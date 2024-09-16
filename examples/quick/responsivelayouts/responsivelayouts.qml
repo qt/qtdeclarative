@@ -14,65 +14,72 @@ Window {
     minimumHeight: 500
     minimumWidth: 250
 
-    component AnnotatedRect : Rectangle {
-        implicitWidth: 36
-        implicitHeight: 36
-        Layout.minimumWidth: 36
-        Layout.minimumHeight: 36
-        Layout.alignment: Qt.AlignHCenter
-        property string text: ""
-        border.color: "#EEE"
-        border.width: hh.hovered ? 2 : 0
-        HoverHandler { id: hh }
-        Text {
-            font.pixelSize: 18
-            font.bold: true
-            anchors.centerIn: parent
-            text: parent.text
-            color: "#333"
-        }
-    }
-
     //! [item definition]
-    AnnotatedRect {
+    Rectangle {
         id: contentItem
-        text: "Content Item"
         Layout.fillWidth: true
-        implicitHeight: 1000
-        implicitWidth: 500
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "tomato" }
-            GradientStop { position: 0.5; color: "navajowhite" }
-            GradientStop { position: 1.0; color: "darkseagreen" }
+        implicitHeight: grid.implicitHeight
+        implicitWidth: grid.implicitWidth
+        color: "#00414A"
+
+        GridLayout {
+            anchors.fill: parent
+            id: grid
+            columns: 2
+            anchors.margins: 8
+            Repeater {
+                model: 18
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.margins: 8
+                    implicitWidth: 200
+                    implicitHeight: width
+                    radius: width / 10
+                    gradient: Gradient {
+                        GradientStop { position: -0.2; color: "#2CDE85" }
+                        GradientStop { position: 1.2; color: "#00414A" }
+                    }
+                    Text {
+                        color: "#ffffff"
+                        font.pointSize: 22
+                        anchors.centerIn: parent
+                        text: index
+                    }
+                }
+            }
         }
     }
 
-    AnnotatedRect {
+    Button {
         id: a
-        text: "A"
-        color: "lightskyblue"
+        text: "Text"
+        icon.source: "./icons/text.svg"
         Layout.fillWidth: true
+        Layout.margins: 3
     }
 
-    AnnotatedRect {
+    Button {
         id: b
-        text: "B"
-        color: "lightskyblue"
+        text: "Grid 1"
+        icon.source: "./icons/grid.svg"
         Layout.fillWidth: true
+        Layout.margins: 3
     }
 
-    AnnotatedRect {
+    Button {
         id: c
-        text: "C"
-        color: "lightskyblue"
+        text: "Grid 2"
+        icon.source: "./icons/grid.svg"
         Layout.fillWidth: true
+        Layout.margins: 3
     }
 
-    AnnotatedRect {
+    Button {
         id: d
-        text: "D"
-        color: "lightskyblue"
+        text: "Settings"
+        icon.source: "./icons/settings.svg"
         Layout.fillWidth: true
+        Layout.margins: 3
     }
     //! [item definition]
 
@@ -102,11 +109,12 @@ Window {
         RowLayout {
             Layout.fillHeight: false
             Layout.fillWidth: true
+            Layout.margins: 5
             //! [layout property on proxy]
-            LayoutItemProxy{ target: a; Layout.bottomMargin: 5 }
+            LayoutItemProxy{ target: a; }
             //! [layout property on proxy]
-            LayoutItemProxy{ target: b; Layout.bottomMargin: 5 }
-            LayoutItemProxy{ target: c; Layout.bottomMargin: 5 }
+            LayoutItemProxy{ target: b; }
+            LayoutItemProxy{ target: c; }
         }
         //! [proxy in layout]
     }
@@ -130,6 +138,7 @@ Window {
 
         LayoutItemProxy {
             Layout.fillHeight: true
+            Layout.fillWidth: false
             target: contentItem
         }
     }

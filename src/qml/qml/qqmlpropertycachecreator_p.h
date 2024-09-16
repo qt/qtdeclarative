@@ -24,6 +24,11 @@
 #include <private/qqmlsignalnames_p.h>
 
 #include <QScopedValueRollback>
+
+#if QT_CONFIG(regularexpression)
+#include <QtCore/qregularexpression.h>
+#endif
+
 #include <vector>
 
 QT_BEGIN_NAMESPACE
@@ -67,8 +72,57 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt Q_AUTOTEST_EXPORT classIndexCounter;
 
-    static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type);
-    static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type);
+    static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type)
+    {
+        switch (type) {
+        case QV4::CompiledData::CommonType::Void:     return QMetaType();
+        case QV4::CompiledData::CommonType::Var:      return QMetaType::fromType<QVariant>();
+        case QV4::CompiledData::CommonType::Int:      return QMetaType::fromType<int>();
+        case QV4::CompiledData::CommonType::Bool:     return QMetaType::fromType<bool>();
+        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<qreal>();
+        case QV4::CompiledData::CommonType::String:   return QMetaType::fromType<QString>();
+        case QV4::CompiledData::CommonType::Url:      return QMetaType::fromType<QUrl>();
+        case QV4::CompiledData::CommonType::Time:     return QMetaType::fromType<QTime>();
+        case QV4::CompiledData::CommonType::Date:     return QMetaType::fromType<QDate>();
+        case QV4::CompiledData::CommonType::DateTime: return QMetaType::fromType<QDateTime>();
+#if QT_CONFIG(regularexpression)
+        case QV4::CompiledData::CommonType::RegExp:   return QMetaType::fromType<QRegularExpression>();
+#else
+        case QV4::CompiledData::CommonType::RegExp:   return QMetaType();
+#endif
+        case QV4::CompiledData::CommonType::Rect:     return QMetaType::fromType<QRectF>();
+        case QV4::CompiledData::CommonType::Point:    return QMetaType::fromType<QPointF>();
+        case QV4::CompiledData::CommonType::Size:     return QMetaType::fromType<QSizeF>();
+        case QV4::CompiledData::CommonType::Invalid:  break;
+        };
+        return QMetaType {};
+    }
+
+    static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type)
+    {
+        switch (type) {
+        case QV4::CompiledData::CommonType::Void:     return QMetaType();
+        case QV4::CompiledData::CommonType::Var:      return QMetaType::fromType<QList<QVariant>>();
+        case QV4::CompiledData::CommonType::Int:      return QMetaType::fromType<QList<int>>();
+        case QV4::CompiledData::CommonType::Bool:     return QMetaType::fromType<QList<bool>>();
+        case QV4::CompiledData::CommonType::Real:     return QMetaType::fromType<QList<qreal>>();
+        case QV4::CompiledData::CommonType::String:   return QMetaType::fromType<QList<QString>>();
+        case QV4::CompiledData::CommonType::Url:      return QMetaType::fromType<QList<QUrl>>();
+        case QV4::CompiledData::CommonType::Time:     return QMetaType::fromType<QList<QTime>>();
+        case QV4::CompiledData::CommonType::Date:     return QMetaType::fromType<QList<QDate>>();
+        case QV4::CompiledData::CommonType::DateTime: return QMetaType::fromType<QList<QDateTime>>();
+#if QT_CONFIG(regularexpression)
+        case QV4::CompiledData::CommonType::RegExp:   return QMetaType::fromType<QList<QRegularExpression>>();
+#else
+        case QV4::CompiledData::CommonType::RegExp:   return QMetaType();
+#endif
+        case QV4::CompiledData::CommonType::Rect:     return QMetaType::fromType<QList<QRectF>>();
+        case QV4::CompiledData::CommonType::Point:    return QMetaType::fromType<QList<QPointF>>();
+        case QV4::CompiledData::CommonType::Size:     return QMetaType::fromType<QList<QSizeF>>();
+        case QV4::CompiledData::CommonType::Invalid:  break;
+        };
+        return QMetaType {};
+    }
 
     static bool canCreateClassNameTypeByUrl(const QUrl &url);
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
@@ -364,8 +418,9 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
             Q_ASSERT(typeRef);
             QQmlType qmltype = typeRef->type();
             if (!qmltype.isValid()) {
-                imports->resolveType(stringAt(binding->propertyNameIndex),
-                                     &qmltype, nullptr, nullptr, nullptr);
+                imports->resolveType(
+                        QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                        &qmltype, nullptr, nullptr);
             }
 
             const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
@@ -374,23 +429,6 @@ inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::pr
                 return nullptr;
             }
             return QQmlMetaType::propertyCache(attachedMo);
-        } else if (binding->isGroupProperty()) {
-            const auto *obj = objectContainer->objectAt(binding->value.objectIndex);
-            if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
-                return nullptr;
-
-            for (int i = 0, end = objectContainer->objectCount(); i != end; ++i) {
-                const auto *ext = objectContainer->objectAt(i);
-                if (ext->idNameIndex != binding->propertyNameIndex)
-                    continue;
-
-                if (ext->inheritedTypeNameIndex == 0)
-                    return nullptr;
-
-                QQmlBindingInstantiationContext pendingContext(i, &(*binding), QString(), nullptr);
-                pendingGroupPropertyBindings->append(pendingContext);
-                return nullptr;
-            }
         }
     }
     return nullptr;
@@ -666,26 +704,30 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             QQmlType qmltype;
             bool selfReference = false;
             if (!imports->resolveType(
-                    stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
-                    nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
+                        QQmlTypeLoader::get(enginePrivate),
+                        stringAt(p->commonTypeOrTypeNameIndex()), &qmltype, nullptr, nullptr,
+                        nullptr, QQmlType::AnyRegistrationType, &selfReference)) {
                 return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Invalid property type"));
             }
 
             // inline components are not necessarily valid yet
-            Q_ASSERT(qmltype.isValid() || qmltype.isInlineComponentType());
+            Q_ASSERT(qmltype.isValid());
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
                 QQmlType compositeType;
                 if (qmltype.isInlineComponentType()) {
-                    const QString icName = qmltype.elementName();
-                    compositeType = QQmlMetaType::inlineComponentTypeForUrl(
-                            qmltype.sourceUrl(), icName);
-                    if (!compositeType.isValid()) // type has not been registered yet, we must be in containing type
-                        compositeType = objectContainer->qmlTypeForComponent(icName);
+                    compositeType = qmltype;
                     Q_ASSERT(compositeType.isValid());
                 } else if (selfReference) {
                     compositeType = objectContainer->qmlTypeForComponent();
                 } else {
-                    compositeType = qmltype;
+                    // compositeType may not be the same type as qmlType because multiple engines
+                    // may load different types for the same document. Therefore we have to ask
+                    // our engine's type loader here.
+                    QQmlRefPointer<QQmlTypeData> tdata
+                            = enginePrivate->typeLoader.getType(qmltype.sourceUrl());
+                    Q_ASSERT(tdata);
+                    Q_ASSERT(tdata->isComplete());
+                    compositeType = tdata->compilationUnit()->qmlTypeForComponent();
                 }
 
                 if (p->isList()) {
@@ -742,8 +784,9 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
         *customTypeName = typeName;
     QQmlType qmltype;
     bool selfReference = false;
-    if (!imports->resolveType(typeName, &qmltype, nullptr, nullptr, nullptr,
-                              QQmlType::AnyRegistrationType, &selfReference))
+    if (!imports->resolveType(
+                &enginePrivate->typeLoader, typeName, &qmltype, nullptr, nullptr, nullptr,
+                QQmlType::AnyRegistrationType, &selfReference))
         return QMetaType();
 
     if (!qmltype.isComposite()) {
@@ -870,7 +913,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                 Q_ASSERT(type->isValid());
             }
         } else {
-            *type = typeRef->compilationUnit()->qmlType.typeId();
+            *type = typeRef->compilationUnit()->metaType();
         }
 
         *version = typeRef->version();
@@ -887,53 +930,67 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         const QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
-        // for deep aliases, valueTypeIndex is always set
-        if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
-            // deep alias property
-            *type = targetProperty->propType();
-            QQmlPropertyCache::ConstPtr typeCache = QQmlMetaType::propertyCacheForType(*type);
-            Q_ASSERT(typeCache);
-            const QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
+        const QMetaType targetPropType = targetProperty->propType();
 
-            if (typeProperty == nullptr) {
-                return qQmlCompileError(alias.referenceLocation,
-                                        QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+        const auto populateWithPropertyData = [&](const QQmlPropertyData *property) {
+            *type = property->propType();
+            writable = property->isWritable();
+            resettable = property->isResettable();
+            bindable = property->isBindable();
+
+            if (property->isVarProperty())
+                propertyFlags->setType(QQmlPropertyData::Flags::QVariantType);
+            else
+                propertyFlags->copyPropertyTypeFlags(property->flags());
+        };
+
+        // for deep aliases, valueTypeIndex is always set
+        if (!QQmlMetaType::isValueType(targetPropType) && valueTypeIndex != -1) {
+            // deep alias property
+
+            QQmlPropertyCache::ConstPtr typeCache
+                    = QQmlMetaType::propertyCacheForType(targetPropType);
+
+            if (!typeCache) {
+                // See if it's a half-resolved composite type
+                if (const QV4::ResolvedTypeReference *typeRef
+                        = objectContainer->resolvedType(targetPropType)) {
+                    typeCache = typeRef->typePropertyCache();
+                }
             }
 
-            *type = typeProperty->propType();
-            writable = typeProperty->isWritable();
-            resettable = typeProperty->isResettable();
-            bindable = typeProperty->isBindable();
+            const QQmlPropertyData *typeProperty = typeCache
+                    ? typeCache->property(valueTypeIndex)
+                    : nullptr;
+            if (typeProperty == nullptr) {
+                return qQmlCompileError(
+                        alias.referenceLocation,
+                        QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
+            }
+            populateWithPropertyData(typeProperty);
         } else {
             // value type or primitive type or enum
-            *type = targetProperty->propType();
-
-            writable = targetProperty->isWritable();
-            resettable = targetProperty->isResettable();
-            bindable = targetProperty->isBindable();
+            populateWithPropertyData(targetProperty);
 
             if (valueTypeIndex != -1) {
-                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(*type);
-                if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                    *type = QMetaType::fromType<int>();
-                else
-                    *type = valueTypeMetaObject->property(valueTypeIndex).metaType();
-            } else {
-                if (targetProperty->isEnum()) {
-                    *type = QMetaType::fromType<int>();
-                } else {
-                    // Copy type flags
-                    propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
+                const QMetaObject *valueTypeMetaObject
+                        = QQmlMetaType::metaObjectForValueType(*type);
+                const QMetaProperty valueTypeMetaProperty
+                        = valueTypeMetaObject->property(valueTypeIndex);
+                *type = valueTypeMetaProperty.metaType();
 
-                    if (targetProperty->isVarProperty())
-                        propertyFlags->setType(QQmlPropertyData::Flags::QVariantType);
-                }
+                // We can only write or reset the value type property if we can write
+                // the value type itself.
+                resettable = writable && valueTypeMetaProperty.isResettable();
+                writable = writable && valueTypeMetaProperty.isWritable();
+
+                bindable = valueTypeMetaProperty.isBindable();
             }
         }
     }
 
-    propertyFlags->setIsWritable(!(alias.hasFlag(QV4::CompiledData::Alias::IsReadOnly))
-                                 && writable);
+    propertyFlags->setIsWritable(
+            writable && !alias.hasFlag(QV4::CompiledData::Alias::IsReadOnly));
     propertyFlags->setIsResettable(resettable);
     propertyFlags->setIsBindable(bindable);
     return QQmlError();

@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTreeViewPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTreeView : public QQuickTableView
+class Q_QUICK_EXPORT QQuickTreeView : public QQuickTableView
 {
     Q_OBJECT
     Q_PROPERTY(QModelIndex rootIndex READ rootIndex WRITE setRootIndex RESET resetRootIndex NOTIFY rootIndexChanged REVISION(6, 6) FINAL)
@@ -70,7 +70,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTreeView)
 
 #endif // QQUICKTREEVIEW_P_H

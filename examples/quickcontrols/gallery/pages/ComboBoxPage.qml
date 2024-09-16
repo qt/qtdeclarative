@@ -28,7 +28,7 @@ ScrollablePage {
             width: parent.width
             wrapMode: Label.Wrap
             horizontalAlignment: Qt.AlignHCenter
-            text: qsTr("ComboBox can be made \l editable. An editable combo box auto-"
+            text: qsTr("ComboBox can be made editable. An editable combo box auto-"
                 + "completes its text based on what is available in the model.")
         }
 

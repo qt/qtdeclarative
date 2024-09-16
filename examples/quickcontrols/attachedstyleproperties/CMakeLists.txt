@@ -3,15 +3,9 @@ project(attachedstyleproperties LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/attachedstyleproperties")
-
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml QuickControls2)
 
-qt_standard_project_setup(REQUIRES 6.5)
+qt_standard_project_setup(REQUIRES 6.8)
 
 add_subdirectory(MyStyle)
 
@@ -38,15 +32,16 @@ target_link_libraries(attachedstylepropertiesexample PRIVATE
 add_dependencies(attachedstylepropertiesexample MyStyle)
 
 install(TARGETS attachedstylepropertiesexample
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-include(../../quick/shared/QtBundleQmlModuleForMacOS.cmake)
-
-set(app_target "attachedstylepropertiesexample")
-set(qml_plugin_target "MyStyleplugin")
-set(qml_module_uri "MyStyle")
-add_qml_module_to_macos_app_bundle(
-    "${app_target}" "${qml_plugin_target}" "${qml_module_uri}")
+qt_generate_deploy_qml_app_script(
+    TARGET attachedstylepropertiesexample
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})

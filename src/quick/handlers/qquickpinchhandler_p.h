@@ -26,35 +26,35 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
+class Q_QUICK_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickDragAxis *scaleAxis READ scaleAxis CONSTANT FINAL)
+    Q_PROPERTY(QQuickDragAxis *scaleAxis READ scaleAxis CONSTANT)
 #if QT_DEPRECATED_SINCE(6, 5)
-    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged FINAL)
-    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged FINAL)
-    Q_PROPERTY(qreal scale READ scale NOTIFY updated FINAL)
+    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
+    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
+    Q_PROPERTY(qreal scale READ scale NOTIFY updated)
 #endif
-    Q_PROPERTY(qreal activeScale READ activeScale NOTIFY scaleChanged FINAL)
-    Q_PROPERTY(qreal persistentScale READ persistentScale WRITE setPersistentScale NOTIFY scaleChanged FINAL)
+    Q_PROPERTY(qreal activeScale READ activeScale NOTIFY scaleChanged)
+    Q_PROPERTY(qreal persistentScale READ persistentScale WRITE setPersistentScale NOTIFY scaleChanged)
 
-    Q_PROPERTY(QQuickDragAxis *rotationAxis READ rotationAxis CONSTANT FINAL)
+    Q_PROPERTY(QQuickDragAxis *rotationAxis READ rotationAxis CONSTANT)
 #if QT_DEPRECATED_SINCE(6, 5)
-    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged FINAL)
-    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged FINAL)
-    Q_PROPERTY(qreal rotation READ rotation NOTIFY updated FINAL)
+    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
+    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
+    Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
 #endif
-    Q_PROPERTY(qreal activeRotation READ activeRotation NOTIFY rotationChanged FINAL)
-    Q_PROPERTY(qreal persistentRotation READ persistentRotation WRITE setPersistentRotation NOTIFY rotationChanged FINAL)
+    Q_PROPERTY(qreal activeRotation READ activeRotation NOTIFY rotationChanged)
+    Q_PROPERTY(qreal persistentRotation READ persistentRotation WRITE setPersistentRotation NOTIFY rotationChanged)
 
-    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT FINAL)
-    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT FINAL)
+    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
+    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
 #if QT_DEPRECATED_SINCE(6, 5)
-    Q_PROPERTY(QVector2D translation READ translation NOTIFY updated FINAL)
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
 #endif
-    Q_PROPERTY(QPointF activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 5) FINAL)
-    Q_PROPERTY(QPointF persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(QPointF activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 5))
+    Q_PROPERTY(QPointF persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 5))
 
     QML_NAMED_ELEMENT(PinchHandler)
     QML_ADDED_IN_VERSION(2, 12)

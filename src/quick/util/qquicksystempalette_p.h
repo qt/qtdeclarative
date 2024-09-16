@@ -26,27 +26,28 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSystemPalettePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickSystemPalette : public QObject
+class Q_QUICK_EXPORT QQuickSystemPalette : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSystemPalette)
 
-    Q_PROPERTY(QQuickSystemPalette::ColorGroup colorGroup READ colorGroup WRITE setColorGroup NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor window READ window NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor windowText READ windowText NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor base READ base NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor text READ text NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor alternateBase READ alternateBase NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor button READ button NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor buttonText READ buttonText NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor light READ light NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor midlight READ midlight NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor dark READ dark NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor mid READ mid NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor shadow READ shadow NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlight READ highlight NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlightedText READ highlightedText NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor placeholderText READ placeholderText NOTIFY paletteChanged REVISION(6, 2) FINAL)
+    Q_PROPERTY(QQuickSystemPalette::ColorGroup colorGroup READ colorGroup WRITE setColorGroup NOTIFY paletteChanged)
+    Q_PROPERTY(QColor window READ window NOTIFY paletteChanged)
+    Q_PROPERTY(QColor windowText READ windowText NOTIFY paletteChanged)
+    Q_PROPERTY(QColor base READ base NOTIFY paletteChanged)
+    Q_PROPERTY(QColor text READ text NOTIFY paletteChanged)
+    Q_PROPERTY(QColor alternateBase READ alternateBase NOTIFY paletteChanged)
+    Q_PROPERTY(QColor button READ button NOTIFY paletteChanged)
+    Q_PROPERTY(QColor buttonText READ buttonText NOTIFY paletteChanged)
+    Q_PROPERTY(QColor light READ light NOTIFY paletteChanged)
+    Q_PROPERTY(QColor midlight READ midlight NOTIFY paletteChanged)
+    Q_PROPERTY(QColor dark READ dark NOTIFY paletteChanged)
+    Q_PROPERTY(QColor mid READ mid NOTIFY paletteChanged)
+    Q_PROPERTY(QColor shadow READ shadow NOTIFY paletteChanged)
+    Q_PROPERTY(QColor highlight READ highlight NOTIFY paletteChanged)
+    Q_PROPERTY(QColor highlightedText READ highlightedText NOTIFY paletteChanged)
+    Q_PROPERTY(QColor placeholderText READ placeholderText NOTIFY paletteChanged REVISION(6, 2))
+    Q_PROPERTY(QColor accent READ accent NOTIFY paletteChanged REVISION(6, 7) FINAL)
     QML_NAMED_ELEMENT(SystemPalette)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -76,6 +77,7 @@ public:
     QColor highlightedText() const;
 
     QColor placeholderText() const;
+    QColor accent() const;
 
     QQuickSystemPalette::ColorGroup colorGroup() const;
     void setColorGroup(QQuickSystemPalette::ColorGroup);
@@ -85,7 +87,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickSystemPalette)
 
 #endif // QQUICKSYSTEMPALETTE_H

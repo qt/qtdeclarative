@@ -62,7 +62,8 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
 
     function += QLatin1String(") { ") + expression + QLatin1String(" })");
     QV4::Scope valueScope(v4);
-    QV4::ScopedFunctionObject f(valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
+    QV4::Scoped<QV4::JavaScriptFunctionObject> f(
+            valueScope, evalFunction(context(), scopeObject(), function, fileName, line));
     QV4::ScopedContext context(valueScope, f->scope());
     setupFunction(context, f->function());
 }
@@ -107,7 +108,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
         // we need to run the outer function to get the nested one.
         if (function->isClosureWrapper()) {
             bool isUndefined = false;
-            QV4::ScopedFunctionObject result(
+            QV4::Scoped<QV4::JavaScriptFunctionObject> result(
                         valueScope, QQmlJavaScriptExpression::evaluate(&isUndefined));
 
             Q_ASSERT(!isUndefined);
@@ -179,7 +180,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
                     QMetaObjectPrivate::signal(targetMeta, m_index).methodIndex());
 
         int argCount = metaMethod.parameterCount();
-        QQmlMetaObject::ArgTypeStorage storage;
+        QQmlMetaObject::ArgTypeStorage<9> storage;
         storage.reserve(argCount + 1);
         storage.append(QMetaType()); // We're not interested in the return value
         for (int i = 0; i < argCount; ++i) {

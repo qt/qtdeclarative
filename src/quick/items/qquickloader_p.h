@@ -20,18 +20,17 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickLoaderPrivate;
-class QQmlV4Function;
-class Q_QUICK_PRIVATE_EXPORT QQuickLoader : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged FINAL)
-    Q_PROPERTY(QUrl source READ source WRITE setSourceWithoutResolve NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QQmlComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged FINAL)
-    Q_PROPERTY(QObject *item READ item NOTIFY itemChanged FINAL)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
-    Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged FINAL)
-    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged FINAL)
+    Q_PROPERTY(bool active READ active WRITE setActive NOTIFY activeChanged)
+    Q_PROPERTY(QUrl source READ source WRITE setSourceWithoutResolve NOTIFY sourceChanged)
+    Q_PROPERTY(QQmlComponent *sourceComponent READ sourceComponent WRITE setSourceComponent RESET resetSourceComponent NOTIFY sourceComponentChanged)
+    Q_PROPERTY(QObject *item READ item NOTIFY itemChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     QML_NAMED_ELEMENT(Loader)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -89,7 +88,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickLoader)
 
 #endif // QQUICKLOADER_P_H

@@ -14,13 +14,12 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
-Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
+Q_STATIC_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
 /*!
     \qmltype FileDialog
     \inherits Dialog
-//!     \instantiates QQuickFileDialog
+//!     \nativetype QQuickFileDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.2
     \brief A file dialog.

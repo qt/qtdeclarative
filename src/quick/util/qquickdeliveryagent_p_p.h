@@ -42,7 +42,7 @@ struct QQuickPointingDeviceExtra {
     QVector<QObject *> deliveryTargets;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDeliveryAgent)
@@ -66,6 +66,8 @@ public:
     static void notifyFocusChangesRecur(QQuickItem **item, int remaining, Qt::FocusReason reason);
     void clearFocusObject();
     void updateFocusItemTransform();
+
+    QQuickItem *focusTargetItem() const;
 
     // Keeps track of the item currently receiving mouse events
 #if QT_CONFIG(quick_draganddrop)
@@ -109,7 +111,8 @@ public:
     bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
     void cancelTouchMouseSynthesis();
 
-    bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
+    bool checkIfDoubleTapped(ulong newPressEventTimestamp, const QPoint &newPressPos);
+    void resetIfDoubleTapPrevented(const QEventPoint &pressedPoint);
     QPointingDevicePrivate::EventPointData *mousePointData();
     QPointerEvent *eventInDelivery() const;
 
@@ -118,6 +121,7 @@ public:
     bool deliverTouchAsMouse(QQuickItem *item, QTouchEvent *pointerEvent);
     void translateTouchEvent(QTouchEvent *touchEvent);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true, bool cancel = false);
+    void clearGrabbers(QPointerEvent *pointerEvent);
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
     static QPointerEvent *clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos = std::nullopt);
     void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
@@ -148,6 +152,9 @@ public:
     static bool isTabletEvent(const QPointerEvent *ev);
     static bool isEventFromMouseOrTouchpad(const QPointerEvent *ev);
     static bool isSynthMouse(const QPointerEvent *ev);
+    static bool isWithinDoubleClickInterval(ulong timeInterval);
+    static bool isWithinDoubleTapDistance(const QPoint &distanceBetweenPresses);
+    static bool isSinglePointDevice(const QInputDevice *dev);
     static QQuickPointingDeviceExtra *deviceExtra(const QInputDevice *device);
 
     // delivery of pointer events:
@@ -164,9 +171,14 @@ public:
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
 
     // hover delivery
+    enum class HoverChange : uint8_t {
+        Clear,
+        Set,
+    };
     bool deliverHoverEvent(const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool deliverHoverEventRecursive(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp);
-    bool deliverHoverEventToItem(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool clearHover);
+    bool deliverHoverEventToItem(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp,
+                                 HoverChange hoverChange);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
                         Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool clearHover(ulong timestamp = 0);

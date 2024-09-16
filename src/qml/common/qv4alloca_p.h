@@ -17,16 +17,17 @@
 
 #include <QtCore/private/qglobal_p.h>
 
-#if QT_CONFIG(alloca_h)
+#include <stdlib.h>
+#if __has_include(<alloca.h>)
 #  include <alloca.h>
-#elif QT_CONFIG(alloca_malloc_h)
+#endif
+#if __has_include(<malloc.h>)
 #  include <malloc.h>
+#endif
+
+#ifdef Q_CC_MSVC
 // This does not matter unless compiling in strict standard mode.
-#  ifdef Q_CC_MSVC
-#    define alloca _alloca
-#  endif
-#else
-#  include <stdlib.h>
+#  define alloca _alloca
 #endif
 
 // Define Q_ALLOCA_VAR macro to be used instead of #ifdeffing
@@ -37,7 +38,7 @@
     Q_ALLOCA_DECLARE(type, name); \
     Q_ALLOCA_ASSIGN(type, name, size)
 
-#if QT_CONFIG(alloca)
+#ifdef alloca
 
 #define Q_ALLOCA_DECLARE(type, name) \
     type *name = 0
@@ -46,27 +47,16 @@
     name = static_cast<type*>(alloca(size))
 
 #else
-QT_BEGIN_NAMESPACE
-class Qt_AllocaWrapper
-{
-public:
-    Qt_AllocaWrapper() { m_data = 0; }
-    ~Qt_AllocaWrapper() { free(m_data); }
-    void *data() { return m_data; }
-    void allocate(int size) { m_data = malloc(size); memset(m_data, 0, size); }
-private:
-    void *m_data;
-};
-QT_END_NAMESPACE
+#  include <memory>
 
 #define Q_ALLOCA_DECLARE(type, name) \
-    Qt_AllocaWrapper _qt_alloca_##name; \
+    std::unique_ptr<char[]> _qt_alloca_##name; \
     type *name = nullptr
 
 #define Q_ALLOCA_ASSIGN(type, name, size) \
     do { \
-        _qt_alloca_##name.allocate(size); \
-        name = static_cast<type*>(_qt_alloca_##name.data()); \
+        _qt_alloca_##name.reset(new char[size]); \
+        name = reinterpret_cast<type*>(_qt_alloca_##name.get()); \
     } while (false)
 
 #endif

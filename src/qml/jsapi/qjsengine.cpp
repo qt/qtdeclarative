@@ -16,6 +16,7 @@
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmldebugconnector_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4qmetaobjectwrapper_p.h>
 #include <private/qv4stackframe_p.h>
 #include <private/qv4module_p.h>
 #include <private/qv4symbol_p.h>
@@ -345,11 +346,8 @@ QJSEngine::QJSEngine()
 */
 
 QJSEngine::QJSEngine(QObject *parent)
-    : QObject(*new QJSEnginePrivate, parent)
-    , m_v4Engine(new QV4::ExecutionEngine(this))
+    : QJSEngine(*new QJSEnginePrivate, parent)
 {
-    checkForApplicationInstance();
-
     QJSEnginePrivate::addToDebugServer(this);
 }
 
@@ -372,6 +370,7 @@ QJSEngine::QJSEngine(QJSEnginePrivate &dd, QObject *parent)
 */
 QJSEngine::~QJSEngine()
 {
+    m_v4Engine->inShutdown = true;
     QJSEnginePrivate::removeFromDebugServer(this);
     delete m_v4Engine;
 }
@@ -391,7 +390,11 @@ QJSEngine::~QJSEngine()
     when the QJSEngine decides that it's wise to do so (i.e. when a certain number of new objects
     have been created). However, you can call this function to explicitly request that garbage
     collection should be performed as soon as possible.
-*/
+
+
+    \sa {Garbage Collection}
+    \sa {Qt::}{gc()}
+ */
 void QJSEngine::collectGarbage()
 {
     m_v4Engine->memoryManager->runGC();
@@ -578,7 +581,7 @@ QJSValue QJSEngine::importModule(const QString &fileName)
 
     QV4::Scope scope(m_v4Engine);
     if (const auto compiled = module.compiled) {
-        QV4::Scoped<QV4::Module> moduleNamespace(scope, compiled->instantiate(m_v4Engine));
+        QV4::Scoped<QV4::Module> moduleNamespace(scope, compiled->instantiate());
         if (m_v4Engine->hasException)
             return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
         compiled->evaluate();

@@ -1,6 +1,5 @@
 /*! \internal
     \page qq-ideal-pointer-event-delivery-single-drag Dragging one DragHandler with one touchpoint
-    \tableofcontents
 
     <a href="https://doc.qt.io/qt-6/qtquick-input-topic.html">Multi-touch</a>
     is intended to be a strong feature in Qt Quick, so let's run this example
@@ -239,4 +238,9 @@
     to end up there eventually): there are a lot of legacy QQuickItem
     subclasses that do their event handling by overriding virtual functions
     rather than by having handlers added. But let's save that for later.
+
+    In the meantime, to go further with how Pointer Handlers work (but with
+    less-daunting amounts of detail), you might want to look at
+    \ref qq-ideal-pointer-event-delivery-parallel-drags
+    and \ref qq-ideal-pointer-event-delivery-pinch
 */

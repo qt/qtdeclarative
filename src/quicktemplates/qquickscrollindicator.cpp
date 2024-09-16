@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollIndicator
     \inherits Control
-//!     \instantiates QQuickScrollIndicator
+//!     \nativetype QQuickScrollIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-indicators
@@ -168,6 +168,8 @@ void QQuickScrollIndicatorPrivate::resizeContent()
 QQuickScrollIndicator::QQuickScrollIndicator(QQuickItem *parent)
     : QQuickControl(*(new QQuickScrollIndicatorPrivate), parent)
 {
+    Q_D(QQuickScrollIndicator);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickScrollIndicatorAttached *QQuickScrollIndicator::qmlAttachedProperties(QObject *object)
@@ -294,6 +296,11 @@ void QQuickScrollIndicator::setOrientation(Qt::Orientation orientation)
     Q_D(QQuickScrollIndicator);
     if (d->orientation == orientation)
         return;
+
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
 
     d->orientation = orientation;
     if (isComponentComplete())
@@ -488,7 +495,7 @@ QQuickScrollIndicatorAttached::QQuickScrollIndicatorAttached(QObject *parent)
     if (d->flickable)
         QQuickItemPrivate::get(d->flickable)->updateOrAddGeometryChangeListener(d, QQuickGeometryChange::Size);
     else if (parent)
-        qmlWarning(parent) << "ScrollIndicator must be attached to a Flickable";
+        qmlWarning(parent) << "ScrollIndicator attached property must be attached to an object deriving from Flickable";
 }
 
 QQuickScrollIndicatorAttached::~QQuickScrollIndicatorAttached()

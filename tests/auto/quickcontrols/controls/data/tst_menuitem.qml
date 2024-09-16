@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -23,21 +23,23 @@ TestCase {
         Menu { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(menuItem, testCase)
         verify(control)
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(menuItem, testCase)
+        let control = createTemporaryObject(menuItem, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
 
     function test_checkable() {
-        var control = createTemporaryObject(menuItem, testCase)
+        let control = createTemporaryObject(menuItem, testCase)
         verify(control)
         verify(control.hasOwnProperty("checkable"))
         verify(!control.checkable)
@@ -54,7 +56,7 @@ TestCase {
     }
 
     function test_highlighted() {
-        var control = createTemporaryObject(menuItem, testCase)
+        let control = createTemporaryObject(menuItem, testCase)
         verify(control)
         verify(!control.highlighted)
 
@@ -76,7 +78,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(menuItem, testCase, {
+        let control = createTemporaryObject(menuItem, testCase, {
             text: "MenuItem",
             display: data.display,
             "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png",
@@ -85,16 +87,16 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var padding = data.mirrored ? control.contentItem.rightPadding : control.contentItem.leftPadding
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let padding = data.mirrored ? control.contentItem.rightPadding : control.contentItem.leftPadding
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case MenuItem.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - padding : padding)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round(control.mirrored ? control.availableWidth - iconImage.width - padding : padding))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case MenuItem.TextOnly:
             verify(!iconImage)
@@ -105,7 +107,7 @@ TestCase {
         case MenuItem.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, control.mirrored ? control.availableWidth - iconImage.width - (textLabel.width - iconImage.width) / 2 - padding : (textLabel.width - iconImage.width) / 2 + padding)
+            compare(iconImage.x, Math.round(control.mirrored ? control.availableWidth - iconImage.width - (textLabel.width - iconImage.width) / 2 - padding : (textLabel.width - iconImage.width) / 2 + padding))
             compare(textLabel.x, control.mirrored ? control.availableWidth - textLabel.width - padding : padding)
             verify(iconImage.y < textLabel.y)
             break;
@@ -116,21 +118,21 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }
     }
 
     function test_menu() {
-        var control = createTemporaryObject(menu, testCase)
+        let control = createTemporaryObject(menu, testCase)
         verify(control)
 
-        var item1 = createTemporaryObject(menuItem, testCase)
+        let item1 = createTemporaryObject(menuItem, testCase)
         verify(item1)
         compare(item1.menu, null)
 
-        var item2 = createTemporaryObject(menuItem, testCase)
+        let item2 = createTemporaryObject(menuItem, testCase)
         verify(item2)
         compare(item2.menu, null)
 

@@ -24,7 +24,6 @@ qt_internal_add_test(tst_qquickpixmapcache
         tst_qquickpixmapcache.cpp
         deviceloadingimage.h deviceloadingimage.cpp
     LIBRARIES
-        Qt::Concurrent
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
@@ -48,6 +47,12 @@ qt_internal_extend_target(tst_qquickpixmapcache CONDITION NOT ANDROID AND NOT IO
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
+qt_internal_extend_target(tst_qquickpixmapcache CONDITION QT_FEATURE_concurrent
+    LIBRARIES
+        Qt::Concurrent
+)
+
+qt_policy(SET QTP0001 NEW)
 qt_add_qml_module(tst_qquickpixmapcache
     URI PixmapCacheTest
 )

@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickIcon;
 class QQuickActionPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAction : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickAction : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
@@ -91,7 +91,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickAction)
 
 #endif // QQUICKACTION_P_H

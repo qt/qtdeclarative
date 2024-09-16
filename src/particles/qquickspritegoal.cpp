@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype SpriteGoal
-    \instantiates QQuickSpriteGoalAffector
+    \nativetype QQuickSpriteGoalAffector
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-images-sprites
     \inherits Affector

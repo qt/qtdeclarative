@@ -7,6 +7,8 @@ qt_internal_add_plugin(QmlLintQuickPlugin
     SOURCES
         quicklintplugin.h
         quicklintplugin.cpp
+        qquickliteralbindingcheck.cpp qquickliteralbindingcheck_p.h
+        qquickvaluetypefromstringcheck.cpp qquickvaluetypefromstringcheck_p.h
     LIBRARIES
         Qt::QmlCompilerPrivate
 )

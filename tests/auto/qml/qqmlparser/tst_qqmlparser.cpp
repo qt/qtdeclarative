@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljsparser_p.h>
@@ -34,6 +34,10 @@ private slots:
     void codeLocationsWithContinuationStringLiteral_data();
     void noSubstitutionTemplateLiteral();
     void templateLiteral();
+    void numericSeparator_data();
+    void numericSeparator();
+    void invalidNumericSeparator_data();
+    void invalidNumericSeparator();
     void leadingSemicolonInClass();
     void templatedReadonlyProperty();
     void qmlImportInJS();
@@ -494,6 +498,74 @@ void tst_qqmlparser::templateLiteral()
     QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0u);
     auto *e = templateLiteral->expression;
     QVERIFY(e);
+}
+
+void tst_qqmlparser::numericSeparator_data() {
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<double>("expected_value");
+
+    QTest::newRow("Separator in decimal literal") << "1_000_000_000" << 1000000000.0;
+    QTest::newRow("Separator in fractional part") << "1000.22_33" << 1000.2233;
+    QTest::newRow("Separator in exponent part") << "1e1_0_0" << std::pow(10, 100);
+    QTest::newRow("Separator in positive exponent part") << "1e+1_0_0" << 1e100;
+    QTest::newRow("Separator in negative exponent part") << "1e-1_0_0" << 1e-100;
+    QTest::newRow("Separator in binary literal with b prefix") << "0b1010_0001_1000_0101" << static_cast<double>(0b1010000110000101);
+    QTest::newRow("Separator in binary literal with B prefix") << "0B01_10_01_10" << static_cast<double>(0b01100110);
+    QTest::newRow("Separator in octal literal with o prefix") << "0o1234_5670" << static_cast<double>(012345670);
+    QTest::newRow("Separator in octal literal with O prefix") << "0O7777_0000" << static_cast<double>(077770000);
+    QTest::newRow("Separator in hex literal with x prefix") << "0xA0_B0_C0" << static_cast<double>(0xA0B0C0);
+    QTest::newRow("Separator in hex literal with X prefix") << "0X1000_AAAA" << static_cast<double>(0x1000AAAA);
+}
+
+void tst_qqmlparser::numericSeparator() {
+    using namespace QQmlJS;
+
+    QFETCH(QString, code);
+    QFETCH(double, expected_value);
+
+    QQmlJS::Engine engine;
+
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(code, 1);
+
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(parser.parseExpression());
+
+    AST::ExpressionNode *expression = parser.expression();
+    QVERIFY(expression);
+
+    auto *literal = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(expression);
+    QVERIFY(literal);
+
+    QCOMPARE(literal->value, expected_value);
+    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
+}
+
+void tst_qqmlparser::invalidNumericSeparator_data() {
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<QString>("error");
+
+    QTest::newRow("Trailing numeric separator") << "1_" << "A trailing numeric separator is not allowed in numeric literals";
+    QTest::newRow("Multiple numeric separators") << "1__2" << "There can be at most one numeric separator between digits";
+}
+
+void tst_qqmlparser::invalidNumericSeparator() {
+    using namespace QQmlJS;
+
+    QFETCH(QString, code);
+    QFETCH(QString, error);
+
+    QQmlJS::Engine engine;
+
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(code, 1);
+
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(!parser.parseExpression());
+
+    QVERIFY(lexer.errorCode() != Lexer::NoError);
+    QCOMPARE(lexer.errorMessage(), error);
 }
 
 void tst_qqmlparser::leadingSemicolonInClass()

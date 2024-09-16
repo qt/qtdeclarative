@@ -25,7 +25,7 @@
 #include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
-class Q_QUICK_PRIVATE_EXPORT QQuickInputMethod : public QObject
+class Q_QUICK_EXPORT QQuickInputMethod : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(InputMethod)

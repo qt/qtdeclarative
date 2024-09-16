@@ -7,7 +7,11 @@ layout(location = 0) out vec4 fragColor;
 layout(location = 0) in vec3 barycentric;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 qt_Matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 qt_Matrix;
+#endif
 } ubuf;
 
 void main()

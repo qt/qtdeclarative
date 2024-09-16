@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -28,10 +28,12 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(buttonBox, testCase)
+    function test_defaults() {
+        let control = createTemporaryObject(buttonBox, testCase)
         verify(control)
         compare(control.count, 0)
         verify(control.delegate)
@@ -39,19 +41,19 @@ TestCase {
     }
 
     function test_standardButtons() {
-        var control = createTemporaryObject(buttonBox, testCase)
+        let control = createTemporaryObject(buttonBox, testCase)
         verify(control)
         compare(control.count, 0)
 
         control.standardButtons = DialogButtonBox.Ok
         compare(control.count, 1)
-        var okButton = control.itemAt(0)
+        let okButton = control.itemAt(0)
         verify(okButton)
         compare(okButton.text.toUpperCase(), "OK")
 
         control.standardButtons = DialogButtonBox.Cancel
         compare(control.count, 1)
-        var cancelButton = control.itemAt(0)
+        let cancelButton = control.itemAt(0)
         verify(cancelButton)
         compare(cancelButton.text.toUpperCase(), "CANCEL")
 
@@ -79,21 +81,21 @@ TestCase {
     }
 
     function test_attached() {
-        var control = createTemporaryObject(buttonBox, testCase)
+        let control = createTemporaryObject(buttonBox, testCase)
         verify(control)
 
         control.standardButtons = DialogButtonBox.Ok
-        var okButton = control.itemAt(0)
+        let okButton = control.itemAt(0)
         compare(okButton.DialogButtonBox.buttonBox, control)
         compare(okButton.DialogButtonBox.buttonRole, DialogButtonBox.AcceptRole)
 
-        var saveButton = button.createObject(control, {text: "Save"})
+        let saveButton = button.createObject(control, {text: "Save"})
         compare(saveButton.DialogButtonBox.buttonBox, control)
         compare(saveButton.DialogButtonBox.buttonRole, DialogButtonBox.InvalidRole)
         saveButton.DialogButtonBox.buttonRole = DialogButtonBox.AcceptRole
         compare(saveButton.DialogButtonBox.buttonRole, DialogButtonBox.AcceptRole)
 
-        var closeButton = createTemporaryObject(button, null, {text: "Save"})
+        let closeButton = createTemporaryObject(button, null, {text: "Save"})
         compare(closeButton.DialogButtonBox.buttonBox, null)
         compare(closeButton.DialogButtonBox.buttonRole, DialogButtonBox.InvalidRole)
         closeButton.DialogButtonBox.buttonRole = DialogButtonBox.DestructiveRole
@@ -131,18 +133,18 @@ TestCase {
     }
 
     function test_signals(data) {
-        var control = createTemporaryObject(buttonBox, testCase)
+        let control = createTemporaryObject(buttonBox, testCase)
         verify(control)
 
         control.standardButtons = data.standardButton
         compare(control.count, 1)
-        var button = control.itemAt(0)
+        let button = control.itemAt(0)
         verify(button)
         compare(button.DialogButtonBox.buttonRole, data.buttonRole)
 
-        var clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        let clickedSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickedSpy.valid)
-        var roleSpy = signalSpy.createObject(control, {target: control, signalName: data.signalName})
+        let roleSpy = signalSpy.createObject(control, {target: control, signalName: data.signalName})
         verify(roleSpy.valid)
 
         button.clicked()
@@ -162,16 +164,16 @@ TestCase {
     }
 
     function test_buttonLayout(data) {
-        var control = createTemporaryObject(buttonBox, testCase, {buttonLayout: data.buttonLayout, standardButtons: DialogButtonBox.Ok|DialogButtonBox.Cancel})
+        let control = createTemporaryObject(buttonBox, testCase, {buttonLayout: data.buttonLayout, standardButtons: DialogButtonBox.Ok|DialogButtonBox.Cancel})
         verify(control)
 
         compare(control.count, 2)
 
-        var button1 = control.itemAt(0)
+        let button1 = control.itemAt(0)
         verify(button1)
         compare(button1.DialogButtonBox.buttonRole, data.button1Role)
 
-        var button2 = control.itemAt(1)
+        let button2 = control.itemAt(1)
         verify(button2)
         compare(button2.DialogButtonBox.buttonRole, data.button2Role)
     }
@@ -185,16 +187,16 @@ TestCase {
 
     // QTBUG-59719
     function test_implicitSize(data) {
-        var control = createTemporaryObject(buttonBox, testCase, {standardButtons: data.standardButtons})
+        let control = createTemporaryObject(buttonBox, testCase, {standardButtons: data.standardButtons})
         verify(control)
 
-        var listView = control.contentItem
+        let listView = control.contentItem
         verify(listView && listView.hasOwnProperty("contentWidth"))
         waitForRendering(listView)
 
-        var implicitContentWidth = control.leftPadding + control.rightPadding
-        for (var i = 0; i < listView.contentItem.children.length; ++i) {
-            var button = listView.contentItem.children[i]
+        let implicitContentWidth = control.leftPadding + control.rightPadding
+        for (let i = 0; i < listView.contentItem.children.length; ++i) {
+            let button = listView.contentItem.children[i]
             if (!button.hasOwnProperty("text"))
                 continue
             implicitContentWidth += button.implicitWidth
@@ -217,14 +219,14 @@ TestCase {
     }
 
     function test_buttonSize() {
-        var control = createTemporaryObject(okCancelBox, testCase)
+        let control = createTemporaryObject(okCancelBox, testCase)
         verify(control)
 
-        var okButton = control.itemAt(0)
+        let okButton = control.itemAt(0)
         verify(okButton)
         verify(okButton.width > 0)
 
-        var cancelButton = control.itemAt(1)
+        let cancelButton = control.itemAt(1)
         verify(cancelButton)
         verify(cancelButton.width > 0)
 
@@ -232,14 +234,14 @@ TestCase {
     }
 
     function test_oneButtonInFixedWidthBox() {
-        var control = createTemporaryObject(buttonBox, testCase,
+        let control = createTemporaryObject(buttonBox, testCase,
             { width: 400, standardButtons: Dialog.Close })
         verify(control)
 
-        var listView = control.contentItem
+        let listView = control.contentItem
         waitForRendering(listView)
 
-        var button = control.itemAt(0)
+        let button = control.itemAt(0)
         verify(button)
 
         // The button should never go outside of the box.
@@ -280,14 +282,14 @@ TestCase {
 
     // QTBUG-73860
     function test_oneButtonAlignedRightInImplicitWidthBox() {
-        var dialog = createTemporaryObject(dialogComponent, testCase)
+        let dialog = createTemporaryObject(dialogComponent, testCase)
         verify(dialog)
 
-        var box = dialog.footer
-        var listView = box.contentItem
+        let box = dialog.footer
+        let listView = box.contentItem
         waitForRendering(listView)
 
-        var button = box.itemAt(0)
+        let button = box.itemAt(0)
         verify(button)
 
         // The button should never go outside of the box.
@@ -353,13 +355,13 @@ TestCase {
 
     // QTBUG-72886
     function test_changeCustomButtonText(data) {
-        var control = createTemporaryObject(data.component, testCase, {})
+        let control = createTemporaryObject(data.component, testCase, {})
         verify(control)
 
-        var listView = control.contentItem
+        let listView = control.contentItem
         waitForRendering(listView)
 
-        var button = control.okButton
+        let button = control.okButton
         verify(button)
         button.text = "some longer text";
 
@@ -519,9 +521,9 @@ TestCase {
     }
 
     function test_contentItemDeletionOrder() {
-        var control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(contentItemDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(contentItemDeletionOrder2, testCase)
         verify(control2)
     }
 
@@ -560,9 +562,9 @@ TestCase {
     }
 
     function test_backgroundDeletionOrder() {
-        var control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
+        let control1 = createTemporaryObject(backgroundDeletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
+        let control2 = createTemporaryObject(backgroundDeletionOrder2, testCase)
         verify(control2)
     }
 }

@@ -64,22 +64,22 @@ private:
     bool m_isLastItem;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickBasePositioner : public QQuickImplicitSizeItem
+class Q_QUICK_EXPORT QQuickBasePositioner : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
 #if QT_CONFIG(quick_viewtransitions)
-    Q_PROPERTY(QQuickTransition *populate READ populate WRITE setPopulate NOTIFY populateChanged FINAL)
-    Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged FINAL)
-    Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged FINAL)
+    Q_PROPERTY(QQuickTransition *populate READ populate WRITE setPopulate NOTIFY populateChanged)
+    Q_PROPERTY(QQuickTransition *move READ move WRITE setMove NOTIFY moveChanged)
+    Q_PROPERTY(QQuickTransition *add READ add WRITE setAdd NOTIFY addChanged)
 #endif
 
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6) FINAL)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
 
     QML_NAMED_ELEMENT(Positioner)
     QML_ADDED_IN_VERSION(2, 0)
@@ -207,7 +207,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickBasePositioner)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColumn : public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickColumn : public QQuickBasePositioner
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Column)
@@ -221,11 +221,11 @@ protected:
 };
 
 class QQuickRowPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRow: public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickRow: public QQuickBasePositioner
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
+    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
+    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
     QML_NAMED_ELEMENT(Row)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -248,19 +248,19 @@ private:
 };
 
 class QQuickGridPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickGrid : public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickGrid : public QQuickBasePositioner
 {
     Q_OBJECT
-    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
-    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged FINAL)
-    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged RESET resetRowSpacing FINAL)
-    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged RESET resetColumnSpacing FINAL)
-    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
-    Q_PROPERTY(HAlignment horizontalItemAlignment READ hItemAlign WRITE setHItemAlign NOTIFY horizontalAlignmentChanged REVISION(2, 1) FINAL)
-    Q_PROPERTY(HAlignment effectiveHorizontalItemAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged REVISION(2, 1) FINAL)
-    Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION(2, 1) FINAL)
+    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
+    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged RESET resetRowSpacing)
+    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged RESET resetColumnSpacing)
+    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
+    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
+    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
+    Q_PROPERTY(HAlignment horizontalItemAlignment READ hItemAlign WRITE setHItemAlign NOTIFY horizontalAlignmentChanged REVISION(2, 1))
+    Q_PROPERTY(HAlignment effectiveHorizontalItemAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged REVISION(2, 1))
+    Q_PROPERTY(VAlignment verticalItemAlignment READ vItemAlign WRITE setVItemAlign NOTIFY verticalAlignmentChanged REVISION(2, 1))
     QML_NAMED_ELEMENT(Grid)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -336,12 +336,12 @@ private:
 };
 
 class QQuickFlowPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFlow: public QQuickBasePositioner
+class Q_QUICK_EXPORT QQuickFlow: public QQuickBasePositioner
 {
     Q_OBJECT
-    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged FINAL)
-    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged FINAL)
+    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
+    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged)
+    Q_PROPERTY(Qt::LayoutDirection effectiveLayoutDirection READ effectiveLayoutDirection NOTIFY effectiveLayoutDirectionChanged)
     QML_NAMED_ELEMENT(Flow)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -370,14 +370,6 @@ private:
     Q_DECLARE_PRIVATE(QQuickFlow)
 };
 
-
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickColumn)
-QML_DECLARE_TYPE(QQuickRow)
-QML_DECLARE_TYPE(QQuickGrid)
-QML_DECLARE_TYPE(QQuickFlow)
-
-QML_DECLARE_TYPE(QQuickBasePositioner)
 
 #endif // QQUICKPOSITIONERS_P_H

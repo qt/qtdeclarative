@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -18,18 +18,20 @@ TestCase {
         RoundButton { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(roundButton, testCase)
         verify(control)
     }
 
     function test_radius() {
-        var control = createTemporaryObject(roundButton, testCase);
+        let control = createTemporaryObject(roundButton, testCase);
         verify(control);
 
-        var implicitRadius = control.radius;
+        let implicitRadius = control.radius;
         compare(implicitRadius, Math.min(control.width, control.height) / 2);
 
         control.radius = 10;
@@ -46,11 +48,11 @@ TestCase {
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(roundButton, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(roundButton, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem
@@ -79,7 +81,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(roundButton, testCase, {
+        let control = createTemporaryObject(roundButton, testCase, {
             text: "RoundButton",
             display: data.display,
             "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png",
@@ -88,15 +90,15 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case RoundButton.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case RoundButton.TextOnly:
             verify(!iconImage)
@@ -107,7 +109,7 @@ TestCase {
         case RoundButton.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
             compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -118,7 +120,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }

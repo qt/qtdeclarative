@@ -30,40 +30,40 @@ class QQmlChangeSet;
 
 class QQuickPathViewPrivate;
 class QQuickPathViewAttached;
-class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
+class Q_QUICK_EXPORT QQuickPathView : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
-    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged FINAL)
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
-    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
-    Q_PROPERTY(qreal offset READ offset WRITE setOffset NOTIFY offsetChanged FINAL)
+    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
+    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+    Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged)
+    Q_PROPERTY(qreal offset READ offset WRITE setOffset NOTIFY offsetChanged)
 
-    Q_PROPERTY(QQmlComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged FINAL)
-    Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged FINAL)
+    Q_PROPERTY(QQmlComponent *highlight READ highlight WRITE setHighlight NOTIFY highlightChanged)
+    Q_PROPERTY(QQuickItem *highlightItem READ highlightItem NOTIFY highlightItemChanged)
 
-    Q_PROPERTY(qreal preferredHighlightBegin READ preferredHighlightBegin WRITE setPreferredHighlightBegin NOTIFY preferredHighlightBeginChanged FINAL)
-    Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged FINAL)
-    Q_PROPERTY(HighlightRangeMode highlightRangeMode READ highlightRangeMode WRITE setHighlightRangeMode NOTIFY highlightRangeModeChanged FINAL)
-    Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged FINAL)
+    Q_PROPERTY(qreal preferredHighlightBegin READ preferredHighlightBegin WRITE setPreferredHighlightBegin NOTIFY preferredHighlightBeginChanged)
+    Q_PROPERTY(qreal preferredHighlightEnd READ preferredHighlightEnd WRITE setPreferredHighlightEnd NOTIFY preferredHighlightEndChanged)
+    Q_PROPERTY(HighlightRangeMode highlightRangeMode READ highlightRangeMode WRITE setHighlightRangeMode NOTIFY highlightRangeModeChanged)
+    Q_PROPERTY(int highlightMoveDuration READ highlightMoveDuration WRITE setHighlightMoveDuration NOTIFY highlightMoveDurationChanged)
 
-    Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin NOTIFY dragMarginChanged FINAL)
-    Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged FINAL)
-    Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged FINAL)
-    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL)
+    Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin NOTIFY dragMarginChanged)
+    Q_PROPERTY(qreal maximumFlickVelocity READ maximumFlickVelocity WRITE setMaximumFlickVelocity NOTIFY maximumFlickVelocityChanged)
+    Q_PROPERTY(qreal flickDeceleration READ flickDeceleration WRITE setFlickDeceleration NOTIFY flickDecelerationChanged)
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged)
 
-    Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL)
-    Q_PROPERTY(bool flicking READ isFlicking NOTIFY flickingChanged FINAL)
-    Q_PROPERTY(bool dragging READ isDragging NOTIFY draggingChanged FINAL)
+    Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged)
+    Q_PROPERTY(bool flicking READ isFlicking NOTIFY flickingChanged)
+    Q_PROPERTY(bool dragging READ isDragging NOTIFY draggingChanged)
 
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
-    Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount RESET resetPathItemCount NOTIFY pathItemCountChanged FINAL)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
-    Q_PROPERTY(MovementDirection movementDirection READ movementDirection WRITE setMovementDirection NOTIFY movementDirectionChanged REVISION(2, 7) FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount RESET resetPathItemCount NOTIFY pathItemCountChanged)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
+    Q_PROPERTY(MovementDirection movementDirection READ movementDirection WRITE setMovementDirection NOTIFY movementDirectionChanged REVISION(2, 7))
 
-    Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged FINAL)
+    Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
     QML_NAMED_ELEMENT(PathView)
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickPathViewAttached)
@@ -263,7 +263,5 @@ private:
 
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPathView)
 
 #endif // QQUICKPATHVIEW_P_H

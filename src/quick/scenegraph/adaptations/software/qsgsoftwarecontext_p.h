@@ -19,14 +19,6 @@
 #include <private/qsgadaptationlayer_p.h>
 #include "qsgrendererinterface.h"
 
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERLOOP)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_COMPILATION)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_TEXTURE)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_GLYPH)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERER)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_INFO)
-Q_DECLARE_LOGGING_CATEGORY(QSG_RASTER_LOG_RENDERLOOP)
-
 QT_BEGIN_NAMESPACE
 
 class QSGSoftwareRenderContext : public QSGRenderContext
@@ -55,7 +47,7 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;

@@ -63,6 +63,7 @@ FontDialogImpl {
     header: Pane {
         palette.window: control.palette.light
         padding: 20
+        visible: content.parent?.parent === Overlay.overlay
 
         contentItem: Label {
             width: parent.width

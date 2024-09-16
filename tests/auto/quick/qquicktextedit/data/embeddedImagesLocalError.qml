@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick
 
 TextEdit {
     textFormat: TextEdit.RichText

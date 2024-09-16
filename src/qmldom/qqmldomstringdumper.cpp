@@ -43,7 +43,7 @@ namespace Dom {
  * \brief Converts a dumper to a string
  * \param writer The dumper convert to a string
  */
-QString dumperToString(Dumper writer)
+QString dumperToString(const Dumper &writer)
 {
     QString s;
     QTextStream d(&s);
@@ -59,7 +59,7 @@ QString dumperToString(Dumper writer)
  * \param s The string to sink
  * \param options If quotes should be outputted around the string (defaults to yes)
  */
-void sinkEscaped(Sink sink, QStringView s, EscapeOptions options) {
+void sinkEscaped(const Sink &sink, QStringView s, EscapeOptions options) {
     if (options == EscapeOptions::OuterQuotes)
         sink(u"\"");
     int it0=0;
@@ -95,7 +95,7 @@ void sinkEscaped(Sink sink, QStringView s, EscapeOptions options) {
  * \param s the sink to write to
  * \param level the level to describe
  */
-void dumpErrorLevel(Sink s, ErrorLevel level)
+void dumpErrorLevel(const Sink &s, ErrorLevel level)
 {
     switch (level) {
     case ErrorLevel::Debug:
@@ -117,7 +117,7 @@ void dumpErrorLevel(Sink s, ErrorLevel level)
 
 }
 
-void dumperToQDebug(Dumper dumper, QDebug debug)
+void dumperToQDebug(const Dumper &dumper, QDebug debug)
 {
     QDebug & d = debug.noquote().nospace();
     dumper([&d](QStringView s){
@@ -131,7 +131,7 @@ void dumperToQDebug(Dumper dumper, QDebug debug)
  * \param level the error level of the message
  * \param dumper the dumper that writes a message
  */
-void dumperToQDebug(Dumper dumper, ErrorLevel level)
+void dumperToQDebug(const Dumper &dumper, ErrorLevel level)
 {
     QDebug d = qDebug().noquote().nospace();
     switch (level) {
@@ -157,7 +157,7 @@ void dumperToQDebug(Dumper dumper, ErrorLevel level)
  * \internal
  * \brief sinks the requested amount of spaces
  */
-void sinkIndent(Sink s, int indent)
+void sinkIndent(const Sink &s, int indent)
 {
     if (indent > 0) {
         QStringView spaces = u"                     ";
@@ -173,7 +173,7 @@ void sinkIndent(Sink s, int indent)
  * \internal
  * \brief sinks a neline and indents by the given amount
  */
-void sinkNewline(Sink s, int indent)
+void sinkNewline(const Sink &s, int indent)
 {
     s(u"\n");
     if (indent > 0)
@@ -186,7 +186,7 @@ void sinkNewline(Sink s, int indent)
  * \brief A sink that ignores whatever it receives
  */
 
-QDebug operator<<(QDebug d, Dumper dumper)
+QDebug operator<<(QDebug d, const Dumper &dumper)
 {
     QDebug dd = d.noquote().nospace();
     dumper([&dd](QStringView s) { dd << s; });

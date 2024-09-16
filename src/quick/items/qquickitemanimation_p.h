@@ -22,14 +22,14 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickParentAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
+class Q_QUICK_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentAnimation)
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged FINAL)
-    Q_PROPERTY(QQuickItem *newParent READ newParent WRITE setNewParent NOTIFY newParentChanged FINAL)
-    Q_PROPERTY(QQuickItem *via READ via WRITE setVia NOTIFY viaChanged FINAL)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged)
+    Q_PROPERTY(QQuickItem *newParent READ newParent WRITE setNewParent NOTIFY newParentChanged)
+    Q_PROPERTY(QQuickItem *via READ via WRITE setVia NOTIFY viaChanged)
     QML_NAMED_ELEMENT(ParentAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -58,13 +58,13 @@ protected:
 };
 
 class QQuickAnchorAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorAnimation)
-    Q_PROPERTY(QQmlListProperty<QQuickItem> targets READ targets FINAL)
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickItem> targets READ targets)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
     QML_NAMED_ELEMENT(AnchorAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -95,21 +95,21 @@ protected:
 class QQuickItem;
 class QQuickPath;
 class QQuickPathAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickPathAnimation)
     Q_DECLARE_PRIVATE(QQuickPathAnimation)
 
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged FINAL)
-    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged FINAL)
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged FINAL)
-    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged FINAL)
-    Q_PROPERTY(int orientationEntryDuration READ orientationEntryDuration WRITE setOrientationEntryDuration NOTIFY orientationEntryDurationChanged FINAL)
-    Q_PROPERTY(int orientationExitDuration READ orientationExitDuration WRITE setOrientationExitDuration NOTIFY orientationExitDurationChanged FINAL)
-    Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged FINAL)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
+    Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTargetObject NOTIFY targetChanged)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
+    Q_PROPERTY(QPointF anchorPoint READ anchorPoint WRITE setAnchorPoint NOTIFY anchorPointChanged)
+    Q_PROPERTY(int orientationEntryDuration READ orientationEntryDuration WRITE setOrientationEntryDuration NOTIFY orientationEntryDurationChanged)
+    Q_PROPERTY(int orientationExitDuration READ orientationExitDuration WRITE setOrientationExitDuration NOTIFY orientationExitDurationChanged)
+    Q_PROPERTY(qreal endRotation READ endRotation WRITE setEndRotation NOTIFY endRotationChanged)
     QML_NAMED_ELEMENT(PathAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -173,11 +173,5 @@ Q_SIGNALS:
 #endif
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickParentAnimation)
-QML_DECLARE_TYPE(QQuickAnchorAnimation)
-#if QT_CONFIG(quick_path)
-QML_DECLARE_TYPE(QQuickPathAnimation)
-#endif
 
 #endif // QQUICKITEMANIMATION_H

@@ -24,7 +24,7 @@ namespace QV4 {
 
 struct Lookup;
 
-struct Q_QML_PRIVATE_EXPORT OwnPropertyKeyIterator {
+struct Q_QML_EXPORT OwnPropertyKeyIterator {
     virtual ~OwnPropertyKeyIterator() = 0;
     virtual PropertyKey next(const Object *o, Property *p = nullptr, PropertyAttributes *attrs = nullptr) = 0;
 };
@@ -64,7 +64,7 @@ struct VTable
     quint8 isExecutionContext;
     quint8 isString;
     quint8 isObject;
-    quint8 isFunctionObject;
+    quint8 isTailCallable;
     quint8 isErrorObject;
     quint8 isArrayData;
     quint8 isStringOrSymbol;
@@ -110,20 +110,38 @@ template<class Class>
 constexpr VTable::CallWithMetaTypes vtableMetaTypesCallEntry()
 {
     // If Class overrides virtualCallWithMetaTypes, return that.
-    // Otherwise, if it overrides virtualCall, return nullptr so that we convert calls.
+    // Otherwise, if it overrides virtualCall, return convertAndCall.
     // Otherwise, just return whatever the base class had.
 
-    // A simple != is not considered constexpr, so we have to jump through some hoops.
-    if constexpr (!std::is_same_v<
-            VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
-            VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>) {
-        return Class::virtualCallWithMetaTypes;
-    }
+    // A simple == on methods is not considered constexpr, so we have to jump through some hoops.
 
-    if constexpr (!std::is_same_v<
-            VTableCallWrapper<Class::virtualCall>,
-            VTableCallWrapper<Class::SuperClass::virtualCall>>) {
-        return nullptr;
+    static_assert(
+            std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+                    VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>
+                || !std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+                    VTableCallWithMetaTypesWrapper<nullptr>>,
+            "You mustn't override virtualCallWithMetaTypes with nullptr");
+
+    static_assert(
+            std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualConvertAndCall>,
+                    VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualConvertAndCall>>
+                || !std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualConvertAndCall>,
+                    VTableCallWithMetaTypesWrapper<nullptr>>,
+            "You mustn't override virtualConvertAndCall with nullptr");
+
+    if constexpr (
+            std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+                    VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>
+            && !std::is_same_v<
+                    VTableCallWrapper<Class::virtualCall>,
+                    VTableCallWrapper<Class::SuperClass::virtualCall>>) {
+        // Converting from metatypes to JS signature is easy.
+        return Class::virtualConvertAndCall;
     }
 
     return Class::virtualCallWithMetaTypes;
@@ -133,21 +151,27 @@ template<class Class>
 constexpr VTable::Call vtableJsTypesCallEntry()
 {
     // If Class overrides virtualCall, return that.
-    // Otherwise, if it overrides virtualCallWithMetaTypes, return nullptr so that we convert calls.
+    // Otherwise, if it overrides virtualCallWithMetaTypes, fail.
+    // (We cannot determine the target types to call virtualCallWithMetaTypes in that case)
     // Otherwise, just return whatever the base class had.
 
-    // A simple != is not considered constexpr, so we have to jump through some hoops.
-    if constexpr (!std::is_same_v<
-            VTableCallWrapper<Class::virtualCall>,
-            VTableCallWrapper<Class::SuperClass::virtualCall>>) {
-        return Class::virtualCall;
-    }
+    // A simple == on methods is not considered constexpr, so we have to jump through some hoops.
 
-    if constexpr (!std::is_same_v<
-            VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
-            VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>) {
-        return nullptr;
-    }
+    static_assert(
+            !std::is_same_v<
+                    VTableCallWrapper<Class::virtualCall>,
+                    VTableCallWrapper<Class::SuperClass::virtualCall>>
+                || std::is_same_v<
+                    VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+                    VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>,
+            "If you override virtualCallWithMetaTypes, override virtualCall, too");
+
+    static_assert(
+            std::is_same_v<
+                    VTableCallWrapper<Class::virtualCall>,
+                    VTableCallWrapper<Class::SuperClass::virtualCall>>
+                || VTableCallWrapper<Class::virtualCall>::c != nullptr,
+            "You mustn't override virtualCall with nullptr");
 
     return Class::virtualCall;
 }
@@ -174,6 +198,7 @@ protected:
     static constexpr VTable::Call virtualCall = nullptr;
     static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
     static constexpr VTable::CallWithMetaTypes virtualCallWithMetaTypes = nullptr;
+    static constexpr VTable::CallWithMetaTypes virtualConvertAndCall = nullptr;
 
     static constexpr VTable::ResolveLookupGetter virtualResolveLookupGetter = nullptr;
     static constexpr VTable::ResolveLookupSetter virtualResolveLookupSetter = nullptr;
@@ -196,7 +221,7 @@ protected:
     classname::IsExecutionContext,          \
     classname::IsString,                    \
     classname::IsObject,                    \
-    classname::IsFunctionObject,            \
+    classname::IsTailCallable,              \
     classname::IsErrorObject,               \
     classname::IsArrayData,                 \
     classname::IsStringOrSymbol,            \

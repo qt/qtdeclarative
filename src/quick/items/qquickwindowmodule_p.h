@@ -32,7 +32,7 @@ struct QWindowForeign
     QML_ADDED_IN_VERSION(2, 1)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -55,12 +55,27 @@ public:
     QObject *screen() const;
     void setScreen(QObject *screen);
 
+    QObject *visualParent() const;
+    void setVisualParent(QObject *parent);
+    void visualParentChanged(QObject *) {};
+
+    void setX(int arg);
+    int x() const;
+    void setY(int arg);
+    int y() const;
+    void setZ(qreal arg);
+    qreal z() const;
+    void zChanged() {};
+
     static QQuickWindowAttached *qmlAttachedProperties(QObject *object);
 
 Q_SIGNALS:
     void visibleChanged(bool arg);
     void visibilityChanged(QWindow::Visibility visibility);
     Q_REVISION(2, 3) void screenChanged();
+
+    void xChanged(int arg);
+    void yChanged(int arg);
 
 protected:
     void classBegin() override;
@@ -71,11 +86,12 @@ protected:
     QQuickWindowQmlImpl(QQuickWindowQmlImplPrivate &dd, QWindow *parent);
 
 private Q_SLOTS:
-    void applyWindowVisibility();
-    void updateTransientParent();
+    Q_REVISION(6, 7) void applyWindowVisibility();
+    Q_REVISION(6, 7) void updateTransientParent();
 
 private:
     bool transientParentVisible();
+    void applyVisualParent();
 
 private:
     Q_DISABLE_COPY(QQuickWindowQmlImpl)
@@ -83,7 +99,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickWindowQmlImpl)
 
 #endif

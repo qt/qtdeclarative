@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Layouts
@@ -35,6 +35,7 @@ ApplicationWindow {
         height: 200
         anchors.centerIn: parent
         visible: true
+        popupType: Popup.Item
 
         ColumnLayout {
             Button {

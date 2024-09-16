@@ -66,6 +66,7 @@ ColorDialogImpl {
             rightPadding: 16
             topPadding: 16
             bottomPadding: 16
+            visible: parent.parent?.parent === Overlay.overlay
 
             Layout.preferredWidth: control.title.length > 0 ? implicitWidth : 0
             Layout.preferredHeight: control.title.length > 0 ? implicitHeight : 15

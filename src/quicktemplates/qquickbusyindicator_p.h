@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickBusyIndicatorPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickBusyIndicator : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickBusyIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
@@ -52,7 +52,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickBusyIndicator)
 
 #endif // QQUICKBUSYINDICATOR_P_H

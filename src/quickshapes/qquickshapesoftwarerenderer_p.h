@@ -38,6 +38,7 @@ public:
 
     void beginSync(int totalCount, bool *countChanged) override;
     void setPath(int index, const QQuickPath *path) override;
+    void setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints pathHints = {}) override;
     void setStrokeColor(int index, const QColor &color) override;
     void setStrokeWidth(int index, qreal w) override;
     void setFillColor(int index, const QColor &color) override;
@@ -47,7 +48,10 @@ public:
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                         qreal dashOffset, const QVector<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
+    void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
+    void setFillTransform(int index, const QSGTransform &transform) override;
     void endSync(bool async) override;
+    void handleSceneChange(QQuickWindow *window) override;
 
     void updateNode() override;
 

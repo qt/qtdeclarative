@@ -1,0 +1,42 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qt-cmake-policy-qtp0005.html
+\ingroup qt-cmake-policies
+
+\title QTP0005
+\keyword qt_cmake_policy_qtp0005
+
+\summary {qt_add_qml_module's DEPENDENCIES argument accepts targets}
+
+This policy was introduced in Qt 6.8. It allows passing targets to
+\l{qt_add_qml_module}{qt_add_qml_module()} \c DEPENDENCIES, \c IMPORTS, \c
+OPTIONAL_IMPORTS and \c DEFAULT_IMPORTS.
+
+Enabling this policy means that the arguments which are passed to the key words
+can be prefixed with TARGET, and are then treated as a target name.
+
+The \c OLD behavior of this policy is that the "TARGET name" is treated as two
+URIs, "TARGET" and "name".
+
+The \c NEW behavior of this policy is that \c TARGET is considered a keyword,
+and the URI is extracted from the target which follows next. It is a hard error
+if the name following \c TARGET does not name a target, or if that target does
+not correspond to a QML module.
+
+In both the \c NEW and the \c OLD behavior it is possible to specify a module
+version by appending a slash and the version. See
+\l{Declaring module dependencies} for more details.
+
+Qt 6.8 issues warnings if you pass a URI to \c DEPENDENCIES which coincides
+with a target name.
+Use the \l qt_policy command to suppress the warning by explicitly setting
+the policy to \c OLD or \c NEW.
+
+\qtpolicydeprecatedbehavior
+
+\sa qt_policy, {qt6_standard_project_setup}{qt_standard_project_setup()},
+    qt_cmake_policies, qt_add_qml_module
+
+*/

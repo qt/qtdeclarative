@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -21,6 +21,7 @@ ApplicationWindow {
             modal: true
             closePolicy: Popup.CloseOnEscape
             visible: true
+            popupType: Popup.Item
 
             property alias button: button
 
@@ -45,6 +46,7 @@ ApplicationWindow {
             focus: true
             closePolicy: Popup.CloseOnEscape
             visible: true
+            popupType: Popup.Item
 
             Text {
                 text: "Press Esc key to reject this dialog"

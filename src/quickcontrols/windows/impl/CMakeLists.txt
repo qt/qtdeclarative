@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 set(qml_files
+    "CheckIndicator.qml"
     "SwitchIndicator.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2windowsstyleimplplugin
+qt_internal_add_qml_module(QuickControls2WindowsStyleImpl
     URI "QtQuick.Controls.Windows.impl"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 6
@@ -13,7 +14,6 @@ qt_internal_add_qml_module(qtquickcontrols2windowsstyleimplplugin
     DEPENDENCIES
         QtQuick/auto
     PLUGIN_TARGET qtquickcontrols2windowsstyleimplplugin
-    NO_PLUGIN_OPTIONAL
     QML_FILES
         ${qml_files}
     DEFINES

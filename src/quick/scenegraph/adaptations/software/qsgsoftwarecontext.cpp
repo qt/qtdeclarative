@@ -22,29 +22,6 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
-// Used for very high-level info about the renderering and gl context
-// Includes GL_VERSION, type of render loop, atlas size, etc.
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_INFO,                "qt.scenegraph.info")
-
-// Used to debug the renderloop logic. Primarily useful for platform integrators
-// and when investigating the render loop logic.
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_RENDERLOOP,          "qt.scenegraph.renderloop")
-
-// GLSL shader compilation
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_COMPILATION,    "qt.scenegraph.time.compilation")
-
-// polish, animations, sync, render and swap in the render loop
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERLOOP,     "qt.scenegraph.time.renderloop")
-
-// Texture uploads and swizzling
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_TEXTURE,        "qt.scenegraph.time.texture")
-
-// Glyph preparation (only for distance fields atm)
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_GLYPH,          "qt.scenegraph.time.glyph")
-
-// Timing inside the renderer base class
-Q_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERER,       "qt.scenegraph.time.renderer")
-
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareRenderContext::QSGSoftwareRenderContext(QSGContext *ctx)
@@ -75,10 +52,10 @@ QSGPainterNode *QSGSoftwareContext::createPainterNode(QQuickPaintedItem *item)
     return new QSGSoftwarePainterNode(item);
 }
 
-QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality)
+QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality)
 {
     Q_UNUSED(rc);
-    Q_UNUSED(preferNativeGlyphNode);
+    Q_UNUSED(renderType);
     Q_UNUSED(renderTypeQuality);
     return new QSGSoftwareGlyphNode();
 }
@@ -201,7 +178,7 @@ void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) c
     if (resource == PainterResource)
         return window->isSceneGraphInitialized() ? static_cast<QSGSoftwareRenderContext *>(cd->context)->m_activePainter : nullptr;
     else if (resource == RedirectPaintDevice)
-        return cd->redirect.rt.paintDevice;
+        return cd->redirect.rt.sw.paintDevice;
 
     return nullptr;
 }

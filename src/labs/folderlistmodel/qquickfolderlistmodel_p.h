@@ -31,7 +31,7 @@ class QModelIndex;
 class QQuickFolderListModelPrivate;
 
 //![class begin]
-class Q_LABSFOLDERLISTMODEL_PRIVATE_EXPORT QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
+class Q_LABSFOLDERLISTMODEL_EXPORT QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

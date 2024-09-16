@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/QtCore>
 #include <QtGui/QStandardItemModel>
@@ -180,6 +180,11 @@ public:
     Q_INVOKABLE void addRow(int row)
     {
         insertRow(row, QModelIndex());
+    }
+
+    Q_INVOKABLE void addColumn(int column)
+    {
+        insertColumn(column, QModelIndex());
     }
 
     Qt::ItemFlags flags(const QModelIndex &index) const override

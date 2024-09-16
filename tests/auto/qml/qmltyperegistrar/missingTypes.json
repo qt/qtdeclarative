@@ -1,0 +1,176 @@
+[
+    {
+        "classes": [
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "int"
+                    },
+                    {
+                        "name": "QML.Extended",
+                        "value": "QQmlIntForeign"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "int"
+                    }
+                ],
+                "className": "QQmlIntForeign",
+                "gadget": true,
+                "qualifiedClassName": "QQmlIntForeign"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "auto"
+                    }
+                ],
+                "className": "ExcessiveVersion",
+                "object": true,
+                "properties": [
+                    {
+                        "constant": false,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "palette",
+                        "notify": "paletteChanged",
+                        "read": "palette",
+                        "required": false,
+                        "revision": 1536,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "int",
+                        "user": false,
+                        "write": "setPalette"
+                    }
+                ],
+                "enums": [
+                    {
+                        "isClass": false,
+                        "isFlag": false,
+                        "name": "RestorationMode",
+                        "type": "NotAnUnderlyingType",
+                        "values": [
+                            "RestoreNone",
+                            "RestoreBinding",
+                            "RestoreValue",
+                            "RestoreBindingOrValue"
+                        ]
+                    }
+                ],
+                "qualifiedClassName": "ExcessiveVersion",
+                "signals": [
+                    {
+                        "access": "public",
+                        "name": "paletteChanged",
+                        "returnType": "void",
+                        "revision": 1536
+                    }
+                ],
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "NotQObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "Versioned"
+                    },
+                    {
+                        "name": "QML.AddedInVersion",
+                        "value": "264"
+                    }
+                ],
+                "className": "AddedInLateVersion",
+                "object": true,
+                "properties": [
+                    {
+                        "constant": true,
+                        "designable": true,
+                        "final": false,
+                        "index": 0,
+                        "name": "revisioned",
+                        "read": "revisioned",
+                        "required": false,
+                        "revision": 260,
+                        "scriptable": true,
+                        "stored": true,
+                        "type": "NotAPropertyType",
+                        "user": false
+                    }
+                ],
+                "methods": [
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                                "type": "NotAnArgumentType"
+                            }
+                        ],
+                        "name": "createAThing",
+                        "returnType": "NotAReturnType"
+                    },
+                    {
+                        "access": "private",
+                        "arguments": [
+                            {
+                                "type": "NotAnArgumentType2"
+                            }
+                        ],
+                        "name": "createAThing",
+                        "returnType": "NotAReturnType"
+                    }               ],
+                "qualifiedClassName": "AddedInLateVersion",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "NotQObject"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Foreign",
+                        "value": "Invisible"
+                    },
+                    {
+                        "name": "QML.Element",
+                        "value": "Invisible"
+                    }
+                ],
+                "className": "InvisibleForeign",
+                "gadget": true,
+                "qualifiedClassName": "InvisibleForeign"
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "anonymous"
+                    },
+                    {
+                        "name": "QML.Sequence",
+                        "value": "NotQByteArray"
+                    },
+                    {
+                        "name": "QML.Foreign",
+                        "value": "std::vector<NotQByteArray>"
+                    }
+                ],
+                "className": "NotQByteArrayStdVectorForeign",
+                "gadget": true,
+                "qualifiedClassName": "NotQByteArrayStdVectorForeign"
+            }
+        ],
+        "inputFile": "tst_qmltyperegistrar.h",
+        "outputRevision": 68
+    }
+]

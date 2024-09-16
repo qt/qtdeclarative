@@ -1,0 +1,92 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-tooling-svgtoqml.html
+\title svgtoqml
+\brief The SVG to QML converter tool
+\ingroup qtqml-tooling
+
+\c svgtoqml is a command line tool shipped with Qt that converts an SVG document
+to a QML file. This QML file can then be used as a component in Qt Quick
+applications. The \l{Weather Forecast Example} includes multiple QML files that have been generated
+using this tool.
+
+\section1 Overview
+The \c svgtoqml will convert an SVG file to a QML file which uses Qt Quick primitives. Since
+Qt Quick supports scalable vector graphics, the resulting item will be smoothly transformable as far
+as this is possible. As a baseline, the tool supports most of the static features of the SVG Tiny 1.2
+profile. Certain additional features are supported, determined on a case-by-case basis. Interactive
+features and animations are not supported.
+
+\section1 Usage
+The basic usage of \c svgtoqml is to provide an input file and an output file:
+\c{svgtoqml input.svg output.qml}. This will read the \c{input.svg} file and convert it into the
+corresponding Qt Quick scene in \c{output.qml}, which can then be used as part of a Qt Quick
+application.
+
+In addition, it supports the following options:
+
+\table
+\header
+    \li Option
+    \li Description
+\row
+    \li --copyright-statement <string>
+    \li Adds <string> as a comment at the beginning of the generated file.
+\row
+    \li -c, --curve-renderer
+    \li Enables the curve renderer backend for \l{Qt Quick Shapes}. This enables smooth, antialiased
+    shapes in the scene without multi-sampling, but at some extra cost.
+\row
+    \li -p, --optimize-paths
+    \li Enables optimization of paths before committing them to the QML file, potentially making
+    them faster to load and render later.
+\row
+    \li --outline-stroke-mode
+    \li Stroke the outline (contour) of the filled shape instead of the original path.
+\row
+    \li -t, --type-name <string>
+    \li In place of \l{Shape}, the output will use the type name <string> instead. This is
+    enables using a custom item to override the default behavior of \l{Shape} items.
+\row
+    \li -v, --view
+    \li Display a preview of the Qt Quick item as it will be generated.
+\endtable
+
+\section1 Comparison to other options
+There are multiple options for including SVG content in Qt Quick. The following will give an
+overview of where \c svgtoqml fits into the story.
+
+\section2 Comparison to Qt SVG
+\l{Qt SVG} is a module which provides a parser and software renderer for SVG files. In addition, it
+includes an image loader plugin, so that SVG files can be loaded directly by the \l{Image} element
+in Qt Quick. The SVG will then be rasterized and cached at a specified size and redrawing it will
+be quite cheap. But zooming into the image without pixelation will involve reloading it at a
+different size, which in turn can be expensive.
+
+\c svgtoqml (and the \l{VectorImage} component) are alternative ways of rendering the same content.
+Once loaded into Qt Quick, transforms can be changed while retaining the geometry data needed to
+render the scene in GPU memory. Thus, the vector image can be redrawn at different scales with very
+little overhead.
+
+If the image size will not change during the life time of the application, however, loading the
+SVG as an \l{Image} will be more efficient. In this case, if the SVG is always rendered at a
+small subset of possible sizes, consider pre-rasterizing it to an image format which is more
+efficient to load, such as \c PNG.
+
+\section2 Comparison to VectorImage
+The \l{VectorImage} component provides the same basic functionality as \c svgtoqml, but instead of
+pregenerating the Qt Quick scene as a QML file, it creates the scene at runtime. This allows loading
+SVG files that are not provided at build time and thus allows for more flexibility. Pregenerating
+the scenes with \c svgtoqml allows optimizing the scene before it is loaded. Thus, for files that
+are available at build time, \c svgtoqml is the preferred option.
+
+\section2 Comparison to PathSvg
+The \l{PathSvg} component is part of the \l{Qt Quick Shapes} module. It provides a way to define
+paths with the syntax used by SVG, where the control points of a path are specified as a string. It
+does not support loading SVG files, so it is not a direct alternative to \c svgtoqml. If a complex
+SVG contains a specific shape needed by the application, then copying this path description into
+\l{PathSvg} may be more convenient than generating the full file.
+
+*/

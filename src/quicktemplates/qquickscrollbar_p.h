@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 class QQuickScrollBarAttached;
 class QQuickScrollBarPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickScrollBar : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal size READ size WRITE setSize NOTIFY sizeChanged FINAL)
@@ -156,7 +156,7 @@ private:
 
 class QQuickScrollBarAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBarAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickScrollBarAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickScrollBar *horizontal READ horizontal WRITE setHorizontal NOTIFY horizontalChanged FINAL)
@@ -182,7 +182,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickScrollBar)
 
 #endif // QQUICKSCROLLBAR_P_H

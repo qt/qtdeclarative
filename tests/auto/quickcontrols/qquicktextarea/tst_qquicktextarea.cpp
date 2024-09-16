@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -12,6 +12,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -29,7 +30,6 @@ private slots:
     void touchscreenSetsFocusAndMovesCursor();
 
 private:
-    static bool hasWindowActivation();
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
@@ -102,8 +102,7 @@ void tst_QQuickTextArea::touchscreenDoesNotSelect()
 
 void tst_QQuickTextArea::touchscreenSetsFocusAndMovesCursor()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION;
     qunsetenv("QT_QUICK_CONTROLS_TEXT_SELECTION_BEHAVIOR");
 
     QQuickView window;
@@ -156,11 +155,6 @@ void tst_QQuickTextArea::touchscreenSetsFocusAndMovesCursor()
     QTest::mouseRelease(&window, Qt::LeftButton, {}, p1);
     QCOMPARE(top->cursorPosition(), 0);
     QCOMPARE_GT(top->selectedText().size(), 0);
-}
-
-bool tst_QQuickTextArea::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickTextArea)

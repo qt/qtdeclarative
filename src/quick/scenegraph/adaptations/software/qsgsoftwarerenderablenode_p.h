@@ -36,7 +36,7 @@ class QSGSoftwareNinePatchNode;
 class QSGSoftwareSpriteNode;
 class QSGRenderNode;
 
-class Q_QUICK_PRIVATE_EXPORT QSGSoftwareRenderableNode
+class Q_QUICK_EXPORT QSGSoftwareRenderableNode
 {
 public:
     enum NodeType {

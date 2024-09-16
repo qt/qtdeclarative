@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -27,6 +27,7 @@ ApplicationWindow {
                 to: 48
                 value: 12
                 stepSize: 1
+                Layout.fillWidth: false
             }
             Label {
                 text: pointSizeSlider.value + " pt " + font.family
@@ -34,6 +35,7 @@ ApplicationWindow {
             Button {
                 text: "Font…"
                 palette.buttonText: systemPalette.buttonText
+                Layout.fillWidth: false
                 onClicked: fontDialog.open()
                 FontDialog { id: fontDialog }
                 Component.onCompleted: fontDialog.selectedFont = window.font
@@ -42,6 +44,7 @@ ApplicationWindow {
             Button {
                 text: "Text…"
                 palette.buttonText: textColorDialog.selectedColor
+                Layout.fillWidth: false
                 onClicked: textColorDialog.open()
                 ColorDialog { id: textColorDialog }
                 Component.onCompleted: textColorDialog.selectedColor = systemPalette.text
@@ -50,6 +53,7 @@ ApplicationWindow {
             }
             Button {
                 text: "Buttons…"
+                Layout.fillWidth: false
                 onClicked: buttonTextColorDialog.open()
                 ColorDialog { id: buttonTextColorDialog }
                 Component.onCompleted: buttonTextColorDialog.selectedColor = systemPalette.buttonText
@@ -72,20 +76,44 @@ ApplicationWindow {
                 text: "Label with **Bold** *Italics* _Underline_ ~~Strikethrough~~ `Mono`"
                 textFormat: Label.MarkdownText
             }
-            Button { text: "Button" }
+            Button {
+                text: "Button"
+                Layout.fillWidth: false
+            }
             GroupBox {
                 title: "GroupBox"
+                Layout.fillWidth: false
+                Layout.fillHeight: false
                 ColumnLayout {
                     RadioButton { text: "RadioButton" }
                     CheckBox { text: "CheckBox" }
                 }
             }
-            Switch { text: "Switch" }
-            TabButton { text: "TabButton" }
-            TextField { placeholderText: "TextField" }
-            TextArea { placeholderText: "TextArea" }
-            ToolButton { text: "ToolButton" }
-            Tumbler { model: 3 }
+            Switch {
+                text: "Switch"
+                Layout.fillWidth: false
+            }
+            TabButton {
+                text: "TabButton"
+                Layout.fillWidth: false
+            }
+            TextField {
+                placeholderText: "TextField"
+                Layout.fillWidth: false
+            }
+            TextArea {
+                placeholderText: "TextArea"
+                Layout.fillWidth: false
+                Layout.fillHeight: false
+            }
+            ToolButton {
+                text: "ToolButton"
+            }
+            Tumbler {
+                model: 3
+                Layout.fillWidth: false
+                Layout.fillHeight: false
+            }
         }
 
         ScrollBar.vertical: ScrollBar { }

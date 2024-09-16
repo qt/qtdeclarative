@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/qt/qml/shared">
+        <file>Button.qml</file>
+        <file>CheckBox.qml</file>
+        <file>FlickrRssModel.qml</file>
+        <file>Images.qml</file>
+        <file>Label.qml</file>
+        <file>LauncherList.qml</file>
+        <file>SimpleLauncherDelegate.qml</file>
+        <file>Slider.qml</file>
+        <file>TabSet.qml</file>
+        <file>TextField.qml</file>
+        <file>images/back.png</file>
+        <file>images/checkmark.png</file>
+        <file>images/next.png</file>
+        <file>images/qt-logo.png</file>
+        <file>images/slider_handle.png</file>
+        <file>images/tab.png</file>
+        <file>qmldir</file>
+    </qresource>
+</RCC>

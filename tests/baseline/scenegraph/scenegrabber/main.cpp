@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/QTimer>
 #include <QtCore/QDebug>
@@ -7,6 +7,7 @@
 #include <QtCore/QHashFunctions>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QImage>
+#include <QtCore/QLoggingCategory>
 
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
@@ -29,6 +30,7 @@
 #define SCENE_TIMEOUT     6000
 
 //#define GRABBERDEBUG
+Q_LOGGING_CATEGORY(lcGrabber, "qt.baseline.scenegrabber")
 
 static const QSize DefaultGrabSize(320, 480);
 
@@ -45,18 +47,23 @@ public:
         grabTimer = new QTimer(this);
         grabTimer->setSingleShot(true);
         grabTimer->setInterval(SCENE_STABLE_TIME);
-        connect(grabTimer, SIGNAL(timeout()), SLOT(grab()));
+        connect(grabTimer, &QTimer::timeout, this, &GrabbingView::grab);
 
         if (!preferAppWindow)
             QObject::connect(this, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
 
-        QTimer::singleShot(SCENE_TIMEOUT, this, SLOT(timedOut()));
+        int sceneTimeout = qEnvironmentVariableIntValue("LANCELOT_SCENE_TIMEOUT");
+        if (!sceneTimeout)
+            sceneTimeout = SCENE_TIMEOUT;
+        QTimer::singleShot(sceneTimeout, this, &GrabbingView::timedOut);
     }
 
     void setApplicationWindow(QWindow* window) {
+        qCDebug(lcGrabber) << "Using ApplicationWindow as visual parent" << this;
+
         appwindow = qobject_cast<QQuickApplicationWindow *>(window);
         if (preferAppWindow)
-            QObject::connect(this, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
+            QObject::connect(appwindow, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing);
     }
     QQuickApplicationWindow* appWindow() { return appwindow; }
 
@@ -65,36 +72,36 @@ private slots:
     {
         if (!initDone) {
             initDone = true;
-            grabTimer->start();
+            qCDebug(lcGrabber) << "Starting grabbing";
         }
+        grabTimer->start();
     }
 
     void grab()
     {
-        if (isGrabbing)
+        if (isGrabbing) {
+            qCDebug(lcGrabber) << "Already grabbing, skipping";
             return;
-        isGrabbing = true;
+        }
+
+        QScopedValueRollback grabGuard(isGrabbing, true);
+
         grabNo++;
-#ifdef GRABBERDEBUG
-        printf("grab no. %i\n", grabNo);
-#endif
+        qCDebug(lcGrabber) << "Starting grab no." << grabNo;
         QImage img;
         img = appwindow ? appwindow->grabWindow() : grabWindow();
+        qCDebug(lcGrabber) << "Finishing grab no." << grabNo;
         if (!img.isNull() && img == lastGrab) {
             sceneStabilized();
         } else {
             lastGrab = img;
             grabTimer->start();
         }
-
-        isGrabbing = false;
     }
 
     void sceneStabilized()
     {
-#ifdef GRABBERDEBUG
-        printf("...sceneStabilized IN\n");
-#endif
+        qCDebug(lcGrabber) << "...sceneStabilized IN";
         if (QGuiApplication::platformName() == QLatin1String("eglfs")) {
             QSize grabSize = initialSize().isEmpty() ? DefaultGrabSize : initialSize();
             lastGrab = lastGrab.copy(QRect(QPoint(0, 0), grabSize));
@@ -119,9 +126,7 @@ private slots:
             }
         }
         QGuiApplication::exit(0);
-#ifdef GRABBERDEBUG
-        printf("...sceneStabilized OUT\n");
-#endif
+        qCDebug(lcGrabber) << "...sceneStabilized OUT";
     }
 
     void timedOut()
@@ -181,7 +186,6 @@ int main(int argc, char *argv[])
             }
         }
         else if (arg == "-useAppWindow") {
-            qWarning() << "Using ApplicationWindow as visual parent";
             useAppWindow = true;
         }
         else if (ifile.isEmpty()) {
@@ -229,7 +233,7 @@ int main(int argc, char *argv[])
             auto *appWindow = qobject_cast<QQuickApplicationWindow *>(appWndComp.create());
 
             if (!appWindow) {
-                qWarning() << "Error: failed to grab application window.";
+                qWarning() << "Error: failed to create application window.";
                 QGuiApplication::exit(2);
             }
 
@@ -259,9 +263,7 @@ int main(int argc, char *argv[])
     }
 
     int retVal = a.exec();
-#ifdef GRABBERDEBUG
-    printf("...retVal=%i\n", retVal);
-#endif
+    qCDebug(lcGrabber) << "...retVal=" << retVal;
 
     return retVal;
 }

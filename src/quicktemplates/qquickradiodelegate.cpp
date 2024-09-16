@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype RadioDelegate
     \inherits ItemDelegate
-//!     \instantiates QQuickRadioDelegate
+//!     \nativetype QQuickRadioDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-delegates
@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing RadioDelegate}, {Delegate Controls}, RadioButton
 */
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioDelegatePrivate : public QQuickItemDelegatePrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickRadioDelegatePrivate : public QQuickItemDelegatePrivate
 {
     Q_DECLARE_PUBLIC(QQuickRadioDelegate)
 

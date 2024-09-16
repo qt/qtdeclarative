@@ -9,7 +9,11 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -18,12 +22,12 @@ layout(std140, binding = 0) uniform buf {
     vec4 styleColor;
     float outlineAlphaMax0;
     float outlineAlphaMax1;
-} ubuf;
+};
 
 void main()
 {
     float d = texture(_qt_texture, sampleCoord).a;
-    float a = smoothstep(ubuf.alphaMin, ubuf.alphaMax, d);
-    fragColor = step(1.0 - a, 1.0) * mix(ubuf.styleColor, ubuf.color, a)
-            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, d);
+    float a = smoothstep(alphaMin, alphaMax, d);
+    fragColor = step(1.0 - a, 1.0) * mix(styleColor, color, a)
+            * smoothstep(outlineAlphaMax0, outlineAlphaMax1, d);
 }

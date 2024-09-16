@@ -12,7 +12,6 @@ class TableModel : public QAbstractTableModel
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_ADDED_IN_VERSION(1, 1)
 
 public:
     int rowCount(const QModelIndex & = QModelIndex()) const override

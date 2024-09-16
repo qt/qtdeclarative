@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qqmldebugprocess_p.h"
 
@@ -56,7 +56,7 @@ QString QQmlDebugProcess::stateString() const
 
 void QQmlDebugProcess::start(const QStringList &arguments)
 {
-#ifdef Q_OS_MAC
+#ifdef Q_OS_MACOS
     // make sure m_executable points to the actual binary even if it's inside an app bundle
     QFileInfo binFile(m_executable);
     if (!binFile.isExecutable()) {

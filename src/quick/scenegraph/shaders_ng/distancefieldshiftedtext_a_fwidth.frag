@@ -11,7 +11,11 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -19,7 +23,7 @@ layout(std140, binding = 0) uniform buf {
     // up to this point it must match distancefieldtext
     vec4 styleColor;
     vec2 shift;
-} ubuf;
+};
 
 void main()
 {
@@ -31,6 +35,6 @@ void main()
     float shiftedF = fwidth(shiftedDistance);
     float shiftedA = smoothstep(0.5 - shiftedF, 0.5 + shiftedF, shiftedDistance);
 
-    vec4 shifted = ubuf.styleColor * shiftedA;
-    fragColor = mix(shifted, ubuf.color, a);
+    vec4 shifted = styleColor * shiftedA;
+    fragColor = mix(shifted, color, a);
 }

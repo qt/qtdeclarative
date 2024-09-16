@@ -23,7 +23,7 @@ void QSGRhiShaderLinker::reset(const QShader &vs, const QShader &fs)
 
     m_error = false;
 
-    m_constantBufferSize = 0;
+    //m_constantBufferSize = 0;
     m_constants.clear();
     m_samplers.clear();
     m_samplerNameMap.clear();
@@ -39,7 +39,6 @@ void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &sh
     Q_ASSERT(shader.shaderInfo.variables.size() == shader.varData.size());
     static bool shaderEffectDebug = qEnvironmentVariableIntValue("QSG_RHI_SHADEREFFECT_DEBUG");
     if (!dirtyIndices) {
-        m_constantBufferSize = qMax(m_constantBufferSize, shader.shaderInfo.constantDataSize);
         for (int i = 0; i < shader.shaderInfo.variables.size(); ++i) {
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &var(shader.shaderInfo.variables.at(i));
             if (var.type == QSGGuiThreadShaderEffectManager::ShaderInfo::Constant) {
@@ -137,7 +136,7 @@ void QSGRhiShaderLinker::dump()
         qDebug() << "Failed to generate program data";
         return;
     }
-    qDebug() << "Combined shader data" << m_vs << m_fs << "cbuffer size" << m_constantBufferSize;
+    qDebug() << "Combined shader data" << m_vs << m_fs;
     qDebug() << " - constants" << m_constants;
     qDebug() << " - samplers" << m_samplers;
 }
@@ -188,7 +187,7 @@ struct QSGRhiShaderMaterialTypeCache
         QSGMaterialType *type;
     };
     QHash<Key, MaterialType> m_types;
-    QVector<QSGMaterialType *> m_graveyard;
+    QHash<Key, QSGMaterialType *> m_graveyard;
 };
 
 size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, size_t seed = 0)
@@ -208,6 +207,14 @@ QSGMaterialType *QSGRhiShaderMaterialTypeCache::ref(const QShader &vs, const QSh
         return it->type;
     }
 
+    auto reuseIt = m_graveyard.constFind(k);
+    if (reuseIt != m_graveyard.cend()) {
+        QSGMaterialType *t = reuseIt.value();
+        m_types.insert(k, { 1, t });
+        m_graveyard.erase(reuseIt);
+        return t;
+    }
+
     QSGMaterialType *t = new QSGMaterialType;
     m_types.insert(k, { 1, t });
     return t;
@@ -220,7 +227,7 @@ void QSGRhiShaderMaterialTypeCache::unref(const QShader &vs, const QShader &fs)
     auto it = m_types.find(k);
     if (it != m_types.end()) {
         if (!--it->ref) {
-            m_graveyard.append(it->type);
+            m_graveyard.insert(k, it->type);
             m_types.erase(it);
         }
     }
@@ -298,8 +305,27 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
             }
         } else if (c.specialType == QSGShaderEffectNode::VariableData::Matrix) {
             if (state.isMatrixDirty()) {
-                const QMatrix4x4 m = state.combinedMatrix();
-                fillUniformBlockMember<float>(dst, m.constData(), 16, c.size);
+                Q_ASSERT(state.projectionMatrixCount() == mat->viewCount());
+                const int rendererViewCount = state.projectionMatrixCount();
+                const int shaderMatrixCount = c.size / 64;
+                if (shaderMatrixCount < mat->viewCount() && mat->viewCount() >= 2) {
+                    qWarning("qt_Matrix uniform block member size is wrong: expected at least view_count * 64 bytes, "
+                             "where view_count is %d, meaning %d bytes in total, but got only %d bytes. "
+                             "This may be due to the ShaderEffect and its shaders not being multiview-capable, "
+                             "or they are used with an unexpected render target. "
+                             "Check if the shaders declare qt_Matrix as appropriate, "
+                             "and if gl_ViewIndex is used correctly in the vertex shader.",
+                             mat->viewCount(), mat->viewCount() * 64, c.size);
+                }
+                const int matrixCount = qMin(rendererViewCount, shaderMatrixCount);
+                size_t offset = 0;
+                for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+                    const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+                    fillUniformBlockMember<float>(dst + offset, m.constData(), 16, 64);
+                    offset += 64;
+                }
+                if (offset < c.size)
+                    memset(dst + offset, 0, c.size - offset);
                 changed = true;
             }
         } else if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
@@ -663,10 +689,42 @@ static QShader loadShaderFromFile(const QString &filename)
     return QShader::fromSerialized(f.readAll());
 }
 
+struct QSGRhiShaderEffectDefaultShader
+{
+    QShader shader;
+    quint32 matrixArrayByteSize;
+    quint32 opacityOffset;
+    qint8 viewCount;
+    static QSGRhiShaderEffectDefaultShader create(const QString &filename, int viewCount);
+};
+
+QSGRhiShaderEffectDefaultShader QSGRhiShaderEffectDefaultShader::create(const QString &filename, int viewCount)
+{
+    QSGRhiShaderEffectDefaultShader s;
+    s.shader = loadShaderFromFile(filename);
+    const QList<QShaderDescription::BlockVariable> uboMembers = s.shader.description().uniformBlocks().constFirst().members;
+    for (const auto &member: uboMembers) {
+        if (member.name == QByteArrayLiteral("qt_Matrix"))
+            s.matrixArrayByteSize = member.size;
+        else if (member.name == QByteArrayLiteral("qt_Opacity"))
+            s.opacityOffset = member.offset;
+    }
+    s.viewCount = viewCount;
+    return s;
+}
+
 void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
 {
-    static QShader defaultVertexShader;
-    static QShader defaultFragmentShader;
+    static const int defaultVertexShaderCount = 2;
+    static QSGRhiShaderEffectDefaultShader defaultVertexShaders[defaultVertexShaderCount] = {
+        QSGRhiShaderEffectDefaultShader::create(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.vert.qsb"), 1),
+        QSGRhiShaderEffectDefaultShader::create(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.vert.qsb.mv2qsb"), 2)
+    };
+    static const int defaultFragmentShaderCount = 2;
+    static QSGRhiShaderEffectDefaultShader defaultFragmentShaders[defaultFragmentShaderCount] = {
+        QSGRhiShaderEffectDefaultShader::create(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.frag.qsb"), 1),
+        QSGRhiShaderEffectDefaultShader::create(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.frag.qsb.mv2qsb"), 2)
+    };
 
     if (bool(m_material.flags() & QSGMaterial::Blending) != syncData->blending) {
         m_material.setFlag(QSGMaterial::Blending, syncData->blending);
@@ -685,21 +743,45 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
         }
 
         m_material.m_hasCustomVertexShader = syncData->vertex.shader->hasShaderCode;
+        quint32 defaultMatrixArrayByteSize = 0;
         if (m_material.m_hasCustomVertexShader) {
             m_material.m_vertexShader = syncData->vertex.shader->shaderInfo.rhiShader;
         } else {
-            if (!defaultVertexShader.isValid())
-                defaultVertexShader = loadShaderFromFile(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.vert.qsb"));
-            m_material.m_vertexShader = defaultVertexShader;
+            bool found = false;
+            for (int i = 0; i < defaultVertexShaderCount; ++i) {
+                if (defaultVertexShaders[i].viewCount == syncData->viewCount) {
+                    m_material.m_vertexShader = defaultVertexShaders[i].shader;
+                    defaultMatrixArrayByteSize = defaultVertexShaders[i].matrixArrayByteSize;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                qWarning("No default vertex shader found for view count %d", syncData->viewCount);
+                m_material.m_vertexShader = defaultVertexShaders[0].shader;
+                defaultMatrixArrayByteSize = 64;
+            }
         }
 
         m_material.m_hasCustomFragmentShader = syncData->fragment.shader->hasShaderCode;
+        quint32 defaultOpacityOffset = 0;
         if (m_material.m_hasCustomFragmentShader) {
             m_material.m_fragmentShader = syncData->fragment.shader->shaderInfo.rhiShader;
         } else {
-            if (!defaultFragmentShader.isValid())
-                defaultFragmentShader = loadShaderFromFile(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.frag.qsb"));
-            m_material.m_fragmentShader = defaultFragmentShader;
+            bool found = false;
+            for (int i = 0; i < defaultFragmentShaderCount; ++i) {
+                if (defaultFragmentShaders[i].viewCount == syncData->viewCount) {
+                    m_material.m_fragmentShader = defaultFragmentShaders[i].shader;
+                    defaultOpacityOffset = defaultFragmentShaders[i].opacityOffset;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                qWarning("No default fragment shader found for view count %d", syncData->viewCount);
+                m_material.m_fragmentShader = defaultFragmentShaders[0].shader;
+                defaultOpacityOffset = 64;
+            }
         }
 
         m_material.m_materialType = shaderMaterialTypeCache[syncData->materialTypeCacheKey].ref(m_material.m_vertexShader,
@@ -717,16 +799,15 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             defaultSD.shaderInfo.rhiShader = m_material.m_vertexShader;
             defaultSD.shaderInfo.type = QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex;
 
-            // { mat4 qt_Matrix; float qt_Opacity; } where only the matrix is used
+            // { mat4 qt_Matrix[VIEW_COUNT]; float qt_Opacity; } where only the matrix is used
             QSGGuiThreadShaderEffectManager::ShaderInfo::Variable v;
             v.name = QByteArrayLiteral("qt_Matrix");
             v.offset = 0;
-            v.size = 16 * sizeof(float);
+            v.size = defaultMatrixArrayByteSize;
             defaultSD.shaderInfo.variables.append(v);
             QSGShaderEffectNode::VariableData vd;
             vd.specialType = QSGShaderEffectNode::VariableData::Matrix;
             defaultSD.varData.append(vd);
-            defaultSD.shaderInfo.constantDataSize = (16 + 1) * sizeof(float);
             m_material.m_linker.feedConstants(defaultSD);
         }
 
@@ -739,10 +820,10 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             defaultSD.shaderInfo.rhiShader = m_material.m_fragmentShader;
             defaultSD.shaderInfo.type = QSGGuiThreadShaderEffectManager::ShaderInfo::TypeFragment;
 
-            // { mat4 qt_Matrix; float qt_Opacity; } where only the opacity is used
+            // { mat4 qt_Matrix[VIEW_COUNT]; float qt_Opacity; } where only the opacity is used
             QSGGuiThreadShaderEffectManager::ShaderInfo::Variable v;
             v.name = QByteArrayLiteral("qt_Opacity");
-            v.offset = 16 * sizeof(float);
+            v.offset = defaultOpacityOffset;
             v.size = sizeof(float);
             defaultSD.shaderInfo.variables.append(v);
             QSGShaderEffectNode::VariableData vd;
@@ -761,8 +842,6 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             }
             vd.specialType = QSGShaderEffectNode::VariableData::Source;
             defaultSD.varData.append(vd);
-
-            defaultSD.shaderInfo.constantDataSize = (16 + 1) * sizeof(float);
 
             m_material.m_linker.feedConstants(defaultSD);
             m_material.m_linker.feedSamplers(defaultSD);
@@ -887,7 +966,6 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
     }
 
     const QShaderDescription desc = result->rhiShader.description();
-    result->constantDataSize = 0;
 
     int ubufBinding = -1;
     const QVector<QShaderDescription::UniformBlock> ubufs = desc.uniformBlocks();
@@ -896,7 +974,6 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         const QShaderDescription::UniformBlock &ubuf(ubufs[i]);
         if (ubufBinding == -1 && ubuf.binding >= 0) {
             ubufBinding = ubuf.binding;
-            result->constantDataSize = ubuf.size;
             for (const QShaderDescription::BlockVariable &member : ubuf.members) {
                 ShaderInfo::Variable v;
                 v.type = ShaderInfo::Constant;

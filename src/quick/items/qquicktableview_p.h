@@ -31,32 +31,32 @@ class QQuickTableViewAttached;
 class QQuickTableViewPrivate;
 class QItemSelectionModel;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_INTERFACES(QQmlFinalizerHook)
 
-    Q_PROPERTY(int rows READ rows NOTIFY rowsChanged FINAL)
-    Q_PROPERTY(int columns READ columns NOTIFY columnsChanged FINAL)
-    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged FINAL)
-    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged FINAL)
-    Q_PROPERTY(QJSValue rowHeightProvider READ rowHeightProvider WRITE setRowHeightProvider NOTIFY rowHeightProviderChanged FINAL)
-    Q_PROPERTY(QJSValue columnWidthProvider READ columnWidthProvider WRITE setColumnWidthProvider NOTIFY columnWidthProviderChanged FINAL)
-    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
-    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged FINAL)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged FINAL)
-    Q_PROPERTY(QQuickTableView *syncView READ syncView WRITE setSyncView NOTIFY syncViewChanged REVISION(2, 14) FINAL)
-    Q_PROPERTY(Qt::Orientations syncDirection READ syncDirection WRITE setSyncDirection NOTIFY syncDirectionChanged REVISION(2, 14) FINAL)
-    Q_PROPERTY(int leftColumn READ leftColumn NOTIFY leftColumnChanged REVISION(6, 0) FINAL)
-    Q_PROPERTY(int rightColumn READ rightColumn NOTIFY rightColumnChanged REVISION(6, 0) FINAL)
-    Q_PROPERTY(int topRow READ topRow NOTIFY topRowChanged REVISION(6, 0) FINAL)
-    Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0) FINAL)
-    Q_PROPERTY(QItemSelectionModel *selectionModel READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged REVISION(6, 2) FINAL)
-    Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4) FINAL)
-    Q_PROPERTY(bool keyNavigationEnabled READ keyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(6, 4) FINAL)
-    Q_PROPERTY(bool pointerNavigationEnabled READ pointerNavigationEnabled WRITE setPointerNavigationEnabled NOTIFY pointerNavigationEnabledChanged REVISION(6, 4) FINAL)
+    Q_PROPERTY(int rows READ rows NOTIFY rowsChanged)
+    Q_PROPERTY(int columns READ columns NOTIFY columnsChanged)
+    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
+    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
+    Q_PROPERTY(QJSValue rowHeightProvider READ rowHeightProvider WRITE setRowHeightProvider NOTIFY rowHeightProviderChanged)
+    Q_PROPERTY(QJSValue columnWidthProvider READ columnWidthProvider WRITE setColumnWidthProvider NOTIFY columnWidthProviderChanged)
+    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
+    Q_PROPERTY(QQuickTableView *syncView READ syncView WRITE setSyncView NOTIFY syncViewChanged REVISION(2, 14))
+    Q_PROPERTY(Qt::Orientations syncDirection READ syncDirection WRITE setSyncDirection NOTIFY syncDirectionChanged REVISION(2, 14))
+    Q_PROPERTY(int leftColumn READ leftColumn NOTIFY leftColumnChanged REVISION(6, 0))
+    Q_PROPERTY(int rightColumn READ rightColumn NOTIFY rightColumnChanged REVISION(6, 0))
+    Q_PROPERTY(int topRow READ topRow NOTIFY topRowChanged REVISION(6, 0))
+    Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0))
+    Q_PROPERTY(QItemSelectionModel *selectionModel READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged REVISION(6, 2))
+    Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4))
+    Q_PROPERTY(bool keyNavigationEnabled READ keyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(6, 4))
+    Q_PROPERTY(bool pointerNavigationEnabled READ pointerNavigationEnabled WRITE setPointerNavigationEnabled NOTIFY pointerNavigationEnabledChanged REVISION(6, 4))
     Q_PROPERTY(int currentRow READ currentRow NOTIFY currentRowChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(int currentColumn READ currentColumn NOTIFY currentColumnChanged REVISION(6, 4) FINAL)
     Q_PROPERTY(bool alternatingRows READ alternatingRows WRITE setAlternatingRows NOTIFY alternatingRowsChanged REVISION(6, 4) FINAL)
@@ -233,6 +233,11 @@ public:
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
 #endif
 
+    Q_REVISION(6, 8) Q_INVOKABLE void moveColumn(int source, int destination);
+    Q_REVISION(6, 8) Q_INVOKABLE void moveRow(int source, int destination);
+    Q_REVISION(6, 8) Q_INVOKABLE void clearColumnReordering();
+    Q_REVISION(6, 8) Q_INVOKABLE void clearRowReordering();
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
@@ -264,6 +269,9 @@ Q_SIGNALS:
     Q_REVISION(6, 5) void editTriggersChanged();
     Q_REVISION(6, 5) void layoutChanged();
     Q_REVISION(6, 6) void selectionModeChanged();
+    Q_REVISION(6, 8) void rowMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+    Q_REVISION(6, 8) void columnMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex);
+
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -286,7 +294,7 @@ private:
     qreal maxYExtent() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
+class Q_QUICK_EXPORT QQuickTableViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTableView *view READ view NOTIFY viewChanged FINAL)
@@ -331,7 +339,5 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::PositionMode)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::EditTriggers)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTableView)
 
 #endif // QQUICKTABLEVIEW_P_H

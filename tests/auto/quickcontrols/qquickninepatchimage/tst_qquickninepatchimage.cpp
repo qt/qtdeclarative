@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -36,6 +36,7 @@ private slots:
     void implicitSize();
     void hwCompressedImages_data();
     void hwCompressedImages();
+    void relativeSource();
 };
 
 static QImage grabItemToImage(QQuickItem *item)
@@ -95,20 +96,25 @@ void tst_qquickninepatchimage::ninePatch()
 
     // Generate an image to compare against the actual 9-patch image.
     QImage generatedImage(size * dpr, ninePatchImageGrab.format());
+    generatedImage.setDevicePixelRatio(dpr);
     generatedImage.fill(Qt::red);
 
     QImage blueRect(4 * dpr, 4 * dpr, ninePatchImageGrab.format());
+    blueRect.setDevicePixelRatio(dpr);
     blueRect.fill(Qt::blue);
+
+    const QSizeF generatedPaintedSize = generatedImage.deviceIndependentSize();
+    const QSizeF blueRectPaintedSize = blueRect.deviceIndependentSize();
 
     QPainter painter(&generatedImage);
     // Top-left
     painter.drawImage(0, 0, blueRect);
     // Top-right
-    painter.drawImage(generatedImage.width() - blueRect.width(), 0, blueRect);
+    painter.drawImage(generatedPaintedSize.width() - blueRectPaintedSize.width(), 0, blueRect);
     // Bottom-right
-    painter.drawImage(generatedImage.width() - blueRect.width(), generatedImage.height() - blueRect.height(), blueRect);
+    painter.drawImage(generatedPaintedSize.width() - blueRectPaintedSize.width(), generatedPaintedSize.height() - blueRectPaintedSize.height(), blueRect);
     // Bottom-left
-    painter.drawImage(0, generatedImage.height() - blueRect.height(), blueRect);
+    painter.drawImage(0, generatedPaintedSize.height() - blueRectPaintedSize.height(), blueRect);
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -287,6 +293,19 @@ void tst_qquickninepatchimage::hwCompressedImages()
 
     QQuickImagePrivate *ninePatchImagePrivate = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(ninePatchImage));
     QVERIFY(ninePatchImagePrivate->paintNode);
+}
+
+void tst_qquickninepatchimage::relativeSource()
+{
+    QQuickView view(testFileUrl("relativeSource.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    auto *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
+    QVERIFY(ninePatchImage);
+    QVERIFY2(ninePatchImage->source().isValid(), qPrintable(QLatin1String("source: ") + ninePatchImage->source().toString()));
+    QVERIFY2(!ninePatchImage->source().isRelative(), qPrintable(QLatin1String("source: ") + ninePatchImage->source().toString()));
 }
 
 QTEST_MAIN(tst_qquickninepatchimage)

@@ -11,7 +11,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTapHandler, "qt.quick.handler.tap")
+Q_STATIC_LOGGING_CATEGORY(lcTapHandler, "qt.quick.handler.tap")
 
 quint64 QQuickTapHandler::m_multiTapInterval(0);
 // single tap distance is the same as the drag threshold
@@ -20,7 +20,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 
 /*!
     \qmltype TapHandler
-    \instantiates QQuickTapHandler
+    \nativetype QQuickTapHandler
     \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
@@ -55,6 +55,7 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
 
 QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(parent)
+    , m_longPressThreshold(QGuiApplication::styleHints()->mousePressAndHoldInterval())
 {
     if (m_mouseMultiClickDistanceSquared < 0) {
         m_multiTapInterval = qApp->styleHints()->mouseDoubleClickInterval();
@@ -78,6 +79,8 @@ bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventP
     bool ret = false;
     bool overThreshold = d_func()->dragOverThreshold(point);
     if (overThreshold && m_gesturePolicy != DragWithinBounds) {
+        if (m_longPressTimer.isActive())
+            qCDebug(lcTapHandler) << objectName() << "drag threshold exceeded";
         m_longPressTimer.stop();
         m_holdTimer.invalidate();
     }
@@ -146,18 +149,27 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
     \qmlproperty real QtQuick::TapHandler::longPressThreshold
 
     The time in seconds that an \l eventPoint must be pressed in order to
-    trigger a long press gesture and emit the \l longPressed() signal.
-    If the point is released before this time limit, a tap can be detected
-    if the \l gesturePolicy constraint is satisfied. The default value is
-    QStyleHints::mousePressAndHoldInterval() converted to seconds.
+    trigger a long press gesture and emit the \l longPressed() signal, if the
+    value is greater than \c 0. If the point is released before this time
+    limit, a tap can be detected if the \l gesturePolicy constraint is
+    satisfied. If \c longPressThreshold is \c 0, the timer is disabled and the
+    signal will not be emitted. If \c longPressThreshold is set to \c undefined,
+    the default value is used instead, and can be read back from this property.
+
+    The default value is QStyleHints::mousePressAndHoldInterval() converted to
+    seconds.
 */
 qreal QQuickTapHandler::longPressThreshold() const
 {
-    return longPressThresholdMilliseconds() / 1000.0;
+    return m_longPressThreshold / qreal(1000);
 }
 
 void QQuickTapHandler::setLongPressThreshold(qreal longPressThreshold)
 {
+    if (longPressThreshold < 0) {
+        resetLongPressThreshold();
+        return;
+    }
     int ms = qRound(longPressThreshold * 1000);
     if (m_longPressThreshold == ms)
         return;
@@ -166,9 +178,14 @@ void QQuickTapHandler::setLongPressThreshold(qreal longPressThreshold)
     emit longPressThresholdChanged();
 }
 
-int QQuickTapHandler::longPressThresholdMilliseconds() const
+void QQuickTapHandler::resetLongPressThreshold()
 {
-    return (m_longPressThreshold < 0 ? QGuiApplication::styleHints()->mousePressAndHoldInterval() : m_longPressThreshold);
+    int ms = QGuiApplication::styleHints()->mousePressAndHoldInterval();
+    if (m_longPressThreshold == ms)
+        return;
+
+    m_longPressThreshold = ms;
+    emit longPressThresholdChanged();
 }
 
 void QQuickTapHandler::timerEvent(QTimerEvent *event)
@@ -176,6 +193,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     if (event->timerId() == m_longPressTimer.timerId()) {
         m_longPressTimer.stop();
         qCDebug(lcTapHandler) << objectName() << "longPressed";
+        m_longPressed = true;
         emit longPressed();
     } else if (event->timerId() == m_doubleTapTimer.timerId()) {
         m_doubleTapTimer.stop();
@@ -350,7 +368,8 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
         connectPreRenderSignal(press);
         updateTimeHeld();
         if (press) {
-            m_longPressTimer.start(longPressThresholdMilliseconds(), this);
+            if (m_longPressThreshold > 0)
+                m_longPressTimer.start(m_longPressThreshold, this);
             m_holdTimer.start();
         } else {
             m_longPressTimer.stop();
@@ -364,7 +383,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
                 setExclusiveGrab(event, point, press);
         }
         if (!cancel && !press && parentContains(point)) {
-            if (point.timeHeld() < longPressThreshold()) {
+            if (m_longPressed) {
+                qCDebug(lcTapHandler) << objectName() << "long press threshold" << longPressThreshold() << "exceeded:" << point.timeHeld();
+            } else {
                 // Assuming here that pointerEvent()->timestamp() is in ms.
                 const quint64 ts = event->timestamp();
                 const quint64 interval = ts - m_lastTapTimestamp;
@@ -410,10 +431,9 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
 
                 m_lastTapTimestamp = ts;
                 m_lastTapPos = point.scenePosition();
-            } else {
-                qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point.timeHeld();
             }
         }
+        m_longPressed = false;
         emit pressedChanged();
         if (!press && m_gesturePolicy != DragThreshold) {
             // on release, ungrab after emitting changed signals
@@ -421,7 +441,8 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
         }
         if (cancel) {
             emit canceled(point);
-            setExclusiveGrab(event, point, false);
+            if (event)
+                setExclusiveGrab(event, point, false);
             // In case there is a filtering parent (Flickable), we should not give up the passive grab,
             // so that it can continue to filter future events.
             d_func()->reset();
@@ -441,13 +462,25 @@ void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDev
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)
 {
+    // disconnect pre-existing connection, if any
+    disconnect(m_preRenderSignalConnection);
+
     auto par = parentItem();
-    if (!par)
+    if (!par || !par->window())
         return;
-    if (conn)
-        connect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
-    else
-        disconnect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+
+    /*
+        Note: beforeSynchronizing is emitted from the SG thread, and the
+        timeHeldChanged signal can be used to do arbitrary things in user QML.
+
+        But the docs say the GUI thread is blockd, and "Therefore, it is safe
+        to access GUI thread thread data in a slot or lambda that is connected
+        with Qt::DirectConnection." We use the default AutoConnection just in case.
+    */
+    if (conn) {
+        m_preRenderSignalConnection = connect(par->window(), &QQuickWindow::beforeSynchronizing,
+                                              this, &QQuickTapHandler::updateTimeHeld);
+    }
 }
 
 void QQuickTapHandler::updateTimeHeld()

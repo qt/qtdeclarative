@@ -6,16 +6,24 @@ layout(location = 1) in vec4 vertexColor;
 layout(location = 0) out vec2 coord;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
+    mat4 gradientMatrix;
     vec2 translationPoint;
     float angle;
     float opacity;
 } ubuf;
 
-out gl_PerVertex { vec4 gl_Position; };
-
 void main()
 {
-    coord = vertexCoord.xy - ubuf.translationPoint;
+    vec2 gradVertexCoord = (ubuf.gradientMatrix * vertexCoord).xy;
+    coord = gradVertexCoord - ubuf.translationPoint;
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = ubuf.matrix[gl_ViewIndex] * vertexCoord;
+#else
     gl_Position = ubuf.matrix * vertexCoord;
+#endif
 }

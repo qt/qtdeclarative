@@ -31,7 +31,7 @@ QMLDOM_EXPORT class IndentingLineWriter : public LineWriter
 {
     Q_GADGET
 public:
-    IndentingLineWriter(SinkF innerSink, QString fileName,
+    IndentingLineWriter(const SinkF &innerSink, const QString &fileName,
                         const LineWriterOptions &options = LineWriterOptions(),
                         const FormatTextStatus &initialStatus = FormatTextStatus::initialStatus(),
                         int lineNr = 0, int columnNr = 0, int utf16Offset = 0,
@@ -40,7 +40,7 @@ public:
           m_preCachedStatus(initialStatus)
     {
     }
-    void reindentAndSplit(QString eol, bool eof = false) override;
+    void reindentAndSplit(const QString &eol, bool eof = false) override;
     FormatPartialStatus &fStatus();
 
     void lineChanged() override { m_fStatusValid = false; }

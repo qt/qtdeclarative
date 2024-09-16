@@ -1,6 +1,7 @@
 <!-- This file only exists for qmake. -->
 <RCC>
-    <qresource prefix="/qt/qml">
+    <qresource prefix="/qt/qml/">
+        <file>Wearable/qmldir</file>
         <file>Wearable/AlarmsPage.qml</file>
         <file>Wearable/Clock.qml</file>
         <file>Wearable/DemoMode.qml</file>
@@ -8,152 +9,127 @@
         <file>Wearable/FitnessPage.qml</file>
         <file>Wearable/LauncherPage.qml</file>
         <file>Wearable/Main.qml</file>
-        <file>Wearable/NaviButton.qml</file>
+        <file>Wearable/MenuHeader.qml</file>
         <file>Wearable/NavigationPage.qml</file>
+        <file>Wearable/NavigationFallbackPage.qml</file>
         <file>Wearable/NotificationsPage.qml</file>
         <file>Wearable/RouteElement.qml</file>
         <file>Wearable/SettingsPage.qml</file>
         <file>Wearable/SwipeViewPage.qml</file>
         <file>Wearable/WeatherPage.qml</file>
         <file>Wearable/WorldClockPage.qml</file>
+        <file>Wearable/ListHeaderItem.qml</file>
+        <file>Wearable/ListItem.qml</file>
+
         <file>Wearable/fitness.js</file>
-        <file>Wearable/icons/wearable/36x36/alarms.png</file>
-        <file>Wearable/icons/wearable/36x36/fitness.png</file>
-        <file>Wearable/icons/wearable/36x36/navigation.png</file>
-        <file>Wearable/icons/wearable/36x36/notifications.png</file>
-        <file>Wearable/icons/wearable/36x36/settings.png</file>
-        <file>Wearable/icons/wearable/36x36/weather.png</file>
-        <file>Wearable/icons/wearable/36x36/worldclock.png</file>
-        <file>Wearable/icons/wearable/36x36@2/alarms.png</file>
-        <file>Wearable/icons/wearable/36x36@2/fitness.png</file>
-        <file>Wearable/icons/wearable/36x36@2/navigation.png</file>
-        <file>Wearable/icons/wearable/36x36@2/notifications.png</file>
-        <file>Wearable/icons/wearable/36x36@2/settings.png</file>
-        <file>Wearable/icons/wearable/36x36@2/weather.png</file>
-        <file>Wearable/icons/wearable/36x36@2/worldclock.png</file>
-        <file>Wearable/icons/wearable/index.theme</file>
-        <file>Wearable/images/back.png</file>
-        <file>Wearable/images/back@2x.png</file>
-        <file>Wearable/images/background-dark.png</file>
-        <file>Wearable/images/background-light.png</file>
-        <file>Wearable/images/fitness-man-running-dark.png</file>
-        <file>Wearable/images/fitness-man-running-dark@2x.png</file>
-        <file>Wearable/images/fitness-man-running-light.png</file>
-        <file>Wearable/images/fitness-man-running-light@2x.png</file>
-        <file>Wearable/images/fitness-man-walking-dark.png</file>
-        <file>Wearable/images/fitness-man-walking-dark@2x.png</file>
-        <file>Wearable/images/fitness-man-walking-light.png</file>
-        <file>Wearable/images/fitness-man-walking-light@2x.png</file>
-        <file>Wearable/images/home.png</file>
-        <file>Wearable/images/home@2x.png</file>
-        <file>Wearable/images/navigation-dark.png</file>
-        <file>Wearable/images/navigation-dark@2x.png</file>
-        <file>Wearable/images/navigation-end.png</file>
-        <file>Wearable/images/navigation-end@2x.png</file>
-        <file>Wearable/images/navigation-leftturn-dark.png</file>
-        <file>Wearable/images/navigation-leftturn-dark@2x.png</file>
-        <file>Wearable/images/navigation-leftturn-light.png</file>
-        <file>Wearable/images/navigation-leftturn-light@2x.png</file>
-        <file>Wearable/images/navigation-light.png</file>
-        <file>Wearable/images/navigation-light@2x.png</file>
-        <file>Wearable/images/navigation-rightturn-dark.png</file>
-        <file>Wearable/images/navigation-rightturn-dark@2x.png</file>
-        <file>Wearable/images/navigation-rightturn-light.png</file>
-        <file>Wearable/images/navigation-rightturn-light@2x.png</file>
-        <file>Wearable/images/navigation-start.png</file>
-        <file>Wearable/images/navigation-start@2x.png</file>
-        <file>Wearable/images/navigation-straight-dark.png</file>
-        <file>Wearable/images/navigation-straight-dark@2x.png</file>
-        <file>Wearable/images/navigation-straight-light.png</file>
-        <file>Wearable/images/navigation-straight-light@2x.png</file>
-        <file>Wearable/images/navigation-uturn.png</file>
-        <file>Wearable/images/navigation-uturn@2x.png</file>
-        <file>Wearable/images/notifications-avatarf-dark.png</file>
-        <file>Wearable/images/notifications-avatarf-dark@2x.png</file>
-        <file>Wearable/images/notifications-avatarf-light.png</file>
-        <file>Wearable/images/notifications-avatarf-light@2x.png</file>
-        <file>Wearable/images/notifications-avatarm-dark.png</file>
-        <file>Wearable/images/notifications-avatarm-dark@2x.png</file>
-        <file>Wearable/images/notifications-avatarm-light.png</file>
-        <file>Wearable/images/notifications-avatarm-light@2x.png</file>
-        <file>Wearable/images/notifications-missedcall-dark.png</file>
-        <file>Wearable/images/notifications-missedcall-dark@2x.png</file>
-        <file>Wearable/images/notifications-missedcall-light.png</file>
-        <file>Wearable/images/notifications-missedcall-light@2x.png</file>
-        <file>Wearable/images/settings-bluetooth-dark.png</file>
-        <file>Wearable/images/settings-bluetooth-dark@2x.png</file>
-        <file>Wearable/images/settings-bluetooth-light.png</file>
-        <file>Wearable/images/settings-bluetooth-light@2x.png</file>
-        <file>Wearable/images/settings-brightness-dark.png</file>
-        <file>Wearable/images/settings-brightness-dark@2x.png</file>
-        <file>Wearable/images/settings-brightness-light.png</file>
-        <file>Wearable/images/settings-brightness-light@2x.png</file>
-        <file>Wearable/images/settings-demo-mode-dark.png</file>
-        <file>Wearable/images/settings-demo-mode-dark@2x.png</file>
-        <file>Wearable/images/settings-demo-mode-light.png</file>
-        <file>Wearable/images/settings-demo-mode-light@2x.png</file>
-        <file>Wearable/images/settings-demo-mode-white.png</file>
-        <file>Wearable/images/settings-demo-mode-white@2x.png</file>
-        <file>Wearable/images/settings-theme-dark.png</file>
-        <file>Wearable/images/settings-theme-dark@2x.png</file>
-        <file>Wearable/images/settings-theme-light.png</file>
-        <file>Wearable/images/settings-theme-light@2x.png</file>
-        <file>Wearable/images/settings-wifi-dark.png</file>
-        <file>Wearable/images/settings-wifi-dark@2x.png</file>
-        <file>Wearable/images/settings-wifi-light.png</file>
-        <file>Wearable/images/settings-wifi-light@2x.png</file>
-        <file>Wearable/images/weather-humidity-dark.png</file>
-        <file>Wearable/images/weather-humidity-dark@2x.png</file>
-        <file>Wearable/images/weather-humidity-light.png</file>
-        <file>Wearable/images/weather-humidity-light@2x.png</file>
-        <file>Wearable/images/weather-pressure-dark.png</file>
-        <file>Wearable/images/weather-pressure-dark@2x.png</file>
-        <file>Wearable/images/weather-pressure-light.png</file>
-        <file>Wearable/images/weather-pressure-light@2x.png</file>
-        <file>Wearable/images/weather-sunrise-dark.png</file>
-        <file>Wearable/images/weather-sunrise-dark@2x.png</file>
-        <file>Wearable/images/weather-sunrise-light.png</file>
-        <file>Wearable/images/weather-sunrise-light@2x.png</file>
-        <file>Wearable/images/weather-sunset-dark.png</file>
-        <file>Wearable/images/weather-sunset-dark@2x.png</file>
-        <file>Wearable/images/weather-sunset-light.png</file>
-        <file>Wearable/images/weather-sunset-light@2x.png</file>
-        <file>Wearable/images/weather-temperature-dark.png</file>
-        <file>Wearable/images/weather-temperature-dark@2x.png</file>
-        <file>Wearable/images/weather-temperature-light.png</file>
-        <file>Wearable/images/weather-temperature-light@2x.png</file>
-        <file>Wearable/images/weather-wind-dark.png</file>
-        <file>Wearable/images/weather-wind-dark@2x.png</file>
-        <file>Wearable/images/weather-wind-light.png</file>
-        <file>Wearable/images/weather-wind-light@2x.png</file>
-        <file>Wearable/images/world-clock-center.png</file>
-        <file>Wearable/images/world-clock-center@2x.png</file>
-        <file>Wearable/images/world-clock-second.png</file>
-        <file>Wearable/images/world-clock-second@2x.png</file>
-        <file>Wearable/images/world-clock-swissdaydial.png</file>
-        <file>Wearable/images/world-clock-swissdaydial@2x.png</file>
-        <file>Wearable/images/world-clock-swissdayhour.png</file>
-        <file>Wearable/images/world-clock-swissdayhour@2x.png</file>
-        <file>Wearable/images/world-clock-swissdayminute.png</file>
-        <file>Wearable/images/world-clock-swissdayminute@2x.png</file>
-        <file>Wearable/images/world-clock-swissnightdial.png</file>
-        <file>Wearable/images/world-clock-swissnightdial@2x.png</file>
-        <file>Wearable/images/world-clock-swissnighthour.png</file>
-        <file>Wearable/images/world-clock-swissnighthour@2x.png</file>
-        <file>Wearable/images/world-clock-swissnightminute.png</file>
-        <file>Wearable/images/world-clock-swissnightminute@2x.png</file>
         <file>Wearable/navigation.js</file>
         <file>Wearable/notifications.js</file>
-        <file>Wearable/qmldir</file>
-        <file>Wearable/walk_route.json</file>
         <file>Wearable/weather.js</file>
+
+        <file>Wearable/fallbackroute.json</file>
         <file>Wearable/weather.json</file>
+
+        <file>Wearable/icons/wind-light.svg</file>
+        <file>Wearable/icons/wind-dark.svg</file>
+        <file>Wearable/icons/wifi-light.svg</file>
+        <file>Wearable/icons/wifi-dark.svg</file>
+        <file>Wearable/icons/weather-light.svg</file>
+        <file>Wearable/icons/weather-dark.svg</file>
+        <file>Wearable/icons/uturnright-light.svg</file>
+        <file>Wearable/icons/uturnright-dark.svg</file>
+        <file>Wearable/icons/uturnleft-light.svg</file>
+        <file>Wearable/icons/uturnleft-dark.svg</file>
+        <file>Wearable/icons/thermometer-light.svg</file>
+        <file>Wearable/icons/thermometer-dark.svg</file>
+        <file>Wearable/icons/sunset-light.svg</file>
+        <file>Wearable/icons/sunset-dark.svg</file>
+        <file>Wearable/icons/sunrise-light.svg</file>
+        <file>Wearable/icons/sunrise-dark.svg</file>
+        <file>Wearable/icons/sun-light.svg</file>
+        <file>Wearable/icons/sun-dark.svg</file>
+        <file>Wearable/icons/settings-light.svg</file>
+        <file>Wearable/icons/settings-dark.svg</file>
+        <file>Wearable/icons/right-light.svg</file>
+        <file>Wearable/icons/right-dark.svg</file>
+        <file>Wearable/icons/pressure-light.svg</file>
+        <file>Wearable/icons/pressure-dark.svg</file>
+        <file>Wearable/icons/plus-light.svg</file>
+        <file>Wearable/icons/plus-dark.svg</file>
+        <file>Wearable/icons/notification-light.svg</file>
+        <file>Wearable/icons/notification-dark.svg</file>
+        <file>Wearable/icons/maps-light.svg</file>
+        <file>Wearable/icons/maps-dark.svg</file>
+        <file>Wearable/icons/lightright-light.svg</file>
+        <file>Wearable/icons/lightright-dark.svg</file>
+        <file>Wearable/icons/lightleft-light.svg</file>
+        <file>Wearable/icons/lightleft-dark.svg</file>
+        <file>Wearable/icons/left-light.svg</file>
+        <file>Wearable/icons/left-dark.svg</file>
+        <file>Wearable/icons/hearth-light.svg</file>
+        <file>Wearable/icons/hearth-dark.svg</file>
+        <file>Wearable/icons/forward-light.svg</file>
+        <file>Wearable/icons/forward-dark.svg</file>
+        <file>Wearable/icons/drop-light.svg</file>
+        <file>Wearable/icons/drop-dark.svg</file>
+        <file>Wearable/icons/demomode-light.svg</file>
+        <file>Wearable/icons/demomode-dark.svg</file>
+        <file>Wearable/icons/darkmode-light.svg</file>
+        <file>Wearable/icons/darkmode-dark.svg</file>
+        <file>Wearable/icons/clock-light.svg</file>
+        <file>Wearable/icons/clock-dark.svg</file>
+        <file>Wearable/icons/bluetooth-light.svg</file>
+        <file>Wearable/icons/bluetooth-dark.svg</file>
+        <file>Wearable/icons/bell-light.svg</file>
+        <file>Wearable/icons/bell-dark.svg</file>
+        <file>Wearable/icons/bearright-light.svg</file>
+        <file>Wearable/icons/bearright-dark.svg</file>
+        <file>Wearable/icons/bearleft-light.svg</file>
+        <file>Wearable/icons/bearleft-dark.svg</file>
+        <file>Wearable/icons/back-light.svg</file>
+        <file>Wearable/icons/back-dark.svg</file>
+        <file>Wearable/icons/weather-thundershower-light.svg</file>
+        <file>Wearable/icons/weather-thundershower-dark.svg</file>
+        <file>Wearable/icons/weather-sunny-very-few-clouds-light.svg</file>
+        <file>Wearable/icons/weather-sunny-very-few-clouds-dark.svg</file>
+        <file>Wearable/icons/weather-sunny-light.svg</file>
+        <file>Wearable/icons/weather-sunny-dark.svg</file>
+        <file>Wearable/icons/weather-storm-light.svg</file>
+        <file>Wearable/icons/weather-storm-dark.svg</file>
+        <file>Wearable/icons/weather-snow-light.svg</file>
+        <file>Wearable/icons/weather-snow-dark.svg</file>
+        <file>Wearable/icons/weather-sleet-light.svg</file>
+        <file>Wearable/icons/weather-sleet-dark.svg</file>
+        <file>Wearable/icons/weather-showers-scattered-light.svg</file>
+        <file>Wearable/icons/weather-showers-scattered-dark.svg</file>
+        <file>Wearable/icons/weather-showers-light.svg</file>
+        <file>Wearable/icons/weather-showers-dark.svg</file>
+        <file>Wearable/icons/weather-overcast-light.svg</file>
+        <file>Wearable/icons/weather-overcast-dark.svg</file>
+        <file>Wearable/icons/weather-icy-light.svg</file>
+        <file>Wearable/icons/weather-icy-dark.svg</file>
+        <file>Wearable/icons/weather-haze-light.svg</file>
+        <file>Wearable/icons/weather-haze-dark.svg</file>
+        <file>Wearable/icons/weather-fog-light.svg</file>
+        <file>Wearable/icons/weather-fog-dark.svg</file>
+        <file>Wearable/icons/weather-few-clouds-light.svg</file>
+        <file>Wearable/icons/weather-few-clouds-dark.svg</file>
+
+        <file>Wearable/images/fitness-man-walking-light.svg</file>
+        <file>Wearable/images/fitness-man-running-light.svg</file>
+        <file>Wearable/images/fitness-man-walking-dark.svg</file>
+        <file>Wearable/images/fitness-man-running-dark.svg</file>
+        <file>Wearable/images/fallbackmap.png</file>
+
         <file>WearableSettings/qmldir</file>
         <file>WearableSettings/WearableSettings.qml</file>
+
+        <file>WearableStyle/qmldir</file>
         <file>WearableStyle/PageIndicator.qml</file>
         <file>WearableStyle/Slider.qml</file>
         <file>WearableStyle/Switch.qml</file>
         <file>WearableStyle/UIStyle.qml</file>
-        <file>WearableStyle/qmldir</file>
+        <file>WearableStyle/fonts/TitilliumWeb-Bold.ttf</file>
+        <file>WearableStyle/fonts/TitilliumWeb-SemiBold.ttf</file>
+        <file>WearableStyle/fonts/TitilliumWeb-Regular.ttf</file>
     </qresource>
 </RCC>

@@ -1,5 +1,5 @@
 // Copyright (C) 2016 Dmitrii Kosarev aka Kakadu <kakadu.hafanana@gmail.com>
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #ifndef STRINGMODEL_H
 #define STRINGMODEL_H
 

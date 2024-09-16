@@ -38,7 +38,7 @@ typedef QQmlListCompositor Compositor;
 class QQmlDelegateModelAttachedMetaObject;
 class QQmlAbstractDelegateComponent;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelItemMetaType final
+class Q_QMLMODELS_EXPORT QQmlDelegateModelItemMetaType final
     : public QQmlRefCounted<QQmlDelegateModelItemMetaType>
 {
 public:
@@ -66,9 +66,9 @@ class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
-    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12) FINAL)
-    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12) FINAL)
-    Q_PROPERTY(QObject *model READ modelObject CONSTANT FINAL)
+    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12))
+    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12))
+    Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
     QQmlDelegateModelItem(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                           QQmlAdaptorModel::Accessors *accessor, int modelIndex,
@@ -233,7 +233,7 @@ public:
 
     bool parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const;
     bool parseGroupArgs(
-            QQmlV4Function *args, Compositor::Group *group, int *index, int *count, int *groups) const;
+            QQmlV4FunctionPtr args, Compositor::Group *group, int *index, int *count, int *groups) const;
 
     Compositor::Group group;
     QPointer<QQmlDelegateModel> model;
@@ -303,7 +303,12 @@ public:
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
     void delegateChanged(bool add = true, bool remove = true);
 
-    bool insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
+    enum class InsertionResult {
+        Success,
+        Error,
+        Retry
+    };
+    InsertionResult insert(Compositor::insert_iterator &before, const QV4::Value &object, int groups);
 
     int adaptorModelCount() const;
 
@@ -329,6 +334,7 @@ public:
     QQmlReusableDelegateModelItemsPool m_reusableItemsPool;
     QList<QQDMIncubationTask *> m_finishedIncubating;
     QList<QByteArray> m_watchedRoles;
+    QHash<int, QByteArray> m_roleNamesBeforeReset;
 
     QString m_filterGroup;
 
@@ -342,6 +348,7 @@ public:
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
     bool m_waitingToFetchMore : 1;
+    bool m_maybeResetRoleNames : 1;
 
     union {
         struct {

@@ -27,17 +27,17 @@ QT_BEGIN_NAMESPACE
 
 class QQuickShaderEffectPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
+class Q_QUICK_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged FINAL)
-    Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged FINAL)
-    Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged FINAL)
-    Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged FINAL)
-    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged FINAL)
-    Q_PROPERTY(QString log READ log NOTIFY logChanged FINAL)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
-    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION(2, 4) FINAL)
+    Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
+    Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
+    Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
+    Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
+    Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
+    Q_PROPERTY(QString log READ log NOTIFY logChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(bool supportsAtlasTextures READ supportsAtlasTextures WRITE setSupportsAtlasTextures NOTIFY supportsAtlasTexturesChanged REVISION(2, 4))
     QML_NAMED_ELEMENT(ShaderEffect)
     QML_ADDED_IN_VERSION(2, 0)
 

@@ -1,5 +1,7 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls
@@ -25,15 +27,19 @@ Page {
         spacing: 20
         model: ["Albert Einstein", "Ernest Hemingway", "Hans Gude"]
         delegate: ItemDelegate {
+            id: contactDelegate
             text: modelData
             width: listView.width - listView.leftMargin - listView.rightMargin
             height: avatar.implicitHeight
             leftPadding: avatar.implicitWidth + 32
+
+            required property string modelData
+
             onClicked: root.StackView.view.push("ConversationPage.qml", { inConversationWith: modelData })
 
             Image {
                 id: avatar
-                source: "images/" + modelData.replace(" ", "_") + ".png"
+                source: "images/" + contactDelegate.modelData.replace(" ", "_") + ".png"
             }
         }
     }

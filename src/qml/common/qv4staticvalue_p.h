@@ -366,10 +366,10 @@ struct StaticValue
     QV4_NEARLY_ALWAYS_INLINE void setDouble(double d) {
         if (qt_is_nan(d)) {
             // We cannot store just any NaN. It has to be a NaN with only the quiet bit
-            // set in the upper bits of the mantissa and the sign bit off.
+            // set in the upper bits of the mantissa and the sign bit either on or off.
             // qt_qnan() happens to produce such a thing via std::numeric_limits,
             // but this is actually not guaranteed. Therefore, we make our own.
-            _val = (quint64(QuickType::NaN) << Tag_Shift);
+            _val = (quint64(std::signbit(d) ? QuickType::MinusNaN : QuickType::NaN) << Tag_Shift);
             Q_ASSERT(isNaN());
         } else {
             memcpy(&_val, &d, 8);
@@ -589,10 +589,17 @@ struct StaticValue
         // Has to be aligned to 32 bytes
         Q_ASSERT(!(tmp & Lower5Mask));
 
+        // MinGW produces a bogus warning about array bounds.
+        // There is no array access here.
+        QT_WARNING_PUSH
+        QT_WARNING_DISABLE_GCC("-Warray-bounds")
+
         // Encode the pointer.
         _val = storePointerBits<Top1Shift, Top1Mask>(
                storePointerBits<Upper3Shift, Upper3Mask>(
                storePointerBits<Lower5Shift, Lower5Mask>(tmp)));
+
+        QT_WARNING_POP
     }
 #elif QT_POINTER_SIZE == 4
     QML_NEARLY_ALWAYS_INLINE HeapBasePtr m() const

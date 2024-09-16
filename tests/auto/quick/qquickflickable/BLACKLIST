@@ -8,7 +8,3 @@ macos-11
 # QTBUG-118060
 [ignoreNonLeftMouseButtons]
 opensuse-leap
-
-# QTBUG-118063
-[nativeGesturePinchOnFlickableWithParentTapHandler]
-opensuse-leap

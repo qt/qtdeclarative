@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/metaltextureimport
     \title Scene Graph - Metal Texture Import
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows how to use a texture created directly with Metal.
 
@@ -64,9 +64,8 @@
     After copying the values we need, sync() also performs some graphics
     resource initialization. The MTLDevice is queried from the scenegraph. Once
     a MTLTexture is available, a QSGTexture wrapping (not owning) it is created
-    via QQuickWindow::createTextureFromNativeObject(). This function is a
-    modern equivalent to QQuickWindow::createTextureFromId() that is not tied
-    to OpenGL. Finally, the QSGTexture is associated with the underlying
+    via \l QNativeInterface::QSGOpenGLTexture::fromNative().
+    Finally, the QSGTexture is associated with the underlying
     materials by calling the base class' setTexture() function.
 
     \snippet scenegraph/metaltextureimport/metaltextureimport.mm 6

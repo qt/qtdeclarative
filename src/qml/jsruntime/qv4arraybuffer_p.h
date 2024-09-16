@@ -25,14 +25,14 @@ namespace QV4 {
 namespace Heap {
 
 struct SharedArrayBufferCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
 struct ArrayBufferCtor : SharedArrayBufferCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
-struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object {
+struct Q_QML_EXPORT SharedArrayBuffer : Object {
     void init(size_t length);
     void init(const QByteArray& array);
     void destroy();
@@ -68,7 +68,7 @@ private:
     bool isShared;
 };
 
-struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer {
+struct Q_QML_EXPORT ArrayBuffer : SharedArrayBuffer {
     void init(size_t length) {
         SharedArrayBuffer::init(length);
         setSharedArrayBuffer(false);
@@ -98,7 +98,7 @@ struct ArrayBufferCtor : SharedArrayBufferCtor
     static ReturnedValue method_isView(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object
+struct Q_QML_EXPORT SharedArrayBuffer : Object
 {
     V4_OBJECT2(SharedArrayBuffer, Object)
     V4_NEEDS_DESTROY
@@ -115,7 +115,7 @@ struct Q_QML_PRIVATE_EXPORT SharedArrayBuffer : Object
     bool isSharedArrayBuffer() const { return d()->isSharedArrayBuffer(); }
 };
 
-struct Q_QML_PRIVATE_EXPORT ArrayBuffer : SharedArrayBuffer
+struct Q_QML_EXPORT ArrayBuffer : SharedArrayBuffer
 {
     V4_OBJECT2(ArrayBuffer, SharedArrayBuffer)
     V4_NEEDS_DESTROY

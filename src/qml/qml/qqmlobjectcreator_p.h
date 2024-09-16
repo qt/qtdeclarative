@@ -84,6 +84,20 @@ struct DeferredQPropertyBinding {
     QUntypedPropertyBinding binding;
 };
 
+class ObjectInCreationGCAnchorList {
+public:
+    // this is a non owning view, rule of zero applies
+    ObjectInCreationGCAnchorList() = default;
+    ObjectInCreationGCAnchorList(const QV4::Scope &scope, int totalObjectCount)
+    {
+        allJavaScriptObjects = scope.alloc(totalObjectCount);
+    }
+    void trackObject(QV4::ExecutionEngine *engine, QObject *instance);
+    bool canTrack() const { return allJavaScriptObjects; }
+private:
+    QV4::Value *allJavaScriptObjects = nullptr; // pointer to vector on JS stack to reference JS wrappers during creation phase.
+};
+
 struct QQmlObjectCreatorSharedState final : QQmlRefCounted<QQmlObjectCreatorSharedState>
 {
     QQmlRefPointer<QQmlContextData> rootContext;
@@ -91,7 +105,7 @@ struct QQmlObjectCreatorSharedState final : QQmlRefCounted<QQmlObjectCreatorShar
     QFiniteStack<QQmlAbstractBinding::Ptr> allCreatedBindings;
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
     QFiniteStack<QQmlGuard<QObject> > allCreatedObjects;
-    QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
+    ObjectInCreationGCAnchorList allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
     QQmlComponentAttached *componentAttached;
     QList<QQmlFinalizerHook *> finalizeHooks;
     QQmlVmeProfiler profiler;
@@ -101,7 +115,7 @@ struct QQmlObjectCreatorSharedState final : QQmlRefCounted<QQmlObjectCreatorShar
     bool hadTopLevelRequiredProperties;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
+class Q_QML_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
@@ -151,11 +165,9 @@ public:
     void removePendingBinding(QObject *target, int propertyIndex)
     {
         QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
-        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(),
-                                 [&](const DeferredQPropertyBinding &deferred) {
+        pendingBindings.removeIf([&](const DeferredQPropertyBinding &deferred) {
             return deferred.properyIndex == propertyIndex && deferred.target == target;
         });
-        pendingBindings.erase(it, pendingBindings.end());
     }
 
 private:
@@ -245,6 +257,10 @@ private:
     void doPopulateDeferred(QObject *instance, int deferredIndex, Functor f)
     {
         QQmlData *declarativeData = QQmlData::get(instance);
+
+        // We're in the process of creating the object. We sure hope it's still alive.
+        Q_ASSERT(declarativeData && declarativeData->propertyCache);
+
         QObject *bindingTarget = instance;
 
         QQmlPropertyCache::ConstPtr cache = declarativeData->propertyCache;
@@ -254,8 +270,9 @@ private:
         qt_ptr_swap(_scopeObject, scopeObject);
 
         QV4::Scope valueScope(v4);
-        QScopedValueRollback<QV4::Value*> jsObjectGuard(sharedState->allJavaScriptObjects,
-                                                        valueScope.alloc(compilationUnit->totalObjectCount()));
+        QScopedValueRollback<ObjectInCreationGCAnchorList> jsObjectGuard(
+                sharedState->allJavaScriptObjects,
+                ObjectInCreationGCAnchorList(valueScope, compilationUnit->totalObjectCount()));
 
         Q_ASSERT(topLevelCreator);
         QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());

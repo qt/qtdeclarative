@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
@@ -62,6 +62,7 @@ private slots:
     void noCaching();
     void sourceChangesOnFrameChanged();
     void currentFrame();
+    void qtbug_120555();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -644,6 +645,36 @@ void tst_qquickanimatedimage::currentFrame()
     QCOMPARE(currentFrameChangedSpy.size(), 2);
     QCOMPARE(anim->property("currentFrameChangeCount"), 2);
     QCOMPARE(anim->property("frameChangeCount"), 2);
+}
+
+void tst_qquickanimatedimage::qtbug_120555()
+{
+    TestHTTPServer server;
+    QVERIFY2(server.listen(), qPrintable(server.errorString()));
+    server.serveDirectory(dataDirectory());
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick 2.0\nAnimatedImage {}", {});
+
+    QQuickAnimatedImage *anim = qobject_cast<QQuickAnimatedImage*>(component.create());
+    QVERIFY(anim);
+
+    anim->setSource(server.url("/stickman.gif"));
+    QTRY_COMPARE(anim->status(), QQuickImage::Loading);
+
+    anim->setFillMode(QQuickImage::PreserveAspectFit);
+    QCOMPARE(anim->fillMode(), QQuickImage::PreserveAspectFit);
+    anim->setMipmap(true);
+    QCOMPARE(anim->mipmap(), true);
+    anim->setCache(false);
+    QCOMPARE(anim->cache(), false);
+    anim->setSourceSize(QSize(200, 200));
+    QCOMPARE(anim->sourceSize(), QSize(200, 200));
+
+    QTRY_COMPARE(anim->status(), QQuickImage::Ready);
+
+    delete anim;
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

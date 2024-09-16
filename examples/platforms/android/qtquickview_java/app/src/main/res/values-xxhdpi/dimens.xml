@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="title_text_size">21sp</dimen>
+    <dimen name="other_text_size">10sp</dimen>
+    <dimen name="title_margin_top">2dp</dimen>
+    <dimen name="smaller_top_margin">2dp</dimen>
+    <dimen name="bigger_top_margin">6dp</dimen>
+    <dimen name="change_color_button_width">85dp</dimen>
+    <dimen name="other_buttons_width">115dp</dimen>
+    <dimen name="color_box_width">70dp</dimen>
+    <dimen name="color_box_height">30dp</dimen>
+    <dimen name="color_box_margin_start">15dp</dimen>
+    <dimen name="button_corner_radius">3dp</dimen>
+    <dimen name="load_second_button_margin_end">16dp</dimen>
+    <dimen name="rotate_qml_grid_top_margin">0dp</dimen>
+    <dimen name="switch_thumb_size">17dp</dimen>
+    <dimen name="switch_thumb_border">1dp</dimen>
+    <dimen name="switch_text_size">9sp</dimen>
+</resources>

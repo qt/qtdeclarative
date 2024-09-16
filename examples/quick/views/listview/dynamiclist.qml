@@ -43,7 +43,7 @@ Rectangle {
             ]
         }
         ListElement {
-            name: "Cumquat"
+            name: "Kumquat"
             cost: 3.25
             attributes: [
                 ListElement {

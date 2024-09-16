@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
+class Q_QUICK_EXPORT QSGSmoothTextureMaterial : public QSGTextureMaterial
 {
 public:
     QSGSmoothTextureMaterial();
@@ -36,7 +36,7 @@ protected:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalImageNode : public QSGBasicInternalImageNode
+class Q_QUICK_EXPORT QSGDefaultInternalImageNode : public QSGBasicInternalImageNode
 {
 public:
     QSGDefaultInternalImageNode(QSGDefaultRenderContext *rc);

@@ -3,8 +3,6 @@
 
 #include "qqmltoolingsettings_p.h"
 
-#include <algorithm>
-
 #include <QtCore/qdebug.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
@@ -18,7 +16,9 @@ using namespace Qt::StringLiterals;
 
 void QQmlToolingSettings::addOption(const QString &name, QVariant defaultValue)
 {
-    m_values[name] = defaultValue;
+    if (defaultValue.isValid()) {
+        m_values[name] = defaultValue;
+    }
 }
 
 bool QQmlToolingSettings::read(const QString &settingsFilePath)
@@ -39,6 +39,7 @@ bool QQmlToolingSettings::read(const QString &settingsFilePath)
 
     return true;
 #else
+    Q_UNUSED(settingsFilePath);
     return false;
 #endif
 }
@@ -118,15 +119,16 @@ bool QQmlToolingSettings::search(const QString &path)
         m_seenDirectories[dir] = QString();
 
 #endif
+    Q_UNUSED(path);
     return false;
 }
 
-QVariant QQmlToolingSettings::value(QString name) const
+QVariant QQmlToolingSettings::value(const QString &name) const
 {
     return m_values.value(name);
 }
 
-bool QQmlToolingSettings::isSet(QString name) const
+bool QQmlToolingSettings::isSet(const QString &name) const
 {
     if (!m_values.contains(name))
         return false;

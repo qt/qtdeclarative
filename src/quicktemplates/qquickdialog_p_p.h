@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAbstractButton;
 class QQuickDialogButtonBox;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDialog)
@@ -39,6 +39,8 @@ public:
     virtual void handleAccept();
     virtual void handleReject();
     virtual void handleClick(QQuickAbstractButton *button);
+
+    Qt::WindowFlags popupWindowType() const override;
 
     int result = 0;
     QString title;

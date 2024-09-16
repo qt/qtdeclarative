@@ -1,5 +1,5 @@
 // Copyright (C) 2017 Klarälvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Kevin Krammer <kevin.krammer@kdab.com>
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
@@ -67,8 +67,9 @@ void tst_PropertyRequirements::constantOrNotifyableMain()
     }
     messages.sort();
 
-    qWarning() << "\nThe following QML Types have properties which are neither CONSTANT nor NOTIFYable:\n"
-        << qPrintable(messages.join("\n"));
+    qWarning() << "\nThe following QML Types have properties which are"
+               << "neither CONSTANT nor NOTIFYable nor BINDABLE:\n"
+               << qPrintable(messages.join("\n"));
 
     // TODO enable once technical debt is fixes
     // QCOMPARE(failuresByProperty.count(), 0);
@@ -94,7 +95,9 @@ void tst_PropertyRequirements::constantOrNotifyableFull()
 
         }
 
-        static const QString messagePattern("\nProperty %1 neither CONSTANT nor NOTIFYable. Affected types:\n\t%2");
+        static const QLatin1String messagePattern(
+                "\nProperty %1 neither CONSTANT nor NOTIFYable nor BINDABLE. "
+                "Affected types:\n\t%2");
         QStringList occurrencesList = occurrences.values();
         occurrencesList.sort();
         messages.append(messagePattern.arg(it.key(), occurrencesList.join("\n\t")));
@@ -165,7 +168,7 @@ void tst_PropertyRequirements::testQmlType(TestDepth testDepth, const QQmlType &
             const QMetaProperty property = metaClass->property(idx);
 
             // needs to be either CONSTANT or have a NOTIFY signal
-            if (!property.isConstant() && !property.hasNotifySignal()) {
+            if (!property.isConstant() && !property.hasNotifySignal() && !property.isBindable()) {
                 static const QString fullNamePattern("%1::%2");
                 const QString fullPropertyName = fullNamePattern.arg(metaClass->className(), property.name());
 

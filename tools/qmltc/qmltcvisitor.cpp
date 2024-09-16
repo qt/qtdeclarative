@@ -89,7 +89,7 @@ void QmltcVisitor::findCppIncludes()
         return false;
     };
     const auto addCppInclude = [this](const QQmlJSScope::ConstPtr &type) {
-        if (QString includeFile = type->filePath(); includeFile.endsWith(u".h"))
+        if (QString includeFile = filePath(type); !includeFile.isEmpty())
             m_cppIncludes.insert(std::move(includeFile));
     };
 
@@ -101,6 +101,9 @@ void QmltcVisitor::findCppIncludes()
 
         // look in type
         addCppInclude(type);
+
+        if (type->isListProperty())
+            addCppInclude(type->valueType());
 
         // look in type's base type
         auto base = type->baseType();
@@ -148,8 +151,8 @@ void QmltcVisitor::findCppIncludes()
             for (const QQmlJSMetaProperty &p : properties) {
                 findInType(p.type());
 
-                if (p.isPrivate() && t->filePath().endsWith(u".h")) {
-                    const QString ownersInclude = t->filePath();
+                if (p.isPrivate()) {
+                    const QString ownersInclude = filePath(t);
                     QString privateInclude = constructPrivateInclude(ownersInclude);
                     if (!privateInclude.isEmpty())
                         m_cppIncludes.insert(std::move(privateInclude));
@@ -171,7 +174,7 @@ void QmltcVisitor::findCppIncludes()
     }
 
     // remove own include
-    m_cppIncludes.remove(m_exportedRootScope->filePath());
+    m_cppIncludes.remove(filePath(m_exportedRootScope));
 }
 
 static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr &scope)
@@ -188,15 +191,8 @@ static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr 
 
 bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
-    const bool processingRoot = !rootScopeIsValid();
-
     if (!QQmlJSImportVisitor::visit(object))
         return false;
-
-    if (processingRoot || m_currentScope->isInlineComponent()) {
-        Q_ASSERT(rootScopeIsValid());
-        setRootFilePath();
-    }
 
     // we're not interested in non-QML scopes
     if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope)
@@ -338,7 +334,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 
     for (const QList<QQmlJSScope::ConstPtr> &qmlTypes : m_pureQmlTypes)
         for (const QQmlJSScope::ConstPtr &type : qmlTypes)
-            checkForNamingCollisionsWithCpp(type);
+            checkNamesAndTypes(type);
 }
 
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
@@ -655,7 +651,7 @@ void QmltcVisitor::setupAliases()
     }
 }
 
-void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &type)
+void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
 {
     static const QString cppKeywords[] = {
         u"alignas"_s,
@@ -674,20 +670,21 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
         u"case"_s,
         u"catch"_s,
         u"char"_s,
-        u"char8_t"_s,
         u"char16_t"_s,
         u"char32_t"_s,
+        u"char8_t"_s,
         u"class"_s,
-        u"compl"_s,
-        u"concept"_s,
-        u"const"_s,
-        u"consteval"_s,
-        u"constexpr"_s,
-        u"const_cast"_s,
-        u"continue"_s,
         u"co_await"_s,
         u"co_return"_s,
         u"co_yield"_s,
+        u"compl"_s,
+        u"concept"_s,
+        u"const"_s,
+        u"const_cast"_s,
+        u"consteval"_s,
+        u"constexpr"_s,
+        u"constinit"_s,
+        u"continue"_s,
         u"decltype"_s,
         u"default"_s,
         u"delete"_s,
@@ -755,6 +752,7 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
         u"xor"_s,
         u"xor_eq"_s,
     };
+    Q_ASSERT(std::is_sorted(std::begin(cppKeywords), std::end(cppKeywords)));
 
     const auto isReserved = [&](QStringView word) {
         if (word.startsWith(QChar(u'_')) && word.size() >= 2
@@ -771,6 +769,23 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
                       qmlCompiler, type->sourceLocation());
     };
 
+    const auto validateType = [&type, this](const QQmlJSScope::ConstPtr &typeToCheck,
+                                            QStringView name, QStringView errorPrefix) {
+        if (type->moduleName().isEmpty() || typeToCheck.isNull())
+            return;
+
+        if (typeToCheck->isComposite() && typeToCheck->moduleName() != type->moduleName()) {
+            m_logger->log(
+                    QStringLiteral(
+                            "Can't compile the %1 type \"%2\" to C++ because it "
+                            "lives in \"%3\" instead of the current file's \"%4\" QML module.")
+                            .arg(errorPrefix, name, typeToCheck->moduleName(), type->moduleName()),
+                    qmlCompiler, type->sourceLocation());
+        }
+    };
+
+    validateType(type->baseType(), type->baseTypeName(), u"QML base");
+
     const auto enums = type->ownEnumerations();
     for (auto it = enums.cbegin(); it != enums.cend(); ++it) {
         const QQmlJSMetaEnum e = it.value();
@@ -785,16 +800,23 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
     for (auto it = properties.cbegin(); it != properties.cend(); ++it) {
         const QQmlJSMetaProperty &p = it.value();
         validate(p.propertyName(), u"Property");
+
+        if (!p.isAlias() && !p.typeName().isEmpty())
+            validateType(p.type(), p.typeName(), u"QML property");
     }
 
     const auto methods = type->ownMethods();
     for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
         const QQmlJSMetaMethod &m = it.value();
         validate(m.methodName(), u"Method");
+        if (!m.returnTypeName().isEmpty())
+            validateType(m.returnType(), m.returnTypeName(), u"QML method return");
 
-        const auto parameterNames = m.parameterNames();
-        for (const auto &name : parameterNames)
-            validate(name, u"Method '%1' parameter"_s.arg(m.methodName()));
+        for (const auto &parameter : m.parameters()) {
+            validate(parameter.name(), u"Method '%1' parameter"_s.arg(m.methodName()));
+            if (!parameter.typeName().isEmpty())
+                validateType(parameter.type(), parameter.typeName(), u"QML parameter");
+        }
     }
 
     // TODO: one could also test signal handlers' parameters but we do not store
@@ -802,14 +824,14 @@ void QmltcVisitor::checkForNamingCollisionsWithCpp(const QQmlJSScope::ConstPtr &
 }
 
 /*! \internal
- *  Sets the file paths for the document and the inline components roots.
+ *  Returns the file path for the C++ header of \a scope or the header created
+ *  by qmltc for it and its inline components.
  */
-void QmltcVisitor::setRootFilePath()
+QString QmltcVisitor::filePath(const QQmlJSScope::ConstPtr &scope) const
 {
-    const QString filePath = m_currentScope->filePath();
-    if (filePath.endsWith(u".h")) // assume the correct path is set
-        return;
-    Q_ASSERT(filePath.endsWith(u".qml"_s));
+    const QString filePath = scope->filePath();
+    if (!filePath.endsWith(u".qml")) // assume the correct path is set
+        return scope->filePath();
 
     const QString correctedFilePath = sourceDirectoryPath(filePath);
     const QStringList paths = m_importer->resourceFileMapper()->resourcePaths(
@@ -821,13 +843,13 @@ void QmltcVisitor::setRootFilePath()
         qCDebug(lcQmltcCompiler,
                 "Failed to find a header file name for path %s. Paths checked:\n%s",
                 correctedFilePath.toUtf8().constData(), matchedPaths.toUtf8().constData());
-        return;
+        return QString();
     }
     // NB: get the file name to avoid prefixes
-    m_currentScope->setFilePath(QFileInfo(*firstHeader).fileName());
+    return QFileInfo(*firstHeader).fileName();
 }
 
-QString QmltcVisitor::sourceDirectoryPath(const QString &path)
+QString QmltcVisitor::sourceDirectoryPath(const QString &path) const
 {
     auto result = QQmlJSUtils::sourceDirectoryPath(m_importer, path);
     if (const QString *srcDirPath = std::get_if<QString>(&result))

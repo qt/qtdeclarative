@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuSeparator
     \inherits Control
-//!     \instantiates QQuickMenuSeparator
+//!     \nativetype QQuickMenuSeparator
     \inqmlmodule QtQuick.Controls
     \since 5.8
     \ingroup qtquickcontrols-separators
@@ -33,7 +33,7 @@ QT_BEGIN_NAMESPACE
     \sa {Customizing Menu}, Menu, {Separator Controls}
 */
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuSeparatorPrivate : public QQuickControlPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuSeparatorPrivate : public QQuickControlPrivate
 {
     Q_DECLARE_PUBLIC(QQuickMenuSeparator)
 

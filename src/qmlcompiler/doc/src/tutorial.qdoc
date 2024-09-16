@@ -1,0 +1,229 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qqmlsa-tutorial.html
+\title QML Static Analysis Tutorial
+\brief An introduction on writing your own qmllint checks
+\nextpage QML Static Analysis 1 - Basic Setup
+
+This tutorial gives an introduction to QQmlSA, the API to statically analyze QML code.
+
+Through the different steps of this tutorial we will learn about how to set up a basic qmllint
+plugin, we will create our own custom analysis pass, and we will add support for fixit-hints.
+
+Chapter one starts with a minimal plugin and the following chapters introduce new concepts.
+
+The tutorial's source code is located in the \c{examples/qmlcompiler/tutorials/helloworld} directory.
+
+Tutorial chapters:
+
+\list 1
+\li \l {QML Static Analysis 1 - Basic Setup}{Basic Setup}
+\li \l {QML Static Analysis 2 - Custom Pass}{Custom Pass}
+\li \l {QML Static Analysis 3 - Fixit Hints}{Fixit Hints}
+\endlist
+
+*/
+
+/*!
+\page qqmlsa-tutorial1.html
+\title QML Static Analysis 1 - Basic Setup
+\previouspage QML Static Analysis Tutorial
+\nextpage QML Static Analysis 2 - Custom Pass
+
+This chapter introduces the basic structure of a qmllint extension plugin,
+and how it can be used with qmllint.
+
+To create our plugin, we first need to make the QmlCompiler module available:
+\quotefromfile tutorials/helloworld/chapter1/CMakeLists.txt
+\skipto find_package
+\printline find_package
+
+We then create a plugin, and link it against the QmlCompiler module.
+
+\skipto qt_add_plugin(HelloWorldPlugin)
+\printuntil
+
+The implementation follows the pattern for \l{The High-Level API: Writing Qt Extensions}{extending
+Qt with a plugin}: We subclass the \l{QQmlSA::LintPlugin},
+\quotefromfile tutorials/helloworld/chapter1/helloplugin.h
+\skipto class HelloWorldPlugin
+\printuntil };
+
+The plugin references a \c{plugin.json} file, which contains some important information:
+\quotefile tutorials/helloworld/chapter1/plugin.json
+\c{name}, \c{author}, \c{version} and \c{description} are meta-data to describe the plugin.
+
+Each plugin can have one or more logging categories, which are used to thematically group
+warnings.
+\c{loggingCategories} takes an array of categories, each consisting of
+\list
+  \li \c{name}, which is used to identify the category, and as the flag name in qmllint,
+  \li \c{settingsName}, which is used to configure the category in qmllint.ini
+  \li \c{description}, which should describe what kind of warning messages are tagged with the category
+\endlist
+
+In our example, we have only one logging category, \c{hello-world}. For each category, we have to
+create a \l{QQmlSA::}{LoggerWarningId} object in our plugin.
+
+\quotefromfile tutorials/helloworld/chapter1/helloplugin.cpp
+\skipto static constexpr QQmlSA::LoggerWarningId
+\printline static constexpr QQmlSA::LoggerWarningId
+
+We construct it with a string literal which should have the format
+\c{Plugin.<plugin name>.<category name>}.
+
+Lastly, for our plugin to actually do anything useful, we have to implement the
+\c{registerPasses} function.
+
+\skipto void HelloWorldPlugin::registerPasses(
+\printuntil }
+
+We check whether our category is enabled, and print a diagnostic indicating its status
+via \l{qDebug}.
+Note that the plugin currently does not do anything useful, as we do not register any
+passes. This will done in the next part of this tutorial.
+
+We can however already verify that our plugin is correctly detected. We use the following command to
+check it:
+
+\badcode
+qmllint -P /path/to/the/directory/containing/the/plugin --Plugin.HelloWorld.hello-world info test.qml
+\endcode
+
+The \c{-P} options tells qmllint to look for plugins in the specified folder. To avoid conflicts
+with Qt internal categories, plugin categories are always prefixed with "Plugin", then followed by
+a dot, the plugin name, another dot and finally the category.
+Running the command should print \c{Hello World Plugin is enabled}.
+
+*/
+
+
+/*!
+\page qqmlsa-tutorial2.html
+\title QML Static Analysis 2 - Custom Pass
+\previouspage QML Static Analysis 1 - Basic Setup
+\nextpage QML Static Analysis 3 - Fixit Hints
+
+This chapter shows how custom analysis passes can be added to \l{qmllint Reference}{qmllint},
+by extending the plugin we've created in the last chapter.
+For demonstration purposes, we will create a plugin which checks whether
+\l{Text} elements have "Hello world!" assigned to their text property.
+
+To do this, we create a new class derived from
+\l{QQmlSA::ElementPass}{ElementPass}.
+
+\note There are two types of passes that
+plugins can register, \l{QQmlSA::ElementPass}{ElementPasses}, and \l{QQmlSA::PropertyPass}{PropertyPasses}.
+In this tutorial, we will only consider the simpler \c{ElementPass}.
+
+\quotefromfile tutorials/helloworld/chapter2/helloplugin.cpp
+\skipto class HelloWorldElementPass : public QQmlSA::ElementPass
+\printuntil };
+
+As our \c{HelloWorldElementPass} should analyze \c{Text} elements,
+we need a reference to the \c{Text} type. We can use the
+\l{QQmlSA::GenericPass::resolveType}{resolveType} function to obtain it.
+As we don't want to constantly re-resolve the type, we do this
+once in the constructor, and store the type in a member variable.
+
+\skipto HelloWorldElementPass::HelloWorldElementPass(
+\printuntil }
+
+The actual logic of our pass happens in two functions:
+\l{QQmlSA::ElementPass::shouldRun}{shouldRun} and
+\l{QQmlSA::ElementPass::run}{run}. They will run on
+all Elements in the file that gets analyzed by qmllint.
+
+In our \c{shouldRun} method, we check whether the current
+Element is derived from Text, and check whether it has
+a binding on the text property.
+\skipto bool HelloWorldElementPass::shouldRun
+\printuntil }
+
+Only elements passing the checks there will then be analyzed by our
+pass via its \c{run} method. It would be possible to do all checking
+inside of \c{run} itself, but it is generally preferable to have
+a separation of concerns – both for performance and to enhance
+code readability.
+
+In our \c{run} function, we retrieve the bindings to the text
+property. If the bound value is a string literal, we check
+if it's the greeting we expect.
+
+\skipto void HelloWorldElementPass::run
+\printuntil /^}/
+
+\note Most of the time, a property will only have one
+binding assigned to it. However, there might be for
+instance a literal binding and a \l{Behavior} assigned
+to the same property.
+
+Lastly, we need to create an instance of our pass, and
+register it with the \l{QQmlSA::PassManager}{PassManager}. This is done by
+adding
+\skipto manager->registerElementPass
+\printline manager->registerElementPass
+to the \c{registerPasses} functions of our plugin.
+
+We can test our plugin by invoking \l{qmllint Reference}{qmllint} on an example
+file via
+\badcode
+qmllint -P /path/to/the/directory/containing/the/plugin --Plugin.HelloWorld.hello-world info test.qml
+\endcode
+
+If \c{test.qml} looks like
+\quotefromfile{tutorials/helloworld/chapter2/test.qml}
+\skipto import
+\printuntil
+
+we will get
+\badcode
+Info: test.qml:22:26: Incorrect greeting [Plugin.HelloWorld.hello-world]
+          MyText { text: "Goodbye world!" }
+                         ^^^^^^^^^^^^^^^^
+Info: test.qml:19:19: Incorrect greeting [Plugin.HelloWorld.hello-world]
+     Text { text: "Goodbye world!" }
+\endcode
+
+as the output. We can make a few observations here:
+\list
+\li The first \c{Text} does contain the expected greeting, so there's no warning
+\li The second \c{Text} would at runtime have the wrong warning (\c{"Hello"}
+    instead of \c{"Hello world"}. However, this cannot be detected by qmllint
+    (in general), as there's no literal binding, but a binding to another property.
+    As we only check literal bindings, we simply skip over this binding.
+\li For the literal binding in the third \c{Text} element, we correctly warn about
+    the wrong greeting.
+\li As \c{NotText} does not derive from \c{Text}, the analysis will skip it, as
+    the \c{inherits} check will discard it.
+\li The custom \c{MyText} element inherits from \c{Text}, and consequently we
+    see the expected warning.
+\endlist
+
+In summary, we've seen the steps necessary to extend \c{qmllint} with custom passes,
+and have also become aware of the limitations of static checks.
+
+*/
+
+/*!
+\page qqmlsa-tutorial3.html
+\title QML Static Analysis 3 - Fixit Hints
+\previouspage QML Static Analysis 2 - Custom Pass
+
+In this chapter we learn how to improve our custom warnings by amending them
+with fixit hints.
+
+So far, we only created warning messages. However, sometimes we also want to
+add a tip for the user how to fix the code. For that, we can pass an instance
+of \c FixSuggestion to \l{QQmlSA::GenericPass::emitWarning}{emitWarning}.
+A fix suggestion always consists of a description of what should be fixed, and
+the location where it should apply. It can also feature a replacement text.
+By default, the replacement text is only shown in the diagnostic message.
+By calling \c{setAutoApplicable(true)} on the \c{FixSuggestion}, the user
+can however apply the fix automatically via qmllint or the QML language
+server.
+It is important to only mark the suggestion as auto-applicable if the
+resulting code is valid.
+*/

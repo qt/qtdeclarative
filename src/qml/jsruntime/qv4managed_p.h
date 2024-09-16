@@ -69,7 +69,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
     static Heap::InternalClass *defaultInternalClass(QV4::EngineBase *e) \
         { return e->internalClasses(QV4::EngineBase::Class_##c); }
 
-struct Q_QML_PRIVATE_EXPORT Managed : Value, VTableBase
+struct Q_QML_EXPORT Managed : Value, VTableBase
 {
     V4_MANAGED_ITSELF(Base, Managed)
     enum {
@@ -77,7 +77,7 @@ struct Q_QML_PRIVATE_EXPORT Managed : Value, VTableBase
         IsString = false,
         IsStringOrSymbol = false,
         IsObject = false,
-        IsFunctionObject = false,
+        IsTailCallable = false,
         IsErrorObject = false,
         IsArrayData = false
     };

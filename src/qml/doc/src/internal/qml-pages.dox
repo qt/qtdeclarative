@@ -1,0 +1,22 @@
+/*! \internal
+    \page qml-language-and-engine QML Language and Engine
+
+    <a href="https://doc.qt.io/qt-6/qtquick-index.html">Qt QQuick</a>
+    consists of multiple interacting sets of components: the scene graph
+    abstraction and the renderers for various graphics architectures; the
+    declarative <a href="https://doc.qt.io/qt-6/qtqml-index.html">QML language</a>;
+    the QQuickItem (<a href="https://doc.qt.io/qt-6/qml-qtquick-item.html">Item</a>)
+    hierarchy of classes that are usually instantiated declaratively, which in
+    turn create and manage scene graph nodes; various model classes that can
+    drive creation of \c Item instances at runtime;
+    <a href="https://doc.qt.io/qt-6/qtquickhandlers-index.html">event-handling classes</a>;
+    and the V4 implementation of JavaScript that can be used for adding imperative
+    scripting to the objects that are declared in QML.
+
+    \section qml-runtime-engine QML Runtime Engine
+
+    The QML language includes a JavaScript interpreter, runtime and compiler.
+    Here we go into some runtime implementation details.
+
+    - \subpage v4-garbage-collector "Garbage Collection in the V4 engine"
+*/

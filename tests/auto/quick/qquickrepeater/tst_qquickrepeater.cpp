@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
@@ -1056,8 +1056,7 @@ void tst_QQuickRepeater::ownership()
 
     QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.get()));
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(modelGuard);
 
@@ -1075,8 +1074,7 @@ void tst_QQuickRepeater::ownership()
 
     QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.get()));
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(delegateGuard);
 
@@ -1089,8 +1087,7 @@ void tst_QQuickRepeater::ownership()
     delegate.release();
     aim.release();
 
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    gc(engine);
 
     QVERIFY(!delegateGuard);
     QVERIFY(!modelGuard);

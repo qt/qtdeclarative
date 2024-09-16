@@ -10,7 +10,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickPlatformMessageDialog, "qt.quick.dialogs.quickplatformmessagedialog")
+Q_STATIC_LOGGING_CATEGORY(lcQuickPlatformMessageDialog, "qt.quick.dialogs.quickplatformmessagedialog")
 
 QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
 {

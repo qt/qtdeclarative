@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qqmldebugprocess_p.h>
 #include <debugutil_p.h>
@@ -47,6 +47,8 @@ private slots:
     void error();
     void zoom();
     void fps();
+    void unhandledFiles_data();
+    void unhandledFiles();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -331,6 +333,28 @@ void tst_QQmlPreview::fps()
     } else {
         QSKIP("offscreen rendering doesn't produce any frames");
     }
+}
+
+void tst_QQmlPreview::unhandledFiles_data()
+{
+    QTest::addColumn<QUrl>("file");
+    QTest::addRow("dll")   << testFileUrl("a.dll");
+    QTest::addRow("dylib") << testFileUrl("a.dylib");
+    QTest::addRow("jsc")   << testFileUrl("a.jsc");
+    QTest::addRow("mjsc")  << testFileUrl("a.mjsc");
+    QTest::addRow("qmlc")  << testFileUrl("a.qmlc");
+    QTest::addRow("so")    << testFileUrl("a.so");
+}
+
+void tst_QQmlPreview::unhandledFiles()
+{
+    QFETCH(QUrl, file);
+    QCOMPARE(startQmlProcess("qtquick2.qml"), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+    m_client->triggerLoad(file);
+    verifyProcessOutputContains("fooh");
+    QVERIFY(!m_files.contains(file.toLocalFile()));
 }
 
 QTEST_MAIN(tst_QQmlPreview)

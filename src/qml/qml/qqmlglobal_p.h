@@ -123,8 +123,8 @@ do { \
     QMetaObject::disconnect(sender, signalIdx, receiver, methodIdx); \
 } while (0)
 
-Q_QML_PRIVATE_EXPORT bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo);
-Q_QML_PRIVATE_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type);
+Q_QML_EXPORT bool qmlobject_can_cpp_cast(QObject *object, const QMetaObject *mo);
+Q_QML_EXPORT bool qmlobject_can_qml_cast(QObject *object, const QQmlType &type);
 
 /*!
     This method is identical to qobject_cast<T>() except that it does not require lazy
@@ -211,7 +211,7 @@ public:
     static bool populateValueType(
             QMetaType targetMetaType, void *target, QMetaType sourceMetaType, void *source);
 
-    static Q_QML_PRIVATE_EXPORT void *heapCreateValueType(
+    static Q_QML_EXPORT void *heapCreateValueType(
             const QQmlType &targetType, const QV4::Value &source);
     static QVariant constructValueType(
             QMetaType targetMetaType, const QMetaObject *targetMetaObject,
@@ -223,7 +223,7 @@ public:
     static QVariant createValueType(const QVariant &, QMetaType);
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlColorProvider
+class Q_QML_EXPORT QQmlColorProvider
 {
 public:
     virtual ~QQmlColorProvider();
@@ -239,11 +239,11 @@ public:
     virtual QVariant tint(const QVariant &, const QVariant &);
 };
 
-Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *);
-Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_colorProvider();
+Q_QML_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *);
+Q_QML_EXPORT QQmlColorProvider *QQml_colorProvider();
 
 class QQmlApplication;
-class Q_QML_PRIVATE_EXPORT QQmlGuiProvider
+class Q_QML_EXPORT QQmlGuiProvider
 {
 public:
     virtual ~QQmlGuiProvider();
@@ -255,12 +255,12 @@ public:
     virtual QString pluginName() const;
 };
 
-Q_QML_PRIVATE_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *);
+Q_QML_EXPORT QQmlGuiProvider *QQml_setGuiProvider(QQmlGuiProvider *);
 Q_AUTOTEST_EXPORT QQmlGuiProvider *QQml_guiProvider();
 
 class QQmlApplicationPrivate;
 
-class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
+class Q_QML_EXPORT QQmlApplication : public QObject
 {
     //Application level logic, subclassed by Qt Quick if available via QQmlGuiProvider
     Q_OBJECT
@@ -270,7 +270,6 @@ class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
     Q_PROPERTY(QString organization READ organization WRITE setOrganization NOTIFY organizationChanged)
     Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
     QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQmlApplication(QObject* parent=nullptr);
 

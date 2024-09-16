@@ -14,7 +14,7 @@ In addition, QML heavily uses Qt, which allows types and other Qt features to
 be accessible directly from QML applications.
 
 This reference guide describes the features of  the QML language. Many of the
-QML types in the guide originate from the \l{Qt QML} or \l{Qt Quick}
+QML types in the guide originate from the \l{Qt Qml} or \l{Qt Quick}
 modules.
 
 \list

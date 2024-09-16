@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QDebug>
@@ -49,6 +49,7 @@ private slots:
     void outerContextObject();
     void contextObjectHierarchy();
     void destroyContextProperty();
+    void destroyContextObject();
 
     void numericContextProperty();
     void gcDeletesContextObject();
@@ -824,7 +825,7 @@ void tst_qqmlcontext::contextLeak()
         scriptContext = scriptContextWrapper->as<QV4::QQmlContextWrapper>()->getContext();
     }
 
-    engine.collectGarbage();
+    gc(engine);
 
     // Each time a JS file (non-pragma-shared) is imported, we create a QQmlContext(Data) for it.
     // Make sure that context does not leak.
@@ -943,6 +944,30 @@ void tst_qqmlcontext::destroyContextProperty()
 
     // We're not allowed to call context->contextProperty("b") anymore.
     // TODO: Or are we?
+}
+
+void tst_qqmlcontext::destroyContextObject()
+{
+    QQmlEngine engine;
+    QList<QQmlRefPointer<QQmlContextData>> contexts;
+    QQmlComponent component(&engine, testFileUrl("destroyContextObject.qml"));
+    QScopedPointer<QObject> root(component.create());
+
+    QPointer<QObject> a = root->property("a").value<QObject *>();
+    QVERIFY(a);
+
+    for (QQmlRefPointer<QQmlContextData> context = QQmlData::get(a)->ownContext;
+         context; context = context->parent()) {
+        contexts.append(context);
+    }
+
+    QObject *deleted = a.data();
+    root.reset();
+
+    QVERIFY(a.isNull());
+
+    for (const auto &context : contexts)
+        QVERIFY(context->contextObject() != deleted);
 }
 
 void tst_qqmlcontext::numericContextProperty()

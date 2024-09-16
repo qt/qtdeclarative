@@ -59,15 +59,18 @@ T.Slider {
         }
 
         NinePatchImage {
+            readonly property real handleWidth: control.handle ? control.handle.width : 0
+            readonly property real handleHeight: control.handle ? control.handle.height : 0
+
             x: control.horizontal ? 0 : (parent.width - width) / 2
             y: control.horizontal
                ? (parent.height - height) / 2
-               : control.handle.height / 2 + control.visualPosition * (parent.height - control.handle.height)
+               : handleHeight / 2 + control.visualPosition * (parent.height - handleHeight)
             width: control.horizontal
-                ? control.handle.width / 2 + control.position * (parent.width - control.handle.width)
+                ? handleWidth / 2 + control.position * (parent.width - handleWidth)
                 : parent.width
             height: control.vertical
-                ? control.handle.height / 2 + control.position * (parent.height - control.handle.height)
+                ? handleHeight / 2 + control.position * (parent.height - handleHeight)
                 : parent.height
 
             source: control.Imagine.url + "slider-progress"

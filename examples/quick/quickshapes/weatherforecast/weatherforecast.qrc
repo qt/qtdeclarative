@@ -1,0 +1,33 @@
+<RCC>
+    <qresource prefix="/qt/qml/weatherforecast">
+        <file>main.qml</file>
+        <file>Europe.qml</file>
+        <file>Europe_generated.qml</file>
+        <file>BouncyShape.qml</file>
+        <file>Cloud.qml</file>
+        <file>Cloud_generated.qml</file>
+        <file>CloudWithLightning.qml</file>
+        <file>CloudWithLightning_generated.qml</file>
+        <file>CloudWithRain.qml</file>
+        <file>CloudWithRain_generated.qml</file>
+        <file>CloudWithSnow.qml</file>
+        <file>CloudWithSnow_generated.qml</file>
+        <file>Gear.qml</file>
+        <file>Gear_generated.qml</file>
+        <file>MapLabel.qml</file>
+        <file>SettingsDrawer.qml</file>
+        <file>Sun.qml</file>
+        <file>Sun_generated.qml</file>
+        <file>SunBehindCloud.qml</file>
+        <file>SunBehindCloud_generated.qml</file>
+        <file>SunBehindRainCloud.qml</file>
+        <file>SunBehindRainCloud_generated.qml</file>
+        <file>SunBehindSmallCloud.qml</file>
+        <file>SunBehindSmallCloud_generated.qml</file>
+        <file>DemoShape.qml</file>
+        <file>assets/WorkSans-Regular.ttf</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>qtquickcontrols2.conf</file>
+    </qresource>
+</RCC>

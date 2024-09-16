@@ -28,12 +28,12 @@ QT_BEGIN_NAMESPACE
  **/
 class QQuickGridLayoutBasePrivate;
 
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickGridLayoutBase : public QQuickLayout
+class Q_QUICKLAYOUTS_EXPORT QQuickGridLayoutBase : public QQuickLayout
 {
     Q_OBJECT
 
     Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection
-               NOTIFY layoutDirectionChanged REVISION(1, 1) FINAL)
+               NOTIFY layoutDirectionChanged REVISION(1, 1))
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(1, 1)
 
@@ -111,19 +111,20 @@ public:
  **
  **/
 class QQuickGridLayoutPrivate;
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickGridLayout : public QQuickGridLayoutBase
+class Q_QUICKLAYOUTS_EXPORT QQuickGridLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged FINAL)
-    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged FINAL)
-    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged FINAL)
-    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged FINAL)
-    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged FINAL)
+    Q_PROPERTY(qreal columnSpacing READ columnSpacing WRITE setColumnSpacing NOTIFY columnSpacingChanged)
+    Q_PROPERTY(qreal rowSpacing READ rowSpacing WRITE setRowSpacing NOTIFY rowSpacingChanged)
+    Q_PROPERTY(int columns READ columns WRITE setColumns NOTIFY columnsChanged)
+    Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
+    Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     Q_PROPERTY(bool uniformCellWidths READ uniformCellWidths WRITE setUniformCellWidths
                NOTIFY uniformCellWidthsChanged REVISION(6, 6) FINAL)
     Q_PROPERTY(bool uniformCellHeights READ uniformCellHeights WRITE setUniformCellHeights
                NOTIFY uniformCellHeightsChanged REVISION(6, 6) FINAL)
+
     QML_NAMED_ELEMENT(GridLayout)
     QML_ADDED_IN_VERSION(1, 0)
 public:
@@ -182,10 +183,11 @@ public:
  **
  **/
 class QQuickLinearLayoutPrivate;
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLinearLayout : public QQuickGridLayoutBase
+class Q_QUICKLAYOUTS_EXPORT QQuickLinearLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)
+    QML_ANONYMOUS
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
     Q_PROPERTY(bool uniformCellSizes READ uniformCellSizes WRITE setUniformCellSizes
                NOTIFY uniformCellSizesChanged REVISION(6, 6) FINAL)
 public:
@@ -219,7 +221,7 @@ public:
  ** QQuickRowLayout
  **
  **/
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT  QQuickRowLayout : public QQuickLinearLayout
+class Q_QUICKLAYOUTS_EXPORT  QQuickRowLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(RowLayout)
@@ -236,7 +238,7 @@ public:
  ** QQuickColumnLayout
  **
  **/
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickColumnLayout : public QQuickLinearLayout
+class Q_QUICKLAYOUTS_EXPORT QQuickColumnLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ColumnLayout)

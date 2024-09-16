@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyToPropertyBinding
+class Q_QML_EXPORT QQmlPropertyToPropertyBinding
     : public QQmlAbstractBinding, public QQmlNotifierEndpoint
 {
 public:

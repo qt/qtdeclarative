@@ -1,10 +1,11 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquickrepeater_p.h>
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlexpression_p.h>
@@ -120,6 +121,8 @@ private slots:
     void objectOwnershipFlip();
     void enumsInListElement();
     void protectQObjectFromGC();
+    void nestedLists();
+    void deadModelData();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1903,6 +1906,215 @@ void tst_qqmllistmodel::protectQObjectFromGC()
         QObject *element = qjsvalue_cast<QObject *>(listModel->get(i).property("path"));
         QVERIFY(element);
         QCOMPARE(element->property("name").toString(), QString::number(i));
+    }
+}
+
+static QVariantList createLast7Days()
+{
+    QVariantList last7DaysList;
+    for (int i = 0; i < 7; i++) {
+        QVariantMap map;
+        map.insert("_day", i);
+        last7DaysList.append(map);
+    }
+    return last7DaysList;
+}
+
+static QVariantList createWeekChartModels()
+{
+    QVariantList list;
+    for (int i = 0; i < 4; i++) {
+        QVariantMap map;
+        map.insert("_week", createLast7Days());
+        list.append(map);
+    }
+    return list;
+}
+
+static QVariantList createVariantModel()
+{
+    QVariantMap element1;
+    element1.insert("_headline", "Element 1");
+    element1.insert("_weeks", createWeekChartModels());
+
+    QVariantMap element2;
+    element2.insert("_headline", "Element 2");
+    element2.insert("_weeks", createWeekChartModels());
+
+    QVariantMap element3;
+    element3.insert("_headline", "Element 3");
+    element3.insert("_weeks", createWeekChartModels());
+
+    QVariantList list;
+    list.append(element1);
+    list.append(element2);
+    list.append(element3);
+
+    return list;
+}
+
+class Day : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int _day READ _day CONSTANT)
+public:
+    Day(int day, QObject *parent = nullptr) : QObject(parent), day(day) {}
+    int _day() const { return day; }
+private:
+    int day = 0;
+};
+
+class Week : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<Day> _week READ _week)
+public:
+    Week(QObject *parent = nullptr) : QObject(parent)
+    {
+        for (int i = 0; i < 7; ++i)
+            week.append(new Day(i, this));
+    }
+
+    QQmlListProperty<Day> _week() { return QQmlListProperty<Day>(this, &week); }
+
+private:
+    QList<Day *> week;
+};
+
+class Month : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<Week> _weeks READ _weeks)
+    Q_PROPERTY(QString _headline READ _headline CONSTANT)
+public:
+
+    Month(int i, QObject *parent = nullptr)
+        : QObject(parent)
+        , headline(QLatin1String("Element ") + QString::number(i))
+    {
+        for (int i = 0; i < 4; ++i)
+            weeks.append(new Week(this));
+    }
+
+    QQmlListProperty<Week> _weeks() { return QQmlListProperty<Week>(this, &weeks); }
+    QString _headline() const { return headline; }
+
+private:
+    QList<Week *> weeks;
+    QString headline;
+};
+
+static void verifyLists(const QVariantList &list, QQuickRepeater *topLevel)
+{
+    QVERIFY(topLevel);
+    QCOMPARE(topLevel->count(), 3);
+
+    for (int month = 0; month < 3; ++month) {
+        const QVariantMap monthData = list[month].toMap();
+        const QQuickItem *monthItem = topLevel->itemAt(month);
+        QCOMPARE(monthItem->objectName(), monthData["_headline"].toString());
+        const QQuickRepeater *monthRepeater = monthItem->findChild<QQuickRepeater *>("month");
+        QVERIFY(monthRepeater);
+        QCOMPARE(monthRepeater->count(), 4);
+        const QVariantList weekList = monthData["_weeks"].toList();
+        for (int week = 0; week < 4; ++week) {
+            const QVariantList weekData = weekList[week].toMap()["_week"].toList();
+            const QQuickItem *weekItem = monthRepeater->itemAt(week);
+            QCOMPARE(weekItem->objectName(), QString::number(week));
+            const QQuickRepeater *weekRepeater = weekItem->findChild<QQuickRepeater *>("week");
+            QVERIFY(weekRepeater);
+            QCOMPARE(weekRepeater->count(), 7);
+            for (int day = 0; day < 7; ++day) {
+                const QVariantMap dayData = weekData[day].toMap();
+                const QQuickItem *dayItem = weekRepeater->itemAt(day);
+                QCOMPARE(dayItem->objectName(), dayData["_day"]);
+            }
+        }
+    }
+}
+
+void tst_qqmllistmodel::nestedLists()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("nestedLists.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQuickRepeater *topLevel = o->findChild<QQuickRepeater *>("topLevel");
+
+    const QVariantList list = createVariantModel();
+    QMetaObject::invokeMethod(o.data(), "load", Q_ARG(QVariant, QVariant::fromValue(list)));
+    verifyLists(list, topLevel);
+
+    const QObjectList objects {
+        new Month(1, o.data()),
+        new Month(2, o.data()),
+        new Month(3, o.data())
+    };
+
+    QMetaObject::invokeMethod(o.data(), "load", Q_ARG(QVariant, QVariant::fromValue(objects)));
+    verifyLists(list, topLevel);
+}
+
+void tst_qqmllistmodel::deadModelData()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deadModelData.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlListModel *l1 = o->property("l1").value<QQmlListModel *>();
+    QVERIFY(l1);
+    QQmlListModel *l2 = o->property("l2").value<QQmlListModel *>();
+    QVERIFY(l2);
+
+    QCOMPARE(l1->count(), 3);
+    QCOMPARE(l2->count(), 3);
+
+    for (int i = 0; i < 3; ++i) {
+        QObject *i1 = qjsvalue_cast<QObject *>(l1->get(i));
+        QVERIFY(i1);
+        QCOMPARE(i1->property("ident").value<double>(), i + 1);
+        QCOMPARE(i1->property("buttonText").value<QString>(),
+                 QLatin1String("B %1").arg(QLatin1Char('0' + i + 1)));
+
+        QObject *i2 = qjsvalue_cast<QObject *>(l2->get(i));
+        QVERIFY(i2);
+        QCOMPARE(i2->property("ident").value<double>(), i + 4);
+        QCOMPARE(i2->property("buttonText").value<QString>(),
+                 QLatin1String("B %1").arg(QLatin1Char('0' + i + 4)));
+    }
+
+    for (int i = 0; i < 6; ++i) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                QRegularExpression(".*: ident is undefined. Adding an object with a undefined "
+                                   "member does not create a role for it."));
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                QRegularExpression(".*: buttonText is undefined. Adding an object with a undefined "
+                                   "member does not create a role for it."));
+    }
+
+    QMetaObject::invokeMethod(o.data(), "swapCorpses");
+
+    // We get default-created values for all the roles now.
+
+    QCOMPARE(l1->count(), 3);
+    QCOMPARE(l2->count(), 3);
+
+    for (int i = 0; i < 3; ++i) {
+        QObject *i1 = qjsvalue_cast<QObject *>(l1->get(i));
+        QVERIFY(i1);
+        QCOMPARE(i1->property("ident").value<double>(), double());
+        QCOMPARE(i1->property("buttonText").value<QString>(), QString());
+
+        QObject *i2 = qjsvalue_cast<QObject *>(l2->get(i));
+        QVERIFY(i2);
+        QCOMPARE(i2->property("ident").value<double>(), double());
+        QCOMPARE(i2->property("buttonText").value<QString>(), QString());
     }
 }
 

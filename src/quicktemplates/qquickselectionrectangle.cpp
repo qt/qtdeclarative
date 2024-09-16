@@ -17,7 +17,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SelectionRectangle
     \inherits Control
-//!     \instantiates QQuickSelectionRectangle
+//!     \nativetype QQuickSelectionRectangle
     \inqmlmodule QtQuick.Controls
     \since 6.2
     \ingroup utilities
@@ -170,18 +170,10 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         else
             m_selectable->setSelectionEndPos(m_scrollToPoint);
         updateHandles();
-        const QSizeF dist = m_selectable->scrollTowardsSelectionPoint(m_scrollToPoint, m_scrollSpeed);
+        const QSizeF dist = m_selectable->scrollTowardsPoint(m_scrollToPoint, m_scrollSpeed);
         m_scrollToPoint.rx() += dist.width() > 0 ? m_scrollSpeed.width() : -m_scrollSpeed.width();
         m_scrollToPoint.ry() += dist.height() > 0 ? m_scrollSpeed.height() : -m_scrollSpeed.height();
         m_scrollSpeed = QSizeF(qAbs(dist.width() * 0.007), qAbs(dist.height() * 0.007));
-    });
-
-    QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [this] {
-        const auto modifiers = m_tapHandler->point().modifiers();
-        if (modifiers != Qt::NoModifier)
-            return;
-
-        updateActiveState(false);
     });
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::pressedChanged, [this]() {
@@ -196,15 +188,20 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (modifiers & Qt::ShiftModifier) {
-            // Extend the existing selection towards the pressed cell
-            if (!m_active)
-                return;
+            // Extend the selection towards the pressed cell. If there is no
+            // existing selection, start a new selection from the current item
+            // to the pressed item.
+            if (!m_active) {
+                if (!m_selectable->startSelection(pos, modifiers))
+                    return;
+                m_selectable->setSelectionStartPos(QPoint{-1, -1});
+            }
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
         } else if (modifiers & Qt::ControlModifier) {
             // Select a single cell, but keep the old selection (unless
-            // m_selectable->startSelection(pos) returns false, which
+            // m_selectable->startSelection(pos. modifiers) returns false, which
             // it will if selectionMode only allows a single selection).
             if (handleUnderPos(pos) != nullptr) {
                 // Don't allow press'n'hold to start a new
@@ -212,15 +209,12 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
                 return;
             }
 
-            if (!m_selectable->startSelection(pos))
+            if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
-        } else if (modifiers == Qt::NoModifier) {
-            // Don't select any cell
-            updateActiveState(false);
         }
     });
 
@@ -237,26 +231,21 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         }
 
         if (modifiers == Qt::ShiftModifier) {
-            // Extend the existing selection towards the pressed cell
-            if (!m_active)
-                return;
+            // Extend the selection towards the pressed cell. If there is no
+            // existing selection, start a new selection from the current item
+            // to the pressed item.
+            if (!m_active) {
+                if (!m_selectable->startSelection(pos, modifiers))
+                    return;
+                m_selectable->setSelectionStartPos(QPoint{-1, -1});
+            }
             m_selectable->setSelectionEndPos(pos);
             updateHandles();
             updateActiveState(true);
-        } else if (modifiers == Qt::ControlModifier) {
-            // Select a single cell, but keep the old selection (unless
-            // m_selectable->startSelection(pos) returns false, which
-            // it will if selectionMode only allows a single selection).
-            if (!m_selectable->startSelection(pos))
-                return;
-            m_selectable->setSelectionStartPos(pos);
-            m_selectable->setSelectionEndPos(pos);
-            updateHandles();
-            updateActiveState(true);
-        } else if (modifiers == Qt::NoModifier) {
-            // Select a single cell
-            m_selectable->clearSelection();
-            if (!m_selectable->startSelection(pos))
+        } else {
+            // Select a single cell. m_selectable->startSelection() will decide
+            // if the existing selection should also be cleared.
+            if (!m_selectable->startSelection(pos, modifiers))
                 return;
             m_selectable->setSelectionStartPos(pos);
             m_selectable->setSelectionEndPos(pos);
@@ -274,13 +263,12 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
             return;
 
         if (m_dragHandler->active()) {
-            // Start a new selection, unless Shift is being pressed. Shift
-            // means that we should extend the existing selection instead.
-            if (modifiers & Qt::ShiftModifier) {
-                if (!m_active)
-                    return;
-            } else {
-                if (!m_selectable->startSelection(startPos))
+            // Start a new selection unless there is an active selection
+            // already, and one of the relevant modifiers are being held.
+            // In that case we continue to extend the active selection instead.
+            const bool modifiersHeld = modifiers & (Qt::ControlModifier | Qt::ShiftModifier);
+            if (!m_active || !modifiersHeld) {
+                if (!m_selectable->startSelection(startPos, modifiers))
                     return;
                 m_selectable->setSelectionStartPos(startPos);
             }
@@ -312,7 +300,7 @@ void QQuickSelectionRectanglePrivate::scrollTowardsPos(const QPointF &pos)
     if (m_scrollTimer.isActive())
         return;
 
-    const QSizeF dist = m_selectable->scrollTowardsSelectionPoint(m_scrollToPoint, m_scrollSpeed);
+    const QSizeF dist = m_selectable->scrollTowardsPoint(m_scrollToPoint, m_scrollSpeed);
     if (!dist.isNull())
         m_scrollTimer.start(1);
 }
@@ -473,6 +461,25 @@ void QQuickSelectionRectanglePrivate::connectToTarget()
     if (const auto flickable = qobject_cast<QQuickFlickable *>(m_target)) {
         connect(flickable, &QQuickFlickable::interactiveChanged, this, &QQuickSelectionRectanglePrivate::updateSelectionMode);
     }
+
+    // Add a callback function that tells if the selection was
+    // modified outside of the actions taken by SelectionRectangle.
+    m_selectable->setCallback([this](QQuickSelectable::CallBackFlag flag){
+        switch (flag) {
+        case QQuickSelectable::CallBackFlag::CancelSelection:
+            // The selection is either cleared, or can no longer be
+            // represented as a rectangle with two selection handles.
+            updateActiveState(false);
+            break;
+        case QQuickSelectable::CallBackFlag::SelectionRectangleChanged:
+            // The selection has changed, but the selection is still
+            // rectangular and without holes.
+            updateHandles();
+            break;
+        default:
+            Q_UNREACHABLE();
+        }
+    });
 }
 
 void QQuickSelectionRectanglePrivate::updateSelectionMode()
@@ -483,7 +490,7 @@ void QQuickSelectionRectanglePrivate::updateSelectionMode()
     m_tapHandler->setEnabled(enabled);
 
     if (m_selectionMode == QQuickSelectionRectangle::Auto) {
-        if (qobject_cast<QQuickScrollView *>(m_target->parentItem())) {
+        if (m_target && qobject_cast<QQuickScrollView *>(m_target->parentItem())) {
             // ScrollView allows flicking with touch, but not with mouse. So we do
             // the same here: you can drag to select with a mouse, but not with touch.
             m_effectiveSelectionMode = QQuickSelectionRectangle::Drag;
@@ -551,6 +558,7 @@ void QQuickSelectionRectangle::setTarget(QQuickItem *target)
         d->m_tapHandler->setParent(this);
         d->m_dragHandler->setParent(this);
         d->m_target->disconnect(this);
+        d->m_selectable->setCallback(nullptr);
     }
 
     d->m_target = target;

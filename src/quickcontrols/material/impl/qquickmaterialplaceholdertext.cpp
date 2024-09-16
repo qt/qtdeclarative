@@ -29,8 +29,8 @@ Q_GLOBAL_STATIC(QEasingCurve, animationEasingCurve, QEasingCurve::OutSine);
 QQuickMaterialPlaceholderText::QQuickMaterialPlaceholderText(QQuickItem *parent)
     : QQuickPlaceholderText(parent)
 {
-    // Ensure that scaling happens on the left side, at the vertical center.
-    setTransformOrigin(QQuickItem::Left);
+    connect(this, &QQuickMaterialPlaceholderText::effectiveHorizontalAlignmentChanged,
+            this, &QQuickMaterialPlaceholderText::adjustTransformOrigin);
 }
 
 bool QQuickMaterialPlaceholderText::isFilled() const
@@ -212,10 +212,33 @@ void QQuickMaterialPlaceholderText::setVerticalPadding(qreal verticalPadding)
     emit verticalPaddingChanged();
 }
 
+void QQuickMaterialPlaceholderText::adjustTransformOrigin()
+{
+    switch (effectiveHAlign()) {
+    case QQuickText::AlignLeft:
+        Q_FALLTHROUGH();
+    case QQuickText::AlignJustify:
+        setTransformOrigin(QQuickItem::Left);
+        break;
+    case QQuickText::AlignRight:
+        setTransformOrigin(QQuickItem::Right);
+        break;
+    case QQuickText::AlignHCenter:
+        setTransformOrigin(QQuickItem::Center);
+        break;
+    }
+}
+
 void QQuickMaterialPlaceholderText::controlGotActiveFocus()
 {
-    if (m_focusOutAnimation)
+    if (m_focusOutAnimation) {
+        // Focus changes can happen before the animations finish.
+        // In that case, stop the animation, which will eventually delete it.
+        // Until it's deleted, we clear the pointer so that our asserts don't fail
+        // for the wrong reason.
         m_focusOutAnimation->stop();
+        m_focusOutAnimation.clear();
+    }
 
     Q_ASSERT(!m_focusInAnimation);
     if (shouldAnimate()) {
@@ -243,6 +266,11 @@ void QQuickMaterialPlaceholderText::controlGotActiveFocus()
 
 void QQuickMaterialPlaceholderText::controlLostActiveFocus()
 {
+    if (m_focusInAnimation) {
+        m_focusInAnimation->stop();
+        m_focusInAnimation.clear();
+    }
+
     Q_ASSERT(!m_focusOutAnimation);
     if (shouldAnimate()) {
         m_focusOutAnimation = new QParallelAnimationGroup(this);
@@ -275,9 +303,9 @@ void QQuickMaterialPlaceholderText::maybeSetFocusAnimationProgress()
 
 void QQuickMaterialPlaceholderText::componentComplete()
 {
-    // We deliberately do not call QQuickPlaceholderText's implementation here,
-    // as Material 3 placeholder text should always be left-aligned.
-    QQuickText::componentComplete();
+    QQuickPlaceholderText::componentComplete();
+
+    adjustTransformOrigin();
 
     m_largestHeight = implicitHeight();
     if (m_largestHeight > 0) {

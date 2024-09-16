@@ -69,13 +69,18 @@ public:
     }
 
     QQuickItem *getItem(int modelIndex, qreal z = 0, bool async=false);
+    void releaseCurrentItem()
+    {
+        auto oldCurrentItem = std::exchange(currentItem, nullptr);
+        releaseItem(oldCurrentItem);
+    }
     void releaseItem(QQuickItem *item);
     QQuickPathViewAttached *attached(QQuickItem *item);
     QQmlOpenMetaObjectType *attachedType();
     void clear();
     void updateMappedRange();
     qreal positionOfIndex(qreal index) const;
-    bool isInBound(qreal position, qreal lower, qreal upper) const;
+    bool isInBound(qreal position, qreal lower, qreal upper, bool emptyRangeCheck = true) const;
     void createHighlight();
     void updateHighlight();
     void setHighlightPosition(qreal pos);
@@ -140,6 +145,7 @@ public:
     int pathItems;
     int requestedIndex;
     int cacheSize;
+    int requestedCacheSize;
     qreal requestedZ;
     QList<QQuickItem *> items;
     QList<QQuickItem *> itemCache;

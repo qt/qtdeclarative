@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TST_QMLDOMPATH_H
 #define TST_QMLDOMPATH_H
@@ -16,7 +16,7 @@ namespace PathEls {
 class TestPaths: public QObject {
     Q_OBJECT
 public:
-    void testPathInternals(Path p1)
+    void testPathInternals(const Path &p1)
     {
         QCOMPARE(p1.component(0).kind(), Kind::Root);
         QCOMPARE(p1.component(1).kind(), Kind::Current);
@@ -175,7 +175,7 @@ private slots:
             Path::Index(4),
             Path::Key(u"zz")
             });
-        for (Path p : paths) {
+        for (const Path &p : paths) {
             Source s = p.split();
             QCOMPARE(p, s.pathToSource.path(s.pathFromSource));
             if (!s.pathFromSource)

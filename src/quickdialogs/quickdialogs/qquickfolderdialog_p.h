@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFileNameFilter;
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFolderDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickFolderDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
@@ -74,7 +74,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFolderDialog)
 
 #endif // QQUICKFOLDERDIALOG_P_H

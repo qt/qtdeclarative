@@ -47,12 +47,12 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
 
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
     if (!file) {
-        guard.setError(QQmlLSUtilsErrorMessage{
+        guard.setError(QQmlLSUtils::ErrorMessage{
                 0, u"Could not find the file %1"_s.arg(doc.snapshot.doc.canonicalFilePath()) });
         return;
     }
     if (!file.field(Fields::isValid).value().toBool(false)) {
-        guard.setError(QQmlLSUtilsErrorMessage{ 0, u"Cannot format invalid documents!"_s });
+        guard.setError(QQmlLSUtils::ErrorMessage{ 0, u"Cannot format invalid documents!"_s });
         return;
     }
     if (auto envPtr = file.environment().ownerAs<DomEnvironment>())
@@ -66,7 +66,7 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
                     return true;
                 },
                 true);
-        guard.setError(QQmlLSUtilsErrorMessage{
+        guard.setError(QQmlLSUtils::ErrorMessage{
                 0, u"Failed to parse %1"_s.arg(file.canonicalFilePath()) });
         return;
     }
@@ -80,9 +80,8 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     QLspSpecification::TextEdit formattedText;
     LineWriter lw([&formattedText](QStringView s) {formattedText.newText += s.toUtf8(); }, QString(), options);
     OutWriter ow(lw);
-    MutableDomItem formatted = file.writeOutForFile(ow, WriteOutCheck::None);
+    file.writeOutForFile(ow, WriteOutCheck::None);
     ow.flush();
-
     const auto &code = qmlFile->code();
     const auto [endLine, endColumn] = QQmlLSUtils::textRowAndColumnFrom(code, code.length());
 

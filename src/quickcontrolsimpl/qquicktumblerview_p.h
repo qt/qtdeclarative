@@ -26,7 +26,7 @@ class QQuickPathView;
 
 class QQuickTumbler;
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickTumblerView : public QQuickItem
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickTumblerView : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged)

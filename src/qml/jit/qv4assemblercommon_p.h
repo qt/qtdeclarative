@@ -33,7 +33,7 @@ namespace QV4 {
 namespace JIT {
 
 #if defined(Q_PROCESSOR_X86_64) || defined(ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES)
-#if defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN) || defined(Q_OS_SOLARIS) || defined(Q_OS_VXWORKS)
+#if defined(Q_OS_LINUX) || defined(Q_OS_QNX) || defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN) || defined(Q_OS_SOLARIS) || defined(Q_OS_VXWORKS) || defined(Q_OS_HURD)
 
 class PlatformAssembler_X86_64_SysV : public JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
 {
@@ -562,7 +562,7 @@ public:
     Address loadConstAddress(int constIndex, RegisterID baseReg = ScratchRegister)
     {
         Address addr = loadCompilationUnitPtr(baseReg);
-        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, constants);
+        addr.offset = offsetof(QV4::CompilationUnitRuntimeData, constants);
         loadPtr(addr, baseReg);
         addr.offset = constIndex * int(sizeof(QV4::Value));
         return addr;
@@ -571,7 +571,7 @@ public:
     Address loadStringAddress(int stringId)
     {
         Address addr = loadCompilationUnitPtr(ScratchRegister);
-        addr.offset = offsetof(QV4::CompiledData::CompilationUnitBase, runtimeStrings);
+        addr.offset = offsetof(QV4::CompilationUnitRuntimeData, runtimeStrings);
         loadPtr(addr, ScratchRegister);
         return Address(ScratchRegister, stringId * PointerSize);
     }

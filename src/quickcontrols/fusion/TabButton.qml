@@ -35,6 +35,7 @@ T.TabButton {
         color: control.palette.buttonText
     }
 
+
     background: Rectangle {
         y: control.checked || control.TabBar.position !== T.TabBar.Header ? 0 : 2
         implicitHeight: 21

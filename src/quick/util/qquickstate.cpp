@@ -82,7 +82,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
 
 /*!
     \qmltype State
-    \instantiates QQuickState
+    \nativetype QQuickState
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Defines configurations of objects and properties.
@@ -112,7 +112,7 @@ QQuickStateOperation::QQuickStateOperation(QObjectPrivate &dd, QObject *parent)
     not allowed.
 
     \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States},
-    {Animation and Transitions in Qt Quick}{Transitions}, {Qt QML}
+    {Animation and Transitions in Qt Quick}{Transitions}, {Qt Qml}
 */
 QQuickState::QQuickState(QObject *parent)
 : QObject(*(new QQuickStatePrivate), parent)
@@ -419,27 +419,25 @@ void QQuickState::addEntryToRevertList(const QQuickStateAction &action)
 
 void QQuickState::removeAllEntriesFromRevertList(QObject *target)
 {
-     Q_D(QQuickState);
+    Q_D(QQuickState);
 
-     if (isStateActive()) {
-         const auto actionMatchesTarget = [target](QQuickSimpleAction &simpleAction) {
-             if (simpleAction.property().object() == target) {
-                 QQmlPropertyPrivate::removeBinding(simpleAction.property());
-                 simpleAction.property().write(simpleAction.value());
-                 if (auto binding = simpleAction.binding()) {
-                     QQmlProperty prop = simpleAction.property();
-                     binding.installOn(prop);
-                 }
+    if (isStateActive()) {
+        const auto actionMatchesTarget = [target](const QQuickSimpleAction &simpleAction) {
+            if (simpleAction.property().object() == target) {
+                QQmlPropertyPrivate::removeBinding(simpleAction.property());
+                simpleAction.property().write(simpleAction.value());
+                if (auto binding = simpleAction.binding()) {
+                    QQmlProperty prop = simpleAction.property();
+                    binding.installOn(prop);
+                }
 
-                 return true;
-             }
-             return false;
-         };
+                return true;
+            }
+            return false;
+        };
 
-         d->revertList.erase(std::remove_if(d->revertList.begin(), d->revertList.end(),
-                                            actionMatchesTarget),
-                             d->revertList.end());
-     }
+        d->revertList.removeIf(actionMatchesTarget);
+    }
 }
 
 void QQuickState::addEntriesToRevertList(const QList<QQuickStateAction> &actionList)

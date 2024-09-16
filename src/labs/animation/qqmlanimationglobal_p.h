@@ -17,6 +17,6 @@
 // We mean it.
 //
 
-#include <QtLabsAnimation/private/qtlabsanimationexports_p.h>
+#include <QtLabsAnimation/qtlabsanimationexports.h>
 
 #endif // QTLABSANIMATIONGLOBAL_P_H

@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MessageDialog
     \inherits Dialog
-//!     \instantiates QQuickMessageDialog
+//!     \nativetype QQuickMessageDialog
     \inqmlmodule QtQuick.Dialogs
     \since 6.3
     \brief A message dialog.
@@ -218,7 +218,9 @@ void QQuickMessageDialog::setButtons(QPlatformDialogHelper::StandardButtons butt
 void QQuickMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button,
                                       QPlatformDialogHelper::ButtonRole role)
 {
+    m_roleOfLastButtonPressed = role;
     emit buttonClicked(button, role);
+    done(button);
 }
 
 void QQuickMessageDialog::onCreate(QPlatformDialogHelper *dialog)
@@ -238,6 +240,20 @@ void QQuickMessageDialog::onShow(QPlatformDialogHelper *dialog)
     if (QPlatformMessageDialogHelper *messageDialog =
                 qobject_cast<QPlatformMessageDialogHelper *>(dialog))
         messageDialog->setOptions(m_options); // setOptions only assigns a member and isn't virtual
+}
+
+int QQuickMessageDialog::dialogCode() const
+{
+    switch (m_roleOfLastButtonPressed) {
+    case QPlatformDialogHelper::AcceptRole:
+    case QPlatformDialogHelper::YesRole:
+        return Accepted;
+    case QPlatformDialogHelper::RejectRole:
+    case QPlatformDialogHelper::NoRole:
+        return Rejected;
+    default:
+        return QQuickAbstractDialog::dialogCode();
+    }
 }
 
 QT_END_NAMESPACE

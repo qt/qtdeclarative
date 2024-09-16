@@ -85,7 +85,9 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
+add_subdirectory(impl)
+
+qt_internal_add_qml_module(QuickControls2Imagine
     URI "QtQuick.Controls.Imagine"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -98,7 +100,6 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
     SOURCES
         qquickimaginestyle.cpp qquickimaginestyle_p.h
         qquickimaginetheme.cpp qquickimaginetheme_p.h
-        qtquickcontrols2imaginestyleplugin.cpp
     QML_FILES
         ${qml_files}
     DEFINES
@@ -108,10 +109,21 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2ImagineStyleImpl
         Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
+)
+
+target_sources(qtquickcontrols2imaginestyleplugin
+    PRIVATE
+        qtquickcontrols2imaginestyleplugin.cpp
+)
+
+target_link_libraries(qtquickcontrols2imaginestyleplugin
+    PRIVATE
+        Qt::QuickControls2Private
 )
 
 file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.png")
@@ -125,19 +137,17 @@ foreach(file IN LISTS resource_glob_1)
 endforeach()
 
 # Resources:
-set(qmake_qtquickcontrols2imaginestyleplugin_resource_files
+set(qmake_qtquickcontrols2imaginestyle_resource_files
     ${resource_glob_0}
     ${resource_glob_1}
 )
 
-qt_internal_add_resource(qtquickcontrols2imaginestyleplugin "qmake_qtquickcontrols2imaginestyleplugin"
+qt_internal_add_resource(QuickControls2Imagine "qmake_qtquickcontrols2imaginestyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Imagine"
     FILES
-        ${qmake_qtquickcontrols2imaginestyleplugin_resource_files}
+        ${qmake_qtquickcontrols2imaginestyle_resource_files}
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2imaginestyleplugin quickwindow)
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2imaginestyleplugin

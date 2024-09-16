@@ -74,6 +74,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickCalendarModel)
-
 #endif // QQUICKCALENDARMODEL_P_H

@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickThemePrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickThemePrivate
 {
 public:
     static QQuickThemePrivate *get(QQuickTheme *theme)

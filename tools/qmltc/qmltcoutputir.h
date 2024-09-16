@@ -92,6 +92,42 @@ struct QmltcDtor : QmltcMethodBase
 {
 };
 
+// Represents a generated class that knows how to set the public,
+// writable properties of a compiled QML -> C++ type.
+// This is generally intended to be available for the root of the
+// document to allow the user to set the initial values for
+// properties, when creating a component, with support for strong
+// typing.
+struct QmltcPropertyInitializer {
+    QString name;
+
+    QmltcCtor constructor;
+
+    // A member containing a reference to the object for which the
+    // properties should be set.
+    QmltcVariable component;
+
+    // A member containing a cache of properties that were actually
+    // set that can be referenced later..
+    QmltcVariable initializedCache;
+
+    // Setter methods for each property.
+    QList<QmltcMethod> propertySetters;
+};
+
+// Represents a generated class that contains a bundle of values to
+// initialize the required properties of a type.
+//
+// This is generally intended to be available for the root component
+// of the document, where it will be used as a constructor argument to
+// force the user to provide initial values for the required
+// properties of the constructed type.
+struct QmltcRequiredPropertiesBundle {
+    QString name;
+
+    QList<QmltcVariable> members;
+};
+
 // Represents QML -> C++ compiled type
 struct QmltcType
 {
@@ -131,6 +167,12 @@ struct QmltcType
 
     // needed for singletons
     std::optional<QmltcMethod> staticCreate{};
+
+    // A proxy class that provides a restricted interface that only
+    // allows setting the properties of the type.
+    QmltcPropertyInitializer propertyInitializer{};
+
+    std::optional<QmltcRequiredPropertiesBundle> requiredPropertiesBundle{};
 };
 
 // Represents whole QML program, compiled to C++

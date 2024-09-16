@@ -248,15 +248,19 @@ environment.
 
 The non-threaded render loop is currently used by default on Windows with
 OpenGL when not using the system's standard opengl32.dll, \macos with OpenGL,
-and Linux with some drivers. For the latter this is mostly a precautionary
-measure, as not all combinations of OpenGL drivers and windowing systems have
-been tested.
+WebAssembly, and Linux with some drivers. For the latter this is mostly a
+precautionary measure, as not all combinations of OpenGL drivers and windowing
+systems have been tested.
 
 On macOS and OpenGL, the threaded render loop is not supported when building
 with XCode 10 (10.14 SDK) or later, since this opts in to layer-backed views on
 macOS 10.14. You can build with Xcode 9 (10.13 SDK) to opt out of
 layer-backing, in which case the threaded render loop is available and used by
 default. There is no such restriction with Metal.
+
+The threaded render loop is not supported on WebAssembly, since the web platform
+has limited support for using WebGL on other threads than the main thread, and
+limited support for blocking the main thread.
 
 Even when using the non-threaded render loop, you should write your code as if
 you are using the threaded renderer, as failing to do so will make the code
@@ -370,7 +374,7 @@ manner, advancing animations cannot be based on the rendering.
 This switch of animation handling mechanisms is transparent to the
 applications.
 
-\section3 What if vsync-based throttling is disfunctional, globally disabled, or the application disabled it itself?
+\section3 What if vsync-based throttling is dysfunctional, globally disabled, or the application disabled it itself?
 
 The \c threaded render loop relies on the graphics API implementation and/or
 the windowing system for throttling, for example, by requesting a swap interval

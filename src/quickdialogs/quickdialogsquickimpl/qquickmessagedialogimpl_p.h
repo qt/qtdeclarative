@@ -29,7 +29,7 @@ class QQuickMessageDialogImplAttached;
 class QQuickMessageDialogImplAttachedPrivate;
 class QQuickMessageDialogImplPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickMessageDialogImpl : public QQuickDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickMessageDialogImpl : public QQuickDialog
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text NOTIFY optionsChanged)
@@ -66,7 +66,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickMessageDialogImpl)
 };
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickMessageDialogImplAttached : public QObject
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickMessageDialogImplAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY
@@ -92,7 +92,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickMessageDialogImpl)
 
 #endif // QQUICKMESSAGEDIALOGIMPL_P_H

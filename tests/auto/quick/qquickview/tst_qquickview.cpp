@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include <QtQml/qqmlcomponent.h>
@@ -10,8 +10,12 @@
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4mm_p.h>
 
 #include <QtQuickTestUtils/private/geometrytestutils_p.h>
+
+using namespace Qt::StringLiterals;
 
 class tst_QQuickView : public QQmlDataTest
 {
@@ -20,17 +24,52 @@ public:
     tst_QQuickView();
 
 private slots:
+    void gc();
     void resizemodeitem();
     void errors();
     void engine();
     void findChild();
     void setInitialProperties();
+    void fromModuleCtor();
+    void loadFromModule_data();
+    void loadFromModule();
+    void overlay();
 };
 
 
 tst_QQuickView::tst_QQuickView()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
+}
+
+void tst_QQuickView::gc()
+{
+    QQuickView view;
+    QQmlEngine *engine = view.engine();
+    QV4::ExecutionEngine *v4 = engine->handle();
+
+    v4->memoryManager->gcStateMachine->deadline = QDeadlineTimer(QDeadlineTimer::Forever);
+    auto sm = v4->memoryManager->gcStateMachine.get();
+    sm->reset();
+    while (sm->state != QV4::GCState::CallDestroyObjects) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    view.loadFromModule("test", "TestQml");
+    auto root = view.rootObject();
+    QVERIFY(root);
+    auto ddata = QQmlData::get(root, false);
+    while (sm->state != QV4::GCState::DoSweep) {
+        if (sm->state > QV4::GCState::InitCallDestroyObjects) {
+            sm->mm->collectFromJSStack(sm->mm->markStack());
+            sm->mm->m_markStack->drain();
+        }
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QVERIFY(ddata);
+    QVERIFY(ddata->jsWrapper.asManaged());
+    QVERIFY(ddata->jsWrapper.asManaged()->markBit());
 }
 
 void tst_QQuickView::resizemodeitem()
@@ -268,6 +307,50 @@ void tst_QQuickView::setInitialProperties()
     QVERIFY(rootObject);
     QCOMPARE(rootObject->property("z").toInt(), 4);
     QCOMPARE(rootObject->property("width").toInt(), 100);
+}
+
+void tst_QQuickView::fromModuleCtor()
+{
+    QQuickView view("QtQuick", "Rectangle");
+    // creation is always synchronous for C++ defined types, so we don't need _TRY
+    QObject *rootObject = view.rootObject();
+    QVERIFY(rootObject);
+    QCOMPARE(rootObject->metaObject()->className(), "QQuickRectangle");
+}
+
+void tst_QQuickView::loadFromModule_data()
+{
+    QTest::addColumn<QString>("module");
+    QTest::addColumn<QString>("typeName");
+    QTest::addColumn<QUrl>("url");
+    QTest::addColumn<QQuickView::Status>("status");
+
+    QTest::addRow("Item") << u"QtQuick"_s << u"Item"_s << QUrl() << QQuickView::Ready;
+    QTest::addRow("composite") << u"test"_s << u"TestQml"_s << QUrl("qrc:/qt/qml/test/data/TestQml.qml") << QQuickView::Ready;
+    QTest::addRow("nonexistent") << u"missing"_s << u"Type"_s << QUrl() << QQuickView::Error;
+}
+
+void tst_QQuickView::loadFromModule()
+{
+    QFETCH(QString, module);
+    QFETCH(QString, typeName);
+    QFETCH(QUrl, url);
+    QFETCH(QQuickView::Status, status);
+
+    QQuickView view;
+    view.loadFromModule(module, typeName);
+    QTRY_COMPARE(view.status(), status);
+    QCOMPARE(view.source(), url);
+}
+
+void tst_QQuickView::overlay()
+{
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(".*: Cannot set properties on overlay as it is null"));
+    QQuickView view;
+    view.setSource(testFileUrl("overlay.qml"));
+    QObject *rootObject = view.rootObject();
+    QVERIFY(!rootObject);
 }
 
 QTEST_MAIN(tst_QQuickView)

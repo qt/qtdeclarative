@@ -79,32 +79,32 @@ struct URIErrorObject : ErrorObject {
 };
 
 struct ErrorCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
-    void init(QV4::ExecutionContext *scope, const QString &name);
+    void init(ExecutionEngine *engine);
+    void init(ExecutionEngine *engine, const QString &name);
 };
 
 struct EvalErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct RangeErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct ReferenceErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct SyntaxErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct TypeErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct URIErrorCtor : ErrorCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 }

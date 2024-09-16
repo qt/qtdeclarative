@@ -13,9 +13,9 @@ DEFINE_OBJECT_VTABLE(GeneratorFunctionCtor);
 DEFINE_OBJECT_VTABLE(GeneratorFunction);
 DEFINE_OBJECT_VTABLE(GeneratorObject);
 
-void Heap::GeneratorFunctionCtor::init(QV4::ExecutionContext *scope)
+void Heap::GeneratorFunctionCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("GeneratorFunction"));
+    Heap::FunctionObject::init(engine, QStringLiteral("GeneratorFunction"));
 }
 
 ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -26,7 +26,7 @@ ReturnedValue GeneratorFunctionCtor::virtualCallAsConstructor(const FunctionObje
     if (engine->hasException)
         return Encode::undefined();
 
-    Function *vmf = compilationUnit->linkToEngine(engine);
+    Function *vmf = compilationUnit->rootFunction();
     ExecutionContext *global = engine->scriptContext();
     ReturnedValue o = Encode(GeneratorFunction::create(global, vmf));
 
@@ -82,7 +82,9 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
 
     gp->cppFrame.push(engine);
 
+    CHECK_STACK_LIMITS(scope.engine)
     Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
+
     gp->state = GeneratorState::SuspendedStart;
 
     gp->cppFrame.pop(engine);
@@ -131,7 +133,7 @@ ReturnedValue GeneratorPrototype::method_next(const FunctionObject *f, const Val
     if (gp->state == GeneratorState::Completed)
         return IteratorPrototype::createIterResultObject(engine, Value::undefinedValue(), true);
 
-    return g->resume(engine, argc ? argv[0] : Value::undefinedValue());
+    return g->resume(engine, argc ? argv[0] : Value::undefinedValue(), {});
 }
 
 ReturnedValue GeneratorPrototype::method_return(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -149,11 +151,7 @@ ReturnedValue GeneratorPrototype::method_return(const FunctionObject *f, const V
     if (gp->state == GeneratorState::Completed)
         return IteratorPrototype::createIterResultObject(engine, argc ? argv[0] : Value::undefinedValue(), true);
 
-    // the bytecode interpreter interprets an exception with empty value as
-    // a yield called with return()
-    engine->throwError(Value::emptyValue());
-
-    return g->resume(engine, argc ? argv[0] : Value::undefinedValue());
+    return g->resume(engine, argc ? argv[0] : Value::undefinedValue(), Value::emptyValue());
 }
 
 ReturnedValue GeneratorPrototype::method_throw(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
@@ -165,17 +163,17 @@ ReturnedValue GeneratorPrototype::method_throw(const FunctionObject *f, const Va
 
     Heap::GeneratorObject *gp = g->d();
 
-    engine->throwError(argc ? argv[0] : Value::undefinedValue());
 
     if (gp->state == GeneratorState::SuspendedStart || gp->state == GeneratorState::Completed) {
         gp->state = GeneratorState::Completed;
+        engine->throwError(argc ? argv[0] : Value::undefinedValue());
         return Encode::undefined();
     }
 
-    return g->resume(engine, Value::undefinedValue());
+    return g->resume(engine, Value::undefinedValue(), argc ? argv[0] : Value::undefinedValue());
 }
 
-ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg) const
+ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg, std::optional<Value> exception) const
 {
     Heap::GeneratorObject *gp = d();
     gp->state = GeneratorState::Executing;
@@ -189,6 +187,19 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
     gp->cppFrame.setYieldIsIterator(false);
 
     Scope scope(engine);
+
+    CHECK_STACK_LIMITS(scope.engine)
+
+    // A value to be thrown will be passed in by `method_throw` or
+    // `method_return` when they need to resume the generator.
+    // For `method_throw` this will be the value that was passed to
+    // `throw` itself.
+    // For `method_return` this will be an `emptyValue`.
+    // The empty value will be used as a signal that `return` was
+    // called and managed in the execution of a `Resume` instruction
+    // during `interpret`.
+    if (exception)
+        engine->throwError(*exception);
     ScopedValue result(scope, Moth::VME::interpret(&gp->cppFrame, engine, code));
 
     engine->currentStackFrame = gp->cppFrame.parentFrame();

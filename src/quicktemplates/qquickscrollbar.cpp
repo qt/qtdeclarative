@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollBar
     \inherits Control
-//!     \instantiates QQuickScrollBar
+//!     \nativetype QQuickScrollBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-indicators
@@ -368,6 +368,7 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
     Q_D(QQuickScrollBar);
     d->decreaseVisual = new QQuickIndicatorButton(this);
     d->increaseVisual = new QQuickIndicatorButton(this);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
@@ -571,6 +572,11 @@ void QQuickScrollBar::setOrientation(Qt::Orientation orientation)
     Q_D(QQuickScrollBar);
     if (d->orientation == orientation)
         return;
+
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Preferred);
 
     d->orientation = orientation;
     if (isComponentComplete())
@@ -1165,7 +1171,7 @@ QQuickScrollBarAttached::QQuickScrollBarAttached(QObject *parent)
     d->setFlickable(qobject_cast<QQuickFlickable *>(parent));
 
     if (parent && !d->flickable && !qobject_cast<QQuickScrollView *>(parent))
-        qmlWarning(parent) << "ScrollBar must be attached to a Flickable or ScrollView";
+        qmlWarning(parent) << "ScrollBar attached property must be attached to an object deriving from Flickable or ScrollView";
 }
 
 QQuickScrollBarAttached::~QQuickScrollBarAttached()

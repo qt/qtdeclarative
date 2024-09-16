@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QuickTestEvent;
-class Q_QUICK_TEST_PRIVATE_EXPORT QQuickTouchEventSequence : public QObject
+class Q_QMLTEST_EXPORT QQuickTouchEventSequence : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -45,7 +45,7 @@ private:
     QuickTestEvent * const m_testEvent;
 };
 
-class Q_QUICK_TEST_PRIVATE_EXPORT QuickTestEvent : public QObject
+class Q_QMLTEST_EXPORT QuickTestEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int defaultMouseDelay READ defaultMouseDelay FINAL)
@@ -77,7 +77,7 @@ public Q_SLOTS:
                           int modifiers, int delay);
     bool mouseDoubleClickSequence(QObject *item, qreal x, qreal y, int button,
                           int modifiers, int delay);
-    bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons);
+    bool mouseMove(QObject *item, qreal x, qreal y, int delay, int buttons, int modifiers);
 
 #if QT_CONFIG(wheelevent)
     bool mouseWheel(QObject *item, qreal x, qreal y, int buttons,

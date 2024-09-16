@@ -11,10 +11,6 @@ useful to delay instantiation of objects until necessary, thereby improving
 application startup time.  It also allows visual objects to be dynamically
 created and added to the scene in reaction to user input or other events.
 
-See the \l {QML Example - Dynamic Scene}{Dynamic Scene example} for a
-demonstration of the concepts discussed on this page.
-
-
 \section1 Creating Objects Dynamically
 
 There are two ways to create objects dynamically from JavaScript. You can
@@ -101,6 +97,12 @@ It is also possible to instantiate components without blocking via the
 \l {Component::incubateObject()}{incubateObject()} function.
 
 \section2 Creating an Object from a String of QML
+
+\warning Creating objects from a string of QML is extremely slow since the engine has to compile the
+passed QML string every time you do it. Furthermore, it's very easy to produce invalid QML when
+programmatically constructing QML code. It's much better to keep your QML components as separate
+files and add properties and methods to customize their behavior than to produce new components by
+string manipulation.
 
 If the QML is not defined until runtime, you can create a QML object from
 a string of QML using the \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}

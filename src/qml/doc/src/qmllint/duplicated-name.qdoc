@@ -5,14 +5,10 @@
 \page qmllint-warnings-and-errors-duplicated-name.html
 \ingroup qmllint-warnings-and-errors
 
-\title Duplicated Name
+\title Duplicated name
 \brief Multiple signals or properties share the same name in the same Component.
 
-This warning category has multiple warnings:
-\list
-    \li \l{Duplicated Property Name}
-    \li \l{Duplicated Signal Name}
-\endlist
+\qmllintwarningcategory duplicated-name
 
 \section1 Duplicated Property Name
 
@@ -31,7 +27,7 @@ Item {
     property int helloWorld
 }
 \endqml
-You can fix this warning by removing the duplicate property or renaming it:
+To fix this warning, remove the duplicate property or rename it:
 \qml
 import QtQuick
 
@@ -40,7 +36,7 @@ Item {
 }
 \endqml
 
-\section1 Duplicated Signal Name
+\section1 Duplicated signal mame
 
 \section2 What happened?
 Multiple signals in the same QML component scope have the same name.
@@ -57,7 +53,7 @@ Rectangle {
     signal helloWorld
 }
 \endqml
-You can fix this warning by removing the duplicate signal or renaming it:
+To fix this warning, remove the duplicate signal or rename it:
 \qml
 import QtQuick
 

@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPanePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPane : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickPane : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL)
@@ -68,7 +68,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPane)
 
 #endif // QQUICKPANE_P_H

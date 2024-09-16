@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include "testtypes.h"
 
 #include <QUrl>
@@ -1148,7 +1148,7 @@ void tst_qqmlincubator::garbageCollection()
     QQmlComponent component(&engine, testFileUrl("garbageCollection.qml"));
     QScopedPointer<QObject> obj(component.create());
 
-    engine.collectGarbage();
+    gc(engine);
 
     std::atomic<bool> b{true};
     controller.incubateWhile(&b);
@@ -1166,8 +1166,14 @@ void tst_qqmlincubator::garbageCollection()
     incubatorVariant.clear();
 
     // verify incubator is correctly collected now that incubation is complete and all references are gone
-    engine.collectGarbage();
+    gc(engine);
     QVERIFY(weakIncubatorRef.isNullOrUndefined());
+
+    QQmlComponent component2(&engine, testFileUrl("garbageCollection2.qml"));
+    QVERIFY2(component2.isReady(), qPrintable(component2.errorString()));
+    QScopedPointer<QObject> obj2(component2.create());
+    QVERIFY(!obj2.isNull());
+    QVERIFY(obj2->property("incubated").value<QObject *>() != nullptr);
 }
 
 void tst_qqmlincubator::requiredProperties()

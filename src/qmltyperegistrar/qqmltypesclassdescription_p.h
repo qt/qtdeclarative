@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <private/qmetatypesjsonprocessor_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qcbormap.h>
 #include <QtCore/qvector.h>
@@ -23,20 +25,45 @@
 
 QT_BEGIN_NAMESPACE
 
+struct FoundType
+{
+    enum Origin {
+        Unknown,
+        OwnTypes,
+        ForeignTypes,
+    };
+
+    FoundType() = default;
+    FoundType(const MetaType &single, Origin origin);
+
+    MetaType native;
+    MetaType javaScript;
+
+    Origin nativeOrigin = Unknown;
+    Origin javaScriptOrigin = Unknown;
+
+    operator bool() const { return !native.isEmpty() || !javaScript.isEmpty(); }
+
+    MetaType select(const MetaType &category, QAnyStringView relation) const;
+
+};
+
 struct QmlTypesClassDescription
 {
     // All the string views in this class are based on string data in the JSON they are parsed from.
     // You must keep the relevant QCborValues alive while the QmlTypesClassDescription exists.
 
-    const QCborMap *resolvedClass = nullptr;
+    MetaType resolvedClass;
     QAnyStringView file;
     QAnyStringView className;
-    QAnyStringView elementName;
+    QList<QAnyStringView> primitiveAliases;
+    QList<QAnyStringView> elementNames;
     QAnyStringView defaultProp;
     QAnyStringView parentProp;
     QAnyStringView superClass;
     QAnyStringView attachedType;
-    QAnyStringView extensionType;
+    QAnyStringView javaScriptExtensionType;
+    QAnyStringView nativeExtensionType;
     QAnyStringView sequenceValueType;
     QAnyStringView accessSemantics;
     QList<QTypeRevision> revisions;
@@ -46,8 +73,10 @@ struct QmlTypesClassDescription
     bool isStructured = false;
     bool isSingleton = false;
     bool hasCustomParser = false;
-    bool omitFromQmlTypes = false;
+    bool isRootClass = false;
+    bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
+    bool registerEnumClassesScoped = false;
     QList<QAnyStringView> implementsInterfaces;
     QList<QAnyStringView> deferredNames;
     QList<QAnyStringView> immediateNames;
@@ -58,27 +87,44 @@ struct QmlTypesClassDescription
         RelatedType
     };
 
-    void collect(const QCborMap *classDef, const QVector<QCborMap> &types,
-                 const QVector<QCborMap> &foreign, CollectMode mode,
-                 QTypeRevision defaultRevision);
-    const QCborMap *collectRelated(
-            QAnyStringView related, const QVector<QCborMap> &types,
-            const QVector<QCborMap> &foreign, QTypeRevision defaultRevision,
+    void collect(
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
+    FoundType collectRelated(
+            QAnyStringView related, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, QTypeRevision defaultRevision,
             const QList<QAnyStringView> &namespaces);
 
-    static const QCborMap *findType(
-            const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+    static FoundType findType(
+            const QVector<MetaType> &types, const QVector<MetaType> &foreign,
             const QAnyStringView &name, const QList<QAnyStringView> &namespaces);
 
-    void collectLocalAnonymous(const QCborMap *classDef,const QVector<QCborMap> &types,
-                      const QVector<QCborMap> &foreign, QTypeRevision defaultRevision);
+    void collectLocalAnonymous(
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, QTypeRevision defaultRevision);
 
 
 private:
     void collectSuperClasses(
-            const QCborMap *classDef, const QVector<QCborMap> &types,
-            const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision);
-    void collectInterfaces(const QCborMap *classDef);
+            const MetaType &classDef, const QVector<MetaType> &types,
+            const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision);
+    void collectInterfaces(const MetaType &classDef);
+};
+
+struct ResolvedTypeAlias
+{
+    ResolvedTypeAlias(QAnyStringView alias, const QList<UsingDeclaration> &usingDeclarations);
+
+    QAnyStringView type;
+    bool isList = false;
+    bool isPointer = false;
+    bool isConstant = false;
+
+private:
+    void handleVoid();
+    void handleList();
+    void handlePointer();
+    void handleConst();
 };
 
 QT_END_NAMESPACE

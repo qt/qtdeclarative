@@ -23,7 +23,7 @@ class QQuickToolTipPrivate;
 class QQuickToolTipAttached;
 class QQuickToolTipAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolTip : public QQuickPopup
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolTip : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(int delay READ delay WRITE setDelay NOTIFY delayChanged FINAL)
@@ -74,7 +74,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickToolTip)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolTipAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolTipAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
@@ -116,7 +116,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickToolTip)
 
 #endif // QQUICKTOOLTIP_P_H

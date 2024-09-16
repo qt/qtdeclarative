@@ -54,7 +54,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype Context2D
-    \instantiates QQuickContext2D
+    \nativetype QQuickContext2D
     \inqmlmodule QtQuick
     \ingroup qtquick-canvas
     \since 5.0
@@ -98,7 +98,7 @@ QT_BEGIN_NAMESPACE
                                        THROW_GENERIC_ERROR("Not a Context2D object");
 #define qClamp(val, min, max) qMin(qMax(val, min), max)
 #define CHECK_RGBA(c) (c == '-' || c == '.' || (c >=0 && c <= 9))
-Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
+Q_QUICK_EXPORT QColor qt_color_from_string(const QV4::Value &name)
 {
     QByteArray str = name.toQString().toUtf8();
 
@@ -3412,7 +3412,7 @@ bool QQuickJSContext2DPixelData::virtualPut(QV4::Managed *m, QV4::PropertyKey id
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(CanvasImageData imageData)
 
-    Creates a CanvasImageData object with the same dimensions as the argument.
+    Creates a CanvasImageData object with the same dimensions as the \a imageData argument.
 */
 /*!
     \qmlmethod CanvasImageData QtQuick::Context2D::createImageData(Url imageUrl)
@@ -4141,6 +4141,7 @@ static int textAlignOffset(QQuickContext2D::TextAlignType value, const QFontMetr
         break;
     case QQuickContext2D::Right:
         offset = metrics.horizontalAdvance(text);
+        break;
     case QQuickContext2D::Left:
     default:
         break;

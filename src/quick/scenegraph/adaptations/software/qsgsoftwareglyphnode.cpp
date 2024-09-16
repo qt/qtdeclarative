@@ -59,6 +59,10 @@ void QSGSoftwareGlyphNode::setGlyphs(const QPointF &position, const QGlyphRun &g
 {
     m_position = position;
     m_glyphRun = glyphs;
+    // Decorations handled by text node
+    m_glyphRun.setOverline(false);
+    m_glyphRun.setStrikeOut(false);
+    m_glyphRun.setUnderline(false);
     m_bounding_rect = calculateBoundingRect(position, glyphs);
 }
 

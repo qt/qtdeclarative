@@ -31,17 +31,17 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimationPrivate;
 class QQuickAnimationGroup;
-class Q_QUICK_PRIVATE_EXPORT QQuickAbstractAnimation : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickAbstractAnimation : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAbstractAnimation)
 
     Q_INTERFACES(QQmlParserStatus)
     Q_INTERFACES(QQmlPropertyValueSource)
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
-    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged FINAL)
-    Q_PROPERTY(bool alwaysRunToEnd READ alwaysRunToEnd WRITE setAlwaysRunToEnd NOTIFY alwaysRunToEndChanged FINAL)
-    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopCountChanged FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(bool alwaysRunToEnd READ alwaysRunToEnd WRITE setAlwaysRunToEnd NOTIFY alwaysRunToEndChanged)
+    Q_PROPERTY(int loops READ loops WRITE setLoops NOTIFY loopCountChanged)
     Q_CLASSINFO("DefaultMethod", "start()")
 
     QML_NAMED_ELEMENT(Animation)
@@ -125,12 +125,12 @@ private:
 };
 
 class QQuickPauseAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPauseAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPauseAnimation)
 
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     QML_NAMED_ELEMENT(PauseAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -152,13 +152,13 @@ protected:
 };
 
 class QQuickScriptActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickScriptAction)
 
-    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript FINAL)
-    Q_PROPERTY(QString scriptName READ stateChangeScriptName WRITE setStateChangeScriptName FINAL)
+    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript)
+    Q_PROPERTY(QString scriptName READ stateChangeScriptName WRITE setStateChangeScriptName)
     QML_NAMED_ELEMENT(ScriptAction)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -180,17 +180,17 @@ protected:
 };
 
 class QQuickPropertyActionPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAction)
 
-    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged FINAL)
-    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged FINAL)
-    Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> targets READ targets FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> exclude READ exclude FINAL)
-    Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged FINAL)
+    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged)
+    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
+    Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged)
+    Q_PROPERTY(QQmlListProperty<QObject> targets READ targets)
+    Q_PROPERTY(QQmlListProperty<QObject> exclude READ exclude)
+    Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
     QML_NAMED_ELEMENT(PropertyAction)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -227,20 +227,20 @@ protected:
 };
 
 class QQuickPropertyAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
     Q_PROPERTY(QVariant from READ from WRITE setFrom NOTIFY fromChanged)
     Q_PROPERTY(QVariant to READ to WRITE setTo NOTIFY toChanged)
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged FINAL)
-    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged FINAL)
-    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged FINAL)
-    Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> targets READ targets FINAL)
-    Q_PROPERTY(QQmlListProperty<QObject> exclude READ exclude FINAL)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
+    Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged)
+    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
+    Q_PROPERTY(QString properties READ properties WRITE setProperties NOTIFY propertiesChanged)
+    Q_PROPERTY(QQmlListProperty<QObject> targets READ targets)
+    Q_PROPERTY(QQmlListProperty<QObject> exclude READ exclude)
     QML_NAMED_ELEMENT(PropertyAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -292,12 +292,12 @@ Q_SIGNALS:
     void propertyChanged();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickColorAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickColorAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
-    Q_PROPERTY(QColor from READ from WRITE setFrom FINAL)
-    Q_PROPERTY(QColor to READ to WRITE setTo FINAL)
+    Q_PROPERTY(QColor from READ from WRITE setFrom)
+    Q_PROPERTY(QColor to READ to WRITE setTo)
     QML_NAMED_ELEMENT(ColorAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -312,13 +312,13 @@ public:
     void setTo(const QColor &);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
     QML_NAMED_ELEMENT(NumberAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -339,13 +339,13 @@ private:
     void init();
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(QVector3D from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged FINAL)
+    Q_PROPERTY(QVector3D from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged)
     QML_NAMED_ELEMENT(Vector3dAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -361,14 +361,14 @@ public:
 };
 
 class QQuickRotationAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimation : public QQuickPropertyAnimation
+class Q_QUICK_EXPORT QQuickRotationAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged FINAL)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(RotationAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -392,13 +392,13 @@ Q_SIGNALS:
 };
 
 class QQuickAnimationGroupPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimationGroup : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickAnimationGroup : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
 
     Q_CLASSINFO("DefaultProperty", "animations")
-    Q_PROPERTY(QQmlListProperty<QQuickAbstractAnimation> animations READ animations FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickAbstractAnimation> animations READ animations)
 
 public:
     QQuickAnimationGroup(QObject *parent);
@@ -411,7 +411,7 @@ protected:
     QQuickAnimationGroup(QQuickAnimationGroupPrivate &dd, QObject *parent);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickSequentialAnimation : public QQuickAnimationGroup
+class Q_QUICK_EXPORT QQuickSequentialAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
@@ -430,7 +430,7 @@ protected:
                             QObject *defaultTarget = nullptr) override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
+class Q_QUICK_EXPORT QQuickParallelAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
@@ -451,17 +451,5 @@ protected:
 
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickAbstractAnimation)
-QML_DECLARE_TYPE(QQuickPauseAnimation)
-QML_DECLARE_TYPE(QQuickScriptAction)
-QML_DECLARE_TYPE(QQuickPropertyAction)
-QML_DECLARE_TYPE(QQuickPropertyAnimation)
-QML_DECLARE_TYPE(QQuickColorAnimation)
-QML_DECLARE_TYPE(QQuickNumberAnimation)
-QML_DECLARE_TYPE(QQuickSequentialAnimation)
-QML_DECLARE_TYPE(QQuickParallelAnimation)
-QML_DECLARE_TYPE(QQuickVector3dAnimation)
-QML_DECLARE_TYPE(QQuickRotationAnimation)
 
 #endif // QQUICKANIMATION_H

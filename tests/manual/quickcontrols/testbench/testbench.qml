@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtCore
 import QtQuick
@@ -139,7 +139,11 @@ Ui.ApplicationWindow {
                 text: "\ue801"
                 font.family: "fontello"
                 visible: searchTextField.length > 0
-                onClicked: searchTextField.clear()
+                onClicked: {
+                    searchTextField.clear()
+                    // textEdited is not emitted for clear(), so we have to set this ourselves.
+                    settings.lastSearchText = ""
+                }
 
                 Layout.leftMargin: -5
             }

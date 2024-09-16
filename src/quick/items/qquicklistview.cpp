@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_SNAPONETHRESHOLD 30
 #endif
 
-Q_LOGGING_CATEGORY(lcEvents, "qt.quick.listview.events")
+Q_STATIC_LOGGING_CATEGORY(lcEvents, "qt.quick.listview.events")
 
 class FxListItemSG;
 
@@ -289,7 +289,8 @@ public:
                     : itemX() + itemWidth());
         }
     }
-    void setPosition(qreal pos, bool immediate = false) {
+
+    void setPosition(qreal pos, bool immediate = false, bool resetInactiveAxis = true) {
         // position the section immediately even if there is a transition
         if (section()) {
             if (view->orientation() == QQuickListView::Vertical) {
@@ -304,8 +305,9 @@ public:
                     section()->setX(pos);
             }
         }
-        moveTo(pointForPosition(pos), immediate);
+        moveTo(pointForPosition(pos, resetInactiveAxis), immediate);
     }
+
     void setSize(qreal size) {
         if (view->orientation() == QQuickListView::Vertical)
             item->setHeight(size);
@@ -320,26 +322,26 @@ public:
     QQuickListView *view;
 
 private:
-    QPointF pointForPosition(qreal pos) const {
+    QPointF pointForPosition(qreal pos, bool resetInactiveAxis) const {
         if (view->orientation() == QQuickListView::Vertical) {
             if (view->verticalLayoutDirection() == QQuickItemView::BottomToTop) {
                 if (section())
                     pos += section()->height();
-                return QPointF(itemX(), -itemHeight() - pos);
+                return QPointF(resetInactiveAxis ? 0 : itemX(), -itemHeight() - pos);
             } else {
                 if (section())
                     pos += section()->height();
-                return QPointF(itemX(), pos);
+                return QPointF(resetInactiveAxis ? 0 : itemX(), pos);
             }
         } else {
             if (view->effectiveLayoutDirection() == Qt::RightToLeft) {
                 if (section())
                     pos += section()->width();
-                return QPointF(-itemWidth() - pos, itemY());
+                return QPointF(-itemWidth() - pos, resetInactiveAxis ? 0 : itemY());
             } else {
                 if (section())
                     pos += section()->width();
-                return QPointF(pos, itemY());
+                return QPointF(pos, resetInactiveAxis ? 0 : itemY());
             }
         }
     }
@@ -1108,7 +1110,7 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
                 sectionItem->setParentItem(contentItem);
             }
             // sections are not controlled by FxListItemSG, so apply attached properties here
-            QQuickItemViewAttached *attached = static_cast<QQuickItemViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(sectionItem));
+            auto *attached = static_cast<QQuickListViewAttached*>(qmlAttachedPropertiesObject<QQuickListView>(sectionItem));
             attached->setView(q);
         } else if (!reuseExistingContext) {
             delete context;
@@ -1469,26 +1471,26 @@ void QQuickListViewPrivate::updateFooter()
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(footer);
     if (footerPositioning == QQuickListView::OverlayFooter) {
-        listItem->setPosition(isContentFlowReversed() ? -position() - footerSize() : position() + size() - footerSize());
+        listItem->setPosition(isContentFlowReversed() ? -position() - footerSize() : position() + size() - footerSize(), false, false);
     } else if (visibleItems.size()) {
         if (footerPositioning == QQuickListView::PullBackFooter) {
             qreal viewPos = isContentFlowReversed() ? -position() : position() + size();
             // using qBound() would throw an assert here, because max < min is a valid case
             // here, if the list's delegates do not fill the whole view
             qreal clampedPos = qMax(originPosition() - footerSize() + size(), qMin(listItem->position(), lastPosition()));
-            listItem->setPosition(qBound(viewPos - footerSize(), clampedPos, viewPos));
+            listItem->setPosition(qBound(viewPos - footerSize(), clampedPos, viewPos), false, false);
         } else {
             qreal endPos = lastPosition();
             if (findLastVisibleIndex() == model->count()-1) {
-                listItem->setPosition(endPos);
+                listItem->setPosition(endPos, false, false);
             } else {
                 qreal visiblePos = position() + q->height();
                 if (endPos <= visiblePos || listItem->position() < endPos)
-                    listItem->setPosition(endPos);
+                    listItem->setPosition(endPos, false, false);
             }
         }
     } else {
-        listItem->setPosition(visiblePos);
+        listItem->setPosition(visiblePos, false, false);
     }
 
     if (created)
@@ -1535,7 +1537,7 @@ void QQuickListViewPrivate::updateHeader()
 
     FxListItemSG *listItem = static_cast<FxListItemSG*>(header);
     if (headerPositioning == QQuickListView::OverlayHeader) {
-        listItem->setPosition(isContentFlowReversed() ? -position() - size() : position());
+        listItem->setPosition(isContentFlowReversed() ? -position() - size() : position(), false, false);
     } else if (visibleItems.size()) {
         const bool fixingUp = (orient == QQuickListView::Vertical ? vData : hData).fixingUp;
         if (headerPositioning == QQuickListView::PullBackHeader) {
@@ -1547,18 +1549,18 @@ void QQuickListViewPrivate::updateHeader()
             // using qBound() would throw an assert here, because max < min is a valid case
             // here, if the list's delegates do not fill the whole view
             qreal clampedPos = qMax(originPosition() - headerSize(), qMin(headerPosition, lastPosition() - size()));
-            listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos));
+            listItem->setPosition(qBound(viewPos - headerSize(), clampedPos, viewPos), false, false);
         } else {
             qreal startPos = originPosition();
             if (visibleIndex == 0) {
-                listItem->setPosition(startPos - headerSize());
+                listItem->setPosition(startPos - headerSize(), false, false);
             } else {
                 if (position() <= startPos || listItem->position() > startPos - headerSize())
-                    listItem->setPosition(startPos - headerSize());
+                    listItem->setPosition(startPos - headerSize(), false, false);
             }
         }
     } else {
-        listItem->setPosition(-headerSize());
+        listItem->setPosition(-headerSize(), false, false);
     }
 
     if (created)
@@ -1804,6 +1806,19 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
         }
+        // If we have the CurrentLabelAtStart flag set, then we need to consider
+        // the section size while calculating the position
+        if (sectionCriteria
+            && (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart)
+            && currentSectionItem) {
+            auto sectionSize = (orient == QQuickListView::Vertical) ? currentSectionItem->height()
+                                                                    : currentSectionItem->width();
+            if (isContentFlowReversed())
+                pos += sectionSize;
+            else
+                pos -= sectionSize;
+        }
+
         pos = qBound(-minExtent, pos, -maxExtent);
 
         qreal dist = qAbs(data.move + pos);
@@ -2021,7 +2036,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
 
 /*!
     \qmltype ListView
-    \instantiates QQuickListView
+    \nativetype QQuickListView
     \inqmlmodule QtQuick
     \ingroup qtquick-views
     \inherits Flickable
@@ -2409,7 +2424,7 @@ QQuickListView::~QQuickListView()
 
 /*!
   \qmlproperty int QtQuick::ListView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
 /*!
@@ -3662,7 +3677,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     int modelIndex = change.index;
     int count = change.count;
 
-    if (q->size().isEmpty() && visibleItems.isEmpty())
+    if (q->size().isNull() && visibleItems.isEmpty())
         return false;
 
     qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
@@ -3790,7 +3805,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 continue;
             }
 
-            visibleItems.insert(index, item);
+            if (index < visibleItems.size())
+                visibleItems.insert(index, item);
+            else // special case of appending an item to the model - as above
+                visibleItems.append(item);
             if (index == 0)
                 insertResult->changedFirstItem = true;
             if (change.isMove()) {

@@ -29,9 +29,9 @@ QtObject {
 
     property date date1: "2021-08-13T14:16:21.435Z"
 
-    property point point1: "1,2"
+    property point point1: ({ x: 1, y: 2 })
 
-    property size size1: "50x50"
+    property size size1: ({ width: 50, height: 50 })
 
-    property rect rect1: "10,20,30x30"
+    property rect rect1: ({ x: 10, y: 20, width: 30, height: 30 })
 }

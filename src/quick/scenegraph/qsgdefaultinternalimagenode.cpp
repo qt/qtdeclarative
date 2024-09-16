@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 class SmoothTextureMaterialRhiShader : public QSGTextureMaterialRhiShader
 {
 public:
-    SmoothTextureMaterialRhiShader();
+    SmoothTextureMaterialRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
@@ -40,25 +40,28 @@ QSGMaterialType *QSGSmoothTextureMaterial::type() const
 QSGMaterialShader *QSGSmoothTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new SmoothTextureMaterialRhiShader;
+    return new SmoothTextureMaterialRhiShader(viewCount());
 }
 
-SmoothTextureMaterialRhiShader::SmoothTextureMaterialRhiShader()
+SmoothTextureMaterialRhiShader::SmoothTextureMaterialRhiShader(int viewCount)
+    : QSGTextureMaterialRhiShader(viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothtexture.frag.qsb"), viewCount);
 }
 
 bool SmoothTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
 
     if (!oldMaterial) {
         // The viewport is constant, so set the pixel size uniform only once (per batches with the same material).
         const QRect r = state.viewportRect();
         const QVector2D v(2.0f / r.width(), 2.0f / r.height());
-        memcpy(buf->data() + 64 + 8, &v, 8);
+        // mat4 matrix, float opacity, vec2 pixelSize, and the vec2 must be 2*4 aligned
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &v, 8);
         changed = true;
     }
 

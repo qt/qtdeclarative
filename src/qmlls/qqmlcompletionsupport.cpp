@@ -39,6 +39,11 @@ bool CompletionRequest::fillFrom(QmlLsp::OpenDocument doc, const Parameters &par
     return true;
 }
 
+QmlCompletionSupport::QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel)
+    : BaseT(codeModel), m_completionEngine(codeModel->pluginLoader())
+{
+}
+
 void QmlCompletionSupport::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
 {
     protocol->registerCompletionRequestHandler(getRequestHandler());
@@ -68,7 +73,7 @@ void QmlCompletionSupport::process(RequestPointerArgument req)
 {
     QmlLsp::OpenDocumentSnapshot doc =
             m_codeModel->snapshotByUrl(req->m_parameters.textDocument.uri);
-    req->sendCompletions(doc);
+    req->sendCompletions(req->completions(doc, m_completionEngine));
 }
 
 QString CompletionRequest::urlAndPos() const
@@ -78,36 +83,97 @@ QString CompletionRequest::urlAndPos() const
             + QString::number(m_parameters.position.character);
 }
 
-void CompletionRequest::sendCompletions(QmlLsp::OpenDocumentSnapshot &doc)
+void CompletionRequest::sendCompletions(const QList<CompletionItem> &completions)
 {
-    QList<CompletionItem> res = completions(doc);
-    m_response.sendResponse(res);
+    m_response.sendResponse(completions);
 }
 
-QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapshot &doc) const
+static bool positionIsFollowedBySpaces(qsizetype position, const QString &code)
+{
+    if (position >= code.size())
+        return false;
+
+    auto newline =
+            std::find_if(std::next(code.cbegin(), position), code.cend(),
+                         [](const QChar &c) { return c == u'\n' || c == u'\r' || !c.isSpace(); });
+
+    return newline == code.cend() || newline->isSpace();
+}
+
+/*!
+\internal
+
+\note Remove this method and all its usages once the new fault-tolerant parser from QTBUG-118053 is
+introduced!!!
+
+Tries to make the document valid for the parser, to be able to provide completions after dots.
+The created DomItem is not in the qqmlcodemodel which mean it cannot be seen and cannot bother
+other modules: it would be bad to have the linting module complain about code that was modified
+here, but cannot be seen by the user.
+*/
+DomItem CompletionRequest::patchInvalidFileForParser(const DomItem &file, qsizetype position) const
+{
+    // automatic semicolon insertion after dots, if there is nothing behind the dot!
+    if (position > 0 && code[position - 1] == u'.' && positionIsFollowedBySpaces(position, code)) {
+        qCWarning(QQmlLSCompletionLog)
+                << "Patching invalid document: adding a semicolon after '.' for "
+                << QString::fromUtf8(m_parameters.textDocument.uri);
+
+        const QString patchedCode =
+                code.first(position).append(u"_dummyIdentifier;").append(code.sliced(position));
+
+        // create a new (local) Dom only for the completions.
+        // This avoids weird behaviors, like the linting module complaining about the inserted
+        // semicolon that the user cannot see, for example.
+        DomItem newCurrent = file.environment().makeCopy(DomItem::CopyOption::EnvConnected).item();
+
+        DomItem result;
+        auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
+        newCurrentPtr->loadFile(
+                FileToLoad::fromMemory(newCurrentPtr, file.canonicalFilePath(), patchedCode),
+                [&result](Path, const DomItem &, const DomItem &newValue) {
+                    result = newValue.fileObject();
+                });
+        newCurrentPtr->loadPendingDependencies();
+        return result;
+    }
+
+    qCWarning(QQmlLSCompletionLog) << "No valid document for completions for "
+                                   << QString::fromUtf8(m_parameters.textDocument.uri);
+
+    return file;
+}
+
+QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapshot &doc,
+                                                     const QQmlLSCompletion &completionEngine) const
 {
     QList<CompletionItem> res;
-    if (!doc.validDoc) {
-        qCWarning(QQmlLSCompletionLog) << "No valid document for completions  for "
-                                       << QString::fromUtf8(m_parameters.textDocument.uri);
-        // try to add some import and global completions?
-        return res;
-    }
-    if (!doc.docVersion || *doc.docVersion < m_minVersion) {
-        qCWarning(QQmlLSCompletionLog) << "sendCompletions on older doc version";
-    } else if (!doc.validDocVersion || *doc.validDocVersion < m_minVersion) {
-        qCWarning(QQmlLSCompletionLog) << "using outdated valid doc, position might be incorrect";
-    }
-    DomItem file = doc.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
+
+
+    const qsizetype pos = QQmlLSUtils::textOffsetFrom(code, m_parameters.position.line,
+                                                      m_parameters.position.character);
+
+    const bool useValidDoc =
+            doc.validDoc && doc.validDocVersion && *doc.validDocVersion >= m_minVersion;
+
+    const DomItem file = useValidDoc
+            ? doc.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely)
+            : patchInvalidFileForParser(doc.doc.fileObject(QQmlJS::Dom::GoTo::MostLikely), pos);
+
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (std::shared_ptr<DomEnvironment> envPtr = file.environment().ownerAs<DomEnvironment>())
         envPtr->clearReferenceCache();
-    qsizetype pos = QQmlLSUtils::textOffsetFrom(code, m_parameters.position.line,
-                                                m_parameters.position.character);
+
+
     CompletionContextStrings ctx(code, pos);
     auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, m_parameters.position.line,
                                                          m_parameters.position.character
                                                                  - ctx.filterChars().size());
+    if (itemsFound.isEmpty()) {
+        qCDebug(QQmlLSCompletionLog) << "No items found for completions at" << urlAndPos();
+        return {};
+    }
+
     if (itemsFound.size() > 1) {
         QStringList paths;
         for (auto &it : itemsFound)
@@ -115,9 +181,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
         qCWarning(QQmlLSCompletionLog) << "Multiple elements of " << urlAndPos()
                                        << " at the same depth:" << paths << "(using first)";
     }
-    DomItem currentItem;
-    if (!itemsFound.isEmpty())
-        currentItem = itemsFound.first().domItem;
+    const DomItem currentItem = itemsFound.first().domItem;
     qCDebug(QQmlLSCompletionLog) << "Completion at " << urlAndPos() << " "
                                  << m_parameters.position.line << ":"
                                  << m_parameters.position.character << "offset:" << pos
@@ -126,7 +190,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
                                  << "validVersion:"
                                  << (doc.validDocVersion ? (*doc.validDocVersion) : -1) << "in"
                                  << currentItem.internalKindStr() << currentItem.canonicalPath();
-    auto result = QQmlLSUtils::completions(currentItem, ctx);
+    auto result = completionEngine.completions(currentItem, ctx);
     return result;
 }
 QT_END_NAMESPACE

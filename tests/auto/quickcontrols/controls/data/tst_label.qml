@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -35,10 +35,12 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_creation() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(label, testCase)
+    function test_creation() {
+        let control = createTemporaryObject(label, testCase)
         verify(control)
     }
 
@@ -46,7 +48,7 @@ TestCase {
         return [
             {tag: "bold", value: true},
             {tag: "capitalization", value: Font.Capitalize},
-            {tag: "family", value: "Courier"},
+            {tag: "family", value: "Tahoma"},
             {tag: "italic", value: true},
             {tag: "strikeout", value: true},
             {tag: "underline", value: true},
@@ -56,19 +58,19 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = createTemporaryObject(label, testCase)
+        let control = createTemporaryObject(label, testCase)
         verify(control)
 
-        var child = label.createObject(control)
+        let child = label.createObject(control)
         verify(child)
 
-        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        let controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
         verify(controlSpy.valid)
 
-        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        let childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
         verify(childSpy.valid)
 
-        var defaultValue = control.font[data.tag]
+        let defaultValue = control.font[data.tag]
         child.font[data.tag] = defaultValue
 
         compare(child.font[data.tag], defaultValue)
@@ -84,7 +86,7 @@ TestCase {
     }
 
     function test_background() {
-        var control = createTemporaryObject(backgroundLabel, testCase, {text: "Label"})
+        let control = createTemporaryObject(backgroundLabel, testCase, {text: "Label"})
         verify(control)
 
         compare(control.background.width, control.width)
@@ -102,25 +104,25 @@ TestCase {
     }
 
     function test_inset() {
-        var control = createTemporaryObject(label, testCase, {background: rectangle.createObject(control)})
+        let control = createTemporaryObject(label, testCase, {background: rectangle.createObject(testCase)})
         verify(control)
 
-        var topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
+        let topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
         verify(topInsetSpy.valid)
 
-        var leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
+        let leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
         verify(leftInsetSpy.valid)
 
-        var rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
+        let rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
         verify(rightInsetSpy.valid)
 
-        var bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
+        let bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
         verify(bottomInsetSpy.valid)
 
-        var topInsetChanges = 0
-        var leftInsetChanges = 0
-        var rightInsetChanges = 0
-        var bottomInsetChanges = 0
+        let topInsetChanges = 0
+        let leftInsetChanges = 0
+        let rightInsetChanges = 0
+        let bottomInsetChanges = 0
 
         compare(control.topInset, 0)
         compare(control.leftInset, 0)

@@ -46,6 +46,11 @@ void ESTable::markObjects(MarkStack *s, bool isWeakMap)
 void ESTable::clear()
 {
     m_size = 0;
+
+    std::for_each(m_observers.begin(), m_observers.end(), [](ShiftObserver* ob){
+        Q_ASSERT(ob);
+        ob->pivot = ShiftObserver::OUT_OF_TABLE;
+    });
 }
 
 // Update the table to contain \a value for a given \a key. The key is
@@ -111,21 +116,25 @@ ReturnedValue ESTable::get(const Value &key, bool *hasValue) const
 // Removes the given \a key from the table
 bool ESTable::remove(const Value &key)
 {
-    bool found = false;
-    uint idx = 0;
-    for (; idx < m_size; ++idx) {
-        if (m_keys[idx].sameValueZero(key)) {
-            found = true;
-            break;
+    for (uint index = 0; index < m_size; ++index) {
+        if (m_keys[index].sameValueZero(key)) {
+            // Remove the element at |index| by moving all elements to the right
+            // of |index| one place to the left.
+            size_t count = (m_size - (index + 1)) * sizeof(Value);
+            memmove(m_keys + index, m_keys + index + 1, count);
+            memmove(m_values + index, m_values + index + 1, count);
+            m_size--;
+
+            std::for_each(m_observers.begin(), m_observers.end(), [index](ShiftObserver* ob) {
+                Q_ASSERT(ob);
+                if (index <= ob->pivot && ob->pivot != ShiftObserver::OUT_OF_TABLE)
+                    ob->pivot = ob->pivot == 0 ? ShiftObserver::OUT_OF_TABLE : ob->pivot - 1;
+            });
+
+            return true;
         }
     }
-
-    if (found == true) {
-        memmove(m_keys + idx, m_keys + idx + 1, (m_size - idx)*sizeof(Value));
-        memmove(m_values + idx, m_values + idx + 1, (m_size - idx)*sizeof(Value));
-        m_size--;
-    }
-    return found;
+    return false;
 }
 
 // Returns the size of the table. Note that the size may not match the underlying allocation.
@@ -160,4 +169,3 @@ void ESTable::removeUnmarkedKeys()
     }
     m_size = toIdx;
 }
-

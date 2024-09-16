@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickColorDialogImpl;
 class QWindow;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickPlatformColorDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickPlatformColorDialog
     : public QPlatformColorDialogHelper
 {
     Q_OBJECT

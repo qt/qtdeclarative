@@ -19,7 +19,7 @@ public:
 
 /*!
     \qmltype SystemPalette
-    \instantiates QQuickSystemPalette
+    \nativetype QQuickSystemPalette
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Provides access to the Qt palettes.
@@ -230,6 +230,20 @@ QColor QQuickSystemPalette::placeholderText() const
     Q_D(const QQuickSystemPalette);
     return QGuiApplication::palette().color(d->group, QPalette::PlaceholderText);
 }
+
+/*!
+    \qmlproperty color QtQuick::SystemPalette::accent
+    The accent color of the current color group.
+
+    \since 6.7
+    \sa QPalette::ColorRole
+*/
+QColor QQuickSystemPalette::accent() const
+{
+    Q_D(const QQuickSystemPalette);
+    return QGuiApplication::palette().color(d->group, QPalette::Accent);
+}
+
 /*!
     \qmlproperty enumeration QtQuick::SystemPalette::colorGroup
 

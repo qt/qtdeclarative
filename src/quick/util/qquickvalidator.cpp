@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype IntValidator
-    \instantiates QIntValidator
+    \nativetype QIntValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \ingroup qtquick-text-validators
@@ -75,7 +75,7 @@ void QQuickIntValidator::resetLocaleName()
 
 /*!
     \qmltype DoubleValidator
-    \instantiates QDoubleValidator
+    \nativetype QDoubleValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \ingroup qtquick-text-validators
@@ -168,7 +168,7 @@ void QQuickDoubleValidator::resetLocaleName()
 
 /*!
     \qmltype RegularExpressionValidator
-    \instantiates QRegularExpressionValidator
+    \nativetype QRegularExpressionValidator
     \inqmlmodule QtQuick
     \ingroup qtquick-text-utility
     \ingroup qtquick-text-validators

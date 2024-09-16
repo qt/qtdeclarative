@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits QtObject
-//! \instantiates QQuickLabsPlatformDialog
+//! \nativetype QQuickLabsPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief The base class of native dialogs.
@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \sa accepted()
 */
 
-Q_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
+Q_STATIC_LOGGING_CATEGORY(qtLabsPlatformDialogs, "qt.labs.platform.dialogs")
 
 QQuickLabsPlatformDialog::QQuickLabsPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
     : QObject(parent),

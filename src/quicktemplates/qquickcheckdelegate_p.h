@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickCheckDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickCheckDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_EXPORT QQuickCheckDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
@@ -62,7 +62,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickCheckDelegate)
 
 #endif // QQUICKCHECKDELEGATE_P_H

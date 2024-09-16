@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.impl
 import QtQuick.Controls.iOS.impl
 
 Button {
@@ -20,7 +21,7 @@ Button {
     flat: true
 
     contentItem: IconLabel {
-        readonly property var redColor: Qt.styleHints.colorScheme === Qt.Light ? "#ff3b30" : "#ff453a"
+        readonly property var redColor: Application.styleHints.colorScheme === Qt.Light ? "#ff3b30" : "#ff453a"
         text: delegate.text
         font: delegate.font
         spacing: delegate.spacing
@@ -56,8 +57,8 @@ Button {
                     {"vertical": delegate.hasVerticalLayout},
                     {"last": delegate.hasVerticalLayout && delegate.isLastItem},
                     {"pressed": delegate.down},
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }

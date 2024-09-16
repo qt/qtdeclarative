@@ -134,7 +134,7 @@ private:
     T *m_instance;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickAbstractAnimationPrivate : public QObjectPrivate, public QAnimationJobChangeListener
+class Q_QUICK_EXPORT QQuickAbstractAnimationPrivate : public QObjectPrivate, public QAnimationJobChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickAbstractAnimation)
 public:
@@ -234,7 +234,7 @@ public:
     bool animationDirty: 1;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
+class Q_QUICK_EXPORT QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPropertyAnimation)
 public:

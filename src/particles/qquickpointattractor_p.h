@@ -18,14 +18,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickAttractorAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_EXPORT QQuickAttractorAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged FINAL)
-    Q_PROPERTY(qreal pointX READ pointX WRITE setPointX NOTIFY pointXChanged FINAL)
-    Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged FINAL)
-    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged FINAL)
-    Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged FINAL)
+    Q_PROPERTY(qreal strength READ strength WRITE setStrength NOTIFY strengthChanged)
+    Q_PROPERTY(qreal pointX READ pointX WRITE setPointX NOTIFY pointXChanged)
+    Q_PROPERTY(qreal pointY READ pointY WRITE setPointY NOTIFY pointYChanged)
+    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
+    Q_PROPERTY(Proportion proportionalToDistance READ proportionalToDistance WRITE setProportionalToDistance NOTIFY proportionalToDistanceChanged)
     QML_NAMED_ELEMENT(Attractor)
     QML_ADDED_IN_VERSION(2, 0)
 

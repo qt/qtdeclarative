@@ -26,6 +26,7 @@ Window {
             focus: true
             modal: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+            popupType: Popup.Item
 
             Button {
                 id: buttonPopup1
@@ -46,6 +47,7 @@ Window {
             focus: true
             modal: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+            popupType: Popup.Item
 
             TextEdit {
                 id: texteditPopup2
@@ -66,6 +68,7 @@ Window {
             focus: true
             modal: true
             closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+            popupType: Popup.Item
 
             Drawer {
                 id: drawerPopup3

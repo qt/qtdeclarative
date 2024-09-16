@@ -10,21 +10,19 @@
 \keyword qtquick-samples
 
 Qt includes several examples to demonstrate a particular usage. The examples
-run as applications or as non-GUI examples in Qt Creator. Qt tutorials show
+run as applications or as non-GUI examples in \l{\QC Documentation}{\QC}. Qt tutorials show
 the step-by-step information and give insight to particular code snippets.
 
-This page lists the \l{Qt QML} and \l{Qt Quick} examples, however, many other
+This page lists the \l{Qt Qml} and \l{Qt Quick} examples, however, many other
 \l{All Modules}{Qt modules} contain examples related to their QML API.
 
 \section1 Running the Examples and Demos
 
 The examples are packaged with the \l{Getting Started with Qt}{Qt installers}
-and are accessed through Qt Creator. For more information about running
-examples in Qt Creator, visit the
-\l{Qt Creator: Building and Running an Example}{Building and Running an Example}
-page.
+and are accessed through \QC. For more information about running
+examples in \QC, see \l{\QC: Tutorial: Build and run}.
 
-Open and run examples within Qt Creator's \gui{Welcome} mode. Most of the
+Open and run examples in the \QC \uicontrol {Welcome} mode. Most of the
 examples run on various platforms and to search for platform-specific
 examples, type the platform name (or any keywords) in the search field. For
 example, typing \c mobile in the search field lists the examples that are
@@ -44,15 +42,16 @@ demos are deployable to mobile and desktop platforms.
 \section1 Developing Qt Quick Applications
 
 The following pages show how to develop Qt applications using
-\l{Qt Creator Manual}{Qt Creator} and Qt Quick. The pages demonstrate various
-steps such as use cases and introductory material. For more information about Qt Quick Applications and related modules, visit the \l{QML Applications} page.
+\l{\QC Documentation}{\QC} and Qt Quick. The pages demonstrate various
+steps such as use cases and introductory material. For more information about
+Qt Quick Applications and related modules, visit the \l{QML Applications} page.
 
 \div {class="multi-column"}
     \div {class="doc-column"}
         \b{Development Environment}
         \list
-        \li \l{Qt Creator: Creating Qt Quick Projects}{Creating Qt Quick Projects}
-        \li \l{Qt Creator: Using QML Modules with Plugins}{Using QML Modules with Plugins}
+        \li \l{\QC: Create Qt Quick Applications}
+        \li \l{\QC: Using QML Modules with Plugins}
         \endlist
     \enddiv
     \div {class="doc-column"}
@@ -60,7 +59,7 @@ steps such as use cases and introductory material. For more information about Qt
         \list
         \li \l{First Steps with QML}
         \li \l{Getting Started Programming with Qt Quick}{Alarms Application}
-        \li \l{Qt Design Studio: Your First UI}{Qt Design Studio Tutorials}
+        \li \l{\QDS: Your First UI}{\QDS Tutorials}
         \li \l{QML Advanced Tutorial}{SameGame}
         \endlist
     \enddiv
@@ -81,7 +80,7 @@ steps such as use cases and introductory material. For more information about Qt
 \section2 Extending QML
 
 The following tutorials show how a QML-based application can be combined and
-exteneded with C++ code using the \l{Qt QML} module.
+exteneded with C++ code using the \l{Qt Qml} module.
 \list
     \li \l {Writing QML Extensions with C++}
     \li \l {Writing advanced QML Extensions with C++}
@@ -100,6 +99,7 @@ Creator.
         \li \l{Qt Quick Controls - Gallery}{Controls Gallery}
         \li \l{tableview/gameoflife}{TableView}
         \li \l{Qt Quick Examples - Text}{Text and Fonts}
+        \li \l{Qt Quick Controls - Table of Contents}
         \endlist
     \enddiv
     \div {class="doc-column"}
@@ -121,6 +121,13 @@ Creator.
         \li \l{Qt Quick Examples - Shader Effects}{Shader Effects}
         \li \l{Qt Quick Examples - MultiEffect Test Bed}{MultiEffect}
         \li \l{Qt Quick Examples - MultiEffect Item Switcher}{MultiEffect-based Item Transitions}
+        \endlist
+    \enddiv
+    \div {class="doc-column"}
+        \b{Shapes}
+        \list
+        \li \l{Qt Quick Examples - Shapes}{Shapes}
+        \li \l{Weather Forecast Example}{Weather Forecast}
         \endlist
     \enddiv
 \enddiv

@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickColorDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickColorDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
     Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor NOTIFY selectedColorChanged)
@@ -55,7 +55,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickColorDialog)
 
 #endif // QQUICKCOLORDIALOG_P_H

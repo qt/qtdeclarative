@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QQMLDOMCOMMENTS_P_H
 #define QQMLDOMCOMMENTS_P_H
@@ -17,7 +17,6 @@
 
 #include "qqmldom_fwd_p.h"
 #include "qqmldomconstants_p.h"
-#include "qqmldomfunctionref_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldomattachedinfo_p.h"
 
@@ -39,7 +38,7 @@ class QMLDOM_EXPORT CommentInfo
 {
     Q_DECLARE_TR_FUNCTIONS(CommentInfo)
 public:
-    CommentInfo(QStringView);
+    CommentInfo(QStringView, QQmlJS::SourceLocation loc);
 
     QStringView preWhitespace() const { return rawComment.mid(0, commentBegin); }
 
@@ -55,6 +54,10 @@ public:
         return rawComment.mid(commentEnd, rawComment.size() - commentEnd);
     }
 
+    // Comment source location populated during lexing doesn't include start strings // or /*
+    // Returns the location starting from // or /*
+    QQmlJS::SourceLocation sourceLocation() const { return commentLocation; }
+
     quint32 commentBegin = 0;
     quint32 commentEnd = 0;
     quint32 commentContentBegin = 0;
@@ -66,6 +69,7 @@ public:
     int nContentNewlines = 0;
     QStringView rawComment;
     QStringList warnings;
+    QQmlJS::SourceLocation commentLocation;
 };
 
 class QMLDOM_EXPORT Comment
@@ -74,11 +78,16 @@ public:
     constexpr static DomType kindValue = DomType::Comment;
     DomType kind() const { return kindValue; }
 
-    Comment(QString c, int newlinesBefore = 1)
-        : m_commentStr(c), m_comment(m_commentStr), m_newlinesBefore(newlinesBefore)
+    enum CommentType {Pre, Post};
+
+    Comment(const QString &c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
-    Comment(QStringView c, int newlinesBefore = 1) : m_comment(c), m_newlinesBefore(newlinesBefore)
+    Comment(QStringView c, const QQmlJS::SourceLocation &loc, int newlinesBefore = 1,
+            CommentType type = Pre)
+        : m_comment(c), m_location(loc), m_newlinesBefore(newlinesBefore), m_type(type)
     {
     }
 
@@ -86,8 +95,10 @@ public:
     int newlinesBefore() const { return m_newlinesBefore; }
     void setNewlinesBefore(int n) { m_newlinesBefore = n; }
     QStringView rawComment() const { return m_comment; }
-    CommentInfo info() const { return CommentInfo(m_comment); }
+    CommentInfo info() const { return CommentInfo(m_comment, m_location); }
     void write(OutWriter &lw, SourceLocation *commentLocation = nullptr) const;
+
+    CommentType type() const { return m_type; }
 
     friend bool operator==(const Comment &c1, const Comment &c2)
     {
@@ -96,9 +107,10 @@ public:
     friend bool operator!=(const Comment &c1, const Comment &c2) { return !(c1 == c2); }
 
 private:
-    QString m_commentStr;
     QStringView m_comment;
+    QQmlJS::SourceLocation m_location;
     int m_newlinesBefore;
+    CommentType m_type;
 };
 
 class QMLDOM_EXPORT CommentedElement
@@ -110,19 +122,30 @@ public:
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const;
     void writePre(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
     void writePost(OutWriter &lw, QList<SourceLocation> *locations = nullptr) const;
-    QMultiMap<quint32, const QList<Comment> *> commentGroups(SourceLocation elLocation) const;
 
     friend bool operator==(const CommentedElement &c1, const CommentedElement &c2)
     {
-        return c1.preComments == c2.preComments && c1.postComments == c2.postComments;
+        return c1.m_preComments == c2.m_preComments && c1.m_postComments == c2.m_postComments;
     }
     friend bool operator!=(const CommentedElement &c1, const CommentedElement &c2)
     {
         return !(c1 == c2);
     }
 
-    QList<Comment> preComments;
-    QList<Comment> postComments;
+    void addComment(const Comment &comment)
+    {
+        if (comment.type() == Comment::CommentType::Pre)
+            m_preComments.append(comment);
+        else
+            m_postComments.append(comment);
+    }
+
+    const QList<Comment> &preComments() const { return m_preComments;}
+    const QList<Comment> &postComments() const { return m_postComments;}
+
+private:
+    QList<Comment> m_preComments;
+    QList<Comment> m_postComments;
 };
 
 class QMLDOM_EXPORT RegionComments
@@ -135,18 +158,28 @@ public:
 
     friend bool operator==(const RegionComments &c1, const RegionComments &c2)
     {
-        return c1.regionComments == c2.regionComments;
+        return c1.m_regionComments == c2.m_regionComments;
     }
     friend bool operator!=(const RegionComments &c1, const RegionComments &c2)
     {
         return !(c1 == c2);
     }
 
+    const QMap<FileLocationRegion, CommentedElement> &regionComments() const { return m_regionComments;}
+    Path addComment(const Comment &comment, FileLocationRegion region)
+    {
+        if (comment.type() == Comment::CommentType::Pre)
+            return addPreComment(comment, region);
+        else
+            return addPostComment(comment, region);
+    }
+
+private:
     Path addPreComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &preList = regionComments[region].preComments;
+        auto &preList = m_regionComments[region].preComments();
         index_type idx = preList.size();
-        preList.append(comment);
+        m_regionComments[region].addComment(comment);
         return Path::Field(Fields::regionComments)
                 .key(fileLocationRegionName(region))
                 .field(Fields::preComments)
@@ -155,16 +188,16 @@ public:
 
     Path addPostComment(const Comment &comment, FileLocationRegion region)
     {
-        auto &postList = regionComments[region].postComments;
+        auto &postList = m_regionComments[region].postComments();
         index_type idx = postList.size();
-        postList.append(comment);
+        m_regionComments[region].addComment(comment);
         return Path::Field(Fields::regionComments)
                 .key(fileLocationRegionName(region))
                 .field(Fields::postComments)
                 .index(idx);
     }
 
-    QMap<FileLocationRegion, CommentedElement> regionComments;
+    QMap<FileLocationRegion, CommentedElement> m_regionComments;
 };
 
 class QMLDOM_EXPORT AstComments final : public OwningItem
@@ -185,12 +218,7 @@ public:
     }
 
     Path canonicalPath(const DomItem &self) const override { return self.m_ownerPath; }
-    static void collectComments(MutableDomItem &item);
-    static void collectComments(
-            std::shared_ptr<Engine> engine, AST::Node *n,
-            std::shared_ptr<AstComments> collectComments, const MutableDomItem &rootItem,
-            FileLocations::Tree rootItemLocations);
-    AstComments(std::shared_ptr<Engine> e) : m_engine(e) { }
+    AstComments(const std::shared_ptr<Engine> &e) : m_engine(e) { }
     AstComments(const AstComments &o)
         : OwningItem(o), m_engine(o.m_engine), m_commentedElements(o.m_commentedElements)
     {
@@ -200,6 +228,12 @@ public:
     {
         return m_commentedElements;
     }
+
+    QHash<AST::Node *, CommentedElement> &commentedElements()
+    {
+        return m_commentedElements;
+    }
+
     CommentedElement *commentForNode(AST::Node *n)
     {
         if (m_commentedElements.contains(n))
@@ -211,6 +245,20 @@ public:
 private:
     std::shared_ptr<Engine> m_engine;
     QHash<AST::Node *, CommentedElement> m_commentedElements;
+};
+
+class CommentCollector
+{
+public:
+    CommentCollector() = default;
+    CommentCollector(MutableDomItem item);
+    void collectComments();
+    void collectComments(const std::shared_ptr<Engine> &engine, AST::Node *rootNode,
+                         const std::shared_ptr<AstComments> &astComments);
+
+private:
+    MutableDomItem m_rootItem;
+    FileLocations::Tree m_fileLocations;
 };
 
 class VisitAll : public AST::Visitor

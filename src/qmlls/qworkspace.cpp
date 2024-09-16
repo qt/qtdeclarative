@@ -58,6 +58,7 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
                                  if (file.open(QIODevice::ReadOnly))
                                      // m_modelManager->setFileContents(filename, file.readAll());
                                      break;
+                                 break;
                              }
                              case FileChangeType::Deleted:
                                  // m_modelManager->removeFile(filename);
@@ -112,8 +113,11 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
         FileSystemWatcher qmltypesWatcher;
         qmltypesWatcher.globPattern = QByteArray("*.qmltypes");
         qmltypesWatcher.kind = watchAll;
-        watchedFilesParams.watchers =
-                QList<FileSystemWatcher>({ qmlWatcher, qmldirWatcher, qmltypesWatcher });
+        watchedFilesParams.watchers = QList<FileSystemWatcher>({
+            std::move(qmlWatcher),
+            std::move(qmldirWatcher),
+            std::move(qmltypesWatcher)
+        });
         registrations.append(Registration {
                 // use ClientCapabilitiesInfo::WorkspaceDidChangeWatchedFiles as id too
                 ClientCapabilitiesInfo::WorkspaceDidChangeWatchedFiles,

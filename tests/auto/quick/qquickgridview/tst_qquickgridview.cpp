@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtCore/qstringlistmodel.h>
@@ -194,6 +194,7 @@ private slots:
 
     void keyNavigationEnabled();
     void releaseItems();
+    void removeAccessibleChildrenEvenIfReusingItems();
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -541,7 +542,7 @@ void tst_QQuickGridView::inserted_defaultLayout(QQuickGridView::Flow flow,
     int firstVisibleIndex = -1;
     for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (item && delegateVisible(item)) {
+        if (item && isDelegateVisible(item)) {
             firstVisibleIndex = i;
             break;
         }
@@ -963,7 +964,7 @@ void tst_QQuickGridView::removed_defaultLayout(QQuickGridView::Flow flow,
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
         if (item) {
             QRectF itemRect(item->x(), item->y(), item->width(), item->height());
-            if (delegateVisible(item) && viewRect.intersects(itemRect)) {
+            if (isDelegateVisible(item) && viewRect.intersects(itemRect)) {
                 firstVisibleIndex = i;
                 QQmlExpression en(qmlContext(item), item, "name");
                 firstName = en.evaluate().toString();
@@ -1311,7 +1312,7 @@ void tst_QQuickGridView::moved_defaultLayout(QQuickGridView::Flow flow,
     int firstVisibleIndex = -1;
     for (int i=0; i<items.size(); i++) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        if (item && delegateVisible(item)) {
+        if (item && isDelegateVisible(item)) {
             firstVisibleIndex = i;
             break;
         }
@@ -1891,9 +1892,9 @@ void tst_QQuickGridView::currentIndex()
 
     // moving currentItem out of view should make it invisible
     gridview->setCurrentIndex(0);
-    QTRY_VERIFY(delegateVisible(gridview->currentItem()));
+    QTRY_VERIFY(isDelegateVisible(gridview->currentItem()));
     gridview->setContentY(200);
-    QTRY_VERIFY(!delegateVisible(gridview->currentItem()));
+    QTRY_VERIFY(!isDelegateVisible(gridview->currentItem()));
 
     delete window;
 }
@@ -3662,7 +3663,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_COMPARE(item->y(), qreal((i/3)*60));
-        QCOMPARE(delegateVisible(item), i < 9); // inside view visible, outside not visible
+        QCOMPARE(isDelegateVisible(item), i < 9); // inside view visible, outside not visible
     }
 
     // ensure items outside view become invisible
@@ -3676,7 +3677,7 @@ void tst_QQuickGridView::resizeViewAndRepaint()
         QTRY_VERIFY(item);
         QTRY_COMPARE(item->x(), qreal((i%3)*80));
         QTRY_COMPARE(item->y(), qreal((i/3)*60));
-        QCOMPARE(delegateVisible(item), i < 6); // inside view visible, outside not visible
+        QCOMPARE(isDelegateVisible(item), i < 6); // inside view visible, outside not visible
     }
 
     delete window;
@@ -4305,6 +4306,7 @@ void tst_QQuickGridView::snapToRow()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QQuickView *window = getView();
 
@@ -4327,7 +4329,7 @@ void tst_QQuickGridView::snapToRow()
     qreal origContentY = gridview->contentY();
     qreal origContentX = gridview->contentX();
     // confirm that a flick hits an item boundary
-    flick(window, flickStart, flickEnd, 180);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
 
     // wait until it's at least one cell further
     QTRY_VERIFY(qAbs(gridview->contentX() - origContentX) > 80 ||
@@ -4343,26 +4345,40 @@ void tst_QQuickGridView::snapToRow()
     else
         QCOMPARE(qreal(fmod(gridview->contentX(),80.0)), snapAlignment);
 
-    // flick to end
-    do {
-        flick(window, flickStart, flickEnd, 180);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYEnd()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+    {
+        auto atEnd = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYEnd()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXEnd() : gridview->isAtXBeginning();
+        };
+
+        // flick to end
+        for (int i = 0; i < 4 && !atEnd(); ++i) {
+            QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atEnd());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), endExtent);
     else
         QCOMPARE(gridview->contentX(), endExtent);
 
-    // flick to start
-    do {
-        flick(window, flickEnd, flickStart, 180);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYBeginning()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+    {
+        auto atStart = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYBeginning()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXBeginning() : gridview->isAtXEnd();
+        };
+
+        // flick to start
+        for (int i = 0; i < 4 && !atStart(); ++i) {
+            QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart, 180);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atStart());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
@@ -4423,6 +4439,7 @@ void tst_QQuickGridView::snapOneRow()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
     QFETCH(qreal, flickSlowdown);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     qreal flickDuration = 180 * flickSlowdown;
 
@@ -4447,7 +4464,7 @@ void tst_QQuickGridView::snapOneRow()
     QSignalSpy currentIndexSpy(gridview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits next row boundary
-    flick(window, flickStart, flickEnd, flickDuration);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, flickDuration);
     QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), snapAlignment);
@@ -4459,13 +4476,21 @@ void tst_QQuickGridView::snapOneRow()
         QCOMPARE(currentIndexSpy.size(), 1);
     }
 
-    // flick to end
-    do {
-        flick(window, flickStart, flickEnd, flickDuration);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYEnd()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXEnd() : !gridview->isAtXBeginning());
+    {
+        auto atEnd = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYEnd()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXEnd() : gridview->isAtXBeginning();
+        };
+
+        // flick to end
+        for (int i = 0; i < 4 && !atEnd(); ++i) {
+            QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd,
+                                     flickDuration, Qt::LeftButton, Qt::NoModifier, 500);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atEnd());
+    }
 
     if (QQuickItemView::HighlightRangeMode(highlightRangeMode) == QQuickItemView::StrictlyEnforceRange) {
         QCOMPARE(gridview->currentIndex(), 6);
@@ -4477,13 +4502,21 @@ void tst_QQuickGridView::snapOneRow()
     else
         QCOMPARE(gridview->contentX(), endExtent);
 
-    // flick to start
-    do {
-        flick(window, flickEnd, flickStart, flickDuration);
-        QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
-    } while (flow == QQuickGridView::FlowLeftToRight
-           ? !gridview->isAtYBeginning()
-           : layoutDirection == Qt::LeftToRight ? !gridview->isAtXBeginning() : !gridview->isAtXEnd());
+    {
+        auto atStart = [flow, gridview, layoutDirection]() {
+            return flow == QQuickGridView::FlowLeftToRight
+                    ? gridview->isAtYBeginning()
+                    : layoutDirection == Qt::LeftToRight ? gridview->isAtXBeginning() : gridview->isAtXEnd();
+        };
+
+        // flick to start
+        for (int i = 0; i < 4 && !atStart(); ++i) {
+            QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart,
+                                     flickDuration, Qt::LeftButton, Qt::NoModifier, 500);
+            QTRY_VERIFY(gridview->isMoving() == false); // wait until it stops
+        }
+        QVERIFY(atStart());
+    }
 
     if (flow == QQuickGridView::FlowLeftToRight)
         QCOMPARE(gridview->contentY(), startExtent);
@@ -6049,23 +6082,23 @@ void tst_QQuickGridView::unrequestedVisibility()
     QQuickItem *item;
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 4));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     rightview->setCurrentIndex(0);
 
@@ -6073,9 +6106,9 @@ void tst_QQuickGridView::unrequestedVisibility()
     QTRY_COMPARE(rightview->contentY(), 0.0);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     QVERIFY(!findItem<QQuickItem>(leftContent, "wrapper", 11));
     QVERIFY(!findItem<QQuickItem>(rightContent, "wrapper", 11));
@@ -6086,98 +6119,98 @@ void tst_QQuickGridView::unrequestedVisibility()
     QTRY_COMPARE(rightview->contentY(), 0.0);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QTRY_COMPARE(delegateVisible(item), false);
+    QTRY_COMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QTRY_VERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 1));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 11));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a visible item out of view
     model.moveItems(5, 3, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(3, 5, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a visible item out of view
     model.moveItems(9, 10, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // move a non-visible item into view
     model.moveItems(10, 9, 1);
     QVERIFY(QQuickTest::qWaitForPolish(leftview));
 
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 3));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
     QVERIFY(item = findItem<QQuickItem>(leftContent, "wrapper", 5));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 9));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
     QVERIFY(item = findItem<QQuickItem>(rightContent, "wrapper", 10));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     delete window;
 }
@@ -6465,22 +6498,22 @@ void tst_QQuickGridView::displayMargin()
     QQuickItem *item97;
 
     QVERIFY(item0 = findItem<QQuickItem>(content, "delegate", 0));
-    QCOMPARE(delegateVisible(item0), true);
+    QCOMPARE(isDelegateVisible(item0), true);
 
     // the 97th item should be within the end margin
     QVERIFY(item97 = findItem<QQuickItem>(content, "delegate", 96));
-    QCOMPARE(delegateVisible(item97), true);
+    QCOMPARE(isDelegateVisible(item97), true);
 
     // GridView staggers item creation, so the 118th item should be outside the end margin.
     QVERIFY(findItem<QQuickItem>(content, "delegate", 117) == nullptr);
 
     // the first delegate should still be within the begin margin
     gridview->positionViewAtIndex(20, QQuickGridView::Beginning);
-    QCOMPARE(delegateVisible(item0), true);
+    QCOMPARE(isDelegateVisible(item0), true);
 
     // the first delegate should now be outside the begin margin
     gridview->positionViewAtIndex(36, QQuickGridView::Beginning);
-    QCOMPARE(delegateVisible(item0), false);
+    QCOMPARE(isDelegateVisible(item0), false);
 
     delete window;
 }
@@ -6504,26 +6537,26 @@ void tst_QQuickGridView::negativeDisplayMargin()
     QVERIFY(content != nullptr);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 0));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 7));
-    QCOMPARE(delegateVisible(item), true);
+    QCOMPARE(isDelegateVisible(item), true);
 
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
-    QCOMPARE(delegateVisible(item), false);
+    QCOMPARE(isDelegateVisible(item), false);
 
     // Flick until contentY means that delegate8 should be visible
     listview->setProperty("contentY", 500);
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 8));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     listview->setProperty("contentY", 1000);
     QTRY_VERIFY(item = findItem<QQuickItem>(content, "delegate", 14));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     listview->setProperty("contentY", 0);
     QVERIFY(item = findItem<QQuickItem>(content, "delegate", 4));
-    QTRY_COMPARE(delegateVisible(item), true);
+    QTRY_COMPARE(isDelegateVisible(item), true);
 
     delete window;
 }
@@ -6702,6 +6735,7 @@ void tst_QQuickGridView::positionViewAtBeginningAfterResizingCells()
 
 void tst_QQuickGridView::keyNavigationEnabled()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
@@ -6724,7 +6758,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     QCOMPARE(enabledSpy.size(), 1);
     QCOMPARE(gridView->isKeyNavigationEnabled(), false);
 
-    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 175), QPoint(200, 50), 100);
     QVERIFY(!gridView->isMoving());
     QCOMPARE(gridView->contentY(), 0.0);
     QCOMPARE(gridView->currentIndex(), 0);
@@ -6745,7 +6779,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
     // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
     gridView->setKeyNavigationEnabled(true);
     QCOMPARE(enabledSpy.size(), 4);
-    flick(window.data(), QPoint(200, 175), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 175), QPoint(200, 50), 100);
     QVERIFY(!gridView->isMoving());
     QCOMPARE(gridView->contentY(), 0.0);
     QCOMPARE(gridView->currentIndex(), 0);
@@ -6767,6 +6801,7 @@ void tst_QQuickGridView::keyNavigationEnabled()
 
 void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     StressTestModel model;
 
     QScopedPointer<QQuickView> window(createView());
@@ -6794,9 +6829,9 @@ void tst_QQuickGridView::QTBUG_48870_fastModelUpdates()
                                         : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
         if (i % 3 != 0) {
             if (i & 1)
-                flick(window.data(), QPoint(100, 200), QPoint(100, 0), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 0), 100);
             else
-                flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 400), 100);
         }
     }
 }
@@ -6843,6 +6878,36 @@ void tst_QQuickGridView::releaseItems()
     // don't crash (QTBUG-61294)
     gridview->setModel(123);
 }
+
+void tst_QQuickGridView::removeAccessibleChildrenEvenIfReusingItems()
+{
+    auto window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("removeAccessibleChildrenEvenIfReusingItems.qml"));
+    window->show();
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(window.get());
+    QVERIFY(iface);
+    QAccessibleInterface *gridView = iface->child(0)->child(0);
+    QCOMPARE(gridView->childCount(), 4);
+    QCOMPARE(gridView->child(0)->text(QAccessible::Text::Name), "item11");
+    QCOMPARE(gridView->child(1)->text(QAccessible::Text::Name), "item12");
+    QCOMPARE(gridView->child(2)->text(QAccessible::Text::Name), "item13");
+    QCOMPARE(gridView->child(3)->text(QAccessible::Text::Name), "item14");
+
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "replaceItems"));
+
+    QCOMPARE(gridView->childCount(), 4);
+    QTRY_COMPARE(gridView->child(0)->text(QAccessible::Text::Name), "item21");
+    QTRY_COMPARE(gridView->child(1)->text(QAccessible::Text::Name), "item22");
+    QTRY_COMPARE(gridView->child(2)->text(QAccessible::Text::Name), "item23");
+    QTRY_COMPARE(gridView->child(3)->text(QAccessible::Text::Name), "item24");
+}
+
 
 QTEST_MAIN(tst_QQuickGridView)
 

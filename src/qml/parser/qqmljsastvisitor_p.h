@@ -210,6 +210,30 @@ public:
 #undef X
 };
 
+class QML_PARSER_EXPORT JSVisitor : public BaseVisitor
+{
+public:
+    JSVisitor() = default;
+
+    bool preVisit(Node *) override { return true; }
+    void postVisit(Node *) override { }
+
+#define X(name)                                  \
+    bool visit(name *) override { return true; } \
+    void endVisit(name *) override { }
+    QQmlJSASTQQmlJSClassListToVisit
+#undef X
+
+#define X(name)                 \
+    bool visit(name *) override \
+    {                           \
+        Q_ASSERT(false);        \
+        return false;           \
+    }                           \
+    void endVisit(name *) override { }
+            QQmlJSASTUiClassListToVisit
+#undef X
+}; // namespace AST
 } } // namespace AST
 
 QT_END_NAMESPACE

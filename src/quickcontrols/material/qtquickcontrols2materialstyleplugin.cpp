@@ -5,8 +5,6 @@
 #include "qquickmaterialtheme_p.h"
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -23,6 +21,7 @@ public:
 
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
+    void updateTheme() override;
 
     QQuickMaterialTheme theme;
 };
@@ -42,6 +41,11 @@ void QtQuickControls2MaterialStylePlugin::initializeTheme(QQuickTheme *theme)
 {
     QQuickMaterialStyle::initGlobals();
     this->theme.initialize(theme);
+}
+
+void QtQuickControls2MaterialStylePlugin::updateTheme()
+{
+    theme.updateTheme();
 }
 
 QT_END_NAMESPACE

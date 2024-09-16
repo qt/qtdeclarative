@@ -7,9 +7,9 @@
 #include <QQmlComponent>
 #include "qqmlapplicationengine.h"
 #include "qqmlapplicationengine_p.h"
+#include <QtQml/private/qqmlcomponent_p.h>
+#include <QtQml/private/qqmldirdata_p.h>
 #include <QtQml/private/qqmlfileselector_p.h>
-
-#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -109,15 +109,36 @@ void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &
     ensureLoadingFinishes(c);
 }
 
-void QQmlApplicationEnginePrivate::startLoad(QAnyStringView uri, QAnyStringView type)
+void QQmlApplicationEnginePrivate::startLoad(QAnyStringView uri, QAnyStringView typeName)
 {
     Q_Q(QQmlApplicationEngine);
 
-    _q_loadTranslations(); //Translations must be loaded before the QML file is
     QQmlComponent *c = new QQmlComponent(q, q);
 
     ensureInitialized();
-    c->loadFromModule(uri, type);
+
+    auto *componentPriv = QQmlComponentPrivate::get(c);
+    const auto [status, type] = componentPriv->prepareLoadFromModule(uri, typeName);
+
+    if (type.sourceUrl().isValid()) {
+        const auto qmlDirData = typeLoader.getQmldir(type.sourceUrl());
+        const QUrl url = qmlDirData->finalUrl();
+        if (url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("qrc")) {
+            QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
+            translationsDirectory = fi.path() + QLatin1String("/i18n");
+        } else {
+            translationsDirectory.clear();
+        }
+    }
+
+    /* Translations must be loaded before the QML file. They require translationDirectory to
+     * already be resolved. But, in order to resolve the translationDirectory, the type of the
+     * module to load needs to be known. Therefore, loadFromModule is split into resolution and
+     * loading because the translation directory needs to be set in between.
+     */
+    _q_loadTranslations();
+    componentPriv->completeLoadFromModule(uri, typeName, type, status);
+
     ensureLoadingFinishes(c);
 }
 
@@ -236,10 +257,9 @@ void QQmlApplicationEnginePrivate::ensureLoadingFinishes(QQmlComponent *c)
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    // quit on error
-    QObject::connect(&engine, QQmlApplicationEngine::objectCreationFailed,
-                     QCoreApplication::instance(), QCoreApplication::quit,
-                     Qt::QueuedConnection);
+    // exit on error
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+        &app, []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
     engine.load(QUrl());
     return app.exec();
   \endcode
@@ -285,16 +305,23 @@ QQmlApplicationEngine::QQmlApplicationEngine(QAnyStringView uri, QAnyStringView 
     loadFromModule(uri, typeName);
 }
 
+static QUrl urlFromFilePath(const QString &filePath)
+{
+    return filePath.startsWith(QLatin1Char(':'))
+        ? QUrl(QLatin1String("qrc") + filePath)
+        : QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile);
+}
+
 /*!
   Create a new QQmlApplicationEngine and loads the QML file at the given
-  \a filePath, which must be a local file path. If a relative path is
+  \a filePath, which must be a local file or qrc path. If a relative path is
   given then it will be interpreted as relative to the working directory of the
   application.
 
   This is provided as a convenience, and is the same as using the empty constructor and calling load afterwards.
 */
 QQmlApplicationEngine::QQmlApplicationEngine(const QString &filePath, QObject *parent)
-    : QQmlApplicationEngine(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile), parent)
+    : QQmlApplicationEngine(urlFromFilePath(filePath), parent)
 {
 }
 
@@ -326,16 +353,16 @@ void QQmlApplicationEngine::load(const QUrl &url)
 
 /*!
   Loads the root QML file located at \a filePath. \a filePath must be a path to
-  a local file. If \a filePath is a relative path, it is taken as relative to
-  the application's working directory. The object tree defined by the file is
-  instantiated immediately.
+  a local file or a path to a file in the resource file system. If \a filePath
+  is a relative path, it is taken as relative to the application's working
+  directory. The object tree defined by the file is instantiated immediately.
 
   If an error occurs, error messages are printed with qWarning.
 */
 void QQmlApplicationEngine::load(const QString &filePath)
 {
     Q_D(QQmlApplicationEngine);
-    d->startLoad(QUrl::fromUserInput(filePath, QLatin1String("."), QUrl::AssumeLocalFile));
+    d->startLoad(urlFromFilePath(filePath));
 }
 
 /*!

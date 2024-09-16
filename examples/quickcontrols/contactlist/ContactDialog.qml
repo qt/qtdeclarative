@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
@@ -41,5 +41,9 @@ Dialog {
         id: form
     }
 
-    onAccepted: finished(form.fullName.text, form.address.text, form.city.text, form.number.text)
+    onAccepted: {
+        if (form.fullName.text && form.address.text && form.city.text && form.number.text) {
+            finished(form.fullName.text, form.address.text, form.city.text, form.number.text);
+        }
+    }
 }

@@ -24,7 +24,7 @@ namespace QV4 {
 
 struct IdentifierHashEntry;
 struct IdentifierHashData;
-struct Q_QML_PRIVATE_EXPORT IdentifierHash
+struct Q_QML_EXPORT IdentifierHash
 {
     IdentifierHash() = default;
     IdentifierHash(ExecutionEngine *engine);

@@ -28,7 +28,7 @@ class QSGGeometryNode;
 class QMatrix4x4;
 class QSGRenderNode;
 
-class Q_QUICK_PRIVATE_EXPORT QSGNodeUpdater
+class Q_QUICK_EXPORT QSGNodeUpdater
 {
 public:
     QSGNodeUpdater();

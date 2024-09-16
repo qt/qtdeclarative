@@ -46,7 +46,7 @@ protected:
     QString key(const QString &path, ImageParameters *params) override;
 };
 
-class Q_LABSSHAREDIMAGE_PRIVATE_EXPORT SharedImageProvider : public QQuickImageProviderWithOptions
+class Q_LABSSHAREDIMAGE_EXPORT SharedImageProvider : public QQuickImageProviderWithOptions
 {
 public:
     SharedImageProvider();

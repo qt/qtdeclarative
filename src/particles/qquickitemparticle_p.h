@@ -22,11 +22,11 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItemParticleAttached;
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickItemParticle : public QQuickParticlePainter
+class Q_QUICKPARTICLES_EXPORT QQuickItemParticle : public QQuickParticlePainter
 {
     Q_OBJECT
-    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged FINAL)
-    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
+    Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     QML_NAMED_ELEMENT(ItemParticle)
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickItemParticleAttached)
@@ -71,6 +71,10 @@ protected:
     void initialize(int gIdx, int pIdx) override;
     void prepareNextFrame();
 private:
+    bool clockShouldUpdate() const;
+    void updateClock();
+    void reconnectSystem(QQuickParticleSystem *system);
+    void reconnectParent(QQuickItem *parent);
     void processDeletables();
     void tick(int time = 0);
     QSet<QQuickItem* > m_deletables;
@@ -85,6 +89,10 @@ private:
 
     typedef QTickAnimationProxy<QQuickItemParticle, &QQuickItemParticle::tick> Clock;
     Clock *clock;
+    QMetaObject::Connection m_systemRunStateConnection;
+    QMetaObject::Connection m_systemPauseStateConnection;
+    QMetaObject::Connection m_systemEnabledStateConnection;
+    QMetaObject::Connection m_parentEnabledStateConnection;
 };
 
 class QQuickItemParticleAttached : public QObject

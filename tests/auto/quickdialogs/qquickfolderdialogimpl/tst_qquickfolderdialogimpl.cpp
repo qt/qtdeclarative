@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -150,6 +150,7 @@ void tst_QQuickFolderDialogImpl::cleanupTestCase()
 
 void tst_QQuickFolderDialogImpl::defaults()
 {
+    QTest::failOnWarning(QRegularExpression(".*"));
     QQuickApplicationHelper helper(this, "folderDialog.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -343,10 +344,12 @@ void tst_QQuickFolderDialogImpl::changeFolderViaTextEdit()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
@@ -354,11 +357,12 @@ void tst_QQuickFolderDialogImpl::changeFolderViaTextEdit()
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
 
     // Enter the path to the folder in the text edit.
-    enterText(dialogHelper.window(), tempSubDir2.path());
+    enterText(dialogHelper.popupWindow(), tempSubDir2.path());
     QCOMPARE(breadcrumbBar->textField()->text(), tempSubDir2.path());
+#endif
 
     // Hit enter to accept.
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Return);
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     COMPARE_URL(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     // We changed into a directory with no folders, so the selected folder should be invalid.
@@ -380,6 +384,7 @@ void tst_QQuickFolderDialogImpl::changeFolderViaEnter()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     // The first delegate in the view should be selected and have focus.
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
@@ -393,7 +398,7 @@ void tst_QQuickFolderDialogImpl::changeFolderViaEnter()
     // Select the delegate by pressing enter.
     const FolderDialogSignalHelper signalHelper(dialogHelper);
     QVERIFY2(signalHelper.errorMessage.isEmpty(), signalHelper.errorMessage);
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Return);
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir1.path()));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempSubSubDir.path()));
     QCOMPARE(signalHelper.dialogSelectedFolderChangedSpy.size(), 1);
@@ -416,10 +421,13 @@ void tst_QQuickFolderDialogImpl::cancelDialogWhileTextEditHasFocus()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
@@ -471,6 +479,7 @@ void tst_QQuickFolderDialogImpl::goUp()
     QTRY_VERIFY(findViewDelegateItem(folderDialogListView, 0, subDirDelegate));
     QCOMPARE(subDirDelegate->isHighlighted(), true);
 
+#if QT_CONFIG(shortcut)
     // Go up a directory via the keyboard shortcut.
     const auto goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
@@ -478,6 +487,7 @@ void tst_QQuickFolderDialogImpl::goUp()
     QVERIFY(tempParentDir.cdUp());
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempParentDir.path()));
     COMPARE_URL(dialogHelper.dialog->selectedFolder(), QUrl::fromLocalFile(tempDir.path()));
+#endif
 }
 
 void tst_QQuickFolderDialogImpl::goUpWhileTextEditHasFocus()
@@ -489,6 +499,7 @@ void tst_QQuickFolderDialogImpl::goUpWhileTextEditHasFocus()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     // Go up a directory via the button next to the breadcrumb bar.
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
@@ -504,12 +515,12 @@ void tst_QQuickFolderDialogImpl::goUpWhileTextEditHasFocus()
     QVERIFY(!breadcrumbBar->textField()->hasActiveFocus());
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     // The focus should be given to the first delegate.
-    QVERIFY(dialogHelper.window()->activeFocusItem());
+    QVERIFY(dialogHelper.popupWindow()->activeFocusItem());
     auto folderDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("folderDialogListView");
     QVERIFY(folderDialogListView);
     QQuickFileDialogDelegate *firstDelegate = nullptr;
     QTRY_VERIFY(findViewDelegateItem(folderDialogListView, 0, firstDelegate));
-    QCOMPARE(dialogHelper.window()->activeFocusItem(), firstDelegate);
+    QCOMPARE(dialogHelper.popupWindow()->activeFocusItem(), firstDelegate);
 }
 
 void tst_QQuickFolderDialogImpl::goIntoLargeFolder()
@@ -609,36 +620,43 @@ void tst_QQuickFolderDialogImpl::keyAndShortcutHandling()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
+#endif
     auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
     QVERIFY(breadcrumbBar);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
 
+#if QT_CONFIG(shortcut)
     // Ctrl+L shouldn't hide it.
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
+#endif
 
     // Cancel it with the escape key.
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Escape);
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     QVERIFY(dialogHelper.dialog->isVisible());
 
+#if QT_CONFIG(shortcut)
     // Make it visible.
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
+#endif
 
     // Cancel it with the escape key again.
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Escape);
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     QVERIFY(dialogHelper.dialog->isVisible());
 
     // Pressing escape now should close the dialog.
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Escape);
     QVERIFY(!dialogHelper.dialog->isVisible());
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
 }
@@ -651,6 +669,7 @@ void tst_QQuickFolderDialogImpl::tabFocusNavigation()
     QVERIFY(dialogHelper.waitForWindowActive());
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QList<QQuickItem*> expectedFocusItems;
 
@@ -690,12 +709,12 @@ void tst_QQuickFolderDialogImpl::tabFocusNavigation()
     for (auto expectedFocusItem : std::as_const(expectedFocusItems)) {
         // Check the focus item first so that we account for the first item.
         // Print detailed failure message as workaround for QTBUG-92102.
-        QVERIFY2(dialogHelper.window()->activeFocusItem() == expectedFocusItem, qPrintable(QString::fromLatin1(
-            "\n   Actual:   %1\n   Expected: %2").arg(QDebug::toString(dialogHelper.window()->activeFocusItem()))
+        QVERIFY2(dialogHelper.popupWindow()->activeFocusItem() == expectedFocusItem, qPrintable(QString::fromLatin1(
+            "\n   Actual:   %1\n   Expected: %2").arg(QDebug::toString(dialogHelper.popupWindow()->activeFocusItem()))
                 .arg(QDebug::toString(expectedFocusItem))));
 
         if (expectedFocusItem != expectedFocusItems.last())
-            QTest::keyClick(dialogHelper.window(), Qt::Key_Tab);
+            QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Tab);
     }
 
     // Ensure the order is reversed when shift-tabbing.
@@ -703,9 +722,9 @@ void tst_QQuickFolderDialogImpl::tabFocusNavigation()
     // We know the first (last) item has focus already, so skip it.
     expectedFocusItems.removeFirst();
     for (auto expectedFocusItem : std::as_const(expectedFocusItems)) {
-        QTest::keyClick(dialogHelper.window(), Qt::Key_Tab, Qt::ShiftModifier);
+        QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Tab, Qt::ShiftModifier);
 
-        QCOMPARE(dialogHelper.window()->activeFocusItem(), expectedFocusItem);
+        QCOMPARE(dialogHelper.popupWindow()->activeFocusItem(), expectedFocusItem);
     }
 }
 
@@ -778,6 +797,7 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
     COMPARE_URL(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(tempSubDir2.path()));
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     // We opened it in a folder that has no files, so the Open button should be disabled.
     QVERIFY(dialogHelper.quickDialog->footer());
@@ -795,14 +815,15 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
     COMPARE_URL(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
 
+#if QT_CONFIG(shortcut)
     // Get the text edit visible with Ctrl+L. The Open button should now be disabled.
     const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
-    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), false);
-
+#endif
     // Hide it with the escape key. The Open button should now be enabled.
-    QTest::keyClick(dialogHelper.window(), Qt::Key_Escape);
+    QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Escape);
     QVERIFY(!breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), true);
 }

@@ -1,0 +1,10 @@
+The SVG files in this directory are converted to QML using the svgtoqml tool. They are not directly
+used by the example, but are provided as .svg for users who might want to modify them on their own.
+The font file is required to build the example.
+
+The following third-party assets are used in this example:
+
+- Weather icons from the Noto Emoji collection: https://www.svgrepo.com/collection/noto-emojis/ (Author: googlefonts, License: Apache, see apache.txt))
+- "Europe.svg" is a modified version of https://commons.wikimedia.org/wiki/File:Europ%C3%A4ische_Wirtschafts-_und_W%C3%A4hrungsunion-2009.svg (Cc-by-3.0 license)
+- "Work Sans" font by Wei Huang (Licensed under Open Font License, see OFL.txt)
+- "gear alt fill" from "Framework7 iOS icons" by Framework7. (licensed under MIT license)

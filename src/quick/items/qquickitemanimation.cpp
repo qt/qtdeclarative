@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ParentAnimation
-    \instantiates QQuickParentAnimation
+    \nativetype QQuickParentAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \since 5.0
@@ -371,7 +371,7 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 
 /*!
     \qmltype AnchorAnimation
-    \instantiates QQuickAnchorAnimation
+    \nativetype QQuickAnchorAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
@@ -513,7 +513,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
 #if QT_CONFIG(quick_path)
 /*!
     \qmltype PathAnimation
-    \instantiates QQuickPathAnimation
+    \nativetype QQuickPathAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-properties
     \inherits Animation
@@ -770,13 +770,13 @@ void QQuickPathAnimation::setOrientationExitDuration(int duration)
 qreal QQuickPathAnimation::endRotation() const
 {
     Q_D(const QQuickPathAnimation);
-    return d->endRotation.isNull ? qreal(0) : d->endRotation.value;
+    return d->endRotation.isValid() ? d->endRotation.value() : qreal(0);
 }
 
 void QQuickPathAnimation::setEndRotation(qreal rotation)
 {
     Q_D(QQuickPathAnimation);
-    if (!d->endRotation.isNull && d->endRotation == rotation)
+    if (d->endRotation.isValid() && d->endRotation == rotation)
         return;
 
     d->endRotation = rotation;
@@ -946,11 +946,11 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
             //shortest distance to correct orientation
             qreal diff = angle - startRotation;
             while (diff > 180.0) {
-                startRotation.value += 360.0;
+                startRotation = startRotation.value() + 360.0;
                 diff -= 360.0;
             }
             while (diff < -180.0) {
-                startRotation.value -= 360.0;
+                startRotation = startRotation.value() - 360.0;
                 diff += 360.0;
             }
         }
@@ -993,9 +993,8 @@ QQuickPathAnimationAnimator::QQuickPathAnimationAnimator(QQuickPathAnimationPriv
 QQuickPathAnimationAnimator::~QQuickPathAnimationAnimator()
 {
     if (animationTemplate && pathUpdater()) {
-        QHash<QQuickItem*, QQuickPathAnimationAnimator* >::iterator it =
-                animationTemplate->activeAnimations.find(pathUpdater()->target);
-        if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+        auto it = animationTemplate->activeAnimations.constFind(pathUpdater()->target);
+        if (it != animationTemplate->activeAnimations.cend() && it.value() == this)
             animationTemplate->activeAnimations.erase(it);
     }
 }

@@ -27,11 +27,11 @@ class ESTable;
 namespace Heap {
 
 struct WeakMapCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct MapCtor : WeakMapCtor {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct MapObject : Object {
@@ -78,7 +78,7 @@ struct WeakMapPrototype : Object
     static ReturnedValue method_delete(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    Q_AUTOTEST_EXPORT static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };
 
 struct MapPrototype : WeakMapPrototype
@@ -92,7 +92,7 @@ struct MapPrototype : WeakMapPrototype
     static ReturnedValue method_get(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_has(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_keys(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    Q_AUTOTEST_EXPORT static ReturnedValue method_set(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_get_size(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_values(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 };

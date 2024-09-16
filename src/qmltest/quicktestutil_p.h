@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_TEST_PRIVATE_EXPORT QuickTestUtil : public QObject
+class Q_QMLTEST_EXPORT QuickTestUtil : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
@@ -52,7 +52,7 @@ public Q_SLOTS:
     QJSValue callerFile(int frameIndex = 0) const;
     int callerLine(int frameIndex = 0) const;
 
-    QString signalHandlerName(const QString &signalName)
+    Q_REVISION(6, 7) QString signalHandlerName(const QString &signalName)
     {
         if (QQmlSignalNames::isHandlerName(signalName))
             return signalName;

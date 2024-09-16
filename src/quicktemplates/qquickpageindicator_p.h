@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 class QQmlComponent;
 class QQuickPageIndicatorPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPageIndicator : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickPageIndicator : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count WRITE setCount NOTIFY countChanged FINAL)
@@ -71,7 +71,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPageIndicator)
 
 #endif // QQUICKPAGEINDICATOR_P_H

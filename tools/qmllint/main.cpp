@@ -2,11 +2,13 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
+#include <QtQmlToolingSettings/private/qqmltoolingutils_p.h>
 
-#include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljsloggingutils_p.h>
+#include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
@@ -29,6 +31,35 @@
 using namespace Qt::StringLiterals;
 
 constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
+
+bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringList &arguments)
+{
+    allArguments.reserve(arguments.size());
+    for (const QString &argument : arguments) {
+        // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
+        if (argument.startsWith(u'@')) {
+            QString optionsFile = argument;
+            optionsFile.remove(0, 1);
+            if (optionsFile.isEmpty()) {
+                qWarning().nospace() << "The @ option requires an input file";
+                return false;
+            }
+            QFile f(optionsFile);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                qWarning().nospace() << "Cannot open options file specified with @";
+                return false;
+            }
+            while (!f.atEnd()) {
+                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                if (!line.isEmpty())
+                    allArguments << line;
+            }
+        } else {
+            allArguments << argument;
+        }
+    }
+    return true;
+}
 
 int main(int argv, char *argc[])
 {
@@ -93,6 +124,11 @@ All warnings can be set to three levels:
     const QString qmlImportPathsSetting = QLatin1String("AdditionalQmlImportPaths");
     settings.addOption(qmlImportPathsSetting);
 
+    QCommandLineOption environmentOption(
+            QStringList() << "E",
+            QLatin1String("Use the QML_IMPORT_PATH environment variable to look for QML Modules"));
+    parser.addOption(environmentOption);
+
     QCommandLineOption qmlImportNoDefault(
                 QStringList() << "bare",
                 QLatin1String("Do not include default import directories or the current directory. "
@@ -151,21 +187,17 @@ All warnings can be set to three levels:
             QLatin1String("directory"));
     parser.addOption(pluginPathsOption);
 
-    auto levelToString = [](const QQmlJS::LoggerCategory &category) -> QString {
-        Q_ASSERT(category.isIgnored() || category.level() != QtCriticalMsg);
-        if (category.isIgnored())
-            return QStringLiteral("disable");
-
-        switch (category.level()) {
-        case QtInfoMsg:
-            return QStringLiteral("info");
-        case QtWarningMsg:
-            return QStringLiteral("warning");
-        default:
-            Q_UNREACHABLE();
-            break;
-        }
-    };
+    QCommandLineOption maxWarnings(
+            QStringList() << "W"
+                          << "max-warnings",
+            QLatin1String("Exit with an error code if more than \"count\" many"
+                          "warnings are found by qmllint. By default or if \"count\" "
+                          "is -1, warnings do not cause qmllint "
+                          "to return with an error exit code."),
+            "count"
+            );
+    parser.addOption(maxWarnings);
+    settings.addOption("MaxWarnings", -1);
 
     auto addCategory = [&](const QQmlJS::LoggerCategory &category) {
         categories.push_back(category);
@@ -174,13 +206,14 @@ All warnings can be set to three levels:
         QCommandLineOption option(
                 category.id().name().toString(),
                 category.description()
-                        + QStringLiteral(" (default: %1)").arg(levelToString(category)),
-                QStringLiteral("level"), levelToString(category));
+                        + QStringLiteral(" (default: %1)")
+                                  .arg(QQmlJS::LoggingUtils::levelToString(category)),
+                QStringLiteral("level"), QQmlJS::LoggingUtils::levelToString(category));
         if (category.isIgnored())
             option.setFlags(QCommandLineOption::HiddenFromHelp);
         parser.addOption(option);
         settings.addOption(QStringLiteral("Warnings/") + category.settingsName(),
-                           levelToString(category));
+                           QQmlJS::LoggingUtils::levelToString(category));
     };
 
     for (const auto &category : QQmlJSLogger::defaultCategories()) {
@@ -189,11 +222,16 @@ All warnings can be set to three levels:
 
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
-    if (!parser.parse(app.arguments())) {
-        if (parser.unknownOptionNames().isEmpty()) {
-            qWarning().noquote() << parser.errorText();
-            return 1;
-        }
+
+    QStringList arguments;
+    if (!argumentsFromCommandLineAndFile(arguments, app.arguments())) {
+        // argumentsFromCommandLine already printed any necessary warnings.
+        return 1;
+    }
+
+    if (!parser.parse(arguments)) {
+        qWarning().noquote() << parser.errorText();
+        return 1;
     }
 
     // Since we can't use QCommandLineParser::process(), we need to handle version and help manually
@@ -208,38 +246,7 @@ All warnings can be set to three levels:
     }
 
     auto updateLogLevels = [&]() {
-        for (auto &category : categories) {
-            if (category.isDefault())
-                continue;
-
-            const QString &key = category.id().name().toString();
-            const QString &settingsName = QStringLiteral("Warnings/") + category.settingsName();
-            if (parser.isSet(key) || settings.isSet(settingsName)) {
-                const QString value = parser.isSet(key) ? parser.value(key)
-                                                        : settings.value(settingsName).toString();
-
-                // Do not try to set the levels if it's due to a default config option.
-                // This way we can tell which options have actually been overwritten by the user.
-                if (levelToString(category) == value && !parser.isSet(key))
-                    continue;
-
-                if (value == "disable"_L1) {
-                    category.setLevel(QtCriticalMsg);
-                    category.setIgnored(true);
-                } else if (value == "info"_L1) {
-                    category.setLevel(QtInfoMsg);
-                    category.setIgnored(false);
-                } else if (value == "warning"_L1) {
-                    category.setLevel(QtWarningMsg);
-                    category.setIgnored(false);
-                } else {
-                    qWarning() << "Invalid logging level" << value << "provided for"
-                               << category.id().name().toString()
-                               << "(allowed are: disable, info, warning)";
-                    parser.showHelp(-1);
-                }
-            }
-        }
+        QQmlJS::LoggingUtils::updateLogLevels(categories, settings, &parser);
     };
 
     bool silent = parser.isSet(silentOption);
@@ -261,8 +268,8 @@ All warnings can be set to three levels:
 
     QStringList defaultQmldirFiles;
     if (parser.isSet(qmldirFilesOption)) {
-        defaultQmldirFiles = parser.values(qmldirFilesOption);
-    } else {
+        defaultQmldirFiles = QQmlJSUtils::cleanPaths(parser.values(qmldirFilesOption));
+    } else if (!parser.isSet(qmlImportNoDefault)){
         // If nothing given explicitly, use the qmldir file from the current directory.
         QFileInfo qmldirFile(QStringLiteral("qmldir"));
         if (qmldirFile.isFile()) {
@@ -326,63 +333,89 @@ All warnings can be set to three levels:
     QJsonArray jsonFiles;
 
     for (const QString &filename : positionalArguments) {
-        if (!parser.isSet(ignoreSettings)) {
+        if (!parser.isSet(ignoreSettings))
             settings.search(filename);
-            updateLogLevels();
+        updateLogLevels();
 
-            const QDir fileDir = QFileInfo(filename).absoluteDir();
-            auto addAbsolutePaths = [&](QStringList &list, const QStringList &entries) {
-                for (const QString &file : entries)
-                    list << (QFileInfo(file).isAbsolute() ? file : fileDir.filePath(file));
-            };
+        const QDir fileDir = QFileInfo(filename).absoluteDir();
+        auto addAbsolutePaths = [&](QStringList &list, const QStringList &entries) {
+            for (const QString &file : entries)
+                list << (QFileInfo(file).isAbsolute() ? file : fileDir.filePath(file));
+        };
 
-            resourceFiles = defaultResourceFiles;
+        resourceFiles = defaultResourceFiles;
 
-            addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
+        addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
 
-            qmldirFiles = defaultQmldirFiles;
-            if (settings.isSet(qmldirFilesSetting)
-                && !settings.value(qmldirFilesSetting).toStringList().isEmpty()) {
-                qmldirFiles = {};
-                addAbsolutePaths(qmldirFiles,
-                                 settings.value(qmldirFilesSetting).toStringList());
-            }
-
-            if (parser.isSet(qmlImportNoDefault)
-                || (settings.isSet(qmlImportNoDefaultSetting)
-                    && settings.value(qmlImportNoDefaultSetting).toBool())) {
-                qmlImportPaths = {};
-            } else {
-                qmlImportPaths = defaultImportPaths;
-            }
-
-            if (parser.isSet(qmlImportPathsOption))
-                qmlImportPaths << parser.values(qmlImportPathsOption);
-
-            addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
-
-            QSet<QString> disabledPlugins;
-
-            if (parser.isSet(pluginsDisable)) {
-                for (const QString &plugin : parser.values(pluginsDisable))
-                    disabledPlugins << plugin.toLower();
-            }
-
-            if (settings.isSet(pluginsDisableSetting)) {
-                for (const QString &plugin : settings.value(pluginsDisableSetting).toStringList())
-                    disabledPlugins << plugin.toLower();
-            }
-
-            linter.setPluginsEnabled(!disabledPlugins.contains("all"));
-
-            if (!linter.pluginsEnabled())
-                continue;
-
-            auto &plugins = linter.plugins();
-
-            for (auto &plugin : plugins)
-                plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
+        qmldirFiles = defaultQmldirFiles;
+        if (settings.isSet(qmldirFilesSetting)
+            && !settings.value(qmldirFilesSetting).toStringList().isEmpty()) {
+            qmldirFiles = {};
+            addAbsolutePaths(qmldirFiles, settings.value(qmldirFilesSetting).toStringList());
         }
+
+        if (parser.isSet(qmlImportNoDefault)
+            || (settings.isSet(qmlImportNoDefaultSetting)
+                && settings.value(qmlImportNoDefaultSetting).toBool())) {
+            qmlImportPaths = {};
+        } else {
+            qmlImportPaths = defaultImportPaths;
+        }
+
+        if (parser.isSet(qmlImportPathsOption))
+            qmlImportPaths << parser.values(qmlImportPathsOption);
+        if (parser.isSet(environmentOption)) {
+            if (silent) {
+                qmlImportPaths << qEnvironmentVariable("QML_IMPORT_PATH")
+                                          .split(QDir::separator(), Qt::SkipEmptyParts)
+                               << qEnvironmentVariable("QML2_IMPORT_PATH")
+                                          .split(QDir::separator(), Qt::SkipEmptyParts);
+            } else {
+                if (const QStringList dirsFromEnv =
+                            QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML_IMPORT_PATH"_s);
+                    !dirsFromEnv.isEmpty()) {
+                    qInfo().nospace().noquote()
+                            << "Using import directories passed from environment variable "
+                               "\"QML_IMPORT_PATH\": \""
+                            << dirsFromEnv.join(u"\", \""_s) << "\".";
+                    qmlImportPaths << dirsFromEnv;
+                }
+                if (const QStringList dirsFromEnv =
+                            QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(
+                                    u"QML2_IMPORT_PATH"_s);
+                    !dirsFromEnv.isEmpty()) {
+                    qInfo().nospace().noquote() << "Using import directories passed from the "
+                                                   "deprecated environment variable "
+                                                   "\"QML2_IMPORT_PATH\": \""
+                                                << dirsFromEnv.join(u"\", \""_s) << "\".";
+                    qmlImportPaths << dirsFromEnv;
+                }
+            }
+        }
+
+        addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
+
+        QSet<QString> disabledPlugins;
+
+        if (parser.isSet(pluginsDisable)) {
+            for (const QString &plugin : parser.values(pluginsDisable))
+                disabledPlugins << plugin.toLower();
+        }
+
+        if (settings.isSet(pluginsDisableSetting)) {
+            for (const QString &plugin : settings.value(pluginsDisableSetting).toStringList())
+                disabledPlugins << plugin.toLower();
+        }
+
+        linter.setPluginsEnabled(!disabledPlugins.contains("all"));
+
+        if (!linter.pluginsEnabled())
+            continue;
+
+        auto &plugins = linter.plugins();
+
+        for (auto &plugin : plugins)
+            plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
 
         const bool isFixing = parser.isSet(fixFile);
 
@@ -396,7 +429,13 @@ All warnings can be set to three levels:
                                          useJson ? &jsonFiles : nullptr, qmlImportPaths,
                                          qmldirFiles, resourceFiles, categories);
         }
-        success &= (lintResult == QQmlJSLinter::LintSuccess);
+        success &= (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings);
+        if (success && parser.isSet(maxWarnings))
+        {
+            int value = parser.value(maxWarnings).toInt();
+            if (value != -1 && value < linter.logger()->warnings().size())
+                success = false;
+        }
 
         if (isFixing) {
             if (lintResult != QQmlJSLinter::LintSuccess && lintResult != QQmlJSLinter::HasWarnings)
@@ -478,8 +517,10 @@ All warnings can be set to three levels:
             QTextStream(stdout) << QString::fromUtf8(json);
         } else {
             QFile file(fileName);
-            file.open(QFile::WriteOnly);
-            file.write(json);
+            if (file.open(QFile::WriteOnly))
+                file.write(json);
+            else
+                success = false;
         }
     }
 

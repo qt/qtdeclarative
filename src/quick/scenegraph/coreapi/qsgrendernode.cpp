@@ -66,6 +66,7 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     , m_clip_list(nullptr)
     , m_opacity(1)
 {
+    m_projectionMatrix.resize(1);
 }
 
 /*!
@@ -351,7 +352,15 @@ QRectF QSGRenderNode::rect() const
  */
 const QMatrix4x4 *QSGRenderNode::projectionMatrix() const
 {
-    return &d->m_projectionMatrix;
+    return &d->m_projectionMatrix[0];
+}
+
+/*!
+    \internal
+ */
+const QMatrix4x4 *QSGRenderNode::projectionMatrix(qsizetype index) const
+{
+    return &d->m_projectionMatrix[index];
 }
 
 /*!

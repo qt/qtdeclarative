@@ -27,6 +27,8 @@
 #include "qqmlrangeformatting_p.h"
 #include "qqmlgotodefinitionsupport_p.h"
 #include "qqmlrenamesymbolsupport_p.h"
+#include "qqmlhover_p.h"
+#include "qqmlhighlightsupport_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -71,6 +73,8 @@ private:
     QQmlDocumentFormatting m_documentFormatting;
     QQmlRenameSymbolSupport m_renameSupport;
     QQmlRangeFormatting m_rangeFormatting;
+    QQmlHover m_hover;
+    QQmlHighlightSupport m_highlightSupport;
     int m_returnValue = 1;
 };
 

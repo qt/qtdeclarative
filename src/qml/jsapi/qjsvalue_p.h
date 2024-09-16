@@ -150,9 +150,17 @@ public:
         case QV4::StaticValue::Integer_Type:
             return encode(qv4Value.integerValue());
         case QV4::StaticValue::Managed_Type: {
-            QV4::Value *m = qv4Value.as<QV4::Managed>()->engine()
-                    ->memoryManager->m_persistentValues->allocate();
+            auto managed = qv4Value.as<QV4::Managed>();
+            auto engine = managed->engine();
+            auto mm = engine->memoryManager;
+            QV4::Value *m = mm->m_persistentValues->allocate();
             Q_ASSERT(m);
+            // we create a new strong reference to the heap managed object
+            // to avoid having to rescan the persistent values, we mark it here
+            QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+                if constexpr (QV4::WriteBarrier::isInsertionBarrier)
+                    managed->heapObject()->mark(stack);
+            });
             *m = qv4Value;
             return encodePointer(m, Kind::QV4ValuePtr);
         }

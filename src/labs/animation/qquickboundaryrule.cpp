@@ -13,7 +13,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcBR, "qt.quick.boundaryrule")
+Q_STATIC_LOGGING_CATEGORY(lcBR, "qt.quick.boundaryrule")
 
 class QQuickBoundaryReturnJob;
 class QQuickBoundaryRulePrivate : public QObjectPrivate
@@ -92,7 +92,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
 
 /*!
     \qmltype BoundaryRule
-//!    \instantiates QQuickBoundaryRule
+//!    \nativetype QQuickBoundaryRule
     \inqmlmodule Qt.labs.animation
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors
@@ -111,7 +111,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
     Note that a property cannot have more than one assigned BoundaryRule.
 
     \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior
-example}, {Qt QML}, {Qt Quick Examples - Pointer Handlers}
+example}, {Qt Qml}, {Qt Quick Examples - Pointer Handlers}
 */
 
 QQuickBoundaryRule::QQuickBoundaryRule(QObject *parent)

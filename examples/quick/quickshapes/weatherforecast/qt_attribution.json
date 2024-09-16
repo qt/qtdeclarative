@@ -1,0 +1,55 @@
+[
+    {
+        "Id": "weather-icons",
+        "Name": "Weather icons from the Noto Emoji collection",
+        "QDocModule": "qtquick",
+        "QtUsage": "Used in the Weather Forecast Example",
+        "QtParts": [ "examples" ],
+        "Files": [ "assets/cloud-with-snow-svgrepo-com.svg", "CloudWithSnow_generated.qml",
+                   "assets/cloud-svgrepo-com.svg", "Cloud_generated.qml",
+                   "assets/cloud-with-lightning-and-rain-svgrepo-com.svg", "CloudWithLightningAndRain_generated.qml",
+                   "assets/cloud-with-lightning-svgrepo-com.svg", "CloudWithLightning_generated.qml",
+                   "assets/cloud-with-rain-svgrepo-com.svg", "CloudWithRain_generated.qml",
+                   "assets/sun-svgrepo-com.svg", "Sun_generated.qml",
+                   "assets/sun-behind-cloud-svgrepo-com.svg", "SunBehindCloud_generated.qml",
+                   "assets/sun-behind-large-cloud-svgrepo-com.svg", "SunBehindLargeCloud_generated.qml",
+                   "assets/sun-behind-rain-cloud-svgrepo-com.svg", "SunBehindRainCloud_generated.qml",
+                   "assets/sun-behind-small-cloud-svgrepo-com.svg", "SunBehindSmallCloud_generated.qml" ],
+        "LicenseId": "Apache-2.0",
+        "License": "Apache License 2.0",
+        "Copyright": "Copyright (C) 2023 Googlefonts"
+    },
+    {
+        "Id": "map-of-europe",
+        "Name": "Map of Europe from Wikipedia",
+        "QDocModule": "qtquick",
+        "QtUsage": "Used in the Weather Forecast Example",
+        "QtParts": [ "examples" ],
+        "Files": [ "assets/Europe.svg", "Europe_generated.qml" ],
+        "LicenseId": "CC-BY-3.0",
+        "License": "Creative Commons Attribution 3.0 Unported",
+        "Copyright": "Copyright (C) 2010 Kolja21"
+    },
+    {
+        "Id": "work-sans-font",
+        "Name": "Work Sans font by Wei Huang",
+        "QDocModule": "qtquick",
+        "QtUsage": "Used in the Weather Forecast Example",
+        "QtParts": [ "examples" ],
+        "Files": "assets/WorkSans-Regular.ttf",
+        "LicenseId": "OFL-1.1",
+        "License": "SIL Open Font License 1.1",
+        "Copyright": "Copyright (C) 2020 Wei Huang"
+    },
+    {
+        "Id": "gear-icon",
+        "Name": "Gear Icon",
+        "QDocModule": "qtquick",
+        "QtUsage": "Used in the Weather Forecast Example",
+        "QtParts": [ "examples" ],
+        "Files": [ "assets/gear-alt-stroke.svg", "Gear_generated.qml" ],
+        "LicenseId": "MIT",
+        "License": "MIT License",
+        "Copyright": "Copyright (C) 2023 Framework7"
+    }
+]

@@ -2,7 +2,7 @@ include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
 include($QT_INSTALL_DOCS/config/exampleurl-qtdeclarative.qdocconf)
 
 project                 = QtQml
-description             = Qt QML Reference Documentation
+description             = Qt Qml Reference Documentation
 version                 = $QT_VERSION
 
 examplesinstallpath     = qml
@@ -12,22 +12,23 @@ qhp.projects            = QtQml
 qhp.QtQml.file                = qtqml.qhp
 qhp.QtQml.namespace           = org.qt-project.qtqml.$QT_VERSION_TAG
 qhp.QtQml.virtualFolder       = qtqml
-qhp.QtQml.indexTitle          = Qt QML
+qhp.QtQml.indexTitle          = Qt Qml
 qhp.QtQml.indexRoot           =
 
-qhp.QtQml.subprojects         = qmltypes classes examples
-qhp.QtQml.subprojects.classes.title = C++ Classes
-qhp.QtQml.subprojects.classes.indexTitle = Qt QML C++ Classes
-qhp.QtQml.subprojects.classes.selectors = class fake:headerfile
-qhp.QtQml.subprojects.classes.sortPages = true
-qhp.QtQml.subprojects.examples.title = Examples
-qhp.QtQml.subprojects.examples.indexTitle = Qt QML Examples
-qhp.QtQml.subprojects.examples.selectors = fake:example
+qhp.QtQml.subprojects = manual qmltypes classes
+qhp.QtQml.subprojects.manual.title = Qt Qml
+qhp.QtQml.subprojects.manual.indexTitle = Qt Qml module topics
+qhp.QtQml.subprojects.manual.type = manual
+
 qhp.QtQml.subprojects.qmltypes.title = QML Types
-qhp.QtQml.subprojects.qmltypes.indexTitle = Qt QML QML Types
+qhp.QtQml.subprojects.qmltypes.indexTitle = Qt Qml QML Types
 qhp.QtQml.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQml.subprojects.qmltypes.sortPages = true
 
+qhp.QtQml.subprojects.classes.title = C++ Classes
+qhp.QtQml.subprojects.classes.indexTitle = Qt Qml C++ Classes
+qhp.QtQml.subprojects.classes.selectors = class headerfile
+qhp.QtQml.subprojects.classes.sortPages = true
 
 tagfile                 = ../../../doc/qtqml/qtqml.tags
 
@@ -43,11 +44,13 @@ depends += \
     qtwidgets \
     qtquickcontrols \
     qmake \
+    qtsvg \
     qtcmake
 
 headerdirs  += ..
 
-sourcedirs  += ..
+sourcedirs  += .. \
+               ../../qmlmeta
 
 exampledirs += ../../../examples/qml \
                ../ \
@@ -55,20 +58,27 @@ exampledirs += ../../../examples/qml \
 
 imagedirs   += images
 
+# Exclude documentation for the compiler category: these are not mature enough to be documented
+excludefiles += src/qmllint/compiler.qdoc \
+                src/qmllint/deferred-property-id.qdoc \
+                src/qmllint/prefixed-import-type.qdoc
+
 # Add a thumbnail for examples that do not have images
 manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
                                 "QtQml/Chapter 6*" \
                                 "QtQml/C++ Extensions: *"
 
-navigation.landingpage = "Qt QML"
-navigation.cppclassespage = "Qt QML C++ Classes"
-navigation.qmltypespage = "Qt QML QML Types"
-# Auto-generate navigation linking based on the \list structures on the following:
-navigation.toctitles = "Qt Quick Compiler"
+navigation.landingpage = "Qt Qml"
+navigation.cppclassespage = "Qt Qml C++ Classes"
+navigation.qmltypespage = "Qt Qml QML Types"
+# Autogenerate navigation linking based on the \list structures on the following:
+navigation.toctitles = "Qt Qml module topics"
+navigation.toctitles.inclusive = false
 
-navigation.toctitles.inclusive = true
 # suppress qdoc warnings for \instantiates entries
 spurious += "C\\+\\+ class .*\\\\instantiates .*"
 
 # Enforce zero documentation warnings
 warninglimit = 0
+
+macro.qmllintwarningcategory = "This warning category is spelled \c{[\1]} by qmllint."

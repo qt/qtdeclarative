@@ -1,11 +1,13 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TST_QMLTYPEREGISTRAR_H
 #define TST_QMLTYPEREGISTRAR_H
 
 #include "foreign.h"
-#include "foreign_p.h"
+#include "private/foreign_p.h"
+#include "inaccessible/base.h"
+#include "inaccessible/property.h"
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 
@@ -17,33 +19,34 @@
 #include <QtQml/qqmlcomponent.h>
 
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qnamespace.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qtemporaryfile.h>
 #include <QtCore/qtimeline.h>
 
-class Interface {};
+class Interface1 {};
 class Interface2 {};
 class Interface3 {};
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(Interface, "io.qt.bugreports.Interface");
+Q_DECLARE_INTERFACE(Interface1, "io.qt.bugreports.Interface1");
 Q_DECLARE_INTERFACE(Interface2, "io.qt.bugreports.Interface2");
 Q_DECLARE_INTERFACE(Interface3, "io.qt.bugreports.Interface3");
 QT_END_NAMESPACE
 
-class ImplementsInterfaces : public QObject, public Interface
+class ImplementsInterfaces : public QObject, public Interface1
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_IMPLEMENTS_INTERFACES(Interface)
+    QML_IMPLEMENTS_INTERFACES(Interface1)
 };
 
-class ImplementsInterfaces2 : public QObject, public Interface, public Interface2
+class ImplementsInterfaces2 : public QObject, public Interface1, public Interface2
 {
     Q_OBJECT
     QML_ELEMENT
-    QML_IMPLEMENTS_INTERFACES(Interface Interface2)
+    QML_IMPLEMENTS_INTERFACES(Interface1 Interface2)
 };
 
 class ExcessiveVersion : public QObject
@@ -494,6 +497,23 @@ public:
     RemovedInEarlyVersion(QObject *parent = nullptr) : AddedInLateVersion(parent) {}
 };
 
+class AddedIn1_5 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 5)
+};
+
+// Slightly absurd. The reason for such a thing may be a change in the versioning
+// scheme of the base class. We still have to retain all of the version information
+// so that you can at least use version 1.5.
+class AddedIn1_0 : public AddedIn1_5
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
+};
+
 class HasResettableProperty : public QObject
 {
     Q_OBJECT
@@ -525,6 +545,13 @@ class ClonedSignal : public QObject
     QML_ELEMENT
 signals:
     void clonedSignal(int i = 7);
+};
+
+class Unconstructible
+{
+    Q_GADGET
+    QML_VALUE_TYPE(unconstructible)
+    int m_i = 11;
 };
 
 class Constructible
@@ -573,6 +600,24 @@ class TypedEnum : public QObject
     Q_OBJECT
     QML_ELEMENT
 public:
+    enum UChar: uchar       { V0 = 41 };
+    Q_ENUM(UChar)
+    enum Int8_T: int8_t     { V1 = 42 };
+    Q_ENUM(Int8_T)
+    enum UInt8_T: uint8_t   { V2 = 43 };
+    Q_ENUM(UInt8_T)
+    enum Int16_T: int16_t   { V3 = 44 };
+    Q_ENUM(Int16_T)
+    enum UInt16_T: uint16_t { V4 = 45 };
+    Q_ENUM(UInt16_T)
+    enum Int32_T: int32_t   { V5 = 46 };
+    Q_ENUM(Int32_T)
+    enum UInt32_T: uint32_t { V6 = 47 };
+    Q_ENUM(UInt32_T)
+
+    // TODO: We cannot handle 64bit numbers as underlying types for enums.
+    //       Luckily, moc generates bad code for those. So we don't have to, for now.
+
     enum S: qint16 {
         A, B, C
     };
@@ -702,6 +747,134 @@ struct NotNamespaceForeign {
     QML_ELEMENT
 };
 
+class NameExplosion : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Name1)
+    QML_NAMED_ELEMENT(Name2)
+    QML_ELEMENT
+    QML_ANONYMOUS
+};
+
+class JavaScriptExtension : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("QML.Extended", "SymbolPrototype")
+    Q_CLASSINFO("QML.ExtensionIsJavaScript", "true")
+};
+
+class LongNumberTypes : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(qint64   a MEMBER m_a)
+    Q_PROPERTY(int64_t  b MEMBER m_b)
+    Q_PROPERTY(quint64  c MEMBER m_c)
+    Q_PROPERTY(uint64_t d MEMBER m_d)
+
+    qint64   m_a = 1;
+    int64_t  m_b = 2;
+    quint64  m_c = 3;
+    uint64_t m_d = 4;
+};
+
+struct EnumList
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QList<NetworkManager::NM>)
+    QML_SEQUENTIAL_CONTAINER(NetworkManager::NM)
+};
+
+class ConstInvokable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE const QObject *getObject() { return nullptr; }
+};
+
+using myint = int;
+
+struct IntAlias
+{
+    Q_GADGET
+    QML_FOREIGN(myint)
+    QML_USING(int);
+};
+
+class WithMyInt : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(myint a READ a CONSTANT)
+public:
+    myint a() const { return 10; }
+};
+
+class UsesQtNamespace : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(Qt::Key key READ key CONSTANT)
+public:
+    Qt::Key key() const { return Qt::Key_Escape; }
+};
+
+class SlotsBeforeInvokables : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+public:
+    Q_INVOKABLE void foo() {}
+public Q_SLOTS:
+    void bar() {}
+public:
+    Q_INVOKABLE void baz() {}
+};
+
+class JavaScriptFunction : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    JavaScriptFunction(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE void jsfunc(QQmlV4FunctionPtr) {}
+};
+
+struct UsingVoid {};
+struct UsingVoidForeign
+{
+    Q_GADGET
+    QML_FOREIGN(UsingVoid)
+    QML_USING(void)
+};
+
+class VoidProperties : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(void* void1 READ void1 CONSTANT)
+    Q_PROPERTY(UsingVoid* void2 READ void2 CONSTANT)
+    QML_ELEMENT
+public:
+    VoidProperties(QObject *parent = nullptr) : QObject(parent) {}
+
+    void *void1() const { return nullptr; }
+    UsingVoid *void2() const { return nullptr; }
+};
+
+class AccessibleDerived : public InaccessibleBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(InaccessibleProperty *p MEMBER m_p CONSTANT)
+public:
+    AccessibleDerived(QObject *parent = nullptr) : InaccessibleBase(parent) {}
+private:
+    InaccessibleProperty *m_p = nullptr;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -738,6 +911,7 @@ private slots:
     void methodReturnType();
     void hasIsConstantInParameters();
     void uncreatable();
+    void singletonVersions();
 
 #ifdef QT_QUICK_LIB
     void foreignRevisionedProperty();
@@ -751,6 +925,7 @@ private slots:
     void duplicateExportWarnings();
     void clonedSignal();
     void baseVersionInQmltypes();
+    void unconstructibleValueType();
     void constructibleValueType();
     void structuredValueType();
     void anonymousAndUncreatable();
@@ -761,6 +936,29 @@ private slots:
     void sequenceRegistration();
     void valueTypeSelfReference();
     void foreignNamespaceFromGadget();
+
+    void nameExplosion_data();
+    void nameExplosion();
+
+    void javaScriptExtension();
+
+    void consistencyWarnings();
+    void relatedAddedInVersion();
+    void longNumberTypes();
+    void enumList();
+    void constReturnType();
+
+    void usingDeclaration();
+    void enumsRegistered();
+    void doNotDuplicateQtNamespace();
+    void doNotDuplicateQObject();
+    void slotsBeforeInvokables();
+    void allReferencedTypesCollected();
+
+    void omitQQmlV4FunctionPtrArg();
+    void preserveVoidStarPropTypes();
+
+    void inaccessibleBase();
 
 private:
     QByteArray qmltypesData;

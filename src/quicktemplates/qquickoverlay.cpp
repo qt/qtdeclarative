@@ -9,6 +9,7 @@
 #include "qquickdrawer_p.h"
 #include "qquickdrawer_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include <QtGui/qpainterpath.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
@@ -19,7 +20,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Overlay
     \inherits Item
-//!     \instantiates QQuickOverlay
+//!     \nativetype QQuickOverlay
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \brief A window overlay for popups.
@@ -62,6 +63,11 @@ QList<QQuickPopup *> QQuickOverlayPrivate::stackingOrderDrawers() const
 }
 
 void QQuickOverlayPrivate::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
+{
+    updateGeometry();
+}
+
+void QQuickOverlayPrivate::itemRotationChanged(QQuickItem *)
 {
     updateGeometry();
 }
@@ -256,38 +262,15 @@ void QQuickOverlayPrivate::setMouseGrabberPopup(QQuickPopup *popup)
 void QQuickOverlayPrivate::updateGeometry()
 {
     Q_Q(QQuickOverlay);
-    if (!window)
+    if (!window || !window->contentItem())
         return;
 
-    QPointF pos;
-    QSizeF size = window->size();
-    qreal rotation = 0;
-
-    switch (window->contentOrientation()) {
-    case Qt::PrimaryOrientation:
-    case Qt::PortraitOrientation:
-        size = window->size();
-        break;
-    case Qt::LandscapeOrientation:
-        rotation = 90;
-        pos = QPointF((size.width() - size.height()) / 2, -(size.width() - size.height()) / 2);
-        size.transpose();
-        break;
-    case Qt::InvertedPortraitOrientation:
-        rotation = 180;
-        break;
-    case Qt::InvertedLandscapeOrientation:
-        rotation = 270;
-        pos = QPointF((size.width() - size.height()) / 2, -(size.width() - size.height()) / 2);
-        size.transpose();
-        break;
-    default:
-        break;
-    }
+    const QSizeF size = window->contentItem()->size();
+    const QPointF pos(-(size.width() - window->size().width()) / 2,
+                      -(size.height() - window->size().height()) / 2);
 
     q->setSize(size);
     q->setPosition(pos);
-    q->setRotation(rotation);
 }
 
 QQuickOverlay::QQuickOverlay(QQuickItem *parent)
@@ -307,7 +290,8 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
         QQuickItemPrivate::get(parent)->addItemChangeListener(d, QQuickItemPrivate::Geometry);
         if (QQuickWindow *window = parent->window()) {
             window->installEventFilter(this);
-            QObjectPrivate::connect(window, &QWindow::contentOrientationChanged, d, &QQuickOverlayPrivate::updateGeometry);
+            if (QQuickItem *contentItem = window->contentItem())
+                QQuickItemPrivate::get(contentItem)->addItemChangeListener(d, QQuickItemPrivate::Rotation);
         }
     }
 }
@@ -315,8 +299,13 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
 QQuickOverlay::~QQuickOverlay()
 {
     Q_D(QQuickOverlay);
-    if (QQuickItem *parent = parentItem())
+    if (QQuickItem *parent = parentItem()) {
         QQuickItemPrivate::get(parent)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
+        if (QQuickWindow *window = parent->window()) {
+            if (QQuickItem *contentItem = window->contentItem())
+                QQuickItemPrivate::get(contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Rotation);
+        }
+    }
 }
 
 QQmlComponent *QQuickOverlay::modal() const
@@ -392,7 +381,7 @@ void QQuickOverlay::geometryChange(const QRectF &newGeometry, const QRectF &oldG
     Q_D(QQuickOverlay);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
     for (QQuickPopup *popup : std::as_const(d->allPopups))
-        QQuickPopupPrivate::get(popup)->resizeOverlay();
+        QQuickPopupPrivate::get(popup)->resizeDimmer();
 }
 
 void QQuickOverlay::mousePressEvent(QMouseEvent *event)
@@ -467,6 +456,13 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             case QEvent::HoverEnter:
             case QEvent::HoverMove:
             case QEvent::HoverLeave:
+                // If the control item has already been hovered, allow the hover leave event
+                // to be processed by the same item for resetting its internal hovered state
+                // instead of filtering it here.
+                if (auto *control = qobject_cast<QQuickControl *>(item)) {
+                    if (control->isHovered() && event->type() == QEvent::HoverLeave)
+                        return false;
+                }
                 handled = d->handleHoverEvent(item, static_cast<QHoverEvent *>(event), popup);
                 break;
 
@@ -524,10 +520,7 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         event->accept();
         // Since we eat the event, QQuickWindow::event never sees it to clean up the
         // grabber states. So we have to do so explicitly.
-        if (QQuickWindow *window = parentItem() ? parentItem()->window() : nullptr) {
-            QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
-            d->clearGrabbers(static_cast<QPointerEvent *>(event));
-        }
+        d->deliveryAgentPrivate()->clearGrabbers(static_cast<QPointerEvent *>(event));
         return true;
 #endif
 

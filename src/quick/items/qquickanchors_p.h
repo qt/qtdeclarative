@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickAnchorsPrivate;
 class QQuickAnchorLine;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchors : public QObject
+class Q_QUICK_EXPORT QQuickAnchors : public QObject
 {
     Q_OBJECT
 
@@ -179,7 +179,5 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickAnchors::Anchors)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickAnchors)
 
 #endif // QQUICKANCHORS_P_H

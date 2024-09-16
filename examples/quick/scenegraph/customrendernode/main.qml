@@ -102,6 +102,11 @@ Item {
             }
 
 
+            Button {
+                text: qsTr("Toggle custom item visibility")
+                onClicked: custom.visible = !custom.visible
+            }
+
             CustomRender {
                 id: custom
                 width: Math.min(parent.width, parent.height)

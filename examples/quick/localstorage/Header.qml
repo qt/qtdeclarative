@@ -99,6 +99,7 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
+                        Layout.fillWidth: false
 
                         ToolTip {
                             x: parent.width + 3
@@ -130,6 +131,7 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
+                        Layout.fillWidth: false
                         onFocusChanged: if (focus) oldString = descInput.text
                         onEditingFinished: function() {
                             if (descInput.text.length < 8 && descInput.text !== descInput.oldString && root.enabled)
@@ -143,6 +145,7 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
+                        Layout.fillWidth: false
                         validator: RegularExpressionValidator {
                             regularExpression: /\d{1,3}/
                         }

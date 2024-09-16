@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtQmlXmlListModel/private/qqmlxmllistmodel_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -321,14 +321,12 @@ void tst_QQmlXmlListModel::headers()
     QTRY_COMPARE_WITH_TIMEOUT(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
                               QQmlXmlListModel::Error, 10000);
 
-    QVariantMap expectedHeaders;
-    expectedHeaders["Accept"] = "application/xml,*/*";
+    QLatin1String expectedAcceptHeader = "application/xml,*/*"_L1;
 
-    QCOMPARE(factory.lastSentHeaders.size(), expectedHeaders.size());
-    for (auto it = expectedHeaders.cbegin(), end = expectedHeaders.cend(); it != end; ++it) {
-        QVERIFY(factory.lastSentHeaders.contains(it.key()));
-        QCOMPARE(factory.lastSentHeaders[it.key()].toString(), it.value().toString());
-    }
+    QCOMPARE(factory.lastSentHeaders.size(), 1);
+    QVariant acceptHeader = factory.lastSentHeaders["accept"];
+    QVERIFY(acceptHeader.isValid());
+    QCOMPARE(acceptHeader.toString(), expectedAcceptHeader);
 }
 
 void tst_QQmlXmlListModel::source()

@@ -1,10 +1,11 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
+#include <QtCore/qlibraryinfo.h>
 #include <QtQml/qqml.h>
 #include <QtTest/qtest.h>
 
@@ -33,6 +34,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QSKIP(u"Cannot find source directory '%1', skipping test..."_s.arg(SOURCE_DIRECTORY)
                       .toLatin1());
 
+    const QString &docPath = QLibraryInfo::path(QLibraryInfo::DocumentationPath);
     {
         auto file = QFile(source.absoluteFilePath(qmllsIniName));
         QVERIFY(file.exists());
@@ -41,10 +43,11 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         auto secondFolder = QDir(build.absolutePath().append(u"/qml/hello/subfolders"_s));
         QVERIFY(secondFolder.exists());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1%2%3\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
-                                                       secondFolder.absolutePath()));
+                 u"[General]\nbuildDir=%1%2%3\nno-cmake-calls=false\ndocDir=%4\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
+                                                       secondFolder.absolutePath(), docPath));
     }
 
+    {
     QDir sourceSubfolder = source;
     QVERIFY(sourceSubfolder.cd(u"SomeSubfolder"_s));
     QDir buildSubfolder(build.absolutePath().append(u"/SomeSubfolder/qml/Some/Sub/Folder"_s));
@@ -54,7 +57,39 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
         const auto fileContent = QString::fromUtf8(file.readAll());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1\n"_s.arg(buildSubfolder.absolutePath()));
+                 u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(buildSubfolder.absolutePath(), docPath));
+    }
+    }
+
+    {
+        QDir dottedUriSubfolder = source;
+        QVERIFY(dottedUriSubfolder.cd(u"Dotted"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Uri"_s));
+        {
+            auto file = QFile(dottedUriSubfolder.absoluteFilePath(qmllsIniName));
+            QVERIFY(file.exists());
+            QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
+            const auto fileContent = QString::fromUtf8(file.readAll());
+            QCOMPARE(
+                    fileContent,
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
+        }
+    }
+    {
+        QDir dottedUriSubfolder = source;
+        QVERIFY(dottedUriSubfolder.cd(u"Dotted"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Uri"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"Hello"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"World"_s));
+        {
+            auto file = QFile(dottedUriSubfolder.absoluteFilePath(qmllsIniName));
+            QVERIFY(file.exists());
+            QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
+            const auto fileContent = QString::fromUtf8(file.readAll());
+            QCOMPARE(
+                    fileContent,
+                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
+        }
     }
 }
 

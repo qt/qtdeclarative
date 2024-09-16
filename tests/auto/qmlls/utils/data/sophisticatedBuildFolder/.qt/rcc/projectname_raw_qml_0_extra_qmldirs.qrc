@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/qt/qml/Me/Apps/Main/">
+    <file alias="qml/qmldir">../../Me/Apps/Main/qml/qmldir</file>
+    <file alias="qml/common/qmldir">../../Me/Apps/Main/qml/common/qmldir</file>
+    <file alias="qml/popups/qmldir">../../Me/Apps/Main/qml/popups/qmldir</file>
+  </qresource>
+</RCC>

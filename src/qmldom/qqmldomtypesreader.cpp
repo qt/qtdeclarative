@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmldomtypesreader_p.h"
 #include "qqmldomelements_p.h"
@@ -179,6 +179,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::ConstPtr &jsScope,
     comp.setValueTypeName(jsScope->valueTypeName());
     comp.setAccessSemantics(jsScope->accessSemantics());
     comp.setExtensionTypeName(jsScope->extensionTypeName());
+    comp.setExtensionIsJavaScript(jsScope->extensionIsJavaScript());
     comp.setExtensionIsNamespace(jsScope->extensionIsNamespace());
     Path exportSourcePath = qmltypesFile().canonicalPath();
     QMap<int, Path> revToPath;

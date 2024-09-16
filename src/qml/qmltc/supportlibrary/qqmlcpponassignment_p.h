@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
     (unintentionally?). This API allows to avoid manual casts to base types as
     the C++ compiler would implicitly cast derived classes in this case.
 */
-struct Q_QML_PRIVATE_EXPORT QQmlCppOnAssignmentHelper
+struct Q_QML_EXPORT QQmlCppOnAssignmentHelper
 {
     // TODO: in theory, this API might just accept QObject * and int that would
     // give the QMetaProperty. using the meta property, one could create

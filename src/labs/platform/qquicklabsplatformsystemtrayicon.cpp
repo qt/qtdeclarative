@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SystemTrayIcon
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformSystemTrayIcon
+//!     \nativetype QQuickLabsPlatformSystemTrayIcon
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A system tray icon.
@@ -130,7 +130,7 @@ QT_BEGIN_NAMESPACE
     \sa showMessage()
 */
 
-Q_LOGGING_CATEGORY(qtLabsPlatformTray, "qt.labs.platform.tray")
+Q_STATIC_LOGGING_CATEGORY(qtLabsPlatformTray, "qt.labs.platform.tray")
 
 QQuickLabsPlatformSystemTrayIcon::QQuickLabsPlatformSystemTrayIcon(QObject *parent)
     : QObject(parent),
@@ -258,10 +258,15 @@ void QQuickLabsPlatformSystemTrayIcon::setMenu(QQuickLabsPlatformMenu *menu)
 
     if (m_menu)
         m_menu->setSystemTrayIcon(nullptr);
-    if (menu) {
+
+    if (menu)
         menu->setSystemTrayIcon(this);
-        if (m_handle && m_complete && menu->create())
+
+    if (m_handle && m_complete) {
+        if (menu && menu->create())
             m_handle->updateMenu(menu->handle());
+        else
+            m_handle->updateMenu(nullptr);
     }
 
     m_menu = menu;

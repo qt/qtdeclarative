@@ -67,12 +67,11 @@ void PropertyHash::detach(bool grow, int classSize)
 
 SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(const SharedInternalClassDataPrivate<PropertyKey> &other)
     : refcount(1),
-      engine(other.engine),
-      data(nullptr)
+      engine(other.engine)
 {
     if (other.alloc()) {
         const uint s = other.size();
-        data = MemberData::allocate(engine, other.alloc(), other.data);
+        data.set(engine, MemberData::allocate(engine, other.alloc(), other.data));
         setSize(s);
     }
 }
@@ -82,7 +81,7 @@ SharedInternalClassDataPrivate<PropertyKey>::SharedInternalClassDataPrivate(cons
     : refcount(1),
       engine(other.engine)
 {
-    data = MemberData::allocate(engine, other.alloc(), nullptr);
+    data.set(engine, MemberData::allocate(engine, other.alloc(), nullptr));
     memcpy(data, other.data, sizeof(Heap::MemberData) - sizeof(Value) + pos*sizeof(Value));
     data->values.size = pos + 1;
     data->values.set(engine, pos, Value::fromReturnedValue(value.id()));
@@ -92,7 +91,7 @@ void SharedInternalClassDataPrivate<PropertyKey>::grow()
 {
     const uint a = alloc() * 2;
     const uint s = size();
-    data = MemberData::allocate(engine, a, data);
+    data.set(engine, MemberData::allocate(engine, a, data));
     setSize(s);
     Q_ASSERT(alloc() >= a);
 }
@@ -122,6 +121,11 @@ PropertyKey SharedInternalClassDataPrivate<PropertyKey>::at(uint i) const
 void SharedInternalClassDataPrivate<PropertyKey>::set(uint i, PropertyKey t)
 {
     Q_ASSERT(data && i < size());
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier)
+            if (auto string = t.asStringOrSymbol())
+                string->mark(stack);
+    });
     data->values.values[i].rawValueRef() = t.id();
 }
 
@@ -227,7 +231,7 @@ void InternalClass::init(ExecutionEngine *engine)
     new (&propertyTable) PropertyHash();
     new (&nameMap) SharedInternalClassData<PropertyKey>(engine);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(engine);
-    new (&transitions) std::vector<Transition>();
+    new (&transitions) QVarLengthArray<Transition, 1>();
 
     this->engine = engine;
     vtable = QV4::InternalClass::staticVTable();
@@ -244,7 +248,7 @@ void InternalClass::init(Heap::InternalClass *other)
     new (&propertyTable) PropertyHash(other->propertyTable);
     new (&nameMap) SharedInternalClassData<PropertyKey>(other->nameMap);
     new (&propertyData) SharedInternalClassData<PropertyAttributes>(other->propertyData);
-    new (&transitions) std::vector<Transition>();
+    new (&transitions) QVarLengthArray<Transition, 1>();
 
     engine = other->engine;
     vtable = other->vtable;
@@ -256,6 +260,11 @@ void InternalClass::init(Heap::InternalClass *other)
     protoId = engine->newProtoId();
 
     internalClass.set(engine, other->internalClass);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier) {
+            other->mark(stack);
+        }
+    });
 }
 
 void InternalClass::destroy()
@@ -275,7 +284,7 @@ void InternalClass::destroy()
     propertyTable.~PropertyHash();
     nameMap.~SharedInternalClassData<PropertyKey>();
     propertyData.~SharedInternalClassData<PropertyAttributes>();
-    transitions.~vector<Transition>();
+    transitions.~QVarLengthArray<Transition, 1>();
     engine = nullptr;
     Base::destroy();
 }
@@ -302,7 +311,7 @@ void InternalClass::changeMember(QV4::Object *object, PropertyKey id, PropertyAt
 
 InternalClassTransition &InternalClass::lookupOrInsertTransition(const InternalClassTransition &t)
 {
-    std::vector<Transition>::iterator it = std::lower_bound(transitions.begin(), transitions.end(), t);
+    QVarLengthArray<Transition, 1>::iterator it = std::lower_bound(transitions.begin(), transitions.end(), t);
     if (it != transitions.end() && *it == t) {
         return *it;
     } else {
@@ -334,7 +343,7 @@ static Heap::InternalClass *cleanInternalClass(Heap::InternalClass *orig)
 
     // We will generally add quite a few transitions here. We have 255 redundant ones.
     // We can expect at least as many significant ones in addition.
-    std::vector<InternalClassTransition> transitions;
+    QVarLengthArray<InternalClassTransition, 1> transitions;
 
     Scope scope(orig->engine);
     Scoped<QV4::InternalClass> child(scope, orig);
@@ -476,6 +485,10 @@ Heap::InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
 
     // create a new class and add it to the tree
     Heap::InternalClass *newClass = engine->newClass(this);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+        if (proto && QV4::WriteBarrier::isInsertionBarrier)
+            proto->mark(stack);
+    });
     newClass->prototype = proto;
 
     t.lookup = newClass;

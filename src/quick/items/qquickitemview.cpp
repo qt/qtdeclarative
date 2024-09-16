@@ -1086,8 +1086,7 @@ qreal QQuickItemViewPrivate::calculatedMaxExtent() const
 void QQuickItemViewPrivate::applyDelegateChange()
 {
     releaseVisibleItems(QQmlDelegateModel::NotReusable);
-    releaseItem(currentItem, QQmlDelegateModel::NotReusable);
-    currentItem = nullptr;
+    releaseCurrentItem(QQmlDelegateModel::NotReusable);
     updateSectionCriteria();
     refill();
     moveReason = QQuickItemViewPrivate::SetIndex;
@@ -1267,7 +1266,9 @@ void QQuickItemView::trackedPositionChanged()
         return;
     }
 
-    if (d->moveReason == QQuickItemViewPrivate::SetIndex) {
+    const bool needMoveToTrackHighlight = d->autoHighlight || d->highlightRange != NoHighlightRange;
+
+    if (d->moveReason == QQuickItemViewPrivate::SetIndex && needMoveToTrackHighlight) {
         qreal trackedPos = d->trackedItem->position();
         qreal trackedSize = d->trackedItem->size();
         qreal viewPos = d->isContentFlowReversed() ? -d->position()-d->size() : d->position();
@@ -1652,8 +1653,7 @@ void QQuickItemViewPrivate::updateCurrent(int modelIndex)
         if (currentItem) {
             if (currentItem->attached)
                 currentItem->attached->setIsCurrentItem(false);
-            releaseItem(currentItem, reusableFlag);
-            currentItem = nullptr;
+            releaseCurrentItem(reusableFlag);
             currentIndex = modelIndex;
             emit q->currentIndexChanged();
             emit q->currentItemChanged();
@@ -1714,10 +1714,9 @@ void QQuickItemViewPrivate::clear(bool onDestruction)
     releasePendingTransition.clear();
 #endif
 
-    auto oldCurrentItem = currentItem;
-    releaseItem(currentItem, QQmlDelegateModel::NotReusable);
-    currentItem = nullptr;
-    if (oldCurrentItem)
+    const bool hadCurrentItem = currentItem != nullptr;
+    releaseCurrentItem(QQmlDelegateModel::NotReusable);
+    if (hadCurrentItem)
         emit q->currentItemChanged();
     createHighlight(onDestruction);
     trackedItem = nullptr;
@@ -1762,7 +1761,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
     Q_Q(QQuickItemView);
     if (!model || !model->isValid() || !q->isComponentComplete())
         return;
-    if (q->size().isEmpty() && visibleItems.isEmpty())
+    if (q->size().isNull() && visibleItems.isEmpty())
         return;
     if (!model->count()) {
         updateHeader();
@@ -1861,7 +1860,10 @@ void QQuickItemViewPrivate::layout()
     // viewBounds contains bounds before any add/remove/move operation to the view
     QRectF viewBounds(q->contentX(),  q->contentY(), q->width(), q->height());
 
-    if (!isValid() && !visibleItems.size()) {
+    // We use isNull for the size check, because isEmpty returns true
+    // if either dimension is negative, but apparently we support negative-sized
+    // views (see tst_QQuickListView::resizeView).
+    if ((!isValid() && !visibleItems.size()) || q->size().isNull()) {
         clear();
         setPosition(contentStartOffset());
         updateViewport();
@@ -2121,10 +2123,9 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
         if (currentChanges.currentRemoved && currentItem) {
             if (currentItem->item && currentItem->attached)
                 currentItem->attached->setIsCurrentItem(false);
-            auto oldCurrentItem = currentItem;
-            releaseItem(currentItem, reusableFlag);
-            currentItem = nullptr;
-            if (oldCurrentItem)
+            const bool hadCurrentItem = currentItem != nullptr;
+            releaseCurrentItem(reusableFlag);
+            if (hadCurrentItem)
                 emit q->currentItemChanged();
         }
         if (!currentIndexCleared)
@@ -2491,9 +2492,15 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
     return flags != QQmlInstanceModel::Referenced;
 }
 
-QQuickItem *QQuickItemViewPrivate::createHighlightItem() const
+QQuickItem *QQuickItemViewPrivate::createHighlightItem()
 {
-    return createComponentItem(highlightComponent, 0.0, true);
+    QQuickItem *item = nullptr;
+    if (!inRequest) {
+        inRequest = true;
+        item = createComponentItem(highlightComponent, 0.0, true);
+        inRequest = false;
+    }
+    return item;
 }
 
 QQuickItem *QQuickItemViewPrivate::createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault) const

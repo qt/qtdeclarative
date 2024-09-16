@@ -22,6 +22,7 @@
 #include <QtQml/private/qqmlprofilerdefinitions_p.h>
 #endif
 
+#include <QtCore/private/qnumeric_p.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qmutex.h>
@@ -128,14 +129,14 @@ public:
     template<SceneGraphFrameType type>
     qint64 *timings()
     {
-        if (type < NumRenderThreadFrameTypes)
+        if constexpr (type < NumRenderThreadFrameTypes)
             return renderThreadTimings.localData().values[type];
         else
             return guiThreadTimings.values[type - NumRenderThreadFrameTypes];
     }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickProfiler : public QObject, public QQmlProfilerDefinitions {
+class Q_QUICK_EXPORT QQuickProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 public:
 
@@ -206,11 +207,12 @@ public:
 
     static void animationFrame(qint64 delta, AnimationThread threadId)
     {
-        int animCount = QUnifiedTimer::instance()->runningAnimationCount();
+        const qsizetype animCount = QUnifiedTimer::instance()->runningAnimationCount();
 
         if (animCount > 0 && delta > 0) {
             s_instance->processMessage(QQuickProfilerData(s_instance->timestamp(), 1 << Event,
-                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */, animCount,
+                    1 << AnimationFrame, 1000 / (int)delta /* trim fps to integer */,
+                    qt_saturate<int>(animCount),
                     threadId));
         }
     }
@@ -316,7 +318,17 @@ protected:
     void processMessage(const QQuickProfilerData &message)
     {
         QMutexLocker lock(&m_dataMutex);
-        m_data.append(message);
+        if (Q_LIKELY(m_data.isEmpty() || m_data.last().time <= message.time)) {
+            m_data.append(message);
+            return;
+        }
+
+        // Since the scenegraph data is recorded from different threads, contention for the lock
+        // can cause it to be processed out of order here. Insert the message at the right place.
+        const auto it = std::find_if(
+                m_data.rbegin(), m_data.rend(),
+                [t = message.time](const QQuickProfilerData &i) { return i.time <= t; });
+        m_data.insert(it.base(), message);
     }
 
     void startProfilingImpl(quint64 features);

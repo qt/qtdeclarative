@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContentItem : public QQuickItem
+class Q_QUICKTEMPLATES2_EXPORT QQuickContentItem : public QQuickItem
 {
     Q_OBJECT
 

@@ -16,26 +16,30 @@ QT_BEGIN_NAMESPACE
 class SmoothColorMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    SmoothColorMaterialRhiShader();
+    SmoothColorMaterialRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-SmoothColorMaterialRhiShader::SmoothColorMaterialRhiShader()
+SmoothColorMaterialRhiShader::SmoothColorMaterialRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/smoothcolor.frag.qsb"), viewCount);
 }
 
-bool SmoothColorMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *oldMaterial)
+bool SmoothColorMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
-    if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+    for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     if (oldMaterial == nullptr) {
@@ -43,13 +47,13 @@ bool SmoothColorMaterialRhiShader::updateUniformData(RenderState &state, QSGMate
         const QRect r = state.viewportRect();
         const QVector2D v(2.0f / r.width(), 2.0f / r.height());
         Q_ASSERT(sizeof(v) == 8);
-        memcpy(buf->data() + 64, &v, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &v, 8);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 72, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 8, &opacity, 4);
         changed = true;
     }
 
@@ -78,7 +82,7 @@ QSGMaterialType *QSGSmoothColorMaterial::type() const
 QSGMaterialShader *QSGSmoothColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new SmoothColorMaterialRhiShader;
+    return new SmoothColorMaterialRhiShader(viewCount());
 }
 
 QSGDefaultInternalRectangleNode::QSGDefaultInternalRectangleNode()

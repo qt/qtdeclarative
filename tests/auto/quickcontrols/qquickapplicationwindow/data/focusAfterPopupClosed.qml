@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -27,6 +27,7 @@ ApplicationWindow {
             Menu {
                 id: fileMenu
                 y: parent.height
+                popupType: Popup.Item
 
                 MenuItem {
                     text: qsTr("New")
@@ -52,6 +53,7 @@ ApplicationWindow {
     Popup {
         id: focusPopup
         focus: true
+        popupType: Popup.Item
         width: parent.width
         height: parent.height
 

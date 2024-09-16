@@ -6,11 +6,13 @@
 
 #include <QtCore/qtimer.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qmimedata.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQuick/qquickitemgrabresult.h>
 
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
@@ -467,6 +469,9 @@
     \li required property bool current - \c true if the delegate is \l {Keyboard navigation}{current.}
     \li required property bool selected - \c true if the delegate is \l {Selecting items}{selected.}
     \li required property bool editing - \c true if the delegate is being \l {Editing cells}{edited.}
+    \li required property bool containsDrag - \c true if a column or row is currently being dragged
+    over this delegate. This property is only supported for HorizontalHeaderView and
+    VerticalHeaderView. (since Qt 6.8)
     \endlist
 
     The following example shows how to use these properties:
@@ -944,6 +949,48 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TableView::moveColumn(int source, int destination)
+    \since 6.8
+
+    Moves a column from the \a source to the \a destination position.
+
+    \note If a syncView is set, the sync view will control the internal index mapping for
+    column reordering. Therefore, in that case, a call to this function will be forwarded to
+    the sync view instead.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearColumnReordering()
+    \since 6.8
+
+    Resets any previously applied column reordering.
+
+    \note If a syncView is set, a call to this function will be forwarded to
+    corresponding view item and reset the column ordering.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::moveRow(int source, int destination)
+    \since 6.8
+
+    Moves a row from the \a source to the \a destination position.
+
+    \note If a syncView is set, the sync view will control the internal index mapping for
+    row reordering. Therefore, in that case, a call to this function will be forwarded to
+    the sync view instead.
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::clearRowReordering()
+    \since 6.8
+
+    Resets any previously applied row reordering.
+
+    \note If a syncView is set, a call to this function will be forwarded to
+    the corresponding view item and reset the row ordering.
+*/
+
+/*!
     \qmlmethod Item QtQuick::TableView::itemAtCell(point cell)
 
     Returns the delegate item at \a cell if loaded, otherwise \c null.
@@ -1042,32 +1089,26 @@
     \qmlmethod real QtQuick::TableView::implicitColumnWidth(int column)
     \since 6.2
 
-    Returns the implicit width of the given \a column. If the
-    column is not loaded (and therefore not visible), the return value
-    will be \c -1.
+    Returns the implicit width of the given \a column. This is the largest
+    \l {QtQuick::Item::}{implicitWidth} found among the currently
+    \l{isRowLoaded()}{loaded} delegate items inside that column.
 
-    The implicit width of a column is the largest implicitWidth
-    found among the currently loaded delegate items inside that column.
-    Widths returned by the \l columnWidthProvider will not be taken
-    into account.
+    If the \a column is not loaded (and therefore not visible), the return value is \c -1.
 
-    \sa columnWidthProvider, columnWidth(), isColumnLoaded(), {Row heights and column widths}
+    \sa columnWidth(), isRowLoaded(), {Row heights and column widths}
 */
 
 /*!
     \qmlmethod real QtQuick::TableView::implicitRowHeight(int row)
     \since 6.2
 
-    Returns the implicit height of the given \a row. If the
-    row is not loaded (and therefore not visible), the return value
-    will be \c -1.
+    Returns the implicit height of the given \a row. This is the largest
+    \l {QtQuick::Item::}{implicitHeight} found among the currently
+    \l{isColumnLoaded()}{loaded} delegate items inside that row.
 
-    The implicit height of a row is the largest implicitHeight
-    found among the currently loaded delegate items inside that row.
-    Heights returned by the \l rowHeightProvider will not be taken
-    into account.
+    If the \a row is not loaded (and therefore not visible), the return value is \c -1.
 
-    \sa rowHeightProvider, rowHeight(), isRowLoaded(), {Row heights and column widths}
+    \sa rowHeight(), isColumnLoaded(), {Row heights and column widths}
 */
 
 /*!
@@ -1233,13 +1274,15 @@
 
     Convenience function for doing:
     \code
-    modelIndex(cell.y, cell.x)
+    index(cell.y, cell.x)
     \endcode
 
-    A cell is simply a \l point that combines row and column into
+    A \a cell is simply a \l point that combines row and column into
     a single type.
 
     \note \c {point.x} will map to the column, and \c {point.y} will map to the row.
+
+    \sa index()
 */
 
 /*!
@@ -1336,6 +1379,24 @@
     of overlays.
 
     \sa forceLayout(), {Overlays and underlays}
+*/
+
+/*!
+    \qmlsignal QtQuick::TableView::columnMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+    \since 6.8
+
+    This signal is emitted when a column is moved. The column's logical index is specified by
+    \a logicalIndex, the old index by \a oldVisualIndex, and the new index position by
+    \a newVisualIndex.
+*/
+
+/*!
+    \qmlsignal QtQuick::TableView::rowMoved(int logicalIndex, int oldVisualIndex, int newVisualIndex)
+    \since 6.8
+
+    This signal is emitted when a row is moved. The row's logical index is specified by
+    \a logicalIndex, the old index by \a oldVisualIndex, and the new index position by
+    \a newVisualIndex.
 */
 
 /*!
@@ -1459,6 +1520,52 @@ static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
 static const char* kRequiredProperty_editing = "editing";
+static const char* kRequiredProperty_containsDrag = "containsDrag";
+
+QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildState state)
+{
+#define TV_REBUILDSTATE(STATE) \
+    case QQuickTableViewPrivate::RebuildState::STATE: \
+        dbg << QStringLiteral(#STATE); break;
+
+    switch (state) {
+    TV_REBUILDSTATE(Begin);
+    TV_REBUILDSTATE(LoadInitalTable);
+    TV_REBUILDSTATE(VerifyTable);
+    TV_REBUILDSTATE(LayoutTable);
+    TV_REBUILDSTATE(CancelOvershoot);
+    TV_REBUILDSTATE(UpdateContentSize);
+    TV_REBUILDSTATE(PreloadColumns);
+    TV_REBUILDSTATE(PreloadRows);
+    TV_REBUILDSTATE(MovePreloadedItemsToPool);
+    TV_REBUILDSTATE(Done);
+    }
+
+    return dbg;
+}
+
+QDebug operator<<(QDebug dbg, QQuickTableViewPrivate::RebuildOptions options)
+{
+#define TV_REBUILDOPTION(OPTION) \
+    if (options & QQuickTableViewPrivate::RebuildOption::OPTION) \
+        dbg << QStringLiteral(#OPTION)
+
+    if (options == QQuickTableViewPrivate::RebuildOption::None) {
+        dbg << QStringLiteral("None");
+    } else {
+        TV_REBUILDOPTION(All);
+        TV_REBUILDOPTION(LayoutOnly);
+        TV_REBUILDOPTION(ViewportOnly);
+        TV_REBUILDOPTION(CalculateNewTopLeftRow);
+        TV_REBUILDOPTION(CalculateNewTopLeftColumn);
+        TV_REBUILDOPTION(CalculateNewContentWidth);
+        TV_REBUILDOPTION(CalculateNewContentHeight);
+        TV_REBUILDOPTION(PositionViewAtRow);
+        TV_REBUILDOPTION(PositionViewAtColumn);
+    }
+
+    return dbg;
+}
 
 QQuickTableViewPrivate::EdgeRange::EdgeRange()
     : startIndex(kEdgeIndexNotSet)
@@ -1618,10 +1725,15 @@ QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
     return const_cast<QQuickTableView *>(q_func())->contentItem();
 }
 
-bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
+bool QQuickTableViewPrivate::startSelection(const QPointF &pos, Qt::KeyboardModifiers modifiers)
 {
     Q_Q(QQuickTableView);
-    Q_UNUSED(pos);
+    if (!selectionModel) {
+        if (warnNoSelectionModel)
+            qmlWarning(q_func()) << "Cannot start selection: no SelectionModel assigned!";
+        warnNoSelectionModel = false;
+        return false;
+    }
 
     if (selectionBehavior == QQuickTableView::SelectionDisabled) {
         qmlWarning(q) << "Cannot start selection: TableView.selectionBehavior == TableView.SelectionDisabled";
@@ -1632,10 +1744,27 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
     if (resizeHandler->state() != QQuickTableViewResizeHandler::Listening)
         return false;
 
-    // For SingleSelection and ContiguousSelection, we should only allow one selection at a time
+    // For SingleSelection and ContiguousSelection, we should only allow one
+    // selection at a time. We also clear the current selection if the mode
+    // is ExtendedSelection, but no modifier is being held.
     if (selectionMode == QQuickTableView::SingleSelection
-            || selectionMode == QQuickTableView::ContiguousSelection)
+            || selectionMode == QQuickTableView::ContiguousSelection
+            || modifiers == Qt::NoModifier)
         clearSelection();
+    else if (selectionModel)
+        existingSelection = selectionModel->selection();
+
+    // If pos is on top of an unselected cell, we start a session where the user selects which
+    // cells to become selected. Otherwise, if pos is on top of an already selected cell and
+    // ctrl is being held, we start a session where the user selects which selected cells to
+    // become unselected.
+    selectionFlag = QItemSelectionModel::Select;
+    if (modifiers & Qt::ControlModifier) {
+        QPoint startCell = clampedCellAtPos(pos);
+        const QModelIndex startIndex = q->index(startCell.y(), startCell.x());
+        if (selectionModel->isSelected(startIndex))
+            selectionFlag = QItemSelectionModel::Deselect;
+    }
 
     selectionStartCell = QPoint(-1, -1);
     selectionEndCell = QPoint(-1, -1);
@@ -1645,6 +1774,8 @@ bool QQuickTableViewPrivate::startSelection(const QPointF &pos)
 
 void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 {
+    Q_Q(QQuickTableView);
+    Q_ASSERT(selectionFlag != QItemSelectionModel::NoUpdate);
     if (loadedItems.isEmpty())
         return;
     if (!selectionModel) {
@@ -1663,11 +1794,19 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
     }
 
     const QRect prevSelection = selection();
-    const QPoint clampedCell = clampedCellAtPos(pos);
+
+    QPoint clampedCell;
+    if (pos.x() == -1) {
+        // Special case: use current cell as start cell
+        clampedCell = q->cellAtIndex(selectionModel->currentIndex());
+    } else {
+        clampedCell = clampedCellAtPos(pos);
+        if (cellIsValid(clampedCell))
+            setCurrentIndex(clampedCell);
+    }
+
     if (!cellIsValid(clampedCell))
         return;
-
-    setCurrentIndex(clampedCell);
 
     switch (selectionBehavior) {
     case QQuickTableView::SelectCells:
@@ -1687,11 +1826,13 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
         return;
 
     // Update selection model
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 
 void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
 {
+    Q_ASSERT(selectionFlag != QItemSelectionModel::NoUpdate);
     if (loadedItems.isEmpty())
         return;
     if (!selectionModel) {
@@ -1735,6 +1876,7 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
         return;
 
     // Update selection model
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
     updateSelection(prevSelection, selection());
 }
 
@@ -1765,42 +1907,84 @@ void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QR
     const QRect oldRect = oldSelection.normalized();
     const QRect newRect = newSelection.normalized();
 
+    QItemSelection select;
+    QItemSelection deselect;
+
     // Select cells inside the new selection rect
     {
         const QModelIndex startIndex = qaim->index(newRect.y(), newRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() + newRect.height(), newRect.x() + newRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            select.append(QItemSelection(logicalModelIndex, logicalModelIndex));
+        }
     }
 
     // Unselect cells in the new minus old rects
     if (oldRect.x() < newRect.x()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), newRect.x() - 1);
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     } else if (oldRect.x() + oldRect.width() > newRect.x() + newRect.width()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), newRect.x() + newRect.width() + 1);
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        for (auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     }
 
     if (oldRect.y() < newRect.y()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() - 1, oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     } else if (oldRect.y() + oldRect.height() > newRect.y() + newRect.height()) {
         const QModelIndex startIndex = qaim->index(newRect.y() + newRect.height() + 1, oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
+            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+        }
     }
+
+    if (selectionFlag == QItemSelectionModel::Select) {
+        // Don't clear the selection that existed before the user started a new selection block
+        deselect.merge(existingSelection, QItemSelectionModel::Deselect);
+        selectionModel->select(deselect, QItemSelectionModel::Deselect);
+        selectionModel->select(select, QItemSelectionModel::Select);
+    } else if (selectionFlag == QItemSelectionModel::Deselect){
+        QItemSelection oldSelection = existingSelection;
+        oldSelection.merge(select, QItemSelectionModel::Deselect);
+        selectionModel->select(oldSelection, QItemSelectionModel::Select);
+        selectionModel->select(select, QItemSelectionModel::Deselect);
+    } else {
+        Q_UNREACHABLE();
+    }
+}
+
+void QQuickTableViewPrivate::cancelSelectionTracking()
+{
+    // Cancel any ongoing key/mouse aided selection tracking
+    selectionStartCell = QPoint(-1, -1);
+    selectionEndCell = QPoint(-1, -1);
+    existingSelection.clear();
+    selectionFlag = QItemSelectionModel::NoUpdate;
+    if (selectableCallbackFunction)
+        selectableCallbackFunction(QQuickSelectable::CallBackFlag::CancelSelection);
 }
 
 void QQuickTableViewPrivate::clearSelection()
 {
-    selectionStartCell = QPoint(-1, -1);
-    selectionEndCell = QPoint(-1, -1);
-
-    if (selectionModel)
-        selectionModel->clearSelection();
+    if (!selectionModel)
+        return;
+    QScopedValueRollback callbackGuard(inSelectionModelUpdate, true);
+    selectionModel->clearSelection();
 }
 
 void QQuickTableViewPrivate::normalizeSelection()
@@ -1872,7 +2056,7 @@ QRect QQuickTableViewPrivate::selection() const
     return QRect(selectionStartCell.x(), selectionStartCell.y(), w, h);
 }
 
-QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step)
+QSizeF QQuickTableViewPrivate::scrollTowardsPoint(const QPointF &pos, const QSizeF &step)
 {
     Q_Q(QQuickTableView);
 
@@ -1938,6 +2122,11 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     return dist;
 }
 
+void QQuickTableViewPrivate::setCallback(std::function<void (CallBackFlag)> func)
+{
+    selectableCallbackFunction = func;
+}
+
 QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject *object) const
 {
     QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
@@ -1976,14 +2165,14 @@ QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex) const
     }
 }
 
-int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex) const
+int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex, bool visualIndex) const
 {
     // Convert QModelIndex to cell index. A cell index is just an
     // integer representation of a cell instead of using a QPoint.
     const QPoint cell = q_func()->cellAtIndex(modelIndex);
     if (!cellIsValid(cell))
         return -1;
-    return modelIndexAtCell(cell);
+    return modelIndexAtCell(visualIndex ? cell : QPoint(modelIndex.column(), modelIndex.row()));
 }
 
 int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge) const
@@ -2202,11 +2391,13 @@ void QQuickTableViewPrivate::updateExtents()
     const int nextTopRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge);
     const int nextBottomRow = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge);
 
+    QPointF prevOrigin = origin;
+    QSizeF prevEndExtent = endExtent;
+
     if (syncHorizontally) {
         const auto syncView_d = syncView->d_func();
         origin.rx() = syncView_d->origin.x();
         endExtent.rwidth() = syncView_d->endExtent.width();
-        hData.markExtentsDirty();
     } else if (nextLeftColumn == kEdgeIndexAtEnd) {
         // There are no more columns to load on the left side of the table.
         // In that case, we ensure that the origin match the beginning of the table.
@@ -2223,7 +2414,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         origin.rx() = loadedTableOuterRect.left();
-        hData.markExtentsDirty();
     } else if (loadedTableOuterRect.left() <= origin.x() + cellSpacing.width()) {
         // The table rect is at the origin, or outside, but we still have more
         // visible columns to the left. So we try to guesstimate how much space
@@ -2233,7 +2423,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal remainingSpacing = columnsRemaining * cellSpacing.width();
         const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
         origin.rx() = loadedTableOuterRect.left() - estimatedRemainingWidth;
-        hData.markExtentsDirty();
     } else if (nextRightColumn == kEdgeIndexAtEnd) {
         // There are no more columns to load on the right side of the table.
         // In that case, we ensure that the end of the content view match the end of the table.
@@ -2251,7 +2440,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         endExtent.rwidth() = loadedTableOuterRect.right() - q->contentWidth();
-        hData.markExtentsDirty();
     } else if (loadedTableOuterRect.right() >= q->contentWidth() + endExtent.width() - cellSpacing.width()) {
         // The right-most column is outside the end of the content view, and we
         // still have more visible columns in the model. This can happen if the application
@@ -2262,14 +2450,12 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal estimatedRemainingWidth = remainingColumnWidths + remainingSpacing;
         const qreal pixelsOutsideContentWidth = loadedTableOuterRect.right() - q->contentWidth();
         endExtent.rwidth() = pixelsOutsideContentWidth + estimatedRemainingWidth;
-        hData.markExtentsDirty();
     }
 
     if (syncVertically) {
         const auto syncView_d = syncView->d_func();
         origin.ry() = syncView_d->origin.y();
         endExtent.rheight() = syncView_d->endExtent.height();
-        vData.markExtentsDirty();
     } else if (nextTopRow == kEdgeIndexAtEnd) {
         // There are no more rows to load on the top side of the table.
         // In that case, we ensure that the origin match the beginning of the table.
@@ -2286,7 +2472,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         origin.ry() = loadedTableOuterRect.top();
-        vData.markExtentsDirty();
     } else if (loadedTableOuterRect.top() <= origin.y() + cellSpacing.height()) {
         // The table rect is at the origin, or outside, but we still have more
         // visible rows at the top. So we try to guesstimate how much space
@@ -2296,7 +2481,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal remainingSpacing = rowsRemaining * cellSpacing.height();
         const qreal estimatedRemainingHeight = remainingRowHeights + remainingSpacing;
         origin.ry() = loadedTableOuterRect.top() - estimatedRemainingHeight;
-        vData.markExtentsDirty();
     } else if (nextBottomRow == kEdgeIndexAtEnd) {
         // There are no more rows to load on the bottom side of the table.
         // In that case, we ensure that the end of the content view match the end of the table.
@@ -2314,7 +2498,6 @@ void QQuickTableViewPrivate::updateExtents()
             }
         }
         endExtent.rheight() = loadedTableOuterRect.bottom() - q->contentHeight();
-        vData.markExtentsDirty();
     } else if (loadedTableOuterRect.bottom() >= q->contentHeight() + endExtent.height() - cellSpacing.height()) {
         // The bottom-most row is outside the end of the content view, and we
         // still have more visible rows in the model. This can happen if the application
@@ -2325,7 +2508,6 @@ void QQuickTableViewPrivate::updateExtents()
         const qreal estimatedRemainingHeight = remainingRowHeigts + remainingSpacing;
         const qreal pixelsOutsideContentHeight = loadedTableOuterRect.bottom() - q->contentHeight();
         endExtent.rheight() = pixelsOutsideContentHeight + estimatedRemainingHeight;
-        vData.markExtentsDirty();
     }
 
     if (tableMovedHorizontally || tableMovedVertically) {
@@ -2346,12 +2528,23 @@ void QQuickTableViewPrivate::updateExtents()
         }
     }
 
-    if (hData.minExtentDirty || vData.minExtentDirty) {
-        qCDebug(lcTableViewDelegateLifecycle) << "move origin and endExtent to:" << origin << endExtent;
+    if (prevOrigin != origin || prevEndExtent != endExtent) {
+        if (prevOrigin != origin)
+            qCDebug(lcTableViewDelegateLifecycle) << "move origin to:" << origin;
+        if (prevEndExtent != endExtent)
+            qCDebug(lcTableViewDelegateLifecycle) << "move endExtent to:" << endExtent;
         // updateBeginningEnd() will let the new extents take effect. This will also change the
         // visualArea of the flickable, which again will cause any attached scrollbars to adjust
         // the position of the handle. Note the latter will cause the viewport to move once more.
+        hData.markExtentsDirty();
+        vData.markExtentsDirty();
         updateBeginningEnd();
+        if (!q->isMoving()) {
+            // When we adjust the extents, the viewport can sometimes be left suspended in an
+            // overshooted state. It will bounce back again once the user clicks inside the
+            // viewport. But this comes across as a bug, so returnToBounds explicitly.
+            q->returnToBounds();
+        }
     }
 }
 
@@ -2385,18 +2578,6 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
     QRectF bottomRightRect = loadedTableItem(bottomRight)->geometry();
     loadedTableOuterRect = QRectF(topLeftRect.topLeft(), bottomRightRect.bottomRight());
     loadedTableInnerRect = QRectF(topLeftRect.bottomRight(), bottomRightRect.topLeft());
-}
-
-void QQuickTableViewPrivate::shiftLoadedTableRect(const QPointF newPosition)
-{
-    // Move the tracked table rects to the new position. For this to
-    // take visual effect (move the delegate items to be inside the table
-    // rect), it needs to be followed by a relayoutTableItems().
-    // Also note that the position of the viewport needs to be adjusted
-    // separately for it to overlap the loaded table.
-    const QPointF innerDiff = loadedTableOuterRect.topLeft() - loadedTableInnerRect.topLeft();
-    loadedTableOuterRect.moveTopLeft(newPosition);
-    loadedTableInnerRect.moveTopLeft(newPosition + innerDiff);
 }
 
 QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
@@ -2477,20 +2658,21 @@ void QQuickTableViewPrivate::forceLayout(bool immediate)
 
     const QSize actualTableSize = calculateTableSize();
     if (tableSize != actualTableSize) {
-        // This can happen if the app is calling forceLayout while
-        // the model is updated, but before we're notified about it.
-        rebuildOptions = RebuildOption::All;
-    } else {
-        // Resizing a column (or row) can result in the table going from being
-        // e.g completely inside the viewport to go outside. And in the latter
-        // case, the user needs to be able to scroll the viewport, also if
-        // flags such as Flickable.StopAtBounds is in use. So we need to
-        // update contentWidth/Height to support that case.
-        rebuildOptions = RebuildOption::LayoutOnly
-                | RebuildOption::CalculateNewContentWidth
-                | RebuildOption::CalculateNewContentHeight
-                | checkForVisibilityChanges();
+        // The table size will have changed if forceLayout is called after
+        // the row count in the model has changed, but before we received
+        // a rowsInsertedCallback about it (and vice versa for columns).
+        rebuildOptions |= RebuildOption::ViewportOnly;
     }
+
+    // Resizing a column (or row) can result in the table going from being
+    // e.g completely inside the viewport to go outside. And in the latter
+    // case, the user needs to be able to scroll the viewport, also if
+    // flags such as Flickable.StopAtBounds is in use. So we need to
+    // update contentWidth/Height to support that case.
+    rebuildOptions |= RebuildOption::LayoutOnly
+            | RebuildOption::CalculateNewContentWidth
+            | RebuildOption::CalculateNewContentHeight
+            | checkForVisibilityChanges();
 
     scheduleRebuildTable(rebuildOptions);
 
@@ -2537,7 +2719,9 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
     Q_Q(QQuickTableView);
 
     bool ownItem = false;
-    int modelIndex = modelIndexAtCell(cell);
+
+    int modelIndex = modelIndexAtCell(isTransposed ? QPoint(logicalRowIndex(cell.x()), logicalColumnIndex(cell.y())) :
+                                              QPoint(logicalColumnIndex(cell.x()), logicalRowIndex(cell.y())));
 
     QObject* object = model->object(modelIndex, incubationMode);
     if (!object) {
@@ -2773,21 +2957,6 @@ qreal QQuickTableViewPrivate::sizeHintForRow(int row) const
     return rowHeight;
 }
 
-void QQuickTableViewPrivate::updateTableSize()
-{
-    // tableSize is the same as row and column count, and will always
-    // be the same as the number of rows and columns in the model.
-    Q_Q(QQuickTableView);
-
-    const QSize prevTableSize = tableSize;
-    tableSize = calculateTableSize();
-
-    if (prevTableSize.width() != tableSize.width())
-        emit q->columnsChanged();
-    if (prevTableSize.height() != tableSize.height())
-        emit q->rowsChanged();
-}
-
 QSize QQuickTableViewPrivate::calculateTableSize()
 {
     QSize size(0, 0);
@@ -2905,7 +3074,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
 
     const int noExplicitColumnWidth = -1;
 
-    if (cachedColumnWidth.startIndex == column)
+    if (cachedColumnWidth.startIndex == logicalColumnIndex(column))
         return cachedColumnWidth.size;
 
     if (syncHorizontally)
@@ -2936,7 +3105,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column) const
         columnWidth = noExplicitColumnWidth;
     }
 
-    cachedColumnWidth.startIndex = column;
+    cachedColumnWidth.startIndex = logicalColumnIndex(column);
     cachedColumnWidth.size = columnWidth;
     return columnWidth;
 }
@@ -2951,7 +3120,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
 
     const int noExplicitRowHeight = -1;
 
-    if (cachedRowHeight.startIndex == row)
+    if (cachedRowHeight.startIndex == logicalRowIndex(row))
         return cachedRowHeight.size;
 
     if (syncVertically)
@@ -2982,7 +3151,7 @@ qreal QQuickTableViewPrivate::getRowHeight(int row) const
         rowHeight = noExplicitRowHeight;
     }
 
-    cachedRowHeight.startIndex = row;
+    cachedRowHeight.startIndex = logicalRowIndex(row);
     cachedRowHeight.size = rowHeight;
     return rowHeight;
 }
@@ -3318,18 +3487,8 @@ void QQuickTableViewPrivate::processRebuildTable()
     Q_Q(QQuickTableView);
 
     if (rebuildState == RebuildState::Begin) {
-        if (Q_UNLIKELY(lcTableViewDelegateLifecycle().isDebugEnabled())) {
-            qCDebug(lcTableViewDelegateLifecycle()) << "begin rebuild:" << q;
-            if (rebuildOptions & RebuildOption::All)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::All, options:" << rebuildOptions;
-            else if (rebuildOptions & RebuildOption::ViewportOnly)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::ViewportOnly, options:" << rebuildOptions;
-            else if (rebuildOptions & RebuildOption::LayoutOnly)
-                qCDebug(lcTableViewDelegateLifecycle()) << "RebuildOption::LayoutOnly, options:" << rebuildOptions;
-            else
-                Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
-        }
-
+        qCDebug(lcTableViewDelegateLifecycle()) << "begin rebuild:" << q << "options:" << rebuildOptions;
+        tableSizeBeforeRebuild = tableSize;
         edgesBeforeRebuild = loadedItems.isEmpty() ? QMargins()
             : QMargins(q->leftColumn(), q->topRow(), q->rightColumn(), q->bottomRow());
     }
@@ -3398,6 +3557,10 @@ void QQuickTableViewPrivate::processRebuildTable()
     }
 
     if (rebuildState == RebuildState::Done) {
+        if (tableSizeBeforeRebuild.width() != tableSize.width())
+            emit q->columnsChanged();
+        if (tableSizeBeforeRebuild.height() != tableSize.height())
+            emit q->rowsChanged();
         if (edgesBeforeRebuild.left() != q->leftColumn())
             emit q->leftColumnChanged();
         if (edgesBeforeRebuild.right() != q->rightColumn())
@@ -3436,7 +3599,7 @@ bool QQuickTableViewPrivate::moveToNextRebuildState()
     else
         rebuildState = RebuildState(int(rebuildState) + 1);
 
-    qCDebug(lcTableViewDelegateLifecycle()) << int(rebuildState);
+    qCDebug(lcTableViewDelegateLifecycle()) << rebuildState;
     return true;
 }
 
@@ -3547,7 +3710,7 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
 
 void QQuickTableViewPrivate::loadInitialTable()
 {
-    updateTableSize();
+    tableSize = calculateTableSize();
 
     if (positionXAnimation.isRunning()) {
         positionXAnimation.stop();
@@ -4053,10 +4216,11 @@ bool QQuickTableViewPrivate::currentInSelectionModel(const QPoint &cell) const
 
 void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
 {
-    if (!selectionModel->hasSelection()) {
-        // Ensure that we cancel any ongoing key/mouse-based selections
-        // if selectionModel.clearSelection() is called.
-        clearSelection();
+    if (!inSelectionModelUpdate) {
+        // The selection model was manipulated outside of TableView
+        // and SelectionRectangle. In that case we cancel any ongoing
+        // selection tracking.
+        cancelSelectionTracking();
     }
 
     const auto &selectedIndexes = selected.indexes();
@@ -4198,11 +4362,13 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     item->setZ(1);
 
     const QPoint cell = cellAtModelIndex(modelIndex);
-    const bool current = currentInSelectionModel(cell);
-    const bool selected = selectedInSelectionModel(cell);
+    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
+    const bool current = currentInSelectionModel(visualCell);
+    const bool selected = selectedInSelectionModel(visualCell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), modelIndex, item, true);
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, item, true);
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);
@@ -4219,11 +4385,13 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
     const QPoint cell = cellAtModelIndex(modelIndex);
-    const bool current = currentInSelectionModel(cell);
-    const bool selected = selectedInSelectionModel(cell);
+    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
+    const bool current = currentInSelectionModel(visualCell);
+    const bool selected = selectedInSelectionModel(visualCell);
     setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
     // Note: the edit item will never be reused, so no reason to set kRequiredProperty_editing
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, object, false);
 
     if (auto item = qobject_cast<QQuickItem*>(object))
         QQuickItemPrivate::get(item)->setCulled(false);
@@ -4297,9 +4465,6 @@ QVariant QQuickTableViewPrivate::modelImpl() const
 
 void QQuickTableViewPrivate::setModelImpl(const QVariant &newModel)
 {
-    if (newModel == assignedModel)
-        return;
-
     assignedModel = newModel;
     scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
     emit q_func()->modelChanged();
@@ -4307,7 +4472,7 @@ void QQuickTableViewPrivate::setModelImpl(const QVariant &newModel)
 
 void QQuickTableViewPrivate::syncModel()
 {
-    if (modelVariant == assignedModel)
+    if (compareModel(modelVariant, assignedModel))
         return;
 
     if (model) {
@@ -4377,11 +4542,18 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setRightMargin(syncView->rightMargin());
         updateContentWidth();
 
-        if (syncView->leftColumn() != q->leftColumn()) {
-            // The left column is no longer the same as the left
-            // column in syncView. This requires a rebuild.
-            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
-            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        if (scheduledRebuildOptions & RebuildOption::LayoutOnly) {
+            if (syncView->leftColumn() != q->leftColumn()
+                    || syncView->d_func()->loadedTableOuterRect.left() != loadedTableOuterRect.left()) {
+                // The left column is no longer the same, or at the same pos, as the left column in
+                // syncView. This can happen if syncView did a relayout that caused its left column
+                // to be resized so small that it ended up outside the viewport. It can also happen
+                // if the syncView loaded and unloaded columns after the relayout. We therefore need
+                // to sync our own left column and pos to be the same, which we do by rebuilding the
+                // whole viewport instead of just doing a plain LayoutOnly.
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn;
+                scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+            }
         }
     }
 
@@ -4392,11 +4564,18 @@ void QQuickTableViewPrivate::syncSyncView()
         q->setBottomMargin(syncView->bottomMargin());
         updateContentHeight();
 
-        if (syncView->topRow() != q->topRow()) {
-            // The top row is no longer the same as the top
-            // row in syncView. This requires a rebuild.
-            scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
-            scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+        if (scheduledRebuildOptions & RebuildOption::LayoutOnly) {
+            if (syncView->topRow() != q->topRow()
+                    || syncView->d_func()->loadedTableOuterRect.top() != loadedTableOuterRect.top()) {
+                // The top row is no longer the same, or at the same pos, as the top row in
+                // syncView. This can happen if syncView did a relayout that caused its top row
+                // to be resized so small that it ended up outside the viewport. It can also happen
+                // if the syncView loaded and unloaded rows after the relayout. We therefore need
+                // to sync our own top row and pos to be the same, which we do by rebuilding the
+                // whole viewport instead of just doing a plain LayoutOnly.
+                scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow;
+                scheduledRebuildOptions.setFlag(RebuildOption::ViewportOnly);
+            }
         }
     }
 
@@ -4581,6 +4760,13 @@ void QQuickTableViewPrivate::modelResetCallback()
     Q_Q(QQuickTableView);
     q->closeEditor();
     scheduleRebuildTable(RebuildOption::All);
+}
+
+bool QQuickTableViewPrivate::compareModel(const QVariant& model1, const QVariant& model2) const
+{
+    return (model1 == model2 ||
+            (model1.userType() == qMetaTypeId<QJSValue>() && model2.userType() == qMetaTypeId<QJSValue>() &&
+                                 model1.value<QJSValue>().strictlyEquals(model2.value<QJSValue>())));
 }
 
 void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect)
@@ -4776,7 +4962,7 @@ void QQuickTableViewPrivate::syncViewportRect()
         auto syncChild_d = syncChild->d_func();
         if (syncChild_d->syncHorizontally)
             w = qMax(w, syncChild->width());
-        if (syncChild_d->syncHorizontally)
+        if (syncChild_d->syncVertically)
             h = qMax(h, syncChild->height());
     }
 
@@ -4802,6 +4988,7 @@ void QQuickTableViewPrivate::init()
 
     hoverHandler = new QQuickTableViewHoverHandler(q);
     resizeHandler = new QQuickTableViewResizeHandler(q);
+
     hoverHandler->setEnabled(resizableRows || resizableColumns);
     resizeHandler->setEnabled(resizableRows || resizableColumns);
 
@@ -4884,8 +5071,10 @@ void QQuickTableViewPrivate::handleTap(const QQuickHandlerPoint &point)
     // the current selection and move the current index instead.
     if (pointerNavigationEnabled) {
         q->closeEditor();
-        if (selectionBehavior != QQuickTableView::SelectionDisabled)
+        if (selectionBehavior != QQuickTableView::SelectionDisabled) {
             clearSelection();
+            cancelSelectionTracking();
+        }
         setCurrentIndexFromTap(point.position());
     }
 }
@@ -4985,7 +5174,6 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
 
     const QModelIndex currentIndex = selectionModel->currentIndex();
     const QPoint currentCell = q->cellAtIndex(currentIndex);
-    const bool select = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
 
     if (!q->activeFocusOnTab()) {
         switch (e->key()) {
@@ -5017,25 +5205,38 @@ bool QQuickTableViewPrivate::setCurrentIndexFromKeyEvent(QKeyEvent *e)
     }
 
     auto beginMoveCurrentIndex = [&](){
-        if (!select) {
+        const bool shouldSelect = (e->modifiers() & Qt::ShiftModifier) && (e->key() != Qt::Key_Backtab);
+        const bool startNewSelection = selectionRectangle().isEmpty();
+        if (!shouldSelect) {
             clearSelection();
-        } else if (selectionRectangle().isEmpty()) {
+            cancelSelectionTracking();
+        } else if (startNewSelection) {
+            // Try to start a new selection if no selection exists from before.
+            // The startSelection() call is theoretically allowed to refuse, although this
+            // is less likely when starting a selection using the keyboard.
             const int serializedStartIndex = modelIndexToCellIndex(selectionModel->currentIndex());
             if (loadedItems.contains(serializedStartIndex)) {
                 const QRectF startGeometry = loadedItems.value(serializedStartIndex)->geometry();
-                setSelectionStartPos(startGeometry.center());
+                if (startSelection(startGeometry.center(), Qt::ShiftModifier)) {
+                    setSelectionStartPos(startGeometry.center());
+                    if (selectableCallbackFunction)
+                        selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
+                }
             }
         }
     };
 
     auto endMoveCurrentIndex = [&](const QPoint &cell){
-        if (select) {
+        const bool isSelecting = selectionFlag != QItemSelectionModel::NoUpdate;
+        if (isSelecting) {
             if (polishScheduled)
                 forceLayout(true);
             const int serializedEndIndex = modelIndexAtCell(cell);
             if (loadedItems.contains(serializedEndIndex)) {
                 const QRectF endGeometry = loadedItems.value(serializedEndIndex)->geometry();
                 setSelectionEndPos(endGeometry.center());
+                if (selectableCallbackFunction)
+                    selectableCallbackFunction(QQuickSelectable::CallBackFlag::SelectionRectangleChanged);
             }
         }
         selectionModel->setCurrentIndex(q->modelIndex(cell), QItemSelectionModel::NoUpdate);
@@ -5315,6 +5516,14 @@ QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
 
 QQuickTableView::~QQuickTableView()
 {
+    Q_D(QQuickTableView);
+
+    if (d->syncView) {
+        // Remove this TableView as a sync child from the syncView
+        auto syncView_d = d->syncView->d_func();
+        syncView_d->syncChildren.removeOne(this);
+        syncView_d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    }
 }
 
 void QQuickTableView::componentFinalized()
@@ -5446,6 +5655,8 @@ QVariant QQuickTableView::model() const
 void QQuickTableView::setModel(const QVariant &newModel)
 {
     Q_D(QQuickTableView);
+    if (d->compareModel(newModel, d->assignedModel))
+        return;
 
     closeEditor();
     d->setModelImpl(newModel);
@@ -5549,6 +5760,10 @@ void QQuickTableView::setSyncView(QQuickTableView *view)
     Q_D(QQuickTableView);
     if (d->assignedSyncView == view)
         return;
+
+    // Clear existing index mapping information maintained
+    // in the current view
+    d->clearIndexMapping();
 
     d->assignedSyncView = view;
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
@@ -5894,6 +6109,169 @@ void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode,
 }
 #endif
 
+void QQuickTableView::moveColumn(int source, int destination)
+{
+    Q_D(QQuickTableView);
+    d->moveSection(source, destination, Qt::Horizontal);
+}
+
+void QQuickTableView::moveRow(int source, int destination)
+{
+    Q_D(QQuickTableView);
+    d->moveSection(source, destination, Qt::Vertical);
+}
+
+void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orientations orientation)
+{
+    Q_Q(QQuickTableView);
+
+    if (source < 0 || destination < 0 ||
+        (orientation == Qt::Horizontal &&
+         (source >= tableSize.width() || destination >= tableSize.width())) ||
+        (orientation == Qt::Vertical &&
+         (source >= tableSize.height() || destination >= tableSize.height())))
+        return;
+
+    if (source == destination)
+        return;
+
+    if (m_sectionState != SectionState::Moving) {
+        m_sectionState = SectionState::Moving;
+        if (syncView)
+            syncView->d_func()->moveSection(source, destination, orientation);
+        else {
+            // Initialize the visual and logical index mapping
+            initializeIndexMapping();
+
+            // Set current index mapping according to moving rows or columns
+            SectionData *visualIndex = nullptr;
+            SectionData *logicalIndex =  nullptr;
+
+            if (orientation == Qt::Horizontal) {
+                visualIndex = visualIndices[0].data();
+                logicalIndex = logicalIndices[0].data();
+            } else if (orientation == Qt::Vertical) {
+                visualIndex = visualIndices[1].data();
+                logicalIndex = logicalIndices[1].data();
+            }
+
+            const int logical = logicalIndex[source].index;
+            int visual = source;
+
+            if (destination > source) {
+                while (visual < destination) {
+                    SectionData &visualData = visualIndex[logicalIndex[visual + 1].index];
+                    SectionData &logicalData = logicalIndex[visual];
+                    visualData.prevIndex = visualData.index;
+                    visualData.index = visual;
+                    logicalData.prevIndex = logicalData.index;
+                    logicalData.index = logicalIndex[visual + 1].index;
+                    ++visual;
+                }
+            } else {
+                while (visual > destination) {
+                    SectionData &visualData = visualIndex[logicalIndex[visual - 1].index];
+                    SectionData &logicalData = logicalIndex[visual];
+                    visualData.prevIndex = visualData.index;
+                    visualData.index = visual;
+                    logicalData.prevIndex = logicalData.index;
+                    logicalData.index = logicalIndex[visual - 1].index;
+                    --visual;
+                }
+            }
+
+            visualIndex[logical].prevIndex = visualIndex[logical].index;
+            visualIndex[logical].index = destination;
+            logicalIndex[destination].prevIndex = logicalIndex[destination].index;
+            logicalIndex[destination].index = logical;
+
+            // Trigger section move for horizontal and vertical child views
+            // Used in a case where moveSection() triggered for table view
+            for (auto syncChild : std::as_const(syncChildren)) {
+                auto syncChild_d = syncChild->d_func();
+                if (syncChild_d->m_sectionState != SectionState::Moving &&
+                    ((syncChild_d->syncHorizontally && orientation == Qt::Horizontal) ||
+                     (syncChild_d->syncVertically && orientation == Qt::Vertical)))
+                    syncChild_d->moveSection(source, destination, orientation);
+            }
+        }
+
+        // Rebuild the view to reflect the section order
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+        m_sectionState = SectionState::Idle;
+
+        // Emit section moved signal for the sections moved in the view
+        const int startIndex = (source > destination) ? destination : source;
+        const int endIndex = (source > destination) ? source : destination;
+        const int mapIndex = static_cast<int>(orientation) - 1;
+        for (int index = startIndex; index <= endIndex; index++) {
+            const SectionData *logicalDataIndices = (syncView ? syncView->d_func()->logicalIndices[mapIndex].constData() : logicalIndices[mapIndex].constData());
+            const SectionData *visualDataIndices = syncView ? syncView->d_func()->visualIndices[mapIndex].constData() : visualIndices[mapIndex].constData();
+            const int prevLogicalIndex = logicalDataIndices[index].prevIndex;
+            if (orientation == Qt::Horizontal)
+                emit q->columnMoved(prevLogicalIndex, visualDataIndices[prevLogicalIndex].prevIndex, visualDataIndices[prevLogicalIndex].index);
+            else
+                emit q->rowMoved(prevLogicalIndex, visualDataIndices[prevLogicalIndex].prevIndex, visualDataIndices[prevLogicalIndex].index);
+        }
+    }
+}
+
+void QQuickTableView::clearColumnReordering()
+{
+    Q_D(QQuickTableView);
+    d->clearSection(Qt::Horizontal);
+}
+
+void QQuickTableView::clearRowReordering()
+{
+    Q_D(QQuickTableView);
+    d->clearSection(Qt::Vertical);
+}
+
+void QQuickTableViewPrivate::clearSection(Qt::Orientations orientation)
+{
+    Q_Q(QQuickTableView);
+
+    const int mapIndex = static_cast<int>(orientation) - 1;
+    const QList<SectionData> oldLogicalIndices = syncView ? syncView->d_func()->logicalIndices[mapIndex] : logicalIndices[mapIndex];
+    const QList<SectionData> oldVisualIndices = syncView ? syncView->d_func()->visualIndices[mapIndex] : visualIndices[mapIndex];;
+
+    if (syncView)
+        syncView->d_func()->clearSection(orientation);
+    else {
+        // Clear the index mapping and rebuild the table
+        logicalIndices[mapIndex].clear();
+        visualIndices[mapIndex].clear();
+        scheduleRebuildTable(RebuildOption::ViewportOnly);
+    }
+
+    // Emit section moved signal for the sections moved in the view
+    for (int index = 0; index < oldLogicalIndices.size(); index++) {
+        const SectionData *logicalDataIndices = oldLogicalIndices.constData();
+        const SectionData *visualDataIndices = oldVisualIndices.constData();
+        if (logicalDataIndices[index].index != index) {
+            const int currentIndex = logicalDataIndices[index].index;
+            if (orientation == Qt::Horizontal)
+                emit q->columnMoved(currentIndex, visualDataIndices[currentIndex].index, index);
+            else
+                emit q->rowMoved(currentIndex, visualDataIndices[currentIndex].index, index);
+        }
+    }
+}
+
+void QQuickTableViewPrivate::setContainsDragOnDelegateItem(const QModelIndex &modelIndex, bool overlay)
+{
+    if (!modelIndex.isValid())
+        return;
+
+    const int cellIndex = modelIndexToCellIndex(modelIndex);
+    if (!loadedItems.contains(cellIndex))
+        return;
+    const QPoint cell = cellAtModelIndex(cellIndex);
+    QQuickItem *item = loadedTableItem(cell)->item;
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(overlay), cellIndex, item, false);
+}
+
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
 {
     Q_D(const QQuickTableView);
@@ -6072,9 +6450,9 @@ void QQuickTableView::setColumnWidth(int column, qreal size)
         return;
 
     if (size < 0)
-        d->explicitColumnWidths.remove(column);
+        d->explicitColumnWidths.remove(d->logicalColumnIndex(column));
     else
-        d->explicitColumnWidths.insert(column, size);
+        d->explicitColumnWidths.insert(d->logicalColumnIndex(column), size);
 
     if (d->loadedItems.isEmpty())
         return;
@@ -6107,7 +6485,7 @@ qreal QQuickTableView::explicitColumnWidth(int column) const
     if (d->syncHorizontally)
         return d->syncView->explicitColumnWidth(column);
 
-    const auto it = d->explicitColumnWidths.constFind(column);
+    const auto it = d->explicitColumnWidths.constFind(d->logicalColumnIndex(column));
     if (it != d->explicitColumnWidths.constEnd())
         return *it;
     return -1;
@@ -6130,9 +6508,9 @@ void QQuickTableView::setRowHeight(int row, qreal size)
         return;
 
     if (size < 0)
-        d->explicitRowHeights.remove(row);
+        d->explicitRowHeights.remove(d->logicalRowIndex(row));
     else
-        d->explicitRowHeights.insert(row, size);
+        d->explicitRowHeights.insert(d->logicalRowIndex(row), size);
 
     if (d->loadedItems.isEmpty())
         return;
@@ -6165,7 +6543,7 @@ qreal QQuickTableView::explicitRowHeight(int row) const
     if (d->syncVertically)
         return d->syncView->explicitRowHeight(row);
 
-    const auto it = d->explicitRowHeights.constFind(row);
+    const auto it = d->explicitRowHeights.constFind(d->logicalRowIndex(row));
     if (it != d->explicitRowHeights.constEnd())
         return *it;
     return -1;
@@ -6181,14 +6559,15 @@ QModelIndex QQuickTableView::modelIndex(const QPoint &cell) const
     if (!qaim)
         return {};
 
-    return qaim->index(cell.y(), cell.x());
+    return qaim->index(d->logicalRowIndex(cell.y()), d->logicalColumnIndex(cell.x()));
 }
 
 QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
 {
     if (!index.isValid() || index.parent().isValid())
         return {-1, -1};
-    return {index.column(), index.row()};
+    Q_D(const QQuickTableView);
+    return {d->visualColumnIndex(index.column()), d->visualRowIndex(index.row())};
 }
 
 #if QT_DEPRECATED_SINCE(6, 4)
@@ -6253,7 +6632,8 @@ void QQuickTableView::edit(const QModelIndex &index)
             // is currently dependent of the QQmlTableInstanceModel that was used to create the object
             // in order to initialize required properties, so we need to set the editItem variable
             // early on, so that we can use it in setRequiredProperty.
-            d->editIndex = modelIndex(d->cellAtModelIndex(serializedModelIndex));
+            const QPoint cell = d->cellAtModelIndex(serializedModelIndex);
+            d->editIndex = modelIndex({d->visualColumnIndex(cell.x()), d->visualRowIndex(cell.y())});
             d->editItem = qmlobject_cast<QQuickItem*>(object);
             if (!d->editItem)
                 return;
@@ -6282,7 +6662,7 @@ void QQuickTableView::edit(const QModelIndex &index)
     d->editModel->setModel(d->tableModel->model());
     d->editModel->setDelegate(attached->editDelegate());
 
-    const int cellIndex = d->modelIndexToCellIndex(index);
+    const int cellIndex = d->modelIndexToCellIndex(index, false);
     QObject* object = d->editModel->object(cellIndex, QQmlIncubator::Synchronous);
     if (!object) {
         d->editIndex = QModelIndex();
@@ -6333,7 +6713,7 @@ void QQuickTableView::closeEditor()
     d->editItem = nullptr;
 
     cellItem->setZ(1);
-    const int cellIndex = d->modelIndexToCellIndex(d->editIndex);
+    const int cellIndex = d->modelIndexToCellIndex(d->editIndex, false);
     d->setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), cellIndex, cellItem, false);
     // Remove the extra reference we sat on the cell item from edit()
     d->model->release(cellItem, QQmlInstanceModel::NotReusable);
@@ -6551,7 +6931,6 @@ void QQuickTableView::setResizableRows(bool enabled)
 }
 
 // ----------------------------------------------
-
 QQuickTableViewHoverHandler::QQuickTableViewHoverHandler(QQuickTableView *view)
     : QQuickHoverHandler(view->contentItem())
 {
@@ -6602,13 +6981,35 @@ void QQuickTableViewHoverHandler::handleEventPoint(QPointerEvent *event, QEventP
 
 // ----------------------------------------------
 
-QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view)
+QQuickTableViewPointerHandler::QQuickTableViewPointerHandler(QQuickTableView *view)
     : QQuickSinglePointHandler(view->contentItem())
 {
-    setMargin(5);
     // Set a grab permission that stops the flickable, as well as
     // any drag handler inside the delegate, from stealing the drag.
     setGrabPermissions(QQuickPointerHandler::CanTakeOverFromAnything);
+}
+
+bool QQuickTableViewPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
+{
+    if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
+        return false;
+
+    // If we have a mouse wheel event then we do not want to do anything related to resizing.
+    if (event->type() == QEvent::Type::Wheel)
+        return false;
+
+    // When the user is flicking, we disable resizing, so that
+    // he doesn't start to resize by accident.
+    const auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    return !tableView->isMoving();
+}
+
+// ----------------------------------------------
+
+QQuickTableViewResizeHandler::QQuickTableViewResizeHandler(QQuickTableView *view)
+    : QQuickTableViewPointerHandler(view)
+{
+    setMargin(5);
     setObjectName("tableViewResizeHandler");
 }
 
@@ -6636,23 +7037,14 @@ void QQuickTableViewResizeHandler::onGrabChanged(QQuickPointerHandler *grabber
     }
 }
 
-bool QQuickTableViewResizeHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
-{
-    if (!QQuickSinglePointHandler::wantsEventPoint(event, point))
-        return false;
-
-    // If we have a mouse wheel event then we do not want to do anything related to resizing.
-    if (event->type() == QEvent::Type::Wheel)
-        return false;
-
-    // When the user is flicking, we disable resizing, so that
-    // he doesn't start to resize by accident.
-    auto tableView = static_cast<QQuickTableView *>(parentItem()->parent());
-    return !tableView->isMoving();
-}
-
 void QQuickTableViewResizeHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
+    auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    const auto *activeHandler = tableViewPrivate->activePointerHandler();
+    if (activeHandler && !qobject_cast<const QQuickTableViewResizeHandler *>(activeHandler))
+        return;
+
     // Resolve which state we're in first...
     updateState(point);
     // ...and act on it next
@@ -6717,6 +7109,7 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         // pointer handlers to do flicking, so setting an exclusive grab (together
         // with grab permissions) doens't work ATM.
         tableView->setFiltersChildMouseEvents(false);
+        tableViewPrivate->setActivePointerHandler(this);
         break;
     case DraggingStarted:
         setExclusiveGrab(event, point, true);
@@ -6738,11 +7131,328 @@ void QQuickTableViewResizeHandler::updateDrag(QPointerEvent *event, QEventPoint 
         break; }
     case DraggingFinished: {
         tableView->setFiltersChildMouseEvents(true);
+        tableViewPrivate->setActivePointerHandler(nullptr);
 #if QT_CONFIG(cursor)
         tableViewPrivate->updateCursor();
 #endif
         break; }
     }
+}
+
+// ----------------------------------------------
+QQuickTableViewSectionDragHandler::QQuickTableViewSectionDragHandler(QQuickTableView *view)
+    : QQuickTableViewPointerHandler(view)
+{
+    setObjectName("tableViewDragHandler");
+}
+
+QQuickTableViewSectionDragHandler::~QQuickTableViewSectionDragHandler()
+{
+    resetDragData();
+}
+
+void QQuickTableViewSectionDragHandler::resetDragData()
+{
+    if (m_state != Listening) {
+        m_state = Listening;
+        resetSectionOverlay();
+        m_source = -1;
+        m_destination = -1;
+        if (m_grabResult.data())
+            m_grabResult.data()->disconnect();
+        if (!m_drag.isNull()) {
+            m_drag->disconnect();
+            delete m_drag;
+        }
+        if (!m_dropArea.isNull()) {
+            m_dropArea->disconnect();
+            delete m_dropArea;
+        }
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        tableView->setFiltersChildMouseEvents(true);
+    }
+}
+
+void QQuickTableViewSectionDragHandler::resetSectionOverlay()
+{
+    if (m_destination != -1) {
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        const int row = (m_sectionOrientation == Qt::Horizontal) ? 0 : m_destination;
+        const int column = (m_sectionOrientation == Qt::Horizontal) ? m_destination : 0;
+        tableViewPrivate->setContainsDragOnDelegateItem(tableView->index(row, column), false);
+        m_destination = -1;
+    }
+}
+
+void QQuickTableViewSectionDragHandler::grabSection()
+{
+    // Generate the transparent section image in pixmap
+    QPixmap pixmap(m_grabResult->image().size());
+    pixmap.fill(Qt::transparent);
+    QPainter painter(&pixmap);
+    painter.setOpacity(0.6);
+    painter.drawImage(0, 0, m_grabResult->image());
+    painter.end();
+
+    // Specify the pixmap and mime data to be as drag object
+    auto *mimeData = new QMimeData();
+    mimeData->setImageData(pixmap);
+    m_drag->setMimeData(mimeData);
+    m_drag->setPixmap(pixmap);
+}
+
+void QQuickTableViewSectionDragHandler::handleDrop(QQuickDragEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (m_state == Dragging) {
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        tableViewPrivate->moveSection(m_source, m_destination, m_sectionOrientation);
+        m_state = DraggingFinished;
+        resetSectionOverlay();
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleDrag(QQuickDragEvent *event)
+{
+    Q_UNUSED(event);
+
+    if (m_state == Dragging) {
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        const QPoint dragItemPosition(tableView->contentX() + event->x(), tableView->contentY() + event->y());
+        const auto *sourceItem = qobject_cast<QQuickItem *>(m_drag->source());
+        const QPoint targetCell = tableView->cellAtPosition(dragItemPosition, true);
+
+        auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+        const int newDestination = (m_sectionOrientation == Qt::Horizontal) ? targetCell.x() : targetCell.y();
+        if (newDestination != m_destination) {
+            // Reset the overlay property in the existing model delegate item
+            resetSectionOverlay();
+            // Set the overlay property in the new model delegate item
+            const int row = (m_sectionOrientation == Qt::Horizontal) ? 0 : newDestination;
+            const int column = (m_sectionOrientation == Qt::Horizontal) ? newDestination : 0;
+            tableViewPrivate->setContainsDragOnDelegateItem(tableView->index(row, column), true);
+            m_destination = newDestination;
+        }
+
+        // Scroll header view while section item moves out of the table boundary
+        const QPoint dragItemStartPos = (m_sectionOrientation == Qt::Horizontal) ? QPoint(dragItemPosition.x() - sourceItem->width() / 2, dragItemPosition.y()) :
+                QPoint(dragItemPosition.x(), dragItemPosition.y() - sourceItem->height() / 2);
+        const QPoint dragItemEndPos = (m_sectionOrientation == Qt::Horizontal) ? QPoint(dragItemPosition.x() + sourceItem->width() / 2, dragItemPosition.y()) :
+                QPoint(dragItemPosition.x(), dragItemPosition.y() + sourceItem->height() / 2);
+        const bool useStartPos = (m_sectionOrientation == Qt::Horizontal) ? (dragItemStartPos.x() <= tableView->contentX()) : (dragItemStartPos.y() <= tableView->contentY());
+        const bool useEndPos = (m_sectionOrientation == Qt::Horizontal) ? (dragItemEndPos.x() >= tableView->width()) : (dragItemEndPos.y() >= tableView->height());
+        if (useStartPos || useEndPos) {
+            if (!m_scrollTimer.isActive()) {
+                m_dragPoint = (m_sectionOrientation == Qt::Horizontal) ? QPoint(useStartPos ? dragItemStartPos.x() : dragItemEndPos.x(), 0) :
+                        QPoint(0, useStartPos ? dragItemStartPos.y() : dragItemEndPos.y());
+                m_scrollTimer.start(1);
+            }
+        } else {
+            if (m_scrollTimer.isActive())
+                m_scrollTimer.stop();
+        }
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleDragDropAction(Qt::DropAction action)
+{
+    // Reset the overlay property in the model delegate item when drag or drop
+    // happens outside specified drop area (i.e. during ignore action)
+    if (action == Qt::IgnoreAction) {
+        resetSectionOverlay();
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
+    }
+}
+
+void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
+{
+    QQuickSinglePointHandler::handleEventPoint(event, point);
+
+    auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+    auto *tableViewPrivate = QQuickTableViewPrivate::get(tableView);
+    const auto *activeHandler = tableViewPrivate->activePointerHandler();
+    if (activeHandler && !qobject_cast<const QQuickTableViewSectionDragHandler *>(activeHandler))
+        return;
+
+    if (m_state == DraggingFinished) {
+       if (m_scrollTimer.isActive())
+           m_scrollTimer.stop();
+       resetDragData();
+    }
+
+    if (point.state() == QEventPoint::Pressed) {
+        // Reset the information in the drag handler
+        resetDragData();
+        // Activate the passive grab to get further move updates
+        setPassiveGrab(event, point, true);
+        // Disable flicking while dragging. TableView uses filtering instead of
+        // pointer handlers to do flicking, so setting an exclusive grab (together
+        // with grab permissions) doens't work ATM.
+        auto *tableView = static_cast<QQuickTableView *>(parentItem()->parent());
+        tableView->setFiltersChildMouseEvents(false);
+        m_state = Tracking;
+    } else if (point.state() == QEventPoint::Released) {
+        // Reset the information in the drag handler
+        if (m_scrollTimer.isActive())
+            m_scrollTimer.stop();
+        resetDragData();
+    } else if (point.state() == QEventPoint::Updated) {
+        // Check to see that the movement can be considered as dragging
+        const qreal distX = point.position().x() - point.pressPosition().x();
+        const qreal distY = point.position().y() - point.pressPosition().y();
+        const qreal dragDist = qSqrt(distX * distX + distY * distY);
+        if (dragDist > qApp->styleHints()->startDragDistance()) {
+            switch (m_state) {
+                case Tracking: {
+                    // Grab the image for dragging header
+                    const QPoint cell = tableView->cellAtPosition(point.position(), true);
+                    auto *item = tableView->itemAtCell(cell);
+                    if (!item)
+                        break;
+                    if (m_drag.isNull()) {
+                        m_drag = new QDrag(item);
+                        connect(m_drag.data(), &QDrag::actionChanged, this,
+                                &QQuickTableViewSectionDragHandler::handleDragDropAction);
+                    }
+                    // Connect the timer for scroling
+                    QObject::connect(&m_scrollTimer, &QTimer::timeout, [&]{
+                        const QSizeF dist = tableViewPrivate->scrollTowardsPoint(m_dragPoint, m_step);
+                        m_dragPoint.rx() += dist.width() > 0 ? m_step.width() : -m_step.width();
+                        m_dragPoint.ry() += dist.height() > 0 ? m_step.height() : -m_step.height();
+                        m_step = QSizeF(qAbs(dist.width() * 0.010), qAbs(dist.height() * 0.010));
+                    });
+                    // Set the drop area
+                    if (m_dropArea.isNull()) {
+                        m_dropArea = new QQuickDropArea(tableView);
+                        m_dropArea->setSize(tableView->size());
+                        connect(m_dropArea, &QQuickDropArea::positionChanged, this,
+                                &QQuickTableViewSectionDragHandler::handleDrag);
+                        connect(m_dropArea, &QQuickDropArea::dropped, this,
+                                &QQuickTableViewSectionDragHandler::handleDrop);
+                    }
+                    // Grab the image of the section
+                    m_grabResult = item->grabToImage();
+                    connect(m_grabResult.data(), &QQuickItemGrabResult::ready, this,
+                            &QQuickTableViewSectionDragHandler::grabSection);
+                    // Update source depending on the type of orientation
+                    m_source = (m_sectionOrientation == Qt::Horizontal) ? cell.x() : cell.y();
+                    m_state = DraggingStarted;
+                    // Set drag handler as active and it further handles section pointer events
+                    tableViewPrivate->setActivePointerHandler(this);
+                }
+                break;
+
+                case DraggingStarted: {
+                    if (m_drag && m_drag->mimeData()) {
+                        if (auto *item = qobject_cast<QQuickItem *>(m_drag->source())) {
+                            m_state = Dragging;
+                            const QPointF itemPos = item->mapFromItem(tableView->contentItem(), point.position());
+                            Q_UNUSED(itemPos);
+                            m_drag->setHotSpot(m_sectionOrientation == Qt::Horizontal ? QPoint(item->width()/2, itemPos.y()) : QPoint(itemPos.x(), item->height()/2));
+                            m_drag->exec();
+                            // If the state still remains dragging, means the drop happened outside the corresponding section handler's
+                            // drop area, better clear all the state.
+                            if (m_state == Dragging)
+                                resetDragData();
+                            // Reset the active handler
+                            tableViewPrivate->setActivePointerHandler(nullptr);
+                        }
+                    }
+                }
+                break;
+
+                default:
+                    break;
+            }
+        }
+    }
+}
+
+// ----------------------------------------------
+void QQuickTableViewPrivate::initSectionDragHandler(Qt::Orientation orientation)
+{
+    if (!sectionDragHandler) {
+        Q_Q(QQuickTableView);
+        sectionDragHandler = new QQuickTableViewSectionDragHandler(q);
+        sectionDragHandler->setSectionOrientation(orientation);
+    }
+}
+
+void QQuickTableViewPrivate::destroySectionDragHandler()
+{
+    if (sectionDragHandler)
+        delete sectionDragHandler;
+}
+
+void QQuickTableViewPrivate::initializeIndexMapping()
+{
+    auto initIndices = [](auto& visualIndex, auto& logicalIndex, int size) {
+        visualIndex.resize(size);
+        logicalIndex.resize(size);
+        for (int index = 0; index < size; ++index)
+            visualIndex[index].index = logicalIndex[index].index = index;
+    };
+
+    if (!tableSize.isEmpty()) {
+        if (visualIndices[0].size() != tableSize.width()
+            || logicalIndices[0].size() != tableSize.width())
+            initIndices(visualIndices[0], logicalIndices[0], tableSize.width());
+
+        if (visualIndices[1].size() != tableSize.height()
+            || logicalIndices[1].size() != tableSize.height())
+            initIndices(visualIndices[1], logicalIndices[1], tableSize.height());
+    }
+}
+
+void QQuickTableViewPrivate::clearIndexMapping()
+{
+    logicalIndices[0].clear();
+    visualIndices[0].clear();
+
+    logicalIndices[1].clear();
+    visualIndices[1].clear();
+}
+
+int QQuickTableViewPrivate::logicalRowIndex(const int visualIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->logicalRowIndex(visualIndex);
+    if (logicalIndices[1].isEmpty() || visualIndex < 0)
+        return visualIndex;
+    return logicalIndices[1].constData()[visualIndex].index;
+}
+
+int QQuickTableViewPrivate::logicalColumnIndex(const int visualIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->logicalColumnIndex(visualIndex);
+    if (logicalIndices[0].isEmpty() || visualIndex < 0)
+        return visualIndex;
+    return logicalIndices[0].constData()[visualIndex].index;
+}
+
+int QQuickTableViewPrivate::visualRowIndex(const int logicalIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->visualRowIndex(logicalIndex);
+    if (visualIndices[1].isEmpty() || logicalIndex < 0)
+        return logicalIndex;
+    return visualIndices[1].constData()[logicalIndex].index;
+}
+
+int QQuickTableViewPrivate::visualColumnIndex(const int logicalIndex) const
+{
+    if (syncView)
+        return syncView->d_func()->visualColumnIndex(logicalIndex);
+    if (visualIndices[0].isEmpty() || logicalIndex < 0)
+        return logicalIndex;
+    return visualIndices[0].constData()[logicalIndex].index;
 }
 
 // ----------------------------------------------

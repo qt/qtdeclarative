@@ -23,8 +23,8 @@
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtGui/qdrag.h>
 
-#include <QtQuick/private/qminimalflatset_p.h>
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
@@ -32,6 +32,9 @@
 #include <QtQuick/private/qquicksinglepointhandler_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
+#include <QtQuick/private/qquickdroparea_p.h>
+
+#include <QtCore/private/qminimalflatset_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,15 +70,10 @@ protected:
     void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
 };
 
-/*! \internal
- *  TableView uses QQuickTableViewResizeHandler to enable the user to resize
- *  rows and columns. By using a custom pointer handler, we can get away with
- *  using a single pointer handler for the whole content item, rather than
- *  e.g having to split it up into multiple items with drag handlers placed
- *  between the cells.
- */
-class QQuickTableViewResizeHandler : public QQuickSinglePointHandler
+class QQuickTableViewPointerHandler : public QQuickSinglePointHandler
 {
+    Q_OBJECT
+
 public:
     enum State {
         Listening, // the pointer is not being pressed between the cells
@@ -85,12 +83,28 @@ public:
         DraggingFinished // dragging was finished
     };
 
-    QQuickTableViewResizeHandler(QQuickTableView *view);
-    State state() { return m_state; }
-    void updateState(QEventPoint &point);
-    void updateDrag(QPointerEvent *event, QEventPoint &point);
+    QQuickTableViewPointerHandler(QQuickTableView *view);
 
     State m_state = Listening;
+    State state() { return m_state; }
+
+protected:
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+};
+
+/*! \internal
+ *  TableView uses QQuickTableViewResizeHandler to enable the user to resize
+ *  rows and columns. By using a custom pointer handler, we can get away with
+ *  using a single pointer handler for the whole content item, rather than
+ *  e.g having to split it up into multiple items with drag handlers placed
+ *  between the cells.
+ */
+class QQuickTableViewResizeHandler : public QQuickTableViewPointerHandler
+{
+    Q_OBJECT
+
+public:
+    QQuickTableViewResizeHandler(QQuickTableView *view);
 
     int m_row = -1;
     qreal m_rowStartY = -1;
@@ -100,13 +114,52 @@ public:
     qreal m_columnStartX = -1;
     qreal m_columnStartWidth = -1;
 
+    void updateState(QEventPoint &point);
+    void updateDrag(QPointerEvent *event, QEventPoint &point);
+
     friend class QQuickTableViewPrivate;
 
 protected:
-    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
     void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
     void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
                        QPointerEvent *ev, QEventPoint &point) override;
+};
+
+class QQuickTableViewSectionDragHandler : public QQuickTableViewPointerHandler
+{
+    Q_OBJECT
+
+public:
+    QQuickTableViewSectionDragHandler(QQuickTableView *view);
+    ~QQuickTableViewSectionDragHandler();
+
+    void grabSection();
+
+    void handleDrag(QQuickDragEvent *event);
+    void handleDrop(QQuickDragEvent *event);
+    void handleDragDropAction(Qt::DropAction action);
+
+    void setSectionOrientation(Qt::Orientation orientation) { m_sectionOrientation = orientation; }
+
+    friend class QQuickTableViewPrivate;
+
+protected:
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
+
+private:
+    void resetDragData();
+    void resetSectionOverlay();
+
+    QSharedPointer<QQuickItemGrabResult> m_grabResult;
+    QPointer<QDrag> m_drag;
+    int m_source = -1;
+    int m_destination = -1;
+    QPointer<QQuickDropArea> m_dropArea;
+    Qt::Orientation m_sectionOrientation;
+
+    QPointF m_dragPoint;
+    QSizeF m_step = QSizeF(1, 1);
+    QTimer m_scrollTimer;
 };
 
 /*! \internal
@@ -123,8 +176,7 @@ public:
     friend class QQuickTableViewPrivate;
 };
 
-
-class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
+class Q_QUICK_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
 public:
     Q_DECLARE_PUBLIC(QQuickTableView)
@@ -238,6 +290,11 @@ public:
         PreloadRows,
         MovePreloadedItemsToPool,
         Done
+    };
+
+    enum class SectionState {
+        Idle = 0,
+        Moving
     };
 
     enum class RebuildOption {
@@ -360,6 +417,9 @@ public:
     QPointer<QItemSelectionModel> selectionModel;
     QQuickTableView::SelectionBehavior selectionBehavior = QQuickTableView::SelectCells;
     QQuickTableView::SelectionMode selectionMode = QQuickTableView::ExtendedSelection;
+    QItemSelectionModel::SelectionFlag selectionFlag = QItemSelectionModel::NoUpdate;
+    std::function<void(CallBackFlag)> selectableCallbackFunction;
+    bool inSelectionModelUpdate = false;
 
     int assignedPositionViewAtRowAfterRebuild = 0;
     int assignedPositionViewAtColumnAfterRebuild = 0;
@@ -377,8 +437,10 @@ public:
 
     QPoint selectionStartCell = {-1, -1};
     QPoint selectionEndCell = {-1, -1};
+    QItemSelection existingSelection;
 
     QMargins edgesBeforeRebuild;
+    QSize tableSizeBeforeRebuild;
 
     int currentRow = -1;
     int currentColumn = -1;
@@ -388,6 +450,8 @@ public:
 
     QQuickTableViewHoverHandler *hoverHandler = nullptr;
     QQuickTableViewResizeHandler *resizeHandler = nullptr;
+    QQuickTableViewSectionDragHandler *sectionDragHandler = nullptr;
+    QQuickTableViewPointerHandler *activePtrHandler = nullptr;
 
     QQmlTableInstanceModel *editModel = nullptr;
     QQuickItem *editItem = nullptr;
@@ -398,6 +462,16 @@ public:
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
 #endif
 
+    struct SectionData {
+        int index = -1;
+        int prevIndex = -1;
+    };
+
+    QList<SectionData> visualIndices[Qt::Vertical];
+    QList<SectionData> logicalIndices[Qt::Vertical];
+
+    SectionState m_sectionState = SectionState::Idle;
+
 public:
     void init();
 
@@ -405,7 +479,7 @@ public:
 
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
-    int modelIndexToCellIndex(const QModelIndex &modelIndex) const;
+    int modelIndexToCellIndex(const QModelIndex &modelIndex, bool visualIndex = true) const;
     inline bool cellIsValid(const QPoint &cell) const { return cell.x() != -1 && cell.y() != -1; }
 
     qreal sizeHintForColumn(int column) const;
@@ -453,7 +527,6 @@ public:
     void updateExtents();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
-    void shiftLoadedTableRect(const QPointF newPosition);
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const;
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const;
@@ -533,6 +606,7 @@ public:
     void columnsRemovedCallback(const QModelIndex &parent, int begin, int end);
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
+    bool compareModel(const QVariant& model1, const QVariant& model2) const;
 
     void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
     void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset, const QRectF subRect = QRectF());
@@ -577,18 +651,36 @@ public:
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;
-    bool startSelection(const QPointF &pos) override;
+    bool startSelection(const QPointF &pos, Qt::KeyboardModifiers modifiers) override;
     void setSelectionStartPos(const QPointF &pos) override;
     void setSelectionEndPos(const QPointF &pos) override;
     void clearSelection() override;
     void normalizeSelection() override;
     QRectF selectionRectangle() const override;
-    QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) override;
+    QSizeF scrollTowardsPoint(const QPointF &pos, const QSizeF &step) override;
+    void setCallback(std::function<void(CallBackFlag)> func) override;
+    void cancelSelectionTracking();
 
     QPoint clampedCellAtPos(const QPointF &pos) const;
     virtual void updateSelection(const QRect &oldSelection, const QRect &newSelection);
     QRect selection() const;
     // ----------------
+
+    // Section drag handler
+    void initSectionDragHandler(Qt::Orientation orientation);
+    void destroySectionDragHandler();
+    inline void setActivePointerHandler(QQuickTableViewPointerHandler *handler) { activePtrHandler = handler; }
+    inline QQuickTableViewPointerHandler* activePointerHandler() const { return activePtrHandler; }
+    // Row/Column reordering
+    void moveSection(int source , int destination, Qt::Orientations orientation);
+    void initializeIndexMapping();
+    void clearIndexMapping();
+    void clearSection(Qt::Orientations orientation);
+    virtual int logicalRowIndex(const int visualIndex) const;
+    virtual int logicalColumnIndex(const int visualIndex) const;
+    virtual int visualRowIndex(const int logicalIndex) const;
+    virtual int visualColumnIndex(const int logicalIndex) const;
+    void setContainsDragOnDelegateItem(const QModelIndex &modelIndex, bool overlay);
 };
 
 class FxTableItem : public QQuickItemViewFxItem

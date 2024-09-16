@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype StandardPaths
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformStandardPaths
+//!     \nativetype QQuickLabsPlatformStandardPaths
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \deprecated [6.4] Use QtCore::StandardPaths instead.

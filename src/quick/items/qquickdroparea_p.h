@@ -117,12 +117,12 @@ private:
 };
 
 class QQuickDropAreaPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickDropArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickDropArea : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged FINAL)
-    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged FINAL)
-    Q_PROPERTY(QQuickDropAreaDrag *drag READ drag CONSTANT FINAL)
+    Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged)
+    Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
+    Q_PROPERTY(QQuickDropAreaDrag *drag READ drag CONSTANT)
     QML_NAMED_ELEMENT(DropArea)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -160,7 +160,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickDropArea)
 
 #endif // QQUICKDROPAREA_P_H

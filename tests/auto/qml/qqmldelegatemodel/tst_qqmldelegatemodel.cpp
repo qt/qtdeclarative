@@ -1,9 +1,10 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/QConcatenateTablesProxyModel>
+#include <QtCore/qtimer.h>
 #include <QtGui/QStandardItemModel>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlapplicationengine.h>
@@ -11,10 +12,16 @@
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtTest/QSignalSpy>
 
 #include <forward_list>
+
+using namespace QQuickVisualTestUtils;
 
 class tst_QQmlDelegateModel : public QQmlDataTest
 {
@@ -25,6 +32,8 @@ public:
 
 private slots:
     void resettingRolesRespected();
+    void resetInQAIMConstructor();
+    void reset();
     void valueWithoutCallingObjectFirst_data();
     void valueWithoutCallingObjectFirst();
     void qtbug_86017();
@@ -34,22 +43,19 @@ private slots:
     void nestedDelegates();
     void universalModelData();
     void typedModelData();
+    void requiredModelData();
+    void overriddenModelData();
     void deleteRace();
     void persistedItemsStayInCache();
     void unknownContainersAsModel();
     void doNotUnrefObjectUnderConstruction();
+    void clearCacheDuringInsertion();
+    void viewUpdatedOnDelegateChoiceAffectingRoleChange();
 };
 
-class AbstractItemModel : public QAbstractItemModel
+class BaseAbstractItemModel : public QAbstractItemModel
 {
-    Q_OBJECT
 public:
-    AbstractItemModel()
-    {
-        for (int i = 0; i < 3; ++i)
-            mValues.append(QString::fromLatin1("Item %1").arg(i));
-    }
-
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override
     {
         if (parent.isValid())
@@ -87,8 +93,19 @@ public:
         return mValues.at(index.row());
     }
 
-private:
+protected:
     QVector<QString> mValues;
+};
+
+class AbstractItemModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+public:
+    AbstractItemModel()
+    {
+        for (int i = 0; i < 3; ++i)
+            mValues.append(QString::fromLatin1("Item %1").arg(i));
+    }
 };
 
 tst_QQmlDelegateModel::tst_QQmlDelegateModel()
@@ -149,7 +166,109 @@ void tst_QQmlDelegateModel::resettingRolesRespected()
     QObject *root = engine.rootObjects().constFirst();
     QVERIFY(!root->property("success").toBool());
     model->change();
-    QTRY_VERIFY(root->property("success").toBool());
+    QTRY_VERIFY_WITH_TIMEOUT(root->property("success").toBool(), 100);
+}
+
+class ResetInConstructorModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    ResetInConstructorModel()
+    {
+        beginResetModel();
+        QTimer::singleShot(0, this, &ResetInConstructorModel::finishReset);
+    }
+
+private:
+    void finishReset()
+    {
+        mValues.append("First");
+        endResetModel();
+    }
+};
+
+void tst_QQmlDelegateModel::resetInQAIMConstructor()
+{
+    qmlRegisterTypesAndRevisions<ResetInConstructorModel>("Test", 1);
+
+    QQuickApplicationHelper helper(this, "resetInQAIMConstructor.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *listView = window->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+    QTRY_VERIFY_WITH_TIMEOUT(listView->itemAtIndex(0), 100);
+    QQuickItem *firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "First");
+}
+
+class ResettableModel : public BaseAbstractItemModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    ResettableModel()
+    {
+        mValues.append("First");
+    }
+
+    void callBeginResetModel()
+    {
+        beginResetModel();
+        mValues.clear();
+    }
+
+    void appendData()
+    {
+        mValues.append(QString::fromLatin1("Item %1").arg(mValues.size()));
+    }
+
+    void callEndResetModel()
+    {
+        endResetModel();
+    }
+};
+
+// Tests that everything works as expected when calling beginResetModel/endResetModel
+// after the QAIM subclass constructor has run.
+void tst_QQmlDelegateModel::reset()
+{
+    qmlRegisterTypesAndRevisions<ResettableModel>("Test", 1);
+
+    QQuickApplicationHelper helper(this, "reset.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *listView = window->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+    QQuickItem *firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "First");
+
+    const auto delegateModel = QQuickItemViewPrivate::get(listView)->model;
+    QSignalSpy rootIndexChangedSpy(delegateModel, SIGNAL(rootIndexChanged()));
+    QVERIFY(rootIndexChangedSpy.isValid());
+
+    auto *model = listView->model().value<ResettableModel *>();
+    model->callBeginResetModel();
+    model->appendData();
+    model->callEndResetModel();
+    // This is verifies that handleModelReset isn't called
+    // more than once during this process, since it unconditionally emits rootIndexChanged.
+    QCOMPARE(rootIndexChangedSpy.count(), 1);
+
+    QTRY_VERIFY_WITH_TIMEOUT(listView->itemAtIndex(0), 100);
+    firstDelegateItem = listView->itemAtIndex(0);
+    QVERIFY(firstDelegateItem);
+    QCOMPARE(firstDelegateItem->property("display").toString(), "Item 0");
 }
 
 void tst_QQmlDelegateModel::valueWithoutCallingObjectFirst_data()
@@ -452,6 +571,54 @@ void tst_QQmlDelegateModel::typedModelData()
 
 }
 
+void tst_QQmlDelegateModel::requiredModelData()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("requiredModelData.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 4; ++i) {
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+        const QVariant a = delegate->property("a");
+        QCOMPARE(a.metaType(), QMetaType::fromType<QString>());
+        QCOMPARE(a.toString(), QLatin1String("a"));
+    }
+}
+
+void tst_QQmlDelegateModel::overriddenModelData()
+{
+    QTest::failOnWarning(QRegularExpression(
+            "Final member [^ ]+ is overridden in class [^\\.]+. The override won't be used."));
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overriddenModelData.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel *>(o.data());
+    QVERIFY(delegateModel);
+
+    for (int i = 0; i < 3; ++i) {
+        delegateModel->setProperty("n", i);
+        QObject *delegate = delegateModel->object(0);
+        QVERIFY(delegate);
+
+        if (i == 1 || i == 2) {
+            // You can actually not override if the model is a QObject or a JavaScript array.
+            // Someone is certainly relying on this.
+            // We need to find a migration mechanism to fix it.
+            QCOMPARE(delegate->objectName(), QLatin1String(" 0 0  e 0"));
+        } else {
+            QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
+        }
+    }
+}
 
 void tst_QQmlDelegateModel::deleteRace()
 {
@@ -531,6 +698,37 @@ void tst_QQmlDelegateModel::doNotUnrefObjectUnderConstruction()
     std::unique_ptr<QObject> object(component.create());
     QVERIFY(object);
     QTRY_COMPARE(object->property("testModel").toInt(), 0);
+}
+
+void tst_QQmlDelegateModel::clearCacheDuringInsertion()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("clearCacheDuringInsertion.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QTRY_COMPARE(object->property("testModel").toInt(), 0);
+}
+
+void tst_QQmlDelegateModel::viewUpdatedOnDelegateChoiceAffectingRoleChange()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("viewUpdatedOnDelegateChoiceAffectingRoleChange.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QQuickItem *listview = object->findChild<QQuickItem *>("listview");
+    QVERIFY(listview);
+    QTRY_VERIFY(listview->property("count").toInt() > 0);
+    bool returnedValue = false;
+    QMetaObject::invokeMethod(object.get(), "verify", Q_RETURN_ARG(bool, returnedValue));
+    QVERIFY(returnedValue);
+    returnedValue = false;
+
+    object->setProperty("triggered", "true");
+    QTRY_VERIFY(listview->property("count").toInt() > 0);
+    QMetaObject::invokeMethod(object.get(), "verify", Q_RETURN_ARG(bool, returnedValue));
+    QVERIFY(returnedValue);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

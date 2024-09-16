@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickPaintedItemTextureProvider;
 class QSGPainterNode;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPaintedItemPrivate : public QQuickItemPrivate
+class Q_QUICK_EXPORT QQuickPaintedItemPrivate : public QQuickItemPrivate
 {
 public:
     QQuickPaintedItemPrivate();
@@ -40,7 +40,6 @@ public:
     QRect dirtyRect;
 
     bool opaquePainting: 1;
-    bool antialiasing: 1;
     bool mipmap: 1;
 
     mutable QQuickPaintedItemTextureProvider *textureProvider;

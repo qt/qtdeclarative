@@ -1,0 +1,238 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qml-in-android-studio-projects-example.html
+    \title QML in Android Studio Projects
+    \brief Uses a \l {Qt Quick View Android Class}{QtQuickView}
+    to embed a QML component into Android projects.
+    \ingroup qtquickexamples
+
+    \section1 Overview
+
+    This example contains a QML project that you can import into Android Studio
+    with the \l {Qt Tools for Android Studio} plugin
+    and Java and Kotlin projects that use the QML project as a View by
+    utilizing the \l {Qt Quick View Android Class}{QtQuickView} API.
+
+    For more information on how QML works, see the \l {Qt Qml}. This
+    documentation will focus on how a QML component is embedded into
+    Java- and Kotlin-based Android applications.
+
+    \image portrait_java.png
+
+    First, we look at the \c MainActivity's onCreate() method of the Java
+    and Kotlin projects.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onCreate
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onCreate
+
+    \note in the Kotlin project we use \l {Android: View binding}{View binding}
+    to access the UI components of the application:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt binding
+
+    Inside the \c onCreate() method, a previously declared variable
+    \c m_qtQuickView is initialized with a new
+    \l {Qt Quick View Android Class}{QtQuickView}.
+    This new instance of \l {Qt Quick View Android Class}{QtQuickView}
+    is created by giving it the Context of the Java/Kotlin Activity as
+    an argument.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java m_qtQuickView
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt m_qtQuickView
+
+    The \c Main and \c Second Java classes inherit from the \c QtQuickViewContent
+    class. These classes are generated from the QML project that we've
+    imported. In this example, these QML components are used to explain how to
+    embed QML components into Android Projects.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qmlContent
+
+    For a Kotlin-based project (initialized when declared):
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qmlContent
+
+    The \c m_mainQmlContent is loaded into the \c m_qtQuickView through the
+    \c QtQuickView.loadContent() method, which takes \c QtQuickViewContent as an
+    argument.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java loadContent
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt loadContent
+
+    The \c m_qtQuickView is added to Android FrameLayout ViewGroup with
+    appropriate layout parameters.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java layoutParams
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt layoutParams
+
+    \section1 Interacting with the QML component
+
+    To interact with the embedded QML component we implement the
+    \c QtQmlStatusChangeListener interface and override the onStatusChanged
+    method to get the loading status of the QtQuickViewContent currently being
+    loaded into the \c m_qtQuickView.
+
+    For a Java-based project:
+
+    \code
+    public class MainActivity extends AppCompatActivity implements
+    QtQmlStatusChangeListener{
+        ...
+    }
+    \endcode
+
+    For a Kotlin-based project:
+
+    \code
+    class MainActivity : AppCompatActivity(), QtQmlStatusChangeListener{
+        ...
+    }
+    \endcode
+
+    The \c onStatusChanged implementation.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onStatusChanged
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onStatusChanged
+
+    The \c onStatusChanged listener is set as the \c statusChangeListener
+    of the \c m_mainQmlContent and \c m_secondQmlContent with
+    \c {QtQuickViewContent.setStatusChangeListener(QtQmlStatusChangeListener onStatusChanged())}
+    method.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java setStatusChangeListener
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt setStatusChangeListener
+
+    The overridden callback function \c onStatusChanged() receives
+    \c StatusChanged() signal containing the current
+    status (public Enum QtQmlStatus) of the loading of the current
+    QtQuickViewContent into the \c m_qtQuickView. If this \c QtQmlStatus
+    is confirmed to be \c QtQmlStatus.READY, we can start interacting
+    with the QML view.
+
+    \section1 Loading QtQuickViewContents into QtQuickView
+
+    You can have multiple QtQuickViewContents in the imported QML project and
+    switch the currently loaded content of the QtQuickView between them
+    using the QtQuickView.loadContent() method, which
+    takes a QtQuickViewContent as an argument. This will load the QtQuickViewContent
+    that was given and unloads the previous one, if there is one.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java switchLoadedContent
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt switchLoadedContent
+
+    \section1 Getting and setting QML component property values
+
+    Getting and setting QML component property values happens through the
+    methods described in the \c Main.java class. In this case we use the
+    \c m_mainQmlContent.setColorStringProperty() and
+    \c m_mainQmlContent.getColorStringProperty() methods. These methods are
+    generated according to what properties the QML component includes.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java onClickListener
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt onClickListener
+
+    With the \c m_mainQmlContent.setColorStringProperty()
+    method we set the \c colorStringFormat property value of the
+    \c m_mainQmlContent a random color value that is fetched from the
+    \c Colors.java (or \c {Colors.kt}) class.
+
+    The \c m_mainQmlContent.getColorStringProperty()
+    method is used here to fetch the current background color of the root
+    object of the m_mainQmlContent and then show it to the user on the
+    Java/Kotlin Android side of the application.
+
+    \c m_secondQmlContent has a \l [QML] {Grid} QML component
+    which we can rotate from the Java side with the generated
+    \c m_secondQmlContent.setGridRotation() method.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java gridRotate
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt gridRotate
+
+    \section1 Signal listeners
+
+    The \c QtQuickViewContent class offers a
+    \c connectSignalListener() and \c disconnectSignalListener() methods which
+    are used to connect and disconnect a signal listener/s between a signal/s
+    that is/are declared in the QML component root object.
+    The \c QtQuickViewContent.connectSignalListener()
+    returns a unique signal listener id which we store and use later to
+    identify and disconnect the listener.
+
+    Here we connect a signal listener to the \c onClicked()  signal of the
+    QML component.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java qml signal listener
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt qml signal listener
+
+    The \c onClicked() signal is emitted every time the button on the
+    QML component is clicked.
+    That signal is then received by this listener and the background
+    color of the layout holding the Android side of the application is set to
+    a random color value fetched from the \c Colors.java class.
+
+    Next, the signal listener is disconnected using the
+    \c QtQuickViewContent.disconnectSignalListener()
+    method by giving it the unique signal listener id.
+
+    For a Java-based project:
+
+    \snippet android/qtquickview_java/app/src/main/java/com/example/qtquickview_java/MainActivity.java disconnect qml signal listener
+
+    For a Kotlin-based project:
+
+    \snippet android/qtquickview_kotlin/app/src/main/java/com/example/qtquickview_kotlin/MainActivity.kt disconnect qml signal listener
+
+*/

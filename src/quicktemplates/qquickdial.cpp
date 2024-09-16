@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dial
     \inherits Control
-//!     \instantiates QQuickDial
+//!     \nativetype QQuickDial
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -372,6 +372,8 @@ QQuickDial::QQuickDial(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
+    Q_D(QQuickDial);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 /*!

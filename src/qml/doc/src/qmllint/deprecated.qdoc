@@ -8,7 +8,9 @@
 \title Deprecated
 \brief A deprecated property or type was used.
 
-\section1 Deprecated Binding or Type
+\qmllintwarningcategory deprecated
+
+\section1 Deprecated binding or type
 
 \section2 What happened?
 A deprecated type was instantiated, a deprecated property was used or a deprecated method was

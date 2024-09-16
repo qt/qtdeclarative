@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -30,33 +30,35 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_creation() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(textField, testCase)
+    function test_creation() {
+        let control = createTemporaryObject(textField, testCase)
         verify(control)
     }
 
     function test_implicitSize() {
-        var control = createTemporaryObject(textField, testCase)
+        let control = createTemporaryObject(textField, testCase)
         verify(control)
 
-        var implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
+        let implicitWidthSpy = signalSpy.createObject(control, { target: control, signalName: "implicitWidthChanged"} )
         verify(implicitWidthSpy.valid)
 
-        var implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
+        let implicitHeightSpy = signalSpy.createObject(control, { target: control, signalName: "implicitHeightChanged"} )
         verify(implicitHeightSpy.valid)
 
-        var implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
+        let implicitBackgroundWidthSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundWidthChanged"})
         verify(implicitBackgroundWidthSpy.valid)
 
-        var implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
+        let implicitBackgroundHeightSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "implicitBackgroundHeightChanged"})
         verify(implicitBackgroundHeightSpy.valid)
 
-        var implicitWidthChanges = 0
-        var implicitHeightChanges = 0
-        var implicitBackgroundWidthChanges = 0
-        var implicitBackgroundHeightChanges = 0
+        let implicitWidthChanges = 0
+        let implicitHeightChanges = 0
+        let implicitBackgroundWidthChanges = 0
+        let implicitBackgroundHeightChanges = 0
 
         verify(control.implicitWidth >= control.leftPadding + control.rightPadding)
         verify(control.implicitHeight >= control.contentHeight + control.topPadding + control.bottomPadding)
@@ -154,13 +156,15 @@ TestCase {
     }
 
     function test_alignment(data) {
-        var control = createTemporaryObject(textField, testCase, {text: data.text, placeholderText: data.placeholderText, horizontalAlignment: data.textAlignment})
+        let control = createTemporaryObject(textField, testCase, {text: data.text, placeholderText: data.placeholderText})
 
-        if (data.textAlignment !== undefined)
+        if (data.textAlignment !== undefined) {
+            control.horizontalAlignment = data.textAlignment
             compare(control.horizontalAlignment, data.textAlignment)
+        }
         // The placeholder text of the Material style doesn't currently respect the alignment of the control.
         if (StyleInfo.styleName !== "Material") {
-            for (var i = 0; i < control.children.length; ++i) {
+            for (let i = 0; i < control.children.length; ++i) {
                 if (control.children[i].hasOwnProperty("text") && control.children[i].hasOwnProperty("horizontalAlignment"))
                     compare(control.children[i].effectiveHorizontalAlignment, data.placeholderAlignment) // placeholder
             }
@@ -169,7 +173,7 @@ TestCase {
         control.verticalAlignment = TextField.AlignBottom
         compare(control.verticalAlignment, TextField.AlignBottom)
         if (StyleInfo.styleName !== "Material") {
-            for (var j = 0; j < control.children.length; ++j) {
+            for (let j = 0; j < control.children.length; ++j) {
                 if (control.children[j].hasOwnProperty("text") && control.children[j].hasOwnProperty("verticalAlignment"))
                     compare(control.children[j].verticalAlignment, Text.AlignBottom) // placeholder
             }
@@ -180,7 +184,7 @@ TestCase {
         return [
             {tag: "bold", value: true},
             {tag: "capitalization", value: Font.Capitalize},
-            {tag: "family", value: "Courier"},
+            {tag: "family", value: "Tahoma"},
             {tag: "italic", value: true},
             {tag: "strikeout", value: true},
             {tag: "underline", value: true},
@@ -190,19 +194,19 @@ TestCase {
     }
 
     function test_font_explicit_attributes(data) {
-        var control = createTemporaryObject(textField, testCase)
+        let control = createTemporaryObject(textField, testCase)
         verify(control)
 
-        var child = textField.createObject(control)
+        let child = textField.createObject(control)
         verify(child)
 
-        var controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
+        let controlSpy = signalSpy.createObject(control, {target: control, signalName: "fontChanged"})
         verify(controlSpy.valid)
 
-        var childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
+        let childSpy = signalSpy.createObject(child, {target: child, signalName: "fontChanged"})
         verify(childSpy.valid)
 
-        var defaultValue = control.font[data.tag]
+        let defaultValue = control.font[data.tag]
         child.font[data.tag] = defaultValue
 
         compare(child.font[data.tag], defaultValue)
@@ -225,7 +229,7 @@ TestCase {
     }
 
     function test_hover(data) {
-        var control = createTemporaryObject(textField, testCase, {hoverEnabled: data.hoverEnabled})
+        let control = createTemporaryObject(textField, testCase, {hoverEnabled: data.hoverEnabled})
         verify(control)
 
         compare(control.hovered, false)
@@ -290,9 +294,9 @@ TestCase {
     }
 
     function test_pressedReleased(data) {
-        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
+        let mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
-        var control = textField.createObject(mouseArea)
+        let control = textField.createObject(mouseArea)
         verify(control)
 
         // Give enough room to check presses outside of the control and on the parent.
@@ -322,13 +326,13 @@ TestCase {
         if (data.parentReleaseEvent)
             control.onReleased.connect(checkParentReleaseEvent)
 
-        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        let controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
         verify(controlPressedSpy.valid)
-        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        let controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
         verify(controlReleasedSpy.valid)
-        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        let parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
         verify(parentPressedSpy.valid)
-        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        let parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
         verify(parentReleasedSpy.valid)
 
         mousePress(control, data.x, data.y, data.button)
@@ -360,18 +364,18 @@ TestCase {
     }
 
     function test_ignorePressRelease() {
-        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
+        let mouseArea = createTemporaryObject(mouseAreaComponent, testCase)
         verify(mouseArea)
-        var control = ignoreTextField.createObject(mouseArea)
+        let control = ignoreTextField.createObject(mouseArea)
         verify(control)
 
-        var controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        let controlPressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
         verify(controlPressedSpy.valid)
-        var controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        let controlReleasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
         verify(controlReleasedSpy.valid)
-        var parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
+        let parentPressedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "pressed" })
         verify(parentPressedSpy.valid)
-        var parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
+        let parentReleasedSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "released" })
         verify(parentReleasedSpy.valid)
 
         // Ignore only press events.
@@ -402,12 +406,12 @@ TestCase {
     }
 
     function test_multiClick() {
-        var control = createTemporaryObject(textField, testCase, {text: "Qt Quick Controls 2 TextArea"})
+        let control = createTemporaryObject(textField, testCase, {text: "Qt Quick Controls 2 TextArea"})
         verify(control)
 
         waitForRendering(control)
         control.width = control.contentWidth
-        var rect = control.positionToRectangle(12)
+        let rect = control.positionToRectangle(12)
 
         // double click -> select word
         mouseDoubleClickSequence(control, rect.x + rect.width / 2, rect.y + rect.height / 2)
@@ -420,7 +424,7 @@ TestCase {
 
     // QTBUG-64048
     function test_rightClick() {
-        var control = createTemporaryObject(textField, testCase, {text: "TextField"})
+        let control = createTemporaryObject(textField, testCase, {text: "TextField"})
         verify(control)
 
         control.selectAll()
@@ -434,10 +438,10 @@ TestCase {
     }
 
     function test_mouseSelect() {
-        var control = createTemporaryObject(textField, testCase, {text: "Text", width: parent.width})
+        let control = createTemporaryObject(textField, testCase, {text: "Text", width: parent.width})
         verify(control)
         verify(control.selectByMouse) // true by default since 6.4
-        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        let pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
 
         const y = control.height / 2
         mousePress(control, 0, y, Qt.LeftButton)
@@ -448,11 +452,11 @@ TestCase {
     }
 
     function test_noTouchSelect() {
-        var control = createTemporaryObject(textField, testCase, {text: "Text"})
+        let control = createTemporaryObject(textField, testCase, {text: "Text"})
         verify(control)
         verify(control.selectByMouse) // true by default since 6.4
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         const y = control.height / 2
         touch.press(0, control, 0, y).commit()
         touch.move(0, control, control.implicitWidth, 0).commit()
@@ -461,13 +465,13 @@ TestCase {
     }
 
     function test_aaTouchPressAndHold() {
-        var control = createTemporaryObject(textField, testCase, {text: "Text"})
+        let control = createTemporaryObject(textField, testCase, {text: "Text"})
         verify(control)
         verify(control.selectByMouse) // true by default since 6.4
-        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
-        var pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
+        let pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        let pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control).commit()
         tryCompare(pressSpy, "count", 1)
         tryCompare(pressAndHoldSpy, "count", 1)
@@ -476,7 +480,7 @@ TestCase {
 
     // QTBUG-66260
     function test_placeholderTextColor() {
-        var control = createTemporaryObject(textField, testCase)
+        let control = createTemporaryObject(textField, testCase)
         verify(control)
 
         // usually default value should not be pure opacue black
@@ -484,32 +488,32 @@ TestCase {
         control.placeholderTextColor = "#12345678"
         compare(control.placeholderTextColor, "#12345678")
 
-        for (var i = 0; i < control.children.length; ++i) {
+        for (let i = 0; i < control.children.length; ++i) {
             if (control.children[i].hasOwnProperty("text"))
                 compare(control.children[i].color, control.placeholderTextColor) // placeholder.color
         }
     }
 
     function test_inset() {
-        var control = createTemporaryObject(textField, testCase, {background: rectangle.createObject(control)})
+        let control = createTemporaryObject(textField, testCase, {background: rectangle.createObject(testCase)})
         verify(control)
 
-        var topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
+        let topInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "topInsetChanged"})
         verify(topInsetSpy.valid)
 
-        var leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
+        let leftInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "leftInsetChanged"})
         verify(leftInsetSpy.valid)
 
-        var rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
+        let rightInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rightInsetChanged"})
         verify(rightInsetSpy.valid)
 
-        var bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
+        let bottomInsetSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "bottomInsetChanged"})
         verify(bottomInsetSpy.valid)
 
-        var topInsetChanges = 0
-        var leftInsetChanges = 0
-        var rightInsetChanges = 0
-        var bottomInsetChanges = 0
+        let topInsetChanges = 0
+        let leftInsetChanges = 0
+        let rightInsetChanges = 0
+        let bottomInsetChanges = 0
 
         compare(control.topInset, 0)
         compare(control.leftInset, 0)
@@ -653,10 +657,10 @@ TestCase {
     }
 
     function test_inLayout() {
-        var layout = createTemporaryObject(layoutComponent, testCase)
+        let layout = createTemporaryObject(layoutComponent, testCase)
         verify(layout)
 
-        var control = layout.textField
+        let control = layout.textField
         verify(control)
 
         compare(control.width, control.parent.width)
@@ -682,14 +686,12 @@ TestCase {
         // macOS is special: 43eca45b061fe965fe2a6f1876d4a35a58e3a9e4
         if (Qt.platform.os === "osx" || Qt.platform.os === "macos")
             skip("TextField hard-codes pixel size on macOS")
-        failOnWarning("Both point size and pixel size set. Using pixel size.")
-        var textField = createTemporaryObject(textFieldWithPointSizeSet, testCase)
+        let textField = createTemporaryObject(textFieldWithPointSizeSet, testCase)
         verify(textField)
     }
 
     function test_setPixelSizeDoesNotWarn() {
-        failOnWarning("Both point size and pixel size set. Using pixel size.")
-        var textField = createTemporaryObject(textFieldWithPixelSizeSet, testCase)
+        let textField = createTemporaryObject(textFieldWithPixelSizeSet, testCase)
         verify(textField)
     }
 }

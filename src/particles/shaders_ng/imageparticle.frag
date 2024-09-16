@@ -22,7 +22,11 @@ layout(location = 2) in float fFade;
 layout(location = 0) out vec4 fragColor;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     float opacity;
     float entry;
     float timestamp;

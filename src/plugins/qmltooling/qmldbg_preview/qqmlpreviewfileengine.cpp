@@ -40,12 +40,11 @@ bool isRootPath(const QString &path)
 class QQmlPreviewFileEngineIterator : public QAbstractFileEngineIterator
 {
 public:
-    QQmlPreviewFileEngineIterator(QDir::Filters filters, const QStringList &filterNames,
-                                  const QStringList &m_entries);
+    QQmlPreviewFileEngineIterator(const QString &path, QDir::Filters filters,
+                                  const QStringList &filterNames, const QStringList &m_entries);
     ~QQmlPreviewFileEngineIterator();
 
-    QString next() override;
-    bool hasNext() const override;
+    bool advance() override;
     QString currentFileName() const override;
 
 private:
@@ -53,10 +52,11 @@ private:
     int m_index;
 };
 
-QQmlPreviewFileEngineIterator::QQmlPreviewFileEngineIterator(QDir::Filters filters,
+QQmlPreviewFileEngineIterator::QQmlPreviewFileEngineIterator(const QString &path,
+                                                             QDir::Filters filters,
                                                              const QStringList &filterNames,
                                                              const QStringList &entries)
-    : QAbstractFileEngineIterator(filters, filterNames), m_entries(entries), m_index(0)
+    : QAbstractFileEngineIterator(path, filters, filterNames), m_entries(entries), m_index(0)
 {
 }
 
@@ -64,17 +64,13 @@ QQmlPreviewFileEngineIterator::~QQmlPreviewFileEngineIterator()
 {
 }
 
-QString QQmlPreviewFileEngineIterator::next()
+bool QQmlPreviewFileEngineIterator::advance()
 {
-    if (!hasNext())
-        return QString();
-    ++m_index;
-    return currentFilePath();
-}
+    if (m_index >= m_entries.size())
+        return false;
 
-bool QQmlPreviewFileEngineIterator::hasNext() const
-{
-    return m_index < m_entries.size();
+    ++m_index;
+    return true;
 }
 
 QString QQmlPreviewFileEngineIterator::currentFileName() const
@@ -215,14 +211,15 @@ uint QQmlPreviewFileEngine::ownerId(QAbstractFileEngine::FileOwner owner) const
     return m_fallback ? m_fallback->ownerId(owner) : static_cast<uint>(-2);
 }
 
-QAbstractFileEngine::Iterator *QQmlPreviewFileEngine::beginEntryList(QDir::Filters filters,
-                                                                     const QStringList &filterNames)
+QAbstractFileEngine::IteratorUniquePtr QQmlPreviewFileEngine::beginEntryList(
+        const QString &path, QDir::Filters filters, const QStringList &filterNames)
 {
-    return m_fallback ? m_fallback->beginEntryList(filters, filterNames)
-                      : new QQmlPreviewFileEngineIterator(filters, filterNames, m_entries);
+    return m_fallback ? m_fallback->beginEntryList(path, filters, filterNames)
+                      : std::make_unique<QQmlPreviewFileEngineIterator>(
+                              path, filters, filterNames, m_entries);
 }
 
-QAbstractFileEngine::Iterator *QQmlPreviewFileEngine::endEntryList()
+QAbstractFileEngine::IteratorUniquePtr QQmlPreviewFileEngine::endEntryList()
 {
     return m_fallback ? m_fallback->endEntryList() : nullptr;
 }
@@ -327,7 +324,7 @@ QString QQmlPreviewFileEngine::owner(FileOwner owner) const
     return m_fallback ? m_fallback->owner(owner) : QString();
 }
 
-QDateTime QQmlPreviewFileEngine::fileTime(FileTime time) const
+QDateTime QQmlPreviewFileEngine::fileTime(QFile::FileTime time) const
 {
     // Files we replace are always newer than the ones we had before. This makes the QML engine
     // actually recompile them, rather than pick them from the cache.
@@ -378,7 +375,7 @@ void QQmlPreviewFileEngine::load() const
         m_entries = m_loader->entries();
         break;
     case QQmlPreviewFileLoader::Fallback:
-        m_fallback.reset(QAbstractFileEngine::create(m_name));
+        m_fallback = QAbstractFileEngine::create(m_name);
         break;
     case QQmlPreviewFileLoader::Unknown:
         Q_UNREACHABLE();
@@ -391,12 +388,25 @@ QQmlPreviewFileEngineHandler::QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader
 {
 }
 
-QAbstractFileEngine *QQmlPreviewFileEngineHandler::create(const QString &fileName) const
+std::unique_ptr<QAbstractFileEngine> QQmlPreviewFileEngineHandler::create(
+        const QString &fileName) const
 {
-    // Don't load compiled QML/JS over the network
-    if (fileName.endsWith(".qmlc") || fileName.endsWith(".jsc") || isRootPath(fileName)) {
-        return nullptr;
+    using namespace Qt::StringLiterals;
+    static QList<QLatin1StringView> prohibitedSuffixes {
+        // Don't load compiled QML/JS over the network
+        ".qmlc"_L1, ".jsc"_L1, ".mjsc"_L1,
+
+        // Don't load plugins over the network
+        ".dll"_L1, ".so"_L1, ".dylib"_L1
+    };
+
+    for (QLatin1StringView suffix : prohibitedSuffixes) {
+        if (fileName.endsWith(suffix))
+            return nullptr;
     }
+
+    if (isRootPath(fileName))
+        return nullptr;
 
     QString relative = fileName;
     while (relative.endsWith('/'))
@@ -407,8 +417,10 @@ QAbstractFileEngine *QQmlPreviewFileEngineHandler::create(const QString &fileNam
 
     const QString absolute = relative.startsWith(':') ? relative : absolutePath(relative);
 
-    return m_loader->isBlacklisted(absolute)
-            ? nullptr : new QQmlPreviewFileEngine(relative, absolute, m_loader.data());
+    if (m_loader->isBlacklisted(absolute))
+        return {};
+
+    return std::make_unique<QQmlPreviewFileEngine>(relative, absolute, m_loader.data());
 }
 
 QT_END_NAMESPACE

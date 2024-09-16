@@ -11,24 +11,30 @@ layout(location = 4) out vec2 sCoordRight;
 
 layout(std140, binding = 0) uniform buf {
     mat4 modelViewMatrix;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 projectionMatrix[QSHADER_VIEW_COUNT];
+#else
     mat4 projectionMatrix;
-    vec4 color;
+#endif
     vec2 textureScale;
     float dpr;
+    vec4 color;
     // the above must stay compatible with textmask/8bittextmask
     vec4 styleColor;
     vec2 shift;
-} ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
+};
 
 void main()
 {
-     sampleCoord = tCoord * ubuf.textureScale;
-     sCoordUp = (tCoord - vec2(0.0, -1.0)) * ubuf.textureScale;
-     sCoordDown = (tCoord - vec2(0.0, 1.0)) * ubuf.textureScale;
-     sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * ubuf.textureScale;
-     sCoordRight = (tCoord - vec2(1.0, 0.0)) * ubuf.textureScale;
-     vec4 xformed = ubuf.modelViewMatrix * vCoord;
-     gl_Position = ubuf.projectionMatrix * vec4(floor(xformed.xyz * ubuf.dpr + 0.5) / ubuf.dpr, xformed.w);
+     sampleCoord = tCoord * textureScale;
+     sCoordUp = (tCoord - vec2(0.0, -1.0)) * textureScale;
+     sCoordDown = (tCoord - vec2(0.0, 1.0)) * textureScale;
+     sCoordLeft = (tCoord - vec2(-1.0, 0.0)) * textureScale;
+     sCoordRight = (tCoord - vec2(1.0, 0.0)) * textureScale;
+     vec4 xformed = modelViewMatrix * vCoord;
+#if QSHADER_VIEW_COUNT >= 2
+     gl_Position = projectionMatrix[gl_ViewIndex] * vec4(floor(xformed.xyz * dpr + 0.5) / dpr, xformed.w);
+#else
+     gl_Position = projectionMatrix * vec4(floor(xformed.xyz * dpr + 0.5) / dpr, xformed.w);
+#endif
 }

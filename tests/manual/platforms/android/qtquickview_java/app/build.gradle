@@ -1,0 +1,82 @@
+plugins {
+    id 'com.android.application'
+    id 'org.qtproject.qt.gradleplugin' version '1.+'
+}
+
+def qtBuildPropertiesFile = rootProject.file('qtbuild.properties');
+def qtBuildProperties = new Properties();
+qtBuildProperties.load(new FileInputStream(qtBuildPropertiesFile));
+QtBuild {
+    projectPath file('../../qtquickview_service')
+    qtKitDir file(qtBuildProperties['qtKitDir'])
+    qtPath file(qtBuildProperties['qtPath'])
+}
+
+def keystorePropertiesFile = rootProject.file('keystore.properties');
+def keystoreProperties = new Properties();
+keystoreProperties.load(new FileInputStream(keystorePropertiesFile));
+
+android {
+    signingConfigs {
+        debug {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+    namespace 'com.example.qtquickview_java'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.example.qtquickview_java"
+        minSdk 28
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+        }
+        debug {
+            signingConfig signingConfigs.debug
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+    sourceSets {
+        main {
+            assets {
+                srcDirs 'assets'
+            }
+            jniLibs {
+                srcDirs 'libs'
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+}
+

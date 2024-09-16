@@ -17,7 +17,6 @@
 
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qv4compileddata_p.h>
 
 #if QT_CONFIG(qml_network)
 #include <QtNetwork/qnetworkreply.h>
@@ -35,7 +34,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlTypeLoader;
-class Q_QML_PRIVATE_EXPORT QQmlDataBlob : public QQmlRefCounted<QQmlDataBlob>
+class Q_QML_EXPORT QQmlDataBlob : public QQmlRefCounted<QQmlDataBlob>
 {
 public:
     using Ptr = QQmlRefPointer<QQmlDataBlob>;

@@ -1,9 +1,10 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-import QtQuick 2.2
-import QtTest 1.0
-import QtQuick.Layouts 1.0
+import QtQuick
+import QtTest
+import QtQuick.Controls
+import QtQuick.Layouts
 import "LayoutHelperLibrary.js" as LayoutHelpers
 
 import org.qtproject.Test
@@ -22,6 +23,13 @@ Item {
         function itemRect(item)
         {
             return [item.x, item.y, item.width, item.height];
+        }
+
+        function cleanup() {
+            if (LayoutSetup.useDefaultSizePolicy) {
+                LayoutSetup.useDefaultSizePolicy = false
+                compare(LayoutSetup.useDefaultSizePolicy, false)
+            }
         }
 
         Component {
@@ -937,7 +945,19 @@ Item {
                     },
                     layoutWidth:     0,
                     expectedWidths: [0]
-                  }
+                },{
+                  tag: "preferred_infinity",    // Do not crash/assert when the preferred size is infinity
+                  layout: {
+                    type: "RowLayout",
+                    items: [
+                        {minimumWidth:  10, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                        {minimumWidth:  20, preferredWidth: Number.POSITIVE_INFINITY, fillWidth: true},
+                      ]
+                  },
+                  layoutWidth:     31,      // Important that this is between minimum and preferred width of the layout.
+                  expectedWidths: [10, 21]  // The result here does not have to be exact. (This
+                                            // test is mostly concerned about not crashing).
+                }
             ];
         }
 
@@ -1067,6 +1087,37 @@ Item {
                 compare(actualPositions, data.expectedPositions)
             }
         }
+
+        Component {
+            id: uniformCellSizes_QML_Component
+            RowLayout {
+                spacing: 0
+                uniformCellSizes: true
+                Rectangle {
+                    implicitWidth: 1
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    color: "red"
+                }
+                Rectangle {
+                    implicitWidth: 2
+                    Layout.fillHeight: true
+                    Layout.fillWidth: true
+                    color: "blue"
+                }
+            }
+        }
+
+        function test_uniformCellSizes_QML(data)
+        {
+            var layout = createTemporaryObject(uniformCellSizes_QML_Component, testCase)
+            layout.width  = 40
+            layout.height = 20
+            let expectedWidths = [20, 20]
+            let actualWidths = [layout.children[0].width, layout.children[1].width]
+            compare(actualWidths, expectedWidths)
+        }
+
 
         Component {
             id: layout_alignToPixelGrid_Component
@@ -1290,6 +1341,78 @@ Item {
         }
 
         Component {
+            id: sizeHintBindingLoopComp
+            Item {
+                id: root
+                anchors.fill: parent
+                property var customWidth: 100
+                RowLayout {
+                    id: col
+                    Item {
+                        id: item
+                        implicitHeight: 80
+                        implicitWidth: Math.max(col2.implicitWidth, root.customWidth + 20)
+                        ColumnLayout {
+                            id: col2
+                            width: parent.width
+                            Item {
+                                id: rect
+                                implicitWidth: root.customWidth
+                                implicitHeight: 80
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function test_sizeHintBindingLoopIssue() {
+            var item = createTemporaryObject(sizeHintBindingLoopComp, container)
+            waitForRendering(item)
+            item.customWidth += 10
+            waitForRendering(item)
+            verify(!LayoutSetup.bindingLoopDetected, "Detected binding loop")
+            LayoutSetup.resetBindingLoopDetectedFlag()
+        }
+
+        Component {
+            id: polishLayoutItemComp
+            Item {
+                anchors.fill: parent
+                implicitHeight: contentLayout.implicitHeight
+                implicitWidth: contentLayout.implicitWidth
+                property alias textLayout: contentLayout
+                RowLayout {
+                    width: parent.width
+                    height: parent.height
+                    ColumnLayout {
+                        id: contentLayout
+                        Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
+                        Layout.maximumWidth: 200
+                        Repeater {
+                            model: 2
+                            Text {
+                                Layout.fillWidth: true
+                                text: "This is a long text causing line breaks to show the bug."
+                                wrapMode: Text.Wrap
+                            }
+                        }
+                        Item {
+                            Layout.fillHeight: true
+                        }
+                    }
+                }
+            }
+        }
+
+        function test_polishLayoutItemIssue() {
+            var rootItem = createTemporaryObject(polishLayoutItemComp, container)
+            waitForRendering(rootItem)
+            var textItem = rootItem.textLayout.children[1]
+            verify(textItem.y >= rootItem.textLayout.children[0].height)
+        }
+
+        Component {
             id: rearrangeNestedLayouts_Component
             RowLayout {
                 id: layout
@@ -1390,6 +1513,44 @@ Item {
         }
 
         Component {
+            id: rearrangeInvalidatedChildInNestedLayout
+            ColumnLayout {
+                anchors.fill: parent
+                RowLayout {
+                    spacing: 0
+                    Text {
+                        Layout.preferredWidth: 50
+                        text: "Text Text Text"
+                        wrapMode: Text.WordWrap
+                    }
+                    Rectangle {
+                        color: "red";
+                        Layout.preferredWidth: 50
+                        Layout.preferredHeight: 20
+                    }
+                    Rectangle {
+                        color: "green"
+                        Layout.preferredHeight: 20
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+        }
+
+        function test_rearrangeInvalidatedChildInNestedLayout() {
+            let layout = rearrangeInvalidatedChildInNestedLayout.createObject(container)
+            waitForRendering(layout)
+
+            let item1 = layout.children[0].children[0]
+            let item2 = layout.children[0].children[1]
+            let item3 = layout.children[0].children[2]
+
+            compare(item1.width, 50)
+            compare(item2.width, 50)
+            compare(item3.width, 100)
+        }
+
+        Component {
             id: changeChildrenOfHiddenLayout_Component
             RowLayout {
                 property int childCount: 1
@@ -1455,6 +1616,49 @@ Item {
             waitForRendering(rootRect.layout)
             compare(rootRect.item1.width, 100)
         }
+
+        //---------------------------
+        // Layout with negative size
+        Component {
+            id: negativeSize_Component
+            Item {
+                id: rootItem
+                width: 0
+                height: 0
+                // default width x height: (0 x 0)
+                RowLayout {
+                    spacing: 0
+                    anchors.fill: parent
+                    anchors.leftMargin: 1   // since parent size == (0 x 0), it causes layout size
+                    anchors.bottomMargin: 1 // to become (-1, -1)
+                    Item {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                    }
+                }
+            }
+        }
+
+        function test_negativeSize() {
+            let rootItem = createTemporaryObject(negativeSize_Component, container)
+            let rowLayout = rootItem.children[0]
+            let item = rowLayout.children[0]
+
+            const arr = [7, 1, 7, 0]
+            arr.forEach((n) => {
+                                rootItem.width = n
+                                rootItem.height = n
+
+                                // n === 0 is special: It will cause the layout to have a
+                                // negative size. In this case it will simply not rearrange its
+                                // child (and leave it at its previous size, 6)
+                                const expectedItemExtent = n === 0 ? 6 : n - 1
+
+                                compare(item.width, expectedItemExtent)
+                                compare(item.height, expectedItemExtent)
+                               });
+        }
+
 
 //---------------------------
         Component {
@@ -1589,8 +1793,8 @@ Item {
             compare(rootItem.maxWidth, 66)
 
             // Should not trigger a binding loop
-            verify(!BindingLoopDetector.bindingLoopDetected, "Detected binding loop")
-            BindingLoopDetector.reset()
+            verify(!LayoutSetup.bindingLoopDetected, "Detected binding loop")
+            LayoutSetup.resetBindingLoopDetectedFlag()
         }
 
 
@@ -1629,6 +1833,106 @@ Item {
             layout.children[0].destroy()    // deleteLater()
             wait(0)                         // process the scheduled delete and actually invoke the dtor
             data.func(layout)               // call a function that might ultimately access the deleted item (but shouldn't)
+        }
+
+        //---------------------------
+        // Default layout size policy
+        Component {
+            id: defaultLayoutComp
+            Item {
+                id: rootItem
+                width: 110
+                height: 100
+                // Check default layout size policy
+                RowLayout {
+                    spacing: 0
+                    anchors.fill: parent
+                    // Rectangle item - SizePolicy { Horizontal: Fixed;  Vertical: Fixed }
+                    Rectangle {}
+                    // Button item - SizePolicy { Horizontal: Preferred; Vertical: Fixed }
+                    Button {}
+                    // Frame item - SizePolicy { Horizontal: Preferred; Vertical: Preferred }
+                    Frame {}
+                }
+            }
+        }
+
+        function test_defaultLayoutSize() {
+            let rootItem = createTemporaryObject(defaultLayoutComp, container)
+            waitForRendering(rootItem)
+
+            let rowLayout = rootItem.children[0]
+
+            // Test default size policy disabled by default
+            compare(LayoutSetup.useDefaultSizePolicy, false)
+
+            let defaultButtonWidth = rowLayout.children[1].width
+            let defaultFrameWidth = rowLayout.children[2].width
+
+            // Enable attached properties for items and check its size
+            {
+                rowLayout.children[0].Layout.fillWidth = true
+                rowLayout.children[0].Layout.fillHeight = true
+                rowLayout.children[1].Layout.fillWidth = true
+                rowLayout.children[1].Layout.fillHeight = true
+                rowLayout.children[2].Layout.fillWidth = true
+                rowLayout.children[2].Layout.fillHeight = true
+                waitForRendering(rowLayout)
+                let isAbovePreferred = rowLayout.width >= rowLayout.implicitWidth
+                // Removing rectangle as width & implicitWidth be zero always, which makes validation of no use
+                for (let i = 1; i < rowLayout.children.length; i++) {
+                    compare(rowLayout.children[i].width >= rowLayout.children[i].implicitWidth, isAbovePreferred)
+                    compare(rowLayout.children[i].height, rowLayout.height)
+                }
+            }
+
+            // Destroy existing object
+            rootItem.destroy()
+
+            // Enable default size policy
+            LayoutSetup.useDefaultSizePolicy = true
+            compare(LayoutSetup.useDefaultSizePolicy, true)
+            rootItem = createTemporaryObject(defaultLayoutComp, container)
+            waitForRendering(rootItem)
+            rowLayout = rootItem.children[0]
+
+            // The default size policy would stretch button and frame accordingly
+            {
+                verify(Math.abs(rowLayout.width - (rowLayout.children[0].width + rowLayout.children[1].width + rowLayout.children[2].width)) <= 1)
+                compare(rowLayout.children[1].width < rowLayout.children[2].width, rowLayout.children[1].implicitWidth < rowLayout.children[2].implicitWidth)
+                compare(rowLayout.children[1].height, rowLayout.children[1].implicitHeight)
+                compare(rowLayout.children[2].height, rowLayout.height)
+            }
+
+            // Change the width and height of the root item to see layout size change
+            // Since default size policy for button and frame are Preferred, these items should
+            // stretch
+            {
+                let szDefaultButtonWidth = rowLayout.children[1].width
+                let szDefaultFrameWidth = rowLayout.children[2].width
+
+                rootItem.width = 210
+                rootItem.height = 200
+                waitForRendering(rootItem)
+                verify(rowLayout.children[1].width > szDefaultButtonWidth)
+                compare(rowLayout.children[1].height, rowLayout.children[1].implicitHeight)
+                verify(rowLayout.children[2].width > szDefaultFrameWidth)
+                compare(rowLayout.children[2].height, rowLayout.height)
+            }
+
+            // Disable size policies through attached properties and check item size
+            {
+                rowLayout.children[1].Layout.fillWidth = false
+                rowLayout.children[2].Layout.fillWidth = false
+                rowLayout.children[2].Layout.fillHeight = false
+                waitForRendering(rowLayout)
+                compare(rowLayout.children[1].width, defaultButtonWidth)
+                compare(rowLayout.children[2].width, defaultFrameWidth)
+                for (let index = 1; index < rowLayout.children.length; index++)
+                    compare(rowLayout.children[index].height, rowLayout.children[index].implicitHeight)
+            }
+
+            rootItem.destroy()
         }
     }
 }

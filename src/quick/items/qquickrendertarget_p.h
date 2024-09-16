@@ -22,9 +22,9 @@
 QT_BEGIN_NAMESPACE
 
 class QRhi;
-class QQuickWindowRenderTarget;
+struct QQuickWindowRenderTarget;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickRenderTargetPrivate
+class Q_QUICK_EXPORT QQuickRenderTargetPrivate
 {
 public:
     static QQuickRenderTargetPrivate *get(QQuickRenderTarget *rt) { return rt->d; }
@@ -36,6 +36,7 @@ public:
     enum class Type {
         Null,
         NativeTexture,
+        NativeTextureArray,
         NativeRenderbuffer,
         RhiRenderTarget,
         PaintDevice
@@ -50,16 +51,30 @@ public:
         quint64 object;
         int layoutOrState;
         uint rhiFormat;
-        uint rhiFlags;
+        uint rhiFormatFlags;
+        uint rhiViewFormat;
+        uint rhiViewFormatFlags;
+    };
+    struct NativeTextureArray {
+        quint64 object;
+        int layoutOrState;
+        int arraySize;
+        uint rhiFormat;
+        uint rhiFormatFlags;
+        uint rhiViewFormat;
+        uint rhiViewFormatFlags;
     };
     union {
         NativeTexture nativeTexture;
+        NativeTextureArray nativeTextureArray;
         quint64 nativeRenderbufferObject;
         QRhiRenderTarget *rhiRt;
         QPaintDevice *paintDevice;
     } u;
 
+    QRhiTexture *customDepthTexture = nullptr;
     bool mirrorVertically = false;
+    bool multisampleResolve = false;
 };
 
 QT_END_NAMESPACE

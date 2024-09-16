@@ -41,12 +41,12 @@ namespace QV4 {
 struct ModelObject;
 }
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
+class Q_QMLMODELS_EXPORT QQmlListModel : public QAbstractListModel
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
-    Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles FINAL)
-    Q_PROPERTY(QObject *agent READ agent CONSTANT REVISION(2, 14) FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(bool dynamicRoles READ dynamicRoles WRITE setDynamicRoles)
+    Q_PROPERTY(QObject *agent READ agent CONSTANT REVISION(2, 14))
     QML_NAMED_ELEMENT(ListModel)
     QML_ADDED_IN_VERSION(2, 0)
     QML_CUSTOMPARSER
@@ -65,9 +65,9 @@ public:
     int count() const;
 
     Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(QQmlV4Function *args);
-    Q_INVOKABLE void append(QQmlV4Function *args);
-    Q_INVOKABLE void insert(QQmlV4Function *args);
+    Q_INVOKABLE void remove(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void append(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void insert(QQmlV4FunctionPtr args);
     Q_INVOKABLE QJSValue get(int index) const;
     Q_INVOKABLE void set(int index, const QJSValue &value);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
@@ -78,6 +78,8 @@ public:
 
     bool dynamicRoles() const { return m_dynamicRoles; }
     void setDynamicRoles(bool enableDynamicRoles);
+
+    ListModel *listModel() const { return m_listModel; }
 
 Q_SIGNALS:
     void countChanged();
@@ -180,8 +182,5 @@ inline QQmlCustomParser *qmlCreateCustomParser<QQmlListModel>()
 }
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQmlListModel)
-QML_DECLARE_TYPE(QQmlListElement)
 
 #endif // QQMLLISTMODEL_H

@@ -77,14 +77,14 @@ Zzz {
     }
     property var testSingleton: SystemInformation.byteOrder
 
-    Item {
-        id: itemWithEnums
-        enum Hello { World }
-        enum MyEnum { ValueOne, ValueTwo }
-    }
 
-    property var testEnums: itemWithEnums.World
-    property var testEnums2: itemWithEnums.Hello.World
+
+    enum Hello { World }
+    enum MyEnum { ValueOne, ValueTwo }
+
+
+    property var testEnums: Yyy.World
+    property var testEnums2: Yyy.Hello.World
 
     Component.onCompleted: {}
     property var anything: Rectangle{ height: 200 }
@@ -99,4 +99,45 @@ Zzz {
     default property int defaultProperty
     property int builtin: Math.abs(43)
     signal handleMe()
+    function helloForStatement() {
+        for(let i = 0; i < 5; ++i) {
+
+        }
+        for(let j = 0; j < 5; ++j)
+            helloForStatement()
+    }
+    function helloIfStatement(hello) {
+        if (hello)
+            hello = !hello
+        else
+            hello = hello
+        if (hello == !hello) {
+            hello = hello / hello
+        } else {
+            hello += hello
+        }
+        if (hello)
+            hello = hello
+        else if (hello)
+            hello = hello + hello / 2
+    }
+    function helloReturnStatement(hello) {
+        return hello
+    }
+    function helloWhileStatement(hello) {
+        while (hello) --hello
+    }
+    function helloDoWhileStatement(hello) {
+        do  --hello;  while (hello);
+    }
+    function helloForEachStatement(hello) {
+        for(variable in hello) ++hello;
+        for(element of hello) ++hello;
+    }
+    function qualifiedScriptIdentifiers() {
+        console.l()
+    }
+    QtObject {
+
+    }
 }

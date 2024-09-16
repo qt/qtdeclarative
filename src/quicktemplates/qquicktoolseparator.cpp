@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolSeparator
     \inherits Control
-//!     \instantiates QQuickToolSeparator
+//!     \nativetype QQuickToolSeparator
     \inqmlmodule QtQuick.Controls
     \since 5.8
     \ingroup qtquickcontrols-separators

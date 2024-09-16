@@ -6,14 +6,20 @@ layout(location = 1) in vec4 vertexColor;
 layout(location = 0) out vec4 color;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     float opacity;
-} ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
+};
 
 void main()
 {
-    gl_Position = ubuf.matrix * vertexCoord;
-    color = vertexColor * ubuf.opacity;
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = matrix[gl_ViewIndex] * vertexCoord;
+#else
+    gl_Position = matrix * vertexCoord;
+#endif
+    color = vertexColor * opacity;
 }

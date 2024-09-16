@@ -28,9 +28,8 @@ QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
     }
 }
 
-QQmlPropertyValidator::QQmlPropertyValidator(
-        QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
@@ -88,6 +87,12 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
+
+        // This binding instantiates a separate object. The separate object can have an ID and its
+        // own group properties even if it's then assigned to a value type, for example a 'var', or
+        // anything with an invokable ctor taking a QObject*.
+        populatingValueTypeGroupProperty = false;
+
         const auto type = typeRef->type();
         if (type.isValid())
             customParser = type.customParser();
@@ -127,7 +132,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         defaultProperty = propertyCache->defaultProperty();
     }
 
-    QV4::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
+    QV4::CompiledData::BindingPropertyData collectedBindingPropertyData(obj->nBindings);
 
     binding = obj->bindingTable();
     for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
@@ -195,7 +200,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
             imports->resolveType(
-                        stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
+                    QQmlTypeLoader::get(enginePrivate), stringAt(binding->propertyNameIndex),
+                    &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
@@ -296,17 +302,25 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                         return recordError(
                                     binding->location,
                                     tr("Invalid grouped property access: Property \"%1\" with primitive type \"%2\".")
-                                        .arg(name)
-                                        .arg(QString::fromUtf8(type.name()))
+                                        .arg(name, QString::fromUtf8(type.name()))
                                     );
                     }
 
                     if (!QQmlMetaType::propertyCacheForType(type)) {
-                        return recordError(binding->location,
-                                           tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
-                                           .arg(name)
-                                           .arg(QString::fromUtf8(type.name()))
-                                          );
+                        auto mo = type.metaObject();
+                        if (!mo) {
+                            return recordError(binding->location,
+                                               tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is neither a value nor an object type")
+                                               .arg(name, QString::fromUtf8(type.name()))
+                                              );
+                        }
+                        if (QMetaObjectPrivate::get(mo)->flags & DynamicMetaObject) {
+                            return recordError(binding->location,
+                                               tr("Unsupported grouped property access: Property \"%1\" with type \"%2\" has a dynamic meta-object.")
+                                               .arg(name, QString::fromUtf8(type.name()))
+                                               );
+                        }
+                        // fall through, this is okay
                     }
                 }
             }
@@ -336,7 +350,10 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->validator = this;
         customParser->engine = enginePrivate;
         customParser->imports = imports;
-        customParser->verifyBindings(compilationUnit, customBindings);
+        customParser->verifyBindings(
+                enginePrivate->v4engine()->executableCompilationUnit(
+                        QQmlRefPointer<QV4::CompiledData::CompilationUnit>(compilationUnit)),
+                customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
@@ -363,6 +380,11 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
 
     if (property->isEnum()) {
         if (binding->hasFlag(QV4::CompiledData::Binding::IsResolvedEnum))
+            return noError;
+
+        // TODO: For historical reasons you can assign any number to an enum property alias
+        //       This can be fixed with an opt-out mechanism, for example a pragma.
+        if (property->isAlias() && binding->isNumberBinding())
             return noError;
 
         QString value = compilationUnit->bindingValueAsString(binding);
@@ -433,12 +455,11 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
         return warnOrError(tr("Invalid property assignment: int expected"));
     }
     break;
-    case QMetaType::Float: {
-        if (bindingType != QV4::CompiledData::Binding::Type_Number) {
-            return warnOrError(tr("Invalid property assignment: number expected"));
-        }
-    }
-    break;
+    case QMetaType::LongLong:
+    case QMetaType::ULongLong:
+    case QMetaType::Long:
+    case QMetaType::ULong:
+    case QMetaType::Float:
     case QMetaType::Double: {
         if (bindingType != QV4::CompiledData::Binding::Type_Number) {
             return warnOrError(tr("Invalid property assignment: number expected"));
@@ -742,7 +763,8 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
             // Therefore we need to check the ICs here
             for (const auto& icDatum: compilationUnit->inlineComponentData) {
                 if (icDatum.qmlType.typeId() == property->propType()) {
-                    propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                    propertyMetaObject
+                            = compilationUnit->propertyCaches.at(icDatum.objectIndex);
                     break;
                 }
             }

@@ -28,15 +28,15 @@ class QQuickSprite;
 class QQuickSpriteEngine;
 class QQuickSpriteSequencePrivate;
 class QSGSpriteNode;
-class Q_QUICK_PRIVATE_EXPORT QQuickSpriteSequence : public QQuickItem
+class Q_QUICK_EXPORT QQuickSpriteSequence : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged FINAL)
-    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged FINAL)
-    Q_PROPERTY(QString goalSprite READ goalSprite WRITE setGoalSprite NOTIFY goalSpriteChanged FINAL)
-    Q_PROPERTY(QString currentSprite READ currentSprite NOTIFY currentSpriteChanged FINAL)
+    Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool interpolate READ interpolate WRITE setInterpolate NOTIFY interpolateChanged)
+    Q_PROPERTY(QString goalSprite READ goalSprite WRITE setGoalSprite NOTIFY goalSpriteChanged)
+    Q_PROPERTY(QString currentSprite READ currentSprite NOTIFY currentSpriteChanged)
     //###try to share similar spriteEngines for less overhead?
-    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
     QML_NAMED_ELEMENT(SpriteSequence)
     QML_ADDED_IN_VERSION(2, 0)

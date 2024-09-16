@@ -9,5 +9,4 @@
 
 import QtQml
 
-QtObject {
-}
+QtObject {}

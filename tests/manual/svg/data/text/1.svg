@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1">
+    <linearGradient
+       id="linearGradient1">
+      <stop
+         style="stop-color:#ff0000;stop-opacity:1;"
+         offset="0"
+         id="stop1" />
+      <stop
+         style="stop-color:#00ff00;stop-opacity:1;"
+         offset="1"
+         id="stop2" />
+    </linearGradient>
+    <rect
+       x="150.02508"
+       y="181.45326"
+       width="412.12424"
+       height="148.24613"
+       id="rect1" />
+    <linearGradient
+       xlink:href="#linearGradient1"
+       id="linearGradient2"
+       x1="159.13997"
+       y1="232.67492"
+       x2="543.63868"
+       y2="232.67492"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g id="layer1">
+    <text xml:space="preserve" transform="scale(0.26458333)" id="text1" x="150.02539" y="266.60392" style="font-size:93.3333px;fill:url(#linearGradient2)"><tspan id="tspan3">FOO</tspan><tspan style="font-weight:bold;font-family:Dubai;-inkscape-font-specification:'Dubai Bold'">BAR</tspan></text>
+  </g>
+</svg>

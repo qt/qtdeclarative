@@ -30,7 +30,6 @@ qt_internal_add_qml_module(QuickControls2Impl
         qquickpaddedrectangle.cpp qquickpaddedrectangle_p.h
         qquickplaceholdertext.cpp qquickplaceholdertext_p.h
         qquickplatformtheme.cpp qquickplatformtheme_p.h
-        qtquickcontrols2foreign.cpp qtquickcontrols2foreign_p.h
         qtquickcontrols2implglobal_p.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
@@ -45,9 +44,7 @@ qt_internal_add_qml_module(QuickControls2Impl
         Qt::Core
         Qt::Gui
         Qt::Quick
-    GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_extend_target(QuickControls2Impl CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES

@@ -114,6 +114,7 @@ QChar JsonParser::nextToken()
     case EndArray:
     case EndObject:
         eatSpace();
+        break;
     case Quote:
         break;
     default:
@@ -622,7 +623,8 @@ public:
                         QStringLiteral("Cannot convert circular structure to JSON"));
         }
 
-        stringify->v4->checkStackLimits();
+        const bool hasOverflow = stringify->v4->checkStackLimits();
+        Q_UNUSED(hasOverflow); // No handling needed. Exception has been thrown already.
     }
 
     bool foundProblem() const { return m_callDepthRecorder.ee->hasException; }
@@ -987,12 +989,16 @@ QJsonValue JsonObject::toJsonValue(const Value &value, V4ObjectSet &visitedObjec
 
     Q_ASSERT(value.isObject());
     Scope scope(value.as<Object>()->engine());
-    ScopedArrayObject a(scope, value);
-    if (a)
+    if (ScopedArrayObject a{ scope, value }) {
         return toJsonArray(a, visitedObjects);
-    ScopedObject o(scope, value);
-    if (o)
+    } else if (Scoped<QV4::Sequence> a{ scope, value }) {
+        return toJsonArray(a, visitedObjects);
+    } else if (Scoped<QmlListWrapper> lw{ scope, value }) {
+        return toJsonArray(lw, visitedObjects);
+    } else if (ScopedObject o{ scope, value }) {
         return toJsonObject(o, visitedObjects);
+    }
+
     return QJsonValue(value.toQString());
 }
 
@@ -1057,7 +1063,7 @@ QV4::ReturnedValue JsonObject::fromJsonArray(ExecutionEngine *engine, const QJso
     return a.asReturnedValue();
 }
 
-QJsonArray JsonObject::toJsonArray(const ArrayObject *a, V4ObjectSet &visitedObjects)
+QJsonArray JsonObject::toJsonArray(const Object *a, V4ObjectSet &visitedObjects)
 {
     QJsonArray result;
     if (!a)

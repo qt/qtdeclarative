@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -17,15 +17,17 @@ TestCase {
         ToolSeparator {}
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(toolSeparator, testCase)
         verify(control)
     }
 
     function test_size() {
-        var control = createTemporaryObject(toolSeparator, testCase);
+        let control = createTemporaryObject(toolSeparator, testCase);
         verify(control);
         verify(control.width > 1);
         verify(control.height > 1);
@@ -37,15 +39,15 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = createTemporaryObject(toolSeparator, testCase);
+        let control = createTemporaryObject(toolSeparator, testCase);
         verify(control);
         compare(control.horizontal, false);
         compare(control.vertical, true);
 
-        var orientationSpy = signalSpyComponent.createObject(control, { target: control, signalName: "orientationChanged" });
+        let orientationSpy = signalSpyComponent.createObject(control, { target: control, signalName: "orientationChanged" });
 
-        var originalWidth = control.width;
-        var originalHeight = control.height;
+        let originalWidth = control.width;
+        let originalHeight = control.height;
         control.orientation = Qt.Horizontal;
         compare(control.orientation, Qt.Horizontal);
         compare(control.width, originalHeight);

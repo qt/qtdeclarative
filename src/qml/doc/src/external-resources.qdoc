@@ -29,16 +29,8 @@
     \title QmlLive Manual
 */
 /*!
-    \externalpage https://doc.qt.io/qtcreator/creator-debugging-qml.html
-    \title Qt Creator: QML Debugger
-*/
-/*!
-    \externalpage https://doc.qt.io/qtcreator/creator-qml-performance-monitor.html
-    \title Qt Creator: QML Profiler
-*/
-/*!
-    \externalpage https://doc.qt.io/qtcreator/creator-live-preview-desktop.html
-    \title Qt Creator: QML Preview On Desktop
+    \externalpage https://felgo.com/qml-hot-reload
+    \title Felgo QML Hot Reload Tool
 */
 /*!
     \externalpage https://fontawesome.com/
@@ -56,4 +48,36 @@
 /*!
     \externalpage https://cmake.org/cmake/help/latest/command/install.html#files
     \title install(FILES)
+*/
+/*!
+    \externalpage https://developer.android.com/reference/android/view/View
+    \title Android: View
+*/
+/*!
+    \externalpage https://developer.android.com/reference/java/security/InvalidParameterException
+    \title Android: InvalidParameterException
+*/
+/*!
+    \externalpage https://developer.android.com/reference/java/lang/ClassCastException
+    \title Android: ClassCastException
+*/
+/*!
+    \externalpage https://developer.android.com/topic/libraries/view-binding
+    \title Android: View binding
+*/
+/*!
+    \externalpage https://developer.android.com/reference/android/Manifest.permission#SYSTEM_ALERT_WINDOW
+    \title Android: SYSTEM_ALERT_WINDOW
+*/
+/*!
+    \externalpage https://developer.android.com/reference/android/app/Activity
+    \title Android: Activity
+*/
+/*!
+    \externalpage https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/
+    \title Kotlin: Int
+*/
+/*!
+    \externalpage https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/
+    \title Kotlin: String
 */

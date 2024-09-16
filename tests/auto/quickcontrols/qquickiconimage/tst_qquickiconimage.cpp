@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -49,9 +49,6 @@ private slots:
 
 private:
     void setTheme();
-
-    qreal dpr;
-    int integerDpr;
 };
 
 static QImage grabItemToImage(QQuickItem *item)
@@ -62,14 +59,14 @@ static QImage grabItemToImage(QQuickItem *item)
     return result->image();
 }
 
-#define SKIP_IF_DPR_TOO_HIGH() \
+#define INIT_DPR(view) \
+    [[maybe_unused]] const qreal dpr = view.devicePixelRatio(); \
+    [[maybe_unused]] const int integerDpr = qCeil(dpr); \
     if (dpr > 2) \
         QSKIP("Test does not support device pixel ratio greater than 2")
 
 tst_qquickiconimage::tst_qquickiconimage() :
-    QQmlDataTest(QT_QMLTEST_DATADIR),
-    dpr(qGuiApp->devicePixelRatio()),
-    integerDpr(qCeil(dpr))
+    QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickStyle::setStyle("Basic");
 }
@@ -78,6 +75,7 @@ void tst_qquickiconimage::initTestCase()
 {
     QQmlDataTest::initTestCase();
     QIcon::setThemeName(QStringLiteral("testtheme"));
+
 }
 
 void tst_qquickiconimage::defaults()
@@ -91,14 +89,12 @@ void tst_qquickiconimage::defaults()
 
 void tst_qquickiconimage::nameBindingSourceSize()
 {
-    // We can't have images for every DPR.
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("nameBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
     QVERIFY(iconImage);
@@ -132,11 +128,10 @@ void tst_qquickiconimage::nameBindingSourceSize()
 
 void tst_qquickiconimage::nameBindingSourceSizeWidthHeight()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("nameBindingSourceSizeWidthHeight.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject());
     QVERIFY(iconImage);
@@ -150,11 +145,10 @@ void tst_qquickiconimage::nameBindingSourceSizeWidthHeight()
 
 void tst_qquickiconimage::nameBindingNoSizes()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("nameBindingNoSizes.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject());
     QVERIFY(iconImage);
@@ -169,11 +163,11 @@ void tst_qquickiconimage::nameBindingNoSizes()
 
 void tst_qquickiconimage::sourceBindingNoSizes()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("sourceBindingNoSizes.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
+    INIT_DPR(view);
+
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
@@ -194,13 +188,12 @@ void tst_qquickiconimage::sourceBindingNoSizes()
 
 void tst_qquickiconimage::sourceBindingSourceSize()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("sourceBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
     QVERIFY(iconImage);
@@ -227,13 +220,12 @@ void tst_qquickiconimage::sourceBindingSourceSize()
 
 void tst_qquickiconimage::sourceBindingSourceSizeWidthHeight()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("sourceBindingSourceSizeWidthHeight.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject());
     QVERIFY(iconImage);
@@ -247,13 +239,12 @@ void tst_qquickiconimage::sourceBindingSourceSizeWidthHeight()
 
 void tst_qquickiconimage::sourceBindingSourceTooLarge()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("sourceBindingSourceTooLarge.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject());
     QVERIFY(iconImage);
@@ -283,8 +274,6 @@ void tst_qquickiconimage::alignment_data()
 
 void tst_qquickiconimage::alignment()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QFETCH(QQuickImage::HAlignment, horizontalAlignment);
     QFETCH(QQuickImage::VAlignment, verticalAlignment);
 
@@ -293,6 +282,7 @@ void tst_qquickiconimage::alignment()
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
     QVERIFY(iconImage);
@@ -335,6 +325,9 @@ void tst_qquickiconimage::svgNoSizes()
     QQuickView view(testFileUrl("svgNoSizes.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
+
+    INIT_DPR(view);
+
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
@@ -344,8 +337,8 @@ void tst_qquickiconimage::svgNoSizes()
     QQuickImage *image = qobject_cast<QQuickImage*>(view.rootObject()->childItems().at(1));
     QVERIFY(image);
 
-    QCOMPARE(iconImage->sourceSize().width(), 48);
-    QCOMPARE(iconImage->sourceSize().height(), 48);
+    QCOMPARE(iconImage->sourceSize().width(), 48 * integerDpr);
+    QCOMPARE(iconImage->sourceSize().height(), 48 * integerDpr);
     QCOMPARE(iconImage->implicitWidth(), 48.0);
     QCOMPARE(iconImage->implicitHeight(), 48.0);
     QCOMPARE(iconImage->width(), 48.0);
@@ -383,13 +376,12 @@ void tst_qquickiconimage::svgSourceBindingSourceSize()
 
 void tst_qquickiconimage::color()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view(testFileUrl("color.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
     QVERIFY(iconImage);
@@ -438,8 +430,6 @@ void tst_qquickiconimage::changeSourceSize()
 
 void tst_qquickiconimage::fileSelectors()
 {
-    SKIP_IF_DPR_TOO_HIGH();
-
     QQuickView view;
     QScopedPointer<QQmlFileSelector> fileSelector(new QQmlFileSelector(view.engine()));
     fileSelector->setExtraSelectors(QStringList() << "testselector");
@@ -448,6 +438,7 @@ void tst_qquickiconimage::fileSelectors()
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    INIT_DPR(view);
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
     QVERIFY(iconImage);

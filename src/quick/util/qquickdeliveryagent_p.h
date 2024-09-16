@@ -25,6 +25,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcPtr)
+Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
+Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
+
 class QQuickItem;
 class QQuickDeliveryAgentPrivate;
 

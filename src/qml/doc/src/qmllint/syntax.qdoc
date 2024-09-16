@@ -5,22 +5,312 @@
 \page qmllint-warnings-and-errors-syntax.html
 \ingroup qmllint-warnings-and-errors
 
-\title syntax
-\brief BRIEF
+\title Syntax
+\brief Various syntactic errors.
 
-\section1 syntax
+\qmllintwarningcategory syntax
+
+\section1 Nested inline components are not supported
 
 \section2 What happened?
-TODO
+You defined an \l{qtqml-documents-definetypes.html#inline-components}{inline component}
+inside another inline component.
 
 \section2 Why is this bad?
-TODO
+The QML language does not allow nested inline components. Always define inline components
+inside the root item of the QML file.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    component Correct: Item {
+        component Evil: Item { ... }
+        ...
+    }
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, move all components to the root item of the QML file.
 \qml
+import QtQuick
+
+Item {
+    component NotEvilAnymore: Item { ... }
+    component Correct: Item {
+        ...
+    }
+}
+
+\endqml
+
+\section1 Inline component declaration must be followed by a typename
+
+\section2 What happened?
+You defined an \l{qtqml-documents-definetypes.html#inline-components}{inline component}
+with an invalid base type.
+
+\section2 Why is this bad?
+Inline components need a base type to inherit from.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property Item someProperty
+    component InlineComponent: someProperty {}
+}
+
+\endqml
+In this case, \c someProperty is not a valid type name, as it is a property name.
+To fix this warning, use a valid Type as the component's base type:
+\qml
+import QtQuick
+
+Item {
+    property Item someProperty
+    component InlineComponent: Item { ... }
+}
+
+\endqml
+
+\section1 Invalid alias expression: an initializer is needed
+
+\section2 What happened?
+You defined a \l{qtqml-syntax-objectattributes.html#property-aliases}{property alias}
+without its aliased property.
+
+\section2 Why is this bad?
+Alias properties always need to have their aliased property or id in their definition.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    id: root
+    property int someProperty
+    property alias aliasProperty
+}
+
+\endqml
+To fix this warning, replace the alias with a normal property, or add the missing
+aliased property:
+\qml
+import QtQuick
+
+Item {
+    id: root
+    property int someProperty
+    property alias withAliasedProperty: root.someProperty
+}
+
+\endqml
+
+\section1 Invalid alias expression: only ids and field member expressions can be aliased
+
+\section2 What happened?
+You defined a \l{qtqml-syntax-objectattributes.html#property-aliases}{property alias}
+that aliases an expression other than an ID or a field member expression.
+
+A field member expression is an expression of the form \c {someId.someProperty}.
+
+\section2 Why is this bad?
+Alias properties always need to have their aliased property in their definition, and can't
+bind to other expressions than IDs and field member expressions.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int p
+    property alias someProperty: p + 1
+}
+
+\endqml
+To fix this warning, replace the alias with a normal property or bind it to an id or
+field member expression:
+\qml
+import QtQuick
+
+Item {
+    id: root
+    property int p
+    property int someProperty: p + 1
+    property alias alternative: root.p
+}
+
+\endqml
+
+\section1 Id must be followed by an identifier
+
+\section2 What happened?
+You defined an \l{qtqml-syntax-objectattributes.html#the-id-attribute}{id} without
+a value.
+
+\section2 Why is this bad?
+The QML language does not allow empty ids.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    id:;
+}
+
+\endqml
+To fix this warning, bind the id to a valid name:
+\qml
+import QtQuick
+
+Item {
+    id: root;
+}
+
+\endqml
+
+\section1 Failed to parse id
+
+\section2 What happened?
+You bound an \l{qtqml-syntax-objectattributes.html#the-id-attribute}{id} to an
+expression other than a name.
+
+\section2 Why is this bad?
+The QML language only allows names as bindings to ids; more complex expressions
+can't be used.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int a
+    property int b
+    function f() {
+        if (true)
+            return a
+        return b
+    }
+
+    id: f()
+}
+\endqml
+To fix this warning, bind the id to a valid name or declare a property and set up a binding:
+\qml
+import QtQuick
+
+Item {
+    property int a
+    property int b
+    function f() {
+        if (true)
+            return a
+        return b
+    }
+
+    id: someItem // it would be confusing to call it `f` like the function
+    property int alternative: f()
+}
+\endqml
+
+\section1 Declaring an object which is not a QML object as a list member
+
+\section2 What happened?
+You added an expression other than an \l{qtqml-typesystem-objecttypes.html}{object} into a
+list of objects.
+
+\section2 Why is this bad?
+The QML language only allows objects in object lists.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int hello
+    property list<Item> myList: [
+        Item {}, hello{}
+    ]
+}
+
+\endqml
+To fix this warning, use a valid object type, or remove the item from the list:
+\qml
+import QtQuick
+
+Item {
+    component Hello: Item {}
+    property list<Item> myList: [
+        Item {}, Hello{}
+    ]
+}
+
+\endqml
+
+\section1 Enums declared inside of inline components are ignored
+
+\section2 What happened?
+You defined an \l{qtqml-syntax-objectattributes.html#enumeration-attributes}{enum}
+inside an inline component.
+
+\section2 Why is this bad?
+The QML language only allows enum definitions inside the root
+item of the QML file. Enums declared inside an inline
+component are unusable, even inside the inline component. The same applies to
+enums declared inside non-root QML objects.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    component MyInlineComponent: Item {
+        enum MyEnum { Hello, World }
+    }
+}
+
+\endqml
+To fix this warning, move the enum declaration into the root element of the
+QML file:
+\qml
+import QtQuick
+
+Item {
+    enum MyEnum { Hello, World }
+    component MyInlineComponent: Item {
+    }
+}
+
+\endqml
+
+\section1 Unknown argument to pragma
+
+\section2 What happened?
+You specified an invalid argument to a \l{qtqml-documents-structure.html#pragmas}{pragma}.
+
+\section2 Why is this bad?
+The pragma will have no effect.
+
+\section2 Example
+\qml
+pragma ComponentBehavior: Buond
+import QtQuick
+
+Item {
+}
+
+\endqml
+You can fix this warning by removing the pragma or fixing a potential typo:
+\qml
+pragma ComponentBehavior: Bound
+import QtQuick
+
+Item {
+}
+
 \endqml
 */
-

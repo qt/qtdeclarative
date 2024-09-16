@@ -27,11 +27,13 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcStates)
+
 class QQuickStateActionEvent;
 class QQmlBinding;
 class QQmlExpression;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickStateAction
+class Q_QUICK_EXPORT QQuickStateAction
 {
 public:
     QQuickStateAction();
@@ -89,7 +91,7 @@ public:
 class QQuickStateGroup;
 class QQuickState;
 class QQuickStateOperationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
+class Q_QUICK_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -116,14 +118,14 @@ typedef QQuickStateOperation::ActionList QQuickStateActions;
 
 class QQuickTransition;
 class QQuickStatePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
+class Q_QUICK_EXPORT QQuickState : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QString name READ name WRITE setName FINAL)
-    Q_PROPERTY(bool when READ when WRITE setWhen FINAL)
-    Q_PROPERTY(QString extend READ extends WRITE setExtends FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickStateOperation> changes READ changes FINAL)
+    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(bool when READ when WRITE setWhen)
+    Q_PROPERTY(QString extend READ extends WRITE setExtends)
+    Q_PROPERTY(QQmlListProperty<QQuickStateOperation> changes READ changes)
     Q_CLASSINFO("DefaultProperty", "changes")
     Q_CLASSINFO("DeferredPropertyNames", "changes")
     QML_NAMED_ELEMENT(State)
@@ -177,8 +179,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickStateOperation)
-QML_DECLARE_TYPE(QQuickState)
 
 #endif // QQUICKSTATE_H

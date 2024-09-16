@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -27,27 +27,29 @@ TestCase {
 
     // TODO: data-fy tst_checkbox (rename to tst_check?) so we don't duplicate its tests here?
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(switchDelegate, testCase);
-        verify(control);
-        verify(!control.checked);
+    function test_defaults() {
+        let control = createTemporaryObject(switchDelegate, testCase);
+        verify(control)
+        verify(!control.checked)
     }
 
     function test_checked() {
-        var control = createTemporaryObject(switchDelegate, testCase);
-        verify(control);
+        let control = createTemporaryObject(switchDelegate, testCase);
+        verify(control)
 
-        mouseClick(control);
-        verify(control.checked);
+        mouseClick(control)
+        verify(control.checked)
 
-        mouseClick(control);
-        verify(!control.checked);
+        mouseClick(control)
+        verify(!control.checked)
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(switchDelegate, testCase);
+        let control = createTemporaryObject(switchDelegate, testCase);
         verify(control);
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
     }
@@ -60,7 +62,7 @@ TestCase {
     }
 
     function test_pressed(data) {
-        var control = createTemporaryObject(switchDelegate, testCase, {padding: 10})
+        let control = createTemporaryObject(switchDelegate, testCase, {padding: 10})
         verify(control)
 
         // stays pressed when dragged outside
@@ -74,11 +76,11 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(switchDelegate, testCase)
+        let control = createTemporaryObject(switchDelegate, testCase)
         verify(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -175,13 +177,13 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(switchDelegate, testCase)
+        let control = createTemporaryObject(switchDelegate, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         touch.press(0, control, control.width / 2, control.height / 2).commit()
@@ -201,7 +203,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -218,7 +220,7 @@ TestCase {
         // release on the right
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -237,7 +239,7 @@ TestCase {
         // release on the left
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -256,7 +258,7 @@ TestCase {
         // release in the middle
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0, 0).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -273,10 +275,10 @@ TestCase {
     }
 
     function test_mouseDrag() {
-        var control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -378,12 +380,12 @@ TestCase {
     }
 
     function test_touchDrag() {
-        var control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(switchDelegate, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -417,7 +419,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0).commit()
         compare(control.position, 1.0)
         compare(control.checked, true)
@@ -453,7 +455,7 @@ TestCase {
         // press-drag-release from and to outside the indicator
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width - 1).commit()
         compare(control.position, 0.0)
         compare(control.checked, false)
@@ -488,11 +490,11 @@ TestCase {
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(switchDelegate, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(switchDelegate, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem should be
@@ -519,7 +521,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(switchDelegate, testCase, {
+        let control = createTemporaryObject(switchDelegate, testCase, {
             text: "SwitchDelegate",
             display: data.display,
             width: 400,
@@ -529,18 +531,18 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
-        var availableWidth = control.availableWidth - control.indicator.width - control.spacing
-        var indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
+        let availableWidth = control.availableWidth - control.indicator.width - control.spacing
+        let indicatorOffset = control.mirrored ? control.indicator.width + control.spacing : 0
 
         switch (control.display) {
         case SwitchDelegate.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, indicatorOffset + (availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round(indicatorOffset + (availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case SwitchDelegate.TextOnly:
             verify(!iconImage)
@@ -551,7 +553,7 @@ TestCase {
         case SwitchDelegate.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, indicatorOffset + (availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round(indicatorOffset + (availableWidth - iconImage.width) / 2))
             compare(textLabel.x, indicatorOffset + (availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -562,7 +564,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }

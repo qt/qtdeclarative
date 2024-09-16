@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <qtesttouch.h>
@@ -11,8 +11,10 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
 #include <QtGui/QImage>
@@ -128,6 +130,8 @@ private slots:
     void synthMouseFromTouch();
     void touchTapMouseArea();
     void touchTapButton();
+    void touchTapHandler_data();
+    void touchTapHandler();
     void touchMultipleWidgets();
     void tabKey();
     void resizeOverlay();
@@ -138,6 +142,9 @@ private slots:
 #endif
     void focusPreserved();
     void accessibilityHandlesViewChange();
+    void cleanupRhi();
+    void dontRecreateRootElementOnWindowChange();
+    void setInitialProperties();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -681,11 +688,54 @@ void tst_qquickwidget::touchTapButton()
     QTRY_VERIFY(rootItem->property("wasClicked").toBool());
 }
 
+void tst_qquickwidget::touchTapHandler_data()
+{
+    QTest::addColumn<bool>("guiSynthMouse"); // AA_SynthesizeMouseForUnhandledTouchEvents
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+
+    // QTest::newRow("nosynth: passive grab") << false << QQuickTapHandler::DragThreshold; // still failing
+    QTest::newRow("nosynth: exclusive grab") << false << QQuickTapHandler::ReleaseWithinBounds;
+    QTest::newRow("allowsynth: passive grab") << true << QQuickTapHandler::DragThreshold; // QTBUG-113558
+    QTest::newRow("allowsynth: exclusive grab") << true << QQuickTapHandler::ReleaseWithinBounds;
+}
+
+void tst_qquickwidget::touchTapHandler()
+{
+    QFETCH(bool, guiSynthMouse);
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+
+    QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, guiSynthMouse);
+    QQuickWidget quick;
+    if (!quick.testAttribute(Qt::WA_AcceptTouchEvents))
+        QSKIP("irrelevant on non-touch platforms");
+
+    quick.setSource(testFileUrl("tapHandler.qml"));
+    quick.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&quick));
+
+    QQuickItem *rootItem = quick.rootObject();
+    QVERIFY(rootItem);
+    QQuickTapHandler *th = rootItem->findChild<QQuickTapHandler *>();
+    QVERIFY(th);
+    th->setGesturePolicy(gesturePolicy);
+    QSignalSpy tappedSpy(th, &QQuickTapHandler::tapped);
+
+    const QPoint p(50, 50);
+    QTest::touchEvent(&quick, device).press(0, p, &quick);
+    QTRY_COMPARE(th->isPressed(), true);
+    QTest::touchEvent(&quick, device).release(0, p, &quick);
+    QTRY_COMPARE(tappedSpy.size(), 1);
+    QCOMPARE(th->isPressed(), false);
+}
+
 void tst_qquickwidget::touchMultipleWidgets()
 {
     QWidget window;
     QQuickWidget *leftQuick = new QQuickWidget;
     leftQuick->setSource(testFileUrl("button.qml"));
+    if (!leftQuick->testAttribute(Qt::WA_AcceptTouchEvents))
+        QSKIP("irrelevant on non-touch platforms");
+
     QQuickWidget *rightQuick = new QQuickWidget;
     rightQuick->setSource(testFileUrl("button.qml"));
 
@@ -944,8 +994,7 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
 
 void tst_qquickwidget::focusPreserved()
 {
-    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))
-        QSKIP("Window Activation is not supported.");
+    SKIP_IF_NO_WINDOW_ACTIVATION;
     if (QGuiApplication::platformName() == "android")
         QSKIP("Test doesn't exit cleanly on Android and generates many warnings - QTBUG-112696");
 
@@ -1027,6 +1076,51 @@ void tst_qquickwidget::accessibilityHandlesViewChange()
     (void)iface->child(0);
 }
 
+class CreateDestroyWidget : public QWidget
+{
+public:
+    using QWidget::create;
+    using QWidget::destroy;
+};
+
+void tst_qquickwidget::cleanupRhi()
+{
+    CreateDestroyWidget topLevel;
+    QQuickWidget quickWidget(&topLevel);
+    quickWidget.setSource(testFileUrl("rectangle.qml"));
+    topLevel.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&topLevel));
+
+    topLevel.destroy();
+    topLevel.create();
+}
+
+void tst_qquickwidget::dontRecreateRootElementOnWindowChange()
+{
+    auto *quickWidget = new QQuickWidget();
+    quickWidget->setSource(testFileUrl("rectangle.qml"));
+    QObject *item = quickWidget->rootObject();
+
+    bool wasDestroyed = false;
+    QObject::connect(item, &QObject::destroyed, this, [&] { wasDestroyed = true; });
+
+    QEvent event(QEvent::WindowChangeInternal);
+    QCoreApplication::sendEvent(quickWidget, &event);
+
+    QVERIFY(!wasDestroyed);
+}
+
+void tst_qquickwidget::setInitialProperties()
+{
+    QQuickWidget widget;
+    widget.setInitialProperties({{"z", 4}, {"width", 100}});
+    widget.setSource(testFileUrl("resizemodeitem.qml"));
+    widget.show();
+    QObject *rootObject = widget.rootObject();
+    QVERIFY(rootObject);
+    QCOMPARE(rootObject->property("z").toInt(), 4);
+    QCOMPARE(rootObject->property("width").toInt(), 100);
+}
 
 QTEST_MAIN(tst_qquickwidget)
 

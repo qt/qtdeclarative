@@ -33,10 +33,10 @@ class BaselineAssembler;
 class BaselineJIT final: public Moth::ByteCodeHandler
 {
 public:
-    BaselineJIT(QV4::Function *);
-    ~BaselineJIT() override;
+    Q_AUTOTEST_EXPORT BaselineJIT(QV4::Function *);
+    Q_AUTOTEST_EXPORT ~BaselineJIT() override;
 
-    void generate();
+    Q_AUTOTEST_EXPORT void generate();
 
     void generate_Ret() override;
     void generate_Debug() override;

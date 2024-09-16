@@ -19,16 +19,17 @@
 #include <QJSEngine>
 
 #include <QtNetwork/qnetworkinformation.h>
-#include <private/qtqmlnetworkexports_p.h>
+#include <qtqmlnetworkexports.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QMLNETWORK_PRIVATE_EXPORT QQmlNetworkInformation
+struct Q_QMLNETWORK_EXPORT QQmlNetworkInformation
 {
     Q_GADGET
     QML_FOREIGN(QNetworkInformation)
     QML_NAMED_ELEMENT(NetworkInformation)
+    QML_ADDED_IN_VERSION(6, 7)
     QML_SINGLETON
 
 public:

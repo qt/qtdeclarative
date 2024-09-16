@@ -46,45 +46,16 @@ struct Options
     QStringList errors;
 };
 
-bool parseFile(const QString &filename, const Options &options)
+// TODO refactor
+// Move out to the LineWriterOptions class / helper
+static LineWriterOptions composeLwOptions(const Options &options, QStringView code)
 {
-    DomItem env =
-            DomEnvironment::create(QStringList(),
-                                   QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                                           | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
-    DomItem tFile; // place where to store the loaded file
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), filename),
-            [&tFile](Path, const DomItem &, const DomItem &newIt) {
-                tFile = newIt; // callback called when everything is loaded that receives the loaded
-                               // external file pair (path, oldValue, newValue)
-            },
-            LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
-    DomItem qmlFile = tFile.fileObject();
-    std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>();
-    if (!qmlFilePtr || !qmlFilePtr->isValid()) {
-        qmlFile.iterateErrors(
-                [](const DomItem &, const ErrorMessage &msg) {
-                    errorToQDebug(msg);
-                    return true;
-                },
-                true);
-        qWarning().noquote() << "Failed to parse" << filename;
-        return false;
-    }
-
-    // Turn AST back into source code
-    if (options.verbose)
-        qWarning().noquote() << "Dumping" << filename;
-
     LineWriterOptions lwOptions;
     lwOptions.formatOptions.indentSize = options.indentWidth;
     lwOptions.formatOptions.useTabs = options.tabs;
     lwOptions.updateOptions = LineWriterOptions::Update::None;
     if (options.newline == "native") {
         // find out current line endings...
-        QStringView code = qmlFilePtr->code();
         int newlineIndex = code.indexOf(QChar(u'\n'));
         int crIndex = code.indexOf(QChar(u'\r'));
         if (newlineIndex >= 0) {
@@ -109,37 +80,111 @@ bool parseFile(const QString &filename, const Options &options)
     } else if (options.newline == "unix") {
         lwOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
     } else {
-        qWarning().noquote() << "Unknown line ending type" << options.newline;
-        return false;
+        qWarning().noquote() << "Unknown line ending type" << options.newline << ", using default";
     }
 
     if (options.normalize)
         lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Normalize;
     else
         lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
-    WriteOutChecks checks = WriteOutCheck::Default;
-    if (options.force || qmlFilePtr->code().size() > 32000)
-        checks = WriteOutCheck::None;
 
     lwOptions.objectsSpacing = options.objectsSpacing;
     lwOptions.functionsSpacing = options.functionsSpacing;
+    return lwOptions;
+}
 
-    MutableDomItem res;
+static void logParsingErrors(const DomItem &fileItem, const QString &filename)
+{
+    fileItem.iterateErrors(
+            [](const DomItem &, const ErrorMessage &msg) {
+                errorToQDebug(msg);
+                return true;
+            },
+            true);
+    qWarning().noquote() << "Failed to parse" << filename;
+}
+
+// TODO
+// refactor this workaround. ExternalOWningItem is not recognized as an owning type
+// in ownerAs.
+static std::shared_ptr<ExternalOwningItem> getFileItemOwner(const DomItem &fileItem)
+{
+    std::shared_ptr<ExternalOwningItem> filePtr = nullptr;
+    switch (fileItem.internalKind()) {
+    case DomType::JsFile:
+        filePtr = fileItem.ownerAs<JsFile>();
+        break;
+    default:
+        filePtr = fileItem.ownerAs<QmlFile>();
+        break;
+    }
+    return filePtr;
+}
+
+// TODO refactor
+// Introduce better encapsulation and separation of concerns and move to DOM API
+// returns a DomItem corresponding to the loaded file and bool indicating the validity of the file
+static std::pair<DomItem, bool> parse(const QString &filename)
+{
+    auto envPtr =
+            DomEnvironment::create(QStringList(),
+                                   QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                                           | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+    // placeholder for a node
+    // containing metadata (ExternalItemInfo) about the loaded file
+    DomItem fMetadataItem;
+    envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, filename),
+                     // callback called when everything is loaded that receives the
+                     // loaded external file pair (path, oldValue, newValue)
+                     [&fMetadataItem](Path, const DomItem &, const DomItem &extItemInfo) {
+                         fMetadataItem = extItemInfo;
+                     });
+    auto fItem = fMetadataItem.fileObject();
+    auto filePtr = getFileItemOwner(fItem);
+    return { fItem, filePtr && filePtr->isValid() };
+}
+
+static bool parseFile(const QString &filename, const Options &options)
+{
+    const auto [fileItem, validFile] = parse(filename);
+    if (!validFile) {
+        logParsingErrors(fileItem, filename);
+        return false;
+    }
+
+    // Turn AST back into source code
+    if (options.verbose)
+        qWarning().noquote() << "Dumping" << filename;
+
+    const auto &code = getFileItemOwner(fileItem)->code();
+    auto lwOptions = composeLwOptions(options, code);
+    WriteOutChecks checks = WriteOutCheck::Default;
+    //Disable writeOutChecks for some usecases
+    if (options.force ||
+        code.size() > 32000 ||
+        fileItem.internalKind() == DomType::JsFile) {
+        checks = WriteOutCheck::None;
+    }
+
+    bool res = false;
     if (options.inplace) {
         if (options.verbose)
             qWarning().noquote() << "Writing to file" << filename;
         FileWriter fw;
         const unsigned numberOfBackupFiles = 0;
-        res = qmlFile.writeOut(filename, numberOfBackupFiles, lwOptions, &fw, checks);
+        res = fileItem.writeOut(filename, numberOfBackupFiles, lwOptions, &fw, checks);
     } else {
         QFile out;
-        out.open(stdout, QIODevice::WriteOnly);
-        LineWriter lw([&out](QStringView s) { out.write(s.toUtf8()); }, filename, lwOptions);
-        OutWriter ow(lw);
-        res = qmlFile.writeOutForFile(ow, checks);
-        ow.flush();
+        if (out.open(stdout, QIODevice::WriteOnly)) {
+            LineWriter lw([&out](QStringView s) { out.write(s.toUtf8()); }, filename, lwOptions);
+            OutWriter ow(lw);
+            res = fileItem.writeOutForFile(ow, checks);
+            ow.flush();
+        } else {
+            res = false;
+        }
     }
-    return bool(res);
+    return res;
 }
 
 Options buildCommandLineOptions(const QCoreApplication &app)
@@ -217,8 +262,7 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     QStringList files;
     if (!parser.value("files").isEmpty()) {
         QFile file(parser.value("files"));
-        file.open(QIODevice::Text | QIODevice::ReadOnly);
-        if (file.isOpen()) {
+        if (file.open(QIODevice::Text | QIODevice::ReadOnly)) {
             QTextStream in(&file);
             while (!in.atEnd()) {
                 QString file = in.readLine();

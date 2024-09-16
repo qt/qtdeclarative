@@ -25,18 +25,18 @@ QT_BEGIN_NAMESPACE
 class QQuickWheelEvent;
 class QQuickWheelHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWheelHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickWheelHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
-    Q_PROPERTY(bool invertible READ isInvertible WRITE setInvertible NOTIFY invertibleChanged FINAL)
-    Q_PROPERTY(qreal activeTimeout READ activeTimeout WRITE setActiveTimeout NOTIFY activeTimeoutChanged FINAL)
-    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged FINAL)
-    Q_PROPERTY(qreal rotationScale READ rotationScale WRITE setRotationScale NOTIFY rotationScaleChanged FINAL)
-    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged FINAL)
-    Q_PROPERTY(qreal targetScaleMultiplier READ targetScaleMultiplier WRITE setTargetScaleMultiplier NOTIFY targetScaleMultiplierChanged FINAL)
-    Q_PROPERTY(bool targetTransformAroundCursor READ isTargetTransformAroundCursor WRITE setTargetTransformAroundCursor NOTIFY targetTransformAroundCursorChanged FINAL)
-    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3) FINAL)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
+    Q_PROPERTY(bool invertible READ isInvertible WRITE setInvertible NOTIFY invertibleChanged)
+    Q_PROPERTY(qreal activeTimeout READ activeTimeout WRITE setActiveTimeout NOTIFY activeTimeoutChanged)
+    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
+    Q_PROPERTY(qreal rotationScale READ rotationScale WRITE setRotationScale NOTIFY rotationScaleChanged)
+    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
+    Q_PROPERTY(qreal targetScaleMultiplier READ targetScaleMultiplier WRITE setTargetScaleMultiplier NOTIFY targetScaleMultiplierChanged)
+    Q_PROPERTY(bool targetTransformAroundCursor READ isTargetTransformAroundCursor WRITE setTargetTransformAroundCursor NOTIFY targetTransformAroundCursorChanged)
+    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3))
 
     QML_NAMED_ELEMENT(WheelHandler)
     QML_ADDED_IN_VERSION(2, 14)

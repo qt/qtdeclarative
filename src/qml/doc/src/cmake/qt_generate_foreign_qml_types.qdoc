@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_generate_foreign_qml_types
-\target qt6_generate_foreign_qml_types
+\keyword qt6_generate_foreign_qml_types
 
 \summary{Registers types from one target in a QML module.}
 

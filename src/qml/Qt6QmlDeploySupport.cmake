@@ -9,7 +9,7 @@
 
 cmake_minimum_required(VERSION 3.16...3.21)
 
-function(qt_deploy_qml_imports)
+function(qt6_deploy_qml_imports)
     set(no_value_options
         NO_QT_IMPORTS
     )
@@ -60,6 +60,21 @@ function(qt_deploy_qml_imports)
 
 endfunction()
 
+if(NOT __QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_deploy_qml_imports)
+        if(__QT_DEFAULT_MAJOR_VERSION EQUAL 6)
+            qt6_deploy_qml_imports(${ARGV})
+
+            cmake_parse_arguments(PARSE_ARGV 0 arg "" "PLUGINS_FOUND" "")
+            if(arg_PLUGINS_FOUND)
+                set(${arg_PLUGINS_FOUND} ${${arg_PLUGINS_FOUND}} PARENT_SCOPE)
+            endif()
+        else()
+            message(FATAL_ERROR "qt_deploy_qml_imports() is only available in Qt 6.")
+        endif()
+    endfunction()
+endif()
+
 function(_qt_internal_deploy_qml_imports_for_target)
     set(no_value_options
         BUNDLE
@@ -102,6 +117,16 @@ function(_qt_internal_deploy_qml_imports_for_target)
 
     if(__QT_DEPLOY_POST_BUILD)
         message(STATUS "Running macOS bundle QML support POST_BUILD routine.")
+
+        # Unset the DESTDIR environment variable if it's set during a post build step, otherwise
+        # file(INSTALL) will install to the wrong location, which will not coincide with where
+        # symlinks will be created using file(CREATE_LINK) + the overridden QT_DEPLOY_PREFIX that
+        # will NOT contain DESTDIR.
+        if(DEFINED ENV{DESTDIR})
+            message(STATUS "Clearing DESTDIR environment variable, because it's not "
+                "supposed to be set during the post build step.")
+            set(ENV{DESTDIR} "")
+        endif()
     endif()
 
     # Parse the generated cmake file. It is possible for the scanner to find no
@@ -144,6 +169,11 @@ function(_qt_internal_deploy_qml_imports_for_target)
             # file names, so account for those. There should never be plugin
             # libraries for more than one QML module in the directory, so we
             # shouldn't need to worry about matching plugins we don't want.
+            #
+            # install_qmldir and install_plugin do not contain $ENV{DESTDIR},
+            # whereas dest_qmldir and dest_plugin do.
+            # The install_ variants are used in file(INSTALL) to avoid double DESTDIR in paths.
+            # Other code should reference the dest_ variants instead.
             set(relative_qmldir "${arg_QML_DIR}/${entry_RELATIVEPATH}")
             if("${CMAKE_INSTALL_PREFIX}" STREQUAL "")
                 set(install_qmldir "./${relative_qmldir}")
@@ -165,6 +195,12 @@ function(_qt_internal_deploy_qml_imports_for_target)
 
             file(INSTALL "${entry_PATH}/qmldir" DESTINATION "${install_qmldir}")
 
+            if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE AND
+                __QT_DEPLOY_TARGET_${entry_LINKTARGET}_TYPE STREQUAL "STATIC_LIBRARY")
+                # If the QML plugin is built statically, skip further deployment.
+                continue()
+            endif()
+
             if(__QT_DEPLOY_POST_BUILD)
                 # We are being invoked as a post-build step. The plugin might
                 # not exist yet, so we can't even glob for it, let alone copy
@@ -177,10 +213,33 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 # supports symlinks (which all do in some form now, even
                 # Windows if the right permissions are set), but we only really
                 # expect to need this for macOS app bundles.
-                set(final_destination "${dest_qmldir}/lib${entry_PLUGIN}.dylib")
+                if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE)
+                    set(source_file "${__QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE}")
+                    get_filename_component(source_file_name "${source_file}" NAME)
+                    set(final_destination "${dest_qmldir}/${source_file_name}")
+                else()
+                    # TODO: This is inconsistent with what we do further down below for the
+                    # installation case. There we file(GLOB) any files we find, whereas here we
+                    # build the path manually, because the file might not exist yet.
+                    # Ideally both cases should use neither file(GLOB) nor manual path building,
+                    # and instead rely on available target information or qmldir information.
+                    # Currently that is not possible because we don't have all targets exposed
+                    # via the __QT_DEPLOY_TARGET_{target} mechanism, only those that are built as
+                    # part of the current project, and the qmldir -> qmlimportscanner does print
+                    # the full file path, because there is one qmldir, but possibly 2+ plugins
+                    # (debug and release).
+                    set(plugin_suffix "")
+                    if(__QT_DEPLOY_ACTIVE_CONFIG STREQUAL "Debug")
+                        string(APPEND plugin_suffix "${__QT_DEPLOY_QT_DEBUG_POSTFIX}")
+                    endif()
+
+                    set(source_file "${entry_PATH}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
+                    set(final_destination "${dest_qmldir}/lib${entry_PLUGIN}${plugin_suffix}.dylib")
+                endif()
+
                 message(STATUS "Symlinking: ${final_destination}")
                 file(CREATE_LINK
-                    "${entry_PATH}/lib${entry_PLUGIN}.dylib"
+                    "${source_file}"
                     "${final_destination}"
                     SYMBOLIC
                 )
@@ -192,23 +251,30 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 continue()
             endif()
 
-            # Construct a regular expression that matches the plugin's file name.
-            set(plugin_regex "^(.*/)?(lib)?${entry_PLUGIN}")
-            if(__QT_DEPLOY_QT_IS_MULTI_CONFIG_BUILD_WITH_DEBUG)
-                # If our application is a release build, do not match any debug suffix.
-                # If our application is a debug build, match exactly a debug suffix.
-                if(__QT_DEPLOY_ACTIVE_CONFIG STREQUAL "Debug")
-                    string(APPEND plugin_regex "${__QT_DEPLOY_QT_DEBUG_POSTFIX}")
-                endif()
+            # Deploy the plugin.
+            if(DEFINED __QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE)
+                set(files "${__QT_DEPLOY_TARGET_${entry_LINKTARGET}_FILE}")
             else()
-                # The Qt installation does only contain one build of the plugin. We match any
-                # possible debug suffix, or none.
-                string(APPEND plugin_regex ".*")
-            endif()
-            string(APPEND plugin_regex "\\.(so|dylib|dll)(\\.[0-9]+)*$")
+                # We don't know the exact target file name. Fall back to file name heuristics.
 
-            file(GLOB files LIST_DIRECTORIES false "${entry_PATH}/*${entry_PLUGIN}*")
-            list(FILTER files INCLUDE REGEX "${plugin_regex}")
+                # Construct a regular expression that matches the plugin's file name.
+                set(plugin_regex "^(.*/)?(lib)?${entry_PLUGIN}")
+                if(__QT_DEPLOY_QT_IS_MULTI_CONFIG_BUILD_WITH_DEBUG)
+                    # If our application is a release build, do not match any debug suffix.
+                    # If our application is a debug build, match exactly a debug suffix.
+                    if(__QT_DEPLOY_ACTIVE_CONFIG STREQUAL "Debug")
+                        string(APPEND plugin_regex "${__QT_DEPLOY_QT_DEBUG_POSTFIX}")
+                    endif()
+                else()
+                    # The Qt installation does only contain one build of the plugin. We match any
+                    # possible debug suffix, or none.
+                    string(APPEND plugin_regex ".*")
+                endif()
+                string(APPEND plugin_regex "\\.(so|dylib|dll)(\\.[0-9]+)*$")
+
+                file(GLOB files LIST_DIRECTORIES false "${entry_PATH}/*${entry_PLUGIN}*")
+                list(FILTER files INCLUDE REGEX "${plugin_regex}")
+            endif()
             file(INSTALL ${files} DESTINATION "${install_plugin}" USE_SOURCE_PERMISSIONS)
 
             get_filename_component(dest_plugin_abs "${dest_plugin}" ABSOLUTE)
@@ -223,6 +289,16 @@ function(_qt_internal_deploy_qml_imports_for_target)
                 foreach(file IN LISTS files)
                     get_filename_component(filename "${file}" NAME)
                     list(APPEND plugins_found "${rel_path}/${filename}")
+                endforeach()
+            endif()
+
+            # Install runtime dependencies on Windows.
+            if(__QT_DEPLOY_SYSTEM_NAME STREQUAL "Windows")
+                foreach(file IN LISTS __QT_DEPLOY_TARGET_${entry_LINKTARGET}_RUNTIME_DLLS)
+                    if(__QT_DEPLOY_VERBOSE)
+                        message(STATUS "runtime dependency for QML plugin '${entry_PLUGIN}':")
+                    endif()
+                    file(INSTALL ${file} DESTINATION "${QT_DEPLOY_PREFIX}/${QT_DEPLOY_BIN_DIR}")
                 endforeach()
             endif()
 

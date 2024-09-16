@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickThemePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTheme
+class Q_QUICKTEMPLATES2_EXPORT QQuickTheme
 {
 public:
     QQuickTheme();

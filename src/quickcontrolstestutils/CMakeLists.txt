@@ -22,6 +22,8 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private
         Qt::QuickTestUtilsPrivate
+    NO_GENERATE_CPP_EXPORTS
+    QT_LICENSE_ID QT_COMMERCIAL_OR_GPL3
 )
 qt_internal_extend_target(QuickControlsTestUtilsPrivate CONDITION QT_FEATURE_quicktemplates2_container
     SOURCES

@@ -194,17 +194,6 @@ void QQmlThread::shutdown()
     Q_ASSERT(!d->m_shutdown);
 
     d->m_shutdown = true;
-    for (;;) {
-        if (d->mainSync || !d->mainList.isEmpty()) {
-            d->unlock();
-            d->mainEvent();
-            d->lock();
-        } else if (!d->threadList.isEmpty()) {
-            d->wait();
-        } else {
-            break;
-        }
-    }
 
     if (QCoreApplication::closingDown())
         d->quit();
@@ -213,6 +202,10 @@ void QQmlThread::shutdown()
 
     d->unlock();
     d->QThread::wait();
+
+    // Discard all remaining messages.
+    // We don't need the lock anymore because the thread is dead.
+    discardMessages();
 }
 
 bool QQmlThread::isShutdown() const
@@ -247,7 +240,7 @@ void QQmlThread::wait()
 
 bool QQmlThread::isThisThread() const
 {
-    return QThread::currentThreadId() == static_cast<QThreadPrivate *>(QObjectPrivate::get(d))->threadData.loadRelaxed()->threadId.loadRelaxed();
+    return d->isCurrentThread();
 }
 
 QThread *QQmlThread::thread() const
@@ -399,5 +392,22 @@ void QQmlThread::waitForNextMessage()
     d->m_mainThreadWaiting = false;
 }
 
+/*!
+    \internal
+    \note This method must be called in the main thread
+    \warning This method requires that the lock is held!
+
+    Clear all pending events, for either thread.
+*/
+void QQmlThread::discardMessages()
+{
+    Q_ASSERT(!isThisThread());
+    if (Message *mainSync = std::exchange(d->mainSync, nullptr))
+        delete mainSync;
+    while (!d->mainList.isEmpty())
+        delete d->mainList.takeFirst();
+    while (!d->threadList.isEmpty())
+        delete d->threadList.takeFirst();
+}
 
 QT_END_NAMESPACE

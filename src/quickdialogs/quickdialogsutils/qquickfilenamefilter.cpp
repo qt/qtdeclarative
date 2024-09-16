@@ -7,7 +7,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcFileNameFilter, "qt.quick.dialogs.qquickfilenamefilter")
+Q_STATIC_LOGGING_CATEGORY(lcFileNameFilter, "qt.quick.dialogs.qquickfilenamefilter")
 
 QQuickFileNameFilter::QQuickFileNameFilter(QObject *parent)
     : QObject(parent), m_index(-1)

@@ -1,9 +1,8 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick.Controls as QQC2
-import WearableStyle
 
 Item {
     QQC2.SwipeView {
@@ -15,31 +14,31 @@ Item {
             id: placesList
             ListElement {
                 cityName: "New York"
-                timeShift: -4
+                shift: -4
             }
             ListElement {
                 cityName: "London"
-                timeShift: 0
+                shift: 0
             }
             ListElement {
                 cityName: "Oslo"
-                timeShift: 1
+                shift: 1
             }
             ListElement {
                 cityName: "Mumbai"
-                timeShift: 5.5
+                shift: 5.5
             }
             ListElement {
                 cityName: "Tokyo"
-                timeShift: 9
+                shift: 9
             }
             ListElement {
                 cityName: "Brisbane"
-                timeShift: 10
+                shift: 10
             }
             ListElement {
                 cityName: "Los Angeles"
-                timeShift: -8
+                shift: -8
             }
         }
 

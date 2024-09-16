@@ -3,7 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.impl as ControlsImpl
+import QtQuick.Controls.impl
 import QtQuick.Dialogs.quickimpl as DialogsQuickImpl
 
 DialogsQuickImpl.FileDialogDelegate {
@@ -34,7 +34,7 @@ DialogsQuickImpl.FileDialogDelegate {
     required property int index
     required property string fileName
     required property url fileUrl
-    required property int fileSize
+    required property double fileSize
     required property date fileModified
     required property bool fileIsDir
 

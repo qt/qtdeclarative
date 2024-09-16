@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 
@@ -62,6 +62,7 @@ private slots:
     void renderAndReadBackWithRhi_data();
     void renderAndReadBackWithRhi();
     void renderAndReadBackWithVulkanNative();
+    void renderAndReadBackWithVulkanAndCustomDepthTexture();
 
 private:
 #if QT_CONFIG(vulkan)
@@ -104,30 +105,32 @@ void tst_RenderControl::renderAndReadBackWithRhi_data()
     QTest::addColumn<QSGRendererInterface::GraphicsApi>("api");
 
 #if QT_CONFIG(opengl)
-    QTest::newRow("OpenGL") << QSGRendererInterface::OpenGLRhi;
+    QTest::newRow("OpenGL") << QSGRendererInterface::OpenGL;
 #endif
 #if QT_CONFIG(vulkan)
-    QTest::newRow("Vulkan") << QSGRendererInterface::VulkanRhi;
+    QTest::newRow("Vulkan") << QSGRendererInterface::Vulkan;
 #endif
 #ifdef Q_OS_WIN
-    QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
+    QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11;
+    QTest::newRow("D3D12") << QSGRendererInterface::Direct3D12;
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-    QTest::newRow("Metal") << QSGRendererInterface::MetalRhi;
+#if QT_CONFIG(metal)
+    QTest::newRow("Metal") << QSGRendererInterface::Metal;
 #endif
 }
 
 void tst_RenderControl::renderAndReadBackWithRhi()
 {
     QFETCH(QSGRendererInterface::GraphicsApi, api);
+
 #if QT_CONFIG(vulkan)
-    if (api == QSGRendererInterface::VulkanRhi && !vulkanInstance.isValid())
+    if (api == QSGRendererInterface::Vulkan && !vulkanInstance.isValid())
         QSKIP("Skipping Vulkan-based QRhi readback test due to failing to create a VkInstance");
 #endif
 
 #ifdef Q_OS_ANDROID
     // QTBUG-102780
-    if (api == QSGRendererInterface::VulkanRhi)
+    if (api == QSGRendererInterface::Vulkan)
         QSKIP("Vulkan-based rendering tests on Android are flaky.");
 #endif
 
@@ -141,7 +144,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
     QScopedPointer<QQuickRenderControl> renderControl(new QQuickRenderControl);
     QScopedPointer<QQuickWindow> quickWindow(new QQuickWindow(renderControl.data()));
 #if QT_CONFIG(vulkan)
-    if (api == QSGRendererInterface::VulkanRhi)
+    if (api == QSGRendererInterface::Vulkan)
         quickWindow->setVulkanInstance(&vulkanInstance);
 #endif
 
@@ -180,7 +183,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
     // failed. The exception for now is OpenGL - that should (usually) work.
     if (!initSuccess) {
 #if QT_CONFIG(opengl)
-        if (api != QSGRendererInterface::OpenGLRhi
+        if (api != QSGRendererInterface::OpenGL
                 || !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
 #endif
         {
@@ -353,7 +356,7 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
     if (!vulkanInstance.isValid())
         QSKIP("Skipping native Vulkan test due to failing to create a VkInstance");
 
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
     // We will create our own VkDevice and friends, which will then get used by
     // Qt Quick as well (instead of creating its own objects), so this is a test
@@ -659,21 +662,6 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
             QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
             QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
 
-            // after about 1.25 seconds (animation time, one iteration is 16 ms
-            // thanks to our custom animation driver) the rectangle reaches a 90
-            // degree rotation, that should be frame 76
-            if (frame <= 2 || (frame >= 76 && frame <= 80)) {
-                QRgb c = img.pixel(28, 28); // rectangle
-                QVERIFY(qAbs(qRed(c) - 152) < maxFuzz);
-                QVERIFY(qAbs(qGreen(c) - 251) < maxFuzz);
-                QVERIFY(qAbs(qBlue(c) - 152) < maxFuzz);
-            } else {
-                QRgb c = img.pixel(28, 28); // background because rectangle got rotated so this pixel is not covered by it
-                QVERIFY(qAbs(qRed(c) - 70) < maxFuzz);
-                QVERIFY(qAbs(qGreen(c) - 130) < maxFuzz);
-                QVERIFY(qAbs(qBlue(c) - 180) < maxFuzz);
-            }
-
             img = QImage();
             df->vkUnmapMemory(dev, bufMem);
         }
@@ -690,6 +678,151 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
     // now that everything is destroyed, get rid of the VkDevice too
     df->vkDestroyDevice(dev, nullptr);
     vulkanInstance.resetDeviceFunctions(dev);
+#else
+    QSKIP("No Vulkan support in Qt build, skipping native Vulkan test");
+#endif
+}
+
+void tst_RenderControl::renderAndReadBackWithVulkanAndCustomDepthTexture()
+{
+#if QT_CONFIG(vulkan)
+    if (!vulkanInstance.isValid())
+        QSKIP("Skipping native Vulkan test due to failing to create a VkInstance");
+
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
+
+#ifdef Q_OS_ANDROID
+    if (QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan)
+        QSKIP("Vulkan support is broken in Android emulator, skipping");
+#endif
+
+    QScopedPointer<QQuickRenderControl> renderControl(new QQuickRenderControl);
+    QScopedPointer<QQuickWindow> quickWindow(new QQuickWindow(renderControl.data()));
+
+    quickWindow->setVulkanInstance(&vulkanInstance);
+
+    QScopedPointer<QQmlEngine> qmlEngine(new QQmlEngine);
+    QScopedPointer<QQmlComponent> qmlComponent(new QQmlComponent(qmlEngine.data(),
+                                                                 testFileUrl(QLatin1String("rect_depth.qml"))));
+    QVERIFY(!qmlComponent->isLoading());
+    if (qmlComponent->isError()) {
+        for (const QQmlError &error : qmlComponent->errors())
+            qWarning() << error.url() << error.line() << error;
+    }
+    QVERIFY(!qmlComponent->isError());
+
+    QObject *rootObject = qmlComponent->create();
+    if (qmlComponent->isError()) {
+        for (const QQmlError &error : qmlComponent->errors())
+            qWarning() << error.url() << error.line() << error;
+    }
+    QVERIFY(!qmlComponent->isError());
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(rootObject);
+    QVERIFY(rootItem);
+    static const QSize ITEM_SIZE = QSize(200, 200);
+    QCOMPARE(rootItem->size(), ITEM_SIZE);
+
+    quickWindow->contentItem()->setSize(rootItem->size());
+    quickWindow->setGeometry(0, 0, rootItem->width(), rootItem->height());
+
+    rootItem->setParentItem(quickWindow->contentItem());
+
+    const bool initSuccess = renderControl->initialize();
+
+    if (!initSuccess)
+        QSKIP("Could not initialize graphics, perhaps unsupported graphics API, skipping");
+
+    QRhi *rhi = renderControl->rhi();
+    Q_ASSERT(rhi);
+
+    const QSize size = rootItem->size().toSize();
+    QScopedPointer<QRhiTexture> tex(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
+                                                    QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    QVERIFY(tex->create());
+
+    // In this test we use QRhiTexture to create resources but pull out the
+    // native VkImage and pass that in via fromVulkanImage(). This is to
+    // exercise additional features, such as setting a custom depth texture,
+    // which is not available (not relevant) when using fromRhiRenderTarget().
+    // In particular, this setup (fromVulkanImage + setDepthTexture) exercises
+    // what we get in Qt Quick 3D with OpenXR, where rendering happens into a
+    // XrSwapchain-provided color and depth texture. (granted, here we only
+    // exercise the non-multiview, non-MSAA case).
+
+    QScopedPointer<QRhiTexture> depthTex(rhi->newTexture(QRhiTexture::D24S8, size, 1, QRhiTexture::RenderTarget));
+    QVERIFY(depthTex->create());
+
+    QQuickRenderTarget rt = QQuickRenderTarget::fromVulkanImage(VkImage(tex->nativeTexture().object),
+                                                                        VkImageLayout(tex->nativeTexture().layout),
+                                                                        VK_FORMAT_R8G8B8A8_UNORM,
+                                                                        VK_FORMAT_R8G8B8A8_UNORM,
+                                                                        size,
+                                                                        1,
+                                                                        0,
+                                                                        {});
+    rt.setDepthTexture(depthTex.data());
+    quickWindow->setRenderTarget(rt);
+
+    QSize currentSize = size;
+
+    for (int frame = 0; frame < 100; ++frame) {
+        QCoreApplication::processEvents();
+
+        if (frame > 0)
+            animDriver->advance();
+
+        renderControl->polishItems();
+
+        renderControl->beginFrame();
+
+        renderControl->sync();
+        renderControl->render();
+
+        bool readCompleted = false;
+        QRhiReadbackResult readResult;
+        QImage result;
+        readResult.completed = [&readCompleted, &readResult, &result, &rhi] {
+            readCompleted = true;
+            QImage wrapperImage(reinterpret_cast<const uchar *>(readResult.data.constData()),
+                                readResult.pixelSize.width(), readResult.pixelSize.height(),
+                                QImage::Format_RGBA8888_Premultiplied);
+            if (rhi->isYUpInFramebuffer())
+                result = wrapperImage.mirrored();
+            else
+                result = wrapperImage.copy();
+        };
+        QRhiResourceUpdateBatch *readbackBatch = rhi->nextResourceUpdateBatch();
+        readbackBatch->readBackTexture(tex.data(), &readResult);
+        renderControl->commandBuffer()->resourceUpdate(readbackBatch);
+
+        renderControl->endFrame();
+
+        QVERIFY(readCompleted);
+
+        QImage img = result;
+        QVERIFY(!img.isNull());
+        QCOMPARE(img.size(), currentSize);
+
+        const int maxFuzz = 2;
+
+        // The scene is: background, rectangle, text
+        // where rectangle rotates
+
+        QRgb background = img.pixel(5, 5);
+
+        // with rect_depth.qml the following would not pass if the depth buffering
+        // was not functional (because the red rectangle with z: -1 would still
+        // go on top, not below)
+        QVERIFY(qAbs(qRed(background) - 70) < maxFuzz);
+        QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
+        QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
+
+        background = img.pixel(195, 195);
+        QVERIFY(qAbs(qRed(background) - 70) < maxFuzz);
+        QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
+        QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
+    }
 #else
     QSKIP("No Vulkan support in Qt build, skipping native Vulkan test");
 #endif

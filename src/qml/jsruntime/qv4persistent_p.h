@@ -51,10 +51,13 @@ struct Q_QML_EXPORT PersistentValueStorage
     Iterator begin() { return Iterator(firstPage, 0); }
     Iterator end() { return Iterator(nullptr, 0); }
 
+    void clearFreePageHint();
+
     static ExecutionEngine *getEngine(const Value *v);
 
     ExecutionEngine *engine;
     void *firstPage;
+    void *freePageHint = nullptr;
 private:
     static void freeUnchecked(Value *v);
     static void freePage(void *page);
@@ -128,26 +131,11 @@ public:
     WeakValue &operator=(const WeakValue &other);
     ~WeakValue();
 
-    void set(ExecutionEngine *engine, const Value &value)
-    {
-        if (!val)
-            allocVal(engine);
-        *val = value;
-    }
+    void set(ExecutionEngine *engine, const Value &value);
 
-    void set(ExecutionEngine *engine, ReturnedValue value)
-    {
-        if (!val)
-            allocVal(engine);
-        *val = value;
-    }
+    void set(ExecutionEngine *engine, ReturnedValue value);
 
-    void set(ExecutionEngine *engine, Heap::Base *obj)
-    {
-        if (!val)
-            allocVal(engine);
-        *val = obj;
-    }
+    void set(ExecutionEngine *engine, Heap::Base *obj);
 
     ReturnedValue value() const {
         return (val ? val->asReturnedValue() : Encode::undefined());

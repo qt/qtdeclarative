@@ -67,6 +67,7 @@ public:
     Qt::DropAction startDrag(Qt::DropActions supportedActions);
     void setTarget(QQuickItem *item);
     QMimeData *createMimeData() const;
+    void loadPixmap();
 
     QQuickDragGrabber dragGrabber;
 
@@ -86,6 +87,7 @@ public:
     bool overrideActions : 1;
     QPointF hotSpot;
     QUrl imageSource;
+    QSize imageSourceSize;
     QQuickPixmap pixmapLoader;
     QStringList keys;
     QVariantMap externalMimeData;

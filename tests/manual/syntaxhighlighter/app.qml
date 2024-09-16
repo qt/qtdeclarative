@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -9,7 +9,12 @@ TextEdit {
     id: textEdit
     width: 420; height: 200
     text: '<p>Try the different <span style="text-decoration: underline overline; text-decoration-color: green;">highlight</span> styles.' +
-          "The keyword is 'char'.</p><code>char * test;</code>"
+          "The keyword is 'char'.</p><code>char * test;</code>" + '<ol>
+<li style="color:#f32727">Red bullet</li>
+<li style="color:#f327ca">Pink bullet</li>
+<li>black bullet</li>
+<li style="color:#f32727">Red bullet</li></ol><p>
+Some non-red text<p>'
     textFormat: TextEdit.RichText
     leftPadding: 6; topPadding: 6
 

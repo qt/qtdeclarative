@@ -630,11 +630,6 @@ void ArrayData::sort(ExecutionEngine *engine, Object *thisObject, const Value &c
     if (!arrayData || !arrayData->length())
         return;
 
-    if (!comparefn.isUndefined() && !comparefn.isFunctionObject()) {
-        engine->throwTypeError();
-        return;
-    }
-
     // The spec says the sorting goes through a series of get,put and delete operations.
     // this implies that the attributes don't get sorted around.
 

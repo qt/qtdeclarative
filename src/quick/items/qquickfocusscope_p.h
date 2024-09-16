@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickFocusScope : public QQuickItem
+class Q_QUICK_EXPORT QQuickFocusScope : public QQuickItem
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(FocusScope)
@@ -31,7 +31,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFocusScope)
 
 #endif // QQUICKFOCUSSCOPE_P_H

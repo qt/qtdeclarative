@@ -138,8 +138,8 @@ void QQmlPreviewBlacklist::Node::remove(const QString &path, int offset)
     if (offset == path.size())
         return;
 
-    auto it = m_next.find(path.at(offset));
-    if (it != m_next.end())
+    auto it = m_next.constFind(path.at(offset));
+    if (it != m_next.cend())
         (*it)->remove(path, ++offset);
 }
 

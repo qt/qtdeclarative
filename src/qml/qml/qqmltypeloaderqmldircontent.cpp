@@ -7,10 +7,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
+QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri, const QUrl &url) const
 {
     QList<QQmlError> errors;
-    const QUrl url(uri);
     const auto parseErrors = m_parser.errors(uri);
     for (const auto &parseError : parseErrors) {
         QQmlError error;

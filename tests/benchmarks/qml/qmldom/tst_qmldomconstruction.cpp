@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
@@ -54,16 +54,16 @@ void tst_qmldomconstruction::domConstructionTime()
 
     DomItem tFile;
     QBENCHMARK {
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 importPaths,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
-                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies, withScope);
 
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileName, withScope),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt.fileObject(); },
-                LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, fileName),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                             tFile = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
     }
 }
 

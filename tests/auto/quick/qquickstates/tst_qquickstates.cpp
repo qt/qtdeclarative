@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -154,6 +154,7 @@ private slots:
     void anchorChangesCrash();
     void anchorRewindBug();
     void anchorRewindBug2();
+    void anchorRewind_keepsSize_whenStateResetsDefaultAnchors();
     void script();
     void restoreEntryValues();
     void explicitChanges();
@@ -191,6 +192,7 @@ private slots:
     void rewindAnchorChange();
     void rewindAnchorChangeSize();
     void bindingProperlyRemovedWithTransition();
+    void doNotCrashOnBroken();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1086,6 +1088,30 @@ void tst_qquickstates::anchorRewindBug2()
     QCOMPARE(mover->width(), qreal(50.0));
 }
 
+// QTBUG-126057
+void tst_qquickstates::anchorRewind_keepsSize_whenStateResetsDefaultAnchors()
+{
+    // Arrange
+    QQmlEngine engine;
+
+    // NOTE: Contains two nested rectangles, inner is by default anchored to the top left corner of
+    // its parent. A state is initially "anchored" which removes the default anchoring and anchors
+    // the inner rectangle to the bottom right corner of the parent. The size of the inner rectangle
+    // is assigned to 50x50 on Component.onCompleted of outer rectangle.
+    QQmlComponent rectComponent(&engine, testFileUrl("anchorRewindBug3.qml"));
+    QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle*>(rectComponent.create()));
+    QVERIFY(rect != nullptr);
+    QQuickRectangle *mover = rect->findChild<QQuickRectangle*>("inner");
+    QVERIFY(mover != nullptr);
+
+    // Act
+    QQuickItemPrivate::get(rect.get())->setState("");
+
+    // Assert
+    QCOMPARE(mover->width(), qreal(50.0));
+    QCOMPARE(mover->height(), qreal(50.0));
+}
+
 void tst_qquickstates::script()
 {
     QQmlEngine engine;
@@ -1656,7 +1682,7 @@ static int getRefCount(const QQmlAnyBinding &binding)
     } else {
         // this temporarily adds a refcount because we construc a new untypedpropertybinding
         // thus -1
-        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->ref - 1;
+        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->refCount() - 1;
     }
 }
 
@@ -2034,6 +2060,21 @@ void tst_qquickstates::bindingProperlyRemovedWithTransition()
 
     item->setProperty("toggle", true);
     QTRY_COMPARE(item->width(), 100);
+}
+
+void tst_qquickstates::doNotCrashOnBroken()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("broken.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QQuickItem *item = qobject_cast<QQuickItem *>(root.get());
+    QVERIFY(item);
+
+    QQmlListReference states(item, "states");
+    QCOMPARE(states.size(), 1);
+    QCOMPARE(states.at(0), nullptr);
 }
 
 QTEST_MAIN(tst_qquickstates)

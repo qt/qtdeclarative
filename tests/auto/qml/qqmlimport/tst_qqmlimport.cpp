@@ -1,23 +1,50 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
-#include <QtCore/qscopeguard.h>
-#include <QtTest/QtTest>
-#include <QQmlApplicationEngine>
-#include <QQmlAbstractUrlInterceptor>
+#include <private/qmlutils_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlimport_p.h>
+
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
-#include <private/qqmlimport_p.h>
-#include <private/qqmlengine_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QQmlComponent>
+
+#include <QtTest/qsignalspy.h>
+
+#include <QtQml/qqmlabstracturlinterceptor.h>
+#include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlmoduleregistration.h>
+
+#include <QtCore/qscopeguard.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtCore/private/qlibraryinfo_p.h>
+
+class TheThing : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int width MEMBER m_width FINAL)
+
+public:
+    int m_width = 12;
+};
+
+void qml_register_types_noimport()
+{
+    qmlRegisterTypesAndRevisions<TheThing>("noimport", 1);
+    qmlRegisterModule("noimport", 1, 0);
+}
 
 class tst_QQmlImport : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    tst_QQmlImport();
+    tst_QQmlImport()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
+        , noimportRegistration("noimport", qml_register_types_noimport)
+    {
+    }
 
 private slots:
     void importPathOrder();
@@ -34,12 +61,19 @@ private slots:
     void importDependenciesPrecedence();
     void cleanup();
     void envResourceImportPath();
+    void preferResourcePath_data();
     void preferResourcePath();
     void invalidFileImport_data();
     void invalidFileImport();
     void implicitWithDependencies();
     void qualifiedScriptImport();
     void invalidImportUrl();
+    void registerTypesFromImplicitImport_data();
+    void registerTypesFromImplicitImport();
+    void containsAllQtConfEntries();
+
+private:
+    QQmlModuleRegistration noimportRegistration;
 };
 
 void tst_QQmlImport::cleanup()
@@ -74,12 +108,21 @@ void tst_QQmlImport::envResourceImportPath()
         QVERIFY((importPaths.contains(path.startsWith(u':') ? QLatin1String("qrc") + path : path)));
 }
 
+void tst_QQmlImport::preferResourcePath_data()
+{
+    QTest::addColumn<QUrl>("file");
+    QTest::addRow("without qmldir") << testFileUrl("prefer.qml");
+    QTest::addRow("with qmldir") << testFileUrl("prefer2.qml");
+}
+
 void tst_QQmlImport::preferResourcePath()
 {
+    QFETCH(QUrl, file);
+
     QQmlEngine engine;
     engine.addImportPath(dataDirectory());
 
-    QQmlComponent component(&engine, testFileUrl("prefer.qml"));
+    QQmlComponent component(&engine, file);
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> o(component.create());
     QCOMPARE(o->objectName(), "right");
@@ -150,6 +193,43 @@ void tst_QQmlImport::invalidImportUrl()
                     ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
+void tst_QQmlImport::registerTypesFromImplicitImport_data()
+{
+    QTest::addColumn<QUrl>("testfile");
+    QTest::addRow("immediate") << testFileUrl("noimport/Main.qml");
+    QTest::addRow("redirected") << testFileUrl("noimport/redirected/Redirected.qml");
+    QTest::addRow("dirimported") << testFileUrl("noimport/dirimported/Dirimported.qml");
+}
+
+void tst_QQmlImport::registerTypesFromImplicitImport()
+{
+    QFETCH(QUrl, testfile);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testfile);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    TheThing *t = qobject_cast<TheThing *>(o.data());
+    QVERIFY(t);
+    QCOMPARE(t->m_width, 640);
+}
+
+void tst_QQmlImport::containsAllQtConfEntries()
+{
+    QString qtConfPath(u":/qmlimports.qt.conf");
+    QLibraryInfoPrivate::setQtconfManualPath(&qtConfPath);
+    QLibraryInfoPrivate::reload();
+    auto cleanup = qScopeGuard([](){
+        QLibraryInfoPrivate::setQtconfManualPath(nullptr);
+        QLibraryInfoPrivate::reload();
+    });
+    QQmlEngine engine;
+    auto importPaths = engine.importPathList();
+    QVERIFY(importPaths.contains(u"qrc:/a/path"));
+    QVERIFY(importPaths.contains(u"qrc:/another/path"));
+    QVERIFY(importPaths.contains(u"qrc:/even/more/path"));
+}
+
 void tst_QQmlImport::testDesignerSupported()
 {
     std::unique_ptr<QQuickView> window = std::make_unique<QQuickView>();
@@ -217,11 +297,6 @@ void tst_QQmlImport::uiFormatLoading()
     QCOMPARE(test->rootObjects().size(), ++size);
     QVERIFY(test->rootObjects()[size -1]);
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
-}
-
-tst_QQmlImport::tst_QQmlImport()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
-{
 }
 
 void tst_QQmlImport::importPathOrder()
@@ -525,6 +600,25 @@ void tst_QQmlImport::registerModuleImport()
 
     qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick", 2);
     qmlUnregisterModuleImport("MyPluginSupported", 2, "ShadowQuick", 1);
+
+    qmlRegisterTypesAndRevisions<NotItem>("NoQmldir", 2);
+    qmlRegisterModuleImport("NoQmldir", QQmlModuleImportModuleAny, "QtQml", QQmlModuleImportAuto);
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import NoQmldir 2.0
+            QtObject {
+                property Item item: Item {}
+            }
+        )", QUrl::fromLocalFile(""));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> object { component.create() };
+        QVERIFY(object);
+        NotItem *item = object->property("item").value<NotItem *>();
+        QVERIFY(item);
+    }
 }
 
 void tst_QQmlImport::importDependenciesPrecedence()

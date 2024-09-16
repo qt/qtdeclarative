@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickMnemonicLabel : public QQuickText
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickMnemonicLabel : public QQuickText
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText FINAL)
@@ -45,7 +45,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickMnemonicLabel)
 
 #endif // QQUICKMNEMONICLABEL_P_H

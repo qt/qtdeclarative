@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -38,6 +38,14 @@ Window {
         ListElement {
             text: "Squircle"
             source: "Squircle.qml"
+        }
+        ListElement {
+            text: "Intersect"
+            source: "Intersect.qml"
+        }
+        ListElement {
+            text: "Intersect2"
+            source: "Intersect2.qml"
         }
         ListElement {
             text: "CubicShape"

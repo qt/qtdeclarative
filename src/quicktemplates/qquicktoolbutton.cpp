@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolButton
     \inherits Button
-//!     \instantiates QQuickToolButton
+//!     \nativetype QQuickToolButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-buttons
@@ -32,9 +32,11 @@ QT_BEGIN_NAMESPACE
     \sa ToolBar, {Customizing ToolButton}, {Button Controls}
 */
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolPrivate : public QQuickButtonPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolPrivate : public QQuickButtonPrivate
 {
     Q_DECLARE_PUBLIC(QQuickToolButton)
+
+    QQuickToolPrivate() { setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed); }
 
 public:
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolBar); }

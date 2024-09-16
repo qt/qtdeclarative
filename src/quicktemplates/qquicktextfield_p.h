@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextFieldPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextField : public QQuickTextInput
+class Q_QUICKTEMPLATES2_EXPORT QQuickTextField : public QQuickTextInput
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
@@ -147,7 +147,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTextField)
 
 #endif // QQUICKTEXTFIELD_P_H

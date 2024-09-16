@@ -14,7 +14,7 @@ qt_find_package(LTTngUST PROVIDED_TARGETS LTTng::UST MODULE_NAME qml QMAKE_LIB l
 qt_find_package(Python REQUIRED)
 if(Python_Interpreter_FOUND)
     # Need to make it globally available to the project
-    set(QT_INTERNAL_DECLARATIVE_PYTHON "${Python_EXECUTABLE}" CACHE STRING "")
+    set(QT_INTERNAL_DECLARATIVE_PYTHON "${Python_EXECUTABLE}" CACHE STRING "" FORCE)
 endif()
 
 #### Tests
@@ -82,7 +82,7 @@ qt_feature("qml-ssl" PUBLIC
     SECTION "QML"
     LABEL "QML SSL support"
     PURPOSE "Provides ssl support in QML."
-    CONDITION QT_FEATURE_ssl
+    CONDITION QT_FEATURE_qml_network AND QT_FEATURE_ssl
 )
 
 # On arm and arm64 we need a specialization of cacheFlush() for each OS to be

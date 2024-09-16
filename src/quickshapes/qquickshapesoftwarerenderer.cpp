@@ -19,8 +19,13 @@ void QQuickShapeSoftwareRenderer::beginSync(int totalCount, bool *countChanged)
 
 void QQuickShapeSoftwareRenderer::setPath(int index, const QQuickPath *path)
 {
+    setPath(index, path ? path->path() : QPainterPath());
+}
+
+void QQuickShapeSoftwareRenderer::setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints)
+{
     ShapePathGuiData &d(m_sp[index]);
-    d.path = path ? path->path() : QPainterPath();
+    d.path = path;
     d.dirty |= DirtyPath;
     m_accDirty |= DirtyPath;
 }
@@ -37,7 +42,7 @@ void QQuickShapeSoftwareRenderer::setStrokeWidth(int index, qreal w)
 {
     ShapePathGuiData &d(m_sp[index]);
     d.strokeWidth = w;
-    if (w >= 0.0f)
+    if (w > 0.0f)
         d.pen.setWidthF(w);
     d.dirty |= DirtyPen;
     m_accDirty |= DirtyPen;
@@ -138,6 +143,27 @@ void QQuickShapeSoftwareRenderer::setFillGradient(int index, QQuickShapeGradient
     m_accDirty |= DirtyBrush;
 }
 
+void QQuickShapeSoftwareRenderer::setFillTextureProvider(int index, QQuickItem *textureProviderItem)
+{
+    Q_UNUSED(index);
+    Q_UNUSED(textureProviderItem);
+}
+
+void QQuickShapeSoftwareRenderer::handleSceneChange(QQuickWindow *window)
+{
+    Q_UNUSED(window);
+    // No action needed
+}
+
+void QQuickShapeSoftwareRenderer::setFillTransform(int index, const QSGTransform &transform)
+{
+    ShapePathGuiData &d(m_sp[index]);
+    if (!(transform.isIdentity() && d.brush.transform().isIdentity())) // No need to copy if both==I
+        d.brush.setTransform(transform.matrix().toTransform());
+    d.dirty |= DirtyBrush;
+    m_accDirty |= DirtyBrush;
+}
+
 void QQuickShapeSoftwareRenderer::endSync(bool)
 {
 }
@@ -223,7 +249,7 @@ void QQuickShapeSoftwareRenderNode::render(const RenderState *state)
     p->setOpacity(inheritedOpacity());
 
     for (const ShapePathRenderData &d : std::as_const(m_sp)) {
-        p->setPen(d.strokeWidth >= 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
+        p->setPen(d.strokeWidth > 0.0f && d.pen.color() != Qt::transparent ? d.pen : Qt::NoPen);
         p->setBrush(d.brush.color() != Qt::transparent ? d.brush : Qt::NoBrush);
         p->drawPath(d.path);
     }

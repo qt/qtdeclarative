@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.2
 import QtTest 1.0
@@ -12,7 +12,7 @@ TestCase {
     height:400
 
     function test_invalidParent() {
-        ignoreWarning('<Unknown File>:1:49: QML QtObject: Layout must be attached to Item elements')
+        ignoreWarning('<Unknown File>:1:49: QML QtObject: Layout attached property must be attached to an object deriving from Item')
         var object = Qt.createQmlObject('import QtQuick 2.2; import QtQuick.Layouts 1.0; QtObject { Layout.fillWidth: true }', testCase, '');
         object.destroy()
     }

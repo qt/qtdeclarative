@@ -30,7 +30,7 @@ QT_BEGIN_NAMESPACE
 class RequiredProperties;
 
 class QQmlIncubator;
-class Q_QML_PRIVATE_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator, public QSharedData
+class Q_QML_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator, public QSharedData
 {
 public:
     QQmlIncubatorPrivate(QQmlIncubator *q, QQmlIncubator::IncubationMode m);

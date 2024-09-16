@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
@@ -59,7 +59,8 @@ class QQmlJSMetaEnum
     QString m_typeName;
     QSharedPointer<const QQmlJSScope> m_type;
     bool m_isFlag = false;
-    bool m_scoped = true;
+    bool m_isScoped = false;
+    bool m_isQml = false;
 
 public:
     QQmlJSMetaEnum() = default;
@@ -76,8 +77,11 @@ public:
     bool isFlag() const { return m_isFlag; }
     void setIsFlag(bool isFlag) { m_isFlag = isFlag; }
 
-    bool isScoped() const { return m_scoped; }
-    void setScoped(bool v) { m_scoped = v; }
+    bool isScoped() const { return m_isScoped; }
+    void setIsScoped(bool v) { m_isScoped = v; }
+
+    bool isQml() const { return m_isQml; }
+    void setIsQml(bool v) { m_isQml = v; }
 
     void addKey(const QString &key) { m_keys.append(key); }
     QStringList keys() const { return m_keys; }
@@ -102,7 +106,8 @@ public:
                 && a.m_name == b.m_name
                 && a.m_alias == b.m_alias
                 && a.m_isFlag == b.m_isFlag
-                && a.m_type == b.m_type;
+                && a.m_type == b.m_type
+                && a.m_isScoped == b.m_isScoped;
     }
 
     friend bool operator!=(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
@@ -112,7 +117,8 @@ public:
 
     friend size_t qHash(const QQmlJSMetaEnum &e, size_t seed = 0)
     {
-        return qHashMulti(seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag, e.m_type);
+        return qHashMulti(
+                seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag, e.m_type, e.m_isScoped);
     }
 };
 
@@ -130,10 +136,13 @@ public:
         Const,
     };
 
-    QQmlJSMetaParameter(const QString &name, const QString &typeName,
+    QQmlJSMetaParameter(QString name = QString(), QString typeName = QString(),
                         Constness typeQualifier = NonConst,
                         QWeakPointer<const QQmlJSScope> type = {})
-        : m_name(name), m_typeName(typeName), m_type(type), m_typeQualifier(typeQualifier)
+        : m_name(std::move(name)),
+          m_typeName(std::move(typeName)),
+          m_type(type),
+          m_typeQualifier(typeQualifier)
     {
     }
 
@@ -177,6 +186,8 @@ private:
     bool m_isList = false;
 };
 
+using QQmlJSMetaReturnType = QQmlJSMetaParameter;
+
 class QQmlJSMetaMethod
 {
 public:
@@ -203,22 +214,29 @@ public:
     QQmlJSMetaMethod() = default;
     explicit QQmlJSMetaMethod(QString name, QString returnType = QString())
         : m_name(std::move(name)),
-          m_returnTypeName(std::move(returnType)),
+          m_returnType(QString(), std::move(returnType)),
           m_methodType(MethodType::Method)
     {}
 
     QString methodName() const { return m_name; }
     void setMethodName(const QString &name) { m_name = name; }
 
-    QString returnTypeName() const { return m_returnTypeName; }
-    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.toStrongRef(); }
-    void setReturnTypeName(const QString &type) { m_returnTypeName = type; }
-    void setReturnType(const QSharedPointer<const QQmlJSScope> &type)
-    {
-        m_returnType = type;
-    }
+    QQmlJS::SourceLocation sourceLocation() const { return m_sourceLocation; }
+    void setSourceLocation(QQmlJS::SourceLocation location) { m_sourceLocation = location; }
+
+    QQmlJSMetaReturnType returnValue() const { return m_returnType; }
+    void setReturnValue(const QQmlJSMetaReturnType returnValue) { m_returnType = returnValue; }
+    QString returnTypeName() const { return m_returnType.typeName(); }
+    void setReturnTypeName(const QString &typeName) { m_returnType.setTypeName(typeName); }
+    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.type(); }
+    void setReturnType(QWeakPointer<const QQmlJSScope> type) { m_returnType.setType(type); }
 
     QList<QQmlJSMetaParameter> parameters() const { return m_parameters; }
+    QPair<QList<QQmlJSMetaParameter>::iterator, QList<QQmlJSMetaParameter>::iterator>
+    mutableParametersRange()
+    {
+        return { m_parameters.begin(), m_parameters.end() };
+    }
 
     QStringList parameterNames() const
     {
@@ -290,11 +308,10 @@ public:
 
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
-        return a.m_name == b.m_name && a.m_returnTypeName == b.m_returnTypeName
-                && a.m_returnType.owner_equal(b.m_returnType) && a.m_parameters == b.m_parameters
-                && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
-                && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
-                && a.m_isConstructor == b.m_isConstructor;
+        return a.m_name == b.m_name && a.m_returnType == b.m_returnType
+                && a.m_parameters == b.m_parameters && a.m_annotations == b.m_annotations
+                && a.m_methodType == b.m_methodType && a.m_methodAccess == b.m_methodAccess
+                && a.m_revision == b.m_revision && a.m_isConstructor == b.m_isConstructor;
     }
 
     friend bool operator!=(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
@@ -307,8 +324,7 @@ public:
         QtPrivate::QHashCombine combine;
 
         seed = combine(seed, method.m_name);
-        seed = combine(seed, method.m_returnTypeName);
-        seed = combine(seed, method.m_returnType.owner_hash());
+        seed = combine(seed, method.m_returnType);
         seed = combine(seed, method.m_annotations);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
@@ -324,9 +340,10 @@ public:
 
 private:
     QString m_name;
-    QString m_returnTypeName;
-    QWeakPointer<const QQmlJSScope> m_returnType;
 
+    QQmlJS::SourceLocation m_sourceLocation;
+
+    QQmlJSMetaReturnType m_returnType;
     QList<QQmlJSMetaParameter> m_parameters;
     QList<QQmlJSAnnotation> m_annotations;
 
@@ -356,8 +373,9 @@ class QQmlJSMetaProperty
     bool m_isList = false;
     bool m_isWritable = false;
     bool m_isPointer = false;
+    bool m_isTypeConstant = false;
     bool m_isFinal = false;
-    bool m_isConstant = false;
+    bool m_isPropertyConstant = false;
     int m_revision = 0;
     int m_index = -1; // relative property index within owning QQmlJSScope
 
@@ -404,6 +422,9 @@ public:
     void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
     bool isPointer() const { return m_isPointer; }
 
+    void setIsTypeConstant(bool isTypeConstant) { m_isTypeConstant = isTypeConstant; }
+    bool isTypeConstant() const { return m_isTypeConstant; }
+
     void setAliasExpression(const QString &aliasString) { m_aliasExpr = aliasString; }
     QString aliasExpression() const { return m_aliasExpr; }
     bool isAlias() const { return !m_aliasExpr.isEmpty(); } // exists for convenience
@@ -411,8 +432,8 @@ public:
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
 
-    void setIsConstant(bool isConstant) { m_isConstant = isConstant; }
-    bool isConstant() const { return m_isConstant; }
+    void setIsPropertyConstant(bool isPropertyConstant) { m_isPropertyConstant = isPropertyConstant; }
+    bool isPropertyConstant() const { return m_isPropertyConstant; }
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
@@ -455,7 +476,7 @@ public:
     create a new binding, you know all the details of it already, so you should
     just set all the data at once.
 */
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
+class Q_QMLCOMPILER_EXPORT QQmlJSMetaPropertyBinding
 {
     using BindingType = QQmlSA::BindingType;
     using ScriptBindingKind = QQmlSA::ScriptBindingKind;
@@ -725,8 +746,6 @@ public:
         m_bindingContent = Content::ValueSource { typeName, type };
     }
 
-    QString literalTypeName() const;
-
     // ### TODO: here and below: Introduce an allowConversion parameter, if yes, enable conversions e.g. bool -> number?
     bool boolValue() const;
 
@@ -860,7 +879,7 @@ public:
     }
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaSignalHandler
+struct Q_QMLCOMPILER_EXPORT QQmlJSMetaSignalHandler
 {
     QStringList signalParameters;
     bool isMultiline;

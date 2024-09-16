@@ -17,17 +17,17 @@ class QColorOutputPrivate
 public:
     QColorOutputPrivate()
     {
-        /* - QIODevice::Unbuffered because we want it to appear when the user actually calls,
-         *   performance is considered of lower priority.
-         */
-        m_out.open(stderr, QIODevice::WriteOnly | QIODevice::Unbuffered);
         m_coloringEnabled = isColoringPossible();
     }
 
     static const char *const foregrounds[];
     static const char *const backgrounds[];
 
-    inline void write(const QString &msg) { m_out.write(msg.toLocal8Bit()); }
+    inline void write(const QString &msg)
+    {
+        const QByteArray encodedMsg = msg.toLocal8Bit();
+        fwrite(encodedMsg.constData(), size_t(1), size_t(encodedMsg.size()), stderr);
+    }
 
     static QString escapeCode(const QString &in)
     {
@@ -72,7 +72,7 @@ private:
         /* We use QFile::handle() to get the file descriptor. It's a bit unsure
          * whether it's 2 on all platforms and in all cases, so hopefully this layer
          * of abstraction helps handle such cases. */
-        return isatty(m_out.handle());
+        return isatty(fileno(stderr));
 #endif
     }
 };

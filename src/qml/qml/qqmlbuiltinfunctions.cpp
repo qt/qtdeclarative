@@ -3,52 +3,40 @@
 
 #include "qqmlbuiltinfunctions_p.h"
 
-#include <QtQml/qqmlcomponent.h>
-#include <QtQml/qqmlfile.h>
-#include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
-#include <private/qqmlloggingcategory_p.h>
-#include <private/qqmlstringconverters_p.h>
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <private/qqmldelayedcallqueue_p.h>
-#include <QFileInfo>
-
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
-#include <private/qqmlglobal_p.h>
-
+#include <private/qqmldelayedcallqueue_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlloggingcategorybase_p.h>
 #include <private/qqmlplatform_p.h>
+#include <private/qqmlstringconverters_p.h>
 
+#include <private/qv4dateobject_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4include_p.h>
-#include <private/qv4context_p.h>
-#include <private/qv4stringobject_p.h>
-#include <private/qv4dateobject_p.h>
 #include <private/qv4mm_p.h>
-#include <private/qv4jsonobject_p.h>
-#include <private/qv4objectproto_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4sequenceobject_p.h>
 #include <private/qv4stackframe_p.h>
 
-#include <QtCore/qstring.h>
-#include <QtCore/qdatetime.h>
+#include <QtQml/qqmlfile.h>
+
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qsize.h>
-#include <QtCore/qpoint.h>
+#include <QtCore/qstring.h>
 #include <QtCore/qurl.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qloggingcategory.h>
-
-#include <QDebug>
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcRootProperties, "qt.qml.rootObjectProperties");
+Q_STATIC_LOGGING_CATEGORY(lcRootProperties, "qt.qml.rootObjectProperties");
 Q_LOGGING_CATEGORY(lcQml, "qml");
 Q_LOGGING_CATEGORY(lcJs, "js");
 
@@ -62,7 +50,7 @@ using namespace QV4;
 /*!
 \qmltype Qt
 \inqmlmodule QtQml
-//! \instantiates QQmlEnginePrivate
+//! \nativetype QQmlEnginePrivate
 \ingroup qml-utility-elements
 \keyword QmlGlobalQtObject
 \brief Provides a global object with useful enums and functions from Qt.
@@ -109,8 +97,6 @@ creating objects of specific data types are also available for clients to use:
 \li \c quaternion - use \l{Qt::quaternion()}{Qt.quaternion()}
 \li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
 \endlist
-
-There are also string based constructors for these types. See \l{qtqml-typesystem-valuetypes.html}{QML Value Types} for more information.
 
 \section1 Date/Time Formatters
 
@@ -174,6 +160,7 @@ The following functions are also on the Qt object.
         \li \c "android" - Android
         \li \c "ios" - iOS
         \li \c "tvos" - tvOS
+        \li \c "visionos" - visionOS
         \li \c "linux" - Linux
         \li \c "osx" - \macos
         \li \c "qnx" - QNX (since Qt 5.9.3)
@@ -181,6 +168,9 @@ The following functions are also on the Qt object.
         \li \c "windows" - Windows
         \li \c "wasm" - WebAssembly
     \endlist
+
+    \note The property's value on \macos is "osx", regardless of Apple naming convention.
+    The returned value will be updated to "macos" for Qt 7.
 
     \row
     \li \c platform.pluginName
@@ -231,7 +221,9 @@ The following functions are also on the Qt object.
     The \c styleHints object provides platform-specific style hints and settings.
     See the \l QStyleHints documentation for further details.
 
-    You should access StyleHints via \l Application::styleHints instead.
+    You should access StyleHints via \l Application::styleHints instead, as
+    this provides better type information for tooling such as the
+    \l {Qt Quick Compiler}.
 
     \note The \c styleHints object is only available when using the Qt Quick module.
 */
@@ -264,6 +256,9 @@ The \c status property will be updated as the operation progresses.
 
 If provided, \a callback is invoked when the operation completes.  The callback is passed
 the same object as is returned from the Qt.include() call.
+
+\warning Using this function is strict mode does not actually put identifier into the
+current context.
 */
 // Qt.include() is implemented in qv4include.cpp
 
@@ -360,14 +355,11 @@ QVariant QtObject::rgba(double r, double g, double b, double a) const
 */
 QVariant QtObject::hsla(double h, double s, double l, double a) const
 {
-    if (h < 0.0) h=0.0;
-    if (h > 1.0) h=1.0;
-    if (s < 0.0) s=0.0;
-    if (s > 1.0) s=1.0;
-    if (l < 0.0) l=0.0;
-    if (l > 1.0) l=1.0;
-    if (a < 0.0) a=0.0;
-    if (a > 1.0) a=1.0;
+    if (h != -1)
+        h = qBound(0.0, h, 1.0);
+    s = qBound(0.0, s, 1.0);
+    l = qBound(0.0, l, 1.0);
+    a = qBound(0.0, a, 1.0);
 
     return QQml_colorProvider()->fromHslF(h, s, l, a);
 }
@@ -382,7 +374,8 @@ QVariant QtObject::hsla(double h, double s, double l, double a) const
 */
 QVariant QtObject::hsva(double h, double s, double v, double a) const
 {
-    h = qBound(0.0, h, 1.0);
+    if (h != -1)
+        h = qBound(0.0, h, 1.0);
     s = qBound(0.0, s, 1.0);
     v = qBound(0.0, v, 1.0);
     a = qBound(0.0, a, 1.0);
@@ -1301,9 +1294,14 @@ Each object in this array has the members \c lineNumber, \c columnNumber, \c fil
 For example, if the above snippet had misspelled color as 'colro' then the array would contain an object like the following:
 { "lineNumber" : 1, "columnNumber" : 32, "fileName" : "dynamicSnippet1", "message" : "Cannot assign to non-existent property \"colro\""}.
 
-Note that this function returns immediately, and therefore may not work if
+\note This function returns immediately, and therefore may not work if
 the \a qml string loads new components (that is, external QML files that have not yet been loaded).
 If this is the case, consider using \l{QtQml::Qt::createComponent()}{Qt.createComponent()} instead.
+
+\warning This function is extremely slow since it has to compile the passed QML string every time
+it is invoked. Furthermore, it's very easy to produce invalid QML when programmatically constructing
+QML code. It's much better to keep your QML components as separate files and add properties and
+methods to customize their behavior than to produce new components by string manipulation.
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
@@ -1466,14 +1464,15 @@ use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
 
 /*!
+\since 6.5
 \qmlmethod Component Qt::createComponent(string moduleUri, string typeName, enumeration mode, QtObject parent)
 \overload
 Returns a \l Component object created for the type specified by \a moduleUri and \a typeName.
 \qml
-import QtQuick
+import QtQml
 QtObject {
     id: root
-    property Component myComponent: Qt.createComponent(Rectangle, root)
+    property Component myComponent: Qt.createComponent("QtQuick", "Rectangle", Component.Asynchronous, root)
 }
 \endqml
 This overload mostly behaves as the \c url based version, but can be used
@@ -1610,12 +1609,19 @@ QLocale QtObject::locale(const QString &name) const
 }
 #endif
 
-void Heap::QQmlBindingFunction::init(const QV4::FunctionObject *bindingFunction)
+void Heap::QQmlBindingFunction::init(const QV4::JavaScriptFunctionObject *bindingFunction)
 {
     Scope scope(bindingFunction->engine());
     ScopedContext context(scope, bindingFunction->scope());
-    FunctionObject::init(context, bindingFunction->function());
+    JavaScriptFunctionObject::init(context, bindingFunction->function());
     this->bindingFunction.set(internalClass->engine, bindingFunction->d());
+}
+
+ReturnedValue QQmlBindingFunction::virtualCall(
+        const FunctionObject *f, const Value *, const Value *, int)
+{
+    // Mark this as a callable object, so that we can perform the binding magic on it.
+    return f->engine()->throwTypeError(QStringLiteral("Bindings must not be called directly."));
 }
 
 QQmlSourceLocation QQmlBindingFunction::currentLocation() const
@@ -1672,7 +1678,8 @@ DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 */
 QJSValue QtObject::binding(const QJSValue &function) const
 {
-    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(&function);
+    const QV4::JavaScriptFunctionObject *f
+            = QJSValuePrivate::asManagedType<JavaScriptFunctionObject>(&function);
     QV4::ExecutionEngine *e = v4Engine();
     if (!f) {
         return QJSValuePrivate::fromReturnedValue(
@@ -1685,7 +1692,7 @@ QJSValue QtObject::binding(const QJSValue &function) const
                 Encode(e->memoryManager->allocate<QQmlBindingFunction>(f)));
 }
 
-void QtObject::callLater(QQmlV4Function *args)
+void QtObject::callLater(QQmlV4FunctionPtr args)
 {
     m_engine->delayedCallQueue()->addUniquelyAndExecuteLater(m_engine, args);
 }
@@ -1750,19 +1757,21 @@ enum ConsoleLogTypes {
 static QString jsStack(QV4::ExecutionEngine *engine) {
     QString stack;
 
-    QVector<QV4::StackFrame> stackTrace = engine->stackTrace(10);
-
-    for (int i = 0; i < stackTrace.size(); i++) {
-        const QV4::StackFrame &frame = stackTrace.at(i);
-
+    int i = 0;
+    for (CppStackFrame *f = engine->currentStackFrame; f && i < 10; f = f->parentFrame(), ++i) {
         QString stackFrame;
-        if (frame.column >= 0) {
-            stackFrame = QStringLiteral("%1 (%2:%3:%4)").arg(
-                frame.function, frame.source,
-                QString::number(qAbs(frame.line)), QString::number(frame.column));
+
+        if (f->isJSTypesFrame() && static_cast<JSTypesStackFrame *>(f)->isTailCalling()) {
+            stackFrame = QStringLiteral("[elided tail calls]");
         } else {
-            stackFrame = QStringLiteral("%1 (%2:%3)").arg(
-                frame.function, frame.source, QString::number(qAbs(frame.line)));
+            const int line = f->lineNumber();
+            if (line != f->missingLineNumber()) {
+                stackFrame = QStringLiteral("%1 (%2:%3)").arg(
+                        f->function(), f->source(), QString::number(qAbs(line)));
+            } else {
+                stackFrame = QStringLiteral("%1 (%2)").arg(
+                        f->function(), f->source());
+            }
         }
 
         if (i)
@@ -1776,14 +1785,20 @@ static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap
     Scope scope(v4);
     ScopedValue val(scope);
     QString result;
-
     alreadySeen.insert(array->d());
+
+    ScopedObject detached(scope);
+    if (Sequence *reference = array->as<Sequence>())
+        detached = ReferenceObject::detached(reference->d());
+    else
+        detached = array;
+
     result += QLatin1Char('[');
-    const uint length = array->getLength();
+    const uint length = detached->getLength();
     for (uint i = 0; i < length; ++i) {
         if (i != 0)
             result += QLatin1Char(',');
-        val = array->get(i);
+        val = detached->get(i);
         if (val->isManaged() && val->managed()->isArrayLike())
             if (!alreadySeen.contains(val->objectValue()->d()))
                 result += serializeArray(val->objectValue(), v4, alreadySeen);
@@ -1793,6 +1808,7 @@ static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap
             result += val->toQStringNoThrow();
     }
     result += QLatin1Char(']');
+
     alreadySeen.remove(array->d());
     return result;
 };
@@ -1808,7 +1824,8 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *argv, 
     int start = 0;
     if (argc > 0) {
         if (const QObjectWrapper* wrapper = argv[0].as<QObjectWrapper>()) {
-            if (QQmlLoggingCategory* category = qobject_cast<QQmlLoggingCategory*>(wrapper->object())) {
+            if (QQmlLoggingCategoryBase *category
+                    = qobject_cast<QQmlLoggingCategoryBase *>(wrapper->object())) {
                 if (category->category())
                     loggingCategory = category->category();
                 else
@@ -1989,7 +2006,7 @@ ReturnedValue ConsoleObject::method_trace(const FunctionObject *b, const Value *
     QV4::CppStackFrame *frame = v4->currentStackFrame;
     QMessageLogger(frame->source().toUtf8().constData(), frame->lineNumber(),
                    frame->function().toUtf8().constData())
-        .debug("%s", qPrintable(stack));
+            .debug(v4->qmlEngine() ? lcQml() : lcJs(), "%s", qPrintable(stack));
 
     return QV4::Encode::undefined();
 }
@@ -2133,7 +2150,7 @@ ReturnedValue GlobalExtensions::method_qsTranslate(const FunctionObject *b, cons
 }
 
 /*!
-    \qmlmethod string Qt::qsTranslateNoOp(string context, string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TRANSLATE_NOOP(string context, string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation in the given \a context; i.e, the stored \a sourceText
     will not be altered.
@@ -2170,9 +2187,8 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
 
     // The first non-empty source URL in the call stack determines the translation context.
     while (frame && context.isEmpty()) {
-        if (CompiledData::CompilationUnitBase *baseUnit = frame->v4Function->compilationUnit) {
-            const auto *unit = static_cast<const CompiledData::CompilationUnit *>(baseUnit);
-            auto translationContextIndex = unit->data->translationContextIndex();
+        if (ExecutableCompilationUnit *unit = frame->v4Function->executableCompilationUnit()) {
+            auto translationContextIndex = unit->unitData()->translationContextIndex();
             if (translationContextIndex)
                 context = unit->stringAt(*translationContextIndex);
             if (!context.isEmpty())
@@ -2212,14 +2228,15 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     otherwise returns \a sourceText itself if no appropriate translated string
     is available.
 
-    If the same \a sourceText is used in different roles within the
-    same translation context, an additional identifying string may be passed in
-    for \a disambiguation.
-
     Example:
     \snippet qml/qsTr.qml 0
 
-    \sa {Internationalization with Qt}
+    If the same \a sourceText is used in different roles within the
+    same translation context, an additional identifying string may be passed in
+    for \a disambiguation. For more information and examples, refer to
+    \l{Disambiguate Identical Text}.
+
+    \sa {Internationalization with Qt},{Writing Source Code for Translation}
 */
 ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
@@ -2249,7 +2266,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
 }
 
 /*!
-    \qmlmethod string Qt::qsTrNoOp(string sourceText, string disambiguation)
+    \qmlmethod string Qt::QT_TR_NOOP(string sourceText, string disambiguation)
 
     Marks \a sourceText for dynamic translation; i.e, the stored \a sourceText
     will not be altered.
@@ -2330,7 +2347,7 @@ ReturnedValue GlobalExtensions::method_qsTrId(const FunctionObject *b, const Val
 }
 
 /*!
-    \qmlmethod string Qt::qsTrIdNoOp(string id)
+    \qmlmethod string Qt::QT_TRID_NOOP(string id)
 
     Marks \a id for dynamic translation.
 
@@ -2354,15 +2371,22 @@ ReturnedValue GlobalExtensions::method_qsTrIdNoOp(const FunctionObject *, const 
 }
 #endif // translation
 
+/*!
+    \qmlmethod void Qt::gc()
 
+    Runs the garbage collector.
+
+    This is equivalent to calling QJSEngine::collectGarbage().
+
+    \sa {Garbage Collection}
+*/
 ReturnedValue GlobalExtensions::method_gc(const FunctionObject *b, const Value *, const Value *, int)
 {
-    b->engine()->memoryManager->runGC();
+    auto mm = b->engine()->memoryManager;
+    mm->runFullGC();
 
     return QV4::Encode::undefined();
 }
-
-
 
 ReturnedValue GlobalExtensions::method_string_arg(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {

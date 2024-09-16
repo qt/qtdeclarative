@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainerPrivate : public QQuickControlPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickContainerPrivate : public QQuickControlPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickContainer)
@@ -39,6 +39,8 @@ public:
     void moveItem(int from, int to, QQuickItem *item);
     void removeItem(int index, QQuickItem *item);
     void reorderItems();
+    void maybeCullItem(QQuickItem *item);
+    void maybeCullItems();
 
     void _q_currentIndexChanged();
 

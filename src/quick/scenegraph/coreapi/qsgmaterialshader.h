@@ -40,8 +40,11 @@ public:
 
         float opacity() const;
         QMatrix4x4 combinedMatrix() const;
+        QMatrix4x4 combinedMatrix(qsizetype index) const;
         QMatrix4x4 modelViewMatrix() const;
         QMatrix4x4 projectionMatrix() const;
+        QMatrix4x4 projectionMatrix(qsizetype index) const;
+        qsizetype projectionMatrixCount() const;
         QRect viewportRect() const;
         QRect deviceRect() const;
         float determinant() const;
@@ -80,6 +83,14 @@ public:
             OneMinusSrc1Alpha
         };
 
+        enum class BlendOp {
+            Add,
+            Subtract,
+            ReverseSubtract,
+            Min,
+            Max,
+        };
+
         enum ColorMaskComponent {
             R = 1 << 0,
             G = 1 << 1,
@@ -109,6 +120,9 @@ public:
         bool separateBlendFactors;
         BlendFactor srcAlpha;
         BlendFactor dstAlpha;
+        BlendOp opColor;
+        BlendOp opAlpha;
+
         // This struct is extensible while keeping BC since apps only ever get
         // a ptr to the struct, it is not created by them.
     };
@@ -147,6 +161,7 @@ protected:
 
     // filename is for a file containing a serialized QShader.
     void setShaderFileName(Stage stage, const QString &filename);
+    void setShaderFileName(Stage stage, const QString &filename, int viewCount);
 
     void setShader(Stage stage, const QShader &shader);
 

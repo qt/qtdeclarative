@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDefaultClipNode : public QSGClipNode
+class Q_QUICK_EXPORT QQuickDefaultClipNode : public QSGClipNode
 {
 public:
     QQuickDefaultClipNode(const QRectF &);

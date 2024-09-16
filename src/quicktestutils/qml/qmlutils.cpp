@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "qmlutils_p.h"
 
@@ -7,6 +7,7 @@
 #include <QtCore/QMutexLocker>
 #include <QtQml/QQmlComponent>
 #include <QtQml/QQmlEngine>
+#include <private/qqmlengine_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,6 +109,34 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
     qInstallMessageHandler(m_oldHandler);
     QQmlTestMessageHandler::m_instance = nullptr;
 }
+
+
+bool gcDone(const QV4::ExecutionEngine *engine) {
+    return !engine->memoryManager->gcStateMachine->inProgress();
+}
+
+void gc(QV4::ExecutionEngine &engine, GCFlags flags)
+{
+    engine.memoryManager->runGC();
+    while (!gcDone(&engine))
+        engine.memoryManager->gcStateMachine->step();
+    if (int(GCFlags::DontSendPostedEvents) & int(flags))
+        return;
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+}
+
+bool gcDone(QQmlEngine *engine) {
+    auto priv = QQmlEnginePrivate::get(engine);
+    return gcDone(priv->v4engine());
+}
+
+void gc(QQmlEngine &engine, GCFlags flags)
+{
+    auto priv = QQmlEnginePrivate::get(&engine);
+    gc(*priv->v4engine(), flags);
+}
+
 
 QT_END_NAMESPACE
 

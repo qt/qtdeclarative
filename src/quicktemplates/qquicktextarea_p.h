@@ -26,7 +26,7 @@ class QQuickText;
 class QQuickTextAreaPrivate;
 class QQuickTextAreaAttached;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
+class Q_QUICKTEMPLATES2_EXPORT QQuickTextArea : public QQuickTextEdit
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
@@ -155,7 +155,7 @@ private:
 
 class QQuickTextAreaAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextAreaAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickTextAreaAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTextArea *flickable READ flickable WRITE setFlickable NOTIFY flickableChanged FINAL)
@@ -175,7 +175,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTextArea)
 
 #endif // QQUICKTEXTAREA_P_H

@@ -86,6 +86,7 @@ Window {
                 text: qsTr("Request location permissions")
                 enabled: locationPermission.status !== Qt.Denied
                 Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: false
 
                 onClicked: locationPermission.request()
             }

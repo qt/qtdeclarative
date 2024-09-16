@@ -2493,7 +2493,7 @@
 
     \section1 Attached Property Documentation
 
-    \styleproperty {Imagine.path} {string} {imagine-path-attached-prop}
+    \styleproperty {Imagine.path} {string}
     \target imagine-path-attached-prop
     This attached property holds the path to the image assets...
 

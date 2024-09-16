@@ -14,9 +14,7 @@ qt_internal_add_qml_module(QmlNetwork
         Qt::Core
         Qt::Network
         Qt::Qml
-    GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_extend_target(QmlNetwork CONDITION QT_FEATURE_qml_ssl
     SOURCES

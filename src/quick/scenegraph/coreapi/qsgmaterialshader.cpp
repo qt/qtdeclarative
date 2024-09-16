@@ -208,8 +208,8 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
     clearCachedRendererData();
 
     for (QShader::Stage stage : { QShader::VertexStage, QShader::FragmentStage }) {
-        auto it = shaderFileNames.find(stage);
-        if (it != shaderFileNames.end()) {
+        auto it = shaderFileNames.constFind(stage);
+        if (it != shaderFileNames.cend()) {
             QString fn = *it;
             const QShader s = loadShader(*it);
             if (!s.isValid())
@@ -358,6 +358,33 @@ void QSGMaterialShader::setShaderFileName(Stage stage, const QString &filename)
 {
     Q_D(QSGMaterialShader);
     d->shaderFileNames[toShaderStage(stage)] = filename;
+}
+
+/*!
+    Sets the \a filename for the shader for the specified \a stage.
+
+    The file is expected to contain a serialized QShader.
+
+    This overload is used when enabling \l{QSGMaterial::viewCount()}{multiview}
+    rendering, in particular when the \l{Qt Shader Tools Build System
+    Integration}{build system's MULTIVIEW convenience option} is used.
+
+    \a viewCount should be 2, 3, or 4. The \a filename is adjusted automatically
+    based on this.
+
+    \since 6.8
+ */
+void QSGMaterialShader::setShaderFileName(Stage stage, const QString &filename, int viewCount)
+{
+    Q_D(QSGMaterialShader);
+    if (viewCount == 2)
+        d->shaderFileNames[toShaderStage(stage)] = filename + QStringLiteral(".mv2qsb");
+    else if (viewCount == 3)
+        d->shaderFileNames[toShaderStage(stage)] = filename + QStringLiteral(".mv3qsb");
+    else if (viewCount == 4)
+        d->shaderFileNames[toShaderStage(stage)] = filename + QStringLiteral(".mv4qsb");
+    else
+        d->shaderFileNames[toShaderStage(stage)] = filename;
 }
 
 /*!
@@ -634,6 +661,17 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
  */
 
 /*!
+    \enum QSGMaterialShader::GraphicsPipelineState::BlendOp
+    \since 6.8
+
+    \value Add
+    \value Subtract
+    \value ReverseSubtract
+    \value Min
+    \value Max
+ */
+
+/*!
     \enum QSGMaterialShader::GraphicsPipelineState::ColorMaskComponent
     \since 5.14
 
@@ -745,6 +783,18 @@ bool QSGMaterialShader::updateGraphicsPipelineState(RenderState &state, Graphics
  */
 
 /*!
+    \variable QSGMaterialShader::GraphicsPipelineState::opColor
+    \since 6.8
+    \brief RGB blending operation.
+ */
+
+/*!
+    \variable QSGMaterialShader::GraphicsPipelineState::opAlpha
+    \since 6.8
+    \brief Alpha blending operation.
+ */
+
+/*!
     Returns the accumulated opacity to be used for rendering.
  */
 float QSGMaterialShader::RenderState::opacity() const
@@ -768,7 +818,16 @@ float QSGMaterialShader::RenderState::determinant() const
 QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix();
+    return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix(0);
+}
+
+/*!
+    \internal
+ */
+QMatrix4x4 QSGMaterialShader::RenderState::combinedMatrix(qsizetype index) const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->currentCombinedMatrix(index);
 }
 
 /*!
@@ -807,7 +866,25 @@ QMatrix4x4 QSGMaterialShader::RenderState::modelViewMatrix() const
 QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix() const
 {
     Q_ASSERT(m_data);
-    return static_cast<const QSGRenderer *>(m_data)->currentProjectionMatrix();
+    return static_cast<const QSGRenderer *>(m_data)->currentProjectionMatrix(0);
+}
+
+/*!
+    \internal
+ */
+QMatrix4x4 QSGMaterialShader::RenderState::projectionMatrix(qsizetype index) const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->currentProjectionMatrix(index);
+}
+
+/*!
+    \internal
+ */
+qsizetype QSGMaterialShader::RenderState::projectionMatrixCount() const
+{
+    Q_ASSERT(m_data);
+    return static_cast<const QSGRenderer *>(m_data)->projectionMatrixCount();
 }
 
 /*!

@@ -1,6 +1,13 @@
 TEMPLATE = app
 TARGET = wearable
 QT += quick quickcontrols2
+qtHaveModule(positioning): QT += positioning
+qtHaveModule(location): QT += location
+
+QML_IMPORT_PATH += \
+    Wearable \
+    WearableSettings \
+    WearableStyle
 
 SOURCES += \
     wearable.cpp

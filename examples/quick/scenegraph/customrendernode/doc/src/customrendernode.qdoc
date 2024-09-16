@@ -4,7 +4,7 @@
 /*!
     \example scenegraph/customrendernode
     \title Scene Graph - Custom QSGRenderNode
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \ingroup qtquickexamples
     \brief Shows how to use QSGRenderNode to implement custom rendering in the Qt Quick scenegraph.
 
@@ -66,11 +66,11 @@
     \endlist
 
     The custom item derives from QQuickItem. Most importantly, it reimplements
-    \l{QQuickItem::}updatePaintNode().
+    \l{QQuickItem::}{updatePaintNode()}.
 
     \snippet scenegraph/customrendernode/customrender.h item
 
-    The constructor sets the \l{QQuickItem::}ItemHasContents flag to indicate
+    The constructor sets the \l{QQuickItem::}{ItemHasContents} flag to indicate
     that this is a visual item.
 
     \snippet scenegraph/customrendernode/customrender.cpp item-ctor
@@ -97,8 +97,8 @@
     \snippet scenegraph/customrendernode/customrender.cpp node
 
     Well-behaving QSGRenderNode subclasses also reimplement
-    \l{QSGRenderNode::}releaseResources(),which in this case can be a simple set
-    of reset() calls.
+    \l{QSGRenderNode::}{releaseResources()}, which in this case can be a simple
+    set of reset() calls.
 
     \snippet scenegraph/customrendernode/customrender.cpp node-release
 

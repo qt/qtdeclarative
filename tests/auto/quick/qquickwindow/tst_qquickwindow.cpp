@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QDebug>
@@ -548,6 +548,10 @@ private slots:
 
     void visibleVsVisibility_data();
     void visibleVsVisibility();
+
+    void visibilityDoesntClobberWindowState();
+
+    void eventTypes();
 
 private:
     QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
@@ -1622,8 +1626,7 @@ public:
 
 void tst_qquickwindow::earlyGrab()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB;
 
     qmlRegisterType<Grabber>("Test", 1, 0, "Grabber");
     QQmlEngine engine;
@@ -3297,57 +3300,48 @@ public:
      */
     bool testFilterPreConditions() const { return !m_filterNotPreAccepted; }
     static QVector<DeliveryRecord> &deliveryList() { return m_deliveryList; }
-    static QSet<QEvent::Type> &includedEventTypes()
-    {
-        if (m_includedEventTypes.isEmpty())
-            m_includedEventTypes << QEvent::MouseButtonPress;
-        return m_includedEventTypes;
-    }
     static void setExpectedDeliveryList(const QVector<DeliveryRecord> &v) { m_expectedDeliveryList = v; }
+
+    bool isRelevant(QQuickItem *receiver, QEvent *e)
+    {
+        if (receiver->acceptTouchEvents())
+            return e->type() == QEvent::TouchBegin;
+        return e->type() == QEvent::MouseButtonPress;
+    }
 
 protected:
     bool childMouseEventFilter(QQuickItem *i, QEvent *e) override
     {
+        if (!isRelevant(i, e))
+            return QQuickRectangle::childMouseEventFilter(i, e);
+
         appendEvent(this, i, e);
-        switch (e->type()) {
-        case QEvent::MouseButtonPress:
-            if (!e->isAccepted())
-                m_filterNotPreAccepted = true;
-            e->setAccepted(m_filterAccepts);
-            // qCDebug(lcTests) << objectName() << i->objectName();
-            return m_filterReturns;
-        default:
-            break;
-        }
-        return QQuickRectangle::childMouseEventFilter(i, e);
+        if (!e->isAccepted())
+            m_filterNotPreAccepted = true;
+        e->setAccepted(m_filterAccepts);
+        return m_filterReturns;
     }
 
     bool event(QEvent *e) override
     {
+        if (!isRelevant(this, e))
+            QQuickRectangle::event(e);
+
         appendEvent(nullptr, this, e);
-        switch (e->type()) {
-        case QEvent::MouseButtonPress:
-            // qCDebug(lcTests) << objectName();
-            e->setAccepted(m_eventAccepts);
-            return true;
-        default:
-            break;
-        }
-        return QQuickRectangle::event(e);
+        e->setAccepted(m_eventAccepts);
+        return true;
     }
 
 private:
-    static void appendEvent(QQuickItem *filter, QQuickItem *receiver, QEvent *event) {
-        if (includedEventTypes().contains(event->type())) {
-            auto record = DeliveryRecord(filter ? filter->objectName() : QString(), receiver ? receiver->objectName() : QString());
-            int i = m_deliveryList.size();
-            if (m_expectedDeliveryList.size() > i && m_expectedDeliveryList[i] == record)
-                qCDebug(lcTests).noquote().nospace() << i << ": " << record;
-            else
-                qCDebug(lcTests).noquote().nospace() << i << ": " << record
-                     << ", expected " << (m_expectedDeliveryList.size() > i ? m_expectedDeliveryList[i].toString() : QLatin1String("nothing")) << " <---";
-            m_deliveryList << record;
-        }
+    static void appendEvent(QQuickItem *filter, QQuickItem *receiver, QEvent *) {
+        auto record = DeliveryRecord(filter ? filter->objectName() : QString(), receiver ? receiver->objectName() : QString());
+        int i = m_deliveryList.size();
+        if (m_expectedDeliveryList.size() > i && m_expectedDeliveryList[i] == record)
+            qCDebug(lcTests).noquote().nospace() << i << ": " << record;
+        else
+            qCDebug(lcTests).noquote().nospace() << i << ": " << record
+                                                 << ", expected " << (m_expectedDeliveryList.size() > i ? m_expectedDeliveryList[i].toString() : QLatin1String("nothing")) << " <---";
+        m_deliveryList << record;
     }
     bool m_eventAccepts;
     bool m_filterReturns;
@@ -3357,12 +3351,10 @@ private:
     // list of (filtering-parent . receiver) pairs
     static DeliveryRecordVector m_expectedDeliveryList;
     static DeliveryRecordVector m_deliveryList;
-    static QSet<QEvent::Type> m_includedEventTypes;
 };
 
 DeliveryRecordVector EventItem::m_expectedDeliveryList;
 DeliveryRecordVector EventItem::m_deliveryList;
-QSet<QEvent::Type> EventItem::m_includedEventTypes;
 
 typedef QVector<const char*> CharStarVector;
 
@@ -3387,11 +3379,21 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
     // r0->r1->r2->r3
     //
     QTest::addColumn<QPoint>("mousePos");
+    QTest::addColumn<QString>("eventMode");
     QTest::addColumn<InputState>("inputState");
     QTest::addColumn<DeliveryRecordVector>("expectedDeliveryOrder");
 
-    QTest::newRow("if filtered and rejected, do not deliver it to the item that filtered it")
+    for (const QString &eventMode : {
+            QStringLiteral("mouse"),
+            QStringLiteral("touch"),
+            QStringLiteral("touchToMouse")
+        }) {
+
+    #define desc(txt) qPrintable(QString("%1 events, ").arg(eventMode) + txt)
+
+    QTest::newRow(desc("if filtered and rejected, do not deliver it to the item that filtered it"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3409,8 +3411,9 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("r1")
             );
 
-    QTest::newRow("no filtering, no accepting")
+    QTest::newRow(desc("no filtering, no accepting"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3429,8 +3432,9 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("root")
             );
 
-    QTest::newRow("all filtering, no accepting")
+    QTest::newRow(desc("all filtering, no accepting"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3456,8 +3460,9 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             );
 
 
-    QTest::newRow("some filtering, no accepting")
+    QTest::newRow(desc("some filtering, no accepting"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3481,8 +3486,9 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("root")
             );
 
-    QTest::newRow("r1 accepts")
+    QTest::newRow(desc("r1 accepts"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3504,8 +3510,9 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("r1")
             );
 
-    QTest::newRow("r1 rejects and filters")
+    QTest::newRow(desc("r1 rejects and filters"))
         << QPoint(100, 100)
+        << eventMode
         << InputState({
               //  | event() |   child mouse filter
               //  +---------+---------+---------+---------
@@ -3528,12 +3535,13 @@ void tst_qquickwindow::testChildMouseEventFilter_data()
             << DeliveryRecord("r0")
             << DeliveryRecord("root")
             );
-
+    }
 }
 
 void tst_qquickwindow::testChildMouseEventFilter()
 {
     QFETCH(QPoint, mousePos);
+    QFETCH(QString, eventMode);
     QFETCH(InputState, inputState);
     QFETCH(DeliveryRecordVector, expectedDeliveryOrder);
 
@@ -3548,21 +3556,28 @@ void tst_qquickwindow::testChildMouseEventFilter()
     QScopedPointer<EventFilter> rootFilter(new EventFilter);
     root->installEventFilter(rootFilter.data());
 
+    const bool useMouseEvents = eventMode == "mouse";
+    const bool acceptTouchEvents = eventMode == "touch";
+
     // Create 4 items; each item a child of the previous item.
     EventItem *r[4];
     r[0] = new EventItem(root);
     r[0]->setColor(QColor(0x404040));
     r[0]->setWidth(200);
     r[0]->setHeight(200);
+    r[0]->setAcceptTouchEvents(acceptTouchEvents);
 
     r[1] = new EventItem(r[0]);
     r[1]->setColor(QColor(0x606060));
+    r[1]->setAcceptTouchEvents(acceptTouchEvents);
 
     r[2] = new EventItem(r[1]);
     r[2]->setColor(Qt::red);
+    r[2]->setAcceptTouchEvents(acceptTouchEvents);
 
     r[3] = new EventItem(r[2]);
     r[3]->setColor(Qt::green);
+    r[3]->setAcceptTouchEvents(acceptTouchEvents);
 
     for (uint i = 0; i < sizeof(r)/sizeof(EventItem*); ++i) {
         r[i]->setEventAccepts(inputState.r[i].eventAccepts);
@@ -3579,7 +3594,11 @@ void tst_qquickwindow::testChildMouseEventFilter()
 
     DeliveryRecordVector &actualDeliveryOrder = EventItem::deliveryList();
     actualDeliveryOrder.clear();
-    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
+
+    if (useMouseEvents)
+        QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
+    else
+        QTest::touchEvent(&window, touchDevice).press(0, mousePos, &window);
 
     // Check if event got delivered to the root item. If so, append it to the list of items the event got delivered to
     if (rootFilter->events.contains(QEvent::MouseButtonPress))
@@ -3595,8 +3614,11 @@ void tst_qquickwindow::testChildMouseEventFilter()
         QVERIFY(item->testFilterPreConditions());
     }
 
-    // "restore" mouse state
-    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
+    // "restore" mouse/touch state
+    if (useMouseEvents)
+        QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
+    else
+        QTest::touchEvent(&window, touchDevice).release(0, mousePos, &window);
 }
 
 void tst_qquickwindow::cleanupGrabsOnRelease()
@@ -3851,7 +3873,7 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl_data()
 #ifdef Q_OS_WIN
     QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     QTest::newRow("Metal") << QSGRendererInterface::MetalRhi;
 #endif
 }
@@ -4120,6 +4142,50 @@ void tst_qquickwindow::visibleVsVisibility()
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
     QVERIFY(window);
     QCOMPARE(window->isVisible(), expectVisible);
+}
+
+void tst_qquickwindow::visibilityDoesntClobberWindowState()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("visibilityDoesntClobberWindowState.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+
+    window->showMaximized();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QCOMPARE(window->windowState(), Qt::WindowMaximized);
+
+    window->setProperty("visible", false);
+    window->setProperty("visible", true);
+
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QCOMPARE(window->windowState(), Qt::WindowMaximized);
+
+    EventFilter eventFilter;
+    window->installEventFilter(&eventFilter);
+    window->setProperty("visibility", QWindow::FullScreen);
+    QTRY_VERIFY(eventFilter.events.contains(QEvent::WindowStateChange));
+    QTRY_COMPARE(window->windowState(), Qt::WindowFullScreen);
+
+    eventFilter.events.clear();
+    window->setWindowState(Qt::WindowMaximized);
+    QTRY_VERIFY(eventFilter.events.contains(QEvent::WindowStateChange));
+    QTRY_COMPARE(window->windowState(), Qt::WindowMaximized);
+}
+
+void tst_qquickwindow::eventTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("eventTypes.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+    QVERIFY(created);
 }
 
 QTEST_MAIN(tst_qquickwindow)

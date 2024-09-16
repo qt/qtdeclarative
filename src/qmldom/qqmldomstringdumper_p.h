@@ -32,7 +32,7 @@ namespace Dom {
 
 using Sink = function_ref<void(QStringView)>;
 using SinkF = std::function<void(QStringView)>;
-using DumperFunction = std::function<void(Sink)>;
+using DumperFunction = std::function<void(const Sink &)>;
 
 class Dumper{
 public:
@@ -43,7 +43,7 @@ private:
     // would be the second user defined conversion.
     // For a similar reason we have a template to accept function_ref<void(Sink)> .
     // The end result is that void f(Dumper) can be called nicely, and avoid overloads:
-    // f(u"bla"), f(QLatin1String("bla")), f(QString()), f([](Sink s){...}),...
+    // f(u"bla"), f(QLatin1String("bla")), f(QString()), f([](const Sink &s){...}),...
     template <typename T>
     using if_compatible_dumper = typename
     std::enable_if<std::is_convertible<T, DumperFunction>::value, bool>::type;
@@ -54,7 +54,7 @@ private:
 
 public:
     Dumper(QStringView s):
-        dumper([s](Sink sink){ sink(s); }) {}
+        dumper([s](const Sink &sink){ sink(s); }) {}
 
     Dumper(std::nullptr_t): Dumper(QStringView(nullptr)) {}
 
@@ -63,13 +63,13 @@ public:
         Dumper(QStringView(string)) {}
 
     template <typename U, if_compatible_dumper<U> = true>
-    Dumper(U f): dumper(f) {}
+    Dumper(U f): dumper(std::move(f)) {}
 
-    void operator()(Sink s) { dumper(s); }
+    void operator()(const Sink &s) const { dumper(s); }
 };
 
 template <typename T>
-void sinkInt(Sink s, T i) {
+void sinkInt(const Sink &s, T i) {
     const int BUFSIZE = 42; // safe up to 128 bits
     QChar buf[BUFSIZE];
     int ibuf = BUFSIZE;
@@ -96,24 +96,24 @@ void sinkInt(Sink s, T i) {
     s(QStringView(&buf[ibuf], BUFSIZE - ibuf -1));
 }
 
-QMLDOM_EXPORT QString dumperToString(Dumper writer);
+QMLDOM_EXPORT QString dumperToString(const Dumper &writer);
 
-QMLDOM_EXPORT void sinkEscaped(Sink sink, QStringView s,
+QMLDOM_EXPORT void sinkEscaped(const Sink &sink, QStringView s,
                                EscapeOptions options = EscapeOptions::OuterQuotes);
 
 inline void devNull(QStringView) {}
 
-QMLDOM_EXPORT void sinkIndent(Sink s, int indent);
+QMLDOM_EXPORT void sinkIndent(const Sink &s, int indent);
 
-QMLDOM_EXPORT void sinkNewline(Sink s, int indent = 0);
+QMLDOM_EXPORT void sinkNewline(const Sink &s, int indent = 0);
 
-QMLDOM_EXPORT void dumpErrorLevel(Sink s, ErrorLevel level);
+QMLDOM_EXPORT void dumpErrorLevel(const Sink &s, ErrorLevel level);
 
-QMLDOM_EXPORT void dumperToQDebug(Dumper dumper, QDebug debug);
+QMLDOM_EXPORT void dumperToQDebug(const Dumper &dumper, QDebug debug);
 
-QMLDOM_EXPORT void dumperToQDebug(Dumper dumper, ErrorLevel level = ErrorLevel::Debug);
+QMLDOM_EXPORT void dumperToQDebug(const Dumper &dumper, ErrorLevel level = ErrorLevel::Debug);
 
-QMLDOM_EXPORT QDebug operator<<(QDebug d, Dumper dumper);
+QMLDOM_EXPORT QDebug operator<<(QDebug d, const Dumper &dumper);
 
 } // end namespace Dom
 } // end namespace QQmlJS

@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick.Controls
@@ -9,7 +9,7 @@ Button {
     text: qsTr("Button")
 
     ToolTip.visible: pressed
-    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
+    ToolTip.delay: Application.styleHints.mousePressAndHoldInterval
     ToolTip.text: qsTr("This tool tip is shown after pressing and holding the button down.")
 }
 //! [1]

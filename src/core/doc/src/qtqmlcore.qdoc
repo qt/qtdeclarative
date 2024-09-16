@@ -3,9 +3,9 @@
 
 /*!
     \page qtqmlcore-index.html
-    \title Qt QML Core
+    \title Qt Qml Core
 
-    \brief The Qt QML Core module provides core system functionality in QML.
+    \brief The Qt Qml Core module provides core system functionality in QML.
 
     \section1 Application Permissions
 
@@ -23,6 +23,6 @@
 
     \list
       \li \l{Qt Core}
-      \li \l{Qt QML}
+      \li \l{Qt Qml}
     \endlist
 */

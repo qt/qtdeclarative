@@ -5,8 +5,11 @@ SUBDIRS += \
     texteditor \
     contactlist \
     wearable \
-    filesystemexplorer \
     imagine/automotive
+
+win32|macos|unix {
+    qtHaveModule(svg): SUBDIRS += filesystemexplorer
+}
 
 qtHaveModule(sql): SUBDIRS += eventcalendar
 qtHaveModule(widgets): SUBDIRS += flatstyle

@@ -22,62 +22,73 @@
 
 QT_BEGIN_NAMESPACE
 
+class QTextDocument;
 class QQuickTextDocument;
 class QQuickTextEditPrivate;
+class QQuickTextSelection;
 class QTextBlock;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
+class QQuickTextBlockForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QTextBlock)
+    QML_EXTENDED(QQuickTextBlockForeign)
+};
+
+class Q_QUICK_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
     Q_INTERFACES(QQuickTextInterface)
 
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
-    Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor NOTIFY selectionColorChanged FINAL)
-    Q_PROPERTY(QColor selectedTextColor READ selectedTextColor WRITE setSelectedTextColor NOTIFY selectedTextColorChanged FINAL)
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QColor selectionColor READ selectionColor WRITE setSelectionColor NOTIFY selectionColorChanged)
+    Q_PROPERTY(QColor selectedTextColor READ selectedTextColor WRITE setSelectedTextColor NOTIFY selectedTextColorChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
-    Q_PROPERTY(HAlignment horizontalAlignment READ hAlign WRITE setHAlign RESET resetHAlign NOTIFY horizontalAlignmentChanged FINAL)
-    Q_PROPERTY(HAlignment effectiveHorizontalAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged FINAL)
-    Q_PROPERTY(VAlignment verticalAlignment READ vAlign WRITE setVAlign NOTIFY verticalAlignmentChanged FINAL)
-    Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged FINAL)
-    Q_PROPERTY(int lineCount READ lineCount NOTIFY lineCountChanged FINAL)
-    Q_PROPERTY(int length READ length NOTIFY textChanged FINAL)
-    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged FINAL)
-    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged FINAL)
-    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentSizeChanged FINAL)  // Compatibility
-    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentSizeChanged FINAL)
-    Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged FINAL)
-    Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly NOTIFY readOnlyChanged FINAL)
-    Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged FINAL)
-    Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged FINAL)
-    Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged FINAL)
-    Q_PROPERTY(QQmlComponent* cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged FINAL)
-    Q_PROPERTY(bool overwriteMode READ overwriteMode WRITE setOverwriteMode NOTIFY overwriteModeChanged FINAL)
-    Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged FINAL)
-    Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged FINAL)
-    Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged FINAL)
-    Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged FINAL)
-    Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged FINAL)
-    Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged FINAL)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL)
-    Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION(2, 1) FINAL)
-    Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged FINAL)
-    Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged FINAL)
-    Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged FINAL)
-    Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged FINAL)
-    Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged FINAL)
-    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL)
-    Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged FINAL)
-    Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged FINAL)
+    Q_PROPERTY(HAlignment horizontalAlignment READ hAlign WRITE setHAlign RESET resetHAlign NOTIFY horizontalAlignmentChanged)
+    Q_PROPERTY(HAlignment effectiveHorizontalAlignment READ effectiveHAlign NOTIFY effectiveHorizontalAlignmentChanged)
+    Q_PROPERTY(VAlignment verticalAlignment READ vAlign WRITE setVAlign NOTIFY verticalAlignmentChanged)
+    Q_PROPERTY(WrapMode wrapMode READ wrapMode WRITE setWrapMode NOTIFY wrapModeChanged)
+    Q_PROPERTY(int lineCount READ lineCount NOTIFY lineCountChanged)
+    Q_PROPERTY(int length READ length NOTIFY textChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(qreal paintedWidth READ contentWidth NOTIFY contentSizeChanged)  // Compatibility
+    Q_PROPERTY(qreal paintedHeight READ contentHeight NOTIFY contentSizeChanged)
+    Q_PROPERTY(TextFormat textFormat READ textFormat WRITE setTextFormat NOTIFY textFormatChanged)
+    Q_PROPERTY(bool readOnly READ isReadOnly WRITE setReadOnly NOTIFY readOnlyChanged)
+    Q_PROPERTY(bool cursorVisible READ isCursorVisible WRITE setCursorVisible NOTIFY cursorVisibleChanged)
+    Q_PROPERTY(int cursorPosition READ cursorPosition WRITE setCursorPosition NOTIFY cursorPositionChanged)
+    Q_PROPERTY(QRectF cursorRectangle READ cursorRectangle NOTIFY cursorRectangleChanged)
+    Q_PROPERTY(QQmlComponent* cursorDelegate READ cursorDelegate WRITE setCursorDelegate NOTIFY cursorDelegateChanged)
+    Q_PROPERTY(bool overwriteMode READ overwriteMode WRITE setOverwriteMode NOTIFY overwriteModeChanged)
+    Q_PROPERTY(int selectionStart READ selectionStart NOTIFY selectionStartChanged)
+    Q_PROPERTY(int selectionEnd READ selectionEnd NOTIFY selectionEndChanged)
+    Q_PROPERTY(QString selectedText READ selectedText NOTIFY selectedTextChanged)
+    Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
+    Q_PROPERTY(bool persistentSelection READ persistentSelection WRITE setPersistentSelection NOTIFY persistentSelectionChanged)
+    Q_PROPERTY(qreal textMargin READ textMargin WRITE setTextMargin NOTIFY textMarginChanged)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged)
+    Q_PROPERTY(bool selectByKeyboard READ selectByKeyboard WRITE setSelectByKeyboard NOTIFY selectByKeyboardChanged REVISION(2, 1))
+    Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
+    Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
+    Q_PROPERTY(bool canPaste READ canPaste NOTIFY canPasteChanged)
+    Q_PROPERTY(bool canUndo READ canUndo NOTIFY canUndoChanged)
+    Q_PROPERTY(bool canRedo READ canRedo NOTIFY canRedoChanged)
+    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged)
+    Q_PROPERTY(QUrl baseUrl READ baseUrl WRITE setBaseUrl RESET resetBaseUrl NOTIFY baseUrlChanged)
+    Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QQuickTextDocument *textDocument READ textDocument CONSTANT FINAL REVISION(2, 1))
-    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2) FINAL)
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6) FINAL)
-    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7) FINAL)
-    Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION(2, 10) FINAL)
+    Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7))
+    Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION(2, 10))
+    Q_PROPERTY(QQuickTextSelection* cursorSelection READ cursorSelection REVISION(6, 7) CONSTANT FINAL)
     QML_NAMED_ELEMENT(TextEdit)
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     QML_ADDED_IN_VERSION(6, 4)
@@ -85,6 +96,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, pub
 
 public:
     QQuickTextEdit(QQuickItem *parent=nullptr);
+    ~QQuickTextEdit() override;
 
     enum HAlignment {
         AlignLeft = Qt::AlignLeft,
@@ -124,7 +136,8 @@ public:
     Q_ENUM(SelectionMode)
 
     enum RenderType { QtRendering,
-                      NativeRendering
+                      NativeRendering,
+                      CurveRendering
                     };
     Q_ENUM(RenderType)
 
@@ -208,6 +221,8 @@ public:
 
     void componentComplete() override;
 
+    int resourcesLoading() const; // mainly for testing
+
     /* FROM EDIT */
     void setReadOnly(bool);
     bool isReadOnly() const;
@@ -230,6 +245,8 @@ public:
     Q_INVOKABLE int positionAt(qreal x, qreal y) const;
     Q_INVOKABLE void moveCursorSelection(int pos);
     Q_INVOKABLE void moveCursorSelection(int pos, SelectionMode mode);
+
+    QQuickTextSelection *cursorSelection() const;
 
     QRectF boundingRect() const override;
     QRectF clipRect() const override;
@@ -353,11 +370,15 @@ private Q_SLOTS:
     void q_updateAlignment();
     void updateSize();
     void triggerPreprocess();
+    Q_REVISION(6, 7) QVariant loadResource(int type, const QUrl &source);
+    void resourceRequestFinished();
 
 private:
     void markDirtyNodesForRange(int start, int end, int charDelta);
     void updateTotalLines();
     void invalidateFontCaches();
+    QTextDocument* document() const;
+    void setDocument(QTextDocument *doc);
 
 protected:
     QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = nullptr);
@@ -366,6 +387,7 @@ protected:
 #endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
 
     bool event(QEvent *) override;
     void keyPressEvent(QKeyEvent *) override;
@@ -389,7 +411,7 @@ protected:
     void updatePolish() override;
 
     friend class QQuickTextUtil;
-    friend class QQuickTextDocument;
+    friend class QQuickTextDocumentPrivate;
 
 private:
     Q_DISABLE_COPY(QQuickTextEdit)
@@ -410,7 +432,5 @@ public:
 Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QQuickTextEdit::HAlignment, QQuickTextEdit::VAlignment)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTextEdit)
 
 #endif // QQUICKTEXTEDIT_P_H

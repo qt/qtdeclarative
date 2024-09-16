@@ -8,10 +8,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lspServerLog, "qt.languageserver.server")
+
 using namespace QLspSpecification;
 using namespace Qt::StringLiterals;
-
-Q_LOGGING_CATEGORY(lspServerLog, "qt.languageserver.server")
 
 QLanguageServerPrivate::QLanguageServerPrivate(const QJsonRpcTransport::DataHandler &h)
     : protocol(h)
@@ -226,9 +226,15 @@ const QLspSpecification::InitializeResult &QLanguageServer::serverInfo() const
     return d->serverInfo;
 }
 
-void QLanguageServer::receiveData(const QByteArray &d)
+void QLanguageServer::receiveData(const QByteArray &data, bool isEndOfMessage)
 {
-    protocol()->receiveData(d);
+    if (!data.isEmpty())
+        protocol()->receiveData(data);
+
+    const Q_D(QLanguageServer);
+    // read next message if not shutting down
+    if (isEndOfMessage && d->runStatus != RunStatus::Stopped)
+        emit readNextMessage();
 }
 
 void QLanguageServer::registerHandlers(QLanguageServerProtocol *protocol)

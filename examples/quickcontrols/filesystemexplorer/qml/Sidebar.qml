@@ -50,6 +50,8 @@ Rectangle {
         id: tabBarComponent
 
         Layout.fillWidth: true
+        Layout.fillHeight: false
+
         // ButtonGroup ensures that only one button can be checked at a time.
         ButtonGroup {
             buttons: tabBarComponent.contentChildren

@@ -20,11 +20,11 @@
 #include <QPointF>
 #include <QtQml/qqml.h>
 #include <QtCore/private/qglobal_p.h>
-#include <QtQuickParticles/private/qtquickparticlesexports_p.h>
+#include <QtQuickParticles/qtquickparticlesexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleExtruder : public QObject
+class Q_QUICKPARTICLES_EXPORT QQuickParticleExtruder : public QObject
 {
     Q_OBJECT
 

@@ -36,7 +36,7 @@ bool ModuleScope::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
         int minorVersion = version.minorVersion;
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::exports),
-                [minorVersion](const DomItem &mapExp, QString name) -> DomItem {
+                [minorVersion](const DomItem &mapExp, const QString &name) -> DomItem {
                     DomItem mapExpOw = mapExp.owner();
                     QList<DomItem> exports =
                             mapExp.ownerAs<ModuleIndex>()->exportsWithNameAndMinorVersion(
@@ -58,7 +58,7 @@ bool ModuleScope::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
         Path basePath = Path::Current(PathCurrent::Obj).field(Fields::exports);
         return self.subMapItem(Map(
                 self.pathFromOwner().field(Fields::symbols),
-                [basePath](const DomItem &mapExp, QString name) -> DomItem {
+                [basePath](const DomItem &mapExp, const QString &name) -> DomItem {
                     QList<Path> symb({ basePath.key(name) });
                     return mapExp.subReferencesItem(PathEls::Key(name), symb);
                 },
@@ -121,7 +121,7 @@ bool ModuleIndex::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
     cont = cont && self.dvItemField(visitor, Fields::moduleScope, [this, &self]() {
         return self.subMapItem(Map(
                 pathFromOwner(self).field(Fields::moduleScope),
-                [](const DomItem &map, QString minorVersionStr) {
+                [](const DomItem &map, const QString &minorVersionStr) {
                     bool ok;
                     int minorVersion = minorVersionStr.toInt(&ok);
                     if (minorVersionStr.isEmpty()
@@ -180,7 +180,7 @@ QList<DomItem> ModuleIndex::autoExports(const DomItem &self) const
     DomItem env = self.environment();
     if (!cachedPaths.isEmpty()) {
         bool outdated = false;
-        for (Path p : cachedPaths) {
+        for (const Path &p : cachedPaths) {
             DomItem newEl = env.path(p);
             if (!newEl) {
                 outdated = true;
@@ -200,7 +200,7 @@ QList<DomItem> ModuleIndex::autoExports(const DomItem &self) const
     QList<Path> mySources = sources();
     QSet<QString> knownAutoImportUris;
     QList<ModuleAutoExport> knownExports;
-    for (Path p : mySources) {
+    for (const Path &p : mySources) {
         DomItem autoExports = self.path(p).field(Fields::autoExports);
         for (const DomItem &i : autoExports.values()) {
             if (const ModuleAutoExport *iPtr = i.as<ModuleAutoExport>()) {
@@ -219,7 +219,7 @@ QList<DomItem> ModuleIndex::autoExports(const DomItem &self) const
     return res;
 }
 
-QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(const DomItem &self, QString name,
+QList<DomItem> ModuleIndex::exportsWithNameAndMinorVersion(const DomItem &self, const QString &name,
                                                            int minorVersion) const
 {
     Path myPath = Paths::moduleScopePath(uri(), Version(majorVersion(), minorVersion))
@@ -297,8 +297,8 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
         minorVersion = Version::Latest;
     {
         QMutexLocker l(mutex());
-        auto it = m_moduleScope.find(minorVersion);
-        if (it != m_moduleScope.end())
+        auto it = m_moduleScope.constFind(minorVersion);
+        if (it != m_moduleScope.cend())
             return *it;
     }
     ModuleScope *res = nullptr;
@@ -306,8 +306,8 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
     auto cleanup = qScopeGuard([&newScope] { delete newScope; });
     {
         QMutexLocker l(mutex());
-        auto it = m_moduleScope.find(minorVersion);
-        if (it != m_moduleScope.end()) {
+        auto it = m_moduleScope.constFind(minorVersion);
+        if (it != m_moduleScope.cend()) {
             res = *it;
         } else {
             res = newScope;
@@ -318,7 +318,7 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
     return res;
 }
 
-void ModuleIndex::mergeWith(std::shared_ptr<ModuleIndex> o)
+void ModuleIndex::mergeWith(const std::shared_ptr<ModuleIndex> &o)
 {
     if (o) {
         QList<Path> qmltypesPaths;
@@ -330,7 +330,7 @@ void ModuleIndex::mergeWith(std::shared_ptr<ModuleIndex> o)
         }
         {
             QMutexLocker l(mutex());
-            for (Path qttPath : qmltypesPaths) {
+            for (const Path &qttPath : qmltypesPaths) {
                 if (!m_qmltypesFilesPaths.contains((qttPath)))
                     m_qmltypesFilesPaths.append(qttPath);
             }
@@ -359,7 +359,7 @@ QList<Path> ModuleIndex::qmldirsToLoad(const DomItem &self)
         qCDebug(QQmlJSDomImporting)
                 << "ModuleIndex::qmldirsToLoad: Searching versioned module" << subPath
                 << majorVersion() << "in" << envPtr->loadPaths().join(u", ");
-        for (QString path : envPtr->loadPaths()) {
+        for (const QString &path : envPtr->loadPaths()) {
             QDir dir(path);
             QFileInfo fInfo(dir.filePath(subPathV));
             if (fInfo.isFile()) {
@@ -374,7 +374,7 @@ QList<Path> ModuleIndex::qmldirsToLoad(const DomItem &self)
     if (dirPath.isEmpty()) {
         qCDebug(QQmlJSDomImporting) << "ModuleIndex::qmldirsToLoad: Searching unversioned module"
                                     << subPath << "in" << envPtr->loadPaths().join(u", ");
-        for (QString path : envPtr->loadPaths()) {
+        for (const QString &path : envPtr->loadPaths()) {
             QDir dir(path);
             QFileInfo fInfo(dir.filePath(subPath + QLatin1String("/qmldir")));
             if (fInfo.isFile()) {

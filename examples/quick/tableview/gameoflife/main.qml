@@ -74,6 +74,7 @@ ApplicationWindow {
                 text: qsTr("Next")
                 onClicked: gameOfLifeModel.nextStep()
                 Layout.rightMargin: 50
+                Layout.fillWidth: false
             }
             //! [next]
 
@@ -82,10 +83,12 @@ ApplicationWindow {
                 from: 0
                 to: 1
                 value: 0.9
+                Layout.fillWidth: false
             }
 
             Button {
                 text: timer.running ? "❙❙" : "▶️"
+                Layout.fillWidth: false
                 onClicked: timer.running = !timer.running
             }
         }

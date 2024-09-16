@@ -21,6 +21,7 @@
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qhash.h>
+#include <QtQmlLS/private/qqmllscompletion_p.h>
 
 QT_BEGIN_NAMESPACE
 struct CompletionRequest
@@ -34,21 +35,26 @@ struct CompletionRequest
     QString code;
 
     bool fillFrom(QmlLsp::OpenDocument doc, const Parameters &params, Response &&response);
-    void sendCompletions(QmlLsp::OpenDocumentSnapshot &);
+    void sendCompletions(const QList<QLspSpecification::CompletionItem> &completions);
     QString urlAndPos() const;
-    QList<QLspSpecification::CompletionItem> completions(QmlLsp::OpenDocumentSnapshot &doc) const;
+    QList<QLspSpecification::CompletionItem>
+    completions(QmlLsp::OpenDocumentSnapshot &doc, const QQmlLSCompletion &completionEngine) const;
+    QQmlJS::Dom::DomItem patchInvalidFileForParser(const QQmlJS::Dom::DomItem &file,
+                                                   qsizetype position) const;
 };
 
 class QmlCompletionSupport : public QQmlBaseModule<CompletionRequest>
 {
     Q_OBJECT
 public:
-    using BaseT::BaseT;
+    QmlCompletionSupport(QmlLsp::QQmlCodeModel *codeModel);
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
     void process(RequestPointerArgument req) override;
+
+    QQmlLSCompletion m_completionEngine;
 };
 QT_END_NAMESPACE
 

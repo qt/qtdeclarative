@@ -77,8 +77,8 @@ QT_BEGIN_NAMESPACE
     The size of the texture will by default adapt to the size of the item (with
     the \l{QQuickWindow::effectiveDevicePixelRatio()}{device pixel ratio} taken
     into account). If the item size changes, the texture is recreated with the
-    correct size. If a fixed size is preferred, set \l explicitTextureWidth and
-    \l explicitTextureHeight to non-zero values.
+    correct size. If a fixed size is preferred, set \l fixedColorBufferWidth and
+    \l fixedColorBufferHeight to non-zero values.
 
     QQuickRhiItem is a \l{QSGTextureProvider}{texture provider} and can be used
     directly in \l {ShaderEffect}{ShaderEffects} and other classes that consume
@@ -114,8 +114,22 @@ QT_BEGIN_NAMESPACE
     \snippet qquickrhiitem/qquickrhiitem_intro.cpp 0
 
     It is notable that this simple class is almost exactly the same as the code
-    shown in the \l QRhiWidget introduction. The vertex and fragment shaders
-    are the same as shown there.
+    shown in the \l QRhiWidget introduction. The vertex and fragment shaders are
+    the same as well. These are provided as Vulkan-style GLSL source code and
+    must be processed first by the Qt shader infrastructure first. This is
+    achieved either by running the \c qsb command-line tool manually, or by
+    using the \l{Qt Shader Tools Build System Integration}{qt_add_shaders()}
+    function in CMake. The QQuickRhiItem loads these pre-processed \c{.qsb}
+    files that are shipped with the application. See \l{Qt Shader Tools} for
+    more information about Qt's shader translation infrastructure.
+
+    \c{color.vert}
+
+    \snippet qquickrhiitem/qquickrhiitem_intro.vert 0
+
+    \c{color.frag}
+
+    \snippet qquickrhiitem/qquickrhiitem_intro.frag 0
 
     Once exposed to QML (note the \c QML_NAMED_ELEMENT), our custom item can be
     instantiated in any scene. (after importing the appropriate \c URI specified
@@ -125,7 +139,7 @@ QT_BEGIN_NAMESPACE
     ExampleRhiItem {
         anchors.fill: parent
         anchors.margins: 10
-        NumberAnimation on angle { from: 0; to: 360: duration: 5000; loops: Animation.Infinite }
+        NumberAnimation on angle { from: 0; to: 360; duration: 5000; loops: Animation.Infinite }
     }
     \endcode
 
@@ -200,7 +214,7 @@ void QQuickRhiItemNode::sync()
     const int maxTexSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
 
     QQuickRhiItemPrivate *itemD = m_item->d_func();
-    QSize newSize = QSize(itemD->explicitTextureWidth, itemD->explicitTextureHeight);
+    QSize newSize = QSize(itemD->fixedTextureWidth, itemD->fixedTextureHeight);
     if (newSize.isEmpty())
         newSize = QSize(int(m_item->width()), int(m_item->height())) * m_dpr;
 
@@ -347,7 +361,7 @@ void QQuickRhiItemNode::sync()
 
     if (newSize != itemD->effectiveTextureSize) {
         itemD->effectiveTextureSize = newSize;
-        emit m_item->effectiveTextureSizeChanged();
+        emit m_item->effectiveColorBufferSizeChanged();
     }
 
     QRhiCommandBuffer *cb = queryCommandBuffer();
@@ -404,6 +418,13 @@ QQuickRhiItem::QQuickRhiItem(QQuickItem *parent)
 }
 
 /*!
+    Destructor.
+*/
+QQuickRhiItem::~QQuickRhiItem()
+{
+}
+
+/*!
     \internal
  */
 QSGNode *QQuickRhiItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
@@ -423,7 +444,7 @@ QSGNode *QQuickRhiItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         if (!d->node->hasRenderer()) {
             QQuickRhiItemRenderer *r = createRenderer();
             if (r) {
-                r->data = d->node;
+                r->node = d->node;
                 d->node->setRenderer(r);
             } else {
                 qWarning("No QQuickRhiItemRenderer was created; the item will not render");
@@ -458,6 +479,14 @@ QSGNode *QQuickRhiItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     n->scheduleUpdate();
 
     return n;
+}
+
+/*!
+    \reimp
+ */
+bool QQuickRhiItem::event(QEvent *e)
+{
+    return QQuickItem::event(e);
 }
 
 /*!
@@ -529,7 +558,7 @@ QSGTextureProvider *QQuickRhiItem::textureProvider() const
     must not be used anymore. When the value changes, all color and
     depth-stencil buffers are destroyed and recreated automatically, and
     \l {QQuickRhiItemRenderer::}{initialize()} is invoked again. However, when
-    \l autoRenderTarget is \c false, it will be up to the application to
+    isAutoRenderTargetEnabled() is \c false, it will be up to the application to
     manage this with regards to the depth-stencil buffer or additional color
     buffers.
 
@@ -565,7 +594,7 @@ void QQuickRhiItem::setSampleCount(int samples)
 }
 
 /*!
-    \property QQuickRhiItem::textureFormat
+    \property QQuickRhiItem::colorBufferFormat
 
     This property controls the texture format for the texture used as the color
     buffer. The default value is TextureFormat::RGBA8. QQuickRhiItem supports
@@ -584,13 +613,13 @@ void QQuickRhiItem::setSampleCount(int samples)
     creating new ones.
  */
 
-QQuickRhiItem::TextureFormat QQuickRhiItem::textureFormat() const
+QQuickRhiItem::TextureFormat QQuickRhiItem::colorBufferFormat() const
 {
     Q_D(const QQuickRhiItem);
     return d->itemTextureFormat;
 }
 
-void QQuickRhiItem::setTextureFormat(TextureFormat format)
+void QQuickRhiItem::setColorBufferFormat(TextureFormat format)
 {
     Q_D(QQuickRhiItem);
     if (d->itemTextureFormat == format)
@@ -611,16 +640,28 @@ void QQuickRhiItem::setTextureFormat(TextureFormat format)
         d->rhiTextureFormat = QRhiTexture::RGB10A2;
         break;
     }
-    emit textureFormatChanged();
+    emit colorBufferFormatChanged();
     update();
 }
 
 /*!
-    \property QQuickRhiItem::autoRenderTarget
+    \return the current automatic depth-stencil buffer and render target management setting.
 
-    This property controls if a depth-stencil QRhiRenderBuffer and a
-    QRhiTextureRenderTarget is created and maintained automatically by the
-    item. The default value is \c true.
+    By default this value is \c true.
+
+    \sa setAutoRenderTarget()
+ */
+bool QQuickRhiItem::isAutoRenderTargetEnabled() const
+{
+    Q_D(const QQuickRhiItem);
+    return d->autoRenderTarget;
+}
+
+/*!
+    Controls if a depth-stencil QRhiRenderBuffer and a QRhiTextureRenderTarget
+    is created and maintained automatically by the item. The default value is
+    \c true. Call this function early on, for example from the derived class'
+    constructor, with \a enabled set to \c false to disable this.
 
     In automatic mode, the size and sample count of the depth-stencil buffer
     follows the color buffer texture's settings. In non-automatic mode,
@@ -628,13 +669,6 @@ void QQuickRhiItem::setTextureFormat(TextureFormat format)
     then up to the application's implementation of initialize() to take care of
     setting up and managing these objects.
  */
-
-bool QQuickRhiItem::isAutoRenderTargetEnabled() const
-{
-    Q_D(const QQuickRhiItem);
-    return d->autoRenderTarget;
-}
-
 void QQuickRhiItem::setAutoRenderTarget(bool enabled)
 {
     Q_D(QQuickRhiItem);
@@ -674,13 +708,14 @@ void QQuickRhiItem::setMirrorVertically(bool enable)
 }
 
 /*!
-    \property QQuickRhiItem::explicitTextureWidth
+    \property QQuickRhiItem::fixedColorBufferWidth
 
-    The fixed width, in pixels, of the item's associated texture. Relevant when
-    a fixed texture size is desired that does not depend on the item's size.
-    This size has no effect on the geometry of the item (its size and placement
-    within the scene), which means the texture's content will appear stretched
-    (scaled up) or scaled down onto the item's area.
+    The fixed width, in pixels, of the item's associated texture or
+    renderbuffer. Relevant when a fixed color buffer size is desired that does
+    not depend on the item's size. This size has no effect on the geometry of
+    the item (its size and placement within the scene), which means the
+    texture's content will appear stretched (scaled up) or scaled down onto the
+    item's area.
 
     For example, setting a size that is exactly twice the item's (pixel) size
     effectively performs 2x supersampling (rendering at twice the resolution
@@ -691,25 +726,25 @@ void QQuickRhiItem::setMirrorVertically(bool enable)
     follows the item's size. (\c{texture size} = \c{item size} * \c{device
     pixel ratio}).
  */
-int QQuickRhiItem::explicitTextureWidth() const
+int QQuickRhiItem::fixedColorBufferWidth() const
 {
     Q_D(const QQuickRhiItem);
-    return d->explicitTextureWidth;
+    return d->fixedTextureWidth;
 }
 
-void QQuickRhiItem::setExplicitTextureWidth(int width)
+void QQuickRhiItem::setFixedColorBufferWidth(int width)
 {
     Q_D(QQuickRhiItem);
-    if (d->explicitTextureWidth == width)
+    if (d->fixedTextureWidth == width)
         return;
 
-    d->explicitTextureWidth = width;
-    emit explicitTextureWidthChanged();
+    d->fixedTextureWidth = width;
+    emit fixedColorBufferWidthChanged();
     update();
 }
 
 /*!
-    \property QQuickRhiItem::explicitTextureHeight
+    \property QQuickRhiItem::fixedColorBufferHeight
 
     The fixed height, in pixels, of the item's associated texture. Relevant when
     a fixed texture size is desired that does not depend on the item's size.
@@ -727,25 +762,25 @@ void QQuickRhiItem::setExplicitTextureWidth(int width)
     pixel ratio}).
  */
 
-int QQuickRhiItem::explicitTextureHeight() const
+int QQuickRhiItem::fixedColorBufferHeight() const
 {
     Q_D(const QQuickRhiItem);
-    return d->explicitTextureHeight;
+    return d->fixedTextureHeight;
 }
 
-void QQuickRhiItem::setExplicitTextureHeight(int height)
+void QQuickRhiItem::setFixedColorBufferHeight(int height)
 {
     Q_D(QQuickRhiItem);
-    if (d->explicitTextureHeight == height)
+    if (d->fixedTextureHeight == height)
         return;
 
-    d->explicitTextureHeight = height;
-    emit explicitTextureHeightChanged();
+    d->fixedTextureHeight = height;
+    emit fixedColorBufferHeightChanged();
     update();
 }
 
 /*!
-    \property QQuickRhiItem::effectiveTextureSize
+    \property QQuickRhiItem::effectiveColorBufferSize
 
     This property exposes the size, in pixels, of the underlying color buffer
     (the QRhiTexture or QRhiRenderBuffer). It is provided for use on the GUI
@@ -756,10 +791,16 @@ void QQuickRhiItem::setExplicitTextureHeight(int height)
     size from the
     \l{QQuickRhiItemRenderer::renderTarget()}{render target}.
 
+    \note The value becomes available asynchronously from the main thread's
+    perspective in the sense that the value changes when rendering happens on
+    the render thread. This means that this property is useful mainly in QML
+    bindings. Application code must not assume that the value is up to date
+    already when the QQuickRhiItem object is constructed.
+
     This is a read-only property.
  */
 
-QSize QQuickRhiItem::effectiveTextureSize() const
+QSize QQuickRhiItem::effectiveColorBufferSize() const
 {
     Q_D(const QQuickRhiItem);
     return d->effectiveTextureSize;
@@ -857,8 +898,8 @@ QQuickRhiItemRenderer::~QQuickRhiItemRenderer()
  */
 void QQuickRhiItemRenderer::update()
 {
-    if (data)
-        static_cast<QQuickRhiItemNode *>(data)->scheduleUpdate();
+    if (node)
+        node->scheduleUpdate();
 }
 
 /*!
@@ -868,7 +909,7 @@ void QQuickRhiItemRenderer::update()
  */
 QRhi *QQuickRhiItemRenderer::rhi() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_rhi : nullptr;
+    return node ? node->m_rhi : nullptr;
 }
 
 /*!
@@ -878,7 +919,7 @@ QRhi *QQuickRhiItemRenderer::rhi() const
 
     Unlike the depth-stencil buffer and the QRhiRenderTarget, this texture is
     always available and is managed by the QQuickRhiItem, independent of the
-    value of \l {QQuickRhiItem::}{autoRenderTarget}.
+    value of \l {QQuickRhiItem::}{isAutoRenderTargetEnabled}.
 
     \note When \l {QQuickRhiItem::}{sampleCount} is larger than 1, and so
     multisample antialiasing is enabled, the return value is \nullptr. Instead,
@@ -893,7 +934,7 @@ QRhi *QQuickRhiItemRenderer::rhi() const
  */
 QRhiTexture *QQuickRhiItemRenderer::colorTexture() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_colorTexture : nullptr;
+    return node ? node->m_colorTexture : nullptr;
 }
 
 /*!
@@ -903,12 +944,12 @@ QRhiTexture *QQuickRhiItemRenderer::colorTexture() const
 
     When \l {QQuickRhiItem::}{sampleCount} is larger than 1, and so multisample
     antialising is enabled, the returned QRhiRenderBuffer has a matching sample
-    count and serves as the color buffer. Graphics pipelines used to render into
-    this buffer must be created with the same sample count, and the
+    count and serves as the color buffer. Graphics pipelines used to render
+    into this buffer must be created with the same sample count, and the
     depth-stencil buffer's sample count must match as well. The multisample
     content is expected to be resolved into the texture returned from
-    resolveTexture(). When \l {QQuickRhiItem::}{autoRenderTarget} is \c true,
-    renderTarget() is set up automatically to do this, by setting up
+    resolveTexture(). When \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is
+    \c true, renderTarget() is set up automatically to do this, by setting up
     msaaColorBuffer() as the
     \l{QRhiColorAttachment::renderBuffer()}{renderbuffer} of color attachment 0
     and resolveTexture() as its
@@ -935,7 +976,7 @@ QRhiTexture *QQuickRhiItemRenderer::colorTexture() const
  */
 QRhiRenderBuffer *QQuickRhiItemRenderer::msaaColorBuffer() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_msaaColorBuffer.get() : nullptr;
+    return node ? node->m_msaaColorBuffer.get() : nullptr;
 }
 
 /*!
@@ -948,17 +989,17 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::msaaColorBuffer() const
     With MSAA enabled, this is the texture that gets used by the item's
     underlying scene graph node when texturing a quad in the main render pass
     of Qt Quick. However, the QQuickRhiItemRenderer's rendering must target the
-    (multisample) QRhiRenderBuffer returned from msaaColorBuffer(). When
-    \l {QQuickRhiItem::}{autoRenderTarget} is \c true, this is taken care of by
-    the QRhiRenderTarget returned from renderTarget(). Otherwise, it is up to
-    the subclass code to correctly configure a render target object with both
-    the color buffer and resolve textures.
+    (multisample) QRhiRenderBuffer returned from msaaColorBuffer(). When \l
+    {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c true, this is taken care
+    of by the QRhiRenderTarget returned from renderTarget(). Otherwise, it is
+    up to the subclass code to correctly configure a render target object with
+    both the color buffer and resolve textures.
 
     \sa colorTexture()
  */
 QRhiTexture *QQuickRhiItemRenderer::resolveTexture() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_resolveTexture : nullptr;
+    return node ? node->m_resolveTexture : nullptr;
 }
 
 /*!
@@ -966,16 +1007,16 @@ QRhiTexture *QQuickRhiItemRenderer::resolveTexture() const
 
     Must only be called from initialize() and render().
 
-    Available only when \l {QQuickRhiItem::}{autoRenderTarget} is \c true.
-    Otherwise the returned value is \nullptr and it is up the reimplementation
-    of initialize() to create and manage a depth-stencil buffer and a
-    QRhiTextureRenderTarget.
+    Available only when \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c
+    true. Otherwise the returned value is \nullptr and it is up the
+    reimplementation of initialize() to create and manage a depth-stencil
+    buffer and a QRhiTextureRenderTarget.
 
     \sa colorTexture(), renderTarget()
  */
 QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_depthStencilBuffer.get() : nullptr;
+    return node ? node->m_depthStencilBuffer.get() : nullptr;
 }
 
 /*!
@@ -984,10 +1025,10 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
 
     Must only be called from initialize() and render().
 
-    Available only when \l {QQuickRhiItem::}{autoRenderTarget} is \c true.
-    Otherwise the returned value is \nullptr and it is up the reimplementation
-    of initialize() to create and manage a depth-stencil buffer and a
-    QRhiTextureRenderTarget.
+    Available only when \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c
+    true. Otherwise the returned value is \nullptr and it is up the
+    reimplementation of initialize() to create and manage a depth-stencil
+    buffer and a QRhiTextureRenderTarget.
 
     When creating \l{QRhiGraphicsPipeline}{graphics pipelines}, a
     QRhiRenderPassDescriptor is needed. This can be queried from the returned
@@ -1008,7 +1049,7 @@ QRhiRenderBuffer *QQuickRhiItemRenderer::depthStencilBuffer() const
  */
 QRhiRenderTarget *QQuickRhiItemRenderer::renderTarget() const
 {
-    return data ? static_cast<QQuickRhiItemNode *>(data)->m_renderTarget.get() : nullptr;
+    return node ? node->m_renderTarget.get() : nullptr;
 }
 
 /*!
@@ -1049,14 +1090,14 @@ QRhiRenderTarget *QQuickRhiItemRenderer::renderTarget() const
     resources previously created by the subclass are destroyed because they
     belong to the previous QRhi that should not be used anymore.
 
-    When \l {QQuickRhiItem::}{autoRenderTarget} is \c true, which is the
-    default, a depth-stencil QRhiRenderBuffer and a QRhiTextureRenderTarget
+    When \l {QQuickRhiItem::}{isAutoRenderTargetEnabled} is \c true, which is
+    the default, a depth-stencil QRhiRenderBuffer and a QRhiTextureRenderTarget
     associated with the colorTexture() (or msaaColorBuffer()) and the
     depth-stencil buffer are created and managed automatically.
     Reimplementations of initialize() and render() can query those objects via
-    depthStencilBuffer() and renderTarget(). When
-    \l {QQuickRhiItem::}{autoRenderTarget} is set to \c false, these objects are
-    no longer created and managed automatically. Rather, it will be
+    depthStencilBuffer() and renderTarget(). When \l
+    {QQuickRhiItem::}{isAutoRenderTargetEnabled} is set to \c false, these
+    objects are no longer created and managed automatically. Rather, it will be
     up the the initialize() implementation to create buffers and set up the
     render target as it sees fit. When manually managing additional color or
     depth-stencil attachments for the render target, their size and sample

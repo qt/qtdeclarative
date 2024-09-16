@@ -5,6 +5,7 @@
 
 #include "qqmlcontext.h"
 #include "qqmldata_p.h"
+#include "qqmlinfo.h"
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
@@ -145,7 +146,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
         getPropertyData(&d, &vtd);
         Q_ASSERT(d);
         QQmlProperty p = QQmlPropertyPrivate::restore(targetObject(), *d, &vtd, nullptr);
-        QQmlAbstractBinding::printBindingLoopError(p);
+        printBindingLoopError(p);
         return;
     }
     setUpdatingFlag(true);
@@ -165,6 +166,12 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 
     if (!watcher.wasDeleted())
         setUpdatingFlag(false);
+}
+
+void QQmlBinding::printBindingLoopError(const QQmlProperty &prop)
+{
+    qmlWarning(prop.object()) << QString(QLatin1String("Binding loop detected for property \"%1\":\n%2"))
+        .arg(prop.name(), expressionIdentifier());
 }
 
 QV4::ReturnedValue QQmlBinding::evaluate(bool *isUndefined)
@@ -410,6 +417,8 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
 
                                            location.line, location.column });
     }
+#else
+    Q_UNUSED(propertyName)
 #endif
     return b;
 }
@@ -531,7 +540,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         delayedError()->setErrorDescription(QLatin1String("Unable to assign [undefined] to ")
                                             + typeName);
         return false;
-    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>()) {
+    } else if (const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
+               f && !f->as<QV4::QQmlTypeWrapper>()) {
         if (f->isBinding())
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
         else
@@ -673,7 +683,7 @@ void QQmlBinding::doUpdate(const DeleteWatcher &watcher, QQmlPropertyData::Write
     auto canWrite = [&]() { return !watcher.wasDeleted() && isAddedToObject() && !hasError(); };
     const QV4::Function *v4Function = function();
     if (v4Function && v4Function->kind == QV4::Function::AotCompiled && !hasBoundFunction()) {
-        const auto returnType = v4Function->aotCompiledFunction->returnType;
+        const auto returnType = v4Function->aotCompiledFunction.types[0];
         if (returnType == QMetaType::fromType<QVariant>()) {
             QVariant result;
             const bool isUndefined = !evaluate(&result, returnType);

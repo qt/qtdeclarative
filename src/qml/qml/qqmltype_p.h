@@ -40,7 +40,7 @@ namespace QV4 {
 struct String;
 }
 
-class Q_QML_PRIVATE_EXPORT QQmlType
+class Q_QML_EXPORT QQmlType
 {
 public:
     QQmlType();
@@ -50,10 +50,6 @@ public:
     QQmlType &operator =(QQmlType &&other);
     explicit QQmlType(const QQmlTypePrivate *priv);
     ~QQmlType();
-
-    bool operator ==(const QQmlType &other) const {
-        return d.data() == other.d.data();
-    }
 
     bool isValid() const { return !d.isNull(); }
 
@@ -96,12 +92,17 @@ public:
     bool isQObjectSingleton() const;
     bool isQJSValueSingleton() const;
     bool isSequentialContainer() const;
+    bool isValueType() const;
 
     QMetaType typeId() const;
     QMetaType qListTypeId() const;
     QMetaSequence listMetaSequence() const;
 
     const QMetaObject *metaObject() const;
+
+    // Precondition: The type is actually a value type!
+    const QMetaObject *metaObjectForValueType() const;
+
     const QMetaObject *baseMetaObject() const;
     QTypeRevision metaObjectRevision() const;
     bool containsRevisionedAttributes() const;
@@ -119,7 +120,7 @@ public:
 
     bool isInlineComponentType() const;
 
-    struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo final
+    struct Q_QML_EXPORT SingletonInstanceInfo final
         : public QQmlRefCounted<SingletonInstanceInfo>
     {
         using Ptr = QQmlRefPointer<SingletonInstanceInfo>;
@@ -148,8 +149,7 @@ public:
     int scopedEnumIndex(QQmlEnginePrivate *engine, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
-    int scopedEnumValue(QQmlEnginePrivate *engine, QStringView, QStringView, bool *ok) const;
+    int scopedEnumValue(QQmlEnginePrivate *engine, const QHashedStringRef &, const QHashedStringRef &, bool *ok) const;
 
     const QQmlTypePrivate *priv() const { return d.data(); }
     static void refHandle(const QQmlTypePrivate *priv);
@@ -172,6 +172,15 @@ public:
 private:
     friend class QQmlTypePrivate;
     friend size_t qHash(const QQmlType &t, size_t seed);
+    friend bool operator==(const QQmlType &a, const QQmlType &b) noexcept
+    {
+        return a.d.data() == b.d.data();
+    }
+    friend bool operator!=(const QQmlType &a, const QQmlType &b) noexcept
+    {
+        return !(a == b);
+    }
+
     QQmlRefPointer<const QQmlTypePrivate> d;
 };
 

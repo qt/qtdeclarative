@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolTip
     \inherits Popup
-//!     \instantiates QQuickToolTip
+//!     \nativetype QQuickToolTip
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-popups
@@ -102,6 +102,8 @@ public:
 
     void opened() override;
 
+    Qt::WindowFlags popupWindowType() const override;
+
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolTip); }
 
     int delay = 0;
@@ -139,6 +141,11 @@ void QQuickToolTipPrivate::opened()
 {
     QQuickPopupPrivate::opened();
     startTimeout();
+}
+
+Qt::WindowFlags QQuickToolTipPrivate::popupWindowType() const
+{
+    return Qt::ToolTip;
 }
 
 QQuickToolTip::QQuickToolTip(QQuickItem *parent)
@@ -249,7 +256,7 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 {
     QQuickItem *item = qobject_cast<QQuickItem *>(object);
     if (!item)
-        qmlWarning(object) << "ToolTip must be attached to an Item";
+        qmlWarning(object) << "ToolTip attached property must be attached to an object deriving from Item";
 
     return new QQuickToolTipAttached(object);
 }

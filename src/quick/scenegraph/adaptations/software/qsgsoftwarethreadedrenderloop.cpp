@@ -29,6 +29,10 @@
 
 QT_BEGIN_NAMESPACE
 
+// Used to debug the renderloop logic. Primarily useful for platform integrators
+// and when investigating the render loop logic.
+Q_STATIC_LOGGING_CATEGORY(QSG_RASTER_LOG_RENDERLOOP,          "qt.scenegraph.renderloop")
+
 class QSGSoftwareWindowEvent : public QEvent
 {
 public:

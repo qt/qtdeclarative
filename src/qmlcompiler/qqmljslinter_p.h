@@ -14,7 +14,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
@@ -38,7 +38,7 @@ namespace QQmlSA {
 class LintPlugin;
 }
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLinter
+class Q_QMLCOMPILER_EXPORT QQmlJSLinter
 {
 public:
     QQmlJSLinter(const QStringList &importPaths,
@@ -48,7 +48,7 @@ public:
     enum LintResult { FailedToOpen, FailedToParse, HasWarnings, LintSuccess };
     enum FixResult { NothingToFix, FixError, FixSuccess };
 
-    class Q_QMLCOMPILER_PRIVATE_EXPORT Plugin
+    class Q_QMLCOMPILER_EXPORT Plugin
     {
         Q_DISABLE_COPY(Plugin)
     public:

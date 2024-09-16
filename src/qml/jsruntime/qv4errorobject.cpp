@@ -182,14 +182,14 @@ DEFINE_OBJECT_VTABLE(SyntaxErrorCtor);
 DEFINE_OBJECT_VTABLE(TypeErrorCtor);
 DEFINE_OBJECT_VTABLE(URIErrorCtor);
 
-void Heap::ErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::ErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Error"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Error"));
 }
 
-void Heap::ErrorCtor::init(QV4::ExecutionContext *scope, const QString &name)
+void Heap::ErrorCtor::init(QV4::ExecutionEngine *engine, const QString &name)
 {
-    Heap::FunctionObject::init(scope, name);
+    Heap::FunctionObject::init(engine, name);
 }
 
 ReturnedValue ErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -203,9 +203,9 @@ ReturnedValue ErrorCtor::virtualCall(const FunctionObject *f, const Value *, con
     return f->callAsConstructor(argv, argc);
 }
 
-void Heap::EvalErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::EvalErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("EvalError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("EvalError"));
 }
 
 ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -214,9 +214,9 @@ ReturnedValue EvalErrorCtor::virtualCallAsConstructor(const FunctionObject *f, c
     return ErrorObject::create<EvalErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
-void Heap::RangeErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::RangeErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("RangeError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("RangeError"));
 }
 
 ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -225,9 +225,9 @@ ReturnedValue RangeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, 
     return ErrorObject::create<RangeErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
-void Heap::ReferenceErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::ReferenceErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("ReferenceError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("ReferenceError"));
 }
 
 ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -236,9 +236,9 @@ ReturnedValue ReferenceErrorCtor::virtualCallAsConstructor(const FunctionObject 
     return ErrorObject::create<ReferenceErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
-void Heap::SyntaxErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::SyntaxErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("SyntaxError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("SyntaxError"));
 }
 
 ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -247,9 +247,9 @@ ReturnedValue SyntaxErrorCtor::virtualCallAsConstructor(const FunctionObject *f,
     return ErrorObject::create<SyntaxErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
-void Heap::TypeErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::TypeErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("TypeError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("TypeError"));
 }
 
 ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -258,9 +258,9 @@ ReturnedValue TypeErrorCtor::virtualCallAsConstructor(const FunctionObject *f, c
     return ErrorObject::create<TypeErrorObject>(f->engine(), v, newTarget)->asReturnedValue();
 }
 
-void Heap::URIErrorCtor::init(QV4::ExecutionContext *scope)
+void Heap::URIErrorCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("URIError"));
+    Heap::FunctionObject::init(engine, QStringLiteral("URIError"));
 }
 
 ReturnedValue URIErrorCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

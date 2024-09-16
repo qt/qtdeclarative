@@ -73,7 +73,7 @@ struct QQuickParticleDataHeapNode{
     QSet<QQuickParticleData*> data;//Set ptrs instead?
 };
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleDataHeap {
+class Q_QUICKPARTICLES_EXPORT QQuickParticleDataHeap {
     //Idea is to do a binary heap, but which also stores a set of int,Node* so that if the int already exists, you can
     //add it to the data* list. Pops return the whole list at once.
 public:
@@ -82,6 +82,8 @@ public:
     void insertTimed(QQuickParticleData* data, int time);
 
     int top();
+
+    bool isEmpty() const { return m_end == 0; }
 
     QSet<QQuickParticleData*> pop();
 
@@ -100,7 +102,7 @@ private:
     QHash<int,int> m_lookups;
 };
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleGroupData {
+class Q_QUICKPARTICLES_EXPORT QQuickParticleGroupData {
     class FreeList
     {
     public:
@@ -208,7 +210,7 @@ struct Color4ub {
     uchar a;
 };
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleData
+class Q_QUICKPARTICLES_EXPORT QQuickParticleData
 {
 public:
     //Convenience functions for working backwards, because parameters are from the start of particle life
@@ -303,12 +305,12 @@ public:
 static_assert(std::is_trivially_copyable_v<QQuickParticleData>);
 static_assert(std::is_trivially_destructible_v<QQuickParticleData>);
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem
+class Q_QUICKPARTICLES_EXPORT QQuickParticleSystem : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
-    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged FINAL)
-    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged)
     QML_NAMED_ELEMENT(ParticleSystem)
     QML_ADDED_IN_VERSION(2, 0)
 

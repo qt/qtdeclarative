@@ -3,22 +3,25 @@
 
 #include "qqmllistmodel_p_p.h"
 #include "qqmllistmodelworkeragent_p.h"
-#include <private/qqmlopenmetaobject_p.h>
-#include <private/qqmljsast_p.h>
-#include <private/qqmljsengine_p.h>
+
 #include <private/qjsvalue_p.h>
 
 #include <private/qqmlcustomparser_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmljsast_p.h>
+#include <private/qqmljsengine_p.h>
+#include <private/qqmllistwrapper_p.h>
 #include <private/qqmlnotifier_p.h>
+#include <private/qqmlopenmetaobject_p.h>
 
-#include <private/qv4object_p.h>
-#include <private/qv4dateobject_p.h>
-#include <private/qv4urlobject_p.h>
-#include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
+#include <private/qv4dateobject_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4objectiterator_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <private/qv4sequenceobject_p.h>
+#include <private/qv4urlobject_p.h>
 
 #include <qqmlcontext.h>
 #include <qqmlinfo.h>
@@ -681,18 +684,11 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 e->setDoublePropertyFast(r, propertyValue->asDouble());
             }
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
-            if (r.type == ListLayout::Role::List) {
-                ListModel *subModel = new ListModel(r.subLayout, nullptr);
-
-                int arrayLength = a->getLength();
-                for (int j=0 ; j < arrayLength ; ++j) {
-                    o = a->get(j);
-                    subModel->append(o);
-                }
-
-                e->setListPropertyFast(r, subModel);
-            }
+            setArrayLike(&o, propertyName, e, a);
+        } else if (QV4::Sequence *s = propertyValue->as<QV4::Sequence>()) {
+            setArrayLike(&o, propertyName, e, s);
+        } else if (QV4::QmlListWrapper *l = propertyValue->as<QV4::QmlListWrapper>()) {
+            setArrayLike(&o, propertyName, e, l);
         } else if (propertyValue->isBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             if (r.type == ListLayout::Role::Bool) {
@@ -1669,9 +1665,12 @@ bool ModelObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Val
 
     ExecutionEngine *eng = that->engine();
     const int elementIndex = that->d()->elementIndex();
-    int roleIndex = that->d()->m_model->m_listModel->setExistingProperty(elementIndex, propName, value, eng);
-    if (roleIndex != -1)
-        that->d()->m_model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
+    if (QQmlListModel *model = that->d()->m_model) {
+        const int roleIndex
+                = model->listModel()->setExistingProperty(elementIndex, propName, value, eng);
+        if (roleIndex != -1)
+            model->emitItemsChanged(elementIndex, 1, QVector<int>(1, roleIndex));
+    }
 
     ModelNodeMetaObject *mo = ModelNodeMetaObject::get(that->object());
     if (mo->initialized())
@@ -1687,7 +1686,11 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     const ModelObject *that = static_cast<const ModelObject*>(m);
     Scope scope(that);
     ScopedString name(scope, id.asStringOrSymbol());
-    const ListLayout::Role *role = that->d()->m_model->m_listModel->getExistingRole(name);
+    QQmlListModel *model = that->d()->m_model;
+    if (!model)
+        return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
+
+    const ListLayout::Role *role = model->listModel()->getExistingRole(name);
     if (!role)
         return QObjectWrapper::virtualGet(m, id, receiver, hasProperty);
     if (hasProperty)
@@ -1700,7 +1703,7 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
     }
 
     const int elementIndex = that->d()->elementIndex();
-    QVariant value = that->d()->m_model->data(elementIndex, role->index);
+    QVariant value = model->data(elementIndex, role->index);
     return that->engine()->fromVariant(value);
 }
 
@@ -1723,16 +1726,19 @@ PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *p
     const ModelObject *that = static_cast<const ModelObject *>(o);
 
     ExecutionEngine *v4 = that->engine();
-    if (roleNameIndex < that->listModel()->roleCount()) {
+
+    QQmlListModel *model = that->d()->m_model;
+    ListModel *listModel = model ? model->listModel() : nullptr;
+    if (listModel && roleNameIndex < listModel->roleCount()) {
         Scope scope(that->engine());
-        const ListLayout::Role &role = that->listModel()->getExistingRole(roleNameIndex);
+        const ListLayout::Role &role = listModel->getExistingRole(roleNameIndex);
         ++roleNameIndex;
         ScopedString roleName(scope, v4->newString(role.name));
         if (attrs)
             *attrs = QV4::Attr_Data;
         if (pd) {
 
-            QVariant value = that->d()->m_model->data(that->d()->elementIndex(), role.index);
+            QVariant value = model->data(that->d()->elementIndex(), role.index);
             if (auto recursiveListModel = qvariant_cast<QQmlListModel*>(value)) {
                 auto size = recursiveListModel->count();
                 auto array = ScopedArrayObject{scope, v4->newArrayObject(size)};
@@ -1915,7 +1921,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
 /*!
     \qmltype ListModel
-    \instantiates QQmlListModel
+    \nativetype QQmlListModel
     \inherits AbstractListModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
@@ -2009,7 +2015,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
     You must call sync() or else the changes made to the list from that
     thread will not be reflected in the list model in the main thread.
 
-    \sa {qml-data-models}{Data Models}, {Qt QML}
+    \sa {qml-data-models}{Data Models}, {Qt Qml}
 */
 
 QQmlListModel::QQmlListModel(QObject *parent)
@@ -2373,9 +2379,10 @@ int QQmlListModel::count() const
 /*!
     \qmlmethod ListModel::clear()
 
-    Deletes all content from the model.
+    Deletes all content from the model. In particular this invalidates all objects you may have
+    retrieved using \l get().
 
-    \sa append(), remove()
+    \sa append(), remove(), get()
 */
 void QQmlListModel::clear()
 {
@@ -2389,7 +2396,7 @@ void QQmlListModel::clear()
 
     \sa clear()
 */
-void QQmlListModel::remove(QQmlV4Function *args)
+void QQmlListModel::remove(QQmlV4FunctionPtr args)
 {
     int argLength = args->length();
 
@@ -2477,7 +2484,7 @@ void QQmlListModel::updateTranslations()
     \sa set(), append()
 */
 
-void QQmlListModel::insert(QQmlV4Function *args)
+void QQmlListModel::insert(QQmlV4FunctionPtr args)
 {
     if (args->length() == 2) {
         QV4::Scope scope(args->v4engine());
@@ -2593,7 +2600,7 @@ void QQmlListModel::move(int from, int to, int n)
 
     \sa set(), remove()
 */
-void QQmlListModel::append(QQmlV4Function *args)
+void QQmlListModel::append(QQmlV4FunctionPtr args)
 {
     if (args->length() == 1) {
         QV4::Scope scope(args->v4engine());
@@ -2669,9 +2676,10 @@ void QQmlListModel::append(QQmlV4Function *args)
     \endcode
 
     \warning The returned object is not guaranteed to remain valid. It
-    should not be used in \l{Property Binding}{property bindings}.
+    should not be used in \l{Property Binding}{property bindings} or for
+    storing data across modifications of its origin ListModel.
 
-    \sa append()
+    \sa append(), clear()
 */
 QJSValue QQmlListModel::get(int index) const
 {
@@ -2993,7 +3001,7 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 
 /*!
     \qmltype ListElement
-    \instantiates QQmlListElement
+    \nativetype QQmlListElement
     \inqmlmodule QtQml.Models
     \brief Defines a data item in a ListModel.
     \ingroup qtquick-models

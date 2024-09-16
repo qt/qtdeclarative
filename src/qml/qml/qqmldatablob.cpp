@@ -4,9 +4,10 @@
 #include <private/qqmldatablob_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlprofiler_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmltypedata_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypeloaderthread_p.h>
-#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -19,8 +20,6 @@
 #endif
 
 DEFINE_BOOL_CONFIG_OPTION(dumpErrors, QML_DUMP_ERRORS);
-
-Q_DECLARE_LOGGING_CATEGORY(lcCycle)
 
 QT_BEGIN_NAMESPACE
 

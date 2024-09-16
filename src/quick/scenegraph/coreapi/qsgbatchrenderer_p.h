@@ -599,6 +599,8 @@ struct GraphicsState
     QRhiGraphicsPipeline::BlendFactor dstColor = QRhiGraphicsPipeline::OneMinusSrcAlpha;
     QRhiGraphicsPipeline::BlendFactor srcAlpha = QRhiGraphicsPipeline::One;
     QRhiGraphicsPipeline::BlendFactor dstAlpha = QRhiGraphicsPipeline::OneMinusSrcAlpha;
+    QRhiGraphicsPipeline::BlendOp opColor = QRhiGraphicsPipeline::Add;
+    QRhiGraphicsPipeline::BlendOp opAlpha = QRhiGraphicsPipeline::Add;
     QRhiGraphicsPipeline::ColorMask colorWrite = QRhiGraphicsPipeline::ColorMask(0xF);
     QRhiGraphicsPipeline::CullMode cullMode = QRhiGraphicsPipeline::None;
     bool usesScissor = false;
@@ -607,6 +609,7 @@ struct GraphicsState
     QSGGeometry::DrawingMode drawMode = QSGGeometry::DrawTriangles;
     float lineWidth = 1.0f;
     QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
+    int multiViewCount = 0;
 };
 
 bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept;
@@ -639,6 +642,17 @@ struct GraphicsPipelineStateKey
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
 bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
 size_t qHash(const GraphicsPipelineStateKey &k, size_t seed = 0) noexcept;
+
+struct ShaderKey
+{
+    QSGMaterialType *type;
+    QSGRendererInterface::RenderMode renderMode;
+    int multiViewCount;
+};
+
+bool operator==(const ShaderKey &a, const ShaderKey &b) noexcept;
+bool operator!=(const ShaderKey &a, const ShaderKey &b) noexcept;
+size_t qHash(const ShaderKey &k, size_t seed = 0) noexcept;
 
 struct ShaderManagerShader
 {
@@ -674,11 +688,16 @@ public Q_SLOTS:
     void invalidated();
 
 public:
-    Shader *prepareMaterial(QSGMaterial *material, const QSGGeometry *geometry = nullptr, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
-    Shader *prepareMaterialNoRewrite(QSGMaterial *material, const QSGGeometry *geometry = nullptr, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
+    Shader *prepareMaterial(QSGMaterial *material,
+                            const QSGGeometry *geometry = nullptr,
+                            QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D,
+                            int multiViewCount = 0);
+    Shader *prepareMaterialNoRewrite(QSGMaterial *material,
+                                     const QSGGeometry *geometry = nullptr,
+                                     QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D,
+                                     int multiViewCount = 0);
 
 private:
-    typedef QPair<QSGMaterialType *, QSGRendererInterface::RenderMode> ShaderKey;
     QHash<ShaderKey, Shader *> rewrittenShaders;
     QHash<ShaderKey, Shader *> stockShaders;
 
@@ -723,7 +742,7 @@ protected:
     QHash<Node *, uint> m_visualizeChangeSet;
 };
 
-class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
+class Q_QUICK_EXPORT Renderer : public QSGRenderer
 {
 public:
     Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
@@ -798,7 +817,8 @@ private:
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass = false);
     QRhiTexture *dummyTexture();
     void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
-                                   QSGMaterial *material, const Batch *batch, Element *e, int ubufOffset, int ubufRegionSize);
+                                   QSGMaterial *material, const Batch *batch, Element *e, int ubufOffset, int ubufRegionSize,
+                                   char *directUpdatePtr);
     void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);

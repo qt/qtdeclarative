@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PathElement
-    \instantiates QQuickPathElement
+    \nativetype QQuickPathElement
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief PathElement is the base path type.
@@ -25,12 +25,12 @@ QT_BEGIN_NAMESPACE
     be instantiated.
 
     \sa Path, PathAttribute, PathPercent, PathLine, PathPolyline, PathQuad, PathCubic, PathArc,
-        PathAngleArc, PathCurve, PathSvg
+        PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 
 /*!
     \qmltype Path
-    \instantiates QQuickPath
+    \nativetype QQuickPath
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path for use by \l PathView and \l Shape.
@@ -70,7 +70,7 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
     \row
-    \li PathMultiLine
+    \li PathMultiline
         \li Yes
         \li Yes
         \li Yes
@@ -100,6 +100,11 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
     \row
+        \li PathRectangle
+        \li Yes
+        \li Yes
+        \li Yes
+    \row
         \li PathAttribute
         \li Yes
         \li N/A
@@ -119,7 +124,7 @@ QT_BEGIN_NAMESPACE
     \note Path is a non-visual type; it does not display anything on its own.
     To draw a path, use \l Shape.
 
-    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathPolyline, PathMove, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
+    \sa PathView, Shape, PathAttribute, PathPercent, PathLine, PathPolyline, PathMove, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 QQuickPath::QQuickPath(QObject *parent)
  : QObject(*(new QQuickPathPrivate), parent)
@@ -143,7 +148,7 @@ QQuickPath::~QQuickPath()
 qreal QQuickPath::startX() const
 {
     Q_D(const QQuickPath);
-    return d->startX.isNull ? 0 : d->startX.value;
+    return d->startX.isValid() ? d->startX.value() : 0;
 }
 
 void QQuickPath::setStartX(qreal x)
@@ -165,7 +170,7 @@ bool QQuickPath::hasStartX() const
 qreal QQuickPath::startY() const
 {
     Q_D(const QQuickPath);
-    return d->startY.isNull ? 0 : d->startY.value;
+    return d->startY.isValid() ? d->startY.value() : 0;
 }
 
 void QQuickPath::setStartY(qreal y)
@@ -210,6 +215,7 @@ bool QQuickPath::isClosed() const
         \li \l PathArc - an arc to a given position with a radius.
         \li \l PathAngleArc - an arc specified by center point, radii, and angles.
         \li \l PathSvg - a path specified as an SVG path data string.
+        \li \l PathRectangle - a rectangle with a given position and size
         \li \l PathCurve - a point on a Catmull-Rom curve.
         \li \l PathAttribute - an attribute at a given position in the path.
         \li \l PathPercent - a way to spread out items along various segments of the path.
@@ -284,6 +290,8 @@ void QQuickPath::pathElements_clear(QQmlListProperty<QQuickPathElement> *propert
     d->_pathCurves.clear();
     d->_pointCache.clear();
     d->_pathTexts.clear();
+    d->_path.clear();
+    emit path->changed();
 }
 
 void QQuickPath::interpolate(int idx, const QString &name, qreal value)
@@ -362,6 +370,26 @@ void QQuickPath::processPath()
     if (!d->componentComplete)
         return;
 
+    if (!d->asynchronous) {
+        doProcessPath();
+    } else if (!d->processPending) {
+        d->processPending = true;
+        QMetaObject::invokeMethod(this, &QQuickPath::doProcessPath, Qt::QueuedConnection);
+    }
+}
+
+void QQuickPath::doProcessPath()
+{
+    Q_D(QQuickPath);
+
+    d->processPending = false;
+
+    if (!d->componentComplete)
+        return;
+
+    if (d->useCustomPath)
+        return;
+
     d->_pointCache.clear();
     d->prevBez.isValid = false;
 
@@ -408,8 +436,8 @@ QPainterPath QQuickPath::createPath(const QPointF &startPoint, const QPointF &en
         first.values[attributes.at(ii)] = 0;
     attributePoints << first;
 
-    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
-    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    qreal startX = d->startX.isValid() ? d->startX.value() : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value() : startPoint.y();
     path.moveTo(startX, startY);
 
     const QString percentString = QStringLiteral("_qfx_percent");
@@ -493,8 +521,8 @@ QPainterPath QQuickPath::createShapePath(const QPointF &startPoint, const QPoint
 
     QPainterPath path;
 
-    qreal startX = d->startX.isValid() ? d->startX.value : startPoint.x();
-    qreal startY = d->startY.isValid() ? d->startY.value : startPoint.y();
+    qreal startX = d->startX.isValid() ? d->startX.value() : startPoint.x();
+    qreal startY = d->startY.isValid() ? d->startY.value() : startPoint.y();
     path.moveTo(startX, startY);
 
     int index = 0;
@@ -572,7 +600,7 @@ void QQuickPath::componentComplete()
 
     gatherAttributes();
 
-    processPath();
+    doProcessPath();
 
     connectPathElements();
 }
@@ -581,6 +609,16 @@ QPainterPath QQuickPath::path() const
 {
     Q_D(const QQuickPath);
     return d->_path;
+}
+
+void QQuickPath::setPath(const QPainterPath &path)
+{
+    Q_D(QQuickPath);
+    d->useCustomPath = !path.isEmpty();
+    d->_pointCache.clear();
+    d->prevBez.isValid = false;
+    d->_path = path;
+    emit changed();
 }
 
 QStringList QQuickPath::attributes() const
@@ -739,6 +777,31 @@ bool QQuickPath::simplify() const
 {
     Q_D(const QQuickPath);
     return d->simplify;
+}
+
+/*! \qmlproperty bool QtQuick::Path::asynchronous
+    \since 6.9
+
+    When set to true, the path will be processed asynchronously. This is an optimization
+    to process the path only once, after all the methods that possibly affect the path.
+    This means that when set to \c true, the updated path is not available immediately
+    after e.g. adjusting \l startX, \l scale or appending an element, only after the Qt
+    event loop has been processed. The default value is \c false.
+*/
+bool QQuickPath::isAsynchronous() const
+{
+    Q_D(const QQuickPath);
+    return d->asynchronous;
+}
+
+void QQuickPath::setAsynchronous(bool a)
+{
+    Q_D(QQuickPath);
+    if (d->asynchronous == a)
+        return;
+
+    d->asynchronous = a;
+    emit asynchronousChanged();
 }
 
 /*!
@@ -981,12 +1044,12 @@ qreal QQuickPath::attributeAt(const QString &name, qreal percent) const
 
 qreal QQuickCurve::x() const
 {
-    return _x.isNull ? 0 : _x.value;
+    return _x.isValid() ? _x.value() : 0;
 }
 
 void QQuickCurve::setX(qreal x)
 {
-    if (_x.isNull || _x != x) {
+    if (!_x.isValid() || _x != x) {
         _x = x;
         emit xChanged();
         emit changed();
@@ -1000,12 +1063,12 @@ bool QQuickCurve::hasX()
 
 qreal QQuickCurve::y() const
 {
-    return _y.isNull ? 0 : _y.value;
+    return _y.isValid() ? _y.value() : 0;
 }
 
 void QQuickCurve::setY(qreal y)
 {
-    if (_y.isNull || _y != y) {
+    if (!_y.isValid() || _y != y) {
         _y = y;
         emit yChanged();
         emit changed();
@@ -1024,7 +1087,7 @@ qreal QQuickCurve::relativeX() const
 
 void QQuickCurve::setRelativeX(qreal x)
 {
-    if (_relativeX.isNull || _relativeX != x) {
+    if (!_relativeX.isValid() || _relativeX != x) {
         _relativeX = x;
         emit relativeXChanged();
         emit changed();
@@ -1043,7 +1106,7 @@ qreal QQuickCurve::relativeY() const
 
 void QQuickCurve::setRelativeY(qreal y)
 {
-    if (_relativeY.isNull || _relativeY != y) {
+    if (!_relativeY.isValid() || _relativeY != y) {
         _relativeY = y;
         emit relativeYChanged();
         emit changed();
@@ -1059,7 +1122,7 @@ bool QQuickCurve::hasRelativeY()
 
 /*!
     \qmltype PathAttribute
-    \instantiates QQuickPathAttribute
+    \nativetype QQuickPathAttribute
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Specifies how to set an attribute at a given position in a Path.
@@ -1176,7 +1239,7 @@ void QQuickPathAttribute::setValue(qreal value)
 
 /*!
     \qmltype PathLine
-    \instantiates QQuickPathLine
+    \nativetype QQuickPathLine
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a straight line.
@@ -1191,7 +1254,7 @@ void QQuickPathAttribute::setValue(qreal value)
     }
     \endqml
 
-    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove, PathPolyline
+    \sa Path, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg, PathMove, PathPolyline, PathRectangle
 */
 
 /*!
@@ -1235,7 +1298,7 @@ void QQuickPathLine::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathMove
-    \instantiates QQuickPathMove
+    \nativetype QQuickPathMove
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Moves the Path's position.
@@ -1293,7 +1356,7 @@ void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathQuad
-    \instantiates QQuickPathQuad
+    \nativetype QQuickPathQuad
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a quadratic Bezier curve with a control point.
@@ -1402,7 +1465,7 @@ qreal QQuickPathQuad::relativeControlX() const
 
 void QQuickPathQuad::setRelativeControlX(qreal x)
 {
-    if (_relativeControlX.isNull || _relativeControlX != x) {
+    if (!_relativeControlX.isValid() || _relativeControlX != x) {
         _relativeControlX = x;
         emit relativeControlXChanged();
         emit changed();
@@ -1421,7 +1484,7 @@ qreal QQuickPathQuad::relativeControlY() const
 
 void QQuickPathQuad::setRelativeControlY(qreal y)
 {
-    if (_relativeControlY.isNull || _relativeControlY != y) {
+    if (!_relativeControlY.isValid() || _relativeControlY != y) {
         _relativeControlY = y;
         emit relativeControlYChanged();
         emit changed();
@@ -1445,7 +1508,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathCubic
-    \instantiates QQuickPathCubic
+    \nativetype QQuickPathCubic
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a cubic Bezier curve with two control points.
@@ -1467,7 +1530,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     \endqml
     \endtable
 
-    \sa Path, PathQuad, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg
+    \sa Path, PathQuad, PathLine, PathArc, PathAngleArc, PathCurve, PathSvg, PathRectangle
 */
 
 /*!
@@ -1586,7 +1649,7 @@ qreal QQuickPathCubic::relativeControl1X() const
 
 void QQuickPathCubic::setRelativeControl1X(qreal x)
 {
-    if (_relativeControl1X.isNull || _relativeControl1X != x) {
+    if (!_relativeControl1X.isValid() || _relativeControl1X != x) {
         _relativeControl1X = x;
         emit relativeControl1XChanged();
         emit changed();
@@ -1605,7 +1668,7 @@ qreal QQuickPathCubic::relativeControl1Y() const
 
 void QQuickPathCubic::setRelativeControl1Y(qreal y)
 {
-    if (_relativeControl1Y.isNull || _relativeControl1Y != y) {
+    if (!_relativeControl1Y.isValid() || _relativeControl1Y != y) {
         _relativeControl1Y = y;
         emit relativeControl1YChanged();
         emit changed();
@@ -1624,7 +1687,7 @@ qreal QQuickPathCubic::relativeControl2X() const
 
 void QQuickPathCubic::setRelativeControl2X(qreal x)
 {
-    if (_relativeControl2X.isNull || _relativeControl2X != x) {
+    if (!_relativeControl2X.isValid() || _relativeControl2X != x) {
         _relativeControl2X = x;
         emit relativeControl2XChanged();
         emit changed();
@@ -1643,7 +1706,7 @@ qreal QQuickPathCubic::relativeControl2Y() const
 
 void QQuickPathCubic::setRelativeControl2Y(qreal y)
 {
-    if (_relativeControl2Y.isNull || _relativeControl2Y != y) {
+    if (!_relativeControl2Y.isValid() || _relativeControl2Y != y) {
         _relativeControl2Y = y;
         emit relativeControl2YChanged();
         emit changed();
@@ -1669,7 +1732,7 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathCurve
-    \instantiates QQuickPathCatmullRomCurve
+    \nativetype QQuickPathCatmullRomCurve
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a point on a Catmull-Rom curve.
@@ -1815,7 +1878,7 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
 
 /*!
     \qmltype PathArc
-    \instantiates QQuickPathArc
+    \nativetype QQuickPathArc
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radius.
@@ -2026,7 +2089,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 
 /*!
     \qmltype PathAngleArc
-    \instantiates QQuickPathAngleArc
+    \nativetype QQuickPathAngleArc
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines an arc with the given radii and center.
@@ -2035,7 +2098,7 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
     to work as part of a larger path (specifying start and end), PathAngleArc is designed
     to make a path where the arc is primary (such as a circular progress indicator) more intuitive.
 
-    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg, PathArc
+    \sa Path, PathLine, PathQuad, PathCubic, PathCurve, PathSvg, PathArc, PathRectangle
 */
 
 /*!
@@ -2199,7 +2262,7 @@ void QQuickPathAngleArc::addToPath(QPainterPath &path, const QQuickPathData &)
 
 /*!
     \qmltype PathSvg
-    \instantiates QQuickPathSvg
+    \nativetype QQuickPathSvg
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a path using an SVG path data string.
@@ -2252,8 +2315,270 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
 /****************************************************************************/
 
 /*!
+    \qmltype PathRectangle
+    \nativetype QQuickPathRectangle
+    \inqmlmodule QtQuick
+    \ingroup qtquick-animation-paths
+    \brief Defines a rectangle with optionally rounded corners.
+    \since QtQuick 6.8
+
+    PathRectangle provides an easy way to specify a rectangle, optionally with rounded corners. The
+    API corresponds to that of the \l Rectangle item.
+
+    \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve, PathSvg
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::x
+    \qmlproperty real QtQuick::PathRectangle::y
+
+    Defines the top left corner of the rectangle.
+
+    Unless that corner is rounded, this will also be the start and end point of the path.
+
+    \sa relativeX, relativeY
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::relativeX
+    \qmlproperty real QtQuick::PathRectangle::relativeY
+
+    Defines the top left corner of the rectangle relative to the path's start point.
+
+    If both a relative and absolute end position are specified for a single axis, the relative
+    position will be used.
+
+    Relative and absolute positions can be mixed, for example it is valid to set a relative x
+    and an absolute y.
+
+    \sa x, y
+*/
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::width
+    \qmlproperty real QtQuick::PathRectangle::height
+
+    Defines the width and height of the rectangle.
+
+    \sa x, y
+*/
+
+qreal QQuickPathRectangle::width() const
+{
+    return _width;
+}
+
+void QQuickPathRectangle::setWidth(qreal width)
+{
+    if (_width == width)
+        return;
+
+    _width = width;
+    emit widthChanged();
+    emit changed();
+}
+
+qreal QQuickPathRectangle::height() const
+{
+    return _height;
+}
+
+void QQuickPathRectangle::setHeight(qreal height)
+{
+    if (_height == height)
+        return;
+
+    _height = height;
+    emit heightChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::strokeAdjustment
+
+    This property defines the stroke width adjustment to the rectangle coordinates.
+
+    When used in a \l ShapePath with stroking enabled, the actual stroked rectangle will by default
+    extend beyond the defined rectangle by half the stroke width on all sides. This is the expected
+    behavior since the path defines the midpoint line of the stroking, and corresponds to QPainter
+    and SVG rendering.
+
+    If one instead wants the defined rectangle to be the outer edge of the stroked rectangle, like
+    a \l Rectangle item with a border, one can set strokeAdjustment to the stroke width. This will
+    effectively shift all edges inwards by half the stroke width. Like in the following example:
+
+    \qml
+    ShapePath {
+        id: myRec
+        fillColor: "white"
+        strokeColor: "black"
+        strokeWidth: 16
+        joinStyle: ShapePath.MiterJoin
+
+        PathRectangle { x: 10; y: 10; width: 200; height: 100; strokeAdjustment: myRec.strokeWidth }
+    }
+    \endqml
+*/
+
+qreal QQuickPathRectangle::strokeAdjustment() const
+{
+    return _strokeAdjustment;
+}
+
+void QQuickPathRectangle::setStrokeAdjustment(qreal newStrokeAdjustment)
+{
+    if (_strokeAdjustment == newStrokeAdjustment)
+        return;
+    _strokeAdjustment = newStrokeAdjustment;
+    emit strokeAdjustmentChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::radius
+
+    This property defines the corner radius used to define a rounded rectangle.
+
+    If radius is a positive value, the rectangle path will be defined as a rounded rectangle,
+    otherwise it will be defined as a normal rectangle.
+
+    This property may be overridden by the individual corner radius properties.
+
+    \sa topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius
+*/
+
+qreal QQuickPathRectangle::radius() const
+{
+    return _extra.isAllocated() ? _extra->radius : 0;
+}
+
+void QQuickPathRectangle::setRadius(qreal newRadius)
+{
+    if (_extra.value().radius == newRadius)
+        return;
+    _extra->radius = newRadius;
+    emit radiusChanged();
+    if (_extra->cornerRadii[Qt::TopLeftCorner] < 0)
+        emit topLeftRadiusChanged();
+    if (_extra->cornerRadii[Qt::TopRightCorner] < 0)
+        emit topRightRadiusChanged();
+    if (_extra->cornerRadii[Qt::BottomLeftCorner] < 0)
+        emit bottomLeftRadiusChanged();
+    if (_extra->cornerRadii[Qt::BottomRightCorner] < 0)
+        emit bottomRightRadiusChanged();
+    emit changed();
+}
+
+/*!
+    \qmlproperty real QtQuick::PathRectangle::topLeftRadius
+    \qmlproperty real QtQuick::PathRectangle::topRightRadius
+    \qmlproperty real QtQuick::PathRectangle::bottomLeftRadius
+    \qmlproperty real QtQuick::PathRectangle::bottomRightRadius
+
+    If set, these properties define the individual corner radii. A zero value defines that corner
+    to be sharp, while a positive value defines it to be rounded. When unset, the value of \l
+    radius is used instead.
+
+    These properties are unset by default. Assign \c undefined to them to return them to the unset
+    state.
+
+    \sa radius
+*/
+
+qreal QQuickPathRectangle::cornerRadius(Qt::Corner corner) const
+{
+    if (_extra.isAllocated())
+        return _extra->cornerRadii[corner] < 0 ? _extra->radius : _extra->cornerRadii[corner];
+    else
+        return 0;
+}
+
+void QQuickPathRectangle::setCornerRadius(Qt::Corner corner, qreal newCornerRadius)
+{
+    if (newCornerRadius < 0 || _extra.value().cornerRadii[corner] == newCornerRadius)
+        return;
+    _extra->cornerRadii[corner] = newCornerRadius;
+    emitCornerRadiusChanged(corner);
+}
+
+void QQuickPathRectangle::resetCornerRadius(Qt::Corner corner)
+{
+    if (!_extra.isAllocated() || _extra->cornerRadii[corner] < 0)
+        return;
+    _extra->cornerRadii[corner] = -1;
+    emitCornerRadiusChanged(corner);
+}
+
+void QQuickPathRectangle::emitCornerRadiusChanged(Qt::Corner corner)
+{
+    switch (corner) {
+    case Qt::TopLeftCorner:
+        emit topLeftRadiusChanged();
+        break;
+    case Qt::TopRightCorner:
+        emit topRightRadiusChanged();
+        break;
+    case Qt::BottomLeftCorner:
+        emit bottomLeftRadiusChanged();
+        break;
+    case Qt::BottomRightCorner:
+        emit bottomRightRadiusChanged();
+        break;
+    }
+    emit changed();
+}
+
+void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &data)
+{
+    QRectF rect(positionForCurve(data, path.currentPosition()), QSizeF(_width, _height));
+
+    qreal halfStroke = _strokeAdjustment * 0.5;
+    rect.adjust(halfStroke, halfStroke, -halfStroke, -halfStroke);
+    if (rect.isEmpty())
+        return;
+
+    if (!_extra.isAllocated()) {
+        // No rounded corners
+        path.addRect(rect);
+    } else {
+        // Radii must not exceed half of the width or half of the height
+        const qreal maxDiameter = qMin(rect.width(), rect.height());
+        const qreal generalDiameter = qMax(qreal(0), qMin(maxDiameter, 2 * _extra->radius));
+        auto effectiveDiameter = [&](Qt::Corner corner) {
+            qreal radius = _extra->cornerRadii[corner];
+            return radius < 0 ? generalDiameter : qMin(maxDiameter, 2 * radius);
+        };
+        const qreal diamTL = effectiveDiameter(Qt::TopLeftCorner);
+        const qreal diamTR = effectiveDiameter(Qt::TopRightCorner);
+        const qreal diamBL = effectiveDiameter(Qt::BottomLeftCorner);
+        const qreal diamBR = effectiveDiameter(Qt::BottomRightCorner);
+
+        path.moveTo(rect.left() + diamTL * 0.5, rect.top());
+        if (diamTR)
+            path.arcTo(QRectF(QPointF(rect.right() - diamTR, rect.top()), QSizeF(diamTR, diamTR)), 90, -90);
+        else
+            path.lineTo(rect.topRight());
+        if (diamBR)
+            path.arcTo(QRectF(QPointF(rect.right() - diamBR, rect.bottom() - diamBR), QSizeF(diamBR, diamBR)), 0, -90);
+        else
+            path.lineTo(rect.bottomRight());
+        if (diamBL)
+            path.arcTo(QRectF(QPointF(rect.left(), rect.bottom() - diamBL), QSizeF(diamBL, diamBL)), 270, -90);
+        else
+            path.lineTo(rect.bottomLeft());
+        if (diamTL)
+            path.arcTo(QRectF(rect.topLeft(), QSizeF(diamTL, diamTL)), 180, -90);
+        else
+            path.lineTo(rect.topLeft());
+        path.closeSubpath();
+    }
+}
+
+/****************************************************************************/
+
+/*!
     \qmltype PathPercent
-    \instantiates QQuickPathPercent
+    \nativetype QQuickPathPercent
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Manipulates the way a path is interpreted.
@@ -2348,7 +2673,7 @@ void QQuickPathPercent::setValue(qreal value)
 
 /*!
     \qmltype PathPolyline
-    \instantiates QQuickPathPolyline
+    \nativetype QQuickPathPolyline
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a polyline through a list of coordinates.
@@ -2456,7 +2781,7 @@ void QQuickPathPolyline::addToPath(QPainterPath &path, const QQuickPathData &/*d
 
 /*!
     \qmltype PathMultiline
-    \instantiates QQuickPathMultiline
+    \nativetype QQuickPathMultiline
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a set of polylines through a list of lists of coordinates.
@@ -2607,7 +2932,7 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
 /*!
     \qmltype PathText
-    \instantiates QQuickPathText
+    \nativetype QQuickPathText
     \inqmlmodule QtQuick
     \ingroup qtquick-animation-paths
     \brief Defines a string in a specified font.
@@ -2797,10 +3122,31 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 */
 
 /*!
+    \qmlproperty object QtQuick::PathText::font.variableAxes
+    \since 6.7
+
+    \include qquicktext.cpp qml-font-variable-axes
+*/
+
+/*!
     \qmlproperty object QtQuick::PathText::font.features
     \since 6.6
 
     \include qquicktext.cpp qml-font-features
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.contextFontMerging
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-context-font-merging
+*/
+
+/*!
+    \qmlproperty bool QtQuick::PathText::font.preferTypoLineMetrics
+    \since 6.8
+
+    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
 */
 void QQuickPathText::updatePath() const
 {

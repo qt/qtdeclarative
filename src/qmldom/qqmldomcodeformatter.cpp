@@ -6,7 +6,7 @@
 #include <QLoggingCategory>
 #include <QMetaEnum>
 
-static Q_LOGGING_CATEGORY(formatterLog, "qt.qmldom.formatter", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(formatterLog, "qt.qmldom.formatter", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
@@ -199,7 +199,6 @@ bool FormatPartialStatus::tryStatement()
     case QQmlJSGrammar::T_REQUIRED:
     case QQmlJSGrammar::T_READONLY:
     case QQmlJSGrammar::T_FUNCTION:
-    case QQmlJSGrammar::T_FUNCTION_STAR:
     case QQmlJSGrammar::T_NUMERIC_LITERAL:
     case QQmlJSGrammar::T_LPAREN:
         enterState(StateType::Expression);
@@ -433,7 +432,6 @@ void FormatPartialStatus::handleTokens()
                 enter(StateType::ComponentStart);
                 break;
             case QQmlJSGrammar::T_FUNCTION:
-            case QQmlJSGrammar::T_FUNCTION_STAR:
                 enter(StateType::FunctionStart);
                 break;
             case QQmlJSGrammar::T_SIGNAL:

@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickLabelPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickLabel : public QQuickText
+class Q_QUICKTEMPLATES2_EXPORT QQuickLabel : public QQuickText
 {
     Q_OBJECT
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
@@ -94,7 +94,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickLabel)
 
 #endif // QQUICKLABEL_P_H

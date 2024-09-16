@@ -86,7 +86,7 @@ FontDialogImpl {
         leftPadding: 16
         rightPadding: 16
         topPadding: 12
-        visible: control.title.length > 0
+        visible: content.parent?.parent === Overlay.overlay && control.title.length > 0
 
         background: NinePatchImage {
             width: parent.width

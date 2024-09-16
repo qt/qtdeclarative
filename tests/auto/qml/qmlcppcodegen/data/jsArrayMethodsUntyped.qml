@@ -14,4 +14,11 @@ QtObject {
     property string jsArrayJoin: jsArray().join()
     property int jsArrayIndexOf: jsArray().indexOf(l2)
     property int jsArrayLastIndexOf: jsArray().lastIndexOf(l3)
+
+    property string pushAndJoin: {
+        var s = [];
+        s.push("A")
+        s.push("B")
+        return s.join("+");
+    }
 }

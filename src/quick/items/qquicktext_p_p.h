@@ -23,13 +23,13 @@
 #include <QtGui/qtextlayout.h>
 #include <private/qquickstyledtext_p.h>
 #include <private/qlazilyallocated_p.h>
+#include <private/qquicktextdocument_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QTextLayout;
-class QQuickTextDocumentWithImageResources;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickTextPrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickText)
 public:
@@ -71,12 +71,12 @@ public:
         bool explicitRightPadding : 1;
         bool explicitBottomPadding : 1;
         qreal lineHeight;
-        QQuickTextDocumentWithImageResources *doc;
+        QTextDocument *doc;
+        QQuickTextImageHandler *imageHandler = nullptr;
         QString activeLink;
         QString hoveredLink;
         int minimumPixelSize;
         int minimumPointSize;
-        int nbActiveDownloads;
         int maximumLineCount;
         int renderTypeQuality;
         bool lineHeightValid : 1;
@@ -84,6 +84,7 @@ public:
         QQuickText::FontSizeMode fontSizeMode;
         QList<QQuickStyledTextImgTag*> imgTags;
         QList<QQuickStyledTextImgTag*> visibleImgTags;
+        QList<QQuickPixmap *> pixmapsInProgress;
         QUrl baseUrl;
     };
     QLazilyAllocated<ExtraData> extra;
@@ -94,8 +95,8 @@ public:
     QFontInfo fontInfo;
 
     QTextLayout layout;
-    QTextLayout *elideLayout;
-    QQuickTextLine *textLine;
+    QScopedPointer<QTextLayout> elideLayout;
+    QScopedPointer<QQuickTextLine> textLine;
 
     qreal lineWidth;
 
@@ -143,6 +144,7 @@ public:
     bool formatModifiesFontSize:1;
     bool polishSize:1; // Workaround for problem with polish called after updateSize (QTBUG-42636)
     bool updateSizeRecursionGuard:1;
+    bool containsUnscalableGlyphs:1;
 
     static const QChar elideChar;
     static const int largeTextSizeThreshold;
@@ -161,6 +163,8 @@ public:
 
     void ensureDoc();
     void updateDocumentText();
+
+    qreal devicePixelRatio() const;
 
     QRectF setupTextLayout(qreal * const baseline);
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset = 0);

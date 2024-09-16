@@ -29,7 +29,7 @@ struct PropertyKey;
 
 namespace Heap {
 
-struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
+struct Q_QML_EXPORT StringOrSymbol : Base
 {
     enum StringType {
         StringType_Symbol,
@@ -76,7 +76,7 @@ struct Q_QML_PRIVATE_EXPORT StringOrSymbol : Base
     }
 };
 
-struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
+struct Q_QML_EXPORT String : StringOrSymbol {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
 
     const VTable *vtable() const {
@@ -136,7 +136,7 @@ int String::length() const {
 
 }
 
-struct Q_QML_PRIVATE_EXPORT StringOrSymbol : public Managed {
+struct Q_QML_EXPORT StringOrSymbol : public Managed {
     V4_MANAGED(StringOrSymbol, Managed)
     V4_NEEDS_DESTROY
     enum {
@@ -155,7 +155,7 @@ public:
     }
 };
 
-struct Q_QML_PRIVATE_EXPORT String : public StringOrSymbol {
+struct Q_QML_EXPORT String : public StringOrSymbol {
     V4_MANAGED(String, StringOrSymbol)
     Q_MANAGED_TYPE(String)
     V4_INTERNALCLASS(String)

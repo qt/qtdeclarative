@@ -5,14 +5,16 @@
 \page qmllint-warnings-and-errors-unqualified.html
 \ingroup qmllint-warnings-and-errors
 
-\title Unqualified Access
+\title Unqualified
 \brief Accessing an outer scope without its id.
 
-\section1 Unqualified Access
+\qmllintwarningcategory unqualified
+
+\section1 Unqualified access
 
 \section2 What happened?
 
-A parent element was accessed without its \l{QML Object Attributes#the-id-attribute}{id}.
+You accessed a parent element without its \l{QML Object Attributes#the-id-attribute}{id}.
 
 \section2 Why is this bad?
 
@@ -30,11 +32,9 @@ Item {
     }
 }
 \endqml
-
-You can fix this warning by referring to the parent object by
-\l{QML Object Attributes#the-id-attribute}{id}.
-If the object currently has no \l{QML Object Attributes#the-id-attribute}{id}, you will need to add
-one first.
+To fix this warning, refer to the parent object by \l{QML Object Attributes#the-id-attribute}{id}.
+You will need to add an \l{QML Object Attributes#the-id-attribute}{id} first if the object
+currently has none.
 
 \qml
 import QtQuick
@@ -49,4 +49,108 @@ Item {
 \endqml
 
 \sa {QML Coding Conventions#unqualified-access}{QML Coding Conventions - Unqualified Access}
+
+\section1 Unknown attached/grouped property scope
+
+\section2 What happened?
+You used an \l{Attached Properties and Attached Signal Handlers}{attached property} type or
+\l{Grouped Properties}{grouped property} that can't be found.
+This can be caused by a typo or by a missing QML module dependency.
+
+\note If you are importing QML modules with external dependencies, verify that they are
+actually installed and inside an \l{Import Statements#qml-import-path}{import path}.
+
+\section2 Why is this bad?
+Components with unknown attached property scopes or unknown grouped properties will not be created
+at runtime: they will be null instead.
+
+\section2 Example
+
+Let's try to use the (inexistent) attached property of \c Item or the (inexistent) grouped property
+\c grouped of \c Item:
+\qml
+import QtQuick
+
+Item {
+    Item.helloAttached: 44 // not ok: unknown attached property scope Item. [unqualified]
+    grouped.helloGrouped: 44 // not ok: unknown grouped property scope grouped. [unqualified]
+}
+\endqml
+
+Indeed, \l{Item} does neither have any attached type nor any grouped property called \c{item}.
+To fix this warning, remove the attached type and the grouped property.
+
+Refer to \l{Attached Properties and Attached Signal Handlers} on how to use attached
+properties and to \l{Grouped Properties} on how to use grouped properties.
+
+\section1 No matching signal found for handler
+
+\section2 What happened?
+You used a \l{Signal and Handler Event System}{signal handler} on a signal that can't be found.
+This can be caused by a typo in the signal handler or by a missing QML module dependency.
+
+\note The name of a signal handler is \c on concatenated with the capitalized signal name.
+\c onHelloWorld handles the signal \c helloWorld and \c on_helloWorld  handles \c _helloWorld,
+for example.
+
+\note If you are importing QML modules with external dependencies, verify that they are
+actually installed and inside an \l{Import Statements#qml-import-path}{import path}.
+
+\section2 Why is this bad?
+Components with unknown signal handlers will not be created at runtime: they will be null
+instead.
+
+\section2 Example
+
+Lets try to write a signal handler for the (inexistent) signal \c{mySignal}:
+\qml
+import QtQuick
+
+Item {
+    onMySignal: console.log("hello") // not ok: no matching signal found for handler "onMySignal" [unqualified]
+}
+\endqml
+
+Indeed, this \l{Item} does not have any signal called \c{mySignal}. To fix this warning,
+remove the signal handler or add the missing signal.
+
+\section1 Implicitly defining signal handler in Connections is deprecated
+
+\section2 What happened?
+You used a signal handler on a \l{qml-qtqml-connections.html}{Connections type}.
+
+\section2 Why is this bad?
+This is deprecated.
+
+\section2 Example
+
+\qml
+import QtQuick
+
+Window {
+    id: root
+    property int myInt
+
+    Connections {
+        target: root
+        onMyIntChanged: console.log("new int", myInt)
+    }
+}
+\endqml
+
+To fix this warning, replace the signal handler binding with a function:
+
+\qml
+import QtQuick
+
+Window {
+    id: root
+    property int myInt
+
+    Connections {
+        target: root
+        function onMyIntChanged() { console.log("new int", myInt) }
+    }
+}
+\endqml
 */

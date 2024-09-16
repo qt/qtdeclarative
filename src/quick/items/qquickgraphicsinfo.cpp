@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype GraphicsInfo
-    \instantiates QQuickGraphicsInfo
+    \nativetype QQuickGraphicsInfo
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \since 5.8

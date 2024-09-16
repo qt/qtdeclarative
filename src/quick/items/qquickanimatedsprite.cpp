@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype AnimatedSprite
-    \instantiates QQuickAnimatedSprite
+    \nativetype QQuickAnimatedSprite
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-visual

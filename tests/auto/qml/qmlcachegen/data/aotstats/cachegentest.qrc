@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/cachegentest">
+    <file alias="qmldir">qmldir</file>
+  </qresource>
+</RCC>

@@ -6,6 +6,7 @@
 #include <private/qqmlextensionplugin_p.h>
 #include <private/qqmlmetatypedata_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmlscriptblob_p.h>
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypemodule_p.h>
@@ -16,8 +17,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qloggingcategory.h>
 
-Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
-Q_LOGGING_CATEGORY(lcTypeRegistration, "qt.qml.typeregistration")
+Q_STATIC_LOGGING_CATEGORY(lcTypeRegistration, "qt.qml.typeregistration")
 
 QT_BEGIN_NAMESPACE
 
@@ -151,6 +151,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
 
 static void addQQmlMetaTypeInterfaces(QQmlTypePrivate *priv, const QByteArray &className)
 {
+    Q_ASSERT(!className.isEmpty());
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
@@ -168,15 +169,15 @@ static void addQQmlMetaTypeInterfaces(QQmlTypePrivate *priv, const QByteArray &c
 static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &elementName,
                                        const QQmlPrivate::RegisterCompositeType &type)
 {
+    // This is a procedurally registered composite type. It's evil. It doesn't get any metatypes
+    // because we never want to find it in the compositeTypes. Otherwise we might mix it up with an
+    // actually compiled version of the same type.
+
     auto *d = new QQmlTypePrivate(QQmlType::CompositeType);
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
     d->version = type.version;
-
-    const QUrl normalized = QQmlTypeLoader::normalize(type.url);
-    d->extraData.compositeTypeData = normalized;
-    addQQmlMetaTypeInterfaces(
-        d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
+    d->extraData.compositeTypeData = QQmlTypeLoader::normalize(type.url);
     return d;
 }
 
@@ -185,6 +186,10 @@ static QQmlTypePrivate *createQQmlType(
         const QQmlPrivate::RegisterCompositeSingletonType &type,
         const QQmlType::SingletonInstanceInfo::ConstPtr &siinfo)
 {
+    // This is a procedurally registered composite singleton. It's evil. It doesn't get any
+    // metatypes because we never want to find it in the compositeTypes. Otherwise we might mix it
+    // up with an actually compiled version of the same type.
+
     auto *d = new QQmlTypePrivate(QQmlType::CompositeSingletonType);
     data->registerType(d);
     d->setName(QString::fromUtf8(type.uri), elementName);
@@ -192,8 +197,6 @@ static QQmlTypePrivate *createQQmlType(
     d->version = type.version;
 
     d->extraData.singletonTypeData->singletonInstanceInfo = siinfo;
-    addQQmlMetaTypeInterfaces(
-            d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(siinfo->url));
     return d;
 }
 
@@ -658,24 +661,27 @@ static QQmlType createTypeForUrl(
 }
 
 QQmlType QQmlMetaType::findCompositeType(
-        const QUrl &url, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QUrl &url, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
         CompositeTypeLookupMode mode)
 {
     const QUrl normalized = QQmlTypeLoader::normalize(url);
     QQmlMetaTypeDataPtr data;
 
     bool urlExists = true;
-    auto found = data->urlToType.find(normalized);
-    if (found == data->urlToType.end()) {
-        found = data->urlToNonFileImportType.find(normalized);
-        if (found == data->urlToNonFileImportType.end())
+    auto found = data->urlToType.constFind(normalized);
+    if (found == data->urlToType.cend()) {
+        found = data->urlToNonFileImportType.constFind(normalized);
+        if (found == data->urlToNonFileImportType.cend())
             urlExists = false;
     }
 
-    if (urlExists) {
+    if (const QtPrivate::QMetaTypeInterface *iface = urlExists
+                ? found.value()->typeId.iface()
+                : nullptr) {
         if (compilationUnit.isNull())
             return QQmlType(*found);
-        const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
+
+        const auto composite = data->compositeTypes.constFind(iface);
         if (composite == data->compositeTypes.constEnd() || composite.value() == compilationUnit)
             return QQmlType(*found);
     }
@@ -709,7 +715,7 @@ static QQmlType doRegisterInlineComponentType(QQmlMetaTypeData *data, const QUrl
 }
 
 QQmlType QQmlMetaType::findInlineComponentType(
-        const QUrl &url, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+        const QUrl &url, const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {
     QQmlMetaTypeDataPtr data;
 
@@ -1354,7 +1360,7 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlType QQmlMetaType::inlineComponentTypeForUrl(const QUrl &url)
+QQmlType QQmlMetaType::fetchOrCreateInlineComponentTypeForUrl(const QUrl &url)
 {
     QQmlMetaTypeDataPtr data;
     const auto it = data->inlineComponentTypes.constFind(url);
@@ -1363,7 +1369,6 @@ QQmlType QQmlMetaType::inlineComponentTypeForUrl(const QUrl &url)
 
     return doRegisterInlineComponentType(data, url);
 }
-
 
 /*!
 Returns a QQmlPropertyCache for \a obj if one is available.
@@ -1458,8 +1463,15 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(QMetaType meta
         return composite;
 
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
-    return (type && type->typeId == metaType)
-            ? data->propertyCache(type->baseMetaObject, QTypeRevision())
+    if (!type || type->typeId != metaType)
+        return QQmlPropertyCache::ConstPtr();
+
+    const QMetaObject *metaObject = type->isValueType()
+            ? type->metaObjectForValueType()
+            : type->baseMetaObject;
+
+    return metaObject
+            ? data->propertyCache(metaObject, QTypeRevision())
             : QQmlPropertyCache::ConstPtr();
 }
 
@@ -1535,6 +1547,27 @@ static bool hasActiveInlineComponents(const QQmlMetaTypeData *data, const QQmlTy
     return false;
 }
 
+static int doCountInternalCompositeTypeSelfReferences(
+        QQmlMetaTypeData *data,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
+{
+    int result = 0;
+    auto doCheck = [&](const QtPrivate::QMetaTypeInterface *iface) {
+        if (!iface)
+            return;
+
+        const auto it = data->compositeTypes.constFind(iface);
+        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
+            ++result;
+    };
+
+    doCheck(compilationUnit->metaType().iface());
+    for (auto &&inlineData: compilationUnit->inlineComponentData)
+        doCheck(inlineData.qmlType.typeId().iface());
+
+    return result;
+}
+
 void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QQmlMetaTypeDataPtr data;
@@ -1542,6 +1575,20 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
     // in case this is being called during program exit, `data` might be destructed already
     if (!data.isValid())
         return;
+
+    bool droppedAtLeastOneComposite;
+    do {
+        droppedAtLeastOneComposite = false;
+        auto it = data->compositeTypes.begin();
+        while (it != data->compositeTypes.end()) {
+            if ((*it)->count() <= doCountInternalCompositeTypeSelfReferences(data, *it)) {
+                it = data->compositeTypes.erase(it);
+                droppedAtLeastOneComposite = true;
+            } else {
+                ++it;
+            }
+        }
+    } while (droppedAtLeastOneComposite);
 
     bool deletedAtLeastOneType;
     do {
@@ -1668,7 +1715,7 @@ const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(
     for (const auto lookup : std::as_const(data->lookupCachedQmlUnit)) {
         if (const QQmlPrivate::CachedQmlUnit *unit = lookup(uri)) {
             QString error;
-            if (!QV4::ExecutableCompilationUnit::verifyHeader(unit->qmlData, QDateTime(), &error)) {
+            if (!unit->qmlData->verifyHeader(QDateTime(), &error)) {
                 qCDebug(DBG_DISK_CACHE) << "Error loading pre-compiled file " << uri << ":" << error;
                 if (status)
                     *status = CachedUnitLookupError::VersionMismatch;
@@ -1858,8 +1905,12 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     // call QObject pointers value types. Explicitly registered types also override
     // the implicit use of gadgets.
     if (!(metaType.flags() & QMetaType::PointerToQObject)) {
-        if (const QMetaObject *mo = metaObjectForValueType(QQmlMetaType::qmlType(metaType)))
-            return mo;
+        const QQmlMetaTypeDataPtr data;
+        const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+        if (type && type->regType == QQmlType::CppType && type->typeId == metaType) {
+            if (const QMetaObject *mo = type->metaObjectForValueType())
+                return mo;
+        }
     }
 
     // If it _is_ a gadget, we can just use it.
@@ -1889,7 +1940,7 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::findPropertyCacheInCompositeTypes(QMet
 }
 
 void QQmlMetaType::registerInternalCompositeType(
-    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {
     QQmlMetaTypeDataPtr data;
 
@@ -1903,13 +1954,13 @@ void QQmlMetaType::registerInternalCompositeType(
         data->compositeTypes.insert(iface, compilationUnit);
     };
 
-    doInsert(compilationUnit->qmlType.typeId().iface());
+    doInsert(compilationUnit->metaType().iface());
     for (auto &&inlineData: compilationUnit->inlineComponentData)
         doInsert(inlineData.qmlType.typeId().iface());
 }
 
 void QQmlMetaType::unregisterInternalCompositeType(
-    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {
     QQmlMetaTypeDataPtr data;
 
@@ -1922,38 +1973,42 @@ void QQmlMetaType::unregisterInternalCompositeType(
             data->compositeTypes.erase(it);
     };
 
-    doRemove(compilationUnit->qmlType.typeId().iface());
+    doRemove(compilationUnit->metaType().iface());
     for (auto &&inlineData: compilationUnit->inlineComponentData)
         doRemove(inlineData.qmlType.typeId().iface());
 }
 
 int QQmlMetaType::countInternalCompositeTypeSelfReferences(
-    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {
     QQmlMetaTypeDataPtr data;
-
-    int result = 0;
-    auto doCheck = [&](const QtPrivate::QMetaTypeInterface *iface) {
-        if (!iface)
-            return;
-
-        const auto it = data->compositeTypes.constFind(iface);
-        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
-            ++result;
-    };
-
-    doCheck(compilationUnit->qmlType.typeId().iface());
-    for (auto &&inlineData: compilationUnit->inlineComponentData)
-        doCheck(inlineData.qmlType.typeId().iface());
-
-    return result;
+    return doCountInternalCompositeTypeSelfReferences(data, compilationUnit);
 }
 
-QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlMetaType::obtainExecutableCompilationUnit(
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlMetaType::obtainCompilationUnit(
     QMetaType type)
 {
     const QQmlMetaTypeDataPtr data;
     return data->compositeTypes.value(type.iface());
+}
+
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlMetaType::obtainCompilationUnit(
+        const QUrl &url)
+{
+    const QUrl normalized = QQmlTypeLoader::normalize(url);
+    QQmlMetaTypeDataPtr data;
+
+    auto found = data->urlToType.constFind(normalized);
+    if (found == data->urlToType.constEnd()) {
+        found = data->urlToNonFileImportType.constFind(normalized);
+        if (found == data->urlToNonFileImportType.constEnd())
+            return QQmlRefPointer<QV4::CompiledData::CompilationUnit>();
+    }
+
+    const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
+    return composite == data->compositeTypes.constEnd()
+            ? QQmlRefPointer<QV4::CompiledData::CompilationUnit>()
+            : composite.value();
 }
 
 QT_END_NAMESPACE

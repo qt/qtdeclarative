@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
@@ -13,6 +13,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
@@ -22,6 +23,11 @@
 #include <qpa/qwindowsysteminterface_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+static bool isPlatformWayland()
+{
+    return !QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive);
+}
 
 class CircleMask : public QObject
 {
@@ -121,6 +127,7 @@ private slots:
     void changeAxis();
 #if QT_CONFIG(cursor)
     void cursorShape();
+    void cursorUpdating();
 #endif
     void moveAndReleaseWithoutPress();
     void nestedStopAtBounds();
@@ -933,6 +940,9 @@ void tst_QQuickMouseArea::doubleClick()
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
     QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
     QCOMPARE(window.rootObject()->property("released").toInt(), 2);
+
+    // wait long enough to avoid affecting the next test function
+    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval());
 }
 
 void tst_QQuickMouseArea::doubleTap() // QTBUG-112434
@@ -964,6 +974,9 @@ void tst_QQuickMouseArea::doubleTap() // QTBUG-112434
     QCOMPARE(mouseArea->isPressed(), false);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
 
+    // avoid getting a double-click event next
+    QTest::qWait(QGuiApplication::styleHints()->mouseDoubleClickInterval());
+
     // now tap with two fingers simultaneously: only one of them generates synth-mouse
     QPoint p2 = p1 + QPoint(50, 5);
     QTest::touchEvent(&window, device).press(2, p1).press(3, p2);
@@ -985,8 +998,8 @@ void tst_QQuickMouseArea::doubleTap() // QTBUG-112434
     QTest::touchEvent(&window, device).release(4, p1).release(5, p2);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(window.rootObject()->property("released").toInt(), 4);
-    QCOMPARE(window.rootObject()->property("clicked").toInt(), 2);
-    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 2);
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 3);
+    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
     QCOMPARE(mouseArea->isPressed(), false); // make sure it doesn't get stuck
 }
 
@@ -1363,8 +1376,7 @@ void tst_QQuickMouseArea::hoverPropagation()
 
 void tst_QQuickMouseArea::hoverVisible()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverVisible.qml")));
@@ -1900,6 +1912,38 @@ void tst_QQuickMouseArea::cursorShape()
     QCOMPARE(mouseArea->cursorShape(), Qt::WaitCursor);
     QCOMPARE(mouseArea->cursor().shape(), Qt::WaitCursor);
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_QQuickMouseArea::cursorUpdating()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("cursorUpdating.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickFlickable *flickable = root->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+    QQuickItemPrivate *rootPrivate = QQuickItemPrivate::get(root);
+    QVERIFY(rootPrivate->subtreeCursorEnabled);
+
+    QTest::mouseMove(&window, QPoint(40, 40));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+
+    QTest::mouseMove(&window, QPoint(240, 40));
+    QCOMPARE(window.cursor().shape(), Qt::UpArrowCursor);
+
+    if (isPlatformWayland())
+        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    // QTBUG-53987: with the cursor physically hovering, use wheel to
+    // position a different item that requests a different cursor
+    const QPoint p(240, 40);
+    const QPoint pg = window.mapToGlobal(p);
+    QCursor::setPos(pg);
+    QWheelEvent wheelEvent(p, pg, QPoint(60, -400), QPoint(0, -600),
+                           Qt::NoButton, Qt::ControlModifier, Qt::NoScrollPhase, false);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+    QTRY_VERIFY(flickable->contentY() > 300);
+    QCOMPARE(window.cursor().shape(), Qt::IBeamCursor);
 }
 #endif
 

@@ -28,11 +28,11 @@ class QObject;
 class QQmlChangeSet;
 class QAbstractItemModel;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstanceModel : public QObject
+class Q_QMLMODELS_EXPORT QQmlInstanceModel : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -82,7 +82,7 @@ private:
 
 class QQmlObjectModelAttached;
 class QQmlObjectModelPrivate;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlObjectModel : public QQmlInstanceModel
+class Q_QMLMODELS_EXPORT QQmlObjectModel : public QQmlInstanceModel
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlObjectModel)
@@ -134,9 +134,6 @@ class QQmlObjectModelAttached : public QObject
 public:
     QQmlObjectModelAttached(QObject *parent)
         : QObject(parent), m_index(-1) {}
-    ~QQmlObjectModelAttached() {
-        attachedProperties.remove(parent());
-    }
 
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
     int index() const { return m_index; }
@@ -147,28 +144,14 @@ public:
         }
     }
 
-    static QQmlObjectModelAttached *properties(QObject *obj) {
-        QQmlObjectModelAttached *rv = attachedProperties.value(obj);
-        if (!rv) {
-            rv = new QQmlObjectModelAttached(obj);
-            attachedProperties.insert(obj, rv);
-        }
-        return rv;
-    }
-
 Q_SIGNALS:
     void indexChanged();
 
 public:
     int m_index;
-
-    static QHash<QObject*, QQmlObjectModelAttached*> attachedProperties;
 };
 
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQmlInstanceModel)
-QML_DECLARE_TYPE(QQmlObjectModel)
 
 #endif // QQMLINSTANCEMODEL_P_H

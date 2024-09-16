@@ -50,13 +50,13 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
 DECLARE_HEAP_OBJECT(RegExpCtor, FunctionObject) {
     DECLARE_MARKOBJECTS(RegExpCtor)
 
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
     void clearLastMatch();
 };
 
 }
 
-struct Q_QML_PRIVATE_EXPORT RegExpObject: Object {
+struct Q_QML_EXPORT RegExpObject: Object {
     V4_OBJECT2(RegExpObject, Object)
     Q_MANAGED_TYPE(RegExpObject)
     V4_INTERNALCLASS(RegExpObject)

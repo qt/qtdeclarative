@@ -47,8 +47,7 @@ private:
     QQuickWorkerScriptEnginePrivate *d;
 };
 
-class QQmlV4Function;
-class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
+class Q_QMLWORKERSCRIPT_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickWorkerScript)
@@ -69,7 +68,7 @@ public:
     bool ready() const;
 
 public Q_SLOTS:
-    void sendMessage(QQmlV4Function*);
+    void sendMessage(QQmlV4FunctionPtr);
 
 Q_SIGNALS:
     void sourceChanged();
@@ -90,7 +89,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickWorkerScript)
 
 #endif // QQUICKWORKERSCRIPT_P_H

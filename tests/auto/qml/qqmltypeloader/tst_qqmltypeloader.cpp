@@ -1,5 +1,5 @@
 // Copyright (C) 2016 Canonical Limited and/or its subsidiary(-ies).
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
@@ -38,6 +38,7 @@ private slots:
     void redirect();
     void qmlSingletonWithinModule();
     void multiSingletonModule();
+    void multiSingletonModuleNoWarning();
     void implicitComponentModule();
     void customDiskCachePath();
     void qrcRootPathUrl();
@@ -47,6 +48,7 @@ private slots:
     void circularDependency();
     void declarativeCppAndQmlDir();
     void signalHandlersAreCompatible();
+    void loadTypeOnShutdown();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -91,7 +93,7 @@ void tst_QQMLTypeLoader::trimCache()
     QQmlEngine engine;
     QQmlTypeLoader &loader = QQmlEnginePrivate::get(&engine)->typeLoader;
     QVector<QQmlTypeData *> releaseLater;
-    QVector<QV4::ExecutableCompilationUnit *> releaseCompilationUnitLater;
+    QVector<QV4::CompiledData::CompilationUnit *> releaseCompilationUnitLater;
     for (int i = 0; i < 256; ++i) {
         QUrl url = testFileUrl("trim_cache.qml");
         url.setQuery(QString::number(i));
@@ -533,6 +535,18 @@ void tst_QQMLTypeLoader::multiSingletonModule()
     checkCleanCacheLoad(QLatin1String("multiSingletonModule"));
 }
 
+void tst_QQMLTypeLoader::multiSingletonModuleNoWarning()
+{
+    // Should not warn about a "cyclic" dependency between the singletons
+    QTest::failOnWarning(QRegularExpression(".*"));
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("imports/multisingletonmodule/a.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+}
+
 void tst_QQMLTypeLoader::implicitComponentModule()
 {
 #ifdef Q_OS_ANDROID
@@ -672,7 +686,7 @@ static void getCompilationUnitAndRuntimeInfo(QQmlRefPointer<QV4::ExecutableCompi
         QVERIFY(!typeData->isError()); // this returns
     }
 
-    unit = typeData->compilationUnit();
+    unit = engine->handle()->executableCompilationUnit(typeData->compilationUnit());
     QVERIFY(unit);
 
     // the QmlIR::Document is deleted once loader.getType() is complete, so
@@ -721,6 +735,49 @@ void tst_QQMLTypeLoader::signalHandlersAreCompatible()
     QSKIP("qrc and file system is the same thing on Android");
 #endif
     QVERIFY(unitFromCachegen->url() != unitFromTypeCompiler->url());
+}
+
+void tst_QQMLTypeLoader::loadTypeOnShutdown()
+{
+    bool dead1 = false;
+    bool dead2 = false;
+
+    {
+        QQmlEngine engine;
+        auto good = new QQmlComponent(
+                &engine, testFileUrl("doesExist.qml"),
+                QQmlComponent::CompilationMode::Asynchronous, &engine);
+        QObject::connect(
+                good, &QQmlComponent::statusChanged, &engine,
+                [&](QQmlComponent::Status) {
+
+            // Must not call this if the engine is already dead.
+            QVERIFY(engine.rootContext());
+
+        });
+
+        QObject::connect(good, &QQmlComponent::destroyed, good, [&]() { dead1 = true; });
+        QVERIFY(good->isLoading());
+
+        auto bad = new QQmlComponent(
+                &engine, testFileUrl("doesNotExist.qml"),
+                QQmlComponent::CompilationMode::Asynchronous, &engine);
+        QObject::connect(
+                bad, &QQmlComponent::statusChanged, &engine,
+                [&](QQmlComponent::Status) {
+
+            // Must not call this if the engine is already dead.
+            // Must also not leak memory from the events the error produces.
+            QVERIFY(engine.rootContext());
+
+        });
+
+        QObject::connect(bad, &QQmlComponent::destroyed, bad, [&]() { dead2 = true; });
+        QVERIFY(bad->isLoading());
+    }
+
+    QVERIFY(dead1);
+    QVERIFY(dead2);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

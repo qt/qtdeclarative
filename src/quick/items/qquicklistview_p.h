@@ -29,13 +29,13 @@ QT_BEGIN_NAMESPACE
 
 class QQuickListView;
 class QQuickListViewPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickViewSection : public QObject
+class Q_QUICK_EXPORT QQuickViewSection : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged FINAL)
-    Q_PROPERTY(SectionCriteria criteria READ criteria WRITE setCriteria NOTIFY criteriaChanged FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
-    Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged FINAL)
+    Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
+    Q_PROPERTY(SectionCriteria criteria READ criteria WRITE setCriteria NOTIFY criteriaChanged)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(int labelPositioning READ labelPositioning WRITE setLabelPositioning NOTIFY labelPositioningChanged)
     QML_NAMED_ELEMENT(ViewSection)
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -77,25 +77,25 @@ private:
 
 class QQmlInstanceModel;
 class QQuickListViewAttached;
-class Q_QUICK_PRIVATE_EXPORT QQuickListView : public QQuickItemView
+class Q_QUICK_EXPORT QQuickListView : public QQuickItemView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickListView)
 
-    Q_PROPERTY(qreal highlightMoveVelocity READ highlightMoveVelocity WRITE setHighlightMoveVelocity NOTIFY highlightMoveVelocityChanged FINAL)
-    Q_PROPERTY(qreal highlightResizeVelocity READ highlightResizeVelocity WRITE setHighlightResizeVelocity NOTIFY highlightResizeVelocityChanged FINAL)
-    Q_PROPERTY(int highlightResizeDuration READ highlightResizeDuration WRITE setHighlightResizeDuration NOTIFY highlightResizeDurationChanged FINAL)
+    Q_PROPERTY(qreal highlightMoveVelocity READ highlightMoveVelocity WRITE setHighlightMoveVelocity NOTIFY highlightMoveVelocityChanged)
+    Q_PROPERTY(qreal highlightResizeVelocity READ highlightResizeVelocity WRITE setHighlightResizeVelocity NOTIFY highlightResizeVelocityChanged)
+    Q_PROPERTY(int highlightResizeDuration READ highlightResizeDuration WRITE setHighlightResizeDuration NOTIFY highlightResizeDurationChanged)
 
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)
-    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged)
+    Q_PROPERTY(Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged)
 
-    Q_PROPERTY(QQuickViewSection *section READ sectionCriteria CONSTANT FINAL)
-    Q_PROPERTY(QString currentSection READ currentSection NOTIFY currentSectionChanged FINAL)
+    Q_PROPERTY(QQuickViewSection *section READ sectionCriteria CONSTANT)
+    Q_PROPERTY(QString currentSection READ currentSection NOTIFY currentSectionChanged)
 
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
 
-    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION(2, 4) FINAL)
-    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION(2, 4) FINAL)
+    Q_PROPERTY(HeaderPositioning headerPositioning READ headerPositioning WRITE setHeaderPositioning NOTIFY headerPositioningChanged REVISION(2, 4))
+    Q_PROPERTY(FooterPositioning footerPositioning READ footerPositioning WRITE setFooterPositioning NOTIFY footerPositioningChanged REVISION(2, 4))
 
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(ListView)
@@ -171,23 +171,29 @@ protected:
     qreal maxXExtent() const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
+class Q_QUICK_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
 {
     Q_OBJECT
-
+    Q_PROPERTY(QQuickListView *view READ view NOTIFY viewChanged FINAL)
 public:
     QQuickListViewAttached(QObject *parent)
         : QQuickItemViewAttached(parent), m_sectionItem(nullptr) {}
     ~QQuickListViewAttached() {}
+    QQuickListView *view() const { return m_view; }
+    void setView(QQuickListView *view) {
+        if (view != m_view) {
+            m_view = view;
+            Q_EMIT viewChanged();
+        }
+    }
 
 public:
     QPointer<QQuickItem> m_sectionItem;
+private:
+    QPointer<QQuickListView> m_view;
 };
 
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickListView)
-QML_DECLARE_TYPE(QQuickViewSection)
 
 #endif // QQUICKLISTVIEW_P_H

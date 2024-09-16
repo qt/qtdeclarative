@@ -336,7 +336,7 @@
   engine in order to assert on that.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(),
-      qmlRegisterSingletonInstance(), QQmlEngine::singletonInstance()
+      qmlRegisterSingletonInstance(), QQmlEngine::singletonInstance(), {Singletons in QML}
 */
 
 /*!
@@ -528,7 +528,7 @@
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
   \l QML_ADDED_IN_VERSION(), \l QML_REMOVED_IN_VERSION(),
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
-  \l QML_ATTACHED(), \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
+  \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
   in the enclosing C++ type do not apply to the enclosing type but instead to
   \a FOREIGN_TYPE. The enclosing type still needs to be registered with the
   \l {The Meta-Object System}{meta object system} using a \l Q_GADGET or
@@ -542,6 +542,9 @@
   With QML_ELEMENT, the element is named after the struct it is contained in,
   not the foreign type. The \l {Foreign objects integration} chapter in
   \l {Writing advanced QML Extensions with C++} demonstrates this.
+
+  \note QML_ATTACHED() can currently not be redirected like this. It has to be
+  specificed in the same type that implements qmlAttachedProperties().
 
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
@@ -715,7 +718,7 @@
 
 
 /*!
-  \fn int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+  \fn template <typename T> int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
@@ -768,7 +771,7 @@
 */
 
 /*!
-  \fn int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
+  \fn template<typename T, int metaObjectRevision> int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
   \relates QQmlEngine
 
   This template function registers the specified revision of a C++ type in the QML system with
@@ -787,7 +790,7 @@
 */
 
 /*!
-  \fn int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
+  \fn template <typename T> int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& message)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system with
@@ -806,7 +809,7 @@
 */
 
 /*!
-  \fn int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
+  \fn template <typename T, typename E> int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
   \relates QQmlEngine
 
   This template function registers the C++ type and its extension object in the
@@ -821,7 +824,7 @@
 
 
 /*!
-  \fn int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
+  \fn template <typename T, typename E> int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
   \relates QQmlEngine
 
   This template function registers the C++ type and its extension
@@ -936,7 +939,7 @@
 */
 
 /*!
-  \fn int qmlRegisterAnonymousType(const char *uri, int versionMajor)
+  \fn template <typename T> int qmlRegisterAnonymousType(const char *uri, int versionMajor)
   \relates QQmlEngine
 
   This template function registers the C++ type in the QML system as an anonymous type. The
@@ -1145,7 +1148,7 @@
 */
 
 /*!
-   \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
+   \fn template <typename T> int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
    \relates QQmlEngine
 
    This function may be used to register a singleton type provider \a callback in a particular \a uri
@@ -1456,6 +1459,10 @@
   Returns -1 if no matching type was found or one of the given parameters
   was invalid.
 
+  \note: qmlTypeId tries to make modules available, even if they were not accessed by any
+  engine yet. This can introduce overhead the first time a module is accessed. Trying to
+  find types from a module which does not exist always introduces this overhead.
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT, QML_SINGLETON, qmlRegisterType(), qmlRegisterSingletonType()
 */
 
@@ -1496,6 +1503,7 @@
       Q_GADGET
       QML_VALUE_TYPE(myValueType)
       QML_CONSTRUCTIBLE_VALUE
+  public:
       Q_INVOKABLE MyValueType(double d);
 
       // ...

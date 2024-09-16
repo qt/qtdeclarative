@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PointHandler
-    \instantiates QQuickPointHandler
+    \nativetype QQuickPointHandler
     \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

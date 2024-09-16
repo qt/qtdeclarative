@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -18,15 +18,17 @@ TestCase {
         ProgressBar { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(progressBar, testCase)
         verify(control)
     }
 
     function test_value() {
-        var control = createTemporaryObject(progressBar, testCase)
+        let control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -41,7 +43,7 @@ TestCase {
     }
 
     function test_range() {
-        var control = createTemporaryObject(progressBar, testCase, {from: 0, to: 100, value: 50})
+        let control = createTemporaryObject(progressBar, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -73,7 +75,7 @@ TestCase {
     }
 
     function test_inverted() {
-        var control = createTemporaryObject(progressBar, testCase, {from: 1.0, to: -1.0})
+        let control = createTemporaryObject(progressBar, testCase, {from: 1.0, to: -1.0})
         verify(control)
 
         compare(control.from, 1.0)
@@ -95,7 +97,7 @@ TestCase {
     }
 
     function test_position() {
-        var control = createTemporaryObject(progressBar, testCase)
+        let control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -111,7 +113,7 @@ TestCase {
     }
 
     function test_visualPosition() {
-        var control = createTemporaryObject(progressBar, testCase)
+        let control = createTemporaryObject(progressBar, testCase)
         verify(control)
 
         compare(control.value, 0)
@@ -143,7 +145,7 @@ TestCase {
     }
 
     function test_indeterminate() {
-        var control = createTemporaryObject(progressBar, testCase)
+        let control = createTemporaryObject(progressBar, testCase)
         verify(control)
         compare(control.indeterminate, false)
 

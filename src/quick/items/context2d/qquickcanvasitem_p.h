@@ -31,7 +31,6 @@ class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
 class QQuickPixmap;
-class QQmlV4Function;
 
 class QQuickCanvasPixmap final : public QQmlRefCounted<QQuickCanvasPixmap>
 {
@@ -56,14 +55,14 @@ class QQuickCanvasItem : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged FINAL)
-    Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged FINAL)
-    Q_PROPERTY(QJSValue context READ context NOTIFY contextChanged FINAL)
-    Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged FINAL)
-    Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged FINAL)
-    Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged FINAL)
-    Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged FINAL)
-    Q_PROPERTY(RenderStrategy renderStrategy READ renderStrategy WRITE setRenderStrategy NOTIFY renderStrategyChanged FINAL)
+    Q_PROPERTY(bool available READ isAvailable NOTIFY availableChanged)
+    Q_PROPERTY(QString contextType READ contextType WRITE setContextType NOTIFY contextTypeChanged)
+    Q_PROPERTY(QJSValue context READ context NOTIFY contextChanged)
+    Q_PROPERTY(QSizeF canvasSize READ canvasSize WRITE setCanvasSize NOTIFY canvasSizeChanged)
+    Q_PROPERTY(QSize tileSize READ tileSize WRITE setTileSize NOTIFY tileSizeChanged)
+    Q_PROPERTY(QRectF canvasWindow READ canvasWindow WRITE setCanvasWindow NOTIFY canvasWindowChanged)
+    Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
+    Q_PROPERTY(RenderStrategy renderStrategy READ renderStrategy WRITE setRenderStrategy NOTIFY renderStrategyChanged)
     QML_NAMED_ELEMENT(Canvas)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -110,10 +109,10 @@ public:
 
     QImage toImage(const QRectF& rect = QRectF()) const;
 
-    Q_INVOKABLE void getContext(QQmlV4Function *args);
+    Q_INVOKABLE void getContext(QQmlV4FunctionPtr args);
 
-    Q_INVOKABLE void requestAnimationFrame(QQmlV4Function *args);
-    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV4Function *args);
+    Q_INVOKABLE void requestAnimationFrame(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void cancelRequestAnimationFrame(QQmlV4FunctionPtr args);
 
     Q_INVOKABLE void requestPaint();
     Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());
@@ -185,7 +184,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickCanvasItem)
 
 #endif //QQUICKCANVASITEM_P_H

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 QT_REQUIRE_CONFIG(qml_debug);
 
 class QQmlProfilerService;
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapter : public QObject, public QQmlProfilerDefinitions {
+class Q_QML_EXPORT QQmlAbstractProfilerAdapter : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
 
 public:
@@ -71,7 +71,7 @@ private:
     quint64 featuresEnabled;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlAbstractProfilerAdapterFactory : public QObject
+class Q_QML_EXPORT QQmlAbstractProfilerAdapterFactory : public QObject
 {
     Q_OBJECT
 public:

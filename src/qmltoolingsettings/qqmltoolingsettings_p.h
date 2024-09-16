@@ -31,8 +31,8 @@ public:
     bool writeDefaults() const;
     bool search(const QString &path);
 
-    QVariant value(QString name) const;
-    bool isSet(QString name) const;
+    QVariant value(const QString &name) const;
+    bool isSet(const QString &name) const;
 
 private:
     QString m_toolName;

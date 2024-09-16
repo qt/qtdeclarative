@@ -50,7 +50,6 @@ public:
     bool m_error;
     QShader m_vs;
     QShader m_fs;
-    uint m_constantBufferSize;
     QHash<uint, Constant> m_constants; // offset -> Constant
     QHash<int, QVariant> m_samplers; // binding -> value (source ref)
     QHash<QByteArray, int> m_samplerNameMap; // name -> binding

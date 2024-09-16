@@ -18,11 +18,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickAgeAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_EXPORT QQuickAgeAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(int lifeLeft READ lifeLeft WRITE setLifeLeft NOTIFY lifeLeftChanged FINAL)
-    Q_PROPERTY(bool advancePosition READ advancePosition WRITE setAdvancePosition NOTIFY advancePositionChanged FINAL)
+    Q_PROPERTY(int lifeLeft READ lifeLeft WRITE setLifeLeft NOTIFY lifeLeftChanged)
+    Q_PROPERTY(bool advancePosition READ advancePosition WRITE setAdvancePosition NOTIFY advancePositionChanged)
     QML_NAMED_ELEMENT(Age)
     QML_ADDED_IN_VERSION(2, 0)
 

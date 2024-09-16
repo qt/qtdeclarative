@@ -4,57 +4,45 @@
 #include "qqmlengine_p.h"
 #include "qqmlengine.h"
 
-#include "qqmlcontext_p.h"
-#include "qqml.h"
-#include "qqmlcontext.h"
-#include "qqmlscriptstring.h"
-#include "qqmlglobal_p.h"
-#include "qqmlnotifier_p.h"
-#include "qqmlincubator.h"
-#include "qqmlabstracturlinterceptor.h"
-
-#include <private/qqmldirparser_p.h>
+#include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
-#include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qqmltype_p_p.h>
+#include <private/qqmlcontext_p.h>
+#include <private/qqmlnotifier_p.h>
 #include <private/qqmlpluginimporter_p.h>
-#include <QtCore/qstandardpaths.h>
-#include <QtCore/qmetaobject.h>
-#include <QDebug>
+#include <private/qqmlprofiler_p.h>
+#include <private/qqmlscriptdata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qqmltypedata_p.h>
+#include <private/qqmlvmemetaobject_p.h>
+#include <private/qqmlcomponent_p.h>
+
+#include <private/qobject_p.h>
+#include <private/qthread_p.h>
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlincubator.h>
+#include <QtQml/qqmlscriptstring.h>
+
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qstandardpaths.h>
 #include <QtCore/qthread.h>
-#include <private/qthread_p.h>
-#include <private/qqmlscriptdata_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQml/private/qqmlsourcecoordinate_p.h>
-#include <QtQml/private/qqmlcomponent_p.h>
 
 #if QT_CONFIG(qml_network)
-#include "qqmlnetworkaccessmanagerfactory.h"
-#include <QNetworkAccessManager>
+#include <QtQml/qqmlnetworkaccessmanagerfactory.h>
+#include <QtNetwork/qnetworkaccessmanager.h>
 #endif
-
-#include <private/qobject_p.h>
-#include <private/qmetaobject_p.h>
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <private/qqmlbind_p.h>
-#include <private/qqmlconnections_p.h>
-#if QT_CONFIG(qml_animation)
-#include <private/qqmltimer_p.h>
-#endif
-#include <private/qqmlplatform_p.h>
-#include <private/qqmlloggingcategory_p.h>
-#include <private/qv4sequenceobject_p.h>
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #  include <qt_windows.h>
 #  include <shlobj.h>
-#  include <qlibrary.h>
+#  include <QtCore/qlibrary.h>
 #  ifndef CSIDL_APPDATA
 #    define CSIDL_APPDATA           0x001a  // <username>\Application Data
 #  endif
@@ -62,9 +50,11 @@
 
 QT_BEGIN_NAMESPACE
 
+void qml_register_types_QML();
+
 /*!
   \qmltype QtObject
-    \instantiates QObject
+    \nativetype QObject
   \inqmlmodule QtQml
   \ingroup qml-utility-elements
   \brief A basic QML type.
@@ -215,22 +205,15 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     QObjectPrivate *p = QObjectPrivate::get(o);
     if (QQmlData *d = QQmlData::get(p)) {
+        const auto invalidate = [](QQmlContextData *c) {c->invalidate();};
         if (d->ownContext) {
-            for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext(); lc;
-                 lc = lc->linkedContext()) {
-                lc->invalidate();
-                if (lc->contextObject() == o)
-                    lc->setContextObject(nullptr);
-            }
-            d->ownContext->invalidate();
-            if (d->ownContext->contextObject() == o)
-                d->ownContext->setContextObject(nullptr);
+            d->ownContext->deepClearContextObject(o, invalidate, invalidate);
             d->ownContext.reset();
             d->context = nullptr;
+            Q_ASSERT(!d->outerContext || d->outerContext->contextObject() != o);
+        } else if (d->outerContext && d->outerContext->contextObject() == o) {
+            d->outerContext->deepClearContextObject(o, invalidate, invalidate);
         }
-
-        if (d->outerContext && d->outerContext->contextObject() == o)
-            d->outerContext->setContextObject(nullptr);
 
         if (d->hasVMEMetaObject || d->hasInterceptorMetaObject) {
             // This is somewhat dangerous because another thread might concurrently
@@ -404,9 +387,7 @@ void QQmlData::setQueuedForDeletion(QObject *object)
         if (QQmlData *ddata = QQmlData::get(object)) {
             if (ddata->ownContext) {
                 Q_ASSERT(ddata->ownContext.data() == ddata->context);
-                ddata->context->emitDestruction();
-                if (ddata->ownContext->contextObject() == object)
-                    ddata->ownContext->setContextObject(nullptr);
+                ddata->ownContext->deepClearContextObject(object);
                 ddata->ownContext.reset();
                 ddata->context = nullptr;
             }
@@ -477,84 +458,8 @@ void QQmlEnginePrivate::init()
     Q_Q(QQmlEngine);
 
     if (baseModulesUninitialized) {
-        // Named builtins
-        qmlRegisterType<void>("QML", 1, 0, "void");
-
-        const int varId = qmlRegisterType<QVariant>("QML", 1, 0, "var");
-        QQmlMetaType::registerTypeAlias(varId, QLatin1String("variant"));
-        qmlRegisterAnonymousSequentialContainer<QList<QVariant>>("QML", 1);
-
-        qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
-        qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
-
-        qmlRegisterType<int>("QML", 1, 0, "int");
-        qmlRegisterAnonymousSequentialContainer<QList<int>>("QML", 1);
-
-        const int realId = qmlRegisterType<double>("QML", 1, 0, "real");
-        QQmlMetaType::registerTypeAlias(realId, QLatin1String("double"));
-        qmlRegisterAnonymousSequentialContainer<QList<double>>("QML", 1);
-
-        qmlRegisterType<QString>("QML", 1, 0, "string");
-        qmlRegisterAnonymousSequentialContainer<QList<QString>>("QML", 1);
-
-        qmlRegisterType<bool>("QML", 1, 0, "bool");
-        qmlRegisterAnonymousSequentialContainer<QList<bool>>("QML", 1);
-
-        qmlRegisterType<QDateTime>("QML", 1, 0, "date");
-        qmlRegisterAnonymousSequentialContainer<QList<QDateTime>>("QML", 1);
-
-        qmlRegisterType<QUrl>("QML", 1, 0, "url");
-        qmlRegisterAnonymousSequentialContainer<QList<QUrl>>("QML", 1);
-
-#if QT_CONFIG(regularexpression)
-        qmlRegisterType<QRegularExpression>("QML", 1, 0, "regexp");
-        qmlRegisterAnonymousSequentialContainer<QList<QRegularExpression>>("QML", 1);
-#else
-        qmlRegisterType<void>("QML", 1, 0, "regexp");
-#endif
-
-        // Anonymous builtins
-        qmlRegisterAnonymousType<std::nullptr_t>("QML", 1);
-        qmlRegisterAnonymousType<QVariantMap>("QML", 1);
-
-        qmlRegisterAnonymousType<QJSValue>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QJSValue>>("QML", 1);
-
-        qmlRegisterAnonymousType<qint8>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<qint8>>("QML", 1);
-
-        qmlRegisterAnonymousType<quint8>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<quint8>>("QML", 1);
-
-        qmlRegisterAnonymousType<short>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<short>>("QML", 1);
-
-        qmlRegisterAnonymousType<ushort>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<ushort>>("QML", 1);
-
-        qmlRegisterAnonymousType<uint>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<uint>>("QML", 1);
-
-        qmlRegisterAnonymousType<qlonglong>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<qlonglong>>("QML", 1);
-
-        qmlRegisterAnonymousType<qulonglong>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<qulonglong>>("QML", 1);
-
-        qmlRegisterAnonymousType<float>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<float>>("QML", 1);
-
-        qmlRegisterAnonymousType<QChar>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QChar>>("QML", 1);
-
-        qmlRegisterAnonymousType<QDate>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QDate>>("QML", 1);
-
-        qmlRegisterAnonymousType<QTime>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QTime>>("QML", 1);
-
-        qmlRegisterAnonymousType<QByteArray>("QML", 1);
-        qmlRegisterAnonymousSequentialContainer<QList<QByteArray>>("QML", 1);
+        // Register builtins
+        qml_register_types_QML();
 
         // No need to specifically register those.
         static_assert(std::is_same_v<QStringList, QList<QString>>);
@@ -564,6 +469,9 @@ void QQmlEnginePrivate::init()
         qRegisterMetaType<QQmlComponent::Status>();
         qRegisterMetaType<QList<QObject*> >();
         qRegisterMetaType<QQmlBinding*>();
+
+        // Protect the module: We don't want any URL interceptor to mess with the builtins.
+        qmlProtectModule("QML", 1);
 
         QQmlData::init();
         baseModulesUninitialized = false;
@@ -580,7 +488,7 @@ void QQmlEnginePrivate::init()
   \inmodule QtQml
   \brief The QQmlEngine class provides an environment for instantiating QML components.
 
-  A QQmlEngine is used to manage \l{components}{QQmlComponent} and objects created from
+  A QQmlEngine is used to manage \l{QQmlComponent}{components} and objects created from
   them and execute their bindings and functions. QQmlEngine also inherits from
   \l{QJSEngine} which allows seamless integration between your QML components and
   JavaScript code.
@@ -625,6 +533,7 @@ QQmlEngine::QQmlEngine(QQmlEnginePrivate &dd, QObject *parent)
 QQmlEngine::~QQmlEngine()
 {
     Q_D(QQmlEngine);
+    handle()->inShutdown = true;
     QJSEnginePrivate::removeFromDebugServer(this);
 
     // Emit onDestruction signals for the root context before
@@ -666,14 +575,16 @@ QQmlEngine::~QQmlEngine()
 /*!
   Clears the engine's internal component cache.
 
-  This function causes the property metadata of all components previously
-  loaded by the engine to be destroyed.  All previously loaded components and
-  the property bindings for all extant objects created from those components will
-  cease to function.
+  This function causes the property metadata of most components previously
+  loaded by the engine to be destroyed. It does so by dropping unreferenced
+  components from the engine's component cache. It does not drop components that
+  are still referenced since that would almost certainly lead to crashes further
+  down the line.
 
-  This function returns the engine to a state where it does not contain any loaded
-  component data.  This may be useful in order to reload a smaller subset of the
-  previous component set, or to load a new version of a previously loaded component.
+  If no components are referenced, this function returns the engine to a state
+  where it does not contain any loaded component data. This may be useful in
+  order to reload a smaller subset of the previous component set, or to load a
+  new version of a previously loaded component.
 
   Once the component cache has been cleared, components must be loaded before
   any new objects can be created.
@@ -693,9 +604,20 @@ QQmlEngine::~QQmlEngine()
 void QQmlEngine::clearComponentCache()
 {
     Q_D(QQmlEngine);
+
+    // Contexts can hold on to CUs but live on the JS heap.
+    // Use a non-incremental GC run to get rid of those.
+    QV4::MemoryManager *mm = handle()->memoryManager;
+    auto oldLimit = mm->gcStateMachine->timeLimit;
+    mm->setGCTimeLimit(-1);
+    mm->runGC();
+    mm->gcStateMachine->timeLimit = std::move(oldLimit);
+
+    handle()->trimCompilationUnits();
     d->typeLoader.lock();
     d->typeLoader.clearCache();
     d->typeLoader.unlock();
+    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 /*!
@@ -713,6 +635,7 @@ void QQmlEngine::clearComponentCache()
 void QQmlEngine::trimComponentCache()
 {
     Q_D(QQmlEngine);
+    handle()->trimCompilationUnits();
     d->typeLoader.trimCache();
 }
 
@@ -1316,11 +1239,12 @@ void QQmlData::deferData(
     deferData->context = context;
 
     const QV4::CompiledData::Object *compiledObject = compilationUnit->objectAt(objectIndex);
-    const QV4::BindingPropertyData &propertyData = compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    const QV4::CompiledData::BindingPropertyData *propertyData
+            = compilationUnit->bindingPropertyDataPerObjectAt(objectIndex);
 
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
-        const QQmlPropertyData *property = propertyData.at(i);
+        const QQmlPropertyData *property = propertyData->at(i);
         if (binding->hasFlag(QV4::CompiledData::Binding::IsDeferredBinding))
             deferData->bindings.insert(property ? property->coreIndex() : -1, binding);
     }
@@ -1947,6 +1871,24 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             return QJSValue(QJSValue::UndefinedValue);
         }
         QObject *o = component.beginCreate(q->rootContext());
+        auto *compPriv = QQmlComponentPrivate::get(&component);
+        if (compPriv->state.hasUnsetRequiredProperties()) {
+            /* We would only get the errors from the component after (complete)Create.
+                We can't call create, as we need to convertAndInsert before completeCreate (otherwise
+                tst_qqmllanguage::compositeSingletonCircular fails).
+                On the other hand, we don't want to call cnovertAndInsert if we have an error
+                So create the unset required component errors manually.
+            */
+            delete o;
+            const auto requiredProperties = compPriv->state.requiredProperties();
+            QList<QQmlError> errors (requiredProperties->size());
+            for (const auto &reqProp: *requiredProperties)
+                errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(reqProp));
+            warning(errors);
+            v4engine()->throwError(QLatin1String("Due to the preceding error(s), Singleton \"%1\" could not be loaded.").arg(QString::fromUtf8(type.typeName())));
+            return QJSValue(QJSValue::UndefinedValue);
+        }
+
         value = q->newQObject(o);
         singletonInstances.convertAndInsert(v4engine(), siinfo, &value);
         component.completeCreate();
@@ -2011,7 +1953,7 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
         // different version of ExecutionEngine::callInContext() that returns a
         // QV4::ReturnedValue with no arguments since they are not needed by the
         // outer function anyhow
-        QV4::ScopedFunctionObject result(scope,
+        QV4::Scoped<QV4::JavaScriptFunctionObject> result(scope,
             v4->callInContext(function, thisObject, callContext, 0, nullptr));
         Q_ASSERT(result->function());
         Q_ASSERT(result->function()->compilationUnit == function->compilationUnit);
@@ -2026,12 +1968,20 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)
 {
+    QV4::ExecutionEngine *v4 = v4engine();
+    if (auto unit = v4->compilationUnitForUrl(url)) {
+        if (!unit->runtimeStrings)
+            unit->populate();
+        return unit.data();
+    }
+
     auto unit = typeLoader.getType(url)->compilationUnit();
     if (!unit)
         return nullptr;
-    if (!unit->engine)
-        unit->linkToEngine(v4engine());
-    return unit;
+
+    auto executable = v4->executableCompilationUnit(std::move(unit));
+    executable->populate();
+    return executable.data();
 }
 
 QQmlRefPointer<QQmlContextData>
@@ -2044,21 +1994,21 @@ QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCom
     QQmlRefPointer<QQmlContextData> context;
     context = QQmlContextData::createRefCounted(parentContext);
     context->setInternal(true);
-    context->setImports(unit->typeNameCache);
+    context->setImports(unit->typeNameCache());
     context->initFromTypeCompilationUnit(unit, subComponentIndex);
 
-    if (isComponentRoot && unit->dependentScripts.size()) {
+    const auto *dependentScripts = unit->dependentScriptsPtr();
+    const qsizetype dependentScriptsSize = dependentScripts->size();
+    if (isComponentRoot && dependentScriptsSize) {
         QV4::ExecutionEngine *v4 = v4engine();
         Q_ASSERT(v4);
         QV4::Scope scope(v4);
 
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.size()));
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(dependentScriptsSize));
         context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
         QV4::ScopedValue v(scope);
-        for (int i = 0; i < unit->dependentScripts.size(); ++i) {
-            QQmlRefPointer<QQmlScriptData> s = unit->dependentScripts.at(i);
-            scripts->put(i, (v = s->scriptValueForContext(context)));
-        }
+        for (qsizetype i = 0; i < dependentScriptsSize; ++i)
+            scripts->put(i, (v = dependentScripts->at(i)->scriptValueForContext(context)));
     }
 
     return context;
@@ -2100,7 +2050,7 @@ static inline QString shellNormalizeFileName(const QString &name)
 
 bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 {
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
+#if defined(Q_OS_DARWIN) || defined(Q_OS_WIN)
     QFileInfo info(fileName);
     const QString absolute = info.absoluteFilePath();
 
@@ -2203,9 +2153,8 @@ LoadHelper::ResolveTypeResult LoadHelper::resolveType(QAnyStringView typeName)
     QTypeRevision versionReturn;
     QList<QQmlError> errors;
     QQmlImportNamespace *ns_return = nullptr;
-    m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
-                               &ns_return,
-                               &errors);
+    m_importCache->resolveType(
+            typeLoader(), typeName.toString(), &type, &versionReturn, &ns_return, &errors);
     return {ResolveTypeResult::ModuleFound, type};
 }
 
@@ -2221,7 +2170,4 @@ bool LoadHelper::couldFindModule() const
 
 QT_END_NAMESPACE
 
-#include "moc_qqmlengine_p.cpp"
-
 #include "moc_qqmlengine.cpp"
-

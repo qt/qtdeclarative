@@ -19,10 +19,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickPointHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged FINAL)
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
     QML_NAMED_ELEMENT(PointHandler)
     QML_ADDED_IN_VERSION(2, 12)
 

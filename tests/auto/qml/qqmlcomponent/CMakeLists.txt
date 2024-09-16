@@ -46,7 +46,10 @@ qt_policy(SET QTP0001 NEW)
 
 qt_add_qml_module(
     tst_qqmlcomponent
+    SOURCES
+        lifecyclewatcher.h
     URI test
+    NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         "data/TestComponentWithIC.qml"
         "data/withAot.qml"

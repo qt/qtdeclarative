@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuickLayouts/private/qtquicklayoutsexports_p.h>
+#include <QtQuickLayouts/qtquicklayoutsexports.h>
 
 #endif // QQUICKLAYOUTGLOBAL_P_H

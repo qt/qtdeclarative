@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 class QQuickTransition;
 class QQuickDelayButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDelayButton : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickDelayButton : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(int delay READ delay WRITE setDelay NOTIFY delayChanged FINAL)
@@ -61,7 +61,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickDelayButton)
 
 #endif // QQUICKDELAYBUTTON_P_H

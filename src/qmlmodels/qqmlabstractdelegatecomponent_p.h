@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 // TODO: consider making QQmlAbstractDelegateComponent public API
 class QQmlAdaptorModel;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
+class Q_QMLMODELS_EXPORT QQmlAbstractDelegateComponent : public QQmlComponent
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(AbstractDelegateComponent)
@@ -37,6 +37,7 @@ public:
     ~QQmlAbstractDelegateComponent() override;
 
     virtual QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = 0) const = 0;
+    virtual QString role() const = 0;
 
 Q_SIGNALS:
     void delegateChanged();

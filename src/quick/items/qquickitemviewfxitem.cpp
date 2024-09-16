@@ -72,8 +72,10 @@ void QQuickItemViewFxItem::setVisible(bool visible)
 #endif
         )
         return;
-    if (item)
+    if (item) {
         QQuickItemPrivate::get(item)->setCulled(!visible);
+        QQuickItemPrivate::get(item)->isAccessible = visible;
+    }
 }
 
 void QQuickItemViewFxItem::trackGeometry(bool track)

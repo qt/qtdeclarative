@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef QQMLTESTUTILS_P_H
 #define QQMLTESTUTILS_P_H
@@ -105,6 +105,22 @@ private:
     QtMessageHandler m_oldHandler;
     bool m_includeCategories;
 };
+
+class QQmlEngine;
+
+namespace QV4 {
+struct ExecutionEngine;
+}
+
+enum class GCFlags {
+    None = 0,
+    DontSendPostedEvents = 1
+};
+
+bool gcDone(const QV4::ExecutionEngine *engine);
+void gc(QV4::ExecutionEngine &engine, GCFlags flags = GCFlags::None);
+bool gcDone(QQmlEngine *engine);
+void gc(QQmlEngine &engine, GCFlags flags = GCFlags::None);
 
 QT_END_NAMESPACE
 

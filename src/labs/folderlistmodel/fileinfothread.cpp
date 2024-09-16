@@ -11,7 +11,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcFileInfoThread, "qt.labs.folderlistmodel.fileinfothread")
+Q_STATIC_LOGGING_CATEGORY(lcFileInfoThread, "qt.labs.folderlistmodel.fileinfothread")
 
 FileInfoThread::FileInfoThread(QObject *parent)
     : QThread(parent),

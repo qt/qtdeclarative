@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick.Controls
@@ -29,7 +29,7 @@ Row {
             onClicked: {
                 let menuItem = menuItemComponent.createObject(
                     menu.contentItem, { text: qsTr("New item") })
-                menu.addMenu(menuItem)
+                menu.addItem(menuItem)
             }
         }
     }

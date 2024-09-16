@@ -59,19 +59,13 @@ bool FileLocations::iterateDirectSubpaths(const DomItem &self, DirectVisitor vis
     return cont;
 }
 
-void FileLocations::ensureCommentLocations(const QList<FileLocationRegion> &keys)
-{
-    for (FileLocationRegion k : keys) {
-        preCommentLocations[k];
-        postCommentLocations[k];
-    }
-}
-
-FileLocations::Tree FileLocations::createTree(Path basePath){
+FileLocations::Tree FileLocations::createTree(const Path &basePath){
     return AttachedInfoT<FileLocations>::createTree(basePath);
 }
 
-FileLocations::Tree FileLocations::ensure(FileLocations::Tree base, Path basePath, AttachedInfo::PathType pType){
+FileLocations::Tree FileLocations::ensure(
+        const FileLocations::Tree &base, const Path &basePath, AttachedInfo::PathType pType)
+{
     return AttachedInfoT<FileLocations>::ensure(base, basePath, pType);
 }
 
@@ -105,7 +99,7 @@ FileLocations::Tree FileLocations::treeOf(const DomItem &item)
  */
 const FileLocations *FileLocations::fileLocationsOf(const DomItem &item)
 {
-    if (FileLocations::Tree t = treeOf(item))
+    if (const FileLocations::Tree &t = treeOf(item))
         return &(t->info());
     return nullptr;
 }
@@ -128,6 +122,9 @@ void FileLocations::updateFullLocation(const FileLocations::Tree &fLoc, SourceLo
     }
 }
 
+// Adding a new region to file location regions might break down qmlformat because
+// comments might be linked to new region undesirably. We might need to add an
+// exception to AstRangesVisitor::shouldSkipRegion when confronted those cases.
 void FileLocations::addRegion(const FileLocations::Tree &fLoc, FileLocationRegion region,
                               SourceLocation loc)
 {
@@ -180,7 +177,7 @@ bool AttachedInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visi
     cont = cont && self.dvItemField(visitor, Fields::subItems, [this, &self]() {
         return self.subMapItem(Map(
                 Path::Field(Fields::subItems),
-                [this](const DomItem &map, QString key) {
+                [this](const DomItem &map, const QString &key) {
                     Path p = Path::fromString(key);
                     return map.copy(m_subItems.value(p), map.canonicalPath().key(key));
                 },
@@ -210,7 +207,9 @@ AttachedInfo::AttachedInfo(const AttachedInfo &o):
 
   The path might be either a relative path or a canonical path, as specified by the PathType
 */
-AttachedInfo::Ptr AttachedInfo::ensure(AttachedInfo::Ptr self, Path path, AttachedInfo::PathType pType){
+AttachedInfo::Ptr AttachedInfo::ensure(
+        const AttachedInfo::Ptr &self, const Path &path, AttachedInfo::PathType pType){
+    Path relative;
     switch (pType) {
     case PathType::Canonical: {
         if (!path)
@@ -218,14 +217,15 @@ AttachedInfo::Ptr AttachedInfo::ensure(AttachedInfo::Ptr self, Path path, Attach
         Q_ASSERT(self);
         Path removed = path.mid(0, self->path().length());
         Q_ASSERT(removed == self->path());
-        path = path.mid(self->path().length());
+        relative = path.mid(self->path().length());
     } break;
     case PathType::Relative:
         Q_ASSERT(self);
+        relative = path;
         break;
     }
     Ptr res = self;
-    for (const auto &p : path) {
+    for (const auto &p : std::as_const(relative)) {
         if (AttachedInfo::Ptr subEl = res->m_subItems.value(p)) {
             res = subEl;
         } else {
@@ -237,16 +237,21 @@ AttachedInfo::Ptr AttachedInfo::ensure(AttachedInfo::Ptr self, Path path, Attach
     return res;
 }
 
-AttachedInfo::Ptr AttachedInfo::find(AttachedInfo::Ptr self, Path p, AttachedInfo::PathType pType){
+AttachedInfo::Ptr AttachedInfo::find(
+        const AttachedInfo::Ptr &self, const Path &p, AttachedInfo::PathType pType)
+{
+    Path rest;
     if (pType == PathType::Canonical) {
         if (!self) return nullptr;
         Path removed = p.mid(0, self->path().length());
         if (removed != self->path())
             return nullptr;
-        p = p.dropFront(self->path().length());
+        rest = p.dropFront(self->path().length());
+    } else {
+        rest = p;
     }
+
     AttachedInfo::Ptr res = self;
-    Path rest = p;
     while (rest) {
         if (!res)
             break;
@@ -283,7 +288,7 @@ AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName)
     res.rootTreePath = fLoc.canonicalPath();
 
     res.foundTreePath = res.rootTreePath;
-    for (Path pEl : res.lookupPath)
+    for (const Path &pEl : res.lookupPath)
         res.foundTreePath = res.foundTreePath.field(Fields::subItems).key(pEl.toString());
     return res;
 }
@@ -295,14 +300,14 @@ bool UpdatedScriptExpression::iterateDirectSubpaths(const DomItem &self, DirectV
     return cont;
 }
 
-UpdatedScriptExpression::Tree UpdatedScriptExpression::createTree(Path basePath)
+UpdatedScriptExpression::Tree UpdatedScriptExpression::createTree(const Path &basePath)
 {
     return AttachedInfoT<UpdatedScriptExpression>::createTree(basePath);
 }
 
-UpdatedScriptExpression::Tree UpdatedScriptExpression::ensure(UpdatedScriptExpression::Tree base,
-                                                              Path basePath,
-                                                              AttachedInfo::PathType pType)
+UpdatedScriptExpression::Tree UpdatedScriptExpression::ensure(
+        const UpdatedScriptExpression::Tree &base, const Path &basePath,
+        AttachedInfo::PathType pType)
 {
     return AttachedInfoT<UpdatedScriptExpression>::ensure(base, basePath, pType);
 }
@@ -326,8 +331,9 @@ const UpdatedScriptExpression *UpdatedScriptExpression::exprPtr(const DomItem &i
     return nullptr;
 }
 
-bool UpdatedScriptExpression::visitTree(Tree base, function_ref<bool(Path, Tree)> visitor,
-                                        Path basePath)
+bool UpdatedScriptExpression::visitTree(
+        const Tree &base, function_ref<bool(const Path &, const Tree &)> visitor,
+        const Path &basePath)
 {
     return AttachedInfoT<UpdatedScriptExpression>::visitTree(base, visitor, basePath);
 }

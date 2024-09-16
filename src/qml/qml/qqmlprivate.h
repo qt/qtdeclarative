@@ -82,6 +82,10 @@ class QQmlEngine;
 class QQmlCustomParser;
 class QQmlTypeNotAvailable;
 
+class QQmlV4Function;
+using QQmlV4FunctionPtr = QQmlV4Function *;
+using QQmlV4ExecutionEnginePtr = QV4::ExecutionEngine *;
+
 template<class T>
 QQmlCustomParser *qmlCreateCustomParser()
 {
@@ -366,8 +370,8 @@ namespace QQmlPrivate
         struct Properties<Parent, void>
         {
             using Func = QQmlAttachedPropertiesFunc<QObject>;
-            static const QMetaObject *staticMetaObject() { return nullptr; };
-            static Func attachedPropertiesFunc() { return nullptr; };
+            static const QMetaObject *staticMetaObject() { return nullptr; }
+            static Func attachedPropertiesFunc() { return nullptr; }
         };
 
         using Type = typename std::conditional<
@@ -736,10 +740,10 @@ namespace QQmlPrivate
     };
 
     struct AOTCompiledFunction {
-        qintptr extraData;
-        QMetaType returnType;
-        QList<QMetaType> argumentTypes;
-        void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);
+        int functionIndex;
+        int numArguments;
+        void (*signature)(QV4::ExecutableCompilationUnit *unit, QMetaType *argTypes);
+        void (*functionPtr)(const AOTCompiledContext *context, void **argv);
     };
 
 #if QT_DEPRECATED_SINCE(6, 6)
@@ -836,29 +840,6 @@ namespace QQmlPrivate
         if (index == -1)
             return defaultValue;
         return qstrcmp(metaObject->classInfo(index).value(), "true") == 0;
-    }
-
-    inline const char *classElementName(const QMetaObject *metaObject)
-    {
-        const char *elementName = classInfo(metaObject, "QML.Element");
-        if (qstrcmp(elementName, "auto") == 0) {
-            const char *strippedClassName = metaObject->className();
-            for (const char *c = strippedClassName; *c != '\0'; c++) {
-                if (*c == ':')
-                    strippedClassName = c + 1;
-            }
-
-            return strippedClassName;
-        }
-        if (qstrcmp(elementName, "anonymous") == 0)
-            return nullptr;
-
-        if (!elementName) {
-            qWarning().nospace() << "Missing QML.Element class info \"" << elementName << "\""
-                                 << " for " << metaObject->className();
-        }
-
-        return elementName;
     }
 
     template<class T, class = std::void_t<>>
@@ -971,7 +952,7 @@ namespace QQmlPrivate
     };
 
     template<class T>
-    struct QmlInterface<T, std::void_t<typename T::QmlIsInterface>>
+    struct QmlInterface<T, std::void_t<typename T::QmlIsInterface, decltype(qobject_interface_iid<T *>())>>
     {
         static constexpr bool Value = bool(T::QmlIsInterface::yes);
     };
@@ -1001,7 +982,7 @@ namespace QQmlPrivate
                 return std::is_copy_constructible_v<T>;
         }
 
-        static QMetaType self()
+        static constexpr QMetaType self()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaType::fromType<T*>();
@@ -1009,7 +990,7 @@ namespace QQmlPrivate
                 return QMetaType::fromType<T>();
         }
 
-        static QMetaType list()
+        static constexpr QMetaType list()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaType::fromType<QQmlListProperty<T>>();
@@ -1017,13 +998,28 @@ namespace QQmlPrivate
                 return QMetaType::fromType<QList<T>>();
         }
 
-        static QMetaSequence sequence()
+        static constexpr QMetaSequence sequence()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaSequence();
             else
                 return QMetaSequence::fromContainer<QList<T>>();
         }
+
+        static constexpr int size()
+        {
+            return sizeof(T);
+        }
+    };
+
+    template<>
+    struct QmlMetaType<void>
+    {
+        static constexpr bool hasAcceptableCtors() { return true; }
+        static constexpr QMetaType self() { return QMetaType(); }
+        static constexpr QMetaType list() { return QMetaType(); }
+        static constexpr QMetaSequence sequence() { return QMetaSequence(); }
+        static constexpr int size() { return 0; }
     };
 
     template<typename T, typename E, typename WrapperT = T>
@@ -1064,7 +1060,7 @@ namespace QQmlPrivate
             3,
             QmlMetaType<T>::self(),
             QmlMetaType<T>::list(),
-            int(sizeof(T)),
+            QmlMetaType<T>::size(),
             Constructors<T>::createInto,
             nullptr,
             ValueType<T, E>::create,
@@ -1156,8 +1152,16 @@ namespace QQmlPrivate
 
     Q_QML_EXPORT void qmlRegistrationWarning(QmlRegistrationWarning warning, QMetaType type);
 
+    Q_QML_EXPORT QMetaType compositeMetaType(
+            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
+    Q_QML_EXPORT QMetaType compositeListMetaType(
+            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE
+
+Q_DECLARE_OPAQUE_POINTER(QQmlV4FunctionPtr)
+Q_DECLARE_OPAQUE_POINTER(QQmlV4ExecutionEnginePtr)
 
 #endif // QQMLPRIVATE_H

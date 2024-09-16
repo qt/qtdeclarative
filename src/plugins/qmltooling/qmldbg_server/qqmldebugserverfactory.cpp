@@ -497,8 +497,8 @@ void QQmlDebugServerImpl::receiveMessage()
 
     } else {
         if (m_gotHello) {
-            QHash<QString, QQmlDebugService *>::Iterator iter = m_plugins.find(name);
-            if (iter == m_plugins.end()) {
+            const auto iter = m_plugins.constFind(name);
+            if (iter == m_plugins.cend()) {
                 qWarning() << "QML Debugger: Message received for missing plugin" << name << '.';
             } else {
                 QQmlDebugService *service = *iter;

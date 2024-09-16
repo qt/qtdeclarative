@@ -1,13 +1,15 @@
 Item {
-    property var test: [{
+    property var test: [
+        {
             // Testing
             "foo": "bar"
-        }]
+        }
+    ]
 
     onTestChanged: {
         fooBar(test, {
-                // Testing
-                "foo": "bar"
-            });
+            // Testing
+            "foo": "bar"
+        });
     }
 }

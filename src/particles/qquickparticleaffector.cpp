@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Affector
-//!    \instantiates QQuickParticleAffector
+//!    \nativetype QQuickParticleAffector
     \inqmlmodule QtQuick.Particles
     \brief Applies alterations to the attributes of logical particles at any
     point in their lifetime.

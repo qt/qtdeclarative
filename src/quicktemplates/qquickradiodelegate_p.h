@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRadioDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_EXPORT QQuickRadioDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(RadioDelegate)
@@ -42,7 +42,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickRadioDelegate)
 
 #endif // QQUICKRADIODELEGATE_P_H

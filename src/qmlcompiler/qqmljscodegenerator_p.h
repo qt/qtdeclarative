@@ -27,17 +27,17 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
+class Q_QMLCOMPILER_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
 {
 public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
-                       const QV4::Compiler::JSUnitGenerator *unitGenerator,
-                       const QQmlJSTypeResolver *typeResolver,
-                       QQmlJSLogger *logger);
+                        const QV4::Compiler::JSUnitGenerator *unitGenerator,
+                        const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                        QList<QQmlJS::DiagnosticMessage> *errors, const BasicBlocks &basicBlocks,
+                        const InstructionAnnotations &annotations);
     ~QQmlJSCodeGenerator() = default;
 
-    QQmlJSAotFunction run(const Function *function, const InstructionAnnotations *annotations,
-                          QQmlJS::DiagnosticMessage *error, bool basicBlocksValidationFailed);
+    QQmlJSAotFunction run(const Function *function, bool basicBlocksValidationFailed);
 
 protected:
     struct CodegenState : public State
@@ -49,7 +49,7 @@ protected:
     // This is an RAII helper we can use to automatically convert the result of "inflexible"
     // operations to the desired type. For example GetLookup can only retrieve the type of
     // the property we're looking up. If we want to store a different type, we need to convert.
-    struct Q_QMLCOMPILER_PRIVATE_EXPORT AccumulatorConverter
+    struct Q_QMLCOMPILER_EXPORT AccumulatorConverter
     {
         Q_DISABLE_COPY_MOVE(AccumulatorConverter);
         AccumulatorConverter(QQmlJSCodeGenerator *generator);
@@ -217,7 +217,7 @@ protected:
                        const QQmlJSRegisterContent &to,
                        const QString &variable)
     {
-        const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(to);
+        const QQmlJSScope::ConstPtr contained = to.containedType();
         if (m_typeResolver->equals(to.storedType(), contained)
                 || m_typeResolver->isNumeric(to.storedType())
                 || to.storedType()->isReferenceType()
@@ -230,7 +230,9 @@ protected:
             // we can convert by stored type.
             return convertStored(from, to.storedType(), variable);
         } else {
-            return convertContained(m_typeResolver->globalType(from), to, variable);
+            return convertContained(
+                    m_typeResolver->globalType(from).storedIn(m_typeResolver->storedType(from)),
+                    to, variable);
         }
     }
 
@@ -242,11 +244,14 @@ protected:
                              const QQmlJSRegisterContent &to,
                              const QString &variable);
 
-    QString errorReturnValue();
+    void generateReturnError();
     void reject(const QString &thing);
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;
     QString metaTypeFromName(const QQmlJSScope::ConstPtr &type) const;
+    QString compositeMetaType(const QString &elementName) const;
+    QString compositeListMetaType(const QString &elementName) const;
+
     QString contentPointer(const QQmlJSRegisterContent &content, const QString &var);
     QString contentType(const QQmlJSRegisterContent &content, const QString &var);
 
@@ -276,7 +281,18 @@ protected:
 
 private:
     void generateExceptionCheck();
-    void generateEqualityOperation(const QQmlJSRegisterContent &lhsContent, const QString &lhsName, const QString &function, bool invert);
+
+    void generateEqualityOperation(
+            const QQmlJSRegisterContent &lhsContent, const QString &lhsName,
+            const QString &function, bool invert) {
+        generateEqualityOperation(
+                lhsContent, m_state.accumulatorIn(), lhsName, m_state.accumulatorVariableIn,
+                function, invert);
+    }
+
+    void generateEqualityOperation(
+            const QQmlJSRegisterContent &lhsContent, const QQmlJSRegisterContent &rhsContent,
+            const QString &lhsName, const QString &rhsName, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
     void generateShiftOperation(int lhs, const QString &cppOperator);
@@ -288,8 +304,11 @@ private:
     void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
-    void generateVariantEqualityComparison(const QQmlJSRegisterContent &nonStorable,
-                                           const QString &registerName, bool invert);
+    void generateVariantEqualityComparison(
+            const QQmlJSRegisterContent &nonStorable, const QString &registerName, bool invert);
+    void generateVariantEqualityComparison(
+            const QQmlJSRegisterContent &storableContent, const QString &typedRegisterName,
+            const QString &varRegisterName, bool invert);
     void generateArrayInitializer(int argc, int argv);
     void generateWriteBack(int registerIndex);
     void rejectIfNonQObjectOut(const QString &error);
@@ -306,17 +325,7 @@ private:
     bool inlineConsoleMethod(const QString &name, int argc, int argv);
     bool inlineArrayMethod(const QString &name, int base, int argc, int argv);
 
-    QQmlJSScope::ConstPtr mathObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
-    }
-
-    QQmlJSScope::ConstPtr consoleObject() const
-    {
-        using namespace Qt::StringLiterals;
-        return m_typeResolver->jsGlobalObject()->property(u"console"_s).type();
-    }
+    void generate_GetLookupHelper(int index);
 
     QString resolveValueTypeContentPointer(
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
@@ -328,11 +337,32 @@ private:
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
 
+    QQmlJSRegisterContent original(const QQmlJSRegisterContent &tracked)
+    {
+        const QQmlJSRegisterContent restored = m_typeResolver->original(tracked);
+        return restored.storedIn(m_typeResolver->originalType(tracked.storedType()));
+    }
+
+    QQmlJSRegisterContent global(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->globalType(contained).storedIn(contained);
+    }
+
+    QQmlJSRegisterContent builtin(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->builtinType(contained).storedIn(contained);
+    }
+
+    bool registerIsStoredIn(
+            const QQmlJSRegisterContent &reg, const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_typeResolver->equals(reg.storedType(), type);
+    }
+
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
 
     const QV4::Compiler::Context *m_context = nullptr;
-    const InstructionAnnotations *m_annotations = nullptr;
 
     bool m_skipUntilNextLabel = false;
 

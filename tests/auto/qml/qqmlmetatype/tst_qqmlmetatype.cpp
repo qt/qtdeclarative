@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qstandardpaths.h>
 #include <qtest.h>
@@ -769,8 +769,16 @@ void checkBuiltinTypes()
 template<typename T>
 void checkNamedBuiltin(const QString &name)
 {
-    QCOMPARE(QQmlMetaType::qmlType("QML/" + name, QTypeRevision::fromVersion(1, 0)),
-             QQmlMetaType::qmlType(QMetaType::fromType<T>()));
+    const QQmlType expected = QQmlMetaType::qmlType(QMetaType::fromType<T>());
+    const QQmlType actual = QQmlMetaType::qmlType("QML/" + name, QTypeRevision::fromVersion(1, 0));
+    if (actual != expected) {
+        qWarning() << Q_FUNC_INFO << "looking for" << name;
+        qWarning() << "found" << actual.module() << actual.elementName() << actual.version()
+                   << actual.typeId();
+        qWarning() << "expected" << expected.module() << expected.elementName()
+                   << expected.version() << expected.typeId();
+        QFAIL("mismatch");
+    }
 }
 
 template<typename T>

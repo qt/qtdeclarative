@@ -5,22 +5,38 @@
 \page qmllint-warnings-and-errors-syntax.id-quotation.html
 \ingroup qmllint-warnings-and-errors
 
-\title syntax.id-quotation
-\brief BRIEF
+\title Id quotation
+\brief Id has quotation marks.
 
-\section1 syntax.id-quotation
+\qmllintwarningcategory syntax.id-quotation
+
+\section1 Ids do not need quotation marks
 
 \section2 What happened?
-TODO
+You surrounded an \l{qtqml-syntax-objectattributes.html#the-id-attribute}{id}
+with quotation marks.
 
 \section2 Why is this bad?
-TODO
+This might lead to confusion between ids and strings.
+The QML language does not require quotation marks for ids and
+forbids more complex string expressions for ids.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    id: "root"
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, remove the quotation marks:
 \qml
+import QtQuick
+
+Item {
+    id: root
+}
 \endqml
 */
 

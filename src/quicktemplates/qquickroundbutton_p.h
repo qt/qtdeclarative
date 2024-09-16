@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRoundButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRoundButton : public QQuickButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickRoundButton : public QQuickButton
 {
     Q_OBJECT
     Q_PROPERTY(qreal radius READ radius WRITE setRadius RESET resetRadius NOTIFY radiusChanged FINAL)
@@ -47,7 +47,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickRoundButton)
 
 #endif // QQUICKROUNDBUTTON_P_H

@@ -453,7 +453,7 @@ QJSValue QQmlContext::importedScript(const QString &name) const
 {
     Q_D(const QQmlContext);
 
-    QQmlTypeNameCache::Result r = d->m_data->imports()->query(name);
+    QQmlTypeNameCache::Result r = d->m_data->imports()->query(name, QQmlTypeLoader::get(engine()));
     QV4::Scope scope(engine()->handle());
     QV4::ScopedObject scripts(scope, d->m_data->importedScripts().valueRef());
     return scripts ? QJSValuePrivate::fromReturnedValue(scripts->get(r.scriptIndex))

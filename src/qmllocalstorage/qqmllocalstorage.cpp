@@ -682,7 +682,7 @@ Returns the created database object.
 
 */
 
-void QQmlLocalStorage::openDatabaseSync(QQmlV4Function *args)
+void QQmlLocalStorage::openDatabaseSync(QQmlV4FunctionPtr args)
 {
 #if QT_CONFIG(settings)
     QV4::Scope scope(args->v4engine());

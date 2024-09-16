@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-alias-cycle.html
 \ingroup qmllint-warnings-and-errors
 
-\title Alias Cycle
+\title Alias cycle
 \brief Alias property is part of an alias cycle.
 
-\section1 Alias Property Is Part Of An Alias Cycle
+\qmllintwarningcategory alias-cycle
+
+\section1 Alias property is part of an alias cycle
 
 \section2 What happened?
 A \l{QML Object Attributes#property-aliases}{property alias} resolves to itself or to another
@@ -38,7 +40,7 @@ Item {
     property alias indirect: someId.cycle // not ok: referring to alias indirectly referring to itself
 }
 \endqml
-You can fix this warning by breaking up the alias cycles:
+To fix this warning, break up the alias cycles:
 \qml
 import QtQuick
 

@@ -14,12 +14,13 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljscontextualtypes_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsresourcefilemapper_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
+#include <QtQml/private/qqmljsast_p.h>
 
 #include <memory>
 
@@ -61,15 +62,21 @@ private:
 };
 }
 
+enum QQmlJSImporterFlag {
+    UseOptionalImports = 0x1,
+    PreferQmlFilesFromSourceFolder = 0x2
+};
+Q_DECLARE_FLAGS(QQmlJSImporterFlags, QQmlJSImporterFlag)
+
 class QQmlJSImportVisitor;
 class QQmlJSLogger;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
+class Q_QMLCOMPILER_EXPORT QQmlJSImporter
 {
 public:
     using ImportedTypes = QQmlJS::ContextualTypes;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
-                   bool useOptionalImports = false);
+                   QQmlJSImporterFlags flags = QQmlJSImporterFlags{});
 
     QQmlJSResourceFileMapper *resourceFileMapper() const { return m_mapper; }
     void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
@@ -113,14 +120,38 @@ public:
 
     QQmlJSScope::ConstPtr jsGlobalObject() const;
 
-    std::unique_ptr<QQmlJSImportVisitor>
-    makeImportVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
-                      QQmlJSLogger *logger, const QString &implicitImportDirectory,
-                      const QStringList &qmldirFiles = QStringList());
-    using ImportVisitorCreator = QQmlJSImportVisitor *(*)(const QQmlJSScope::Ptr &,
-                                                          QQmlJSImporter *, QQmlJSLogger *,
-                                                          const QString &, const QStringList &);
-    void setImportVisitorCreator(ImportVisitorCreator create) { m_createImportVisitor = create; }
+    struct ImportVisitorPrerequisites
+    {
+        ImportVisitorPrerequisites(QQmlJSScope::Ptr target, QQmlJSLogger *logger,
+                                   const QString &implicitImportDirectory = {},
+                                   const QStringList &qmldirFiles = {})
+            : m_target(target),
+              m_logger(logger),
+              m_implicitImportDirectory(implicitImportDirectory),
+              m_qmldirFiles(qmldirFiles)
+        {
+            Q_ASSERT(target && logger);
+        }
+
+        QQmlJSScope::Ptr m_target;
+        QQmlJSLogger *m_logger;
+        QString m_implicitImportDirectory;
+        QStringList m_qmldirFiles;
+    };
+    void runImportVisitor(QQmlJS::AST::Node *rootNode,
+                          const ImportVisitorPrerequisites &prerequisites);
+
+    /*!
+    \internal
+     When a qml file gets lazily loaded, it will be lexed and parsed and finally be constructed
+    via an ImportVisitor. By default, this is done via the QQmlJSImportVisitor, but can also be done
+    via other import visitors like QmltcVisitor, which is used by qmltc to compile a QML file, or
+    QQmlDomAstCreatorWithQQmlJSScope, which is used to construct the Dom of lazily loaded QML files.
+    */
+    using ImportVisitor = std::function<void(QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
+                                             const ImportVisitorPrerequisites &prerequisites)>;
+
+    void setImportVisitor(ImportVisitor visitor) { m_importVisitor = visitor; }
 
 private:
     friend class QDeferredFactory<QQmlJSScope>;
@@ -166,6 +197,7 @@ private:
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision(), bool isDependency = false);
+    QQmlDirParser createQmldirParserForFile(const QString &filename);
     void readQmltypes(const QString &filename, QList<QQmlJSExportedScope> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
@@ -187,9 +219,14 @@ private:
 
     QQmlJSResourceFileMapper *m_mapper = nullptr;
     QQmlJSResourceFileMapper *m_metaDataMapper = nullptr;
-    bool m_useOptionalImports;
+    QQmlJSImporterFlags m_flags;
+    bool useOptionalImports() const { return m_flags.testFlag(UseOptionalImports); };
+    bool preferQmlFilesFromSourceFolder() const
+    {
+        return m_flags.testFlag(PreferQmlFilesFromSourceFolder);
+    };
 
-    ImportVisitorCreator m_createImportVisitor = nullptr;
+    ImportVisitor m_importVisitor;
 };
 
 QT_END_NAMESPACE

@@ -13,7 +13,11 @@ qhp.QtLabsPlatform.virtualFolder = qtlabsplatform
 qhp.QtLabsPlatform.indexTitle    = Qt Labs Platform
 qhp.QtLabsPlatform.indexRoot     =
 
-qhp.QtLabsPlatform.subprojects = qmltypes
+qhp.QtLabsPlatform.subprojects = manual qmltypes
+qhp.QtLabsPlatform.subprojects.manual.title = Upgrading from Qt 5
+qhp.QtLabsPlatform.subprojects.manual.indexTitle = Changes to Qt Quick Labs Platform
+qhp.QtLabsPlatform.subprojects.manual.selectors = group:none
+
 qhp.QtLabsPlatform.subprojects.qmltypes.title = QML Types
 qhp.QtLabsPlatform.subprojects.qmltypes.indexTitle = Qt Labs Platform QML Types
 qhp.QtLabsPlatform.subprojects.qmltypes.selectors = qmlclass

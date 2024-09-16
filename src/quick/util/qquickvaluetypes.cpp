@@ -5,6 +5,7 @@
 
 #include <qtquickglobal.h>
 #include <private/qqmlvaluetype_p.h>
+#include <private/qqmlstringconverters_p.h>
 #include <private/qcolorspace_p.h>
 #include <private/qfont_p.h>
 
@@ -162,48 +163,10 @@ void QQuickColorValueType::setHslLightness(qreal hslLightness)
     v.setHslF(hue, saturation, hslLightness, alpha);
 }
 
-template<typename T, int NumParams>
-QVariant createValueTypeFromNumberString(const QString &s)
-{
-    Q_STATIC_ASSERT_X(NumParams == 2 || NumParams == 3 || NumParams == 4 || NumParams == 16,
-                      "Unsupported number of params; add an additional case below if necessary.");
-
-    if (s.count(u',') != NumParams - 1)
-        return QVariant();
-
-    QVarLengthArray<float, NumParams> parameters;
-    bool ok = true;
-    for (qsizetype prev = 0, next = s.indexOf(u','), length = s.size(); ok && prev < length;) {
-        parameters.append(s.mid(prev, next - prev).toFloat(&ok));
-        prev = next + 1;
-        next = (parameters.size() == NumParams - 1) ? length : s.indexOf(u',', prev);
-    }
-
-    if (!ok)
-        return QVariant();
-
-    if constexpr (NumParams == 2) {
-        return T(parameters[0], parameters[1]);
-    } else if constexpr (NumParams == 3) {
-        return T(parameters[0], parameters[1], parameters[2]);
-    } else if constexpr (NumParams == 4) {
-        return T(parameters[0], parameters[1], parameters[2], parameters[3]);
-    } else if constexpr (NumParams == 16) {
-        return T(parameters[0], parameters[1], parameters[2], parameters[3],
-                 parameters[4], parameters[5], parameters[6], parameters[7],
-                 parameters[8], parameters[9], parameters[10], parameters[11],
-                 parameters[12], parameters[13], parameters[14], parameters[15]);
-    } else {
-        Q_UNREACHABLE();
-    }
-
-    return QVariant();
-}
-
 QVariant QQuickVector2DValueType::create(const QJSValue &params)
 {
     if (params.isString())
-        return createValueTypeFromNumberString<QVector2D, 2>(params.toString());
+        return QQmlStringConverters::valueTypeFromNumberString<QVector2D, 2, u','>(params.toString());
     if (params.isArray())
         return QVector2D(params.property(0).toNumber(), params.property(1).toNumber());
     return QVariant();
@@ -296,8 +259,10 @@ bool QQuickVector2DValueType::fuzzyEquals(const QVector2D &vec) const
 
 QVariant QQuickVector3DValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QVector3D, 3>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QVector3D, 3, u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QVector3D(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -415,8 +380,10 @@ bool QQuickVector3DValueType::fuzzyEquals(const QVector3D &vec) const
 
 QVariant QQuickVector4DValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QVector4D, 4>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QVector4D, 4, u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QVector4D(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -542,8 +509,10 @@ bool QQuickVector4DValueType::fuzzyEquals(const QVector4D &vec) const
 
 QVariant QQuickQuaternionValueType::create(const QJSValue &params)
 {
-    if (params.isString())
-        return createValueTypeFromNumberString<QQuaternion, 4>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QQuaternion, 4, u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray()) {
         return QQuaternion(params.property(0).toNumber(), params.property(1).toNumber(),
@@ -682,8 +651,12 @@ QVariant QQuickMatrix4x4ValueType::create(const QJSValue &params)
     if (params.isNull() || params.isUndefined())
         return QMatrix4x4();
 
-    if (params.isString())
-        return createValueTypeFromNumberString<QMatrix4x4, 16>(params.toString());
+    if (params.isString()) {
+        return QQmlStringConverters::valueTypeFromNumberString<QMatrix4x4, 16, u',', u',', u',',
+                                                               u',', u',', u',', u',', u',', u',',
+                                                               u',', u',', u',', u',', u',', u','>(
+                params.toString());
+    }
 
     if (params.isArray() && params.property(QStringLiteral("length")).toInt() == 16) {
         return QMatrix4x4(params.property(0).toNumber(),
@@ -790,6 +763,135 @@ bool QQuickMatrix4x4ValueType::fuzzyEquals(const QMatrix4x4 &m) const
     return qFuzzyCompare(v, m);
 }
 
+/*!
+    \qmltype PlanarTransform
+    \inqmlmodule QtQuick
+    \since 6.8
+
+    \brief Provides utility functions for matrix4x4 when used for 2D transforms.
+
+    The \c PlanarTransform is a global object with utility functions.
+
+    It is not instantiable; to use it, call the members of the global \c PlanarTransform object
+    directly. For example:
+
+    \qml
+    Item {
+        transform: Matrix4x4 { matrix: PlanarTransform.fromAffineMatrix(1, 0, 0.36, 1, -36, 0) }
+    }
+    \endqml
+*/
+
+QQuickPlanarTransform::QQuickPlanarTransform(QObject *parent)
+    : QObject(parent)
+{
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::identity()
+
+    Returns a matrix4x4 for the identity transform.
+
+    This is equivalent to \l Qt::matrix4x4().
+*/
+
+QMatrix4x4 QQuickPlanarTransform::identity()
+{
+    return QMatrix4x4();
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromAffineMatrix(real scaleX, real shearY,
+                                                           real shearX, real scaleY,
+                                                           real translateX, real translateY)
+
+    Returns a matrix4x4 for an affine (non-projecting) 2D transform with the specified values.
+
+    This method and its argument order correspond to SVG's \c matrix() function and the
+    six-argument QTransform constructor. The result is this 4x4 matrix:
+
+    \table
+    \row \li \a scaleX \li \a shearX \li 0 \li \a translateX
+    \row \li \a shearY \li \a scaleY \li 0 \li \a translateY
+    \row \li 0 \li 0 \li 1 \li 0
+    \row \li 0 \li 0 \li 0 \li 1
+    \endtable
+*/
+
+QMatrix4x4 QQuickPlanarTransform::fromAffineMatrix(float scaleX, float shearY,
+                                                   float shearX, float scaleY,
+                                                   float translateX, float translateY)
+{
+    return QMatrix4x4(scaleX, shearX, 0, translateX,
+                      shearY, scaleY, 0, translateY,
+                      0, 0, 1, 0,
+                      0, 0, 0, 1);
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromTranslate(real translateX, real translateY)
+
+    Returns a matrix4x4 for a 2D transform that translates by \a translateX horizontally and
+    \a translateY vertically.
+*/
+QMatrix4x4 QQuickPlanarTransform::fromTranslate(float translateX, float translateY)
+{
+    QMatrix4x4 xf;
+    xf.translate(translateX, translateY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromScale(real scaleX, real scaleY, real originX, real originY)
+
+    Returns a matrix4x4 for a 2D transform that scales by \a scaleX horizontally and \a scaleY
+    vertically, centered at the point (\a originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromScale(float scaleX, float scaleY, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf.scale(scaleX, scaleY);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromRotate(real angle, real originX, real originY)
+
+    Returns a matrix4x4 for a 2D transform that rotates by \a angle degrees around the point (\a
+    originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromRotate(float angle, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf.rotate(angle, 0, 0, 1);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
+/*!
+    \qmlmethod matrix4x4 PlanarTransform::fromShear(float shearX, float shearY, float originX, float originY)
+
+    Returns a matrix4x4 for a 2D transform that shears by \a shearX horizontally and \a shearY
+    vertically, centered at the point (\a originX, \a originY).
+
+    \a originX and \a originY are optional and default to (0, 0).
+*/
+QMatrix4x4 QQuickPlanarTransform::fromShear(float shearX, float shearY, float originX, float originY)
+{
+    QMatrix4x4 xf;
+    xf.translate(originX, originY);
+    xf *= QMatrix4x4(1, shearX, 0, 0, shearY, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+    xf.translate(-originX, -originY);
+    return xf;
+}
+
 template<typename T>
 void setFontProperty(QFont &font, void (QFont::*setter)(T value), QString name,
                      const QJSValue &params, bool *ok)
@@ -836,27 +938,106 @@ QVariant QQuickFontValueType::create(const QJSValue &params)
     setFontProperty(ret, &QFont::setPixelSize, QStringLiteral("pixelSize"), params, &ok);
     setFontProperty(ret, &QFont::setPointSize, QStringLiteral("pointSize"), params, &ok);
     setFontProperty(ret, &QFont::setStrikeOut, QStringLiteral("strikeout"), params, &ok);
+    setFontProperty(ret, &QFont::setStyleName, QStringLiteral("styleName"), params, &ok);
     setFontProperty(ret, &QFont::setUnderline, QStringLiteral("underline"), params, &ok);
     setFontProperty(ret, &QFont::setWeight, QStringLiteral("weight"), params, &ok);
     setFontProperty(ret, &QFont::setWordSpacing, QStringLiteral("wordSpacing"), params, &ok);
     setFontProperty(ret, &QFont::setHintingPreference, QStringLiteral("hintingPreference"), params, &ok);
     setFontProperty(ret, &QFont::setKerning, QStringLiteral("kerning"), params, &ok);
 
-    const QJSValue vlspac = params.property(QStringLiteral("letterSpacing"));
-    if (vlspac.isNumber()) {
-        ret.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.toNumber());
-        ok = true;
+    {
+        const QJSValue vlspac = params.property(QStringLiteral("letterSpacing"));
+        if (vlspac.isNumber()) {
+            ret.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.toNumber());
+            ok = true;
+        }
     }
 
-    const QJSValue vshaping = params.property(QStringLiteral("preferShaping"));
-    if (vshaping.isBool()) {
-        const bool enable = vshaping.toBool();
-        const QFont::StyleStrategy strategy = ret.styleStrategy();
-        if (enable)
-            ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferNoShaping));
-        else
-            ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferNoShaping));
-        ok = true;
+    {
+        const QJSValue vshaping = params.property(QStringLiteral("preferShaping"));
+        if (vshaping.isBool()) {
+            const bool enable = vshaping.toBool();
+            const QFont::StyleStrategy strategy = ret.styleStrategy();
+            if (enable)
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferNoShaping));
+            else
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferNoShaping));
+            ok = true;
+        }
+    }
+
+    {
+        const QJSValue typoMetrics = params.property(QStringLiteral("preferTypoLineMetrics"));
+        if (typoMetrics.isBool()) {
+            const bool enable = typoMetrics.toBool();
+            const QFont::StyleStrategy strategy = ret.styleStrategy();
+            if (enable)
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::PreferTypoLineMetrics));
+            else
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::PreferTypoLineMetrics));
+            ok = true;
+        }
+    }
+
+    {
+        const QJSValue ctxFontMerging = params.property(QStringLiteral("contextFontMerging"));
+        if (ctxFontMerging.isBool()) {
+            const bool enable = ctxFontMerging.toBool();
+            const QFont::StyleStrategy strategy = ret.styleStrategy();
+            if (enable)
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy | QFont::ContextFontMerging));
+            else
+                ret.setStyleStrategy(QFont::StyleStrategy(strategy & ~QFont::ContextFontMerging));
+            ok = true;
+        }
+    }
+
+    {
+        const QJSValue variableAxes = params.property(QStringLiteral("variableAxes"));
+        if (variableAxes.isObject()) {
+            QVariantMap variantMap = variableAxes.toVariant().toMap();
+            for (auto [variableAxisName, variableAxisValue] : variantMap.asKeyValueRange()) {
+                const auto maybeTag = QFont::Tag::fromString(variableAxisName);
+                if (!maybeTag) {
+                    qWarning() << "Invalid variable axis" << variableAxisName << "ignored";
+                    continue;
+                }
+
+                bool valueOk;
+                float value = variableAxisValue.toFloat(&valueOk);
+                if (!valueOk) {
+                    qWarning() << "Variable axis" << variableAxisName << "value" << variableAxisValue << "is not a floating point value.";
+                    continue;
+                }
+
+                ret.setVariableAxis(*maybeTag, value);
+                ok = true;
+            }
+        }
+    }
+
+    {
+        const QJSValue features = params.property(QStringLiteral("features"));
+        if (features.isObject()) {
+            QVariantMap variantMap = features.toVariant().toMap();
+            for (auto [featureName, featureValue] : variantMap.asKeyValueRange()) {
+                const auto maybeTag = QFont::Tag::fromString(featureName);
+                if (!maybeTag) {
+                    qWarning() << "Invalid font feature" << featureName << "ignored";
+                    continue;
+                }
+
+                bool valueOk;
+                quint32 value = featureValue.toUInt(&valueOk);
+                if (!valueOk) {
+                    qWarning() << "Font feature" << featureName << "value" << featureValue << "is not an integer.";
+                    continue;
+                }
+
+                ret.setFeature(*maybeTag, value);
+                ok = true;
+            }
+        }
     }
 
     return ok ? ret : QVariant();
@@ -1047,6 +1228,36 @@ void QQuickFontValueType::setPreferShaping(bool enable)
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferNoShaping));
 }
 
+void QQuickFontValueType::setVariableAxes(const QVariantMap &variableAxes)
+{
+    v.clearVariableAxes();
+    for (auto [variableAxisName, variableAxisValue] : variableAxes.asKeyValueRange()) {
+        const auto maybeTag = QFont::Tag::fromString(variableAxisName);
+        if (!maybeTag) {
+            qWarning() << "Invalid variable axis" << variableAxisName << "ignored";
+            continue;
+        }
+
+        bool ok;
+        float value = variableAxisValue.toFloat(&ok);
+        if (!ok) {
+            qWarning() << "Variable axis" << variableAxisName << "value" << variableAxisValue << "is not a floating point value.";
+            continue;
+        }
+
+        v.setVariableAxis(*maybeTag, value);
+    }
+}
+
+QVariantMap QQuickFontValueType::variableAxes() const
+{
+    QVariantMap ret;
+    for (const auto &tag : v.variableAxisTags())
+        ret.insert(QString::fromUtf8(tag.toString()), v.variableAxisValue(tag));
+
+    return ret;
+}
+
 void QQuickFontValueType::setFeatures(const QVariantMap &features)
 {
     v.clearFeatures();
@@ -1075,6 +1286,32 @@ QVariantMap QQuickFontValueType::features() const
         ret.insert(QString::fromUtf8(tag.toString()), v.featureValue(tag));
 
     return ret;
+}
+
+bool QQuickFontValueType::contextFontMerging() const
+{
+    return (v.styleStrategy() & QFont::ContextFontMerging) != 0;
+}
+
+void QQuickFontValueType::setContextFontMerging(bool enable)
+{
+    if (enable)
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::ContextFontMerging));
+    else
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::ContextFontMerging));
+}
+
+bool QQuickFontValueType::preferTypoLineMetrics() const
+{
+    return (v.styleStrategy() & QFont::PreferTypoLineMetrics) != 0;
+}
+
+void QQuickFontValueType::setPreferTypoLineMetrics(bool enable)
+{
+    if (enable)
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferTypoLineMetrics));
+    else
+        v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() & ~QFont::PreferTypoLineMetrics));
 }
 
 QVariant QQuickColorSpaceValueType::create(const QJSValue &params)

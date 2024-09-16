@@ -59,7 +59,7 @@ class QRhiTexture;
 Q_DECLARE_LOGGING_CATEGORY(lcQuickWindow)
 
 //Make it easy to identify and customize the root item if needed
-class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
+class Q_QUICK_EXPORT QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -72,20 +72,39 @@ public Q_SLOTS:
     void setHeight(int h) {QQuickItem::setHeight(qreal(h));}
 };
 
-class QQuickWindowRenderTarget
+struct QQuickWindowRenderTarget
 {
-public:
-    void reset(QRhi *rhi);
-    QRhiRenderTarget *renderTarget = nullptr;
-    QRhiRenderPassDescriptor *rpDesc = nullptr;
-    QRhiTexture *texture = nullptr;
-    QRhiRenderBuffer *renderBuffer = nullptr;
-    QRhiRenderBuffer *depthStencil = nullptr;
-    QPaintDevice *paintDevice = nullptr;
-    bool owns = false;
+    enum class ResetFlag {
+        KeepImplicitBuffers = 0x01
+    };
+    Q_DECLARE_FLAGS(ResetFlags, ResetFlag)
+    void reset(QRhi *rhi, ResetFlags flags = {});
+
+    struct {
+        QRhiRenderTarget *renderTarget = nullptr;
+        bool owns = false;
+        int multiViewCount = 1;
+    } rt;
+    struct {
+        QRhiTexture *texture = nullptr;
+        QRhiRenderBuffer *renderBuffer = nullptr;
+        QRhiRenderPassDescriptor *rpDesc = nullptr;
+    } res;
+    struct ImplicitBuffers {
+        QRhiRenderBuffer *depthStencil = nullptr;
+        QRhiTexture *depthStencilTexture = nullptr;
+        QRhiTexture *multisampleTexture = nullptr;
+        void reset(QRhi *rhi);
+    } implicitBuffers;
+    struct {
+        QPaintDevice *paintDevice = nullptr;
+        bool owns = false;
+    } sw;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowPrivate
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowRenderTarget::ResetFlags)
+
+class Q_QUICK_EXPORT QQuickWindowPrivate
     : public QWindowPrivate
     , public QQuickPaletteProviderPrivateBase<QQuickWindow, QQuickWindowPrivate>
 {
@@ -103,6 +122,8 @@ public:
     QQuickWindowPrivate();
     ~QQuickWindowPrivate() override;
 
+    void setPalette(QQuickPalette *p) override;
+    void updateWindowPalette();
     void updateChildrenPalettes(const QPalette &parentPalette) override;
 
     void init(QQuickWindow *, QQuickRenderControl *control = nullptr);
@@ -125,6 +146,7 @@ public:
 #endif
 
     void clearFocusObject() override;
+    void setFocusToTarget(FocusTarget, Qt::FocusReason) override;
 
     void dirtyItem(QQuickItem *);
     void cleanup(QSGNode *);
@@ -181,7 +203,11 @@ public:
     void fireFrameSwapped() { Q_EMIT q_func()->frameSwapped(); }
     void fireAboutToStop() { Q_EMIT q_func()->sceneGraphAboutToStop(); }
 
-    void clearGrabbers(QPointerEvent *event);
+    bool needsChildWindowStackingOrderUpdate = false;
+    void updateChildWindowStackingOrder(QQuickItem *item = nullptr);
+
+    int multiViewCount();
+    QRhiRenderTarget *activeCustomRhiRenderTarget();
 
     QSGRenderContext *context;
     QSGRenderer *renderer;
@@ -261,6 +287,7 @@ public:
     uint updatesEnabled : 1;
     bool pendingFontUpdate = false;
     bool windowEventDispatch = false;
+    QPointer<QQuickPalette> windowPaletteRef;
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);

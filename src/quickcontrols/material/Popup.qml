@@ -39,7 +39,7 @@ T.Popup {
         layer.enabled: control.Material.elevation > 0
         layer.effect: RoundedElevationEffect {
             elevation: control.Material.elevation
-            roundedScale: control.background.radius
+            roundedScale: control.Material.roundedScale
         }
     }
 

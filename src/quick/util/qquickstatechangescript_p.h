@@ -21,13 +21,13 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickStateChangeScriptPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickStateChangeScript : public QQuickStateOperation, public QQuickStateActionEvent
+class Q_QUICK_EXPORT QQuickStateChangeScript : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickStateChangeScript)
 
-    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript FINAL)
-    Q_PROPERTY(QString name READ name WRITE setName FINAL)
+    Q_PROPERTY(QQmlScriptString script READ script WRITE setScript)
+    Q_PROPERTY(QString name READ name WRITE setName)
     QML_NAMED_ELEMENT(StateChangeScript)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -49,7 +49,5 @@ public:
 
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickStateChangeScript)
 
 #endif // QQUICKSTATEOPERATIONS_H

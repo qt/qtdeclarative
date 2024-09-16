@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "interfaces.h"
 #include <qtest.h>
@@ -30,8 +30,15 @@ class MyQmlObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QPoint pointProperty MEMBER m_point)
+    Q_PROPERTY(QString a READ objectName NOTIFY somethingHappened)
+    Q_PROPERTY(QString b READ objectName NOTIFY somethingHappened)
 public:
-    MyQmlObject(QObject *parent = nullptr) : QObject(parent) {}
+    MyQmlObject(QObject *parent = nullptr) : QObject(parent) {
+        connect(this, &QObject::objectNameChanged, this, &MyQmlObject::somethingHappened);
+    }
+
+signals:
+    void somethingHappened();
 
 private:
     QPoint m_point;
@@ -222,6 +229,8 @@ private slots:
 
     void invalidateQPropertyChangeTriggers();
 
+    void propertyStartsWithOn();
+
 private:
     QQmlEngine engine;
 };
@@ -360,6 +369,7 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("registeredCompositeTypeProperty.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(obj);
 
@@ -2421,9 +2431,13 @@ void tst_qqmlproperty::initFlags_data()
 
     const QString names[] = {
         QStringLiteral("foo"),
+        QStringLiteral("aChanged"),
         QStringLiteral("self.foo"),
+        QStringLiteral("self.aChanged"),
         QStringLiteral("onFoo"),
+        QStringLiteral("onAChanged"),
         QStringLiteral("self.onFoo"),
+        QStringLiteral("self.onAChanged"),
         QStringLiteral("bar"),
         QStringLiteral("self.bar"),
         QStringLiteral("abar"),
@@ -2458,15 +2472,15 @@ void tst_qqmlproperty::initFlags()
     QQmlEngine engine;
     QQmlComponent c(&engine);
     c.setData(R"(
-        import QtQml
-        QtObject {
+        import Test
+        MyQmlObject {
             id: self
             signal foo()
             property int bar: 12
             property alias abar: self.bar
         }
     )", QUrl());
-    QVERIFY(c.isReady());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
@@ -2476,7 +2490,9 @@ void tst_qqmlproperty::initFlags()
                     passObject ? o.data() : nullptr, name, context, flags);
 
     const bool usesId = name.startsWith(QStringLiteral("self."));
-    const bool hasSignal = name.endsWith(QStringLiteral("foo"));
+    const bool hasSignal = name.endsWith(QStringLiteral("foo"))
+            || name.endsWith(QStringLiteral("aChanged"));
+
     if (!passObject && !usesId) {
         QVERIFY(!property.isValid());
     } else if (passObject && usesId) {
@@ -2491,9 +2507,13 @@ void tst_qqmlproperty::initFlags()
             QVERIFY(property.isProperty());
             QCOMPARE(property.name(), usesId ? name.mid(strlen("self.")) : name);
             QCOMPARE(property.propertyMetaType(), QMetaType::fromType<int>());
-        } else {
+        } else if (name.endsWith(QStringLiteral("oo"))) { // 'onFoo' or 'foo'
             QVERIFY(property.isSignalProperty());
             QCOMPARE(property.name(), QStringLiteral("onFoo"));
+            QVERIFY(!property.propertyMetaType().isValid());
+        } else {
+            QVERIFY(property.isSignalProperty());
+            QCOMPARE(property.name(), QStringLiteral("onSomethingHappened"));
             QVERIFY(!property.propertyMetaType().isValid());
         }
     }
@@ -2587,6 +2607,18 @@ void tst_qqmlproperty::invalidateQPropertyChangeTriggers()
         u""_s, u"1300"_s, u"Create Object"_s,
         u""_s
     }));
+}
+
+void tst_qqmlproperty::propertyStartsWithOn()
+{
+    QTest::failOnWarning("\"onlineStatus\" is not a properly capitalized signal handler name. "
+                         "\"onLineStatus\" would be correct.");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("propertyStartsWithOn.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+    QCOMPARE(root->property("onlineStatus").toInt(), 12);
 }
 
 QTEST_MAIN(tst_qqmlproperty)

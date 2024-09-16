@@ -20,20 +20,20 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickTargetDirection : public QQuickDirection
+class Q_QUICKPARTICLES_EXPORT QQuickTargetDirection : public QQuickDirection
 {
     Q_OBJECT
-    Q_PROPERTY(qreal targetX READ targetX WRITE setTargetX NOTIFY targetXChanged FINAL)
-    Q_PROPERTY(qreal targetY READ targetY WRITE setTargetY NOTIFY targetYChanged FINAL)
+    Q_PROPERTY(qreal targetX READ targetX WRITE setTargetX NOTIFY targetXChanged)
+    Q_PROPERTY(qreal targetY READ targetY WRITE setTargetY NOTIFY targetYChanged)
     //If targetItem is set, X/Y are ignored. Aims at middle of item, use variation for variation
-    Q_PROPERTY(QQuickItem* targetItem READ targetItem WRITE setTargetItem NOTIFY targetItemChanged FINAL)
+    Q_PROPERTY(QQuickItem* targetItem READ targetItem WRITE setTargetItem NOTIFY targetItemChanged)
 
-    Q_PROPERTY(qreal targetVariation READ targetVariation WRITE setTargetVariation NOTIFY targetVariationChanged FINAL)
+    Q_PROPERTY(qreal targetVariation READ targetVariation WRITE setTargetVariation NOTIFY targetVariationChanged)
 
     //TODO: An enum would be better
-    Q_PROPERTY(bool proportionalMagnitude READ proportionalMagnitude WRITE setProportionalMagnitude NOTIFY proprotionalMagnitudeChanged FINAL)
-    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged FINAL)
-    Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged FINAL)
+    Q_PROPERTY(bool proportionalMagnitude READ proportionalMagnitude WRITE setProportionalMagnitude NOTIFY proprotionalMagnitudeChanged)
+    Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
+    Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
     QML_NAMED_ELEMENT(TargetDirection)
     QML_ADDED_IN_VERSION(2, 0)
 

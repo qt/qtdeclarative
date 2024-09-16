@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -27,10 +27,13 @@ TestCase {
         SignalSpy {}
     }
 
-    function test_instance() {
+    function init() {
+        // Fail on any warning that we don't expect.
         failOnWarning(/.?/)
+    }
 
-        var dial = createTemporaryObject(dialComponent, testCase);
+    function test_instance() {
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
         compare(dial.value, 0.0);
         compare(dial.from, 0.0);
@@ -41,7 +44,7 @@ TestCase {
     }
 
     function test_value() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
         compare(dial.value, 0.0);
 
@@ -59,7 +62,7 @@ TestCase {
     }
 
     function test_range() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
         dial.from = 0;
@@ -94,7 +97,7 @@ TestCase {
     }
 
     function test_inverted() {
-        var dial = createTemporaryObject(dialComponent, testCase, { from: 1.0, to: -1.0 });
+        let dial = createTemporaryObject(dialComponent, testCase, { from: 1.0, to: -1.0 });
         verify(dial);
         compare(dial.from, 1.0);
         compare(dial.to, -1.0);
@@ -120,7 +123,7 @@ TestCase {
     }
 
     function test_pressed() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
         pressSpy.target = dial;
@@ -135,7 +138,7 @@ TestCase {
         verify(!dial.pressed);
         compare(pressSpy.count, 2);
 
-        var touch = touchEvent(dial);
+        let touch = touchEvent(dial);
         touch.press(0).commit();
         verify(dial.pressed);
         compare(pressSpy.count, 3);
@@ -160,7 +163,7 @@ TestCase {
     }
 
     function test_dragging(data) {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
         dial.wrap = true;
@@ -172,10 +175,10 @@ TestCase {
         valueSpy.target = dial;
         verify(valueSpy.valid);
 
-        var moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
+        let moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
         verify(moveSpy.valid);
 
-        var minimumExpectedValueCount = data.live ? 2 : 1;
+        let minimumExpectedValueCount = data.live ? 2 : 1;
 
         // drag to the left
         // we always add or subtract 1 to ensure we start the drag from the opposite side
@@ -217,16 +220,16 @@ TestCase {
     }
 
     function test_nonWrapping() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
         compare(dial.wrap, false);
         dial.value = 0;
 
         // Ensure that dragging from bottom left to bottom right doesn't work.
-        var yPos = dial.height * 0.75;
+        let yPos = dial.height * 0.75;
         mousePress(dial, dial.width * 0.25, yPos, Qt.LeftButton);
-        var positionAtPress = dial.position;
+        let positionAtPress = dial.position;
         mouseMove(dial, dial.width * 0.5, yPos);
         verify(dial.position < positionAtPress);
         mouseMove(dial, dial.width * 0.75, yPos);
@@ -258,15 +261,15 @@ TestCase {
     }
 
     function test_touch() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
-        var touch = touchEvent(dial);
+        let touch = touchEvent(dial);
 
         // Ensure that dragging from bottom left to bottom right doesn't work.
-        var yPos = dial.height * 0.75;
+        let yPos = dial.height * 0.75;
         touch.press(0, dial, dial.width * 0.25, yPos).commit();
-        var positionAtPress = dial.position;
+        let positionAtPress = dial.position;
         touch.move(0, dial, dial.width * 0.5, yPos).commit();
         compare(dial.position, positionAtPress);
         touch.move(0, dial, dial.width * 0.75, yPos).commit();
@@ -298,15 +301,15 @@ TestCase {
     }
 
     function test_multiTouch() {
-        var dial1 = createTemporaryObject(dialComponent, testCase);
+        let dial1 = createTemporaryObject(dialComponent, testCase);
         verify(dial1);
 
-        var touch = touchEvent(dial1);
+        let touch = touchEvent(dial1);
         touch.press(0, dial1).commit().move(0, dial1, dial1.width / 4, dial1.height / 4).commit();
         compare(dial1.pressed, true);
         verify(dial1.position > 0.0);
 
-        var pos1Before = dial1.position;
+        let pos1Before = dial1.position;
 
         // second touch point on the same control is ignored
         touch.stationary(0).press(1, dial1, 0, 0).commit()
@@ -315,7 +318,7 @@ TestCase {
         compare(dial1.pressed, true);
         compare(dial1.position, pos1Before);
 
-        var dial2 = createTemporaryObject(dialComponent, testCase, {y: dial1.height});
+        let dial2 = createTemporaryObject(dialComponent, testCase, {y: dial1.height});
         verify(dial2);
 
         // press the second dial
@@ -324,7 +327,7 @@ TestCase {
         compare(dial2.position, 0.0);
 
         pos1Before = dial1.position;
-        var pos2Before = dial2.position;
+        let pos2Before = dial2.position;
 
         // move both dials
         touch.move(0, dial1).move(2, dial2, dial2.width / 4, dial2.height / 4).commit();
@@ -356,19 +359,19 @@ TestCase {
     }
 
     function test_keyboardNavigation() {
-        var dial = createTemporaryObject(dialComponent, testCase);
+        let dial = createTemporaryObject(dialComponent, testCase);
         verify(dial);
 
-        var focusScope = createTemporaryObject(focusTest, testCase);
+        let focusScope = createTemporaryObject(focusTest, testCase);
         verify(focusScope);
 
-        var moveCount = 0;
+        let moveCount = 0;
 
         // Tests that we've accepted events that we're interested in.
         parentEventSpy.target = focusScope;
         parentEventSpy.signalName = "receivedKeyPress";
 
-        var moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
+        let moveSpy = createTemporaryObject(signalSpy, testCase, {target: dial, signalName: "moved"});
         verify(moveSpy.valid);
 
         dial.parent = focusScope;
@@ -384,10 +387,10 @@ TestCase {
         compare(moveSpy.count, moveCount);
         compare(dial.value, 0);
 
-        var oldValue = 0.0;
-        var keyPairs = [[Qt.Key_Left, Qt.Key_Right], [Qt.Key_Down, Qt.Key_Up]];
-        for (var keyPairIndex = 0; keyPairIndex < 2; ++keyPairIndex) {
-            for (var i = 1; i <= 10; ++i) {
+        let oldValue = 0.0;
+        let keyPairs = [[Qt.Key_Left, Qt.Key_Right], [Qt.Key_Down, Qt.Key_Up]];
+        for (let keyPairIndex = 0; keyPairIndex < 2; ++keyPairIndex) {
+            for (let i = 1; i <= 10; ++i) {
                 oldValue = dial.value;
                 keyClick(keyPairs[keyPairIndex][1]);
                 compare(parentEventSpy.count, 0);
@@ -398,7 +401,7 @@ TestCase {
 
             compare(dial.value, dial.to);
 
-            for (i = 10; i > 0; --i) {
+            for (let i = 10; i > 0; --i) {
                 oldValue = dial.value;
                 keyClick(keyPairs[keyPairIndex][0]);
                 compare(parentEventSpy.count, 0);
@@ -450,7 +453,7 @@ TestCase {
     }
 
     function test_snapMode_mouse(data) {
-        var dial = createTemporaryObject(dialComponent, testCase, {live: false});
+        let dial = createTemporaryObject(dialComponent, testCase, {live: false});
         verify(dial);
 
         dial.snapMode = data.snapMode;
@@ -458,7 +461,7 @@ TestCase {
         dial.to = data.to;
         dial.stepSize = 0.2;
 
-        var fuzz = 0.055;
+        let fuzz = 0.055;
 
         mousePress(dial, dial.width * 0.25, dial.height * 0.75);
         fuzzyCompare(dial.value, data.values[0], fuzz);
@@ -478,7 +481,7 @@ TestCase {
     }
 
     function test_snapMode_touch(data) {
-        var dial = createTemporaryObject(dialComponent, testCase, {live: false});
+        let dial = createTemporaryObject(dialComponent, testCase, {live: false});
         verify(dial);
 
         dial.snapMode = data.snapMode;
@@ -486,9 +489,9 @@ TestCase {
         dial.to = data.to;
         dial.stepSize = 0.2;
 
-        var fuzz = 0.05;
+        let fuzz = 0.05;
 
-        var touch = touchEvent(dial);
+        let touch = touchEvent(dial);
         touch.press(0, dial, dial.width * 0.25, dial.height * 0.75).commit()
         compare(dial.value, data.values[0]);
         compare(dial.position, data.positions[0]);
@@ -504,13 +507,13 @@ TestCase {
 
     function test_wheel_data() {
         return [
-            { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
-            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+            { tag: "horizontal", dx: 120, dy: 0 },
+            { tag: "vertical", dx: 0, dy: 120 }
         ]
     }
 
     function test_wheel(data) {
-        var control = createTemporaryObject(dialComponent, testCase, {wheelEnabled: true, orientation: data.orientation})
+        let control = createTemporaryObject(dialComponent, testCase, {wheelEnabled: true})
         verify(control)
 
         compare(control.value, 0.0)
@@ -548,7 +551,7 @@ TestCase {
     }
 
     function test_nullHandle() {
-        var control = createTemporaryObject(dialComponent, testCase)
+        let control = createTemporaryObject(dialComponent, testCase)
         verify(control)
 
         control.handle = null
@@ -564,7 +567,7 @@ TestCase {
         if (inputEventType === "mouseInput") {
             mouseMove(control, x, y);
         } else {
-            var touch = touchEvent(control);
+            let touch = touchEvent(control);
             touch.move(0, control, x, y).commit();
         }
     }
@@ -573,7 +576,7 @@ TestCase {
         if (inputEventType === "mouseInput") {
             mousePress(control, x, y);
         } else {
-            var touch = touchEvent(control);
+            let touch = touchEvent(control);
             touch.press(0, control, x, y).commit();
         }
     }
@@ -582,13 +585,13 @@ TestCase {
         if (inputEventType === "mouseInput") {
             mouseRelease(control, x, y);
         } else {
-            var touch = touchEvent(control);
+            let touch = touchEvent(control);
             touch.release(0, control, x, y).commit();
         }
     }
 
     function test_horizontalAndVertical_data() {
-        var data = [
+        let data = [
             { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 0.5, moveToY: 0.25, expectedPosition: 0.125 },
             // Horizontal movement should have no effect on a vertical dial.
             { eventType: "mouseInput", inputMode: Dial.Vertical, moveToX: 2.0, moveToY: 0.25, expectedPosition: 0.125 },
@@ -614,15 +617,15 @@ TestCase {
         ];
 
         // Do the same tests for touch by copying the mouse tests and adding them to the end of the array.
-        var mouseTestCount = data.length;
-        for (var i = mouseTestCount; i < mouseTestCount * 2; ++i) {
+        let mouseTestCount = data.length;
+        for (let i = mouseTestCount; i < mouseTestCount * 2; ++i) {
             // Shallow-copy the object.
             data[i] = JSON.parse(JSON.stringify(data[i - mouseTestCount]));
             data[i].eventType = "touchInput";
         }
 
-        for (i = 0; i < data.length; ++i) {
-            var row = data[i];
+        for (let i = 0; i < data.length; ++i) {
+            let row = data[i];
             row.tag = "eventType=" + row.eventType + ", "
                     + "inputMode=" + (row.inputMode === Dial.Vertical ? "Vertical" : "Horizontal") + ", "
                     + "moveToX=" + row.moveToX + ", moveToY=" + row.moveToY + ", "
@@ -633,7 +636,7 @@ TestCase {
     }
 
     function test_horizontalAndVertical(data) {
-        var control = createTemporaryObject(dialComponent, testCase, { inputMode: data.inputMode });
+        let control = createTemporaryObject(dialComponent, testCase, { inputMode: data.inputMode });
         verify(control);
 
         press(data.eventType, control);
@@ -650,7 +653,7 @@ TestCase {
     }
 
     function test_integerStepping() {
-        var dial = createTemporaryObject(dialComponent, testCase)
+        let dial = createTemporaryObject(dialComponent, testCase)
         verify(dial)
 
         dial.from = 1
@@ -765,7 +768,7 @@ TestCase {
         compare(dial.startAngle, data.startAngle)
         compare(dial.endAngle, data.endAngle)
 
-        var wrappedSpy = signalSpy.createObject(dial, {target: dial, signalName: "wrapped"})
+        let wrappedSpy = signalSpy.createObject(dial, {target: dial, signalName: "wrapped"})
         verify(wrappedSpy.valid)
 
         for (let i = 0; i < data.x.length; i++) {
@@ -785,13 +788,9 @@ TestCase {
 
         compare(clockwiseCount, data.wrapClockwise)
         compare(counterClockwiseCount, data.wrapCounterClockwise)
-
     }
 
     function test_startEndAngleWarnings(data) {
-        // Fail on any warning that we don't expect.
-        failOnWarning(/.?/)
-
         let dial = createTemporaryObject(dialComponent, testCase)
         verify(dial)
 
@@ -827,4 +826,42 @@ TestCase {
             compare(dial.endAngle, 300.)
         }
     }
+
+    function test_notSquareGeometry() {
+        let dial = createTemporaryObject(dialComponent, testCase)
+        verify(dial);
+        if (!dial.handle) {
+            skip("Test cannot run on styles where handle == null (macOS style)")
+        }
+        dial.from = 0
+        dial.to = 1
+        dial.live = true
+        dial.wrap = true
+        dial.startAngle = -180
+        dial.endAngle = 180
+
+        // Dial input handling always assumes that the dial is in the *center*.
+        // Instantiate a Dial with a geometries of 400x100 and then 100x400
+        // Some styles always could wrongly align the Dial background and handle in the topLeft
+        // corner. Pressing in the handle would cause the Dial to move because the dial
+        // assumes that the "Dial circle" is center aligned in its geometry.
+        for (let pass = 0; pass < 2; ++pass) {
+            if (pass === 0) {
+                dial.width = testCase.width
+                dial.height = 100
+            } else {
+                dial.width = 100
+                dial.height = testCase.height
+            }
+
+            let val = pass * 0.25
+            dial.value = val
+            // find coordinates in the middle of the handle
+            let pt2 = dial.mapFromItem(dial.handle, dial.handle.width/2, dial.handle.height/2)
+            // press the knob in the middle. It shouldn't move (except from due to rounding errors)
+            mousePress(dial, pt2.x, pt2.y)
+            fuzzyCompare(dial.value, val, 0.1)
+        }
+    }
+
 }

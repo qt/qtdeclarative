@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/qt/qml/views">
+        
         <file>gridview/gridview-example.qml</file>
         <file>gridview/pics/AddressBook_48.png</file>
         <file>gridview/pics/AudioPlayer_48.png</file>
@@ -41,7 +42,6 @@
         <file>pathview/pics/EMail_48.png</file>
         <file>pathview/pics/TodoList_48.png</file>
         <file>pathview/pics/VideoPlayer_48.png</file>
-        <file>delegatemodel/slideshow.qml</file>
         <file>delegatemodel/dragselection.qml</file>
         <file>objectmodel/objectmodel.qml</file>
         <file>views.qml</file>

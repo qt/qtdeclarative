@@ -118,7 +118,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickImageSelector)
-QML_DECLARE_TYPE(QQuickAnimatedImageSelector)
-
 #endif // QQUICKIMAGESELECTOR_P_H

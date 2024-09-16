@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 
 #include <QtTest/QtTest>
@@ -19,6 +19,7 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -61,6 +62,9 @@ private slots:
     void hitTest();
     void checkableTest();
     void ignoredTest();
+    void passwordTest();
+    void announceTest();
+    void eventTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -159,7 +163,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
     // Attaching to non-item
     {
         QObject parent;
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Accessible must be attached to an Item");
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Accessible attached property must be attached to an object deriving from Item or Action");
         QQuickAccessibleAttached *attachedObj = new QQuickAccessibleAttached(&parent);
 
         QCOMPARE(attachedObj->ignored(), false);
@@ -667,6 +671,83 @@ void tst_QQuickAccessible::ignoredTest()
         QCOMPARE(child->text(QAccessible::Name), QString(QLatin1Char(expected[i])));
     }
     QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::passwordTest()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nTextInput {\n"
+                      "Accessible.role: Accessible.EditableText\n"
+                      "Accessible.name: \"Password\"\n"
+                      "Accessible.passwordEdit: true\n"
+                      "echoMode: TextInput.Password\n"
+                      "text: \"Green\"\n"
+                      "}", QUrl());
+    auto object = std::unique_ptr<QObject>(component.create());
+    QVERIFY(object != nullptr);
+
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(object.get());
+    QVERIFY(textInput != nullptr);
+
+    const auto passwordCharacter = textInput->passwordCharacter();
+    const auto passwordLength = textInput->text().length();
+    const auto password = passwordCharacter.repeated(passwordLength);
+
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(object.get());
+    QVERIFY(iface);
+    QCOMPARE(iface->text(QAccessible::Value), password);
+
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::announceTest()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick\nItem {\n"
+                      "Component.onCompleted: Accessible.announce('I am complete!')"
+                      "}",
+                      QUrl());
+    auto object = std::unique_ptr<QObject>(component.create());
+    QVERIFY(object != nullptr);
+
+    QAccessibleEvent createdEvent(object.get(), QAccessible::ObjectCreated);
+    QVERIFY_EVENT(&createdEvent);
+    QAccessibleAnnouncementEvent event(object.get(), QStringLiteral("I am complete!"));
+    QVERIFY_EVENT(&event);
+
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::eventTest()
+{
+    std::unique_ptr<QQuickView, void(*)(QQuickView *)> window(new QQuickView, [](QQuickView *ptr) {
+        delete ptr;
+        QTestAccessibility::clearEvents();
+    });
+    window->setSource(testFileUrl("eventTest.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.get()));
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    // move an item that is not accessible
+    QQuickItem *textItem = rootItem->findChild<QQuickItem*>(QLatin1String("text"));
+    QTestAccessibility::clearEvents();
+    textItem->setX(textItem->x() + 2);
+    QCOMPARE(QTestAccessibility::events().size(), 0);
+
+    // move an item that is accessible
+    QQuickItem *buttonItem = rootItem->findChild<QQuickItem*>(QLatin1String("button"));
+    QTestAccessibility::clearEvents();
+    buttonItem->setX(buttonItem->x() + 2);
+    QCOMPARE(QTestAccessibility::events().size(), 1);
+    QAccessibleEvent ev(buttonItem, QAccessible::LocationChanged);
+    QTestAccessibility::verifyEvent(&ev);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)

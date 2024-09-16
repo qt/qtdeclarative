@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQuickControls2Impl/private/qtquickcontrols2implexports_p.h>
+#include <QtQuickControls2Impl/qtquickcontrols2implexports.h>
 
 #endif // QTQUICKCONTROLS2IMPLGLOBAL_H

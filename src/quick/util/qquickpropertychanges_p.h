@@ -21,14 +21,14 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickPropertyChangesPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPropertyChanges : public QQuickStateOperation
+class Q_QUICK_EXPORT QQuickPropertyChanges : public QQuickStateOperation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyChanges)
-    Q_PROPERTY(QObject *target READ object WRITE setObject NOTIFY objectChanged FINAL)
+    Q_PROPERTY(QObject *target READ object WRITE setObject NOTIFY objectChanged)
     Q_PROPERTY(bool restoreEntryValues READ restoreEntryValues WRITE setRestoreEntryValues
-               NOTIFY restoreEntryValuesChanged FINAL)
-    Q_PROPERTY(bool explicit READ isExplicit WRITE setIsExplicit NOTIFY isExplicitChanged FINAL)
+               NOTIFY restoreEntryValuesChanged)
+    Q_PROPERTY(bool explicit READ isExplicit WRITE setIsExplicit NOTIFY isExplicitChanged)
     QML_NAMED_ELEMENT(PropertyChanges)
     QML_ADDED_IN_VERSION(2, 0)
     QML_CUSTOMPARSER
@@ -88,7 +88,5 @@ inline QQmlCustomParser *qmlCreateCustomParser<QQuickPropertyChanges>()
 }
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPropertyChanges)
 
 #endif // QQUICKPROPERTYCHANGES_H

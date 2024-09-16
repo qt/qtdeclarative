@@ -19,13 +19,14 @@
 #include <QtQuickTemplates2/private/qquickcontainer_p_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtGui/qpa/qplatformmenu.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
 class QQuickMenuBarItem;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarPrivate : public QQuickContainerPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuBarPrivate : public QQuickContainerPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickMenuBar)
@@ -38,19 +39,36 @@ public:
     QQmlListProperty<QQuickMenu> menus();
     QQmlListProperty<QObject> contentData();
 
-    QQuickItem *beginCreateItem(QQuickMenu *menu);
-    void completeCreateItem();
+    QQuickItem *createItemFromDelegate();
+    QQuickMenuBarItem *createMenuBarItem(QQuickMenu *menu);
 
-    QQuickItem *createItem(QQuickMenu *menu);
+    void openCurrentMenu();
+    void closeCurrentMenu();
+    void activateMenuItem(int index);
 
-    void toggleCurrentMenu(bool visible, bool activate);
     void activateItem(QQuickMenuBarItem *item);
     void activateNextItem();
     void activatePreviousItem();
 
     void onItemHovered();
     void onItemTriggered();
-    void onMenuAboutToHide();
+    void onMenuAboutToHide(QQuickMenu *menu);
+
+    void insertMenu(int index, QQuickMenu *menu, QQuickMenuBarItem *delegateItem);
+    QQuickMenu *takeMenu(int index);
+    void insertNativeMenu(QQuickMenu *menu);
+    void removeNativeMenu(QQuickMenu *menu);
+    void syncMenuBarItemVisibilty(QQuickMenuBarItem *menuBarItem);
+
+    QWindow *window() const;
+    int menuIndex(QQuickMenu *menu) const;
+
+    QPlatformMenuBar *nativeHandle() const;
+    bool useNativeMenuBar() const;
+    bool useNativeMenu(const QQuickMenu *menu) const;
+    void syncNativeMenuBarVisible();
+    void createNativeMenuBar();
+    void removeNativeMenuBar();
 
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;
@@ -67,12 +85,15 @@ public:
 
     QPalette defaultPalette() const override;
 
-    bool popupMode = false;
-    bool triggering = false;
+    bool closingCurrentMenu = false;
     bool altPressed = false;
+    bool currentMenuOpen = false;
     QQmlComponent *delegate = nullptr;
     QPointer<QQuickMenuBarItem> currentItem;
     QPointer<QQuickItem> windowContentItem;
+
+private:
+    std::unique_ptr<QPlatformMenuBar> handle;
 };
 
 QT_END_NAMESPACE

@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef WITHLENGTH_H
 #define WITHLENGTH_H
@@ -8,6 +8,14 @@
 #include <QtCore/qpoint.h>
 #include <QtCore/qrect.h>
 #include <QtQml/qqml.h>
+
+class ObjectType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    ObjectType(QObject *parent = nullptr) : QObject(parent) {}
+};
 
 struct ValueTypeWithLength
 {
@@ -23,6 +31,7 @@ public:
     Q_INVOKABLE ValueTypeWithLength(QPointF point) : m_length(point.manhattanLength()) {}
     Q_INVOKABLE ValueTypeWithLength(QRectF rect) : m_length(rect.width()) {}
     Q_INVOKABLE QString toString() const { return QStringLiteral("no"); }
+    Q_INVOKABLE ValueTypeWithLength(ObjectType *) : m_length(-4) {}
 
     int length() const { return m_length; }
 

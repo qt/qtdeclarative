@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickPlatformMessageDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickPlatformMessageDialog
     : public QPlatformMessageDialogHelper
 {
     Q_OBJECT

@@ -16,6 +16,6 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQmlCore/private/qtqmlcoreexports_p.h>
+#include <QtQmlCore/qtqmlcoreexports.h>
 
 #endif // QQMLCOREGLOBAL_P_H

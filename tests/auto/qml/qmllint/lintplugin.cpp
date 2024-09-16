@@ -1,7 +1,9 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "lintplugin.h"
+#include <QtQmlCompiler/private/qqmlsa_p.h>
+#include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -45,12 +47,19 @@ private:
 class PropertyTest : public QQmlSA::PropertyPass
 {
 public:
-    PropertyTest(QQmlSA::PassManager *manager) : QQmlSA::PropertyPass(manager) { }
+    PropertyTest(QQmlSA::PassManager *manager)
+        : QQmlSA::PropertyPass(manager)
+        , m_manager(manager) { }
 
     void onBinding(const QQmlSA::Element &element, const QString &propertyName,
                    const QQmlSA::Binding &binding, const QQmlSA::Element &bindingScope,
                    const QQmlSA::Element &value) override
     {
+        auto resolver = QQmlSA::PassManagerPrivate::resolver(*m_manager);
+        if (resolver->jsGlobalObject().isNull()) {
+            emitWarning(u"Type resolution is broken", plugin);
+            return;
+        }
         emitWarning(u"Saw binding on %1 property %2 with value %3 (and type %4) in scope %5"_s
                             .arg(element.baseTypeName(), propertyName,
                                  value.isNull()
@@ -81,6 +90,9 @@ public:
                             writeScope.baseTypeName()),
                     plugin, location);
     }
+
+private:
+    QQmlSA::PassManager *m_manager;
 };
 
 class HasImportedModuleTest : public QQmlSA::ElementPass
@@ -116,6 +128,7 @@ void LintPlugin::registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Elem
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "Text",
                                   "text");
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "", "", "x");
+    manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "", "", "log");
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager), "QtQuick", "ListView");
     if (manager->hasImportedModule("QtQuick.Controls")) {
         if (manager->hasImportedModule("QtQuick")) {

@@ -64,6 +64,20 @@
     \include qquickheaderview.qdocinc {textRole}
 */
 
+/*!
+    \qmlproperty bool QtQuick.Controls::HorizontalHeaderView::movableColumns
+    \since 6.8
+
+    \include qquickheaderview.qdocinc {movableColumns}
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::VerticalHeaderView::movableRows
+    \since 6.8
+
+    \include qquickheaderview.qdocinc {movableRows}
+*/
+
 QT_BEGIN_NAMESPACE
 
 QQuickHeaderViewBasePrivate::QQuickHeaderViewBasePrivate()
@@ -73,6 +87,15 @@ QQuickHeaderViewBasePrivate::QQuickHeaderViewBasePrivate()
 
 QQuickHeaderViewBasePrivate::~QQuickHeaderViewBasePrivate()
 {
+}
+
+void QQuickHeaderViewBasePrivate::init()
+{
+    Q_Q(QQuickHeaderViewBase);
+    m_headerDataProxyModel.m_headerView = q;
+    setSizePolicy(orientation() == Qt::Horizontal ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed,
+                  orientation() == Qt::Horizontal ? QLayoutPolicy::Fixed : QLayoutPolicy::Preferred);
+    q->setSyncDirection(orientation());
 }
 
 const QPointer<QQuickItem> QQuickHeaderViewBasePrivate::delegateItemAt(int row, int col) const
@@ -154,22 +177,11 @@ void QQuickHeaderViewBasePrivate::syncModel()
 
 void QQuickHeaderViewBasePrivate::syncSyncView()
 {
-    Q_Q(QQuickHeaderViewBase);
     if (assignedSyncDirection != orientation()) {
         qmlWarning(q_func()) << "Setting syncDirection other than Qt::"
                              << QVariant::fromValue(orientation()).toString()
                              << " is invalid.";
         assignedSyncDirection = orientation();
-    }
-    if (assignedSyncView) {
-        QBoolBlocker fixupGuard(inUpdateContentSize, true);
-        if (orientation() == Qt::Horizontal) {
-            q->setLeftMargin(assignedSyncView->leftMargin());
-            q->setRightMargin(assignedSyncView->rightMargin());
-        } else {
-            q->setTopMargin(assignedSyncView->topMargin());
-            q->setBottomMargin(assignedSyncView->bottomMargin());
-        }
     }
     QQuickTableViewPrivate::syncSyncView();
 }
@@ -184,16 +196,39 @@ QAbstractItemModel *QQuickHeaderViewBasePrivate::selectionSourceModel()
     return &m_headerDataProxyModel;
 }
 
+int QQuickHeaderViewBasePrivate::logicalRowIndex(const int visualIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Horizontal) ? visualIndex : QQuickTableViewPrivate::logicalRowIndex(visualIndex);
+}
+
+int QQuickHeaderViewBasePrivate::logicalColumnIndex(const int visualIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Vertical) ? visualIndex : QQuickTableViewPrivate::logicalColumnIndex(visualIndex);
+}
+
+int QQuickHeaderViewBasePrivate::visualRowIndex(const int logicalIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Horizontal) ? logicalIndex : QQuickTableViewPrivate::visualRowIndex(logicalIndex);
+}
+
+int QQuickHeaderViewBasePrivate::visualColumnIndex(const int logicalIndex) const
+{
+    return (m_headerDataProxyModel.orientation() == Qt::Vertical) ? logicalIndex : QQuickTableViewPrivate::visualColumnIndex(logicalIndex);
+}
+
 QQuickHeaderViewBase::QQuickHeaderViewBase(Qt::Orientation orient, QQuickItem *parent)
     : QQuickTableView(*(new QQuickHeaderViewBasePrivate), parent)
 {
-    d_func()->setOrientation(orient);
-    setSyncDirection(orient);
+    Q_D(QQuickHeaderViewBase);
+    d->setOrientation(orient);
+    d->init();
 }
 
 QQuickHeaderViewBase::QQuickHeaderViewBase(QQuickHeaderViewBasePrivate &dd, QQuickItem *parent)
     : QQuickTableView(dd, parent)
 {
+    Q_D(QQuickHeaderViewBase);
+    d->init();
 }
 
 QQuickHeaderViewBase::~QQuickHeaderViewBase()
@@ -316,7 +351,20 @@ bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
 
 QHash<int, QByteArray> QHeaderDataProxyModel::roleNames() const
 {
-    return m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
+    using namespace Qt::Literals::StringLiterals;
+
+    auto names = m_model ? m_model->roleNames() : QAbstractItemModel::roleNames();
+    if (m_headerView) {
+        QString textRole = m_headerView->textRole();
+        if (textRole.isEmpty())
+            textRole = u"display"_s;
+        if (!names.values().contains(textRole.toUtf8().constData())) {
+            qmlWarning(m_headerView).nospace() << "The 'textRole' property contains a role that doesn't exist in the model: "
+                                               << textRole << ". Check your model's roleNames() implementation";
+        }
+    }
+
+    return names;
 }
 
 QVariant QHeaderDataProxyModel::variantValue() const
@@ -399,7 +447,7 @@ void QHeaderDataProxyModel::disconnectFromModel()
 }
 
 QQuickHorizontalHeaderView::QQuickHorizontalHeaderView(QQuickItem *parent)
-    : QQuickHeaderViewBase(Qt::Horizontal, parent)
+    : QQuickHeaderViewBase(*(new QQuickHorizontalHeaderViewPrivate), parent)
 {
     setFlickableDirection(FlickableDirection::HorizontalFlick);
     setResizableColumns(true);
@@ -407,10 +455,34 @@ QQuickHorizontalHeaderView::QQuickHorizontalHeaderView(QQuickItem *parent)
 
 QQuickHorizontalHeaderView::~QQuickHorizontalHeaderView()
 {
+    Q_D(QQuickHorizontalHeaderView);
+    d->destroySectionDragHandler();
+}
+
+bool QQuickHorizontalHeaderView::movableColumns() const
+{
+    Q_D(const QQuickHorizontalHeaderView);
+    return d->m_movableColumns;
+}
+
+void QQuickHorizontalHeaderView::setMovableColumns(bool movableColumns)
+{
+    Q_D(QQuickHorizontalHeaderView);
+    if (d->m_movableColumns == movableColumns)
+        return;
+
+    d->m_movableColumns = movableColumns;
+
+    if (d->m_movableColumns)
+        d->initSectionDragHandler(Qt::Horizontal);
+    else
+        d->destroySectionDragHandler();
+
+    emit movableColumnsChanged();
 }
 
 QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
-    : QQuickHeaderViewBase(Qt::Vertical, parent)
+    : QQuickHeaderViewBase(*(new QQuickVerticalHeaderViewPrivate), parent)
 {
     setFlickableDirection(FlickableDirection::VerticalFlick);
     setResizableRows(true);
@@ -418,13 +490,43 @@ QQuickVerticalHeaderView::QQuickVerticalHeaderView(QQuickItem *parent)
 
 QQuickVerticalHeaderView::~QQuickVerticalHeaderView()
 {
+    Q_D(QQuickVerticalHeaderView);
+    d->destroySectionDragHandler();
 }
 
-QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate() = default;
+bool QQuickVerticalHeaderView::movableRows() const
+{
+    Q_D(const QQuickVerticalHeaderView);
+    return d->m_movableRows ;
+}
+
+void QQuickVerticalHeaderView::setMovableRows(bool movableRows)
+{
+    Q_D(QQuickVerticalHeaderView);
+    if (d->m_movableRows == movableRows)
+        return;
+
+    d->m_movableRows = movableRows;
+
+    if (d->m_movableRows)
+        d->initSectionDragHandler(Qt::Vertical);
+    else
+        d->destroySectionDragHandler();
+
+    emit movableRowsChanged();
+}
+
+QQuickHorizontalHeaderViewPrivate::QQuickHorizontalHeaderViewPrivate()
+{
+    setOrientation(Qt::Horizontal);
+};
 
 QQuickHorizontalHeaderViewPrivate::~QQuickHorizontalHeaderViewPrivate() = default;
 
-QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate() = default;
+QQuickVerticalHeaderViewPrivate::QQuickVerticalHeaderViewPrivate()
+{
+    setOrientation(Qt::Vertical);
+};
 
 QQuickVerticalHeaderViewPrivate::~QQuickVerticalHeaderViewPrivate() = default;
 

@@ -14,6 +14,7 @@ target_link_libraries(tst_generate_qmlls_ini PRIVATE Qt6::Test)
 set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "" FORCE)
 
 add_subdirectory(SomeSubfolder)
+add_subdirectory(Dotted)
 
 qt_add_qml_module(tst_generate_qmlls_ini
     URI MainModule

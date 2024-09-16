@@ -32,7 +32,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QML_PRIVATE_EXPORT QQmlCppBinding
+struct Q_QML_EXPORT QQmlCppBinding
 {
     // TODO: this might instead be put into the QQmlEngine or QQmlAnyBinding?
     static QUntypedPropertyBinding

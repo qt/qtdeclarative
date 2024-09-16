@@ -27,6 +27,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
     URI QmltcQProcessTests
     SOURCES
         cpptypes/testtype.h
+        cpptypes/typewithrequiredproperty.h
     DEPENDENCIES
         QtQuick/auto
     QML_FILES
@@ -40,6 +41,14 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/singletonUncreatable.qml
         data/uncreatable.qml
         data/invalidSignalHandlers.qml
+        data/QmlBaseFromAnotherModule.qml
+        data/invalidTypeAnnotation.qml
+        data/constructFromString.qml
+        data/unboundRequiredPropertyInInlineComponent.qml
+        data/componentDefinitionInnerRequiredProperty.qml
+        data/componentDefinitionInnerRequiredPropertyFromOutside.qml
+        data/innerLevelRequiredProperty.qml
+    NO_GENERATE_EXTRA_QMLDIRS
 )
 
 set(common_libraries

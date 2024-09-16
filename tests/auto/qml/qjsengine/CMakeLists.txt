@@ -34,6 +34,7 @@ qt_internal_add_test(tst_qjsengine
         Qt::GuiPrivate
         Qt::Qml
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     LIBRARIES # special case
         Threads::Threads # special case
     TESTDATA ${test_data} "dummy_imports.qml"

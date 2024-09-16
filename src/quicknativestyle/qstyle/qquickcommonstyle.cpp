@@ -3874,6 +3874,7 @@ QRect QCommonStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex 
                 break;
             case SC_SpinBoxFrame:
                 ret = spinbox->rect;
+                break;
             default:
                 break;
             }
@@ -4442,7 +4443,7 @@ int QCommonStyle::pixelMetric(PixelMetric m, const QStyleOption *opt) const
         ret = int(QStyleHelper::dpiScaled(13, opt));
         break;
     case PM_MessageBoxIconSize:
-#ifdef Q_OS_MAC
+#ifdef Q_OS_APPLE
         if (QGuiApplication::desktopSettingsAware()) {
             ret = 64; // No DPI scaling, it's handled elsewhere.
         } else
@@ -5661,7 +5662,7 @@ QIcon QCommonStyle::standardIcon(StandardPixmap standardIcon, const QStyleOption
     if (!icon.isNull())
         return icon;
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     if (QGuiApplication::desktopSettingsAware()) {
         switch (standardIcon) {
         case SP_DirIcon: {
@@ -5729,7 +5730,7 @@ QIcon QCommonStyle::standardIcon(StandardPixmap standardIcon, const QStyleOption
             break;
         }
     } // if (QGuiApplication::desktopSettingsAware())
-#endif // Q_OS_MAC
+#endif // Q_OS_MACOS
 
     switch (standardIcon) {
 #ifndef QT_NO_IMAGEFORMAT_PNG

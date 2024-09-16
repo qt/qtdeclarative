@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <QtTest/QtTest>
 #include <QtQml/QtQml>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -67,7 +67,8 @@ private:
 QByteArray tst_qjsonbinding::readAsUtf8(const QString &fileName)
 {
     QFile file(testFile(fileName));
-    file.open(QIODevice::ReadOnly);
+    if (!file.open(QIODevice::ReadOnly))
+        qFatal("Cannot open file %s", qPrintable(fileName));
     QTextStream stream(&file);
     return stream.readAll().trimmed().toUtf8();
 }
@@ -144,7 +145,11 @@ void tst_qjsonbinding::cppJsConversion()
 
     {
         QJSValue jsValue = eng.toScriptValue(jsonValue);
+#if QT_DEPRECATED_SINCE(6, 9)
+        QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
         QVERIFY(!jsValue.isVariant());
+        QT_WARNING_POP
+#endif
         switch (jsonValue.type()) {
         case QJsonValue::Null:
             QVERIFY(jsValue.isNull());
@@ -193,7 +198,6 @@ void tst_qjsonbinding::cppJsConversion()
     if (jsonValue.isObject()) {
         QJsonObject jsonObject = jsonValue.toObject();
         QJSValue jsObject = eng.toScriptValue(jsonObject);
-        QVERIFY(!jsObject.isVariant());
         QVERIFY(jsObject.isObject());
 
         QJSValue stringified = stringify.call(QJSValueList() << jsObject);
@@ -205,7 +209,6 @@ void tst_qjsonbinding::cppJsConversion()
     } else if (jsonValue.isArray()) {
         QJsonArray jsonArray = jsonValue.toArray();
         QJSValue jsArray = eng.toScriptValue(jsonArray);
-        QVERIFY(!jsArray.isVariant());
         QVERIFY(jsArray.isArray());
 
         QJSValue stringified = stringify.call(QJSValueList() << jsArray);

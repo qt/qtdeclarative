@@ -80,9 +80,11 @@ static bool verboseMode = false;
 static bool quietMode = false;
 static bool glShareContexts = true;
 static bool disableShaderCache = true;
+#if defined(QT_GUI_LIB)
 static bool requestAlphaChannel = false;
 static bool requestMSAA = false;
 static bool requestCoreProfile = false;
+#endif
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -517,7 +519,7 @@ int main(int argc, char *argv[])
     parser.addOption(fixedAnimationsOption);
     QCommandLineOption rhiOption(QStringList() << QStringLiteral("r") << QStringLiteral("rhi"),
         QCoreApplication::translate("main", "Set the backend for the Qt graphics abstraction (RHI). "
-                                    "Backend is one of: default, vulkan, metal, d3d11, gl"),
+                                    "Backend is one of: default, vulkan, metal, d3d11, d3d12, opengl"),
                                  QStringLiteral("backend"));
     parser.addOption(rhiOption);
     QCommandLineOption selectorOption(QStringLiteral("S"), QCoreApplication::translate("main",

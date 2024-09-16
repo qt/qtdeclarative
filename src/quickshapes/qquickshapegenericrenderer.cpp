@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickshapegenericrenderer_p.h"
@@ -6,6 +6,10 @@
 #include <QtGui/private/qtriangulatingstroker_p.h>
 #include <rhi/qrhi.h>
 #include <QSGVertexColorMaterial>
+#include <QSGTextureProvider>
+#include <private/qsgplaintexture_p.h>
+
+#include <QtQuick/private/qsggradientcache_p.h>
 
 #if QT_CONFIG(thread)
 #include <QThreadPool>
@@ -40,6 +44,7 @@ QQuickShapeGenericStrokeFillNode::QQuickShapeGenericStrokeFillNode(QQuickWindow 
     : m_material(nullptr)
 {
     setFlag(QSGNode::OwnsGeometry, true);
+    setFlag(QSGNode::UsePreprocess, true);
     setGeometry(new QSGGeometry(QSGGeometry::defaultAttributes_ColoredPoint2D(), 0, 0));
     activateMaterial(window, MatSolidColor);
 #ifdef QSG_RUNTIME_DESCRIPTION
@@ -64,6 +69,9 @@ void QQuickShapeGenericStrokeFillNode::activateMaterial(QQuickWindow *window, Ma
     case MatConicalGradient:
         m_material.reset(QQuickShapeGenericMaterialFactory::createConicalGradient(window, this));
         break;
+    case MatTextureFill:
+        m_material.reset(QQuickShapeGenericMaterialFactory::createTextureFill(window, this));
+        break;
     default:
         qWarning("Unknown material %d", m);
         return;
@@ -71,6 +79,25 @@ void QQuickShapeGenericStrokeFillNode::activateMaterial(QQuickWindow *window, Ma
 
     if (material() != m_material.data())
         setMaterial(m_material.data());
+}
+
+void QQuickShapeGenericStrokeFillNode::preprocess()
+{
+    if (m_fillTextureProvider != nullptr) {
+        if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(m_fillTextureProvider->texture()))
+            texture->updateTexture();
+    }
+}
+
+void QQuickShapeGenericStrokeFillNode::handleTextureChanged()
+{
+    markDirty(QSGNode::DirtyMaterial);
+}
+
+void QQuickShapeGenericStrokeFillNode::handleTextureProviderDestroyed()
+{
+    m_fillTextureProvider = nullptr;
+    markDirty(QSGNode::DirtyMaterial);
 }
 
 QQuickShapeGenericRenderer::~QQuickShapeGenericRenderer()
@@ -101,8 +128,13 @@ void QQuickShapeGenericRenderer::beginSync(int totalCount, bool *countChanged)
 
 void QQuickShapeGenericRenderer::setPath(int index, const QQuickPath *path)
 {
+    setPath(index, path ? path->path() : QPainterPath());
+}
+
+void QQuickShapeGenericRenderer::setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints)
+{
     ShapePathData &d(m_sp[index]);
-    d.path = path ? path->path() : QPainterPath();
+    d.path = path;
     d.syncDirty |= DirtyFillGeom | DirtyStrokeGeom;
 }
 
@@ -121,7 +153,7 @@ void QQuickShapeGenericRenderer::setStrokeWidth(int index, qreal w)
 {
     ShapePathData &d(m_sp[index]);
     d.strokeWidth = w;
-    if (w >= 0.0f)
+    if (w > 0.0f)
         d.pen.setWidthF(w);
     d.syncDirty |= DirtyStrokeGeom;
 }
@@ -176,7 +208,7 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
     ShapePathData &d(m_sp[index]);
     if (gradient) {
         d.fillGradient.stops = gradient->gradientStops(); // sorted
-        d.fillGradient.spread = gradient->spread();
+        d.fillGradient.spread = QGradient::Spread(gradient->spread());
         if (QQuickShapeLinearGradient *g  = qobject_cast<QQuickShapeLinearGradient *>(gradient)) {
             d.fillGradientActive = LinearGradient;
             d.fillGradient.a = QPointF(g->x1(), g->y1());
@@ -198,6 +230,39 @@ void QQuickShapeGenericRenderer::setFillGradient(int index, QQuickShapeGradient 
         d.fillGradientActive = NoGradient;
     }
     d.syncDirty |= DirtyFillGradient;
+}
+
+void QQuickShapeGenericRenderer::setFillTextureProvider(int index, QQuickItem *textureProviderItem)
+{
+    ShapePathData &d(m_sp[index]);
+    if ((d.fillTextureProviderItem == nullptr) != (textureProviderItem == nullptr))
+        d.syncDirty |= DirtyFillGeom;
+    if (d.fillTextureProviderItem != nullptr)
+        QQuickItemPrivate::get(d.fillTextureProviderItem)->derefWindow();
+    d.fillTextureProviderItem = textureProviderItem;
+    if (d.fillTextureProviderItem != nullptr)
+        QQuickItemPrivate::get(d.fillTextureProviderItem)->refWindow(m_item->window());
+    d.syncDirty |= DirtyFillTexture;
+}
+
+void QQuickShapeGenericRenderer::handleSceneChange(QQuickWindow *window)
+{
+    for (auto &pathData : m_sp) {
+        if (pathData.fillTextureProviderItem != nullptr) {
+            if (window == nullptr)
+                QQuickItemPrivate::get(pathData.fillTextureProviderItem)->derefWindow();
+            else
+                QQuickItemPrivate::get(pathData.fillTextureProviderItem)->refWindow(window);
+        }
+    }
+}
+
+
+void QQuickShapeGenericRenderer::setFillTransform(int index, const QSGTransform &transform)
+{
+    ShapePathData &d(m_sp[index]);
+    d.fillTransform = transform;
+    d.syncDirty |= DirtyFillTransform;
 }
 
 void QQuickShapeGenericRenderer::setTriangulationScale(qreal scale)
@@ -326,7 +391,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             }
         }
 
-        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth >= 0.0f && d.strokeColor.a) {
+        if ((d.syncDirty & DirtyStrokeGeom) && d.strokeWidth > 0.0f && d.strokeColor.a) {
             if (async) {
                 QQuickShapeStrokeRunnable *r = new QQuickShapeStrokeRunnable;
                 r->setAutoDelete(false);
@@ -489,7 +554,7 @@ void QQuickShapeGenericRenderer::updateNode()
         QQuickShapeGenericNode *node = *nodePtr;
 
         if (m_accDirty & DirtyList)
-            d.effectiveDirty |= DirtyFillGeom | DirtyStrokeGeom | DirtyColor | DirtyFillGradient;
+            d.effectiveDirty |= DirtyFillGeom | DirtyStrokeGeom | DirtyColor | DirtyFillGradient | DirtyFillTransform | DirtyFillTexture;
 
         if (!d.effectiveDirty) {
             prevNode = node;
@@ -510,7 +575,7 @@ void QQuickShapeGenericRenderer::updateNode()
             d.effectiveDirty |= DirtyFillGeom;
         }
 
-        if (d.strokeWidth < 0.0f || d.strokeColor.a == 0) {
+        if (d.strokeWidth <= 0.0f || d.strokeColor.a == 0) {
             delete node->m_strokeNode;
             node->m_strokeNode = nullptr;
         } else if (!node->m_strokeNode) {
@@ -543,13 +608,43 @@ void QQuickShapeGenericRenderer::updateShadowDataInNode(ShapePathData *d, QQuick
         if (d->effectiveDirty & DirtyFillGradient)
             n->m_fillGradient = d->fillGradient;
     }
+    if (d->effectiveDirty & DirtyFillTexture) {
+        bool needsUpdate = d->fillTextureProviderItem == nullptr && n->m_fillTextureProvider != nullptr;
+        if (!needsUpdate
+            && d->fillTextureProviderItem != nullptr
+            && n->m_fillTextureProvider != d->fillTextureProviderItem->textureProvider()) {
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            if (n->m_fillTextureProvider != nullptr) {
+                QObject::disconnect(n->m_fillTextureProvider, &QSGTextureProvider::textureChanged,
+                                    n, &QQuickShapeGenericStrokeFillNode::handleTextureChanged);
+                QObject::disconnect(n->m_fillTextureProvider, &QSGTextureProvider::destroyed,
+                                    n, &QQuickShapeGenericStrokeFillNode::handleTextureProviderDestroyed);
+            }
+
+            n->m_fillTextureProvider = d->fillTextureProviderItem == nullptr
+                                           ? nullptr
+                                           : d->fillTextureProviderItem->textureProvider();
+
+            if (n->m_fillTextureProvider != nullptr) {
+                QObject::connect(n->m_fillTextureProvider, &QSGTextureProvider::textureChanged,
+                                 n, &QQuickShapeGenericStrokeFillNode::handleTextureChanged);
+                QObject::connect(n->m_fillTextureProvider, &QSGTextureProvider::destroyed,
+                                 n, &QQuickShapeGenericStrokeFillNode::handleTextureProviderDestroyed);
+            }
+        }
+    }
+    if (d->effectiveDirty & DirtyFillTransform)
+        n->m_fillTransform = d->fillTransform;
 }
 
 void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGenericNode *node)
 {
     if (!node->m_fillNode)
         return;
-    if (!(d->effectiveDirty & (DirtyFillGeom | DirtyColor | DirtyFillGradient)))
+    if (!(d->effectiveDirty & (DirtyFillGeom | DirtyColor | DirtyFillGradient | DirtyFillTransform | DirtyFillTexture)))
         return;
 
     // Make a copy of the data that will be accessed by the material on
@@ -582,17 +677,21 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
             Q_UNREACHABLE_RETURN();
         }
         n->activateMaterial(m_item->window(), gradMat);
-        if (d->effectiveDirty & DirtyFillGradient) {
+        if (d->effectiveDirty & (DirtyFillGradient | DirtyFillTransform)) {
             // Gradients are implemented via a texture-based material.
             n->markDirty(QSGNode::DirtyMaterial);
-            // stop here if only the gradient changed; no need to touch the geometry
+            // stop here if only the gradient or filltransform changed; no need to touch the geometry
             if (!(d->effectiveDirty & DirtyFillGeom))
                 return;
         }
+    } else if (d->fillTextureProviderItem != nullptr) {
+        n->activateMaterial(m_item->window(), QQuickShapeGenericStrokeFillNode::MatTextureFill);
+        if (d->effectiveDirty & DirtyFillTexture)
+            n->markDirty(QSGNode::DirtyMaterial);
     } else {
         n->activateMaterial(m_item->window(), QQuickShapeGenericStrokeFillNode::MatSolidColor);
         // fast path for updating only color values when no change in vertex positions
-        if ((d->effectiveDirty & DirtyColor) && !(d->effectiveDirty & DirtyFillGeom)) {
+        if ((d->effectiveDirty & DirtyColor) && !(d->effectiveDirty & DirtyFillGeom) && d->fillTextureProviderItem == nullptr) {
             ColoredVertex *vdst = reinterpret_cast<ColoredVertex *>(g->vertexData());
             for (int i = 0; i < g->vertexCount(); ++i)
                 vdst[i].set(vdst[i].x, vdst[i].y, d->fillColor);
@@ -611,6 +710,7 @@ void QQuickShapeGenericRenderer::updateFillNode(ShapePathData *d, QQuickShapeGen
         g->allocate(d->fillVertices.size(), indexCount);
     }
     g->setDrawingMode(QSGGeometry::DrawTriangles);
+
     memcpy(g->vertexData(), d->fillVertices.constData(), g->vertexCount() * g->sizeOfVertex());
     memcpy(g->indexData(), d->fillIndices.constData(), g->indexCount() * g->sizeOfIndex());
 
@@ -701,10 +801,22 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createConicalGradient(QQuickWind
     return nullptr;
 }
 
-QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader()
+QSGMaterial *QQuickShapeGenericMaterialFactory::createTextureFill(QQuickWindow *window,
+                                                                  QQuickShapeGenericStrokeFillNode *node)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.frag.qsb"));
+    QSGRendererInterface::GraphicsApi api = window->rendererInterface()->graphicsApi();
+
+    if (api == QSGRendererInterface::OpenGL || QSGRendererInterface::isApiRhiBased(api))
+        return new QQuickShapeTextureFillMaterial(node);
+
+    qWarning("Texture fill material: Unsupported graphics API %d", api);
+    return nullptr;
+}
+
+QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader(int viewCount)
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
@@ -714,32 +826,42 @@ bool QQuickShapeLinearGradientRhiShader::updateUniformData(RenderState &state,
     QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 84);
+    Q_ASSERT(buf->size() >= 84 + 64);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
 
+    if (!oldMaterial || m_fillTransform != node->m_fillTransform) {
+        memcpy(buf->data() + 64 * shaderMatrixCount, node->m_fillTransform.invertedData(), 64);
+        m_fillTransform = node->m_fillTransform;
+        changed = true;
+    }
+
     if (!oldMaterial || m_gradA.x() != node->m_fillGradient.a.x() || m_gradA.y() != node->m_fillGradient.a.y()) {
         m_gradA = QVector2D(node->m_fillGradient.a.x(), node->m_fillGradient.a.y());
         Q_ASSERT(sizeof(m_gradA) == 8);
-        memcpy(buf->data() + 64, &m_gradA, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64, &m_gradA, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_gradB.x() != node->m_fillGradient.b.x() || m_gradB.y() != node->m_fillGradient.b.y()) {
         m_gradB = QVector2D(node->m_fillGradient.b.x(), node->m_fillGradient.b.y());
-        memcpy(buf->data() + 72, &m_gradB, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8, &m_gradB, 8);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 80, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8 + 8, &opacity, 4);
         changed = true;
     }
 
@@ -754,8 +876,8 @@ void QQuickShapeLinearGradientRhiShader::updateSampledImage(RenderState &state, 
 
     QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -777,8 +899,8 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->spread - gb->spread)
         return d;
@@ -802,19 +924,22 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
             return d;
     }
 
+    if (int d = a->m_fillTransform.compareTo(b->m_fillTransform))
+        return d;
+
     return 0;
 }
 
 QSGMaterialShader *QQuickShapeLinearGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeLinearGradientRhiShader;
+    return new QQuickShapeLinearGradientRhiShader(viewCount());
 }
 
-QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader()
+QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/radialgradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
@@ -824,15 +949,25 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
     QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 92);
+    Q_ASSERT(buf->size() >= 92 + 64);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
+
+    if (!oldMaterial || m_fillTransform != node->m_fillTransform) {
+        memcpy(buf->data() + 64 * shaderMatrixCount, node->m_fillTransform.invertedData(), 64);
+        m_fillTransform = node->m_fillTransform;
+        changed = true;
+    }
 
     const QPointF centerPoint = node->m_fillGradient.a;
     const QPointF focalPoint = node->m_fillGradient.b;
@@ -843,32 +978,32 @@ bool QQuickShapeRadialGradientRhiShader::updateUniformData(RenderState &state,
     if (!oldMaterial || m_focalPoint.x() != focalPoint.x() || m_focalPoint.y() != focalPoint.y()) {
         m_focalPoint = QVector2D(focalPoint.x(), focalPoint.y());
         Q_ASSERT(sizeof(m_focalPoint) == 8);
-        memcpy(buf->data() + 64, &m_focalPoint, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64, &m_focalPoint, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_focalToCenter.x() != focalToCenter.x() || m_focalToCenter.y() != focalToCenter.y()) {
         m_focalToCenter = QVector2D(focalToCenter.x(), focalToCenter.y());
         Q_ASSERT(sizeof(m_focalToCenter) == 8);
-        memcpy(buf->data() + 72, &m_focalToCenter, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8, &m_focalToCenter, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_centerRadius != centerRadius) {
         m_centerRadius = centerRadius;
-        memcpy(buf->data() + 80, &m_centerRadius, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8 + 8, &m_centerRadius, 4);
         changed = true;
     }
 
     if (!oldMaterial || m_focalRadius != focalRadius) {
         m_focalRadius = focalRadius;
-        memcpy(buf->data() + 84, &m_focalRadius, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8 + 8 + 4, &m_focalRadius, 4);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 88, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8 + 8 + 4 + 4, &opacity, 4);
         changed = true;
     }
 
@@ -883,8 +1018,8 @@ void QQuickShapeRadialGradientRhiShader::updateSampledImage(RenderState &state, 
 
     QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -906,8 +1041,8 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->spread - gb->spread)
         return d;
@@ -936,19 +1071,22 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
             return d;
     }
 
+    if (int d = a->m_fillTransform.compareTo(b->m_fillTransform))
+        return d;
+
     return 0;
 }
 
 QSGMaterialShader *QQuickShapeRadialGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeRadialGradientRhiShader;
+    return new QQuickShapeRadialGradientRhiShader(viewCount());
 }
 
-QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader()
+QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/conicalgradient.frag.qsb"), viewCount);
 }
 
 bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
@@ -958,15 +1096,25 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
     QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(newMaterial);
     bool changed = false;
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 80);
+    Q_ASSERT(buf->size() >= 80 + 64);
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     QQuickShapeGenericStrokeFillNode *node = m->node();
+
+    if (!oldMaterial || m_fillTransform != node->m_fillTransform) {
+        memcpy(buf->data() + 64 * shaderMatrixCount, node->m_fillTransform.invertedData(), 64);
+        m_fillTransform = node->m_fillTransform;
+        changed = true;
+    }
 
     const QPointF centerPoint = node->m_fillGradient.a;
     const float angle = -qDegreesToRadians(node->m_fillGradient.v0);
@@ -974,19 +1122,19 @@ bool QQuickShapeConicalGradientRhiShader::updateUniformData(RenderState &state,
     if (!oldMaterial || m_centerPoint.x() != centerPoint.x() || m_centerPoint.y() != centerPoint.y()) {
         m_centerPoint = QVector2D(centerPoint.x(), centerPoint.y());
         Q_ASSERT(sizeof(m_centerPoint) == 8);
-        memcpy(buf->data() + 64, &m_centerPoint, 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64, &m_centerPoint, 8);
         changed = true;
     }
 
     if (!oldMaterial || m_angle != angle) {
         m_angle = angle;
-        memcpy(buf->data() + 72, &m_angle, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8, &m_angle, 4);
         changed = true;
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 76, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8 + 4, &opacity, 4);
         changed = true;
     }
 
@@ -1001,8 +1149,8 @@ void QQuickShapeConicalGradientRhiShader::updateSampledImage(RenderState &state,
 
     QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(newMaterial);
     QQuickShapeGenericStrokeFillNode *node = m->node();
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
+    const QSGGradientCacheKey cacheKey(node->m_fillGradient.stops, QGradient::Spread(node->m_fillGradient.spread));
+    QSGTexture *t = QSGGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
     t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
@@ -1024,8 +1172,8 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
     if (a == b)
         return 0;
 
-    const QQuickAbstractPathRenderer::GradientDesc *ga = &a->m_fillGradient;
-    const QQuickAbstractPathRenderer::GradientDesc *gb = &b->m_fillGradient;
+    const QSGGradientCache::GradientDesc *ga = &a->m_fillGradient;
+    const QSGGradientCache::GradientDesc *gb = &b->m_fillGradient;
 
     if (int d = ga->a.x() - gb->a.x())
         return d;
@@ -1045,13 +1193,149 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
             return d;
     }
 
+    if (int d = a->m_fillTransform.compareTo(b->m_fillTransform))
+        return d;
+
     return 0;
 }
 
 QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QQuickShapeConicalGradientRhiShader;
+    return new QQuickShapeConicalGradientRhiShader(viewCount());
+}
+
+QQuickShapeTextureFillRhiShader::QQuickShapeTextureFillRhiShader(int viewCount)
+{
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/texturefill.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/texturefill.frag.qsb"), viewCount);
+}
+
+bool QQuickShapeTextureFillRhiShader::updateUniformData(RenderState &state,
+                                                        QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+{
+    Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
+    QQuickShapeTextureFillMaterial *m = static_cast<QQuickShapeTextureFillMaterial *>(newMaterial);
+    bool changed = false;
+    QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
+    Q_ASSERT(buf->size() >= 64 * shaderMatrixCount + 64 + 8 + 4);
+
+    if (state.isMatrixDirty()) {
+        for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+            const QMatrix4x4 m = state.combinedMatrix();
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
+    }
+
+    QQuickShapeGenericStrokeFillNode *node = m->node();
+
+    if (!oldMaterial || m_fillTransform != node->m_fillTransform) {
+        memcpy(buf->data() + 64 * shaderMatrixCount, node->m_fillTransform.invertedData(), 64);
+        m_fillTransform = node->m_fillTransform;
+        changed = true;
+    }
+
+    const QSizeF boundsSize = node->m_fillTextureProvider != nullptr && node->m_fillTextureProvider->texture() != nullptr
+        ? node->m_fillTextureProvider->texture()->textureSize()
+        : QSizeF(0, 0);
+
+
+    const QVector2D boundsVector(boundsSize.width() / state.devicePixelRatio(),
+                                 boundsSize.height() / state.devicePixelRatio());
+    if (!oldMaterial || m_boundsSize != boundsVector) {
+        m_boundsSize = boundsVector;
+        Q_ASSERT(sizeof(m_boundsSize) == 8);
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64, &m_boundsSize, 8);
+        changed = true;
+    }
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 64 * shaderMatrixCount + 64 + 8, &opacity, 4);
+        changed = true;
+    }
+
+    return changed;
+}
+
+void QQuickShapeTextureFillRhiShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
+                                                         QSGMaterial *newMaterial, QSGMaterial *)
+{
+    if (binding != 1)
+        return;
+
+    QQuickShapeTextureFillMaterial *m = static_cast<QQuickShapeTextureFillMaterial *>(newMaterial);
+    QQuickShapeGenericStrokeFillNode *node = m->node();
+    if (node->m_fillTextureProvider != nullptr) {
+        QSGTexture *providedTexture = node->m_fillTextureProvider->texture();
+        if (providedTexture != nullptr) {
+            if (providedTexture->isAtlasTexture()) {
+                // Create a non-atlas copy to make texture coordinate wrapping work. This
+                // texture copy is owned by the QSGTexture so memory is managed with the original
+                // texture provider.
+                QSGTexture *newTexture = providedTexture->removedFromAtlas(state.resourceUpdateBatch());
+                if (newTexture != nullptr)
+                    providedTexture = newTexture;
+            }
+
+            providedTexture->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+            *texture = providedTexture;
+            return;
+        }
+    }
+
+    if (m->dummyTexture() == nullptr) {
+        QSGPlainTexture *dummyTexture = new QSGPlainTexture;
+        dummyTexture->setFiltering(QSGTexture::Nearest);
+        dummyTexture->setHorizontalWrapMode(QSGTexture::Repeat);
+        dummyTexture->setVerticalWrapMode(QSGTexture::Repeat);
+        QImage img(128, 128, QImage::Format_ARGB32_Premultiplied);
+        img.fill(0);
+        dummyTexture->setImage(img);
+        dummyTexture->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
+
+        m->setDummyTexture(dummyTexture);
+    }
+
+    *texture = m->dummyTexture();
+}
+
+QQuickShapeTextureFillMaterial::~QQuickShapeTextureFillMaterial()
+{
+    delete m_dummyTexture;
+}
+
+QSGMaterialType *QQuickShapeTextureFillMaterial::type() const
+{
+    static QSGMaterialType type;
+    return &type;
+}
+
+int QQuickShapeTextureFillMaterial::compare(const QSGMaterial *other) const
+{
+    Q_ASSERT(other && type() == other->type());
+    const QQuickShapeTextureFillMaterial *m = static_cast<const QQuickShapeTextureFillMaterial *>(other);
+
+    QQuickShapeGenericStrokeFillNode *a = node();
+    QQuickShapeGenericStrokeFillNode *b = m->node();
+    Q_ASSERT(a && b);
+    if (a == b)
+        return 0;
+
+    if (int d = a->m_fillTransform.compareTo(b->m_fillTransform))
+        return d;
+
+    const qintptr diff = qintptr(a->m_fillTextureProvider) - qintptr(b->m_fillTextureProvider);
+    return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
+}
+
+QSGMaterialShader *QQuickShapeTextureFillMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
+{
+    Q_UNUSED(renderMode);
+    return new QQuickShapeTextureFillRhiShader(viewCount());
 }
 
 QT_END_NAMESPACE

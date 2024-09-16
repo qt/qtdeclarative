@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QQmlEngine>
@@ -269,7 +269,7 @@ void tst_qqmlvaluetypeproviders::structured()
         QTest::ignoreMessage(QtWarningMsg, warning);
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(
-                             url.toString()  + QStringLiteral(":44: Error: Cannot assign QJSValue "
+                             url.toString()  + QStringLiteral(":46: Error: Cannot assign QJSValue "
                                                               "to ConstructibleValueType")));
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(
@@ -291,6 +291,8 @@ void tst_qqmlvaluetypeproviders::structured()
     QCOMPARE(o->property("c2").value<ConstructibleValueType>(), ConstructibleValueType(0));
     QCOMPARE(o->property("c3").value<ConstructibleValueType>(), ConstructibleValueType(99));
     QCOMPARE(o->property("c4").value<ConstructibleValueType>(), ConstructibleValueType(0));
+    QCOMPARE(o->property("c5").value<ConstructibleValueType>(), ConstructibleValueType(69));
+    QCOMPARE(o->property("c6").value<ConstructibleValueType>(), ConstructibleValueType(97));
 
     const QList<QPointF> actual = o->property("ps").value<QList<QPointF>>();
     const QList<QPointF> expected = {

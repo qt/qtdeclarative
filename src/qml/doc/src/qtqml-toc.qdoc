@@ -1,0 +1,96 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtqml-toc.html
+    \title Qt Qml module topics
+
+    The following list has links to all the individual topics (HTML files)
+    in the Qt Qml module.
+
+    \list
+    \li \l{The QML Reference}
+        \list
+            \li \l{QML Syntax Basics}
+            \li \l{Import Statements}
+            \li \l{Importing QML Document Directories}
+            \li \l{QML Object Attributes}
+            \li \l{Property Binding}
+            \li \l{Signal and Handler Event System}
+            \li \l{The QML Type System}
+                \list
+                \li \l{QML Value Types}
+                \li \l{QML Object Types}
+                \li \l{QML Sequence Types}
+                \li \l{QML Namespaces}
+                \endlist
+            \li \l{QML Modules}
+                \list
+                    \li \l{Module Definition qmldir Files}{Specifying a QML module}
+                    \li \l{Identified Modules}
+                    \li \l{Legacy Modules}
+                    \li \l{Creating C++ Plugins for QML}
+                \endlist
+            \li \l{QML Documents}
+                \list
+                    \li \l{Structure of a QML Document}
+                    \li \l{Defining Object Types through QML Documents}{Defining Object Types in QML}
+                    \li \l{Resource Loading and Network Transparency}
+                    \li \l{Scope and Naming Resolution}
+                \endlist
+        \endlist
+    \li \l{Singletons in QML}
+    \li \l{The QML Disk Cache}
+    \li \l{Overview - QML and C++ Integration}{QML and C++ Integration}
+        \list
+            \li \l{Exposing Attributes of C++ Types to QML}
+            \li \l{Defining QML Types from C++}
+            \li \l{Embedding C++ Objects into QML with Context Properties}
+            \li \l{Data Type Conversion Between QML and C++}
+            \li \l{Exposing Attributes of C++ Types to QML}
+            \li \l{Exposing State from C++ to QML}
+            \li \l{Interacting with QML Objects from C++}
+            \li \l{Integrating with JavaScript values from C++}
+            \li \l{Important C++ Classes Provided By The Qt QML Module}{Important C++ Classes}
+            \li \l{Writing QML Extensions with C++}
+            \li \l{Writing advanced QML Extensions with C++}
+        \endlist
+    \li \l{Integrating QML and JavaScript}{QML and JavaScript Integration}
+        \list
+            \li \l{Making Applications Scriptable}
+            \li \l{JavaScript Expressions in QML Documents}{JavaScript Expressions}
+            \li \l{Dynamic QML Object Creation from JavaScript}
+            \li \l{Defining JavaScript Resources in QML}{Defining JavaScript Resources}
+            \li \l{Importing JavaScript Resources in QML}{Importing JavaScript Resources}
+            \li \l{JavaScript Host Environment}
+            \li \l{Memory Management in the JavaScript Engine}
+            \li \l{Configuring the JavaScript Engine}
+            \li \l{QML Global Object}
+            \li \l{List of JavaScript Objects and Functions}
+        \endlist
+    \li \l{Writing QML Modules}
+    \li \l{Qt Qml Tooling}
+        \list
+            \li \l{qmllint Reference}{qmllint}
+            \li \l{qmlformat}
+            \li \l{\QMLLS Reference}{qmlls}
+\omit reason: empty topic           \li \l{qmlprofiler} \endomit
+            \li \l{qml}
+            \li \l{qmlpreview}
+            \li \l{Qt Quick Compiler}
+            \li \l{QML type compiler}
+            \li \l{QML script compiler}
+            \li \l{qmltyperegistrar}
+            \li \l{qmlimportscanner}
+            \li \l{svgtoqml}
+            \li \l{qmlcachegen}
+        \endlist
+    \li \l{Changes to Qt QML}{Upgrade from Qt 5}
+    \li \l{QML Lint Warning and Errors}
+    \li \l{CMake Global Properties in Qt6 Qml}{CMake Global Properties}
+    \li \l{CMake Source File Properties in Qt6 Qml}{CMake Source File Properties}
+    \li \l{CMake Global Variables in Qt6 Qml}{CMake Global Variables}
+    \li \l{Qt Quick I18N}{Example - Qt Quick i18n}
+    \endlist
+
+*/

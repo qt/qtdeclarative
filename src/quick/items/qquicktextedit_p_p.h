@@ -19,9 +19,12 @@
 #include "qquickimplicitsizeitem_p_p.h"
 #include "qquicktextutil_p.h"
 
+#include <QtQuick/private/qquicktextselection_p.h>
+
 #include <QtQml/qqml.h>
 #include <QtCore/qlist.h>
 #include <private/qlazilyallocated_p.h>
+#include <private/qquicktextdocument_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
@@ -31,12 +34,12 @@
 
 QT_BEGIN_NAMESPACE
 class QTextLayout;
-class QQuickTextDocumentWithImageResources;
+class QQuickPixmap;
 class QQuickTextControl;
 class QSGInternalTextNode;
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickTextEditPrivate : public QQuickImplicitSizeItemPrivate
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -49,7 +52,7 @@ public:
     struct Node {
         explicit Node(int startPos = std::numeric_limits<int>::max(),
                       QSGInternalTextNode *node = nullptr)
-            : m_startPos(startPos), m_node(node) { }
+            : m_node(node), m_startPos(startPos) { }
         QSGInternalTextNode *textNode() const { return m_node; }
         void moveStartPos(int delta) { Q_ASSERT(m_startPos + delta > 0); m_startPos += delta; }
         int startPos() const { return m_startPos; }
@@ -57,12 +60,12 @@ public:
         bool dirty() const { return m_dirty; }
 
     private:
-        int m_startPos;
         QSGInternalTextNode *m_node;
+        int m_startPos;
         bool m_dirty = false;
 
 #ifndef QT_NO_DEBUG_STREAM
-        friend QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug, const Node &);
+        friend QDebug Q_QUICK_EXPORT operator<<(QDebug, const Node &);
 #endif
     };
     typedef QList<Node>::iterator TextNodeIterator;
@@ -89,7 +92,8 @@ public:
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
-        , hadSelection(false), markdownText(false), inResize(false)
+        , hadSelection(false), markdownText(false), inResize(false), ownsDocument(false)
+        , containsUnscalableGlyphs(false)
     {
 #if QT_CONFIG(accessibility)
         QAccessible::installActivationObserver(this);
@@ -110,6 +114,7 @@ public:
 
     void resetInputMethod();
     void updateDefaultTextOption();
+    void onDocumentStatusChanged();
     void relayoutDocument();
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
@@ -163,16 +168,19 @@ public:
 
     QQmlComponent* cursorComponent = nullptr;
     QQuickItem* cursorItem = nullptr;
-    QQuickTextDocumentWithImageResources *document = nullptr;
+    QTextDocument *document = nullptr;
     QQuickTextControl *control = nullptr;
     QQuickTextDocument *quickDocument = nullptr;
+    mutable QQuickTextSelection *cursorSelection = nullptr;
     QList<Node> textNodeMap;
+    QList<QQuickPixmap *> pixmapsInProgress;
 
     int lastSelectionStart = 0;
     int lastSelectionEnd = 0;
     int lineCount = 0;
-    int firstBlockInViewport = -1;   // only for the autotest; can be wrong after scrolling sometimes
+    int firstBlockInViewport = -1;   // can be wrong after scrolling sometimes
     int firstBlockPastViewport = -1; // only for the autotest
+    int renderedBlockCount = -1;     // only for the autotest
     QRectF renderedRegion;
 
     enum UpdateType {
@@ -212,12 +220,14 @@ public:
     bool hadSelection : 1;
     bool markdownText : 1;
     bool inResize : 1;
+    bool ownsDocument : 1;
+    bool containsUnscalableGlyphs : 1;
 
     static const int largeTextSizeThreshold;
 };
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug Q_QUICK_PRIVATE_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickTextEditPrivate::Node &);
 #endif
 
 QT_END_NAMESPACE

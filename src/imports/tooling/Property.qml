@@ -10,7 +10,8 @@ Member {
     property bool isRequired: false
     property bool isList: false
     property bool isFinal: false
-    property bool isConstant: false
+    property bool isTypeConstant: false
+    property bool isPropertyConstant: false
     property int revision: 0
     property string bindable
     property string read

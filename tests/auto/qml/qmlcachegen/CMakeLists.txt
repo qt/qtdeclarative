@@ -28,12 +28,14 @@ qt_internal_add_test(tst_qmlcachegen
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::QmlCompilerPrivate
     TESTDATA ${test_data}
 )
 
 qt6_add_qml_module(tst_qmlcachegen
     URI cachegentest
     RESOURCE_PREFIX "/"
+    NO_GENERATE_EXTRA_QMLDIRS
 )
 
 set(qmake_workerscripts_test_qml_files

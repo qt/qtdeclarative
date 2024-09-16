@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/QFile>
 #include <QtQuick/private/qquickimage_p.h>
@@ -15,5 +15,11 @@ public:
 protected:
     void load() override;
 
+protected slots:
+    void onRequestFinished();
+
+public:
     std::unique_ptr<QFile> device;
+    bool connectSuccess = true;
+    int requestsFinished = 0;
 };

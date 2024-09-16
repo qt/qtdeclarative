@@ -10,11 +10,11 @@ QT_BEGIN_NAMESPACE
 
 static const qreal DragAngleToleranceDegrees = 10;
 
-Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
+Q_STATIC_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
 
 /*!
     \qmltype DragHandler
-    \instantiates QQuickDragHandler
+    \nativetype QQuickDragHandler
     \inherits MultiPointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
@@ -50,7 +50,8 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     \c target is an Item, \c centroid is the point at which the drag begins and
     to which the \c target will be moved (subject to constraints).
 
-    At this time, drag-and-drop is not yet supported.
+    DragHandler can be used together with the \l Drag attached property to
+    implement drag-and-drop.
 
     \sa Drag, MouseArea, {Qt Quick Examples - Pointer Handlers}
 */
@@ -98,7 +99,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
     The snap mode configures snapping of the \l target item's center to the \l eventPoint.
 
     Possible values:
-    \value DragHandler.SnapNever Never snap
+    \value DragHandler.NoSnap Never snap
     \value DragHandler.SnapAuto The \l target snaps if the \l eventPoint was pressed outside of the \l target
                                 item \e and the \l target is a descendant of \l {PointerHandler::}{parent} item (default)
     \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the \l eventPoint was pressed outside of the \l target
@@ -167,7 +168,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         return; // see QQuickDragHandler::wantsPointerEvent; we don't want to handle those events
 
     QQuickMultiPointHandler::handlePointerEventImpl(event);
-    event->setAccepted(true);
+    event->accept(); // just the event, not the points
 
     if (active()) {
         // Calculate drag delta, taking into account the axis enabled constraint
@@ -184,13 +185,15 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         // and in approximately the same direction
         qreal minAngle =  361;
         qreal maxAngle = -361;
-        bool allOverThreshold = !event->isEndEvent();
+        bool allOverThreshold = QQuickDeliveryAgentPrivate::isTouchEvent(event) ?
+                static_cast<QTouchEvent *>(event)->touchPointStates() != QEventPoint::Released :
+                !event->isEndEvent();
         QVector<QEventPoint> chosenPoints;
 
         if (event->isBeginEvent())
             m_pressedInsideTarget = target() && currentPoints().size() > 0;
 
-        for (const QQuickHandlerPoint &p : currentPoints()) {
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints())) {
             if (!allOverThreshold)
                 break;
             auto point = event->pointById(p.id());
@@ -233,10 +236,11 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
                     m_pressTargetPos = targetCentroidPosition();
                 }
                 // QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers() skips subsequent delivery if the event is filtered.
-                // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
+                // That affects behavior for mouse but not for touch, because Flickable behaves differently in the mouse case.
                 // So we have to compensate by accepting the event here to avoid any parent Flickable from
                 // getting the event via direct delivery and grabbing too soon.
-                point->setAccepted(QQuickDeliveryAgentPrivate::isMouseEvent(event)); // stop propagation iff it's a mouse event
+                if (QQuickDeliveryAgentPrivate::isMouseEvent(event))
+                    point->setAccepted(true); // stop propagation iff it's a mouse event
             }
         }
         if (allOverThreshold) {
@@ -364,6 +368,93 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
     point(s) are dragged downward and to the right. After the gesture ends, it
     stays the same; and when the next drag gesture begins, it is reset to
     \c {0, 0} again.
+*/
+
+/*!
+    \qmlproperty flags QtQuick::DragHandler::acceptedButtons
+
+    The mouse buttons that can activate this DragHandler.
+
+    By default, this property is set to
+    \l {QtQuick::MouseEvent::button} {Qt.LeftButton}.
+    It can be set to an OR combination of mouse buttons, and will ignore events
+    from other buttons.
+
+    For example, if a component (such as TextEdit) already handles
+    left-button drags in its own way, it can be augmented with a
+    DragHandler that does something different when dragged via the
+    right button:
+
+    \snippet pointerHandlers/dragHandlerAcceptedButtons.qml 0
+*/
+
+/*!
+    \qmlproperty flags DragHandler::acceptedDevices
+
+    The types of pointing devices that can activate this DragHandler.
+
+    By default, this property is set to
+    \l{QInputDevice::DeviceType}{PointerDevice.AllDevices}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching devices.
+
+    \note Not all platforms are yet able to distinguish mouse and touchpad; and
+    on those that do, you often want to make mouse and touchpad behavior the same.
+*/
+
+/*!
+    \qmlproperty flags DragHandler::acceptedModifiers
+
+    If this property is set, it will require the given keyboard modifiers to
+    be pressed in order to react to pointer events, and otherwise ignore them.
+
+    For example, two DragHandlers can perform two different drag-and-drop
+    operations, depending on whether the \c Control modifier is pressed:
+
+    \snippet pointerHandlers/draggableGridView.qml entire
+
+    If this property is set to \c Qt.KeyboardModifierMask (the default value),
+    then the DragHandler ignores the modifier keys.
+
+    If you set \c acceptedModifiers to an OR combination of modifier keys,
+    it means \e all of those modifiers must be pressed to activate the handler.
+
+    The available modifiers are as follows:
+
+    \value NoModifier       No modifier key is allowed.
+    \value ShiftModifier    A Shift key on the keyboard must be pressed.
+    \value ControlModifier  A Ctrl key on the keyboard must be pressed.
+    \value AltModifier      An Alt key on the keyboard must be pressed.
+    \value MetaModifier     A Meta key on the keyboard must be pressed.
+    \value KeypadModifier   A keypad button must be pressed.
+    \value GroupSwitchModifier X11 only (unless activated on Windows by a command line argument).
+                            A Mode_switch key on the keyboard must be pressed.
+    \value KeyboardModifierMask The handler does not care which modifiers are pressed.
+
+    \sa Qt::KeyboardModifier
+*/
+
+/*!
+    \qmlproperty flags DragHandler::acceptedPointerTypes
+
+    The types of pointing instruments (finger, stylus, eraser, etc.)
+    that can activate this DragHandler.
+
+    By default, this property is set to
+    \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
+    If you set it to an OR combination of device types, it will ignore events
+    from non-matching \l {PointerDevice}{devices}.
+*/
+
+/*!
+    \qmlproperty real DragHandler::margin
+
+    The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+    item within which an \l eventPoint can activate this handler. For example,
+    you can make it easier to drag small items by allowing the user to drag
+    from a position nearby:
+
+    \snippet pointerHandlers/dragHandlerMargin.qml draggable
 */
 
 QT_END_NAMESPACE

@@ -112,7 +112,7 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent)
 
 /*!
     \qmltype ParentChange
-    \instantiates QQuickParentChange
+    \nativetype QQuickParentChange
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to reparent an Item in a state change.
@@ -159,7 +159,7 @@ QQuickParentChange::QQuickParentChange(QObject *parent)
 QQmlScriptString QQuickParentChange::x() const
 {
     Q_D(const QQuickParentChange);
-    return d->xString.value;
+    return d->xString.value();
 }
 
 void QQuickParentChange::setX(const QQmlScriptString &x)
@@ -177,7 +177,7 @@ bool QQuickParentChange::xIsSet() const
 QQmlScriptString QQuickParentChange::y() const
 {
     Q_D(const QQuickParentChange);
-    return d->yString.value;
+    return d->yString.value();
 }
 
 void QQuickParentChange::setY(const QQmlScriptString &y)
@@ -195,7 +195,7 @@ bool QQuickParentChange::yIsSet() const
 QQmlScriptString QQuickParentChange::width() const
 {
     Q_D(const QQuickParentChange);
-    return d->widthString.value;
+    return d->widthString.value();
 }
 
 void QQuickParentChange::setWidth(const QQmlScriptString &width)
@@ -213,7 +213,7 @@ bool QQuickParentChange::widthIsSet() const
 QQmlScriptString QQuickParentChange::height() const
 {
     Q_D(const QQuickParentChange);
-    return d->heightString.value;
+    return d->heightString.value();
 }
 
 void QQuickParentChange::setHeight(const QQmlScriptString &height)
@@ -231,7 +231,7 @@ bool QQuickParentChange::heightIsSet() const
 QQmlScriptString QQuickParentChange::scale() const
 {
     Q_D(const QQuickParentChange);
-    return d->scaleString.value;
+    return d->scaleString.value();
 }
 
 void QQuickParentChange::setScale(const QQmlScriptString &scale)
@@ -249,7 +249,7 @@ bool QQuickParentChange::scaleIsSet() const
 QQmlScriptString QQuickParentChange::rotation() const
 {
     Q_D(const QQuickParentChange);
-    return d->rotationString.value;
+    return d->rotationString.value();
 }
 
 void QQuickParentChange::setRotation(const QQmlScriptString &rotation)
@@ -316,13 +316,14 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->xString.isValid()) {
         bool ok = false;
-        qreal x = d->xString.value.numberLiteral(&ok);
+        qreal x = d->xString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction xa(d->target, QLatin1String("x"), x);
             actions << xa;
         } else {
             QQmlProperty property(d->target, QLatin1String("x"));
-            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->xString.value, d->target, qmlContext(this));
+            auto newBinding = QQmlAnyBinding::createFromScriptString(
+                    property, d->xString.value(), d->target, qmlContext(this));
             QQuickStateAction xa;
             xa.property = property;
             xa.toBinding = newBinding;
@@ -334,13 +335,14 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->yString.isValid()) {
         bool ok = false;
-        qreal y = d->yString.value.numberLiteral(&ok);
+        qreal y = d->yString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction ya(d->target, QLatin1String("y"), y);
             actions << ya;
         } else {
             QQmlProperty property(d->target, QLatin1String("y"));
-            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->yString.value, d->target, qmlContext(this));
+            auto newBinding = QQmlAnyBinding::createFromScriptString(
+                    property, d->yString.value(), d->target, qmlContext(this));
             QQuickStateAction ya;
             ya.property = property;
             ya.toBinding = newBinding;
@@ -352,13 +354,14 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->scaleString.isValid()) {
         bool ok = false;
-        qreal scale = d->scaleString.value.numberLiteral(&ok);
+        qreal scale = d->scaleString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction sa(d->target, QLatin1String("scale"), scale);
             actions << sa;
         } else {
             QQmlProperty property(d->target, QLatin1String("scale"));
-            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->scaleString.value, d->target, qmlContext(this));
+            auto newBinding = QQmlAnyBinding::createFromScriptString(
+                    property, d->scaleString.value(), d->target, qmlContext(this));
             QQuickStateAction sa;
             sa.property = property;
             sa.toBinding = newBinding;
@@ -370,13 +373,14 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->rotationString.isValid()) {
         bool ok = false;
-        qreal rotation = d->rotationString.value.numberLiteral(&ok);
+        qreal rotation = d->rotationString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction ra(d->target, QLatin1String("rotation"), rotation);
             actions << ra;
         } else {
             QQmlProperty property(d->target, QLatin1String("rotation"));
-            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->rotationString.value, d->target, qmlContext(this));
+            auto newBinding = QQmlAnyBinding::createFromScriptString(
+                    property, d->rotationString.value(), d->target, qmlContext(this));
             QQuickStateAction ra;
             ra.property = property;
             ra.toBinding = newBinding;
@@ -388,7 +392,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->widthString.isValid()) {
         bool ok = false;
-        qreal width = d->widthString.value.numberLiteral(&ok);
+        qreal width = d->widthString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction wa(d->target, QLatin1String("width"), width);
             actions << wa;
@@ -406,7 +410,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
 
     if (d->heightString.isValid()) {
         bool ok = false;
-        qreal height = d->heightString.value.numberLiteral(&ok);
+        qreal height = d->heightString.value().numberLiteral(&ok);
         if (ok) {
             QQuickStateAction ha(d->target, QLatin1String("height"), height);
             actions << ha;
@@ -524,7 +528,7 @@ void QQuickParentChange::rewind()
 
 /*!
     \qmltype AnchorChanges
-    \instantiates QQuickAnchorChanges
+    \nativetype QQuickAnchorChanges
     \inqmlmodule QtQuick
     \ingroup qtquick-states
     \brief Specifies how to change the anchors of an item in a state.
@@ -1058,17 +1062,24 @@ void QQuickAnchorChanges::reverse()
     //restore any absolute geometry changed by the state's anchors
     QQuickAnchors::Anchors stateVAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Vertical_Mask;
     QQuickAnchors::Anchors origVAnchors = targetPrivate->anchors()->usedAnchors() & QQuickAnchors::Vertical_Mask;
+    QQuickAnchors::Anchors resetVAnchors = d->anchorSet->d_func()->resetAnchors & QQuickAnchors::Vertical_Mask;
     QQuickAnchors::Anchors stateHAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Horizontal_Mask;
     QQuickAnchors::Anchors origHAnchors = targetPrivate->anchors()->usedAnchors() & QQuickAnchors::Horizontal_Mask;
+    QQuickAnchors::Anchors resetHAnchors = d->anchorSet->d_func()->resetAnchors & QQuickAnchors::Horizontal_Mask;
 
     const QRectF oldGeometry(d->target->position(), d->target->size());
     bool stateSetWidth = (stateHAnchors &&
                           stateHAnchors != QQuickAnchors::LeftAnchor &&
                           stateHAnchors != QQuickAnchors::RightAnchor &&
                           stateHAnchors != QQuickAnchors::HCenterAnchor);
-    // in case of an additive AnchorChange, we _did_ end up modifying the width
-    stateSetWidth |= ((stateHAnchors & QQuickAnchors::LeftAnchor) && (origHAnchors & QQuickAnchors::RightAnchor)) ||
-                     ((stateHAnchors & QQuickAnchors::RightAnchor) && (origHAnchors & QQuickAnchors::LeftAnchor));
+    // in case of an additive AnchorChange, we _did_ end up modifying the width, unless opposite
+    // edge was set to undefined in state
+    stateSetWidth |= ((stateHAnchors & QQuickAnchors::LeftAnchor)
+                      && (origHAnchors & QQuickAnchors::RightAnchor)
+                      && !(resetHAnchors & QQuickAnchors::RightAnchor))
+            || ((stateHAnchors & QQuickAnchors::RightAnchor)
+                && (origHAnchors & QQuickAnchors::LeftAnchor)
+                && !(resetHAnchors & QQuickAnchors::LeftAnchor));
     bool origSetWidth = (origHAnchors &&
                          origHAnchors != QQuickAnchors::LeftAnchor &&
                          origHAnchors != QQuickAnchors::RightAnchor &&
@@ -1084,9 +1095,14 @@ void QQuickAnchorChanges::reverse()
                            stateVAnchors != QQuickAnchors::BottomAnchor &&
                            stateVAnchors != QQuickAnchors::VCenterAnchor &&
                            stateVAnchors != QQuickAnchors::BaselineAnchor);
-    // in case of an additive AnchorChange, we _did_ end up modifying the height
-    stateSetHeight |= ((stateVAnchors & QQuickAnchors::TopAnchor) && (origVAnchors & QQuickAnchors::BottomAnchor)) ||
-                     ((stateVAnchors & QQuickAnchors::BottomAnchor) && (origVAnchors & QQuickAnchors::TopAnchor));
+    // in case of an additive AnchorChange, we _did_ end up modifying the height, unless opposite
+    // edge was set to undefined in state
+    stateSetHeight |= ((stateVAnchors & QQuickAnchors::TopAnchor)
+                       && (origVAnchors & QQuickAnchors::BottomAnchor)
+                       && !(resetVAnchors & QQuickAnchors::BottomAnchor))
+            || ((stateVAnchors & QQuickAnchors::BottomAnchor)
+                && (origVAnchors & QQuickAnchors::TopAnchor)
+                && !(resetVAnchors & QQuickAnchors::TopAnchor));
     bool origSetHeight = (origVAnchors &&
                           origVAnchors != QQuickAnchors::TopAnchor &&
                           origVAnchors != QQuickAnchors::BottomAnchor &&

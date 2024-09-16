@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGRhiDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
+class Q_QUICK_EXPORT QSGRhiDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
     QSGRhiDistanceFieldGlyphCache(QSGDefaultRenderContext *rc, const QRawFont &font, int renderTypeQuality);

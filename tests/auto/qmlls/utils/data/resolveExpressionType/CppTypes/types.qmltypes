@@ -1,0 +1,69 @@
+import QtQuick.tooling 1.2
+Module {
+    Component {
+        file: "private/myfile_p.h"
+        name: "TypeWithAttachedAndEnum"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["resolveExpressionType.CppTypes/TypeWithAttachedAndEnum 254.0"]
+        attachedType: "TypeWithAttachedAndEnumAttached"
+        Enum {
+            name: "MyEnum"
+            values: [
+                "Hello",
+                "World",
+            ]
+        }
+        Property {
+            name: "sameAsAttached"
+            type: "var"
+        }
+    }
+    Component {
+        file: "private/myfile_p.h"
+        name: "TypeWithAttachedAndEnumAttached"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property {
+            name: "sameAsAttached"
+            type: "var"
+        }
+    }
+    Component {
+        file: "private/myfile_p.h"
+        name: "SomeType"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property {
+            name: "helloData"
+            type: "real"
+        }
+    }
+    Component {
+        file: "private/myfile_p.h"
+        name: "WithSignal"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["resolveExpressionType.CppTypes/WithSignal 254.0"]
+        Signal {
+            name: "helloSignal"
+            Parameter { name: "data"; type: "SomeType" }
+        }
+    }
+    Component {
+        file: "private/myfile_p.h"
+        name: "WithFakePropertyChangedSignal"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["completions.CppTypes/WithFakePropertyChangedSignal 254.0"]
+        Property {
+            name: "mySomeType"
+            type: "SomeType"
+            notify: "mySomeTypeChanged"
+        }
+        Signal {
+            name: "mySomeTypeChanged"
+            Parameter { name: "data"; type: "SomeType" }
+        }
+    }
+}

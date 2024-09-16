@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 
 #include <QtTest/QtTest>
@@ -48,8 +48,8 @@ private slots:
     void mouseMultiTapLeftRight();
     void singleTapDoubleTap_data();
     void singleTapDoubleTap();
-    void touchLongPress();
-    void mouseLongPress();
+    void longPress_data();
+    void longPress();
     void buttonsMultiTouch();
     void componentUserBehavioralOverride();
     void rightLongPressIgnoreWheel();
@@ -57,6 +57,8 @@ private slots:
     void nonTopLevelParentWindow();
     void nestedDoubleTap_data();
     void nestedDoubleTap();
+    void nestedAndSiblingPropagation_data();
+    void nestedAndSiblingPropagation();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName,
@@ -778,76 +780,192 @@ void tst_TapHandler::singleTapDoubleTap()
     QCOMPARE(singleTapSpy.size(), expectedEndingSingleTapCount);
 }
 
-void tst_TapHandler::touchLongPress()
+void tst_TapHandler::longPress_data()
 {
-    QScopedPointer<QQuickView> windowPtr;
-    createView(windowPtr, "buttons.qml");
-    QQuickView * window = windowPtr.data();
+    QTest::addColumn<const QPointingDevice *>("device");
+    QTest::addColumn<QString>("buttonName");
+    QTest::addColumn<qreal>("longPressThreshold");
+    QTest::addColumn<QPoint>("releaseOffset");
+    QTest::addColumn<bool>("expectLongPress");
+    QTest::addColumn<bool>("expectTapped");
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("DragThreshold");
-    QVERIFY(button);
-    QQuickTapHandler *tapHandler = button->findChild<QQuickTapHandler*>("DragThreshold");
-    QVERIFY(tapHandler);
-    QSignalSpy tappedSpy(button, SIGNAL(tapped()));
-    QSignalSpy longPressThresholdChangedSpy(tapHandler, SIGNAL(longPressThresholdChanged()));
-    QSignalSpy timeHeldSpy(tapHandler, SIGNAL(timeHeldChanged()));
-    QSignalSpy longPressedSpy(tapHandler, SIGNAL(longPressed()));
+    const QPointingDevice *constTouchDevice = touchDevice;
 
-    // Reduce the threshold so that we can get a long press quickly
-    tapHandler->setLongPressThreshold(0.5);
-    QCOMPARE(longPressThresholdChangedSpy.size(), 1);
+    // Reduce the threshold so that we can get a long press quickly (faster in CI)
+    const qreal longPressThreshold = 0.3;
+    QTest::newRow("mouse, lpt longPressThreshold: DragThreshold")
+            << QPointingDevice::primaryPointingDevice() << "DragThreshold"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: DragThreshold")
+            << constTouchDevice << "DragThreshold" << longPressThreshold
+            << QPoint(0, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: DragThreshold, drag")
+            << QPointingDevice::primaryPointingDevice() << "DragThreshold"
+            << longPressThreshold << QPoint(50, 0) << false << false;
+    QTest::newRow("touch, lpt longPressThreshold: DragThreshold, drag")
+            << constTouchDevice << "DragThreshold"
+            << longPressThreshold << QPoint(50, 0) << false << false;
 
-    // Press and hold
-    QPoint p1 = button->mapToScene(button->clipRect().center()).toPoint();
-    QTest::touchEvent(window, touchDevice).press(1, p1, window);
-    QQuickTouchUtils::flush(window);
-    QTRY_VERIFY(button->property("pressed").toBool());
-    QTRY_COMPARE(longPressedSpy.size(), 1);
-    timeHeldSpy.wait(); // the longer we hold it, the more this will occur
-    qDebug() << "held" << tapHandler->timeHeld() << "secs; timeHeld updated" << timeHeldSpy.size() << "times";
-    QVERIFY(timeHeldSpy.size() > 0);
-    QVERIFY(tapHandler->timeHeld() > 0.4); // Should be > 0.5 but slow CI and timer granularity can interfere
+    QTest::newRow("mouse, lpt longPressThreshold: WithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "WithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: WithinBounds")
+            << constTouchDevice << "WithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: WithinBounds, drag")
+            << QPointingDevice::primaryPointingDevice() << "WithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: WithinBounds, drag")
+            << constTouchDevice << "WithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: WithinBounds, drag out")
+            << QPointingDevice::primaryPointingDevice() << "WithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
+    QTest::newRow("touch, lpt longPressThreshold: WithinBounds, drag out")
+            << constTouchDevice << "WithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
 
-    // Release and verify that tapped was not emitted
-    QTest::touchEvent(window, touchDevice).release(1, p1, window);
-    QQuickTouchUtils::flush(window);
-    QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.size(), 0);
+    QTest::newRow("mouse, lpt longPressThreshold: ReleaseWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: ReleaseWithinBounds")
+            << constTouchDevice << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: ReleaseWithinBounds, drag")
+            << QPointingDevice::primaryPointingDevice() << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: ReleaseWithinBounds, drag")
+            << constTouchDevice << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: ReleaseWithinBounds, drag out")
+            << QPointingDevice::primaryPointingDevice() << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
+    QTest::newRow("touch, lpt longPressThreshold: ReleaseWithinBounds, drag out")
+            << constTouchDevice << "ReleaseWithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
+
+    QTest::newRow("mouse, lpt longPressThreshold: DragWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "DragWithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: DragWithinBounds")
+            << constTouchDevice << "DragWithinBounds"
+            << longPressThreshold << QPoint(0, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: DragWithinBounds, drag")
+            << QPointingDevice::primaryPointingDevice() << "DragWithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("touch, lpt longPressThreshold: DragWithinBounds, drag")
+            << constTouchDevice << "DragWithinBounds"
+            << longPressThreshold << QPoint(50, 0) << true << false;
+    QTest::newRow("mouse, lpt longPressThreshold: DragWithinBounds, drag out")
+            << QPointingDevice::primaryPointingDevice() << "DragWithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
+    QTest::newRow("touch, lpt longPressThreshold: DragWithinBounds, drag out")
+            << constTouchDevice << "DragWithinBounds"
+            << longPressThreshold << QPoint(155, 0) << false << false;
+
+    // Zero or negative threshold means long press is disabled
+    QTest::newRow("mouse, lpt 0: DragThreshold")
+            << QPointingDevice::primaryPointingDevice() << "DragThreshold"
+            << qreal(0) << QPoint(0, 0) << false << true;
+    QTest::newRow("mouse, lpt -1: DragThreshold")
+            << QPointingDevice::primaryPointingDevice() << "DragThreshold"
+            << qreal(-1) << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt 0: DragThreshold")
+            << constTouchDevice << "DragThreshold"
+            << qreal(0) << QPoint(0, 0) << false << true;
+
+    QTest::newRow("mouse, lpt 0: WithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "WithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
+    QTest::newRow("mouse, lpt -1: WithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "WithinBounds"
+            << qreal(-1) << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt 0: WithinBounds")
+            << constTouchDevice << "WithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
+
+    QTest::newRow("mouse, lpt 0: ReleaseWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "ReleaseWithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
+    QTest::newRow("mouse, lpt -1: ReleaseWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "ReleaseWithinBounds"
+            << qreal(-1) << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt 0: ReleaseWithinBounds")
+            << constTouchDevice << "ReleaseWithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
+
+    QTest::newRow("mouse, lpt 0: DragWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "DragWithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
+    QTest::newRow("mouse, lpt -1: DragWithinBounds")
+            << QPointingDevice::primaryPointingDevice() << "DragWithinBounds"
+            << qreal(-1) << QPoint(0, 0) << true << false;
+    QTest::newRow("touch, lpt 0: DragWithinBounds")
+            << constTouchDevice << "DragWithinBounds"
+            << qreal(0) << QPoint(0, 0) << false << true;
 }
 
-void tst_TapHandler::mouseLongPress()
+void tst_TapHandler::longPress()
 {
-    QScopedPointer<QQuickView> windowPtr;
-    createView(windowPtr, "buttons.qml");
-    QQuickView * window = windowPtr.data();
+    QFETCH(const QPointingDevice *, device);
+    QFETCH(QString, buttonName);
+    QFETCH(qreal, longPressThreshold);
+    QFETCH(QPoint, releaseOffset);
+    QFETCH(bool, expectLongPress);
+    QFETCH(bool, expectTapped);
 
-    QQuickItem *button = window->rootObject()->findChild<QQuickItem*>("DragThreshold");
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("buttons.qml")));
+
+    QQuickItem *button = window.rootObject()->findChild<QQuickItem*>(buttonName);
     QVERIFY(button);
-    QQuickTapHandler *tapHandler = button->findChild<QQuickTapHandler*>("DragThreshold");
+    QQuickTapHandler *tapHandler = button->findChild<QQuickTapHandler*>(buttonName);
     QVERIFY(tapHandler);
     QSignalSpy tappedSpy(button, SIGNAL(tapped()));
     QSignalSpy longPressThresholdChangedSpy(tapHandler, SIGNAL(longPressThresholdChanged()));
     QSignalSpy timeHeldSpy(tapHandler, SIGNAL(timeHeldChanged()));
     QSignalSpy longPressedSpy(tapHandler, SIGNAL(longPressed()));
 
-    // Reduce the threshold so that we can get a long press quickly
-    tapHandler->setLongPressThreshold(0.5);
-    QCOMPARE(longPressThresholdChangedSpy.size(), 1);
+    const qreal defaultThreshold = tapHandler->longPressThreshold();
+    qsizetype changedCount = 0;
+    QCOMPARE_GT(defaultThreshold, 0);
+    tapHandler->setLongPressThreshold(longPressThreshold);
+    if (longPressThreshold > 0)
+        QCOMPARE(longPressThresholdChangedSpy.size(), ++changedCount);
+    QVERIFY(QMetaObject::invokeMethod(button, "assignUndefinedLongPressThreshold"));
+    if (longPressThreshold > 0)
+        QCOMPARE(longPressThresholdChangedSpy.size(), ++changedCount);
+    QCOMPARE(tapHandler->longPressThreshold(), defaultThreshold);
+    tapHandler->setLongPressThreshold(longPressThreshold);
 
     // Press and hold
     QPoint p1 = button->mapToScene(button->clipRect().center()).toPoint();
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QQuickTest::pointerPress(device, &window, 1, p1);
     QTRY_VERIFY(button->property("pressed").toBool());
-    QTRY_COMPARE(longPressedSpy.size(), 1);
+    QTRY_COMPARE(longPressedSpy.size(), expectLongPress ? 1 : 0);
     timeHeldSpy.wait(); // the longer we hold it, the more this will occur
     qDebug() << "held" << tapHandler->timeHeld() << "secs; timeHeld updated" << timeHeldSpy.size() << "times";
-    QVERIFY(timeHeldSpy.size() > 0);
-    QVERIFY(tapHandler->timeHeld() > 0.4); // Should be > 0.5 but slow CI and timer granularity can interfere
+    QCOMPARE_GT(timeHeldSpy.size(), 0);
+    if (expectLongPress) {
+        // Should be > longPressThreshold but slow CI and timer granularity can interfere
+        QCOMPARE_GT(tapHandler->timeHeld(), longPressThreshold - 0.1);
+    } else {
+        // Should be quite small, but event delivery is not instantaneous
+        QCOMPARE_LT(tapHandler->timeHeld(), 0.3);
+    }
 
-    // Release and verify that tapped was not emitted
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1, 500);
+    // If we have an offset, we need a move between press and release for realistic simulation
+    if (!releaseOffset.isNull())
+        QQuickTest::pointerMove(device, &window, 1, p1 + releaseOffset);
+
+    // Release (optionally at an offset) and check whether tapped was emitted
+    QQuickTest::pointerRelease(device, &window, 1, p1 + releaseOffset);
     QTRY_VERIFY(!button->property("pressed").toBool());
-    QCOMPARE(tappedSpy.size(), 0);
+    if (expectLongPress)
+        QCOMPARE_GT(button->property("timeHeldWhenLongPressed").toReal(), longPressThreshold - 0.1);
+    QCOMPARE(tapHandler->timeHeld(), -1);
+    QCOMPARE(tappedSpy.size(), expectTapped ? 1 : 0);
+    QCOMPARE(longPressedSpy.size(), expectLongPress ? 1 : 0);
 }
 
 void tst_TapHandler::buttonsMultiTouch()
@@ -1114,6 +1232,61 @@ void tst_TapHandler::nestedDoubleTap() // QTBUG-102625
              childGesturePolicy == QQuickTapHandler::GesturePolicy::DragThreshold ? 1 : 0);
     QCOMPARE(root->property("taps").toList().size(),
              childGesturePolicy == QQuickTapHandler::GesturePolicy::DragThreshold ? 4 : 2);
+}
+
+void tst_TapHandler::nestedAndSiblingPropagation_data()
+{
+    QTest::addColumn<const QPointingDevice *>("device");
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+    QTest::addColumn<bool>("expectPropagation");
+
+    const QPointingDevice *constTouchDevice = touchDevice;
+
+    QTest::newRow("primary, DragThreshold") << QPointingDevice::primaryPointingDevice()
+            << QQuickTapHandler::GesturePolicy::DragThreshold << true;
+    QTest::newRow("primary, WithinBounds") << QPointingDevice::primaryPointingDevice()
+            << QQuickTapHandler::GesturePolicy::WithinBounds << false;
+    QTest::newRow("primary, ReleaseWithinBounds") << QPointingDevice::primaryPointingDevice()
+            << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds << false;
+    QTest::newRow("primary, DragWithinBounds") << QPointingDevice::primaryPointingDevice()
+            << QQuickTapHandler::GesturePolicy::DragWithinBounds << false;
+
+    QTest::newRow("touch, DragThreshold") << constTouchDevice
+            << QQuickTapHandler::GesturePolicy::DragThreshold << true;
+    QTest::newRow("touch, WithinBounds") << constTouchDevice
+            << QQuickTapHandler::GesturePolicy::WithinBounds << false;
+    QTest::newRow("touch, ReleaseWithinBounds") << constTouchDevice
+            << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds << false;
+    QTest::newRow("touch, DragWithinBounds") << constTouchDevice
+            << QQuickTapHandler::GesturePolicy::DragWithinBounds << false;
+}
+
+void tst_TapHandler::nestedAndSiblingPropagation() // QTBUG-117387
+{
+    QFETCH(const QPointingDevice *, device);
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+    QFETCH(bool, expectPropagation);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nestedAndSibling.qml")));
+    QQuickItem *root = window.rootObject();
+    QQuickTapHandler *th1 = root->findChild<QQuickTapHandler*>("th1");
+    QVERIFY(th1);
+    th1->setGesturePolicy(gesturePolicy);
+    QQuickTapHandler *th2 = root->findChild<QQuickTapHandler*>("th2");
+    QVERIFY(th2);
+    th2->setGesturePolicy(gesturePolicy);
+    QQuickTapHandler *th3 = root->findChild<QQuickTapHandler*>("th3");
+    QVERIFY(th3);
+    th3->setGesturePolicy(gesturePolicy);
+
+    QPoint middle(180, 140);
+    QQuickTest::pointerPress(device, &window, 0, middle);
+    QVERIFY(th3->isPressed()); // it's on top
+    QCOMPARE(th2->isPressed(), expectPropagation);
+    QCOMPARE(th1->isPressed(), expectPropagation);
+
+    QQuickTest::pointerRelease(device, &window, 0, middle);
 }
 
 QTEST_MAIN(tst_TapHandler)

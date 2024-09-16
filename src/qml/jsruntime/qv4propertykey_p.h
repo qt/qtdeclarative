@@ -14,6 +14,7 @@
 // We mean it.
 //
 
+#include <private/qv4writebarrier_p.h>
 #include <private/qv4global_p.h>
 #include <private/qv4staticvalue_p.h>
 #include <QtCore/qhashfunctions.h>
@@ -70,11 +71,18 @@ public:
     // We cannot #include the declaration of Heap::StringOrSymbol here.
     // Therefore we do some gymnastics to enforce the type safety.
 
-    template<typename StringOrSymbol = Heap::StringOrSymbol>
-    static PropertyKey fromStringOrSymbol(StringOrSymbol *b)
+    template<typename StringOrSymbol = Heap::StringOrSymbol, typename Engine = QV4::EngineBase>
+    static PropertyKey fromStringOrSymbol(Engine *engine, StringOrSymbol *b)
     {
         static_assert(std::is_base_of_v<Heap::StringOrSymbol, StringOrSymbol>);
         PropertyKey key;
+        QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
+            if constexpr (QV4::WriteBarrier::isInsertionBarrier) {
+                // treat this as an insertion - the StringOrSymbol becomes reachable
+                // via the propertykey, so we consequently need to mark it durnig gc
+                b->mark(stack);
+            }
+        });
         key.val.setM(b);
         Q_ASSERT(key.isManaged());
         return key;
@@ -89,11 +97,11 @@ public:
         return static_cast<StringOrSymbol *>(val.m());
     }
 
-    Q_QML_PRIVATE_EXPORT bool isString() const;
-    Q_QML_PRIVATE_EXPORT bool isSymbol() const;
+    Q_QML_EXPORT bool isString() const;
+    Q_QML_EXPORT bool isSymbol() const;
     bool isCanonicalNumericIndexString() const;
 
-    Q_QML_PRIVATE_EXPORT QString toQString() const;
+    Q_QML_EXPORT QString toQString() const;
     Heap::StringOrSymbol *toStringOrSymbol(ExecutionEngine *e);
     quint64 id() const { return val._val; }
     static PropertyKey fromId(quint64 id) {

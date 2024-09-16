@@ -1,18 +1,12 @@
 # Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
 project(wearableexample VERSION 1 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols/wearable")
-
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Positioning Location)
 
 qt_standard_project_setup()
 
@@ -31,6 +25,18 @@ target_link_libraries(wearableexample PUBLIC
     Qt6::QuickControls2
 )
 
+if(TARGET Qt6::Positioning)
+    target_link_libraries(wearableexample PUBLIC
+        Qt6::Positioning
+    )
+endif()
+
+if(TARGET Qt6::Location)
+target_link_libraries(wearableexample PUBLIC
+    Qt6::Location
+)
+endif()
+
 if(UNIX AND NOT APPLE AND CMAKE_CROSSCOMPILING)
     find_package(Qt6 REQUIRED COMPONENTS QuickTemplates2)
 
@@ -46,14 +52,17 @@ set_target_properties(wearableexample PROPERTIES
 )
 
 install(TARGETS wearableexample
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
 
-include(../../quick/shared/QtBundleQmlModuleForMacOS.cmake)
+qt_generate_deploy_qml_app_script(
+    TARGET wearableexample
+    OUTPUT_SCRIPT deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})
 
-set(app_target "wearableexample")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearableplugin" "Wearable")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablesettingsplugin" "WearableSettings")
-add_qml_module_to_macos_app_bundle("${app_target}" "wearablestyleplugin" "WearableStyle")

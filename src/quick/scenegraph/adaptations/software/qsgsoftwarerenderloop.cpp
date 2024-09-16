@@ -21,6 +21,9 @@
 
 QT_BEGIN_NAMESPACE
 
+// polish, animations, sync, render and swap in the render loop
+Q_STATIC_LOGGING_CATEGORY(QSG_RASTER_LOG_TIME_RENDERLOOP,     "qt.scenegraph.time.renderloop")
+
 QSGSoftwareRenderLoop::QSGSoftwareRenderLoop()
 {
     sg = new QSGSoftwareContext();

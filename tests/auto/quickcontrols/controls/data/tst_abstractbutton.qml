@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -42,15 +42,56 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
-        failOnWarning(/.?/)
+    property var expectedPressSignals: [
+        ["activeFocusChanged", { "activeFocus": true }],
+        ["pressedChanged", { "pressed": true }],
+        ["downChanged", { "down": true }],
+        "pressed"
+    ]
 
+    property var expectedReleaseSignals: [
+        ["pressedChanged", { "pressed": false }],
+        ["downChanged", { "down": false }],
+        "released",
+        "clicked"
+    ]
+
+    property var expectedClickSignals
+
+    property var expectedCheckableClickSignals: [
+        ["activeFocusChanged", { "activeFocus": true }],
+        ["pressedChanged", { "pressed": true }],
+        ["downChanged", { "down": true }],
+        "pressed",
+        ["pressedChanged", { "pressed": false }],
+        ["downChanged", { "down": false }],
+        ["checkedChanged", { "checked": true }],
+        "toggled",
+        "released",
+        "clicked"
+    ]
+
+    function initTestCase() {
+        // AbstractButton has TabFocus on macOS, not StrongFocus.
+        if (Qt.platform.os === "osx") {
+            expectedPressSignals.splice(0, 1)
+            expectedCheckableClickSignals.splice(0, 1)
+        }
+
+        expectedClickSignals = [...expectedPressSignals, ...expectedReleaseSignals]
+    }
+
+    function init() {
+        failOnWarning(/.?/)
+    }
+
+    function test_defaults() {
         let control = createTemporaryObject(defaultComponent, testCase)
         verify(control)
     }
 
     function test_text() {
-        var control = createTemporaryObject(button, testCase);
+        let control = createTemporaryObject(button, testCase);
         verify(control);
 
         compare(control.text, "");
@@ -61,7 +102,7 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(button, testCase, {padding: 6})
+        let control = createTemporaryObject(button, testCase, {padding: 6})
         verify(control)
         compare(control.baselineOffset, 0)
         control.contentItem = item.createObject(control, {baselineOffset: 12})
@@ -69,7 +110,7 @@ TestCase {
     }
 
     function test_implicitSize() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         compare(control.implicitWidth, 0)
@@ -96,22 +137,22 @@ TestCase {
     }
 
     function test_pressPoint(data) {
-        var control = createTemporaryObject(button, testCase, {width: 100, height: 40})
+        let control = createTemporaryObject(button, testCase, {width: 100, height: 40})
         verify(control)
 
-        var pressXChanges = 0
-        var pressYChanges = 0
+        let pressXChanges = 0
+        let pressYChanges = 0
 
-        var pressXSpy = signalSpy.createObject(control, {target: control, signalName: "pressXChanged"})
+        let pressXSpy = signalSpy.createObject(control, {target: control, signalName: "pressXChanged"})
         verify(pressXSpy.valid)
 
-        var pressYSpy = signalSpy.createObject(control, {target: control, signalName: "pressYChanged"})
+        let pressYSpy = signalSpy.createObject(control, {target: control, signalName: "pressYChanged"})
         verify(pressYSpy.valid)
 
         compare(control.pressX, 0)
         compare(control.pressY, 0)
 
-        var touch = data.touch ? touchEvent(control) : null
+        let touch = data.touch ? touchEvent(control) : null
 
         if (data.touch)
             touch.press(0, control, control.width / 2, control.height / 2).commit()
@@ -196,10 +237,10 @@ TestCase {
     }
 
     function test_pressAndHold() {
-        var control = createTemporaryObject(button, testCase, {checkable: true})
+        let control = createTemporaryObject(button, testCase, {checkable: true})
         verify(control)
 
-        var pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
+        let pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
         verify(pressAndHoldSpy.valid)
 
         mousePress(control)
@@ -228,10 +269,10 @@ TestCase {
     }
 
     function test_keyEvents(data) {
-        var container = createTemporaryObject(keyCatcher, testCase)
+        let container = createTemporaryObject(keyCatcher, testCase)
         verify(container)
 
-        var control = button.createObject(container)
+        let control = button.createObject(container)
         verify(control)
 
         control.forceActiveFocus()
@@ -245,7 +286,7 @@ TestCase {
     }
 
     function test_icon() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         compare(control.icon.name, "")
         compare(control.icon.source, "")
@@ -253,7 +294,7 @@ TestCase {
         compare(control.icon.height, 0)
         compare(control.icon.color, "#00000000")
 
-        var iconSpy = signalSpy.createObject(control, { target: control, signalName: "iconChanged"} )
+        let iconSpy = signalSpy.createObject(control, { target: control, signalName: "iconChanged"} )
         verify(iconSpy.valid)
 
         control.icon.name = "test-name"
@@ -322,14 +363,14 @@ TestCase {
     }
 
     function test_action(data) {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         control[data.property] = data.initButton
 
-        var act = action.createObject(control)
+        let act = action.createObject(control)
         act[data.property] = data.initAction
 
-        var spy = signalSpy.createObject(control, {target: control, signalName: data.property + "Changed"})
+        let spy = signalSpy.createObject(control, {target: control, signalName: data.property + "Changed"})
         verify(spy.valid)
 
         // assign action
@@ -362,23 +403,23 @@ TestCase {
     }
 
     function test_actionIcon_data() {
-        var data = []
+        let data = []
 
         // Save duplicating the rows by reusing them with different properties of the same type.
         // This means that the first loop will test icon.name and the second one will test icon.source.
-        var stringPropertyValueSuffixes = [
+        let stringPropertyValueSuffixes = [
             { propertyName: "name", valueSuffix: "IconName" },
             { propertyName: "source", valueSuffix: "IconSource" }
         ]
 
-        for (var i = 0; i < stringPropertyValueSuffixes.length; ++i) {
-            var propertyName = stringPropertyValueSuffixes[i].propertyName
-            var valueSuffix = stringPropertyValueSuffixes[i].valueSuffix
+        for (let i = 0; i < stringPropertyValueSuffixes.length; ++i) {
+            let propertyName = stringPropertyValueSuffixes[i].propertyName
+            let valueSuffix = stringPropertyValueSuffixes[i].valueSuffix
 
-            var buttonPropertyValue = "Button" + valueSuffix
-            var buttonPropertyValue2 = "Button" + valueSuffix + "2"
-            var actionPropertyValue = "Action" + valueSuffix
-            var actionPropertyValue2 = "Action" + valueSuffix + "2"
+            let buttonPropertyValue = "Button" + valueSuffix
+            let buttonPropertyValue2 = "Button" + valueSuffix + "2"
+            let actionPropertyValue = "Action" + valueSuffix
+            let actionPropertyValue2 = "Action" + valueSuffix + "2"
 
             data.push({ tag: "implicit " + propertyName, property: propertyName,
                 initButton: undefined, initAction: actionPropertyValue,
@@ -420,19 +461,19 @@ TestCase {
                 resetExpected: buttonPropertyValue, resetChanged: false })
         }
 
-        var intPropertyNames = [
+        let intPropertyNames = [
             "width",
             "height",
         ]
 
-        for (i = 0; i < intPropertyNames.length; ++i) {
-            propertyName = intPropertyNames[i]
+        for (let i = 0; i < intPropertyNames.length; ++i) {
+            let propertyName = intPropertyNames[i]
 
-            buttonPropertyValue = 20
-            buttonPropertyValue2 = 21
-            actionPropertyValue = 40
-            actionPropertyValue2 = 41
-            var defaultValue = 0
+            let buttonPropertyValue = 20
+            let buttonPropertyValue2 = 21
+            let actionPropertyValue = 40
+            let actionPropertyValue2 = 41
+            let defaultValue = 0
 
             data.push({ tag: "implicit " + propertyName, property: propertyName,
                 initButton: undefined, initAction: actionPropertyValue,
@@ -474,12 +515,12 @@ TestCase {
                 resetExpected: buttonPropertyValue, resetChanged: false })
         }
 
-        propertyName = "color"
-        buttonPropertyValue = "#aa0000"
-        buttonPropertyValue2 = "#ff0000"
-        actionPropertyValue = "#0000aa"
-        actionPropertyValue2 = "#0000ff"
-        defaultValue = "#00000000"
+        let propertyName = "color"
+        let buttonPropertyValue = "#aa0000"
+        let buttonPropertyValue2 = "#ff0000"
+        let actionPropertyValue = "#0000aa"
+        let actionPropertyValue2 = "#0000ff"
+        let defaultValue = "#00000000"
 
         data.push({ tag: "implicit " + propertyName, property: propertyName,
             initButton: undefined, initAction: actionPropertyValue,
@@ -524,14 +565,14 @@ TestCase {
     }
 
     function test_actionIcon(data) {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
         control.icon[data.property] = data.initButton
 
-        var act = action.createObject(control)
+        let act = action.createObject(control)
         act.icon[data.property] = data.initAction
 
-        var spy = signalSpy.createObject(control, {target: control, signalName: "iconChanged"})
+        let spy = signalSpy.createObject(control, {target: control, signalName: "iconChanged"})
         verify(spy.valid)
 
         // assign action
@@ -580,7 +621,7 @@ TestCase {
     }
 
     function test_actionButton() {
-        var control = createTemporaryObject(actionButton, testCase)
+        let control = createTemporaryObject(actionButton, testCase)
         verify(control)
 
         // initial values
@@ -590,7 +631,7 @@ TestCase {
         compare(control.enabled, false)
         compare(control.icon.name, "checked")
 
-        var textSpy = signalSpy.createObject(control, { target: control, signalName: "textChanged" })
+        let textSpy = signalSpy.createObject(control, { target: control, signalName: "textChanged" })
         verify(textSpy.valid)
 
         // changes via action
@@ -631,7 +672,7 @@ TestCase {
 
         // setting an action while button has a particular property set
         // shouldn't cause a change in the button's effective property value
-        var secondAction = createTemporaryObject(action, testCase)
+        let secondAction = createTemporaryObject(action, testCase)
         verify(secondAction)
         secondAction.text = "SecondAction"
         control.action = secondAction
@@ -639,7 +680,7 @@ TestCase {
         compare(textSpy.count, 2)
 
         // test setting an action whose properties aren't set
-        var thirdAction = createTemporaryObject(action, testCase)
+        let thirdAction = createTemporaryObject(action, testCase)
         verify(thirdAction)
         control.action = thirdAction
         compare(control.text, "Button")
@@ -657,7 +698,7 @@ TestCase {
     }
 
     function test_checkable_button() {
-        var control = createTemporaryObject(checkableButton, testCase)
+        let control = createTemporaryObject(checkableButton, testCase)
         verify(control)
         control.checked = false
         control.forceActiveFocus()
@@ -681,9 +722,9 @@ TestCase {
         compare(control.action.checked, false)
         compare(control.checked, false)
 
-        var checkedSpy = signalSpy.createObject(control, {target: control.action, signalName: "checkedChanged"})
-        var toggledSpy = signalSpy.createObject(control, {target: control, signalName: "toggled"})
-        var actionToggledSpy = signalSpy.createObject(control, {target: control.action, signalName: "toggled"})
+        let checkedSpy = signalSpy.createObject(control, {target: control.action, signalName: "checkedChanged"})
+        let toggledSpy = signalSpy.createObject(control, {target: control, signalName: "toggled"})
+        let actionToggledSpy = signalSpy.createObject(control, {target: control.action, signalName: "toggled"})
 
         verify(checkedSpy.valid)
         verify(toggledSpy.valid)
@@ -723,16 +764,16 @@ TestCase {
     }
 
     function test_trigger(data) {
-        var control = createTemporaryObject(actionButton, testCase, {"action.enabled": data.action, "enabled": data.button})
+        let control = createTemporaryObject(actionButton, testCase, {"action.enabled": data.action, "enabled": data.button})
         verify(control)
 
         compare(control.enabled, data.button)
         compare(control.action.enabled, data.action)
 
-        var buttonSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        let buttonSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(buttonSpy.valid)
 
-        var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
+        let actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
         verify(actionSpy.valid)
 
         if (data.click)
@@ -748,13 +789,13 @@ TestCase {
         if (Qt.platform.os === "osx" || Qt.platform.os === "macos")
             skip("Mnemonics are not used on macOS")
 
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         control.text = "&Hello"
         compare(control.text, "&Hello")
 
-        var clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
+        let clickSpy = signalSpy.createObject(control, {target: control, signalName: "clicked"})
         verify(clickSpy.valid)
 
         keyClick(Qt.Key_H, Qt.AltModifier)
@@ -789,7 +830,7 @@ TestCase {
         control.text = undefined
         control.action = action.createObject(control, {text: "&Action"})
 
-        var actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
+        let actionSpy = signalSpy.createObject(control, {target: control.action, signalName: "triggered"})
         verify(actionSpy.valid)
 
         keyClick(Qt.Key_A, Qt.AltModifier)
@@ -814,12 +855,12 @@ TestCase {
     }
 
     function test_actionGroup() {
-        var group = createTemporaryObject(actionGroup, testCase)
+        let group = createTemporaryObject(actionGroup, testCase)
         verify(group)
 
-        var button1 = createTemporaryObject(button, testCase, {action: group.actions[0], width: 10, height: 10})
-        var button2 = createTemporaryObject(button, testCase, {action: group.actions[1], width: 10, height: 10, y: 10})
-        var button3 = createTemporaryObject(button, testCase, {action: group.actions[2], width: 10, height: 10, y: 20})
+        let button1 = createTemporaryObject(button, testCase, {action: group.actions[0], width: 10, height: 10})
+        let button2 = createTemporaryObject(button, testCase, {action: group.actions[1], width: 10, height: 10, y: 10})
+        let button3 = createTemporaryObject(button, testCase, {action: group.actions[2], width: 10, height: 10, y: 20})
 
         verify(button1)
         compare(button1.checked, true)
@@ -846,17 +887,17 @@ TestCase {
     }
 
     function test_clickedAfterLongPress() {
-        var control = createTemporaryObject(button, testCase, { text: "Hello" })
+        let control = createTemporaryObject(button, testCase, { text: "Hello" })
         verify(control)
 
-        var clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
         verify(clickedSpy.valid)
 
         mousePress(control)
         // Ensure that clicked is emitted when no handler is defined for the pressAndHold() signal.
         // Note that even though signal spies aren't considered in QObject::isSignalConnected(),
         // we can't use one here to check for pressAndHold(), because otherwise clicked() won't be emitted.
-        wait(Qt.styleHints.mousePressAndHoldInterval + 100)
+        wait(Application.styleHints.mousePressAndHoldInterval + 100)
         mouseRelease(control)
         compare(clickedSpy.count, 1)
     }
@@ -970,7 +1011,7 @@ TestCase {
     }
 
     function test_rightMouseButton() {
-        var control = createTemporaryObject(button, testCase)
+        let control = createTemporaryObject(button, testCase)
         verify(control)
 
         let pressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
@@ -992,7 +1033,8 @@ TestCase {
 
         // QTBUG-116289 - adding a HoverHandler into the button should not affect the handling of the right mouse button
         let hoverHandler = createTemporaryQmlObject("import QtQuick; HoverHandler {}", control)
-        control.data.push(hoverHandler)
+        verify(hoverHandler)
+        compare(hoverHandler.target, control)
 
         mousePress(control, control.width / 2, control.height / 2, Qt.RightButton)
         mouseRelease(control, control.width / 2, control.height / 2, Qt.RightButton)
@@ -1000,5 +1042,138 @@ TestCase {
         compare(pressedSpy.count, 0)
         compare(releasedSpy.count, 0)
         compare(clickedSpy.count, 0)
+    }
+
+    Component {
+        id: signalSequenceSpy
+        SignalSequenceSpy {
+            // List all signals, even ones we might not be interested in for a particular test,
+            // so that it can catch unwanted ones and fail the test.
+            signals: ["pressed", "released", "canceled", "clicked", "toggled", "doubleClicked",
+                "pressedChanged", "downChanged", "checkedChanged", "activeFocusChanged"]
+        }
+    }
+
+    function test_click() {
+        let control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedClickSignals
+        control.click()
+        verify(sequenceSpy.success)
+    }
+
+    function test_clickCheckableButton() {
+        let control = createTemporaryObject(button, testCase, { checkable: true })
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedCheckableClickSignals
+        control.click()
+        verify(sequenceSpy.success)
+    }
+
+    function test_animateClick() {
+        let control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedClickSignals
+        control.animateClick()
+        tryVerify(() => { return sequenceSpy.success }, 1000)
+    }
+
+    function test_animateClickCheckableButton() {
+        let control = createTemporaryObject(button, testCase, { checkable: true })
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedCheckableClickSignals
+        control.animateClick()
+        tryVerify(() => { return sequenceSpy.success }, 1000)
+    }
+
+    function test_animateClickTwice() {
+        let control = createTemporaryObject(button, testCase)
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedPressSignals
+        // Check that calling it again before it finishes works as expected.
+        control.animateClick()
+        verify(sequenceSpy.success)
+        // Let the timer progress a bit.
+        wait(0)
+        sequenceSpy.expectedSequence = testCase.expectedReleaseSignals
+        control.animateClick()
+        tryVerify(() => { return sequenceSpy.success }, 1000)
+    }
+
+    function test_clickOnDisabledButton() {
+        let control = createTemporaryObject(button, testCase, { enabled: false })
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = []
+        control.click()
+        verify(sequenceSpy.success)
+    }
+
+    function test_animateClickOnDisabledButton() {
+        let control = createTemporaryObject(button, testCase, { enabled: false })
+        verify(control)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = []
+        control.animateClick()
+        verify(sequenceSpy.success)
+    }
+
+    Component {
+        id: destroyOnPressButtonComponent
+
+        AbstractButton {
+            width: 100
+            height: 50
+
+            onPressed: destroy(this)
+        }
+    }
+
+    function test_clickDestroyOnPress() {
+        let control = createTemporaryObject(destroyOnPressButtonComponent, testCase)
+        verify(control)
+
+        // Parent it to the testCase, otherwise it will be destroyed when the control is.
+        let destructionSpy = createTemporaryObject(signalSpy, testCase,
+            { target: control.Component, signalName: "destruction"  })
+        verify(destructionSpy.valid)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedClickSignals
+        // Shouldn't crash, etc. Note that destroy() isn't synchronous, and so
+        // the destruction will happen after the release.
+        control.click()
+        verify(sequenceSpy.success)
+        tryCompare(destructionSpy, "count", 1)
+    }
+
+    function test_animateClickDestroyOnPress() {
+        let control = createTemporaryObject(destroyOnPressButtonComponent, testCase)
+        verify(control)
+
+        // Parent it to the testCase, otherwise it will be destroyed when the control is.
+        let destructionSpy = createTemporaryObject(signalSpy, testCase,
+            { target: control.Component, signalName: "destruction"  })
+        verify(destructionSpy.valid)
+
+        let sequenceSpy = signalSequenceSpy.createObject(control, { target: control })
+        sequenceSpy.expectedSequence = testCase.expectedPressSignals
+        // Shouldn't crash, etc. Note that destroy() isn't synchronous, but it is processed
+        // on the next frame, so should always come before the release's 100 ms delay.
+        control.animateClick()
+        verify(sequenceSpy.success)
+        tryCompare(destructionSpy, "count", 1)
     }
 }

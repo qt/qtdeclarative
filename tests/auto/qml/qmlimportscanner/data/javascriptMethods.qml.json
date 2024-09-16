@@ -1,27 +1,19 @@
 [
     {
-        "classname": "QtQmlMetaPlugin",
-        "linkTarget": "Qt6::QmlMeta",
-        "name": "QtQml",
-        "plugin": "qmlmetaplugin",
-        "pluginIsOptional": true,
-        "relativePath": "QtQml",
-        "type": "module",
-        "prefer": ":/qt-project.org/imports/QtQml/"
-    },
-    {
         "classname": "QtQmlPlugin",
         "linkTarget": "Qt6::qmlplugin",
-        "name": "QtQml.Base",
+        "name": "QtQml",
         "plugin": "qmlplugin",
         "pluginIsOptional": true,
-        "relativePath": "QtQml/Base",
-        "type": "module",
-        "prefer": ":/qt-project.org/imports/QtQml/Base/"
+        "prefer": ":/qt-project.org/imports/QtQml/",
+        "relativePath": "QtQml",
+        "type": "module"
     },
     {
-        "name": "Methods.js",
-        "type": "javascript"
+        "name": "QML",
+        "prefer": ":/qt-project.org/imports/QML/",
+        "relativePath": "QML",
+        "type": "module"
     },
     {
         "classname": "QtQmlModelsPlugin",
@@ -29,9 +21,9 @@
         "name": "QtQml.Models",
         "plugin": "modelsplugin",
         "pluginIsOptional": true,
+        "prefer": ":/qt-project.org/imports/QtQml/Models/",
         "relativePath": "QtQml/Models",
-        "type": "module",
-        "prefer": ":/qt-project.org/imports/QtQml/Models/"
+        "type": "module"
     },
     {
         "classname": "QtQmlWorkerScriptPlugin",
@@ -39,8 +31,12 @@
         "name": "QtQml.WorkerScript",
         "plugin": "workerscriptplugin",
         "pluginIsOptional": true,
+        "prefer": ":/qt-project.org/imports/QtQml/WorkerScript/",
         "relativePath": "QtQml/WorkerScript",
-        "type": "module",
-        "prefer": ":/qt-project.org/imports/QtQml/WorkerScript/"
+        "type": "module"
+    },
+    {
+        "name": "Methods.js",
+        "type": "javascript"
     }
 ]

@@ -19,9 +19,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ObjectCtor);
 
-void Heap::ObjectCtor::init(QV4::ExecutionContext *scope)
+void Heap::ObjectCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Object"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Object"));
 }
 
 ReturnedValue ObjectCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)

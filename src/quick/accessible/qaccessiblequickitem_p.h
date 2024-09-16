@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QTextDocument;
 
-class Q_QUICK_PRIVATE_EXPORT QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionInterface, public QAccessibleValueInterface, public QAccessibleTextInterface
+class Q_QUICK_EXPORT QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionInterface, public QAccessibleValueInterface, public QAccessibleTextInterface
 {
 public:
     QAccessibleQuickItem(QQuickItem *item);

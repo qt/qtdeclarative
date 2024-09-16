@@ -30,7 +30,7 @@ class QQuickColorDialogImplAttached;
 class QQuickColorDialogImplAttachedPrivate;
 class QQuickColorDialogImplPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickColorDialogImpl : public QQuickDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickColorDialogImpl : public QQuickDialog
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
@@ -96,7 +96,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickColorDialogImpl)
 };
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickColorDialogImplAttached : public QObject
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickColorDialogImplAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY buttonBoxChanged FINAL)
@@ -144,7 +144,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickColorDialogImpl)
 
 #endif // QQUICKCOLORDIALOGIMPL_P_H

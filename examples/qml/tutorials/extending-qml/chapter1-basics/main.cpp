@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setSource(QUrl("qrc:///app.qml"));
+    view.loadFromModule("Charts", "App");
     view.show();
     return QGuiApplication::exec();
 }

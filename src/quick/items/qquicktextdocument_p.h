@@ -15,54 +15,63 @@
 // We mean it.
 //
 
-#include <QtCore/qhash.h>
-#include <QtCore/qvariant.h>
-#include <QtGui/qimage.h>
-#include <QtGui/qtextdocument.h>
+#include "qquicktextdocument.h"
+
 #include <QtGui/qabstracttextdocumentlayout.h>
-#include <QtGui/qtextlayout.h>
-#include <QtCore/private/qglobal_p.h>
+#include <QtGui/qtextdocument.h>
+#include <QtGui/qtextdocumentfragment.h>
+#include <QtGui/qtextformat.h>
+#include <QtCore/qrect.h>
+#include <QtCore/private/qobject_p_p.h>
+
+#if QT_CONFIG(mimetype)
+#include <QtCore/qmimedatabase.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItem;
 class QQuickPixmap;
-class QQmlContext;
+class QQuickTextEdit;
 
-class Q_AUTOTEST_EXPORT QQuickTextDocumentWithImageResources : public QTextDocument, public QTextObjectInterface
+/*! \internal
+    QTextImageHandler would attempt to resolve relative paths, and load the
+    image itself if the document returns an invalid image from loadResource().
+    We replace it with this version instead, because Qt Quick's text resources
+    are resolved against the Text item's context, and because we override
+    intrinsicSize(). drawObject() is empty because we don't need to use this
+    handler to paint images: they get put into scene graph nodes instead.
+*/
+class QQuickTextImageHandler : public QObject, public QTextObjectInterface
 {
     Q_OBJECT
     Q_INTERFACES(QTextObjectInterface)
 public:
-    QQuickTextDocumentWithImageResources(QQuickItem *parent);
-    virtual ~QQuickTextDocumentWithImageResources();
-
-    int resourcesLoading() const { return outstanding; }
-
+    QQuickTextImageHandler(QObject *parent = nullptr);
+    ~QQuickTextImageHandler() override = default;
     QSizeF intrinsicSize(QTextDocument *doc, int posInDocument, const QTextFormat &format) override;
-    void drawObject(QPainter *p, const QRectF &rect, QTextDocument *doc, int posInDocument, const QTextFormat &format) override;
+    void drawObject(QPainter *, const QRectF &, QTextDocument *, int, const QTextFormat &) override { }
+};
 
-    QImage image(const QTextImageFormat &format) const;
+class QQuickTextDocumentPrivate : public QObjectPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickTextDocument)
+public:
+    static QQuickTextDocumentPrivate *get(QQuickTextDocument *doc) { return doc->d_func(); }
+    static const QQuickTextDocumentPrivate *get(const QQuickTextDocument *doc) { return doc->d_func(); }
 
-public Q_SLOTS:
-    void clearResources();
+    void load();
+    void writeTo(const QUrl &fileUrl);
+    QTextDocument *document() const;
+    void setDocument(QTextDocument *doc);
+    void setStatus(QQuickTextDocument::Status s, const QString &err);
 
-Q_SIGNALS:
-    void imagesLoaded();
-
-protected:
-    QVariant loadResource(int type, const QUrl &name) override;
-
-    QQuickPixmap *loadPixmap(QQmlContext *context, const QUrl &name);
-
-private Q_SLOTS:
-    void requestFinished();
-
-private:
-    QHash<QUrl, QQuickPixmap *> m_resources;
-
-    int outstanding;
-    static QSet<QUrl> errors;
+    // so far the QQuickItem given to the QQuickTextDocument ctor is always a QQuickTextEdit
+    QQuickTextEdit *editor = nullptr;
+    QUrl url;
+    QString errorString;
+    Qt::TextFormat detectedFormat = Qt::AutoText; // url's extension, independent of TextEdit.textFormat
+    std::optional<QStringConverter::Encoding> encoding; // only relevant for HTML (Qt::RichText)
+    QQuickTextDocument::Status status = QQuickTextDocument::Status::Null;
 };
 
 namespace QtPrivate {
@@ -78,4 +87,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // QQUICKDOCUMENT_P_H
+#endif // QQUICKTEXTDOCUMENT_P_H

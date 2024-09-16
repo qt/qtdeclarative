@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -25,15 +25,17 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(swtch, testCase)
         verify(control)
     }
 
     function test_text() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -44,12 +46,12 @@ TestCase {
     }
 
     function test_checked() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         compare(control.checked, false)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["checkedChanged", { "checked": true }]]
         control.checked = true
         compare(control.checked, true)
@@ -69,7 +71,7 @@ TestCase {
     }
 
     function test_pressed(data) {
-        var control = createTemporaryObject(swtch, testCase, {padding: 10})
+        let control = createTemporaryObject(swtch, testCase, {padding: 10})
         verify(control)
 
         // stays pressed when dragged outside
@@ -83,11 +85,11 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
@@ -184,13 +186,13 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
         touch.press(0, control, control.width / 2, control.height / 2).commit()
@@ -210,7 +212,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -227,7 +229,7 @@ TestCase {
         // release on the right
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -246,7 +248,7 @@ TestCase {
         // release on the left
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -265,7 +267,7 @@ TestCase {
         // release in the middle
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0, 0).commit()
         compare(control.pressed, true)
         verify(spy.success)
@@ -282,10 +284,10 @@ TestCase {
     }
 
     function test_mouseDrag() {
-        var control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -387,12 +389,12 @@ TestCase {
     }
 
     function test_touchDrag() {
-        var control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
+        let control = createTemporaryObject(swtch, testCase, {leftPadding: 100, rightPadding: 100})
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, false)
@@ -426,7 +428,7 @@ TestCase {
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                 "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, 0).commit()
         compare(control.position, 1.0)
         compare(control.checked, true)
@@ -462,7 +464,7 @@ TestCase {
         // press-drag-release from and to outside the indicator
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width - 1).commit()
         compare(control.position, 0.0)
         compare(control.checked, false)
@@ -497,14 +499,14 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
         // check
-        var spy = signalSequenceSpy.createObject(control, {target: control})
+        let spy = signalSequenceSpy.createObject(control, {target: control})
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed",
                                 ["pressedChanged", { "pressed": false, "checked": false }],
@@ -532,8 +534,8 @@ TestCase {
         spy.expectedSequence = []
         // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
         // pressing buttons and the CI uses the QGnomeTheme platform theme.
-        var keys = [Qt.Key_Escape, Qt.Key_Tab]
-        for (var i = 0; i < keys.length; ++i) {
+        let keys = [Qt.Key_Escape, Qt.Key_Tab]
+        for (let i = 0; i < keys.length; ++i) {
             keyClick(keys[i])
             compare(control.checked, false)
             verify(spy.success)
@@ -549,7 +551,7 @@ TestCase {
     }
 
     function test_binding() {
-        var container = createTemporaryObject(twoSwitches, testCase)
+        let container = createTemporaryObject(twoSwitches, testCase)
         verify(container)
 
         compare(container.sw1.checked, false)
@@ -565,13 +567,13 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
 
     function test_focus() {
-        var control = createTemporaryObject(swtch, testCase)
+        let control = createTemporaryObject(swtch, testCase)
         verify(control)
 
         verify(!control.activeFocus)
@@ -597,9 +599,9 @@ TestCase {
     }
 
     function test_deletionOrder() {
-        var control1 = createTemporaryObject(deletionOrder1, testCase)
+        let control1 = createTemporaryObject(deletionOrder1, testCase)
         verify(control1)
-        var control2 = createTemporaryObject(deletionOrder2, testCase)
+        let control2 = createTemporaryObject(deletionOrder2, testCase)
         verify(control2)
     }
 }

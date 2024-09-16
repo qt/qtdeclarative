@@ -22,17 +22,17 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
+class Q_QUICK_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT FINAL)
-    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT FINAL)
+    Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
+    Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
 #if QT_DEPRECATED_SINCE(6, 2)
-    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged FINAL)
+    Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
 #endif
-    Q_PROPERTY(QVector2D activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 2) FINAL)
-    Q_PROPERTY(QVector2D persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 2) FINAL)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION(2, 14) FINAL)
+    Q_PROPERTY(QVector2D activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 2))
+    Q_PROPERTY(QVector2D persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 2))
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION(2, 14))
     QML_NAMED_ELEMENT(DragHandler)
     QML_ADDED_IN_VERSION(2, 12)
 

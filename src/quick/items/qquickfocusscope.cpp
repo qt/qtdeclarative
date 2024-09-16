@@ -7,7 +7,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype FocusScope
-    \instantiates QQuickFocusScope
+    \nativetype QQuickFocusScope
     \inqmlmodule QtQuick
     \ingroup qtquick-input
 

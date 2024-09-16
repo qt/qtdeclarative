@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtCore
 import QtQuick
@@ -80,6 +80,7 @@ ApplicationWindow {
                 id: useNativeDialogsCheckBox
                 text: qsTr("Use Native Dialogs (requires restart)")
                 checked: settings.useNativeDialogs
+                Layout.fillWidth: false
             }
 
             Item {
@@ -88,6 +89,7 @@ ApplicationWindow {
 
             Button {
                 text: qsTr("Open")
+                Layout.fillWidth: false
 
                 onClicked: stackLayout.children[stackLayout.currentIndex].dialog.open()
             }

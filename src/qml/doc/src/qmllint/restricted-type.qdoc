@@ -5,22 +5,73 @@
 \page qmllint-warnings-and-errors-restricted-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title restricted-type
-\brief BRIEF
+\title Restricted type
+\brief A restricted type was accessed.
 
-\section1 restricted-type
+\qmllintwarningcategory restricted-type
+
+\section1 You can't access an unscoped enum from here
 
 \section2 What happened?
-TODO
+You accessed the value of an enum defined in C++ by its enum type name.
 
 \section2 Why is this bad?
-TODO
+Unscoped enums defined in C++ can't be accessed by their enum type name.
+They will be undefined at runtime.
 
 \section2 Example
+
 \qml
+import QtQuick
+import SomeModule // contains MyClass
+
+Item {
+    property int i: MyClass.Hello.World
+}
+
 \endqml
-You can fix this warning by TODO
+where MyClass is defined as
+\code
+class MyClass: public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum Hello { World };
+    Q_ENUM(Hello);
+    ...
+
+};
+\endcode
+To fix this warning, remove the unnecessary enum type name from its QML usage:
 \qml
+import QtQuick
+
+Item {
+    property int i: MyClass.World
+}
+
 \endqml
+
+If you are the author of the enum, you can also modify the enum definition to use an enum
+class instead of changing the QML code:
+
+\code
+class MyClass: public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum class Hello { World };
+    Q_ENUM(Hello);
+    ...
+};
+\endcode
+
+\note You can find more information about enum type registration
+\l{qtqml-cppintegration-data.html#enumeration-types}{here}.
+
 */
 

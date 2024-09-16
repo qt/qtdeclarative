@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtQuick/qquickview.h>
@@ -35,6 +35,7 @@ private slots:
     void delegateModelRefresh();
     void wheelSnap();
     void wheelSnap_data();
+    void nestedWheelSnap();
 
     void sectionsNoOverlap();
     void metaSequenceAsModel();
@@ -55,10 +56,19 @@ private slots:
     void sectionIsCompatibleWithBoundComponents();
     void sectionGeometryChange();
     void areaZeroviewDoesNotNeedlesslyPopulateWholeModel();
+    void viewportAvoidUndesiredMovementOnSetCurrentIndex();
 
     void delegateContextHandling();
     void fetchMore_data();
     void fetchMore();
+
+    void changingOrientationResetsPreviousAxisValues_data();
+    void changingOrientationResetsPreviousAxisValues();
+    void bindingDirectlyOnPositionInHeaderAndFooterDelegates_data();
+    void bindingDirectlyOnPositionInHeaderAndFooterDelegates();
+
+    void clearObjectListModel();
+    void gadgetModelSections();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -125,6 +135,33 @@ void tst_QQuickListView2::dragDelegateWithMouseArea_data()
         const char *enumValueName = QMetaEnum::fromType<QQuickItemView::LayoutDirection>().valueToKey(layDir);
         QTest::newRow(enumValueName) << static_cast<QQuickItemView::LayoutDirection>(layDir);
     }
+}
+
+void tst_QQuickListView2::viewportAvoidUndesiredMovementOnSetCurrentIndex()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QVERIFY(window);
+    window->setFlag(Qt::FramelessWindowHint);
+    window->setSource(testFileUrl("viewportAvoidUndesiredMovementOnSetCurrentIndex.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject());
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QVERIFY(listview);
+    listview->setCurrentIndex(2); // change current item
+    // partially obscure first item
+    QCOMPARE(listview->contentY(), 0);
+    listview->setContentY(50);
+    QTRY_COMPARE(listview->contentY(), 50);
+    listview->setCurrentIndex(0); // change current item back to first one
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    // that shouldn't have caused any movement
+    QCOMPARE(listview->contentY(), 50);
+
+    // that even applies to the case where the current item is completely out of the viewport
+    listview->setCurrentIndex(25);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QCOMPARE(listview->contentY(), 50);
 }
 
 void tst_QQuickListView2::dragDelegateWithMouseArea()
@@ -548,7 +585,7 @@ void tst_QQuickListView2::singletonModelLifetime()
 {
     // this does not really test any functionality of listview, but we do not have a good way
     // to unit test QQmlAdaptorModel in isolation.
-    qmlRegisterSingletonType<SingletonModel>("test", 1, 0, "SingletonModel",
+    qmlRegisterSingletonType<SingletonModel>("SingletonModelLifeTimeTest", 1, 0, "SingletonModel",
             [](QQmlEngine* , QJSEngine*) -> QObject* { return new SingletonModel; });
 
     QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
@@ -835,6 +872,67 @@ void tst_QQuickListView2::wheelSnap_data()
             << 210.0;
 }
 
+void tst_QQuickListView2::nestedWheelSnap()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nestedSnap.qml")));
+
+    quint64 timestamp = 10;
+    auto sendWheelEvent = [&timestamp, &window](const QPoint &pixelDelta, Qt::ScrollPhase phase) {
+        const QPoint pos(100, 100);
+        QWheelEvent event(pos, window.mapToGlobal(pos), pixelDelta, pixelDelta, Qt::NoButton,
+                          Qt::NoModifier, phase, false, Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(&window, &event);
+        timestamp += 50;
+    };
+
+    QQuickListView *outerListView = qobject_cast<QQuickListView *>(window.rootObject());
+    QTRY_VERIFY(outerListView);
+    QSignalSpy outerCurrentIndexSpy(outerListView, &QQuickListView::currentIndexChanged);
+    int movingAtIndex = -1;
+
+    // send horizontal pixel-delta wheel events with phases; confirm that ListView hits the next item boundary
+    sendWheelEvent({}, Qt::ScrollBegin);
+    for (int i = 1; i < 4; ++i) {
+        sendWheelEvent({-50, 0}, Qt::ScrollUpdate);
+        if (movingAtIndex < 0 && outerListView->isMoving())
+            movingAtIndex = i;
+    }
+    QVERIFY(outerListView->isDragging());
+    sendWheelEvent({}, Qt::ScrollEnd);
+    QCOMPARE(outerListView->isDragging(), false);
+    QTRY_COMPARE(outerListView->isMoving(), false); // wait until it stops
+    qCDebug(lcTests) << "outer got moving after" << movingAtIndex
+                     << "horizontal events; stopped at" << outerListView->contentX() << outerListView->currentIndex();
+    QCOMPARE_GT(movingAtIndex, 0);
+    QCOMPARE(outerListView->contentX(), 300);
+    QCOMPARE(outerCurrentIndexSpy.size(), 1);
+
+    movingAtIndex = -1;
+    QQuickListView *innerListView = qobject_cast<QQuickListView *>(outerListView->currentItem());
+    QTRY_VERIFY(innerListView);
+    QSignalSpy innerCurrentIndexSpy(innerListView, &QQuickListView::currentIndexChanged);
+
+    // send vertical pixel-delta wheel events with phases; confirm that ListView hits the next item boundary
+    sendWheelEvent({}, Qt::ScrollBegin);
+    for (int i = 1; i < 4; ++i) {
+        sendWheelEvent({0, -50}, Qt::ScrollUpdate);
+        if (movingAtIndex < 0 && innerListView->isMoving())
+            movingAtIndex = i;
+    }
+    QVERIFY(innerListView->isDragging());
+    sendWheelEvent({}, Qt::ScrollEnd);
+    QCOMPARE(innerListView->isDragging(), false);
+    QTRY_COMPARE(innerListView->isMoving(), false); // wait until it stops
+    qCDebug(lcTests) << "inner got moving after" << movingAtIndex
+                     << "vertical events; stopped at" << innerListView->contentY() << innerListView->currentIndex();
+    QCOMPARE_GT(movingAtIndex, 0);
+    QCOMPARE(innerListView->contentY(), 300);
+    QCOMPARE(innerCurrentIndexSpy.size(), 1);
+}
+
 class FriendlyItemView : public QQuickItemView
 {
     friend class ItemViewAccessor;
@@ -1116,6 +1214,116 @@ void tst_QQuickListView2::fetchMore() // QTBUG-95107
         QCOMPARE_GE(model.m_lines, listView->count()); // fetchMore() was called
     }
 }
+
+void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues_data()
+{
+    QTest::addColumn<QByteArray>("sourceFile");
+    QTest::newRow("ObjectModel") << QByteArray("changingOrientationWithObjectModel.qml");
+    QTest::newRow("ListModel") << QByteArray("changingOrientationWithListModel.qml");
+}
+
+void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues() // QTBUG-115696
+{
+    QFETCH(QByteArray, sourceFile);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(QString::fromLatin1(sourceFile))));
+    auto *listView = qobject_cast<QQuickListView *>(window.rootObject());
+    QVERIFY(listView);
+
+    // Starts of with vertical orientation. X should be 0 for all delegates, but not Y.
+    QVERIFY(listView->property("isXReset").toBool());
+    QVERIFY(!listView->property("isYReset").toBool());
+
+    listView->setOrientation(QQuickListView::Orientation::Horizontal);
+
+    // Y should be 0 for all delegates, but not X.
+    QVERIFY(!listView->property("isXReset").toBool());
+    QVERIFY(listView->property("isYReset").toBool());
+
+    listView->setOrientation(QQuickListView::Orientation::Vertical);
+
+    // X should be 0 for all delegates, but not Y.
+    QVERIFY(listView->property("isXReset").toBool());
+    QVERIFY(!listView->property("isYReset").toBool());
+}
+
+void tst_QQuickListView2::bindingDirectlyOnPositionInHeaderAndFooterDelegates_data()
+{
+    QTest::addColumn<QByteArray>("sourceFile");
+    QTest::addColumn<qreal(QQuickItem::*)()const>("pos");
+    QTest::addColumn<qreal(QQuickItem::*)()const>("size");
+    QTest::newRow("XPosition") << QByteArray("bindOnHeaderAndFooterXPosition.qml") << &QQuickItem::x << &QQuickItem::width;
+    QTest::newRow("YPosition") << QByteArray("bindOnHeaderAndFooterYPosition.qml") << &QQuickItem::y << &QQuickItem::height;
+}
+void tst_QQuickListView2::bindingDirectlyOnPositionInHeaderAndFooterDelegates()
+{
+
+    typedef qreal (QQuickItem::*position_func_t)() const;
+    QFETCH(QByteArray, sourceFile);
+    QFETCH(position_func_t, pos);
+    QFETCH(position_func_t, size);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(QString::fromLatin1(sourceFile))));
+    auto *listView = qobject_cast<QQuickListView *>(window.rootObject());
+    QVERIFY(listView);
+
+    const qreal widthOrHeight = (listView->*size)();
+
+    QCOMPARE((listView->headerItem()->*pos)(), (widthOrHeight - 50) / 2);
+    QCOMPARE((listView->footerItem()->*pos)(), (widthOrHeight - 50) / 2);
+
+    // Verify that the "regular" delegate items, don't honor x and y bindings.
+    // This should only be allowed for header and footer delegates.
+    for (int i = 0; i < listView->count(); ++i)
+        QCOMPARE((listView->itemAtIndex(i)->*pos)(), 0);
+}
+
+void tst_QQuickListView2::clearObjectListModel()
+{
+    QQmlEngine engine;
+    QQmlComponent delegate(&engine);
+
+    // Need one required property to trigger the incremental rebuilding of metaobjects.
+    delegate.setData("import QtQuick\nItem { required property int index }", QUrl());
+
+    QQuickListView list;
+    engine.setContextForObject(&list, engine.rootContext());
+    list.setDelegate(&delegate);
+    list.setWidth(640);
+    list.setHeight(480);
+
+    QScopedPointer modelObject(new QObject);
+
+    // Use a list that might also carry something non-QObject
+
+    list.setModel(QVariantList {
+        QVariant::fromValue(modelObject.data()),
+        QVariant::fromValue(modelObject.data())
+    });
+
+    QVERIFY(list.itemAtIndex(0));
+
+    modelObject.reset();
+
+    // list should not access dangling pointer from old model data anymore.
+    list.setModel(QVariantList());
+
+    QVERIFY(!list.itemAtIndex(0));
+}
+
+void tst_QQuickListView2::gadgetModelSections()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("gadgetlist.qml")));
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window.rootObject());
+    QTRY_VERIFY(listview);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QCOMPARE(listview->count(), 4);
+    QCOMPARE(listview->currentSection(), "small");
+}
+
 QTEST_MAIN(tst_QQuickListView2)
 
 #include "tst_qquicklistview2.moc"

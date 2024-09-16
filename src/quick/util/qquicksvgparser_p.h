@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 namespace QQuickSvgParser
 {
     bool parsePathDataFast(const QString &dataStr, QPainterPath &path);
-    Q_QUICK_PRIVATE_EXPORT void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
+    Q_QUICK_EXPORT void pathArc(QPainterPath &path, qreal rx, qreal ry, qreal x_axis_rotation,
                                         int large_arc_flag, int sweep_flag, qreal x, qreal y, qreal curx,
                                         qreal cury);
 }

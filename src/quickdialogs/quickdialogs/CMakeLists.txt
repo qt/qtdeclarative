@@ -45,13 +45,12 @@ qt_internal_add_qml_module(QuickDialogs2
         Qt::QuickDialogs2UtilsPrivate
         Qt::QuickDialogs2QuickImpl
         Qt::QuickDialogs2QuickImplPrivate
+        Qt::QuickTemplates2Private
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick
-    GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_add_docs(QuickDialogs2
     doc/qtquickdialogs.qdocconf

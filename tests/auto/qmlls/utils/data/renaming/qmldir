@@ -1,0 +1,6 @@
+module renaming
+RenameMe 254.0 RenameMe.qml
+RenameMe2 254.0 RenameMe2.ui.qml
+RenameMe3 254.0 subfolder/RenameMe3.qml
+main 254.0 main.qml
+HelloWorld 254.0 RenamedByQmldir.qml

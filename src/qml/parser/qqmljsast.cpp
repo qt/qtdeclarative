@@ -1158,8 +1158,8 @@ void ExportClause::accept0(BaseVisitor *visitor)
 void ExportDeclaration::accept0(BaseVisitor *visitor)
 {
     if (visitor->visit(this)) {
-        accept(fromClause, visitor);
         accept(exportClause, visitor);
+        accept(fromClause, visitor);
         accept(variableStatementOrDeclaration, visitor);
     }
 
@@ -1392,6 +1392,11 @@ void TaggedTemplate::accept0(BaseVisitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+void InitializerExpression::accept0(BaseVisitor *visitor)
+{
+    expression->accept0(visitor);
 }
 
 void PatternElement::accept0(BaseVisitor *visitor)

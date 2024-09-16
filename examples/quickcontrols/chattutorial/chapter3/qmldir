@@ -1,0 +1,4 @@
+module chattutorial
+ContactPage 1.0 ContactPage.qml
+ConversationPage 1.0 ConversationPage.qml
+Main 1.0 Main.qml

@@ -25,15 +25,15 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFontLoaderPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFontLoader : public QObject
+class Q_QUICK_EXPORT QQuickFontLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFontLoader)
 
-    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)
-    Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged FINAL)
-    Q_PROPERTY(QFont font READ font NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
+    Q_PROPERTY(QString name READ name NOTIFY nameChanged)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged)
+    Q_PROPERTY(QFont font READ font NOTIFY fontChanged)
     QML_NAMED_ELEMENT(FontLoader)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -63,8 +63,6 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFontLoader)
 
 #endif // QQUICKFONTLOADER_H
 

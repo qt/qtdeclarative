@@ -58,14 +58,6 @@ class QQmlObjectCreator;
 class QQmlProfiler;
 class QQmlPropertyCapture;
 
-struct QObjectForeign {
-    Q_GADGET
-    QML_FOREIGN(QObject)
-    QML_NAMED_ELEMENT(QtObject)
-    QML_ADDED_IN_VERSION(2, 0)
-    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
-};
-
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.
 // The inline method definitions are in qqmljavascriptexpression_p.h
 class QQmlJavaScriptExpressionGuard : public QQmlNotifierEndpoint
@@ -105,7 +97,7 @@ struct TriggerList : QPropertyChangeTrigger {
     TriggerList *next = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
+class Q_QML_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlEngine)
 public:
@@ -215,8 +207,8 @@ public:
     QQmlGadgetPtrWrapper *valueTypeInstance(QMetaType type)
     {
         int typeIndex = type.id();
-        auto it = cachedValueTypeInstances.find(typeIndex);
-        if (it != cachedValueTypeInstances.end())
+        auto it = cachedValueTypeInstances.constFind(typeIndex);
+        if (it != cachedValueTypeInstances.cend())
             return *it;
 
         if (QQmlValueType *valueType = QQmlMetaType::valueType(type)) {
@@ -392,7 +384,7 @@ QQmlEnginePrivate *QQmlEnginePrivate::get(QV4::ExecutionEngine *e)
 }
 
 template<>
-Q_QML_PRIVATE_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type);
+Q_QML_EXPORT QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type);
 
 template<typename T>
 T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {

@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -8,6 +8,8 @@ import QtQuick.Templates as T
 import QtQuick.Controls
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl as MaterialImpl
+
+import Qt.test
 
 TestCase {
     id: testCase
@@ -21,6 +23,11 @@ TestCase {
         // This is particularly important for test_propertyBindingLoop,
         // which relies on binding loop warnings failing the test.
         failOnWarning(/.?/)
+    }
+
+    Component {
+        id: signalSpyComponent
+        SignalSpy {}
     }
 
     Component {
@@ -43,17 +50,6 @@ TestCase {
     Component {
         id: windowComponent
         Window { }
-    }
-
-    Component {
-        id: styledWindowComponent
-        Window {
-            Material.theme: Material.Dark
-            Material.primary: Material.Brown
-            Material.accent: Material.Green
-            Material.background: Material.Yellow
-            Material.foreground: Material.Grey
-        }
     }
 
     Component {
@@ -271,6 +267,10 @@ TestCase {
     function test_inheritance_popup(data) {
         let prop = data.tag
         let popupObject = createTemporaryObject(popupComponent, testCase)
+
+        if (popupObject.popup.popupType === Popup.Window)
+            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
+
         compare(popupObject.popup.Material.textSelectionColor.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label.color.toString(), popupObject.Material.textSelectionColor.toString())
         compare(popupObject.label2.color.toString(), popupObject.Material.textSelectionColor.toString())
@@ -527,6 +527,10 @@ TestCase {
         let container = createTemporaryObject(menuComponent, testCase)
         verify(container)
         verify(container.menu)
+
+        if (container.menu.popupType === Popup.Window)
+            skip("QTBUG-126713: Palette propagation is currently not supported for QQuickPopupWindows.")
+
         container.menu.open()
         verify(container.menu.visible)
         let child = container.menu.itemAt(0)
@@ -741,6 +745,7 @@ TestCase {
             property Page page: Page { }
             property Pane pane: Pane { }
             property Popup popup: Popup { }
+            property Popup popup_window: Popup { popupType: Popup.Window }
             property TabBar tabbar: TabBar { }
             property ToolBar toolbar: ToolBar { }
             property ToolTip tooltip: ToolTip { }
@@ -757,6 +762,7 @@ TestCase {
             { tag: "page", inherit: true },
             { tag: "pane", inherit: true },
             { tag: "popup", inherit: true },
+            { tag: "popup_window", inherit: true },
             { tag: "tabbar", inherit: true },
             { tag: "toolbar", inherit: false },
             { tag: "tooltip", inherit: false }
@@ -984,10 +990,10 @@ TestCase {
         verify(textField)
         let placeholderTextItem = textField.children[0]
         verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
-        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
 
         textField.forceActiveFocus()
-        compare(placeholderTextItem.horizontalAlignment, TextField.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
         textField.destroy()
     }
 
@@ -995,7 +1001,8 @@ TestCase {
         return [
             { tag: "AlignLeft", horizontalAlignment: TextArea.AlignLeft },
             { tag: "AlignHCenter", horizontalAlignment: TextArea.AlignHCenter },
-            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight }
+            { tag: "AlignRight", horizontalAlignment: TextArea.AlignRight },
+            { tag: "AlignJustify", horizontalAlignment: TextArea.AlignJustify }
         ]
     }
 
@@ -1008,10 +1015,10 @@ TestCase {
         verify(textArea)
         let placeholderTextItem = textArea.children[0]
         verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
-        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
 
         textArea.forceActiveFocus()
-        compare(placeholderTextItem.horizontalAlignment, TextArea.AlignLeft)
+        compare(placeholderTextItem.horizontalAlignment, data.horizontalAlignment)
     }
 
     function test_placeholderTextPos() {
@@ -1043,6 +1050,38 @@ TestCase {
             textArea.height = 10
             compare(placeholderTextItem.y, (textArea.height - placeholderTextItem.height) / 2)
         }
+    }
+
+    function test_outlinedPlaceholderTextPosWithPadding_data() {
+        return [
+            { tag: "TextField, leftPadding=0", component: textFieldComponent, leftPadding: 0 },
+            { tag: "TextField, rightPadding=0", component: textFieldComponent, rightPadding: 0 },
+            { tag: "TextField, leftPadding=20", component: textFieldComponent, leftPadding: 20 },
+            { tag: "TextField, rightPadding=20", component: textFieldComponent, rightPadding: 20 },
+            { tag: "TextArea, leftPadding=0", component: textAreaComponent, leftPadding: 0 },
+            { tag: "TextArea, rightPadding=0", component: textAreaComponent, rightPadding: 0 },
+            { tag: "TextArea, leftPadding=20", component: textAreaComponent, leftPadding: 20 },
+            { tag: "TextArea, rightPadding=20", component: textAreaComponent, rightPadding: 20 },
+        ]
+    }
+
+    function test_outlinedPlaceholderTextPosWithPadding(data) {
+        let control = createTemporaryObject(data.component, testCase, {
+            text: "Text",
+            placeholderText: "Enter text..."
+        })
+        verify(control)
+
+        // Work around QTBUG-99231.
+        if (data.leftPadding !== undefined)
+            control.leftPadding = data.leftPadding
+        if (data.rightPadding !== undefined)
+            control.rightPadding = data.rightPadding
+
+        let placeholderTextItem = control.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        // This is the default value returned by textFieldHorizontalPadding when using a non-dense variant.
+        compare(placeholderTextItem.x, 16)
     }
 
     Component {
@@ -1213,5 +1252,153 @@ TestCase {
         // Note that we can't use the properties argument of createTemporaryObject due to QTBUG-117201.
         textArea.background = null
         verify(!placeholderTextItem.visible)
+    }
+
+    Component {
+        id: textFieldAndButtonComponent
+
+        FocusScope {
+            focus: true
+            anchors.fill: parent
+
+            property alias textField: textField
+            property alias button: button
+
+            Keys.onEscapePressed: function (event) {
+                event.accepted = true
+                button.forceActiveFocus()
+                textField.forceActiveFocus()
+            }
+
+            TextField {
+                id: textField
+                focus: true
+                placeholderText: "placeholderText"
+                anchors.fill: parent
+            }
+
+            Button {
+                id: button
+                anchors.right: parent.right
+                text: focus ? "focus" : "no focus"
+            }
+        }
+    }
+
+    // QTBUG-118889
+    function test_focusChanges() {
+        let focusScope = createTemporaryObject(textFieldAndButtonComponent, testCase)
+        verify(focusScope)
+        testCase.Window.window.requestActivate()
+        tryCompare(testCase.Window.window, "active", true)
+
+        let textField = focusScope.textField
+        verify(textField.activeFocus)
+        let textFieldActiveFocusSpy = signalSpyComponent.createObject(textField,
+            { target: textField, signalName: "activeFocusChanged" })
+        verify(textFieldActiveFocusSpy.valid)
+
+        let button = focusScope.button
+        let buttonActiveFocusSpy = signalSpyComponent.createObject(button,
+            { target: button, signalName: "activeFocusChanged" })
+        verify(buttonActiveFocusSpy.valid)
+
+        // Shouldn't assert after quickly switching focus.
+        keyClick(Qt.Key_Escape)
+        // true => false => true.
+        compare(textFieldActiveFocusSpy.count, 2)
+        // false => true => false.
+        compare(buttonActiveFocusSpy.count, 2)
+    }
+
+    Component {
+        id: childWindowComponent
+
+        ApplicationWindow {
+            objectName: "parentWindow"
+            property alias childWindow: childWindow
+
+            Material.theme: Material.Dark
+            Material.primary: Material.Brown
+            Material.accent: Material.Green
+            Material.background: Material.Yellow
+            Material.foreground: Material.Grey
+
+            ApplicationWindow {
+                id: childWindow
+                objectName: "childWindow"
+            }
+        }
+    }
+
+    function test_windowBackgroundColorPropagation() {
+        let parentWindow = createTemporaryObject(childWindowComponent, testCase)
+        verify(parentWindow)
+
+        let childWindow = parentWindow.childWindow
+        compare(childWindow.Material.theme, Material.Dark)
+    }
+
+    Component {
+        id: themePropagationWithBehaviorComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+
+            Material.theme: Material.Dark
+
+            property alias listView: listView
+
+            ListView {
+                id: listView
+                anchors.fill: parent
+                header: Text {
+                    text: `Material.theme for header is ${Material.theme} - should be 1`
+
+                    Rectangle {
+                        anchors.fill: parent
+                        z: -1
+                    }
+
+                    Material.elevation: 6
+                    // Having this would break the theme (QTBUG-122783)
+                    Behavior on Material.elevation {}
+                }
+            }
+        }
+    }
+
+    function test_themePropagationWithBehavior() {
+        let window = createTemporaryObject(themePropagationWithBehaviorComponent, testCase)
+        verify(window)
+
+        let headerItem = window.listView.headerItem
+        compare(headerItem.Material.theme, Material.Dark)
+    }
+
+    Component {
+        id: systemThemeComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+            Material.theme: Material.System
+        }
+    }
+
+    function test_systemTheme() {
+        let window = createTemporaryObject(systemThemeComponent, testCase)
+        verify(window)
+
+        const toggleTheme = (theme) => (theme === Material.Dark) ? Material.Light : Material.Dark
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Material, "theme", TestHelper.platformTheme)
+
+        TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
+        tryCompare(window.Material, "theme", TestHelper.platformTheme)
     }
 }

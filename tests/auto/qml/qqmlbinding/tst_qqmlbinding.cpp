@@ -1,13 +1,17 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include <qtest.h>
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
+#include "WithBindableProperties.h"
+
+#include <private/qmlutils_p.h>
+#include <private/qqmlbind_p.h>
+#include <private/qqmlcomponentattached_p.h>
+#include <private/qquickrectangle_p.h>
+
+#include <QtTest/qtest.h>
+
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtQml/private/qqmlbind_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
-#include "WithBindableProperties.h"
 
 class tst_qqmlbinding : public QQmlDataTest
 {
@@ -25,6 +29,7 @@ private slots:
     void restoreBindingJSValue();
     void restoreBindingWithLoop();
     void restoreBindingWithoutCrash();
+    void restoreBindingWhenDestroyed();
     void deletedObject();
     void warningOnUnknownProperty();
     void warningOnReadOnlyProperty();
@@ -40,6 +45,7 @@ private slots:
     void localSignalHandler();
     void whenEvaluatedEarlyEnough();
     void propertiesAttachedToBindingItself();
+    void toggleEnableProperlyRemembersValues();
 
 private:
     QQmlEngine engine;
@@ -299,6 +305,25 @@ void tst_qqmlbinding::restoreBindingWithoutCrash()
     //original binding restored
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(100-49));
+}
+
+void tst_qqmlbinding::restoreBindingWhenDestroyed()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("bindingRestoredWhenDestroyed.qml"));
+    QScopedPointer<QObject> root {c.create()};
+    QVERIFY2(root, qUtf8Printable(c.errorString()));
+    QCOMPARE(root->property("text").toString(), u"original");
+    QCOMPARE(root->property("i").toInt(), 42);
+
+    root->setProperty("toggle", true);
+    // QTRY_COMPARE as loader is async
+    QTRY_COMPARE(root->property("text").toString(), u"changed");
+    QCOMPARE(root->property("i").toInt(), 100);
+
+    root->setProperty("toggle", false);
+    QTRY_COMPARE(root->property("text").toString(), u"original");
+    QCOMPARE(root->property("i").toInt(), 100);
 }
 
 //QTBUG-20692
@@ -623,6 +648,30 @@ void tst_qqmlbinding::propertiesAttachedToBindingItself()
     // 0 => everything broken; 1 => normal attached properties broken;
     // 2 => Component.onCompleted broken, 3 => everything works
     QTRY_COMPARE(root->property("check").toInt(), 3);
+}
+
+void tst_qqmlbinding::toggleEnableProperlyRemembersValues()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("toggleEnableProperlyRemembersValues.qml"));
+    std::unique_ptr<QObject> root { c.create() };
+    QVERIFY2(root, qPrintable(c.errorString()));
+    for (int i = 0; i < 3; ++i) {
+        {
+            QJSManagedValue arr(root->property("arr"), &e);
+            QJSManagedValue func(root->property("func"), &e);
+            QCOMPARE(arr.property("length").toInt(), 2);
+            QCOMPARE(func.call().toInt(), 1);
+        }
+        root->setProperty("enabled", true);
+        {
+            QJSManagedValue arr(root->property("arr"), &e);
+            QJSManagedValue func(root->property("func"), &e);
+            QCOMPARE(arr.property("length").toInt(), 3);
+            QCOMPARE(func.call().toInt(), 2);
+        }
+        root->setProperty("enabled", false);
+    }
 }
 
 QTEST_MAIN(tst_qqmlbinding)

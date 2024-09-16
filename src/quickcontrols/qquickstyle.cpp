@@ -27,7 +27,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
+Q_STATIC_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
 
 /*!
     \class QQuickStyle
@@ -306,6 +306,7 @@ QSharedPointer<QSettings> QQuickStylePrivate::settings(const QString &group)
         return QSharedPointer<QSettings>(settings);
     }
 #endif // QT_NO_SETTINGS
+    Q_UNUSED(group)
     return QSharedPointer<QSettings>();
 }
 
@@ -399,6 +400,7 @@ QStringList QQuickStylePrivate::builtInStyles()
     return {
         QLatin1String("Basic"),
         QLatin1String("Fusion"),
+        QLatin1String("FluentWinUI3"),
         QLatin1String("Imagine"),
 #ifdef Q_OS_MACOS
         QLatin1String("macOS"),

@@ -11,7 +11,7 @@
 
 /*!
     \qmltype RowLayout
-    //! \instantiates QQuickRowLayout
+    //! \nativetype QQuickRowLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -71,7 +71,7 @@
 
 /*!
     \qmltype ColumnLayout
-    //! \instantiates QQuickColumnLayout
+    //! \nativetype QQuickColumnLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -130,7 +130,7 @@
 
 /*!
     \qmltype GridLayout
-    //! \instantiates QQuickGridLayout
+    //! \nativetype QQuickGridLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -361,26 +361,24 @@ void QQuickGridLayoutBase::invalidate(QQuickItem *childItem)
     if (!isReady())
         return;
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate()" << this << ", invalidated:" << invalidated();
-    if (invalidated()) {
-        return;
-    }
-    qCDebug(lcQuickLayouts) << "d->m_rearranging:" << d->m_rearranging;
-    if (d->m_rearranging) {
-        d->m_invalidateAfterRearrange << childItem;
-        return;
+    if (childItem) {
+        if (d->m_rearranging) {
+            if (!d->m_invalidateAfterRearrange.contains(childItem))
+                d->m_invalidateAfterRearrange << childItem;
+            return;
+        }
+        if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem)) {
+            layoutItem->invalidate();
+        }
     }
 
-    if (childItem) {
-        if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem))
-            layoutItem->invalidate();
-    }
     // invalidate engine
     d->engine.invalidate();
 
     qCDebug(lcQuickLayouts) << "calling QQuickLayout::invalidate();";
     QQuickLayout::invalidate();
 
-    if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
+    if (auto *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
         parentLayout->invalidate(this);
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate() LEAVING" << this;
 }
@@ -443,7 +441,7 @@ void QQuickGridLayoutBase::itemVisibilityChanged(QQuickItem *item)
 void QQuickGridLayoutBase::rearrange(const QSizeF &size)
 {
     Q_D(QQuickGridLayoutBase);
-    if (!isReady())
+    if (!isReady() || !size.isValid())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::rearrange" << d->m_recurRearrangeCounter << this;
@@ -479,8 +477,8 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     d->engine.setGeometries(QRectF(QPointF(0,0), size), d->styleInfo);
     d->m_rearranging = false;
 
-    for (QQuickItem *invalid : std::as_const(d->m_invalidateAfterRearrange))
-        invalidate(invalid);
+    for (auto childItem : std::as_const(d->m_invalidateAfterRearrange))
+        invalidate(childItem);
     d->m_invalidateAfterRearrange.clear();
 }
 
@@ -635,9 +633,6 @@ void QQuickGridLayout::setFlow(QQuickGridLayout::Flow flow)
 
     Default value is \c false.
 
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
-
     \sa GridLayout::uniformCellHeights, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
 */
 bool QQuickGridLayout::uniformCellWidths() const
@@ -668,9 +663,6 @@ void QQuickGridLayout::setUniformCellWidths(bool uniformCellWidths)
     compromisses to fullfill the requirements of all items.
 
     Default value is \c false.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     \sa GridLayout::uniformCellWidths, RowLayout::uniformCellSizes, ColumnLayout::uniformCellSizes
 */
@@ -819,6 +811,7 @@ void QQuickGridLayout::insertLayoutItems()
             layoutItem->setStretchFactor(hStretch, Qt::Horizontal);
         if (vStretch >= 0)
             layoutItem->setStretchFactor(vStretch, Qt::Vertical);
+
         d->engine.insertItem(layoutItem, -1);
     }
 }
@@ -872,9 +865,6 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
     If this property is set to \c true, the layout will force all cells to have
     a uniform size.
 
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
-
     \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, ColumnLayout::uniformCellSizes
 */
 /*!
@@ -883,9 +873,6 @@ QQuickLinearLayout::QQuickLinearLayout(Qt::Orientation orientation,
 
     If this property is set to \c true, the layout will force all cells to have
     a uniform size.
-
-    \note This API is considered tech preview and may change or be removed in future versions of
-    Qt.
 
     \sa GridLayout::uniformCellWidths, GridLayout::uniformCellHeights, RowLayout::uniformCellSizes
 */

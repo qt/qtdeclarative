@@ -1,0 +1,44 @@
+/*! \internal
+    \page qq-event-delivery Qt Quick Event Delivery
+
+    Every QQuickItem subclass needs to handle various kinds of events.
+    To put it very generally and naively, the Window needs to dispatch
+    every event recursively to all the relevant items, until event propagation
+    is stopped by one means or another. The Window delegates most of the work
+    to QQuickDeliveryAgent.
+
+    From an item perspective, dispatching begins in QQuickItem::event().
+
+    There are also specialized
+    <a href="https://doc.qt.io/qt-6/qtquickhandlers-index.html">Input Handler</a>
+    classes which don't inherit QQuickItem but can be added as children of an Item.
+
+    \subsection qq-pointer-event-delivery Qt Quick Pointer Event Delivery
+
+    Input events are a large subset of all the kinds of events that items need
+    to handle; and to support the complexity of interaction that is possible
+    and has come to be expected by users over the years, the event delivery
+    code is more specialized than for other event types. Here we go into some
+    details about how that is done.
+
+    QPointerEvent instances are stack-allocated in
+    QGuiApplicationPrivate::processMouseEvent(),
+    QGuiApplicationPrivate::processTouchEvent() etc., and sent to the
+    application via QCoreApplication::sendSpontaneousEvent() (taking QWindow
+    and QEvent pointer arguments). If the window is a QQuickWindow, the QTouchEvent
+    arrives to QQuickWindow::event() which then dispatches to the
+    QQuickDeliveryAgent. QQuickDeliveryAgent contains much of the event
+    delivery code. In fact, it's quite complex, for legacy reasons such as
+    touch->mouse synthesis in three possible layers, handling events in
+    QQuickItem subclasses in C++, event compression, multiple kinds of event
+    filtering, drag-and-drop, dealing with popup menus and so on; but let's
+    start with the ideal case: no synthesis, no filtering, no popups, and all
+    events are handled in
+    <a href="https://doc.qt.io/qt-6/qtquickhandlers-index.html">Pointer Handlers</a>.
+
+    Here are some "ideal" scenarios:
+
+    - \subpage qq-ideal-pointer-event-delivery-single-drag
+    - \subpage qq-ideal-pointer-event-delivery-parallel-drags
+    - \subpage qq-ideal-pointer-event-delivery-pinch
+*/

@@ -7,18 +7,23 @@
 #include <private/qtquicktemplates2-config_p.h>
 #if QT_CONFIG(quicktemplates2_container)
 #include "qquickmenubaritem_p.h"
-#include "qquickmenubar_p.h"
+#include "qquickmenubar_p_p.h"
 #endif
+#include "qquickmenuseparator_p.h"
+#include "qquicknativemenuitem_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopuppositioner_p_p.h"
 #include "qquickaction_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qcursor.h>
 #if QT_CONFIG(shortcut)
 #include <QtGui/qkeysequence.h>
 #endif
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
@@ -30,9 +35,14 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
+#include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lcMenu, "qt.quick.controls.menu")
+Q_STATIC_LOGGING_CATEGORY(lcNativeMenus, "qt.quick.controls.nativemenus")
 
 // copied from qfusionstyle.cpp
 static const int SUBMENU_DELAY = 225;
@@ -40,14 +50,20 @@ static const int SUBMENU_DELAY = 225;
 /*!
     \qmltype Menu
     \inherits Popup
-//!     \instantiates QQuickMenu
+//!     \nativetype QQuickMenu
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-menus
     \ingroup qtquickcontrols-popups
     \brief Menu popup that can be used as a context menu or popup menu.
 
-    \image qtquickcontrols-menu.png
+    \table
+        \row
+          \li \image qtquickcontrols-menu-native.png
+             \caption Native macOS menu.
+          \li \image qtquickcontrols-menu.png
+             \caption Non-native \l {Material Style}{Material style} menu.
+   \endtable
 
     Menu has two main use cases:
     \list
@@ -184,6 +200,94 @@ static const int SUBMENU_DELAY = 225;
 
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls},
         {Dynamic QML Object Creation from JavaScript}
+
+    \section1 Menu types
+
+    Since Qt 6.8, a menu offers three different implementations, depending on the
+    platform. You can choose which one should be preferred by setting
+    \l [QML] {Popup::} {popupType}. This will let you control if a menu should
+    be shown as a separate window, as an item inside the parent window, or as a
+    native menu. You can read more about these options \l{Popup type}{here}.
+
+    The default \l [QML] {Popup::}{popupType} is decided by the style. The \l {macOS Style}, for example,
+    sets it to be \c Popup.Native, while the \l{Imagine Style} uses \c Popup.Window (which
+    is the default when the style doesn't set a popup type).
+    If you add customizations to a menu, and want those to be used regardless of the
+    style, you should set the popup type to be \c Popup.Window (or \c Popup.Item) explicitly.
+    Another alternative is to set the \c Qt::AA_DontUseNativeMenuWindows
+    \l {Qt::ApplicationAttribute}{application attribute}. This will disable native context
+    menus for the whole application, irrespective of the style.
+
+    Whether a menu will be able to use the preferred type depends on the platform.
+    \c Popup.Item is supported on all platforms, but \c Popup.Window is
+    normally only supported on desktop platforms. Additionally, if the menu is inside
+    a \l {Native menu bars}{native menubar}, the menu will be native as well. And if
+    the menu is a sub-menu inside another menu, the parent (or root) menu will decide the type.
+
+    \section2 Limitations when using native menus
+
+    When setting \l [QML] {Popup::} {popupType} to \c Popup.Native
+    there are some limitations and differences compared to using \c Popup.Item
+    and \c Popup.Window.
+
+    \section3 API differences
+
+    When using native menus, only a subset of the Menu API is supported on all platforms:
+
+    \list
+    \li \l {Popup::}{x}
+    \li \l {Popup::}{y}
+    \li \l {Popup::}{visible}
+    \li \l {Popup::}{opened}
+    \li \l title
+    \li \l count
+    \li \l {Popup::}{contentData}
+    \li \l {Popup::}{contentChildren} (visual children will not be visible)
+    \li \l contentModel
+    \li \l {Popup::}{open()}
+    \li \l popup()
+    \li \l {Popup::}{close()}
+    \li \l {Popup::}{opened()}
+    \li \l {Popup::}{closed()}
+    \li \l {Popup::}{aboutToShow()}
+    \li \l {Popup::}{aboutToHide()}
+    \endlist
+
+    In addition, showing a popup (using for example \l {Popup::}{open()} or
+    \l popup() will, on some platforms, be a blocking call. This means that the
+    call will not return before the menu is closed again, which can affect the
+    logic in your application. This is especially important to take into
+    consideration if your application is targeting multiple
+    platforms, and as such, sometimes run on platforms where native menus are
+    not supported. In that case the popupType will fall back to \c Popup.Item,
+    for example, and calls to \l {Popup::}{open()} will not be blocking.
+
+    Items like \l MenuItem will still react to clicks in the corresponding
+    native menu item by emitting signals, for example, but will be replaced by
+    their native counterpart.
+
+    \section3 Rendering differences
+
+    Native menus are implemented using the available native menu APIs on the platform.
+    Those menus, and all of their contents, will therefore be rendered by the platform, and
+    not by QML. This means that the \l delegate will \e not be used for rendering. It will,
+    however, always be instantiated (but hidden), so that functions such as
+    \l [QML] {QtQml::Component::completed}{onCompleted()} execute regardless of platform and
+    \l [QML] {Popup::} {popupType}.
+
+    \section3 Supported platforms
+
+    Native menus are currently supported on the following platforms:
+
+    \list
+    \li Android
+    \li iOS
+    \li Linux (only available as a stand-alone context menu when running with the GTK+ platform theme)
+    \li macOS
+    \li Windows
+    \endlist
+
+    \sa {Popup type}, [QML] {Popup::}{popupType}
 */
 
 /*!
@@ -196,6 +300,8 @@ static const int SUBMENU_DELAY = 225;
     \l {Keyboard Focus in Qt Quick}.
 
     The default value is \c true.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa {Popup::}{activeFocus}
 */
@@ -230,6 +336,308 @@ void QQuickMenuPrivate::init()
     contentModel = new QQmlObjectModel(q);
 }
 
+QQuickMenu *QQuickMenuPrivate::rootMenu() const
+{
+    Q_Q(const QQuickMenu);
+    const QQuickMenu *rootMenu = q;
+    const QObject *p = q->parent();
+    while (p) {
+        if (auto menu = qobject_cast<const QQuickMenu *>(p))
+            rootMenu = menu;
+        p = p->parent();
+    }
+
+    return const_cast<QQuickMenu *>(rootMenu);
+}
+
+ QQuickPopup::PopupType QQuickMenuPrivate::resolvedPopupType() const
+{
+    // The resolved popup type is decided by the root
+    // menu (which can be this menu, unless it's a child menu).
+    QQuickMenuPrivate *root_d = QQuickMenuPrivate::get(rootMenu());
+
+    // If the root menu is native, then so should we. We assume here that
+    // the root menu is always shown and created first, before we try to
+    // show and create a child menu.
+    if (root_d->maybeNativeHandle())
+        return QQuickPopup::PopupType::Native;
+
+    return root_d->QQuickPopupPrivate::resolvedPopupType();
+}
+
+bool QQuickMenuPrivate::useNativeMenu() const
+{
+    if (QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows))
+        return false;
+
+    // If we're inside a MenuBar, it'll decide whether or not we should be
+    // native. Otherwise, the root menu (which might be this menu) will decide.
+    // Note that this is just a preference, QPA can still fail to create a native
+    // menu. In that case we'll fall back to let QQuickPopup create the menu/popup
+    // instead, and end up with Window or Item as resolved popup type.
+    QQuickMenu *root = rootMenu();
+    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
+        return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
+    return root->popupType() == QQuickPopup::Native;
+}
+
+QPlatformMenu *QQuickMenuPrivate::nativeHandle()
+{
+    Q_ASSERT(handle || useNativeMenu());
+    if (!handle && !triedToCreateNativeMenu)
+        createNativeMenu();
+    return handle.get();
+}
+
+QPlatformMenu *QQuickMenuPrivate::maybeNativeHandle() const
+{
+    return handle.get();
+}
+
+bool QQuickMenuPrivate::createNativeMenu()
+{
+    Q_ASSERT(!handle);
+    Q_Q(QQuickMenu);
+    qCDebug(lcNativeMenus) << "createNativeMenu called on" << q;
+
+    if (auto menuBar = QQuickMenuPrivate::get(rootMenu())->menuBar) {
+        auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+        if (menuBarPrivate->useNativeMenuBar()) {
+            qCDebug(lcNativeMenus) << "- creating native menu from native menubar";
+            if (QPlatformMenuBar *menuBarHandle = menuBarPrivate->nativeHandle())
+                handle.reset(menuBarHandle->createMenu());
+        }
+    }
+
+    if (!handle) {
+        QPlatformMenu *parentMenuHandle(parentMenu ? get(parentMenu)->handle.get() : nullptr);
+        if (parentMenu && parentMenuHandle) {
+            qCDebug(lcNativeMenus) << "- creating native sub-menu";
+            handle.reset(parentMenuHandle->createSubMenu());
+        } else {
+            qCDebug(lcNativeMenus) << "- creating native menu";
+            handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenu());
+        }
+    }
+
+    triedToCreateNativeMenu = true;
+
+    if (!handle)
+        return false;
+
+    q->connect(handle.get(), &QPlatformMenu::aboutToShow, q, [q, this](){
+        emit q->aboutToShow();
+        visible = true;
+        emit q->visibleChanged();
+        emit q->openedChanged();
+        opened();
+    });
+    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [q, this](){
+        qCDebug(lcNativeMenus) << "QPlatformMenu::aboutToHide called; about to call setVisible(false) on Menu";
+        emit q->aboutToHide();
+        visible = false;
+        emit q->visibleChanged();
+        emit q->openedChanged();
+        emit q->closed();
+    });
+
+    recursivelyCreateNativeMenuItems(q);
+    syncWithNativeMenu();
+
+    return true;
+}
+
+QString nativeMenuItemListToString(const QList<QQuickNativeMenuItem *> &nativeItems)
+{
+    if (nativeItems.isEmpty())
+        return QStringLiteral("(Empty)");
+
+    QString str;
+    QTextStream debug(&str);
+    for (const auto *nativeItem : nativeItems)
+        debug << nativeItem->debugText() << ", ";
+    // Remove trailing space and comma.
+    if (!nativeItems.isEmpty())
+        str.chop(2);
+    return str;
+}
+
+void QQuickMenuPrivate::syncWithNativeMenu()
+{
+    Q_Q(QQuickMenu);
+    if (!complete || !handle)
+        return;
+
+    qCDebug(lcNativeMenus).nospace() << "syncWithNativeMenu called on " << q
+        << " (complete: " << complete << " visible: " << visible << ") - "
+        << "syncing " << nativeItems.size() << " item(s)...";
+
+    // TODO: call this function when any of the variables below change
+
+    handle->setText(title);
+    handle->setEnabled(q->isEnabled());
+    handle->setMinimumWidth(q->implicitWidth());
+//    nativeHandle->setMenuType(m_type);
+    handle->setFont(q->font());
+
+    // Note: the QQuickMenu::visible property is used to open or close the menu.
+    // This is in contrast to QPlatformMenu::visible, which tells if the menu
+    // should be visible in the menubar or not (if it belongs to one). To control
+    // if a QPlatformMenu should be open, we instead use QPlatformMenu::showPopup()
+    // and dismiss(). As such, we don't want to call handle->setVisible(visible)
+    // from this function since we always want the menu to be visible in the menubar
+    // (if it belongs to one). The currently only way to hide a menu from a menubar is
+    // to instead call MenuBar.removeMenu(menu).
+
+//    if (m_menuBar && m_menuBar->handle())
+//        m_menuBar->handle()->syncMenu(handle);
+//#if QT_CONFIG(systemtrayicon)
+//    else if (m_systemTrayIcon && m_systemTrayIcon->handle())
+//        m_systemTrayIcon->handle()->updateMenu(handle);
+//#endif
+
+    for (QQuickNativeMenuItem *item : std::as_const(nativeItems)) {
+        qCDebug(lcNativeMenus) << "- syncing" << item << "action" << item->action()
+            << "sub-menu" << item->subMenu() << item->debugText();
+        item->sync();
+    }
+
+    qCDebug(lcNativeMenus) << "... finished syncing" << q;
+}
+
+void QQuickMenuPrivate::removeNativeMenu()
+{
+    // Remove the native menu, including it's native menu items
+    Q_Q(QQuickMenu);
+    const int qtyItemsToRemove = nativeItems.size();
+    if (qtyItemsToRemove != 0)
+        Q_ASSERT(q->count() == qtyItemsToRemove);
+    for (int i = 0; i < qtyItemsToRemove; ++i)
+        removeNativeItem(0);
+    Q_ASSERT(nativeItems.isEmpty());
+
+    // removeNativeItem will take care of destroying sub-menus and resetting their native data,
+    // but as the root menu, we have to take care of our own.
+    resetNativeData();
+}
+
+void QQuickMenuPrivate::syncWithUseNativeMenu()
+{
+    Q_Q(QQuickMenu);
+    // Users can change AA_DontUseNativeMenuWindows while a menu is visible,
+    // but the changes won't take affect until the menu is re-opened.
+    if (q->isVisible() || parentMenu)
+        return;
+
+    if (maybeNativeHandle() && !useNativeMenu()) {
+        // Switch to a non-native menu by removing the native menu and its native items.
+        // Note that there's nothing to do if a native menu was requested but we failed to create it.
+        removeNativeMenu();
+    } else if (useNativeMenu()) {
+        Q_ASSERT(nativeItems.isEmpty());
+        // Try to create a native menu.
+        nativeHandle();
+    }
+}
+
+/*!
+    \internal
+
+    Recursively destroys native sub-menus of \a menu.
+
+    This function checks if each native item in \c menu has a sub-menu,
+    and if so:
+    \list
+    \li Calls itself with that sub-menu
+    \li Resets the item's data (important to avoid accessing a deleted QQuickAction
+        when printing in QQuickNativeMenuItem's destructor)
+    \li Deletes (eventually) the native item
+    \endlist
+
+    Similar (besides the recursion) to removeNativeItem(), except that
+    we can avoid repeated calls to syncWithNativeMenu().
+*/
+void QQuickMenuPrivate::recursivelyDestroyNativeSubMenus(QQuickMenu *menu)
+{
+    auto *menuPrivate = QQuickMenuPrivate::get(menu);
+    Q_ASSERT(menuPrivate->handle);
+    qCDebug(lcNativeMenus) << "recursivelyDestroyNativeSubMenus called with" << menu << "...";
+
+    while (!menuPrivate->nativeItems.isEmpty()) {
+        std::unique_ptr<QQuickNativeMenuItem> item(menuPrivate->nativeItems.takeFirst());
+        qCDebug(lcNativeMenus) << "- taking and destroying" << item->debugText();
+        if (QQuickMenu *subMenu = item->subMenu())
+            recursivelyDestroyNativeSubMenus(subMenu);
+
+        if (item->handle())
+            menuPrivate->handle->removeMenuItem(item->handle());
+    }
+
+    menuPrivate->resetNativeData();
+
+    qCDebug(lcNativeMenus) << "... finished destroying native sub-menus of" << menu;
+}
+
+static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
+{
+    QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(window);
+    if (quickWindow) {
+        QWindow *renderWindow = QQuickRenderControl::renderWindowFor(quickWindow, offset);
+        if (renderWindow)
+            return renderWindow;
+    }
+    return window;
+}
+
+void QQuickMenuPrivate::setNativeMenuVisible(bool visible)
+{
+    Q_Q(QQuickMenu);
+    qCDebug(lcNativeMenus) << "setNativeMenuVisible called with visible" << visible;
+    if (visible)
+        emit q->aboutToShow();
+    else
+        emit q->aboutToHide();
+
+    this->visible = visible;
+    syncWithNativeMenu();
+
+    QPoint offset;
+    QWindow *window = effectiveWindow(qGuiApp->topLevelWindows().first(), &offset);
+
+    if (visible) {
+        lastDevicePixelRatio = window->devicePixelRatio();
+
+        const QPointF globalPos = parentItem->mapToGlobal(x, y);
+        const QPoint windowPos = window->mapFromGlobal(globalPos.toPoint());
+        QRect targetRect(windowPos, QSize(0, 0));
+        auto *daPriv = QQuickItemPrivate::get(parentItem)->deliveryAgentPrivate();
+        Q_ASSERT(daPriv);
+        // A menu is typically opened when some event-handling object (like TapHandler) calls
+        // QQuickMenu::popup(). We don't have the event or the caller available directly here.
+        // But showPopup() below is expected to "eat" the release event, so
+        // the caller will not see it. Cancel all grabs so that the object that
+        // handled the press event will not get stuck in pressed state.
+        if (QPointerEvent *openingEvent = daPriv->eventInDelivery()) {
+            auto *devPriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(openingEvent->pointingDevice()));
+            for (const auto &pt : std::as_const(openingEvent->points())) {
+                qCDebug(lcNativeMenus) << "popup over" << window << "its DA" << daPriv->q_func() << "opening due to" << openingEvent
+                                       << "with grabbers" << openingEvent->exclusiveGrabber(pt) << openingEvent->passiveGrabbers(pt);
+
+                if (auto *opener = openingEvent->exclusiveGrabber(pt))
+                    devPriv->removeGrabber(opener, true); // cancel
+                for (auto passiveGrabber : openingEvent->passiveGrabbers(pt)) {
+                    if (auto *opener = passiveGrabber.get())
+                        devPriv->removeGrabber(opener, true); // cancel
+                }
+            }
+        }
+        handle->showPopup(window, QHighDpi::toNativePixels(targetRect, window),
+            /*menuItem ? menuItem->handle() : */nullptr);
+    } else {
+        handle->dismiss();
+    }
+}
+
 QQuickItem *QQuickMenuPrivate::itemAt(int index) const
 {
     return qobject_cast<QQuickItem *>(contentModel->get(index));
@@ -237,6 +645,9 @@ QQuickItem *QQuickMenuPrivate::itemAt(int index) const
 
 void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 {
+    qCDebug(lcMenu) << "insert called with index" << index << "item" << item;
+
+    Q_Q(QQuickMenu);
     contentData.append(item);
     item->setParentItem(contentItem);
     QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-53262
@@ -248,23 +659,90 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
 
     QQuickMenuItem *menuItem = qobject_cast<QQuickMenuItem *>(item);
     if (menuItem) {
-        Q_Q(QQuickMenu);
         QQuickMenuItemPrivate::get(menuItem)->setMenu(q);
         if (QQuickMenu *subMenu = menuItem->subMenu())
             QQuickMenuPrivate::get(subMenu)->setParentMenu(q);
         QObjectPrivate::connect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::implicitTextPaddingChanged, this, &QQuickMenuPrivate::updateTextPadding);
+        QObjectPrivate::connect(menuItem, &QQuickMenuItem::visibleChanged, this, &QQuickMenuPrivate::updateTextPadding);
         QObjectPrivate::connect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::connect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
+
+    if (maybeNativeHandle() && complete)
+        maybeCreateAndInsertNativeItem(index, item);
+
+    if (lcMenu().isDebugEnabled())
+        printContentModelItems();
+
+    updateTextPadding();
+}
+
+void QQuickMenuPrivate::maybeCreateAndInsertNativeItem(int index, QQuickItem *item)
+{
+    Q_Q(QQuickMenu);
+    Q_ASSERT(complete);
+    Q_ASSERT_X(handle, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
+        "Expected %1 to be using a native menu").arg(QDebug::toString(q))));
+    std::unique_ptr<QQuickNativeMenuItem> nativeMenuItem(QQuickNativeMenuItem::createFromNonNativeItem(q, item));
+    if (!nativeMenuItem) {
+        // TODO: fall back to non-native menu
+        qmlWarning(q) << "Native menu failed to create a native menu item for item at index" << index;
+        return;
+    }
+
+    nativeItems.insert(index, nativeMenuItem.get());
+
+    // Having a QQuickNativeMenuItem doesn't mean that we were able to create a native handle:
+    // it could be e.g. a Rectangle. See comment in QQuickNativeMenuItem::createFromNonNativeItem.
+    if (nativeMenuItem->handle()) {
+        QQuickNativeMenuItem *before = nativeItems.value(index + 1);
+        handle->insertMenuItem(nativeMenuItem->handle(), before ? before->handle() : nullptr);
+        qCDebug(lcNativeMenus) << "inserted native menu item at index" << index
+            << "before" << (before ? before->debugText() : QStringLiteral("null"));
+
+        if (nativeMenuItem->subMenu() && QQuickMenuPrivate::get(nativeMenuItem->subMenu())->nativeItems.count()
+                < nativeMenuItem->subMenu()->count()) {
+            // We're inserting a sub-menu item, and it hasn't had native items added yet,
+            // which probably means it's a menu that's been added back in after being removed
+            // with takeMenu(). Sub-menus added for the first time have their native items already
+            // constructed by virtue of contentData_append. Sub-menus that are removed always
+            // have their native items destroyed and removed too.
+            recursivelyCreateNativeMenuItems(nativeMenuItem->subMenu());
+        }
+    }
+
+    nativeMenuItem.release();
+
+    qCDebug(lcNativeMenus) << "nativeItems now contains the following items:"
+        << nativeMenuItemListToString(nativeItems);
 }
 
 void QQuickMenuPrivate::moveItem(int from, int to)
 {
     contentModel->move(from, to);
+
+    if (maybeNativeHandle())
+        nativeItems.move(from, to);
 }
 
-void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
+/*!
+    \internal
+
+    Removes the specified \a item, potentially destroying it depending on
+    \a destructionPolicy.
+
+    \note the native menu item is destroyed regardless of the destruction
+    policy, because it's an implementation detail and hence is not created by
+    or available to the user.
+*/
+void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolicy destructionPolicy)
 {
+    qCDebug(lcMenu) << "removeItem called with index" << index << "item" << item;
+
+    if (maybeNativeHandle())
+        removeNativeItem(index);
+
     contentData.removeOne(item);
 
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
@@ -278,9 +756,79 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item)
         if (QQuickMenu *subMenu = menuItem->subMenu())
             QQuickMenuPrivate::get(subMenu)->setParentMenu(nullptr);
         QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::triggered, this, &QQuickMenuPrivate::onItemTriggered);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::implicitTextPaddingChanged, this, &QQuickMenuPrivate::updateTextPadding);
+        QObjectPrivate::disconnect(menuItem, &QQuickMenuItem::visibleChanged, this, &QQuickMenuPrivate::updateTextPadding);
         QObjectPrivate::disconnect(menuItem, &QQuickItem::activeFocusChanged, this, &QQuickMenuPrivate::onItemActiveFocusChanged);
         QObjectPrivate::disconnect(menuItem, &QQuickControl::hoveredChanged, this, &QQuickMenuPrivate::onItemHovered);
     }
+
+    if (destructionPolicy == DestructionPolicy::Destroy)
+        item->deleteLater();
+
+    if (lcMenu().isDebugEnabled())
+        printContentModelItems();
+}
+
+void QQuickMenuPrivate::removeNativeItem(int index)
+{
+    // Either we're still using native menus and are removing item(s), or we've switched
+    // to a non-native menu; either way, we should actually have items to remove before we're called.
+    Q_ASSERT(handle);
+    Q_ASSERT_X(index >= 0 && index < nativeItems.size(), Q_FUNC_INFO, qPrintable(QString::fromLatin1(
+        "index %1 is less than 0 or greater than or equal to %2").arg(index).arg(nativeItems.size())));
+
+    // We can delete the item synchronously because there aren't any external (e.g. QML)
+    // references to it.
+    std::unique_ptr<QQuickNativeMenuItem> nativeItem(nativeItems.takeAt(index));
+    qCDebug(lcNativeMenus) << "removing native item" << nativeItem->debugText() << "at index" << index
+        << "from" << q_func() << "...";
+    if (QQuickMenu *subMenu = nativeItem->subMenu())
+        recursivelyDestroyNativeSubMenus(subMenu);
+
+    if (nativeItem->handle()) {
+        handle->removeMenuItem(nativeItem->handle());
+        syncWithNativeMenu();
+    }
+
+    qCDebug(lcNativeMenus).nospace() << "... after removing item at index " << index
+        << ", nativeItems now contains the following items: " << nativeMenuItemListToString(nativeItems);
+}
+
+void QQuickMenuPrivate::resetNativeData()
+{
+    qCDebug(lcNativeMenus) << "resetNativeData called on" << q_func();
+    handle.reset();
+    triedToCreateNativeMenu = false;
+}
+
+void QQuickMenuPrivate::recursivelyCreateNativeMenuItems(QQuickMenu *menu)
+{
+    auto *menuPrivate = QQuickMenuPrivate::get(menu);
+    // If we're adding a sub-menu, we need to ensure its handle has been created
+    // before trying to create native items for it.
+    if (!menuPrivate->triedToCreateNativeMenu)
+        menuPrivate->createNativeMenu();
+
+    const int qtyItemsToCreate = menuPrivate->contentModel->count();
+    if (menuPrivate->nativeItems.count() == qtyItemsToCreate)
+        return;
+
+    qCDebug(lcNativeMenus) << "recursively creating" << qtyItemsToCreate << "menu item(s) for" << menu;
+    Q_ASSERT(menuPrivate->nativeItems.count() == 0);
+    for (int i = 0; i < qtyItemsToCreate; ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        menuPrivate->maybeCreateAndInsertNativeItem(i, item);
+        auto *menuItem = qobject_cast<QQuickMenuItem *>(item);
+        if (menuItem && menuItem->subMenu())
+            recursivelyCreateNativeMenuItems(menuItem->subMenu());
+    }
+}
+
+void QQuickMenuPrivate::printContentModelItems() const
+{
+    qCDebug(lcMenu) << "contentModel now contains:";
+    for (int i = 0; i < contentModel->count(); ++i)
+        qCDebug(lcMenu) << "-" << itemAt(i);
 }
 
 QQuickItem *QQuickMenuPrivate::beginCreateItem()
@@ -415,18 +963,28 @@ QQuickPopupPositioner *QQuickMenuPrivate::getPositioner()
 void QQuickMenuPositioner::reposition()
 {
     QQuickMenu *menu = static_cast<QQuickMenu *>(popup());
-    QQuickMenuPrivate *p = QQuickMenuPrivate::get(menu);
-    if (p->parentMenu) {
-        if (p->cascade) {
-            if (p->popupItem->isMirrored())
-                menu->setPosition(QPointF(-menu->width() - p->parentMenu->leftPadding() + menu->overlap(), -menu->topPadding()));
-            else if (p->parentItem)
-                menu->setPosition(QPointF(p->parentItem->width() + p->parentMenu->rightPadding() - menu->overlap(), -menu->topPadding()));
+    QQuickMenuPrivate *menu_d = QQuickMenuPrivate::get(menu);
+
+    if (QQuickMenu *parentMenu = menu_d->parentMenu) {
+        if (menu_d->cascade) {
+            // Align the menu to the frame of the parent menuItem, minus overlap. The position
+            // should be in the coordinate system of the parentItem.
+            if (menu_d->popupItem->isMirrored()) {
+                const qreal distanceToFrame = parentMenu->leftPadding();
+                const qreal menuX = -menu->width() - distanceToFrame + menu->overlap();
+                menu->setPosition({menuX, -menu->topPadding()});
+            } else if (menu_d->parentItem) {
+                const qreal distanceToFrame = parentMenu->rightPadding();
+                const qreal menuX = menu_d->parentItem->width() + distanceToFrame - menu->overlap();
+                menu->setPosition({menuX, -menu->topPadding()});
+            }
         } else {
-            menu->setPosition(QPointF(p->parentMenu->x() + (p->parentMenu->width() - menu->width()) / 2,
-                                      p->parentMenu->y() + (p->parentMenu->height() - menu->height()) / 2));
+            const qreal menuX = parentMenu->x() + (parentMenu->width() - menu->width()) / 2;
+            const qreal menuY = parentMenu->y() + (parentMenu->height() - menu->height()) / 2;
+            menu->setPosition({menuX, menuY});
         }
     }
+
     QQuickPopupPositioner::reposition();
 }
 
@@ -472,6 +1030,32 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
 {
     // keep the parent menu open when a cascading sub-menu (this menu) is interacted with
     return (cascade && parentMenu && contains(point)) || QQuickPopupPrivate::blockInput(item, point);
+}
+
+/*! \internal
+    QQuickPopupWindow::event() calls this to handle the release event of a
+    menu drag-press-release gesture, because the \a eventPoint does not have
+    a grabber within the popup window. This override finds and activates the
+    appropriate menu item, as if it had been pressed and released.
+    Returns true on success, to indicate that handling \a eventPoint is done.
+ */
+bool QQuickMenuPrivate::handleReleaseWithoutGrab(const QEventPoint &eventPoint)
+{
+    const QPointF scenePos = eventPoint.scenePosition();
+    if (!contains(scenePos))
+        return false;
+
+    auto *list = qobject_cast<QQuickListView *>(contentItem);
+    if (!list)
+        return false;
+
+    const QPointF listPos = list->mapFromScene(scenePos);
+    if (auto *menuItem = qobject_cast<QQuickMenuItem *>(list->itemAt(listPos.x(), listPos.y()))) {
+        menuItem->animateClick();
+        return true;
+    }
+
+    return false;
 }
 
 void QQuickMenuPrivate::onItemHovered()
@@ -526,6 +1110,30 @@ void QQuickMenuPrivate::onItemActiveFocusChanged()
     int indexOfItem = contentModel->indexOf(item, nullptr);
     QQuickControl *control = qobject_cast<QQuickControl *>(item);
     setCurrentIndex(indexOfItem, control ? control->focusReason() : Qt::OtherFocusReason);
+}
+
+void QQuickMenuPrivate::updateTextPadding()
+{
+    Q_Q(QQuickMenu);
+    if (!complete)
+        return;
+
+    qreal padding = 0;
+    for (int i = 0; i < q->count(); ++i) {
+        if (const auto menuItem = qobject_cast<QQuickMenuItem *>(itemAt(i)))
+            if (menuItem->isVisible())
+                padding = qMax(padding, menuItem->implicitTextPadding());
+    }
+
+    if (padding == textPadding)
+        return;
+
+    textPadding = padding;
+
+    for (int i = 0; i < q->count(); ++i) {
+        if (const auto menuItem = qobject_cast<QQuickMenuItem *>(itemAt(i)))
+            emit menuItem->textPaddingChanged();
+    }
 }
 
 QQuickMenu *QQuickMenuPrivate::currentSubMenu() const
@@ -741,11 +1349,17 @@ QQuickMenu::QQuickMenu(QObject *parent)
 QQuickMenu::~QQuickMenu()
 {
     Q_D(QQuickMenu);
-    // We have to do this to ensure that the change listeners are removed.
-    // It's too late to do this in ~QQuickMenuPrivate, as contentModel has already
-    // been destroyed before that is called.
+    qCDebug(lcNativeMenus) << "destroying" << this
+                          << "item count:"
+                          << d->contentModel->count()
+                          << "native item count:" << d->nativeItems.count();
+    // We have to remove items to ensure that our change listeners on the item
+    // are removed. It's too late to do this in ~QQuickMenuPrivate, as
+    // contentModel has already been destroyed before that is called.
+    // Destruction isn't necessary for the QQuickItems themselves, but it is
+    // required for the native menus (see comment in removeItem()).
     while (d->contentModel->count() > 0)
-        d->removeItem(0, d->itemAt(0));
+        d->removeItem(0, d->itemAt(0), QQuickMenuPrivate::DestructionPolicy::Destroy);
 
     if (d->contentItem) {
         QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
@@ -797,8 +1411,9 @@ void QQuickMenu::insertItem(int index, QQuickItem *item)
     if (oldIndex != -1) {
         if (oldIndex < index)
             --index;
-        if (oldIndex != index)
+        if (oldIndex != index) {
             d->moveItem(oldIndex, index);
+        }
     } else {
         d->insertItem(index, item);
     }
@@ -838,8 +1453,7 @@ void QQuickMenu::removeItem(QQuickItem *item)
     if (index == -1)
         return;
 
-    d->removeItem(index, item);
-    item->deleteLater();
+    d->removeItem(index, item, QQuickMenuPrivate::DestructionPolicy::Destroy);
 }
 
 /*!
@@ -953,6 +1567,7 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
 
     d->removeItem(index, item);
     item->deleteLater();
+
     return subMenu;
 }
 
@@ -966,11 +1581,18 @@ QQuickMenu *QQuickMenu::takeMenu(int index)
 QQuickAction *QQuickMenu::actionAt(int index) const
 {
     Q_D(const QQuickMenu);
-    QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
-    if (!item)
-        return nullptr;
+    if (!const_cast<QQuickMenuPrivate *>(d)->maybeNativeHandle()) {
+        QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton *>(d->itemAt(index));
+        if (!item)
+            return nullptr;
 
-    return item->action();
+        return item->action();
+    } else {
+        if (index < 0 || index >= d->nativeItems.size())
+            return nullptr;
+
+        return d->nativeItems.at(index)->action();
+    }
 }
 
 /*!
@@ -1049,6 +1671,43 @@ QQuickAction *QQuickMenu::takeAction(int index)
     return action;
 }
 
+bool QQuickMenu::isVisible() const
+{
+    Q_D(const QQuickMenu);
+    if (d->maybeNativeHandle())
+        return d->visible;
+    return QQuickPopup::isVisible();
+}
+
+void QQuickMenu::setVisible(bool visible)
+{
+    Q_D(QQuickMenu);
+    if (visible == d->visible)
+        return;
+    if (visible && !parentItem()) {
+        qmlWarning(this) << "cannot show menu: parent is null";
+        return;
+    }
+
+    if (visible && ((d->useNativeMenu() && !d->maybeNativeHandle())
+            || (!d->useNativeMenu() && d->maybeNativeHandle()))) {
+        // We've been made visible, and our actual native state doesn't match our requested state,
+        // which means AA_DontUseNativeMenuWindows was set while we were visible or had a parent.
+        // Try to sync our state again now that we're about to be re-opened.
+        qCDebug(lcNativeMenus) << "setVisible called - useNativeMenu:" << d->useNativeMenu()
+            << "maybeNativeHandle:" << d->maybeNativeHandle();
+        d->syncWithUseNativeMenu();
+    }
+    if (d->maybeNativeHandle()) {
+        d->setNativeMenuVisible(visible);
+        return;
+    }
+
+    // Either the native menu wasn't wanted, or it couldn't be created;
+    // show the non-native menu.
+    QQuickPopup::setVisible(visible);
+}
+
 /*!
     \qmlproperty model QtQuick.Controls::Menu::contentModel
     \readonly
@@ -1118,12 +1777,14 @@ QString QQuickMenu::title() const
     return d->title;
 }
 
-void QQuickMenu::setTitle(QString &title)
+void QQuickMenu::setTitle(const QString &title)
 {
     Q_D(QQuickMenu);
     if (title == d->title)
         return;
     d->title = title;
+    if (d->handle)
+        d->handle->setText(title);
     emit titleChanged(title);
 }
 
@@ -1138,6 +1799,8 @@ void QQuickMenu::setTitle(QString &title)
     This property group was added in QtQuick.Controls 6.5.
 
     \include qquickicon.qdocinc grouped-properties
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa AbstractButton::text, AbstractButton::display, {Icons in Qt Quick Controls}
 */
@@ -1169,6 +1832,8 @@ void QQuickMenu::setIcon(const QQuickIcon &icon)
     are shown one menu at a time, and centered over the parent menu.
 
     \note Changing the value of the property has no effect while the menu is open.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa overlap
 */
@@ -1210,6 +1875,8 @@ void QQuickMenu::resetCascade()
 
     \note Changing the value of the property has no effect while the menu is open.
 
+    \include qquickmenu.qdocinc non-native-only-property
+
     \sa cascade
 */
 qreal QQuickMenu::overlap() const
@@ -1242,6 +1909,9 @@ void QQuickMenu::setOverlap(qreal overlap)
     }
     \endcode
 
+    \note delegates will only be visible when using a \l {Menu types}
+    {non-native Menu}.
+
     \sa Action
 */
 QQmlComponent *QQuickMenu::delegate() const
@@ -1267,6 +1937,8 @@ void QQuickMenu::setDelegate(QQmlComponent *delegate)
     This property holds the index of the currently highlighted item.
 
     Menu items can be highlighted by mouse hover or keyboard navigation.
+
+    \include qquickmenu.qdocinc non-native-only-property
 
     \sa MenuItem::highlighted
 */
@@ -1307,10 +1979,10 @@ void QQuickMenu::popup(QQuickItem *menuItem)
 #endif
 
     // As a fallback, center the menu over its parent item.
-    if (pos.isNull && d->parentItem)
+    if (!pos.isValid() && d->parentItem)
         pos = QPointF((d->parentItem->width() - width()) / 2, (d->parentItem->height() - height()) / 2);
 
-    popup(pos.isNull ? QPointF() : pos.value, menuItem);
+    popup(pos.isValid() ? pos.value() : QPointF(), menuItem);
 }
 
 void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
@@ -1325,6 +1997,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
 
     if (menuItem)
         d->setCurrentIndex(d->contentModel->indexOf(menuItem, nullptr), Qt::PopupFocusReason);
+    else
+        d->setCurrentIndex(-1, Qt::PopupFocusReason);
+
     open();
 }
 
@@ -1336,7 +2011,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the mouse cursor on desktop platforms that have a mouse cursor
     available, and otherwise centers the menu over its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa Popup::open()
 */
@@ -1349,7 +2026,9 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the specified position \a pos in the popups coordinate system,
     that is, a coordinate relative to its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa Popup::open()
 */
@@ -1362,11 +2041,13 @@ void QQuickMenu::popup(const QPointF &pos, QQuickItem *menuItem)
     Opens the menu at the specified position \a x, \a y in the popups coordinate system,
     that is, a coordinate relative to its \a parent item.
 
-    The menu can be optionally aligned to a specific menu \a item.
+    The menu can be optionally aligned to a specific menu \a item. This item will
+    then become \l {currentIndex}{current.} If no \a item is specified, \l currentIndex
+    will be set to \c -1.
 
     \sa dismiss(), Popup::open()
 */
-void QQuickMenu::popup(QQmlV4Function *args)
+void QQuickMenu::popup(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickMenu);
     const int len = args->length();
@@ -1411,7 +2092,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
             pos = QPointF(xArg->asDouble(), yArg->asDouble());
     }
 
-    if (pos.isNull && (len >= 2 || (!parentItem && len >= 1))) {
+    if (!pos.isValid() && (len >= 2 || (!parentItem && len >= 1))) {
         // point pos
         QV4::ScopedValue posArg(scope, (*args)[parentItem ? 1 : 0]);
         const QVariant var = QV4::ExecutionEngine::toVariant(posArg, QMetaType {});
@@ -1422,10 +2103,10 @@ void QQuickMenu::popup(QQmlV4Function *args)
     if (parentItem)
         setParentItem(parentItem);
 
-    if (pos.isNull)
-        popup(menuItem);
-    else
+    if (pos.isValid())
         popup(pos, menuItem);
+    else
+        popup(menuItem);
 }
 
 /*!
@@ -1434,9 +2115,10 @@ void QQuickMenu::popup(QQmlV4Function *args)
 
     Closes all menus in the hierarchy that this menu belongs to.
 
-    \note Unlike \l {Popup::}{close()} that only closes a menu and its sub-menus,
-    \c dismiss() closes the whole hierarchy of menus, including the parent menus.
-    In practice, \c close() is suitable e.g. for implementing navigation in a
+    \note Unlike \l {Popup::}{close()} that only closes a menu and its
+    sub-menus (when using \l {Menu types}{non-native menus}), \c dismiss()
+    closes the whole hierarchy of menus, including the parent menus. In
+    practice, \c close() is suitable e.g. for implementing navigation in a
     hierarchy of menus, and \c dismiss() is the appropriate method for closing
     the whole hierarchy of menus.
 
@@ -1456,6 +2138,8 @@ void QQuickMenu::componentComplete()
     Q_D(QQuickMenu);
     QQuickPopup::componentComplete();
     d->resizeItems();
+    d->updateTextPadding();
+    d->syncWithUseNativeMenu();
 }
 
 void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
@@ -1480,12 +2164,16 @@ void QQuickMenu::itemChange(QQuickItem::ItemChange change, const QQuickItem::Ite
     Q_D(QQuickMenu);
     QQuickPopup::itemChange(change, data);
 
-    if (change == QQuickItem::ItemVisibleHasChanged) {
+    switch (change) {
+    case QQuickItem::ItemVisibleHasChanged:
         if (!data.boolValue && d->cascade) {
             // Ensure that when the menu isn't visible, there's no current item
             // the next time it's opened.
             d->setCurrentIndex(-1, Qt::OtherFocusReason);
         }
+        break;
+    default:
+        break;
     }
 }
 
@@ -1543,6 +2231,23 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
     default:
         break;
     }
+
+#if QT_CONFIG(shortcut)
+    if (event->modifiers() == Qt::NoModifier) {
+        for (int i = 0; i < count(); ++i) {
+            QQuickAbstractButton *item = qobject_cast<QQuickAbstractButton*>(d->itemAt(i));
+            if (!item)
+                continue;
+            const QKeySequence keySequence = QKeySequence::mnemonic(item->text());
+            if (keySequence.isEmpty())
+                continue;
+            if (keySequence[0].key() == event->key()) {
+                item->click();
+                break;
+            }
+        }
+    }
+#endif
 }
 
 void QQuickMenu::timerEvent(QTimerEvent *event)

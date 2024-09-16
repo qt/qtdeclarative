@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtQml/qqmlcomponent.h>
@@ -93,13 +93,13 @@ void tst_qquickapplication::active()
             window.show();
             window.requestActivate();
             QVERIFY(QTest::qWaitForWindowActive(&window));
-            QCOMPARE(QGuiApplication::focusWindow(), &window);
+            QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
             QVERIFY(item->property("active").toBool());
             QVERIFY(item->property("active2").toBool());
 
             // not active again
-            QWindowSystemInterface::handleWindowActivated(nullptr);
-            QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
+            QWindowSystemInterface::handleFocusWindowChanged(nullptr);
+            QTRY_COMPARE_NE(QGuiApplication::focusWindow(), &window);
             QVERIFY(!item->property("active").toBool());
             QVERIFY(!item->property("active2").toBool());
         }
@@ -166,13 +166,13 @@ void tst_qquickapplication::state()
             window.show();
             window.requestActivate();
             QVERIFY(QTest::qWaitForWindowActive(&window));
-            QCOMPARE(QGuiApplication::focusWindow(), &window);
+            QTRY_COMPARE(QGuiApplication::focusWindow(), &window);
             QCOMPARE(Qt::ApplicationState(item->property("state").toInt()), Qt::ApplicationActive);
             QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()), Qt::ApplicationActive);
 
             // not active again
-            QWindowSystemInterface::handleWindowActivated(nullptr);
-            QTRY_VERIFY(QGuiApplication::focusWindow() != &window);
+            QWindowSystemInterface::handleFocusWindowChanged(nullptr);
+            QTRY_COMPARE_NE(QGuiApplication::focusWindow(), &window);
             QCOMPARE(Qt::ApplicationState(item->property("state").toInt()),
                      Qt::ApplicationInactive);
             QCOMPARE(Qt::ApplicationState(item->property("state2").toInt()),
@@ -246,7 +246,7 @@ void tst_qquickapplication::styleHints()
 {
     // technically not in QQuickApplication, but testing anyway here
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; Item { property variant styleHints: Qt.styleHints }", QUrl::fromLocalFile(""));
+    component.setData("import QtQuick 2.0; Item { property variant styleHints: Application.styleHints }", QUrl::fromLocalFile(""));
     QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
     QVERIFY(item);
     QQuickView view;

@@ -11,7 +11,11 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -19,14 +23,14 @@ layout(std140, binding = 0) uniform buf {
     // up to this point it must match distancefieldtext
     float fontScale;
     vec4 vecDelta;
-} ubuf;
+};
 
 void main()
 {
     vec2 n;
     n.x = textureProj(_qt_texture, sampleNearLeft).a;
     n.y = textureProj(_qt_texture, sampleNearRight).a;
-    n = smoothstep(ubuf.alphaMin, ubuf.alphaMax, n);
+    n = smoothstep(alphaMin, alphaMax, n);
     float c = 0.5 * (n.x + n.y);
-    fragColor = vec4(n.x, c, n.y, c) * ubuf.color.w;
+    fragColor = vec4(n.x, c, n.y, c) * color.w;
 }

@@ -25,7 +25,7 @@ QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
 
-class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
+class Q_LABSQMLMODELS_EXPORT QQmlDelegateChoice : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged FINAL)
@@ -67,7 +67,7 @@ private:
     QQmlComponent *m_delegate = nullptr;
 };
 
-class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
+class Q_LABSQMLMODELS_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
 {
     Q_OBJECT
     Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged FINAL)
@@ -77,7 +77,7 @@ class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDe
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    QString role() const { return m_role; }
+    QString role() const final { return m_role; }
     void setRole(const QString &role);
 
     virtual QQmlListProperty<QQmlDelegateChoice> choices();
@@ -100,8 +100,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQmlDelegateChoice)
-QML_DECLARE_TYPE(QQmlDelegateChooser)
 
 #endif // QQMLDELEGATECOMPONENT_P_H

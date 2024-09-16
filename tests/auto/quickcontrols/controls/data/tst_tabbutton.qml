@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -28,22 +28,24 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(tabButton, testCase)
         verify(control)
     }
 
     function test_autoExclusive() {
-        var container = createTemporaryObject(repeater, testCase)
+        let container = createTemporaryObject(repeater, testCase)
 
-        for (var i = 0; i < 3; ++i) {
+        for (let i = 0; i < 3; ++i) {
             container.children[i].checked = true
             compare(container.children[i].checked, true)
 
             // check that all other buttons are unchecked
-            for (var j = 0; j < 3; ++j) {
+            for (let j = 0; j < 3; ++j) {
                 if (j !== i)
                     compare(container.children[j].checked, false)
             }
@@ -51,18 +53,18 @@ TestCase {
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(tabButton, testCase)
+        let control = createTemporaryObject(tabButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(tabButton, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(tabButton, testCase, { text: "Some long, long, long text" })
         verify(control)
         if (control.background)
             verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem
@@ -91,7 +93,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(tabButton, testCase, {
+        let control = createTemporaryObject(tabButton, testCase, {
             text: "TabButton",
             display: data.display,
             "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png",
@@ -100,15 +102,15 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case TabButton.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case TabButton.TextOnly:
             verify(!iconImage)
@@ -119,7 +121,7 @@ TestCase {
         case TabButton.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
             compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -130,7 +132,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }

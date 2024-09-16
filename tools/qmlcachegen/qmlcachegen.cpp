@@ -15,11 +15,12 @@
 #include <QLoggingCategory>
 
 #include <private/qqmlirbuilder_p.h>
-#include <private/qqmljsparser_p.h>
-#include <private/qqmljslexer_p.h>
-#include <private/qqmljsresourcefilemapper_p.h>
-#include <private/qqmljsloadergenerator_p.h>
 #include <private/qqmljscompiler_p.h>
+#include <private/qqmljslexer_p.h>
+#include <private/qqmljsloadergenerator_p.h>
+#include <private/qqmljsparser_p.h>
+#include <private/qqmljsresourcefilemapper_p.h>
+#include <private/qqmljsutils_p.h>
 #include <private/qresourcerelocater_p.h>
 
 #include <algorithm>
@@ -83,6 +84,9 @@ int main(int argc, char **argv)
     QCommandLineOption directCallsOption("direct-calls"_L1, QCoreApplication::translate("main", "This option is ignored."));
     directCallsOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(directCallsOption);
+    QCommandLineOption staticOption("static"_L1, QCoreApplication::translate("main", "This option is ignored."));
+    staticOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(staticOption);
     QCommandLineOption importsOption("i"_L1, QCoreApplication::translate("main", "Import extra qmldir"), QCoreApplication::translate("main", "qmldir file"));
     parser.addOption(importsOption);
     QCommandLineOption importPathOption("I"_L1, QCoreApplication::translate("main", "Look for QML modules in specified directory"), QCoreApplication::translate("main", "import directory"));
@@ -91,8 +95,16 @@ int main(int argc, char **argv)
     parser.addOption(onlyBytecode);
     QCommandLineOption verboseOption("verbose"_L1, QCoreApplication::translate("main", "Output compile warnings"));
     parser.addOption(verboseOption);
+    QCommandLineOption warningsAreErrorsOption("warnings-are-errors"_L1, QCoreApplication::translate("main", "Treat warnings as errors"));
+    parser.addOption(warningsAreErrorsOption);
+
     QCommandLineOption validateBasicBlocksOption("validate-basic-blocks"_L1, QCoreApplication::translate("main", "Performs checks on the basic blocks of a function compiled ahead of time to validate its structure and coherence"));
     parser.addOption(validateBasicBlocksOption);
+
+    QCommandLineOption dumpAotStatsOption("dump-aot-stats"_L1, QCoreApplication::translate("main", "Dumps statistics about ahead-of-time compilation of bindings and functions"));
+    parser.addOption(dumpAotStatsOption);
+    QCommandLineOption moduleIdOption("module-id"_L1, QCoreApplication::translate("main", "Identifies the module of the qml file being compiled for aot stats"), QCoreApplication::translate("main", "id"));
+    parser.addOption(moduleIdOption);
 
     QCommandLineOption outputFileOption("o"_L1, QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
@@ -127,6 +139,28 @@ int main(int argc, char **argv)
 
     if (target == GenerateLoader && parser.isSet(resourceNameOption))
         target = GenerateLoaderStandAlone;
+
+    if (parser.isSet(onlyBytecode)) {
+        const std::array<QCommandLineOption *, 5> compilerOnlyOptions{
+            &directCallsOption, &staticOption, &validateBasicBlocksOption, &dumpAotStatsOption,
+            &moduleIdOption
+        };
+
+        for (auto *compilerOnlyOption : compilerOnlyOptions) {
+            if (parser.isSet(*compilerOnlyOption)) {
+                std::string name = compilerOnlyOption->names().first().toStdString();
+                fprintf(stderr, "Passing mutually exclusive options \"only-bytecode\" and \"%s\".\n"
+                                "Remove --only-bytecode to be able to use compiler options like --%s",
+                        name.c_str(), name.c_str());
+                return EXIT_FAILURE;
+            }
+        }
+    }
+
+    if (parser.isSet(dumpAotStatsOption) && !parser.isSet(moduleIdOption)) {
+        fprintf(stderr, "--dump-aot-stats set without setting --module-id");
+        return EXIT_FAILURE;
+    }
 
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
@@ -247,11 +281,17 @@ int main(int argc, char **argv)
             logger.setCategoryIgnored(qmlCompiler, false);
             logger.setCategoryFatal(qmlCompiler, true);
 
-            if (!parser.isSet(verboseOption))
+            if (!parser.isSet(verboseOption) && !parser.isSet(warningsAreErrorsOption))
                 logger.setSilent(true);
 
             QQmlJSAotCompiler cppCodeGen(
-                        &importer, u':' + inputResourcePath, parser.values(importsOption), &logger);
+                    &importer, u':' + inputResourcePath,
+                    QQmlJSUtils::cleanPaths(parser.values(importsOption)), &logger);
+
+            if (parser.isSet(dumpAotStatsOption)) {
+                QQmlJS::QQmlJSAotCompilerStats::setRecordAotStats(true);
+                QQmlJS::QQmlJSAotCompilerStats::setModuleId(parser.value(moduleIdOption));
+            }
 
             if (parser.isSet(validateBasicBlocksOption))
                 cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::ValidateBasicBlocks);
@@ -268,7 +308,12 @@ int main(int argc, char **argv)
                 logger.log("Type warnings occurred while compiling file:"_L1,
                            qmlImport, QQmlJS::SourceLocation());
                 logger.processMessages(warnings, qmlImport);
+                if (parser.isSet(warningsAreErrorsOption))
+                    return EXIT_FAILURE;
             }
+
+            if (parser.isSet(dumpAotStatsOption))
+                QQmlJS::QQmlJSAotCompilerStats::instance()->saveToDisk(outputFileName + u".aotstats"_s);
         }
     } else if (inputFile.endsWith(".js"_L1) || inputFile.endsWith(".mjs"_L1)) {
         QQmlJSCompileError error;
@@ -278,6 +323,8 @@ int main(int argc, char **argv)
         }
     } else {
         fprintf(stderr, "Ignoring %s input file as it is not QML source code - maybe remove from QML_FILES?\n", qPrintable(inputFile));
+        if (parser.isSet(warningsAreErrorsOption))
+            return EXIT_FAILURE;
     }
 
     return EXIT_SUCCESS;

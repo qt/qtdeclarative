@@ -1,14 +1,18 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
-#include <QtTest/QSignalSpy>
-#include <qtest.h>
-#include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlcomponent.h>
-#include <QtQml/private/qqmltimer_p.h>
-#include <QtQuick/qquickitem.h>
-#include <QDebug>
-#include <QtCore/QPauseAnimation>
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+
 #include <private/qabstractanimation_p.h>
+#include <private/qqmltimer_p.h>
+
+#include <QtQuick/qquickitem.h>
+
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlengine.h>
+
+#include <QtTest/qsignalspy.h>
+#include <QtTest/qtest.h>
+
+#include <QtCore/qpauseanimation.h>
 
 void consistentWait(int ms)
 {
@@ -69,7 +73,8 @@ void tst_qqmltimer::notRepeating()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 100; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
+    std::unique_ptr<QObject> o { component.create() };
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(o.get());
     QVERIFY(timer != nullptr);
     QVERIFY(timer->isRunning());
     QVERIFY(!timer->isRepeating());
@@ -355,7 +360,8 @@ void tst_qqmltimer::stopWhenEventPosted()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
+    std::unique_ptr<QObject> o { component.create() };
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(o.get());
 
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
@@ -379,7 +385,8 @@ void tst_qqmltimer::restartWhenEventPosted()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 200; running: true }"), QUrl::fromLocalFile(""));
-    QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
+    std::unique_ptr<QObject> o { component.create() };
+    QQmlTimer *timer = qobject_cast<QQmlTimer*>(o.get());
 
     TimerHelper helper;
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));

@@ -35,7 +35,7 @@ class QQmlError;
 class QQuickItem;
 class QQmlComponent;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickViewPrivate : public QQuickWindowPrivate,
+class Q_QUICK_EXPORT QQuickViewPrivate : public QQuickWindowPrivate,
                        public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickView)
@@ -46,7 +46,10 @@ public:
     QQuickViewPrivate();
     ~QQuickViewPrivate();
 
+    enum ExecuteState { Continue, Stop };
+    ExecuteState executeHelper();
     void execute();
+    void execute(QAnyStringView uri, QAnyStringView typeName);
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
     void initResize();
     void updateSize();

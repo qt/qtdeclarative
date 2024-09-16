@@ -1,12 +1,13 @@
 TEMPLATE = app
 
 QT += qml quick
-CONFIG += c++11
 
 SOURCES += main.cpp
 
-resources.files = main.qml
-resources.prefix = qt/qml/chapter1/
+resources.files = \
+    Main.qml \
+    qmldir
+resources.prefix = qt/qml/chattutorial/
 RESOURCES += resources \
     qtquickcontrols2.conf
 

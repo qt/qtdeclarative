@@ -9,11 +9,11 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
+Q_STATIC_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
 
 /*!
     \qmltype WheelHandler
-    \instantiates QQuickWheelHandler
+    \nativetype QQuickWheelHandler
     \inherits SinglePointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers

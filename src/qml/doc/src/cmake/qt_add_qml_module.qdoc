@@ -6,7 +6,7 @@
 \ingroup cmake-commands-qtqml
 
 \title qt_add_qml_module
-\target qt6_add_qml_module
+\keyword qt6_add_qml_module
 
 \brief Defines a QML module.
 
@@ -44,6 +44,7 @@ qt_add_qml_module(
     [NO_GENERATE_PLUGIN_SOURCE]
     [NO_GENERATE_QMLTYPES]
     [NO_GENERATE_QMLDIR]
+    [NO_GENERATE_EXTRA_QMLDIRS]
     [NO_LINT]
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
@@ -61,6 +62,9 @@ qt_add_qml_module(
 
 See \l {Building a QML application} and \l {Building a reusable QML module}
 for examples that define QML modules.
+
+See \l {QT_QML_GENERATE_QMLLS_INI} for configuring your project such that information about
+QML modules is exposed to the \l{QML Language Server}.
 
 \section1 Description
 
@@ -167,6 +171,12 @@ well as the sources and \c{.qml} files added to the backing target.
 The \l OUTPUT_DIRECTORY argument determines where the \c qmldir and typeinfo
 files will be written to. If the QML module has a plugin, that plugin will also
 be created in the same directory as the \c qmldir file.
+
+If \l{QTP0004} policy is set to \c NEW, for each further directory that contains
+\c{.qml} files another \c qmldir file is generated. These extra \c qmldir files
+merely redirect to the module's base directory via a \c prefer directive. This
+is so that all the QML components in a module can access each other, no matter
+which directory they are stored in.
 
 If using a statically built Qt, the backing target's \c{.qml} files will be
 scanned during the CMake configure run to determine the imports used by the
@@ -436,6 +446,12 @@ generated \l{Module Definition qmldir Files}{qmldir} file by default.
 \c NO_GENERATE_QMLDIR can be given to disable the automatic generation of the
 \c qmldir file. This should normally be avoided, but for cases where the
 project needs to provide its own \c qmldir file, this option can be used.
+Since Qt 6.8, when \l{QTP0004} is enabled,  \c qt_add_qml_module will
+create additional \c qmldir files for each subdirectory in the QML module,
+which ensure that each QML file will import its own module via the implicit
+import. This behavior can be turned off for a QML module by passing the
+\c NO_GENERATE_EXTRA_QMLDIRS flag to it.
+The \c NO_GENERATE_QMLDIR implies \c NO_GENERATE_EXTRA_QMLDIRS.
 
 \note See \l{qt6_target_qml_sources}{qt_target_qml_sources()} for further details on
 how to add qmlfiles after \c qt_add_qml_module() was called.
@@ -568,6 +584,9 @@ store a list of additional targets that will also need to be installed.
 These additional targets are generated internally by \c{qt_add_qml_module()}
 and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
+
+\note Since Qt 6.8, it is possible to pass a target name to IMPORTS and
+DEPENDENCIES. See \l{QTP0005} for more details.
 
 \target PLUGIN_TARGET
 \section2 Targets and plugin targets

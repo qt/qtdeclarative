@@ -118,6 +118,20 @@ void QQuickMaterialTextContainer::setPlaceholderTextWidth(qreal placeholderTextW
     update();
 }
 
+QQuickMaterialTextContainer::PlaceHolderHAlignment QQuickMaterialTextContainer::placeholderTextHAlign() const
+{
+    return m_placeholderTextHAlign;
+}
+
+void QQuickMaterialTextContainer::setPlaceholderTextHAlign(PlaceHolderHAlignment placeholderTextHAlign)
+{
+    if (m_placeholderTextHAlign == placeholderTextHAlign)
+        return;
+
+    m_placeholderTextHAlign = placeholderTextHAlign;
+    update();
+}
+
 bool QQuickMaterialTextContainer::controlHasActiveFocus() const
 {
     return m_controlHasActiveFocus;
@@ -208,6 +222,25 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
     // This is coincidentally the same as cornerRadius, but use different variable names
     // to keep the code understandable.
     const qreal gapPadding = 4;
+    // When animating focus on outlined containers, we need to make a gap
+    // at the top left for the placeholder text.
+    // If the text is too wide for the container, it will be elided, so
+    // we shouldn't need to clamp its width here. TODO: check that this is the case for TextArea.
+    const qreal halfPlaceholderWidth = m_placeholderTextWidth / 2;
+    // Take care of different Alignment cases for the placeholder text.
+    qreal gapCenterX;
+    switch (m_placeholderTextHAlign) {
+    case PlaceHolderHAlignment::AlignHCenter:
+        gapCenterX = width() / 2;
+        break;
+    case PlaceHolderHAlignment::AlignRight:
+        gapCenterX = width()  - halfPlaceholderWidth - m_horizontalPadding;
+        break;
+    default:
+        gapCenterX = m_horizontalPadding + halfPlaceholderWidth;
+        break;
+    }
+
     QPainterPath path;
 
     QPointF startPos;
@@ -216,15 +249,6 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
     if (m_filled || m_focusAnimationProgress == 0) {
         startPos = QPointF(cornerRadius, 0);
     } else {
-        // When animating focus on outlined containers, we need to make a gap
-        // at the top left for the placeholder text.
-        // If the text is too wide for the container, it will be elided, so
-        // we shouldn't need to clamp its width here. TODO: check that this is the case for TextArea.
-        const qreal halfPlaceholderWidth = m_placeholderTextWidth / 2;
-        // Left padding plus half of the placeholder text gives the center of the placeholder text gap.
-        // Note that the placeholder gap is always aligned to the left side of the TextField,
-        // not the center, so we can't just use half the container's width.
-        const qreal gapCenterX = m_horizontalPadding + halfPlaceholderWidth;
         // Start at the center of the gap and animate outwards towards the left-hand side.
         // Subtract gapPadding to account for the gap between the line and the placeholder text.
         // Also subtract the pen width because otherwise it extends by that distance too much to the right.
@@ -259,11 +283,6 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
         // Back to the start.
         path.lineTo(startPos.x(), startPos.y());
     } else {
-        // Go to the end (right-hand side) of the gap.
-        const qreal halfPlaceholderWidth = (/*placeholderTextGap * 2 + */m_placeholderTextWidth) / 2;
-        const qreal gapCenterX = m_horizontalPadding + halfPlaceholderWidth;
-        // Just "+ placeholderTextGap" should be enough to get us to the correct place - not
-        // sure why doubling it is necessary...
         path.lineTo(gapCenterX + (m_focusAnimationProgress * halfPlaceholderWidth) + gapPadding, startPos.y());
     }
 

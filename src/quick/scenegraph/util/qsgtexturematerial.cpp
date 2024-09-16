@@ -13,21 +13,24 @@ inline static bool isPowerOfTwo(int x)
     return x == (x & -x);
 }
 
-QSGOpaqueTextureMaterialRhiShader::QSGOpaqueTextureMaterialRhiShader()
+QSGOpaqueTextureMaterialRhiShader::QSGOpaqueTextureMaterialRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/opaquetexture.frag.qsb"), viewCount);
 }
 
-bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *)
+bool QSGOpaqueTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int matrixCount = qMin(state.projectionMatrixCount(), newMaterial->viewCount());
 
-    if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+    for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     return changed;
@@ -142,7 +145,7 @@ QSGMaterialType *QSGOpaqueTextureMaterial::type() const
 QSGMaterialShader *QSGOpaqueTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QSGOpaqueTextureMaterialRhiShader;
+    return new QSGOpaqueTextureMaterialRhiShader(viewCount());
 }
 
 
@@ -333,24 +336,26 @@ QSGMaterialType *QSGTextureMaterial::type() const
 QSGMaterialShader *QSGTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QSGTextureMaterialRhiShader;
+    return new QSGTextureMaterialRhiShader(viewCount());
 }
 
 
-QSGTextureMaterialRhiShader::QSGTextureMaterialRhiShader()
+QSGTextureMaterialRhiShader::QSGTextureMaterialRhiShader(int viewCount)
+    : QSGOpaqueTextureMaterialRhiShader(viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/texture.frag.qsb"), viewCount);
 }
 
 bool QSGTextureMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 64, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         changed = true;
     }
 

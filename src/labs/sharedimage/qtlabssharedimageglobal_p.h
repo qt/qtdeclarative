@@ -17,11 +17,11 @@
 // We mean it.
 //
 
-#include <QtLabsSharedImage/private/qtlabssharedimageexports_p.h>
+#include <QtLabsSharedImage/qtlabssharedimageexports.h>
 
 QT_BEGIN_NAMESPACE
 
-void Q_LABSSHAREDIMAGE_PRIVATE_EXPORT qml_register_types_Qt_labs_sharedimage();
+void Q_LABSSHAREDIMAGE_EXPORT qml_register_types_Qt_labs_sharedimage();
 
 QT_END_NAMESPACE
 

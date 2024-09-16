@@ -18,10 +18,11 @@
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/qquickattachedpropertypropagator.h>
+#include <QtQuickControls2Material/qtquickcontrols2materialexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
+class Q_QUICKCONTROLS2MATERIAL_EXPORT QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(Theme theme READ theme WRITE setTheme RESET resetTheme NOTIFY themeChanged FINAL)
@@ -76,9 +77,12 @@ class QQuickMaterialStyle : public QQuickAttachedPropertyPropagator
     Q_PROPERTY(QColor textFieldFilledContainerColor READ textFieldFilledContainerColor NOTIFY themeChanged FINAL)
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
+    Q_PROPERTY(int buttonVerticalPadding READ buttonVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
     Q_PROPERTY(int delegateHeight READ delegateHeight CONSTANT FINAL)
     Q_PROPERTY(int dialogButtonBoxHeight READ dialogButtonBoxHeight CONSTANT FINAL)
+    Q_PROPERTY(int dialogTitleFontPixelSize READ dialogTitleFontPixelSize CONSTANT FINAL)
+    Q_PROPERTY(RoundedScale dialogRoundedScale READ dialogRoundedScale CONSTANT FINAL)
     Q_PROPERTY(int frameVerticalPadding READ frameVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int menuItemHeight READ menuItemHeight CONSTANT FINAL)
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
@@ -269,9 +273,14 @@ public:
     Q_INVOKABLE QColor shade(const QColor &color, Shade shade) const;
 
     int touchTarget() const;
+    int buttonVerticalPadding() const;
+    Q_INVOKABLE int buttonLeftPadding(bool flat, bool hasIcon) const;
+    Q_INVOKABLE int buttonRightPadding(bool flat, bool hasIcon, bool hasText) const;
     int buttonHeight() const;
     int delegateHeight() const;
     int dialogButtonBoxHeight() const;
+    int dialogTitleFontPixelSize() const;
+    RoundedScale dialogRoundedScale() const;
     int frameVerticalPadding() const;
     int menuItemHeight() const;
     int menuItemVerticalPadding() const;
@@ -341,6 +350,7 @@ private:
     bool m_hasForeground = false;
     bool m_hasBackground = false;
     // The actual values for this item, whether explicit, inherited or globally set.
+    bool m_systemTheme = false;
     Theme m_theme = Light;
     uint m_primary = 0;
     uint m_accent = 0;

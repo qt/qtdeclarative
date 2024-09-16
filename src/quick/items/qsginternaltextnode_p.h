@@ -39,7 +39,7 @@ class QSGRenderContext;
 
 class QQuickTextNodeEngine;
 
-class Q_QUICK_PRIVATE_EXPORT QSGInternalTextNode : public QSGTextNode
+class Q_QUICK_EXPORT QSGInternalTextNode : public QSGTextNode
 {
 public:
     QSGInternalTextNode(QSGRenderContext *renderContext);
@@ -47,13 +47,7 @@ public:
 
     static bool isComplexRichText(QTextDocument *);
 
-    void addTextLayout(const QPointF &position, QTextLayout *textLayout,
-                       int selectionStart = -1, int selectionEnd = -1,
-                       int lineStart = 0, int lineCount = -1) override;
-    void addTextDocument(const QPointF &position, QTextDocument *textDocument,
-                         int selectionStart = -1, int selectionEnd = -1) override;
-
-    void setColor(const QColor &color) override
+    void setColor(QColor color) override
     {
         m_color = color;
     }
@@ -73,7 +67,7 @@ public:
         return m_textStyle;
     }
 
-    void setStyleColor(const QColor &styleColor) override
+    void setStyleColor(QColor styleColor) override
     {
         m_styleColor = styleColor;
     }
@@ -83,17 +77,17 @@ public:
         return m_styleColor;
     }
 
-    void setAnchorColor(const QColor &anchorColor) override
+    void setLinkColor(QColor linkColor) override
     {
-        m_anchorColor = anchorColor;
+        m_linkColor = linkColor;
     }
 
-    QColor anchorColor() const override
+    QColor linkColor() const override
     {
-        return m_anchorColor;
+        return m_linkColor;
     }
 
-    void setSelectionColor(const QColor &selectionColor) override
+    void setSelectionColor(QColor selectionColor) override
     {
         m_selectionColor = selectionColor;
     }
@@ -103,7 +97,7 @@ public:
         return m_selectionColor;
     }
 
-    void setSelectionTextColor(const QColor &selectionTextColor) override
+    void setSelectionTextColor(QColor selectionTextColor) override
     {
         m_selectionTextColor = selectionTextColor;
     }
@@ -132,14 +126,19 @@ public:
         return m_renderType;
     }
 
-    void setSmooth(bool smooth) override
+    bool containsUnscalableGlyphs() const
     {
-        m_smooth = smooth;
+        return m_containsUnscalableGlyphs;
     }
 
-    bool smooth() const override
+    void setFiltering(QSGTexture::Filtering filtering) override
     {
-        return m_smooth;
+        m_filtering = filtering;
+    }
+
+    QSGTexture::Filtering filtering() const override
+    {
+        return m_filtering;
     }
 
     void setViewport(const QRectF &viewport) override
@@ -156,14 +155,28 @@ public:
     void clearCursor();
 
     void addRectangleNode(const QRectF &rect, const QColor &color);
+    virtual void addDecorationNode(const QRectF &rect, const QColor &color);
     void addImage(const QRectF &rect, const QImage &image);
-    void deleteContent();
+    void clear() override;
     QSGGlyphNode *addGlyphs(const QPointF &position, const QGlyphRun &glyphs, const QColor &color,
                             QQuickText::TextStyle style = QQuickText::Normal, const QColor &styleColor = QColor(),
                             QSGNode *parentNode = 0);
 
     QSGInternalRectangleNode *cursorNode() const { return m_cursorNode; }
     QPair<int, int> renderedLineRange() const { return { m_firstLineInViewport, m_firstLinePastViewport }; }
+
+protected:
+    void doAddTextLayout(QPointF position,
+                         QTextLayout *textLayout,
+                         int selectionStart,
+                         int selectionEnd,
+                         int lineStart,
+                         int lineCount) override;
+
+    void doAddTextDocument(QPointF position,
+                           QTextDocument *textDocument,
+                           int selectionStart,
+                           int selectionEnd) override;
 
 private:
     QSGInternalRectangleNode *m_cursorNode = nullptr;
@@ -174,13 +187,14 @@ private:
     QRectF m_viewport;
     QColor m_color = QColor(0, 0, 0);
     QColor m_styleColor = QColor(0, 0, 0);
-    QColor m_anchorColor = QColor(0, 0, 255);
+    QColor m_linkColor = QColor(0, 0, 255);
     QColor m_selectionColor = QColor(0, 0, 128);
     QColor m_selectionTextColor = QColor(255, 255, 255);
-    bool m_smooth = false;
+    QSGTexture::Filtering m_filtering = QSGTexture::Nearest;
     int m_renderTypeQuality = -1;
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;
+    bool m_containsUnscalableGlyphs = false;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;

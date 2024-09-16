@@ -33,13 +33,13 @@ Item {
 
         mirrorVertically: cbMirror.checked
         sampleCount: cbMSAA.checked ? 4 : 1
-        explicitTextureWidth: cbSize.checked ? slSize.value.toFixed(0) : 0
-        explicitTextureHeight: cbSize.checked ? slSize.value.toFixed(0) : 0
+        fixedColorBufferWidth: cbSize.checked ? slSize.value.toFixed(0) : 0
+        fixedColorBufferHeight: cbSize.checked ? slSize.value.toFixed(0) : 0
         alphaBlending: cbBlend.checked
-        textureFormat: rdFormatRGBA8.checked ? ExampleRhiItem.RGBA8
-                                             : rdFormatFP16.checked ? ExampleRhiItem.RGBA16F
-                                                                    : rdFormatFP32.checked ? ExampleRhiItem.RGBA32F
-                                                                                           : ExampleRhiItem.RGB10A2
+        colorBufferFormat: rdFormatRGBA8.checked ? ExampleRhiItem.TextureFormat.RGBA8
+                                             : rdFormatFP16.checked ? ExampleRhiItem.TextureFormat.RGBA16F
+                                                                    : rdFormatFP32.checked ? ExampleRhiItem.TextureFormat.RGBA32F
+                                                                                           : ExampleRhiItem.TextureFormat.RGB10A2
 
         // custom properties provided by the QQuickRhiItem subclass: angle, backgroundAlpha
         NumberAnimation on angle {
@@ -159,7 +159,7 @@ Item {
 
         CheckBox {
             id: cbSize
-            text: qsTr("Use explicit size")
+            text: qsTr("Use fixed size")
             checked: false
         }
         RowLayout {
@@ -172,11 +172,12 @@ Item {
                 from: 8
                 to: 2048
                 value: 128
+                Layout.fillWidth: false
             }
         }
 
         Label {
-            text: qsTr("Backing texture size: %1x%2 pixels").arg(renderer.effectiveTextureSize.width).arg(renderer.effectiveTextureSize.height)
+            text: qsTr("Backing texture size: %1x%2 pixels").arg(renderer.effectiveColorBufferSize.width).arg(renderer.effectiveColorBufferSize.height)
         }
 
         Label {
@@ -197,6 +198,7 @@ Item {
                 from: 0
                 to: 1.0
                 value: 1.0
+                Layout.fillWidth: false
             }
         }
 
@@ -234,18 +236,22 @@ Item {
                     id: rdFormatRGBA8
                     text: qsTr("8-bit RGBA")
                     checked: true
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatFP16
                     text: qsTr("Half-float RGBA")
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatFP32
                     text: qsTr("Float RGBA")
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     id: rdFormatRGB10A2
                     text: qsTr("10-bit RGB, 2-bit A")
+                    Layout.fillWidth: false
                 }
             }
         }

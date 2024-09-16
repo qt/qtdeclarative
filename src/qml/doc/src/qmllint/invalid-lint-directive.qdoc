@@ -5,22 +5,64 @@
 \page qmllint-warnings-and-errors-invalid-lint-directive.html
 \ingroup qmllint-warnings-and-errors
 
-\title invalid-lint-directive
-\brief BRIEF
+\title Invalid qmllint directives
+\brief Invalid qmllint comments.
 
-\section1 invalid-lint-directive
+\qmllintwarningcategory invalid-lint-directive
+
+\section1 Invalid qmllint directive provided
 
 \section2 What happened?
-TODO
+You used an invalid \l{qtqml-tooling-qmllint.html#disabling-warnings-inline}{qmllint directive}
+in a qmllint comment. This is probably due to a typo.
 
 \section2 Why is this bad?
-TODO
+The qmllint directive has no effect.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    // qmllint diasble with
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, correct the typo:
 \qml
+import QtQuick
+
+Item {
+    // qmllint disable with
+}
+\endqml
+
+\section1 Qmllint directive on unknown category
+
+\section2 What happened?
+You used an unknown category in a
+\l{qtqml-tooling-qmllint.html#disabling-warnings-inline}{qmllint directive}
+inside a qmllint comment. This is probably due to a typo.
+
+\section2 Why is this bad?
+The qmllint directive has no effect.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    // qmllint disable woth
+}
+
+\endqml
+To fix this warning, correct the typo:
+\qml
+import QtQuick
+
+Item {
+    // qmllint disable with
+}
 \endqml
 */
 

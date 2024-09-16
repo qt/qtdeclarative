@@ -1,0 +1,4 @@
+//! [non-native-only-property]
+\note This property is only supported when using a
+\l {Menu types}{non-native Menu}.
+//! [non-native-only-property]

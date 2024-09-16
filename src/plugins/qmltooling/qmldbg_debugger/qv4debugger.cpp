@@ -251,9 +251,9 @@ void QV4Debugger::pauseAndWait(PauseReason reason)
 
 bool QV4Debugger::reallyHitTheBreakPoint(const QString &filename, int linenr)
 {
-    QHash<BreakPoint, QString>::iterator it = m_breakPoints.find(
+    const auto it = m_breakPoints.constFind(
                 BreakPoint(QUrl(filename).fileName(), linenr));
-    if (it == m_breakPoints.end())
+    if (it == m_breakPoints.cend())
         return false;
     QString condition = it.value();
     if (condition.isEmpty())

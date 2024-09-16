@@ -31,7 +31,7 @@ class QQmlComponent;
 class QQuickMenuItem;
 class QQuickMenuPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenu : public QQuickPopup
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenu : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(QVariant contentModel READ contentModel CONSTANT FINAL)
@@ -63,7 +63,7 @@ public:
     QQmlListProperty<QObject> contentData();
 
     QString title() const;
-    void setTitle(QString &title);
+    void setTitle(const QString &title);
 
     QQuickIcon icon() const;
     void setIcon(const QQuickIcon &icon);
@@ -97,10 +97,13 @@ public:
     Q_REVISION(2, 3) Q_INVOKABLE void removeAction(QQuickAction *action);
     Q_REVISION(2, 3) Q_INVOKABLE QQuickAction *takeAction(int index);
 
+    bool isVisible() const override;
+    void setVisible(bool visible) override;
+
     void popup(QQuickItem *menuItem = nullptr);
     void popup(const QPointF &pos, QQuickItem *menuItem = nullptr);
 
-    Q_REVISION(2, 3) Q_INVOKABLE void popup(QQmlV4Function *args);
+    Q_REVISION(2, 3) Q_INVOKABLE void popup(QQmlV4FunctionPtr args);
     Q_REVISION(2, 3) Q_INVOKABLE void dismiss();
 
 protected:
@@ -135,7 +138,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickMenu)
 
 #endif // QQUICKMENU_P_H

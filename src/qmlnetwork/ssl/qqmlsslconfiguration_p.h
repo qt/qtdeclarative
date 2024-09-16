@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlnetworkexports_p.h>
+#include <qtqmlnetworkexports.h>
 #include "qqmlsslkey_p.h"
 
 #include <QtCore/QByteArray>
@@ -27,7 +27,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLNETWORK_PRIVATE_EXPORT QQmlSslConfiguration
+class Q_QMLNETWORK_EXPORT QQmlSslConfiguration
 {
     Q_GADGET
 
@@ -84,7 +84,7 @@ protected:
     QSslConfiguration m_configuration;
 };
 
-class Q_QMLNETWORK_PRIVATE_EXPORT QQmlSslDefaultConfiguration : public QQmlSslConfiguration
+class Q_QMLNETWORK_EXPORT QQmlSslDefaultConfiguration : public QQmlSslConfiguration
 {
     Q_GADGET
     QML_NAMED_ELEMENT(sslConfiguration)
@@ -94,7 +94,7 @@ public:
     QQmlSslDefaultConfiguration();
 };
 
-class Q_QMLNETWORK_PRIVATE_EXPORT QQmlSslDefaultDtlsConfiguration : public QQmlSslConfiguration
+class Q_QMLNETWORK_EXPORT QQmlSslDefaultDtlsConfiguration : public QQmlSslConfiguration
 {
     Q_GADGET
     QML_NAMED_ELEMENT(sslDtlsConfiguration)

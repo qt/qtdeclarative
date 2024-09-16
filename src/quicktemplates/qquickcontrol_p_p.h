@@ -35,7 +35,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcItemManagement)
 
 class QQuickAccessibleAttached;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_EXPORT QQuickControlPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 #if QT_CONFIG(accessibility)
     , public QAccessible::ActivationObserver
 #endif
@@ -155,6 +155,8 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemFocusChanged(QQuickItem *item, Qt::FocusReason reason) override;
 
+    bool setLastFocusChangeReason(Qt::FocusReason) override;
+
     virtual qreal getContentWidth() const;
     virtual qreal getContentHeight() const;
 
@@ -206,8 +208,6 @@ public:
     qreal spacing = 0;
     QLocale locale;
     QFont resolvedFont;
-    Qt::FocusPolicy focusPolicy = Qt::NoFocus;
-    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickDeferredPointer<QQuickItem> background;
     QQuickDeferredPointer<QQuickItem> contentItem;
 };

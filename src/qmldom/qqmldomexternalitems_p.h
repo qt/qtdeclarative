@@ -25,6 +25,7 @@
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtCore/QMetaType>
+#include <QtCore/qregularexpression.h>
 
 #include <limits>
 #include <memory>
@@ -48,8 +49,9 @@ Every owning item has a file or directory it refers to.
 */
 class QMLDOM_EXPORT ExternalOwningItem: public OwningItem {
 public:
-    ExternalOwningItem(QString filePath, QDateTime lastDataUpdateAt, Path pathFromTop,
-                       int derivedFrom = 0, QString code = QString());
+    ExternalOwningItem(
+            const QString &filePath, const QDateTime &lastDataUpdateAt, const Path &pathFromTop,
+            int derivedFrom = 0, const QString &code = QString());
     ExternalOwningItem(const ExternalOwningItem &o) = default;
     QString canonicalFilePath(const DomItem &) const override;
     QString canonicalFilePath() const;
@@ -72,7 +74,7 @@ public:
     bool iterateSubOwners(const DomItem &self, function_ref<bool(const DomItem &owner)> visitor) override
     {
         bool cont = OwningItem::iterateSubOwners(self, visitor);
-        cont = cont && self.field(Fields::components).visitKeys([visitor](QString, const DomItem &comps) {
+        cont = cont && self.field(Fields::components).visitKeys([visitor](const QString &, const DomItem &comps) {
             return comps.visitIndexes([visitor](const DomItem &comp) {
                 return comp.field(Fields::objects).visitIndexes([visitor](const DomItem &qmlObj) {
                     if (const QmlObject *qmlObjPtr = qmlObj.as<QmlObject>())
@@ -114,9 +116,10 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::QmlDirectory;
     DomType kind() const override { return kindValue; }
-    QmlDirectory(QString filePath = QString(), QStringList dirList = QStringList(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                 int derivedFrom = 0);
+    QmlDirectory(
+            const QString &filePath = QString(), const QStringList &dirList = QStringList(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0);
     QmlDirectory(const QmlDirectory &o) = default;
 
     std::shared_ptr<QmlDirectory> makeCopy(const DomItem &self) const
@@ -130,7 +133,7 @@ public:
 
     const QMultiMap<QString, QString> &qmlFiles() const & { return m_qmlFiles; }
 
-    bool addQmlFilePath(QString relativePath);
+    bool addQmlFilePath(const QString &relativePath);
 
 private:
     QMultiMap<QString, Export> m_exports;
@@ -153,9 +156,10 @@ public:
 
     static ErrorGroups myParsingErrors();
 
-    QmldirFile(QString filePath = QString(), QString code = QString(),
-               QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-               int derivedFrom = 0)
+    QmldirFile(
+            const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmldirFilePath(filePath),
                              derivedFrom, code)
     {
@@ -190,7 +194,7 @@ public:
     QList<ModuleAutoExport> autoExports() const;
     void setAutoExports(const QList<ModuleAutoExport> &autoExport);
 
-    void ensureInModuleIndex(const DomItem &self, QString uri) const;
+    void ensureInModuleIndex(const DomItem &self, const QString &uri) const;
 
 private:
     void parse();
@@ -218,12 +222,15 @@ protected:
 public:
     constexpr static DomType kindValue = DomType::JsFile;
     DomType kind() const override { return kindValue; }
-    JsFile(QString filePath = QString(),
-           QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-           Path pathFromTop = Path(), int derivedFrom = 0)
+    JsFile(const QString &filePath = QString(),
+           const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+           const Path &pathFromTop = Path(), int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
     }
+    JsFile(const QString &filePath = QString(), const QString &code = QString(),
+           const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+           int derivedFrom = 0);
     JsFile(const JsFile &o) = default;
 
     std::shared_ptr<JsFile> makeCopy(const DomItem &self) const
@@ -231,12 +238,85 @@ public:
         return std::static_pointer_cast<JsFile>(doCopy(self));
     }
 
+    bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
+            override; // iterates the *direct* subpaths, returns false if a quick end was requested
+
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
     JsResource rootComponent() const { return m_rootComponent; }
+    void setFileLocationsTree(const FileLocations::Tree &v) { m_fileLocationsTree = std::move(v); }
+
+    static ErrorGroups myParsingErrors();
+
+    void writeOut(const DomItem &self, OutWriter &lw) const override;
+    void setExpression(const std::shared_ptr<ScriptExpression> &script) { m_script = script; }
+
+    void initPragmaLibrary() { m_pragmaLibrary = LegacyPragmaLibrary{}; };
+    void addFileImport(const QString &jsfile, const QString &module);
+    void addModuleImport(const QString &uri, const QString &version, const QString &module);
+
+private:
+    void writeOutDirectives(OutWriter &lw) const;
+
+    /*
+    Entities with Legacy prefix are here to support formatting of the discouraged
+    .import, .pragma directives in .js files.
+    Taking into account that usage of these directives is discouraged and
+    the fact that current usecase is limited to the formatting of .js, it's arguably should not
+    be exposed and kept private.
+
+    LegacyPragma corresponds to the only one existing .pragma library
+
+    LegacyImport is capable of representing the following import statements:
+    .import T_STRING_LITERAL as T_IDENTIFIER
+    .import T_IDENTIFIER (. T_IDENTIFIER)* (T_VERSION_NUMBER (. T_VERSION_NUMBER)?)? as T_IDENTIFIER
+
+    LegacyDirectivesCollector is a workaround for collecting those directives.
+    At the moment of writing .import, .pragma in .js files do not have corresponding
+    representative AST::Node-s. Collecting of those is happening during the lexing
+    */
+
+    struct LegacyPragmaLibrary
+    {
+        void writeOut(OutWriter &lw) const;
+    };
+
+    struct LegacyImport
+    {
+        QString fileName; // file import
+        QString uri; // module import
+        QString version; // used for module import
+        QString asIdentifier; // .import ... as T_Identifier
+
+        void writeOut(OutWriter &lw) const;
+    };
+
+    class LegacyDirectivesCollector : public QQmlJS::Directives
+    {
+    public:
+        LegacyDirectivesCollector(JsFile &file) : m_file(file){};
+
+        void pragmaLibrary() override { m_file.initPragmaLibrary(); };
+        void importFile(const QString &jsfile, const QString &module, int, int) override
+        {
+            m_file.addFileImport(jsfile, module);
+        };
+        void importModule(const QString &uri, const QString &version, const QString &module, int,
+                          int) override
+        {
+            m_file.addModuleImport(uri, version, module);
+        };
+
+    private:
+        JsFile &m_file;
+    };
 
 private:
     std::shared_ptr<QQmlJS::Engine> m_engine;
+    std::optional<LegacyPragmaLibrary> m_pragmaLibrary = std::nullopt;
+    QList<LegacyImport> m_imports;
+    std::shared_ptr<ScriptExpression> m_script;
     JsResource m_rootComponent;
+    FileLocations::Tree m_fileLocationsTree;
 };
 
 class QMLDOM_EXPORT QmlFile final : public ExternalOwningItem
@@ -248,10 +328,11 @@ public:
     constexpr static DomType kindValue = DomType::QmlFile;
     DomType kind() const override { return kindValue; }
 
-    QmlFile(const QmlFile &o);
-    QmlFile(QString filePath = QString(), QString code = QString(),
-            QDateTime lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-            int derivedFrom = 0);
+    enum RecoveryOption { DisableParserRecovery, EnableParserRecovery };
+
+    QmlFile(const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdate = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0, RecoveryOption option = DisableParserRecovery);
     static ErrorGroups myParsingErrors();
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
             override; // iterates the *direct* subpaths, returns false if a quick end was requested
@@ -262,18 +343,21 @@ public:
     }
     void addError(const DomItem &self, ErrorMessage &&msg) override;
 
-    const QMultiMap<QString, QmlComponent> &components() const & { return m_components; }
+    const QMultiMap<QString, QmlComponent> &components() const &
+    {
+        return lazyMembers().m_components;
+    }
     void setComponents(const QMultiMap<QString, QmlComponent> &components)
     {
-        m_components = components;
+        lazyMembers().m_components = components;
     }
     Path addComponent(const QmlComponent &component, AddOption option = AddOption::Overwrite,
                       QmlComponent **cPtr = nullptr)
     {
         QStringList nameEls = component.name().split(QChar::fromLatin1('.'));
         QString key = nameEls.mid(1).join(QChar::fromLatin1('.'));
-        return insertUpdatableElementInMultiMap(Path::Field(Fields::components), m_components, key,
-                                                component, option, cPtr);
+        return insertUpdatableElementInMultiMap(Path::Field(Fields::components), lazyMembers().m_components,
+                                                key, component, option, cPtr);
     }
 
     void writeOut(const DomItem &self, OutWriter &lw) const override;
@@ -282,68 +366,122 @@ public:
     {
         return m_ast; // avoid making it public? would make moving away from it easier
     }
-    const QList<Import> &imports() const & { return m_imports; }
-    void setImports(const QList<Import> &imports) { m_imports = imports; }
+    const QList<Import> &imports() const &
+    {
+        return lazyMembers().m_imports;
+    }
+    void setImports(const QList<Import> &imports) { lazyMembers().m_imports = imports; }
     Path addImport(const Import &i)
     {
-        index_type idx = index_type(m_imports.size());
-        m_imports.append(i);
+        auto &members = lazyMembers();
+        index_type idx = index_type(members.m_imports.size());
+        members.m_imports.append(i);
         if (i.uri.isModule()) {
-            m_importScope.addImport((i.importId.isEmpty()
-                                             ? QStringList()
-                                             : i.importId.split(QChar::fromLatin1('.'))),
-                                    i.importedPath());
+            members.m_importScope.addImport((i.importId.isEmpty()
+                                                     ? QStringList()
+                                                     : i.importId.split(QChar::fromLatin1('.'))),
+                                            i.importedPath());
         } else {
             QString path = i.uri.absoluteLocalPath(canonicalFilePath());
             if (!path.isEmpty())
-                m_importScope.addImport((i.importId.isEmpty()
-                                                 ? QStringList()
-                                                 : i.importId.split(QChar::fromLatin1('.'))),
-                                        Paths::qmlDirPath(path));
+                members.m_importScope.addImport(
+                        (i.importId.isEmpty() ? QStringList()
+                                              : i.importId.split(QChar::fromLatin1('.'))),
+                        Paths::qmlDirPath(path));
         }
         return Path::Field(Fields::imports).index(idx);
     }
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }
-    RegionComments &comments() { return m_comments; }
-    std::shared_ptr<AstComments> astComments() const { return m_astComments; }
-    void setAstComments(std::shared_ptr<AstComments> comm) { m_astComments = comm; }
-    FileLocations::Tree fileLocationsTree() const { return m_fileLocationsTree; }
-    void setFileLocationsTree(FileLocations::Tree v) { m_fileLocationsTree = v; }
-    const QList<Pragma> &pragmas() const & { return m_pragmas; }
-    void setPragmas(QList<Pragma> pragmas) { m_pragmas = pragmas; }
+    RegionComments &comments() { return lazyMembers().m_comments; }
+    std::shared_ptr<AstComments> astComments() const { return lazyMembers().m_astComments; }
+    void setAstComments(const std::shared_ptr<AstComments> &comm) { lazyMembers().m_astComments = comm; }
+    FileLocations::Tree fileLocationsTree() const { return lazyMembers().m_fileLocationsTree; }
+    void setFileLocationsTree(const FileLocations::Tree &v) { lazyMembers().m_fileLocationsTree = v; }
+    const QList<Pragma> &pragmas() const & { return lazyMembers().m_pragmas; }
+    void setPragmas(QList<Pragma> pragmas) { lazyMembers().m_pragmas = pragmas; }
     Path addPragma(const Pragma &pragma)
     {
-        int idx = m_pragmas.size();
-        m_pragmas.append(pragma);
+        auto &members = lazyMembers();
+        int idx = members.m_pragmas.size();
+        members.m_pragmas.append(pragma);
         return Path::Field(Fields::pragmas).index(idx);
     }
-    ImportScope &importScope() { return m_importScope; }
-    const ImportScope &importScope() const { return m_importScope; }
+    ImportScope &importScope() { return lazyMembers().m_importScope; }
+    const ImportScope &importScope() const { return lazyMembers().m_importScope; }
 
     std::shared_ptr<QQmlJSTypeResolver> typeResolver() const
     {
-        return m_typeResolver;
+        return lazyMembers().m_typeResolver;
     }
     void setTypeResolverWithDependencies(const std::shared_ptr<QQmlJSTypeResolver> &typeResolver,
                                          const QQmlJSTypeResolverDependencies &dependencies)
     {
-        m_typeResolver = typeResolver;
-        m_typeResolverDependencies = dependencies;
+        auto &members = lazyMembers();
+        members.m_typeResolver = typeResolver;
+        members.m_typeResolverDependencies = dependencies;
     }
 
+    DomCreationOptions creationOptions() const { return lazyMembers().m_creationOptions; }
+
+    QQmlJSScope::ConstPtr handleForPopulation() const
+    {
+        return m_handleForPopulation;
+    }
+
+    void setHandleForPopulation(const QQmlJSScope::ConstPtr &scope)
+    {
+        m_handleForPopulation = scope;
+    }
+
+
 private:
+    // The lazy parts of QmlFile are inside of QmlFileLazy.
+    struct QmlFileLazy
+    {
+        QmlFileLazy(FileLocations::Tree fileLocationsTree, AstComments *astComments)
+            : m_fileLocationsTree(fileLocationsTree), m_astComments(astComments)
+        {
+        }
+        RegionComments m_comments;
+        QMultiMap<QString, QmlComponent> m_components;
+        QList<Pragma> m_pragmas;
+        QList<Import> m_imports;
+        ImportScope m_importScope;
+        FileLocations::Tree m_fileLocationsTree;
+        std::shared_ptr<AstComments> m_astComments;
+        DomCreationOptions m_creationOptions;
+        std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
+        QQmlJSTypeResolverDependencies m_typeResolverDependencies;
+    };
     friend class QQmlDomAstCreator;
-    std::shared_ptr<Engine> m_engine;
     AST::UiProgram *m_ast; // avoid? would make moving away from it easier
-    std::shared_ptr<AstComments> m_astComments;
-    RegionComments m_comments;
-    FileLocations::Tree m_fileLocationsTree;
-    QMultiMap<QString, QmlComponent> m_components;
-    QList<Pragma> m_pragmas;
-    QList<Import> m_imports;
-    ImportScope m_importScope;
-    std::shared_ptr<QQmlJSTypeResolver> m_typeResolver;
-    QQmlJSTypeResolverDependencies m_typeResolverDependencies;
+    std::shared_ptr<Engine> m_engine;
+    QQmlJSScope::ConstPtr m_handleForPopulation;
+    mutable std::optional<QmlFileLazy> m_lazyMembers;
+
+    void ensurePopulated() const
+    {
+        if (m_lazyMembers)
+            return;
+
+        m_lazyMembers.emplace(FileLocations::createTree(canonicalPath()), new AstComments(m_engine));
+
+        // populate via the QQmlJSScope by accessing the (lazy) pointer
+        if (m_handleForPopulation.factory()) {
+            // silence no-discard attribute:
+            Q_UNUSED(m_handleForPopulation.data());
+        }
+    }
+    const QmlFileLazy &lazyMembers() const
+    {
+        ensurePopulated();
+        return *m_lazyMembers;
+    }
+    QmlFileLazy &lazyMembers()
+    {
+        ensurePopulated();
+        return *m_lazyMembers;
+    }
 };
 
 class QMLDOM_EXPORT QmltypesFile final : public ExternalOwningItem
@@ -359,9 +497,10 @@ public:
     constexpr static DomType kindValue = DomType::QmltypesFile;
     DomType kind() const override { return kindValue; }
 
-    QmltypesFile(QString filePath = QString(), QString code = QString(),
-                 QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                 int derivedFrom = 0)
+    QmltypesFile(
+            const QString &filePath = QString(), const QString &code = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::qmltypesFilePath(filePath),
                              derivedFrom, code)
     {
@@ -403,7 +542,7 @@ public:
     }
 
     const QMap<QString, QSet<int>> &uris() const & { return m_uris; }
-    void addUri(QString uri, int majorVersion)
+    void addUri(const QString &uri, int majorVersion)
     {
         QSet<int> &v = m_uris[uri];
         if (!v.contains(majorVersion)) {
@@ -427,9 +566,10 @@ public:
     constexpr static DomType kindValue = DomType::GlobalScope;
     DomType kind() const override { return kindValue; }
 
-    GlobalScope(QString filePath = QString(),
-                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
-                int derivedFrom = 0)
+    GlobalScope(
+            const QString &filePath = QString(),
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC),
+            int derivedFrom = 0)
         : ExternalOwningItem(filePath, lastDataUpdateAt, Paths::globalScopePath(filePath),
                              derivedFrom)
     {
@@ -444,7 +584,7 @@ public:
     QString name() const { return m_name; }
     Language language() const { return m_language; }
     GlobalComponent rootComponent() const { return m_rootComponent; }
-    void setName(QString name) { m_name = name; }
+    void setName(const QString &name) { m_name = name; }
     void setLanguage(Language language) { m_language = language; }
     void setRootComponent(const GlobalComponent &ob)
     {

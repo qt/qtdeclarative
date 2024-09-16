@@ -12,42 +12,101 @@
 #include <QtCore/qcbormap.h>
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
 using namespace Constants;
 using namespace Constants::MetatypesDotJson;
 using namespace Constants::MetatypesDotJson::Qml;
 using namespace QAnyStringViewUtils;
 
-static void collectExtraVersions(const QCborMap *component, QLatin1StringView key,
-                                 QList<QTypeRevision> &extraVersions)
+template<typename Container>
+static void collectExtraVersions(const Container &items, QList<QTypeRevision> &extraVersions)
 {
-    const QCborArray &items = component->value(key).toArray();
-    for (const QCborValue &item : items) {
-        const QCborMap obj = item.toMap();
-        const auto revision = obj.find(S_REVISION);
-        if (revision != obj.end()) {
-            const auto extraVersion = QTypeRevision::fromEncodedVersion(revision.value().toInteger());
-            if (!extraVersions.contains(extraVersion))
-                extraVersions.append(extraVersion);
-        }
+    for (const auto &obj : items) {
+        if (obj.revision.isValid() && !extraVersions.contains(obj.revision))
+            extraVersions.append(obj.revision);
     }
 }
 
-const QCborMap *QmlTypesClassDescription::findType(
-        const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+struct Compare {
+    bool operator()(const QAnyStringView &typeName, const MetaType &type) const
+    {
+        return typeName < type.qualifiedClassName();
+    }
+
+    bool operator()(const MetaType &type, const QAnyStringView &typeName) const
+    {
+        return type.qualifiedClassName() < typeName;
+    }
+};
+
+FoundType::FoundType(const MetaType &single, FoundType::Origin origin)
+{
+    if (single.inputFile().isEmpty()) {
+        javaScript = single;
+        javaScriptOrigin = origin;
+    } else {
+        native = single;
+        nativeOrigin = origin;
+    }
+}
+
+MetaType FoundType::select(const MetaType &category, QAnyStringView relation) const
+{
+    if (category.inputFile().isEmpty()) {
+        if (javaScript.isEmpty()) {
+            warning(category)
+                    << relation << "type of" << category.qualifiedClassName()
+                    << "is not a JavaScript type";
+        }
+        return javaScript;
+    }
+
+    if (native.isEmpty()) {
+        warning(category)
+                << relation << "of" << category.qualifiedClassName()
+                << "is not a native type";
+    }
+    return native;
+}
+
+FoundType QmlTypesClassDescription::findType(
+        const QVector<MetaType> &types, const QVector<MetaType> &foreign,
         const QAnyStringView &name, const QList<QAnyStringView> &namespaces)
 {
-    const auto compare = [](const QCborMap &type, const QAnyStringView &typeName) {
-        return toStringView(type, S_QUALIFIED_CLASS_NAME) < typeName;
-    };
+    const auto tryFindType = [&](QAnyStringView qualifiedName) -> FoundType {
+        FoundType result;
+        for (const QVector<MetaType> &t : {types, foreign}) {
+            const auto [first, last] = std::equal_range(
+                    t.begin(), t.end(), qualifiedName, Compare());
+            for (auto it = first; it != last; ++it) {
+                Q_ASSERT(it->qualifiedClassName() == qualifiedName);
 
-    const auto tryFindType = [&](QAnyStringView qualifiedName) -> const QCborMap * {
-        for (const QVector<QCborMap> &t : {types, foreign}) {
-            const auto it = std::lower_bound(t.begin(), t.end(), qualifiedName, compare);
-            if (it != t.end() && toStringView(*it, S_QUALIFIED_CLASS_NAME) == qualifiedName)
-                return &(*it);
+                if (it->inputFile().isEmpty()) {
+                    if (result.javaScript.isEmpty()) {
+                        result.javaScript = *it;
+                        result.javaScriptOrigin = (&t == &types)
+                                ? FoundType::OwnTypes
+                                : FoundType::ForeignTypes;
+                    } else {
+                        warning(result.javaScript)
+                                << "Multiple JavaScript types called" << qualifiedName << "found!";
+                    }
+                } else if (result.native.isEmpty()) {
+                    result.native = *it;
+                    result.nativeOrigin = (&t == &types)
+                            ? FoundType::OwnTypes
+                            : FoundType::ForeignTypes;
+                } else {
+                    warning(result.native)
+                            << "Multiple C++ types called" << qualifiedName << "found!\n"
+                            << "(other occurrence in :"
+                            << it->inputFile() << ":" << it->lineNumber() << ")\n"
+                            << "This violates the One Definition Rule!";
+                }
+            }
         }
 
-        return nullptr;
+        return result;
     };
 
     if (startsWith(name, QLatin1String("::")))
@@ -60,7 +119,7 @@ const QCborMap *QmlTypesClassDescription::findType(
             qualified.append(QLatin1String("::"));
         }
         name.visit([&](auto data) { qualified.append(data); });
-        if (const QCborMap *found = tryFindType(qualified))
+        if (const FoundType found = tryFindType(qualified))
             return found;
 
         qualified.truncate(0);
@@ -70,21 +129,20 @@ const QCborMap *QmlTypesClassDescription::findType(
 }
 
 void QmlTypesClassDescription::collectSuperClasses(
-        const QCborMap *classDef, const QVector<QCborMap> &types,
-        const QVector<QCborMap> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
+        const MetaType &classDef, const QVector<MetaType> &types,
+        const QVector<MetaType> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
-    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
-    const auto supers = classDef->value(S_SUPER_CLASSES).toArray();
-    for (const QCborValue &superValue : supers) {
-        const QCborMap superObject = superValue.toMap();
-        if (toStringView(superObject, S_ACCESS) == S_PUBLIC) {
-            const QAnyStringView superName = toStringView(superObject, S_NAME);
+    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
+    for (const BaseType &superObject : std::as_const(classDef.superClasses())) {
+        if (superObject.access == Access::Public) {
+            const QAnyStringView superName = superObject.name;
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : RelatedType;
-            if (const QCborMap *other = findType(types, foreign, superName, namespaces)) {
+            if (const FoundType found = findType(types, foreign, superName, namespaces)) {
+                const MetaType other = found.select(classDef, "Base");
                 collect(other, types, foreign, superMode, defaultRevision);
                 if (mode == TopLevel && superClass.isEmpty())
-                    superClass = toStringView(*other, S_QUALIFIED_CLASS_NAME);
+                    superClass = other.qualifiedClassName();
             }
 
             // If we cannot locate a type for it, there is no point in recording the superClass
@@ -92,40 +150,41 @@ void QmlTypesClassDescription::collectSuperClasses(
     }
 }
 
-void QmlTypesClassDescription::collectInterfaces(const QCborMap *classDef)
+void QmlTypesClassDescription::collectInterfaces(const MetaType &classDef)
 {
-    if (classDef->contains(S_INTERFACES)) {
-        const QCborArray array = classDef->value(S_INTERFACES).toArray();
-        for (const QCborValue &value : array) {
-            auto object = value.toArray()[0].toMap();
-            implementsInterfaces << toStringView(object, S_CLASS_NAME);
-        }
-    }
+    for (const Interface &iface : classDef.ifaces())
+        implementsInterfaces << interfaceName(iface);
 }
 
 void QmlTypesClassDescription::collectLocalAnonymous(
-        const QCborMap *classDef, const QVector<QCborMap> &types,
-        const QVector<QCborMap> &foreign, QTypeRevision defaultRevision)
+        const MetaType &classDef, const QVector<MetaType> &types,
+        const QVector<MetaType> &foreign, QTypeRevision defaultRevision)
 {
-    file = toStringView(*classDef, S_INPUT_FILE);
+    file = classDef.inputFile();
 
     resolvedClass = classDef;
-    className = toStringView(*classDef, S_QUALIFIED_CLASS_NAME);
+    className = classDef.qualifiedClassName();
 
-    if (classDef->value(S_OBJECT).toBool())
+    switch (classDef.kind()) {
+    case MetaType::Kind::Object:
         accessSemantics = DotQmltypes::S_REFERENCE;
-    else if (classDef->value(S_GADGET).toBool())
+        break;
+    case MetaType::Kind::Gadget:
         accessSemantics = DotQmltypes::S_VALUE;
-    else
+        break;
+    case MetaType::Kind::Namespace:
+    case MetaType::Kind::Unknown:
         accessSemantics = DotQmltypes::S_NONE;
+        break;
+    }
 
-    const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
-    for (const QCborValue &classInfo : classInfos) {
-        const QCborMap obj = classInfo.toMap();
-        if (obj[S_NAME] == S_DEFAULT_PROPERTY)
-            defaultProp = toStringView(obj, S_VALUE);
-        if (obj[S_NAME] == S_PARENT_PROPERTY)
-            parentProp = toStringView(obj, S_VALUE);
+    for (const ClassInfo &obj : classDef.classInfos()) {
+        if (obj.name == S_DEFAULT_PROPERTY)
+            defaultProp = obj.value;
+        else if (obj.name == S_PARENT_PROPERTY)
+            parentProp = obj.value;
+        else if (obj.name == S_REGISTER_ENUM_CLASSES_UNSCOPED && obj.value == S_FALSE)
+            registerEnumClassesScoped = true;
     }
 
     collectInterfaces(classDef);
@@ -133,23 +192,21 @@ void QmlTypesClassDescription::collectLocalAnonymous(
 }
 
 void QmlTypesClassDescription::collect(
-        const QCborMap *classDef, const QVector<QCborMap> &types,
-        const QVector<QCborMap> &foreign, CollectMode mode, QTypeRevision defaultRevision)
+        const MetaType &classDef, const QVector<MetaType> &types,
+        const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision)
 {
     if (file.isEmpty())
-        file = toStringView(*classDef, S_INPUT_FILE);
+        file = classDef.inputFile();
 
-    const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
-    const QAnyStringView classDefName = toStringView(*classDef, S_CLASS_NAME);
-    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(*classDef);
+    const QAnyStringView classDefName = classDef.className();
+    const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
     QAnyStringView foreignTypeName;
     bool foreignIsNamespace = false;
     bool isConstructible = false;
-    for (const QCborValue &classInfo : classInfos) {
-        const QCborMap obj = classInfo.toMap();
-        const QAnyStringView name = toStringView(obj, S_NAME);
-        const QAnyStringView value = toStringView(obj, S_VALUE);
+    for (const ClassInfo &obj : classDef.classInfos()) {
+        const QAnyStringView name = obj.name;
+        const QAnyStringView value = obj.value;
 
         if (name == S_DEFAULT_PROPERTY) {
             if (mode != RelatedType && defaultProp.isEmpty())
@@ -163,47 +220,64 @@ void QmlTypesClassDescription::collect(
             continue;
         }
 
-        if (const bool added = (name == S_ADDED_IN_VERSION);
-            added || name == S_REMOVED_IN_VERSION) {
-            QTypeRevision revision = QTypeRevision::fromEncodedVersion(toInt(value));
-            revision = handleInMinorVersion(revision, defaultRevision.majorVersion());
-            if (mode == TopLevel) {
-                (added ? addedInRevision : removedInRevision) = revision;
-            }
+        if (name == S_REGISTER_ENUM_CLASSES_UNSCOPED) {
+            if (mode != RelatedType && value == S_FALSE)
+                registerEnumClassesScoped = true;
+            continue;
+        }
+
+        if (name == S_ADDED_IN_VERSION) {
+            const QTypeRevision revision = handleInMinorVersion(
+                    QTypeRevision::fromEncodedVersion(toInt(value)),
+                    defaultRevision.majorVersion());
+            revisions.append(revision);
+            if (mode == TopLevel)
+                addedInRevision = revision;
             continue;
         }
 
         if (mode != TopLevel)
             continue;
 
+        if (name == S_REMOVED_IN_VERSION) {
+            removedInRevision = handleInMinorVersion(
+                    QTypeRevision::fromEncodedVersion(toInt(value)),
+                    defaultRevision.majorVersion());
+            continue;
+        }
+
         // These only apply to the original class
         if (name == S_ELEMENT) {
             if (value == S_AUTO)
-                elementName = classDefName;
+                elementNames.append(classDefName);
             else if (value != S_ANONYMOUS)
-                elementName = value;
+                elementNames.append(value);
         } else if (name == S_CREATABLE) {
             isCreatable = (value != S_FALSE);
         } else if (name == S_CREATION_METHOD) {
             isStructured = (value == S_STRUCTURED);
             isConstructible = isStructured || (value == S_CONSTRUCT);
         } else if (name == S_ATTACHED) {
-            if (const QCborMap *attached = collectRelated(
+            if (const FoundType attached = collectRelated(
                         value, types, foreign, defaultRevision, namespaces)) {
-                attachedType = toStringView(*attached, S_QUALIFIED_CLASS_NAME);
+                attachedType = attached.select(classDef, "Attached").qualifiedClassName();
             }
         } else if (name == S_EXTENDED) {
-            if (const QCborMap *extension = collectRelated(
+            if (const FoundType extension = collectRelated(
                         value, types, foreign, defaultRevision, namespaces)) {
-                extensionType = toStringView(*extension, S_QUALIFIED_CLASS_NAME);
+                javaScriptExtensionType = extension.javaScript.qualifiedClassName();
+                nativeExtensionType = extension.native.qualifiedClassName();
             }
+        } else if (name == S_EXTENSION_IS_JAVA_SCRIPT) {
+            if (value == S_TRUE)
+                extensionIsJavaScript = true;
         } else if (name == S_EXTENSION_IS_NAMESPACE) {
             if (value == S_TRUE)
                 extensionIsNamespace = true;
         } else if (name == S_SEQUENCE) {
-            if (const QCborMap *element = collectRelated(
+            if (const FoundType element = collectRelated(
                         value, types, foreign, defaultRevision, namespaces)) {
-                sequenceValueType = toStringView(*element, S_QUALIFIED_CLASS_NAME);
+                sequenceValueType = element.select(classDef, "Sequence value").qualifiedClassName();
             } else {
                 // TODO: get rid of this once we have JSON data for the builtins.
                 sequenceValueType = value;
@@ -215,86 +289,95 @@ void QmlTypesClassDescription::collect(
             foreignTypeName = value;
         } else if (name == S_FOREIGN_IS_NAMESPACE) {
             foreignIsNamespace = (value == S_TRUE);
-        } else if (name == S_OMIT_FROM_QML_TYPES) {
-            if (value == S_TRUE)
-                omitFromQmlTypes = true;
+        } else if (name == S_PRIMITIVE_ALIAS) {
+            primitiveAliases.append(value);
+        } else if (name == S_ROOT) {
+            isRootClass = (value == S_TRUE);
         } else if (name == S_HAS_CUSTOM_PARSER) {
             if (value == S_TRUE)
                 hasCustomParser = true;
         } else if (name == S_DEFERRED_PROPERTY_NAMES) {
-            deferredNames = split(value, ',');
+            deferredNames = split(value, QLatin1StringView(","));
         } else if (name == S_IMMEDIATE_PROPERTY_NAMES) {
-            immediateNames = split(value, ',');
+            immediateNames = split(value, QLatin1StringView(","));
         }
     }
 
-    if (addedInRevision.isValid() && !elementName.isEmpty())
+    if (addedInRevision.isValid() && !elementNames.isEmpty())
         revisions.append(addedInRevision);
 
     // If the local type is a namespace the result can only be a namespace,
     // no matter what the foreign type is.
-    const bool isNamespace = foreignIsNamespace || classDef->value(S_NAMESPACE).toBool();
+    const bool isNamespace = foreignIsNamespace || classDef.kind() == MetaType::Kind::Namespace;
 
+    MetaType resolved = classDef;
     if (!foreignTypeName.isEmpty()) {
         // We can re-use a type with own QML.* macros as target of QML.Foreign
-        if (const QCborMap *other = findType(foreign, types, foreignTypeName, namespaces)) {
-            classDef = other;
+        if (const FoundType found = findType(foreign, types, foreignTypeName, namespaces)) {
+            resolved = found.select(classDef, "Foreign");
 
-            // Default properties are always local.
+            // Default properties and enum classes are always local.
             defaultProp = {};
+            registerEnumClassesScoped = false;
 
-            // Foreign type can have a default property or an attached types
-            const auto classInfos = classDef->value(S_CLASS_INFOS).toArray();
-            for (const QCborValue &classInfo : classInfos) {
-                const QCborMap obj = classInfo.toMap();
-                const QAnyStringView foreignName = toStringView(obj, S_NAME);
-                const QAnyStringView foreignValue = toStringView(obj, S_VALUE);
+            // Foreign type can have a default property or an attached type,
+            // or RegisterEnumClassesUnscoped classinfo.
+            for (const ClassInfo &obj : resolved.classInfos()) {
+                const QAnyStringView foreignName = obj.name;
+                const QAnyStringView foreignValue = obj.value;
                 if (defaultProp.isEmpty() && foreignName == S_DEFAULT_PROPERTY) {
                     defaultProp = foreignValue;
                 } else if (parentProp.isEmpty() && foreignName == S_PARENT_PROPERTY) {
                     parentProp = foreignValue;
+                } else if (foreignName == S_REGISTER_ENUM_CLASSES_UNSCOPED) {
+                    if (foreignValue == S_FALSE)
+                        registerEnumClassesScoped = true;
                 } else if (foreignName == S_ATTACHED) {
-                    if (const QCborMap *attached = collectRelated(
+                    if (const FoundType attached = collectRelated(
                                 foreignValue, types, foreign, defaultRevision, namespaces)) {
-                        attachedType = toStringView(*attached, S_QUALIFIED_CLASS_NAME);
+                        attachedType = attached.select(resolved, "Attached").qualifiedClassName();
                     }
                 } else if (foreignName == S_EXTENDED) {
-                    if (const QCborMap *extension = collectRelated(
+                    if (const FoundType extension = collectRelated(
                                 foreignValue, types, foreign, defaultRevision, namespaces)) {
-                        extensionType = toStringView(*extension, S_QUALIFIED_CLASS_NAME);
+                        nativeExtensionType = extension.native.qualifiedClassName();
+                        javaScriptExtensionType = extension.javaScript.qualifiedClassName();
                     }
+                } else if (foreignName == S_EXTENSION_IS_JAVA_SCRIPT) {
+                    if (foreignValue == S_TRUE)
+                        extensionIsJavaScript = true;
                 } else if (foreignName == S_EXTENSION_IS_NAMESPACE) {
                     if (foreignValue == S_TRUE)
                         extensionIsNamespace = true;
                 } else if (foreignName == S_SEQUENCE) {
-                    if (const QCborMap *element = collectRelated(
+                    if (const FoundType element = collectRelated(
                                 foreignValue, types, foreign, defaultRevision, namespaces)) {
-                        sequenceValueType = toStringView(*element, S_QUALIFIED_CLASS_NAME);
+                        sequenceValueType
+                                = element.select(resolved, "Sequence value").qualifiedClassName();
                     }
                 }
             }
         } else {
             className = foreignTypeName;
-            classDef = nullptr;
+            resolved = MetaType();
         }
     }
 
-    if (classDef) {
-        if (mode == RelatedType || !elementName.isEmpty()) {
-            collectExtraVersions(classDef, S_PROPERTIES, revisions);
-            collectExtraVersions(classDef, S_SLOTS, revisions);
-            collectExtraVersions(classDef, S_METHODS, revisions);
-            collectExtraVersions(classDef, S_SIGNALS, revisions);
+    if (!resolved.isEmpty()) {
+        if (mode == RelatedType || !elementNames.isEmpty()) {
+            collectExtraVersions(resolved.properties(), revisions);
+            collectExtraVersions(resolved.methods(), revisions);
+            collectExtraVersions(resolved.sigs(), revisions);
         }
 
-        collectSuperClasses(classDef, types, foreign, mode, defaultRevision);
+        collectSuperClasses(resolved, types, foreign, mode, defaultRevision);
     }
 
     if (mode != TopLevel)
         return;
 
-    if (classDef)
-        collectInterfaces(classDef);
+    if (!resolved.isEmpty())
+        collectInterfaces(resolved);
 
     if (!addedInRevision.isValid()) {
         addedInRevision = defaultRevision;
@@ -308,9 +391,9 @@ void QmlTypesClassDescription::collect(
     const auto end = std::unique(revisions.begin(), revisions.end());
     revisions.erase(QList<QTypeRevision>::const_iterator(end), revisions.constEnd());
 
-    resolvedClass = classDef;
-    if (className.isEmpty() && classDef)
-        className = toStringView(*classDef, S_QUALIFIED_CLASS_NAME);
+    resolvedClass = resolved;
+    if (className.isEmpty() && !resolved.isEmpty())
+        className = resolved.qualifiedClassName();
 
     if (!sequenceValueType.isEmpty()) {
         isCreatable = false;
@@ -318,31 +401,43 @@ void QmlTypesClassDescription::collect(
     } else if (isNamespace) {
         isCreatable = false;
         accessSemantics = DotQmltypes::S_NONE;
-    } else if (classDef && classDef->value(S_OBJECT).toBool()) {
+    } else if (resolved.kind() == MetaType::Kind::Object) {
         accessSemantics = DotQmltypes::S_REFERENCE;
     } else {
         isCreatable = isConstructible;
 
-        if (!classDef) {
-            if (elementName.isEmpty() || elementName.front().isLower()) {
-                // If no classDef, we generally assume it's a value type defined by the
+        if (resolved.isEmpty()) {
+            if (elementNames.isEmpty()) {
+                // If no resolved, we generally assume it's a value type defined by the
                 // foreign/extended trick.
                 accessSemantics = DotQmltypes::S_VALUE;
-            } else {
-                // Objects and namespaces always have metaobjects and therefore classDefs.
-                // However, we may not be able to resolve the metaobject at compile time. See
-                // the "Invisible" test case. In that case, we must not assume anything about
-                // access semantics.
-
-                qWarning() << "Warning: Refusing to generate non-lowercase name"
-                           << elementName.toString() << "for unknown foreign type";
-                elementName = {};
-
-                // Make it completely inaccessible.
-                // We cannot get enums from anonymous types after all.
-                accessSemantics = DotQmltypes::S_NONE;
             }
-        } else if (classDef->value(S_GADGET).toBool()) {
+
+            for (auto elementName = elementNames.begin(); elementName != elementNames.end();) {
+                if (elementName->isEmpty() || elementName->front().isLower()) {
+                    // If no resolved, we generally assume it's a value type defined by the
+                    // foreign/extended trick.
+                    accessSemantics = DotQmltypes::S_VALUE;
+                    ++elementName;
+                } else {
+                    // Objects and namespaces always have metaobjects and therefore classDefs.
+                    // However, we may not be able to resolve the metaobject at compile time. See
+                    // the "Invisible" test case. In that case, we must not assume anything about
+                    // access semantics.
+
+                    warning(classDef)
+                            << "Refusing to generate non-lowercase name"
+                            << *elementName << "for unknown foreign type";
+                    elementName = elementNames.erase(elementName);
+
+                    if (elementNames.isEmpty()) {
+                        // Make it completely inaccessible.
+                        // We cannot get enums from anonymous types after all.
+                        accessSemantics = DotQmltypes::S_NONE;
+                    }
+                }
+            }
+        } else if (resolved.kind() == MetaType::Kind::Gadget) {
             accessSemantics = DotQmltypes::S_VALUE;
         } else {
             accessSemantics = DotQmltypes::S_NONE;
@@ -350,15 +445,114 @@ void QmlTypesClassDescription::collect(
     }
 }
 
-const QCborMap *QmlTypesClassDescription::collectRelated(
-        QAnyStringView related, const QVector<QCborMap> &types, const QVector<QCborMap> &foreign,
+FoundType QmlTypesClassDescription::collectRelated(
+        QAnyStringView related, const QVector<MetaType> &types, const QVector<MetaType> &foreign,
         QTypeRevision defaultRevision, const QList<QAnyStringView> &namespaces)
 {
-    if (const QCborMap *other = findType(types, foreign, related, namespaces)) {
-        collect(other, types, foreign, RelatedType, defaultRevision);
+    if (FoundType other = findType(types, foreign, related, namespaces)) {
+        if (!other.native.isEmpty())
+            collect(other.native, types, foreign, RelatedType, defaultRevision);
+        if (!other.javaScript.isEmpty())
+            collect(other.javaScript, types, foreign, RelatedType, defaultRevision);
         return other;
     }
-    return nullptr;
+    return FoundType();
+}
+
+struct UsingCompare {
+    bool operator()(const UsingDeclaration &a, QAnyStringView b) const
+    {
+        return a.alias < b;
+    }
+
+    bool operator()(QAnyStringView a, const UsingDeclaration &b) const
+    {
+        return a < b.alias;
+    }
+};
+
+ResolvedTypeAlias::ResolvedTypeAlias(
+        QAnyStringView alias, const QList<UsingDeclaration> &usingDeclarations)
+    : type(alias)
+{
+    handleVoid();
+    if (type.isEmpty())
+        return;
+
+    handleList();
+
+    if (!isList) {
+        handlePointer();
+        handleConst();
+    }
+
+    while (true) {
+        const auto usingDeclaration = std::equal_range(
+                usingDeclarations.begin(), usingDeclarations.end(), type, UsingCompare());
+        if (usingDeclaration.first == usingDeclaration.second)
+            break;
+
+        type = usingDeclaration.first->original;
+        handleVoid();
+        if (type.isEmpty())
+            return;
+
+        if (isPointer) {
+            handleConst();
+            continue;
+        }
+
+        if (!isList) {
+            handleList();
+            if (!isList) {
+                handlePointer();
+                handleConst();
+            }
+        }
+    }
+}
+
+void ResolvedTypeAlias::handleVoid()
+{
+    if (!isPointer && type == "void")
+        type = "";
+}
+
+void ResolvedTypeAlias::handleList()
+{
+    for (QLatin1StringView list : {"QQmlListProperty<"_L1, "QList<"_L1}) {
+        if (!startsWith(type, list) || type.back() != '>'_L1)
+            continue;
+
+        const int listSize = list.size();
+        const QAnyStringView elementType = trimmed(type.mid(listSize, type.size() - listSize - 1));
+
+               // QQmlListProperty internally constructs the pointer. Passing an explicit '*' will
+               // produce double pointers. QList is only for value types. We can't handle QLists
+               // of pointers (unless specially registered, but then they're not isList).
+        if (elementType.back() == '*'_L1)
+            continue;
+
+        isList = true;
+        type = elementType;
+        return;
+    }
+}
+
+void ResolvedTypeAlias::handlePointer()
+{
+    if (type.back() == '*'_L1) {
+        isPointer = true;
+        type = type.chopped(1);
+    }
+}
+
+void ResolvedTypeAlias::handleConst()
+{
+    if (startsWith(type, "const "_L1)) {
+        isConstant = true;
+        type = type.sliced(strlen("const "));
+    }
 }
 
 QT_END_NAMESPACE

@@ -219,7 +219,7 @@ void QQuickIconLabelPrivate::layout()
                                                        qMin(image->implicitHeight(), availableHeight)),
                                                 QRectF(leftPadding, topPadding, availableWidth, availableHeight));
             image->setSize(iconRect.size());
-            image->setPosition(iconRect.topLeft());
+            image->snapPositionTo(iconRect.topLeft());
         }
         break;
     case QQuickIconLabel::TextOnly:
@@ -256,7 +256,7 @@ void QQuickIconLabelPrivate::layout()
         if (image) {
             QRectF iconRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignTop, iconSize, combinedRect);
             image->setSize(iconRect.size());
-            image->setPosition(iconRect.topLeft());
+            image->snapPositionTo(iconRect.topLeft());
         }
         if (label) {
             QRectF textRect = alignedRect(mirrored, Qt::AlignHCenter | Qt::AlignBottom, textSize, combinedRect);
@@ -290,7 +290,7 @@ void QQuickIconLabelPrivate::layout()
         if (image) {
             const QRectF iconRect = alignedRect(mirrored, Qt::AlignLeft | Qt::AlignVCenter, iconSize, combinedRect);
             image->setSize(iconRect.size());
-            image->setPosition(iconRect.topLeft());
+            image->snapPositionTo(iconRect.topLeft());
         }
         if (label) {
             const QRectF textRect = alignedRect(mirrored, Qt::AlignRight | Qt::AlignVCenter, textSize, combinedRect);

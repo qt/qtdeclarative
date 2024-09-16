@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QDir>
@@ -16,6 +16,25 @@
 
 using namespace QQmlJS::Dom;
 
+// TODO refactor extension helpers
+const QString QML_EXT = ".qml";
+const QString JS_EXT = ".js";
+const QString MJS_EXT = ".mjs";
+
+static QStringView fileExt(QStringView filename)
+{
+    if (filename.endsWith(QML_EXT)) {
+        return QML_EXT;
+    }
+    if (filename.endsWith(JS_EXT)) {
+        return JS_EXT;
+    }
+    if (filename.endsWith(MJS_EXT)) {
+        return MJS_EXT;
+    }
+    Q_UNREACHABLE();
+};
+
 class TestQmlformat: public QQmlDataTest
 {
     Q_OBJECT
@@ -27,6 +46,7 @@ public:
 private Q_SLOTS:
     void initTestCase() override;
 
+    //actually testFormat tests CLI of qmlformat
     void testFormat();
     void testFormat_data();
 
@@ -42,10 +62,17 @@ private Q_SLOTS:
 
     void testFilesOption_data();
     void testFilesOption();
+
+    void plainJS_data();
+    void plainJS();
+
+    void ecmascriptModule();
+
 private:
     QString readTestFile(const QString &path);
+    //TODO(QTBUG-117849) refactor this helper function
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
-                         RunOption rOption = RunOption::OnCopy);
+                         RunOption rOption = RunOption::OnCopy, QStringView ext = QML_EXT);
     QString formatInMemory(const QString &fileToFormat, bool *didSucceed = nullptr,
                            LineWriterOptions options = LineWriterOptions(),
                            WriteOutChecks extraChecks = WriteOutCheck::ReparseCompare,
@@ -132,6 +159,14 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/typeAnnotations.2.qml";
     m_invalidFiles << "tests/auto/qml/qqmlparser/data/disallowedtypeannotations/qmlnestedfunction.qml";
     m_invalidFiles << "tests/auto/qmlls/utils/data/emptyFile.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/missingRHS.parserfail.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/attachedPropertyMissingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/groupedPropertyMissingRHS.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/completions/afterDots.qml";
+    m_invalidFiles << "tests/auto/qmlls/modules/data/completions/bindingAfterDot.qml";
+    m_invalidFiles << "tests/auto/qmlls/modules/data/completions/defaultBindingAfterDot.qml";
+    m_invalidFiles << "tests/auto/qmlls/utils/data/qualifiedModule.qml";
 
     // Files that get changed:
     // rewrite of import "bla/bla/.." to import "bla"
@@ -343,6 +378,45 @@ void TestQmlformat::testFormat_data()
     QTest::newRow("ellipsisFunctionArgument")
             << "ellipsisFunctionArgument.qml"
             << "ellipsisFunctionArgument.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("importStatements")
+            << "importStatements.qml"
+            << "importStatements.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("arrayEndComma")
+            << "arrayEndComma.qml"
+            << "arrayEndComma.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("escapeChars")
+            << "escapeChars.qml"
+            << "escapeChars.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("javascriptBlock")
+            << "javascriptBlock.qml"
+            << "javascriptBlock.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("enumWithValues")
+            << "enumWithValues.qml"
+            << "enumWithValues.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("typeAnnotatedSignal")
+            << "signal.qml"
+            << "signal.formatted.qml" << QStringList{} << RunOption::OnCopy;
+    //plainJS
+    QTest::newRow("nestedLambdaWithIfElse")
+            << "lambdaWithIfElseInsideLambda.js"
+            << "lambdaWithIfElseInsideLambda.formatted.js" << QStringList{} << RunOption::OnCopy;
+
+    QTest::newRow("indentEquals2")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedW2.js" << QStringList{"-w=2"} << RunOption::OnCopy;
+
+    QTest::newRow("tabIndents")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedTabs.js" << QStringList{"-t"} << RunOption::OnCopy;
+
+    QTest::newRow("normalizedFunctionSpacing")
+            << "threeFunctionsOneLine.js"
+            << "threeFunctions.formattedFuncSpacing.js"
+            << QStringList{ "-n", "--functions-spacing" } << RunOption::OnCopy;
+
+    QTest::newRow("esm_tabIndents")
+            << "mini_esm.mjs"
+            << "mini_esm.formattedTabs.mjs" << QStringList{ "-t" } << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
@@ -352,7 +426,82 @@ void TestQmlformat::testFormat()
     QFETCH(QStringList, args);
     QFETCH(RunOption, runOption);
 
-    QCOMPARE(runQmlformat(testFile(file), args, true, runOption), readTestFile(fileFormatted));
+    auto formatted = runQmlformat(testFile(file), args, true, runOption, fileExt(file));
+    QEXPECT_FAIL("normalizedFunctionSpacing",
+                 "Normalize && function spacing are not yet supported for JS", Abort);
+    auto exp = readTestFile(fileFormatted);
+    QCOMPARE(formatted, exp);
+}
+
+void TestQmlformat::plainJS_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("fileFormatted");
+
+    QTest::newRow("simpleStatement") << "simpleJSStatement.js"
+                                     << "simpleJSStatement.formatted.js";
+    QTest::newRow("simpleFunction") << "simpleOnelinerJSFunc.js"
+                                    << "simpleOnelinerJSFunc.formatted.js";
+    QTest::newRow("simpleLoop") << "simpleLoop.js"
+                                << "simpleLoop.formatted.js";
+    QTest::newRow("messyIfStatement") << "messyIfStatement.js"
+                                      << "messyIfStatement.formatted.js";
+    QTest::newRow("lambdaFunctionWithLoop") << "lambdaFunctionWithLoop.js"
+                                            << "lambdaFunctionWithLoop.formatted.js";
+    QTest::newRow("lambdaWithIfElse") << "lambdaWithIfElse.js"
+                                      << "lambdaWithIfElse.formatted.js";
+    QTest::newRow("nestedLambdaWithIfElse") << "lambdaWithIfElseInsideLambda.js"
+                                            << "lambdaWithIfElseInsideLambda.formatted.js";
+    QTest::newRow("twoFunctions") << "twoFunctions.js"
+                                  << "twoFunctions.formatted.js";
+    QTest::newRow("pragma") << "pragma.js"
+                            << "pragma.formatted.js";
+    QTest::newRow("classConstructor") << "class.js"
+                                      << "class.formatted.js";
+    QTest::newRow("legacyDirectives") << "directives.js"
+                                      << "directives.formatted.js";
+    QTest::newRow("legacyDirectivesWithComments") << "directivesWithComments.js"
+                                                  << "directivesWithComments.formatted.js";
+}
+
+void TestQmlformat::plainJS()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, fileFormatted);
+
+    bool wasSuccessful;
+    LineWriterOptions opts;
+#ifdef Q_OS_WIN
+    opts.lineEndings = QQmlJS::Dom::LineWriterOptions::LineEndings::Windows;
+#endif
+    QString output = formatInMemory(testFile(file), &wasSuccessful, opts, WriteOutCheck::None);
+
+    QVERIFY(wasSuccessful && !output.isEmpty());
+
+    // TODO(QTBUG-119404)
+    QEXPECT_FAIL("classConstructor", "see QTBUG-119404", Abort);
+    // TODO(QTBUG-119770)
+    QEXPECT_FAIL("legacyDirectivesWithComments", "see QTBUG-119770", Abort);
+    auto exp = readTestFile(fileFormatted);
+    QCOMPARE(output, exp);
+}
+
+void TestQmlformat::ecmascriptModule()
+{
+    QString file("esm.mjs");
+    QString formattedFile("esm.formatted.mjs");
+
+    bool wasSuccessful;
+    LineWriterOptions opts;
+#ifdef Q_OS_WIN
+    opts.lineEndings = QQmlJS::Dom::LineWriterOptions::LineEndings::Windows;
+#endif
+    QString output = formatInMemory(testFile(file), &wasSuccessful, opts, WriteOutCheck::None);
+
+    QVERIFY(wasSuccessful && !output.isEmpty());
+
+    auto exp = readTestFile(formattedFile);
+    QCOMPARE(output, readTestFile(formattedFile));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
@@ -365,9 +514,23 @@ void TestQmlformat::testExample_data()
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
     QString tests = QLatin1String(SRCDIR) + "/../../../../tests/";
 
+    QStringList exampleFiles;
+    QStringList testFiles;
     QStringList files;
-    files << findFiles(QDir(examples));
-    files << findFiles(QDir(tests));
+    exampleFiles << findFiles(QDir(examples));
+    testFiles << findFiles(QDir(tests));
+
+    // Actually this test is an e2e test and not the unit test.
+    // At the moment of writing, CI lacks providing instruments for the automated tests
+    // which might be time-consuming, as for example this one.
+    // Therefore as part of QTBUG-122990 this test was copied to the /manual/e2e/qml/qmlformat
+    // however very small fraction of the test data is still preserved here for the sake of
+    // testing automatically at least a small part of the examples
+    const int nBatch = 10;
+    files << exampleFiles.mid(0, nBatch) << exampleFiles.mid(exampleFiles.size() / 2, nBatch)
+          << exampleFiles.mid(exampleFiles.size() - nBatch, nBatch);
+    files << testFiles.mid(0, nBatch) << testFiles.mid(exampleFiles.size() / 2, nBatch)
+          << testFiles.mid(exampleFiles.size() - nBatch, nBatch);
 
     for (const QString &file : files)
         QTest::newRow(qPrintable(file)) << file;
@@ -524,11 +687,11 @@ void TestQmlformat::testFilesOption()
 }
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList args,
-                                    bool shouldSucceed, RunOption rOptions)
+                                    bool shouldSucceed, RunOption rOptions, QStringView ext)
 {
     // Copy test file to temporary location
     QTemporaryDir tempDir;
-    const QString tempFile = tempDir.path() + QDir::separator() + "to_format.qml";
+    const QString tempFile = (tempDir.path() + QDir::separator() + "to_format") % ext;
 
     if (rOptions == RunOption::OnCopy) {
         QFile::copy(fileToFormat, tempFile);
@@ -552,7 +715,8 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList arg
 
     QFile temp(tempFile);
 
-    temp.open(QIODevice::ReadOnly);
+    if (!temp.open(QIODevice::ReadOnly))
+        qFatal("Could not open %s", qPrintable(tempFile));
     QString formatted = QString::fromUtf8(temp.readAll());
 
     return formatted;
@@ -562,19 +726,17 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
                                       LineWriterOptions options, WriteOutChecks extraChecks,
                                       WriteOutChecks largeChecks)
 {
-    DomItem env = DomEnvironment::create(
+    auto env = DomEnvironment::create(
             QStringList(), // as we load no dependencies we do not need any paths
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
     DomItem tFile;
-    env.loadFile(
-            FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), fileToFormat),
-            [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-            LoadOption::DefaultLoad);
-    env.loadPendingDependencies();
+    env->loadFile(FileToLoad::fromFileSystem(env, fileToFormat),
+                  [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
+    env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
 
-    DomItem writtenOut;
+    bool writtenOut;
     QString resultStr;
     if (myFile.field(Fields::isValid).value().toBool()) {
         WriteOutChecks checks = extraChecks;
@@ -592,7 +754,7 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
         res.flush();
     }
     if (didSucceed)
-        *didSucceed = bool(writtenOut);
+        *didSucceed = writtenOut;
     return resultStr;
 }
 

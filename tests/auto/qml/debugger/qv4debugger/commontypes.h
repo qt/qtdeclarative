@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef COMMONTYPES_H
 #define COMMONTYPES_H
@@ -14,7 +14,7 @@ class MyType : public QQuickItem
     QML_ELEMENT
 public:
     MyType(QQuickItem *parent = nullptr) : QQuickItem(parent) {}
-    Q_INVOKABLE void name(QQmlV4Function*) const {}
+    Q_INVOKABLE void name(QQmlV4FunctionPtr) const {}
 };
 
 #endif // COMMONTYPES_H

@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DialogButtonBox
     \inherits Container
-//!     \instantiates QQuickDialogButtonBox
+//!     \nativetype QQuickDialogButtonBox
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols-dialogs
     \brief A button box used in dialogs.
@@ -455,6 +455,7 @@ QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
     Q_D(QQuickDialogButtonBox);
     d->changeTypes |= QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
     d->buttonLayout = platformButtonLayout();
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickDialogButtonBox::~QQuickDialogButtonBox()
@@ -506,7 +507,6 @@ void QQuickDialogButtonBox::setPosition(Position position)
     This property holds the alignment of the buttons.
 
     Possible values:
-    \value undefined The buttons are resized to fill the available space.
     \value Qt.AlignLeft The buttons are aligned to the left.
     \value Qt.AlignHCenter The buttons are horizontally centered.
     \value Qt.AlignRight The buttons are aligned to the right.
@@ -514,12 +514,16 @@ void QQuickDialogButtonBox::setPosition(Position position)
     \value Qt.AlignVCenter The buttons are vertically centered.
     \value Qt.AlignBottom The buttons are aligned to the bottom.
 
-    The default value is \c undefined.
+    By default, no specific alignment is set; reading the alignment property yields
+    a default flag value which compares equal to 0. The property can be reset to this
+    value by assigning \c{undefined} to it. In this case, the buttons are resized to
+    fill the available space.
 
-    \note This property assumes a horizontal layout of the buttons. The
-    DialogButtonBox for the \l {iOS Style}{iOS style} uses a vertical layout
-    when there are more than two buttons, and if set to a value other than
-    \c undefined, the layout of its buttons will be done horizontally.
+    \note This property assumes a horizontal layout of the buttons.
+    Note that when running the \l {iOS Style}{iOS style}, the DialogButtonBox will use
+    a vertical layout if this property is set to anything other than \c undefined and
+    there are more than two buttons.
+    In all other cases, the buttons will be arranged horizontally.
 */
 Qt::Alignment QQuickDialogButtonBox::alignment() const
 {

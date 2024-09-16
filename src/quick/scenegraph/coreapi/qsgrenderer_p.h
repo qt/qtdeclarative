@@ -29,10 +29,10 @@ class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
 class QRhiResourceUpdateBatch;
 
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
-Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
+Q_QUICK_EXPORT bool qsg_test_and_clear_fatal_render_error();
+Q_QUICK_EXPORT void qsg_set_fatal_renderer_error();
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderTarget
+class Q_QUICK_EXPORT QSGRenderTarget
 {
 public:
     QSGRenderTarget() { }
@@ -53,18 +53,20 @@ public:
     QRhiCommandBuffer *cb = nullptr;
 
     QPaintDevice *paintDevice = nullptr;
+
+    int multiViewCount = 0;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QSGAbstractRenderer
+class Q_QUICK_EXPORT QSGRenderer : public QSGAbstractRenderer
 {
 public:
     QSGRenderer(QSGRenderContext *context);
     virtual ~QSGRenderer();
 
     // Accessed by QSGMaterial[Rhi]Shader::RenderState.
-    QMatrix4x4 currentProjectionMatrix() const { return m_current_projection_matrix; }
+    QMatrix4x4 currentProjectionMatrix(int index) const { return m_current_projection_matrix[index]; }
     QMatrix4x4 currentModelViewMatrix() const { return m_current_model_view_matrix; }
-    QMatrix4x4 currentCombinedMatrix() const { return m_current_projection_matrix * m_current_model_view_matrix; }
+    QMatrix4x4 currentCombinedMatrix(int index) const { return m_current_projection_matrix[index] * m_current_model_view_matrix; }
     qreal currentOpacity() const { return m_current_opacity; }
     qreal determinant() const { return m_current_determinant; }
 
@@ -115,8 +117,8 @@ protected:
     void addNodesToPreprocess(QSGNode *node);
     void removeNodesToPreprocess(QSGNode *node);
 
-    QMatrix4x4 m_current_projection_matrix; // includes adjustment, where applicable, so can be treated as Y up in NDC always
-    QMatrix4x4 m_current_projection_matrix_native_ndc; // Vulkan has Y down in normalized device coordinates, others Y up...
+    QVarLengthArray<QMatrix4x4, 1> m_current_projection_matrix; // includes adjustment, where applicable, so can be treated as Y up in NDC always
+    QVarLengthArray<QMatrix4x4, 1> m_current_projection_matrix_native_ndc; // Vulkan has Y down in normalized device coordinates, others Y up...
     QMatrix4x4 m_current_model_view_matrix;
     qreal m_current_opacity;
     qreal m_current_determinant;
@@ -154,7 +156,7 @@ QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState
 }
 
 
-class Q_QUICK_PRIVATE_EXPORT QSGNodeDumper : public QSGNodeVisitor {
+class Q_QUICK_EXPORT QSGNodeDumper : public QSGNodeVisitor {
 
 public:
     static void dump(QSGNode *n);

@@ -17,6 +17,6 @@
 // We mean it.
 //
 
-#include <QtLabsQmlModels/private/qtlabsqmlmodelsexports_p.h>
+#include <QtLabsQmlModels/qtlabsqmlmodelsexports.h>
 
 #endif // QTLABSQMLMODELSGLOBAL_P_H

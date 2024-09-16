@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -14,7 +14,7 @@ TestCase {
     when: windowShown
     name: "SwipeDelegate"
 
-    readonly property int dragDistance: Math.max(20, Qt.styleHints.startDragDistance + 5)
+    readonly property int dragDistance: Math.max(20, Application.styleHints.startDragDistance + 5)
 
     Component {
         id: backgroundFillComponent
@@ -86,12 +86,12 @@ TestCase {
     }
 
     function test_horizontalAnchors(data) {
-        var warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
+        let warningMessage = Qt.resolvedUrl("tst_swipedelegate.qml") + data.warningLocation
             + ": QML QQuickItem: SwipeDelegate: cannot use horizontal anchors with " + data.itemName + "; unable to layout the item."
 
         ignoreWarning(warningMessage);
 
-        var control = createTemporaryObject(data.component, testCase);
+        let control = createTemporaryObject(data.component, testCase);
         verify(control.contentItem);
     }
 
@@ -144,7 +144,7 @@ TestCase {
         // Sanity check.
         compare(control.swipe.position, from);
 
-        var distance = (to - from) * control.width;
+        let distance = (to - from) * control.width;
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
         mouseMove(control, control.width / 2 + distance, control.height / 2);
@@ -166,7 +166,7 @@ TestCase {
     }
 
     function test_settingDelegates() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         ignoreWarning(/QML SwipeDelegate: cannot set both behind and left\/right properties/)
@@ -200,8 +200,8 @@ TestCase {
         // First, try the left item.
         swipe(control, 0.0, 1.0);
 
-        var oldLeft = control.swipe.left;
-        var oldLeftItem = control.swipe.leftItem;
+        let oldLeft = control.swipe.left;
+        let oldLeftItem = control.swipe.leftItem;
         ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.left = null;
         compare(control.swipe.left, oldLeft);
@@ -210,8 +210,8 @@ TestCase {
         // Try the same thing with the right item.
         swipe(control, 1.0, -1.0);
 
-        var oldRight = control.swipe.right;
-        var oldRightItem = control.swipe.rightItem;
+        let oldRight = control.swipe.right;
+        let oldRightItem = control.swipe.rightItem;
         ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.right = null;
         compare(control.swipe.right, oldRight);
@@ -235,18 +235,20 @@ TestCase {
 
         swipe(control, 0.0, 1.0);
 
-        var oldBehind = control.swipe.behind;
-        var oldBehindItem = control.swipe.behindItem;
+        let oldBehind = control.swipe.behind;
+        let oldBehindItem = control.swipe.behindItem;
         ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.behind = null;
         compare(control.swipe.behind, oldBehind);
         compare(control.swipe.behindItem, oldBehindItem);
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+    function test_defaults() {
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset);
@@ -261,20 +263,20 @@ TestCase {
     }
 
     function test_swipe() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
-        var overDragDistance = Math.round(dragDistance * 1.1);
+        let overDragDistance = Math.round(dragDistance * 1.1);
 
-        var completedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "completed" });
+        let completedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "completed" });
         verify(completedSpy);
         verify(completedSpy.valid);
 
-        var openedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "opened" });
+        let openedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "opened" });
         verify(openedSpy);
         verify(openedSpy.valid);
 
-        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        let closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
         verify(closedSpy);
         verify(closedSpy.valid);
 
@@ -437,10 +439,10 @@ TestCase {
     function test_swipeVelocity(data) {
         skip("QTBUG-52003");
 
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
-        var distance = Math.round(dragDistance * 1.1);
+        let distance = Math.round(dragDistance * 1.1);
         if (distance >= control.width / 2)
             skip("This test requires a startDragDistance that is less than half the width of the control");
 
@@ -464,10 +466,10 @@ TestCase {
         verify(control.swipe.position < 0.5);
         verify(!control.swipe.complete);
 
-        var expectedVisibleItem;
-        var expectedVisibleObjectName;
-        var expectedHiddenItem;
-        var expectedContentItemX;
+        let expectedVisibleItem;
+        let expectedVisibleObjectName;
+        let expectedHiddenItem;
+        let expectedContentItemX;
         if (distance > 0) {
             expectedVisibleObjectName = "leftItem";
             expectedVisibleItem = control.swipe.leftItem;
@@ -505,7 +507,9 @@ TestCase {
             text: "SwipeDelegate"
             width: 150
             swipe.right: Button {
-                width: parent.width
+                // make the button a bit shorter than the delegate, so
+                // that we're able to release the mouse outside of it
+                width: parent.width - 4
                 height: parent.height
                 text: "Boo!"
             }
@@ -513,10 +517,10 @@ TestCase {
     }
 
     function test_eventsToLeftAndRight() {
-        var control = createTemporaryObject(swipeDelegateWithButtonComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateWithButtonComponent, testCase);
         verify(control);
 
-        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        let closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
         verify(closedSpy);
         verify(closedSpy.valid);
 
@@ -529,20 +533,20 @@ TestCase {
         verify(control.swipe.rightItem.visible);
         compare(control.swipe.rightItem.parent, control);
 
-        var buttonPressedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "pressed" });
+        let buttonPressedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "pressed" });
         verify(buttonPressedSpy);
         verify(buttonPressedSpy.valid);
-        var buttonReleasedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "released" });
+        let buttonReleasedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "released" });
         verify(buttonReleasedSpy);
         verify(buttonReleasedSpy.valid);
-        var buttonClickedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "clicked" });
+        let buttonClickedSpy = signalSpyComponent.createObject(control, { target: control.swipe.rightItem, signalName: "clicked" });
         verify(buttonClickedSpy);
         verify(buttonClickedSpy.valid);
 
         // Now press the button.
         mousePress(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
-        var button = control.swipe.rightItem;
+        let button = control.swipe.rightItem;
         verify(button.pressed);
         compare(buttonPressedSpy.count, 1);
         compare(buttonReleasedSpy.count, 0);
@@ -564,10 +568,26 @@ TestCase {
         verify(!button.pressed);
         mouseRelease(control, control.width / 2, control.height / 2);
         verify(!control.pressed);
+
+        // Try to press the button again, but drag and release outside of it.
+        // This should not click the button.
+        buttonClickedSpy.clear();
+        // Open the control, and press the button
+        mouseDrag(control, control.width / 2, control.height / 2, -control.width, 0);
+        mousePress(control);
+        verify(button.pressed);
+
+        // Drag the mouse outside the button, and release
+        mouseMove(control, control.width - 2, control.height / 2, -1, Qt.LeftButton);
+        mouseRelease(control);
+        verify(!button.pressed);
+        verify(!button.hovered);
+        // This should not be a click
+        compare(buttonClickedSpy.count, 0);
     }
 
     function test_mouseButtons() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         // click
@@ -609,7 +629,7 @@ TestCase {
         verify(mouseSignalSequenceSpy.success);
 
         // press and hold
-        var pressAndHoldSpy = signalSpyComponent.createObject(control, { target: control, signalName: "pressAndHold" });
+        let pressAndHoldSpy = signalSpyComponent.createObject(control, { target: control, signalName: "pressAndHold" });
         verify(pressAndHoldSpy);
         verify(pressAndHoldSpy.valid);
 
@@ -636,6 +656,20 @@ TestCase {
             id: listView
             width: 100
             height: 120
+
+            property int rotation: 0
+
+            transform: [
+                Rotation {
+                    angle: rotation
+                    origin.x: 0
+                    origin.y: 0
+                },
+                Translate {
+                    x: (rotation === 90) ? parent.width : 0
+                    y: 0
+                }
+            ]
 
             model: ListModel {
                 ListElement { name: "Apple" }
@@ -694,19 +728,24 @@ TestCase {
     function test_removableDelegates_data() {
         return [
             { tag: "mouse", touch: false },
-            { tag: "touch", touch: true }
+            { tag: "touch", touch: true },
+            { tag: "mouse_rotation_90", touch: false, rotation: 90 },
+            { tag: "touch_rotation_90", touch: true, rotation: 90 },
         ]
     }
 
-    function test_removableDelegates() {
-        var listView = createTemporaryObject(removableDelegatesComponent, testCase);
+    function test_removableDelegates(data) {
+        let listView = createTemporaryObject(removableDelegatesComponent, testCase);
         verify(listView);
         compare(listView.count, 3);
+
+        if (data.rotation)
+            listView.rotation = data.rotation;
 
         let touch = data.touch ? touchEvent(listView) : null
 
         // Expose the remove button.
-        var firstItem = listView.itemAt(0, 0);
+        let firstItem = listView.itemAt(0, 0);
         if (data.touch)
             touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
         else
@@ -738,13 +777,13 @@ TestCase {
         // Wait for it to settle down.
         tryCompare(firstItem.contentItem, "x", firstItem.leftPadding + firstItem.width);
 
-        var leftClickedSpy = signalSpyComponent.createObject(firstItem.swipe.leftItem,
+        let leftClickedSpy = signalSpyComponent.createObject(firstItem.swipe.leftItem,
             { target: firstItem.swipe.leftItem.SwipeDelegate, signalName: "clicked" });
         verify(leftClickedSpy);
         verify(leftClickedSpy.valid);
 
         // Click the left item to remove the delegate from the list.
-        var contentItemX = firstItem.contentItem.x;
+        let contentItemX = firstItem.contentItem.x;
         // press
         if (data.touch)
             touch.press(0, listView, firstItem.width / 2, firstItem.height / 2).commit()
@@ -837,7 +876,7 @@ TestCase {
     }
 
     function test_leadingTrailing(data) {
-        var control = createTemporaryObject(data.component, testCase);
+        let control = createTemporaryObject(data.component, testCase);
         verify(control);
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
@@ -848,7 +887,7 @@ TestCase {
     }
 
     function test_minMaxPosition() {
-        var control = createTemporaryObject(leadingTrailingXComponent, testCase);
+        let control = createTemporaryObject(leadingTrailingXComponent, testCase);
         verify(control);
 
         // Should be limited within the range -1.0 to 1.0.
@@ -884,13 +923,13 @@ TestCase {
     // swipe.position should be scaled to the width of the relevant delegate,
     // and it shouldn't be possible to drag past the delegate (so that content behind the control is visible).
     function test_delegateWidth() {
-        var control = createTemporaryObject(emptySwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(emptySwipeDelegateComponent, testCase);
         verify(control);
 
         control.swipe.left = smallLeftComponent;
 
         // Ensure that the position is scaled to the width of the currently visible delegate.
-        var overDragDistance = Math.round(dragDistance * 1.1);
+        let overDragDistance = Math.round(dragDistance * 1.1);
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
         mouseMove(control, control.width / 2 + overDragDistance, control.height / 2);
         verify(control.swipe.leftItem);
@@ -922,7 +961,7 @@ TestCase {
     }
 
     function test_positionAfterSwipeCompleted() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         // Ensure that both delegates are constructed.
@@ -947,7 +986,7 @@ TestCase {
         mousePress(control, control.swipe.leftItem.width - 1, control.height / 2, Qt.LeftButton);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
-        var newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1) -1;
+        let newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1) -1;
         mouseMove(control, newX, control.height / 2);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
@@ -1017,7 +1056,7 @@ TestCase {
     }
 
     function test_leadingTrailingBehindItem() {
-        var control = createTemporaryObject(behindSwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(behindSwipeDelegateComponent, testCase);
         verify(control);
 
         swipe(control, 0.0, 1.0);
@@ -1069,10 +1108,10 @@ TestCase {
     }
 
     function test_close() {
-        var control = createTemporaryObject(closeSwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(closeSwipeDelegateComponent, testCase);
         verify(control);
 
-        var closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
+        let closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" });
         verify(closedSpy);
         verify(closedSpy.valid);
 
@@ -1204,14 +1243,14 @@ TestCase {
     // Tests that it's possible to have multiple non-interactive items in one delegate
     // (e.g. left/right/behind) that can each receive clicks.
     function test_multipleClickableActions() {
-        var control = createTemporaryObject(multiActionSwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(multiActionSwipeDelegateComponent, testCase);
         verify(control);
 
         swipe(control, 0.0, -1.0);
         verify(control.swipe.rightItem);
         tryCompare(control.swipe, "complete", true);
 
-        var firstClickedSpy = signalSpyComponent.createObject(control,
+        let firstClickedSpy = signalSpyComponent.createObject(control,
             { target: control.swipe.rightItem.firstAction.SwipeDelegate, signalName: "clicked" });
         verify(firstClickedSpy);
         verify(firstClickedSpy.valid);
@@ -1235,7 +1274,7 @@ TestCase {
         compare(firstClickedSpy.count, 1);
         compare(control.swipe.rightItem.firstClickCount, 1);
 
-        var secondClickedSpy = signalSpyComponent.createObject(control,
+        let secondClickedSpy = signalSpyComponent.createObject(control,
             { target: control.swipe.rightItem.secondAction.SwipeDelegate, signalName: "clicked" });
         verify(secondClickedSpy);
         verify(secondClickedSpy.valid);
@@ -1311,25 +1350,25 @@ TestCase {
     // rotation, for example), the positions of the contentItem and background items
     // should be updated accordingly.
     function test_contentItemPosOnWidthChanged() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         swipe(control, 0.0, 1.0);
 
-        var oldContentItemX = control.contentItem.x;
-        var oldBackgroundX = control.background.x;
+        let oldContentItemX = control.contentItem.x;
+        let oldBackgroundX = control.background.x;
         control.width += 100;
         compare(control.contentItem.x, oldContentItemX + 100);
         compare(control.background.x, oldBackgroundX + 100);
     }
 
     function test_contentItemHeightOnHeightChanged() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
         // Try when swipe.complete is false.
-        var originalHeight = control.height;
-        var originalContentItemHeight = control.contentItem.height;
+        let originalHeight = control.height;
+        let originalContentItemHeight = control.contentItem.height;
         verify(control.height !== 10);
         control.height = 10;
         compare(control.contentItem.height, control.availableHeight);
@@ -1353,7 +1392,7 @@ TestCase {
     }
 
     function test_releaseOutside(data) {
-        var control = createTemporaryObject(data.component, testCase);
+        let control = createTemporaryObject(data.component, testCase);
         verify(control);
 
         // Press and then release below the control.
@@ -1368,7 +1407,7 @@ TestCase {
         verify(mouseSignalSequenceSpy.success);
 
         // Press and then release to the right of the control.
-        var hasDelegates = control.swipe.left || control.swipe.right || control.swipe.behind;
+        let hasDelegates = control.swipe.left || control.swipe.right || control.swipe.behind;
         mouseSignalSequenceSpy.target = control;
         mouseSignalSequenceSpy.expectedSequence = hasDelegates
             ? [["pressedChanged", { "pressed": true }], "pressed"]
@@ -1436,7 +1475,7 @@ TestCase {
     }
 
     function test_beginSwipeOverRightItem() {
-        var control = createTemporaryObject(leftRightWithLabelsComponent, testCase);
+        let control = createTemporaryObject(leftRightWithLabelsComponent, testCase);
         verify(control);
 
         // Swipe to the left, exposing the right item.
@@ -1447,8 +1486,8 @@ TestCase {
 
         // TODO: Swipe to the left, with the mouse over the Label in the right item.
         // The left item should not become visible at any point.
-        var rightLabel = control.swipe.rightItem.label;
-        var overDragDistance = Math.round(dragDistance * 1.1);
+        let rightLabel = control.swipe.rightItem.label;
+        let overDragDistance = Math.round(dragDistance * 1.1);
         mousePress(rightLabel, rightLabel.width / 2, rightLabel.height / 2, Qt.rightButton);
         mouseMove(rightLabel, rightLabel.width / 2 - overDragDistance, rightLabel.height / 2);
         verify(!control.swipe.leftItem);
@@ -1481,7 +1520,7 @@ TestCase {
     }
 
     function test_swipeEnabled() {
-        var control = createTemporaryObject(swipeDelegateDisabledComponent, testCase);
+        let control = createTemporaryObject(swipeDelegateDisabledComponent, testCase);
 
         mousePress(control, control.width / 2, control.height / 2);
         verify(control.pressed);
@@ -1491,7 +1530,7 @@ TestCase {
         verify(!control.swipe.rightItem);
 
         // It shouldn't be possible to swipe.
-        var overDragDistance = Math.round(dragDistance * 1.1);
+        let overDragDistance = Math.round(dragDistance * 1.1);
         mouseMove(control, control.width / 2 - overDragDistance, control.height / 2);
         verify(control.pressed);
         compare(control.swipe.position, 0.0);
@@ -1558,7 +1597,7 @@ TestCase {
     }
 
     function test_open_side(data) {
-        var control = createTemporaryObject(emptySwipeDelegateComponent, testCase,
+        let control = createTemporaryObject(emptySwipeDelegateComponent, testCase,
             {"swipe.left": data.left, "swipe.right": data.right, "swipe.behind": data.behind});
         verify(control);
 
@@ -1584,7 +1623,7 @@ TestCase {
     }
 
     function test_open() {
-        var control = createTemporaryObject(openSwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(openSwipeDelegateComponent, testCase);
         verify(control);
 
         mouseClick(control);
@@ -1630,7 +1669,7 @@ TestCase {
 
     function test_animations() {
         // Test that animations are run when releasing from a drag.
-        var control = createTemporaryObject(animationSwipeDelegateComponent, testCase);
+        let control = createTemporaryObject(animationSwipeDelegateComponent, testCase);
         verify(control);
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
@@ -1646,11 +1685,11 @@ TestCase {
     }
 
     function test_spacing() {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase, { text: "Some long, long, long text" })
+        let control = createTemporaryObject(swipeDelegateComponent, testCase, { text: "Some long, long, long text" })
         verify(control)
         verify(control.contentItem.implicitWidth + control.leftPadding + control.rightPadding > control.background.implicitWidth)
 
-        var textLabel = findChild(control.contentItem, "label")
+        let textLabel = findChild(control.contentItem, "label")
         verify(textLabel)
 
         // The implicitWidth of the IconLabel that all buttons use as their contentItem
@@ -1679,7 +1718,7 @@ TestCase {
     }
 
     function test_display(data) {
-        var control = createTemporaryObject(swipeDelegateComponent, testCase, {
+        let control = createTemporaryObject(swipeDelegateComponent, testCase, {
             text: "SwipeDelegate",
             display: data.display,
             width: 400,
@@ -1689,15 +1728,15 @@ TestCase {
         verify(control)
         compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
-        var iconImage = findChild(control.contentItem, "image")
-        var textLabel = findChild(control.contentItem, "label")
+        let iconImage = findChild(control.contentItem, "image")
+        let textLabel = findChild(control.contentItem, "label")
 
         switch (control.display) {
         case SwipeDelegate.IconOnly:
             verify(iconImage)
             verify(!textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             break;
         case SwipeDelegate.TextOnly:
             verify(!iconImage)
@@ -1708,7 +1747,7 @@ TestCase {
         case SwipeDelegate.TextUnderIcon:
             verify(iconImage)
             verify(textLabel)
-            compare(iconImage.x, (control.availableWidth - iconImage.width) / 2)
+            compare(iconImage.x, Math.round((control.availableWidth - iconImage.width) / 2))
             compare(textLabel.x, (control.availableWidth - textLabel.width) / 2)
             verify(iconImage.y < textLabel.y)
             break;
@@ -1719,7 +1758,7 @@ TestCase {
                 verify(textLabel.x < iconImage.x)
             else
                 verify(iconImage.x < textLabel.x)
-            compare(iconImage.y, (control.availableHeight - iconImage.height) / 2)
+            compare(iconImage.y, Math.round((control.availableHeight - iconImage.height) / 2))
             compare(textLabel.y, (control.availableHeight - textLabel.height) / 2)
             break;
         }

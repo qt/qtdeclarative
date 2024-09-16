@@ -1,0 +1,3 @@
+module Qtbug111015
+typeinfo qtbug111015.qmltypes
+import QtQml

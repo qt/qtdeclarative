@@ -14,7 +14,7 @@ project(QtDeclarative # special case
 )
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
-find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Gui Network Widgets OpenGL OpenGLWidgets Sql Concurrent Test LanguageServerPrivate LinguistTools Svg)
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Gui Network Widgets OpenGL OpenGLWidgets Sql Concurrent Test LanguageServerPrivate LinguistTools Svg ExamplesAssetDownloaderPrivate)
 qt_internal_project_setup()
 
 # Set up QT_HOST_PATH as an extra root path to look for the ShaderToolsTools package
@@ -50,6 +50,7 @@ include(src/qml/Qt6QmlMacros.cmake)
 if(ANDROID)
     include("${CMAKE_CURRENT_LIST_DIR}/src/qml/Qt6AndroidQmlMacros.cmake")
 endif()
+include("${CMAKE_CURRENT_LIST_DIR}/src/qml/Qt6QmlPublicCMakeHelpers.cmake")
 # special case end
 
 if(NOT QT_FEATURE_commandlineparser)

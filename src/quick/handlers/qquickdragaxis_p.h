@@ -24,13 +24,13 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickPointerHandler;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickDragAxis : public QObject
+class Q_QUICK_EXPORT QQuickDragAxis : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged FINAL)
-    Q_PROPERTY(qreal maximum READ maximum WRITE setMaximum NOTIFY maximumChanged FINAL)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
-    Q_PROPERTY(qreal activeValue READ activeValue NOTIFY activeValueChanged REVISION(6, 5) FINAL)
+    Q_PROPERTY(qreal minimum READ minimum WRITE setMinimum NOTIFY minimumChanged)
+    Q_PROPERTY(qreal maximum READ maximum WRITE setMaximum NOTIFY maximumChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(qreal activeValue READ activeValue NOTIFY activeValueChanged REVISION(6, 5))
     QML_NAMED_ELEMENT(DragAxis)
     QML_ADDED_IN_VERSION(2, 12)
     QML_UNCREATABLE("DragAxis is only available as a grouped property of DragHandler or PinchHandler.")

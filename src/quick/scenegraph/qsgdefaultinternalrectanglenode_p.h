@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGSmoothColorMaterial : public QSGMaterial
+class Q_QUICK_EXPORT QSGSmoothColorMaterial : public QSGMaterial
 {
 public:
     QSGSmoothColorMaterial();
@@ -36,7 +36,7 @@ protected:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalRectangleNode : public QSGBasicInternalRectangleNode
+class Q_QUICK_EXPORT QSGDefaultInternalRectangleNode : public QSGBasicInternalRectangleNode
 {
 public:
     QSGDefaultInternalRectangleNode();

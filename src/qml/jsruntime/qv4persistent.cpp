@@ -142,6 +142,7 @@ PersistentValueStorage::PersistentValueStorage(ExecutionEngine *engine)
 
 PersistentValueStorage::~PersistentValueStorage()
 {
+    clearFreePageHint();
     Page *p = static_cast<Page *>(firstPage);
     while (p) {
         for (int i = 0; i < kEntriesPerPage; ++i) {
@@ -159,7 +160,9 @@ PersistentValueStorage::~PersistentValueStorage()
 
 Value *PersistentValueStorage::allocate()
 {
-    Page *p = static_cast<Page *>(firstPage);
+    Page *p = static_cast<Page *>(freePageHint);
+    if (p && p->header.freeList == -1)
+        p = static_cast<Page *>(firstPage);
     while (p) {
         if (p->header.freeList != -1)
             break;
@@ -171,9 +174,15 @@ Value *PersistentValueStorage::allocate()
     Value *v = p->values + p->header.freeList;
     p->header.freeList = v->int_32();
 
-    if (p->header.freeList != -1 && p != firstPage) {
-        unlink(p);
-        insertInFront(this, p);
+    if (p->header.freeList != -1 && p != freePageHint) {
+        if (auto oldHint = static_cast<Page *>(freePageHint)) {
+            oldHint->header.refCount--;
+            // no need to free - if the old page were unused,
+            // we would have used it to serve the allocation
+            Q_ASSERT(oldHint->header.refCount);
+        }
+        freePageHint = p;
+        p->header.refCount++;
     }
 
     ++p->header.refCount;
@@ -207,6 +216,17 @@ void PersistentValueStorage::mark(MarkStack *markStack)
     }
 }
 
+void PersistentValueStorage::clearFreePageHint()
+{
+    if (!freePageHint)
+        return;
+    auto page = static_cast<Page *>(freePageHint);
+    if (!--page->header.refCount)
+        freePage(page);
+    freePageHint = nullptr;
+
+}
+
 ExecutionEngine *PersistentValueStorage::getEngine(const Value *v)
 {
     return getPage(v)->header.engine;
@@ -223,22 +243,18 @@ void PersistentValueStorage::freePage(void *page)
 PersistentValue::PersistentValue(const PersistentValue &other)
     : val(nullptr)
 {
-    if (other.val) {
-        val = other.engine()->memoryManager->m_persistentValues->allocate();
-        *val = *other.val;
-    }
+    if (other.val)
+        set(other.engine(), *other.val);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, const Value &value)
 {
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = value;
+    set(engine, value);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, ReturnedValue value)
 {
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = value;
+    set(engine, value);
 }
 
 PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
@@ -246,9 +262,7 @@ PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
 {
     if (!object)
         return;
-
-    val = engine->memoryManager->m_persistentValues->allocate();
-    *val = object;
+    set(engine, *object);
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)
@@ -271,19 +285,16 @@ PersistentValue &PersistentValue::operator=(const PersistentValue &other)
 
 PersistentValue &PersistentValue::operator=(const WeakValue &other)
 {
-    if (!val) {
-        if (!other.valueRef())
-            return *this;
-        val = other.engine()->memoryManager->m_persistentValues->allocate();
-    }
+    if (!val && !other.valueRef())
+        return *this;
     if (!other.valueRef()) {
         *val = Encode::undefined();
         return *this;
     }
 
-    Q_ASSERT(engine() == other.engine());
+    Q_ASSERT(!engine() || engine() == other.engine());
 
-    *val = *other.valueRef();
+    set(other.engine(), *other.valueRef());
     return *this;
 }
 
@@ -293,10 +304,7 @@ PersistentValue &PersistentValue::operator=(Object *object)
         PersistentValueStorage::free(val);
         return *this;
     }
-    if (!val)
-        val = object->engine()->memoryManager->m_persistentValues->allocate();
-
-    *val = object;
+    set(object->engine(), *object);
     return *this;
 }
 
@@ -304,6 +312,10 @@ void PersistentValue::set(ExecutionEngine *engine, const Value &value)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if (QV4::WriteBarrier::isInsertionBarrier && value.isManaged())
+            value.heapObject()->mark(stack);
+    });
     *val = value;
 }
 
@@ -311,6 +323,13 @@ void PersistentValue::set(ExecutionEngine *engine, ReturnedValue value)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if constexpr (!QV4::WriteBarrier::isInsertionBarrier)
+            return;
+        auto val = Value::fromReturnedValue(value);
+        if (val.isManaged())
+            val.heapObject()->mark(stack);
+    });
     *val = value;
 }
 
@@ -318,6 +337,11 @@ void PersistentValue::set(ExecutionEngine *engine, Heap::Base *obj)
 {
     if (!val)
         val = engine->memoryManager->m_persistentValues->allocate();
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack){
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier)
+            obj->mark(stack);
+    });
+
     *val = obj;
 }
 
@@ -357,6 +381,56 @@ WeakValue &WeakValue::operator=(const WeakValue &other)
 WeakValue::~WeakValue()
 {
     free();
+}
+
+/*
+   WeakValue::set shold normally not mark objects, after all a weak value
+   is not supposed to keep an object alive.
+   However, if we are past GCState::HandleQObjectWrappers, nothing will
+   reset weak values referencing unmarked values, but those values will
+   still be swept.
+   That lead to stale pointers, and potentially to crashes. To avoid this,
+   we mark the objects here (they might still get collected in the next gc
+   run).
+   This is especially important due to the way we handle QObjectWrappers.
+ */
+void WeakValue::set(ExecutionEngine *engine, const Value &value)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        if (auto *h = value.heapObject())
+            h->mark(ms);
+    });
+    *val = value;
+}
+
+void WeakValue::set(ExecutionEngine *engine, ReturnedValue value)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        if (auto *h = QV4::Value::fromReturnedValue(value).heapObject())
+            h->mark(ms);
+    });
+
+    *val = value;
+}
+
+void WeakValue::set(ExecutionEngine *engine, Heap::Base *obj)
+{
+    if (!val)
+        allocVal(engine);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        if (engine->memoryManager->gcStateMachine->state <= GCState::HandleQObjectWrappers)
+            return;
+        obj->mark(ms);
+    });
+    *val = obj;
 }
 
 void WeakValue::allocVal(ExecutionEngine *engine)

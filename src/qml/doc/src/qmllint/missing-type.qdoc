@@ -5,16 +5,12 @@
 \page qmllint-warnings-and-errors-missing-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title Missing Type
+\title Missing type
 \brief A type used in a binding or alias was not found.
 
-This warning category has multiple warnings:
-\list
- \li \l{Cannot Deduce Type of Alias}
- \li \l{No Type Found For Property}
-\endlist
+\qmllintwarningcategory missing-type
 
-\section1 Cannot Deduce Type of Alias
+\section1 Cannot deduce type of alias
 
 \section2 What happened?
 An alias property points to a property with a C++ type whose QML counterpart was not found. This can
@@ -26,13 +22,14 @@ actually installed, and that their modules end up in an
 
 The warning might also indicate that the type of the property referenced by the alias does not have
 a QML counterpart. The referenced property type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{QQmlEngine::}{QML_ELEMENT} macro, for example. Refer to
 \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
 QML tooling is not able to find the QML counterpart of the C++ type: the
 \l{Qt Quick Compiler}{compiler} can't compile this property alias to
-C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this property alias.
+C++ and \l{qmllint Reference}{qmllint} as well as \l{\QMLLS Reference}{\QMLLS}
+can't analyze this property alias.
 
 \section2 Example
 Let our QML module have one C++ class with a property \c{myProperty}:
@@ -107,7 +104,7 @@ in your QML file. This is because the same type can be exposed multiple times wi
 attributes in different modules: \c{mymodule} actually has to be precise about the QML type of
 \c{myProperty}.
 
-You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+To fix this warning, add the dependency in the \c{CMakeLists.txt}:
 \badcode
 qt_add_qml_module(mymodule
     URI mymodule
@@ -116,12 +113,13 @@ qt_add_qml_module(mymodule
     DEPENDENCIES QtQuick
     ...
 )
+\endcode
 
 Now, the warning should be gone!
 
-\sa{Declaring module dependencies}
+\b {See also} \l {Declaring module dependencies}.
 
-\section1 No Type Found For Property
+\section1 No type found for property
 
 \section2 What happened?
 A binding was set on a property whose QML type was not found. This can be caused by a QML module
@@ -133,13 +131,13 @@ actually installed, and that their modules end up in an
 
 The warning might also indicate that the type of the property does not have
 a QML counterpart. The property type might be missing the
-\l{QQmlEngine Class#QML_ELEMENT}{QML_ELEMENT} macro, for example. Refer to
+\l{QQmlEngine::}{QML_ELEMENT} macro, for example. Refer to
 \l{Defining QML Types from C++} or \l{Overview - QML and C++ Integration} in this case.
 
 \section2 Why is this bad?
 QML tooling is not able to find the QML counterpart of the C++ type: the
 \l{Qt Quick Compiler}{compiler} can't compile this property binding to
-C++ and \l{qmllint} as well as \l{QML Language Server} can't analyze this property binding.
+C++ and \l{qmllint Reference}{qmllint} as well as \l{\QMLLS Reference}{\QMLLS} can't analyze this property binding.
 
 \section2 Example
 Let our QML module have a C++ class with two properties, \c{myProperty} and \c{myProperty2}:
@@ -220,7 +218,7 @@ The reason for the warning message is that in the QML code, the type \c{QQuickIt
 and its QML counterpart \c{Item} are not known: the dependency 'QtQuick' of mymodule was not
 declared in the \c{CMakeLists.txt}.
 
-You can fix this warning by adding the dependency in the \c{CMakeLists.txt}:
+To fix this warning, add the dependency in the \c{CMakeLists.txt}:
 \badcode
 qt_add_qml_module(mymodule
     URI mymodule
@@ -229,11 +227,10 @@ qt_add_qml_module(mymodule
     DEPENDENCIES QtQuick
     ...
 )
+\endcode
 
 Now, the warning should be gone!
 
-\sa{Declaring module dependencies}
-
-\endcode
+\b {See also} \l {Declaring module dependencies}.
 */
 

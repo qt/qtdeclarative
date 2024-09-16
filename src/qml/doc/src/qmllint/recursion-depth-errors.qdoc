@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-recursion-depth-errors.html
 \ingroup qmllint-warnings-and-errors
 
-\title Recursion Depths Errors
+\title Recursion depths errors
 \brief Qml statement or expression is too deeply nested.
 
-\section1 Maximum Statement Or Expression Depth Exceeded
+\qmllintwarningcategory recursion-depth-errors
+
+\section1 Maximum statement or expression depth exceeded
 \section2 What happened?
 A QML statement or expression was too deeply nested for the compiler. This usually only happens for
 generated code where statements or expressions can be very long, as the recursion limit is usually
@@ -31,9 +33,9 @@ Item {
 }
 \endqml
 
-You can fix this warning by auto-generating smaller code pieces. You could split deeply nested
-Components in multiple files or inline components, or split deeply nested expressions into multiple
-expressions:
+To fix this warning, auto-generate smaller code pieces. Split deeply nested
+Components in multiple files or inline components, or split deeply nested
+expressions into multiple expressions:
 \qml
 import QtQuick
 

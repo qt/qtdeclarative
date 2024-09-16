@@ -1,0 +1,18 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example tableofcontents
+    \keyword Qt Quick Controls - Table of Contents
+    \title Qt Quick Controls - Table of Contents
+    \keyword Qt Quick Controls 2 - Table of Contents
+    \ingroup qtquickcontrols-tableofcontents
+    \brief Demonstrate the custom tree model in the TreeView control.
+
+    This example demonstrates how to create and use custom tree model in the
+    TreeView control.
+
+    \image qtquickcontrols-tableofcontents.png
+
+    \include examples-run.qdocinc
+*/

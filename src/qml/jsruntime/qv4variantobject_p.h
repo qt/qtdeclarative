@@ -54,7 +54,7 @@ private:
 
 }
 
-struct Q_QML_PRIVATE_EXPORT VariantObject : Object
+struct Q_QML_EXPORT VariantObject : Object
 {
     V4_OBJECT2(VariantObject, Object)
     V4_PROTOTYPE(variantPrototype)

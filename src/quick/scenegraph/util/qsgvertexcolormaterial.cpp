@@ -8,33 +8,35 @@ QT_BEGIN_NAMESPACE
 class QSGVertexColorMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    QSGVertexColorMaterialRhiShader();
+    QSGVertexColorMaterialRhiShader(int viewCount);
 
-    bool updateUniformData(RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
 
-QSGVertexColorMaterialRhiShader::QSGVertexColorMaterialRhiShader()
+QSGVertexColorMaterialRhiShader::QSGVertexColorMaterialRhiShader(int viewCount)
 {
-    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.vert.qsb"));
-    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.frag.qsb"));
+    setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.vert.qsb"), viewCount);
+    setShaderFileName(FragmentStage, QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/vertexcolor.frag.qsb"), viewCount);
 }
 
-bool QSGVertexColorMaterialRhiShader::updateUniformData(RenderState &state,
-                                                        QSGMaterial * /*newEffect*/,
-                                                        QSGMaterial * /*oldEffect*/)
+bool QSGVertexColorMaterialRhiShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *)
 {
     bool changed = false;
     QByteArray *buf = state.uniformData();
+    const int shaderMatrixCount = newMaterial->viewCount();
+    const int matrixCount = qMin(state.projectionMatrixCount(), shaderMatrixCount);
 
-    if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
-        changed = true;
+    for (int viewIndex = 0; viewIndex < matrixCount; ++viewIndex) {
+        if (state.isMatrixDirty()) {
+            const QMatrix4x4 m = state.combinedMatrix(viewIndex);
+            memcpy(buf->data() + 64 * viewIndex, m.constData(), 64);
+            changed = true;
+        }
     }
 
     if (state.isOpacityDirty()) {
         const float opacity = state.opacity();
-        memcpy(buf->data() + 64, &opacity, 4);
+        memcpy(buf->data() + 64 * shaderMatrixCount, &opacity, 4);
         changed = true;
     }
 
@@ -114,7 +116,7 @@ QSGMaterialType *QSGVertexColorMaterial::type() const
 QSGMaterialShader *QSGVertexColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
     Q_UNUSED(renderMode);
-    return new QSGVertexColorMaterialRhiShader;
+    return new QSGVertexColorMaterialRhiShader(viewCount());
 }
 
 QT_END_NAMESPACE

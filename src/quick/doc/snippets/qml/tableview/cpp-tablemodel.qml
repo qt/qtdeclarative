@@ -3,7 +3,7 @@
 
 //![0]
 import QtQuick
-import TableModel 0.1
+import TableModel
 
 TableView {
     anchors.fill: parent

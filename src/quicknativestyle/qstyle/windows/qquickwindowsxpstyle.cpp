@@ -760,7 +760,7 @@ bool QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
 
 #ifdef DEBUG_XP_STYLE
         char buf[25];
-        ::sprintf(buf, "+ Pixmap(%3d, %3d) ]", w, h);
+        ::snprintf(buf, sizeof(buf), "+ Pixmap(%3d, %3d) ]", w, h);
         printf("---[ CACHED %s--------> Name(%-10s) Part(%d) State(%d)\n",
                haveCachedPixmap ? buf : "]-------------------",
                qPrintable(themeData.name), themeData.partId, themeData.stateId);
@@ -3879,22 +3879,24 @@ void QWindowsXPStylePrivate::dumpNativeDIB(int w, int h)
         static int pCount = 0;
         DWORD *bufPix = (DWORD*)bufferPixels;
 
-        char *bufferDump = new char[bufferH * bufferW * 16];
+        const unsigned int bufferSize = bufferH * bufferW * 16;
+        char *bufferDump = new char[bufferSize];
+        char *bufferEndAdress = bufferDump + bufferSize;
         char *bufferPos = bufferDump;
 
         memset(bufferDump, 0, sizeof(bufferDump));
-        bufferPos += sprintf(bufferPos, "const int pixelBufferW%d = %d;\n", pCount, w);
-        bufferPos += sprintf(bufferPos, "const int pixelBufferH%d = %d;\n", pCount, h);
-        bufferPos += sprintf(bufferPos, "const unsigned DWORD pixelBuffer%d[] = {", pCount);
+        bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "const int pixelBufferW%d = %d;\n", pCount, w);
+        bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "const int pixelBufferH%d = %d;\n", pCount, h);
+        bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "const unsigned DWORD pixelBuffer%d[] = {", pCount);
         for (int iy = 0; iy < h; ++iy) {
-            bufferPos += sprintf(bufferPos, "\n    ");
+            bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "\n    ");
             bufPix = (DWORD*)(bufferPixels + (iy * bufferW * 4));
             for (int ix = 0; ix < w; ++ix) {
-                bufferPos += sprintf(bufferPos, "0x%08x, ", *bufPix);
+                bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "0x%08x, ", *bufPix);
                 ++bufPix;
             }
         }
-        bufferPos += sprintf(bufferPos, "\n};\n\n");
+        bufferPos += snprintf(bufferPos, bufferEndAdress - bufferPos, "\n};\n\n");
         printf(bufferDump);
 
         delete[] bufferDump;

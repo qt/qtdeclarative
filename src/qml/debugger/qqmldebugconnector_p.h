@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 
 #if !QT_CONFIG(qml_debug)
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugConnector
+class Q_QML_EXPORT QQmlDebugConnector
 {
     virtual ~QQmlDebugConnector() = default; // don't break 'override' on ~QQmlDebugServer
 public:
@@ -50,7 +50,7 @@ public:
 #else
 
 class QQmlDebugService;
-class Q_QML_PRIVATE_EXPORT QQmlDebugConnector : public QObject
+class Q_QML_EXPORT QQmlDebugConnector : public QObject
 {
     Q_OBJECT
 public:
@@ -87,7 +87,7 @@ protected:
     static int s_dataStreamVersion;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugConnectorFactory : public QObject {
+class Q_QML_EXPORT QQmlDebugConnectorFactory : public QObject {
     Q_OBJECT
 public:
     virtual QQmlDebugConnector *create(const QString &key) = 0;

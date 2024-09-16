@@ -861,6 +861,15 @@ private:
                     return true;
                 }
 
+                if (value == "Inassertable"_L1) {
+                    setFlag(Pragma::Assertable, false);
+                    return true;
+                }
+                if (value == "Assertable"_L1) {
+                    setFlag(Pragma::Assertable, true);
+                    return true;
+                }
+
                 return false;
             });
         }
@@ -1645,10 +1654,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
     Unit *jsUnit = nullptr;
 
+    if (!output.javaScriptCompilationUnit)
+        output.javaScriptCompilationUnit.adopt(new QV4::CompiledData::CompilationUnit);
+
     // We may already have unit data if we're loading an ahead-of-time generated cache file.
-    if (output.javaScriptCompilationUnit.data) {
-        jsUnit = const_cast<Unit *>(output.javaScriptCompilationUnit.data);
-        output.javaScriptCompilationUnit.dynamicStrings = output.jsGenerator.stringTable.allStrings();
+    if (output.javaScriptCompilationUnit->unitData()) {
+        jsUnit = const_cast<Unit *>(output.javaScriptCompilationUnit->unitData());
+        output.javaScriptCompilationUnit->dynamicStrings
+                = output.jsGenerator.stringTable.allStrings();
     } else {
         Unit *createdUnit;
         jsUnit = createdUnit = output.jsGenerator.generateUnit();
@@ -1713,6 +1726,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
                 if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
                         .testFlag(Pragma::Addressable)) {
                     createdUnit->flags |= Unit::ValueTypesAddressable;
+                }
+                if (Pragma::ValueTypeBehaviorValues(p->valueTypeBehavior)
+                            .testFlag(Pragma::Assertable)) {
+                    createdUnit->flags |= Unit::ValueTypesAssertable;
                 }
                 break;
             case Pragma::Translator:
@@ -1921,7 +1938,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         }
     }
 
-    if (!output.javaScriptCompilationUnit.data) {
+    if (!output.javaScriptCompilationUnit->unitData()) {
         // Combine the qml data into the general unit data.
         jsUnit = static_cast<QV4::CompiledData::Unit *>(realloc(jsUnit, jsUnit->unitSize + totalSize));
         jsUnit->offsetToQmlUnit = jsUnit->unitSize;
@@ -1954,8 +1971,8 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         qDebug() << "    " << totalStringSize << "bytes total strings";
     }
 
-    output.javaScriptCompilationUnit.setUnitData(jsUnit, qmlUnit, output.jsModule.fileName,
-                                                 output.jsModule.finalUrl);
+    output.javaScriptCompilationUnit->setUnitData(
+            jsUnit, qmlUnit, output.jsModule.fileName, output.jsModule.finalUrl);
 }
 
 char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, BindingFilter filter) const

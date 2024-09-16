@@ -33,12 +33,13 @@ T.Dial {
         y: control.background.y + control.background.height / 2 - height / 2
         transform: [
             Translate {
-                y: -control.background.height * 0.4 + control.handle.height / 2
+                y: -control.background.height * 0.4
+                   + (control.handle ? control.handle.height / 2 : 0)
             },
             Rotation {
                 angle: control.angle
-                origin.x: control.handle.width / 2
-                origin.y: control.handle.height / 2
+                origin.x: control.handle ? control.handle.width / 2 : 0
+                origin.y: control.handle ? control.handle.height / 2 : 0
             }
         ]
         implicitWidth: 10

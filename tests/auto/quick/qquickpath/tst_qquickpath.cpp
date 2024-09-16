@@ -1,10 +1,11 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickpath_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -21,6 +22,11 @@ private slots:
     void closedCatmullRomCurve();
     void svg();
     void line();
+    void rectangle_data();
+    void rectangle();
+    void rectangleRadii();
+    void appendRemove();
+    void asynchronous();
 
 private:
     void arc(QSizeF scale);
@@ -29,6 +35,7 @@ private:
     void closedCatmullRomCurve(QSizeF scale, const QVector<QPointF> &points);
     void svg(QSizeF scale);
     void line(QSizeF scale);
+    void rectangle(const QQuickPath *path, const QRectF &rect);
 };
 
 static void compare(const QPointF &point, const QSizeF &scale, int line, double x, double y)
@@ -316,6 +323,163 @@ void tst_QuickPath::line()
 {
     line(QSizeF(1,1));
     line(QSizeF(7.23,7.23));
+}
+
+void tst_QuickPath::rectangle_data()
+{
+    QTest::addColumn<QByteArray>("pathqml");
+    QTest::addColumn<QRectF>("rect");
+
+    QTest::newRow("basic") << QByteArray("PathRectangle { width: 100; height: 100 }\n")
+                           << QRectF(0, 0, 100, 100);
+
+    QTest::newRow("relative") << QByteArray("startX: -50; startY: -100\nPathRectangle {"
+                                            "relativeX: 100.2; relativeY: 200.3;"
+                                            "width: 10.5; height: 10.5 }\n")
+                              << QRectF(50.2, 100.3, 10.5, 10.5);
+
+    QTest::newRow("stroke") << QByteArray("PathRectangle { x: 5; y: 10; width: 100; height: 100;"
+                                          "strokeAdjustment: 20 }\n")
+                            << QRectF(5, 10, 100, 100).adjusted(10, 10, -10, -10);
+}
+
+void tst_QuickPath::rectangle(const QQuickPath *path, const QRectF &rect)
+{
+    QCOMPARE(path->pointAtPercent(0), rect.topLeft());
+    QCOMPARE(path->pointAtPercent(1), rect.topLeft());
+    QCOMPARE(path->pointAtPercent(1.0 / 8), QPointF(rect.center().x(), rect.top()));
+    QCOMPARE(path->pointAtPercent(3.0 / 8), QPointF(rect.right(), rect.center().y()));
+    QCOMPARE(path->pointAtPercent(5.0 / 8), QPointF(rect.center().x(), rect.bottom()));
+    QCOMPARE(path->pointAtPercent(7.0 / 8), QPointF(rect.left(), rect.center().y()));
+}
+
+void tst_QuickPath::rectangle()
+{
+    QFETCH(QByteArray, pathqml);
+    QFETCH(QRectF, rect);
+
+    QQmlEngine engine;
+    QQmlComponent c1(&engine);
+    c1.setData("import QtQuick\nPath {\n" + pathqml + "}", QUrl());
+    QScopedPointer<QObject> o1(c1.create());
+    QQuickPath *path = qobject_cast<QQuickPath *>(o1.data());
+    QVERIFY(path);
+    QCOMPARE(path->pointAtPercent(0), rect.topLeft());
+    QCOMPARE(path->pointAtPercent(1), rect.topLeft());
+    QCOMPARE(path->pointAtPercent(1.0 / 8), QPointF(rect.center().x(), rect.top()));
+    QCOMPARE(path->pointAtPercent(3.0 / 8), QPointF(rect.right(), rect.center().y()));
+    QCOMPARE(path->pointAtPercent(5.0 / 8), QPointF(rect.center().x(), rect.bottom()));
+    QCOMPARE(path->pointAtPercent(7.0 / 8), QPointF(rect.left(), rect.center().y()));
+}
+
+#define COMPARE_RADII(P, Q)                                                                        \
+    QCOMPARE(P.radius(), Q->radius());                                                             \
+    QCOMPARE(P.topLeftRadius(), Q->topLeftRadius());                                               \
+    QCOMPARE(P.topRightRadius(), Q->topRightRadius());                                             \
+    QCOMPARE(P.bottomLeftRadius(), Q->bottomLeftRadius());                                         \
+    QCOMPARE(P.bottomRightRadius(), Q->bottomRightRadius());
+
+void tst_QuickPath::rectangleRadii()
+{
+    // Test that the radius logic of PathRectangle is the same as Rectangle's
+    QQmlEngine engine;
+    QQmlComponent c1(&engine);
+    c1.setData("import QtQuick\n"
+               "Rectangle { x: 10; y: 20; width: 30; height: 40\n"
+               "}",
+               QUrl());
+    QScopedPointer<QObject> o1(c1.create());
+    QQuickRectangle *quickRectangle = qobject_cast<QQuickRectangle *>(o1.data());
+    QVERIFY(quickRectangle);
+    QQuickPathRectangle pathRectangle;
+    pathRectangle.setX(quickRectangle->x());
+    pathRectangle.setY(quickRectangle->y());
+    pathRectangle.setWidth(quickRectangle->width());
+    pathRectangle.setHeight(quickRectangle->height());
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setRadius(5);
+    quickRectangle->setRadius(5);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setBottomLeftRadius(15);
+    quickRectangle->setBottomLeftRadius(15);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setRadius(-5);
+    quickRectangle->setRadius(-5);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setRadius(0);
+    quickRectangle->setRadius(0);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setTopLeftRadius(-7);
+    quickRectangle->setTopLeftRadius(-7);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+    pathRectangle.setRadius(4);
+    quickRectangle->setRadius(4);
+    pathRectangle.resetBottomLeftRadius();
+    quickRectangle->resetBottomLeftRadius();
+    pathRectangle.setTopRightRadius(0);
+    quickRectangle->setTopRightRadius(0);
+    pathRectangle.setTopLeftRadius(200);
+    quickRectangle->setTopLeftRadius(200);
+    COMPARE_RADII(pathRectangle, quickRectangle);
+}
+
+void tst_QuickPath::appendRemove()
+{
+    QQuickPath *path = new QQuickPath();
+    QQmlListReference pathElements(path, "pathElements");
+    QSignalSpy changedSpy(path, SIGNAL(changed()));
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 0);
+
+    pathElements.append(new QQuickPathElement(path));
+    pathElements.append(new QQuickPathElement(path));
+    pathElements.append(new QQuickPathElement(path));
+
+    QCOMPARE(pathElements.count(), 3);
+    QCOMPARE(changedSpy.count(), 3);
+
+    pathElements.clear();
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 4);
+}
+
+void tst_QuickPath::asynchronous()
+{
+    QQmlEngine engine;
+    QQmlComponent c1(&engine);
+    c1.setData("import QtQuick\nPath { }", QUrl());
+    QScopedPointer<QObject> o1(c1.create());
+    QQuickPath *path = qobject_cast<QQuickPath *>(o1.data());
+    QVERIFY(path);
+
+    QQmlListReference pathElements(path, "pathElements");
+    QSignalSpy changedSpy(path, SIGNAL(changed()));
+
+    QCOMPARE(pathElements.count(), 0);
+    QCOMPARE(changedSpy.count(), 0);
+
+    QVERIFY(!path->isAsynchronous());
+    path->setAsynchronous(true);
+    QVERIFY(path->isAsynchronous());
+
+    QQuickPathLine *line = new QQuickPathLine(path);
+    line->setX(10.0);
+    pathElements.append(line);
+    QQuickPathLine *line2 = new QQuickPathLine(path);
+    line2->setX(20.0);
+    pathElements.append(line2);
+
+    // Added into path only after processing events and
+    // changed() called only once for all sequental appends.
+    QCOMPARE(pathElements.count(), 2);
+    QVERIFY(path->path().isEmpty());
+    QCOMPARE(changedSpy.count(), 0);
+    qApp->processEvents();
+    QCOMPARE(pathElements.count(), 2);
+    QTRY_VERIFY(!path->path().isEmpty());
+    QCOMPARE(changedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_QuickPath)

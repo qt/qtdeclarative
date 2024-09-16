@@ -2,18 +2,15 @@
 A \1 provides a styled table header.
 It can either be used as an independent view or header for a \l TableView.
 
-You can add a header for a TableView by assigning a \1
-to the \l {TableView::syncView} property. The header and the table will
+You can add a header for a TableView by assigning the TableView to the
+\l {TableView::syncView}{syncView} property of \1. The header and the table will
 then be kept in sync while flicking.
 
-By default, \1 displays
-\l {QAbstractItemModel::headerData()}{header data}
+By default, \1 displays \l {QAbstractItemModel::headerData()}{header data}
 from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
-If you don't wish to use this model, you can assign a different model to the
-\l {TableView::model}{model} property. If you assign a model that is a
-QAbstractItemModel, its header data will be used. Otherwise the data in
-the model will be used directly (for example, if you assign a model that
-is simply an array of strings).
+If you don't wish to use header data from that model, or you don't use a
+syncView, you can assign a model explicitly to the \l {TableView::model}{model}
+property.
 
 \note In order to show the header data of a QAbstractItemModel, \1
 will internally wrap the model's header data in an independent proxy
@@ -55,16 +52,16 @@ model to label the columns.
 //! [model]
 This property holds the model providing data for the \1 header view.
 
-When model is not explicitly set, the header will use the syncView's
-model once syncView is set.
+By default, \1 header view displays \l {QAbstractItemModel::headerData()}{header data}
+from the \l {TableView::syncView}{sync view's} \l {TableView::model}{model}.
+If you don't wish to use header data from that model, or you don't use a
+syncView, you can assign a model explicitly to this property. If \a model
+is a \l QAbstractTableModel, it's \l {QAbstractItemModel::headerData()}{header data}
+will be used. Otherwise, if it's a \l QAbstractItemModel,
+\l {QAbstractItemModel::data()}{data} will be used.
 
-If model is a QAbstractTableModel, its \1 headerData() will
-be accessed.
-
-If model is a QAbstractItemModel other than QAbstractTableModel, model's data()
-will be accessed.
-
-Otherwise, the behavior is same as setting TableView::model.
+In addition to \l {QAbstractItemModel}{QAbstractItemModels}, you can also assign other
+kinds of models to this property, such as JavaScript arrays.
 
 \sa TableView {TableView::model} {model} QAbstractTableModel
 //! [model]
@@ -78,5 +75,27 @@ role should be displayed.
 If model is a QAbstractItemModel then it will default to "display"; otherwise
 it is empty.
 
+A warning is given if the model's \l {QAbstractItemModel::}{roleNames()}
+doesn't provide the role specified in \l textRole.
+The warning can be silenced by setting the \l textRole.
+
 \sa QAbstractItemModel::roleNames()
 //! [textRole]
+
+//! [movableColumns]
+This property allows the user to move columns in the view. The default value is
+\c false.
+
+\note If this property is set, the HorizontalHeaderView allows the user to drag
+and drop columns at the required position. When syncView is enabled,
+any change will be applied to the corresponding view item.
+//! [movableColumns]
+
+//! [movableRows]
+This property allows the user to move rows in the view. The default value is \c
+false.
+
+\note If this property is set, the VerticalHeaderView allows the user to drag
+and drop rows at the required position. When syncView is enabled,
+any change will be applied to the corresponding view item.
+//! [movableRows]

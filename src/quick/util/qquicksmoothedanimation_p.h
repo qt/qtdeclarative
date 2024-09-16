@@ -24,14 +24,14 @@ QT_BEGIN_NAMESPACE
 
 class QQmlProperty;
 class QQuickSmoothedAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
+class Q_QUICK_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSmoothedAnimation)
 
-    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity NOTIFY velocityChanged FINAL)
-    Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged FINAL)
-    Q_PROPERTY(qreal maximumEasingTime READ maximumEasingTime WRITE setMaximumEasingTime NOTIFY maximumEasingTimeChanged FINAL)
+    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity NOTIFY velocityChanged)
+    Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged)
+    Q_PROPERTY(qreal maximumEasingTime READ maximumEasingTime WRITE setMaximumEasingTime NOTIFY maximumEasingTimeChanged)
     QML_NAMED_ELEMENT(SmoothedAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -64,7 +64,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickSmoothedAnimation)
 
 #endif // QQUICKSMOOTHEDANIMATION_H

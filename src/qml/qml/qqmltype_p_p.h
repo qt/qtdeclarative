@@ -21,6 +21,9 @@
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <private/qqmltypeloader_p.h>
+#include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4engine_p.h>
 
 #include <QAtomicInteger>
 
@@ -54,9 +57,6 @@ public:
     QQmlTypePrivate(QQmlType::RegistrationType type);
 
     const ProxyMetaObjects *init() const;
-    const Enums *initEnums(QQmlEnginePrivate *engine) const;
-    void insertEnums(Enums *enums, const QMetaObject *metaObject) const;
-    void insertEnumsFromPropertyCache(Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const;
 
     QUrl sourceUrl() const
     {
@@ -87,6 +87,11 @@ public:
     bool isComposite() const
     {
         return regType == QQmlType::CompositeType || regType == QQmlType::CompositeSingletonType;
+    }
+
+    bool isValueType() const
+    {
+        return regType == QQmlType::CppType && !(typeId.flags() & QMetaType::PointerToQObject);
     }
 
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
@@ -148,6 +153,108 @@ public:
 
     void setName(const QString &uri, const QString &element);
 
+    template<typename String>
+    static int enumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            return enums->enums.value(name);
+        }, ok);
+    }
+
+    template<typename String>
+    static int scopedEnumIndex(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            return enums->scopedEnumIndex.value(name);
+        }, ok);
+    }
+
+    template<typename String>
+    static int scopedEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine, int index,
+            const String &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) {
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            return enums->scopedEnums.at(index)->value(name);
+        }, ok);
+    }
+
+    template<typename String1, typename String2>
+    static int scopedEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            const String1 &scopedEnumName, const String2 &name, bool *ok)
+    {
+        return doGetEnumValue(d, engine, [&](const QQmlTypePrivate::Enums *enums) -> const int * {
+            const int *rv = enums->scopedEnumIndex.value(scopedEnumName);
+            if (!rv)
+                return nullptr;
+
+            const int index = *rv;
+            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
+            return enums->scopedEnums.at(index)->value(name);
+        }, ok);
+    }
+
+    const QMetaObject *metaObject() const
+    {
+        if (isValueType())
+            return metaObjectForValueType();
+
+        const QQmlTypePrivate::ProxyMetaObjects *proxies = init();
+        return proxies->data.isEmpty()
+                ? baseMetaObject
+                : proxies->data.constFirst().metaObject;
+    }
+
+    const QMetaObject *metaObjectForValueType() const
+    {
+        Q_ASSERT(isValueType());
+
+        // Prefer the extension meta object, if any.
+        // Extensions allow registration of non-gadget value types.
+        if (const QMetaObject *extensionMetaObject = extraData.cppTypeData->extMetaObject) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (extensionMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return extensionMetaObject;
+        }
+
+        if (baseMetaObject) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (baseMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return baseMetaObject;
+        }
+
+        return nullptr;
+    }
+
+    static QQmlType compositeQmlType(
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit,
+            QQmlTypeLoader *typeLoader, const QString &type)
+    {
+        Q_ASSERT(typeLoader);
+
+        const QQmlType qmltype
+                = unit->typeNameCache->query<QQmlImport::AllowRecursion>(type, typeLoader).type;
+        if (!qmltype.isValid())
+            return qmltype;
+
+        if (qmltype.isInlineComponentType()
+                && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
+            // If it seems to be an IC type, make sure there is an actual
+            // compilation unit for it. We create inline component types speculatively.
+            return QQmlType();
+        }
+
+        return qmltype;
+    }
+
 private:
     mutable QAtomicPointer<const ProxyMetaObjects> proxyMetaObjects;
     mutable QAtomicPointer<const Enums> enums;
@@ -163,6 +270,29 @@ private:
         QString metaEnumScope;
         bool scoped;
     };
+
+    template<typename Op>
+    static int doGetEnumValue(
+            const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlEnginePrivate *engine,
+            Op &&op, bool *ok)
+    {
+        Q_ASSERT(ok);
+        if (d) {
+            if (const QQmlTypePrivate::Enums *enums = d->initEnums(engine)) {
+                if (const int *rv = op(enums)) {
+                    *ok = true;
+                    return *rv;
+                }
+            }
+        }
+
+        *ok = false;
+        return -1;
+    }
+
+    const Enums *initEnums(QQmlEnginePrivate *engine) const;
+    void insertEnums(Enums *enums, const QMetaObject *metaObject) const;
+    void insertEnumsFromPropertyCache(Enums *enums, const QQmlPropertyCache::ConstPtr &cache) const;
 
     void createListOfPossibleConflictingItems(const QMetaObject *metaObject, QList<EnumInfo> &enumInfoList, QStringList path) const;
     void createEnumConflictReport(const QMetaObject *metaObject, const QString &conflictingKey) const;

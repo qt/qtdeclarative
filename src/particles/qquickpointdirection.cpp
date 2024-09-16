@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype PointDirection
-    \instantiates QQuickPointDirection
+    \nativetype QQuickPointDirection
     \inqmlmodule QtQuick.Particles
     \ingroup qtquick-particles
     \inherits Direction

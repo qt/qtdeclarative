@@ -29,7 +29,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
-class Q_QML_PRIVATE_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
+class Q_QML_EXPORT QQmlBinding : public QQmlJavaScriptExpression,
                                          public QQmlAbstractBinding
 {
     friend class QQmlAbstractBinding;
@@ -72,6 +72,8 @@ public:
     void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) override;
     QString expression() const override;
     void update(QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding);
+
+    void printBindingLoopError(const QQmlProperty &prop) override;
 
     typedef int Identifier;
     enum {

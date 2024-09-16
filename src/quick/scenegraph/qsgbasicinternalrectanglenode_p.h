@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGBasicInternalRectangleNode : public QSGInternalRectangleNode
+class Q_QUICK_EXPORT QSGBasicInternalRectangleNode : public QSGInternalRectangleNode
 {
 public:
     QSGBasicInternalRectangleNode();
@@ -53,10 +53,10 @@ protected:
     QColor m_color;
     QColor m_border_color;
     float m_radius = 0.0f;
-    float m_topLeftRadius = 0.0f;
-    float m_topRightRadius = 0.0f;
-    float m_bottomLeftRadius = 0.0f;
-    float m_bottomRightRadius = 0.0f;
+    float m_topLeftRadius = -1.0f;
+    float m_topRightRadius = -1.0f;
+    float m_bottomLeftRadius = -1.0f;
+    float m_bottomRightRadius = -1.0f;
     float m_pen_width = 0.0f;
 
     uint m_aligned : 1;

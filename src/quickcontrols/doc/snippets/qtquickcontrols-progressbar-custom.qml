@@ -1,9 +1,9 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 //! [file]
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls.Basic
 
 ProgressBar {
     id: control
@@ -21,11 +21,40 @@ ProgressBar {
         implicitWidth: 200
         implicitHeight: 4
 
+        // Progress indicator for determinate state.
         Rectangle {
             width: control.visualPosition * parent.width
             height: parent.height
             radius: 2
             color: "#17a81a"
+            visible: !control.indeterminate
+        }
+
+        // Scrolling animation for indeterminate state.
+        Item {
+            anchors.fill: parent
+            visible: control.indeterminate
+            clip: true
+
+            Row {
+                spacing: 20
+
+                Repeater {
+                    model: control.width / 40 + 1
+
+                    Rectangle {
+                        color: "#17a81a"
+                        width: 20
+                        height: control.height
+                    }
+                }
+                XAnimator on x {
+                    from: 0
+                    to: -40
+                    loops: Animation.Infinite
+                    running: control.indeterminate
+                }
+            }
         }
     }
 }

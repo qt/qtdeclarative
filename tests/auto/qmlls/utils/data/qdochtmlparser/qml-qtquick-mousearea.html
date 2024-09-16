@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+<!-- qquickmousearea.cpp -->
+  <title>MouseArea QML Type | Qt Quick 5.15.16</title>
+  <link rel="stylesheet" type="text/css" href="style/offline-simple.css" />
+  <script type="text/javascript">
+    document.getElementsByTagName("link").item(0).setAttribute("href", "style/offline.css");
+    // loading style sheet breaks anchors that were jumped to before
+    // so force jumping to anchor again
+    setTimeout(function() {
+        var anchor = location.hash;
+        // need to jump to different anchor first (e.g. none)
+        location.hash = "#";
+        setTimeout(function() {
+            location.hash = anchor;
+        }, 0);
+    }, 0);
+  </script>
+</head>
+<body>
+<div class="header" id="qtdocheader">
+    <div class="main">
+    <div class="main-rounded">
+        <div class="navigationbar">
+        <ul>
+<li><a href="../qtdoc/index.html" translate="no">Qt 5.15</a></li>
+<li><a href="qtquick-index.html" translate="no">Qt Quick</a></li>
+<li><a href="qtquick-qmlmodule.html" translate="no">QML Types</a></li>
+<li>MouseArea QML Type</li>
+<li id="buildversion"><a href="qtquick-index.html" translate="no">Qt 5.15.16 Reference Documentation</a></li>
+    </ul>
+    </div>
+</div>
+<div class="content">
+<div class="line">
+<div class="content mainContent">
+<div class="sidebar">
+<div class="toc">
+<h3><a name="toc">Contents</a></h3>
+<ul>
+<li class="level1"><a href="#properties">Properties</a></li>
+<li class="level1"><a href="#signals">Signals</a></li>
+<li class="level1"><a href="#details">Detailed Description</a></li>
+<li class="level2"><a href="#example-usage">Example Usage</a></li>
+</ul>
+</div>
+<div class="sidebar-content" id="sidebar-content"></div></div>
+<h1 class="title" translate="no">MouseArea QML Type</h1>
+<span class="subtitle" translate="no"></span>
+<!-- $$$MouseArea-brief -->
+<p>Enables simple mouse handling. <a href="#details">More...</a></p>
+<!-- @@@MouseArea -->
+<div class="table"><table class="alignedsummary" translate="no">
+<tr><td class="memItemLeft rightAlign topAlign"> Import Statement:</td><td class="memItemRight bottomAlign"> import QtQuick 2.15</td></tr><tr><td class="memItemLeft rightAlign topAlign"> Inherits:</td><td class="memItemRight bottomAlign"> <p><a href="qml-qtquick-item.html" translate="no">Item</a></p>
+</td></tr></table></div><ul>
+<li><a href="qml-qtquick-mousearea-members.html">List of all members, including inherited members</a></li>
+</ul>
+<a name="properties"></a>
+<h2 id="properties">Properties</h2>
+<ul>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a></b></b> : Qt::MouseButtons</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#containsPress-prop" translate="no">containsPress</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#cursorShape-prop" translate="no">cursorShape</a></b></b> : Qt::CursorShape</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag-prop" translate="no">drag</a></b></b><ul>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.active-prop" translate="no">drag.active</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.axis-prop" translate="no">drag.axis</a></b></b> : enumeration</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.filterChildren-prop" translate="no">drag.filterChildren</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.maximumX-prop" translate="no">drag.maximumX</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.maximumY-prop" translate="no">drag.maximumY</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.minimumX-prop" translate="no">drag.minimumX</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.minimumY-prop" translate="no">drag.minimumY</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.smoothed-prop" translate="no">drag.smoothed</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.target-prop" translate="no">drag.target</a></b></b> : Item</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#drag.threshold-prop" translate="no">drag.threshold</a></b></b> : real</li>
+</ul>
+</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#enabled-prop" translate="no">enabled</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#mouseX-prop" translate="no">mouseX</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#mouseY-prop" translate="no">mouseY</a></b></b> : real</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#pressAndHoldInterval-prop" translate="no">pressAndHoldInterval</a></b></b> : int</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#pressed-prop" translate="no">pressed</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#pressedButtons-prop" translate="no">pressedButtons</a></b></b> : MouseButtons</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#preventStealing-prop" translate="no">preventStealing</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#propagateComposedEvents-prop" translate="no">propagateComposedEvents</a></b></b> : bool</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#scrollGestureEnabled-prop" translate="no">scrollGestureEnabled</a></b></b> : bool</li>
+</ul>
+<a name="signals"></a>
+<h2 id="signals">Signals</h2>
+<ul>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#canceled-signal" translate="no">canceled</a></b></b>()</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#clicked-signal" translate="no">clicked</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#doubleClicked-signal" translate="no">doubleClicked</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#entered-signal" translate="no">entered</a></b></b>()</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#exited-signal" translate="no">exited</a></b></b>()</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#positionChanged-signal" translate="no">positionChanged</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#pressAndHold-signal" translate="no">pressAndHold</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#pressed-signal" translate="no">pressed</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#released-signal" translate="no">released</a></b></b>(MouseEvent <i>mouse</i>)</li>
+<li class="fn" translate="no"><b><b><a href="qml-qtquick-mousearea.html#wheel-signal" translate="no">wheel</a></b></b>(WheelEvent <i>wheel</i>)</li>
+</ul>
+<!-- $$$MouseArea-description -->
+<a name="details"></a>
+<h2 id="details">Detailed Description</h2>
+<p>A MouseArea is an invisible item that is typically used in conjunction with a visible item in order to provide mouse handling for that item. By effectively acting as a proxy, the logic for mouse handling can be contained within a MouseArea item.</p>
+<p>The <a href="qml-qtquick-mousearea.html#enabled-prop" translate="no">enabled</a> property is used to enable and disable mouse handling for the proxied item. When disabled, the mouse area becomes transparent to mouse events.</p>
+<p>MouseArea is an invisible Item, but it has a visible property. When set to false, the mouse area becomes transparent to mouse events.</p>
+<p>The <a href="qml-qtquick-mousearea.html#pressed-signal" translate="no">pressed</a> read-only property indicates whether or not the user is holding down a mouse button over the mouse area. This property is often used in bindings between properties in a user interface. The <a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a> read-only property indicates the presence of the mouse cursor over the mouse area but, by default, only when a mouse button is held down; see the <a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a> documentation for details.</p>
+<p>Information about the mouse position and button clicks are provided via signals for which event handler properties are defined. The most commonly used involved handling mouse presses and clicks: onClicked, onDoubleClicked, onPressed, onReleased and onPressAndHold. It's also possible to handle mouse wheel events via the onWheel signal.</p>
+<p>If a MouseArea overlaps with the area of other MouseArea items, you can choose to propagate <code translate="no">clicked</code>, <code translate="no">doubleClicked</code> and <code translate="no">pressAndHold</code> events to these other items by setting <a href="qml-qtquick-mousearea.html#propagateComposedEvents-prop" translate="no">propagateComposedEvents</a> to true and rejecting events that should be propagated. See the <a href="qml-qtquick-mousearea.html#propagateComposedEvents-prop" translate="no">propagateComposedEvents</a> documentation for details.</p>
+<p>By default, MouseArea items only report mouse clicks and not changes to the position of the mouse cursor. Setting the <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> property ensures that handlers defined for onPositionChanged, onEntered and onExited are used and that the <a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a> property is updated even when no mouse buttons are pressed.</p>
+<a name="example-usage"></a>
+<h2 id="example-usage">Example Usage</h2>
+<div class="float-right"><p><img src="images/qml-mousearea-snippet.png" alt="" /></p>
+</div><p>The following example uses a MouseArea in a <a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a> that changes the <a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a> color to red when clicked:</p>
+<pre class="qml" translate="no">
+ import QtQuick 2.0
+
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">width</span>: <span class="number">100</span>; <span class="name">height</span>: <span class="number">100</span>
+     <span class="name">color</span>: <span class="string">&quot;green&quot;</span>
+
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">onClicked</span>: { <span class="name">parent</span>.<span class="name">color</span> <span class="operator">=</span> <span class="string">'red'</span> }
+     }
+ }
+</pre>
+<br style="clear: both" /><p>Many MouseArea signals pass a <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter that contains additional information about the mouse event, such as the position, button, and any key modifiers.</p>
+<p>Here is an extension of the previous example that produces a different color when the area is right clicked:</p>
+<pre class="qml" translate="no">
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">width</span>: <span class="number">100</span>; <span class="name">height</span>: <span class="number">100</span>
+     <span class="name">color</span>: <span class="string">&quot;green&quot;</span>
+
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">acceptedButtons</span>: <span class="name">Qt</span>.<span class="name">LeftButton</span> <span class="operator">|</span> <span class="name">Qt</span>.<span class="name">RightButton</span>
+         <span class="name">onClicked</span>: {
+             <span class="keyword">if</span> (<span class="name">mouse</span>.<span class="name">button</span> <span class="operator">==</span> <span class="name">Qt</span>.<span class="name">RightButton</span>)
+                 <span class="name">parent</span>.<span class="name">color</span> <span class="operator">=</span> <span class="string">'blue'</span>;
+             <span class="keyword">else</span>
+                 <span class="name">parent</span>.<span class="name">color</span> <span class="operator">=</span> <span class="string">'red'</span>;
+         }
+     }
+ }
+</pre>
+<p><b>See also </b><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a>, <a href="qtquick-mousearea-example.html" translate="no">MouseArea example</a>, and <a href="qtquick-input-topic.html" translate="no">Important Concepts In Qt Quick - User Input</a>.</p>
+<!-- @@@MouseArea -->
+<h2>Property Documentation</h2>
+<!-- $$$ -->
+<div class="qmlitem"><div class="fngroup">
+<div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="mouseX-prop">
+<td class="tblQmlPropNode"><p>
+<a name="mouseX-prop"></a><span class="name">mouseX</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+<tr valign="top" class="odd" id="mouseY-prop">
+<td class="tblQmlPropNode"><p>
+<a name="mouseY-prop"></a><span class="name">mouseY</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+</table></div></div>
+</div><div class="qmldoc"><p>These properties hold the coordinates of the mouse cursor.</p>
+<p>If the <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> property is false then these properties will only be valid while a button is pressed, and will remain valid as long as the button is held down even if the mouse is moved outside the area.</p>
+<p>By default, this property is false.</p>
+<p>If <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> is true then these properties will be valid when:</p>
+<ul>
+<li>no button is pressed, but the mouse is within the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> (<a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a> is true).</li>
+<li>a button is pressed and held, even if it has since moved out of the area.</li>
+</ul>
+<p>The coordinates are relative to the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>.</p>
+</div></div><!-- @@@ -->
+<br/>
+<!-- $$$acceptedButtons -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="acceptedButtons-prop">
+<td class="tblQmlPropNode"><p>
+<a name="acceptedButtons-prop"></a><span class="name">acceptedButtons</span> : <span class="type">Qt::MouseButtons</span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds the mouse buttons that the mouse area reacts to.</p>
+<p>To specify that the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> will react to multiple buttons, <a href="../qtcore/qt.html#MouseButton-enum" translate="no">Qt::MouseButtons</a> flag values are combined using the &quot;|&quot; (or) operator:</p>
+<pre class="cpp" translate="no">
+ MouseArea { acceptedButtons: <span class="type"><a href="../qtqml/qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">.</span>LeftButton <span class="operator">|</span> <span class="type"><a href="../qtqml/qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">.</span>RightButton }
+</pre>
+<p>To indicate that all possible mouse buttons are to be accepted, the special value 'Qt.AllButtons' may be used:</p>
+<pre class="cpp" translate="no">
+ MouseArea { acceptedButtons: <span class="type"><a href="../qtqml/qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">.</span>AllButtons }
+</pre>
+<p>The default value is <code translate="no">Qt.LeftButton</code>.</p>
+</div></div><!-- @@@acceptedButtons -->
+<br/>
+<!-- $$$containsMouse -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="containsMouse-prop">
+<td class="tblQmlPropNode"><p>
+<a name="containsMouse-prop"></a><span class="name">containsMouse</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether the mouse is currently inside the mouse area.</p>
+<div class="admonition warning">
+<p><b>Warning: </b>If <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> is false, containsMouse will only be valid when the mouse is pressed while the mouse cursor is inside the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>.</p>
+</div>
+</div></div><!-- @@@containsMouse -->
+<br/>
+<!-- $$$containsPress -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="containsPress-prop">
+<td class="tblQmlPropNode"><p>
+<a name="containsPress-prop"></a><span class="name">containsPress</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This is a convenience property equivalent to <code translate="no">pressed &amp;&amp; containsMouse</code>, i.e&#x2e; it holds whether any of the <a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a> are currently pressed and the mouse is currently within the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>.</p>
+<p>This property is particularly useful for highlighting an item while the mouse is pressed within its bounds.</p>
+<p>This property was introduced in Qt 5.4.</p>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#pressed-signal" translate="no">pressed</a> and <a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a>.</p>
+</div></div><!-- @@@containsPress -->
+<br/>
+<!-- $$$cursorShape -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="cursorShape-prop">
+<td class="tblQmlPropNode"><p>
+<a name="cursorShape-prop"></a><span class="name">cursorShape</span> : <span class="type">Qt::CursorShape</span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds the cursor shape for this mouse area. Note that on platforms that do not display a mouse cursor this may have no effect.</p>
+<p>The available cursor shapes are:</p>
+<ul>
+<li>Qt.ArrowCursor</li>
+<li>Qt.UpArrowCursor</li>
+<li>Qt.CrossCursor</li>
+<li>Qt.WaitCursor</li>
+<li>Qt.IBeamCursor</li>
+<li>Qt.SizeVerCursor</li>
+<li>Qt.SizeHorCursor</li>
+<li>Qt.SizeBDiagCursor</li>
+<li>Qt.SizeFDiagCursor</li>
+<li>Qt.SizeAllCursor</li>
+<li>Qt.BlankCursor</li>
+<li>Qt.SplitVCursor</li>
+<li>Qt.SplitHCursor</li>
+<li>Qt.PointingHandCursor</li>
+<li>Qt.ForbiddenCursor</li>
+<li>Qt.WhatsThisCursor</li>
+<li>Qt.BusyCursor</li>
+<li>Qt.OpenHandCursor</li>
+<li>Qt.ClosedHandCursor</li>
+<li>Qt.DragCopyCursor</li>
+<li>Qt.DragMoveCursor</li>
+<li>Qt.DragLinkCursor</li>
+</ul>
+<p>In order to only set a mouse cursor shape for a region without reacting to mouse events set the <a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a> to none:</p>
+<pre class="cpp" translate="no">
+ MouseArea { cursorShape: <span class="type"><a href="../qtqml/qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">.</span>IBeamCursor; acceptedButtons: <span class="type"><a href="../qtqml/qml-qtqml-qt.html" translate="no">Qt</a></span><span class="operator">.</span>NoButton }
+</pre>
+<p>The default value is <code translate="no">Qt.ArrowCursor</code>.</p>
+<p><b>See also </b><a href="../qtcore/qt.html#CursorShape-enum" translate="no">Qt::CursorShape</a>.</p>
+</div></div><!-- @@@cursorShape -->
+<br/>
+<!-- $$$drag -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="even" id="drag-prop"><th class="centerAlign"><p><a name="drag-prop"></a><b>drag group</b></p></th></tr>
+<tr valign="top" class="odd" id="drag.active-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.active-prop"></a><span class="name">drag.active</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.axis-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.axis-prop"></a><span class="name">drag.axis</span> : <span class="type"><a href="../qtqml/qml-enumeration.html" translate="no">enumeration</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.filterChildren-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.filterChildren-prop"></a><span class="name">drag.filterChildren</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.maximumX-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.maximumX-prop"></a><span class="name">drag.maximumX</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.maximumY-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.maximumY-prop"></a><span class="name">drag.maximumY</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.minimumX-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.minimumX-prop"></a><span class="name">drag.minimumX</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.minimumY-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.minimumY-prop"></a><span class="name">drag.minimumY</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.smoothed-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.smoothed-prop"></a><span class="name">drag.smoothed</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.target-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.target-prop"></a><span class="name">drag.target</span> : <span class="type"><a href="qml-qtquick-item.html" translate="no">Item</a></span></p></td></tr>
+<tr valign="top" class="odd" id="drag.threshold-prop">
+<td class="tblQmlPropNode"><p>
+<a name="drag.threshold-prop"></a><span class="name">drag.threshold</span> : <span class="type"><a href="../qtqml/qml-real.html" translate="no">real</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p><code translate="no">drag</code> provides a convenient way to make an item draggable.</p>
+<ul>
+<li><code translate="no">drag.target</code> specifies the id of the item to drag.</li>
+<li><code translate="no">drag.active</code> specifies if the target item is currently being dragged.</li>
+<li><code translate="no">drag.axis</code> specifies whether dragging can be done horizontally (<code translate="no">Drag.XAxis</code>), vertically (<code translate="no">Drag.YAxis</code>), or both (<code translate="no">Drag.XAndYAxis</code>)</li>
+<li><code translate="no">drag.minimum</code> and <code translate="no">drag.maximum</code> limit how far the target can be dragged along the corresponding axes.</li>
+</ul>
+<p>The following example displays a <a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a> that can be dragged along the X-axis. The opacity of the rectangle is reduced when it is dragged to the right.</p>
+<pre class="qml" translate="no">
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">id</span>: <span class="name">container</span>
+     <span class="name">width</span>: <span class="number">600</span>; <span class="name">height</span>: <span class="number">200</span>
+
+     <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+         <span class="name">id</span>: <span class="name">rect</span>
+         <span class="name">width</span>: <span class="number">50</span>; <span class="name">height</span>: <span class="number">50</span>
+         <span class="name">color</span>: <span class="string">&quot;red&quot;</span>
+         <span class="name">opacity</span>: (<span class="number">600.0</span> <span class="operator">-</span> <span class="name">rect</span>.<span class="name">x</span>) <span class="operator">/</span> <span class="number">600</span>
+
+         <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+             <span class="name">anchors</span>.fill: <span class="name">parent</span>
+             <span class="name">drag</span>.target: <span class="name">rect</span>
+             <span class="name">drag</span>.axis: <span class="name">Drag</span>.<span class="name">XAxis</span>
+             <span class="name">drag</span>.minimumX: <span class="number">0</span>
+             <span class="name">drag</span>.maximumX: <span class="name">container</span>.<span class="name">width</span> <span class="operator">-</span> <span class="name">rect</span>.<span class="name">width</span>
+         }
+     }
+ }
+</pre>
+<div class="admonition note">
+<p><b>Note: </b>Items cannot be dragged if they are anchored for the requested <code translate="no">drag.axis</code>. For example, if <code translate="no">anchors.left</code> or <code translate="no">anchors.right</code> was set for <code translate="no">rect</code> in the above example, it cannot be dragged along the X-axis. This can be avoided by settng the anchor value to <code translate="no">undefined</code> in an <a href="qml-qtquick-mousearea.html#pressed-signal" translate="no">onPressed</a> handler.</p>
+</div>
+<p>If <code translate="no">drag.filterChildren</code> is set to true, a drag can override descendant MouseAreas. This enables a parent <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> to handle drags, for example, while descendants handle clicks:</p>
+<p><code translate="no">drag.threshold</code> determines the threshold in pixels of when the drag operation should start. By default this is bound to a platform dependent value. This property was added in Qt Quick 2.2&#x2e;</p>
+<p>If <code translate="no">drag.smoothed</code> is <code translate="no">true</code>, the target will be moved only after the drag operation has started. If set to <code translate="no">false</code>, the target will be moved straight to the current mouse position. By default, this property is <code translate="no">true</code>. This property was added in Qt Quick 2.4</p>
+<p>See the <a href="qml-qtquick-drag.html" translate="no">Drag</a> attached property and <a href="qml-qtquick-droparea.html" translate="no">DropArea</a> if you want to make a drop.</p>
+<pre class="qml" translate="no">
+ import QtQuick 2.0
+
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">width</span>: <span class="number">480</span>
+     <span class="name">height</span>: <span class="number">320</span>
+     <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+         <span class="name">x</span>: <span class="number">30</span>; <span class="name">y</span>: <span class="number">30</span>
+         <span class="name">width</span>: <span class="number">300</span>; <span class="name">height</span>: <span class="number">240</span>
+         <span class="name">color</span>: <span class="string">&quot;lightsteelblue&quot;</span>
+
+         <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+             <span class="name">anchors</span>.fill: <span class="name">parent</span>
+             <span class="name">drag</span>.target: <span class="name">parent</span>;
+             <span class="name">drag</span>.axis: <span class="string">&quot;XAxis&quot;</span>
+             <span class="name">drag</span>.minimumX: <span class="number">30</span>
+             <span class="name">drag</span>.maximumX: <span class="number">150</span>
+             <span class="name">drag</span>.filterChildren: <span class="number">true</span>
+
+             <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+                 <span class="name">color</span>: <span class="string">&quot;yellow&quot;</span>
+                 <span class="name">x</span>: <span class="number">50</span>; <span class="name">y</span> : <span class="number">50</span>
+                 <span class="name">width</span>: <span class="number">100</span>; <span class="name">height</span>: <span class="number">100</span>
+                 <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+                     <span class="name">anchors</span>.fill: <span class="name">parent</span>
+                     <span class="name">onClicked</span>: <span class="name">console</span>.<span class="name">log</span>(<span class="string">&quot;Clicked&quot;</span>)
+                 }
+             }
+         }
+     }
+ }
+</pre>
+</div></div><!-- @@@drag -->
+<br/>
+<!-- $$$enabled -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="enabled-prop">
+<td class="tblQmlPropNode"><p>
+<a name="enabled-prop"></a><span class="name">enabled</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether the item accepts mouse events.</p>
+<div class="admonition note">
+<p><b>Note: </b>Due to historical reasons, this property is not equivalent to Item.enabled. It only affects mouse events, and its effect does not propagate to child items.</p>
+</div>
+<p>By default, this property is true.</p>
+</div></div><!-- @@@enabled -->
+<br/>
+<!-- $$$hoverEnabled -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="hoverEnabled-prop">
+<td class="tblQmlPropNode"><p>
+<a name="hoverEnabled-prop"></a><span class="name">hoverEnabled</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether hover events are handled.</p>
+<p>By default, mouse events are only handled in response to a button event, or when a button is pressed. Hover enables handling of all mouse events even when no mouse button is pressed.</p>
+<p>This property affects the <a href="qml-qtquick-mousearea.html#containsMouse-prop" translate="no">containsMouse</a> property and the onEntered, onExited and onPositionChanged signals.</p>
+</div></div><!-- @@@hoverEnabled -->
+<br/>
+<!-- $$$pressAndHoldInterval -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="pressAndHoldInterval-prop">
+<td class="tblQmlPropNode"><p>
+<a name="pressAndHoldInterval-prop"></a><span class="name">pressAndHoldInterval</span> : <span class="type"><a href="../qtqml/qml-int.html" translate="no">int</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property overrides the elapsed time in milliseconds before <code translate="no">pressAndHold</code> is emitted.</p>
+<p>If not explicitly set -- or after reset -- the value follows <code translate="no">QStyleHints::mousePressAndHoldInterval</code>.</p>
+<p>Typically it's sufficient to set this property globally using the application style hint. This property should be used when varying intervals are needed for certain MouseAreas.</p>
+<p>This property was introduced in Qt 5.9.</p>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#pressAndHold-signal" translate="no">pressAndHold</a>.</p>
+</div></div><!-- @@@pressAndHoldInterval -->
+<br/>
+<!-- $$$pressed -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="pressed-prop">
+<td class="tblQmlPropNode"><p>
+<a name="pressed-prop"></a><span class="name">pressed</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether any of the <a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a> are currently pressed.</p>
+</div></div><!-- @@@pressed -->
+<br/>
+<!-- $$$pressedButtons -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="pressedButtons-prop">
+<td class="tblQmlPropNode"><p>
+<a name="pressedButtons-prop"></a><span class="name">pressedButtons</span> : <span class="type">MouseButtons</span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds the mouse buttons currently pressed.</p>
+<p>It contains a bitwise combination of:</p>
+<ul>
+<li>Qt.LeftButton</li>
+<li>Qt.RightButton</li>
+<li>Qt.MiddleButton</li>
+</ul>
+<p>The code below displays &quot;right&quot; when the right mouse buttons is pressed:</p>
+<pre class="qml" translate="no">
+ <span class="type"><a href="qml-qtquick-text.html" translate="no">Text</a></span> {
+     <span class="name">text</span>: <span class="name">mouseArea</span>.<span class="name">pressedButtons</span> <span class="operator">&amp;</span> <span class="name">Qt</span>.<span class="name">RightButton</span> ? <span class="string">&quot;right&quot;</span> : <span class="string">&quot;&quot;</span>
+     <span class="name">horizontalAlignment</span>: <span class="name">Text</span>.<span class="name">AlignHCenter</span>
+     <span class="name">verticalAlignment</span>: <span class="name">Text</span>.<span class="name">AlignVCenter</span>
+
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">id</span>: <span class="name">mouseArea</span>
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">acceptedButtons</span>: <span class="name">Qt</span>.<span class="name">LeftButton</span> <span class="operator">|</span> <span class="name">Qt</span>.<span class="name">RightButton</span>
+     }
+ }
+</pre>
+<div class="admonition note">
+<p><b>Note: </b>this property only handles buttons specified in <a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a>.</p>
+</div>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#acceptedButtons-prop" translate="no">acceptedButtons</a>.</p>
+</div></div><!-- @@@pressedButtons -->
+<br/>
+<!-- $$$preventStealing -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="preventStealing-prop">
+<td class="tblQmlPropNode"><p>
+<a name="preventStealing-prop"></a><span class="name">preventStealing</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether the mouse events may be stolen from this <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>.</p>
+<p>If a <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> is placed within an item that filters child mouse events, such as Flickable, the mouse events may be stolen from the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> if a gesture is recognized by the parent item, e.g&#x2e; a flick gesture. If preventStealing is set to true, no item will steal the mouse events.</p>
+<p>Note that setting preventStealing to true once an item has started stealing events will have no effect until the next press event.</p>
+<p>By default this property is false.</p>
+</div></div><!-- @@@preventStealing -->
+<br/>
+<!-- $$$propagateComposedEvents -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="propagateComposedEvents-prop">
+<td class="tblQmlPropNode"><p>
+<a name="propagateComposedEvents-prop"></a><span class="name">propagateComposedEvents</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property holds whether composed mouse events will automatically propagate to other MouseAreas that overlap with this <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> but are lower in the visual stacking order. By default, this property is false.</p>
+<p><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> contains several composed events: <code translate="no">clicked</code>, <code translate="no">doubleClicked</code> and <code translate="no">pressAndHold</code>. These are composed of basic mouse events, like <code translate="no">pressed</code>, and can be propagated differently in comparison to basic events.</p>
+<p>If propagateComposedEvents is set to true, then composed events will be automatically propagated to other MouseAreas in the same location in the scene. Each event is propagated to the next <a href="qml-qtquick-mousearea.html#enabled-prop" translate="no">enabled</a> <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> beneath it in the stacking order, propagating down this visual hierarchy until a <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> accepts the event. Unlike <code translate="no">pressed</code> events, composed events will not be automatically accepted if no handler is present.</p>
+<p>For example, below is a yellow <a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a> that contains a blue <a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a>. The blue rectangle is the top-most item in the hierarchy of the visual stacking order; it will visually rendered above the yellow rectangle. Since the blue rectangle sets propagateComposedEvents to true, and also sets <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">MouseEvent::accepted</a> to false for all received <code translate="no">clicked</code> events, any <code translate="no">clicked</code> events it receives are propagated to the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> of the yellow rectangle beneath it.</p>
+<pre class="qml" translate="no">
+ import QtQuick 2.0
+
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">color</span>: <span class="string">&quot;yellow&quot;</span>
+     <span class="name">width</span>: <span class="number">100</span>; <span class="name">height</span>: <span class="number">100</span>
+
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">onClicked</span>: <span class="name">console</span>.<span class="name">log</span>(<span class="string">&quot;clicked yellow&quot;</span>)
+     }
+
+     <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+         <span class="name">color</span>: <span class="string">&quot;blue&quot;</span>
+         <span class="name">width</span>: <span class="number">50</span>; <span class="name">height</span>: <span class="number">50</span>
+
+         <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+             <span class="name">anchors</span>.fill: <span class="name">parent</span>
+             <span class="name">propagateComposedEvents</span>: <span class="number">true</span>
+             <span class="name">onClicked</span>: {
+                 <span class="name">console</span>.<span class="name">log</span>(<span class="string">&quot;clicked blue&quot;</span>)
+                 <span class="name">mouse</span>.<span class="name">accepted</span> <span class="operator">=</span> <span class="number">false</span>
+             }
+         }
+     }
+ }
+</pre>
+<p>Clicking on the blue rectangle will cause the <code translate="no">onClicked</code> handler of its child <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> to be invoked; the event will then be propagated to the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> of the yellow rectangle, causing its own <code translate="no">onClicked</code> handler to be invoked.</p>
+<p>This property greatly simplifies the usecase of when you want to have overlapping MouseAreas handling the composed events together. For example: if you want one <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> to handle <code translate="no">clicked</code> signals and the other to handle <code translate="no">pressAndHold</code>, or if you want one <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> to handle <code translate="no">clicked</code> most of the time, but pass it through when certain conditions are met.</p>
+</div></div><!-- @@@propagateComposedEvents -->
+<br/>
+<!-- $$$scrollGestureEnabled -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="scrollGestureEnabled-prop">
+<td class="tblQmlPropNode"><p>
+<a name="scrollGestureEnabled-prop"></a><span class="name">scrollGestureEnabled</span> : <span class="type"><a href="../qtqml/qml-bool.html" translate="no">bool</a></span></p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This property controls whether this <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> responds to scroll gestures from non-mouse devices, such as the 2-finger flick gesture on a trackpad. If set to false, the <a href="qml-qtquick-mousearea.html#wheel-signal" translate="no">wheel</a> signal be emitted only when the wheel event comes from an actual mouse with a wheel, while scroll gesture events will pass through to any other Item that will handle them. For example, the user might perform a flick gesture while the cursor is over an item containing a <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>, intending to interact with a Flickable which is underneath. Setting this property to false will allow the <a href="qml-qtquick-pincharea.html" translate="no">PinchArea</a> to handle the mouse wheel or the pinch gesture, while the Flickable handles the flick gesture.</p>
+<p>By default, this property is true.</p>
+<p>This property was introduced in Qt 5.5.</p>
+</div></div><!-- @@@scrollGestureEnabled -->
+<br/>
+<h2>Signal Documentation</h2>
+<!-- $$$canceled[overload1]$$$canceled -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="canceled-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="canceled-signal"></a><span class="name">canceled</span>()</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when mouse events have been canceled, because another item stole the mouse event handling.</p>
+<p>This signal is for advanced use: it is useful when there is more than one <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> that is handling input, or when there is a <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> inside a <a href="qml-qtquick-flickable.html" translate="no">Flickable</a>. In the latter case, if you execute some logic in the <code translate="no">onPressed</code> signal handler and then start dragging, the <a href="qml-qtquick-flickable.html" translate="no">Flickable</a> will steal the mouse handling from the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>. In these cases, to reset the logic when the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> has lost the mouse handling to the <a href="qml-qtquick-flickable.html" translate="no">Flickable</a>, <code translate="no">canceled</code> should be handled in addition to <a href="qml-qtquick-mousearea.html#released-signal" translate="no">released</a>.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onCanceled</code>.</p>
+</div></div><!-- @@@canceled -->
+<br/>
+<!-- $$$clicked[overload1]$$$clickedMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="clicked-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="clicked-signal"></a><span class="name">clicked</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when there is a click. A click is defined as a press followed by a release, both inside the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> (pressing, moving outside the <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a>, and then moving back inside and releasing is also considered a click).</p>
+<p>The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the click, including the x and y position of the release of the click, and whether the click was held.</p>
+<p>When handling this signal, changing the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter has no effect, unless the <a href="qml-qtquick-mousearea.html#propagateComposedEvents-prop" translate="no">propagateComposedEvents</a> property is <code translate="no">true</code>.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onClicked</code>.</p>
+</div></div><!-- @@@clicked -->
+<br/>
+<!-- $$$doubleClicked[overload1]$$$doubleClickedMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="doubleClicked-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="doubleClicked-signal"></a><span class="name">doubleClicked</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when there is a double-click (a press followed by a release followed by a press). The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the click, including the x and y position of the release of the click, and whether the click was held.</p>
+<p>When handling this signal, if the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter is set to false, the pressed/released/clicked signals will be emitted for the second click; otherwise they are suppressed. The <code translate="no">accepted</code> property defaults to true.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onDoubleClicked</code>.</p>
+</div></div><!-- @@@doubleClicked -->
+<br/>
+<!-- $$$entered[overload1]$$$entered -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="entered-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="entered-signal"></a><span class="name">entered</span>()</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when the mouse enters the mouse area.</p>
+<p>By default this signal is only emitted if a button is currently pressed. Set <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> to true to emit this signal even when no mouse button is pressed.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onEntered</code>.</p>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a>.</p>
+</div></div><!-- @@@entered -->
+<br/>
+<!-- $$$exited[overload1]$$$exited -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="exited-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="exited-signal"></a><span class="name">exited</span>()</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when the mouse exits the mouse area.</p>
+<p>By default this signal is only emitted if a button is currently pressed. Set <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> to true to emit this signal even when no mouse button is pressed.</p>
+<p>The example below shows a fairly typical relationship between two MouseAreas, with <code translate="no">mouseArea2</code> on top of <code translate="no">mouseArea1</code>. Moving the mouse into <code translate="no">mouseArea2</code> from <code translate="no">mouseArea1</code> will cause <code translate="no">mouseArea1</code> to emit the <code translate="no">exited</code> signal.</p>
+<pre class="qml" translate="no">
+ <span class="type"><a href="qml-qtquick-rectangle.html" translate="no">Rectangle</a></span> {
+     <span class="name">width</span>: <span class="number">400</span>; <span class="name">height</span>: <span class="number">400</span>
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">id</span>: <span class="name">mouseArea1</span>
+         <span class="name">anchors</span>.fill: <span class="name">parent</span>
+         <span class="name">hoverEnabled</span>: <span class="number">true</span>
+     }
+     <span class="type"><a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a></span> {
+         <span class="name">id</span>: <span class="name">mouseArea2</span>
+         <span class="name">width</span>: <span class="number">100</span>; <span class="name">height</span>: <span class="number">100</span>
+         <span class="name">anchors</span>.centerIn: <span class="name">parent</span>
+         <span class="name">hoverEnabled</span>: <span class="number">true</span>
+     }
+ }
+</pre>
+<p>If instead you give the two MouseAreas a parent-child relationship, moving the mouse into <code translate="no">mouseArea2</code> from <code translate="no">mouseArea1</code> will <b>not</b> cause <code translate="no">mouseArea1</code> to emit <code translate="no">exited</code>. Instead, they will both be considered to be simultaneously hovered.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onExited</code>.</p>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a>.</p>
+</div></div><!-- @@@exited -->
+<br/>
+<!-- $$$positionChanged[overload1]$$$positionChangedMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="positionChanged-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="positionChanged-signal"></a><span class="name">positionChanged</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when the mouse position changes.</p>
+<p>The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the mouse, including the x and y position, and any buttons currently pressed.</p>
+<p>By default this signal is only emitted if a button is currently pressed. Set <a href="qml-qtquick-mousearea.html#hoverEnabled-prop" translate="no">hoverEnabled</a> to true to emit this signal even when no mouse button is pressed.</p>
+<p>When handling this signal, changing the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter has no effect.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onPositionChanged</code>.</p>
+</div></div><!-- @@@positionChanged -->
+<br/>
+<!-- $$$pressAndHold[overload1]$$$pressAndHoldMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="pressAndHold-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="pressAndHold-signal"></a><span class="name">pressAndHold</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when there is a long press (currently 800ms). The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the press, including the x and y position of the press, and which button is pressed.</p>
+<p>When handling this signal, changing the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter has no effect, unless the <a href="qml-qtquick-mousearea.html#propagateComposedEvents-prop" translate="no">propagateComposedEvents</a> property is <code translate="no">true</code>.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onPressAndHold</code>.</p>
+</div></div><!-- @@@pressAndHold -->
+<br/>
+<!-- $$$pressed[overload1]$$$pressedMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="pressed-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="pressed-signal"></a><span class="name">pressed</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when there is a press. The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the press, including the x and y position and which button was pressed.</p>
+<p>When handling this signal, use the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter to control whether this <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> handles the press and all future mouse events until release. The default is to accept the event and not allow other MouseAreas beneath this one to handle the event. If <i>accepted</i> is set to false, no further events will be sent to this <a href="qml-qtquick-mousearea.html" translate="no">MouseArea</a> until the button is next pressed.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onPressed</code>.</p>
+</div></div><!-- @@@pressed -->
+<br/>
+<!-- $$$released[overload1]$$$releasedMouseEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="released-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="released-signal"></a><span class="name">released</span>(<span class="type"><a href="qml-qtquick-mouseevent.html" translate="no">MouseEvent</a></span> <i>mouse</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted when there is a release. The <a href="qml-qtquick-mouseevent.html" translate="no">mouse</a> parameter provides information about the click, including the x and y position of the release of the click, and whether the click was held.</p>
+<p>When handling this signal, changing the <a href="qml-qtquick-mouseevent.html#accepted-prop" translate="no">accepted</a> property of the <i translate="no">mouse</i> parameter has no effect.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onReleased</code>.</p>
+<p><b>See also </b><a href="qml-qtquick-mousearea.html#canceled-signal" translate="no">canceled</a>.</p>
+</div></div><!-- @@@released -->
+<br/>
+<!-- $$$wheel[overload1]$$$wheelWheelEvent -->
+<div class="qmlitem"><div class="qmlproto" translate="no">
+<div class="table"><table class="qmlname">
+<tr valign="top" class="odd" id="wheel-signal">
+<td class="tblQmlFuncNode"><p>
+<a name="wheel-signal"></a><span class="name">wheel</span>(<span class="type"><a href="qml-qtquick-wheelevent.html" translate="no">WheelEvent</a></span> <i>wheel</i>)</p></td></tr>
+</table></div></div>
+<div class="qmldoc"><p>This signal is emitted in response to both mouse wheel and trackpad scroll gestures.</p>
+<p>The <i translate="no">wheel</i> parameter provides information about the event, including the x and y position, any buttons currently pressed, and information about the wheel movement, including angleDelta and pixelDelta.</p>
+<p><b>Note: </b>The corresponding handler is <code translate="no">onWheel</code>.</p>
+</div></div><!-- @@@wheel -->
+<br/>
+        </div>
+       </div>
+   </div>
+   </div>
+</div>
+<div class="footer">
+   <p>
+   <acronym title="Copyright">&copy;</acronym> 2023 The Qt Company Ltd.
+   Documentation contributions included herein are the copyrights of
+   their respective owners.<br/>    The documentation provided herein is licensed under the terms of the    <a href="http://www.gnu.org/licenses/fdl.html">GNU Free Documentation    License version 1.3</a> as published by the Free Software Foundation.<br/>    Qt and respective logos are <a href="https://doc.qt.io/qt/trademarks.html">    trademarks</a> of The Qt Company Ltd. in Finland and/or other countries
+   worldwide. All other trademarks are property of their respective owners. </p>
+</div>
+</body>
+</html>

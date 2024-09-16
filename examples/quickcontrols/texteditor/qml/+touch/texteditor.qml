@@ -4,17 +4,73 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Window
-
-import io.qt.examples.texteditor
 
 // TODO:
 // - make designer-friendly
 
 ApplicationWindow {
     id: window
+    width: 480
+    height: 640
     visible: true
-    title: document.fileName + " - Text Editor Example"
+    title: textArea.textDocument.source +
+           " - Text Editor Example" + (textArea.textDocument.modified ? " *" : "")
+
+    Action {
+        id: boldAction
+        shortcut: StandardKey.Bold
+        checkable: true
+        checked: textArea.cursorSelection.font.bold
+        onTriggered: textArea.cursorSelection.font = Qt.font({ bold: checked })
+    }
+
+    Action {
+        id: italicAction
+        shortcut: StandardKey.Italic
+        checkable: true
+        checked: textArea.cursorSelection.font.italic
+        onTriggered: textArea.cursorSelection.font = Qt.font({ italic: checked })
+    }
+
+    Action {
+        id: underlineAction
+        shortcut: StandardKey.Underline
+        checkable: true
+        checked: textArea.cursorSelection.font.underline
+        onTriggered: textArea.cursorSelection.font = Qt.font({ underline: checked })
+    }
+
+    Action {
+        id: alignLeftAction
+        shortcut: "Ctrl+{"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignLeft
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignLeft
+    }
+
+    Action {
+        id: alignCenterAction
+        shortcut: "Ctrl+|"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignCenter
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignCenter
+    }
+
+    Action {
+        id: alignRightAction
+        shortcut: "Ctrl+}"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignRight
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignRight
+    }
+
+    Action {
+        id: alignJustifyAction
+        shortcut: "Ctrl+Alt+}"
+        checkable: true
+        checked: textArea.cursorSelection.alignment === Qt.AlignJustify
+        onTriggered: textArea.cursorSelection.alignment = Qt.AlignJustify
+    }
 
     header: ToolBar {
         leftPadding: 5
@@ -26,9 +82,10 @@ ApplicationWindow {
             ToolButton {
                 id: doneEditingButton
                 font.family: "fontello"
-                text: "\uE80A" // icon-ok
+                text: "\uE809" // icon-ok
                 opacity: !textArea.readOnly ? 1 : 0
                 onClicked: textArea.readOnly = true
+                Layout.fillWidth: false
             }
 
             Label {
@@ -43,6 +100,7 @@ ApplicationWindow {
                 font.family: "fontello"
                 text: "\uF142" // icon-ellipsis-vert
                 onClicked: menu.open()
+                Layout.fillWidth: false
 
                 Menu {
                     id: menu
@@ -53,23 +111,6 @@ ApplicationWindow {
                     }
                 }
             }
-        }
-    }
-
-    DocumentHandler {
-        id: document
-        document: textArea.textDocument
-        cursorPosition: textArea.cursorPosition
-        selectionStart: textArea.selectionStart
-        selectionEnd: textArea.selectionEnd
-        // textColor: TODO
-        Component.onCompleted: document.load("qrc:/texteditor.html")
-        onLoaded: {
-            textArea.text = text
-        }
-        onError: {
-            errorDialog.text = message
-            errorDialog.visible = true
         }
     }
 
@@ -94,6 +135,23 @@ ApplicationWindow {
             background: null
 
             onLinkActivated: Qt.openUrlExternally(link)
+
+            Component.onCompleted: textDocument.source = "qrc:/texteditor.html"
+
+            textDocument.onStatusChanged: {
+                // a message lookup table using computed properties:
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
+                const statusMessages = {
+                    [ TextDocument.ReadError ]: qsTr("Failed to load “%1”"),
+                    [ TextDocument.WriteError ]: qsTr("Failed to save “%1”"),
+                    [ TextDocument.NonLocalFileError ]: qsTr("Not a local file: “%1”"),
+                }
+                const err = statusMessages[textDocument.status]
+                if (err) {
+                    errorDialog.text = err.arg(textDocument.source)
+                    errorDialog.open()
+                }
+            }
         }
 
         ScrollBar.vertical: ScrollBar {}
@@ -117,27 +175,21 @@ ApplicationWindow {
                     font.family: "fontello"
                     // Don't want to close the virtual keyboard when this is clicked.
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.bold
-                    onClicked: document.bold = !document.bold
+                    action: boldAction
                 }
                 ToolButton {
                     id: italicButton
                     text: "\uE801" // icon-italic
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.italic
-                    onClicked: document.italic = !document.italic
+                    action: italicAction
                 }
                 ToolButton {
                     id: underlineButton
                     text: "\uF0CD" // icon-underline
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.underline
-                    onClicked: document.underline = !document.underline
+                    action: underlineAction
                 }
 
                 ToolSeparator {}
@@ -147,36 +199,28 @@ ApplicationWindow {
                     text: "\uE803" // icon-align-left
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignLeft
-                    onClicked: document.alignment = Qt.AlignLeft
+                    action: alignLeftAction
                 }
                 ToolButton {
                     id: alignCenterButton
                     text: "\uE804" // icon-align-center
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignHCenter
-                    onClicked: document.alignment = Qt.AlignHCenter
+                    action: alignCenterAction
                 }
                 ToolButton {
                     id: alignRightButton
                     text: "\uE805" // icon-align-right
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignRight
-                    onClicked: document.alignment = Qt.AlignRight
+                    action: alignRightAction
                 }
                 ToolButton {
                     id: alignJustifyButton
                     text: "\uE806" // icon-align-justify
                     font.family: "fontello"
                     focusPolicy: Qt.NoFocus
-                    checkable: true
-                    checked: document.alignment == Qt.AlignJustify
-                    onClicked: document.alignment = Qt.AlignJustify
+                    action: alignJustifyAction
                 }
             }
         }

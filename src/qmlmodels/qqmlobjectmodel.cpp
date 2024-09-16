@@ -3,7 +3,6 @@
 
 #include "qqmlobjectmodel_p.h"
 
-#include <QtCore/qcoreapplication.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlinfo.h>
@@ -11,15 +10,13 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qobject_p.h>
-#include <private/qpodvector_p.h>
 
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
-
-QHash<QObject*, QQmlObjectModelAttached*> QQmlObjectModelAttached::attachedProperties;
-
 
 class QQmlObjectModelPrivate : public QObjectPrivate
 {
@@ -32,7 +29,7 @@ public:
         void addRef() { ++ref; }
         bool deref() { return --ref == 0; }
 
-        QObject *item;
+        QPointer<QObject> item;
         int ref;
     };
 
@@ -67,10 +64,8 @@ public:
     void insert(int index, QObject *item) {
         Q_Q(QQmlObjectModel);
         children.insert(index, Item(item));
-        for (int i = index; i < children.size(); ++i) {
-            QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
-            attached->setIndex(i);
-        }
+        for (int i = index, end = children.size(); i < end; ++i)
+            setIndex(i);
         QQmlChangeSet changeSet;
         changeSet.insert(index, 1);
         emit q->modelUpdated(changeSet, false);
@@ -80,10 +75,9 @@ public:
 
     void replace(int index, QObject *item) {
         Q_Q(QQmlObjectModel);
-        auto *attached = QQmlObjectModelAttached::properties(children.at(index).item);
-        attached->setIndex(-1);
+        clearIndex(index);
         children.replace(index, Item(item));
-        QQmlObjectModelAttached::properties(children.at(index).item)->setIndex(index);
+        setIndex(index);
         QQmlChangeSet changeSet;
         changeSet.change(index, 1);
         emit q->modelUpdated(changeSet, false);
@@ -101,16 +95,15 @@ public:
             n = tfrom-tto;
         }
 
-        QPODVector<QQmlObjectModelPrivate::Item, 4> store;
+        QVarLengthArray<QQmlObjectModelPrivate::Item, 4> store;
         for (int i = 0; i < to - from; ++i)
             store.append(children[from + n + i]);
         for (int i = 0; i < n; ++i)
             store.append(children[from + i]);
 
-        for (int i = 0; i < store.count(); ++i) {
+        for (int i = 0, end = store.count(); i < end; ++i) {
             children[from + i] = store[i];
-            QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(from + i).item);
-            attached->setIndex(from + i);
+            setIndex(from + i);
         }
 
         QQmlChangeSet changeSet;
@@ -121,15 +114,11 @@ public:
 
     void remove(int index, int n) {
         Q_Q(QQmlObjectModel);
-        for (int i = index; i < index + n; ++i) {
-            QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
-            attached->setIndex(-1);
-        }
+        for (int i = index; i < index + n; ++i)
+            clearIndex(i);
         children.erase(children.begin() + index, children.begin() + index + n);
-        for (int i = index; i < children.size(); ++i) {
-            QQmlObjectModelAttached *attached = QQmlObjectModelAttached::properties(children.at(i).item);
-            attached->setIndex(i);
-        }
+        for (int i = index, end = children.size(); i < end; ++i)
+            setIndex(i);
         QQmlChangeSet changeSet;
         changeSet.remove(index, n);
         emit q->modelUpdated(changeSet, false);
@@ -152,16 +141,29 @@ public:
         return -1;
     }
 
+private:
+    void setIndex(int child, int index)
+    {
+        if (auto *attached = static_cast<QQmlObjectModelAttached *>(
+                    qmlAttachedPropertiesObject<QQmlObjectModel>(children.at(child).item))) {
+            attached->setIndex(index);
+        }
+    }
+
+    void setIndex(int child) { setIndex(child, child); }
+    void clearIndex(int child) { setIndex(child, -1); }
+
+
     uint moveId;
     QList<Item> children;
 };
 
-Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_PRIMITIVE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlObjectModelPrivate::Item, Q_RELOCATABLE_TYPE);
 
 
 /*!
     \qmltype ObjectModel
-    \instantiates QQmlObjectModel
+    \nativetype QQmlObjectModel
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Defines a set of items to be used as a model.
@@ -267,7 +269,9 @@ QVariant QQmlObjectModel::variantValue(int index, const QString &role)
     Q_D(QQmlObjectModel);
     if (index < 0 || index >= d->children.size())
         return QString();
-    return d->children.at(index).item->property(role.toUtf8().constData());
+    if (QObject *item = d->children.at(index).item)
+        return item->property(role.toUtf8().constData());
+    return QString();
 }
 
 QQmlIncubator::Status QQmlObjectModel::incubationStatus(int)
@@ -283,7 +287,7 @@ int QQmlObjectModel::indexOf(QObject *item, QObject *) const
 
 QQmlObjectModelAttached *QQmlObjectModel::qmlAttachedProperties(QObject *obj)
 {
-    return QQmlObjectModelAttached::properties(obj);
+    return new QQmlObjectModelAttached(obj);
 }
 
 /*!

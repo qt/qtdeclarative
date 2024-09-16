@@ -11,8 +11,6 @@
   The following guides and references cover aspects of programming with
   JavaScript and Qt.
 
-  \tableofcontents
-
   \section1 Scripting Classes
 
   The following classes add scripting capabilities to Qt applications.

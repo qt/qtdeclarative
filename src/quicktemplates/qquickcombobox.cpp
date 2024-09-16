@@ -29,12 +29,12 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calculatewidesttextwidth")
+Q_STATIC_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calculatewidesttextwidth")
 
 /*!
     \qmltype ComboBox
     \inherits Control
-//!     \instantiates QQuickComboBox
+//!     \nativetype QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -292,6 +292,8 @@ public:
     QQuickDeferredPointer<QQuickItem> indicator;
     QQuickDeferredPointer<QQuickPopup> popup;
     bool m_acceptableInput = true;
+    bool acceptedEscKeyPress = false;
+    bool receivedEscKeyPress = false;
 
     struct ExtraData {
         bool editable = false;
@@ -954,6 +956,7 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 #endif
     Q_D(QQuickComboBox);
     d->setInputMethodHints(Qt::ImhNoPredictiveText, true);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Fixed);
 }
 
 QQuickComboBox::~QQuickComboBox()
@@ -1947,8 +1950,11 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             d->extra->allowComplete = ke->key() != Qt::Key_Backspace && ke->key() != Qt::Key_Delete;
         break;
     }
-    case QEvent::FocusOut:
-        if (qGuiApp->focusObject() != this && (!d->popup || !d->popup->hasActiveFocus())) {
+    case QEvent::FocusOut: {
+        const bool hasActiveFocus = d->popup && d->popup->hasActiveFocus();
+        const bool usingPopupWindows =
+                d->popup ? QQuickPopupPrivate::get(d->popup)->usePopupWindow() : false;
+        if (qGuiApp->focusObject() != this && !(hasActiveFocus && !usingPopupWindows)) {
             // Only close the popup if focus was transferred somewhere else
             // than to the popup or the popup button (which normally means that
             // the user clicked on the popup button to open it, not close it).
@@ -1962,6 +1968,7 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
                 setCurrentIndex(indexForEditText);
         }
         break;
+    }
 #if QT_CONFIG(im)
     case QEvent::InputMethod:
         if (d->extra.isAllocated())
@@ -1991,7 +1998,9 @@ void QQuickComboBox::focusOutEvent(QFocusEvent *event)
     Q_D(QQuickComboBox);
     QQuickControl::focusOutEvent(event);
 
-    if (qGuiApp->focusObject() != d->contentItem && (!d->popup || !d->popup->hasActiveFocus())) {
+    const bool hasActiveFocus = d->popup && d->popup->hasActiveFocus();
+    const bool usingPopupWindows = d->popup && QQuickPopupPrivate::get(d->popup)->usePopupWindow();
+    if (qGuiApp->focusObject() != d->contentItem && !(hasActiveFocus && !usingPopupWindows)) {
         // Only close the popup if focus was transferred
         // somewhere else than to the popup or the inner line edit (which is
         // normally done from QQuickComboBox::focusInEvent).
@@ -2031,8 +2040,13 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
     switch (key) {
     case Qt::Key_Escape:
     case Qt::Key_Back:
-        if (d->isPopupVisible())
+        d->acceptedEscKeyPress = d->isPopupVisible();
+        d->receivedEscKeyPress = true;
+        if (d->acceptedEscKeyPress) {
+            d->hidePopup(false);
+            setPressed(false);
             event->accept();
+        }
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
@@ -2105,11 +2119,14 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
         break;
     case Qt::Key_Escape:
     case Qt::Key_Back:
-        if (d->isPopupVisible()) {
-            d->hidePopup(false);
-            setPressed(false);
+        // If QQuickComboBox accepts the key press event, accept the key release event.
+        // If QQuickComboBox doesn't receive the key press event, but does receive the
+        // key release event, most likely the popup has popupType == Window and the window was
+        // closed on key press, resulting in QQuickComboBox only receiving the release event.
+        if (d->acceptedEscKeyPress || !d->receivedEscKeyPress)
             event->accept();
-        }
+        d->acceptedEscKeyPress = false;
+        d->receivedEscKeyPress = false;
         break;
     default:
         break;

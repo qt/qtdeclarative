@@ -94,7 +94,9 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
+add_subdirectory(impl)
+
+qt_internal_add_qml_module(QuickControls2Material
     URI "QtQuick.Controls.Material"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -109,7 +111,6 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
     SOURCES
         qquickmaterialstyle.cpp qquickmaterialstyle_p.h
         qquickmaterialtheme.cpp qquickmaterialtheme_p.h
-        qtquickcontrols2materialstyleplugin.cpp
     QML_FILES
         ${qml_files}
     DEFINES
@@ -120,12 +121,23 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2ImplPrivate
+        Qt::QuickControls2MaterialStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
 
-qt_internal_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
+target_sources(qtquickcontrols2materialstyleplugin
+    PRIVATE
+        qtquickcontrols2materialstyleplugin.cpp
+)
+
+target_link_libraries(qtquickcontrols2materialstyleplugin
+    PRIVATE
+        Qt::QuickControls2Private
+)
+
+qt_internal_add_resource(QuickControls2Material "qtquickcontrols2materialstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Material"
     FILES
@@ -143,7 +155,7 @@ qt_internal_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2ma
         "images/drop-indicator@4x.png"
 )
 
-qt_internal_add_shaders(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin_shaders"
+qt_internal_add_shaders(QuickControls2Material "qtquickcontrols2materialstyle_shaders"
     SILENT
     BATCHABLE
     PRECOMPILE
@@ -153,8 +165,6 @@ qt_internal_add_shaders(qtquickcontrols2materialstyleplugin "qtquickcontrols2mat
     FILES
         "shaders/RectangularGlow.frag"
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2materialstyleplugin quickwindow)
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2materialstyleplugin

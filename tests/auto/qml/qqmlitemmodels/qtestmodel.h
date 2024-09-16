@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef Q_TEST_MODEL_H
 #define Q_TEST_MODEL_H
@@ -18,6 +18,11 @@ public:
 
     TestModel(int _rows, int _cols, QObject *parent = nullptr): QAbstractItemModel(parent),
        fetched(false), rows(_rows), cols(_cols), levels(INT_MAX), wrongIndex(false) { init(); }
+
+    ~TestModel()
+    {
+        delete tree;
+    }
 
     void init() {
         decorationsEnabled = false;

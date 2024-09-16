@@ -97,7 +97,7 @@ void QSGRhiSupport::applySettings()
             }
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
-#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#elif QT_CONFIG(metal)
             m_rhiBackend = QRhi::Metal;
 #elif QT_CONFIG(opengl)
             m_rhiBackend = QRhi::OpenGLES2;
@@ -120,7 +120,7 @@ void QSGRhiSupport::applySettings()
 
 void QSGRhiSupport::adjustToPlatformQuirks()
 {
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     // A macOS VM may not have Metal support at all. We have to decide at this
     // point, it will be too late afterwards, and the only way is to see if
     // MTLCreateSystemDefaultDevice succeeds.
@@ -215,12 +215,24 @@ void QSGRhiSupport::checkEnvQSgInfo()
 #define GL_RGB10_A2                       0x8059
 #endif
 
-QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
+#ifndef GL_SRGB_ALPHA
+#define GL_SRGB_ALPHA                     0x8C42
+#endif
+
+#ifndef GL_SRGB8_ALPHA8
+#define GL_SRGB8_ALPHA8                   0x8C43
+#endif
+
+QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format, QRhiTexture::Flags *flags)
 {
+    bool sRGB = false;
     auto rhiFormat = QRhiTexture::UnknownFormat;
     switch (format) {
-    case GL_RGBA:
+    case GL_SRGB_ALPHA:
+    case GL_SRGB8_ALPHA8:
+        sRGB = true;
         Q_FALLTHROUGH();
+    case GL_RGBA:
     case GL_RGBA8:
     case 0:
         rhiFormat = QRhiTexture::RGBA8;
@@ -282,6 +294,8 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromGL(uint format)
         qWarning("GL format %d is not supported", format);
         break;
     }
+    if (sRGB)
+        (*flags) |=(QRhiTexture::sRGB);
     return rhiFormat;
 }
 #endif
@@ -598,7 +612,7 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormatFromDXGI(uint format, QRhiT
 }
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
 namespace QSGRhiSupportMac {
     QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
 }
@@ -758,7 +772,7 @@ static const void *qsgrhi_d3d12_rifResource(QSGRendererInterface::Resource res, 
 }
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
 static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, const QRhiNativeHandles *nat,
                                     const QRhiNativeHandles *cbNat)
 {
@@ -805,7 +819,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     case QSGRendererInterface::RhiRedirectCommandBuffer:
         return QQuickWindowPrivate::get(w)->redirect.commandBuffer;
     case QSGRendererInterface::RhiRedirectRenderTarget:
-        return QQuickWindowPrivate::get(w)->redirect.rt.renderTarget;
+        return QQuickWindowPrivate::get(w)->redirect.rt.rt.renderTarget;
     default:
         break;
     }
@@ -835,7 +849,7 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     case QRhi::D3D12:
         return qsgrhi_d3d12_rifResource(res, nat);
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     case QRhi::Metal:
     {
         QRhiCommandBuffer *cb = rc->currentFrameCommandBuffer();
@@ -1090,7 +1104,7 @@ void QSGRhiSupport::finalizePipelineCache(QRhi *rhi, const QQuickGraphicsConfigu
 }
 
 // must be called on the render thread
-QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QSurface *offscreenSurface)
+QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QSurface *offscreenSurface, bool forcePreferSwRenderer)
 {
     QRhi *rhi = nullptr;
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
@@ -1106,7 +1120,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
     const bool debugLayer = wd->graphicsConfig.isDebugLayerEnabled();
     const bool debugMarkers = wd->graphicsConfig.isDebugMarkersEnabled();
     const bool timestamps = wd->graphicsConfig.timestampsEnabled();
-    const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice();
+    const bool preferSoftware = wd->graphicsConfig.prefersSoftwareDevice() || forcePreferSwRenderer;
     const bool pipelineCacheSave = !wd->graphicsConfig.pipelineCacheSaveFile().isEmpty()
             || (wd->graphicsConfig.isAutomaticPipelineCacheEnabled()
                 && !isAutomaticPipelineCacheSaveSkippedForWindow(window->flags()));
@@ -1117,12 +1131,13 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             "  Graphics API debug/validation layers: %d\n"
             "  Debug markers: %d\n"
             "  Timestamps: %d\n"
-            "  Prefer software device: %d\n"
+            "  Prefer software device: %d%s\n"
             "  Shader/pipeline cache collection: %d",
             qPrintable(backendName), window, int(window->flags()), debugLayer,
-            debugMarkers, timestamps, preferSoftware, pipelineCacheSave);
+            debugMarkers, timestamps, preferSoftware, forcePreferSwRenderer ? " [FORCED]" : "", pipelineCacheSave);
 
     QRhi::Flags flags;
+    flags |= QRhi::SuppressSmokeTestWarnings;
     if (debugMarkers)
         flags |= QRhi::EnableDebugMarkers;
     if (timestamps)
@@ -1213,7 +1228,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
         } else {
             rhi = QRhi::create(backend, &rhiParams, flags);
-            if (!rhi && !flags.testFlag(QRhi::PreferSoftwareRenderer)) {
+            if (!rhi && attemptReinitWithSwRastUponFail() && !flags.testFlag(QRhi::PreferSoftwareRenderer)) {
                 qCDebug(QSG_LOG_INFO, "Failed to create a D3D device with default settings; "
                                       "attempting to get a software rasterizer backed device instead");
                 flags |= QRhi::PreferSoftwareRenderer;
@@ -1238,7 +1253,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
         } else {
             rhi = QRhi::create(backend, &rhiParams, flags);
-            if (!rhi && !flags.testFlag(QRhi::PreferSoftwareRenderer)) {
+            if (!rhi && attemptReinitWithSwRastUponFail() && !flags.testFlag(QRhi::PreferSoftwareRenderer)) {
                 qCDebug(QSG_LOG_INFO, "Failed to create a D3D device with default settings; "
                                       "attempting to get a software rasterizer backed device instead");
                 flags |= QRhi::PreferSoftwareRenderer;
@@ -1247,7 +1262,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
         }
     }
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     if (backend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
@@ -1515,6 +1530,9 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickW
     QRhiSwapChain::Format swapChainFormat = QRhiSwapChain::SDR;
 
     QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
+    if (hdrRequest.isEmpty())
+        hdrRequest = window->property("_qt_sg_hdr_format").toByteArray();
+
     if (!hdrRequest.isEmpty()) {
         hdrRequest = hdrRequest.toLower();
         if (hdrRequest == QByteArrayLiteral("scrgb") || hdrRequest == QByteArrayLiteral("extendedsrgblinear"))
@@ -1570,20 +1588,36 @@ QRhiTexture::Format QSGRhiSupport::toRhiTextureFormat(uint nativeFormat, QRhiTex
 #if QT_CONFIG(opengl)
     case QRhi::OpenGLES2:
         Q_UNUSED(flags);
-        return toRhiTextureFormatFromGL(nativeFormat);
+        return toRhiTextureFormatFromGL(nativeFormat, flags);
 #endif
 #ifdef Q_OS_WIN
     case QRhi::D3D11:
     case QRhi::D3D12:
         return toRhiTextureFormatFromDXGI(nativeFormat, flags);
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     case QRhi::Metal:
         return toRhiTextureFormatFromMetal(nativeFormat, flags);
 #endif
     default:
         return QRhiTexture::UnknownFormat;
     }
+    Q_UNUSED(nativeFormat)
+    Q_UNUSED(flags)
+}
+
+bool QSGRhiSupport::attemptReinitWithSwRastUponFail() const
+{
+    const QRhi::Implementation backend = rhiBackend();
+
+    // On Windows it makes sense to retry using a software adapter whenever
+    // device creation or swapchain creation fails, as WARP is usually available
+    // (built in to the OS) and is good quality. This helps a lot in particular
+    // when running in a VM that cripples proper 3D graphics.
+    if (backend == QRhi::D3D11 || backend == QRhi::D3D12)
+        return true;
+
+    return false;
 }
 
 QT_END_NAMESPACE

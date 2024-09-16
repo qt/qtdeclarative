@@ -2,15 +2,12 @@ QtObject {
     id: foo
 
     states: [
-        State {
-        }
+        State {}
     ]
     transitions: [
-        Transition {
-        }
+        Transition {}
     ]
 
     // This needs to be *before* states and transitions after formatting
-    Item {
-    }
+    Item {}
 }

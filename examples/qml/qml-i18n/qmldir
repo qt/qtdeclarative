@@ -1,0 +1,5 @@
+module Translated
+typeinfo qml-i18n.qmltypes
+depends QtQuick
+prefer :/qt/qml/Translated/
+Main 254.0 Main.qml

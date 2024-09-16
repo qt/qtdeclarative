@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TST_QMLLSMODULES_H
 #define TST_QMLLSMODULES_H
@@ -37,6 +37,8 @@ public:
     std::optional<QByteArray> openFile(const QString &uri);
     std::optional<QByteArray> openFileFromAbsolutePath(const QString &uri);
     void ignoreDiagnostics();
+    void compareQTextDocumentEdit(const QLspSpecification::TextDocumentEdit &a,
+                                  const QLspSpecification::TextDocumentEdit &b);
 private slots:
     void init() final;
     void cleanup();
@@ -56,13 +58,25 @@ private slots:
     void renameUsages();
     void linting_data();
     void linting();
+    void warnings_data();
+    void warnings();
     void rangeFormatting_data();
     void rangeFormatting();
-    void qmldirImportsFromBuild();
-    void qmldirImportsFromSource();
+    void qmldirImports_data();
+    void qmldirImports();
     void quickFixes_data();
     void quickFixes();
-
+    void automaticSemicolonInsertionForCompletions_data();
+    void automaticSemicolonInsertionForCompletions();
+    void hover_data();
+    void hover();
+    void checkQuickSnippets();
+    void semanticHighlightingFull_data();
+    void semanticHighlightingFull();
+    void semanticHighlightingRange_data();
+    void semanticHighlightingRange();
+    void semanticHighlightingDelta_data();
+    void semanticHighlightingDelta();
 private:
     QProcess m_server;
     std::unique_ptr<QLanguageServerProtocol> m_protocol;

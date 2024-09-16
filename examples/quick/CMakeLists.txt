@@ -1,5 +1,5 @@
 # Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 qt_internal_add_example(quick-accessibility)
 qt_internal_add_example(animation)
@@ -24,8 +24,6 @@ qt_internal_add_example(imageprovider)
 qt_internal_add_example(imageresponseprovider)
 qt_internal_add_example(window)
 add_subdirectory(particles)
-qt_internal_add_example(delegatechooser)
-qt_internal_add_example(shapes)
 qt_internal_add_example(itemvariablerefreshrate)
 add_subdirectory(multieffect)
 if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
@@ -37,6 +35,9 @@ endif()
 if(TARGET Qt6::QuickWidgets AND TARGET Qt6::Widgets AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3))
     add_subdirectory(quickwidgets)
 endif()
+add_subdirectory(quickshapes)
+add_subdirectory(advancedtext)
+qt_internal_add_example(vectorimage)
 
 # qt_examples_build_end() misses at least some of these due to some
 # source subdirectories being added multiple times. See QTBUG-96159.
@@ -47,9 +48,7 @@ set(reused_dir_targets
     positioners_shared
     text_shared
     window_shared
-    shapes_shared
     imageelements_shared
-    delegatechooser_shared
     pointerhandlers_shared
     affectors_shared
     emitters_shared

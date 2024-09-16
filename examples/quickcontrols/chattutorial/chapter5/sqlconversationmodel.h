@@ -1,14 +1,16 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef SQLCONVERSATIONMODEL_H
 #define SQLCONVERSATIONMODEL_H
 
+#include <QQmlEngine>
 #include <QSqlTableModel>
 
 class SqlConversationModel : public QSqlTableModel
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(QString recipient READ recipient WRITE setRecipient NOTIFY recipientChanged)
 
 public:

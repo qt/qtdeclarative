@@ -146,7 +146,7 @@
 
     \section1 Attached Property Documentation
 
-    \styleproperty {Universal.accent} {color} {universal-accent-attached-prop}
+    \styleproperty {Universal.accent} {color}
     \target universal-accent-attached-prop
     This attached property holds the accent color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -170,7 +170,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Universal.background} {color} {universal-background-attached-prop}
+    \styleproperty {Universal.background} {color}
     \target universal-background-attached-prop
     This attached property holds the background color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -190,7 +190,7 @@
 
     \endstyleproperty
 
-    \styleproperty {Universal.foreground} {color} {universal-foreground-attached-prop}
+    \styleproperty {Universal.foreground} {color}
     \target universal-foreground-attached-prop
     This attached property holds the foreground color of the theme. The property
     can be attached to any window or item. The value is propagated to children.
@@ -208,7 +208,7 @@
                 \image qtquickcontrols-universal-foreground.png
     \endtable
 
-    \styleproperty {Universal.theme} {enumeration} {universal-theme-attached-prop}
+    \styleproperty {Universal.theme} {enumeration}
     \target universal-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
     can be attached to any window or item. The value is propagated to children.
@@ -237,7 +237,7 @@
 
     \section1 Attached Method Documentation
 
-    \stylemethod {color} {color} {enumeration} {predefined} {color-attached-method}
+    \stylemethod {color} {color} {enumeration} {predefined}
     \target color-attached-method
     This attached method returns the effective color value of the specified
     \l {pre-defined Universal colors}{pre-defined Universal color}.

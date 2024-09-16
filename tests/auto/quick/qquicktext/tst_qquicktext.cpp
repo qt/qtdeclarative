@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
 #include <QTextDocument>
@@ -9,10 +9,10 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
 #include <private/qsginternaltextnode_p.h>
-#include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
 #include <qmath.h>
@@ -24,16 +24,22 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 Q_DECLARE_METATYPE(QQuickText::TextFormat)
 
-QT_BEGIN_NAMESPACE
-extern void qt_setQtEnableTestFont(bool value);
-QT_END_NAMESPACE
+typedef QVector<QPointF> PointVector;
+Q_DECLARE_METATYPE(PointVector);
+
+typedef qreal (*ExpectedBaseline)(QQuickText *item);
+Q_DECLARE_METATYPE(ExpectedBaseline)
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+QT_BEGIN_NAMESPACE
+extern void qt_setQtEnableTestFont(bool value);
 
 class tst_qquicktext : public QQmlDataTest
 {
@@ -48,6 +54,7 @@ private slots:
     void wrap();
     void elide();
     void elideParentChanged();
+    void elideRelayoutAfterZeroWidth_data();
     void elideRelayoutAfterZeroWidth();
     void multilineElide_data();
     void multilineElide();
@@ -105,6 +112,7 @@ private slots:
     void largeTextInDelayedLoader();
     void lineLaidOut();
     void lineLaidOutRelayout();
+    void lineLaidOutFontUpdate();
     void lineLaidOutHAlign();
     void lineLaidOutImplicitWidth();
 
@@ -583,10 +591,19 @@ void tst_qquicktext::elideParentChanged()
     QCOMPARE(actualItemImageGrab, expectedItemImageGrab);
 }
 
+void tst_qquicktext::elideRelayoutAfterZeroWidth_data()
+{
+    QTest::addColumn<QByteArray>("fileName");
+
+    QTest::newRow("no_margins") << QByteArray("elideZeroWidth.qml");
+    QTest::newRow("with_margins") << QByteArray("elideZeroWidthWithMargins.qml");
+}
+
 void tst_qquicktext::elideRelayoutAfterZeroWidth()
 {
+    QFETCH(const QByteArray, fileName);
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("elideZeroWidth.qml"));
+    QQmlComponent component(&engine, testFileUrl(fileName.constData()));
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
@@ -1017,6 +1034,8 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
+    SKIP_IF_NO_WINDOW_GRAB;
+
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
@@ -1040,9 +1059,6 @@ void tst_qquicktext::hAlignImplicitWidth()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
-        if (QGuiApplication::platformName() == QLatin1String("minimal"))
-            QSKIP("Skipping due to grabWindow not functional on minimal platforms");
-
         // Left Align
         QImage image = view.grabWindow();
         const int left = numberOfNonWhitePixels(centeredSection1, centeredSection2, image);
@@ -1803,10 +1819,6 @@ public:
     QTextLayout layout;
 };
 
-
-typedef QVector<QPointF> PointVector;
-Q_DECLARE_METATYPE(PointVector);
-
 void tst_qquicktext::linkInteraction_data()
 {
     QTest::addColumn<QString>("text");
@@ -2156,22 +2168,28 @@ void tst_qquicktext::embeddedImages_data()
 
     QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<QString>("error");
-    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "";
+    QTest::addColumn<QSize>("expectedImageSize");
+
+    QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "" << QSize(100, 100);
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
-        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString();
-    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "";
-    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "";
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString()
+         << QSize();
+    QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "" << QSize(100, 100);
+    QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "" << QSize(100, 100);
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found";
-    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "";
+                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found"
+                                   << QSize();
+    QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "" << QSize(100, 100);
+    QTest::newRow("resource") << testFileUrl("embeddedImageResource.qml") << "" << QSize(16, 16);
 }
 
 void tst_qquicktext::embeddedImages()
 {
-    // Tests QTBUG-9900
+    // Tests QTBUG-9900, QTBUG-125526
 
     QFETCH(QUrl, qmlfile);
     QFETCH(QString, error);
+    QFETCH(QSize, expectedImageSize);
 
     TestHTTPServer server;
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
@@ -2181,26 +2199,37 @@ void tst_qquicktext::embeddedImages()
     if (!error.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
 
-    QScopedPointer<QQuickView> view(new QQuickView);
-    view->rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
-    view->setSource(qmlfile);
-    view->show();
-    view->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(view.get()));
-    QQuickText *textObject = qobject_cast<QQuickText*>(view->rootObject());
+    QQuickView view;
+    view.rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
+    QVERIFY(QQuickTest::showView(view, qmlfile));
+    QQuickText *textObject = qobject_cast<QQuickText*>(view.rootObject());
 
     QVERIFY(textObject != nullptr);
     QTRY_COMPARE(textObject->resourcesLoading(), 0);
 
-    QPixmap pm(testFile("http/exists.png"));
-    if (error.isEmpty()) {
-        QCOMPARE(textObject->width(), double(pm.width()));
-        QCOMPARE(textObject->height(), double(pm.height()));
+    if (expectedImageSize.isValid()) {
+        QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(textObject);
+        QVERIFY(textPrivate != nullptr);
+        QVERIFY(textPrivate->extra.isAllocated());
+        QTextDocument *doc = textPrivate->extra->doc;
+        QVERIFY(doc);
+        const auto formats = doc->allFormats();
+        const auto it = std::find_if(formats.begin(), formats.end(), [](const auto &format){
+            return format.objectType() == QTextFormat::ImageObject;
+        });
+        QCOMPARE_NE(it, formats.end());
+        const QTextImageFormat format = (*it).toImageFormat();
+        QImage image = doc->resource(QTextDocument::ImageResource, format.name()).value<QImage>();
+        qCDebug(lcTests) << "found image?" << format.name() << image;
+        QCOMPARE(image.size(), expectedImageSize);
     } else {
-        QVERIFY(16 != pm.width()); // check test is effective
-        QCOMPARE(textObject->width(), 16.0); // default size of QTextDocument broken image icon
-        QCOMPARE(textObject->height(), 16.0);
+        QCOMPARE(textObject->width(), 16); // default size of QTextDocument broken image icon
+        QCOMPARE(textObject->height(), 16);
     }
+
+    // QTextDocument images are cached in QTextDocumentPrivate::cachedResources,
+    // so verify that we don't redundantly cache them in QQuickPixmapCache
+    QCOMPARE(QQuickPixmapCache::instance()->m_cache.size(), 0);
 }
 
 void tst_qquicktext::lineCount()
@@ -3117,6 +3146,29 @@ void tst_qquicktext::lineLaidOutRelayout()
         }
         y += line.height();
     }
+}
+
+void tst_qquicktext::lineLaidOutFontUpdate()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayoutFontUpdate.qml")));
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    auto *myText = window->rootObject()->findChild<QQuickText*>("exampleText");
+    QVERIFY(myText != nullptr);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != nullptr);
+
+    QCOMPARE(textPrivate->layout.lineCount(), 2);
+
+    QTextLine firstLine = textPrivate->layout.lineAt(0);
+    QTextLine secondLine = textPrivate->layout.lineAt(1);
+
+    QCOMPARE(firstLine.rect().x(), secondLine.rect().x() + 40);
+    QCOMPARE(firstLine.rect().width(), secondLine.rect().width() - 40);
 }
 
 void tst_qquicktext::lineLaidOutHAlign()
@@ -4048,9 +4100,6 @@ void tst_qquicktext::fontFormatSizes()
     }
 }
 
-typedef qreal (*ExpectedBaseline)(QQuickText *item);
-Q_DECLARE_METATYPE(ExpectedBaseline)
-
 static qreal expectedBaselineTop(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
@@ -4781,8 +4830,7 @@ void tst_qquicktext::verticallyAlignedImageInTable()
 
 void tst_qquicktext::transparentBackground()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("transparentBackground.qml"));
@@ -4801,8 +4849,7 @@ void tst_qquicktext::transparentBackground()
 
 void tst_qquicktext::displaySuperscriptedTag()
 {
-    if (QGuiApplication::platformName() == QLatin1String("minimal"))
-        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
+    SKIP_IF_NO_WINDOW_GRAB;
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("displaySuperscriptedTag.qml"));
@@ -4822,6 +4869,8 @@ void tst_qquicktext::displaySuperscriptedTag()
     QCOMPARE(color.blue(), 255);
     QCOMPARE(color.green(), 255);
 }
+
+QT_END_NAMESPACE
 
 QTEST_MAIN(tst_qquicktext)
 

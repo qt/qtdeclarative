@@ -1,5 +1,5 @@
 # Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.19)
 project(qt_target_qml_sources_snippet)
@@ -24,6 +24,7 @@ qt_add_qml_module(qt_target_qml_sources_example
     URI Example
     VERSION 2.3
     RESOURCE_PREFIX /my.company.com/imports
+    NO_GENERATE_EXTRA_QMLDIRS
     QML_FILES
         nested/way/down/File.qml
         TemplateFile.qml

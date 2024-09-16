@@ -1,12 +1,12 @@
 PROPFIND /file HTTP/1.1
-Content-Length: 192
-Connection: Keep-Alive{{Ignore}}
-HTTP2-Settings: {{Ignore}}
-Accept-Encoding: {{Ignore}}
-Accept-Language: {{Ignore}}
-Content-type: text/xml; charset="utf-8"
-User-Agent: Mozilla/5.0
-Host: {{ServerHostUrl}}
+content-length: 192
+connection: Keep-Alive{{Ignore}}
+http2-settings: {{Ignore}}
+accept-encoding: {{Ignore}}
+accept-language: {{Ignore}}
+content-type: text/xml; charset="utf-8"
+user-agent: Mozilla/5.0
+host: {{ServerHostUrl}}
 
 <?xml version="1.0" encoding="utf-8" ?>
 <D:propfind xmlns:D="DAV:">

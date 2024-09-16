@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 
@@ -24,7 +24,7 @@
 #include <QTranslator>
 #include <QtCore/qregularexpression.h>
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
 #include <QWidget>
 #include <QMainWindow>
 #endif
@@ -217,7 +217,7 @@ private slots:
 
     void shortcutOverride();
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
     void qtBug60123();
 #endif
 
@@ -229,6 +229,8 @@ private slots:
 
     void objectCastInDestructor();
     void listsAreNotLists();
+
+    void transformChanged();
 
 private:
 
@@ -1527,7 +1529,7 @@ void tst_qquickitem::polishLoopDetection_data()
 
     QTest::newRow("test1.100") <<   PolishItemSpans({ {1, 100} }) << 0;
     QTest::newRow("test1.1002") <<  PolishItemSpans({ {1, 1002} }) << 3;
-    QTest::newRow("test1.2020") <<  PolishItemSpans({ {1, 2020} }) << 10;
+    QTest::newRow("test1.2020") <<  PolishItemSpans({ {1, 2020} }) << 5;
 
     QTest::newRow("test5.1") <<    PolishItemSpans({ {5, 1} }) << 0;
     QTest::newRow("test5.10") <<   PolishItemSpans({ {5, 10} }) << 0;
@@ -1994,13 +1996,6 @@ void tst_qquickitem::acceptedMouseButtons()
     QCOMPARE(item.releaseCount, 3);
 }
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
 void tst_qquickitem::visualParentOwnership()
 {
     QQmlEngine engine;
@@ -2339,7 +2334,7 @@ void tst_qquickitem::shortcutOverride()
     QCOMPARE(view.rootObject()->property("shortcutActivationCount").toInt(), 1);
 }
 
-#ifdef TEST_QTBUG_60123
+#ifdef QT_WIDGETS_LIB
 void tst_qquickitem::qtBug60123()
 {
     QMainWindow main;
@@ -2610,6 +2605,76 @@ void tst_qquickitem::listsAreNotLists()
     QCOMPARE(data.count(&data), 0);
     QCOMPARE(resources.count(&resources), 0);
     QCOMPARE(children.count(&children), 0);
+}
+
+class TransformItemPrivate;
+class TransformItem : public QQuickItem {
+    Q_OBJECT
+    Q_DECLARE_PRIVATE(TransformItem)
+public:
+    TransformItem(QQuickItem *parent = nullptr);
+
+    bool transformChanged = false;
+};
+
+class TransformItemPrivate :public QQuickItemPrivate
+{
+protected:
+    Q_DECLARE_PUBLIC(TransformItem)
+
+    bool transformChanged(QQuickItem *) override
+    {
+        Q_Q(TransformItem);
+        q->transformChanged = true;
+        return true;
+    }
+};
+
+TransformItem::TransformItem(QQuickItem *parent)
+    : QQuickItem(*(new TransformItemPrivate), parent)
+{
+}
+
+void tst_qquickitem::transformChanged()
+{
+    QQuickItem rootItem;
+    QQuickItem *parents[2][3] = {};
+    for (int i = 0; i < 2; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            auto *item = new QQuickItem;
+            item->setObjectName(QString("Item-%1.%2").arg(i).arg(j));
+            item->setParentItem(j > 0 ? parents[i][j - 1] : &rootItem);
+            parents[i][j] = item;
+        }
+    }
+
+    // Setting the root item's position will result in transformChanged,
+    // which will clear the subtreeTransformChangedEnabled flag that is
+    // by default set to true, since there are no children that observe
+    // the viewport.
+    parents[0][0]->setPosition(QPoint(100, 100));
+    parents[1][0]->setPosition(QPoint(200, 200));
+
+    TransformItem transformItem;
+    transformItem.setParentItem(parents[0][2]);
+    transformItem.setFlag(QQuickItem::ItemObservesViewport);
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[0][0]->position());
+
+    parents[0][0]->setPosition(QPoint(110, 110));
+    QVERIFY2(transformItem.transformChanged,
+        "Moving an ancestor should trigger transformChanged");
+
+    transformItem.transformChanged = false;
+    transformItem.setParentItem(parents[1][2]);
+    QVERIFY2(transformItem.transformChanged,
+        "Reparenting the item should result in a transformChanged");
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[1][0]->position());
+
+    transformItem.transformChanged = false;
+    parents[1][0]->setPosition(QPoint(220, 220));
+    QVERIFY2(transformItem.transformChanged,
+        "Changing one of the new ancestors should result in transformChanged");
+    QCOMPARE(transformItem.mapToScene(QPoint(0, 0)), parents[1][0]->position());
 }
 
 QTEST_MAIN(tst_qquickitem)

@@ -13,7 +13,7 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include <QStringList>
 #include <QHash>
@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSResourceFileMapper
+struct Q_QMLCOMPILER_EXPORT QQmlJSResourceFileMapper
 {
     struct Entry
     {
@@ -53,7 +53,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSResourceFileMapper
     QQmlJSResourceFileMapper(const QStringList &resourceFiles);
 
     bool isEmpty() const;
-    bool isFile(const QString &resourcePath) const;
+    bool isFile(QStringView resourcePath) const;
 
     QList<Entry> filter(const Filter &filter) const;
     QStringList filePaths(const Filter &filter) const;

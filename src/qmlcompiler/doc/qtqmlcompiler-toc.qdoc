@@ -1,0 +1,20 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtqmlcompiler-toc.html
+    \title Qt QML Compiler module topics
+
+    The following list has links to all the individual topics (HTML files)
+    in the Qt QML Compiler module.
+
+    \list
+    \li \l {QML Static Analysis Tutorial}
+        \list
+            \li \l {QML Static Analysis 1 - Basic Setup}{Basic Setup}
+            \li \l {QML Static Analysis 2 - Custom Pass}{Custom Pass}
+            \li \l {QML Static Analysis 3 - Fixit Hints}{Fixit Hints}
+        \endlist
+    \endlist
+
+*/

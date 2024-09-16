@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2UTILS_PRIVATE_EXPORT QQuickFileNameFilter : public QObject
+class Q_QUICKDIALOGS2UTILS_EXPORT QQuickFileNameFilter : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index WRITE setIndex NOTIFY indexChanged FINAL)

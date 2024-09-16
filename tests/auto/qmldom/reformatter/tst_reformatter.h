@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TST_QMLDOMCODEFORMATTER_H
 #define TST_QMLDOMCODEFORMATTER_H
@@ -8,6 +8,7 @@
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQmlDom/private/qqmldomreformatter_p.h>
 
 #include <QtTest/QtTest>
 #include <QCborValue>
@@ -24,6 +25,69 @@ class TestReformatter : public QObject
 {
     Q_OBJECT
 public:
+private:
+    // TODO Move to a dedicated LineWriter factory / LineWriter API ?
+    enum class LineWriterType { Default, Indenting };
+    std::unique_ptr<LineWriter> getLineWriter(const SinkF &innerSink,
+                                              const LineWriterOptions &lwOptions)
+    {
+        return lwOptions.maxLineLength > 0
+                ? getLineWriter(LineWriterType::Indenting, innerSink, lwOptions)
+                : getLineWriter(LineWriterType::Default, innerSink, lwOptions);
+    }
+
+    std::unique_ptr<LineWriter> getLineWriter(LineWriterType type, const SinkF &innerSink,
+                                              const LineWriterOptions &lwOptions)
+    {
+        switch (type) {
+        case LineWriterType::Indenting:
+            return std::make_unique<IndentingLineWriter>(innerSink, QLatin1String("*testStream*"),
+                                                         lwOptions);
+        default:
+            return std::make_unique<LineWriter>(innerSink, QLatin1String("*testStream*"),
+                                                lwOptions);
+        }
+        Q_UNREACHABLE_RETURN(nullptr);
+    }
+
+    // "Unix" LineWriter (with '\n' line endings) is used by default,
+    // under the assumption that line endings are properly tested in lineWriter() test.
+    static LineWriterOptions defaultLineWriterOptions()
+    {
+        LineWriterOptions opts;
+        opts.lineEndings = LineWriterOptions::LineEndings::Unix;
+        return opts;
+    }
+
+    QString formatJSCode(const QString &jsCode,
+                         const LineWriterOptions &lwOptions = defaultLineWriterOptions())
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::JSCode, lwOptions);
+    }
+
+    QString formatJSModuleCode(const QString &jsCode,
+                               const LineWriterOptions &lwOptions = defaultLineWriterOptions())
+    {
+        return formatPlainJS(jsCode, ScriptExpression::ExpressionType::ESMCode, lwOptions);
+    }
+
+    QString formatPlainJS(const QString &jsCode, ScriptExpression::ExpressionType exprType,
+                          const LineWriterOptions &lwOptions = defaultLineWriterOptions())
+    {
+        QString resultStr;
+        QTextStream res(&resultStr);
+        auto lwPtr = getLineWriter([&res](QStringView s) { res << s; }, lwOptions);
+        assert(lwPtr);
+        OutWriter ow(*lwPtr);
+
+        const ScriptExpression scriptItem(jsCode, exprType);
+        scriptItem.writeOut(DomItem(), ow);
+
+        lwPtr->flush(); // flush instead of eof to ignore line endings
+        res.flush();
+        return resultStr;
+    }
+
 private slots:
     void reindent_data()
     {
@@ -145,18 +209,16 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        env.loadBuiltins();
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-                LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadBuiltins();
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
+        envPtr->loadPendingDependencies();
 
         MutableDomItem myFile = tFile.field(Fields::currentItem);
 
@@ -252,18 +314,16 @@ private slots:
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-        DomItem env = DomEnvironment::create(
+        auto envPtr = DomEnvironment::create(
                 qmltypeDirs,
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                         | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
         QString testFilePath = baseDir + QLatin1Char('/') + inFile;
         DomItem tFile;
-        env.loadBuiltins();
-        env.loadFile(
-                FileToLoad::fromFileSystem(env.ownerAs<DomEnvironment>(), testFilePath),
-                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
-                LoadOption::DefaultLoad);
-        env.loadPendingDependencies();
+        envPtr->loadBuiltins();
+        envPtr->loadFile(FileToLoad::fromFileSystem(envPtr, testFilePath),
+                         [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
+        envPtr->loadPendingDependencies();
 
         QString resultStr;
         QTextStream res(&resultStr);
@@ -384,6 +444,331 @@ private slots:
             lw.write(u"\n");
             QCOMPARE(res, u"a\rbc\rde\rfg\rh\r\r");
         }
+    }
+
+    void hoistableDeclaration_data()
+    {
+        QTest::addColumn<QString>("declarationToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedDeclaration");
+
+        QTest::newRow("Function") << QStringLiteral(u"function a(a,b){}")
+                                  << QStringLiteral(u"function a(a, b) {}");
+        QTest::newRow("AnonymousFunction") << QStringLiteral(u"let f=function (a,b){}")
+                                           << QStringLiteral(u"let f = function (a, b) {}");
+        QTest::newRow("Generator_lhs_star")
+                << QStringLiteral(u"function* g(a,b){}") << QStringLiteral(u"function* g(a, b) {}");
+        QTest::newRow("Generator_rhs_star")
+                << QStringLiteral(u"function *g(a,b){}") << QStringLiteral(u"function* g(a, b) {}");
+        QTest::newRow("AnonymousGenerator") << QStringLiteral(u"let g=function * (a,b){}")
+                                            << QStringLiteral(u"let g = function* (a, b) {}");
+        QTest::newRow("yield") << QStringLiteral(u"let g=function*(a,b){yield a;}")
+                               << QStringLiteral(u"let g = function* (a, b) {\nyield a;\n}");
+        QTest::newRow("yield*") << QStringLiteral(u"let g=function*(a,b){yield*a;}")
+                                << QStringLiteral(u"let g = function* (a, b) {\nyield* a;\n}");
+        QTest::newRow("yield*NoSemicolon")
+                << QStringLiteral(u"let g=function*(a,b){yield*a}")
+                << QStringLiteral(u"let g = function* (a, b) {\nyield* a;\n}");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-HoistableDeclaration
+    void hoistableDeclaration()
+    {
+        QFETCH(QString, declarationToBeFormatted);
+        QFETCH(QString, expectedFormattedDeclaration);
+
+        QString formattedDeclaration = formatJSCode(declarationToBeFormatted);
+
+        QCOMPARE(formattedDeclaration, expectedFormattedDeclaration);
+    }
+
+    void exportDeclarations_data()
+    {
+        QTest::addColumn<QString>("exportToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedExport");
+        // not exhaustive list of ExportDeclarations as per
+        // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
+
+        // LexicalDeclaration
+        QTest::newRow("LexicalDeclaration_let_Binding")
+                << QStringLiteral(u"export let name") << QStringLiteral(u"export let name;");
+        QTest::newRow("LexicalDeclaration_const_BindingList")
+                << QStringLiteral(u"export const "
+                                  u"n1=1,n2=2,n3=3,n4=4,n5=5")
+                << QStringLiteral(u"export const "
+                                  u"n1 = 1, n2 = 2, n3 = 3, n4 = 4, n5 = 5;");
+        QTest::newRow("LexicalDeclaration_const_ArrayBinding")
+                << QStringLiteral(u"export const "
+                                  u"[a,b]=a_and_b")
+                << QStringLiteral(u"export const "
+                                  u"[a, b] = a_and_b;");
+        QTest::newRow("LexicalDeclaration_let_ObjectBinding")
+                << QStringLiteral(u"export let "
+                                  u"{a,b:c}=a_and_b")
+                << QStringLiteral(u"export let "
+                                  u"{\na,\nb: c\n} = a_and_b;");
+
+        // ClassDeclaration
+        QTest::newRow("ClassDeclaration") << QStringLiteral(u"export "
+                                                            u"class A extends B{}")
+                                          << QStringLiteral(u"export "
+                                                            u"class A extends B {}");
+
+        // HoistableDeclaration
+        QTest::newRow("HoistableDeclaration_FunctionDeclaration")
+                << QStringLiteral(u"export "
+                                  u"function a(a,b){}")
+                << QStringLiteral(u"export "
+                                  u"function a(a, b) {}");
+        QTest::newRow("HoistableDeclaration_GeneratorDeclaration")
+                << QStringLiteral(u"export "
+                                  u"function * g(a,b){}")
+                << QStringLiteral(u"export "
+                                  u"function* g(a, b) {}");
+
+        // export ExportClause ;
+        QTest::newRow("ExportClause_Empty")
+                << QStringLiteral(u"export{}") << QStringLiteral(u"export {};");
+        QTest::newRow("ExportClause_1Specifier")
+                << QStringLiteral(u"export{one}") << QStringLiteral(u"export { one };");
+        QTest::newRow("ExportClause_Specifier_as")
+                << QStringLiteral(u"export{one as o}") << QStringLiteral(u"export { one as o };");
+        QTest::newRow("ExportClause_Specifier_as_StringLiteral")
+                << QStringLiteral(u"export{one as \"s\"}")
+                << QStringLiteral(u"export { one as \"s\" };");
+        QTest::newRow("ExportClause_ExportsList")
+                << QStringLiteral(u"export{one,two,three,four as fo,five}")
+                << QStringLiteral(u"export { one, two, three, four as fo, five };");
+
+        // export * FromClause ;
+        QTest::newRow("star") << QStringLiteral(u"export * from \"design\"")
+                              << QStringLiteral(u"export * from \"design\";");
+        QTest::newRow("star_as_Specifier") << QStringLiteral(u"export * as star from \"design\"")
+                                           << QStringLiteral(u"export * as star from \"design\";");
+
+        // export ExportClause FromClause ;
+        QTest::newRow("ExportClause")
+                << QStringLiteral(u"export {i1 as n1,i2 as n2,nN} from \"M\"")
+                << QStringLiteral(u"export { i1 as n1, i2 as n2, nN } from \"M\";");
+
+        // export default HoistableDeclaration
+        QTest::newRow("Default_AnonymousFunction")
+                << QStringLiteral(u"export default function(a,b){}")
+                << QStringLiteral(u"export default function (a, b) {}");
+        QTest::newRow("Default_AnonymousGenerator")
+                << QStringLiteral(u"export default function * (a,b){}")
+                << QStringLiteral(u"export default function* (a, b) {}");
+        QTest::newRow("Default_Function") << QStringLiteral(u"export default function a(a,b){}")
+                                          << QStringLiteral(u"export default function a(a, b) {}");
+
+        // export default ClassDeclaration
+        QTest::newRow("Default_Class") << QStringLiteral(u"export default class A{}")
+                                       << QStringLiteral(u"export default class A {}");
+        QTest::newRow("Default_AnonymousClass")
+                << QStringLiteral(u"export default class extends A{}")
+                << QStringLiteral(u"export default class extends A{}");
+
+        // export default Expression
+        QTest::newRow("Default_Expression") << QStringLiteral(u"export default 1+1")
+                                            << QStringLiteral(u"export default 1 + 1;");
+        QTest::newRow("Default_ArrowFunctionExpression")
+                << QStringLiteral(u"export default(x,y)=> x+2")
+                << QStringLiteral(u"export default (x, y) => x + 2;");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-ExportDeclaration
+    void exportDeclarations()
+    {
+        QFETCH(QString, exportToBeFormatted);
+        QFETCH(QString, expectedFormattedExport);
+
+        QString formattedExport = formatJSModuleCode(exportToBeFormatted);
+
+        QEXPECT_FAIL("ExportClause_Specifier_as_StringLiteral",
+                     "export {a as \"string name\"} declaration is not supported yet", Abort);
+        QEXPECT_FAIL("star_as_Specifier", "export * as star declaration is not supported yet",
+                     Abort);
+        QEXPECT_FAIL("Default_AnonymousClass", "QTBUG-122291", Abort);
+        QEXPECT_FAIL("Default_AnonymousFunction", "QTBUG-122291", Abort);
+        QEXPECT_FAIL("Default_AnonymousGenerator", "QTBUG-122291", Abort);
+        QCOMPARE(formattedExport, expectedFormattedExport);
+    }
+
+    void carryoverMJS_data()
+    {
+        QTest::addColumn<QString>("codeToBeFormatted");
+        QTest::addColumn<int>("maxLineLength");
+        QTest::addColumn<QString>("expectedFormattedCode");
+
+        QTest::newRow("LongExportList_NoMaxLineLength")
+                << QStringLiteral(u"export const n1=1,n2=2,n3=3,n4=4,n5=5") << -1
+                << QStringLiteral(u"export const n1 = 1, n2 = 2, n3 = 3, n4 = 4, n5 = 5;");
+        QTest::newRow("LongExportList_MaxLineLength20")
+                << QStringLiteral(u"export const n1=1,n2=2,n3=3,n4=4,n5=5") << 20
+                << QStringLiteral(u"export const n1 = 1,\n"
+                                  u"  n2 = 2, n3 = 3,\n"
+                                  u"  n4 = 4, n5 = 5;");
+    }
+
+    void carryoverMJS()
+    {
+        QFETCH(QString, codeToBeFormatted);
+        QFETCH(int, maxLineLength);
+        QFETCH(QString, expectedFormattedCode);
+
+        LineWriterOptions lwOptions;
+        lwOptions.maxLineLength = maxLineLength;
+        // TODO maybe fetch this
+        lwOptions.formatOptions.indentSize = 2;
+        QString formattedCode = formatJSModuleCode(codeToBeFormatted, lwOptions);
+
+        QEXPECT_FAIL("LongExportList_MaxLineLength20", "QTBUG-122260", Abort);
+        QCOMPARE(formattedCode, expectedFormattedCode);
+    }
+
+    void importDeclarations_data()
+    {
+        QTest::addColumn<QString>("importToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedImport");
+        // not exhaustive list of ExportDeclarations as per
+        // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
+
+        // import ModuleSpecifier;
+        QTest::newRow("ModuleSpecifier")
+                << QStringLiteral(u"import \"Module\"") << QStringLiteral(u"import \"Module\";");
+
+        // import ImportClause FromClause ;
+        QTest::newRow("NameSpaceImport") << QStringLiteral(u"import * as d from \"design\";")
+                                         << QStringLiteral(u"import * as d from \"design\";");
+
+        QTest::newRow("NamedImports") << QStringLiteral(u"import {b,cd as c,d} from \"M\";")
+                                      << QStringLiteral(u"import { b, cd as c, d } from \"M\";");
+
+        QTest::newRow("DefaultBindung") << QStringLiteral(u"import defaultExport from \"M\"")
+                                        << QStringLiteral(u"import defaultExport from \"M\";");
+        QTest::newRow("DefaultBindung_NameSpaceImport")
+                << QStringLiteral(u"import defaultExport, * as m from \"M\";")
+                << QStringLiteral(u"import defaultExport, * as m from \"M\";");
+        QTest::newRow("DefaultBinding_NamedImports")
+                << QStringLiteral(u"import defaultExport,{b,cd as c,d} from \"M\";")
+                << QStringLiteral(u"import defaultExport, { b, cd as c, d } from \"M\";");
+
+        QTest::newRow("ImportClause_Specifier_as_StringLiteral")
+                << QStringLiteral(u"import{\"s\" as s} from \"M\"")
+                << QStringLiteral(u"import { \"s\" as s } from \"M\";");
+    }
+
+    // https://262.ecma-international.org/7.0/#prod-ImportDeclaration
+    void importDeclarations()
+    {
+        QFETCH(QString, importToBeFormatted);
+        QFETCH(QString, expectedFormattedImport);
+
+        QString formattedImport = formatJSModuleCode(importToBeFormatted);
+
+        QEXPECT_FAIL(
+                "ImportClause_Specifier_as_StringLiteral",
+                "import {\"string literal export\" as alias } declaration is not supported yet",
+                Abort);
+        QCOMPARE(formattedImport, expectedFormattedImport);
+    }
+
+    void methodDefinitions_data()
+    {
+        QTest::addColumn<QString>("methodToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedMethod");
+
+        // ObjectInitializer
+        QTest::newRow("ObjGetter") << QStringLiteral(u"const o={get a(){},}")
+                                   << QStringLiteral(u"const o = {\nget a(){}\n}");
+        QTest::newRow("ObjSetter") << QStringLiteral(u"const o={set a(a){},}")
+                                   << QStringLiteral(u"const o = {\nset a(a){}\n}");
+        QTest::newRow("ComputedObjPropertyGetter")
+                << QStringLiteral(u"const o={get [a+b](){},}")
+                << QStringLiteral(u"const o = {\nget [a + b](){}\n}");
+
+        // Generator
+        QTest::newRow("ObjPropertyGenerator")
+                << QStringLiteral(u"const o={*a(){1+1;},}")
+                << QStringLiteral(u"const o = {\n*a(){\n1 + 1;\n}\n}");
+        QTest::newRow("ComputedClassPropertyGenerator")
+                << QStringLiteral(u"class A{*[a+b](){}}")
+                << QStringLiteral(u"class A {\n*[a + b](){}\n}");
+
+        // ClassDefinitions
+        QTest::newRow("ClassGetter") << QStringLiteral(u"class A{get a(){}}")
+                                     << QStringLiteral(u"class A {\nget a(){}\n}");
+        QTest::newRow("ClassSetter") << QStringLiteral(u"class A{set a(a){}}")
+                                     << QStringLiteral(u"class A {\nset a(a){}\n}");
+    }
+
+    // https://262.ecma-international.org/7.0/#sec-method-definitions
+    void methodDefinitions()
+    {
+        QFETCH(QString, methodToBeFormatted);
+        QFETCH(QString, expectedFormattedMethod);
+
+        QString formattedMethod = formatJSCode(methodToBeFormatted);
+
+        QCOMPARE(formattedMethod, expectedFormattedMethod);
+    }
+
+    void statementList_data()
+    {
+        QTest::addColumn<QString>("codeToBeFormatted");
+        QTest::addColumn<QString>("expectedFormattedCode");
+
+        QTest::newRow("StatementsOnTheSameLine")
+                << QStringLiteral(u"a=1;b=1;") << QStringLiteral(u"a = 1;\nb = 1;");
+
+        QTest::newRow("StatementsOnSuccessiveLines")
+                << QStringLiteral(u"a=1;\nb=1;") << QStringLiteral(u"a = 1;\nb = 1;");
+
+        QTest::newRow("EmptyLineBetweenStatements")
+                << QStringLiteral(u"a=1;\n\nb=1;") << QStringLiteral(u"a = 1;\n\nb = 1;");
+
+        QTest::newRow("MultipleEmptyLinesBetweenStatements")
+                << QStringLiteral(u"a=1;\n\n\n\n\n\nb=1;") << QStringLiteral(u"a = 1;\n\nb = 1;");
+
+        QTest::newRow("MultilineStatementWithStatementOnTheFollowingLine")
+                << QStringLiteral(u"console.log(\n\n);\nb = 1;")
+                << QStringLiteral(u"console.log();\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndStatementOnTheFollowingLine")
+                << QStringLiteral(u"a=1;//\nb=1;") << QStringLiteral(u"a = 1;//\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndEmptyLineToNextStatement")
+                << QStringLiteral(u"a=1;//\n\nb=1;") << QStringLiteral(u"a = 1;//\n\nb = 1;");
+
+        QTest::newRow("StatementWithPostCommentAndMultipleEmptyLinesToNextStatement")
+                << QStringLiteral(u"a=1;//\n\n\n\n\nb=1;") << QStringLiteral(u"a = 1;//\n\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentInBetweenThem")
+                << QStringLiteral(u"a=1;\n//\nb=1;") << QStringLiteral(u"a = 1;\n//\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentAndSingleEmptyLineInBetweenThem")
+                << QStringLiteral(u"a=1;\n\n//\n\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\n\nb = 1;");
+
+        QTest::newRow("StatementsWithCommentAndMultipleEmptyLinesInBetweenThem")
+                << QStringLiteral(u"a=1;\n\n\n\n//\n\n\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\n\nb = 1;");
+
+        QTest::newRow("StatementWithSingleEmptyLineAndPreCommentOnNextStatement")
+                << QStringLiteral(u"a=1;\n\n//\nb=1;") << QStringLiteral(u"a = 1;\n\n//\nb = 1;");
+
+        QTest::newRow("StatementWithMultipleEmptyLinesAndPreCommentOnNextStatement")
+                << QStringLiteral(u"a=1;\n\n\n\n\n\n\n\n//\nb=1;")
+                << QStringLiteral(u"a = 1;\n\n//\nb = 1;");
+    }
+
+    void statementList()
+    {
+        QFETCH(QString, codeToBeFormatted);
+        QFETCH(QString, expectedFormattedCode);
+
+        QString formattedCode = formatJSCode(codeToBeFormatted);
+
+        QCOMPARE(formattedCode, expectedFormattedCode);
     }
 
 private:

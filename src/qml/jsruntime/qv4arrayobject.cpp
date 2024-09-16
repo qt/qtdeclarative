@@ -14,9 +14,9 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(ArrayCtor);
 
-void Heap::ArrayCtor::init(QV4::ExecutionContext *scope)
+void Heap::ArrayCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Array"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Array"));
 }
 
 ReturnedValue ArrayCtor::virtualCallAsConstructor(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget)
@@ -848,15 +848,69 @@ ReturnedValue ArrayPrototype::method_slice(const FunctionObject *b, const Value 
 
 ReturnedValue ArrayPrototype::method_sort(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    // Based on https://tc39.es/ecma262/#sec-array.prototype.sort
+
     Scope scope(b);
+
+    ScopedValue comparefn(scope, argc ? argv[0] : Value::undefinedValue());
+
+    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
+    if (!comparefn->isUndefined() && !comparefn->isFunctionObject())
+        return scope.engine->throwTypeError(QStringLiteral("The provided comparison function is not callable."));
+
+    // 2. Let obj be ? ToObject(this value).
     ScopedObject instance(scope, thisObject->toObject(scope.engine));
     if (!instance)
         RETURN_UNDEFINED();
 
+    // 3. Let len be ? LengthOfArrayLike(obj).
     uint len = instance->getLength();
 
-    ScopedValue comparefn(scope, argc ? argv[0] : Value::undefinedValue());
-    ArrayData::sort(scope.engine, instance, comparefn, len);
+    if (instance->arrayData() && instance->arrayData()->length()) {
+        ArrayData::sort(scope.engine, instance, comparefn, len);
+    } else {
+        // Generic implementation that does not require a populated
+        // ArrayData, this is used, for example, by `Sequences` which
+        // store their data in a different way.
+
+        // 5. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, skip-holes)
+        Value* sorted = scope.alloc(scope.engine->safeForAllocLength(len));
+        CHECK_EXCEPTION();
+
+        uint written = 0;
+        for (uint index = 0; index < len; ++index) {
+            bool hasProperty = false;
+            auto element = instance->get(index, &hasProperty);
+
+            if (hasProperty) {
+                sorted[written] = element;
+                ++written;
+            }
+        }
+
+        std::stable_sort(sorted, sorted + written, ArrayElementLessThan(scope.engine, comparefn));
+
+        // [...]
+        // 8. Repeat, while j < itemCount,
+        //      a. Perform ? Set(obj, ! ToString(𝔽(j)), sortedList[j], true).
+        // [...]
+        for (uint index = 0; index < written; ++index) {
+            instance->setIndexed(index, sorted[index], QV4::Object::DoThrowOnRejection);
+            CHECK_EXCEPTION();
+        }
+
+        // [...]
+        // 10. Repeat, while j < len,
+        //      a. Perform ? DeletePropertyOrThrow(obj, ! ToString(𝔽(j))).
+        // [...]
+        while (written < len) {
+            if (!instance->deleteProperty(PropertyKey::fromArrayIndex(written)))
+                return scope.engine->throwTypeError();
+            ++written;
+        }
+    }
+
+    // 11. Return obj
     return thisObject->asReturnedValue();
 }
 
@@ -1490,4 +1544,3 @@ ReturnedValue ArrayPrototype::method_get_species(const FunctionObject *, const V
 {
     return thisObject->asReturnedValue();
 }
-

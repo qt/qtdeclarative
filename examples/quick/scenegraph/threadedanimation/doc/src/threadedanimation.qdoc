@@ -1,0 +1,33 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example scenegraph/threadedanimation
+    \title Scene Graph - Threaded Animation
+    \examplecategory {Graphics}
+    \ingroup qtquickexamples
+    \brief Shows benefits of custom items animating independently of the main thread while using the threaded render loop of Qt Quick.
+
+    \image threadedanimation-example.jpg
+
+    This example shows the fundamental concept behind the \l Animator types, by
+    implementing a custom item that effectively animates itself by not relying
+    on the standard Qt Quick animation framework driven on the main thread.
+
+    The left and right spinners should behave identically under normal
+    conditions. However, once the example blocks the main thread by peforming
+    some heavy operation, it will become noticeable that the left spinner is not
+    animating smoothly anymore.
+
+    \note This example should be run with the \c threaded render loop of Qt
+    Quick. This is the default in most cases. There are no positive effects when
+    using the \c basic render loop, because there everything, including all
+    rendering, happens on the main thread.
+
+    Applications without custom QQuickItem implementations can get the same
+    benefits by using one of the \l Animator types, such as \l XAnimator or \l
+    OpacityAnimator from QML. Whereas when building custom items, similar
+    results can be achieved by following the example's implementation.
+
+    \sa {Qt Quick Scene Graph}
+ */

@@ -89,77 +89,19 @@ QDateTime QQmlStringConverters::dateTimeFromString(const QString &s, bool *ok)
 //expects input of "x,y"
 QPointF QQmlStringConverters::pointFFromString(const QString &s, bool *ok)
 {
-    if (s.count(QLatin1Char(',')) != 1) {
-        if (ok)
-            *ok = false;
-        return QPointF();
-    }
-
-    bool xGood, yGood;
-    int index = s.indexOf(QLatin1Char(','));
-    qreal xCoord = QStringView{s}.left(index).toDouble(&xGood);
-    qreal yCoord = QStringView{s}.mid(index+1).toDouble(&yGood);
-    if (!xGood || !yGood) {
-        if (ok)
-            *ok = false;
-        return QPointF();
-    }
-
-    if (ok)
-        *ok = true;
-    return QPointF(xCoord, yCoord);
+    return valueTypeFromNumberString<QPointF, 2, u','>(s, ok);
 }
 
 //expects input of "widthxheight"
 QSizeF QQmlStringConverters::sizeFFromString(const QString &s, bool *ok)
 {
-    if (s.count(QLatin1Char('x')) != 1) {
-        if (ok)
-            *ok = false;
-        return QSizeF();
-    }
-
-    bool wGood, hGood;
-    int index = s.indexOf(QLatin1Char('x'));
-    qreal width = QStringView{s}.left(index).toDouble(&wGood);
-    qreal height = QStringView{s}.mid(index+1).toDouble(&hGood);
-    if (!wGood || !hGood) {
-        if (ok)
-            *ok = false;
-        return QSizeF();
-    }
-
-    if (ok)
-        *ok = true;
-    return QSizeF(width, height);
+    return valueTypeFromNumberString<QSizeF, 2, u'x'>(s, ok);
 }
 
 //expects input of "x,y,widthxheight" //### use space instead of second comma?
 QRectF QQmlStringConverters::rectFFromString(const QString &s, bool *ok)
 {
-    if (s.count(QLatin1Char(',')) != 2 || s.count(QLatin1Char('x')) != 1) {
-        if (ok)
-            *ok = false;
-        return QRectF();
-    }
-
-    bool xGood, yGood, wGood, hGood;
-    int index = s.indexOf(QLatin1Char(','));
-    qreal x = QStringView{s}.left(index).toDouble(&xGood);
-    int index2 = s.indexOf(QLatin1Char(','), index+1);
-    qreal y = QStringView{s}.mid(index+1, index2-index-1).toDouble(&yGood);
-    index = s.indexOf(QLatin1Char('x'), index2+1);
-    qreal width = QStringView{s}.mid(index2+1, index-index2-1).toDouble(&wGood);
-    qreal height = QStringView{s}.mid(index+1).toDouble(&hGood);
-    if (!xGood || !yGood || !wGood || !hGood) {
-        if (ok)
-            *ok = false;
-        return QRectF();
-    }
-
-    if (ok)
-        *ok = true;
-    return QRectF(x, y, width, height);
+    return valueTypeFromNumberString<QRectF, 4, u',', u',', u'x'>(s, ok);
 }
 
 QT_END_NAMESPACE

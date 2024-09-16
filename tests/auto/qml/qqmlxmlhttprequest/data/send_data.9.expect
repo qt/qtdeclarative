@@ -1,8 +1,8 @@
 OPTIONS /testdocument.html HTTP/1.1
-Content-Length: 0
-Connection: Keep-Alive{{Ignore}}
-HTTP2-Settings: {{Ignore}}
-Accept-Encoding: {{Ignore}}
-Accept-Language: {{Ignore}}
-User-Agent: Mozilla/5.0
-Host: {{ServerHostUrl}}
+content-length: 0
+connection: Keep-Alive{{Ignore}}
+http2-settings: {{Ignore}}
+accept-encoding: {{Ignore}}
+accept-language: {{Ignore}}
+user-agent: Mozilla/5.0
+host: {{ServerHostUrl}}

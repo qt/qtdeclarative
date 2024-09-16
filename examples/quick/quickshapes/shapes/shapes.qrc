@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/qt/qml/shapes">
+        <file>main.qml</file>
+        <file>shapegallery.qml</file>
+        <file>interactive.qml</file>
+        <file>sampling.qml</file>
+        <file>clippedtigers.qml</file>
+        <file>tiger.qml</file>
+        <file>tapableTriangle.qml</file>
+        <file>strokeOrFill.qml</file>
+        <file>dashPattern.qml</file>
+        <file>linearGradient.qml</file>
+        <file>radialGradient.qml</file>
+        <file>fillRules.qml</file>
+        <file>joinStyles.qml</file>
+        <file>capStyles.qml</file>
+        <file>quadraticCurve.qml</file>
+        <file>cubicCurve.qml</file>
+        <file>ellipticalArcs.qml</file>
+        <file>gradientSpreadModes.qml</file>
+        <file>arcDirection.qml</file>
+        <file>largeOrSmallArc.qml</file>
+        <file>arcRotation.qml</file>
+        <file>tigerLoader.qml</file>
+        <file>text.qml</file>
+        <file>zoomtiger.qml</file>
+        <file>fillTransform.qml</file>
+        <file>rectangle.qml</file>
+    </qresource>
+</RCC>

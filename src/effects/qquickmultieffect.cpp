@@ -8,7 +8,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
+Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
     \keyword Qt Quick Effects
@@ -26,7 +26,7 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
     \qmltype MultiEffect
-    \instantiates QQuickMultiEffect
+    \nativetype QQuickMultiEffect
     \inqmlmodule QtQuick.Effects
     \inherits Item
     \ingroup qtquick-effects
@@ -45,9 +45,24 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     effect using \l {Qt Quick Effect Maker}. For more information about shader effects,
     see the \l ShaderEffect reference documentation.
 
+    Note that MultiEffect type renders a new visual item alongside the source
+    item. To apply the effect to the source item, you need to place the new
+    MultiEffect item at the position of the source item. If the source item and
+    the MultiEffect item are not opaque, both the items can be visible, thus you
+    may not get the desired effect. To hide the source item, do any of
+    these:
+
+    \list
+        \li Set \c{visible: false} for the source item. In this case, the source
+            item is not rendered at all and cannot receive touch or click input.
+        \li Set \c{opacity: 0} for the source item. In this case, the source
+            item is completely transparent, but still can receive touch or click
+            input.
+    \endlist
+
     \section1 Example Usage
 
-    The following simple example shows how to apply a saturation effect on an item:
+    The following example shows how to apply a saturation effect to an item:
 
     \table 70%
     \row
@@ -60,8 +75,14 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
         Image {
             id: sourceItem
             source: "qt_logo_green_rgb.png"
+            // Hide the source item, otherwise both the source item and
+            // MultiEffect will be rendered
             visible: false
+            // or you can set:
+            // opacity: 0
         }
+        // Renders a new item with the specified effects rendered
+        // at the same position where the source item was rendered
         MultiEffect {
             source: sourceItem
             anchors.fill: sourceItem
@@ -70,7 +91,31 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
         \endqml
     \endtable
 
-    Here is a bit more complex example, applying multiple effects at the same time:
+    The following example shows how to apply a saturation effect to
+    a \l [QML]{Item#Item Layers}{layered Item}:
+
+    \table 70%
+    \row
+    \li \image multieffect-example1.png
+    \li \qml
+        import QtQuick
+        import QtQuick.Effects
+
+        ...
+        Image {
+            id: sourceItem
+            source: "qt_logo_green_rgb.png"
+            layer.enabled: true
+            // For the layered items, you can assign a MultiEffect directly
+            // to layer.effect.
+            layer.effect: MultiEffect {
+                saturation: -1.0
+            }
+        }
+        \endqml
+    \endtable
+
+    The following example shows how to apply multiple effects at the same time:
 
     \table 70%
     \row
@@ -147,6 +192,8 @@ Q_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
         the GPU. When applying the blur effect to the whole background, remember to set
         \l autoPaddingEnabled false or the effect grows "outside" the window / screen.
     \endlist
+
+    \include notes.qdocinc shadereffectsource and multieffect
 */
 
 /*!
@@ -645,8 +692,11 @@ void QQuickMultiEffect::setMaskEnabled(bool enabled)
 
     Source item for the mask effect. Should point to ShaderEffectSource,
     item with \l {QtQuick::Item::layer.enabled} {layer.enabled} set to \c true,
-    or to an item that can be directly used as a texture source (e.g.
+    or to an item that can be directly used as a texture source (for example,
     \l [QML] Image). The alpha channel of the source item is used for masking.
+
+    If the maskSource and the source have different dimensions, the maskSource
+    image is stretched to match the source size.
 */
 QQuickItem *QQuickMultiEffect::maskSource() const
 {
@@ -777,6 +827,7 @@ void QQuickMultiEffect::setMaskInverted(bool inverted)
 
 /*!
     \qmlproperty rect QtQuick.Effects::MultiEffect::itemRect
+    \readonly
 
     Read-only access to effect item rectangle. This can be used e.g. to see
     the area item covers.
@@ -1662,6 +1713,10 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
     if (!m_shaderEffect)
         return;
 
+    const auto engine = qmlEngine(q);
+    if (!engine)
+        return;
+
     // Lowest blur level uses 3 items, highest 5 items.
     int itemsAmount = blurLevel == 0 ? 0 : blurLevel + 2;
 
@@ -1669,7 +1724,6 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
         // Add more blur items.
         // Note that by design blur items are only added and never reduced
         // during the lifetime of the effect component.
-        const auto engine = qmlEngine(q);
         QUrl blurVs = QUrl(QStringLiteral("qrc:/data/shaders/bluritems.vert.qsb"));
         QUrl blurFs = QUrl(QStringLiteral("qrc:/data/shaders/bluritems.frag.qsb"));
         QQmlComponent blurComponent(engine, QUrl(QStringLiteral("qrc:/data/BlurItem.qml")));
@@ -1693,11 +1747,12 @@ void QQuickMultiEffectPrivate::updateBlurItemsAmount(int blurLevel)
     }
 
     // Set the blur items source components
-    static const auto dummyShaderSource = new QQuickShaderEffectSource(q);
+    if (!m_dummyShaderSource)
+        m_dummyShaderSource = new QQuickShaderEffectSource(q);
     for (int i = 0; i < m_blurEffects.size(); i++) {
         auto *blurEffect = m_blurEffects[i];
         auto sourceItem = (i >= itemsAmount) ?
-                    static_cast<QQuickItem *>(dummyShaderSource) : (i == 0) ?
+                    static_cast<QQuickItem *>(m_dummyShaderSource) : (i == 0) ?
                         static_cast<QQuickItem *>(m_shaderSource->output()) :
                         static_cast<QQuickItem *>(m_blurEffects[i - 1]);
         auto sourceVariant = QVariant::fromValue<QQuickItem*>(sourceItem);

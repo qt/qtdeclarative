@@ -15,14 +15,15 @@
 // We mean it.
 //
 
+#include <private/qintrusivelist_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmlnullablevalue_p.h>
+#include <private/qqmlpropertycachevector_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qqmltypenamecache_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4identifierhash_p.h>
-#include <private/qqmlrefcount_p.h>
-#include <private/qintrusivelist_p.h>
-#include <private/qqmlpropertycachevector_p.h>
-#include <private/qqmltype_p.h>
-#include <private/qqmlnullablevalue_p.h>
-#include <private/qqmlmetatype_p.h>
 
 #include <memory>
 
@@ -31,243 +32,121 @@ QT_BEGIN_NAMESPACE
 class QQmlScriptData;
 class QQmlEnginePrivate;
 
-struct InlineComponentData {
-
-    InlineComponentData() = default;
-    InlineComponentData(
-            const QQmlType &qmlType, int objectIndex, int nameIndex, int totalObjectCount,
-            int totalBindingCount, int totalParserStatusCount)
-        : qmlType(qmlType)
-        , objectIndex(objectIndex)
-        , nameIndex(nameIndex)
-        , totalObjectCount(totalObjectCount)
-        , totalBindingCount(totalBindingCount)
-        , totalParserStatusCount(totalParserStatusCount) {}
-
-    QQmlType qmlType;
-    int objectIndex = -1;
-    int nameIndex = -1;
-    int totalObjectCount = 0;
-    int totalBindingCount = 0;
-    int totalParserStatusCount = 0;
-};
-
 namespace QV4 {
 
-// index is per-object binding index
-typedef QVector<const QQmlPropertyData *> BindingPropertyData;
-
 class CompilationUnitMapper;
-class ResolvedTypeReference;
-// map from name index
-struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
+
+struct CompilationUnitRuntimeData
 {
-    bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const;
+    Heap::String **runtimeStrings = nullptr; // Array
+
+    // pointers either to data->constants() or little-endian memory copy.
+    // We keep this member twice so that the JIT can access it via standard layout.
+    const StaticValue *constants = nullptr;
+
+    QV4::StaticValue *runtimeRegularExpressions = nullptr;
+    Heap::InternalClass **runtimeClasses = nullptr;
+    const StaticValue **imports = nullptr;
+
+    QV4::Lookup *runtimeLookups = nullptr;
+    QVector<QV4::Function *> runtimeFunctions;
+    QVector<QV4::Heap::InternalClass *> runtimeBlocks;
+    mutable QVector<QV4::Heap::Object *> templateObjects;
 };
 
-class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final
-    : public CompiledData::CompilationUnit,
+static_assert(std::is_standard_layout_v<CompilationUnitRuntimeData>);
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeStrings) == 0);
+static_assert(offsetof(CompilationUnitRuntimeData, constants) == sizeof(QV4::Heap::String **));
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) == offsetof(CompilationUnitRuntimeData, constants) + sizeof(const StaticValue *));
+static_assert(offsetof(CompilationUnitRuntimeData, runtimeClasses) == offsetof(CompilationUnitRuntimeData, runtimeRegularExpressions) + sizeof(const StaticValue *));
+static_assert(offsetof(CompilationUnitRuntimeData, imports) == offsetof(CompilationUnitRuntimeData, runtimeClasses) + sizeof(const StaticValue *));
+
+class Q_QML_EXPORT ExecutableCompilationUnit final
+    : public CompilationUnitRuntimeData,
       public QQmlRefCounted<ExecutableCompilationUnit>
 {
     Q_DISABLE_COPY_MOVE(ExecutableCompilationUnit)
 public:
     friend class QQmlRefCounted<ExecutableCompilationUnit>;
     friend class QQmlRefPointer<ExecutableCompilationUnit>;
+    friend struct ExecutionEngine;
 
-    static QQmlRefPointer<ExecutableCompilationUnit> create(
-            CompiledData::CompilationUnit &&compilationUnit)
-    {
-        return QQmlRefPointer<ExecutableCompilationUnit>(
-                new ExecutableCompilationUnit(std::move(compilationUnit)),
-                QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
-    }
-
-    static QQmlRefPointer<ExecutableCompilationUnit> create()
-    {
-        return QQmlRefPointer<ExecutableCompilationUnit>(
-                new ExecutableCompilationUnit,
-                QQmlRefPointer<ExecutableCompilationUnit>::Adopt);
-    }
-
-    QIntrusiveListNode nextCompilationUnit;
     ExecutionEngine *engine = nullptr;
 
-    // url() and fileName() shall be used to load the actual QML/JS code or to show errors or
-    // warnings about that code. They include any potential URL interceptions and thus represent the
-    // "physical" location of the code.
-    //
-    // finalUrl() and finalUrlString() shall be used to resolve further URLs referred to in the code
-    // They are _not_ intercepted and thus represent the "logical" name for the code.
+    QString finalUrlString() const { return m_compilationUnit->finalUrlString(); }
+    QString fileName() const { return m_compilationUnit->fileName(); }
 
-    QUrl url() const { if (m_url.isNull) m_url = QUrl(fileName()); return m_url; }
-    QUrl finalUrl() const
+    QUrl url() const { return m_compilationUnit->url(); }
+    QUrl finalUrl() const { return m_compilationUnit->finalUrl(); }
+
+    QQmlRefPointer<QQmlTypeNameCache> typeNameCache() const
     {
-        if (m_finalUrl.isNull)
-            m_finalUrl = QUrl(finalUrlString());
-        return m_finalUrl;
+        return m_compilationUnit->typeNameCache;
     }
 
-    QV4::Lookup *runtimeLookups = nullptr;
-    QVector<QV4::Function *> runtimeFunctions;
-    QVector<QV4::Heap::InternalClass *> runtimeBlocks;
-    mutable QVector<QV4::Heap::Object *> templateObjects;
-    mutable QQmlNullableValue<QUrl> m_url;
-    mutable QQmlNullableValue<QUrl> m_finalUrl;
+    QQmlPropertyCacheVector *propertyCachesPtr()
+    {
+        return &m_compilationUnit->propertyCaches;
+    }
 
-    // QML specific fields
-    QQmlPropertyCacheVector propertyCaches;
-    QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
-
-    QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
-
-    // index is object index. This allows fast access to the
-    // property data when initializing bindings, avoiding expensive
-    // lookups by string (property name).
-    QVector<BindingPropertyData> bindingPropertyDataPerObject;
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const
+    {
+        return m_compilationUnit->rootPropertyCache();
+    }
 
     // mapping from component object index (CompiledData::Unit object index that points to component) to identifier hash of named objects
     // this is initialized on-demand by QQmlContextData
     QHash<int, IdentifierHash> namedObjectsPerComponentCache;
     inline IdentifierHash namedObjectsPerComponent(int componentObjectIndex);
 
-    void finalizeCompositeType(const QQmlType &type);
+    int totalBindingsCount() const { return m_compilationUnit->totalBindingsCount(); }
+    int totalParserStatusCount() const { return m_compilationUnit->totalParserStatusCount(); }
+    int totalObjectCount() const { return m_compilationUnit->totalObjectCount(); }
 
-    int m_totalBindingsCount = 0; // Number of bindings used in this type
-    int m_totalParserStatusCount = 0; // Number of instantiated types that are QQmlParserStatus subclasses
-    int m_totalObjectCount = 0; // Number of objects explicitly instantiated
-    std::unique_ptr<QString> icRootName;
+    ResolvedTypeReference *resolvedType(int id) const
+    {
+        return m_compilationUnit->resolvedType(id);
+    }
 
-    int totalBindingsCount() const;
-    int totalParserStatusCount() const;
-    int totalObjectCount() const;
+    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const
+    {
+        return m_compilationUnit->qmlTypeForComponent(inlineComponentName);
+    }
 
-    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
-    ResolvedTypeReferenceMap resolvedTypes;
-    ResolvedTypeReference *resolvedType(int id) const { return resolvedTypes.value(id); }
-
-    bool verifyChecksum(const CompiledData::DependentTypesHasher &dependencyHasher) const;
-
-    QQmlType qmlTypeForComponent(const QString &inlineComponentName = QString()) const;
-
-    QQmlType qmlType;
-
-    QHash<QString, InlineComponentData> inlineComponentData;
+    QMetaType metaType() const { return m_compilationUnit->qmlType.typeId(); }
 
     int inlineComponentId(const QString &inlineComponentName) const
     {
-        for (int i = 0; i < objectCount(); ++i) {
-            auto *object = objectAt(i);
-            for (auto it = object->inlineComponentsBegin(), end = object->inlineComponentsEnd();
-                 it != end; ++it) {
-                if (stringAt(it->nameIndex) == inlineComponentName)
-                    return it->objectIndex;
-            }
-        }
-        return -1;
+        return m_compilationUnit->inlineComponentId(inlineComponentName);
     }
-
-    std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
-    using CompiledObject = const CompiledData::Object;
-    using CompiledFunction = const CompiledData::Function;
-    using CompiledBinding = const CompiledData::Binding;
-    enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
-
-    // Empty dummy. We don't need to do this when loading from cache.
-    class IdToObjectMap
-    {
-    public:
-        void insert(int, int) {}
-        void clear() {}
-
-        // We have already checked uniqueness of IDs when creating the CU
-        bool contains(int) { return false; }
-    };
-
-    ListPropertyAssignBehavior listPropertyAssignBehavior() const
-    {
-        if (data->flags & CompiledData::Unit::ListPropertyAssignReplace)
-            return ListPropertyAssignBehavior::Replace;
-        if (data->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
-            return ListPropertyAssignBehavior::ReplaceIfNotDefault;
-        return ListPropertyAssignBehavior::Append;
-    }
-
-    bool ignoresFunctionSignature() const
-    {
-        return data->flags & CompiledData::Unit::FunctionSignaturesIgnored;
-    }
+    using CompiledObject = CompiledData::CompilationUnit::CompiledObject;
+    using CompiledFunction = CompiledData::CompilationUnit::CompiledFunction;
+    using CompiledBinding = CompiledData::CompilationUnit::CompiledBinding;
+    using IdToObjectMap = CompiledData::CompilationUnit::IdToObjectMap;
 
     bool nativeMethodsAcceptThisObjects() const
     {
-        return data->flags & CompiledData::Unit::NativeMethodsAcceptThisObject;
+        return m_compilationUnit->nativeMethodsAcceptThisObjects();
     }
 
-    bool valueTypesAreCopied() const
-    {
-        return data->flags & CompiledData::Unit::ValueTypesCopied;
-    }
+    bool ignoresFunctionSignature() const { return m_compilationUnit->ignoresFunctionSignature(); }
+    bool valueTypesAreCopied() const { return m_compilationUnit->valueTypesAreCopied(); }
+    bool valueTypesAreAddressable() const { return m_compilationUnit->valueTypesAreAddressable(); }
+    bool valueTypesAreAssertable() const { return m_compilationUnit->valueTypesAreAssertable(); }
+    bool componentsAreBound() const { return m_compilationUnit->componentsAreBound(); }
+    bool isESModule() const { return m_compilationUnit->isESModule(); }
 
-    bool valueTypesAreAddressable() const
-    {
-        return data->flags & CompiledData::Unit::ValueTypesAddressable;
-    }
-
-    int objectCount() const { return qmlData->nObjects; }
+    int objectCount() const { return m_compilationUnit->objectCount(); }
     const CompiledObject *objectAt(int index) const
     {
-        return qmlData->objectAt(index);
-    }
-
-    int importCount() const { return qmlData->nImports; }
-    const CompiledData::Import *importAt(int index) const
-    {
-        return qmlData->importAt(index);
+        return m_compilationUnit->objectAt(index);
     }
 
     Heap::Object *templateObjectAt(int index) const;
 
-    struct FunctionIterator
-    {
-        FunctionIterator(const CompiledData::Unit *unit, const CompiledObject *object, int index)
-            : unit(unit), object(object), index(index) {}
-        const CompiledData::Unit *unit;
-        const CompiledObject *object;
-        int index;
-
-        const CompiledFunction *operator->() const
-        {
-            return unit->functionAt(object->functionOffsetTable()[index]);
-        }
-
-        void operator++() { ++index; }
-        bool operator==(const FunctionIterator &rhs) const { return index == rhs.index; }
-        bool operator!=(const FunctionIterator &rhs) const { return index != rhs.index; }
-    };
-
-    FunctionIterator objectFunctionsBegin(const CompiledObject *object) const
-    {
-        return FunctionIterator(data, object, 0);
-    }
-
-    FunctionIterator objectFunctionsEnd(const CompiledObject *object) const
-    {
-        return FunctionIterator(data, object, object->nFunctions);
-    }
-
-    bool isESModule() const
-    {
-        return data->flags & CompiledData::Unit::IsESModule;
-    }
-
-    bool isSharedLibrary() const
-    {
-        return data->flags & CompiledData::Unit::IsSharedLibrary;
-    }
-
-    QStringList moduleRequests() const;
-    Heap::Module *instantiate(ExecutionEngine *engine);
+    Heap::Module *instantiate();
     const Value *resolveExport(QV4::String *exportName)
     {
         QVector<ResolveSetEntry> resolveSet;
@@ -288,17 +167,18 @@ public:
     void evaluate();
     void evaluateModuleRequests();
 
-    QV4::Function *linkToEngine(QV4::ExecutionEngine *engine);
-    void unlink();
-
-    void markObjects(MarkStack *markStack);
-
-    bool loadFromDisk(const QUrl &url, const QDateTime &sourceTimeStamp, QString *errorString);
-
-    static QString localCacheFilePath(const QUrl &url);
-    bool saveToDisk(const QUrl &unitUrl, QString *errorString);
+    void mark(MarkStack *markStack) const { markObjects(markStack); }
+    void markObjects(MarkStack *markStack) const;
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
+    double bindingValueAsNumber(const CompiledData::Binding *binding) const
+    {
+        return m_compilationUnit->bindingValueAsNumber(binding);
+    }
+    QString bindingValueAsScriptString(const CompiledData::Binding *binding) const
+    {
+        return m_compilationUnit->bindingValueAsScriptString(binding);
+    }
 
     struct TranslationDataIndex
     {
@@ -308,13 +188,53 @@ public:
 
     QString translateFrom(TranslationDataIndex index) const;
 
-    static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
-                             QString *errorString);
+    Heap::Module *module() const { return m_module; }
+    void setModule(Heap::Module *module) { m_module = module; }
+
+    const CompiledData::Unit *unitData() const { return m_compilationUnit->data; }
+
+    QString stringAt(uint index) const { return m_compilationUnit->stringAt(index); }
+
+    const QVector<QQmlRefPointer<QQmlScriptData>> *dependentScriptsPtr() const
+    {
+        return &m_compilationUnit->dependentScripts;
+    }
+
+    const CompiledData::BindingPropertyData *bindingPropertyDataPerObjectAt(
+            qsizetype objectIndex) const
+    {
+        return &m_compilationUnit->bindingPropertyDataPerObject.at(objectIndex);
+    }
+
+    const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &baseCompilationUnit() const
+    {
+        return m_compilationUnit;
+    }
+
+    QV4::Function *rootFunction()
+    {
+        if (!runtimeStrings)
+            populate();
+
+        const auto *data = unitData();
+        return data->indexOfRootFunction != -1
+                ? runtimeFunctions[data->indexOfRootFunction]
+                : nullptr;
+    }
+
+    void populate();
+    void clear();
+
 protected:
     quint32 totalStringCount() const
-    { return data->stringTableSize; }
+    { return unitData()->stringTableSize; }
 
 private:
+    friend struct ExecutionEngine;
+
+    QQmlRefPointer<CompiledData::CompilationUnit> m_compilationUnit;
+    Heap::Module *m_module = nullptr;
+
     struct ResolveSetEntry
     {
         ResolveSetEntry() {}
@@ -325,8 +245,12 @@ private:
     };
 
     ExecutableCompilationUnit();
-    ExecutableCompilationUnit(CompiledData::CompilationUnit &&compilationUnit);
+    ExecutableCompilationUnit(QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit);
     ~ExecutableCompilationUnit();
+
+    static QQmlRefPointer<ExecutableCompilationUnit> create(
+            QQmlRefPointer<CompiledData::CompilationUnit> &&compilationUnit,
+            ExecutionEngine *engine);
 
     const Value *resolveExportRecursively(QV4::String *exportName,
                                           QVector<ResolveSetEntry> *resolveSet);
@@ -345,8 +269,8 @@ private:
 
 IdentifierHash ExecutableCompilationUnit::namedObjectsPerComponent(int componentObjectIndex)
 {
-    auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
-    if (Q_UNLIKELY(it == namedObjectsPerComponentCache.end()))
+    auto it = namedObjectsPerComponentCache.constFind(componentObjectIndex);
+    if (Q_UNLIKELY(it == namedObjectsPerComponentCache.cend()))
         return createNamedObjectsPerComponent(componentObjectIndex);
     Q_ASSERT(!it->isEmpty());
     return *it;

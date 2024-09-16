@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qurl.h>
 #include <QtGui/qfont.h>
@@ -27,11 +28,12 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
+
 class QIcon;
 class QWindow;
 class QQuickItem;
 class QPlatformMenu;
-class QQmlV4Function;
 class QQuickLabsPlatformMenuBar;
 class QQuickLabsPlatformMenuItem;
 class QQuickLabsPlatformIconLoader;
@@ -117,7 +119,7 @@ public:
     Q_INVOKABLE void clear();
 
 public Q_SLOTS:
-    void open(QQmlV4Function *args);
+    void open(QQmlV4FunctionPtr args);
     void close();
 
 Q_SIGNALS:
@@ -178,7 +180,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickLabsPlatformMenu)
 
 #endif // QQUICKLABSPLATFORMMENU_P_H

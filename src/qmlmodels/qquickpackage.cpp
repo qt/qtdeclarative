@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Package
-    \instantiates QQuickPackage
+    \nativetype QQuickPackage
     \inqmlmodule QtQml.Models
     \ingroup qtquick-models
     \brief Specifies a collection of named items.
@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
     \note Package is part of QtQml.Models since version 2.14 and part of QtQuick since version 2.0.
     Importing Package via QtQuick is deprecated since Qt 5.14.
 
-    \sa {Qt Quick Examples - Views}, {Qt QML}
+    \sa {Qt Quick Examples - Views}, {Qt Qml}
 */
 
 /*!

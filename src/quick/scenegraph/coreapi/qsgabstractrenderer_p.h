@@ -27,19 +27,10 @@ QT_BEGIN_NAMESPACE
 
 class QSGAbstractRendererPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QSGAbstractRenderer : public QObject
+class Q_QUICK_EXPORT QSGAbstractRenderer : public QObject
 {
     Q_OBJECT
 public:
-    enum ClearModeBit
-    {
-        ClearColorBuffer    = 0x0001,
-        ClearDepthBuffer    = 0x0002,
-        ClearStencilBuffer  = 0x0004
-    };
-    Q_DECLARE_FLAGS(ClearMode, ClearModeBit)
-    Q_FLAG(ClearMode)
-
     enum MatrixTransformFlag
     {
         MatrixTransformFlipY = 0x01
@@ -63,16 +54,15 @@ public:
     void setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags);
     void setProjectionMatrixToRect(const QRectF &rect, MatrixTransformFlags flags,
                                    bool nativeNDCFlipY);
-    void setProjectionMatrix(const QMatrix4x4 &matrix);
-    void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix);
-    QMatrix4x4 projectionMatrix() const;
-    QMatrix4x4 projectionMatrixWithNativeNDC() const;
+    void setProjectionMatrix(const QMatrix4x4 &matrix, int index = 0);
+    void setProjectionMatrixWithNativeNDC(const QMatrix4x4 &matrix, int index = 0);
+    QMatrix4x4 projectionMatrix(int index) const;
+    QMatrix4x4 projectionMatrixWithNativeNDC(int index) const;
+    int projectionMatrixCount() const;
+    int projectionMatrixWithNativeNDCCount() const;
 
     void setClearColor(const QColor &color);
     QColor clearColor() const;
-
-    void setClearMode(ClearMode mode);
-    ClearMode clearMode() const;
 
     virtual void renderScene() = 0;
 
@@ -90,8 +80,6 @@ private:
     Q_DECLARE_PRIVATE(QSGAbstractRenderer)
     friend class QSGRootNode;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QSGAbstractRenderer::ClearMode)
 
 QT_END_NAMESPACE
 

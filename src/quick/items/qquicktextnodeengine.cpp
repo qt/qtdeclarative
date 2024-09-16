@@ -13,16 +13,14 @@
 #include <QtGui/qtextlist.h>
 
 #include <private/qquicktext_p.h>
-#include <private/qquicktextdocument_p.h>
 #include <private/qtextdocumentlayout_p.h>
 #include <private/qtextimagehandler_p.h>
 #include <private/qrawfont_p.h>
 #include <private/qglyphrun_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qsgdistancefieldglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcSgText)
 
 QQuickTextNodeEngine::BinaryTreeNodeKey::BinaryTreeNodeKey(BinaryTreeNode *node)
     : fontEngine(QRawFontPrivate::get(node->glyphRun.rawFont())->fontEngine)
@@ -143,6 +141,8 @@ int QQuickTextNodeEngine::addText(const QTextBlock &block,
     while (textPos < fragmentEnd) {
         int blockRelativePosition = textPos - block.position();
         QTextLine line = block.layout()->lineForTextPosition(blockRelativePosition);
+        if (!line.isValid())
+            break;
         if (!currentLine().isValid()
                 || line.lineNumber() != currentLine().lineNumber()) {
             setCurrentLine(line);
@@ -429,15 +429,8 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
 
         if (format.objectType() == QTextFormat::ImageObject) {
             QTextImageFormat imageFormat = format.toImageFormat();
-            if (QQuickTextDocumentWithImageResources *imageDoc = qobject_cast<QQuickTextDocumentWithImageResources *>(textDocument)) {
-                image = imageDoc->image(imageFormat);
-
-                if (image.isNull())
-                    return;
-            } else {
-                QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
-                image = imageHandler->image(textDocument, imageFormat);
-            }
+            QTextImageHandler *imageHandler = static_cast<QTextImageHandler *>(handler);
+            image = imageHandler->image(textDocument, imageFormat);
         }
 
         if (image.isNull()) {
@@ -668,10 +661,14 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     if (borderStyle == QTextFrameFormat::BorderStyle_None)
         return;
 
-    addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
-                                    -frameFormat.rightMargin() - borderWidth,
-                                    -frameFormat.bottomMargin() - borderWidth),
-              borderWidth, borderStyle, borderBrush);
+    const auto collapsed = table->format().borderCollapse();
+
+    if (!collapsed) {
+        addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
+                                        -frameFormat.rightMargin() - borderWidth,
+                                        -frameFormat.bottomMargin() - borderWidth),
+                  borderWidth, borderStyle, borderBrush);
+    }
     if (table != nullptr) {
         int rows = table->rows();
         int columns = table->columns();
@@ -681,7 +678,7 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
                 QTextTableCell cell = table->cellAt(row, column);
 
                 QRectF cellRect = documentLayout->tableCellBoundingRect(table, cell);
-                addBorder(cellRect.adjusted(-borderWidth, -borderWidth, 0, 0), borderWidth,
+                addBorder(cellRect.adjusted(-borderWidth, -borderWidth, collapsed ? -borderWidth : 0, collapsed ? -borderWidth : 0), borderWidth,
                           borderStyle, borderBrush);
             }
         }
@@ -702,6 +699,9 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
         BinaryTreeNode *node = m_processedNodes.data() + i;
 
         if (node->image.isNull()) {
+            if (node->glyphRun.isEmpty())
+                continue;
+
             BinaryTreeNodeKey key(node);
 
             QList<BinaryTreeNode *> &nodes = map[key];
@@ -801,7 +801,7 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                 ? m_selectedTextColor
                 : textDecoration.color;
 
-        parentNode->addRectangleNode(textDecoration.rect, color);
+        parentNode->addDecorationNode(textDecoration.rect, color);
     }
 
     // Finally add the selected text on top of everything
@@ -1040,6 +1040,12 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
             line.setPosition(QPointF(0, 0));
             layout.endLayout();
 
+            // set the color for the bullets, instead of using the previous QTextBlock's color.
+            if (charFormat.foreground().style() == Qt::NoBrush)
+                setTextColor(textColor);
+            else
+                setTextColor(charFormat.foreground().color());
+
             QList<QGlyphRun> glyphRuns = layout.glyphRuns();
             for (int i=0; i<glyphRuns.size(); ++i)
                 addUnselectedGlyphs(glyphRuns.at(i));
@@ -1068,7 +1074,7 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
         else
             setPosition(blockBoundingRect.topLeft());
 
-        if (text.contains(QChar::ObjectReplacementCharacter)) {
+        if (text.contains(QChar::ObjectReplacementCharacter) && charFormat.objectType() != QTextFormat::NoObject) {
             QTextFrame *frame = qobject_cast<QTextFrame *>(textDocument->objectForFormat(charFormat));
             if (!frame || frame->frameFormat().position() == QTextFrameFormat::InFlow) {
                 int blockRelativePosition = textPos - block.position();

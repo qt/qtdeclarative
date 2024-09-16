@@ -15,16 +15,20 @@
 // We mean it.
 //
 
-#include <QtCore/private/qglobal_p.h>
+#include <QtQuickControls2Material/qtquickcontrols2materialexports.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
+class QQuickMaterialStyle;
 
-class QQuickMaterialTheme
+class Q_QUICKCONTROLS2MATERIAL_EXPORT QQuickMaterialTheme
 {
 public:
     static void initialize(QQuickTheme *theme);
+    static void registerSystemStyle(QQuickMaterialStyle *style);
+    static void unregisterSystemStyle(QQuickMaterialStyle *style);
+    static void updateTheme();
 };
 
 QT_END_NAMESPACE

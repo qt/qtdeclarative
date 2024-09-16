@@ -39,50 +39,33 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
     if (guard.setErrorFrom(itemsFound))
         return;
 
-    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front =
+            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
 
     const QString newName = QString::fromUtf8(request->m_parameters.newName);
-    auto expressionType = QQmlLSUtils::resolveExpressionType(front.domItem, ResolveOwnerType);
+    auto expressionType =
+            QQmlLSUtils::resolveExpressionType(front.domItem, QQmlLSUtils::ResolveOwnerType);
 
     if (!expressionType) {
-        guard.setError(QQmlLSUtilsErrorMessage{ 0, u"Cannot rename the requested object"_s });
+        guard.setError(QQmlLSUtils::ErrorMessage{ 0, u"Cannot rename the requested object"_s });
         return;
     }
 
     if (guard.setErrorFrom(QQmlLSUtils::checkNameForRename(front.domItem, newName, expressionType)))
         return;
 
-    QList<QLspSpecification::TextDocumentEdit> editsByFileForResult;
+    auto &editsByFileForResult = result.documentChanges.emplace();
+
     // The QLspSpecification::WorkspaceEdit requires the changes to be grouped by files, so
     // collect them into editsByFileUris.
     QMap<QUrl, QList<QLspSpecification::TextEdit>> editsByFileUris;
 
-    auto renames = QQmlLSUtils::renameUsagesOf(front.domItem, newName, expressionType);
-
-    QQmlJS::Dom::DomItem files = front.domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
-
-    QHash<QString, QString> codeCache;
-
-    for (const auto &rename : renames) {
+    const auto renames = QQmlLSUtils::renameUsagesOf(front.domItem, newName, expressionType);
+    for (const auto &rename : renames.renameInFile()) {
         QLspSpecification::TextEdit edit;
 
-        const QUrl uri = QUrl::fromLocalFile(rename.location.filename);
-
-        auto cacheEntry = codeCache.find(rename.location.filename);
-        if (cacheEntry == codeCache.end()) {
-            auto file = files.key(rename.location.filename)
-                                .field(QQmlJS::Dom::Fields::currentItem)
-                                .ownerAs<QQmlJS::Dom::QmlFile>();
-            if (!file) {
-                qDebug() << "File" << rename.location.filename
-                         << "not found in DOM! Available files are" << files.keys();
-                continue;
-            }
-            cacheEntry = codeCache.insert(rename.location.filename, file->code());
-        }
-
-        edit.range = QQmlLSUtils::qmlLocationToLspLocation(cacheEntry.value(),
-                                                           rename.location.sourceLocation);
+        const QUrl uri = QUrl::fromLocalFile(rename.location.filename());
+        edit.range = QQmlLSUtils::qmlLocationToLspLocation(rename.location);
         edit.newText = rename.replacement.toUtf8();
 
         editsByFileUris[uri].append(edit);
@@ -103,7 +86,14 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
         editsByFileForResult.append(editsForCurrentFile);
     }
 
-    result.documentChanges = editsByFileForResult;
+    // if files need to be renamed, then do it after the text edits
+    for (const auto &rename : renames.renameInFilename()) {
+        QLspSpecification::RenameFile currentRenameFile;
+        currentRenameFile.kind = "rename";
+        currentRenameFile.oldUri = QUrl::fromLocalFile(rename.oldFilename).toEncoded();
+        currentRenameFile.newUri = QUrl::fromLocalFile(rename.newFilename).toEncoded();
+        editsByFileForResult.append(currentRenameFile);
+    }
 }
 
 QT_END_NAMESPACE

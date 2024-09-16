@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QtQuickTest/quicktest.h>
@@ -76,6 +76,7 @@ private slots:
     void emptyModel();
     void updatedModifiedModel();
     void insertRows();
+    void insertColumns();
     void toggleExpandedUsingArrowKeys();
     void expandAndCollapsUsingDoubleClick();
     void selectionBehaviorCells_data();
@@ -390,6 +391,48 @@ void tst_qquicktreeview::insertRows()
     WAIT_UNTIL_POLISHED;
 
     QCOMPARE(treeView->rows(), 9);
+}
+
+void tst_qquicktreeview::insertColumns()
+{
+    // Check that if we add new columns to the model, TreeView gets updated
+    // to contain the new expected number of rows (flattened to a list)
+    LOAD_TREEVIEW("normaltreeview.qml");
+    treeView->expand(0);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->columns(), 5);
+
+    const QModelIndex rootNode = model->index(0, 0, QModelIndex());
+    model->insertColumns(0, 2, rootNode);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->columns(), 7);
+    auto childItem1 = treeViewPrivate->loadedTableItem(QPoint(0, 1))->item;
+    QCOMPARE(childItem1->property("text").toString(), "0, 0 (inserted)");
+    auto childItem2 = treeViewPrivate->loadedTableItem(QPoint(0, 2))->item;
+    QCOMPARE(childItem2->property("text").toString(), "1, 0 (inserted)");
+    auto childItem3 = treeViewPrivate->loadedTableItem(QPoint(0, 3))->item;
+    QCOMPARE(childItem3->property("text").toString(), "2, 0 (inserted)");
+    auto childItem4 = treeViewPrivate->loadedTableItem(QPoint(3, 0))->item;
+    QCOMPARE(childItem4->property("text").toString(), "0, 1");
+    auto childItem5 = treeViewPrivate->loadedTableItem(QPoint(3, 1))->item;
+    QCOMPARE(childItem5->property("text").toString(), "0, 1");
+
+    const QModelIndex indexOfInsertedChild = model->index(1, 0, rootNode);
+    model->insertRows(0, 2, indexOfInsertedChild);
+    treeView->expand(2);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->rows(), 7);
+    QCOMPARE(treeView->columns(), 7);
+
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 7; j++) {
+            auto childItem = treeViewPrivate->loadedTableItem(QPoint(j, i))->item;
+            QVERIFY(childItem);
+        }
+    }
 }
 
 void tst_qquicktreeview::expandChildPendingToBeVisible()
@@ -878,6 +921,7 @@ void tst_qquicktreeview::selectionBehaviorCells()
     const QPointF endPos(endItem->x(), endItem->y());
     const QPointF endPosWrapped(endItemWrapped->x(), endItemWrapped->y());
 
+    QVERIFY(treeViewPrivate->startSelection(startPos, Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(startPos);
     treeViewPrivate->setSelectionEndPos(endPos);
 
@@ -932,6 +976,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from row 0 to row 3
+    QVERIFY(treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
     treeViewPrivate->setSelectionEndPos(QPointF(80, 60));
 
@@ -952,6 +997,7 @@ void tst_qquicktreeview::selectionBehaviorRows()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from row 3 to row 0 (and overshoot mouse)
+    QVERIFY(treeViewPrivate->startSelection(QPointF(80, 60), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(80, 60));
     treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -983,6 +1029,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from column 0 to column 3
+    QVERIFY(treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
     treeViewPrivate->setSelectionEndPos(QPointF(225, 90));
 
@@ -1003,6 +1050,7 @@ void tst_qquicktreeview::selectionBehaviorColumns()
     QCOMPARE(selectionModel->hasSelection(), false);
 
     // Drag from column 3 to column 0 (and overshoot mouse)
+    QVERIFY(treeViewPrivate->startSelection(QPointF(225, 90), Qt::NoModifier));
     treeViewPrivate->setSelectionStartPos(QPointF(225, 90));
     treeViewPrivate->setSelectionEndPos(QPointF(-10, -10));
 
@@ -1032,10 +1080,11 @@ void tst_qquicktreeview::selectionBehaviorDisabled()
 
     QCOMPARE(selectionModel->hasSelection(), false);
 
-    // Drag from column 0 to column 3
-    treeViewPrivate->setSelectionStartPos(QPointF(0, 0));
-    treeViewPrivate->setSelectionEndPos(QPointF(60, 60));
-
+    // Try to start a selection. treeViewPrivate->startSelection() should
+    // reject that, and and return false. The selectionFlag will there stay as
+    // QItemSelectionModel::NoUpdate, meaning no active selection is ongoing.
+    QVERIFY(!treeViewPrivate->startSelection(QPointF(0, 0), Qt::NoModifier));
+    QCOMPARE(treeViewPrivate->selectionFlag, QItemSelectionModel::NoUpdate);
     QCOMPARE(selectionModel->hasSelection(), false);
 }
 

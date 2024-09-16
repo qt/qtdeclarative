@@ -17,11 +17,11 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPA, "qt.quick.pincharea")
+Q_STATIC_LOGGING_CATEGORY(lcPA, "qt.quick.pincharea")
 
 /*!
     \qmltype PinchEvent
-    \instantiates QQuickPinchEvent
+    \nativetype QQuickPinchEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief For specifying information about a pinch event.
@@ -131,7 +131,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
 /*!
     \qmltype PinchArea
-    \instantiates QQuickPinchArea
+    \nativetype QQuickPinchArea
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \inherits Item

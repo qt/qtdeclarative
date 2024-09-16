@@ -17,10 +17,10 @@ T.Button {
 
     topInset: 6
     bottomInset: 6
-    verticalPadding: 14
-    // https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
-    leftPadding: !flat ? (!hasIcon ? 24 : 16) : 12
-    rightPadding: !flat ? (text === "" ? 16 : 24) : (!hasIcon ? 12 : (text === "" ? 12 : 16))
+    verticalPadding: Material.buttonVerticalPadding
+    leftPadding: Material.buttonLeftPadding(flat, hasIcon && (display !== AbstractButton.TextOnly))
+    rightPadding: Material.buttonRightPadding(flat, hasIcon && (display !== AbstractButton.TextOnly),
+                                              (text !== "") && (display !== AbstractButton.IconOnly))
     spacing: 8
 
     icon.width: 24

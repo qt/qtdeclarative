@@ -18,12 +18,12 @@
 #include <QtCore/qglobal.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2-config_p.h>
-#include <QtQuickTemplates2/private/qtquicktemplates2exports_p.h>
+#include <QtQuickTemplates2/qtquicktemplates2exports.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
+Q_QUICKTEMPLATES2_EXPORT void QQuickTemplates_initializeModule();
+Q_QUICKTEMPLATES2_EXPORT void qml_register_types_QtQuick_Templates();
 
 [[maybe_unused]] static inline QString backgroundName() { return QStringLiteral("background"); }
 [[maybe_unused]] static inline QString handleName() { return QStringLiteral("handle"); }

@@ -6,7 +6,7 @@
     \keyword Qt Quick Controls - Attached Style Properties Example
     \title Qt Quick Controls - Attached Style Properties Example
     \ingroup qtquickcontrols-examples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \brief Demonstrates use of QQuickAttachedPropertyPropagator.
 
     \image qtquickcontrols-attachedstyleproperties.png

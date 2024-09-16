@@ -3,6 +3,9 @@
 The following properties of the item are used in the mapping:
 \l x, \l y, \l scale, \l rotation, \l transformOrigin, and \l [QML]{Item::}{transform}.
 
+If the items are part of different scenes, the mapping includes
+the relative position of the two scenes.
+
 //! [mapping]
 
 
@@ -13,3 +16,4 @@ accept the event if you reimplement this function. If you don't accept the
 event, call \c event->ignore().
 
 //! [accepting-events]
+

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QAbstractItemModel;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlTreeModelToTableModel : public QAbstractItemModel
+class Q_QMLMODELS_EXPORT QQmlTreeModelToTableModel : public QAbstractItemModel
 {
     Q_OBJECT
     Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged FINAL)
@@ -118,6 +118,10 @@ private Q_SLOTS:
     void modelRowsInserted(const QModelIndex & parent, int start, int end);
     void modelRowsMoved(const QModelIndex & sourceParent, int sourceStart, int sourceEnd, const QModelIndex & destinationParent, int destinationRow);
     void modelRowsRemoved(const QModelIndex & parent, int start, int end);
+    void modelColumnsAboutToBeInserted(const QModelIndex & parent, int start, int end);
+    void modelColumnsAboutToBeRemoved(const QModelIndex & parent, int start, int end);
+    void modelColumnsInserted(const QModelIndex & parent, int start, int end);
+    void modelColumnsRemoved(const QModelIndex & parent, int start, int end);
 
 private:
     struct TreeItem {
@@ -158,6 +162,7 @@ private:
                           const QModelIndex &bottomRight,
                           const QVector<int> &roles);
     void emitQueuedSignals();
+    void connectToModel();
 
     QPointer<QAbstractItemModel> m_model = nullptr;
     QPersistentModelIndex m_rootIndex;
@@ -169,6 +174,7 @@ private:
     bool m_modelLayoutChanged = false;
     int m_signalAggregatorStack = 0;
     QVector<DataChangedParams> m_queuedDataChanged;
+    std::array<QMetaObject::Connection, 15> m_connections;
     int m_column = 0;
 };
 

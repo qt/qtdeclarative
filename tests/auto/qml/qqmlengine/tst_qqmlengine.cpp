@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QQmlEngine>
 #include <QQmlContext>
@@ -36,8 +36,10 @@ public:
 private slots:
     void initTestCase() override;
     void rootContext();
+#if QT_CONFIG(qml_network)
     void networkAccessManager();
     void synchronousNetworkAccessManager();
+#endif
     void baseUrl();
     void contextForObject();
     void offlineStoragePath();
@@ -80,6 +82,8 @@ private slots:
     void lockedRootObject();
     void crossReferencingSingletonsDeletion();
     void bindingInstallUseAfterFree();
+    void objectListArgumentMethod();
+    void variantListQJsonConversion();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -152,6 +156,7 @@ void tst_qqmlengine::rootContext()
     QVERIFY(!engine.rootContext()->parentContext());
 }
 
+#if QT_CONFIG(qml_network)
 class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
 public:
@@ -227,7 +232,7 @@ void tst_qqmlengine::synchronousNetworkAccessManager()
     // reply is finished, so should not be in loading state.
     QVERIFY(!c.isLoading());
 }
-
+#endif
 
 void tst_qqmlengine::baseUrl()
 {
@@ -403,12 +408,21 @@ void tst_qqmlengine::clearComponentCache()
     // Clear cache
     engine.clearComponentCache();
 
+    // Nothing holds on to any CU anymore. They should all be gone.
+    QVERIFY(QQmlEnginePrivate::get(&engine)->v4engine()->compilationUnits().isEmpty());
+
     // Test cache refresh
     {
         QQmlComponent component(&engine, fileUrl);
         std::unique_ptr<QObject> obj { component.create() };
         QVERIFY(obj.get() != nullptr);
         QCOMPARE(obj->property("test").toInt(), 11);
+
+        engine.clearComponentCache();
+
+        // The CU we are holding on to is still alive.
+        // Otherwise we cannot mark its objects for GC anymore.
+        QVERIFY(!QQmlEnginePrivate::get(&engine)->v4engine()->compilationUnits().isEmpty());
     }
 
     // Regular Synchronous loading will leave us with an event posted
@@ -435,7 +449,7 @@ public:
         // There might be JS function objects around that hold a last ref to the compilation unit that's
         // keeping the type compilation data (CompilationUnit) around. Let's collect them as well so that
         // trim works well.
-        engine->collectGarbage();
+        gc(*engine);
 
         engine->trimComponentCache();
     }
@@ -1336,6 +1350,8 @@ void tst_qqmlengine::createComponentOnSingletonDestruction()
 
 void tst_qqmlengine::uiLanguage()
 {
+    const QRegularExpression bindingLoopWarningRegex(".*QML QtObject: Binding loop detected for property \"textToTranslate\".*");
+
     {
         QQmlEngine engine;
 
@@ -1347,19 +1363,19 @@ void tst_qqmlengine::uiLanguage()
 
         QQmlComponent component(&engine, testFileUrl("uiLanguage.qml"));
 
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, bindingLoopWarningRegex);
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
         QVERIFY(engine.uiLanguage().isEmpty());
         QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 1);
 
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, bindingLoopWarningRegex);
         engine.setUiLanguage("TestLanguage");
         QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 2);
         QCOMPARE(object->property("chosenLanguage").toString(), "TestLanguage");
 
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, bindingLoopWarningRegex);
         engine.evaluate("Qt.uiLanguage = \"anotherLanguage\"");
         QCOMPARE(engine.uiLanguage(), QString("anotherLanguage"));
         QCOMPARE(object->property("numberOfTranslationBindingEvaluations").toInt(), 3);
@@ -1370,7 +1386,7 @@ void tst_qqmlengine::uiLanguage()
         QQmlEngine engine;
         QQmlComponent component(&engine, testFileUrl("uiLanguage.qml"));
 
-        QTest::ignoreMessage(QtMsgType::QtWarningMsg, (component.url().toString() + ":2:1: QML QtObject: Binding loop detected for property \"textToTranslate\"").toLatin1());
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, bindingLoopWarningRegex);
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 
@@ -1731,6 +1747,32 @@ void tst_qqmlengine::bindingInstallUseAfterFree()
     QQmlComponent c(&engine, testFileUrl("bindingInstallUseAfterFree.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
+}
+
+void tst_qqmlengine::objectListArgumentMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("objectListArgumentMethod.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, "5");
+    std::unique_ptr<QObject> o{ c.create() };
+    QVERIFY(o);
+}
+
+void tst_qqmlengine::variantListQJsonConversion()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("variantListQJsonConversion.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, R"(["cpp","variant","list"])");
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg, R"({"test":["cpp","variant","list"]})");
+    QTest::ignoreMessage(QtMsgType::QtDebugMsg,
+                         R"([{"objectName":"o0"},{"objectName":"o1"},{"objectName":"o2"}])");
+
+    QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
 }
 

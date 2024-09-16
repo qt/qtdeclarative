@@ -25,11 +25,11 @@ QT_BEGIN_NAMESPACE
 
 class QQuickHoverHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
+class Q_QUICK_EXPORT QQuickHoverHandler : public QQuickSinglePointHandler
 {
     Q_OBJECT
-    Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
-    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3) FINAL)
+    Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged)
+    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3))
     QML_NAMED_ELEMENT(HoverHandler)
     QML_ADDED_IN_VERSION(2, 12)
 

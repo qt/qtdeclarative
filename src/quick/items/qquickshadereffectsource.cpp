@@ -61,7 +61,7 @@ public:
 
 /*!
     \qmltype ShaderEffectSource
-    \instantiates QQuickShaderEffectSource
+    \nativetype QQuickShaderEffectSource
     \inqmlmodule QtQuick
     \since 5.0
     \inherits Item
@@ -73,7 +73,7 @@ public:
     it was a fully opaque root item. Thus \l sourceItem itself can be
     invisible, but still appear in the texture.
 
-    ShaderEffectSource can be used as:
+    You can use the ShaderEffectSource as:
     \list
     \li a texture source in a \l ShaderEffect.
        This allows you to apply custom shader effects to any \l {Qt Quick} item.
@@ -124,6 +124,8 @@ public:
     meant to replace the \l sourceItem, you typically want to hide the
     \l sourceItem while still handling input. For this, you can use
     the \l hideSource property.
+
+    \include notes.qdocinc shadereffectsource and multieffect
 
     \note The ShaderEffectSource relies on FBO multisampling support
     to antialias edges. If the underlying hardware does not support this,

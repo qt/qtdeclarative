@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -11,9 +11,12 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
+#include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
+#include <QtQuickTemplates2/private/qquickmenubar_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
@@ -28,19 +31,57 @@ public:
     tst_qquickmenubar();
 
 private slots:
+    void init() override;
+    void cleanup();
     void delegate();
+    void mouse_data();
     void mouse();
     void touch();
+    void keys_data();
     void keys();
+    void mnemonics_data();
     void mnemonics();
     void altNavigation();
+    void addRemove_data();
     void addRemove();
+    void addRemoveInlineMenus_data();
+    void addRemoveInlineMenus();
+    void addRemoveMenuFromQml_data();
+    void addRemoveMenuFromQml();
+    void insert_data();
+    void insert();
+    void showAndHideMenuBarItems_data();
+    void showAndHideMenuBarItems();
+    void removeMenuThatIsOpen();
+    void addRemoveExistingMenus_data();
+    void addRemoveExistingMenus();
+    void checkHighlightWhenMenuDismissed_data();
     void checkHighlightWhenMenuDismissed();
+    void hoverAfterClosingWithEscape_data();
     void hoverAfterClosingWithEscape();
+    void closeByClickingOutside_data();
+    void closeByClickingOutside();
+    void AA_DontUseNativeMenuBar();
+    void containerItems_data();
+    void containerItems();
+    void mixedContainerItems_data();
+    void mixedContainerItems();
+    void applicationWindow_data();
+    void applicationWindow();
+    void menubarAsHeader_data();
+    void menubarAsHeader();
+    void menuPosition_data();
+    void menuPosition();
+    void changeDelegate_data();
+    void changeDelegate();
+    void invalidDelegate_data();
+    void invalidDelegate();
+    void panMenuBar_data();
+    void panMenuBar();
 
 private:
-    static bool hasWindowActivation();
-
+    bool nativeMenuBarSupported = false;
+    bool popupWindowsSupported = false;
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
@@ -53,11 +94,27 @@ tst_qquickmenubar::tst_qquickmenubar()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+    QQuickMenuBar mb;
+    nativeMenuBarSupported = QQuickMenuBarPrivate::get(&mb)->useNativeMenuBar();
+#if defined(Q_OS_WINDOWS) || defined(Q_OS_MACOS)
+    popupWindowsSupported = QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
+#endif
 }
 
-bool tst_qquickmenubar::hasWindowActivation()
+void tst_qquickmenubar::init()
 {
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
+    // Enable non-native menubars by default.
+    // Note that some tests will set this property to 'true', which
+    // is why we need to set it back to 'false' here.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, false);
+}
+
+void tst_qquickmenubar::cleanup()
+{
+    // For some reason, it's not impossible for popups to already exist, when a test is executed.
+    if (QGuiApplicationPrivate::popupCount() > 0)
+        QGuiApplicationPrivate::closeAllPopups();
+    QTRY_COMPARE(QGuiApplicationPrivate::popupCount(), 0);
 }
 
 void tst_qquickmenubar::delegate()
@@ -73,16 +130,28 @@ void tst_qquickmenubar::delegate()
     QVERIFY(item);
 }
 
+void tst_qquickmenubar::mouse_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
+    // if (popupWindowsSupported)
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_qquickmenubar::mouse()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -91,7 +160,7 @@ void tst_qquickmenubar::mouse()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -99,7 +168,10 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
-
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
     QQuickMenuBarItem *viewMenuBarItem = qobject_cast<QQuickMenuBarItem *>(viewMenuBarMenu->parentItem());
@@ -260,6 +332,8 @@ void tst_qquickmenubar::mouse()
 // - It's what happens with e.g. overflow menus on Android.
 void tst_qquickmenubar::touch()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     QQuickControlsApplicationHelper helper(this, QLatin1String("touch.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     centerOnScreen(helper.window);
@@ -285,12 +359,24 @@ void tst_qquickmenubar::touch()
     QTRY_VERIFY(fileMenuBarMenu->isOpened());
 }
 
+void tst_qquickmenubar::keys_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
+    // if (popupWindowsSupported)
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_qquickmenubar::keys()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -299,7 +385,7 @@ void tst_qquickmenubar::keys()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -307,7 +393,10 @@ void tst_qquickmenubar::keys()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
-
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
     QQuickMenuBarItem *viewMenuBarItem = qobject_cast<QQuickMenuBarItem *>(viewMenuBarMenu->parentItem());
@@ -477,16 +566,28 @@ void tst_qquickmenubar::keys()
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
 }
 
+void tst_qquickmenubar::mnemonics_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
+    // if (popupWindowsSupported)
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
 void tst_qquickmenubar::mnemonics()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
 #if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
     QSKIP("Mnemonics are not used on this platform");
 #endif
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -497,7 +598,7 @@ void tst_qquickmenubar::mnemonics()
 
     MnemonicKeySimulator keySim(window.data());
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -505,6 +606,10 @@ void tst_qquickmenubar::mnemonics()
     QQuickMenu *viewMenuBarMenu = menuBar->menuAt(2);
     QQuickMenu *helpMenuBarMenu = menuBar->menuAt(3);
     QVERIFY(fileMenuBarMenu && editMenuBarMenu && viewMenuBarMenu && helpMenuBarMenu);
+    fileMenuBarMenu->setPopupType(popupType);
+    editMenuBarMenu->setPopupType(popupType);
+    viewMenuBarMenu->setPopupType(popupType);
+    helpMenuBarMenu->setPopupType(popupType);
 
     QQuickMenuBarItem *fileMenuBarItem = qobject_cast<QQuickMenuBarItem *>(fileMenuBarMenu->parentItem());
     QQuickMenuBarItem *editMenuBarItem = qobject_cast<QQuickMenuBarItem *>(editMenuBarMenu->parentItem());
@@ -632,10 +737,12 @@ void tst_qquickmenubar::mnemonics()
 
 void tst_qquickmenubar::altNavigation()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     if (!QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::MenuBarFocusOnAltPressRelease).toBool())
         QSKIP("Menu doesn't get focus via Alt press&release on this platform");
 
-    QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
+    QQmlApplicationEngine engine(testFileUrl("menubaritems.qml"));
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
     QVERIFY(window);
@@ -644,7 +751,7 @@ void tst_qquickmenubar::altNavigation()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
     QQuickMenu *fileMenuBarMenu = menuBar->menuAt(0);
@@ -669,12 +776,30 @@ void tst_qquickmenubar::altNavigation()
     QVERIFY(editMenuBarMenu->hasActiveFocus());
 }
 
+void tst_qquickmenubar::addRemove_data()
+{
+    QTest::addColumn<QString>("testUrl");
+    QTest::addColumn<bool>("native");
+    QTest::newRow("menuitems, not native") << QStringLiteral("empty.qml") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("menuitems, native") << QStringLiteral("empty.qml") << true;
+}
+
 void tst_qquickmenubar::addRemove()
 {
-    QQmlApplicationEngine engine(testFileUrl("empty.qml"));
+    QFETCH(QString, testUrl);
+    QFETCH(bool, native);
 
-    QScopedPointer<QQuickMenuBar> menuBar(qobject_cast<QQuickMenuBar *>(engine.rootObjects().value(0)));
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl(testUrl));
+
+    QQuickMenuBar *menuBar = qobject_cast<QQuickMenuBar *>(engine.rootObjects().value(0));
     QVERIFY(menuBar);
+    QQuickMenuBarPrivate *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QCOMPARE(menuBarPrivate->useNativeMenuBar(), native);
+    if (native)
+        QVERIFY(menuBarPrivate->nativeHandle());
 
     QQmlComponent component(&engine);
     component.setData("import QtQuick.Controls; Menu { }", QUrl());
@@ -690,7 +815,7 @@ void tst_qquickmenubar::addRemove()
     QCOMPARE(menuBarItem1->menu(), menu1.data());
     QCOMPARE(menuBar->itemAt(0), menuBarItem1.data());
 
-    QScopedPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
+    QPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
     QVERIFY(!menu2.isNull());
     menuBar->insertMenu(0, menu2.data());
     QCOMPARE(menuBar->count(), 2);
@@ -703,15 +828,26 @@ void tst_qquickmenubar::addRemove()
     QCOMPARE(menuBar->itemAt(0), menuBarItem2.data());
     QCOMPARE(menuBar->itemAt(1), menuBarItem1.data());
 
-    // takeMenu(int) does not destroy the menu, but does destroy the respective item in the menubar
+    // takeMenu(int) does not explicitly destroy the menu, but leave
+    // this to the garbage collector. The MenuBarItem, OTOH, is currently
+    // being destroyed from c++, but this might change in the future.
     QCOMPARE(menuBar->takeMenu(1), menu1.data());
     QCOMPARE(menuBar->count(), 1);
     QVERIFY(!menuBar->menuAt(1));
     QVERIFY(!menuBar->itemAt(1));
-    QCoreApplication::sendPostedEvents(menu1.data(), QEvent::DeferredDelete);
+    QTRY_VERIFY(menuBarItem1.isNull());
     QVERIFY(!menu1.isNull());
-    QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
-    QVERIFY(menuBarItem1.isNull());
+    gc(engine);
+    QVERIFY(!menu1.isNull());
+
+    // check that it's safe to call takeMenu(int) with
+    // an index that is out of range.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*out of range"));
+    QCOMPARE(menuBar->takeMenu(-1), nullptr);
+    QCOMPARE(menuBar->count(), 1);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*out of range"));
+    QCOMPARE(menuBar->takeMenu(10), nullptr);
+    QCOMPARE(menuBar->count(), 1);
 
     // addMenu(Menu) re-creates the respective item in the menubar
     menuBar->addMenu(menu1.data());
@@ -719,18 +855,297 @@ void tst_qquickmenubar::addRemove()
     menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
     QVERIFY(!menuBarItem1.isNull());
 
-    // removeMenu(Menu) destroys both the menu and the respective item in the menubar
+    // removeMenu(menu) does not explicitly destroy the menu, but leave
+    // this to the garbage collector. The MenuBarItem, OTOH, is currently
+    // being destroyed from c++, but this might change in the future.
     menuBar->removeMenu(menu1.data());
     QCOMPARE(menuBar->count(), 1);
     QVERIFY(!menuBar->itemAt(1));
-    QCoreApplication::sendPostedEvents(menu1.data(), QEvent::DeferredDelete);
-    QVERIFY(menu1.isNull());
-    QCoreApplication::sendPostedEvents(menuBarItem1, QEvent::DeferredDelete);
-    QVERIFY(menuBarItem1.isNull());
+    QTRY_VERIFY(menuBarItem1.isNull());
+    QVERIFY(!menu1.isNull());
+    gc(engine);
+    QVERIFY(!menu1.isNull());
+}
+
+void tst_qquickmenubar::addRemoveInlineMenus_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::addRemoveInlineMenus()
+{
+    // Check that it's safe to remove a menu from the menubar, that
+    // is an inline child from QML (fileMenu). Since it's owned by
+    // JavaScript, it should be deleted by the gc when appropriate, and
+    // not upon a call to removeMenu.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(0), fileMenu);
+
+    QPointer<QQuickItem> menuBarItem = menuBar->itemAt(0);
+    QVERIFY(menuBarItem);
+
+    menuBar->removeMenu(fileMenu);
+    QVERIFY(menuBar->menuAt(0) != fileMenu);
+    QTRY_VERIFY(!menuBarItem);
+    QVERIFY(fileMenu);
+    gc(engine);
+    QVERIFY(fileMenu);
+
+    // Add it back again, but to the end. This should also be fine, even
+    // if it no longer matches the initial order in the QML file.
+    menuBar->addMenu(fileMenu);
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(menuBar->count() - 1), fileMenu);
+}
+
+void tst_qquickmenubar::addRemoveMenuFromQml_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::addRemoveMenuFromQml()
+{
+    // Create a menu dynamically from QML, and add it to
+    // the menubar. Remove it again. Check that the
+    // garbage collector will then destruct it.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    const int initialMenuCount = menuBar->count();
+    QVERIFY(initialMenuCount > 0);
+
+    QMetaObject::invokeMethod(window, "addTestMenu");
+
+    QCOMPARE(menuBar->count(), initialMenuCount + 1);
+
+    // The "extra" menu should have been added to
+    // the end of the menu bar. Verify this.
+    QQuickItem *item = menuBar->itemAt(menuBar->count() - 1);
+    QPointer<QQuickMenuBarItem> menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+    QVERIFY(menuBarItem);
+    QPointer<QQuickMenu> menu = menuBar->menuAt(menuBar->count() - 1);
+    QVERIFY(menu);
+    QCOMPARE(menu->title(), "extra");
+    QCOMPARE(menuBarItem->menu(), menu);
+
+    // Remove the menu again. Since we have no other references to
+    // it from QML, it should be collected by the gc.
+    menuBar->removeMenu(menu);
+    QCOMPARE(menuBar->count(), initialMenuCount);
+    QTRY_VERIFY(!menuBarItem);
+    QVERIFY(menu);
+    gc(engine);
+    QVERIFY(!menu);
+}
+
+void tst_qquickmenubar::insert_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::insert()
+{
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    const int initialMenuCount = menuBar->count();
+    QVERIFY(initialMenuCount > 0);
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls; Menu { }", QUrl());
+
+    QPointer<QQuickMenu> menu1(qobject_cast<QQuickMenu *>(component.create()));
+    QVERIFY(!menu1.isNull());
+    menuBar->insertMenu(0, menu1.data());
+    QCOMPARE(menuBar->count(), initialMenuCount + 1);
+    QCOMPARE(menuBar->menuAt(0), menu1.data());
+
+    QPointer<QQuickMenu> menu2(qobject_cast<QQuickMenu *>(component.create()));
+    QVERIFY(!menu2.isNull());
+    menuBar->insertMenu(2, menu2.data());
+    QCOMPARE(menuBar->count(), initialMenuCount + 2);
+    QCOMPARE(menuBar->menuAt(2), menu2.data());
+}
+
+void tst_qquickmenubar::showAndHideMenuBarItems_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::showAndHideMenuBarItems()
+{
+    // Check that you can toggle MenuBarItem.visible to show and hide menus in the
+    // menu bar. Note that this is not the same as setting Menu.visible, which will
+    // instead open or close the menus.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("showandhide.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 4);
+
+    auto menuBarItem0 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    auto menuBarItem3 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(3));
+
+    // Initially, the three first MenuBarItems are visible, but the 4th is hidden
+    QVERIFY(menuBarItem0->isVisible());
+    QVERIFY(menuBarItem1->isVisible());
+    QVERIFY(menuBarItem2->isVisible());
+    QVERIFY(!menuBarItem3->isVisible());
+
+    // Native and visible QQuickMenus should be backed by
+    // QPlatformMenus. Otherwise the handle should be nullptr.
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle()), native);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem1->menu())->maybeNativeHandle()), native);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem2->menu())->maybeNativeHandle()), native);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle());
+
+    // Make the hidden MenuBarItem visible
+    menuBarItem3->setVisible(true);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle()), native);
+    QCOMPARE(menuBar->count(), 4);
+    // Hide it again
+    menuBarItem3->setVisible(false);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem3->menu())->maybeNativeHandle());
+    QCOMPARE(menuBar->count(), 4);
+
+    // Toggle the visibility of a MenuBarItem created from the
+    // delegate, which is also initially visible.
+    menuBarItem0->setVisible(false);
+    QVERIFY(!QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle());
+    QCOMPARE(menuBar->count(), 4);
+    // Hide it again
+    menuBarItem0->setVisible(true);
+    QCOMPARE(bool(QQuickMenuPrivate::get(menuBarItem0->menu())->maybeNativeHandle()), native);
+    QCOMPARE(menuBar->count(), 4);
+}
+
+void tst_qquickmenubar::removeMenuThatIsOpen()
+{
+    // Check that if we remove a menu that is open, it ends
+    // up being hidden / closed. This is mostly important for
+    // non-native menubars.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QQuickMenu *fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    fileMenu->open();
+    QVERIFY(fileMenu->isVisible());
+    menuBar->removeMenu(fileMenu);
+    QVERIFY(fileMenu);
+    QTRY_VERIFY(!fileMenu->isVisible());
+}
+
+void tst_qquickmenubar::addRemoveExistingMenus_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("non-native, in-scene") << false << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native, native") << true << true;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("non-native, popup window") << false << true;
+}
+
+void tst_qquickmenubar::addRemoveExistingMenus()
+{
+    // Check that you get warnings if trying to add menus that
+    // are already in the menubar, or remove menus that are not.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    auto window = qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    auto menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    QPointer<QQuickMenu> fileMenu = window->property("fileMenu").value<QQuickMenu *>();
+    QVERIFY(fileMenu);
+    QCOMPARE(menuBar->menuAt(0), fileMenu);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot add menu.*"));
+    menuBar->addMenu(fileMenu);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+    menuBar->insertMenu(0, fileMenu);
+    menuBar->removeMenu(fileMenu);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot remove menu.*"));
+    menuBar->removeMenu(fileMenu);
+}
+
+void tst_qquickmenubar::checkHighlightWhenMenuDismissed_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    // Uncomment when popup windows work 100% (QTBUG-128479)
+    // if (popupWindowsSupported)
+    //     QTest::newRow("Popup.Window") << QQuickPopup::Window;
 }
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 {
+    QFETCH(QQuickPopup::PopupType, popupType);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -749,6 +1164,8 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QQuickMenu *staticMenu = menuBar->menuAt(0);
     QQuickMenu *dynamicMenu = menuBar->menuAt(1);
     QVERIFY(staticMenu && dynamicMenu);
+    staticMenu->setPopupType(popupType);
+    dynamicMenu->setPopupType(popupType);
     QQuickMenuBarItem *staticMenuBarItem = qobject_cast<QQuickMenuBarItem *>(staticMenu->parentItem());
     QQuickMenuBarItem *dynamicMenuBarItem = qobject_cast<QQuickMenuBarItem *>(dynamicMenu->parentItem());
     QVERIFY(staticMenuBarItem && dynamicMenuBarItem);
@@ -787,8 +1204,19 @@ void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
     QVERIFY(!dynamicMenuBarItem->isHighlighted());
 }
 
+void tst_qquickmenubar::hoverAfterClosingWithEscape_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
 void tst_qquickmenubar::hoverAfterClosingWithEscape()
 {
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
@@ -819,6 +1247,600 @@ void tst_qquickmenubar::hoverAfterClosingWithEscape()
     QQuickMenu *secondMenu = menuBar->menuAt(1);
     QVERIFY(secondMenu);
     QVERIFY(!secondMenu->isVisible());
+}
+
+void tst_qquickmenubar::closeByClickingOutside_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+
+    QTest::newRow("Item") << QQuickPopup::Item;
+    QTest::newRow("Window") << QQuickPopup::Window;
+}
+
+void tst_qquickmenubar::closeByClickingOutside()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("hoverAfterClosingWithEscape.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *menuBar = window->property("menuBar").value<QQuickMenuBar*>();
+    QVERIFY(menuBar);
+    auto *fileMenu = window->property("fileMenu").value<QQuickMenu*>();
+    QVERIFY(fileMenu);
+    auto *firstMenuBarItem(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0)));
+    QVERIFY(firstMenuBarItem);
+
+    fileMenu->setPopupType(popupType);
+
+    // Open the first menu by clicking on the first menu bar item.
+    QVERIFY(clickButton(firstMenuBarItem));
+    QTRY_VERIFY(fileMenu->isOpened());
+    // Check that the first menu bar item stays highlighted
+    QVERIFY(firstMenuBarItem->isHighlighted());
+    // ...also after we move the mouse away from it
+    const QPoint windowCenter = {window->width() / 2, window->height() / 2};
+    QTest::mouseMove(window, windowCenter);
+    QVERIFY(firstMenuBarItem->isHighlighted());
+    // Close the menu with by clicking outside of it
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
+    QTRY_VERIFY(!fileMenu->isVisible());
+    // Check that firstMenuBarItem is no longer highlighted since it's
+    // no longer hovered, and the menu it represents is closed.
+    QVERIFY(!firstMenuBarItem->isHighlighted());
+}
+
+void tst_qquickmenubar::AA_DontUseNativeMenuBar()
+{
+    // Check that we end up with a non-native menu bar when AA_DontUseNativeMenuBar is set.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+
+    QVERIFY(!menuBarPrivate->nativeHandle());
+    QVERIFY(menuBar->isVisible());
+    QVERIFY(menuBar->count() > 0);
+    QVERIFY(menuBar->height() > 0);
+    QCOMPARE(contents->height(), window->height() - menuBar->height());
+
+    // If the menu bar is not native, the menus should not be native either.
+    // The main reason for this limitation is that a native menu typically
+    // run in separate native event loop which will not forward mouse events
+    // to Qt. And this is needed for a non-native menu bar to work (e.g to
+    // support hovering over the menu bar items to open and close menus).
+    const auto firstMenu = menuBar->menuAt(0);
+    QVERIFY(firstMenu);
+    QVERIFY(!QQuickMenuPrivate::get(firstMenu)->maybeNativeHandle());
+}
+
+void tst_qquickmenubar::containerItems_data()
+{
+    QTest::addColumn<QString>("testUrl");
+    QTest::addColumn<bool>("native");
+    QTest::newRow("menuitems, not native") << QStringLiteral("menubaritems.qml") << false;
+    QTest::newRow("menus, not native") << QStringLiteral("menus.qml") << false;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("menuitems, native") << QStringLiteral("menubaritems.qml") << true;
+        QTest::newRow("menus, native") << QStringLiteral("menus.qml") << true;
+    }
+}
+
+void tst_qquickmenubar::containerItems()
+{
+    // Check that the MenuBar ends up containing a MenuBarItem
+    // for each Menu added. This should be the case regardless of
+    // if the MenuBar is native or not. There are several ways
+    // of accessing those MenuBarItems and menus in the MenuBar
+    // API, so check that all end up in sync.
+    QFETCH(QString, testUrl);
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl(testUrl));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto *menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QCOMPARE(menuBarPrivate->useNativeMenuBar(), native);
+
+    QCOMPARE(menuBar->count(), 4);
+    for (int i = 0; i < menuBar->count(); ++i) {
+        QQuickMenu *menu = menuBar->menuAt(i);
+        QVERIFY(menu);
+
+        // Test the itemAt() API
+        QQuickItem *item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menu);
+
+        // Test the "contentData" list property API
+        auto cd = menuBarPrivate->contentData();
+        QCOMPARE(cd.count(&cd), menuBar->count());
+        auto cdItem = static_cast<QQuickItem *>(cd.at(&cd, i));
+        QVERIFY(cdItem);
+        auto cdMenuBarItem = qobject_cast<QQuickMenuBarItem *>(cdItem);
+        QVERIFY(cdMenuBarItem);
+        QCOMPARE(cdMenuBarItem->menu(), menu);
+
+        // Test the "menus" list property API
+        auto menus = QQuickMenuBarPrivate::get(menuBar)->menus();
+        QCOMPARE(menus.count(&menus), menuBar->count());
+        auto menusMenu = menus.at(&menus, i);
+        QVERIFY(menusMenu);
+        QCOMPARE(menusMenu, menu);
+    }
+}
+
+void tst_qquickmenubar::mixedContainerItems_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::mixedContainerItems()
+{
+    // The application is allowed to add items other
+    // than MenuBarItems and Menus as children. But those
+    // should just be ignored by the MenuBar (and the Container).
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("mixed.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    // The menubar has four children, but only three of them are
+    // Menus and MenuBarItems. So we should therefore only end up
+    // with three menus in the MenuBar, and three items in the Container.
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
+    }
+
+    // Try to add an unsupported item dynamically. It should
+    // have no impact on the MenuBar/Container API.
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick; Item { }", QUrl());
+    QPointer<QQuickItem> plainItem(qobject_cast<QQuickItem *>(component.create()));
+    QVERIFY(plainItem);
+
+    menuBar->addItem(plainItem);
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
+    }
+
+    // Remove it again. It should have no impact on
+    // the MenuBar/Container API.
+    menuBar->removeItem(plainItem);
+    QCOMPARE(menuBar->count(), 3);
+    for (int i = 0; i < 3; ++i) {
+        auto item = menuBar->itemAt(i);
+        QVERIFY(item);
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        QVERIFY(menuBarItem);
+        QCOMPARE(menuBarItem->menu(), menuBar->menuAt(i));
+    }
+}
+
+void tst_qquickmenubar::applicationWindow_data()
+{
+    QTest::addColumn<bool>("initiallyNative");
+    QTest::addColumn<bool>("initiallyVisible");
+    QTest::newRow("initially not native, visible") << false << true;
+    QTest::newRow("initially not native, hidden") << false << false;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("initially native, visible") << true << true;
+        QTest::newRow("initially native, hidden") << true << false;
+    }
+}
+
+void tst_qquickmenubar::applicationWindow()
+{
+    // Check that ApplicationWindow adds or removes the non-native
+    // menubar in response to toggling Qt::AA_DontUseNativeMenuBar and
+    // MenuBar.visible.
+    QFETCH(bool, initiallyNative);
+    QFETCH(bool, initiallyVisible);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !initiallyNative);
+    QQmlApplicationEngine engine;
+    engine.setInitialProperties({{ "visible", initiallyVisible }});
+    engine.load(testFileUrl("menus.qml"));
+
+    QPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+
+    for (const bool visible : {initiallyVisible, !initiallyVisible, initiallyVisible}) {
+        menuBar->setVisible(visible);
+
+        const bool nativeMenuBarVisible = bool(menuBarPrivate->nativeHandle());
+        QCOMPARE(nativeMenuBarVisible, initiallyNative && visible);
+
+        if (!visible) {
+            QVERIFY(!menuBar->isVisible());
+            QVERIFY(!nativeMenuBarVisible);
+            QCOMPARE(contents->height(), window->height());
+        } else if (nativeMenuBarVisible) {
+            QVERIFY(menuBar->isVisible());
+            QCOMPARE(contents->height(), window->height());
+        } else {
+            QVERIFY(menuBar->isVisible());
+            QVERIFY(menuBar->height() > 0);
+            QCOMPARE(contents->height(), window->height() - menuBar->height());
+        }
+    }
+}
+
+void tst_qquickmenubar::menubarAsHeader_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::menubarAsHeader()
+{
+    // ApplicationWindow.menuBar was added in Qt 5.10. Before that
+    // the menuBar was supposed to be assigned to ApplicationWindow.header.
+    // For backwards compatibility, check that you can still do that.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menubarAsHeader.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
+    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QVERIFY(contents);
+    QVERIFY(menuBar->count() > 0);
+    QCOMPARE(menuBarPrivate->nativeHandle() != nullptr, native);
+
+    if (menuBarPrivate->nativeHandle()) {
+        // Using native menubar
+        QCOMPARE(contents->height(), window->height());
+    } else {
+        // Not using native menubar
+        QCOMPARE(contents->height(), window->height() - menuBar->height());
+    }
+}
+
+void tst_qquickmenubar::menuPosition_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::newRow("Popup.Item") << QQuickPopup::Item;
+    if (popupWindowsSupported)
+        QTest::newRow("Popup.Window") << QQuickPopup::Window;
+}
+
+static bool pixelsCloseEnough(int lhs, int rhs)
+{
+    return qAbs(lhs - rhs) < 2;
+}
+
+void tst_qquickmenubar::menuPosition()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+    // A Menu.qml will typically have a background with a drop-shadow. And to make
+    // room for this shadow, the Menu itself is made bigger by using Control.insets.
+    // This will make room for both the background and its shadow.
+    // To make sure that the corner of the background (rather than the shadow) ends up
+    // at the requested menu position, the effective position of the menu will be
+    // shifted a bit up and left. This test will therefore check that the corner of the
+    // background ends up that the requested position.
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+    // Use in-scene popups for this test, since we have no guarantee where a window
+    // manager might end up placing a menu.
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+
+    const QPoint requestedPos{50, 50};
+
+    QQuickMenu *editMenu = menuBar->menuAt(1);
+    QVERIFY(editMenu);
+    QQuickMenuPrivate *editMenuPrivate = QQuickMenuPrivate::get(editMenu);
+    editMenu->setPopupType(popupType);
+    editMenu->setX(requestedPos.x());
+    editMenu->setY(requestedPos.y());
+    editMenu->setVisible(true);
+    QTRY_VERIFY(editMenu->isOpened());
+    if (editMenuPrivate->usePopupWindow()) {
+        QTRY_VERIFY(editMenuPrivate->popupWindow);
+        QVERIFY(QTest::qWaitForWindowExposed(editMenuPrivate->popupWindow));
+    }
+
+    QVERIFY(pixelsCloseEnough(editMenu->x(), requestedPos.x()));
+    QVERIFY(pixelsCloseEnough(editMenu->y(), requestedPos.y()));
+
+    QQuickItem *background = editMenu->background();
+    QVERIFY(background);
+
+    const QPoint bgPos = editMenu->parentItem()->mapFromGlobal(background->mapToGlobal({0, 0})).toPoint();
+    QVERIFY2(pixelsCloseEnough(requestedPos.x(), bgPos.x()),
+             "The background's x coordinate changed when mapped to the overlay's coordinate space.");
+    QVERIFY2(pixelsCloseEnough(requestedPos.y(), bgPos.y()),
+             "The background's y coordinate changed when mapped to the overlay's coordinate space.");
+}
+
+void tst_qquickmenubar::changeDelegate_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::newRow("not native") << false;
+    if (nativeMenuBarSupported)
+        QTest::newRow("native") << true;
+}
+
+void tst_qquickmenubar::changeDelegate()
+{
+    // Check that you can change the delegate, and that this
+    // will produce new delegate items, except for the MenuBarItem
+    // that is created inline in the QML code, and hence doesn't use the delegate.
+    QFETCH(bool, native);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("nodelegate.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 3);
+
+    QQmlComponent delegate1(&engine);
+    delegate1.setData("import QtQuick.Controls; MenuBarItem {}", QUrl());
+    menuBar->setDelegate(&delegate1);
+
+    auto menuBarItem0_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2_v1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    QVERIFY(menuBarItem0_v1);
+    QVERIFY(menuBarItem1_v1);
+    QVERIFY(menuBarItem2_v1);
+    QVERIFY(menuBarItem0_v1->isVisible());
+    QVERIFY(menuBarItem1_v1->isVisible());
+    QVERIFY(menuBarItem2_v1->isVisible());
+    QVERIFY(menuBarItem0_v1->menu());
+    QVERIFY(menuBarItem1_v1->menu());
+    QVERIFY(menuBarItem2_v1->menu());
+    QCOMPARE(menuBar->menuAt(0), menuBarItem0_v1->menu());
+    QCOMPARE(menuBar->menuAt(1), menuBarItem1_v1->menu());
+    QCOMPARE(menuBar->menuAt(2), menuBarItem2_v1->menu());
+
+    // Change the delegate
+    QQmlComponent delegate2(&engine);
+    delegate2.setData("import QtQuick.Controls; MenuBarItem {}", QUrl());
+    menuBar->setDelegate(&delegate2);
+
+    auto menuBarItem0_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    auto menuBarItem2_v2 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+    QVERIFY(menuBarItem0_v2);
+    QVERIFY(menuBarItem1_v2);
+    QVERIFY(menuBarItem2_v2);
+
+    // The delegate items should now have changed, except for
+    // menuBarItem2, which is not created from the delegate.
+    QVERIFY(menuBarItem0_v2 != menuBarItem0_v1);
+    QVERIFY(menuBarItem1_v2 != menuBarItem1_v1);
+    QCOMPARE(menuBarItem2_v2, menuBarItem2_v1);
+
+    QVERIFY(menuBarItem0_v2->isVisible());
+    QVERIFY(menuBarItem1_v2->isVisible());
+    QVERIFY(menuBarItem2_v2->isVisible());
+    QVERIFY(menuBarItem0_v2->menu());
+    QVERIFY(menuBarItem1_v2->menu());
+    QVERIFY(menuBarItem2_v2->menu());
+    QCOMPARE(menuBar->menuAt(0), menuBarItem0_v2->menu());
+    QCOMPARE(menuBar->menuAt(1), menuBarItem1_v2->menu());
+    QCOMPARE(menuBar->menuAt(2), menuBarItem2_v2->menu());
+}
+
+void tst_qquickmenubar::invalidDelegate_data()
+{
+    QTest::addColumn<bool>("native");
+    QTest::addColumn<bool>("useInvalidDelegate");
+    QTest::newRow("not native, no delegate") << false << false;
+    QTest::newRow("not native, invalid delegate") << false << true;
+    if (nativeMenuBarSupported) {
+        QTest::newRow("native, no delegate") << true << false;
+        QTest::newRow("native, invalid delegate") << true << true;
+    }
+}
+
+void tst_qquickmenubar::invalidDelegate()
+{
+    // Check that QQuickMenuBar can handle a delegate that is either null, or not a
+    // MenuBarItem. The former won't produce any warnings, but the latter should.
+    // In either case, this will not produce visible menus in the menu bar, except
+    // for the menus that are wrapped inside inline MenuBarItems, and therefore
+    // not using the delegate.
+    // To ensure that we still bookkeep the menus for the failing delegates, in case
+    // the delegate changes later, and that functions such as menuAt(index) continues
+    // to work, hidden placeholder MenuBarItems will be used instead.
+    QFETCH(bool, native);
+    QFETCH(bool, useInvalidDelegate);
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, !native);
+    QQmlApplicationEngine engine;
+
+    if (useInvalidDelegate) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+    }
+
+    if (useInvalidDelegate)
+        engine.load(testFileUrl("invaliddelegate.qml"));
+    else
+        engine.load(testFileUrl("nodelegate.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QCOMPARE(menuBar->count(), 3);
+
+    // Menu 2 is an inline MenuBarItem, and is unaffected by the delegate
+    auto inlineMenuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2));
+
+    for (int i = 0; i <= 2; ++i) {
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(i));
+        QVERIFY(menuBarItem);
+        auto menu = menuBarItem->menu();
+        QVERIFY(menu);
+        QCOMPARE(menu, menuBar->menuAt(i));
+        if (menuBarItem == inlineMenuBarItem) {
+            QVERIFY(menuBarItem->isVisible());
+            QCOMPARE(bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()), native);
+        } else {
+            // Menus created from the invalid delegate should be hidden. They should also
+            // not have a native handle, since they should not be in a native menu bar.
+            QVERIFY(!menuBarItem->isVisible());
+            QVERIFY(!bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()));
+        }
+    }
+
+    // Add a new menu. This one should also be inserted into a placeholder MenuBarItem
+    if (useInvalidDelegate)
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot insert menu.*"));
+
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls; Menu { }", QUrl());
+    auto menu = qobject_cast<QQuickMenu *>(component.create());
+    QVERIFY(menu);
+
+    menuBar->addMenu(menu);
+    QCOMPARE(menuBar->count(), 4);
+    auto menuBarItem3 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(3));
+    QVERIFY(menuBarItem3);
+    QVERIFY(!menuBarItem3->isVisible());
+    QCOMPARE(menuBar->menuAt(3), menu);
+    QCOMPARE(menuBar->menuAt(3), menuBarItem3->menu());
+    QVERIFY(!QQuickMenuPrivate::get(menu)->maybeNativeHandle());
+
+    // Finally, set a valid delegate. This will make all MenuBarItems visible.
+    QQmlComponent delegate(&engine);
+    delegate.setData("import QtQuick.Controls; MenuBarItem { }", QUrl());
+    menuBar->setDelegate(&delegate);
+
+    for (int i = 0; i <= 3; ++i) {
+        auto menuBarItem = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(i));
+        QVERIFY(menuBarItem);
+        QVERIFY(menuBarItem->isVisible());
+        auto menu = menuBarItem->menu();
+        QVERIFY(menu);
+        QCOMPARE(menu, menuBar->menuAt(i));
+        QCOMPARE(bool(QQuickMenuPrivate::get(menu)->maybeNativeHandle()), native);
+    }
+
+    // inlineMenuBarItem was not created from a delegate, and shouldn't change
+    QCOMPARE(qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(2)), inlineMenuBarItem);
+}
+
+void tst_qquickmenubar::panMenuBar_data()
+{
+    QTest::addColumn<bool>("usePopupWindow");
+    QTest::newRow("in-scene popup") << false;
+    // Uncomment when popup windows work 100%
+    // if (popupWindowsSupported)
+    //     QTest::newRow("popup window") << true;
+}
+
+void tst_qquickmenubar::panMenuBar()
+{
+    // Check that a MenuBarItem's menu opens when you click it. And then check that
+    // if you hover the next MenuBarItem in the MenuBar, that the first one will
+    // close, and the second one will open.
+
+#if !defined(Q_OS_MACOS) || !defined(Q_OS_WINDOWS)
+    QSKIP("This test doesn't pass on e.g QNX. It needs more investigation before it can be enabled");
+#endif
+
+#ifdef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
+    QSKIP("Panning of MenuBar not supported");
+#endif
+
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar, true);
+    QQmlApplicationEngine engine;
+    engine.load(testFileUrl("menus.qml"));
+
+    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));
+    QVERIFY(window);
+    QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
+    QVERIFY(menuBar);
+    QQuickMenuBarPrivate *menuBar_d = QQuickMenuBarPrivate::get(menuBar);
+
+    auto menuBarItem0 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(0));
+    auto menuBarItem1 = qobject_cast<QQuickMenuBarItem *>(menuBar->itemAt(1));
+    QVERIFY(menuBarItem0);
+    QVERIFY(menuBarItem1);
+
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, itemSceneCenter(menuBarItem0));
+    QVERIFY(menuBarItem0->isHighlighted());
+    QVERIFY(!menuBarItem1->isHighlighted());
+    QCOMPARE(menuBar_d->currentItem, menuBarItem0);
+    QVERIFY(menuBar_d->currentMenuOpen);
+    QTRY_VERIFY(menuBarItem0->menu()->isOpened());
+
+    QTest::mouseMove(window.data(), itemSceneCenter(menuBarItem1));
+    QVERIFY(!menuBarItem0->isHighlighted());
+    QVERIFY(menuBarItem1->isHighlighted());
+    QCOMPARE(menuBar_d->currentItem, menuBarItem1);
+    QVERIFY(menuBar_d->currentMenuOpen);
+    QTRY_VERIFY(menuBarItem1->menu()->isOpened());
+    QTRY_VERIFY(!menuBarItem0->menu()->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)

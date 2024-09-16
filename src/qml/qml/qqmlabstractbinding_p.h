@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQmlObjectCreator;
 class QQmlAnyBinding;
 
-class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
+class Q_QML_EXPORT QQmlAbstractBinding
 {
     friend class QQmlAnyBinding;
 protected:
@@ -63,7 +63,7 @@ public:
     void addToObject();
     void removeFromObject();
 
-    static void printBindingLoopError(const QQmlProperty &prop);
+    virtual void printBindingLoopError(const QQmlProperty &prop);
 
     inline QQmlAbstractBinding *nextBinding() const;
 

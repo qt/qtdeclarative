@@ -5,6 +5,8 @@
 ## qtquickcontrols2iosstyleplugin Plugin:
 #####################################################################
 
+add_subdirectory(impl)
+
 set(qml_files
     "Slider.qml"
     "RangeSlider.qml"
@@ -79,10 +81,11 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2IOSStyleImpl
+        Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-        Qt::QuickControls2ImplPrivate
 )
 
 qt_internal_extend_target(qtquickcontrols2iosstyleplugin CONDITION APPLE AND IOS
@@ -106,8 +109,6 @@ qt_internal_add_resource(qtquickcontrols2iosstyleplugin "qmake_qtquickcontrols2i
     FILES
         ${qmake_qtquickcontrols2iosstyleplugin_resource_files}
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
                                               qtquickcontrols2iosstyleimplplugin)

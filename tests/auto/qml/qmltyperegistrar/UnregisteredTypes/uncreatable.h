@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef UNCREATABLE_H
 #define UNCREATABLE_H
@@ -216,5 +216,21 @@ class FixingBadUncreatable
     Q_GADGET
     QML_FOREIGN(BadUncreatable)
     QML_UNCREATABLE("")
+};
+
+class SingletonVesion0 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    // is default constructible
+};
+
+class SingletonVesion1 : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    // is default constructible
 };
 #endif // UNCREATABLE_H

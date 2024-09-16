@@ -7,7 +7,7 @@
 \brief The Qt Quick module implements the "standard library" for QML
 
 The Qt Quick module is the standard library for writing QML applications.
-While the \l{Qt QML} module provides the QML engine and
+While the \l{Qt Qml} module provides the QML engine and
 language infrastructure, the Qt Quick module provides all the basic
 types necessary for creating user interfaces with QML. It
 provides a visual canvas and includes types for creating and animating
@@ -73,7 +73,7 @@ When using the Qt Quick module, you will need to know how to write QML
 applications using the QML language. In particular, QML Basics and QML
 Essentials from the \l{QML Applications} page.
 
-To find out more about using the QML language, see the \l{Qt QML} module documentation.
+To find out more about using the QML language, see the \l{Qt Qml} module documentation.
 
 \section1 C++ Extension Points
 
@@ -101,7 +101,7 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
         \li \l {QML Applications}
             - essential information for application development with QML and Qt
             Quick
-        \li \l {Qt QML}
+        \li \l {Qt Qml}
             - documentation for the Qt QML module, which provides the QML engine
             and language infrastructure
         \li \l {Qt Quick How-tos}
@@ -134,8 +134,21 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
                    - provides layouts for arranging Qt Quick items
             \li \l {Qt Quick Test QML Types} {Tests}
                    - contains types for writing unit test for a QML application
+            \li \l{Qt Quick Shapes QML Types}{Shapes}
+                   - provides types for rendering vector shapes in a Qt Quick scene.
+            \li \l{Qt Quick Vector Image QML Types}{Vector Image} - provides types for displaying
+            vector image files.
         \endlist
+    \li \l {Qt Quick Android Classes}
+            - provides classes for using QML with Java/Kotlin Android APIs.
 \endlist
+
+\section1 Qt Academy Courses
+    \list
+        \li \l {https://www.qt.io/academy/course-catalog#introduction-to-qt-quick}
+               {Introduction to Qt Quick}
+    \endlist
+
 
 \section1 Licenses and Attributions
 

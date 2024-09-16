@@ -64,13 +64,23 @@ class declaration.
 
 \section2 ComponentBehavior
 
-With this pragma you can restrict components defined in this file to only
-create objects within their original context. This holds for inline
-components as well as Component elements explicitly or implicitly created
-as properties. If a component is bound to its context, you can safely
-use IDs from the rest of the file within the component. Otherwise, the
-engine and the QML tooling cannot know in advance what type, if any, such
-IDs will resolve to at run time.
+You may have multiple components defined in the same QML file. The root
+scope of the QML file is a component, and you may additionally have
+elements of type \l QQmlComponent, explicitly or implicitly created
+as properties, or inline components. Those components are nested. Each
+of the inner components is within one specific outer component. Most of
+the time, IDs defined in an outer component are accessible within all
+its nested inner components. You can, however, create elements from a
+component in any a different context, with different IDs available.
+Doing so breaks the assumption that outer IDs are available. Therefore,
+the engine and the QML tooling cannot generally know in advance what
+type, if any, such IDs will resolve to at run time.
+
+With the ComponentBehavior pragma you can restrict all inner components
+defined in a file to only create objects within their original context.
+If a component is bound to its context, you can safely use IDs from
+outer components in the same file within the component. QML tooling will
+then assume the outer IDs with their specific types to be available.
 
 In order to bind the components to their context specify the \c{Bound}
 argument:
@@ -79,8 +89,34 @@ argument:
 pragma ComponentBehavior: Bound
 \endqml
 
-The default is \c{Unbound}. You can also specify it explicitly. In a
-future version of Qt the default will change to \c{Bound}.
+This implies that, in case of name clashes, IDs defined outside a bound
+component override local properties of objects created from the
+component. Otherwise it wouldn't actually be safe to use the IDs since
+later versions of a module might add more properties to the component.
+If the component is not bound, local properties override IDs defined
+outside the component, but not IDs defined inside the component.
+
+The example below prints the \e r property of the ListView object with
+the id \e color, not the \e r property of the rectangle's color.
+
+\qml
+pragma ComponentBehavior: Bound
+import QtQuick
+
+ListView {
+ id: color
+ property int r: 12
+ model: 1
+
+ delegate: Rectangle {
+  Component.onCompleted: console.log(color.r)
+ }
+}
+\endqml
+
+The default value of \c ComponentBehavior is \c{Unbound}. You can also
+specify it explicitly. In a future version of Qt the default will change
+to \c{Bound}.
 
 Delegate components bound to their context don't receive their own
 private contexts on instantiation. This means that model data can only
@@ -179,21 +215,34 @@ QtObject {
 }
 \endqml
 
-If the type does not match, casting returns \c undefined. \c instanceof
-only checks for inheritance, not for all possible type coercions. So, for
-example, a \l{QRect} is not a \c rect value type since \c rect is \l{QRectF}
-in C++, and therefore not related by inheritance. With \c as you can cast
-to any type compatible via coercion.
-
 Since \c rect in the above example is now a type name, it will shadow any
 properties called \c{rect}.
 
 Explicitly casting to the desired type helps tooling. It can allow the
 \l{Qt Quick Compiler} generate efficient code where it otherwise would not be
-able to. You can use \l{qmllint} to find such occurrences.
+able to. You can use \l{qmllint Reference}{qmllint} to find such occurrences.
 
 There is also a \c{Inaddressable} value you can use to explicitly specify the
 default behavior.
+
+Another attribute to the \c{ValueTypeBehavior} pragma is \c{Assertable},
+introduced in Qt 6.8. Due to a mistake in Qt 6.6 and 6.7 the \c{a as rect} above
+not only checks whether \c{a} is a \c{rect} but also constructs a \c{rect} if
+\c{a} is of a compatible type. This is obviously not what a type assertion
+should do. Specifying \c{Assertable} prevents this behavior and restricts type
+assertions for value types to only check for the type. You should always specify
+it if you are going to use value types with \c{as}. In any case, if the
+type assertion for a value type fails, the result is \c{undefined}.
+
+\c{instanceof} does not have this problem since it only checks for inheritance,
+not for all possible type coercions.
+
+\note Using \c{as} with the \c{int} and \c{double} types is not advisable since by
+JavaScript rules, the result of any calculation is a floating point number, even
+if it happens to hold the same value as its integer equivalent. Conversely, any
+integer constant you declare in JavaScript is not a double by QML's type mapping
+rules. Furthermore, \c{int} and \c{double} are reserved words. You can only
+address these types via type namespaces.
 
 Value types and sequences are generally treated as references. This means, if
 you retrieve a value type instance from a property into a local value, and then
@@ -264,6 +313,10 @@ With this pragma you can set the context for the translations in the file.
 
 \qml
 pragma Translator: myTranslationContext
+\endqml
+
+\qml
+pragma Translator: "myTranslationContext"
 \endqml
 
 For more information on internationalization with QML, see \l{QML: Use qsTr()}{Use qsTr}.

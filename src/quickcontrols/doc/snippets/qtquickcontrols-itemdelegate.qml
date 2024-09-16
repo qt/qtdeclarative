@@ -1,11 +1,12 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
 import QtQuick.Controls
 
 //! [1]
 ListView {
+    id: listView
     width: 160
     height: 240
 
@@ -13,7 +14,7 @@ ListView {
 
     delegate: ItemDelegate {
         text: modelData
-        width: parent.width
+        width: listView.width
         onClicked: console.log("clicked:", modelData)
 
         required property string modelData

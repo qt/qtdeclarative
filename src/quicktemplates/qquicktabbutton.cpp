@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype TabButton
     \inherits AbstractButton
-//!     \instantiates QQuickTabButton
+//!     \nativetype QQuickTabButton
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation
@@ -31,7 +31,7 @@ QT_BEGIN_NAMESPACE
     \sa TabBar, {Customizing TabButton}, {Button Controls}, {Navigation Controls}
 */
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabButtonPrivate : public QQuickAbstractButtonPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickTabButtonPrivate : public QQuickAbstractButtonPrivate
 {
     Q_DECLARE_PUBLIC(QQuickTabButton)
 

@@ -14,10 +14,10 @@
 
     \section1 Marking Text as Translatable
 
-    In the \c qml-i18n.qml file, use the \c qsTr command to mark UI text as
+    In the \c Main.qml file, use the \c qsTr command to mark UI text as
     translatable:
 
-    \quotefromfile qml-i18n/qml-i18n.qml
+    \quotefromfile qml-i18n/Main.qml
     \skipto }
     \skipto Text
     \printuntil )

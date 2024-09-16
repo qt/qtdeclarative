@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLLOCALSTORAGE_PRIVATE_EXPORT QQmlLocalStorage : public QObject
+class Q_QMLLOCALSTORAGE_EXPORT QQmlLocalStorage : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(LocalStorage)
@@ -34,7 +34,7 @@ public:
     QQmlLocalStorage(QObject *parent = nullptr) : QObject(parent) {}
     ~QQmlLocalStorage() override = default;
 
-    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);
+    Q_INVOKABLE void openDatabaseSync(QQmlV4FunctionPtr args);
 };
 
 QT_END_NAMESPACE

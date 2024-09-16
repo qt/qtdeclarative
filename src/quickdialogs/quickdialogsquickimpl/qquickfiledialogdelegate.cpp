@@ -11,6 +11,7 @@
 #include <QtQuickTemplates2/private/qquickitemdelegate_p_p.h>
 
 #include "qquickfiledialogimpl_p.h"
+#include "qquickfiledialogimpl_p_p.h"
 #include "qquickfolderdialogimpl_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -67,6 +68,16 @@ void QQuickFileDialogDelegatePrivate::chooseFile()
         Q_ASSERT(fileDialog);
         // Otherwise it's a file, so select it and close the dialog.
         fileDialog->setSelectedFile(file);
+
+        // Prioritize closing the dialog with QQuickDialogPrivate::handleClick() over QQuickDialog::accept()
+        const QQuickFileDialogImplAttached *attached = QQuickFileDialogImplPrivate::get(fileDialog)->attachedOrWarn();
+        if (Q_LIKELY(attached)) {
+            auto *openButton = attached->buttonBox()->standardButton(QPlatformDialogHelper::Open);
+            if (Q_LIKELY(openButton)) {
+                emit openButton->clicked();
+                return;
+            }
+        }
         fileDialog->accept();
     }
 }

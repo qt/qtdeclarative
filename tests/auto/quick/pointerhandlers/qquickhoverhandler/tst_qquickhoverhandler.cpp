@@ -1,5 +1,5 @@
 // Copyright (C) 2018 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 
@@ -48,9 +48,13 @@ private slots:
     void deviceCursor();
     void addHandlerFromCpp();
     void ensureHoverHandlerWorksWhenItemHasHoverDisabled();
+    void changeCursor();
+    void touchDrag();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
+
+    QScopedPointer<QPointingDevice> touchscreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
 void tst_HoverHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -567,6 +571,17 @@ void tst_HoverHandler::deviceCursor()
     QCOMPARE(eraserHandler->isHovered(), false);
     QCOMPARE(aibrushHandler->isHovered(), false);
     QCOMPARE(airbrushEraserHandler->isHovered(), true); // there was no fresh QTabletEvent to tell it not to be hovered
+
+    // hover with the stylus again, then move the mouse outside the handlers' parent item
+    testStylusDevice(QInputDevice::DeviceType::Stylus, QPointingDevice::PointerType::Pen,
+                     Qt::CrossCursor, stylusHandler);
+    QTest::mouseMove(&window, QPoint(180, 180));
+    // the mouse has left the item: all its HoverHandlers should be unhovered (QTBUG-116505)
+    QCOMPARE(stylusHandler->isHovered(), false);
+    QCOMPARE(eraserHandler->isHovered(), false);
+    QCOMPARE(aibrushHandler->isHovered(), false);
+    QCOMPARE(airbrushEraserHandler->isHovered(), false);
+    QCOMPARE(mouseHandler->isHovered(), false);
 }
 
 void tst_HoverHandler::addHandlerFromCpp()
@@ -669,6 +684,74 @@ void tst_HoverHandler::ensureHoverHandlerWorksWhenItemHasHoverDisabled()
     QTest::mouseMove(window.data(), outside);
     QVERIFY(!handler->isHovered());
     QCOMPARE(spy.size(), 2);
+}
+
+void tst_HoverHandler::changeCursor()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "changingCursor.qml");
+    QQuickView * window = windowPtr.data();
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *item = window->findChild<QQuickItem *>("brownRect");
+    QVERIFY(item);
+    QQuickHoverHandler *hh = item->findChild<QQuickHoverHandler *>();
+    QVERIFY(hh);
+
+    QPoint itemCenter(item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint());
+    QSignalSpy hoveredSpy(hh, SIGNAL(hoveredChanged()));
+
+    QTest::mouseMove(window, itemCenter);
+
+    QTRY_COMPARE(hoveredSpy.size(), 1);
+
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window->cursor().shape(), Qt::CrossCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::CrossCursor);
+    QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+#endif
+}
+
+void tst_HoverHandler::touchDrag()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("hoverHandler.qml")));
+    const QQuickItem *root = window.rootObject();
+    QQuickHoverHandler *handler = root->findChild<QQuickHoverHandler *>();
+    QVERIFY(handler);
+
+    // polishAndSync() calls flushFrameSynchronousEvents() before emitting afterAnimating()
+    QSignalSpy frameSyncSpy(&window, &QQuickWindow::afterAnimating);
+
+    const QPoint out(root->width() - 1, root->height() / 2);
+    QPoint in(root->width() / 2, root->height() / 2);
+
+    QTest::touchEvent(&window, touchscreen.get()).press(0, out, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(handler->isHovered(), false);
+
+    frameSyncSpy.clear();
+    QTest::touchEvent(&window, touchscreen.get()).move(0, in, &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(handler->isHovered(), true);
+    QCOMPARE(handler->point().scenePosition(), in);
+
+    in += {10, 10};
+    QTest::touchEvent(&window, touchscreen.get()).move(0, in, &window);
+    QQuickTouchUtils::flush(&window);
+    // ensure that the color change is visible
+    QTRY_COMPARE_GE(frameSyncSpy.size(), 1);
+    QCOMPARE(handler->isHovered(), true);
+    QCOMPARE(handler->point().scenePosition(), in);
+
+    QTest::touchEvent(&window, touchscreen.get()).move(0, out, &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE_GE(frameSyncSpy.size(), 2);
+    QCOMPARE(handler->isHovered(), false);
+
+    QTest::touchEvent(&window, touchscreen.get()).release(0, out, &window);
 }
 
 QTEST_MAIN(tst_HoverHandler)

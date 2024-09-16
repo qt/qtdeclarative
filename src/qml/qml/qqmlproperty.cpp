@@ -12,6 +12,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmllist_p.h>
+#include <private/qqmllistwrapper_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlsignalnames_p.h>
 #include <private/qqmlstringconverters_p.h>
@@ -247,10 +248,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             // Types must begin with an uppercase letter (see checkRegistration()
             // in qqmlmetatype.cpp for the enforcement of this).
             if (typeNameCache && !pathName.isEmpty() && pathName.at(0).isUpper()) {
-                QQmlTypeNameCache::Result r = typeNameCache->query(pathName);
+                QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
+                QQmlTypeLoader *typeLoader = QQmlTypeLoader::get(enginePrivate);
+                QQmlTypeNameCache::Result r = typeNameCache->query(pathName, typeLoader);
                 if (r.isValid()) {
                     if (r.type.isValid()) {
-                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func) return; // Not an attachable type
 
@@ -262,12 +264,11 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
 
                         // TODO: Do we really _not_ want to query the namespaced types here?
                         r = typeNameCache->query<QQmlTypeNameCache::QueryNamespaced::No>(
-                                    path.at(ii), r.importNamespace);
+                                    path.at(ii), r.importNamespace, typeLoader);
 
                         if (!r.type.isValid())
                             return; // Invalid type in namespace
 
-                        QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
                         if (!func)
                             return; // Not an attachable type
@@ -364,8 +365,8 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     };
 
     QQmlData *ddata = QQmlData::get(currentObject, false);
-    auto findChangeSignal = [&](QStringView changedHandlerName) {
-        if (auto propName = QQmlSignalNames::changedHandlerNameToPropertyName(changedHandlerName)) {
+    auto findChangeSignal = [&](QStringView signalName) {
+        if (auto propName = QQmlSignalNames::changedSignalNameToPropertyName(signalName)) {
             const QQmlPropertyData *d =
                     ddata->propertyCache->property(*propName, currentObject, context);
             while (d && d->isFunction())
@@ -398,7 +399,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 return true;
             }
 
-            return findChangeSignal(terminal);
+            return findChangeSignal(signalName);
         }
 
         return findSignalInMetaObject(signalName.toUtf8());
@@ -411,13 +412,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     } else {
         signalName = QQmlSignalNames::badHandlerNameToSignalName(terminal);
         if (signalName) {
-            qWarning()
-                    << terminal
-                    << "is not a properly capitalized signal handler name."
-                    << QQmlSignalNames::signalNameToHandlerName(*signalName)
-                    << "would be correct.";
-            if (findSignal(*signalName))
+            if (findSignal(*signalName)) {
+                qWarning()
+                        << terminal
+                        << "is not a properly capitalized signal handler name."
+                        << QQmlSignalNames::signalNameToHandlerName(*signalName)
+                        << "would be correct.";
                 return;
+            }
         }
     }
 
@@ -842,17 +844,21 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
     oldBinding = data->bindings;
 
     while (oldBinding && (oldBinding->targetPropertyIndex().coreIndex() != coreIndex ||
-                          oldBinding->targetPropertyIndex().hasValueTypeIndex()))
+                          oldBinding->targetPropertyIndex().hasValueTypeIndex())) {
         oldBinding = oldBinding->nextBinding();
+    }
 
-    if (!oldBinding)
-        return;
-
-    if (valueTypeIndex != -1 && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy)
+    if (valueTypeIndex != -1
+            && oldBinding
+            && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy) {
         oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
+    }
 
-    if (!oldBinding)
+    if (!oldBinding) {
+        // Clear the binding bit so that the binding doesn't appear later for any reason
+        data->clearBindingBit(coreIndex);
         return;
+    }
 
     if (!(flags & QQmlPropertyPrivate::DontEnable))
         oldBinding->setEnabled(false, {});
@@ -1372,18 +1378,6 @@ static ConvertAndAssignResult tryConvertAndAssign(
         return {false, false};
     }
 
-    if (variantMetaType == QMetaType::fromType<QJSValue>()) {
-        // Handle Qt.binding bindings here to avoid mistaken conversion below
-        const QJSValue &jsValue = get<QJSValue>(value);
-        const QV4::FunctionObject *f
-                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
-        if (f && f->isBinding()) {
-            QV4::QObjectWrapper::setProperty(
-                    f->engine(), object, &property, f->asReturnedValue());
-            return {true, true};
-        }
-    }
-
     // common cases:
     switch (propertyMetaType.id()) {
     case QMetaType::Bool:
@@ -1469,6 +1463,21 @@ bool iterateQObjectContainer(QMetaType metaType, const void *data, Op op)
     return true;
 }
 
+static bool tryAssignBinding(
+        QObject *object, const QQmlPropertyData &property, const QVariant &value,
+        QMetaType variantMetaType) {
+    if (variantMetaType != QMetaType::fromType<QJSValue>())
+        return false;
+
+    const QJSValue &jsValue = get<QJSValue>(value);
+    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
+    if (!f || !f->isBinding())
+        return false;
+
+    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, f->asReturnedValue());
+    return true;
+}
+
 bool QQmlPropertyPrivate::write(
         QObject *object, const QQmlPropertyData &property, const QVariant &value,
         const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData::WriteFlags flags)
@@ -1493,6 +1502,10 @@ bool QQmlPropertyPrivate::write(
 
     QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(context);
     const bool isUrl = propertyMetaType == QMetaType::fromType<QUrl>(); // handled separately
+
+    // Handle Qt.binding bindings here to avoid mistaken conversion below
+    if (tryAssignBinding(object, property, value, variantMetaType))
+        return true;
 
     // The cases below are in approximate order of likelyhood:
     if (propertyMetaType == variantMetaType && !isUrl
@@ -1577,8 +1590,11 @@ bool QQmlPropertyPrivate::write(
             propClear(&prop);
 
             const auto doAppend = [&](QObject *o) {
-                if (o && !QQmlMetaObject::canConvert(o, valueMetaObject))
+                if (Q_UNLIKELY(o && !QQmlMetaObject::canConvert(o, valueMetaObject))) {
+                    qCWarning(lcIncompatibleElement)
+                            << "Cannot append" << o << "to a QML list of" << listValueType.name();
                     o = nullptr;
+                }
                 propAppend(&prop, o);
             };
 

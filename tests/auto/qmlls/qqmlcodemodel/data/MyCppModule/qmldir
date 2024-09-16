@@ -1,0 +1,5 @@
+module MyCppModule
+typeinfo mycppmodule.qmltypes
+prefer :/MyCppModule/
+Main 1.0 Main.qml
+

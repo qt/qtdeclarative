@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -23,10 +23,12 @@ TestCase {
         Slider { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(slider, testCase)
+    function test_defaults() {
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.stepSize, 0)
@@ -37,7 +39,7 @@ TestCase {
     }
 
     function test_value() {
-        var control = createTemporaryObject(slider, testCase)
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -52,7 +54,7 @@ TestCase {
     }
 
     function test_range() {
-        var control = createTemporaryObject(slider, testCase, {from: 0, to: 100, value: 50})
+        let control = createTemporaryObject(slider, testCase, {from: 0, to: 100, value: 50})
         verify(control)
 
         compare(control.from, 0)
@@ -84,7 +86,7 @@ TestCase {
     }
 
     function test_inverted() {
-        var control = createTemporaryObject(slider, testCase, {from: 1.0, to: -1.0})
+        let control = createTemporaryObject(slider, testCase, {from: 1.0, to: -1.0})
         verify(control)
 
         compare(control.from, 1.0)
@@ -106,7 +108,7 @@ TestCase {
     }
 
     function test_position() {
-        var control = createTemporaryObject(slider, testCase)
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -122,7 +124,7 @@ TestCase {
     }
 
     function test_visualPosition() {
-        var control = createTemporaryObject(slider, testCase)
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.value, 0.0)
@@ -154,7 +156,7 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = createTemporaryObject(slider, testCase)
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         compare(control.orientation, Qt.Horizontal)
@@ -179,16 +181,16 @@ TestCase {
     }
 
     function test_mouse(data) {
-        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
+        let control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
         verify(control)
 
-        var pressedCount = 0
-        var movedCount = 0
+        let pressedCount = 0
+        let movedCount = 0
 
-        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        let movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
         mousePress(control, 0, control.height - 1, Qt.LeftButton)
@@ -268,19 +270,19 @@ TestCase {
     }
 
     function test_touch(data) {
-        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
+        let control = createTemporaryObject(slider, testCase, {orientation: data.orientation, live: data.live})
         verify(control)
 
-        var pressedCount = 0
-        var movedCount = 0
+        let pressedCount = 0
+        let movedCount = 0
 
-        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        let movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control, 0, 0).commit()
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, movedCount)
@@ -349,19 +351,19 @@ TestCase {
     }
 
     function test_multiTouch() {
-        var control1 = createTemporaryObject(slider, testCase, {live: false})
+        let control1 = createTemporaryObject(slider, testCase, {live: false})
         verify(control1)
 
-        var pressedCount1 = 0
-        var movedCount1 = 0
+        let pressedCount1 = 0
+        let movedCount1 = 0
 
-        var pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
+        let pressedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "pressedChanged"})
         verify(pressedSpy1.valid)
 
-        var movedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "moved"})
+        let movedSpy1 = signalSpy.createObject(control1, {target: control1, signalName: "moved"})
         verify(movedSpy1.valid)
 
-        var touch = touchEvent(control1)
+        let touch = touchEvent(control1)
         touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
 
         compare(pressedSpy1.count, ++pressedCount1)
@@ -379,16 +381,16 @@ TestCase {
         compare(control1.pressed, true)
         compare(control1.position, 1.0)
 
-        var control2 = createTemporaryObject(slider, testCase, {y: control1.height, live: false})
+        let control2 = createTemporaryObject(slider, testCase, {y: control1.height, live: false})
         verify(control2)
 
-        var pressedCount2 = 0
-        var movedCount2 = 0
+        let pressedCount2 = 0
+        let movedCount2 = 0
 
-        var pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
+        let pressedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "pressedChanged"})
         verify(pressedSpy2.valid)
 
-        var movedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "moved"})
+        let movedSpy2 = signalSpy.createObject(control2, {target: control2, signalName: "moved"})
         verify(movedSpy2.valid)
 
         // press the second slider
@@ -443,25 +445,25 @@ TestCase {
     }
 
     function test_keys(data) {
-        var control = createTemporaryObject(slider, testCase, {orientation: data.orientation})
+        let control = createTemporaryObject(slider, testCase, {orientation: data.orientation})
         verify(control)
 
-        var pressedCount = 0
-        var movedCount = 0
+        let pressedCount = 0
+        let movedCount = 0
 
-        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        let movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var oldValue = 0.0
+        let oldValue = 0.0
         control.value = 0.5
 
-        for (var d1 = 1; d1 <= 10; ++d1) {
+        for (let d1 = 1; d1 <= 10; ++d1) {
             oldValue = control.value
             keyPress(data.decrease)
             compare(control.pressed, true)
@@ -478,7 +480,7 @@ TestCase {
             compare(movedSpy.count, movedCount)
         }
 
-        for (var i1 = 1; i1 <= 20; ++i1) {
+        for (let i1 = 1; i1 <= 20; ++i1) {
             oldValue = control.value
             keyPress(data.increase)
             compare(control.pressed, true)
@@ -497,7 +499,7 @@ TestCase {
 
         control.stepSize = 0.25
 
-        for (var d2 = 1; d2 <= 10; ++d2) {
+        for (let d2 = 1; d2 <= 10; ++d2) {
             oldValue = control.value
             keyPress(data.decrease)
             compare(control.pressed, true)
@@ -514,7 +516,7 @@ TestCase {
             compare(movedSpy.count, movedCount)
         }
 
-        for (var i2 = 1; i2 <= 10; ++i2) {
+        for (let i2 = 1; i2 <= 10; ++i2) {
             oldValue = control.value
             keyPress(data.increase)
             compare(control.pressed, true)
@@ -536,10 +538,10 @@ TestCase {
         // test with "unbalanced" paddings (left padding != right padding) to ensure
         // that the slider position calculation is done taking padding into account
         // ==> the position is _not_ 0.5 in the middle of the control
-        var control = createTemporaryObject(slider, testCase, {leftPadding: 10, rightPadding: 20, live: false})
+        let control = createTemporaryObject(slider, testCase, {leftPadding: 10, rightPadding: 20, live: false})
         verify(control)
 
-        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
         mousePress(control, 0, 0, Qt.LeftButton)
@@ -620,12 +622,12 @@ TestCase {
             { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
             // Live
-            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 1, 1] },
-            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0, 0] },
-            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 0.6] },
-            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0.4] },
-            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 1] },
-            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0] },
+            { tag: "SnapAlwaysLive1", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 1, 1] },
+            { tag: "SnapAlwaysLive2", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0, 0] },
+            { tag: "NoSnapLive1", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 0.6] },
+            { tag: "NoSnapLive2", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0.4] },
+            { tag: "SnapOnReleaseLive1", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 1] },
+            { tag: "SnapOnReleaseLive2", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0] },
         ]
     }
 
@@ -635,7 +637,7 @@ TestCase {
         let sliderPos = data.sliderPos !== undefined ? data.sliderPos : 0.1
         let fuzz = 0.05
 
-        var control = createTemporaryObject(slider, testCase, {live: live, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: stepSize})
+        let control = createTemporaryObject(slider, testCase, {live: live, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: stepSize})
         verify(control)
 
         // The test assumes there is no drag threshold for neither mouse or touch.
@@ -644,7 +646,7 @@ TestCase {
         // on a very narrow slider, we ensure the same width of all sliders
         control.width = testCase.width
 
-        var touch = useMouse ? null : touchEvent(control)
+        let touch = useMouse ? null : touchEvent(control)
 
         if (useMouse)
             mousePress(control, calcMousePos(control, 0.0))
@@ -690,16 +692,18 @@ TestCase {
     function test_wheel_data() {
         return [
             { tag: "horizontal", orientation: Qt.Horizontal, dx: 120, dy: 0 },
-            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 }
+            { tag: "vertical", orientation: Qt.Vertical, dx: 0, dy: 120 },
+            { tag: "mostlyHorizontal", orientation: Qt.Horizontal, dx: 120, dy: 1 },
+            { tag: "mostlyVertical", orientation: Qt.Vertical, dx: 1, dy: 120 },
         ]
     }
 
     function test_wheel(data) {
-        var control = createTemporaryObject(slider, testCase, {wheelEnabled: true, orientation: data.orientation})
+        let control = createTemporaryObject(slider, testCase, {wheelEnabled: true, orientation: data.orientation})
         verify(control)
 
-        var movedCount = 0
-        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        let movedCount = 0
+        let movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
         compare(control.value, 0.0)
@@ -761,19 +765,19 @@ TestCase {
     }
 
     function test_wheelPropagation(data) {
-        var mouseArea = createTemporaryObject(mouseAreaComponent, testCase, { width: parent.width, height: parent.height })
+        let mouseArea = createTemporaryObject(mouseAreaComponent, testCase, { width: parent.width, height: parent.height })
         verify(mouseArea)
 
-        var mouseAreaWheelSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "wheel" })
+        let mouseAreaWheelSpy = signalSpy.createObject(mouseArea, { target: mouseArea, signalName: "wheel" })
         verify(mouseAreaWheelSpy.valid)
 
-        var control = createTemporaryObject(slider, mouseArea,
+        let control = createTemporaryObject(slider, mouseArea,
             { wheelEnabled: true, orientation: data.orientation, stepSize: 1 })
         verify(control)
         compare(control.value, 0.0)
 
-        var movedCount = 0
-        var movedSpy = signalSpy.createObject(control, { target: control, signalName: "moved" })
+        let movedCount = 0
+        let movedSpy = signalSpy.createObject(control, { target: control, signalName: "moved" })
         verify(movedSpy.valid)
 
         // Scroll the handle to the edge.
@@ -826,7 +830,7 @@ TestCase {
     }
 
     function test_nullHandle() {
-        var control = createTemporaryObject(slider, testCase)
+        let control = createTemporaryObject(slider, testCase)
         verify(control)
 
         control.handle = null
@@ -839,7 +843,7 @@ TestCase {
     }
 
     function test_touchDragThreshold_data() {
-        var d1 = 3; var d2 = 7;
+        let d1 = 3; let d2 = 7;
         return [
             { tag: "horizontal", orientation: Qt.Horizontal, dx1: d1, dy1: 0, dx2: d2, dy2: 0 },
             { tag: "vertical", orientation: Qt.Vertical, dx1: 0, dy1: -d1, dx2: 0, dy2: -d2 },
@@ -849,19 +853,19 @@ TestCase {
     }
 
     function test_touchDragThreshold(data) {
-        var control = createTemporaryObject(slider, testCase, {touchDragThreshold: 10, live: true, orientation: data.orientation, value: 0.5})
+        let control = createTemporaryObject(slider, testCase, {touchDragThreshold: 10, live: true, orientation: data.orientation, value: 0.5})
         verify(control)
         compare(control.touchDragThreshold, 10)
 
-        var valueChangedCount = 0
-        var valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "touchDragThresholdChanged"})
+        let valueChangedCount = 0
+        let valueChangedSpy = signalSpy.createObject(control, {target: control, signalName: "touchDragThresholdChanged"})
         verify(valueChangedSpy.valid)
 
         control.touchDragThreshold = undefined
         compare(control.touchDragThreshold, -1) // reset to -1
         compare(valueChangedSpy.count, ++valueChangedCount)
 
-        var t = 5
+        let t = 5
         control.touchDragThreshold = t
         compare(control.touchDragThreshold, t)
         compare(valueChangedSpy.count, ++valueChangedCount)
@@ -870,18 +874,18 @@ TestCase {
         compare(control.touchDragThreshold, t)
         compare(valueChangedSpy.count, valueChangedCount)
 
-        var pressedCount = 0
-        var movedCount = 0
+        let pressedCount = 0
+        let movedCount = 0
 
-        var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
+        let pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
+        let movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
-        var touch = touchEvent(control)
-        var x0 = control.handle.x + control.handle.width * 0.5
-        var y0 = control.handle.y + control.handle.height * 0.5
+        let touch = touchEvent(control)
+        let x0 = control.handle.x + control.handle.width * 0.5
+        let y0 = control.handle.y + control.handle.height * 0.5
         touch.press(0, control, x0, y0).commit()
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, movedCount)
@@ -902,7 +906,7 @@ TestCase {
 
     function test_nullTexture() {
         failOnWarning("No QSGTexture provided from updateSampledImage(). This is wrong.")
-        var control = createTemporaryObject(slider, testCase, {width: -100})
+        let control = createTemporaryObject(slider, testCase, {width: -100})
         verify(control)
         control.visible = true
         waitForRendering(control)

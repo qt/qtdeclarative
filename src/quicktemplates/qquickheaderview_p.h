@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickHeaderViewBase;
 class QQuickHeaderViewBasePrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickHeaderViewBase : public QQuickTableView
+class Q_QUICKTEMPLATES2_EXPORT QQuickHeaderViewBase : public QQuickTableView
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHeaderViewBase)
@@ -48,16 +48,23 @@ private:
 };
 
 class QQuickHorizontalHeaderViewPrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickHorizontalHeaderView : public QQuickHeaderViewBase
+class Q_QUICKTEMPLATES2_EXPORT QQuickHorizontalHeaderView : public QQuickHeaderViewBase
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHorizontalHeaderView)
+    Q_PROPERTY(bool movableColumns READ movableColumns WRITE setMovableColumns NOTIFY movableColumnsChanged REVISION(6, 8) FINAL)
     QML_NAMED_ELEMENT(HorizontalHeaderView)
     QML_ADDED_IN_VERSION(2, 15)
 
 public:
     QQuickHorizontalHeaderView(QQuickItem *parent = nullptr);
     ~QQuickHorizontalHeaderView() override;
+
+    bool movableColumns() const;
+    void setMovableColumns(bool movableColumns);
+
+Q_SIGNALS:
+    Q_REVISION(6, 8) void movableColumnsChanged();
 
 protected:
     QQuickHorizontalHeaderView(QQuickHorizontalHeaderViewPrivate &dd, QQuickItem *parent);
@@ -67,16 +74,23 @@ private:
 };
 
 class QQuickVerticalHeaderViewPrivate;
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickVerticalHeaderView : public QQuickHeaderViewBase
+class Q_QUICKTEMPLATES2_EXPORT QQuickVerticalHeaderView : public QQuickHeaderViewBase
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVerticalHeaderView)
+    Q_PROPERTY(bool movableRows READ movableRows WRITE setMovableRows NOTIFY movableRowsChanged REVISION(6, 8) FINAL)
     QML_NAMED_ELEMENT(VerticalHeaderView)
     QML_ADDED_IN_VERSION(2, 15)
 
 public:
     QQuickVerticalHeaderView(QQuickItem *parent = nullptr);
     ~QQuickVerticalHeaderView() override;
+
+    bool movableRows() const;
+    void setMovableRows(bool movableRows);
+
+Q_SIGNALS:
+    Q_REVISION(6, 8) void movableRowsChanged();
 
 protected:
     QQuickVerticalHeaderView(QQuickVerticalHeaderViewPrivate &dd, QQuickItem *parent);
@@ -86,8 +100,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickHorizontalHeaderView)
-QML_DECLARE_TYPE(QQuickVerticalHeaderView)
 
 #endif // QQUICKHEADERVIEW_P_H

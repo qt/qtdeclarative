@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QDebug>
 
@@ -21,7 +21,7 @@
 #include <private/qv4executablecompilationunit_p.h>
 #include <qcolor.h>
 #include <qsignalspy.h>
-
+#include "lifecyclewatcher.h"
 #include <algorithm>
 
 using namespace Qt::StringLiterals;
@@ -90,13 +90,6 @@ public slots:
     }
 };
 
-static void gc(QQmlEngine &engine)
-{
-    engine.collectGarbage();
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-    QCoreApplication::processEvents();
-}
-
 class tst_qqmlcomponent : public QQmlDataTest
 {
     Q_OBJECT
@@ -140,6 +133,7 @@ private slots:
     void boundComponent();
     void loadFromModule_data();
     void loadFromModule();
+    void loadFromModuleLifecycle();
     void loadFromModuleThenCreateWithIncubator();
     void loadFromModuleFailures_data();
     void loadFromModuleFailures();
@@ -148,6 +142,8 @@ private slots:
     void removeBinding();
     void complexObjectArgument();
     void bindingEvaluationOrder();
+    void compilationUnitsWithSameUrl();
+    void bindingInRequired();
 
 private:
     QQmlEngine engine;
@@ -721,7 +717,7 @@ void tst_qqmlcomponent::relativeUrl_data()
 {
     QTest::addColumn<QUrl>("url");
 
-#if !defined(Q_OS_ANDROID)
+#if !defined(Q_OS_ANDROID) && !defined(BUILTIN_TESTDATA)
     QTest::addRow("fromLocalFile") << QUrl::fromLocalFile("data/QtObjectComponent.qml");
     QTest::addRow("fromLocalFileHash") << QUrl::fromLocalFile("data/QtObjectComponent#2.qml");
     QTest::addRow("constructor") << QUrl("data/QtObjectComponent.qml");
@@ -1046,6 +1042,19 @@ void tst_qqmlcomponent::testSetInitialProperties()
 
     }
     {
+        // setInitialProperties: reject setting nested properties
+        auto r = QRegularExpression(".*Setting initial properties failed: Cannot initialize "
+                                    "nested property. To set a.b as an initial property, create a"
+                                    ", set its property b, and pass a as an initial property.");
+        QTest::ignoreMessage(QtWarningMsg, r);
+
+        ComponentWithPublicSetInitial comp(&eng);
+        comp.loadUrl(testFileUrl("allJSONTypes.qml")); // Any valid QML file
+        QScopedPointer<QObject> obj { comp.beginCreate(eng.rootContext()) };
+        comp.setInitialProperties(obj.get(), { { "a.b", 1 } });
+        comp.completeCreate();
+    }
+    {
         // createWithInitialProperties convenience function
         QQmlComponent comp(&eng);
         comp.loadUrl(testFileUrl("requiredNotSet.qml"));
@@ -1121,8 +1130,12 @@ void tst_qqmlcomponent::testSetInitialProperties()
 void tst_qqmlcomponent::createInsideJSModule()
 {
     QQmlEngine engine;
+    QString prefix;
+#if defined(Q_OS_ANDROID) || defined(BUILTIN_TESTDATA)
+    prefix = "qrc:/";
+#endif
     QQmlComponent component(&engine, testFileUrl("jsmodule/test.qml"));
-    QScopedPointer<QObject> root(component.create());
+    QScopedPointer<QObject> root(component.createWithInitialProperties({{"prefix", prefix}}));
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
 }
@@ -1351,6 +1364,34 @@ void tst_qqmlcomponent::loadFromModule()
              name);
 }
 
+void tst_qqmlcomponent::loadFromModuleLifecycle()
+{
+    QQmlEngine engine;
+    QList<int> loadFromModuleOrder;
+    QList<int> plainLoadOrder;
+    const QList<int> expected {1, 2, 3};
+    {
+        QQmlComponent component(&engine);
+        component.loadFromModule("test", "LifeCycleWatcher");
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> root{ component.create() };
+        LifeCycleWatcher *watcher = qobject_cast<LifeCycleWatcher *>(root.get());
+        QVERIFY(watcher);
+        loadFromModuleOrder = watcher->states;
+        QCOMPARE(loadFromModuleOrder, expected);
+    }
+    {
+        QQmlComponent component(&engine);
+        component.setData("import test; LifeCycleWatcher {}", {});
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        std::unique_ptr<QObject> root{ component.create() };
+        LifeCycleWatcher *watcher = qobject_cast<LifeCycleWatcher *>(root.get());
+        QVERIFY(watcher);
+        plainLoadOrder = watcher->states;
+    }
+    QCOMPARE(loadFromModuleOrder, plainLoadOrder);
+}
+
 struct CallVerifyingIncubtor : QQmlIncubator
 {
     void setInitialState(QObject *) override { setInitialStateCalled = true; }
@@ -1390,6 +1431,10 @@ void tst_qqmlcomponent::loadFromModuleFailures_data()
     QTest::addRow("CppSingleton") << u"QtQuick"_s
                                   << u"Application"_s
                                   << u"Application is a singleton, and cannot be loaded"_s;
+    QTest::addRow("passedFileName") << "plainqml"
+                                    << "Plain.qml"
+                                    << R"(Type "Plain" from module "plainqml" contains no inline component named "qml". )"
+                                       R"(To load the type "Plain", drop the ".qml" extension.)";
 }
 
 void tst_qqmlcomponent::loadFromModuleFailures()
@@ -1401,7 +1446,11 @@ void tst_qqmlcomponent::loadFromModuleFailures()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     QSignalSpy errorSpy(&component, &QQmlComponent::statusChanged);
+    QSignalSpy progressSpy(&component, &QQmlComponent::progressChanged);
     component.loadFromModule(uri, typeName);
+    // verify that we changed the progress correctly to 1
+    QTRY_VERIFY(!progressSpy.isEmpty());
+    QTRY_COMPARE(progressSpy.last().at(0).toDouble(), 1.0);
     QVERIFY(!errorSpy.isEmpty());
     QCOMPARE(errorSpy.first().first().value<QQmlComponent::Status>(),
              QQmlComponent::Error);
@@ -1439,7 +1488,7 @@ void tst_qqmlcomponent::loadFromQrc()
     QQmlComponentPrivate *p = QQmlComponentPrivate::get(&component);
     QVERIFY(p);
     QVERIFY(p->compilationUnit);
-    QVERIFY(p->compilationUnit->aotCompiledFunctions);
+    QVERIFY(p->compilationUnit->baseCompilationUnit()->aotCompiledFunctions);
 }
 
 void tst_qqmlcomponent::removeBinding()
@@ -1497,6 +1546,59 @@ void tst_qqmlcomponent::bindingEvaluationOrder()
     QCOMPARE(myList[0].toString(), u"dummy"_s);
     QCOMPARE(myList[1].toString(), u"p1"_s);
     QCOMPARE(myList[2].toString(), u"p2"_s);
+}
+
+void tst_qqmlcomponent::compilationUnitsWithSameUrl()
+{
+    QQmlEngine engine;
+    engine.setUiLanguage("de_CH");
+
+    std::vector<std::unique_ptr<QObject>> objects;
+    for (int i = 0; i < 10; ++i) {
+        QQmlComponent component(&engine);
+        component.setData(R"(
+            import QtQml
+            QtObject {
+                function returnThing() : string { return Qt.uiLanguage }
+            }
+        )", QUrl("duplicate.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+        std::unique_ptr<QObject> o(component.create());
+        QVERIFY(o.get());
+
+        QString result;
+        QMetaObject::invokeMethod(o.get(), "returnThing", Q_RETURN_ARG(QString, result));
+        QCOMPARE(result, "de_CH");
+
+        objects.push_back(std::move(o));
+    }
+
+    gc(engine);
+
+    for (const auto &o: objects) {
+        QString result;
+        QMetaObject::invokeMethod(o.get(), "returnThing", Q_RETURN_ARG(QString, result));
+        QCOMPARE(result, "de_CH");
+    }
+}
+
+void tst_qqmlcomponent::bindingInRequired()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingInRequired.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QObject *outer = object->property("outer").value<QObject *>();
+    QVERIFY(outer);
+
+    QObject *inner = object->property("inner").value<QObject *>();
+    QVERIFY(inner);
+
+    QCOMPARE(inner, outer->property("obj").value<QObject *>());
+    QVERIFY(!inner->property("obj").value<QObject *>());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

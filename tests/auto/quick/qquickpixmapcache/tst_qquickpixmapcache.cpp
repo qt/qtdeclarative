@@ -1,7 +1,8 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtTest/QtTest>
+#include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickimageprovider.h>
@@ -18,18 +19,20 @@
 #include <qfuture.h>
 #endif
 
+#include "deviceloadingimage.h"
+
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 class SlowProvider : public QQuickImageProvider
 {
 public:
-    SlowProvider() : QQuickImageProvider(Pixmap) {}
+    SlowProvider() : QQuickImageProvider(Image) {}
 
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize) override
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override
     {
         const int row = id.toInt();
         qCDebug(lcTests) << requestCount << QThread::currentThread() << "row" << row << requestedSize;
-        QPixmap image(requestedSize);
+        QImage image(requestedSize, QImage::Format_RGB888);
         QPainter painter(&image);
         const QColor c(128, row % 8 * 32, 64);
         painter.fillRect(0, 0, requestedSize.width(), requestedSize.height(), c);
@@ -73,6 +76,7 @@ private slots:
     void dataLeak();
 #endif
     void slowDevice();
+    void slowDeviceInterrupted();
 private:
     QQmlEngine engine;
     TestHTTPServer server;
@@ -139,6 +143,11 @@ void tst_qquickpixmapcache::single()
     QFETCH(bool, incache);
     QFETCH(bool, exists);
     QFETCH(bool, neterror);
+
+#if !QT_CONFIG(qml_network)
+    if (target.scheme() == "http")
+        QSKIP("Skipping due to lack of QML network feature");
+#endif
 
     QString expectedError;
     if (neterror) {
@@ -227,6 +236,11 @@ void tst_qquickpixmapcache::parallel()
     QFETCH(QUrl, target2);
     QFETCH(int, incache);
     QFETCH(int, cancel);
+
+#if !QT_CONFIG(qml_network)
+    if (target1.scheme() == "http" || target2.scheme() == "http")
+        QSKIP("Skipping due to lack of QML network feature");
+#endif
 
     QList<QUrl> targets;
     targets << target1 << target2;
@@ -542,6 +556,8 @@ void tst_qquickpixmapcache::dataLeak()
 */
 void tst_qquickpixmapcache::slowDevice()
 {
+    QSKIP("Crashes: QTBUG-126047");
+
 #ifdef QT_BUILD_INTERNAL
     auto *provider = new SlowProvider;
     engine.addImageProvider("slow", provider); // takes ownership
@@ -560,6 +576,44 @@ void tst_qquickpixmapcache::slowDevice()
     QTRY_COMPARE(QQuickPixmapCache::instance()->referencedCost(), 0);
     const int leakedPixmaps = QQuickPixmapCache::instance()->destroyCache();
     QCOMPARE(leakedPixmaps, 0);
+#else
+    QSKIP("This test relies on private APIs that are only exported in developer-builds");
+#endif
+}
+
+void tst_qquickpixmapcache::slowDeviceInterrupted()
+{
+#ifdef QT_BUILD_INTERNAL
+    auto *provider = new SlowProvider;
+    engine.addImageProvider("slow", provider); // takes ownership
+
+    const QColor secondExpectedColor(128, 50 % 8 * 32, 64);
+
+    {
+        QQuickView window(&engine, nullptr);
+        QVERIFY(QQuickTest::showView(window, testFileUrl("slowLoading.qml")));
+        DeviceLoadingImage *dlimg = qobject_cast<DeviceLoadingImage *>(window.rootObject());
+        QVERIFY(dlimg);
+        // the declared source: "image://slow/200" should take 200 ms to load
+        QTRY_COMPARE(dlimg->status(), QQuickImageBase::Loading);
+        QVERIFY(dlimg->connectSuccess);
+        dlimg->setSource(QUrl("image://slow/50"));
+        QTRY_COMPARE(dlimg->requestsFinished, 2);
+        QCOMPARE(provider->requestCount, 2);
+        QCOMPARE(dlimg->status(), QQuickImageBase::Ready);
+        auto *img_d = static_cast<QQuickImagePrivate *>(QQuickImagePrivate::get(dlimg));
+        QCOMPARE(img_d->currentPix->image().pixelColor({1, 1}), secondExpectedColor);
+        QCOMPARE(QQuickPixmapCache::instance()->m_cache.size(), 2);
+        // Unless CI paused at the wrong time for > 200 ms, we cancelled loading
+        // the first image and switched to the second, so QQuickImageBase::requestFinished()
+        // should have only called swap() once. But if this check ends up being flaky in CI,
+        // it can be be removed.
+        QCOMPARE(img_d->currentPix, &img_d->pix2);
+    } // window goes out of scope: all QQuickPixmapData instances should be eventually unreferenced
+
+    QTRY_COMPARE(QQuickPixmapCache::instance()->referencedCost(), 0);
+    const int leakedPixmaps = QQuickPixmapCache::instance()->destroyCache();
+    QCOMPARE_LE(leakedPixmaps, 0); // -1 if the cache is already destroyed
 #else
     QSKIP("This test relies on private APIs that are only exported in developer-builds");
 #endif

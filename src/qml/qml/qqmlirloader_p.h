@@ -26,7 +26,7 @@ struct Document;
 struct Object;
 }
 
-struct Q_QML_PRIVATE_EXPORT QQmlIRLoader {
+struct Q_QML_EXPORT QQmlIRLoader {
     QQmlIRLoader(const QV4::CompiledData::Unit *unit, QmlIR::Document *output);
 
     void load();

@@ -21,7 +21,6 @@ class QByteArray;
 class QQmlEngine;
 class QQmlComponent;
 class QQmlIncubator;
-class QQmlV4Function;
 class QQmlComponentPrivate;
 class QQmlComponentAttached;
 
@@ -37,10 +36,6 @@ class Q_QML_EXPORT QQmlComponent : public QObject
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged)
     Q_PROPERTY(QUrl url READ url CONSTANT)
-    QML_NAMED_ELEMENT(Component)
-    QML_ADDED_IN_VERSION(2, 0)
-    QML_ATTACHED(QQmlComponentAttached)
-    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
 
 public:
     enum CompilationMode { PreferSynchronous, Asynchronous };
@@ -106,12 +101,12 @@ protected:
 
 #if QT_DEPRECATED_SINCE(6, 3)
     QT_DEPRECATED_X("Use the overload with proper arguments")
-    Q_INVOKABLE void createObject(QQmlV4Function *);
+    Q_INVOKABLE void createObject(QQmlV4FunctionPtr);
 #endif
 
     Q_INVOKABLE QObject *createObject(
             QObject *parent = nullptr, const QVariantMap &properties = {});
-    Q_INVOKABLE void incubateObject(QQmlV4Function *);
+    Q_INVOKABLE void incubateObject(QQmlV4FunctionPtr);
 
 private:
     QQmlComponent(QQmlEngine *, QV4::ExecutableCompilationUnit *compilationUnit, int,
@@ -143,8 +138,6 @@ struct OverridableAttachedType<QQmlComponent, QQmlComponentAttached>
 
 } // namespace QQmlPrivate
 
-
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQmlComponent)
 
 #endif // QQMLCOMPONENT_H

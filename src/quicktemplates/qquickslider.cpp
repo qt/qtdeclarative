@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Slider
     \inherits Control
-//!     \instantiates QQuickSlider
+//!     \nativetype QQuickSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -250,6 +250,8 @@ void QQuickSliderPrivate::itemDestroyed(QQuickItem *item)
 QQuickSlider::QQuickSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickSliderPrivate), parent)
 {
+    Q_D(QQuickSlider);
+    d->setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Fixed);
     setActiveFocusOnTab(true);
 #ifdef Q_OS_MACOS
     setFocusPolicy(Qt::TabFocus);
@@ -533,6 +535,11 @@ void QQuickSlider::setOrientation(Qt::Orientation orientation)
     if (d->orientation == orientation)
         return;
 
+    if (orientation == Qt::Horizontal)
+        d->setSizePolicy(QLayoutPolicy::Expanding, QLayoutPolicy::Fixed);
+    else
+        d->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Expanding);
+
     d->orientation = orientation;
     emit orientationChanged();
 }
@@ -662,7 +669,7 @@ void QQuickSlider::decrease()
 
     This property holds the threshold (in logical pixels) at which a touch drag event will be initiated.
     The mouse drag threshold won't be affected.
-    The default value is \c Qt.styleHints.startDragDistance.
+    The default value is \c Application.styleHints.startDragDistance.
 
     \sa QStyleHints
 */
@@ -830,7 +837,7 @@ void QQuickSlider::wheelEvent(QWheelEvent *event)
     if (d->wheelEnabled) {
         const qreal oldValue = d->value;
         const QPointF angle = event->angleDelta();
-        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : (event->inverted() ? -angle.y() : angle.y())) / int(QWheelEvent::DefaultDeltasPerStep);
+        const qreal delta = (qAbs(angle.y()) < qAbs(angle.x()) ? angle.x() : (event->inverted() ? -angle.y() : angle.y())) / int(QWheelEvent::DefaultDeltasPerStep);
         const qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
         setValue(oldValue + step * delta);
         const bool wasMoved = !qFuzzyCompare(d->value, oldValue);

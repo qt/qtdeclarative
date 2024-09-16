@@ -17,7 +17,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQuickPlatformFileDialog, "qt.quick.dialogs.quickplatformfiledialog")
+Q_STATIC_LOGGING_CATEGORY(lcQuickPlatformFileDialog, "qt.quick.dialogs.quickplatformfiledialog")
 
 /*!
     \class QQuickPlatformFileDialog

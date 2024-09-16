@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 class QRect;
 class QPoint;
 struct QSGAreaAllocatorNode;
-class Q_QUICK_PRIVATE_EXPORT QSGAreaAllocator
+class Q_QUICK_EXPORT QSGAreaAllocator
 {
 public:
     QSGAreaAllocator(const QSize &size);

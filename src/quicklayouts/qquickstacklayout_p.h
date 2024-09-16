@@ -23,11 +23,11 @@ QT_BEGIN_NAMESPACE
 class QQuickStackLayoutPrivate;
 class QQuickStackLayoutAttached;
 
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickStackLayout : public QQuickLayout
+class Q_QUICKLAYOUTS_EXPORT QQuickStackLayout : public QQuickLayout
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
-    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
     QML_NAMED_ELEMENT(StackLayout)
     QML_ADDED_IN_VERSION(1, 3)
     QML_ATTACHED(QQuickStackLayoutAttached)
@@ -99,7 +99,7 @@ private:
     bool explicitCurrentIndex;
 };
 
-class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickStackLayoutAttached : public QObject
+class Q_QUICKLAYOUTS_EXPORT QQuickStackLayoutAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)

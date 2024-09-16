@@ -1,8 +1,8 @@
 GET /json.data HTTP/1.1
-Accept-Language: {{Ignore}}
-Content-Type: application/jsonrequest
-Connection: Keep-Alive{{Ignore}}
-HTTP2-Settings: {{Ignore}}
-Accept-Encoding: {{Ignore}}
-User-Agent: Mozilla/5.0
-Host: {{ServerHostUrl}}
+accept-language: {{Ignore}}
+content-type: application/jsonrequest
+connection: Keep-Alive{{Ignore}}
+http2-settings: {{Ignore}}
+accept-encoding: {{Ignore}}
+user-agent: Mozilla/5.0
+host: {{ServerHostUrl}}

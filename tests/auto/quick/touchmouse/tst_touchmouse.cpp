@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 
 #include <QtTest/QtTest>
@@ -243,6 +243,8 @@ private slots:
     void oneTouchInsideAndOneOutside();
 
     void strayTouchDoesntAutograb();
+
+    void noDoubleClickWithInterveningTouch();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -1303,7 +1305,7 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     QVERIFY(leftItem);
 
     EventItem *rightItem = window.rootObject()->findChild<EventItem*>("rightItem");
-    QVERIFY(leftItem);
+    QVERIFY(rightItem);
 
     // Send a touch to the leftItem. But leftItem accepts only mouse events, thus
     // a mouse event will be synthesized out of this touch and will get accepted by
@@ -1658,6 +1660,58 @@ void tst_TouchMouse::strayTouchDoesntAutograb() // QTBUG-107867
     QCOMPARE(grabMonitor.transitionCount, 1); // no new grab
 
     QTest::touchEvent(&window, device).release(0, p1).release(1, p1);
+}
+
+void tst_TouchMouse::noDoubleClickWithInterveningTouch() // QTBUG-116442
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("twosiblingitems.qml")));
+
+    EventItem *leftItem = window.rootObject()->findChild<EventItem*>("leftItem");
+    QVERIFY(leftItem);
+    // simulate a MouseArea: don't accept touch
+    leftItem->setAcceptedMouseButtons(Qt::LeftButton);
+    leftItem->acceptMouse = true;
+
+    EventItem *rightItem = window.rootObject()->findChild<EventItem*>("rightItem");
+    QVERIFY(rightItem);
+    // simulate an item that reacts to either touch or mouse
+    rightItem->setAcceptedMouseButtons(Qt::LeftButton);
+    rightItem->acceptMouse = true;
+    rightItem->setAcceptTouchEvents(true);
+    rightItem->acceptTouch = true;
+
+    const QPoint pLeft(80, 200);
+    const QPoint pRight(240, 200);
+
+    // tap left
+    QTest::touchEvent(&window, device).press(1, pLeft, &window);
+    QTest::touchEvent(&window, device).release(1, pLeft, &window);
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "left tap" << leftItem->eventList;
+    QCOMPARE(leftItem->eventList.size(), 3);
+    QCOMPARE(leftItem->eventList.at(0).type, QEvent::MouseButtonPress);
+    leftItem->eventList.clear();
+
+    // tap right
+    QTest::touchEvent(&window, device).press(1, pRight, &window);
+    QTest::touchEvent(&window, device).release(1, pRight, &window);
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "right tap" << rightItem->eventList;
+    QCOMPARE(rightItem->eventList.size(), 2);
+    QCOMPARE(rightItem->eventList.at(0).type, QEvent::TouchBegin);
+    rightItem->eventList.clear();
+
+    // tap left again: this is NOT a double-click, even though it's within time and space limits
+    QTest::touchEvent(&window, device).press(3, pLeft, &window);
+    QTest::touchEvent(&window, device).release(3, pLeft, &window);
+    QQuickTouchUtils::flush(&window);
+    qCDebug(lcTests) << "left tap again" << leftItem->eventList;
+    QCOMPARE(leftItem->eventList.size(), 3);
+    QCOMPARE(leftItem->eventList.at(0).type, QEvent::MouseButtonPress);
+    QCOMPARE(leftItem->eventList.at(1).type, QEvent::MouseButtonRelease);
+    QCOMPARE(leftItem->eventList.at(2).type, QEvent::UngrabMouse);
+    leftItem->eventList.clear();
 }
 
 QTEST_MAIN(tst_TouchMouse)

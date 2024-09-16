@@ -11,3 +11,8 @@ qnx
 
 [ComboBox::test_keyClose]
 macos arm ci # QTBUG-102817
+
+# QTBUG-126236
+[Action::test_repeater]
+macos
+linux

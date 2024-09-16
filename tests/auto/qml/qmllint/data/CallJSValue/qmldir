@@ -1,0 +1,3 @@
+module CallJSValue
+typeinfo calljsvalue.qmltypes
+import QtQml

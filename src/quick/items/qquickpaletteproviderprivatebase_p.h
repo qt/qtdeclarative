@@ -345,9 +345,12 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::connectItem()
 
     if constexpr (!isRootWindow<I>()) {
         // Item with palette has the same lifetime as its implementation that inherits this class
-        I::connect(itemWithPalette(), &I::parentChanged , [this]() { inheritPalette(parentPalette(defaultPalette())); });
-        I::connect(itemWithPalette(), &I::windowChanged , [this]() { inheritPalette(parentPalette(defaultPalette())); });
-        I::connect(itemWithPalette(), &I::enabledChanged, [this]() { setCurrentColorGroup(); });
+        I::connect(itemWithPalette(), &I::parentChanged,
+                   itemWithPalette(), [this]() { inheritPalette(parentPalette(defaultPalette())); });
+        I::connect(itemWithPalette(), &I::windowChanged,
+                   itemWithPalette(), [this]() { inheritPalette(parentPalette(defaultPalette())); });
+        I::connect(itemWithPalette(), &I::enabledChanged,
+                   itemWithPalette(), [this]() { setCurrentColorGroup(); });
     }
 }
 

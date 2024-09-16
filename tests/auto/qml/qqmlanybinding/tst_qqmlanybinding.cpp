@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtCore/QScopedPointer>
@@ -39,7 +39,7 @@ static int getRefCount(const QQmlAnyBinding &binding)
     } else {
         // this temporarily adds a refcount because we construc a new untypedpropertybinding
         // thus -1
-        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->ref - 1;
+        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->refCount() - 1;
     }
 }
 

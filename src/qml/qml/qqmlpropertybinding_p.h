@@ -33,7 +33,7 @@ namespace QV4 {
 class QQmlPropertyBinding;
 class QQmlScriptString;
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpression
+class Q_QML_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpression
 {
     bool mustCaptureBindableProperty() const final {return false;}
 
@@ -47,14 +47,14 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpressi
     inline QQmlPropertyBinding const *asBinding() const;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJSForBoundFunction : public QQmlPropertyBindingJS
+class Q_QML_EXPORT QQmlPropertyBindingJSForBoundFunction : public QQmlPropertyBindingJS
 {
 public:
     QV4::ReturnedValue evaluate(bool *isUndefined);
     QV4::PersistentValue m_boundFunction;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlPropertyBinding : public QPropertyBindingPrivate
+class Q_QML_EXPORT QQmlPropertyBinding : public QPropertyBindingPrivate
 
 {
     friend class QQmlPropertyBindingJS;
@@ -220,10 +220,10 @@ inline const QtPrivate::BindingFunctionVTable *bindingFunctionVTableForQQmlPrope
 class QQmlTranslationPropertyBinding
 {
 public:
-    static QUntypedPropertyBinding Q_QML_PRIVATE_EXPORT create(const QQmlPropertyData *pd,
+    static QUntypedPropertyBinding Q_QML_EXPORT create(const QQmlPropertyData *pd,
                                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
                                           const QV4::CompiledData::Binding *binding);
-    static QUntypedPropertyBinding Q_QML_PRIVATE_EXPORT
+    static QUntypedPropertyBinding Q_QML_EXPORT
     create(const QMetaType &pd,
            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
            const QQmlTranslation &translationData);

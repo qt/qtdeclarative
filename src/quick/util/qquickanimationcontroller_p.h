@@ -22,7 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickAnimationControllerPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickAnimationController : public QObject, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickAnimationController)
@@ -33,8 +33,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public 
     QML_NAMED_ELEMENT(AnimationController)
     QML_ADDED_IN_VERSION(2, 0)
 
-    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
-    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged FINAL)
+    Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged)
+    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation NOTIFY animationChanged)
 
 public:
     QQuickAnimationController(QObject *parent=nullptr);
@@ -59,7 +59,5 @@ private Q_SLOTS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickAnimationController)
 
 #endif // QQUICKANIMATIONCONTROLLER_H

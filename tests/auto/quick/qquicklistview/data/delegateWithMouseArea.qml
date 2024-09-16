@@ -17,12 +17,15 @@ ListView {
         width: 500
         height: 500
         color: Qt.rgba(Math.random(), Math.random(), Math.random(), 1)
+        border.width: 4
+        border.color: ma.pressed ? "red" : "white"
         Text {
             text: index
             font.pixelSize: 128
             anchors.centerIn: parent
         }
         MouseArea {
+            id: ma
             anchors.fill: parent
         }
     }

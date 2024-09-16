@@ -41,7 +41,7 @@ static const char *globalProgramName = nullptr;
 static bool loggingStarted = false;
 static QBenchmarkGlobalData globalBenchmarkData;
 
-class Q_QUICK_TEST_EXPORT QuickTestImageObject : public QObject
+class Q_QMLTEST_EXPORT QuickTestImageObject : public QObject
 {
     Q_OBJECT
 
@@ -223,7 +223,8 @@ void QuickTestResult::setFunctionName(const QString &name)
             QString fullName = d->testCaseName + QLatin1String("::") + name;
             QTestResult::setCurrentTestFunction
                 (d->intern(fullName).constData());
-            QTestPrivate::checkBlackLists(fullName.toUtf8().constData(), nullptr);
+            if (QTestPrivate::checkBlackLists(fullName.toUtf8().constData(), nullptr))
+                QTestResult::setBlacklistCurrentTest(true);
         }
     } else {
         QTestResult::setCurrentTestFunction(nullptr);
@@ -252,7 +253,10 @@ void QuickTestResult::setDataTag(const QString &tag)
     if (!tag.isEmpty()) {
         QTestData *data = &(QTest::newRow(tag.toUtf8().constData()));
         QTestResult::setCurrentTestData(data);
-        QTestPrivate::checkBlackLists((testCaseName() + QLatin1String("::") + functionName()).toUtf8().constData(), tag.toUtf8().constData());
+        if (QTestPrivate::checkBlackLists((testCaseName() + QLatin1String("::")
+            + functionName()).toUtf8().constData(), tag.toUtf8().constData())) {
+            QTestResult::setBlacklistCurrentTest(true);
+        }
         emit dataTagChanged();
     } else {
         QTestResult::setCurrentTestData(nullptr);
@@ -500,7 +504,7 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
     return false;
 }
 
-void QuickTestResult::stringify(QQmlV4Function *args)
+void QuickTestResult::stringify(QQmlV4FunctionPtr args)
 {
     if (args->length() < 1)
         args->setReturnValue(QV4::Encode::null());

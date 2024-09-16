@@ -33,6 +33,17 @@ qt_internal_add_test(tst_qquicktextedit
     TESTDATA ${test_data}
 )
 
+# Resources:
+set(resources_resource_files
+    "data/green-16x16.png"
+)
+
+qt_internal_add_resource(tst_qquicktextedit "resources"
+    PREFIX
+        "/"
+    FILES
+        ${resources_resource_files}
+)
 ## Scopes:
 #####################################################################
 

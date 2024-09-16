@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QUrl>
@@ -60,6 +60,7 @@ private slots:
     void jsArrayMethodsWithParams();
     void listIgnoresNull_data() { modeData(); }
     void listIgnoresNull();
+    void consoleLogSyntheticList();
 };
 
 class TestType : public QObject
@@ -862,8 +863,30 @@ void tst_qqmllistreference::compositeListProperty()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("compositeListProp.qml"));
+
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression("Cannot append QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) "
+                                             "to a QML list of AListItem_QMLTYPE_[0-9]+\\*"));
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression("Cannot append QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) "
+                                             "to a QML list of AListItem_QMLTYPE_[0-9]+\\*"));
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression("Cannot insert QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) "
+                                             "into a QML list of AListItem_QMLTYPE_[0-9]+\\*"));
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression("Cannot splice QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) "
+                                             "into a QML list of AListItem_QMLTYPE_[0-9]+\\*"));
+    QTest::ignoreMessage(
+            QtWarningMsg, QRegularExpression("Cannot unshift QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) "
+                                             "into a QML list of AListItem_QMLTYPE_[0-9]+\\*"));
+
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+
+    QQmlListReference list1(object.data(), "items");
+    QCOMPARE(list1.size(), 5);
+    for (qsizetype i = 0; i < 5; ++i)
+        QCOMPARE(list1.at(i), nullptr);
 
     QQmlComponent item(&engine, testFileUrl("AListItem.qml"));
     QScopedPointer<QObject> i1(item.create());
@@ -872,7 +895,6 @@ void tst_qqmllistreference::compositeListProperty()
     QVERIFY(!i2.isNull());
 
     // We know the element type now.
-    QQmlListReference list1(object.data(), "items");
     QVERIFY(list1.listElementType() != nullptr);
     QVERIFY(list1.append(i1.data()));
     QVERIFY(list1.replace(0, i2.data()));
@@ -1080,6 +1102,17 @@ void tst_qqmllistreference::listIgnoresNull()
     }
     QScopedPointer<QObject> object( component.create() );
     QVERIFY(object != nullptr);
+}
+
+void tst_qqmllistreference::consoleLogSyntheticList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("consoleLogSyntheticList.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QTest::ignoreMessage(
+            QtDebugMsg, QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 }
 
 QTEST_MAIN(tst_qqmllistreference)

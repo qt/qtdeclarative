@@ -1,20 +1,18 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qml/qqmlprivate.h"
 #include "qv4function_p.h"
-#include "qv4managed_p.h"
-#include "qv4string_p.h"
-#include "qv4value_p.h"
-#include "qv4engine_p.h"
-#include <private/qv4mm_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4functiontable_p.h>
-#include <assembler/MacroAssemblerCodeRef.h>
-#include <private/qv4vme_moth_p.h>
-#include <private/qqmlglobal_p.h>
-#include <private/qv4jscall_p.h>
+
 #include <private/qqmlpropertycachecreator_p.h>
+#include <private/qqmltype_p_p.h>
+
+#include <private/qv4engine_p.h>
+#include <private/qv4functiontable_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4jscall_p.h>
+#include <private/qv4vme_moth_p.h>
+
+#include <assembler/MacroAssemblerCodeRef.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,14 +59,14 @@ ReturnedValue Function::call(
     switch (kind) {
     case AotCompiled:
         return QV4::convertAndCall(
-                    context->engine(), aotCompiledFunction, thisObject, argv, argc,
+                    context->engine(), &aotCompiledFunction, thisObject, argv, argc,
                     [this, context](
                         QObject *thisObject, void **a, const QMetaType *types, int argc) {
             call(thisObject, a, types, argc, context);
         });
     case JsTyped:
         return QV4::coerceAndCall(
-                    context->engine(), jsTypedFunction, compiledFunction, argv, argc,
+                    context->engine(), &jsTypedFunction, compiledFunction, argv, argc,
                     [this, context, thisObject](const Value *argv, int argc) {
             return doCall(this, thisObject, argv, argc, context);
         });
@@ -91,6 +89,12 @@ void Function::destroy()
     delete this;
 }
 
+void Function::mark(MarkStack *ms)
+{
+    if (internalClass)
+        internalClass->mark(ms);
+}
+
 static bool isSpecificType(const CompiledData::ParameterType &type)
 {
     return type.typeNameIndexOrCommonType()
@@ -100,13 +104,9 @@ static bool isSpecificType(const CompiledData::ParameterType &type)
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                    const CompiledData::Function *function,
                    const QQmlPrivate::AOTCompiledFunction *aotFunction)
-    : FunctionData(unit)
+    : FunctionData(engine, unit)
     , compiledFunction(function)
     , codeData(function->code())
-    , jittedCode(nullptr)
-    , codeRef(nullptr)
-    , aotCompiledFunction(aotFunction)
-    , kind(aotFunction ? AotCompiled : JsUntyped)
 {
     Scope scope(engine);
     Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
@@ -117,24 +117,36 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]), Attr_NotConfigurable);
 
     const CompiledData::Parameter *formalsIndices = compiledFunction->formalsTable();
-    bool enforceJsTypes = !aotFunction && !unit->ignoresFunctionSignature();
+    bool enforceJsTypes = !unit->ignoresFunctionSignature();
 
     for (quint32 i = 0; i < compiledFunction->nFormals; ++i) {
         ic = ic->addMember(engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[formalsIndices[i].nameIndex]), Attr_NotConfigurable);
         if (enforceJsTypes && !isSpecificType(formalsIndices[i].type))
             enforceJsTypes = false;
     }
-    internalClass = ic->d();
+    internalClass.set(engine, ic->d());
 
     nFormals = compiledFunction->nFormals;
+
+    if (!enforceJsTypes)
+        return;
+
+    if (aotFunction) {
+        aotCompiledCode = aotFunction->functionPtr;
+        new (&aotCompiledFunction) AOTCompiledFunction;
+        kind = AotCompiled;
+        aotCompiledFunction.types.resize(aotFunction->numArguments + 1);
+        aotFunction->signature(unit, aotCompiledFunction.types.data());
+        return;
+    }
 
     // If a function has any typed arguments, but an untyped return value, the return value is void.
     // If it doesn't have any arguments at all and the return value is untyped, the function is
     // untyped. Users can specifically set the return type to "void" to have it enforced.
-    if (!enforceJsTypes || (nFormals == 0 && !isSpecificType(compiledFunction->returnType)))
+    if (nFormals == 0 && !isSpecificType(compiledFunction->returnType))
         return;
 
-    JSTypedFunction *synthesized = new JSTypedFunction;
+    QQmlTypeLoader *typeLoader = engine->typeLoader();
 
     auto findQmlType = [&](const CompiledData::ParameterType &param) {
         const quint32 type = param.typeNameIndexOrCommonType();
@@ -143,29 +155,21 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                 QV4::CompiledData::CommonType(type)));
         }
 
-        if (type == 0)
+        if (type == 0 || !typeLoader)
             return QQmlType();
 
-        const QQmlType qmltype = unit->typeNameCache->query<QQmlImport::AllowRecursion>(
-                                                            unit->stringAt(type)).type;
-        if (!qmltype.isValid() || qmltype.typeId().isValid())
-            return qmltype;
-
-        if (!qmltype.isComposite()) {
-            return qmltype.isInlineComponentType()
-                ? unit->qmlTypeForComponent(qmltype.elementName())
-                : QQmlType();
-        }
-
-        return qmltype;
+        const auto &base = unit->baseCompilationUnit();
+        const QQmlType qmltype = QQmlTypePrivate::compositeQmlType(
+                base, typeLoader, base->stringAt(type));
+        return qmltype.typeId().isValid() ? qmltype : QQmlType();
     };
 
-    for (quint16 i = 0; i < nFormals; ++i)
-        synthesized->argumentTypes.append(findQmlType(formalsIndices[i].type));
-
-    synthesized->returnType = findQmlType(compiledFunction->returnType);
-    jsTypedFunction = synthesized;
+    new (&jsTypedFunction) JSTypedFunction;
     kind = JsTyped;
+    jsTypedFunction.types.reserve(nFormals + 1);
+    jsTypedFunction.types.append(findQmlType(compiledFunction->returnType));
+    for (quint16 i = 0; i < nFormals; ++i)
+        jsTypedFunction.types.append(findQmlType(formalsIndices[i].type));
 }
 
 Function::~Function()
@@ -174,8 +178,18 @@ Function::~Function()
         destroyFunctionTable(this, codeRef);
         delete codeRef;
     }
-    if (kind == JsTyped)
-        delete jsTypedFunction;
+
+    switch (kind) {
+    case JsTyped:
+        jsTypedFunction.~JSTypedFunction();
+        break;
+    case AotCompiled:
+        aotCompiledFunction.~AOTCompiledFunction();
+        break;
+    case JsUntyped:
+    case Eval:
+        break;
+    }
 }
 
 void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters)
@@ -206,22 +220,23 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
 
     }
 
-    internalClass = engine->internalClasses(EngineBase::Class_CallContext);
+    Scope scope(engine);
+    Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));
 
     // first locals
     const quint32_le *localsIndices = compiledFunction->localsTable();
     for (quint32 i = 0; i < compiledFunction->nLocals; ++i) {
-        internalClass = internalClass->addMember(
+        ic = ic->addMember(
                 engine->identifierTable->asPropertyKey(compilationUnit->runtimeStrings[localsIndices[i]]),
                 Attr_NotConfigurable);
     }
 
-    Scope scope(engine);
     ScopedString arg(scope);
     for (const QString &parameterName : parameterNames) {
         arg = engine->newIdentifier(parameterName);
-        internalClass = internalClass->addMember(arg->propertyKey(), Attr_NotConfigurable);
+        ic = ic->addMember(arg->propertyKey(), Attr_NotConfigurable);
     }
+    internalClass.set(engine, ic->d());
     nFormals = parameters.size();
 }
 
@@ -240,6 +255,11 @@ QQmlSourceLocation Function::sourceLocation() const
 {
     return QQmlSourceLocation(
             sourceFile(), compiledFunction->location.line(), compiledFunction->location.column());
+}
+
+FunctionData::FunctionData(EngineBase *engine, ExecutableCompilationUnit *compilationUnit_)
+{
+    compilationUnit.set(engine, compilationUnit_);
 }
 
 } // namespace QV4

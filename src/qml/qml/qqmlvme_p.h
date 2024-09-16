@@ -48,7 +48,7 @@ private:
     std::atomic<bool> *runWhile = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlVME
+class Q_QML_EXPORT QQmlVME
 {
 public:
     static void enableComponentComplete();

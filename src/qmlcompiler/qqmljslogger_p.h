@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qcoloroutput_p.h"
 #include "qqmljsloggingutils_p.h"
@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
     \internal
     Used to print the line containing the location of a certain error
  */
-class Q_QMLCOMPILER_PRIVATE_EXPORT IssueLocationWithContext
+class Q_QMLCOMPILER_EXPORT IssueLocationWithContext
 {
 public:
     /*!
@@ -71,7 +71,7 @@ private:
     QStringView m_afterText;
 };
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSFixSuggestion
+class Q_QMLCOMPILER_EXPORT QQmlJSFixSuggestion
 {
 public:
     QQmlJSFixSuggestion() = default;
@@ -111,7 +111,7 @@ struct Message : public QQmlJS::DiagnosticMessage
     std::optional<QQmlJSFixSuggestion> fixSuggestion;
 };
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLogger
+class Q_QMLCOMPILER_EXPORT QQmlJSLogger
 {
     Q_DISABLE_COPY_MOVE(QQmlJSLogger)
 public:

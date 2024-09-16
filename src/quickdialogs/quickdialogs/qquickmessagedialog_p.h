@@ -19,7 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickMessageDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_EXPORT QQuickMessageDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
 
@@ -63,13 +63,13 @@ private Q_SLOTS:
 protected:
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
+    int dialogCode() const override;
 
 private:
     QSharedPointer<QMessageDialogOptions> m_options;
+    QPlatformDialogHelper::ButtonRole m_roleOfLastButtonPressed = QPlatformDialogHelper::NoRole;
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickMessageDialog)
 
 #endif // QQUICKMESSAGEDIALOG_P_H

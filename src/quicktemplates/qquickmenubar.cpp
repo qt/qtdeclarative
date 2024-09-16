@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBar
     \inherits Container
-//!     \instantiates QQuickMenuBar
+//!     \nativetype QQuickMenuBar
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols-menus
@@ -42,16 +42,29 @@ QT_BEGIN_NAMESPACE
     \l {removeMenu}{remove}, and \l {takeMenu}{take} menus dynamically. The
     menus in a menu bar can be accessed using \l menuAt().
 
+    \section1 Native menu bars
+
+    Since Qt 6.8, a MenuBar is implemented as a native menu bar on \macos. As a
+    result, all Menus, MenuItems and MenuBarItems within a MenuBar will also be native.
+    While this has the advantage that everything will look native, it also comes with the
+    disadvantage that the delegates set on the mentioned controls will not be used
+    for rendering.
+    If a native MenuBar is not wanted, you can set
+    \l {Qt::AA_DontUseNativeMenuBar}{QGuiApplication::setAttribute(Qt::AA_DontUseNativeMenuBar)}
+    to disable it.
+
     \sa {Customizing MenuBar}, Menu, MenuBarItem, {Menu Controls},
         {Focus Management in Qt Quick Controls}
 */
 
-QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
+Q_STATIC_LOGGING_CATEGORY(lcMenuBar, "qt.quick.controls.menubar")
+
+static const char* kCreatedFromDelegate = "_qt_createdFromDelegate";
+
+QQuickItem *QQuickMenuBarPrivate::createItemFromDelegate()
 {
     Q_Q(QQuickMenuBar);
-    if (!delegate)
-        return nullptr;
-
+    Q_ASSERT(delegate);
     QQmlContext *context = delegate->creationContext();
     if (!context)
         context = qmlContext(q);
@@ -63,45 +76,94 @@ QQuickItem *QQuickMenuBarPrivate::beginCreateItem(QQuickMenu *menu)
         return nullptr;
     }
 
-    if (QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item))
-        menuBarItem->setMenu(menu);
-    item->setParentItem(q);
     QQml_setParent_noEvent(item, q);
-
-    return item;
-}
-
-void QQuickMenuBarPrivate::completeCreateItem()
-{
-    if (!delegate)
-        return;
-
     delegate->completeCreate();
-}
 
-QQuickItem *QQuickMenuBarPrivate::createItem(QQuickMenu *menu)
-{
-    QQuickItem *item = beginCreateItem(menu);
-    completeCreateItem();
     return item;
 }
 
-void QQuickMenuBarPrivate::toggleCurrentMenu(bool visible, bool activate)
+QQuickMenuBarItem *QQuickMenuBarPrivate::createMenuBarItem(QQuickMenu *menu)
 {
-    if (!currentItem || visible == popupMode)
+    Q_Q(QQuickMenuBar);
+
+    QQuickMenuBarItem *menuBarItem = nullptr;
+    if (delegate) {
+        QQuickItem *item = createItemFromDelegate();
+        menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+        if (!menuBarItem) {
+            qmlWarning(q) << "cannot insert menu: the delegate is not a MenuBarItem.";
+            delete item;
+        }
+    }
+
+    if (!menuBarItem) {
+        // When we fail to create a delegate item, create a hidden placeholder
+        // instead. This is needed, since we store the menus inside the container
+        // using MenuBarItem. And without a MenuBarItem, we would therefore lose
+        // the menu, even if the delegate is changed later.
+        qCDebug(lcMenuBar) << "creating hidden placeholder MenuBarItem for:" << menu->title();
+        menuBarItem = new QQuickMenuBarItem(q);
+        menuBarItem->setParentItem(q);
+        menuBarItem->setVisible(false);
+    }
+
+    menuBarItem->setMenu(menu);
+
+    // Tag the menuBarItem, so that we know which container items to change if the
+    // delegate is changed. This is needed since you can add MenuBarItems directly
+    // to the menu bar, which should not change when the delegate changes.
+    menuBarItem->setProperty(kCreatedFromDelegate, true);
+
+    return menuBarItem;
+}
+
+void QQuickMenuBarPrivate::openCurrentMenu()
+{
+    if (!currentItem || currentMenuOpen)
+        return;
+    QQuickMenu *menu = currentItem->menu();
+    if (!menu || menu->isOpened())
         return;
 
-    QQuickMenu *menu = currentItem->menu();
+#ifdef Q_OS_MACOS
+    // On macOS, the menu should open underneath the MenuBar
+    Q_Q(QQuickMenuBar);
+    const QPointF posInParentItem = q->mapToItem(currentItem, {currentItem->x(), q->height()});
+#else
+    // On other platforms, it should open underneath the MenuBarItem
+    const QPointF posInParentItem{0, currentItem->y() + currentItem->height()};
+#endif
 
-    triggering = true;
-    popupMode = visible;
-    if (menu)
-        menu->setVisible(visible);
-    if (!visible)
-        currentItem->forceActiveFocus();
-    else if (menu && activate)
-        menu->setCurrentIndex(0);
-    triggering = false;
+    // Store explicit if the current menu is logically supposed to be open.
+    // menu->isVisible() is async when using top-level menus, and will not become
+    // "true" before the menu is actually shown by the OS. This will cause us to
+    // lose track of if a menu is (supposed to be) open, if relying on menu->isVisible().
+    currentMenuOpen = true;
+
+    // The position should be the coordinate system of the parent item. Note that
+    // the parentItem() of a menu will be the MenuBarItem (currentItem), and not the
+    // MenuBar (even if parent() usually points to the MenuBar).
+    menu->popup(posInParentItem);
+}
+
+void QQuickMenuBarPrivate::closeCurrentMenu()
+{
+    if (!currentItem || !currentMenuOpen)
+        return;
+    currentMenuOpen = false;
+    QQuickMenu *menu = currentItem->menu();
+    QScopedValueRollback triggerRollback(closingCurrentMenu, true);
+    menu->dismiss();
+}
+
+void QQuickMenuBarPrivate::activateMenuItem(int index)
+{
+    if (!currentItem)
+        return;
+    QQuickMenu *menu = currentItem->menu();
+    if (!menu)
+        return;
+    menu->setCurrentIndex(index);
 }
 
 void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
@@ -109,23 +171,20 @@ void QQuickMenuBarPrivate::activateItem(QQuickMenuBarItem *item)
     if (currentItem == item)
         return;
 
+    const bool stayOpen = currentMenuOpen;
+
     if (currentItem) {
         currentItem->setHighlighted(false);
-        if (popupMode) {
-            if (QQuickMenu *menu = currentItem->menu())
-                menu->dismiss();
-        }
-    }
-
-    if (item) {
-        item->setHighlighted(true);
-        if (popupMode) {
-            if (QQuickMenu *menu = item->menu())
-                menu->open();
-        }
+        closeCurrentMenu();
     }
 
     currentItem = item;
+
+    if (currentItem) {
+        currentItem->setHighlighted(true);
+        if (stayOpen)
+            openCurrentMenu();
+    }
 }
 
 void QQuickMenuBarPrivate::activateNextItem()
@@ -162,19 +221,34 @@ void QQuickMenuBarPrivate::onItemTriggered()
         return;
 
     if (item == currentItem) {
-        toggleCurrentMenu(!popupMode, false);
+        if (currentMenuOpen) {
+            closeCurrentMenu();
+            currentItem->forceActiveFocus();
+        } else {
+            openCurrentMenu();
+        }
     } else {
-        popupMode = true;
         activateItem(item);
+        openCurrentMenu();
     }
 }
 
-void QQuickMenuBarPrivate::onMenuAboutToHide()
+void QQuickMenuBarPrivate::onMenuAboutToHide(QQuickMenu *menu)
 {
-    if (triggering || !currentItem || !currentItem->isHighlighted())
+    if (closingCurrentMenu) {
+        // We only react on a menu closing if it's
+        // initiated from outside of QQuickMenuBar.
+        return;
+    }
+
+    if (!currentItem || currentItem->menu() != menu)
         return;
 
-    popupMode = false;
+    currentMenuOpen = false;
+
+    if (!currentItem->isHighlighted() || currentItem->isHovered())
+        return;
+
     activateItem(nullptr);
 }
 
@@ -220,14 +294,32 @@ void QQuickMenuBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
 
 void QQuickMenuBarPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObject *obj)
 {
-    QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
-    if (QQuickMenu *menu = qobject_cast<QQuickMenu *>(obj))
-        obj = QQuickMenuBarPrivate::get(menuBar)->createItem(menu);
+    auto menuBar = static_cast<QQuickMenuBar *>(prop->object);
+    auto menuBarPriv = QQuickMenuBarPrivate::get(menuBar);
+
+    if (auto *menu = qobject_cast<QQuickMenu *>(obj)) {
+        QQuickMenuBarItem *delegateItem = menuBarPriv->createMenuBarItem(menu);
+        menuBarPriv->insertMenu(menuBar->count(), menu, delegateItem);
+        QQuickContainerPrivate::contentData_append(prop, delegateItem);
+        return;
+    }
+
+    if (auto *menuBarItem = qobject_cast<QQuickMenuBarItem *>(obj)) {
+        menuBarPriv->insertMenu(menuBar->count(), menuBarItem->menu(), menuBarItem);
+        QQuickContainerPrivate::contentData_append(prop, menuBarItem);
+        return;
+    }
+
     QQuickContainerPrivate::contentData_append(prop, obj);
 }
 
 void QQuickMenuBarPrivate::menus_append(QQmlListProperty<QQuickMenu> *prop, QQuickMenu *obj)
 {
+    // This function is only called if the application assigns a list of menus
+    // directly to the 'menus' property. Otherwise, contentData_append is used.
+    // Since the functions belonging to the 'menus' list anyway returns data from
+    // the menuBar, calls such as "menuBar.menus.length" works as expected
+    // regardless of how the menus were added.
     QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
     menuBar->addMenu(obj);
 }
@@ -255,6 +347,285 @@ QPalette QQuickMenuBarPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::MenuBar);
 }
 
+QWindow* QQuickMenuBarPrivate::window() const
+{
+    Q_Q(const QQuickMenuBar);
+    QObject *obj = q->parent();
+    while (obj) {
+        if (QWindow *window = qobject_cast<QWindow *>(obj))
+            return window;
+        QQuickItem *item = qobject_cast<QQuickItem *>(obj);
+        if (item && item->window())
+            return item->window();
+        obj = obj->parent();
+    }
+    return nullptr;
+}
+
+int QQuickMenuBarPrivate::menuIndex(QQuickMenu *menu) const
+{
+    Q_Q(const QQuickMenuBar);
+    for (int i = 0; i < q->count(); ++i) {
+        if (q->menuAt(i) == menu)
+            return i;
+    }
+
+    return -1;
+}
+
+QPlatformMenuBar* QQuickMenuBarPrivate::nativeHandle() const
+{
+    return handle.get();
+}
+
+void QQuickMenuBarPrivate::insertNativeMenu(QQuickMenu *menu)
+{
+    Q_Q(QQuickMenuBar);
+    Q_ASSERT(handle);
+    Q_ASSERT(menu);
+
+    QPlatformMenu *insertBeforeHandle = nullptr;
+
+    // This function assumes that the QQuickMenuBarItem that corresponds to \a menu
+    // has already been added to the container at the correct index. So we search for
+    // it, to determine where to insert it in the native menubar. Since the QPA API
+    // expects a pointer to the QPlatformMenu that comes after it, we need to search
+    // for that one as well, since some MenuBarItems in the container can be hidden.
+    bool foundInContainer = false;
+    for (int i = 0; i < q->count(); ++i) {
+        if (q->menuAt(i) != menu)
+            continue;
+        foundInContainer = true;
+
+        for (int j = i + 1; j < q->count(); ++j) {
+            insertBeforeHandle = QQuickMenuPrivate::get(q->menuAt(j))->maybeNativeHandle();
+            if (insertBeforeHandle)
+                break;
+        }
+
+        break;
+    }
+
+    Q_ASSERT(foundInContainer);
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    if (QPlatformMenu *menuHandle = menuPrivate->nativeHandle()) {
+        qCDebug(lcMenuBar) << "insert native menu:" << menu->title() << menuHandle << "before:" << insertBeforeHandle;
+        handle->insertMenu(menuPrivate->nativeHandle(), insertBeforeHandle);
+    } else {
+        qmlWarning(q) << "failed to create native menu for:" << menu->title();
+    }
+}
+
+void QQuickMenuBarPrivate::removeNativeMenu(QQuickMenu *menu)
+{
+    Q_ASSERT(handle);
+    Q_ASSERT(menu);
+
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+    if (!menuPrivate->maybeNativeHandle())
+        return;
+
+    qCDebug(lcMenuBar) << "remove native menu:" << menu << menu->title();
+    handle->removeMenu(menuPrivate->nativeHandle());
+    menuPrivate->removeNativeMenu();
+}
+
+void QQuickMenuBarPrivate::syncMenuBarItemVisibilty(QQuickMenuBarItem *menuBarItem)
+{
+    if (!handle) {
+        // We only need to update visibility on native menu bar items
+        return;
+    }
+
+    QQuickMenu *menu = menuBarItem->menu();
+    if (!menu)
+        return;
+    QQuickMenuPrivate *menuPrivate = QQuickMenuPrivate::get(menu);
+
+    if (menuBarItem->isVisible()) {
+        Q_ASSERT(!menuPrivate->maybeNativeHandle());
+        insertNativeMenu(menu);
+    } else {
+        if (menuPrivate->maybeNativeHandle())
+            removeNativeMenu(menu);
+    }
+}
+
+void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickMenuBarItem *menuBarItem)
+{
+    Q_Q(QQuickMenuBar);
+    if (!menu) {
+        qmlWarning(q) << "cannot insert menu: menu is null.";
+        return;
+    }
+
+    auto menuPrivate = QQuickMenuPrivate::get(menu);
+    menuPrivate->menuBar = q;
+
+    QObject::connect(menuBarItem, &QQuickMenuBarItem::visibleChanged, [this, menuBarItem]{
+        syncMenuBarItemVisibilty(menuBarItem);
+    });
+
+    // Always insert menu into the container, even when using a native
+    // menubar, so that container API such as 'count' and 'itemAt'
+    // continues to work as expected.
+    q->insertItem(index, menuBarItem);
+
+    // Create or remove a native (QPlatformMenu) menu. Note that we should only create
+    // a native menu if it's supposed to be visible in the menu bar.
+    if (menuBarItem->isVisible()) {
+        if (handle)
+            insertNativeMenu(menu);
+    } else {
+        if (menuPrivate->maybeNativeHandle()) {
+            // If the menu was added from an explicit call to addMenu(m), it will have been
+            // created before we enter here. And in that case, QQuickMenuBar::useNativeMenu(m)
+            // was never called, and a QPlatformMenu might have been created for it. In that
+            // case, we remove it again now, since the menu is not supposed to be visible in
+            // the menu bar.
+            menuPrivate->removeNativeMenu();
+        }
+    }
+}
+
+QQuickMenu *QQuickMenuBarPrivate::takeMenu(int index)
+{
+    Q_Q(QQuickMenuBar);
+    QQuickItem *item = q->itemAt(index);
+    Q_ASSERT(item);
+    QQuickMenuBarItem *menuBarItem = qobject_cast<QQuickMenuBarItem *>(item);
+    if (!menuBarItem) {
+        qmlWarning(q) << "cannot take/remove menu: item at index " << index << " is not a MenuBarItem.";
+        return nullptr;
+    }
+    QQuickMenu *menu = menuBarItem->menu();
+    if (!menu) {
+        qmlWarning(q) << "cannot take/remove menu: MenuBarItem.menu at index " << index << " is null.";
+        return nullptr;
+    }
+
+    // Dismiss the menu if it's open. Otherwise, when we now remove it from
+    // the menubar, it will stay open without the user being able to dismiss
+    // it (at least if it's non-native).
+    menu->dismiss();
+
+    if (item == currentItem)
+        activateItem(nullptr);
+
+    if (QQuickMenuPrivate::get(menu)->maybeNativeHandle())
+        removeNativeMenu(menu);
+
+    removeItem(index, item);
+
+    // Delete the MenuBarItem. This will also cause the menu to be deleted by
+    // the garbage collector, unless other QML references are being held to it.
+    // Note: We might consider leaving it to the garbage collector to also
+    // delete the MenuBarItem in the future.
+    item->deleteLater();
+
+    QQuickMenuPrivate::get(menu)->menuBar = nullptr;
+    menuBarItem->disconnect(q);
+
+    return menu;
+}
+
+bool QQuickMenuBarPrivate::useNativeMenuBar() const
+{
+    // We current only use native menu bars on macOS. Especially, the
+    // QPA menu bar for Windows is old and unused, and looks broken and non-native.
+#ifdef Q_OS_MACOS
+    return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeMenuBar);
+#else
+    return false;
+#endif
+}
+
+bool QQuickMenuBarPrivate::useNativeMenu(const QQuickMenu *menu) const
+{
+    Q_Q(const QQuickMenuBar);
+    if (!useNativeMenuBar())
+        return false;
+
+    // Since we cannot hide a QPlatformMenu, we have to avoid
+    // creating it if it shouldn't be visible in the menu bar.
+    for (int i = 0; i < q->count(); ++i) {
+        if (q->menuAt(i) == menu) {
+            QQuickItem *itemAtI = itemAt(i);
+            return itemAtI && itemAtI->isVisible();
+        }
+    }
+
+    return true;
+}
+
+void QQuickMenuBarPrivate::syncNativeMenuBarVisible()
+{
+    Q_Q(QQuickMenuBar);
+    if (!componentComplete)
+        return;
+
+    const bool shouldBeVisible = q->isVisible() && useNativeMenuBar();
+    qCDebug(lcMenuBar) << "syncNativeMenuBarVisible called - q->isVisible()" << q->isVisible()
+        << "useNativeMenuBar()" << useNativeMenuBar() << "handle" << handle.get();
+    if (shouldBeVisible && !handle)
+        createNativeMenuBar();
+    else if (!shouldBeVisible && handle)
+        removeNativeMenuBar();
+}
+
+void QQuickMenuBarPrivate::createNativeMenuBar()
+{
+    Q_Q(QQuickMenuBar);
+    Q_ASSERT(!handle);
+    qCDebug(lcMenuBar) << "creating native menubar";
+
+    handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformMenuBar());
+    if (!handle) {
+        qCDebug(lcMenuBar) << "QPlatformTheme failed to create a QPlatformMenuBar!";
+        return;
+    }
+
+    handle->handleReparent(window());
+    qCDebug(lcMenuBar) << "native menubar parented to window:" << handle->parentWindow();
+
+    // Add all the native menus. We need to do this right-to-left
+    // because of the QPA API (insertBefore).
+    for (int i = q->count() - 1; i >= 0; --i) {
+        if (QQuickMenu *menu = q->menuAt(i)) {
+            if (useNativeMenu(menu))
+                insertNativeMenu(menu);
+        }
+    }
+
+    // Hide the non-native menubar and set it's height to 0. The
+    // latter will cause a relayout to happen in ApplicationWindow
+    // which effectively removes the menubar from the contentItem.
+     setCulled(true);
+     q->setHeight(0);
+}
+
+void QQuickMenuBarPrivate::removeNativeMenuBar()
+{
+    Q_Q(QQuickMenuBar);
+    Q_ASSERT(handle);
+    qCDebug(lcMenuBar) << "removing native menubar";
+
+    // Remove all native menus.
+    for (int i = 0; i < q->count(); ++i) {
+        if (QQuickMenu *menu = q->menuAt(i))
+            removeNativeMenu(menu);
+    }
+
+    // Delete the menubar
+    handle.reset();
+
+    // Show the non-native menubar and reset it's height. The
+    // latter will cause a relayout to happen in ApplicationWindow
+    // which will effectively add the menubar to the contentItem.
+    setCulled(false);
+    q->resetHeight();
+}
+
 QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
     : QQuickContainer(*(new QQuickMenuBarPrivate), parent)
 {
@@ -262,6 +633,13 @@ QQuickMenuBar::QQuickMenuBar(QQuickItem *parent)
     d->changeTypes |= QQuickItemPrivate::Geometry;
     setFlag(ItemIsFocusScope);
     setFocusPolicy(Qt::ClickFocus);
+}
+
+QQuickMenuBar::~QQuickMenuBar()
+{
+    Q_D(QQuickMenuBar);
+    if (d->handle)
+        d->removeNativeMenuBar();
 }
 
 /*!
@@ -285,6 +663,21 @@ void QQuickMenuBar::setDelegate(QQmlComponent *delegate)
         return;
 
     d->delegate = delegate;
+
+    for (int i = count() - 1; i >= 0; --i) {
+        auto item = itemAt(i);
+        if (!item || !item->property(kCreatedFromDelegate).toBool())
+            continue;
+
+        QQuickMenuBarItem *menuBarItem = static_cast<QQuickMenuBarItem *>(item);
+        if (QQuickMenu *menu = menuBarItem->menu()) {
+            removeMenu(menu);
+            d->insertMenu(i, menu, d->createMenuBarItem(menu));
+        } else {
+            removeItem(menuBarItem);
+        }
+    }
+
     emit delegateChanged();
 }
 
@@ -310,7 +703,12 @@ QQuickMenu *QQuickMenuBar::menuAt(int index) const
 void QQuickMenuBar::addMenu(QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
-    addItem(d->createItem(menu));
+    if (d->menuIndex(menu) >= 0) {
+        qmlWarning(this) << "cannot add menu: '" << menu->title() << "' is already in the MenuBar.";
+        return;
+    }
+
+    d->insertMenu(count(), menu, d->createMenuBarItem(menu));
 }
 
 /*!
@@ -321,54 +719,52 @@ void QQuickMenuBar::addMenu(QQuickMenu *menu)
 void QQuickMenuBar::insertMenu(int index, QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
-    insertItem(index, d->createItem(menu));
+    if (d->menuIndex(menu) >= 0) {
+        qmlWarning(this) << "cannot insert menu: '" << menu->title() << "' is already in the MenuBar.";
+        return;
+    }
+
+    d->insertMenu(index, menu, d->createMenuBarItem(menu));
 }
 
 /*!
     \qmlmethod void QtQuick.Controls::MenuBar::removeMenu(Menu menu)
 
-    Removes and destroys the specified \a menu.
+    Removes specified \a menu. If the menu is \l {Menu::popup()}{open},
+    it will first be \l {Menu::dismiss()}{dismissed}.
+    The \a menu will eventually be deleted by the garbage collector when the
+    application no longer holds any QML references to it.
 */
 void QQuickMenuBar::removeMenu(QQuickMenu *menu)
 {
     Q_D(QQuickMenuBar);
-    if (!menu)
+    const int index = d->menuIndex(menu);
+    if (index < 0) {
+        qmlWarning(this) << "cannot remove menu: '" << menu->title() << "' is not in the MenuBar.";
         return;
-
-    const int count = d->contentModel->count();
-    for (int i = 0; i < count; ++i) {
-        QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(itemAt(i));
-        if (!item || item->menu() != menu)
-            continue;
-
-        removeItem(item);
-        break;
     }
 
-    menu->deleteLater();
+    d->takeMenu(index);
 }
 
 /*!
     \qmlmethod Menu QtQuick.Controls::MenuBar::takeMenu(int index)
 
-    Removes and returns the menu at \a index.
-
-    \note The ownership of the item is transferred to the caller.
+    Removes and returns the menu at \a index. If the menu is
+    \l {Menu::popup()}{open}, it will first be
+    \l {Menu::dismiss()}{dismissed}.
+    The menu will eventually be deleted by the garbage collector when the
+    application no longer holds any QML references to it.
 */
 QQuickMenu *QQuickMenuBar::takeMenu(int index)
 {
     Q_D(QQuickMenuBar);
-    QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(itemAt(index));
-    if (!item)
+    if (index < 0 || index > count() - 1) {
+        qmlWarning(this) << "index out of range: " << index;
         return nullptr;
+    }
 
-    QQuickMenu *menu = item->menu();
-    if (!menu)
-        return nullptr;
-
-    d->removeItem(index, item);
-    item->deleteLater();
-    return menu;
+    return d->takeMenu(index);
 }
 
 /*!
@@ -488,11 +884,12 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
 
     switch (event->key()) {
     case Qt::Key_Up:
-        d->toggleCurrentMenu(false, false);
+        d->closeCurrentMenu();
         break;
 
     case Qt::Key_Down:
-        d->toggleCurrentMenu(true, true);
+        d->openCurrentMenu();
+        d->activateMenuItem(0);
         break;
 
     case Qt::Key_Left:
@@ -517,7 +914,8 @@ void QQuickMenuBar::keyPressEvent(QKeyEvent *event)
                 if (auto *item = qobject_cast<QQuickMenuBarItem *>(d->itemAt(i))) {
                     if (item->shortcut() == mnemonic) {
                         d->activateItem(item);
-                        d->toggleCurrentMenu(true, true);
+                        d->openCurrentMenu();
+                        d->activateMenuItem(0);
                     }
                 }
             }
@@ -550,7 +948,7 @@ void QQuickMenuBar::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickMenuBar);
     QQuickContainer::hoverLeaveEvent(event);
-    if (!d->popupMode && d->currentItem)
+    if (!d->currentMenuOpen && d->currentItem)
         d->activateItem(nullptr);
 }
 
@@ -573,6 +971,10 @@ void QQuickMenuBar::itemChange(QQuickItem::ItemChange change, const QQuickItem::
                 d->windowContentItem->installEventFilter(this);
         }
         break;
+    case ItemVisibleHasChanged:
+        qCDebug(lcMenuBar) << "visibility of" << this << "changed to" << isVisible();
+        d->syncNativeMenuBarVisible();
+        break;
     default:
         break;
     }
@@ -587,7 +989,7 @@ void QQuickMenuBar::itemAdded(int index, QQuickItem *item)
         QObjectPrivate::connect(menuBarItem, &QQuickControl::hoveredChanged, d, &QQuickMenuBarPrivate::onItemHovered);
         QObjectPrivate::connect(menuBarItem, &QQuickMenuBarItem::triggered, d, &QQuickMenuBarPrivate::onItemTriggered);
         if (QQuickMenu *menu = menuBarItem->menu())
-            QObjectPrivate::connect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
+            connect(menu, &QQuickPopup::aboutToHide, [this, menu]{ d_func()->onMenuAboutToHide(menu); });
     }
     d->updateImplicitContentSize();
     emit menusChanged();
@@ -608,10 +1010,17 @@ void QQuickMenuBar::itemRemoved(int index, QQuickItem *item)
         QObjectPrivate::disconnect(menuBarItem, &QQuickControl::hoveredChanged, d, &QQuickMenuBarPrivate::onItemHovered);
         QObjectPrivate::disconnect(menuBarItem, &QQuickMenuBarItem::triggered, d, &QQuickMenuBarPrivate::onItemTriggered);
         if (QQuickMenu *menu = menuBarItem->menu())
-            QObjectPrivate::disconnect(menu, &QQuickPopup::aboutToHide, d, &QQuickMenuBarPrivate::onMenuAboutToHide);
+            menu->disconnect(this);
     }
     d->updateImplicitContentSize();
     emit menusChanged();
+}
+
+void QQuickMenuBar::componentComplete()
+{
+    Q_D(QQuickMenuBar);
+    QQuickContainer::componentComplete();
+    d->syncNativeMenuBarVisible();
 }
 
 QFont QQuickMenuBar::defaultFont() const

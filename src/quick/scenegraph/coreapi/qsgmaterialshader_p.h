@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QRhiSampler;
 
-class Q_QUICK_PRIVATE_EXPORT QSGMaterialShaderPrivate
+class Q_QUICK_EXPORT QSGMaterialShaderPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QSGMaterialShader)

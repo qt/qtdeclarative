@@ -88,8 +88,8 @@ bool ResolvedTypeReference::addToHash(
     }
     if (!m_compilationUnit)
         return false;
-    hash->addData({m_compilationUnit->data->md5Checksum,
-                  sizeof(m_compilationUnit->data->md5Checksum)});
+    hash->addData({m_compilationUnit->unitData()->md5Checksum,
+                  sizeof(m_compilationUnit->unitData()->md5Checksum)});
     return true;
 }
 

@@ -22,7 +22,7 @@
 using namespace QV4;
 using namespace Qt::Literals::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcJavaScriptGlobals, "qt.qml.js.globals")
+Q_STATIC_LOGGING_CATEGORY(lcJavaScriptGlobals, "qt.qml.js.globals")
 
 DEFINE_OBJECT_VTABLE(Object);
 
@@ -42,8 +42,11 @@ void Object::setInternalClass(Heap::InternalClass *ic)
         // Pick the members of the old IC that are still valid in the new IC.
         // Order them by index in memberData (or inline data).
         Scoped<MemberData> newMembers(scope, MemberData::allocate(scope.engine, ic->size));
-        for (uint i = 0; i < ic->size; ++i)
-            newMembers->set(scope.engine, i, get(ic->nameMap.at(i)));
+        for (uint i = 0; i < ic->size; ++i) {
+            // Note that some members might have been deleted. The key may be invalid.
+            const PropertyKey key = ic->nameMap.at(i);
+            newMembers->set(scope.engine, i, key.isValid() ? get(key) : Encode::undefined());
+        }
 
         p->internalClass.set(scope.engine, ic);
         const uint nInline = p->vtable()->nInlineProperties;
@@ -744,6 +747,12 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
 
     Heap::Object *obj = object->d();
     PropertyKey name = engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
+    if (object->as<QV4::ProxyObject>()) {
+        // proxies invalidate assumptions that we normally maek in lookups
+        // so we always need to use the fallback path
+        lookup->getter = Lookup::getterFallback;
+        return lookup->getter(lookup, engine, *object);
+    }
     if (name.isArrayIndex()) {
         lookup->indexedLookup.index = name.asArrayIndex();
         lookup->getter = Lookup::getterIndexed;
@@ -765,7 +774,7 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
         } else {
             lookup->getter = Lookup::getterAccessor;
         }
-        lookup->objectLookup.ic = obj->internalClass;
+        lookup->objectLookup.ic.set(engine, obj->internalClass.get());
         lookup->objectLookup.offset = index.index;
         return lookup->getter(lookup, engine, *object);
     }
@@ -792,7 +801,7 @@ bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine,
             lookup->setter = Lookup::arrayLengthSetter;
             return lookup->setter(lookup, engine, *object, value);
         } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
-            lookup->objectLookup.ic = object->internalClass();
+            lookup->objectLookup.ic.set(engine, object->internalClass());
             lookup->objectLookup.index = idx.index;
             const auto nInline = object->d()->vtable()->nInlineProperties;
             if (idx.index < nInline) {
@@ -826,7 +835,7 @@ bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine,
         lookup->setter = Lookup::setterFallback;
         return false;
     }
-    lookup->insertionLookup.newClass = object->internalClass();
+    lookup->insertionLookup.newClass.set(engine, object->internalClass());
     lookup->insertionLookup.offset = idx.index;
     lookup->setter = Lookup::setterInsert;
     return true;

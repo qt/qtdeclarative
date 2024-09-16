@@ -38,7 +38,7 @@ class QQuickPopupAnchors;
 class QQuickPopupPrivate;
 class QQuickTransition;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -101,6 +101,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION(2, 5))
     Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION(2, 5))
     Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(PopupType popupType READ popupType WRITE setPopupType NOTIFY popupTypeChanged FINAL REVISION(6, 8))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Popup)
@@ -222,11 +223,11 @@ public:
     void setDim(bool dim);
     void resetDim();
 
-    bool isVisible() const;
+    virtual bool isVisible() const;
     virtual void setVisible(bool visible);
 
     qreal opacity() const;
-    void setOpacity(qreal opacity);
+    virtual void setOpacity(qreal opacity);
 
     qreal scale() const;
     void setScale(qreal scale);
@@ -311,6 +312,16 @@ public:
     void setBottomInset(qreal inset);
     void resetBottomInset();
 
+    enum PopupType {
+        Item,
+        Window,
+        Native
+    };
+    Q_ENUM(PopupType)
+
+    PopupType popupType() const;
+    void setPopupType(PopupType);
+
 public Q_SLOTS:
     void open();
     void close();
@@ -378,6 +389,7 @@ Q_SIGNALS:
     Q_REVISION(2, 5) void leftInsetChanged();
     Q_REVISION(2, 5) void rightInsetChanged();
     Q_REVISION(2, 5) void bottomInsetChanged();
+    Q_REVISION(6, 8) void popupTypeChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);
@@ -433,8 +445,11 @@ protected:
     bool setAccessibleProperty(const char *propertyName, const QVariant &value);
 
 private:
+    QQuickItem *findParentItem() const;
+
     Q_DISABLE_COPY(QQuickPopup)
     Q_DECLARE_PRIVATE(QQuickPopup)
+    friend class QQuickPopupWindow;
     friend class QQuickPopupItem;
     friend class QQuickOverlay;
     friend class QQuickOverlayPrivate;
@@ -443,7 +458,5 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPopup::ClosePolicy)
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPopup)
 
 #endif // QQUICKPOPUP_P_H

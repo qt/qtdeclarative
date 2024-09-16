@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QFileSelector;
 class QQmlFileSelectorInterceptor;
-class Q_QML_PRIVATE_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
+class Q_QML_EXPORT QQmlFileSelectorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlFileSelector)
 public:
@@ -40,7 +40,7 @@ public:
     QScopedPointer<QQmlFileSelectorInterceptor> myInstance;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlFileSelectorInterceptor : public QQmlAbstractUrlInterceptor
+class Q_QML_EXPORT QQmlFileSelectorInterceptor : public QQmlAbstractUrlInterceptor
 {
 public:
     QQmlFileSelectorInterceptor(QQmlFileSelectorPrivate* pd);

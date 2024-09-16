@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.15
 
@@ -51,5 +51,11 @@ Item {
     function fff(a: int, b: Item, c: C) : C {
         let x = c.children;
         return x;
+    }
+
+    function helloLambda(c: C) {
+        let myLambda = function (x, y, z) {
+            let xyz = c.children;
+        };
     }
 }

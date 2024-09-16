@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "testtypes.h"
 #ifndef QT_NO_WIDGETS
@@ -9,6 +9,7 @@
 #include <QQmlEngine>
 #include <QJSEngine>
 #include <QThread>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class BaseExtensionObject : public QObject
 {
@@ -105,7 +106,7 @@ public:
     void setWidth(int) { }
 };
 
-void MyQmlObject::v8function(QQmlV4Function *function)
+void MyQmlObject::v8function(QQmlV4FunctionPtr function)
 {
     function->v4engine()->throwError(QStringLiteral("Exception thrown from within QObject slot"));
 }
@@ -394,9 +395,7 @@ void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject 
 
     if (that->gcOnAppend) {
         QQmlEngine *engine = qmlEngine(that);
-        engine->collectGarbage();
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QCoreApplication::processEvents();
+        gc(*engine);
     }
 }
 

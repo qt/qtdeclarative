@@ -117,4 +117,18 @@ Just-in-time compiler. Most common QML expressions are rather simple: value
 lookups on QObjects, arithmetics, simple if/else or loop constructs. Those can
 easily be expressed in C++, and doing so makes your application run faster.
 
+\section1 Obtaining statistics about the compilation of functions and bindings
+
+The QML Script Compiler records statistics when compiling QML to C++. These can
+give insight into the compilation of functions and bindings and whether it was
+successful or which error has caused it to fail. In addition to
+showing these results per binding or function, the statistics are also
+summarized per file, per module, and at the project level. This can give a
+quick overview of how well a project is being compiled.
+
+To show statistics, invoke the \e{all_aotstats} cmake target.
+
+\note These statistics are only available for modules registered through the
+\l{qt_add_qml_module} cmake API
+
 */

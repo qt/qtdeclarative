@@ -1,0 +1,4 @@
+
+QtObject {
+    property int helloProperty
+}

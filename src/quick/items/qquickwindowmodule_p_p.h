@@ -16,10 +16,11 @@
 
 #include "qquickwindow_p.h"
 #include <QtQml/private/qv4persistent_p.h>
+#include "qquickwindowcontainer_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
+class Q_QUICK_EXPORT QQuickWindowQmlImplPrivate : public QQuickWindowPrivate
 {
 public:
     QQuickWindowQmlImplPrivate();
@@ -29,9 +30,15 @@ public:
     bool visible = false;
     bool visibleExplicitlySet = false;
     QQuickWindow::Visibility visibility = QQuickWindow::AutomaticVisibility;
+    bool visibilityExplicitlySet = false;
+
     QV4::PersistentValue rootItemMarker;
 
     QMetaObject::Connection itemParentWindowChangeListener;
+
+    QObject *visualParent = nullptr;
+    QPointer<QQuickWindowContainer> windowContainer;
+    qreal z = 0.0;
 };
 
 QT_END_NAMESPACE

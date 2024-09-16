@@ -1,11 +1,11 @@
 POST /testdocument.html HTTP/1.1
-Accept-Language: {{Ignore}}
-Content-Type: charset=UTF-8;text/plain
-Content-Length: 13
-Connection: Keep-Alive{{Ignore}}
-HTTP2-Settings: {{Ignore}}
-Accept-Encoding: {{Ignore}}
-User-Agent: Mozilla/5.0
-Host: {{ServerHostUrl}}
+accept-language: {{Ignore}}
+content-type: charset=UTF-8;text/plain
+content-length: 13
+connection: Keep-Alive{{Ignore}}
+http2-settings: {{Ignore}}
+accept-encoding: {{Ignore}}
+user-agent: Mozilla/5.0
+host: {{ServerHostUrl}}
 
 My Sent Data

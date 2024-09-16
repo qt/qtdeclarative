@@ -12,12 +12,12 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
+Q_STATIC_LOGGING_CATEGORY(lcTumbler, "qt.quick.controls.tumbler")
 
 /*!
     \qmltype Tumbler
     \inherits Control
-//!     \instantiates QQuickTumbler
+//!     \nativetype QQuickTumbler
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -259,6 +259,9 @@ QPalette QQuickTumblerPrivate::defaultPalette() const
 QQuickTumbler::QQuickTumbler(QQuickItem *parent)
     : QQuickControl(*(new QQuickTumblerPrivate), parent)
 {
+    Q_D(QQuickTumbler);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
+
     setActiveFocusOnTab(true);
 
     connect(this, SIGNAL(leftPaddingChanged()), this, SLOT(_q_updateItemWidths()));
@@ -297,6 +300,12 @@ void QQuickTumbler::setModel(const QVariant &model)
     emit modelChanged();
 
     d->endSetModel();
+
+    if (d->view && d->currentIndexSetDuringModelChange) {
+        const int viewCurrentIndex = d->view->property("currentIndex").toInt();
+        if (viewCurrentIndex != d->currentIndex)
+            d->view->setProperty("currentIndex", d->currentIndex);
+    }
 
     d->currentIndexSetDuringModelChange = false;
 
@@ -427,7 +436,7 @@ bool QQuickTumbler::wrap() const
 void QQuickTumbler::setWrap(bool wrap)
 {
     Q_D(QQuickTumbler);
-    d->setWrap(wrap, true);
+    d->setWrap(wrap, QQml::PropertyUtils::State::ExplicitlySet);
 }
 
 void QQuickTumbler::resetWrap()
@@ -541,9 +550,6 @@ void QQuickTumbler::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             // Make sure we use the new content item and not the current one, as that won't
             // be changed until after contentItemChange() has finished.
             d->setupViewData(newItem);
-
-            d->_q_updateItemHeights();
-            d->_q_updateItemWidths();
         }
     }
 }
@@ -612,6 +618,11 @@ void QQuickTumblerPrivate::setupViewData(QQuickItem *newControlContentItem)
     syncCurrentIndex();
 
     calculateDisplacements();
+
+    if (q->isComponentComplete()) {
+        _q_updateItemWidths();
+        _q_updateItemHeights();
+    }
 }
 
 void QQuickTumblerPrivate::warnAboutIncorrectContentItem()
@@ -747,14 +758,14 @@ void QQuickTumblerPrivate::setWrapBasedOnCount()
     if (count == 0 || explicitWrap || modelBeingSet)
         return;
 
-    setWrap(count >= visibleItemCount, false);
+    setWrap(count >= visibleItemCount, QQml::PropertyUtils::State::ImplicitlySet);
 }
 
-void QQuickTumblerPrivate::setWrap(bool shouldWrap, bool isExplicit)
+void QQuickTumblerPrivate::setWrap(bool shouldWrap, QQml::PropertyUtils::State propertyState)
 {
-    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- explicit?" << isExplicit;
-    if (isExplicit)
+    if (isExplicitlySet(propertyState))
         explicitWrap = true;
+    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- explicit?" << explicitWrap;
 
     Q_Q(QQuickTumbler);
     if (q->isComponentComplete() && shouldWrap == wrap)

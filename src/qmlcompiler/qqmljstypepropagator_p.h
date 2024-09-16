@@ -24,13 +24,16 @@ namespace QQmlSA {
 class PassManager;
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
+struct Q_QMLCOMPILER_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
 {
     QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                         QList<QQmlJS::DiagnosticMessage> *errors,
+                         const BasicBlocks &basicBlocks = {},
+                         const InstructionAnnotations &annotations = {},
                          QQmlSA::PassManager *passManager = nullptr);
 
-    InstructionAnnotations run(const Function *m_function, QQmlJS::DiagnosticMessage *error);
+    BlocksAndAnnotations run(const Function *m_function);
 
     void generate_Ret() override;
     void generate_Debug() override;
@@ -168,7 +171,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypePropagator : public QQmlJSCompileP
     void generate_ThrowOnNullOrUndefined() override;
     void generate_GetTemplateObject(int index) override;
 
-    bool checkForEnumProblems(const QQmlJSRegisterContent &base, const QString &propertyName) const;
+    bool checkForEnumProblems(const QQmlJSRegisterContent &base, const QString &propertyName);
 
     Verdict startInstruction(QV4::Moth::Instr::Type instr) override;
     void endInstruction(QV4::Moth::Instr::Type instr) override;
@@ -186,6 +189,7 @@ private:
         QSet<int> jumpTargets;
         bool skipInstructionsUntilNextJumpTarget = false;
         bool needsMorePasses = false;
+        bool instructionHasError = false;
     };
 
     void handleUnqualifiedAccess(const QString &name, bool isMethod) const;
@@ -237,10 +241,39 @@ private:
         addReadRegister(Accumulator, convertTo);
     }
 
+    bool populatesAccumulator(QV4::Moth::Instr::Type instr) const;
+    bool isNoop(QV4::Moth::Instr::Type instr) const;
+
     void recordEqualsNullType();
     void recordEqualsIntType();
     void recordEqualsType(int lhs);
     void recordCompareType(int lhs);
+
+    // helper functions to deal with special cases in generate_ methods
+    void generate_CallProperty_SCMath(int base, int arcg, int argv);
+    void generate_CallProperty_SCconsole(int base, int argc, int argv);
+    void generate_Construct_SCDate(int argc, int argv);
+    void generate_Construct_SCArray(int argc, int argv);
+
+    // helper functions to perform QQmlSA checks
+    void generate_ret_SAcheck();
+    void generate_LoadQmlContextPropertyLookup_SAcheck(const QString &name);
+    void generate_StoreNameCommon_SAcheck(const QQmlJSRegisterContent &in, const QString &name);
+    void propagatePropertyLookup_SAcheck(const QString &propertyName);
+    void generate_StoreProperty_SAcheck(const QString propertyName, const QQmlJSRegisterContent &callBase);
+    void generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType);
+
+    void addError(const QString &message)
+    {
+        QQmlJSCompilePass::addError(message);
+        m_state.instructionHasError = true;
+    }
+
+    void setVarAccumulatorAndError()
+    {
+        setAccumulator(m_typeResolver->varRegister());
+        m_state.instructionHasError = true;
+    }
 
     QQmlJSRegisterContent m_returnType;
     QQmlSA::PassManager *m_passManager = nullptr;

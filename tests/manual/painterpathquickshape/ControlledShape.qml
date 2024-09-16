@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Shapes
@@ -66,14 +66,13 @@ Item {
             Scale {
                 xScale: controlPanel.scale
                 yScale: controlPanel.scale
-                origin.x: shape.implicitWidth / 2
-                origin.y: shape.implicitHeight / 2
             }
         ]
         Shape {
             id: shape
             x: 0
             y: 0
+            asynchronous: controlPanel.async
             preferredRendererType: controlPanel.preferCurve ? Shape.CurveRenderer : Shape.UnknownRenderer
             onRendererTypeChanged: {
                 controlPanel.rendererName = rendererType == Shape.SoftwareRenderer ? "Software" :
@@ -83,7 +82,7 @@ Item {
 
             ShapePath {
                 id: shapePath
-                fillRule: ShapePath.WindingFill
+                fillRule: controlPanel.fillRule
                 fillGradient: gradients[controlPanel.gradientType]
                 strokeColor: controlPanel.outlineColor
                 fillColor: controlPanel.fillColor
@@ -91,6 +90,7 @@ Item {
                 strokeStyle: controlPanel.outlineStyle
                 joinStyle: controlPanel.joinStyle
                 capStyle: controlPanel.capStyle
+                fillTransform: Qt.matrix4x4(controlPanel.fillScaleX,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1)
             }
 
             Repeater {

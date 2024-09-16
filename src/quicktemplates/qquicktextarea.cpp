@@ -24,7 +24,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype TextArea
     \inherits TextEdit
-//!     \instantiates QQuickTextArea
+//!     \nativetype QQuickTextArea
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -472,6 +472,16 @@ QPalette QQuickTextAreaPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::TextArea);
 }
 
+bool QQuickTextAreaPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    Q_Q(QQuickTextArea);
+    const auto focusReasonChanged = QQuickItemPrivate::setLastFocusChangeReason(reason);
+    if (focusReasonChanged)
+        emit q->focusReasonChanged();
+
+    return focusReasonChanged;
+}
+
 QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
@@ -637,23 +647,34 @@ void QQuickTextArea::setPlaceholderTextColor(const QColor &color)
 /*!
     \qmlproperty enumeration QtQuick.Controls::TextArea::focusReason
 
-    \include qquickcontrol-focusreason.qdocinc
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the item has \l {Item::activeFocus}
+        {active focus}, but the reason why the item either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \note Prefer \l {QtQuick.Controls::Control::focusReason} to this property.
 */
 Qt::FocusReason QQuickTextArea::focusReason() const
 {
     Q_D(const QQuickTextArea);
-    return d->focusReason;
+    return d->lastFocusChangeReason();
 }
 
 void QQuickTextArea::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickTextArea);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
+    d->setLastFocusChangeReason(reason);
 }
+
 
 bool QQuickTextArea::contains(const QPointF &point) const
 {
@@ -980,13 +1001,11 @@ QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 void QQuickTextArea::focusInEvent(QFocusEvent *event)
 {
     QQuickTextEdit::focusInEvent(event);
-    setFocusReason(event->reason());
 }
 
 void QQuickTextArea::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextEdit::focusOutEvent(event);
-    setFocusReason(event->reason());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)
@@ -1098,7 +1117,7 @@ void QQuickTextAreaAttached::setFlickable(QQuickTextArea *control)
     Q_D(QQuickTextAreaAttached);
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(parent());
     if (!flickable) {
-        qmlWarning(parent()) << "TextArea must be attached to a Flickable";
+        qmlWarning(parent()) << "TextArea attached property must be attached to an object deriving from Flickable";
         return;
     }
 

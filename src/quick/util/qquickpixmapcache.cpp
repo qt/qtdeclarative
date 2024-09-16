@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
+using namespace Qt::Literals::StringLiterals;
 
 #if defined(QT_DEBUG) && QT_CONFIG(thread)
 class ThreadAffinityMarker
@@ -96,7 +96,7 @@ private:
 
 const QLatin1String QQuickPixmap::itemGrabberScheme = QLatin1String("itemgrabber");
 
-Q_LOGGING_CATEGORY(lcImg, "qt.quick.image")
+Q_STATIC_LOGGING_CATEGORY(lcImg, "qt.quick.image")
 
 /*! \internal
     The maximum currently-unused image data that can be stored for potential
@@ -606,20 +606,18 @@ QQuickPixmapReader::~QQuickPixmapReader()
             delete reply;
         }
         jobs.clear();
-#if QT_CONFIG(qml_network)
         const auto cancelJob = [this](QQuickPixmapReply *reply) {
             if (reply->loading) {
                 cancelledJobs.append(reply);
                 reply->data = nullptr;
             }
         };
-
+#if QT_CONFIG(qml_network)
         for (auto *reply : std::as_const(networkJobs))
             cancelJob(reply);
-
+#endif
         for (auto *reply : std::as_const(asyncResponses))
             cancelJob(reply);
-#endif
 #if !QT_CONFIG(quick_pixmap_cache_threaded_download)
     // In this case we won't be waiting, but we are on the correct thread already, so we can
     // perform housekeeping synchronously now.
@@ -640,7 +638,6 @@ QQuickPixmapReader::~QQuickPixmapReader()
     wait();
 #endif
 
-#if QT_CONFIG(qml_network)
     // While we've been waiting, the other thread may have added
     // more replies. No one will care about them anymore.
 
@@ -649,16 +646,17 @@ QQuickPixmapReader::~QQuickPixmapReader()
             reply->data->reply = nullptr;
         delete reply;
     };
-
+#if QT_CONFIG(qml_network)
     for (QQuickPixmapReply *reply : std::as_const(networkJobs))
         deleteReply(reply);
-
+#endif
     for (QQuickPixmapReply *reply : std::as_const(asyncResponses))
         deleteReply(reply);
 
+#if QT_CONFIG(qml_network)
     networkJobs.clear();
-    asyncResponses.clear();
 #endif
+    asyncResponses.clear();
 }
 
 #if QT_CONFIG(qml_network)
@@ -803,7 +801,9 @@ void QQuickPixmapReader::processJobs()
                         // cancel any jobs already started
                         reply->close();
                     }
-                } else {
+                } else
+#endif
+                {
                     QQuickImageResponse *asyncResponse = asyncResponses.key(job);
                     if (asyncResponse) {
                         asyncResponses.remove(asyncResponse);
@@ -811,7 +811,6 @@ void QQuickPixmapReader::processJobs()
                     }
                 }
                 PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
-#endif
                 // deleteLater, since not owned by this thread
                 job->deleteLater();
             }
@@ -1495,7 +1494,7 @@ void QQuickPixmapData::addToCache()
             qCDebug(lcImg) << "adding" << key << "to total" << QQuickPixmapCache::instance()->m_cache.size();
             for (auto it = QQuickPixmapCache::instance()->m_cache.keyBegin(); it != QQuickPixmapCache::instance()->m_cache.keyEnd(); ++it) {
                 if (*(it->url) == url && it->frame == frame)
-                    qDebug(lcImg) << "    similar pre-existing:" << *it;
+                    qCDebug(lcImg) << "    similar pre-existing:" << *it;
             }
         }
         QQuickPixmapCache::instance()->m_cache.insert(key, this);
@@ -1645,6 +1644,12 @@ QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url)
 : d(nullptr)
 {
     load(engine, url);
+}
+
+QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, Options options)
+: d(nullptr)
+{
+    load(engine, url, options);
 }
 
 QQuickPixmap::QQuickPixmap(QQmlEngine *engine, const QUrl &url, const QRect &region, const QSize &size)
@@ -2000,6 +2005,17 @@ bool QQuickPixmap::isCached(const QUrl &url, const QRect &requestRegion, const Q
     QQuickPixmapCache *store = QQuickPixmapCache::instance();
 
     return store->m_cache.contains(key);
+}
+
+bool QQuickPixmap::isScalableImageFormat(const QUrl &url)
+{
+    if (url.scheme() == "image"_L1)
+        return true;
+
+    const QString stringUrl = url.path(QUrl::PrettyDecoded);
+    return stringUrl.endsWith("svg"_L1)
+            || stringUrl.endsWith("svgz"_L1)
+            || stringUrl.endsWith("pdf"_L1);
 }
 
 bool QQuickPixmap::connectFinished(QObject *object, const char *method)

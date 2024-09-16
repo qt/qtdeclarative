@@ -132,12 +132,12 @@ QSpringAnimation::~QSpringAnimation()
 {
     if (animationTemplate) {
         if (target.object()) {
-            ActiveAnimationHashIt it = animationTemplate->activeAnimations.find(target);
-            if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            auto it = animationTemplate->activeAnimations.constFind(target);
+            if (it != animationTemplate->activeAnimations.cend() && it.value() == this)
                 animationTemplate->activeAnimations.erase(it);
         } else {
             //target is no longer valid, need to search linearly
-            for (ActiveAnimationHashIt it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
+            for (auto it = animationTemplate->activeAnimations.cbegin(); it != animationTemplate->activeAnimations.cend(); ++it) {
                 if (it.value() == this) {
                     animationTemplate->activeAnimations.erase(it);
                     break;
@@ -311,7 +311,7 @@ void QQuickSpringAnimationPrivate::updateMode()
 
 /*!
     \qmltype SpringAnimation
-    \instantiates QQuickSpringAnimation
+    \nativetype QQuickSpringAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation

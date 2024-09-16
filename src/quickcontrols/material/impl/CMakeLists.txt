@@ -17,15 +17,15 @@ set(qml_files
     "SwitchIndicator.qml"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
+qt_internal_add_qml_module(QuickControls2MaterialStyleImpl
     URI "QtQuick.Controls.Material.impl"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2MaterialStyleImplPlugin
     DEPENDENCIES
         QtQuick/auto
+        QtQuick.Controls.impl/auto
     PLUGIN_TARGET qtquickcontrols2materialstyleimplplugin
-    NO_PLUGIN_OPTIONAL
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
         qquickmaterialplaceholdertext.cpp qquickmaterialplaceholdertext_p.h

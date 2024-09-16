@@ -26,7 +26,7 @@ class QQuickTimeLineValue;
 class QQuickTimeLineCallback;
 struct QQuickTimeLinePrivate;
 class QQuickTimeLineObject;
-class Q_QUICK_PRIVATE_EXPORT QQuickTimeLine : public QObject, QAbstractAnimationJob
+class Q_QUICK_EXPORT QQuickTimeLine : public QObject, QAbstractAnimationJob
 {
 Q_OBJECT
 public:

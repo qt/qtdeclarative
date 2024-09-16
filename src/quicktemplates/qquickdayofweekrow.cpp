@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype DayOfWeekRow
     \inherits Control
-//!     \instantiates QQuickDayOfWeekRow
+//!     \nativetype QQuickDayOfWeekRow
     \inqmlmodule QtQuick.Controls
     \brief A row of names for the days in a week.
 

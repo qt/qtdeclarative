@@ -22,7 +22,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickPlatformTheme : public QObject
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickPlatformTheme : public QObject
 {
     Q_OBJECT
     // This exposes the enums in QPlatformTheme to QML. We can't use QML_EXTENDED

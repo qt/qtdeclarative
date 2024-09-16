@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QObject>
@@ -447,7 +447,7 @@ void tst_qqmldirparser::parse()
     QFETCH(bool, designerSupported);
 
     QFile f(testFile(file));
-    f.open(QIODevice::ReadOnly);
+    QVERIFY(f.open(QIODevice::ReadOnly));
 
     QQmlDirParser p;
     p.parse(f.readAll());

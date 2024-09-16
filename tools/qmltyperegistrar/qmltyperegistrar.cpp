@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
+#include <QtQmlTypeRegistrar/private/qqmltyperegistrarutils_p.h>
 
 using namespace Qt::Literals;
 
@@ -17,6 +18,11 @@ int main(int argc, char **argv)
 {
     // Produce reliably the same output for the same input by disabling QHash's random seeding.
     QHashSeed::setDeterministicGlobalSeed();
+
+    // No, you are not supposed to mess with the message pattern.
+    // Qt Creator wants to read those messages as-is and we want the convenience
+    // of QDebug to print them.
+    qputenv("QT_MESSAGE_PATTERN", "%{if-category}%{category}: %{endif}%{message}");
 
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("qmltyperegistrar"));
@@ -89,10 +95,22 @@ int main(int argc, char **argv)
                            "want to follow Qt's versioning scheme."));
     parser.addOption(followForeignVersioningOption);
 
+    QCommandLineOption jsroot(QStringLiteral("jsroot"));
+    jsroot.setDescription(
+            QStringLiteral("Use the JavaScript root object's meta types as sole input and do not "
+                           "generate any C++ output. Only useful in combination with "
+                           "--generate-qmltypes"));
+    parser.addOption(jsroot);
+
     QCommandLineOption extract(u"extract"_s);
     extract.setDescription(
             u"Extract QML types from a module and use QML_FOREIGN to register them"_s);
     parser.addOption(extract);
+
+    QCommandLineOption mergeQtConf("merge-qt-conf"_L1);
+    mergeQtConf.setValueName("qtconf list"_L1);
+    mergeQtConf.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(mergeQtConf);
 
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
@@ -103,22 +121,49 @@ int main(int argc, char **argv)
 
     parser.process(arguments);
 
+    if (parser.isSet(mergeQtConf)) {
+        return mergeQtConfFiles(parser.value(mergeQtConf));
+    }
+
     const QString module = parser.value(importNameOption);
 
+    const QLatin1String jsrootMetaTypes
+            = QLatin1String(":/qt-project.org/meta_types/jsroot_metatypes.json");
+    QStringList files = parser.positionalArguments();
+    if (parser.isSet(jsroot)) {
+        if (parser.isSet(extract)) {
+            error(module) << "If --jsroot is passed, no type registrations can be extracted.";
+            return EXIT_FAILURE;
+        }
+        if (parser.isSet(outputOption)) {
+            error(module) << "If --jsroot is passed, no C++ output can be generated.";
+            return EXIT_FAILURE;
+        }
+        if (!files.isEmpty() || parser.isSet(foreignTypesOption)) {
+            error(module) << "If --jsroot is passed, no further metatypes can be processed.";
+            return EXIT_FAILURE;
+        }
+
+        files.append(jsrootMetaTypes);
+    }
+
     MetaTypesJsonProcessor processor(parser.isSet(privateIncludesOption));
-    if (!processor.processTypes(parser.positionalArguments()))
+    if (!processor.processTypes(files))
         return EXIT_FAILURE;
 
     processor.postProcessTypes();
 
-    if (parser.isSet(foreignTypesOption))
-        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
+    if (!parser.isSet(jsroot)) {
+        processor.processForeignTypes(jsrootMetaTypes);
+        if (parser.isSet(foreignTypesOption))
+            processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
+    }
 
     processor.postProcessForeignTypes();
 
     if (parser.isSet(extract)) {
         if (!parser.isSet(outputOption)) {
-            fprintf(stderr, "Error: The output file name must be provided\n");
+            error(module) << "The output file name must be provided";
             return EXIT_FAILURE;
         }
         QString baseName = parser.value(outputOption);
@@ -138,30 +183,34 @@ int main(int argc, char **argv)
                                     parser.isSet(followForeignVersioningOption));
     typeRegistrar.setTypes(processor.types(), processor.foreignTypes());
 
-    if (parser.isSet(outputOption)) {
-        // extract does its own file handling
-        QString outputName = parser.value(outputOption);
-        QFile file(outputName);
-        if (!file.open(QIODeviceBase::WriteOnly)) {
-            fprintf(stderr, "Error: Cannot open \"%s\" for writing: %s\n",
-                    qPrintable(QDir::toNativeSeparators(outputName)),
-                    qPrintable(file.errorString()));
-            return EXIT_FAILURE;
+    if (!parser.isSet(jsroot)) {
+        if (module.isEmpty()) {
+            warning(module) << "The module name is empty. Cannot generate C++ code";
+        } else if (parser.isSet(outputOption)) {
+            // extract does its own file handling
+            QString outputName = parser.value(outputOption);
+            QFile file(outputName);
+            if (!file.open(QIODeviceBase::WriteOnly)) {
+                error(QDir::toNativeSeparators(outputName))
+                        << "Cannot open file for writing:" << file.errorString();
+                return EXIT_FAILURE;
+            }
+            QTextStream output(&file);
+            typeRegistrar.write(output, outputName);
+        } else {
+            QTextStream output(stdout);
+            typeRegistrar.write(output, "stdout");
         }
-        QTextStream output(&file);
-        typeRegistrar.write(output);
-    } else {
-        QTextStream output(stdout);
-        typeRegistrar.write(output);
     }
 
     if (!parser.isSet(pluginTypesOption))
         return EXIT_SUCCESS;
 
     typeRegistrar.setReferencedTypes(processor.referencedTypes());
+    typeRegistrar.setUsingDeclarations(processor.usingDeclarations());
     const QString qmltypes = parser.value(pluginTypesOption);
     if (!typeRegistrar.generatePluginTypes(qmltypes)) {
-        fprintf(stderr, "Error: Cannot generate qmltypes file %s\n", qPrintable(qmltypes));
+        error(qmltypes) << "Cannot generate qmltypes file";
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

@@ -4,7 +4,7 @@
 # Generated from src.pro.
 # special case skip regeneration
 
-if (NOT QT_FEATURE_commandlineparser)
+if(NOT QT_FEATURE_commandlineparser)
     message(FATAL_ERROR "QT_FEATURE_commandlineparser required to compile qmltyperegistrar")
 endif()
 
@@ -16,7 +16,7 @@ add_subdirectory(qmlmodels)
 
 add_subdirectory(core)
 
-if (QT_FEATURE_qml_network)
+if(QT_FEATURE_qml_network)
     add_subdirectory(qmlnetwork)
 endif()
 
@@ -24,11 +24,13 @@ if(QT_FEATURE_qml_worker_script)
     add_subdirectory(qmlworkerscript)
 endif()
 
+add_subdirectory(qmlmeta)
+
 if(TARGET Qt::Sql)
    add_subdirectory(qmllocalstorage)
  endif()
 
-if (QT_FEATURE_qml_xmllistmodel)
+if(QT_FEATURE_qml_xmllistmodel)
     add_subdirectory(qmlxmllistmodel)
 endif()
 
@@ -56,6 +58,10 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
         add_subdirectory(quickshapes)
     endif()
 
+    if(TARGET Qt::Svg)
+        add_subdirectory(quickvectorimage)
+    endif()
+
     if(TARGET Qt::Widgets)
         add_subdirectory(quickwidgets)
     endif()
@@ -66,9 +72,11 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     if(QT_FEATURE_quicktemplates2_container)
         add_subdirectory(quickdialogs)
     endif()
-    add_subdirectory(quicknativestyle)
+    if (QT_FEATURE_quickcontrols2_macos OR QT_FEATURE_quickcontrols2_windows)
+        add_subdirectory(quicknativestyle)
+    endif()
 
-    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2)
+    if(QT_FEATURE_testlib AND QT_FEATURE_network AND QT_FEATURE_quick_itemview AND TARGET Qt::Test AND TARGET Qt::QuickControls2 AND NOT (WASM AND BUILD_SHARED_LIBS))
         add_subdirectory(quickcontrolstestutils)
     endif()
 else()
@@ -91,11 +99,15 @@ add_subdirectory(qmldom)
 
 # Build qmlcachegen now, so that we can use it in src/imports.
 if(QT_FEATURE_xmlstreamwriter)
+    add_subdirectory(../tools/qmlaotstats qmlaotstats)
     add_subdirectory(../tools/qmlcachegen qmlcachegen)
 endif()
 
-if(QT_FEATURE_thread AND TARGET Qt::LanguageServerPrivate AND NOT WASM AND NOT IOS AND NOT ANDROID AND NOT QNX AND NOT INTEGRITY AND NOT WEBOS)
-    add_subdirectory(qmlls)
+if(QT_FEATURE_thread AND QT_FEATURE_filesystemwatcher AND QT_FEATURE_processenvironment
+        AND TARGET Qt::LanguageServerPrivate)
+    if (NOT CMAKE_CROSSCOMPILING OR QT_FORCE_BUILD_TOOLS)
+        add_subdirectory(qmlls)
+    endif()
 endif()
 
 add_subdirectory(plugins)
@@ -107,4 +119,7 @@ if(QT_FEATURE_qml_network)
         add_subdirectory(qmldebug)
     endif()
 endif()
+
+add_subdirectory(assets)
+
 # special case end

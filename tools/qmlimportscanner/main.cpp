@@ -76,10 +76,12 @@ void printUsage(const QString &appNameIn)
            "       " << appName << " -qrcFiles file1.qrc file2.qrc -importPath path/to/qt/qml/directory\n\n"
            "Example: " << appName << " -rootPath . -importPath "
         << QDir::toNativeSeparators(qmlPath).toStdString()
+        << "\n\nOptions:\n"
+            << "  -exclude <directory>: Exclude directory\n"
         << '\n';
 }
 
-QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &path)
+QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, const QString &filePath)
 {
     QVariantList imports;
 
@@ -99,7 +101,8 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
                 import[typeLiteral()] = directoryLiteral();
             }
 
-            import[pathLiteral()] = QDir::cleanPath(path + QLatin1Char('/') + name);
+            import[pathLiteral()] = QDir::cleanPath(
+                    QFileInfo(filePath).path() + QLatin1Char('/') + name);
         } else {
             // Walk the id chain ("Foo" -> "Bar" -> etc)
             QString  name;
@@ -710,7 +713,23 @@ struct pathStartsWith {
     const QString _path;
 };
 
+static QStringList excludedDirectories = {
+    ".qtcreator"_L1, ".qtc_clangd"_L1, // Windows does not consider these hidden
+#ifdef Q_OS_WIN
+    "release"_L1, "debug"_L1
+#endif
+};
 
+static bool isExcluded(const QFileInfo &dir)
+{
+    if (excludedDirectories.contains(dir.fileName()))
+        return true;
+
+    const QString &path = dir.absoluteFilePath();
+    // Skip obvious build output directories
+    return path.contains("Debug-iphoneos"_L1) || path.contains("Release-iphoneos"_L1)
+        || path.contains("Debug-iphonesimulator"_L1) || path.contains("Release-iphonesimulator"_L1);
+}
 
 // Scan all qml files in directory for import statements
 QVariantList findQmlImportsInDirectory(const QString &qmlDir,
@@ -726,6 +745,8 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir,
 
     while (iterator.hasNext()) {
         iterator.next();
+        if (isExcluded(iterator.fileInfo()))
+            continue;
         const QString path = iterator.filePath();
         const QFileInfoList entries = QDir(path).entryInfoList();
 
@@ -737,16 +758,6 @@ QVariantList findQmlImportsInDirectory(const QString &qmlDir,
 
         if (std::find_if(blacklist.cbegin(), blacklist.cend(), pathStartsWith(path)) != blacklist.cend())
             continue;
-
-        // Skip obvious build output directories
-        if (path.contains(QLatin1String("Debug-iphoneos")) || path.contains(QLatin1String("Release-iphoneos")) ||
-            path.contains(QLatin1String("Debug-iphonesimulator")) || path.contains(QLatin1String("Release-iphonesimulator"))
-#ifdef Q_OS_WIN
-            || path.endsWith(QLatin1String("/release")) || path.endsWith(QLatin1String("/debug"))
-#endif
-        ){
-            continue;
-        }
 
         for (const QFileInfo &x : entries)
             if (x.isFile()) {
@@ -892,6 +903,7 @@ int main(int argc, char *argv[])
 
     int i = 1;
     while (i < args.size()) {
+        bool checkDirExists = true;
         const QString &arg = args.at(i);
         ++i;
         QStringList *argReceiver = nullptr;
@@ -913,6 +925,11 @@ int main(int argc, char *argv[])
             if (i >= args.size())
                 std::cerr << "-importPath requires an argument\n";
             argReceiver = &qmlImportPaths;
+        } else if (arg == "-exclude"_L1) {
+            if (i >= args.size())
+                std::cerr << "-exclude Path requires an argument\n";
+            checkDirExists = false;
+            argReceiver = &excludedDirectories;
         } else if (arg == QLatin1String("-cmake-output")) {
              generateCmakeContent = true;
         } else if (arg == QLatin1String("-qrcFiles")) {
@@ -936,7 +953,7 @@ int main(int argc, char *argv[])
             if (arg.startsWith(QLatin1Char('-')) && arg != QLatin1String("-"))
                 break;
             ++i;
-            if (arg != QLatin1String("-") && !QFile::exists(arg)) {
+            if (arg != QLatin1String("-") && checkDirExists && !QFile::exists(arg)) {
                 std::cerr << qPrintable(appName) << ": No such file or directory: \""
                     << qPrintable(arg) << "\"\n";
                 return 1;

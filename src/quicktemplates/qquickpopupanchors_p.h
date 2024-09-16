@@ -26,7 +26,7 @@ class QQuickItem;
 class QQuickPopupAnchorsPrivate;
 class QQuickPopup;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject, public QQuickItemChangeListener
+class Q_QUICKTEMPLATES2_EXPORT QQuickPopupAnchors : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged FINAL)
@@ -52,7 +52,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPopupAnchors)
 
 #endif // QQUICKPOPUPANCHORS_P_H

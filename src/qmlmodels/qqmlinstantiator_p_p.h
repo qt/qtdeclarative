@@ -27,7 +27,7 @@ QT_REQUIRE_CONFIG(qml_object_model);
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
+class Q_QMLMODELS_EXPORT QQmlInstantiatorPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlInstantiator)
 

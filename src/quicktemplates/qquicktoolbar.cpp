@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolBar
     \inherits Pane
-//!     \instantiates QQuickToolBar
+//!     \nativetype QQuickToolBar
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers

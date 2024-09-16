@@ -21,7 +21,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultContext : public QSGContext, public QSGRendererInterface
+class Q_QUICK_EXPORT QSGDefaultContext : public QSGContext, public QSGRendererInterface
 {
 public:
     QSGDefaultContext(QObject *parent = nullptr);
@@ -33,7 +33,8 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) override;
+    QSGInternalTextNode *createInternalTextNode(QSGRenderContext *renderContext) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;

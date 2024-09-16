@@ -65,7 +65,7 @@ QQmlTypePrivate::~QQmlTypePrivate()
     delete enums.fetchAndStoreAcquire(nullptr);
     delete proxyMetaObjects.fetchAndStoreAcquire(nullptr);
 
-    if (const auto &iface = typeId.iface()) {
+    if (const QtPrivate::QMetaTypeInterface *iface = typeId.iface()) {
         if (iface->metaObjectFn == &dynamicQmlMetaObject)
             QQmlMetaType::unregisterInternalCompositeType(typeId, listId);
     }
@@ -146,7 +146,7 @@ QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) co
     QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return QQmlType();
-    QV4::ExecutableCompilationUnit *compilationUnit = td->compilationUnit();
+    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
     const QMetaObject *mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
     return QQmlMetaType::qmlType(mo);
 }
@@ -161,7 +161,7 @@ QQmlPropertyCache::ConstPtr QQmlTypePrivate::compositePropertyCache(
     QQmlRefPointer<QQmlTypeData> td(engine->typeLoader.getType(sourceUrl()));
     if (td.isNull() || !td->isComplete())
         return nullptr;
-    QV4::ExecutableCompilationUnit *compilationUnit = td->compilationUnit();
+    QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
     return compilationUnit->rootPropertyCache();
 }
 
@@ -257,15 +257,19 @@ const QQmlTypePrivate::Enums *QQmlTypePrivate::initEnums(QQmlEnginePrivate *engi
     if (const Enums *result = enums.loadRelaxed())
         return result;
 
+    QQmlPropertyCache::ConstPtr cache;
+    if (isComposite()) {
+        cache = compositePropertyCache(engine);
+        if (!cache)
+            return nullptr; // Composite type not ready, yet.
+    }
+
     Enums *newEnums = new Enums;
 
     // beware: It could be a singleton type without metaobject
 
-    if (QQmlPropertyCache::ConstPtr cache = isComposite()
-                ? compositePropertyCache(engine)
-                : QQmlPropertyCache::ConstPtr()) {
+    if (cache)
         insertEnumsFromPropertyCache(newEnums, cache);
-    }
 
     if (baseMetaObject) {
         // init() can add to the metaObjects list. Therefore, check proxies->data only below
@@ -298,6 +302,19 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
     QSet<QString> localEnums;
     const QMetaObject *localMetaObject = nullptr;
 
+    // ### TODO (QTBUG-123294): track this at instance creation time
+    auto shouldSingletonAlsoRegisterUnscoped = [&](){
+        Q_ASSERT(regType == QQmlType::SingletonType);
+        if (!baseMetaObject)
+            return true;
+        int idx = baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
+        if (idx == -1)
+            return true;
+        if (qstrcmp(baseMetaObject->classInfo(idx).value(), "false") == 0)
+            return false;
+        return true;
+    };
+
     // Add any enum values defined by this class, overwriting any inherited values
     for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
         QMetaEnum e = metaObject->enumerator(ii);
@@ -314,12 +331,15 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
             localEnums.clear();
             localMetaObject = e.enclosingMetaObject();
         }
+        const bool shouldRegisterUnscoped = !isScoped
+                || (regType == QQmlType::CppType && extraData.cppTypeData->registerEnumClassesUnscoped)
+                || (regType == QQmlType::SingletonType && shouldSingletonAlsoRegisterUnscoped())
+        ;
 
         for (int jj = 0; jj < e.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(e.key(jj));
             const int value = e.value(jj);
-            if (!isScoped || (regType == QQmlType::CppType
-                              && extraData.cppTypeData->registerEnumClassesUnscoped)) {
+            if (shouldRegisterUnscoped) {
                 if (localEnums.contains(key)) {
                     auto existingEntry = enums->enums.find(key);
                     if (existingEntry != enums->enums.end() && existingEntry.value() != value) {
@@ -640,6 +660,11 @@ bool QQmlType::isSequentialContainer() const
     return d && d->regType == SequentialContainerType;
 }
 
+bool QQmlType::isValueType() const
+{
+    return d && d->isValueType();
+}
+
 QMetaType QQmlType::typeId() const
 {
     return d ? d->typeId : QMetaType{};
@@ -657,14 +682,13 @@ QMetaSequence QQmlType::listMetaSequence() const
 
 const QMetaObject *QQmlType::metaObject() const
 {
-    if (!d)
-        return nullptr;
-    const QQmlTypePrivate::ProxyMetaObjects *proxies = d->init();
+    return d ? d->metaObject() : nullptr;
+}
 
-    if (proxies->data.isEmpty())
-        return d->baseMetaObject;
-    else
-        return proxies->data.constFirst().metaObject;
+const QMetaObject *QQmlType::metaObjectForValueType() const
+{
+    Q_ASSERT(d);
+    return d->metaObjectForValueType();
 }
 
 const QMetaObject *QQmlType::baseMetaObject() const
@@ -747,148 +771,42 @@ QUrl QQmlType::sourceUrl() const
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedStringRef &name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        if (int *rv = d->initEnums(engine)->enums.value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::enumValue(d, engine, name, ok);
 }
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QHashedCStringRef &name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        if (int *rv = d->initEnums(engine)->enums.value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::enumValue(d, engine, name, ok);
 }
 
 int QQmlType::enumValue(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        if (int *rv = d->initEnums(engine)->enums.value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::enumValue(d, engine, name, ok);
 }
 
 int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QV4::String *name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        if (int *rv = d->initEnums(engine)->scopedEnumIndex.value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::scopedEnumIndex(d, engine, name, ok);
 }
 
 int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        if (int *rv = d->initEnums(engine)->scopedEnumIndex.value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::scopedEnumIndex(d, engine, name, ok);
 }
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    *ok = true;
-
-    if (d) {
-        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
-        Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
-        if (int *rv = enums->scopedEnums.at(index)->value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::scopedEnumValue(d, engine, index, name, ok);
 }
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    *ok = true;
-
-    if (d) {
-        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
-        Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
-        if (int *rv = enums->scopedEnums.at(index)->value(name))
-            return *rv;
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::scopedEnumValue(d, engine, index, name, ok);
 }
 
-int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scopedEnumName, const QByteArray &name, bool *ok) const
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QHashedStringRef &scopedEnumName, const QHashedStringRef &name, bool *ok) const
 {
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
-
-        if (int *rv = enums->scopedEnumIndex.value(
-                    QHashedCStringRef(scopedEnumName.constData(), scopedEnumName.size()))) {
-            const int index = *rv;
-            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
-            rv = enums->scopedEnums.at(index)->value(
-                    QHashedCStringRef(name.constData(), name.size()));
-            if (rv)
-                return *rv;
-        }
-    }
-
-    *ok = false;
-    return -1;
-}
-
-int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumName, QStringView name, bool *ok) const
-{
-    Q_ASSERT(ok);
-    if (d) {
-        *ok = true;
-
-        const QQmlTypePrivate::Enums *enums = d->initEnums(engine);
-
-        if (int *rv = enums->scopedEnumIndex.value(QHashedStringRef(scopedEnumName))) {
-            const int index = *rv;
-            Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
-            rv = enums->scopedEnums.at(index)->value(QHashedStringRef(name));
-            if (rv)
-                return *rv;
-        }
-    }
-
-    *ok = false;
-    return -1;
+    return QQmlTypePrivate::scopedEnumValue(d, engine, scopedEnumName, name, ok);
 }
 
 void QQmlType::refHandle(const QQmlTypePrivate *priv)

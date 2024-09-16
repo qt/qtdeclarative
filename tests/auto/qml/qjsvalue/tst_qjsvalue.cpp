@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "tst_qjsvalue.h"
 
@@ -364,10 +364,11 @@ void tst_QJSValue::toString()
     // variant should use internal valueOf(), then fall back to QVariant::toString(),
     // then fall back to "QVariant(typename)"
     QJSValue variant = eng.toScriptValue(QPoint(10, 20));
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED
     QVERIFY(!variant.isVariant());
+    QT_WARNING_POP
     QCOMPARE(variant.toString(), QString::fromLatin1("QPoint(10, 20)"));
     variant = eng.toScriptValue(QUrl());
-    QVERIFY(!variant.isVariant());
     QVERIFY(variant.isUrl());
     QVERIFY(variant.toString().isEmpty());
 
@@ -1112,6 +1113,25 @@ void tst_QJSValue::toVariant()
         QCOMPARE(func2.call().toInt(), 10);
 
         QCOMPARE(func.toVariant().metaType(), QMetaType::fromType<QJSValue>());
+    }
+
+    // object with custom prototype
+    {
+        QJSValue object = eng.evaluate(R"js(
+        (function(){
+            function Person(firstName, lastName) {
+                    this.firstName = firstName;
+                    this.lastName = lastName;
+            }
+            return new Person("John", "Doe");
+        })();
+        )js");
+        QVERIFY(object.isObject());
+        auto asVariant = object.toVariant();
+        QCOMPARE(asVariant.metaType(), QMetaType::fromType<QVariantMap>());
+        auto variantMap = asVariant.value<QVariantMap>();
+        QVERIFY(variantMap.contains("firstName"));
+        QCOMPARE(variantMap["firstName"].toString(), "John");
     }
 }
 
@@ -2797,6 +2817,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     thread->start();
     condition.wait(&mutex);
     QTRY_VERIFY(thread->isFinished());
+    storage.clearFreePageHint();
     QTRY_COMPARE(storage.firstPage, nullptr);
 #endif
 }

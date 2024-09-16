@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtCore/qlist.h>
 
@@ -144,8 +144,8 @@ void tst_qquickiconlabel::display()
         case QQuickIconLabel::IconOnly:
             QVERIFY(icon);
             QVERIFY(!text);
-            QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
-            QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
+            QCOMPARE(icon->x(), std::round(horizontalCenter - icon->width() / 2));
+            QCOMPARE(icon->y(), std::round(verticalCenter - icon->height() / 2));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(label->implicitWidth(), icon->implicitWidth() + horizontalPadding);
@@ -166,8 +166,8 @@ void tst_qquickiconlabel::display()
             QVERIFY(text);
             const qreal combinedHeight = icon->height() + label->spacing() + text->height();
             const qreal contentY = verticalCenter - combinedHeight / 2;
-            QCOMPARE(icon->x(), horizontalCenter - icon->width() / 2);
-            QCOMPARE(icon->y(), contentY);
+            QCOMPARE(icon->x(), std::round(horizontalCenter - icon->width() / 2));
+            QCOMPARE(icon->y(), std::round(contentY));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(text->x(), horizontalCenter - text->width() / 2);
@@ -184,8 +184,8 @@ void tst_qquickiconlabel::display()
             QVERIFY(text);
             const qreal combinedWidth = icon->width() + label->spacing() + text->width();
             const qreal contentX = horizontalCenter - combinedWidth / 2;
-            QCOMPARE(icon->x(), contentX + (label->isMirrored() ? text->width() + label->spacing() : 0));
-            QCOMPARE(icon->y(), verticalCenter - icon->height() / 2);
+            QCOMPARE(icon->x(), std::round(contentX + (label->isMirrored() ? text->width() + label->spacing() : 0)));
+            QCOMPARE(icon->y(), std::round(verticalCenter - icon->height() / 2));
             QCOMPARE(icon->width(), icon->implicitWidth());
             QCOMPARE(icon->height(), icon->implicitHeight());
             QCOMPARE(text->x(), contentX + (label->isMirrored() ? 0 : icon->width() + label->spacing()));
@@ -308,6 +308,7 @@ void tst_qquickiconlabel::colorChanges()
 
 void tst_qquickiconlabel::iconSourceContext()
 {
+#if defined(QT_BUILD_INTERNAL)
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("iconSourceContext.qml"));
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
@@ -335,9 +336,9 @@ void tst_qquickiconlabel::iconSourceContext()
         QVERIFY(image);
         QQuickImagePrivate *imagePrivate
                 = static_cast<QQuickImagePrivate *>(QQuickItemPrivate::get(image));
-        QCOMPARE(imagePrivate->pix.url(), testFileUrl("a.png"));
+        QCOMPARE(imagePrivate->pix1.url(), testFileUrl("a.png"));
     }
-
+#endif
 }
 
 QTEST_MAIN(tst_qquickiconlabel)

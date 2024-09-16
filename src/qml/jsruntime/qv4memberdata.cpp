@@ -46,7 +46,7 @@ Heap::MemberData *MemberData::allocate(ExecutionEngine *e, uint n, Heap::MemberD
         if (oldSize > alloc)
             alloc = oldSize;
         m = e->memoryManager->allocManaged<MemberData>(alloc);
-        // no write barrier required here
+        // no write barrier required here, as m gets marked later when member data is set
         memcpy(m, old, oldSize);
     } else {
         m = e->memoryManager->allocManaged<MemberData>(alloc);

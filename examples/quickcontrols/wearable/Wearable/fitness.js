@@ -1,18 +1,34 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-function getSteps() {
-    return 105;
+function getWalkingSteps() {
+    return 4000.;
 }
 
-function getCalories() {
-    return 150;
+function getWalkingGoal() {
+    return 8000.;
 }
 
-function getDistance() {
-    return 10;
+function getWalkingTime() {
+    return 40.;
 }
 
-function getTime() {
-    return "00:30";
+function getWalkingCalories() {
+    return 100.;
+}
+
+function getRunningGoal() {
+    return 8.;
+}
+
+function getRunningDistance() {
+    return 4.;
+}
+
+function getRunningTime() {
+    return 16.;
+}
+
+function getRunningCalories() {
+    return 200.;
 }

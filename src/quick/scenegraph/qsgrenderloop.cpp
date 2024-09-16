@@ -138,6 +138,7 @@ public:
 
     void releaseSwapchain(QQuickWindow *window);
     void handleDeviceLoss();
+    void teardownGraphics();
 
     bool eventFilter(QObject *watched, QEvent *event) override;
 
@@ -166,6 +167,8 @@ public:
     mutable QSet<QSGRenderContext *> pendingRenderContexts;
 
     bool m_inPolish = false;
+
+    bool swRastFallbackDueToSwapchainFailure = false;
 };
 #endif
 
@@ -258,6 +261,15 @@ void QSGRenderLoop::setInstance(QSGRenderLoop *instance)
 
 void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 {
+    // Must always be called on the gui thread.
+
+    // Guard for recursion; relevant due to the MessageBox() on Windows.
+    static QSet<QQuickWindow *> recurseGuard;
+    if (recurseGuard.contains(window))
+        return;
+
+    recurseGuard.insert(window);
+
     QString translatedMessage;
     QString untranslatedMessage;
     QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
@@ -278,6 +290,8 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 #endif // Q_OS_WIN
     if (!signalEmitted)
         qFatal("%s", qPrintable(untranslatedMessage));
+
+    recurseGuard.remove(window);
 }
 
 #ifdef ENABLE_DEFAULT_BACKEND
@@ -366,13 +380,28 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     }
 }
 
+void QSGGuiThreadRenderLoop::teardownGraphics()
+{
+    for (auto it = m_windows.begin(), itEnd = m_windows.end(); it != itEnd; ++it) {
+        if (it->rhi) {
+            QQuickWindowPrivate::get(it.key())->cleanupNodesOnShutdown();
+            if (it->rc)
+                it->rc->invalidate();
+            releaseSwapchain(it.key());
+            if (it->ownRhi)
+                QSGRhiSupport::instance()->destroyRhi(it->rhi, {});
+            it->rhi = nullptr;
+        }
+    }
+}
+
 void QSGGuiThreadRenderLoop::handleDeviceLoss()
 {
     qWarning("Graphics device lost, cleaning up scenegraph and releasing RHIs");
 
     for (auto it = m_windows.begin(), itEnd = m_windows.end(); it != itEnd; ++it) {
         if (!it->rhi || !it->rhi->isDeviceLost())
-            return;
+            continue;
 
         QQuickWindowPrivate::get(it.key())->cleanupNodesOnShutdown();
 
@@ -436,7 +465,8 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         if (!offscreenSurface)
             offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
-        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface);
+        const bool forcePreferSwRenderer = swRastFallbackDueToSwapchainFailure;
+        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface, forcePreferSwRenderer);
         data.rhi = rhiResult.rhi;
         data.ownRhi = rhiResult.own;
 
@@ -603,15 +633,24 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     // signals and want to do graphics stuff already there.
     if (cd->swapchain) {
         Q_ASSERT(!effectiveOutputSize.isEmpty());
+        QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
         if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
 
             cd->hasActiveSwapchain = cd->swapchain->createOrResize();
-            if (!cd->hasActiveSwapchain && data.rhi->isDeviceLost()) {
-                handleDeviceLoss();
-                return;
+            if (!cd->hasActiveSwapchain) {
+                if (data.rhi->isDeviceLost()) {
+                    handleDeviceLoss();
+                    return;
+                } else if (previousOutputSize.isEmpty() && !swRastFallbackDueToSwapchainFailure && rhiSupport->attemptReinitWithSwRastUponFail()) {
+                    qWarning("Failed to create swapchain."
+                             " Retrying by requesting a software rasterizer, if applicable for the 3D API implementation.");
+                    swRastFallbackDueToSwapchainFailure = true;
+                    teardownGraphics();
+                    return;
+                }
             }
 
             cd->swapchainJustBecameRenderable = false;

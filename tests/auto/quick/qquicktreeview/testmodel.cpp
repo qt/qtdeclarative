@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include "testmodel.h"
 
@@ -126,5 +126,35 @@ bool TestModel::insertRows(int position, int rows, const QModelIndex &parent)
     }
 
     endInsertRows();
+    return true;
+}
+
+
+void insertColumnsRecursive(TreeItem *item, int row, int pos, int cols)
+{
+    for (int col = 0; col < cols; col++)
+        item->m_entries.insert(pos + col, QVariant(QString("%1, %2 (inserted)").arg(row).arg(pos + col)));
+    for (auto child : item->m_childItems) {
+        insertColumnsRecursive(child, row, pos, cols);
+        row++;
+    }
+}
+
+bool TestModel::insertColumns(int position, int cols, const QModelIndex &parent)
+{
+    if (!parent.isValid()) {
+        qWarning() << "Cannot insert columns on an invalid parent!";
+        return false;
+    }
+
+    beginInsertColumns(parent, position, position + cols - 1);
+    TreeItem *parentItem = treeItem(parent);
+
+    TreeItem *item = m_rootItem.data();
+
+    insertColumnsRecursive(item, 0, position, cols);
+    m_columnCount += cols;
+
+    endInsertColumns();
     return true;
 }

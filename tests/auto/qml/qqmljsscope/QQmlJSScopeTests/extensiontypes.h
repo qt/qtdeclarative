@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef EXTENSIONTYPES_H
 #define EXTENSIONTYPES_H
@@ -18,6 +18,17 @@ public:
     Extension(QObject *parent = nullptr) : QObject(parent) { }
     int getCount() const { return 42; }
     void setCount(int) { }
+
+    enum EnumFromExtension {
+        ThisIsTheEnumFromExtension,
+    };
+    Q_ENUM(EnumFromExtension)
+    enum FlagFromExtension {
+        ThisIsTheFlagFromExtension,
+    };
+    Q_DECLARE_FLAGS(FlagsFromExtension, FlagFromExtension)
+    Q_FLAG(FlagsFromExtension)
+
 Q_SIGNALS:
     void countChanged();
 };
@@ -41,6 +52,16 @@ public:
     Extended(QObject *parent = nullptr) : QObject(parent) { }
     double getCount() const { return 0.0; }
     void setCount(double) { }
+
+    enum EnumFromExtended {
+        ThisIsTheEnumFromExtended,
+    };
+    Q_ENUM(EnumFromExtended)
+    enum FlagFromExtended {
+        ThisIsTheFlagFromExtended,
+    };
+    Q_DECLARE_FLAGS(FlagsFromExtended, FlagFromExtended)
+    Q_FLAG(FlagsFromExtended)
 Q_SIGNALS:
     void countChanged();
 };

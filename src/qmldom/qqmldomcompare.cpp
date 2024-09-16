@@ -163,7 +163,7 @@ domCompareStrList(const DomItem &i1, const DomItem &i2,
     bool hasDiff = false;
     domCompare(
             i1, i2,
-            [&res, &hasDiff, stopAtFirstDiff](Path p, const DomItem &j1, const DomItem &j2) {
+            [&res, &hasDiff, stopAtFirstDiff](const Path &p, const DomItem &j1, const DomItem &j2) {
                 hasDiff = true;
                 if (!j1) {
                     res.append(QStringLiteral("- %1\n").arg(p.toString()));

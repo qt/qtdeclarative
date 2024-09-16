@@ -18,22 +18,31 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSShadowCheck : public QQmlJSCompilePass
+class Q_QMLCOMPILER_EXPORT QQmlJSShadowCheck : public QQmlJSCompilePass
 {
 public:
     QQmlJSShadowCheck(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
-        : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger)
+                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                      QList<QQmlJS::DiagnosticMessage> *errors, const BasicBlocks &basicBlocks,
+                      const InstructionAnnotations &annotations)
+        : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger, errors, basicBlocks, annotations)
     {}
 
     ~QQmlJSShadowCheck() = default;
 
-    void run(InstructionAnnotations *annotations, const Function *function,
-             QQmlJS::DiagnosticMessage *error);
+    BlocksAndAnnotations run(const Function *function);
 
 private:
+    struct ResettableStore {
+        QQmlJSRegisterContent accumulatorIn;
+        int instructionOffset = -1;
+    };
+
+    void handleStore(int base, const QString &memberName);
+
     void generate_LoadProperty(int nameIndex) override;
     void generate_GetLookup(int index) override;
+    void generate_GetOptionalLookup(int index, int offset) override;
     void generate_StoreProperty(int nameIndex, int base) override;
     void generate_SetLookup(int index, int base) override;
     void generate_CallProperty(int nameIndex, int base, int argc, int argv) override;
@@ -42,10 +51,18 @@ private:
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type) override;
     void endInstruction(QV4::Moth::Instr::Type) override;
 
-    void checkShadowing(
+    enum Shadowability { NotShadowable, Shadowable };
+    Shadowability checkShadowing(
             const QQmlJSRegisterContent &baseType, const QString &propertyName, int baseRegister);
 
-    InstructionAnnotations *m_annotations = nullptr;
+    void checkResettable(const QQmlJSRegisterContent &accumulatorIn, int instructionOffset);
+
+    Shadowability checkBaseType(const QQmlJSRegisterContent &baseType);
+
+    QList<ResettableStore> m_resettableStores;
+    QList<QQmlJSRegisterContent> m_baseTypes;
+    QSet<QQmlJSRegisterContent> m_adjustedTypes;
+
     State m_state;
 };
 

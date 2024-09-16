@@ -559,7 +559,7 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 }
 /*!
     \qmltype ViewTransition
-    \instantiates QQuickViewTransitionAttached
+    \nativetype QQuickViewTransitionAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \brief Specifies items under transition in a view.

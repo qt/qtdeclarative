@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -52,10 +52,12 @@ TestCase {
         }
     }
 
-    function test_empty() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(groupBox, testCase)
+    function test_empty() {
+        let control = createTemporaryObject(groupBox, testCase)
         verify(control)
 
         verify(control.contentItem)
@@ -66,7 +68,7 @@ TestCase {
     }
 
     function test_oneChild() {
-        var control = createTemporaryObject(oneChildBox, testCase)
+        let control = createTemporaryObject(oneChildBox, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
@@ -78,7 +80,7 @@ TestCase {
     }
 
     function test_twoChildren() {
-        var control = createTemporaryObject(twoChildrenBox, testCase)
+        let control = createTemporaryObject(twoChildrenBox, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
@@ -90,7 +92,7 @@ TestCase {
     }
 
     function test_contentItem() {
-        var control = createTemporaryObject(contentBox, testCase)
+        let control = createTemporaryObject(contentBox, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)

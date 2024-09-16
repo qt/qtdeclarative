@@ -19,7 +19,7 @@
 #include <QtQml/private/qqmlrefcount_p.h>
 #include <QtQml/private/qqmlpropertycache_p.h>
 #include <QtQml/private/qqmltype_p.h>
-#include <QtQml/private/qv4executablecompilationunit_p.h>
+#include <QtQml/private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -46,8 +46,12 @@ public:
     QQmlType type() const { return m_type; }
     void setType(QQmlType type)  {  m_type = std::move(type); }
 
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() { return m_compilationUnit; }
-    void setCompilationUnit(QQmlRefPointer<QV4::ExecutableCompilationUnit> unit)
+    QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit()
+    {
+        return m_compilationUnit;
+    }
+
+    void setCompilationUnit(QQmlRefPointer<QV4::CompiledData::CompilationUnit> unit)
     {
         if (m_compilationUnit == unit.data())
             return;
@@ -93,7 +97,7 @@ public:
 private:
     QQmlType m_type;
     QQmlPropertyCache::ConstPtr m_typePropertyCache;
-    QV4::ExecutableCompilationUnit *m_compilationUnit = nullptr;
+    QV4::CompiledData::CompilationUnit *m_compilationUnit = nullptr;
 
     QTypeRevision m_version = QTypeRevision::zero();
     // Types such as QQmlPropertyMap can add properties dynamically at run-time and

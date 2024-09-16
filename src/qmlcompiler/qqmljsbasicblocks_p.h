@@ -21,57 +21,34 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSBasicBlocks : public QQmlJSCompilePass
+class Q_QMLCOMPILER_EXPORT QQmlJSBasicBlocks : public QQmlJSCompilePass
 {
 public:
-    struct BasicBlock {
-        QList<int> jumpOrigins;
-        QList<int> readRegisters;
-        QList<QQmlJSScope::ConstPtr> readTypes;
-        int jumpTarget = -1;
-        bool jumpIsUnconditional = false;
-        bool isReturnBlock = false;
-        bool isThrowBlock = false;
-    };
-
     QQmlJSBasicBlocks(const QV4::Compiler::Context *context,
                       const QV4::Compiler::JSUnitGenerator *unitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
-        : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_context{ context }
+                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                      QList<QQmlJS::DiagnosticMessage> *errors)
+        : QQmlJSCompilePass(unitGenerator, typeResolver, logger, errors), m_context{ context }
     {
     }
 
     ~QQmlJSBasicBlocks() = default;
 
-    InstructionAnnotations run(const Function *function, const InstructionAnnotations &annotations,
-                               QQmlJS::DiagnosticMessage *error, QQmlJSAotCompiler::Flags,
-                               bool &basicBlocksValidationFailed);
+    QQmlJSCompilePass::BlocksAndAnnotations run(const Function *function,
+                                                QQmlJSAotCompiler::Flags compileFlags,
+                                                bool &basicBlocksValidationFailed);
 
     struct BasicBlocksValidationResult { bool success = true; QString errorMessage; };
     BasicBlocksValidationResult basicBlocksValidation();
 
+    static BasicBlocks::iterator
+    basicBlockForInstruction(QFlatMap<int, BasicBlock> &container, int instructionOffset);
+    static BasicBlocks::const_iterator
+    basicBlockForInstruction(const QFlatMap<int, BasicBlock> &container, int instructionOffset);
+
+    QList<ObjectOrArrayDefinition> objectAndArrayDefinitions() const;
+
 private:
-    struct RegisterAccess
-    {
-        QList<QQmlJSScope::ConstPtr> trackedTypes;
-        QHash<int, QQmlJSScope::ConstPtr> typeReaders;
-        QHash<int, QList<int>> registerReadersAndConversions;
-        int trackedRegister;
-    };
-
-    struct ObjectOrArrayDefinition
-    {
-        enum {
-            ArrayClassId = -1,
-            ArrayConstruct1ArgId = -2,
-        };
-
-        int instructionOffset = -1;
-        int internalClassId = ArrayClassId;
-        int argc = 0;
-        int argv = -1;
-    };
-
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type type) override;
     void endInstruction(QV4::Moth::Instr::Type type) override;
 
@@ -81,6 +58,7 @@ private:
     void generate_JumpNoException(int offset) override;
     void generate_JumpNotUndefined(int offset) override;
     void generate_IteratorNext(int value, int offset) override;
+    void generate_GetOptionalLookup(int index, int offset) override;
 
     void generate_Ret() override;
     void generate_ThrowException() override;
@@ -91,23 +69,11 @@ private:
 
     enum JumpMode { Unconditional, Conditional };
     void processJump(int offset, JumpMode mode);
-    void populateBasicBlocks();
-    void populateReaderLocations();
-    void adjustTypes();
-    bool canMove(int instructionOffset, const RegisterAccess &access) const;
-
-    QFlatMap<int, BasicBlock>::iterator
-    basicBlockForInstruction(QFlatMap<int, BasicBlock> &container, int instructionOffset);
-    QFlatMap<int, BasicBlock>::const_iterator
-    basicBlockForInstruction(const QFlatMap<int, BasicBlock> &container, int instructionOffset) const;
 
     void dumpBasicBlocks();
     void dumpDOTGraph();
 
     const QV4::Compiler::Context *m_context;
-    InstructionAnnotations m_annotations;
-    QFlatMap<int, BasicBlock> m_basicBlocks;
-    QHash<int, RegisterAccess> m_readerLocations;
     QList<ObjectOrArrayDefinition> m_objectAndArrayDefinitions;
     bool m_skipUntilNextLabel = false;
     bool m_hadBackJumps = false;

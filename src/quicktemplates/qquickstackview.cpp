@@ -54,7 +54,7 @@ QDebug operator<<(QDebug debug, const QQuickStackViewArg &arg)
 /*!
     \qmltype StackView
     \inherits Control
-//!     \instantiates QQuickStackView
+//!     \nativetype QQuickStackView
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-navigation
@@ -384,6 +384,9 @@ QQuickStackView::QQuickStackView(QQuickItem *parent)
     : QQuickControl(*(new QQuickStackViewPrivate), parent)
 {
     setFlag(ItemIsFocusScope);
+
+    Q_D(QQuickStackView);
+    d->setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 QQuickStackView::~QQuickStackView()
@@ -564,7 +567,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 
     \sa initialItem, {Pushing Items}
 */
-void QQuickStackView::push(QQmlV4Function *args)
+void QQuickStackView::push(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("push");
@@ -678,7 +681,7 @@ void QQuickStackView::push(QQmlV4Function *args)
 
     \sa clear(), {Popping Items}, {Unwinding Items via Pop}
 */
-void QQuickStackView::pop(QQmlV4Function *args)
+void QQuickStackView::pop(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("pop");
@@ -731,7 +734,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     }
 #endif
 
-    QQuickItem *previousItem = nullptr;
+    QPointer<QQuickItem> previousItem;
 
     if (d->popElements(enter)) {
         if (exit) {
@@ -850,7 +853,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
 
     \sa push(), {Replacing Items}
 */
-void QQuickStackView::replace(QQmlV4Function *args)
+void QQuickStackView::replace(QQmlV4FunctionPtr args)
 {
     Q_D(QQuickStackView);
     const QString operationName = QStringLiteral("replace");
@@ -931,8 +934,10 @@ void QQuickStackView::replace(QQmlV4Function *args)
     \since 6.7
 
     Pushes \a items onto the stack using an optional \a operation, and
-    optionally applies a set of properties on each element. Each element can be
-    an \l Item, \l Component, or \l [QML] url. Returns the item that became
+    optionally applies a set of properties on each element. \a items is an array
+    of elements. Each element can be
+    an \l Item, \l Component, or \l [QML] url and can be followed by an optional
+    properties argument (see below). Returns the item that became
     current (the last item).
 
     StackView creates an instance automatically if the pushed element is a
@@ -945,14 +950,14 @@ void QQuickStackView::replace(QQmlV4Function *args)
     stackView.push([item, rectComponent, Qt.resolvedUrl("MyItem.qml")])
 
     // With properties:
-    stackView.push([
+    stackView.pushItems([
         item, { "color": "red" },
         rectComponent, { "color": "green" },
         Qt.resolvedUrl("MyItem.qml"), { "color": "blue" }
     ])
 
     // With properties for only some items:
-    stackView.push([
+    stackView.pushItems([
         item, { "color": "yellow" },
         rectComponent
     ])
@@ -1691,7 +1696,7 @@ QQuickStackViewAttached::QQuickStackViewAttached(QObject *parent)
         QQuickItemPrivate::get(item)->addItemChangeListener(d, QQuickItemPrivate::Parent);
         d->itemParentChanged(item, item->parentItem());
     } else if (parent) {
-        qmlWarning(parent) << "StackView must be attached to an Item";
+        qmlWarning(parent) << "StackView attached property must be attached to an object deriving from Item";
     }
 }
 

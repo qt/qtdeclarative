@@ -16,7 +16,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcStylePlugin, "qt.quick.controls.styleplugin")
+Q_STATIC_LOGGING_CATEGORY(lcStylePlugin, "qt.quick.controls.styleplugin")
 
 QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
     : QQmlExtensionPlugin(parent)

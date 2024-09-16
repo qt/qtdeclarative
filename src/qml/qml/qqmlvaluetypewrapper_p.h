@@ -19,14 +19,6 @@
 #include <private/qtqmlglobal_p.h>
 
 #include <private/qv4referenceobject_p.h>
-#include <private/qqmlpropertycache_p.h>
-#include <private/qqmltype_p_p.h>
-#include <private/qqmltypewrapper_p.h>
-#include <private/qv4object_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4sequenceobject_p.h>
-#include <private/qv4value_p.h>
-#include <private/qv4referenceobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -120,6 +112,17 @@ public:
             ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
+
+    template<typename ValueType>
+    ValueType *cast()
+    {
+        if (QMetaType::fromType<ValueType>() != d()->metaType())
+            return nullptr;
+        if (d()->isReference() && !readReferenceValue())
+            return nullptr;
+        return static_cast<ValueType *>(d()->gadgetPtr());
+    }
+
     bool toGadget(void *data) const;
     bool isEqual(const QVariant& value) const;
     int typeId() const;

@@ -5,22 +5,117 @@
 \page qmllint-warnings-and-errors-uncreatable-type.html
 \ingroup qmllint-warnings-and-errors
 
-\title uncreatable-type
-\brief BRIEF
+\title Uncreatable type
+\brief Types that can't be created.
 
-\section1 uncreatable-type
+\qmllintwarningcategory uncreatable-type
+
+\section1 Namespace must start with an upper case letter
 
 \section2 What happened?
-TODO
+You used a QML object from a lower-case namespace.
 
 \section2 Why is this bad?
-TODO
+The QML language forbids lower-case namespaces.
 
 \section2 Example
 \qml
+import QtQuick as quick
+
+quick.Item { ... }
+
 \endqml
-You can fix this warning by TODO
+To fix the warning, rename the namespace to start with a capital letter:
 \qml
+import QtQuick as Quick
+
+Quick.Item { ... }
+
 \endqml
+
+\section1 Singleton type is not creatable
+
+\section2 What happened?
+You tried to instantiate a QML object from a \l{qml-singleton.html}{singleton type}.
+
+\section2 Why is this bad?
+The QML language forbids instantiations of singletons.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    Qt { // note: Qt is a singleton type
+        id: qt
+    }
+
+    property string someProperty: qt.uiLanguage
+}
+
+\endqml
+To fix the warning, use the singleton directly without instantiating it:
+\qml
+import QtQuick
+
+Item {
+    property string someProperty: Qt.uiLanguage
+}
+
+\endqml
+
+\section1 Type is not creatable
+
+\section2 What happened?
+You tried to instantiate a QML object from an
+\l{qqmlengine.html#QML_UNCREATABLE}{uncreatable type}.
+
+\section2 Why is this bad?
+Uncreatable types are specifically marked to forbid instantiations.
+You might be misusing a type that should only be used as an attached type or
+as an interface.
+
+\section2 Example
+
+\section3 Attached type misuse
+\qml
+import QtQuick
+
+Item {
+    Keys {
+        onPressed: function (key) { ... }
+    }
+}
+
+\endqml
+To fix the warning, use the \c Keys attached type instead of instantiating it:
+\qml
+import QtQuick
+
+Item {
+    Keys.onPressed: function (key) { ... }
+}
+
+\endqml
+
+\section3 Interface misuse
+\qml
+import QtQuick
+
+Item {
+    property PointerHandler myHandler: PointerHandler {}
+}
+
+\endqml
+To fix the warning, use a more specific derived type like \c TapHandler:
+\qml
+import QtQuick
+
+Item {
+    property PointerHandler myHandler: TapHandler {}
+}
+
+\endqml
+
 */
 

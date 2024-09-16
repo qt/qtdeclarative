@@ -5,6 +5,10 @@
 #include "qqmljstyperesolver_p.h"
 #include "qqmljsscopesbyid_p.h"
 
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qdiriterator.h>
+
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -29,8 +33,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
 
     // TODO: one could optimize the generated alias code for aliases pointing to aliases
     //  e.g., if idA.myAlias -> idB.myAlias2 -> idC.myProp, then one could directly generate
-    //  idA.myProp as pointing to idC.myProp.
-    //  This gets complicated when idB.myAlias is in a different Component than where the
+    //  idA.myProp as pointing to idC.myProp. //  This gets complicated when idB.myAlias is in a different Component than where the
     //  idA.myAlias is defined: scopeForId currently only contains the ids of the current
     //  component and alias resolution on the ids of a different component fails then.
     if (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias()) {
@@ -80,7 +83,7 @@ QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *t
 {
     return ::resolveAlias(
             [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
-                return typeResolver->scopeForId(id, referrer);
+                return typeResolver->typeForId(referrer, id);
             },
             property, owner, visitor);
 }
@@ -204,24 +207,16 @@ QQmlJSUtils::sourceDirectoryPath(const QQmlJSImporter *importer, const QString &
     Utility method that checks if one of the registers is var, and the other can be
     efficiently compared to it
 */
-bool canStrictlyCompareWithVar(const QQmlJSTypeResolver *typeResolver,
-                               const QQmlJSRegisterContent &lhsContent,
-                               const QQmlJSRegisterContent &rhsContent)
+bool canStrictlyCompareWithVar(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType)
 {
     Q_ASSERT(typeResolver);
-    const auto varType = typeResolver->varType();
-    const auto nullType = typeResolver->nullType();
-    const auto voidType = typeResolver->voidType();
 
-    // Use containedType() because nullptr is not a stored type.
-    const auto lhsType = typeResolver->containedType(lhsContent);
-    const auto rhsType = typeResolver->containedType(rhsContent);
-
-    return (typeResolver->equals(lhsType, varType)
-            && (typeResolver->equals(rhsType, nullType) || typeResolver->equals(rhsType, voidType)))
-            || (typeResolver->equals(rhsType, varType)
-                && (typeResolver->equals(lhsType, nullType)
-                    || typeResolver->equals(lhsType, voidType)));
+    const QQmlJSScope::ConstPtr varType = typeResolver->varType();
+    const bool leftIsVar = typeResolver->equals(lhsType, varType);
+    const bool righttIsVar = typeResolver->equals(rhsType, varType);
+    return leftIsVar != righttIsVar;
 }
 
 /*! \internal
@@ -229,13 +224,11 @@ bool canStrictlyCompareWithVar(const QQmlJSTypeResolver *typeResolver,
     Utility method that checks if one of the registers is qobject, and the other can be
     efficiently compared to it
 */
-bool canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
-                           const QQmlJSRegisterContent &lhsContent,
-                           const QQmlJSRegisterContent &rhsContent)
+bool canCompareWithQObject(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType)
 {
     Q_ASSERT(typeResolver);
-    const auto lhsType = typeResolver->containedType(lhsContent);
-    const auto rhsType = typeResolver->containedType(rhsContent);
     return (lhsType->isReferenceType()
             && (rhsType->isReferenceType()
                 || typeResolver->equals(rhsType, typeResolver->nullType())))
@@ -249,15 +242,136 @@ bool canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
     Utility method that checks if both sides are QUrl type. In future, that might be extended to
     support comparison with other types i.e QUrl vs string
 */
-bool canCompareWithQUrl(const QQmlJSTypeResolver *typeResolver,
-                        const QQmlJSRegisterContent &lhsContent,
-                        const QQmlJSRegisterContent &rhsContent)
+bool canCompareWithQUrl(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType)
 {
     Q_ASSERT(typeResolver);
-    const auto lhsType = typeResolver->containedType(lhsContent);
-    const auto rhsType = typeResolver->containedType(rhsContent);
     return typeResolver->equals(lhsType, typeResolver->urlType())
             && typeResolver->equals(rhsType, typeResolver->urlType());
+}
+
+static QVarLengthArray<QString, 2> resourceFoldersFromBuildFolder(const QString &buildFolder)
+{
+    QVarLengthArray<QString, 2> result;
+    const QDir dir(buildFolder);
+    if (dir.exists(u".rcc"_s)) {
+        result.append(dir.filePath(u".rcc"_s));
+    }
+    if (dir.exists(u".qt/rcc"_s)) {
+        result.append(dir.filePath(u".qt/rcc"_s));
+    }
+    return result;
+}
+
+
+QStringList QQmlJSUtils::resourceFilesFromBuildFolders(const QStringList &buildFolders)
+{
+    QStringList result;
+    for (const QString &path : buildFolders) {
+        for (const QString &resourceFolder : resourceFoldersFromBuildFolder(path)) {
+            QDirIterator it(resourceFolder, QStringList{ u"*.qrc"_s }, QDir::Files,
+                            QDirIterator::Subdirectories);
+            while (it.hasNext()) {
+                result.append(it.next());
+            }
+        }
+    }
+    return result;
+}
+
+enum FilterType {
+    LocalFileFilter,
+    ResourceFileFilter
+};
+
+/*!
+\internal
+Obtain a QML module qrc entry from its qmldir entry.
+
+Contains a heuristic for QML modules without nested-qml-module-with-prefer-feature
+that tries to find a parent directory that contains a qmldir entry in the qrc.
+*/
+static QQmlJSResourceFileMapper::Entry
+qmlModuleEntryFromBuildPath(const QQmlJSResourceFileMapper *mapper,
+                            const QString &pathInBuildFolder, FilterType type)
+{
+    const QString cleanPath = QDir::cleanPath(pathInBuildFolder);
+    QStringView directoryPath = cleanPath;
+
+    while (!directoryPath.isEmpty()) {
+        const qsizetype lastSlashIndex = directoryPath.lastIndexOf(u'/');
+        if (lastSlashIndex == -1)
+            return {};
+
+        directoryPath.truncate(lastSlashIndex);
+        const QString qmldirPath = u"%1/qmldir"_s.arg(directoryPath);
+        const QQmlJSResourceFileMapper::Filter qmldirFilter = type == LocalFileFilter
+                ? QQmlJSResourceFileMapper::localFileFilter(qmldirPath)
+                : QQmlJSResourceFileMapper::resourceFileFilter(qmldirPath);
+
+        QQmlJSResourceFileMapper::Entry result = mapper->entry(qmldirFilter);
+        if (result.isValid()) {
+            result.resourcePath.chop(std::char_traits<char>::length("/qmldir"));
+            result.filePath.chop(std::char_traits<char>::length("/qmldir"));
+            return result;
+        }
+    }
+    return {};
+}
+
+/*!
+\internal
+Obtains the source folder path from a build folder QML file path via the passed \c mapper.
+
+This works on proper QML modules when using the nested-qml-module-with-prefer-feature
+from 6.8 and uses a heuristic when the qmldir with the prefer entry is missing.
+*/
+QString QQmlJSUtils::qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
+                                                const QString &pathInBuildFolder)
+{
+    if (!mapper)
+        return pathInBuildFolder;
+
+    const auto qmlModuleEntry =
+            qmlModuleEntryFromBuildPath(mapper, pathInBuildFolder, LocalFileFilter);
+    if (!qmlModuleEntry.isValid())
+        return pathInBuildFolder;
+    const QString qrcPath = qmlModuleEntry.resourcePath
+            + QStringView(pathInBuildFolder).sliced(qmlModuleEntry.filePath.size());
+
+    const auto entry = mapper->entry(QQmlJSResourceFileMapper::resourceFileFilter(qrcPath));
+    return entry.isValid()? entry.filePath : pathInBuildFolder;
+}
+
+/*!
+\internal
+Obtains the source folder path from a build folder QML file path via the passed \c mapper, see also
+\l QQmlJSUtils::qmlSourcePathFromBuildPath.
+*/
+QString QQmlJSUtils::qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
+                                                const QString &pathInSourceFolder)
+{
+    if (!mapper)
+        return pathInSourceFolder;
+
+    const QString qrcPath =
+            mapper->entry(QQmlJSResourceFileMapper::localFileFilter(pathInSourceFolder))
+                    .resourcePath;
+
+    if (qrcPath.isEmpty())
+        return pathInSourceFolder;
+
+    const auto moduleBuildEntry =
+            qmlModuleEntryFromBuildPath(mapper, qrcPath, ResourceFileFilter);
+
+    if (!moduleBuildEntry.isValid())
+        return pathInSourceFolder;
+
+    const auto qrcFolderPath = qrcPath.first(qrcPath.lastIndexOf(u'/')); // drop the filename
+
+    return moduleBuildEntry.filePath + qrcFolderPath.sliced(moduleBuildEntry.resourcePath.size())
+            + pathInSourceFolder.sliced(pathInSourceFolder.lastIndexOf(u'/'));
 }
 
 QT_END_NAMESPACE

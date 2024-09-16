@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSaturationLightnessPickerPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickSaturationLightnessPicker
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickSaturationLightnessPicker
     : public QQuickAbstractColorPicker
 {
     Q_OBJECT
@@ -40,7 +40,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickSaturationLightnessPicker)
 
 #endif // QQUICKSATURATIONLIGHTNESSPICKER_P_H

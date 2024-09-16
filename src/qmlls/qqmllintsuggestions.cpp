@@ -6,22 +6,25 @@
 #include <QtLanguageServer/private/qlanguageserverspec_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
+#include <QtQmlCompiler/private/qqmljsutils_p.h>
 #include <QtQmlDom/private/qqmldom_utils_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qdir.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qtimer.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qfileinfo.h>
-#include <QtCore/qdir.h>
+#include <QtCore/qxpfunctional.h>
 #include <chrono>
+
+QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
 
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
-
-QT_BEGIN_NAMESPACE
 namespace QmlLsp {
 
 static DiagnosticSeverity severityFromMsgType(QtMsgType t)
@@ -56,7 +59,7 @@ static void codeActionHandler(
         int version = data[u"version"].toInt();
         QJsonArray suggestions = data[u"suggestions"].toArray();
 
-        QList<TextDocumentEdit> edits;
+        QList<WorkspaceEdit::DocumentChange> edits;
         QString message;
         for (const QJsonValue &suggestion : suggestions) {
             QString replacement = suggestion[u"replacement"].toString();
@@ -140,10 +143,10 @@ static Diagnostic createMissingBuildDirDiagnostic()
     Position &positionEnd = range.end;
     positionEnd.line = 1;
     diagnostic.message =
-            "qmlls could not find a build directory, without a build directory "
-            "containing a current build there could be spurious warnings, you might "
-            "want to pass the --build-dir <buildDir> option to qmlls, or set the "
-            "environment variable QMLLS_BUILD_DIRS.";
+            "qmlls couldn't find a build directory. Pass the \"--build-dir <buildDir>\" option to "
+            "qmlls, set the environment variable \"QMLLS_BUILD_DIRS\", or create a .qmlls.ini "
+            "configuration file with a \"buildDir\" value in your project's source folder to avoid "
+            "spurious warnings";
     diagnostic.source = QByteArray("qmllint");
     return diagnostic;
 }
@@ -167,13 +170,11 @@ static Diagnostic messageToDiagnostic_helper(AdvanceFunc advancePositionPastLoca
     }
 
     if (message.fixSuggestion && !message.fixSuggestion->fixDescription().isEmpty()) {
-        diagnostic.message = QString(message.message)
-                                     .append(u": "_s)
-                                     .append(message.fixSuggestion->fixDescription())
+        diagnostic.message = u"%1: %2 [%3]"_s.arg(message.message, message.fixSuggestion->fixDescription(), message.id.toString())
                                      .simplified()
                                      .toUtf8();
     } else {
-        diagnostic.message = message.message.toUtf8();
+        diagnostic.message = u"%1 [%2]"_s.arg(message.message, message.id.toString()).toUtf8();
     }
 
     diagnostic.source = QByteArray("qmllint");
@@ -307,7 +308,7 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
 
     qCDebug(lintLog) << "has doc, do real lint";
     QStringList imports = m_codeModel->buildPathsForFileUrl(url);
-    imports.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    imports.append(m_codeModel->importPaths());
     const QString filename = doc.canonicalFilePath();
     // add source directory as last import as fallback in case there is no qmldir in the build
     // folder this mimics qmllint behaviors
@@ -316,11 +317,21 @@ void QmlLintSuggestions::diagnoseHelper(const QByteArray &url,
     bool silent = true;
     const QString fileContents = doc.field(Fields::code).value().toString();
     const QStringList qmltypesFiles;
-    const QStringList resourceFiles = resourceFilesFromBuildFolders(imports);
+    const QStringList resourceFiles = QQmlJSUtils::resourceFilesFromBuildFolders(imports);
 
-    QList<QQmlJS::LoggerCategory> categories;
+    QList<QQmlJS::LoggerCategory> categories = QQmlJSLogger::defaultCategories();
 
     QQmlJSLinter linter(imports);
+
+    for (const QQmlJSLinter::Plugin &plugin : linter.plugins()) {
+        for (const QQmlJS::LoggerCategory &category : plugin.categories())
+            categories.append(category);
+    }
+
+    QQmlToolingSettings settings(QLatin1String("qmllint"));
+    if (settings.search(filename)) {
+        QQmlJS::LoggingUtils::updateLogLevels(categories, settings, nullptr);
+    }
 
     linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles,
                     resourceFiles, categories);

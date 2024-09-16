@@ -15,8 +15,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(lcStates)
-
 class QQuickTransitionManagerPrivate
 {
 public:
@@ -190,8 +188,8 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             }
             return false;
         };
-        auto newEnd = std::remove_if(applyList.begin(), applyList.end(), isHandledInTransition);
-        applyList.erase(newEnd, applyList.end());
+
+        applyList.removeIf(isHandledInTransition);
     }
 
     // Any actions remaining have not been handled by the transition and should

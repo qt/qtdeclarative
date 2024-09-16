@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickDialAttached;
 class QQuickDialPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickDial : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
@@ -161,7 +161,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickDial)
 
 #endif // QQUICKDIAL_P_H

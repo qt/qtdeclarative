@@ -26,44 +26,52 @@ QAbstractItemModel *QQmlTreeModelToTableModel::model() const
     return m_model;
 }
 
+void QQmlTreeModelToTableModel::connectToModel()
+{
+    m_connections = {
+        QObject::connect(m_model, &QAbstractItemModel::destroyed,
+                         this, &QQmlTreeModelToTableModel::modelHasBeenDestroyed),
+        QObject::connect(m_model, &QAbstractItemModel::modelReset,
+                         this, &QQmlTreeModelToTableModel::modelHasBeenReset),
+        QObject::connect(m_model, &QAbstractItemModel::dataChanged,
+                         this, &QQmlTreeModelToTableModel::modelDataChanged),
+
+        QObject::connect(m_model, &QAbstractItemModel::layoutAboutToBeChanged,
+                         this, &QQmlTreeModelToTableModel::modelLayoutAboutToBeChanged),
+        QObject::connect(m_model, &QAbstractItemModel::layoutChanged,
+                         this, &QQmlTreeModelToTableModel::modelLayoutChanged),
+
+        QObject::connect(m_model, &QAbstractItemModel::rowsAboutToBeInserted,
+                         this, &QQmlTreeModelToTableModel::modelRowsAboutToBeInserted),
+        QObject::connect(m_model, &QAbstractItemModel::rowsInserted,
+                         this, &QQmlTreeModelToTableModel::modelRowsInserted),
+        QObject::connect(m_model, &QAbstractItemModel::rowsAboutToBeRemoved,
+                         this, &QQmlTreeModelToTableModel::modelRowsAboutToBeRemoved),
+        QObject::connect(m_model, &QAbstractItemModel::rowsRemoved,
+                         this, &QQmlTreeModelToTableModel::modelRowsRemoved),
+        QObject::connect(m_model, &QAbstractItemModel::rowsAboutToBeMoved,
+                         this, &QQmlTreeModelToTableModel::modelRowsAboutToBeMoved),
+        QObject::connect(m_model, &QAbstractItemModel::rowsMoved,
+                         this, &QQmlTreeModelToTableModel::modelRowsMoved),
+
+        QObject::connect(m_model, &QAbstractItemModel::columnsAboutToBeInserted,
+                         this, &QQmlTreeModelToTableModel::modelColumnsAboutToBeInserted),
+        QObject::connect(m_model, &QAbstractItemModel::columnsAboutToBeRemoved,
+                         this, &QQmlTreeModelToTableModel::modelColumnsAboutToBeRemoved),
+        QObject::connect(m_model, &QAbstractItemModel::columnsInserted,
+                         this, &QQmlTreeModelToTableModel::modelColumnsInserted),
+        QObject::connect(m_model, &QAbstractItemModel::columnsRemoved,
+                         this, &QQmlTreeModelToTableModel::modelColumnsRemoved)
+    };
+}
+
 void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
 {
-    struct Cx {
-        const char *signal;
-        const char *slot;
-    };
-    const Cx connections[] = {
-        { SIGNAL(destroyed(QObject*)),
-          SLOT(modelHasBeenDestroyed()) },
-        { SIGNAL(modelReset()),
-          SLOT(modelHasBeenReset()) },
-        { SIGNAL(dataChanged(QModelIndex,QModelIndex,QList<int>)),
-          SLOT(modelDataChanged(QModelIndex,QModelIndex,QList<int>)) },
-
-        { SIGNAL(layoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
-          SLOT(modelLayoutAboutToBeChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)) },
-        { SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
-          SLOT(modelLayoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)) },
-
-        { SIGNAL(rowsAboutToBeInserted(QModelIndex,int,int)),
-          SLOT(modelRowsAboutToBeInserted(QModelIndex,int,int)) },
-        { SIGNAL(rowsInserted(QModelIndex,int,int)),
-          SLOT(modelRowsInserted(QModelIndex,int,int)) },
-        { SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
-          SLOT(modelRowsAboutToBeRemoved(QModelIndex,int,int)) },
-        { SIGNAL(rowsRemoved(QModelIndex,int,int)),
-          SLOT(modelRowsRemoved(QModelIndex,int,int)) },
-        { SIGNAL(rowsAboutToBeMoved(QModelIndex,int,int,QModelIndex,int)),
-          SLOT(modelRowsAboutToBeMoved(QModelIndex,int,int,QModelIndex,int)) },
-        { SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
-          SLOT(modelRowsMoved(QModelIndex,int,int,QModelIndex,int)) },
-        { nullptr, nullptr }
-    };
-
     if (m_model != arg) {
         if (m_model) {
-            for (const Cx *c = &connections[0]; c->signal; c++)
-                disconnect(m_model, c->signal, this, c->slot);
+            for (const auto &c : m_connections)
+                QObject::disconnect(c);
+            m_connections.fill({});
         }
 
         clearModelData();
@@ -73,9 +81,7 @@ void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
             m_rootIndex = QModelIndex();
 
         if (m_model) {
-            for (const Cx *c = &connections[0]; c->signal; c++)
-                connect(m_model, c->signal, this, c->slot);
-
+            connectToModel();
             showModelTopLevelItems();
         }
 
@@ -971,6 +977,40 @@ void QQmlTreeModelToTableModel::modelRowsMoved(const QModelIndex & sourceParent,
 
     disableSignalAggregation();
 
+    ASSERT_CONSISTENCY();
+}
+
+void QQmlTreeModelToTableModel::modelColumnsAboutToBeInserted(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    beginInsertColumns({}, start, end);
+}
+
+void QQmlTreeModelToTableModel::modelColumnsAboutToBeRemoved(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    beginRemoveColumns({}, start, end);
+}
+
+void QQmlTreeModelToTableModel::modelColumnsInserted(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    endInsertColumns();
+    m_items.clear();
+    showModelTopLevelItems();
+    ASSERT_CONSISTENCY();
+}
+
+void QQmlTreeModelToTableModel::modelColumnsRemoved(const QModelIndex & parent, int start, int end)
+{
+    Q_UNUSED(parent);
+    Q_UNUSED(start);
+    Q_UNUSED(end);
+    endRemoveColumns();
+    m_items.clear();
+    showModelTopLevelItems();
     ASSERT_CONSISTENCY();
 }
 

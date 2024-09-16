@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandlerPrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QQuickPointerHandlerPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPointerHandler)
 
@@ -57,6 +57,7 @@ public:
     bool hadKeepMouseGrab : 1;    // some handlers override target()->setKeepMouseGrab(); this remembers previous state
     bool hadKeepTouchGrab : 1;    // some handlers override target()->setKeepTouchGrab(); this remembers previous state
     bool cursorSet : 1;
+    bool cursorDirty : 1;
 };
 
 QT_END_NAMESPACE

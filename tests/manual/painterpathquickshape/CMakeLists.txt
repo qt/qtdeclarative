@@ -36,6 +36,8 @@ set(qml_resource_files
     "SimpleShape.qml"
     "SmallPolygon.qml"
     "Squircle.qml"
+    "Intersect.qml"
+    "Intersect2.qml"
     "ControlledShape.qml"
     "Mussel.qml"
     "Graziano.ttf"

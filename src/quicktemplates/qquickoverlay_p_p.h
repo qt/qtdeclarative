@@ -56,6 +56,7 @@ public:
     QList<QQuickPopup *> stackingOrderDrawers() const;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
+    void itemRotationChanged(QQuickItem *item) override;
 
     void updateGeometry();
 

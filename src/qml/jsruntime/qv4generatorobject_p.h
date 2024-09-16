@@ -33,7 +33,7 @@ enum class GeneratorState {
 namespace Heap {
 
 struct GeneratorFunctionCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 struct GeneratorFunction : ArrowFunction {
@@ -75,6 +75,8 @@ struct GeneratorFunction : ArrowFunction
     V4_OBJECT2(GeneratorFunction, ArrowFunction)
     V4_INTERNALCLASS(GeneratorFunction)
 
+    static inline constexpr quint8 IsTailCallable = false;
+
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
@@ -83,6 +85,8 @@ struct MemberGeneratorFunction : MemberFunction
 {
     V4_OBJECT2(MemberGeneratorFunction, MemberFunction)
     V4_INTERNALCLASS(MemberGeneratorFunction)
+
+    static inline constexpr quint8 IsTailCallable = false;
 
     static Heap::FunctionObject *create(ExecutionContext *scope, Function *function, Object *homeObject, String *name);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
@@ -104,7 +108,7 @@ struct GeneratorObject : Object {
     V4_INTERNALCLASS(GeneratorObject)
     V4_PROTOTYPE(generatorPrototype)
 
-    ReturnedValue resume(ExecutionEngine *engine, const Value &arg) const;
+    ReturnedValue resume(ExecutionEngine *engine, const Value &arg, std::optional<Value>) const;
 };
 
 }

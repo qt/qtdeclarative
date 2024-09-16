@@ -17,6 +17,6 @@
 
 #include <QtCore/qglobal.h>
 #include <QtQml/private/qqmlglobal_p.h>
-#include <QtQuickDialogs2QuickImpl/private/qtquickdialogs2quickimplexports_p.h>
+#include <QtQuickDialogs2QuickImpl/qtquickdialogs2quickimplexports.h>
 
 #endif // QTQUICKDIALOGS2QUICKIMPLGLOBAL_P_H

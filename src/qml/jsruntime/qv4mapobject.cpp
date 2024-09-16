@@ -12,14 +12,14 @@ DEFINE_OBJECT_VTABLE(WeakMapCtor);
 DEFINE_OBJECT_VTABLE(MapCtor);
 DEFINE_OBJECT_VTABLE(MapObject);
 
-void Heap::WeakMapCtor::init(QV4::ExecutionContext *scope)
+void Heap::WeakMapCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("WeakMap"));
+    Heap::FunctionObject::init(engine, QStringLiteral("WeakMap"));
 }
 
-void Heap::MapCtor::init(QV4::ExecutionContext *scope)
+void Heap::MapCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("Map"));
+    Heap::FunctionObject::init(engine, QStringLiteral("Map"));
 }
 
 ReturnedValue WeakMapCtor::construct(const FunctionObject *f, const Value *argv, int argc, const Value *newTarget, bool weakMap)
@@ -214,6 +214,17 @@ ReturnedValue WeakMapPrototype::method_set(const FunctionObject *b, const Value 
         (!argc || !argv[0].isObject()))
         return scope.engine->throwTypeError();
 
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        if (scope.engine->memoryManager->gcStateMachine->state <= GCState::FreeWeakMaps)
+            return;
+        Q_ASSERT(argv[0].heapObject());
+        argv[0].heapObject()->mark(ms);
+        if (argc > 1) {
+            if (auto *h = argv[1].heapObject())
+                h->mark(ms);
+        }
+    });
+
     that->d()->esTable->set(argv[0], argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();
 }
@@ -269,12 +280,21 @@ ReturnedValue MapPrototype::method_forEach(const FunctionObject *b, const Value 
 
     Value *arguments = scope.alloc(3);
     arguments[2] = that;
-    for (uint i = 0; i < that->d()->esTable->size(); ++i) {
-        that->d()->esTable->iterate(i, &arguments[1], &arguments[0]); // fill in key (0), value (1)
+
+    ESTable::ShiftObserver observer{};
+    that->d()->esTable->observeShifts(observer);
+
+    while (observer.pivot < that->d()->esTable->size()) {
+        that->d()->esTable->iterate(observer.pivot, &arguments[1], &arguments[0]); // fill in key (0), value (1)
 
         callbackfn->call(thisArg, arguments, 3);
         CHECK_EXCEPTION();
+
+        observer.next();
     }
+
+    that->d()->esTable->stopObservingShifts(observer);
+
     return Encode::undefined();
 }
 
@@ -316,6 +336,15 @@ ReturnedValue MapPrototype::method_set(const FunctionObject *b, const Value *thi
     Scoped<MapObject> that(scope, thisObject);
     if (!that || that->d()->isWeakMap)
         return scope.engine->throwTypeError();
+
+    QV4::WriteBarrier::markCustom(scope.engine, [&](QV4::MarkStack *ms) {
+        if  (auto *h = argv[0].heapObject())
+            h->mark(ms);
+        if (argc > 1) {
+            if (auto *h = argv[1].heapObject())
+                h->mark(ms);
+        }
+    });
 
     that->d()->esTable->set(argc ? argv[0] : Value::undefinedValue(), argc > 1 ? argv[1] : Value::undefinedValue());
     return that.asReturnedValue();

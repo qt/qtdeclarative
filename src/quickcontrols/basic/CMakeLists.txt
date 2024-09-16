@@ -148,22 +148,22 @@ if (QT_FEATURE_quicktemplates2_calendar)
     )
 endif()
 
-qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
+add_subdirectory(impl)
+
+qt_internal_add_qml_module(QuickControls2Basic
     URI "QtQuick.Controls.Basic"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2BasicStylePlugin
     DEPENDENCIES
         QtQuick/auto
-    IMPORTS
-        QtQuick.Controls.impl/auto
     PLUGIN_TARGET qtquickcontrols2basicstyleplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquickbasicstyle.cpp qquickbasicstyle_p.h
         qquickbasictheme.cpp qquickbasictheme_p.h
-        qtquickcontrols2basicstyleplugin.cpp
+        qtquickcontrols2basicforeign.cpp qtquickcontrols2basicforeign_p.h
     QML_FILES
         ${qml_files}
     DEFINES
@@ -173,13 +173,24 @@ qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2BasicStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
 
+target_sources(qtquickcontrols2basicstyleplugin
+    PRIVATE
+        qtquickcontrols2basicstyleplugin.cpp
+)
+
+target_link_libraries(qtquickcontrols2basicstyleplugin
+    PRIVATE
+        Qt::QuickControls2Private
+)
+
 # Resources:
-set(qtquickcontrols2basicstyleplugin_resource_files
+set(qtquickcontrols2basicstyle_resource_files
     "images/arrow-indicator.png"
     "images/arrow-indicator@2x.png"
     "images/arrow-indicator@3x.png"
@@ -202,14 +213,12 @@ set(qtquickcontrols2basicstyleplugin_resource_files
     "images/drop-indicator@4x.png"
 )
 
-qt_internal_add_resource(qtquickcontrols2basicstyleplugin "qtquickcontrols2basicstyleplugin"
+qt_internal_add_resource(QuickControls2Basic "qtquickcontrols2basicstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Basic"
     FILES
-        ${qtquickcontrols2basicstyleplugin_resource_files}
+        ${qtquickcontrols2basicstyle_resource_files}
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2basicstyleplugin
                                               qtquickcontrols2basicstyleimplplugin)

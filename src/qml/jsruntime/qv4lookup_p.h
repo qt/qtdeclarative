@@ -19,6 +19,7 @@
 #include "qv4internalclass_p.h"
 #include "qv4qmlcontext_p.h"
 #include <private/qqmltypewrapper_p.h>
+#include <private/qv4mm_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -28,10 +29,13 @@ namespace Heap {
     struct QObjectMethod;
 }
 
+template <typename T, int PhantomTag>
+using HeapObjectWrapper = WriteBarrier::HeapObjectWrapper<T, PhantomTag>;
+
 // Note: We cannot hide the copy ctor and assignment operator of this class because it needs to
 //       be trivially copyable. But you should never ever copy it. There are refcounted members
 //       in there.
-struct Q_QML_PRIVATE_EXPORT Lookup {
+struct Q_QML_EXPORT Lookup {
     union {
         ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
         ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
@@ -48,7 +52,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             quintptr unused2;
         } markDef;
         struct {
-            Heap::InternalClass *ic;
+            HeapObjectWrapper<Heap::InternalClass, 0> ic;
             quintptr unused;
             uint index;
             uint offset;
@@ -59,8 +63,8 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             const Value *data;
         } protoLookup;
         struct {
-            Heap::InternalClass *ic;
-            Heap::InternalClass *ic2;
+            HeapObjectWrapper<Heap::InternalClass, 1> ic;
+            HeapObjectWrapper<Heap::InternalClass, 2> ic2;
             uint offset;
             uint offset2;
         } objectLookupTwoClasses;
@@ -73,12 +77,12 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         struct {
             // Make sure the next two values are in sync with protoLookup
             quintptr protoId;
-            Heap::Object *proto;
+            HeapObjectWrapper<Heap::Object, 3> proto;
             const Value *data;
             quintptr type;
         } primitiveLookup;
         struct {
-            Heap::InternalClass *newClass;
+            HeapObjectWrapper<Heap::InternalClass, 4> newClass;
             quintptr protoId;
             uint offset;
             uint unused;
@@ -90,14 +94,14 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             uint unused;
         } indexedLookup;
         struct {
-            Heap::InternalClass *ic;
-            Heap::InternalClass *qmlTypeIc; // only used when lookup goes through QQmlTypeWrapper
+            HeapObjectWrapper<Heap::InternalClass, 5> ic;
+            HeapObjectWrapper<Heap::InternalClass, 6> qmlTypeIc; // only used when lookup goes through QQmlTypeWrapper
             const QQmlPropertyCache *propertyCache;
             const QQmlPropertyData *propertyData;
         } qobjectLookup;
         struct {
-            Heap::InternalClass *ic;
-            Heap::QObjectMethod *method;
+            HeapObjectWrapper<Heap::InternalClass, 7> ic;
+            HeapObjectWrapper<Heap::QObjectMethod, 8> method;
             const QQmlPropertyCache *propertyCache;
             const QQmlPropertyData *propertyData;
         } qobjectMethodLookup;
@@ -108,7 +112,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             int notifyIndex;
         } qobjectFallbackLookup;
         struct {
-            Heap::InternalClass *ic;
+            HeapObjectWrapper<Heap::InternalClass, 9> ic;
             quintptr metaObject; // a (const QMetaObject* & 1) or nullptr
             const QtPrivate::QMetaTypeInterface *metaType; // cannot use QMetaType; class must be trivial
             quint16 coreIndex;
@@ -121,7 +125,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             int scriptIndex;
         } qmlContextScriptLookup;
         struct {
-            Heap::Base *singletonObject;
+            HeapObjectWrapper<Heap::Base, 10> singletonObject;
             quintptr unused2;
             QV4::ReturnedValue singletonValue;
         } qmlContextSingletonLookup;
@@ -138,18 +142,18 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
         } qmlContextGlobalLookup;
         struct {
-            Heap::Base *qmlTypeWrapper;
+            HeapObjectWrapper<Heap::Base, 11> qmlTypeWrapper;
             quintptr unused2;
         } qmlTypeLookup;
         struct {
-            Heap::InternalClass *ic;
+            HeapObjectWrapper<Heap::InternalClass, 12> ic;
             quintptr unused;
             ReturnedValue encodedEnumValue;
             const QtPrivate::QMetaTypeInterface *metaType;
         } qmlEnumValueLookup;
         struct {
-            Heap::InternalClass *ic;
-            Heap::Object *qmlScopedEnumWrapper;
+            HeapObjectWrapper<Heap::InternalClass, 13> ic;
+            HeapObjectWrapper<Heap::Object, 14> qmlScopedEnumWrapper;
         } qmlScopedEnumWrapperLookup;
     };
 
@@ -251,7 +255,7 @@ inline void setupQObjectLookup(
         const Object *self)
 {
     setupQObjectLookup(lookup, ddata, propertyData);
-    lookup->qobjectLookup.ic = self->internalClass();
+    lookup->qobjectLookup.ic.set(self->engine(), self->internalClass());
 }
 
 
@@ -260,17 +264,20 @@ inline void setupQObjectLookup(
         const Object *self, const Object *qmlType)
 {
     setupQObjectLookup(lookup, ddata, propertyData, self);
-    lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();
+    lookup->qobjectLookup.qmlTypeIc.set(self->engine(), qmlType->internalClass());
 }
 
+// template parameter is an ugly trick to avoid pulling in the QObjectMethod header here
+template<typename QObjectMethod = Heap::QObjectMethod>
 inline void setupQObjectMethodLookup(
         Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
-        const Object *self, Heap::QObjectMethod *method)
+        const Object *self, QObjectMethod *method)
 {
     lookup->releasePropertyCache();
     Q_ASSERT(!ddata->propertyCache.isNull());
-    lookup->qobjectMethodLookup.method = method;
-    lookup->qobjectMethodLookup.ic = self->internalClass();
+    auto engine = self->engine();
+    lookup->qobjectMethodLookup.method.set(engine, method);
+    lookup->qobjectMethodLookup.ic.set(engine, self->internalClass());
     lookup->qobjectMethodLookup.propertyCache = ddata->propertyCache.data();
     lookup->qobjectMethodLookup.propertyCache->addref();
     lookup->qobjectMethodLookup.propertyData = propertyData;

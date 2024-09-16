@@ -25,12 +25,12 @@ QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointHandlerPrivate;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
+class Q_QUICK_EXPORT QQuickMultiPointHandler : public QQuickPointerDeviceHandler
 {
     Q_OBJECT
-    Q_PROPERTY(int minimumPointCount READ minimumPointCount WRITE setMinimumPointCount NOTIFY minimumPointCountChanged FINAL)
-    Q_PROPERTY(int maximumPointCount READ maximumPointCount WRITE setMaximumPointCount NOTIFY maximumPointCountChanged FINAL)
-    Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged FINAL)
+    Q_PROPERTY(int minimumPointCount READ minimumPointCount WRITE setMinimumPointCount NOTIFY minimumPointCountChanged)
+    Q_PROPERTY(int maximumPointCount READ maximumPointCount WRITE setMaximumPointCount NOTIFY maximumPointCountChanged)
+    Q_PROPERTY(QQuickHandlerPoint centroid READ centroid NOTIFY centroidChanged)
 
 public:
     explicit QQuickMultiPointHandler(QQuickItem *parent = nullptr, int minimumPointCount = 2, int maximumPointCount = -1);

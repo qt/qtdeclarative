@@ -20,15 +20,15 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickStateGroupPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickStateGroup : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickStateGroup : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_DECLARE_PRIVATE(QQuickStateGroup)
 
-    Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickState> states READ statesProperty DESIGNABLE false FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickTransition> transitions READ transitionsProperty DESIGNABLE false FINAL)
+    Q_PROPERTY(QString state READ state WRITE setState NOTIFY stateChanged)
+    Q_PROPERTY(QQmlListProperty<QQuickState> states READ statesProperty DESIGNABLE false)
+    Q_PROPERTY(QQmlListProperty<QQuickTransition> transitions READ transitionsProperty DESIGNABLE false)
     QML_NAMED_ELEMENT(StateGroup)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -60,7 +60,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickStateGroup)
 
 #endif // QQUICKSTATEGROUP_H

@@ -18,10 +18,11 @@
 #include <QtCore/qvariant.h>
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/qquickattachedpropertypropagator.h>
+#include <QtQuickControls2Imagine/qtquickcontrols2imagineexports.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickImagineStyle : public QQuickAttachedPropertyPropagator
+class Q_QUICKCONTROLS2IMAGINE_EXPORT QQuickImagineStyle : public QQuickAttachedPropertyPropagator
 {
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath RESET resetPath NOTIFY pathChanged FINAL)

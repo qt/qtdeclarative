@@ -239,8 +239,6 @@ public:
     static QMutex mutex;
 };
 
-
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQuickContext2D)
 
 #endif // QQUICKCONTEXT2D_P_H

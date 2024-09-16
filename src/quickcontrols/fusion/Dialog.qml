@@ -39,7 +39,7 @@ T.Dialog {
 
     header: Label {
         text: control.title
-        visible: control.title
+        visible: control.title && parent?.parent === Overlay.overlay
         elide: Label.ElideRight
         font.bold: true
         padding: 6

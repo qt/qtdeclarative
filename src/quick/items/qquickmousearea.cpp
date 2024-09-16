@@ -21,8 +21,6 @@ QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlMaVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGING)
 
-Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
-
 QQuickMouseAreaPrivate::QQuickMouseAreaPrivate()
 : enabled(true), hoverEnabled(false), scrollGestureEnabled(true), hovered(false), longPress(false),
   moved(false), stealMouse(false), doubleClick(false), preventStealing(false),
@@ -161,7 +159,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
 /*!
     \qmltype MouseArea
-    \instantiates QQuickMouseArea
+    \nativetype QQuickMouseArea
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief Enables simple mouse handling.
@@ -1039,7 +1037,7 @@ void QQuickMouseArea::geometryChange(const QRectF &newGeometry, const QRectF &ol
     Q_D(QQuickMouseArea);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 
-    if (d->lastScenePos.isNull)
+    if (!d->lastScenePos.isValid())
         d->lastScenePos = mapToScene(d->lastPos);
     else if (newGeometry.x() != oldGeometry.x() || newGeometry.y() != oldGeometry.y())
         d->lastPos = mapFromScene(d->lastScenePos);
@@ -1284,6 +1282,7 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
 
         return me.isAccepted();
     }
+    Q_UNUSED(source)
     return false;
 }
 

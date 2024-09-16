@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Transition
-    \instantiates QQuickTransition
+    \nativetype QQuickTransition
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \brief Defines animated transitions that occur on state changes.
@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
     \l Behavior, the Transition animation overrides the \l Behavior for that
     state change.
 
-    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt QML}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt Qml}
 */
 
 //ParallelAnimationWrapper allows us to do a "callback" when the animation finishes, rather than connecting
@@ -424,7 +424,7 @@ bool QQuickTransition::running() const
 
     This property holds a list of the animations to be run for this transition.
 
-    \snippet ../qml/dynamicscene/dynamicscene.qml top-level transitions
+    \snippet qml/transition-animation.qml 0
 
     The top-level animations are run in parallel. To run them sequentially,
     define them within a SequentialAnimation:

@@ -9,7 +9,12 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D gradTabTexture;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
+    mat4 gradientMatrix;
     vec2 translationPoint;
     vec2 focalToCenter;
     float centerRadius;

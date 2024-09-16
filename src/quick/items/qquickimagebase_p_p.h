@@ -23,7 +23,7 @@
 QT_BEGIN_NAMESPACE
 
 class QNetworkReply;
-class Q_QUICK_PRIVATE_EXPORT QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
+class Q_QUICK_EXPORT QQuickImageBasePrivate : public QQuickImplicitSizeItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickImageBase)
 
@@ -33,8 +33,11 @@ public:
         cache(true),
         mirrorHorizontally(false),
         mirrorVertically(false),
-        oldAutoTransform(false)
+        oldAutoTransform(false),
+        retainWhileLoading(false)
     {
+        pendingPix = &pix1;
+        currentPix = &pix1;
     }
 
     virtual bool updateDevicePixelRatio(qreal targetDevicePixelRatio);
@@ -43,7 +46,10 @@ public:
     void setProgress(qreal value);
 
     QUrl url;
-    QQuickPixmap pix;
+    QQuickPixmap *pendingPix = nullptr;
+    QQuickPixmap *currentPix = nullptr;
+    QQuickPixmap pix1;
+    QQuickPixmap pix2;
     QSize sourcesize;
     QSize oldSourceSize;
     QRectF sourceClipRect;
@@ -61,6 +67,7 @@ public:
     bool mirrorHorizontally: 1;
     bool mirrorVertically : 1;
     bool oldAutoTransform : 1;
+    bool retainWhileLoading : 1;
 };
 
 QT_END_NAMESPACE

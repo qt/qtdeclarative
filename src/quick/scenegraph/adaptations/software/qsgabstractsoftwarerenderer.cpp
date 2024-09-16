@@ -12,7 +12,7 @@
 #include <QtGui/QWindow>
 #include <QtQuick/QSGSimpleRectNode>
 
-Q_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
+Q_STATIC_LOGGING_CATEGORY(lc2DRender, "qt.scenegraph.softwarecontext.abstractrenderer")
 
 QT_BEGIN_NAMESPACE
 
@@ -95,8 +95,10 @@ QRegion QSGAbstractSoftwareRenderer::renderNodes(QPainter *painter)
 
     auto iterator = m_renderableNodes.begin();
     // First node is the background and needs to painted without blending
-    auto backgroundNode = *iterator;
-    dirtyRegion += backgroundNode->renderNode(painter, /*force opaque painting*/ true);
+    if (m_clearColorEnabled) {
+        auto backgroundNode = *iterator;
+        dirtyRegion += backgroundNode->renderNode(painter, /*force opaque painting*/ true);
+    }
     iterator++;
 
     for (; iterator != m_renderableNodes.end(); ++iterator) {
@@ -304,6 +306,16 @@ void QSGAbstractSoftwareRenderer::nodeOpacityUpdated(QSGNode *node)
 void QSGAbstractSoftwareRenderer::markDirty()
 {
     m_dirtyRegion = QRegion(m_background->rect().toRect());
+}
+
+void QSGAbstractSoftwareRenderer::setClearColorEnabled(bool enable)
+{
+    m_clearColorEnabled = enable;
+}
+
+bool QSGAbstractSoftwareRenderer::clearColorEnabled() const
+{
+    return m_clearColorEnabled;
 }
 
 QT_END_NAMESPACE

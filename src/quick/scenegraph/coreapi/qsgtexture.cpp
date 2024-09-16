@@ -15,7 +15,7 @@
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_APPLE)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
@@ -34,8 +34,6 @@ Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 #endif
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcQsgLeak)
 
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
@@ -87,7 +85,7 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
     , m_d3d11TextureAccessor(t)
     , m_d3d12TextureAccessor(t)
 #endif
-#if defined(__OBJC__)
+#if QT_CONFIG(metal)
     , m_metalTextureAccessor(t)
 #endif
 #if QT_CONFIG(vulkan)
@@ -103,7 +101,7 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
 
 static int qt_debug_texture_count = 0;
 
-#if (defined(Q_OS_LINUX) || defined (Q_OS_MAC)) && !defined(Q_OS_ANDROID)
+#if (defined(Q_OS_LINUX) || defined (Q_OS_APPLE)) && !defined(Q_OS_ANDROID)
 DEFINE_BOOL_CONFIG_OPTION(qmlDebugLeakBacktrace, QML_DEBUG_LEAK_BACKTRACE)
 
 #define BACKTRACE_SIZE 20
@@ -1047,7 +1045,7 @@ void *QSGTexture::resolveInterface(const char *name, int revision) const
 #if QT_CONFIG(vulkan)
     QT_NATIVE_INTERFACE_RETURN_IF(QSGVulkanTexture, &dd->m_vulkanTextureAccessor);
 #endif
-#if defined(__OBJC__)
+#if QT_CONFIG(metal)
     QT_NATIVE_INTERFACE_RETURN_IF(QSGMetalTexture, &dd->m_metalTextureAccessor);
 #endif
 #if defined(Q_OS_WIN)

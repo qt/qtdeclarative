@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TST_QMLLS_QQMLCODEMODEL_H
 #define TST_QMLLS_QQMLCODEMODEL_H
@@ -18,13 +18,20 @@
 
 using namespace Qt::StringLiterals;
 
-class tst_qmlls_qqmlcodemodel : public QObject
+class tst_qmlls_qqmlcodemodel : public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_qmlls_qqmlcodemodel();
+    QString readFile(const QString &filename) const;
 
 private slots:
     void buildPathsForFileUrl_data();
     void buildPathsForFileUrl();
+    void fileNamesToWatch();
+    void findFilePathsFromFileNames_data();
+    void findFilePathsFromFileNames();
+    void openFiles();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H

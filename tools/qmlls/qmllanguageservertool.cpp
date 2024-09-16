@@ -8,6 +8,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
+#include <QtQmlToolingSettings/private/qqmltoolingutils_p.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
@@ -49,47 +50,83 @@ class StdinReader : public QObject
 {
     Q_OBJECT
 public:
-    void run()
-    {
-        auto guard = qScopeGuard([this]() { emit eof(); });
-        const constexpr qsizetype bufSize = 1024;
-        qsizetype bytesInBuf = 0;
-        char bufferData[2 * bufSize];
-        char *buffer = static_cast<char *>(bufferData);
-
-        auto trySend = [this, &bytesInBuf, buffer]() {
-            if (bytesInBuf == 0)
-                return;
-            qsizetype toSend = bytesInBuf;
-            bytesInBuf = 0;
-            QByteArray dataToSend(buffer, toSend);
-            emit receivedData(dataToSend);
-        };
-        QHttpMessageStreamParser streamParser(
+    StdinReader()
+        : m_streamReader(
                 [](const QByteArray &, const QByteArray &) { /* just a header, do nothing */ },
-                [&trySend](const QByteArray &) {
-                    // message body
-                    trySend();
-                },
-                [&trySend](QtMsgType, QString) {
-                    // there was an error
-                    trySend();
-                },
-                QHttpMessageStreamParser::UNBUFFERED);
+                [this](const QByteArray &) {
+                    // stop reading until we are sure that the server is not shutting down
+                    m_isReading = false;
 
-        while (std::cin.get(buffer[bytesInBuf])) { // should poll/select and process events
-            qsizetype readNow = std::cin.readsome(buffer + bytesInBuf + 1, bufSize) + 1;
-            QByteArray toAdd(buffer + bytesInBuf, readNow);
-            bytesInBuf += readNow;
-            if (bytesInBuf >= bufSize)
-                trySend();
-            streamParser.receiveData(toAdd);
-        }
-        trySend();
+                    // message body
+                    m_shouldSendData = true;
+                },
+                [this](QtMsgType, QString) {
+                    // there was an error
+                    m_shouldSendData = true;
+                },
+                QHttpMessageStreamParser::UNBUFFERED)
+    {
     }
+
+    void sendData()
+    {
+        const bool isEndOfMessage = !m_isReading && !m_hasEof;
+        const qsizetype toSend = m_bytesInBuf;
+        m_bytesInBuf = 0;
+        const QByteArray dataToSend(m_buffer, toSend);
+        emit receivedData(dataToSend, isEndOfMessage);
+    }
+
+private:
+    const static constexpr qsizetype s_bufSize = 1024;
+    qsizetype m_bytesInBuf = 0;
+    char m_buffer[2 * s_bufSize] = {};
+    QHttpMessageStreamParser m_streamReader;
+    /*!
+    \internal
+    Indicates if the current message is not read out entirely.
+    */
+    bool m_isReading = true;
+    /*!
+    \internal
+    Indicates if an EOF was encountered. No more data can be read after an EOF.
+    */
+    bool m_hasEof = false;
+    /*!
+    \internal
+    Indicates whether sendData() should be called or not.
+    */
+    bool m_shouldSendData = false;
 signals:
-    void receivedData(const QByteArray &data);
+    void receivedData(const QByteArray &data, bool canRequestMoreData);
     void eof();
+public slots:
+    void readNextMessage()
+    {
+        if (m_hasEof)
+            return;
+        m_isReading = true;
+        // Try to fill up the buffer as much as possible before calling the queued signal:
+        // each loop iteration might read only one character from std::in in the worstcase, this
+        // happens for example on macos.
+        while (m_isReading) {
+            // block while waiting for some data
+            if (!std::cin.get(m_buffer[m_bytesInBuf])) {
+                m_hasEof = true;
+                emit eof();
+                return;
+            }
+            // see if more data is available and fill the buffer with it
+            qsizetype readNow = std::cin.readsome(m_buffer + m_bytesInBuf + 1, s_bufSize) + 1;
+            QByteArray toAdd(m_buffer + m_bytesInBuf, readNow);
+            m_bytesInBuf += readNow;
+            m_streamReader.receiveData(std::move(toAdd));
+
+            m_shouldSendData |= m_bytesInBuf >= s_bufSize;
+            if (std::exchange(m_shouldSendData, false))
+                sendData();
+        }
+    }
 };
 
 // To debug:
@@ -164,6 +201,17 @@ int main(int argv, char *argc[])
     parser.addOption(buildDirOption);
     settings.addOption(buildDir);
 
+    QString qmlImportPath = QStringLiteral(u"qml-import-path");
+    QCommandLineOption qmlImportPathOption(
+            QStringList() << "I", QLatin1String("Look for QML modules in the specified directory"),
+            qmlImportPath);
+    parser.addOption(qmlImportPathOption);
+
+    QCommandLineOption environmentOption(
+            QStringList() << "E",
+            QLatin1String("Use the QML_IMPORT_PATH environment variable to look for QML Modules"));
+    parser.addOption(environmentOption);
+
     QCommandLineOption writeDefaultsOption(
             QStringList() << "write-defaults",
             QLatin1String("Writes defaults settings to .qmlls.ini and exits (Warning: This "
@@ -174,6 +222,17 @@ int main(int argv, char *argc[])
                                       QLatin1String("Ignores all settings files and only takes "
                                                     "command line options into consideration"));
     parser.addOption(ignoreSettings);
+
+    QCommandLineOption noCMakeCallsOption(
+            QStringList() << "no-cmake-calls",
+            QLatin1String("Disables automatic CMake rebuilds and C++ file watching."));
+    parser.addOption(noCMakeCallsOption);
+    settings.addOption("no-cmake-calls", "false");
+
+    QCommandLineOption docDir(QStringList() << "p",
+                              QLatin1String("Documentation path to use for the documentation hints feature"));
+    parser.addOption(docDir);
+    settings.addOption("docDir");
 
     parser.process(app);
 
@@ -213,60 +272,99 @@ int main(int argv, char *argc[])
             },
             (parser.isSet(ignoreSettings) ? nullptr : &settings));
 
-    const QStringList envPaths =
-            qEnvironmentVariable("QMLLS_BUILD_DIRS").split(u',', Qt::SkipEmptyParts);
-    for (const QString &envPath : envPaths) {
-        QFileInfo info(envPath);
-        if (!info.exists()) {
-            qWarning() << "Argument" << buildDir << "passed via QMLLS_BUILD_DIRS does not exist.";
-        } else if (!info.isDir()) {
-            qWarning() << "Argument" << buildDir
-                       << "passed via QMLLS_BUILD_DIRS is not a directory.";
+    if (parser.isSet(docDir))
+        qmlServer.codeModel()->setDocumentationRootPath(parser.value(docDir).toUtf8());
+
+    const bool disableCMakeCallsViaEnvironment =
+            qmlGetConfigOption<bool, qmlConvertBoolConfigOption>("QMLLS_NO_CMAKE_CALLS");
+
+    if (disableCMakeCallsViaEnvironment || parser.isSet(noCMakeCallsOption)) {
+        if (disableCMakeCallsViaEnvironment) {
+            qWarning() << "Disabling CMake calls via QMLLS_NO_CMAKE_CALLS environment variable.";
+        } else {
+            qWarning() << "Disabling CMake calls via command line switch.";
         }
+
+        qmlServer.codeModel()->disableCMakeCalls();
     }
 
-    QStringList buildDirs;
     if (parser.isSet(buildDirOption)) {
-        buildDirs = parser.values(buildDirOption);
-        for (const QString &buildDir : buildDirs) {
-            QFileInfo info(buildDir);
-            if (!info.exists()) {
-                qWarning() << "Argument" << buildDir << "passed to --build-dir does not exist.";
-            } else if (!info.isDir()) {
-                qWarning() << "Argument" << buildDir << "passed to --build-dir is not a directory.";
-            }
-        }
-        qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), buildDirs);
-    }
+        const QStringList dirs =
+                QQmlToolingUtils::getAndWarnForInvalidDirsFromOption(parser, buildDirOption);
 
-    if (!buildDirs.isEmpty()) {
-        qInfo() << "Using the build directories passed via the --build-dir option:"
-                << buildDirs.join(", ");
-    } else if (!envPaths.isEmpty()) {
-        qInfo() << "Using the build directories passed via the QMLLS_BUILD_DIRS environment "
-                   "variable"
-                << buildDirs.join(", ");
+        qInfo().nospace().noquote()
+                << "Using build directories passed by -b: \"" << dirs.join(u"\", \""_s) << "\".";
+
+        qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), dirs);
+    } else if (QStringList dirsFromEnv =
+                       QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv("QMLLS_BUILD_DIRS");
+               !dirsFromEnv.isEmpty()) {
+
+        // warn now at qmlls startup that those directories will be used later in qqmlcodemodel when
+        // searching for build folders.
+        qInfo().nospace().noquote() << "Using build directories passed from environment variable "
+                                       "\"QMLLS_BUILD_DIRS\": \""
+                                    << dirsFromEnv.join(u"\", \""_s) << "\".";
+
     } else {
         qInfo() << "Using the build directories found in the .qmlls.ini file. Your build folder "
                    "might not be found if no .qmlls.ini files are present in the root source "
                    "folder.";
     }
-
-    if (buildDirs.isEmpty() && envPaths.isEmpty()) {
-        qInfo() << "Build directory path omitted: Your source folders will be searched for "
-                   ".qmlls.ini files.";
+    QStringList importPaths{ QLibraryInfo::path(QLibraryInfo::QmlImportsPath) };
+    if (parser.isSet(qmlImportPathOption)) {
+        const QStringList pathsFromOption =
+                QQmlToolingUtils::getAndWarnForInvalidDirsFromOption(parser, qmlImportPathOption);
+        qInfo().nospace().noquote() << "Using import directories passed by -I: \""
+                                    << pathsFromOption.join(u"\", \""_s) << "\".";
+        importPaths << pathsFromOption;
     }
+    if (parser.isSet(environmentOption)) {
+        if (const QStringList dirsFromEnv =
+                    QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML_IMPORT_PATH"_s);
+            !dirsFromEnv.isEmpty()) {
+            qInfo().nospace().noquote()
+                    << "Using import directories passed from environment variable "
+                       "\"QML_IMPORT_PATH\": \""
+                    << dirsFromEnv.join(u"\", \""_s) << "\".";
+            importPaths << dirsFromEnv;
+        }
+
+        if (const QStringList dirsFromEnv2 =
+                    QQmlToolingUtils::getAndWarnForInvalidDirsFromEnv(u"QML2_IMPORT_PATH"_s);
+            !dirsFromEnv2.isEmpty()) {
+            qInfo().nospace().noquote()
+                    << "Using import directories passed from the deprecated environment variable "
+                       "\"QML2_IMPORT_PATH\": \""
+                    << dirsFromEnv2.join(u"\", \""_s) << "\".";
+            importPaths << dirsFromEnv2;
+        }
+    }
+    qmlServer.codeModel()->setImportPaths(importPaths);
+
     StdinReader r;
+    QThread workerThread;
+    r.moveToThread(&workerThread);
     QObject::connect(&r, &StdinReader::receivedData,
                      qmlServer.server(), &QLanguageServer::receiveData);
-    QObject::connect(&r, &StdinReader::eof, &app, [&app]() {
+    QObject::connect(qmlServer.server(), &QLanguageServer::readNextMessage, &r,
+                     &StdinReader::readNextMessage);
+    auto exit = [&app, &workerThread]() {
+        workerThread.quit();
+        workerThread.wait();
         QTimer::singleShot(100, &app, []() {
             QCoreApplication::processEvents();
             QCoreApplication::exit();
         });
-    });
-    QThreadPool::globalInstance()->start([&r]() { r.run(); });
+    };
+    QObject::connect(&r, &StdinReader::eof, &app, exit);
+    QObject::connect(qmlServer.server(), &QLanguageServer::shutdown, exit);
+
+    emit r.readNextMessage();
+    workerThread.start();
     app.exec();
+    workerThread.quit();
+    workerThread.wait();
     return qmlServer.returnValue();
 }
 

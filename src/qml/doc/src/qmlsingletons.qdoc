@@ -1,0 +1,339 @@
+// Copyright (C) 2023 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qml-singleton.html
+\title Singletons in QML
+\brief A guide for using singletons in QML
+
+In QML, a singleton is an object which is created at most once per
+\l{QQmlEngine}{engine}. In this guide, we'll
+\l{How can singletons be created in QML}{explain how to create} singletons
+and \l{Accessing singletons}{how to use them}. We'll also provide some
+best practices for working with singletons.
+
+\section1 How can singletons be created in QML?
+
+There are two separate ways of creating singletons in QML. You can either define
+the singleton in a QML file, or register it from C++.
+
+\section2 Defining singletons in QML
+To define a singleton in QML, you first have to add
+\code
+pragma Singleton
+\endcode
+to the top of your file.
+There's one more step: You will need to add an entry to the QML module's
+\l{Module Definition qmldir Files}{qmldir file}.
+
+\section3 Using qt_add_qml_module (CMake)
+When using CMake, the qmldir is automatically created by \l{qt_add_qml_module}.
+To indicate that the QML file should be turned into a singleton, you need to set
+the \c{QT_QML_SINGLETON_TYPE}
+file property on it:
+\code
+set_source_files_properties(MySingleton.qml
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+\endcode
+
+You can pass multiple files at once to \c{set_source_files_properties}:
+\code
+set(plain_qml_files
+    MyItem1.qml
+    MyItem2.qml
+    FancyButton.qml
+)
+set(qml_singletons
+    MySingleton.qml
+    MyOtherSingleton.qml
+)
+set_source_files_properties(${qml_singletons}
+    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+qt_add_qml_module(myapp
+    URI MyModule
+    QML_FILES ${plain_qml_files} ${qml_singletons}
+)
+\endcode
+
+\note set_source_files_properties needs to be called before \c{qt_add_qml_module}
+
+\section3 Without qt_add_qml_module
+If you aren't using \c{qt_add_qml_module}, you'll need to manually create a
+\l{Module Definition qmldir Files}{qmldir file}.
+There, you'll need to mark your singletons accordingly:
+\code
+module MyModule
+singleton MySingleton 1.0 MySingleton.qml
+singleton MyOtherSingleton 1.0 MyOtherSingleton.qml
+\endcode
+See also \l{Object Type Declaration} for more details.
+
+
+\section2 Defining singletons in C++
+
+There are multiple ways of exposing singletons to QML from C++. The main
+difference depends on whether a new instance of a class should be created when
+needed by the QML engine; or if some existing object needs to be exposed to a
+QML program.
+
+\section3 Registering a class to provide singletons
+
+The simplest way of defining a singleton is to have a default-constructible
+class, which derives from QObject and mark it with the \l{QML_SINGLETON} and
+\l{QML_ELEMENT} macros.
+\code
+class MySingleton : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_ELEMENT
+public:
+    MySingleton(QObject *parent = nullptr) : QObject(parent) {
+        // ...
+    }
+};
+\endcode
+This will register the \c{MySingleton} class under the name \c{MySingleton} in
+the QML module to which the file belongs.
+If you want to expose it under a different name, you can use \l{QML_NAMED_ELEMENT}
+instead.
+
+If the class can't be made default-constructible, or if you need access to
+the \l{QQmlEngine} in which the singleton is instantiated, it is possible to
+use a static create function instead. It must have the signature
+\c{MySingleton *create(QQmlEngine *, QJSEngine *)}, where \c{MySingleton} is
+the type of the class that gets registered.
+\code
+class MyNonDefaultConstructibleSingleton : public QObject
+{
+    Q_OBJECT
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(MySingleton)
+public:
+    MyNonDefaultConstructibleSingleton(QJSValue id, QObject *parent = nullptr)
+        : QObject(parent)
+        , m_symbol(std::move(id))
+    {}
+
+    static MyNonDefaultConstructibleSingleton *create(QQmlEngine *qmlEngine, QJSEngine *)
+    {
+         return new MyNonDefaultConstructibleSingleton(qmlEngine->newSymbol(u"MySingleton"_s));
+    }
+
+private:
+    QJSValue m_symbol;
+};
+\endcode
+
+\note The create function takes both a \l{QJSEngine} and a \l{QQmlEngine} parameter. That is
+for historical reasons. They both point to the same object which is in fact a QQmlEngine.
+
+\section3 Exposing an existing object as a singleton
+
+Sometimes, you have an existing object that might have been created via
+some third-party API. Often, the right choice in this case is to have one
+singleton, which exposes those objects as its properties (see
+\l{Grouping together related data}).
+But if that is not the case, for example because there is only a single object that needs
+to be exposed, use the following approach to expose an instance of type
+\c{MySingleton} to the engine.
+We first expose the Singleton as a \l{QML_FOREIGN}{foreign type}:
+\code
+struct SingletonForeign
+{
+    Q_GADGET
+    QML_FOREIGN(MySingleton)
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(MySingleton)
+public:
+
+    inline static MySingleton *s_singletonInstance = nullptr;
+
+    static MySingleton *create(QQmlEngine *, QJSEngine *engine)
+    {
+        // The instance has to exist before it is used. We cannot replace it.
+        Q_ASSERT(s_singletonInstance);
+
+        // The engine has to have the same thread affinity as the singleton.
+        Q_ASSERT(engine->thread() == s_singletonInstance->thread());
+
+        // There can only be one engine accessing the singleton.
+        if (s_engine)
+            Q_ASSERT(engine == s_engine);
+        else
+            s_engine = engine;
+
+        // Explicitly specify C++ ownership so that the engine doesn't delete
+        // the instance.
+        QJSEngine::setObjectOwnership(s_singletonInstance,
+                                      QJSEngine::CppOwnership);
+        return s_singletonInstance;
+    }
+
+private:
+    inline static QJSEngine *s_engine = nullptr;
+};
+\endcode
+Then we set \c{SingletonForeign::s_singletonInstance} before we start
+the first engine
+\code
+SingletonForeign::s_singletonInstance = getSingletonInstance();
+QQmlApplicationEngine engine;
+engine.loadFromModule("MyModule", "Main");
+\endcode
+
+\note It can be very tempting to simply use \l{qmlRegisterSingletonInstance} in
+this case. However, be wary of the pitfalls of imperative type registration
+listed in the next section.
+
+\section3 Imperative type registration
+Before Qt 5.15, all types, including singletons were registered via the
+\c{qmlRegisterType} API. Singletons specifically were registered via either
+\l{qmlRegisterSingletonType} or \l{qmlRegisterSingletonInstance}. Besides the
+minor annoyance of having to repeat the module name for each type and the forced
+decoupling of the class declaration and its registration, the major problem with
+that approach was that it is tooling unfriendly: It was not statically possible
+to extract all the necessary information about the types of a module at compile
+time. The declarative registration solved this issue.
+
+\note There is one remaining use case for the imperative \c{qmlRegisterType} API:
+It is a way to expose a singleton of non-QObject type as a \c{var} property via
+\l{qmlRegisterSingletonType}{the QJSValue based \c{qmlRegisterSingletonType} overload}
+. Prefer the alternative: Expose that value as the property of a (\c{QObject}) based
+singleton, so that type information will be available.
+
+\section2 Accessing singletons
+Singletons can be accessed both from QML as well as from C++. In QML, you need
+to import the containing module. Afterwards, you can access the singleton via its
+name. Reading its properties and writing to them inside JavaScript contexts is
+done in the same way as with normal objects:
+
+\code
+import QtQuick
+import MyModule
+
+Item {
+    x: MySingleton.posX
+    Component.onCompleted: MySingleton.ready = true;
+}
+\endcode
+
+Setting up bindings on a singletons properties is not possible; however, if it
+is needed, a \l{Binding} element can be used to achieve the same result:
+\code
+import QtQuick
+import MyModule
+
+Item {
+    id: root
+    Binding {
+        target: MySingleton
+        property: "posX"
+        value: root.x
+    }
+}
+\endcode
+
+\note Care must be taken when installing a binding on a singleton property: If
+done by more than one file, the results are not defined.
+
+\section1 Guidelines for (not) using singletons
+
+Singletons allow you to expose data which needs to be accessed in multiple places
+to the engine. That can be globally shared settings, like the spacing between
+elements, or data models which need to be displayed in multiple places.
+Compared to context properties which can solve a similar use case,
+they have the benefit of being typed, being supported by tooling like the
+\l{\QMLLS Reference}{\QMLLS}, and they are also generally faster at runtime.
+
+It is recommended not to register too many singletons in a module: Singletons,
+once created, stay alive until the engine itself gets destroyed
+and come with the drawbacks of shared state as they are part of the global state.
+Thus consider using the following techniques to reduce the amount of singletons
+in your application:
+
+\section2 Grouping together related data
+Adding one singleton for each object which you want to expose adds quite some boiler plate.
+Most of the time, it makes more sense to group data you want to expose together as properties
+of a single singleton. Assume for instance that you want to create an ebook reader
+where you need to expose three \l{QAbstractItemModel}{abstract item models}, one
+for local books, and two for remote sources. Instead of repeating the process
+for \l{Exposing an existing object as a singleton}{exposing existing objects}
+three times, you can instead create one singleton and set it up before starting
+the main application:
+\code
+class GlobalState : QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    Q_PROPERTY(QAbstractItemModel* localBooks MEMBER localBooks)
+    Q_PROPERTY(QAbstractItemModel* digitalStoreFront MEMBER digitalStoreFront)
+    Q_PROPERTY(QAbstractItemModel* publicLibrary MEMBER publicLibrary)
+public:
+    QAbstractItemModel* localBooks;
+    QAbstractItemModel* digitalStoreFront;
+    QAbstractItemModel* publicLibrary
+};
+
+int main() {
+    QQmlApplicationEngine engine;
+    auto globalState = engine.singletonInstance<GlobalState *>("MyModule", "GlobalState");
+    globalState->localBooks = getLocalBooks();
+    globalState->digitalStoreFront = setupLoalStoreFront();
+    globalState->publicLibrary = accessPublicLibrary();
+    engine.loadFromModule("MyModule", "Main");
+}
+\endcode
+
+\section2 Use object instances
+In the last section, we had the example of exposing three models as members of a
+singleton. That can be useful when either the models need to be used in multiple
+places, or when they are provided by some external API over which we have no
+control. However, if we need the models only in a single place it might make
+more sense have them as an instantiable type. Coming back to the previous example,
+we can add an instantiable RemoteBookModel class, and then instantiate it inside
+the book browser QML file:
+
+
+\code
+// remotebookmodel.h
+class RemoteBookModel : public QAbstractItemModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)
+    // ...
+};
+
+// bookbrowser.qml
+Row {
+    ListView {
+        model: RemoteBookModel { url: "www.public-lib.example"}
+    }
+    ListView {
+        model: RemoteBookModel { url: "www.store-front.example"}
+    }
+}
+
+\endcode
+
+\section2 Passing initial state
+
+While singletons can be used to pass state to QML, they are wasteful when the
+state is only needed for the initial setup of the application. In that case, it
+is often possible to use \l{QQmlApplicationEngine::setInitialProperties}.
+You might for instance want to set \l{Window::visibility} to fullscreen if
+a corresponding command line flag has been set:
+\code
+QQmlApplicationEngine engine;
+if (parser.isSet(fullScreenOption)) {
+    // assumes root item is ApplicationWindow
+    engine.setInitialProperties(
+        { "visibility", QVariant::fromValue(QWindow::FullScreen)}
+    );
+}
+engine.loadFromModule("MyModule, "Main");
+\endcode
+
+*/

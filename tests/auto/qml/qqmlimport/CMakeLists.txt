@@ -35,6 +35,7 @@ qt_internal_add_test(tst_qqmlimport
     SOURCES
         tst_qqmlimport.cpp
     LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate
@@ -48,6 +49,31 @@ qt_internal_add_resource(tst_qqmlimport "preferred"
         "/qqmlimport/ModuleWithPrefer/"
     FILES
         "Preferred.qml"
+)
+
+qt_internal_add_resource(tst_qqmlimport "preferred2"
+    PREFIX
+        "/qqmlimport/ModuleWithPrefer2/"
+    FILES
+        "Preferred.qml"
+        "qmldir"
+)
+
+qt_internal_add_resource(tst_qqmlimport "nomimport"
+    BASE
+        "data"
+    PREFIX
+        "/qqmlimport/"
+    FILES
+        "data/noimport/Main.qml"
+        "data/noimport/qmldir"
+)
+
+qt_internal_add_resource(tst_qqmlimport "qtconf"
+    PREFIX
+        "/"
+    FILES
+        "qmlimports.qt.conf"
 )
 
 ## Scopes:

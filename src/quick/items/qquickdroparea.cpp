@@ -55,7 +55,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 
 /*!
     \qmltype DropArea
-    \instantiates QQuickDropArea
+    \nativetype QQuickDropArea
     \inherits Item
     \inqmlmodule QtQuick
     \ingroup qtquick-input
@@ -302,7 +302,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 
 /*!
     \qmltype DragEvent
-    \instantiates QQuickDragEvent
+    \nativetype QQuickDragEvent
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
     \brief Provides information about a drag event.

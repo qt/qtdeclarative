@@ -1,0 +1,10 @@
+*.user
+build/
+**/.idea/
+**/.gradle/
+**/local.properties
+**/app/libs/
+**/app/src/main/res/xml/qtprovider_paths.xml
+**/app/src/main/res/values/libs.xml
+**/app/assets/android_rcc_bundle.rcc
+

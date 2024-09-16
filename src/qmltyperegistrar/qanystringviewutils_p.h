@@ -47,13 +47,17 @@ inline QAnyStringView toStringView(const QCborMap &map, QLatin1StringView key)
     return toStringView(map[key]);
 }
 
-inline bool endsWith(QAnyStringView whole, QAnyStringView part)
+// Note: This only works if part is US-ASCII, but there is no type to encode this information!
+inline bool endsWith(QAnyStringView whole, QLatin1StringView part)
 {
+    Q_ASSERT(QtPrivate::isAscii(part));
     return whole.length() >= part.length() && whole.last(part.length()) == part;
 }
 
-inline bool startsWith(QAnyStringView whole, QAnyStringView part)
+// Note: This only works if part is US-ASCII, but there is no type to encode this information!
+inline bool startsWith(QAnyStringView whole, QLatin1StringView part)
 {
+    Q_ASSERT(QtPrivate::isAscii(part));
     return whole.length() >= part.length() && whole.first(part.length()) == part;
 }
 
@@ -66,6 +70,24 @@ inline bool doesContain(QUtf8StringView whole, QLatin1Char part)
 inline bool contains(QAnyStringView whole, QLatin1Char part)
 {
     return whole.visit([&](auto view) { return doesContain(view, part); });
+}
+
+inline qsizetype getLastIndexOf(QStringView whole, QLatin1StringView part)
+{
+    return whole.lastIndexOf(part);
+}
+inline qsizetype getLastIndexOf(QLatin1StringView whole, QLatin1StringView part)
+{
+    return whole.lastIndexOf(part);
+}
+inline qsizetype getLastIndexOf(QUtf8StringView whole, QLatin1StringView part)
+{
+    return QByteArrayView(whole.data(), whole.size()).lastIndexOf(part);
+}
+inline qsizetype lastIndexOf(QAnyStringView whole, QLatin1StringView part)
+{
+    Q_ASSERT(QtPrivate::isAscii(part));
+    return whole.visit([&](auto view) { return getLastIndexOf(view, part); });
 }
 
 inline int toInt(QUtf8StringView view)
@@ -131,8 +153,11 @@ auto processAsUtf8(StringView string, Handler &&handler)
     Q_UNREACHABLE();
 }
 
-inline QList<QAnyStringView> split(QAnyStringView source, QAnyStringView sep)
+// Note: This only works if sep is US-ASCII, but there is no type to encode this information!
+inline QList<QAnyStringView> split(QAnyStringView source, QLatin1StringView sep)
 {
+    Q_ASSERT(QtPrivate::isAscii(sep));
+
     QList<QAnyStringView> list;
     if (source.isEmpty()) {
         list.append(source);

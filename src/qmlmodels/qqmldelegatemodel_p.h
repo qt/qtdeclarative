@@ -29,25 +29,24 @@ QT_BEGIN_NAMESPACE
 
 class QQmlChangeSet;
 class QQuickPackage;
-class QQmlV4Function;
 class QQmlDelegateModelGroup;
 class QQmlDelegateModelAttached;
 class QQmlDelegateModelPrivate;
 
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
+class Q_QMLMODELS_EXPORT QQmlDelegateModel : public QQmlInstanceModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlDelegateModel)
 
-    Q_PROPERTY(QVariant model READ model WRITE setModel FINAL)
-    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
-    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup FINAL)
-    Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT FINAL) //TODO : worth renaming?
-    Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT FINAL)
-    Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT FINAL)
-    Q_PROPERTY(QObject *parts READ parts CONSTANT FINAL)
-    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged FINAL)
+    Q_PROPERTY(QVariant model READ model WRITE setModel)
+    Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
+    Q_PROPERTY(QString filterOnGroup READ filterGroup WRITE setFilterGroup NOTIFY filterGroupChanged RESET resetFilterGroup)
+    Q_PROPERTY(QQmlDelegateModelGroup *items READ items CONSTANT) //TODO : worth renaming?
+    Q_PROPERTY(QQmlDelegateModelGroup *persistedItems READ persistedItems CONSTANT)
+    Q_PROPERTY(QQmlListProperty<QQmlDelegateModelGroup> groups READ groups CONSTANT)
+    Q_PROPERTY(QObject *parts READ parts CONSTANT)
+    Q_PROPERTY(QVariant rootIndex READ rootIndex WRITE setRootIndex NOTIFY rootIndexChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateModel)
     QML_ADDED_IN_VERSION(2, 1)
@@ -133,12 +132,12 @@ private:
 };
 
 class QQmlDelegateModelGroupPrivate;
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlDelegateModelGroup : public QObject
+class Q_QMLMODELS_EXPORT QQmlDelegateModelGroup : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
-    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged FINAL)
-    Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged FINAL)
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(bool includeByDefault READ defaultInclude WRITE setDefaultInclude NOTIFY defaultIncludeChanged)
     QML_NAMED_ELEMENT(DelegateModelGroup)
     QML_ADDED_IN_VERSION(2, 1)
 public:
@@ -157,14 +156,14 @@ public:
     Q_INVOKABLE QJSValue get(int index);
 
 public Q_SLOTS:
-    void insert(QQmlV4Function *);
-    void create(QQmlV4Function *);
-    void resolve(QQmlV4Function *);
-    void remove(QQmlV4Function *);
-    void addGroups(QQmlV4Function *);
-    void removeGroups(QQmlV4Function *);
-    void setGroups(QQmlV4Function *);
-    void move(QQmlV4Function *);
+    void insert(QQmlV4FunctionPtr);
+    void create(QQmlV4FunctionPtr);
+    void resolve(QQmlV4FunctionPtr);
+    void remove(QQmlV4FunctionPtr);
+    void addGroups(QQmlV4FunctionPtr);
+    void removeGroups(QQmlV4FunctionPtr);
+    void setGroups(QQmlV4FunctionPtr);
+    void move(QQmlV4FunctionPtr);
 
 Q_SIGNALS:
     void countChanged();
@@ -232,8 +231,5 @@ public:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQmlDelegateModel)
-QML_DECLARE_TYPE(QQmlDelegateModelGroup)
 
 #endif // QQMLDATAMODEL_P_H

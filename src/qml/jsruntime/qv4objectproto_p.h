@@ -25,7 +25,7 @@ namespace QV4 {
 namespace Heap {
 
 struct ObjectCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 }
@@ -38,7 +38,7 @@ struct ObjectCtor: FunctionObject
     static ReturnedValue virtualCall(const FunctionObject *m, const Value *thisObject, const Value *argv, int argc);
 };
 
-struct Q_QML_PRIVATE_EXPORT ObjectPrototype: Object
+struct Q_QML_EXPORT ObjectPrototype: Object
 {
     void init(ExecutionEngine *engine, Object *ctor);
 

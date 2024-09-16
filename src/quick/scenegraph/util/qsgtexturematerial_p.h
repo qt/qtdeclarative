@@ -20,10 +20,10 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialShader
+class Q_QUICK_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialShader
 {
 public:
-    QSGOpaqueTextureMaterialRhiShader();
+    QSGOpaqueTextureMaterialRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
     void updateSampledImage(RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
@@ -32,7 +32,7 @@ public:
 class QSGTextureMaterialRhiShader : public QSGOpaqueTextureMaterialRhiShader
 {
 public:
-    QSGTextureMaterialRhiShader();
+    QSGTextureMaterialRhiShader(int viewCount);
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };

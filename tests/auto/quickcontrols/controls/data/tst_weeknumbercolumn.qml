@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -18,15 +18,17 @@ TestCase {
         WeekNumberColumn { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(component, testCase)
         verify(control)
     }
 
     function test_locale() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         compare(control.contentItem.children.length, 6 + 1)
 
@@ -35,12 +37,12 @@ TestCase {
 
         // en_US: [48...53]
         control.locale = Qt.locale("en_US")
-        for (var i = 0; i < 6; ++i)
+        for (let i = 0; i < 6; ++i)
             compare(control.contentItem.children[i].text, (i + 48).toString())
 
         // no_NO: [49...1]
         control.locale = Qt.locale("no_NO")
-        for (var j = 0; j < 5; ++j)
+        for (let j = 0; j < 5; ++j)
             compare(control.contentItem.children[j].text, (j + 49).toString())
         compare(control.contentItem.children[5].text, "1")
 
@@ -48,7 +50,7 @@ TestCase {
     }
 
     function test_range() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         control.month = 0
         compare(control.month, 0)
@@ -82,7 +84,7 @@ TestCase {
     }
 
     function test_font() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         verify(control.contentItem.children[0])
 

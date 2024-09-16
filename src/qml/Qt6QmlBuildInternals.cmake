@@ -19,6 +19,7 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         NO_GENERATE_PLUGIN_SOURCE
         NO_GENERATE_QMLTYPES
         NO_GENERATE_QMLDIR
+        NO_GENERATE_EXTRA_QMLDIRS
         NO_LINT
         NO_CACHEGEN
         ENABLE_TYPE_COMPILER
@@ -94,7 +95,6 @@ function(qt_internal_add_qml_module target)
     )
     # TODO: Remove these once all repos have been updated to not use them
     set(ignore_option_args
-        SKIP_TYPE_REGISTRATION  # Now always done
         PLUGIN_OPTIONAL         # Now the default
         GENERATE_QMLTYPES       # Now the default
         INSTALL_QMLTYPES        # Now the default
@@ -417,6 +417,18 @@ function(qt_internal_add_qml_module target)
             FILES ${arg_OUTPUT_DIRECTORY}/qmldir
             DESTINATION "${arg_INSTALL_DIRECTORY}"
         )
+
+        get_target_property(extra_qmldirs ${target} _qt_internal_extra_qmldirs)
+        if(extra_qmldirs)
+            foreach(extra_qmldir IN LISTS extra_qmldirs)
+                __qt_get_relative_resource_path_for_file(qmldir_resource_path ${extra_qmldir})
+                get_filename_component(qmldir_dir ${qmldir_resource_path} DIRECTORY)
+                qt_install(
+                    FILES ${extra_qmldir}
+                    DESTINATION "${arg_INSTALL_DIRECTORY}/${qmldir_dir}"
+                )
+            endforeach()
+        endif()
     endif()
 
     if(arg_INSTALL_SOURCE_QMLTYPES)

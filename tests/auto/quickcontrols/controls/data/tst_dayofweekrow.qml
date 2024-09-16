@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -18,15 +18,17 @@ TestCase {
         DayOfWeekRow { }
     }
 
-    function test_defaults() {
+    function init () {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(component, testCase)
         verify(control)
     }
 
     function test_locale() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         verify(control.contentItem.children[0])
 
@@ -43,7 +45,7 @@ TestCase {
     }
 
     function test_font() {
-        var control = component.createObject(testCase)
+        let control = component.createObject(testCase)
 
         verify(control.contentItem.children[0])
 

@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLinear"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical"
+    android:baselineAligned="false">
+
+    <FrameLayout
+        android:id="@+id/qmlFrame"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/kotlinLinear"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/lilac"
+        android:orientation="vertical">
+
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/title_margin_top"
+            android:gravity="center_horizontal"
+            android:includeFontPadding="false"
+            android:text="@string/kotlin"
+            android:textColor="@color/white"
+            android:textSize="@dimen/title_text_size"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/qmlStatusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/smaller_top_margin"
+            android:gravity="center_horizontal"
+            android:text="@string/qml_view_status"
+            android:textColor="@color/white"
+            android:textSize="@dimen/other_text_size"/>
+
+        <LinearLayout
+            android:id="@+id/buttonAndSwitchLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/bigger_top_margin"
+            android:baselineAligned="false">
+
+            <LinearLayout
+                android:id="@+id/buttonLinearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/changeColorText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:maxLines="3"
+                    android:text="@string/change_qml_background"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/other_text_size"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/changeQmlColorButton"
+                    android:layout_width="@dimen/change_color_button_width"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/smaller_top_margin"
+                    android:text="@string/button"
+                    android:textSize="@dimen/other_text_size"
+                    app:cornerRadius="@dimen/button_corner_radius"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/switchLinearLayout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/switchText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:maxLines="3"
+                    android:text="@string/disconnect_qml_button_signal_listener"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/other_text_size"/>
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/disconnectQmlListenerSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="@dimen/smaller_top_margin"
+                    app:showText="true"
+                    android:thumb="@drawable/switch_thumb"
+                    app:track="@drawable/switch_track"
+                    app:switchTextAppearance="@style/switchStyle"
+                    android:textOff="@string/off"
+                    android:textOn="@string/on" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/qmlColorLinear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:layout_marginTop="@dimen/bigger_top_margin">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/qmlViewBackgroundText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:maxLines="2"
+                    android:text="@string/qml_view_background_color"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/other_text_size"/>
+
+                <TextView
+                    android:id="@+id/getPropertyValueText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:gravity="center_horizontal"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/other_text_size"/>
+            </LinearLayout>
+
+            <View
+                android:id="@+id/qmlColorBox"
+                android:layout_width="@dimen/color_box_width"
+                android:layout_height="@dimen/color_box_height"
+                android:layout_gravity="center_horizontal"
+                android:background="@android:color/transparent"
+                android:layout_weight="0"
+                android:layout_marginStart="@dimen/color_box_margin_start"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="@dimen/bigger_top_margin">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loadSecondQml"
+                android:layout_width="@dimen/other_buttons_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/load_second_qml"
+                android:textSize="@dimen/other_text_size"
+                android:layout_marginEnd="@dimen/load_second_button_margin_end"
+                app:cornerRadius="@dimen/button_corner_radius"/>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/loadMainQml"
+                android:layout_width="@dimen/other_buttons_width"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/load_main_qml"
+                android:textSize="@dimen/other_text_size"
+                app:cornerRadius="@dimen/button_corner_radius"/>
+        </LinearLayout>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/rotateQmlGridButton"
+            android:layout_width="@dimen/other_buttons_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/rotate_qml_grid_top_margin"
+            android:text="@string/rotate_qml_grid"
+            android:textSize="@dimen/other_text_size"
+            app:cornerRadius="@dimen/button_corner_radius"/>
+
+    </LinearLayout>
+
+</LinearLayout>

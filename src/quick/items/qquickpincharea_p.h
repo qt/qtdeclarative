@@ -21,21 +21,21 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinch : public QObject
+class Q_QUICK_EXPORT QQuickPinch : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget RESET resetTarget NOTIFY targetChanged FINAL)
-    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged FINAL)
-    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged FINAL)
-    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged FINAL)
-    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged FINAL)
-    Q_PROPERTY(Axis dragAxis READ axis WRITE setAxis NOTIFY dragAxisChanged FINAL)
-    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged FINAL)
-    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged FINAL)
-    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged FINAL)
-    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged FINAL)
-    Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL)
+    Q_PROPERTY(QQuickItem *target READ target WRITE setTarget RESET resetTarget NOTIFY targetChanged)
+    Q_PROPERTY(qreal minimumScale READ minimumScale WRITE setMinimumScale NOTIFY minimumScaleChanged)
+    Q_PROPERTY(qreal maximumScale READ maximumScale WRITE setMaximumScale NOTIFY maximumScaleChanged)
+    Q_PROPERTY(qreal minimumRotation READ minimumRotation WRITE setMinimumRotation NOTIFY minimumRotationChanged)
+    Q_PROPERTY(qreal maximumRotation READ maximumRotation WRITE setMaximumRotation NOTIFY maximumRotationChanged)
+    Q_PROPERTY(Axis dragAxis READ axis WRITE setAxis NOTIFY dragAxisChanged)
+    Q_PROPERTY(qreal minimumX READ xmin WRITE setXmin NOTIFY minimumXChanged)
+    Q_PROPERTY(qreal maximumX READ xmax WRITE setXmax NOTIFY maximumXChanged)
+    Q_PROPERTY(qreal minimumY READ ymin WRITE setYmin NOTIFY minimumYChanged)
+    Q_PROPERTY(qreal maximumY READ ymax WRITE setYmax NOTIFY maximumYChanged)
+    Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     QML_NAMED_ELEMENT(Pinch)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -160,7 +160,7 @@ private:
     bool m_active;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchEvent : public QObject
+class Q_QUICK_EXPORT QQuickPinchEvent : public QObject
 {
     Q_OBJECT
 
@@ -231,12 +231,12 @@ private:
 
 
 class QQuickPinchAreaPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickPinchArea : public QQuickItem
+class Q_QUICK_EXPORT QQuickPinchArea : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
-    Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT FINAL)
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(QQuickPinch *pinch READ pinch CONSTANT)
     QML_NAMED_ELEMENT(PinchArea)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -276,10 +276,6 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPinch)
-QML_DECLARE_TYPE(QQuickPinchEvent)
-QML_DECLARE_TYPE(QQuickPinchArea)
 
 #endif // QQUICKPINCHAREA_H
 

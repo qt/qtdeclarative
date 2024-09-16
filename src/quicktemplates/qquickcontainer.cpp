@@ -5,13 +5,14 @@
 #include "qquickcontainer_p_p.h"
 
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/private/qquickitemview_p.h>
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Container
     \inherits Control
-//!     \instantiates QQuickContainer
+//!     \nativetype QQuickContainer
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-containers
@@ -167,6 +168,7 @@ void QQuickContainerPrivate::init()
     QObject::connect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
     connect(q, &QQuickControl::implicitContentWidthChanged, this, &QQuickContainerPrivate::updateContentWidth);
     connect(q, &QQuickControl::implicitContentHeightChanged, this, &QQuickContainerPrivate::updateContentHeight);
+    setSizePolicy(QLayoutPolicy::Preferred, QLayoutPolicy::Preferred);
 }
 
 void QQuickContainerPrivate::cleanup()
@@ -210,6 +212,7 @@ void QQuickContainerPrivate::insertItem(int index, QQuickItem *item)
     updatingCurrent = true;
 
     item->setParentItem(effectiveContentItem(q->contentItem()));
+    maybeCullItem(item);
     QQuickItemPrivate::get(item)->addItemChangeListener(this, changeTypes);
     contentModel->insert(index, item);
 
@@ -307,6 +310,38 @@ void QQuickContainerPrivate::reorderItems()
         int index = contentModel->indexOf(sibling, nullptr);
         q->moveItem(index, to++);
     }
+}
+
+void QQuickContainerPrivate::maybeCullItem(QQuickItem *item)
+{
+    if (QQuickItemPrivate::get(item)->isTransparentForPositioner())
+        return;
+
+    // Items like Repeater don't control the visibility of the items they create,
+    // so we can't expected them to uncull items added dynamically. As mentioned
+    // below, Repeater _does_ uncull items added to it, but unlike e.g. ListView,
+    // it shouldn't care if its size becomes zero and so it shouldn't manage
+    // the culled state of items in the same way.
+    if (!qobject_cast<QQuickItemView *>(contentItem))
+        return;
+
+    // Only cull items if the contentItem has a zero size; otherwise let the
+    // contentItem manage it.
+    const bool hasZeroSize = qFuzzyIsNull(width) && qFuzzyIsNull(height);
+    if (!hasZeroSize)
+        return;
+
+    QQuickItemPrivate::get(item)->setCulled(true);
+}
+
+void QQuickContainerPrivate::maybeCullItems()
+{
+    if (!contentItem)
+        return;
+
+    const QList<QQuickItem *> childItems = effectiveContentItem(contentItem)->childItems();
+    for (auto &childItem : childItems)
+        maybeCullItem(childItem);
 }
 
 void QQuickContainerPrivate::_q_currentIndexChanged()
@@ -808,6 +843,7 @@ void QQuickContainer::componentComplete()
     Q_D(QQuickContainer);
     QQuickControl::componentComplete();
     d->reorderItems();
+    d->maybeCullItems();
 }
 
 void QQuickContainer::itemChange(ItemChange change, const ItemChangeData &data)

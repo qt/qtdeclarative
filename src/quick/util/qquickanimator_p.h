@@ -23,15 +23,15 @@ class QQuickItem;
 
 class QQuickAnimatorJob;
 class QQuickAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimator : public QQuickAbstractAnimation
+class Q_QUICK_EXPORT QQuickAnimator : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimator)
-    Q_PROPERTY(QQuickItem *target READ targetItem WRITE setTargetItem NOTIFY targetItemChanged FINAL)
-    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged FINAL)
-    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged FINAL)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged FINAL)
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged FINAL)
+    Q_PROPERTY(QQuickItem *target READ targetItem WRITE setTargetItem NOTIFY targetItemChanged)
+    Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
+    Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
 
     QML_NAMED_ELEMENT(Animator)
     QML_ADDED_IN_VERSION(2, 2)
@@ -73,7 +73,7 @@ Q_SIGNALS:
     void fromChanged(qreal from);
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickScaleAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ScaleAnimator)
@@ -85,7 +85,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("scale"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickXAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickXAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(XAnimator)
@@ -97,7 +97,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("x"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickYAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickYAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(YAnimator)
@@ -109,7 +109,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("y"); }
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickOpacityAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickOpacityAnimator : public QQuickAnimator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(OpacityAnimator)
@@ -122,11 +122,11 @@ protected:
 };
 
 class QQuickRotationAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickRotationAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickRotationAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimator)
-    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged FINAL)
+    Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(RotationAnimator)
     QML_ADDED_IN_VERSION(2, 2)
 
@@ -149,11 +149,11 @@ protected:
 
 #if QT_CONFIG(quick_shadereffect)
 class QQuickUniformAnimatorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
+class Q_QUICK_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickUniformAnimator)
-    Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged FINAL)
+    Q_PROPERTY(QString uniform READ uniform WRITE setUniform NOTIFY uniformChanged)
     QML_NAMED_ELEMENT(UniformAnimator)
     QML_ADDED_IN_VERSION(2, 2)
 
@@ -174,13 +174,4 @@ protected:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickAnimator)
-QML_DECLARE_TYPE(QQuickXAnimator)
-QML_DECLARE_TYPE(QQuickYAnimator)
-QML_DECLARE_TYPE(QQuickScaleAnimator)
-QML_DECLARE_TYPE(QQuickRotationAnimator)
-QML_DECLARE_TYPE(QQuickOpacityAnimator)
-#if QT_CONFIG(quick_shadereffect)
-QML_DECLARE_TYPE(QQuickUniformAnimator)
-#endif
 #endif // QQUICKANIMATOR_P_H

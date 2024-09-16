@@ -20,6 +20,8 @@
 
 #include <QObject>
 #include <QHash>
+#include <QtCore/qfilesystemwatcher.h>
+#include <QtCore/private/qfactoryloader_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
@@ -69,6 +71,12 @@ struct ToIndex
     int leftDepth;
 };
 
+struct RegisteredSemanticTokens
+{
+    QByteArray resultId = "0";
+    QList<int> lastTokens;
+};
+
 class QQmlCodeModel : public QObject
 {
     Q_OBJECT
@@ -78,8 +86,8 @@ public:
 
     explicit QQmlCodeModel(QObject *parent = nullptr, QQmlToolingSettings *settings = nullptr);
     ~QQmlCodeModel();
-    QQmlJS::Dom::DomItem currentEnv();
-    QQmlJS::Dom::DomItem validEnv();
+    QQmlJS::Dom::DomItem currentEnv() const { return m_currentEnv; };
+    QQmlJS::Dom::DomItem validEnv() const { return m_validEnv; };
     OpenDocumentSnapshot snapshotByUrl(const QByteArray &url);
     OpenDocument openDocumentByUrl(const QByteArray &url);
 
@@ -99,10 +107,26 @@ public:
     QStringList buildPathsForRootUrl(const QByteArray &url);
     QStringList buildPathsForFileUrl(const QByteArray &url);
     void setBuildPathsForRootUrl(QByteArray url, const QStringList &paths);
+    QStringList importPaths() const { return m_importPaths; };
+    void setImportPaths(const QStringList &paths) { m_importPaths = paths; };
     void removeRootUrls(const QList<QByteArray> &urls);
-    QQmlToolingSettings *settings();
+    QQmlToolingSettings *settings() const { return m_settings; }
+    QStringList findFilePathsFromFileNames(const QStringList &fileNames);
+    static QStringList fileNamesToWatch(const QQmlJS::Dom::DomItem &qmlFile);
+    void disableCMakeCalls();
+    const QFactoryLoader &pluginLoader() const { return m_pluginLoader; }
+
+    RegisteredSemanticTokens &registeredTokens();
+    const RegisteredSemanticTokens &registeredTokens() const;
+    QString documentationRootPath() const { return m_documentationRootPath; }
+    void setDocumentationRootPath(const QString &path);
+
+    QSet<QString> ignoreForWatching() const { return m_ignoreForWatching; }
+
 Q_SIGNALS:
     void updatedSnapshot(const QByteArray &url);
+    void documentationRootPathChanged(const QString &path);
+
 private:
     void indexDirectory(const QString &path, int depthLeft);
     int indexEvalProgress() const; // to be called in the mutex
@@ -116,6 +140,12 @@ private:
     void openUpdateStart();
     void openUpdateEnd();
     void openUpdate(const QByteArray &);
+
+    static bool callCMakeBuild(const QStringList &buildPaths);
+    void addFileWatches(const QQmlJS::Dom::DomItem &qmlFile);
+    enum CMakeStatus { RequiresInitialization, HasCMake, DoesNotHaveCMake };
+    void initializeCMakeStatus(const QString &);
+
     mutable QMutex m_mutex;
     State m_state = State::Running;
     int m_lastIndexProgress = 0;
@@ -124,6 +154,7 @@ private:
     int m_indexInProgressCost = 0;
     int m_indexDoneCost = 0;
     int m_nUpdateInProgress = 0;
+    QStringList m_importPaths;
     QQmlJS::Dom::DomItem m_currentEnv;
     QQmlJS::Dom::DomItem m_validEnv;
     QByteArray m_lastOpenDocumentUpdated;
@@ -134,6 +165,15 @@ private:
     QHash<QString, QByteArray> m_path2url;
     QHash<QByteArray, OpenDocument> m_openDocuments;
     QQmlToolingSettings *m_settings;
+    QFileSystemWatcher m_cppFileWatcher;
+    QFactoryLoader m_pluginLoader;
+    bool m_rebuildRequired = true; // always trigger a rebuild on start
+    CMakeStatus m_cmakeStatus = RequiresInitialization;
+    RegisteredSemanticTokens m_tokens;
+    QString m_documentationRootPath;
+    QSet<QString> m_ignoreForWatching;
+private slots:
+    void onCppFileChanged(const QString &);
 };
 
 } // namespace QmlLsp

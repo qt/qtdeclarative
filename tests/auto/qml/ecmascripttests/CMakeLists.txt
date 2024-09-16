@@ -20,13 +20,17 @@ list(FILTER test_data EXCLUDE REGEX ".git")
 
 qt_internal_add_test(tst_ecmascripttests
     SOURCES
-        qjstest/test262runner.cpp qjstest/test262runner.h
+        test262runner.cpp test262runner.h
         tst_ecmascripttests.cpp
     LIBRARIES
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA
         ${test_data}
+
+    # We're doing our own QTest timeout handling here.
+    # Don't let ctest interfere.
+    TIMEOUT 3600
 )
 
 if(ANDROID OR IOS)
@@ -46,8 +50,4 @@ else()
         DEFINES
             QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/test262"
     )
-endif()
-
-if(NOT CMAKE_CROSSCOMPILING)
-    add_subdirectory(qjstest)
 endif()

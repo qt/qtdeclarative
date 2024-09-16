@@ -455,7 +455,7 @@ QQmlTypeLoader::Blob::PendingImport::PendingImport(
 
 QQmlTypeLoader::Blob::Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader)
   : QQmlDataBlob(url, type, loader)
-  , m_importCache(new QQmlImports(loader), QQmlRefPointer<QQmlImports>::Adopt)
+  , m_importCache(new QQmlImports(), QQmlRefPointer<QQmlImports>::Adopt)
 {
 }
 
@@ -530,8 +530,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     typeLoader()->setQmldirContent(qmldirIdentifier, data->content());
 
     const QTypeRevision version = m_importCache->updateQmldirContent(
-                typeLoader()->importDatabase(), import->uri, import->qualifier, qmldirIdentifier,
-                qmldirUrl, errors);
+            typeLoader(), import->uri, import->qualifier, qmldirIdentifier, qmldirUrl, errors);
     if (!version.isValid())
         return false;
 
@@ -554,15 +553,12 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
 bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingImportPtr &import)
 {
     const QUrl url(import->uri);
-    const auto module = m_typeLoader->engine()->handle()->moduleForUrl(url);
-    QQmlRefPointer<QQmlScriptBlob> blob;
-    if (module.native) {
-        blob.adopt(new QQmlScriptBlob(url, m_typeLoader));
-        blob->initializeFromNative(*module.native);
-        blob->tryDone();
-    } else {
-        blob = typeLoader()->getScript(finalUrl().resolved(url));
-    }
+    QQmlTypeLoader *loader = typeLoader();
+    QQmlRefPointer<QQmlScriptBlob> blob = loader->injectedScript(url);
+    if (!blob)
+        blob = loader->getScript(finalUrl().resolved(url));
+    else
+        Q_ASSERT(blob->status() == QQmlDataBlob::Status::Complete);
     addDependency(blob.data());
     scriptImported(blob, import->location, import->qualifier, QString());
     return true;
@@ -570,7 +566,6 @@ bool QQmlTypeLoader::Blob::addScriptImport(const QQmlTypeLoader::Blob::PendingIm
 
 bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
-    QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
     QQmlImports::ImportFlags flags;
 
     QUrl importUrl(import->uri);
@@ -584,8 +579,8 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     }
 
     const QTypeRevision version = m_importCache->addFileImport(
-                importDatabase, import->uri, import->qualifier, import->version, flags,
-                import->precedence, nullptr, errors);
+            typeLoader(), import->uri, import->qualifier, import->version, flags,
+            import->precedence, nullptr, errors);
     if (!version.isValid())
         return false;
 
@@ -607,6 +602,28 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     return true;
 }
 
+static void addDependencyImportError(
+        const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
+{
+    QQmlError error;
+    QString reason = errors->front().description();
+    if (reason.size() > 512)
+        reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
+    if (import->version.hasMajorVersion()) {
+        error.setDescription(QQmlImportDatabase::tr(
+                                     "module \"%1\" version %2.%3 cannot be imported because:\n%4")
+                                     .arg(import->uri).arg(import->version.majorVersion())
+                                     .arg(import->version.hasMinorVersion()
+                                                  ? QString::number(import->version.minorVersion())
+                                                  : QLatin1String("x"))
+                                     .arg(reason));
+    } else {
+        error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because:\n%2")
+                                     .arg(import->uri, reason));
+    }
+    errors->prepend(error);
+}
+
 bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingImportPtr &import, QList<QQmlError> *errors)
 {
     QQmlImportDatabase *importDatabase = typeLoader()->importDatabase();
@@ -622,9 +639,8 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
                 [&](const QString &qmldirFilePath, const QString &qmldirUrl) {
         // This is a local library import
         const QTypeRevision actualVersion = m_importCache->addLibraryImport(
-                    importDatabase, import->uri, import->qualifier,
-                    import->version, qmldirFilePath, qmldirUrl, import->flags, import->precedence,
-                    errors);
+                typeLoader(), import->uri, import->qualifier, import->version, qmldirFilePath,
+                qmldirUrl, import->flags, import->precedence, errors);
         if (!actualVersion.isValid())
             return false;
 
@@ -633,23 +649,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             import->version = actualVersion;
 
         if (!loadImportDependencies(import, qmldirFilePath, import->flags, errors)) {
-            QQmlError error;
-            QString reason = errors->front().description();
-            if (reason.size() > 512)
-                reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
-            if (import->version.hasMajorVersion()) {
-                error.setDescription(QQmlImportDatabase::tr(
-                                         "module \"%1\" version %2.%3 cannot be imported because:\n%4")
-                                     .arg(import->uri).arg(import->version.majorVersion())
-                                     .arg(import->version.hasMinorVersion()
-                                          ? QString::number(import->version.minorVersion())
-                                          : QLatin1String("x"))
-                                     .arg(reason));
-            } else {
-                error.setDescription(QQmlImportDatabase::tr("module \"%1\" cannot be imported because:\n%2")
-                                     .arg(import->uri, reason));
-            }
-            errors->prepend(error);
+            addDependencyImportError(import, errors);
             return false;
         }
 
@@ -660,7 +660,13 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
     switch (qmldirResult) {
     case QQmlImportDatabase::QmldirFound:
         return true;
-    case QQmlImportDatabase::QmldirNotFound:
+    case QQmlImportDatabase::QmldirNotFound: {
+        if (!loadImportDependencies(import, QString(), import->flags, errors)) {
+            addDependencyImportError(import, errors);
+            return false;
+        }
+        break;
+    }
     case QQmlImportDatabase::QmldirInterceptedToRemote:
         break;
     case QQmlImportDatabase::QmldirRejected:
@@ -682,8 +688,8 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
             || QQmlMetaType::latestModuleVersion(import->uri).isValid())) {
 
         if (!m_importCache->addLibraryImport(
-                    importDatabase, import->uri, import->qualifier, import->version,
-                    QString(), QString(), import->flags, import->precedence, errors).isValid()) {
+                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
+                    QString(), import->flags, import->precedence, errors).isValid()) {
             return false;
         }
     } else {
@@ -702,9 +708,9 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
         if (!remotePathList.isEmpty()) {
             // Add this library and request the possible locations for it
             const QTypeRevision version = m_importCache->addLibraryImport(
-                        importDatabase, import->uri, import->qualifier, import->version,
-                        QString(), QString(), import->flags | QQmlImports::ImportIncomplete,
-                        import->precedence, errors);
+                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
+                    QString(), import->flags | QQmlImports::ImportIncomplete, import->precedence,
+                    errors);
 
             if (!version.isValid())
                 return false;
@@ -821,10 +827,10 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(
         const QQmlTypeLoader::Blob::PendingImportPtr &currentImport, const QString &qmldirUri,
         QQmlImports::ImportFlags flags, QList<QQmlError> *errors)
 {
-    const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
-    const QList<QQmlDirParser::Import> implicitImports
-            = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version)
-            + qmldir.imports();
+    QList<QQmlDirParser::Import> implicitImports
+            = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version);
+    if (!qmldirUri.isEmpty())
+        implicitImports += typeLoader()->qmldirContent(qmldirUri).imports();
 
     // Prevent overflow from one category of import into the other.
     switch (currentImport->precedence) {
@@ -971,6 +977,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
         // this was started Asynchronous, but we need to force Synchronous
         // completion now (if at all possible with this type of URL).
 
+#if QT_CONFIG(thread)
         if (!m_thread->isThisThread()) {
             // this only works when called directly from the UI thread, but not
             // when recursively called on the QML thread via resolveTypes()
@@ -979,6 +986,7 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
                 m_thread->waitForNextMessage();
             }
         }
+#endif
     }
 
     return typeData;
@@ -996,6 +1004,26 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
     QQmlTypeLoader::loadWithStaticData(typeData, data, mode);
 
     return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
+}
+
+void QQmlTypeLoader::injectScript(const QUrl &relativeUrl, const QV4::Value &value)
+{
+    LockHolder<QQmlTypeLoader> holder(this);
+
+    QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this);
+    blob->initializeFromNative(value);
+    blob->m_isDone = true;
+    blob->m_data.setStatus(QQmlDataBlob::Complete);
+    m_scriptCache.insert(relativeUrl, blob);
+}
+
+QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::injectedScript(const QUrl &relativeUrl)
+{
+    LockHolder<QQmlTypeLoader> holder(this);
+    const auto it = m_scriptCache.constFind(relativeUrl);
+    return (it != m_scriptCache.constEnd() && (*it)->isNative())
+            ? *it
+            : QQmlRefPointer<QQmlScriptBlob>();
 }
 
 /*!
@@ -1300,6 +1328,11 @@ and qmldir information.
 */
 void QQmlTypeLoader::clearCache()
 {
+    // Pending messages typically hold references to the blobs they want to be delivered to.
+    // We don't want them anymore.
+    if (m_thread)
+        m_thread->discardMessages();
+
     for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)
         (*iter)->release();
     for (ScriptCache::Iterator iter = m_scriptCache.begin(), end = m_scriptCache.end(); iter != end; ++iter)
@@ -1316,7 +1349,6 @@ void QQmlTypeLoader::clearCache()
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
     m_checksumCache.clear();
-    QQmlMetaType::freeUnusedTypesAndCaches();
 }
 
 void QQmlTypeLoader::updateTypeCacheTrimThreshold()
@@ -1343,7 +1375,7 @@ void QQmlTypeLoader::trimCache()
                 continue;
             }
 
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit
                 = typeData->m_compiledData;
             if (compilationUnit) {
                 if (compilationUnit->count()

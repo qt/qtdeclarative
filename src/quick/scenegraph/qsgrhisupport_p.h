@@ -34,7 +34,7 @@ class QQuickGraphicsConfiguration;
 // In addition, the class provides handy conversion and query stuff for the
 // renderloop and the QSGRendererInterface implementations.
 //
-class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
+class Q_QUICK_EXPORT QSGRhiSupport
 {
 public:
     static QSGRhiSupport *instance_internal();
@@ -45,7 +45,7 @@ public:
     static void checkEnvQSgInfo();
 
 #if QT_CONFIG(opengl)
-    static QRhiTexture::Format toRhiTextureFormatFromGL(uint format);
+    static QRhiTexture::Format toRhiTextureFormatFromGL(uint format, QRhiTexture::Flags *flags);
 #endif
 
 #if QT_CONFIG(vulkan)
@@ -56,7 +56,7 @@ public:
     static QRhiTexture::Format toRhiTextureFormatFromDXGI(uint format, QRhiTexture::Flags *flags);
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if QT_CONFIG(metal)
     static QRhiTexture::Format toRhiTextureFormatFromMetal(uint format, QRhiTexture::Flags *flags);
 #endif
 
@@ -77,7 +77,7 @@ public:
         QRhi *rhi;
         bool own;
     };
-    RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface);
+    RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface, bool forcePreferSwRenderer = false);
     void destroyRhi(QRhi *rhi, const QQuickGraphicsConfiguration &config);
     void prepareWindowForRhi(QQuickWindow *window);
 
@@ -89,6 +89,8 @@ public:
     void applySwapChainFormat(QRhiSwapChain *scWithWindowSet, QQuickWindow *window);
 
     QRhiTexture::Format toRhiTextureFormat(uint nativeFormat, QRhiTexture::Flags *flags) const;
+
+    bool attemptReinitWithSwRastUponFail() const;
 
 private:
     QSGRhiSupport();

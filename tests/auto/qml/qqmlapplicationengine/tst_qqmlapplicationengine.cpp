@@ -1,5 +1,5 @@
 // Copyright (C) 2016 Research In Motion.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QQmlApplicationEngine>
 #include <QScopedPointer>
@@ -28,10 +28,13 @@ private slots:
     void removeObjectsWhenDestroyed();
     void loadTranslation_data();
     void loadTranslation();
+    void loadFromModuleTranslation_data();
+    void loadFromModuleTranslation();
     void translationChange();
     void setInitialProperties();
     void failureToLoadTriggersWarningSignal();
     void errorWhileCreating();
+    void createWithQrcPath();
 
 private:
     QString buildDir;
@@ -266,6 +269,53 @@ void tst_qqmlapplicationengine::loadTranslation()
     QCOMPARE(rootObject->property("translation").toString(), translation);
 }
 
+void tst_qqmlapplicationengine::loadFromModuleTranslation_data()
+{
+    QTest::addColumn<QString>("executable");
+    QTest::addColumn<QLocale::Language>("LANG");
+    QTest::addColumn<QString>("output");
+
+    QString qmlTypeExecutable = "loadFromModuleTranslationsQmlType/i18nLoadFromModuleQmlType";
+    QString cppTypeExecutable = "loadFromModuleTranslationsCppType/i18nLoadFromModuleCppType";
+
+    QTest::newRow("Qml: en -> en") << qmlTypeExecutable << QLocale::English << "Hello";
+    QTest::newRow("Qml: en -> fr") << qmlTypeExecutable << QLocale::French << "Salut";
+    QTest::newRow("Cpp: en -> en") << cppTypeExecutable << QLocale::English << "Hello";
+    QTest::newRow("Cpp: en -> es") << cppTypeExecutable << QLocale::Spanish << "Hola";
+}
+
+void tst_qqmlapplicationengine::loadFromModuleTranslation()
+{
+#if defined(Q_OS_ANDROID)
+    QSKIP("Test doesn't currently run on Android");
+    return;
+#endif
+
+#if QT_CONFIG(process)
+    QFETCH(QString, executable);
+    QFETCH(QLocale::Language, LANG);
+    QFETCH(QString, output);
+
+    QDir::setCurrent(buildDir);
+    QProcess app;
+    auto env = QProcessEnvironment::systemEnvironment();
+    env.insert("qtlang", QString::number(int(LANG)));
+    env.insert("LOADFROMMODULE_TEST_EXPECTED_OUTPUT", output);
+    app.setProcessEnvironment(env);
+    app.start(executable);
+    QVERIFY(app.waitForStarted());
+    QVERIFY(app.waitForFinished());
+
+    auto status = app.exitStatus();
+    auto code = app.exitCode();
+    QVERIFY2(code == 0,
+             QStringLiteral("status: %1, exitCode: %2").arg(status).arg(code).toStdString().c_str());
+    app.kill();
+#else
+    QSKIP("No process support");
+#endif
+}
+
 void tst_qqmlapplicationengine::translationChange()
 {
     if (QLocale().language() == QLocale::SwissGerman) {
@@ -338,6 +388,21 @@ void tst_qqmlapplicationengine::errorWhileCreating()
     QList<QVariant> args = observer.takeFirst();
     QVERIFY(args.at(0).isNull());
     QCOMPARE(args.at(1).toUrl(), url);
+}
+
+void tst_qqmlapplicationengine::createWithQrcPath()
+{
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "qrc:/some/qrc/path.qml: No such file or directory");
+    QQmlApplicationEngine test(":/some/qrc/path.qml");
+
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to load component");
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg, "qrc:/some/other/path.qml: No such file or directory");
+    test.load(":/some/other/path.qml");
 }
 
 QTEST_MAIN(tst_qqmlapplicationengine)

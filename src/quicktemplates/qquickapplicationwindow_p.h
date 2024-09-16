@@ -27,7 +27,7 @@ class QQuickApplicationWindowPrivate;
 class QQuickApplicationWindowAttached;
 class QQuickApplicationWindowAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
+class Q_QUICKTEMPLATES2_EXPORT QQuickApplicationWindow : public QQuickWindowQmlImpl
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
@@ -99,7 +99,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateActiveFocus())
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickApplicationWindowAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickApplicationWindow *window READ window NOTIFY windowChanged FINAL)
@@ -134,7 +134,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickApplicationWindow)
 
 #endif // QQUICKAPPLICATIONWINDOW_P_H

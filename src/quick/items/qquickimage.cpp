@@ -47,7 +47,7 @@ QQuickImagePrivate::QQuickImagePrivate()
 
 /*!
     \qmltype Image
-    \instantiates QQuickImage
+    \nativetype QQuickImage
     \inqmlmodule QtQuick
     \ingroup qtquick-visual
     \inherits Item
@@ -218,7 +218,7 @@ QQuickImage::~QQuickImage()
 void QQuickImagePrivate::setImage(const QImage &image)
 {
     Q_Q(QQuickImage);
-    pix.setImage(image);
+    currentPix->setImage(image);
     q->pixmapChange();
     q->update();
 }
@@ -226,7 +226,7 @@ void QQuickImagePrivate::setImage(const QImage &image)
 void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
 {
     Q_Q(QQuickImage);
-    pix.setPixmap(pixmap);
+    currentPix->setPixmap(pixmap);
     q->pixmapChange();
     q->update();
 }
@@ -605,12 +605,12 @@ void QQuickImage::updatePaintedGeometry()
     Q_D(QQuickImage);
 
     if (d->fillMode == PreserveAspectFit) {
-        if (!d->pix.width() || !d->pix.height()) {
+        if (!d->currentPix->width() || !d->currentPix->height()) {
             setImplicitSize(0, 0);
             return;
         }
-        const qreal pixWidth = d->pix.width() / d->devicePixelRatio;
-        const qreal pixHeight = d->pix.height() / d->devicePixelRatio;
+        const qreal pixWidth = d->currentPix->width() / d->devicePixelRatio;
+        const qreal pixHeight = d->currentPix->height() / d->devicePixelRatio;
         const qreal w = widthValid() ? width() : pixWidth;
         const qreal widthScale = w / pixWidth;
         const qreal h = heightValid() ? height() : pixHeight;
@@ -627,10 +627,10 @@ void QQuickImage::updatePaintedGeometry()
         setImplicitSize(iWidth, iHeight);
 
     } else if (d->fillMode == PreserveAspectCrop) {
-        if (!d->pix.width() || !d->pix.height())
+        if (!d->currentPix->width() || !d->currentPix->height())
             return;
-        const qreal pixWidth = d->pix.width() / d->devicePixelRatio;
-        const qreal pixHeight = d->pix.height() / d->devicePixelRatio;
+        const qreal pixWidth = d->currentPix->width() / d->devicePixelRatio;
+        const qreal pixHeight = d->currentPix->height() / d->devicePixelRatio;
         qreal widthScale = width() / pixWidth;
         qreal heightScale = height() / pixHeight;
         if (widthScale < heightScale) {
@@ -642,8 +642,8 @@ void QQuickImage::updatePaintedGeometry()
         d->paintedHeight = heightScale * pixHeight;
         d->paintedWidth = widthScale * pixWidth;
     } else if (d->fillMode == Pad) {
-        d->paintedWidth = d->pix.width() / d->devicePixelRatio;
-        d->paintedHeight = d->pix.height() / d->devicePixelRatio;
+        d->paintedWidth = d->currentPix->width() / d->devicePixelRatio;
+        d->paintedHeight = d->currentPix->height() / d->devicePixelRatio;
     } else {
         d->paintedWidth = width();
         d->paintedHeight = height();
@@ -685,7 +685,7 @@ QSGTextureProvider *QQuickImage::textureProvider() const
         dd->provider = new QQuickImageTextureProvider;
         dd->provider->m_smooth = d->smooth;
         dd->provider->m_mipmap = d->mipmap;
-        dd->provider->updateTexture(d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window()));
+        dd->provider->updateTexture(d->sceneGraphRenderContext()->textureForFactory(d->currentPix->textureFactory(), window()));
     }
 
     return d->provider;
@@ -711,7 +711,7 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     Q_D(QQuickImage);
 
-    QSGTexture *texture = d->sceneGraphRenderContext()->textureForFactory(d->pix.textureFactory(), window());
+    QSGTexture *texture = d->sceneGraphRenderContext()->textureForFactory(d->currentPix->textureFactory(), window());
 
     // Copy over the current texture state into the texture provider...
     if (d->provider) {
@@ -736,8 +736,8 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     QSGTexture::WrapMode hWrap = QSGTexture::ClampToEdge;
     QSGTexture::WrapMode vWrap = QSGTexture::ClampToEdge;
 
-    qreal pixWidth = (d->fillMode == PreserveAspectFit) ? d->paintedWidth : d->pix.width() / d->devicePixelRatio;
-    qreal pixHeight = (d->fillMode == PreserveAspectFit) ? d->paintedHeight :  d->pix.height() / d->devicePixelRatio;
+    qreal pixWidth = (d->fillMode == PreserveAspectFit) ? d->paintedWidth : d->currentPix->width() / d->devicePixelRatio;
+    qreal pixHeight = (d->fillMode == PreserveAspectFit) ? d->paintedHeight :  d->currentPix->height() / d->devicePixelRatio;
 
     int xOffset = 0;
     if (d->hAlign == QQuickImage::AlignHCenter)
@@ -754,36 +754,36 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
     switch (d->fillMode) {
     case Stretch:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = d->pix.rect();
+        sourceRect = d->currentPix->rect();
         break;
 
     case PreserveAspectFit:
         targetRect = QRectF(xOffset, yOffset, d->paintedWidth, d->paintedHeight);
-        sourceRect = d->pix.rect();
+        sourceRect = d->currentPix->rect();
         break;
 
     case PreserveAspectCrop: {
         targetRect = QRectF(0, 0, width(), height());
-        qreal wscale = width() / qreal(d->pix.width());
-        qreal hscale = height() / qreal(d->pix.height());
+        qreal wscale = width() / qreal(d->currentPix->width());
+        qreal hscale = height() / qreal(d->currentPix->height());
 
         if (wscale > hscale) {
-            int src = (hscale / wscale) * qreal(d->pix.height());
+            int src = (hscale / wscale) * qreal(d->currentPix->height());
             int y = 0;
             if (d->vAlign == QQuickImage::AlignVCenter)
-                y = qCeil((d->pix.height() - src) / 2.);
+                y = qCeil((d->currentPix->height() - src) / 2.);
             else if (d->vAlign == QQuickImage::AlignBottom)
-                y = qCeil(d->pix.height() - src);
-            sourceRect = QRectF(0, y, d->pix.width(), src);
+                y = qCeil(d->currentPix->height() - src);
+            sourceRect = QRectF(0, y, d->currentPix->width(), src);
 
         } else {
-            int src = (wscale / hscale) * qreal(d->pix.width());
+            int src = (wscale / hscale) * qreal(d->currentPix->width());
             int x = 0;
             if (d->hAlign == QQuickImage::AlignHCenter)
-                x = qCeil((d->pix.width() - src) / 2.);
+                x = qCeil((d->currentPix->width() - src) / 2.);
             else if (d->hAlign == QQuickImage::AlignRight)
-                x = qCeil(d->pix.width() - src);
-            sourceRect = QRectF(x, 0, src, d->pix.height());
+                x = qCeil(d->currentPix->width() - src);
+            sourceRect = QRectF(x, 0, src, d->currentPix->height());
         }
         }
         break;
@@ -797,13 +797,13 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 
     case TileHorizontally:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = QRectF(-xOffset, 0, width(), d->pix.height());
+        sourceRect = QRectF(-xOffset, 0, width(), d->currentPix->height());
         hWrap = QSGTexture::Repeat;
         break;
 
     case TileVertically:
         targetRect = QRectF(0, 0, width(), height());
-        sourceRect = QRectF(0, -yOffset, d->pix.width(), height());
+        sourceRect = QRectF(0, -yOffset, d->currentPix->width(), height());
         vWrap = QSGTexture::Repeat;
         break;
 
@@ -817,8 +817,8 @@ QSGNode *QQuickImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         break;
     }
 
-    qreal nsWidth = (hWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.width() / d->devicePixelRatio : d->pix.width();
-    qreal nsHeight = (vWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->pix.height() / d->devicePixelRatio : d->pix.height();
+    qreal nsWidth = (hWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->currentPix->width() / d->devicePixelRatio : d->currentPix->width();
+    qreal nsHeight = (vWrap == QSGTexture::Repeat || d->fillMode == Pad) ? d->currentPix->height() / d->devicePixelRatio : d->currentPix->height();
     QRectF nsrect(sourceRect.x() / nsWidth,
                   sourceRect.y() / nsHeight,
                   sourceRect.width() / nsWidth,
@@ -966,6 +966,25 @@ void QQuickImage::setMipmap(bool use)
 
     frameCount is the number of frames in the image. Most images have only one frame.
 */
+
+/*!
+    \qmlproperty bool QtQuick::Image::retainWhileLoading
+    \since 6.8
+
+//! [qml-image-retainwhileloading]
+    This property defines the behavior when the \l source property is changed and loading happens
+    asynchronously. This is the case when the \l asynchronous property is set to \c true, or if the
+    image is not on the local file system.
+
+    If \c retainWhileLoading is \c false (the default), the old image is discarded immediately, and
+    the component is cleared while the new image is being loaded. If set to \c true, the old image
+    is retained and remains visible until the new one is ready.
+
+    Enabling this property can avoid flickering in cases where loading the new image takes a long
+    time. It comes at the cost of some extra memory use for double buffering while the new image is
+    being loaded.
+//! [qml-image-retainwhileloading]
+ */
 
 QT_END_NAMESPACE
 

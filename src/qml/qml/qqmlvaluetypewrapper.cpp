@@ -3,41 +3,32 @@
 
 #include "qqmlvaluetypewrapper_p.h"
 
-#include <private/qqmlvaluetype_p.h>
 #include <private/qqmlbinding_p.h>
-#include <private/qqmlglobal_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlvaluetype_p.h>
 
-#include <private/qv4engine_p.h>
-#include <private/qv4functionobject_p.h>
-#include <private/qv4variantobject_p.h>
 #include <private/qv4alloca_p.h>
-#include <private/qv4stackframe_p.h>
-#include <private/qv4objectiterator_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4identifiertable_p.h>
-#include <private/qv4lookup_p.h>
-#include <private/qv4sequenceobject_p.h>
 #include <private/qv4arraybuffer_p.h>
 #include <private/qv4dateobject_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4functionobject_p.h>
+#include <private/qv4identifiertable_p.h>
 #include <private/qv4jsonobject_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4stackframe_p.h>
+#include <private/qv4variantobject_p.h>
+
+#include <QtCore/qline.h>
+#include <QtCore/qsize.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qloggingcategory.h>
+
 #if QT_CONFIG(regularexpression)
 #include <private/qv4regexpobject_p.h>
 #endif
-#if QT_CONFIG(qml_locale)
-#include <private/qqmllocale_p.h>
-#endif
-#include <QtCore/qloggingcategory.h>
-#include <QtCore/qdatetime.h>
-#include <QtCore/QLine>
-#include <QtCore/QLineF>
-#include <QtCore/QSize>
-#include <QtCore/QSizeF>
-#include <QtCore/QTimeZone>
 
 QT_BEGIN_NAMESPACE
-
-Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
 
@@ -304,7 +295,7 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
 {
     if (isFunction) {
         // calling a Q_INVOKABLE function of a value type
-        return QV4::QObjectMethod::create(engine->rootContext(), valueTypeWrapper, coreIndex);
+        return QV4::QObjectMethod::create(engine, valueTypeWrapper, coreIndex);
     }
 
     const QMetaObject *metaObject = valueTypeWrapper->metaObject();
@@ -338,12 +329,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
         return engine->newDateObject(
                     time, valueTypeWrapper, index, referenceFlags(metaObject, index));
     };
-
-#if QT_CONFIG(qml_locale)
-    const auto wrapLocale = [engine](const QLocale &locale) {
-        return QQmlLocale::wrap(engine, locale);
-    };
-#endif
 
 #define VALUE_TYPE_LOAD(metatype, cpptype, constructor) \
     case metatype: { \
@@ -397,9 +382,6 @@ static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     VALUE_TYPE_LOAD(QMetaType::QJsonValue, QJsonValue, wrapJsonValue);
     VALUE_TYPE_LOAD(QMetaType::QJsonObject, QJsonObject, wrapJsonObject);
     VALUE_TYPE_LOAD(QMetaType::QJsonArray, QJsonArray, wrapJsonArray);
-#if QT_CONFIG(qml_locale)
-    VALUE_TYPE_LOAD(QMetaType::QLocale, QLocale, wrapLocale);
-#endif
     case QMetaType::QPixmap:
     case QMetaType::QImage: {
         QVariant v(metaType);
@@ -653,7 +635,7 @@ ReturnedValue QQmlValueTypeWrapper::virtualResolveLookupGetter(const Object *obj
     if (!result.isValid())
         return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
 
-    lookup->qgadgetLookup.ic = r->internalClass();
+    lookup->qgadgetLookup.ic.set(engine, r->internalClass());
     // & 1 to tell the gc that this is not heap allocated; see markObjects in qv4lookup_p.h
     lookup->qgadgetLookup.metaObject = quintptr(r->d()->metaObject()) + 1;
     lookup->qgadgetLookup.metaType = result.propType().iface();
@@ -794,7 +776,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
 
-            QV4::ScopedFunctionObject f(scope, bindingFunction->bindingFunction());
+            QV4::Scoped<JavaScriptFunctionObject> f(scope, bindingFunction->bindingFunction());
             QV4::ScopedContext ctx(scope, f->scope());
             QQmlBinding *newBinding = QQmlBinding::create(&cacheData, f->function(), referenceObject, context, ctx);
             newBinding->setSourceLocation(bindingFunction->currentLocation());
@@ -805,12 +787,12 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
             QQmlPropertyPrivate::setBinding(newBinding);
             return true;
         } else if (referenceObject) {
-            if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+            if (Q_UNLIKELY(lcBuiltinsBindingRemoval().isInfoEnabled())) {
                 if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd.coreIndex()))) {
                     Q_ASSERT(binding->kind() == QQmlAbstractBinding::QmlBinding);
                     const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
                     const auto stackFrame = v4->currentStackFrame;
-                    qCInfo(lcBindingRemoval,
+                    qCInfo(lcBuiltinsBindingRemoval,
                            "Overwriting binding on %s::%s which was initially bound at %s by setting \"%s\" at %s:%d",
                            referenceObject->metaObject()->className(), referenceObject->metaObject()->property(referencePropertyIndex).name(),
                            qPrintable(qmlBinding->expressionIdentifier()),

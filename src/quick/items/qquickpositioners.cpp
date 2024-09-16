@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static const QQuickItemPrivate::ChangeTypes watchedChanges
+static const QQuickItemPrivate::ChangeTypes positionerWatchedChanges
     = QQuickItemPrivate::Geometry
     | QQuickItemPrivate::SiblingOrder
     | QQuickItemPrivate::Visibility
@@ -21,13 +21,13 @@ static const QQuickItemPrivate::ChangeTypes watchedChanges
 void QQuickBasePositionerPrivate::watchChanges(QQuickItem *other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->addItemChangeListener(this, watchedChanges);
+    otherPrivate->addItemChangeListener(this, positionerWatchedChanges);
 }
 
 void QQuickBasePositionerPrivate::unwatchChanges(QQuickItem* other)
 {
     QQuickItemPrivate *otherPrivate = QQuickItemPrivate::get(other);
-    otherPrivate->removeItemChangeListener(this, watchedChanges);
+    otherPrivate->removeItemChangeListener(this, positionerWatchedChanges);
 }
 
 
@@ -706,7 +706,7 @@ void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
 
 /*!
     \qmltype Positioner
-    \instantiates QQuickPositionerAttached
+    \nativetype QQuickPositionerAttached
     \inqmlmodule QtQuick
     \ingroup qtquick-positioners
     \brief Provides attached properties that contain details on where an item exists in a positioner.
@@ -789,7 +789,7 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
 /*!
     \qmltype Column
-    \instantiates QQuickColumn
+    \nativetype QQuickColumn
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
@@ -987,7 +987,7 @@ void QQuickColumn::reportConflictingAnchors()
 }
 /*!
     \qmltype Row
-    \instantiates QQuickRow
+    \nativetype QQuickRow
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
@@ -1267,7 +1267,7 @@ void QQuickRow::reportConflictingAnchors()
 
 /*!
     \qmltype Grid
-    \instantiates QQuickGrid
+    \nativetype QQuickGrid
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners
@@ -1870,7 +1870,7 @@ void QQuickGrid::reportConflictingAnchors()
 
 /*!
     \qmltype Flow
-    \instantiates QQuickFlow
+    \nativetype QQuickFlow
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-positioners

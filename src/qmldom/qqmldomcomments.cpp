@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqmldomcomments_p.h"
 #include "qqmldomoutwriter_p.h"
@@ -17,7 +17,7 @@
 
 #include <variant>
 
-static Q_LOGGING_CATEGORY(commentsLog, "qt.qmldom.comments", QtWarningMsg);
+Q_STATIC_LOGGING_CATEGORY(commentsLog, "qt.qmldom.comments", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
@@ -65,7 +65,8 @@ Comments store a string (rawComment) with comment characters (//,..) and spaces.
 Sometime one wants just the comment, the commentcharacters, the space before the comment,....
 CommentInfo gets such a raw comment string and makes the various pieces available
 */
-CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
+CommentInfo::CommentInfo(QStringView rawComment, QQmlJS::SourceLocation loc)
+    : rawComment(rawComment), commentLocation(loc)
 {
     commentBegin = 0;
     while (commentBegin < quint32(rawComment.size()) && rawComment.at(commentBegin).isSpace()) {
@@ -97,6 +98,7 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
             warnings.append(tr("Unexpected comment start %1").arg(commentStartStr));
             break;
         }
+
         commentEnd = commentBegin + commentStartStr.size();
         quint32 rawEnd = quint32(rawComment.size());
         commentContentEnd = commentContentBegin = commentEnd;
@@ -155,6 +157,11 @@ CommentInfo::CommentInfo(QStringView rawComment) : rawComment(rawComment)
                                     .arg(i));
         }
     }
+
+    // Post process comment source location
+    commentLocation.offset -= commentStartStr.size();
+    commentLocation.startColumn -=  commentStartStr.size();
+    commentLocation.length = commentEnd - commentBegin;
 }
 
 /*!
@@ -238,43 +245,27 @@ startRegion/ EndRegion). Region comments keeps a mapping containing them.
 bool CommentedElement::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont = cont && self.dvWrapField(visitor, Fields::preComments, preComments);
-    cont = cont && self.dvWrapField(visitor, Fields::postComments, postComments);
+    cont = cont && self.dvWrapField(visitor, Fields::preComments, m_preComments);
+    cont = cont && self.dvWrapField(visitor, Fields::postComments, m_postComments);
     return cont;
 }
 
 void CommentedElement::writePre(OutWriter &lw, QList<SourceLocation> *locs) const
 {
     if (locs)
-        locs->resize(preComments.size());
+        locs->resize(m_preComments.size());
     int i = 0;
-    for (const Comment &c : preComments)
+    for (const Comment &c : m_preComments)
         c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
 }
 
 void CommentedElement::writePost(OutWriter &lw, QList<SourceLocation> *locs) const
 {
     if (locs)
-        locs->resize(postComments.size());
+        locs->resize(m_postComments.size());
     int i = 0;
-    for (const Comment &c : postComments)
+    for (const Comment &c : m_postComments)
         c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
-}
-
-/*!
-\brief Given the SourceLocation of the current element returns the comments associated with the
-start and end of item
-
-The map uses an index that is based on 2*the location. Thus for every location l it is possible
-to have two indexes: 2*l (just before) and 2*l+1 (just after).
-This allows to attach comments to indexes representing either just before or after any location
-*/
-QMultiMap<quint32, const QList<Comment> *>
-CommentedElement::commentGroups(SourceLocation elLocation) const
-{
-    return QMultiMap<quint32, const QList<Comment> *>(
-            { { elLocation.begin() * 2, &preComments },
-              { elLocation.end() * 2 + 1, &postComments } });
 }
 
 using namespace QQmlJS::AST;
@@ -292,7 +283,7 @@ class ElementRef
 {
 public:
     ElementRef(AST::Node *node, quint32 size) : element(node), size(size) { }
-    ElementRef(Path path, FileLocationRegion region, quint32 size)
+    ElementRef(const Path &path, FileLocationRegion region, quint32 size)
         : element(RegionRef{ path, region }), size(size)
     {
     }
@@ -348,11 +339,13 @@ public:
     AstRangesVisitor() = default;
 
     void addNodeRanges(AST::Node *rootNode);
-    void addItemRanges(const DomItem &item, FileLocations::Tree itemLocations, Path currentP);
+    void addItemRanges(
+            const DomItem &item, const FileLocations::Tree &itemLocations, const Path &currentP);
 
     void throwRecursionDepthError() override { }
 
     static const QSet<int> kindsToSkip();
+    static bool shouldSkipRegion(const DomItem &item, FileLocationRegion region);
 
     bool preVisit(Node *n) override
     {
@@ -367,8 +360,6 @@ public:
         return true;
     }
 
-    QQmlJS::Engine *engine;
-    FileLocations::Tree rootItemLocations;
     QMap<quint32, ElementRef> starts;
     QMap<quint32, ElementRef> ends;
 };
@@ -379,7 +370,7 @@ void AstRangesVisitor::addNodeRanges(AST::Node *rootNode)
 }
 
 void AstRangesVisitor::addItemRanges(
-        const DomItem &item, FileLocations::Tree itemLocations, Path currentP)
+        const DomItem &item, const FileLocations::Tree &itemLocations, const Path &currentP)
 {
     if (!itemLocations) {
         if (item)
@@ -392,10 +383,13 @@ void AstRangesVisitor::addItemRanges(
         for (auto it = regs.cbegin(), end = regs.cend(); it != end; ++it) {
             quint32 startI = it.value().begin();
             quint32 endI = it.value().end();
-            if (!starts.contains(startI))
-                starts.insert(startI, { currentP, it.key(), quint32(endI - startI) });
-            if (!ends.contains(endI))
-                ends.insert(endI, { currentP, it.key(), endI - startI });
+
+            if (!shouldSkipRegion(item, it.key())) {
+                if (!starts.contains(startI))
+                    starts.insert(startI, { currentP, it.key(), quint32(endI - startI) });
+                if (!ends.contains(endI))
+                    ends.insert(endI, { currentP, it.key(), endI - startI });
+            }
         }
     }
     {
@@ -428,89 +422,99 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
     return res;
 }
 
-/*!
-\class QQmlJS::Dom::AstComments
-\brief Stores the comments associated with javascript AST::Node pointers
+/*! \internal
+    \brief returns true if comments should skip attaching to this region
 */
-
-bool AstComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
+bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion region)
 {
-    bool cont = self.dvItemField(visitor, Fields::commentedElements, [this, &self]() {
-        return self.subMapItem(Map(
-                self.pathFromOwner().field(Fields::commentedElements),
-                [this](const DomItem &map, QString key) {
-                    bool ok;
-                    // we expose the comments as map just for debugging purposes,
-                    // as key we use the address hex value as key (keys must be strings)
-                    quintptr v = key.split(QLatin1Char('_')).last().toULong(&ok, 16);
-                    // recover the actual key, and check if it is in the map
-                    AST::Node *n = reinterpret_cast<AST::Node *>(v);
-                    if (ok && m_commentedElements.contains(n))
-                        return map.wrap(PathEls::Key(key), m_commentedElements[n]);
-                    return DomItem();
-                },
-                [this](const DomItem &) {
-                    QSet<QString> res;
-                    for (AST::Node *n : m_commentedElements.keys()) {
-                        QString name;
-                        if (n)
-                            name = QString::number(n->kind); // we should add mapping to
-                                                             // string for this
-                        res.insert(name + QStringLiteral(u"_") + QString::number(quintptr(n), 16));
-                    }
-                    return res;
-                },
-                QLatin1String("CommentedElements")));
-    });
-    return cont;
-}
-
-void AstComments::collectComments(MutableDomItem &item)
-{
-    if (std::shared_ptr<ScriptExpression> scriptPtr = item.ownerAs<ScriptExpression>()) {
-        DomItem itemItem = item.item();
-        return collectComments(scriptPtr->engine(), scriptPtr->ast(), scriptPtr->astComments(),
-                               item, FileLocations::treeOf(itemItem));
-    } else if (std::shared_ptr<QmlFile> qmlFilePtr = item.ownerAs<QmlFile>()) {
-        return collectComments(qmlFilePtr->engine(), qmlFilePtr->ast(), qmlFilePtr->astComments(),
-                               item, qmlFilePtr->fileLocationsTree());
-    } else {
-        qCWarning(commentsLog)
-                << "collectComments works with QmlFile and ScriptExpression, not with"
-                << item.internalKindStr();
+    switch (item.internalKind()) {
+    case DomType::EnumDecl: {
+        return (region == FileLocationRegion::IdentifierRegion)
+                || (region == FileLocationRegion::EnumKeywordRegion);
     }
+    case DomType::EnumItem: {
+        return (region == FileLocationRegion::IdentifierRegion)
+                || (region == FileLocationRegion::EnumValueRegion);
+    }
+    case DomType::QmlObject: {
+        return (region == FileLocationRegion::RightBraceRegion
+                || region == FileLocationRegion::LeftBraceRegion);
+    }
+    case DomType::Import:
+    case DomType::ImportScope:
+        return region == FileLocationRegion::IdentifierRegion;
+    default:
+        return false;
+    }
+    Q_UNREACHABLE_RETURN(false);
 }
 
-/*!
-\brief
-Collects and associates comments with javascript AST::Node pointers and MutableDomItem in
-rootItem
-*/
-void AstComments::collectComments(
-        std::shared_ptr<Engine> engine, AST::Node *n, std::shared_ptr<AstComments> ccomm,
-        const MutableDomItem &rootItem, FileLocations::Tree rootItemLocations)
+class CommentLinker
 {
-    if (!n)
-        return;
-    AstRangesVisitor ranges;
-    ranges.addItemRanges(rootItem.item(), rootItemLocations, Path());
-    ranges.addNodeRanges(n);
-    QStringView code = engine->code();
-    QHash<AST::Node *, CommentedElement> &commentedElements = ccomm->m_commentedElements;
-    quint32 lastPostCommentPostEnd = 0;
-    for (SourceLocation cLoc : engine->comments()) {
-        // collect whitespace before and after cLoc -> iPre..iPost contains whitespace,
-        // do not add newline before, but add the one after
-        quint32 iPre = cLoc.begin();
+public:
+    CommentLinker(QStringView code, ElementRef &commentedElement, const AstRangesVisitor &ranges, quint32 &lastPostCommentPostEnd,
+                  const SourceLocation &commentLocation)
+        : m_code{ code },
+          m_commentedElement{ commentedElement },
+          m_lastPostCommentPostEnd{ lastPostCommentPostEnd },
+          m_ranges{ ranges },
+          m_commentLocation { commentLocation },
+          m_startElement{ m_ranges.starts.lowerBound(commentLocation.begin()) },
+          m_endElement{ m_ranges.ends.lowerBound(commentLocation.end()) },
+          m_spaces{findSpacesAroundComment()}
+    {
+    }
+
+    void linkCommentWithElement()
+    {
+        if (m_spaces.preNewline < 1) {
+            checkElementBeforeComment();
+            checkElementAfterComment();
+        } else {
+            checkElementAfterComment();
+            checkElementBeforeComment();
+        }
+        if (!m_commentedElement)
+            checkElementInside();
+    }
+
+    [[nodiscard]] Comment createComment() const
+    {
+        const auto [preSpacesIndex, postSpacesIndex, preNewlineCount] = m_spaces;
+        return Comment{ m_code.mid(preSpacesIndex, quint32(postSpacesIndex) - preSpacesIndex),
+                        m_commentLocation,
+                        static_cast<int>(preNewlineCount),
+                        m_commentType};
+    }
+
+private:
+    struct SpaceTrace
+    {
+        quint32 iPre;
+        qsizetype iPost;
+        int preNewline;
+    };
+
+    /*! \internal
+        \brief Returns a Comment data
+        Comment starts from the first non-newline and non-space character preceding
+        the comment start characters. For example, "\n\n  // A comment  \n\n\n", we
+        hold the prenewlines count (2). PostNewlines are part of the Comment structure
+        but they are not regarded while writing since they could be a part of prenewlines
+        of a following comment.
+    */
+    [[nodiscard]] SpaceTrace findSpacesAroundComment() const
+    {
+        quint32 iPre = m_commentLocation.begin();
         int preNewline = 0;
         int postNewline = 0;
         QStringView commentStartStr;
         while (iPre > 0) {
-            QChar c = code.at(iPre - 1);
+            QChar c = m_code.at(iPre - 1);
             if (!c.isSpace()) {
                 if (commentStartStr.isEmpty() && (c == QLatin1Char('*') || c == QLatin1Char('/'))
-                    && iPre - 1 > 0 && code.at(iPre - 2) == QLatin1Char('/')) {
-                    commentStartStr = code.mid(iPre - 2, 2);
+                    && iPre - 1 > 0 && m_code.at(iPre - 2) == QLatin1Char('/')) {
+                    commentStartStr = m_code.mid(iPre - 2, 2);
                     --iPre;
                 } else {
                     break;
@@ -519,10 +523,10 @@ void AstComments::collectComments(
                 preNewline = 1;
                 // possibly add an empty line if it was there (but never more than one)
                 int i = iPre - 1;
-                if (c == QLatin1Char('\n') && i > 0 && code.at(i - 1) == QLatin1Char('\r'))
+                if (c == QLatin1Char('\n') && i > 0 && m_code.at(i - 1) == QLatin1Char('\r'))
                     --i;
-                while (i > 0 && code.at(--i).isSpace()) {
-                    c = code.at(i);
+                while (i > 0 && m_code.at(--i).isSpace()) {
+                    c = m_code.at(i);
                     if (c == QLatin1Char('\n') || c == QLatin1Char('\r')) {
                         ++preNewline;
                         break;
@@ -532,17 +536,15 @@ void AstComments::collectComments(
             }
             --iPre;
         }
-
         if (iPre == 0)
             preNewline = 1;
-
-        qsizetype iPost = cLoc.end();
-        while (iPost < code.size()) {
-            QChar c = code.at(iPost);
+        qsizetype iPost = m_commentLocation.end();
+        while (iPost < m_code.size()) {
+            QChar c = m_code.at(iPost);
             if (!c.isSpace()) {
                 if (!commentStartStr.isEmpty() && commentStartStr.at(1) == QLatin1Char('*')
-                    && c == QLatin1Char('*') && iPost + 1 < code.size()
-                    && code.at(iPost + 1) == QLatin1Char('/')) {
+                    && c == QLatin1Char('*') && iPost + 1 < m_code.size()
+                    && m_code.at(iPost + 1) == QLatin1Char('/')) {
                     commentStartStr = QStringView();
                     ++iPost;
                 } else {
@@ -551,12 +553,12 @@ void AstComments::collectComments(
             } else {
                 if (c == QLatin1Char('\n')) {
                     ++postNewline;
-                    if (iPost + 1 < code.size() && code.at(iPost + 1) == QLatin1Char('\n')) {
+                    if (iPost + 1 < m_code.size() && m_code.at(iPost + 1) == QLatin1Char('\n')) {
                         ++iPost;
                         ++postNewline;
                     }
                 } else if (c == QLatin1Char('\r')) {
-                    if (iPost + 1 < code.size() && code.at(iPost + 1) == QLatin1Char('\n')) {
+                    if (iPost + 1 < m_code.size() && m_code.at(iPost + 1) == QLatin1Char('\n')) {
                         ++iPost;
                         ++postNewline;
                     }
@@ -567,122 +569,183 @@ void AstComments::collectComments(
                 break;
         }
 
-        ElementRef commentEl;
-        bool pre = true;
-        auto iStart = ranges.starts.lowerBound(cLoc.begin());
-        auto iEnd = ranges.ends.lowerBound(cLoc.begin());
-        Q_ASSERT(!ranges.ends.isEmpty() && !ranges.starts.isEmpty());
+        return {iPre, iPost, preNewline};
+    }
 
-        auto checkElementBefore = [&]() {
-            if (commentEl)
-                return;
-            // prefer post comment attached to preceding element
-            auto preEnd = iEnd;
-            auto preStart = iStart;
-            if (preEnd != ranges.ends.begin()) {
-                --preEnd;
-                if (iStart == ranges.starts.begin() || (--preStart).key() < preEnd.key()) {
-                    // iStart == begin should never happen
-                    // check that we do not have operators (or in general other things) between
-                    // preEnd and this because inserting a newline too ealy might invalidate the
-                    // expression (think a + //comment\n b  ==> a // comment\n + b), in this
-                    // case attaching as preComment of iStart (b in the example) should be
-                    // preferred as it is safe
-                    quint32 i = iPre;
-                    while (i != 0 && code.at(--i).isSpace())
-                        ;
-                    if (i <= preEnd.key() || i < lastPostCommentPostEnd
-                        || iEnd == ranges.ends.end()) {
-                        commentEl = preEnd.value();
-                        pre = false;
-                        lastPostCommentPostEnd = iPost + 1; // ensure the previous check works
-                        // with multiple post comments
-                    }
+    // tries to associate comment as a postComment to currentElement
+    void checkElementBeforeComment()
+    {
+        if (m_commentedElement)
+            return;
+        // prefer post comment attached to preceding element
+        auto preEnd = m_endElement;
+        auto preStart = m_startElement;
+        if (preEnd != m_ranges.ends.begin()) {
+            --preEnd;
+            if (m_startElement == m_ranges.starts.begin() || (--preStart).key() < preEnd.key()) {
+                // iStart == begin should never happen
+                // check that we do not have operators (or in general other things) between
+                // preEnd and this because inserting a newline too ealy might invalidate the
+                // expression (think a + //comment\n b  ==> a // comment\n + b), in this
+                // case attaching as preComment of iStart (b in the example) should be
+                // preferred as it is safe
+                quint32 i = m_spaces.iPre;
+                while (i != 0 && m_code.at(--i).isSpace())
+                    ;
+                if (i <= preEnd.key() || i < m_lastPostCommentPostEnd
+                    || m_endElement == m_ranges.ends.end()) {
+                    m_commentedElement = preEnd.value();
+                    m_commentType = Comment::Post;
+                    m_lastPostCommentPostEnd = m_spaces.iPost + 1; // ensure the previous check works
+                    // with multiple post comments
                 }
             }
-        };
-        auto checkElementAfter = [&]() {
-            if (commentEl)
+        }
+    }
+    // tries to associate comment as a preComment to currentElement
+    void checkElementAfterComment()
+    {
+        if (m_commentedElement)
+            return;
+        if (m_startElement != m_ranges.starts.end()) {
+            // try to add a pre comment of following element
+            if (m_endElement == m_ranges.ends.end() || m_endElement.key() > m_startElement.key()) {
+                // there is no end of element before iStart begins
+                // associate the comment as preComment of iStart
+                // (btw iEnd == end should never happen here)
+                m_commentedElement = m_startElement.value();
                 return;
-            if (iStart != ranges.starts.end()) {
-                // try to add a pre comment of following element
-                if (iEnd == ranges.ends.end() || iEnd.key() > iStart.key()) {
-                    // there is no end of element before iStart begins
-                    // associate the comment as preComment of iStart
-                    // (btw iEnd == end should never happen here)
-                    commentEl = iStart.value();
-                    return;
-                }
             }
-            if (iStart == ranges.starts.begin()) {
-                Q_ASSERT(iStart != ranges.starts.end());
-                // we are before the first node (should be handled already by previous case)
-                commentEl = iStart.value();
-            }
-        };
-        auto checkInsideEl = [&]() {
-            if (commentEl)
-                return;
-            auto preIStart = iStart;
-            if (iStart == ranges.starts.begin()) {
-                commentEl = iStart.value(); // checkElementAfter should have handled this
-                return;
-            } else {
-                --preIStart;
-            }
-            // we are inside a node, actually inside both n1 and n2 (which might be the same)
-            // add to pre of the smallest between n1 and n2.
-            // This is needed because if there are multiple nodes starting/ending at the same
-            // place we store only the first (i.e. largest)
-            ElementRef n1 = preIStart.value();
-            ElementRef n2 = iEnd.value();
-            if (n1.size > n2.size)
-                commentEl = n2;
-            else
-                commentEl = n1;
-        };
-        if (!preNewline) {
-            checkElementBefore();
-            checkElementAfter();
+        }
+        if (m_startElement == m_ranges.starts.begin()) {
+            Q_ASSERT(m_startElement != m_ranges.starts.end());
+            // we are before the first node (should be handled already by previous case)
+            m_commentedElement = m_startElement.value();
+        }
+    }
+    void checkElementInside()
+    {
+        if (m_commentedElement)
+            return;
+        auto preStart = m_startElement;
+        if (m_startElement == m_ranges.starts.begin()) {
+            m_commentedElement = m_startElement.value(); // checkElementAfter should have handled this
+            return;
         } else {
-            checkElementAfter();
-            checkElementBefore();
+            --preStart;
         }
-        if (!commentEl)
-            checkInsideEl();
-        if (!commentEl) {
-            qCWarning(commentsLog) << "Could not assign comment at" << sourceLocationToQCborValue(cLoc)
+        // we are inside a node, actually inside both n1 and n2 (which might be the same)
+        // add to pre of the smallest between n1 and n2.
+        // This is needed because if there are multiple nodes starting/ending at the same
+        // place we store only the first (i.e. largest)
+        ElementRef n1 = preStart.value();
+        ElementRef n2 = m_endElement.value();
+        if (n1.size > n2.size)
+            m_commentedElement = n2;
+        else
+            m_commentedElement = n1;
+    }
+private:
+    QStringView m_code;
+    ElementRef &m_commentedElement;
+    quint32 &m_lastPostCommentPostEnd;
+    Comment::CommentType m_commentType = Comment::Pre;
+    const AstRangesVisitor &m_ranges;
+    const SourceLocation &m_commentLocation;
+
+    using RangesIterator = decltype(m_ranges.starts.begin());
+    const RangesIterator m_startElement;
+    const RangesIterator m_endElement;
+    SpaceTrace m_spaces;
+};
+
+/*!
+\class QQmlJS::Dom::AstComments
+\brief Stores the comments associated with javascript AST::Node pointers
+*/
+bool AstComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
+{
+    // TODO: QTBUG-123645
+    // Revert this commit to reproduce crash with tst_qmldomitem::doNotCrashAtAstComments
+    QList<Comment> pre;
+    QList<Comment> post;
+    for (const auto &commentedElement : commentedElements().values()) {
+        pre.append(commentedElement.preComments());
+        post.append(commentedElement.postComments());
+    }
+    if (!pre.isEmpty())
+        self.dvWrapField(visitor, Fields::preComments, pre);
+    if (!post.isEmpty())
+        self.dvWrapField(visitor, Fields::postComments, post);
+
+    return false;
+}
+
+CommentCollector::CommentCollector(MutableDomItem item)
+    : m_rootItem{ std::move(item) },
+      m_fileLocations{ FileLocations::treeOf(m_rootItem.item()) }
+{
+}
+
+void CommentCollector::collectComments()
+{
+    if (std::shared_ptr<ScriptExpression> scriptPtr = m_rootItem.ownerAs<ScriptExpression>()) {
+        return collectComments(scriptPtr->engine(), scriptPtr->ast(), scriptPtr->astComments());
+    } else if (std::shared_ptr<QmlFile> qmlFilePtr = m_rootItem.ownerAs<QmlFile>()) {
+        return collectComments(qmlFilePtr->engine(), qmlFilePtr->ast(), qmlFilePtr->astComments());
+    } else {
+        qCWarning(commentsLog)
+                << "collectComments works with QmlFile and ScriptExpression, not with"
+                << m_rootItem.item().internalKindStr();
+    }
+}
+
+/*! \internal
+    \brief Collects and associates comments with javascript AST::Node pointers
+            or with MutableDomItem
+*/
+void CommentCollector::collectComments(
+         const std::shared_ptr<Engine> &engine, AST::Node *rootNode,
+         const std::shared_ptr<AstComments> &astComments)
+{
+    if (!rootNode)
+        return;
+    AstRangesVisitor ranges;
+    ranges.addItemRanges(m_rootItem.item(), m_fileLocations, Path());
+    ranges.addNodeRanges(rootNode);
+    QStringView code = engine->code();
+    quint32 lastPostCommentPostEnd = 0;
+    for (const SourceLocation &commentLocation : engine->comments()) {
+        // collect whitespace before and after cLoc -> iPre..iPost contains whitespace,
+        // do not add newline before, but add the one after
+        ElementRef elementToBeLinked;
+        CommentLinker linker(code, elementToBeLinked, ranges, lastPostCommentPostEnd, commentLocation);
+        linker.linkCommentWithElement();
+        const auto comment = linker.createComment();
+
+        if (!elementToBeLinked) {
+            qCWarning(commentsLog) << "Could not assign comment at" << sourceLocationToQCborValue(commentLocation)
                                    << "adding before root node";
-            if (rootItem && (rootItemLocations || !n)) {
-                commentEl.element = RegionRef{ Path(), MainRegion };
-                commentEl.size = FileLocations::region(rootItemLocations, MainRegion).length;
-                // attach to rootItem
-            } else if (n) {
-                commentEl.element = n;
-                commentEl.size = n->lastSourceLocation().end() - n->firstSourceLocation().begin();
+            if (m_rootItem && (m_fileLocations || !rootNode)) {
+                elementToBeLinked.element = RegionRef{ Path(), MainRegion };
+                elementToBeLinked.size = FileLocations::region(m_fileLocations, MainRegion).length;
+            } else if (rootNode) {
+                elementToBeLinked.element = rootNode;
+                elementToBeLinked.size = rootNode->lastSourceLocation().end() - rootNode->firstSourceLocation().begin();
             }
         }
 
-        Comment comment(code.mid(iPre, iPost - iPre), preNewline);
-        if (commentEl.element.index() == 0 && std::get<0>(commentEl.element)) {
-            CommentedElement &cEl = commentedElements[std::get<0>(commentEl.element)];
-            if (pre)
-                cEl.preComments.append(comment);
-            else
-                cEl.postComments.append(comment);
-        } else if (commentEl.element.index() == 1) {
-            MutableDomItem rComments = rootItem.item()
-                                        .path(std::get<1>(commentEl.element).path)
+        if (const auto *const commentNode = std::get_if<AST::Node *>(&elementToBeLinked.element)) {
+            auto &commentedElement = astComments->commentedElements()[*commentNode];
+            commentedElement.addComment(comment);
+        } else if (const auto * const regionRef = std::get_if<RegionRef>(&elementToBeLinked.element)) {
+            MutableDomItem regionComments = m_rootItem.item()
+                                        .path(regionRef->path)
                                         .field(Fields::comments);
-            if (RegionComments *rCommentsPtr = rComments.mutableAs<RegionComments>()) {
-                if (pre)
-                    rCommentsPtr->addPreComment(comment, std::get<1>(commentEl.element).regionName);
-                else
-                    rCommentsPtr->addPostComment(comment,
-                                                 std::get<1>(commentEl.element).regionName);
-            } else {
-                Q_ASSERT(false);
-            }
+            if (auto *regionCommentsPtr = regionComments.mutableAs<RegionComments>())
+                regionCommentsPtr->addComment(comment, regionRef->regionName);
+            else
+                Q_ASSERT(false && "Cannot attach to region comments");
         } else {
             qCWarning(commentsLog)
                     << "Failed: no item or node to attach comment" << comment.rawComment();
@@ -690,51 +753,15 @@ void AstComments::collectComments(
     }
 }
 
-// internal class to collect all comments in a node or its subnodes
-class CommentCollectorVisitor : protected VisitAll
-{
-public:
-    CommentCollectorVisitor(AstComments *comments, AST::Node *n) : comments(comments)
-    {
-        AST::Node::accept(n, this);
-    }
-
-    void throwRecursionDepthError() override { }
-
-    bool preVisit(Node *n) override
-    {
-        auto &cEls = comments->commentedElements();
-        if (cEls.contains(n))
-            nodeComments += cEls[n].commentGroups(
-                    combine(n->firstSourceLocation(), n->lastSourceLocation()));
-        return true;
-    }
-
-    AstComments *comments;
-    QMultiMap<quint32, const QList<Comment> *> nodeComments;
-};
-
-/*!
-\brief low level method returns all comments in a node (including its subnodes)
-
-The comments are roughly ordered in the order they appear in the file.
-Multiple values are in reverse order if the index is even.
-*/
-QMultiMap<quint32, const QList<Comment> *> AstComments::allCommentsInNode(AST::Node *n)
-{
-    CommentCollectorVisitor v(this, n);
-    return v.nodeComments;
-}
-
 bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    if (!regionComments.isEmpty()) {
+    if (!m_regionComments.isEmpty()) {
         cont = cont
                 && self.dvItemField(visitor, Fields::regionComments, [this, &self]() -> DomItem {
                        const Path pathFromOwner =
                                self.pathFromOwner().field(Fields::regionComments);
-                       auto map = Map::fromFileRegionMap(pathFromOwner, regionComments);
+                       auto map = Map::fromFileRegionMap(pathFromOwner, m_regionComments);
                        return self.subMapItem(map);
                    });
     }

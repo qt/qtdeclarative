@@ -32,7 +32,7 @@ class QQuickFontDialogImplAttached;
 class QQuickFontDialogImplAttachedPrivate;
 class QQuickFontDialogImplPrivate;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFontDialogImpl : public QQuickDialog
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFontDialogImpl : public QQuickDialog
 {
     Q_OBJECT
     Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged FINAL)
@@ -65,7 +65,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickFontDialogImpl)
 };
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFontDialogImplAttached : public QObject
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFontDialogImplAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickListView *familyListView READ familyListView WRITE setFamilyListView
@@ -177,7 +177,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFontDialogImpl)
 
 #endif // QQUICKFONTDIALOGIMPL_P_H

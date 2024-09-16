@@ -1,0 +1,11 @@
+module shared
+Button 2.0 Button.qml
+CheckBox 2.1 CheckBox.qml
+FlickrRssModel 2.0 FlickrRssModel.qml
+Label 2.0 Label.qml
+LauncherList 2.0 LauncherList.qml
+SimpleLauncherDelegate 2.0 SimpleLauncherDelegate.qml
+Slider 2.0 Slider.qml
+TabSet 2.1 TabSet.qml
+TextField 2.1 TextField.qml
+singleton Images 2.2 Images.qml

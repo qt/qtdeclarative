@@ -9,7 +9,7 @@
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype ParticlePainter
-    \instantiates QQuickParticlePainter
+    \nativetype QQuickParticlePainter
     \inqmlmodule QtQuick.Particles
     \inherits Item
     \brief For specifying how to paint particles.

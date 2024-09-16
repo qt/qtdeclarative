@@ -127,7 +127,7 @@ In some cases, Qt's own QML modules may show different behavior, depending on wh
 version is imported. In particular, if a property is added to a QML component, and
 your code contains unqualified access to another property of the same name, your
 code will break. In the following example, the code will behave differently
-depending on the version of Qt, because the \l{QQuickRectangle::topLeftRadius}
+depending on the version of Qt, because the \l [QML] {Rectangle::}{topLeftRadius}
 property was added in Qt 6.7:
 
 \qml
@@ -145,7 +145,7 @@ Item {
 }
 \endqml
 
-The solution here is to avoid the unqualified access. \l{qmllint} can be used to
+The solution here is to avoid the unqualified access. \l{qmllint Reference}{qmllint} can be used to
 find such problems. The following example accesses the property you actually mean
 in a safe, qualified way:
 
@@ -183,7 +183,7 @@ Item {
 Another problem solved by versioning is the fact that QML components imported by
 different modules may shadow each other. In the following example, if \c{MyModule} were
 to introduce a component named \c{Rectangle} in a newer version, the \c{Rectangle}
-created by this document would not be a \l{QQuickRectangle} anymore, but rather the
+created by this document would not be a \c {QQuickRectangle} anymore, but rather the
 new \c{Rectangle} introduced by \c{MyModule}.
 
 \qml
@@ -247,7 +247,7 @@ in QML. The only way to version QML documents is to add a new document with sepa
 
 If a component from your module \c{A} imports another module \c{B} and instantiates a type
 from that module as the root element, then the import version of \c{B} is relevant for the
-properties available from the resulting component, no matter what version of \l{A} is
+properties available from the resulting component, no matter what version of \c{A} is
 imported by a user.
 
 Consider a file \c{TypeFromA.qml} with version \c{2.6} in module \c{A}:
@@ -290,8 +290,8 @@ and \l{QMetaProperty::revision}. This means all the types in your type hierarchy
 to follow the same versioning scheme. This includes any types provided by Qt itself
 that you inherit from.
 
-With \l{qmlRegisterType} and related functions you can register any mapping between
-metaobject revisions and type versions. You then need to use the one-argument forms
+With \l{QQmlEngine::}{qmlRegisterType} and related functions you can register any mapping
+between metaobject revisions and type versions. You then need to use the one-argument forms
 of \l{Q_REVISION} and the \c{REVISION} attribute of \l{Q_PROPERTY}. However, this
 can become rather complex and confusing and is not recommended.
 

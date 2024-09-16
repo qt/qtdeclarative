@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 /*
     This manual test is used to take screenshots of each style for use in the
@@ -43,6 +43,7 @@
         QT_QUICK_CONTROLS_STYLE=Imagine $app 0 400 &
         QT_QUICK_CONTROLS_STYLE=iOS $app 400 0 &
         QT_QUICK_CONTROLS_STYLE=Universal $app 800 400 &
+        QT_QUICK_CONTROLS_STYLE=FluentWinUI3 $app 1200 400 &
         #QT_QUICK_CONTROLS_STYLE=Windows $app 1200 400 &
 
     Step 2
@@ -58,6 +59,8 @@
         mogrify -resize 50% qtquickcontrols-basic.png
         mogrify -resize 50% qtquickcontrols-fusion-light.png
         mogrify -resize 50% qtquickcontrols-fusion-dark.png
+        mogrify -resize 50% qtquickcontrols-fluentwinui3-light.png
+        mogrify -resize 50% qtquickcontrols-fluentwinui3-dark.png
         mogrify -resize 50% qtquickcontrols-imagine.png
         mogrify -resize 50% qtquickcontrols-ios-light.png
         mogrify -resize 50% qtquickcontrols-ios-dark.png
@@ -109,6 +112,8 @@ ApplicationWindow {
             topPadding: 30
             contentWidth: fontColumnLayout.implicitWidth + fontColumnLayout.anchors.leftMargin
             background.visible: false
+            Layout.fillWidth: false
+            Layout.fillHeight: false
 
             ColumnLayout {
                 id: fontColumnLayout
@@ -118,15 +123,18 @@ ApplicationWindow {
                 RadioButton {
                     leftPadding: 0
                     text: "Small"
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     leftPadding: 0
                     text: "Medium"
                     checked: true
+                    Layout.fillWidth: false
                 }
                 RadioButton {
                     leftPadding: 0
                     text: "Large"
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -138,6 +146,7 @@ ApplicationWindow {
             background.visible: false
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 id: audioGridLayout
@@ -175,6 +184,7 @@ ApplicationWindow {
         Button {
             text: "Save"
             Layout.alignment: Qt.AlignRight
+            Layout.fillWidth: false
         }
 
         Item { Layout.fillHeight: true }

@@ -138,6 +138,7 @@ public:
     ~Method();
 
     QString methodName() const;
+    QQmlSA::SourceLocation sourceLocation() const;
     MethodType methodType() const;
 
     friend bool operator==(const Method &lhs, const Method &rhs)

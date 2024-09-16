@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class QQuickFileDialogImpl;
 class QWindow;
 
-class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickPlatformFolderDialog : public QPlatformFileDialogHelper
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickPlatformFolderDialog : public QPlatformFileDialogHelper
 {
     Q_OBJECT
 

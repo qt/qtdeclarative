@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 
@@ -38,6 +38,9 @@ private slots:
     void listView();
 
     void resolve();
+
+    void variableAxes_data();
+    void variableAxes();
 };
 
 static QFont testFont()
@@ -110,7 +113,7 @@ void tst_font::font()
     QFETCH(QString, testFile);
     QFETCH(QFont, expectedFont);
 
-    if (QSysInfo::productType().compare(QLatin1String("osx"), Qt::CaseInsensitive) == 0
+    if (QSysInfo::productType().compare(QLatin1String("macos"), Qt::CaseInsensitive) == 0
             && qgetenv("QTEST_ENVIRONMENT").split(' ').contains("CI")) {
         QSKIP("This test crashes on macOS: QTBUG-70063");
     }
@@ -369,6 +372,39 @@ void tst_font::resolve()
     QCOMPARE(control4Font.resolveMask(), control2ChildControlFont.resolveMask());
     QCOMPARE(control2ChildControlFont, control2Font);
     QVERIFY(control2ChildControlFont != control4Font);
+}
+
+void tst_font::variableAxes_data()
+{
+    QTest::addColumn<QFont::Tag>("axesName");
+    QTest::addColumn<float>("axesValue");
+
+    QTest::addRow("wght") << QFont::Tag("wght") << 200.0f;
+}
+
+void tst_font::variableAxes()
+{
+    QFETCH(QFont::Tag, axesName);
+    QFETCH(float, axesValue);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString(R"QML(
+        import QtQuick
+        import QtQuick.Controls
+
+        Text {
+            font.variableAxes: {
+                "%1": %2
+            }
+        }
+    )QML").arg(axesName.toString()).arg(axesValue).toUtf8(), QUrl());
+
+    QScopedPointer<QObject> control(component.create());
+    QVERIFY2(!control.isNull(), qPrintable(component.errorString()));
+
+    const QFont font = control->property("font").value<QFont>();
+    QCOMPARE(font.variableAxisValue(axesName), axesValue);
 }
 
 QTEST_MAIN(tst_font)

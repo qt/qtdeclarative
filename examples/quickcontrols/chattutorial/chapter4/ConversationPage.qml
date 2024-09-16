@@ -1,11 +1,13 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 
-import io.qt.examples.chattutorial
+import chattutorial
 
 Page {
     id: root
@@ -23,7 +25,7 @@ Page {
 
         Label {
             id: pageTitle
-            text: inConversationWith
+            text: root.inConversationWith
             font.pixelSize: 20
             anchors.centerIn: parent
         }
@@ -42,34 +44,40 @@ Page {
             verticalLayoutDirection: ListView.BottomToTop
             spacing: 12
             model: SqlConversationModel {
-                recipient: inConversationWith
+                recipient: root.inConversationWith
             }
             delegate: Column {
+                id: conversationDelegate
                 anchors.right: sentByMe ? listView.contentItem.right : undefined
                 spacing: 6
 
-                readonly property bool sentByMe: model.recipient !== "Me"
+                required property string author
+                required property string recipient
+                required property date timestamp
+                required property string message
+                readonly property bool sentByMe: recipient !== "Me"
 
                 Row {
                     id: messageRow
                     spacing: 6
-                    anchors.right: sentByMe ? parent.right : undefined
+                    anchors.right: conversationDelegate.sentByMe ? parent.right : undefined
 
                     Image {
                         id: avatar
-                        source: !sentByMe ? "images/" + model.author.replace(" ", "_") + ".png" : ""
+                        source: !conversationDelegate.sentByMe
+                            ? "images/" + conversationDelegate.author.replace(" ", "_") + ".png" : ""
                     }
 
                     Rectangle {
                         width: Math.min(messageText.implicitWidth + 24,
-                            listView.width - (!sentByMe ? avatar.width + messageRow.spacing : 0))
+                            listView.width - (!conversationDelegate.sentByMe ? avatar.width + messageRow.spacing : 0))
                         height: messageText.implicitHeight + 24
-                        color: sentByMe ? "lightgrey" : "steelblue"
+                        color: conversationDelegate.sentByMe ? "lightgrey" : "steelblue"
 
                         Label {
                             id: messageText
-                            text: model.message
-                            color: sentByMe ? "black" : "white"
+                            text: conversationDelegate.message
+                            color: conversationDelegate.sentByMe ? "black" : "white"
                             anchors.fill: parent
                             anchors.margins: 12
                             wrapMode: Label.Wrap
@@ -79,9 +87,9 @@ Page {
 
                 Label {
                     id: timestampText
-                    text: Qt.formatDateTime(model.timestamp, "d MMM hh:mm")
+                    text: Qt.formatDateTime(conversationDelegate.timestamp, "d MMM hh:mm")
                     color: "lightgrey"
-                    anchors.right: sentByMe ? parent.right : undefined
+                    anchors.right: conversationDelegate.sentByMe ? parent.right : undefined
                 }
             }
 
@@ -91,6 +99,7 @@ Page {
         Pane {
             id: pane
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             RowLayout {
                 width: parent.width
@@ -106,9 +115,10 @@ Page {
                     id: sendButton
                     text: qsTr("Send")
                     enabled: messageField.length > 0
+                    Layout.fillWidth: false
                     onClicked: {
-                        listView.model.sendMessage(inConversationWith, messageField.text);
-                        messageField.text = "";
+                        listView.model.sendMessage(root.inConversationWith, messageField.text)
+                        messageField.text = ""
                     }
                 }
             }

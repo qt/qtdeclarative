@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBar
     \inherits QtObject
-//!     \instantiates QQuickLabsPlatformMenuBar
+//!     \nativetype QQuickLabsPlatformMenuBar
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menubar.
@@ -70,8 +70,6 @@ QT_BEGIN_NAMESPACE
 
     \sa Menu
 */
-
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
 
 QQuickLabsPlatformMenuBar::QQuickLabsPlatformMenuBar(QObject *parent)
     : QObject(parent),

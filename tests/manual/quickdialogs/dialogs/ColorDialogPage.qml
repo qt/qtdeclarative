@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Controls
@@ -20,6 +20,7 @@ ColumnLayout {
             title: qsTr("Dialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -41,17 +42,20 @@ ColumnLayout {
 
                     RadioButton {
                         text: qsTr("Qt.NonModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.NonModal
                     }
                     RadioButton {
                         text: qsTr("Qt.WindowModal")
                         checked: true
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.WindowModal
                     }
                     RadioButton {
                         text: qsTr("Qt.ApplicationModal")
+                        Layout.fillWidth: false
 
                         readonly property int modality: Qt.ApplicationModal
                     }
@@ -65,6 +69,7 @@ ColumnLayout {
                     text: colorDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
                     readOnly: true
                     enabled: false
+                    Layout.fillWidth: false
                 }
 
                 Label {
@@ -73,6 +78,7 @@ ColumnLayout {
                 TextField {
                     id: titleTextField
                     text: qsTr("A Color Dialog")
+                    Layout.fillWidth: false
                 }
             }
         }
@@ -81,6 +87,7 @@ ColumnLayout {
             title: qsTr("ColorDialog properties")
 
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             GridLayout {
                 columns: 2
@@ -122,12 +129,14 @@ ColumnLayout {
                     CheckBox {
                         id: showAlphaChannel
                         text: qsTr("ShowAlphaChannel")
+                        Layout.fillWidth: false
 
                         readonly property int colorOption: checked ? ColorDialog.ShowAlphaChannel : 0
                     }
                     CheckBox {
                         id: noButtons
                         text: qsTr("NoButtons")
+                        Layout.fillWidth: false
 
                         readonly property int colorOption: checked ? ColorDialog.NoButtons : 0
                     }
@@ -135,6 +144,7 @@ ColumnLayout {
                     CheckBox {
                         id: noEyeDropperButton
                         text: qsTr("NoEyeDropperButton")
+                        Layout.fillWidth: false
 
                         readonly property int colorOption: checked ? ColorDialog.NoEyeDropperButton : 0
                     }

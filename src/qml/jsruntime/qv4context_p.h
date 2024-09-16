@@ -64,7 +64,7 @@ Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == 0);
 Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
-    Member(class, Pointer, FunctionObject *, function) \
+    Member(class, Pointer, JavaScriptFunctionObject *, function) \
     Member(class, ValueArray, ValueArray, locals)
 
 DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {

@@ -39,12 +39,34 @@ FileDialogImpl {
 
     standardButtons: T.Dialog.Open | T.Dialog.Cancel
 
+    Dialog {
+        id: overwriteConfirmationDialog
+        objectName: "confirmationDialog"
+        anchors.centerIn: parent
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+        dim: true
+        modal: true
+        spacing: 12
+        title: qsTr("Overwrite file?")
+        width: control.width - control.leftPadding - control.rightPadding
+
+        contentItem: Label {
+            text: qsTr("“%1” already exists.\nDo you want to replace it?").arg(control.fileName)
+            wrapMode: Text.WordWrap
+        }
+
+        footer: DialogButtonBox {
+            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+        }
+    }
+
     FileDialogImpl.buttonBox: buttonBox
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
     FileDialogImpl.fileNameLabel: fileNameLabel
     FileDialogImpl.fileNameTextField: fileNameTextField
+    FileDialogImpl.overwriteConfirmationDialog: overwriteConfirmationDialog
 
     background: NinePatchImage {
         source: Imagine.url + "dialog-background"
@@ -63,6 +85,7 @@ FileDialogImpl {
             text: control.title
             elide: Label.ElideRight
             font.bold: true
+            visible: parent.parent?.parent === Overlay.overlay
 
             Layout.leftMargin: 16
             Layout.rightMargin: 16
@@ -88,6 +111,7 @@ FileDialogImpl {
             id: breadcrumbBar
             dialog: control
 
+            Layout.topMargin: parent.parent?.parent !== Overlay.overlay ? 12 : 6
             Layout.leftMargin: 16
             Layout.rightMargin: 16
             Layout.fillWidth: true
@@ -115,6 +139,9 @@ FileDialogImpl {
             highlighted: ListView.isCurrentItem
             dialog: control
             fileDetailRowWidth: nameFiltersComboBox.width
+
+            KeyNavigation.backtab: breadcrumbBar
+            KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
         }
     }
 
@@ -133,7 +160,6 @@ FileDialogImpl {
         TextField {
             id: fileNameTextField
             objectName: "fileNameTextField"
-            text: control.fileName
             visible: false
 
             Layout.fillWidth: true

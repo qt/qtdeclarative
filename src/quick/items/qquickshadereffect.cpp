@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ShaderEffect
-    \instantiates QQuickShaderEffect
+    \nativetype QQuickShaderEffect
     \inqmlmodule QtQuick
     \inherits Item
     \ingroup qtquick-effects
@@ -486,6 +486,15 @@ QT_BEGIN_NAMESPACE
 
     \li Samplers must use binding points starting from 1.
 
+    \li When Qt Quick is rendering with \c multiview enabled, e.g. because it is
+    part of a 3D scene rendering in a VR/AR environment where the left and right
+    eye content are generated in a single pass, the ShaderEffect's shaders have
+    to be written with this in mind. With a view count of 2 for example, there
+    will be \c 2 matrices (qt_Matrix is an array of mat4 with two elements). The
+    vertex shader is expected to take \c gl_ViewIndex into account. See the \c
+    Multiview section in the \l{QSB Manual} for general information on creating
+    multiview-capable shaders.
+
     \endlist
 
     \sa {Item Layers}, {QSB Manual}, {Qt Shader Tools Build System Integration}
@@ -538,6 +547,14 @@ QQuickShaderEffect::~QQuickShaderEffect()
 {
     Q_D(QQuickShaderEffect);
     d->inDestructor = true;
+
+    for (int i = 0; i < QQuickShaderEffectPrivate::NShader; ++i) {
+        d->disconnectSignals(QQuickShaderEffectPrivate::Shader(i));
+        d->clearMappers(QQuickShaderEffectPrivate::Shader(i));
+    }
+
+    delete d->m_mgr;
+    d->m_mgr = nullptr;
 }
 
 /*!
@@ -835,12 +852,7 @@ QQuickShaderEffectPrivate::QQuickShaderEffectPrivate()
 
 QQuickShaderEffectPrivate::~QQuickShaderEffectPrivate()
 {
-    for (int i = 0; i < NShader; ++i) {
-        disconnectSignals(Shader(i));
-        clearMappers(Shader(i));
-    }
-
-    delete m_mgr;
+    Q_ASSERT(m_mgr == nullptr);
 }
 
 void QQuickShaderEffectPrivate::setFragmentShader(const QUrl &fileUrl)
@@ -981,9 +993,11 @@ void QQuickShaderEffectPrivate::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
         const auto propertyName = static_cast<QDynamicPropertyChangeEvent *>(event)->propertyName();
-        const auto mappedId = findMappedShaderVariableId(propertyName);
-        if (mappedId)
-            propertyChanged(*mappedId);
+        for (int i = 0; i < NShader; ++i) {
+            const auto mappedId = findMappedShaderVariableId(propertyName, Shader(i));
+            if (mappedId)
+                propertyChanged(*mappedId);
+        }
     }
 }
 
@@ -1035,6 +1049,7 @@ QSGNode *QQuickShaderEffectPrivate::handleUpdatePaintNode(QSGNode *oldNode, QQui
     sd.fragment.dirtyConstants = &m_dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = &m_dirtyTextures[Fragment];
     sd.materialTypeCacheKey = q->window();
+    sd.viewCount = QQuickWindowPrivate::get(q->window())->multiViewCount();
 
     node->syncMaterial(&sd);
 
@@ -1117,6 +1132,7 @@ bool QQuickShaderEffectPrivate::updateUniformValue(const QByteArray &name, const
     sd.fragment.dirtyConstants = &dirtyConstants[Fragment];
     sd.fragment.dirtyTextures = {};
     sd.materialTypeCacheKey = q->window();
+    sd.viewCount = QQuickWindowPrivate::get(q->window())->multiViewCount();
 
     node->syncMaterial(&sd);
 
@@ -1433,6 +1449,17 @@ std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const Q
             if (vars[idx].name == name)
                 return indexToMappedId(shaderType, idx);
         }
+    }
+
+    return {};
+}
+
+std::optional<int> QQuickShaderEffectPrivate::findMappedShaderVariableId(const QByteArray &name, Shader shaderType) const
+{
+    const auto &vars = m_shaders[shaderType].shaderInfo.variables;
+    for (int idx = 0; idx < vars.size(); ++idx) {
+        if (vars[idx].name == name)
+            return indexToMappedId(shaderType, idx);
     }
 
     return {};

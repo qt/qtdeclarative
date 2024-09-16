@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickGroupBoxPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickGroupBox : public QQuickFrame
+class Q_QUICKTEMPLATES2_EXPORT QQuickGroupBox : public QQuickFrame
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
@@ -70,7 +70,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickGroupBox)
 
 #endif // QQUICKGROUPBOX_P_H

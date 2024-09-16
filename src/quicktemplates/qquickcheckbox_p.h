@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickCheckBoxPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickCheckBox : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickCheckBox : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool tristate READ isTristate WRITE setTristate NOTIFY tristateChanged FINAL)
@@ -61,7 +61,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickCheckBox)
 
 #endif // QQUICKCHECKBOX_P_H

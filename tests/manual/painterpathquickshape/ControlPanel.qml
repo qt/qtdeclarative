@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Layouts
@@ -15,6 +15,7 @@ Item {
     property color outlineColor: enableOutline.checked ? Qt.rgba(outlineColor.color.r, outlineColor.color.g, outlineColor.color.b, outlineAlpha) : Qt.rgba(0,0,0,0)
     property color fillColor: Qt.rgba(fillColor.color.r, fillColor.color.g, fillColor.color.b, pathAlpha)
     property alias pathAlpha: alphaSlider.value
+    property alias fillRule: fillRule.currentValue
     property alias outlineAlpha: outlineAlphaSlider.value
     property real outlineWidth: cosmeticPen.checked ? outlineWidthEdit.text / scale : outlineWidthEdit.text
     property alias outlineStyle: outlineStyle.currentValue
@@ -27,8 +28,10 @@ Item {
     property alias painterComparisonAlpha: painterComparisonColorAlpha.value
     property alias outlineEnabled: enableOutline.checked
     property alias gradientType: gradientType.currentIndex
+    property alias fillScaleX: fillTransformSlider.value
     property alias rendererName: rendererLabel.text
     property alias preferCurve: rendererLabel.preferCurve
+    property alias async: enableAsync.checked
 
     property int subShape: pickSubShape.checked ? subShapeSelector.value : -1
     property bool subShapeGreaterThan : pickSubShapeGreaterThan.checked
@@ -46,6 +49,7 @@ Item {
         property alias cosmeticPen: cosmeticPen.checked
 
         property alias pathAlpha: alphaSlider.value
+        property alias fillRule: fillRule.currentIndex
         property alias fillColor: fillColor.color
 
         property alias setBackground: setBackground.checked
@@ -82,18 +86,33 @@ Item {
                     }
                 }
             }
-            CheckBox { id: enableDebug }
+            CheckBox {
+                id: enableAsync
+                Layout.fillWidth: false
+            }
+            Label {
+                text: "Asynchronous"
+                color: "white"
+            }
+            CheckBox {
+                id: enableDebug
+                Layout.fillWidth: false
+            }
             Label {
                 text: "Debug"
                 color: "white"
             }
-            CheckBox { id: enableWireframe }
+            CheckBox {
+                id: enableWireframe
+                Layout.fillWidth: false
+            }
             Label {
                 text: "Wireframe"
                 color: "white"
             }
             ComboBox {
                 id: painterComparison
+                Layout.fillWidth: false
                 model: [
                     "No QPainter comparison",
                     "Overlaid QPainter comparison",
@@ -117,6 +136,7 @@ Item {
                 from: 0.0
                 to: 1.0
                 value: 1.0
+                Layout.fillWidth: false
             }
             Label {
                 text: "Alpha"
@@ -126,6 +146,7 @@ Item {
                 text: "Pick SVG sub-shape"
                 id: pickSubShape
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             SpinBox {
                 id: subShapeSelector
@@ -133,17 +154,20 @@ Item {
                 value: 0
                 to: 999
                 editable: true
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: pickSubShapeGreaterThan
                 visible: pickSubShape.checked
                 text: "show greater than"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             CheckBox {
                 id: setBackground
                 text: "Solid background"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             RowLayout {
                 visible: setBackground.checked
@@ -181,6 +205,7 @@ Item {
             TextField {
                 id: scaleEdit
                 text: scaleSlider.value.toFixed(4)
+                Layout.fillWidth: false
                 onEditingFinished: {
                     let val = +text
                     if (val > 0)
@@ -191,7 +216,7 @@ Item {
                 id: scaleSlider
                 Layout.fillWidth: true
                 from: 0.01
-                to: 500.0
+                to: 50.0
                 value: 0.2
                 onValueChanged: scaleEdit.text = value.toFixed(4)
             }
@@ -215,7 +240,41 @@ Item {
             }
             ComboBox {
                 id: gradientType
+                Layout.fillWidth: false
                 model: [ "NoGradient", "LinearGradient", "RadialGradient", "ConicalGradient" ]
+            }
+            Label {
+                text: "Fill rule:"
+                color: "white"
+            }
+            ComboBox {
+                id: fillRule
+                textRole: "text"
+                valueRole: "style"
+                Layout.fillWidth: false
+                model: ListModel {
+                    ListElement {
+                        text: "WindingFill"
+                        style: ShapePath.WindingFill
+                    }
+                    ListElement {
+                        text: "OddEvenFill"
+                        style: ShapePath.OddEvenFill
+                    }
+                }
+            }
+            Label {
+                text: "Fill transform (scale x: " + fillTransformSlider.value.toFixed(2) + "):"
+                color: "white"
+                visible: gradientType.currentIndex != 0
+            }
+            Slider {
+                id: fillTransformSlider
+                Layout.fillWidth: true
+                from: 0.2
+                to: 5.0
+                value: 1.0
+                visible: gradientType.currentIndex != 0
             }
             Label {
                 text: "Fill alpha(" + Math.round(alphaSlider.value*100)/100 + "):"
@@ -234,6 +293,7 @@ Item {
                 id: enableOutline
                 text: "Enable outline"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             RowLayout {
                 opacity: enableOutline.checked ? 1 : 0
@@ -258,6 +318,7 @@ Item {
                 id: outlineStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Solid line"
@@ -273,6 +334,7 @@ Item {
                 id: joinStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Miter join"
@@ -292,6 +354,7 @@ Item {
                 id: capStyle
                 textRole: "text"
                 valueRole: "style"
+                Layout.fillWidth: false
                 model: ListModel {
                     ListElement {
                         text: "Square cap"
@@ -314,6 +377,7 @@ Item {
             TextField {
                 id: outlineWidthEdit
                 text: (cosmeticPen.checked ? outlineWidthSlider.value: outlineWidthSlider.value ** 2).toFixed(2)
+                Layout.fillWidth: false
                 onEditingFinished: {
                     let val = +text
                     if (val > 0) {
@@ -335,6 +399,7 @@ Item {
                 id: cosmeticPen
                 text: "Cosmetic pen"
                 palette.windowText: "white"
+                Layout.fillWidth: false
             }
             Label {
                 text: "Outline alpha (" + Math.round(outlineAlphaSlider.value*100)/100 + "):"

@@ -23,12 +23,12 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcFolderBreadcrumbBar, "qt.quick.dialogs.folderbreadcrumbbar")
-Q_LOGGING_CATEGORY(lcContentSize, "qt.quick.dialogs.folderbreadcrumbbar.contentsize")
-Q_LOGGING_CATEGORY(lcDelegates, "qt.quick.dialogs.folderbreadcrumbbar.delegates")
-Q_LOGGING_CATEGORY(lcShortcuts, "qt.quick.dialogs.folderbreadcrumbbar.shortcuts")
-Q_LOGGING_CATEGORY(lcTextInput, "qt.quick.dialogs.folderbreadcrumbbar.textinput")
-Q_LOGGING_CATEGORY(lcCurrentItem, "qt.quick.dialogs.folderbreadcrumbbar.currentitem")
+Q_STATIC_LOGGING_CATEGORY(lcFolderBreadcrumbBar, "qt.quick.dialogs.folderbreadcrumbbar")
+Q_STATIC_LOGGING_CATEGORY(lcContentSize, "qt.quick.dialogs.folderbreadcrumbbar.contentsize")
+Q_STATIC_LOGGING_CATEGORY(lcDelegates, "qt.quick.dialogs.folderbreadcrumbbar.delegates")
+Q_STATIC_LOGGING_CATEGORY(lcShortcuts, "qt.quick.dialogs.folderbreadcrumbbar.shortcuts")
+Q_STATIC_LOGGING_CATEGORY(lcTextInput, "qt.quick.dialogs.folderbreadcrumbbar.textinput")
+Q_STATIC_LOGGING_CATEGORY(lcCurrentItem, "qt.quick.dialogs.folderbreadcrumbbar.currentitem")
 
 QQuickItem *QQuickFolderBreadcrumbBarPrivate::createDelegateItem(QQmlComponent *component, const QVariantMap &initialProperties)
 {

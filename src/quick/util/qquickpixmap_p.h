@@ -54,7 +54,7 @@ public:
 };
 
 // ### Qt 6: Make public moving to qquickimageprovider.h
-class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderOptions
+class Q_QUICK_EXPORT QQuickImageProviderOptions
 {
 public:
     enum AutoTransform {
@@ -83,6 +83,9 @@ public:
     QColorSpace targetColorSpace() const;
     void setTargetColorSpace(const QColorSpace &colorSpace);
 
+    QRectF sourceClipRect() const;
+    void setSourceClipRect(const QRectF &rect);
+
 private:
     QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
@@ -97,16 +100,10 @@ private:
     QQuickPixmapCache::shrinkCache() sweeps away the least-recently-released
     instances until the remaining bytes are less than cache_limit.)
 */
-class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
+class Q_QUICK_EXPORT QQuickPixmap
 {
     Q_DECLARE_TR_FUNCTIONS(QQuickPixmap)
 public:
-    QQuickPixmap();
-    QQuickPixmap(QQmlEngine *, const QUrl &);
-    QQuickPixmap(QQmlEngine *, const QUrl &, const QRect &region, const QSize &);
-    QQuickPixmap(const QUrl &, const QImage &image);
-    ~QQuickPixmap();
-
     enum Status { Null, Ready, Error, Loading };
 
     enum Option {
@@ -114,6 +111,13 @@ public:
         Cache        = 0x00000002
     };
     Q_DECLARE_FLAGS(Options, Option)
+
+    QQuickPixmap();
+    QQuickPixmap(QQmlEngine *, const QUrl &);
+    QQuickPixmap(QQmlEngine *, const QUrl &, Options options);
+    QQuickPixmap(QQmlEngine *, const QUrl &, const QRect &region, const QSize &);
+    QQuickPixmap(const QUrl &, const QImage &image);
+    ~QQuickPixmap();
 
     bool isNull() const;
     bool isReady() const;
@@ -162,6 +166,7 @@ public:
     static void purgeCache();
     static bool isCached(const QUrl &url, const QRect &requestRegion, const QSize &requestSize,
                          const int frame, const QQuickImageProviderOptions &options);
+    static bool isScalableImageFormat(const QUrl &url);
 
     static const QLatin1String itemGrabberScheme;
 
@@ -175,7 +180,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPixmap::Options)
 
 // ### Qt 6: This should be made public in Qt 6. It's functionality can't be merged into
 // QQuickImageProvider without breaking source compatibility.
-class Q_QUICK_PRIVATE_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
+class Q_QUICK_EXPORT QQuickImageProviderWithOptions : public QQuickAsyncImageProvider
 {
 public:
     QQuickImageProviderWithOptions(ImageType type, Flags flags = Flags());

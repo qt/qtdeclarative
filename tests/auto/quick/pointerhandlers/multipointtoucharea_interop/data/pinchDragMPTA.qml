@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.12
 
@@ -35,8 +35,8 @@ Rectangle {
             Item {
                 id: crosshairs
                 property TouchPoint touchPoint
-                x: touchPoint.x - width / 2
-                y: touchPoint.y - height / 2
+                x: touchPoint?.x - width / 2
+                y: touchPoint?.y - height / 2
                 width: 300; height: 300
                 visible: touchPoint.pressed
                 rotation: touchPoint.rotation

@@ -17,6 +17,6 @@
 // We mean it.
 //
 
-#include <QtLabsWavefrontMesh/private/qtlabswavefrontmeshexports_p.h>
+#include <QtLabsWavefrontMesh/qtlabswavefrontmeshexports.h>
 
 #endif // QTLABSWAVEFRONTMESHGLOBAL_P_H

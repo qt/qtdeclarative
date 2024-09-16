@@ -5,22 +5,53 @@
 \page qmllint-warnings-and-errors-multiline-strings.html
 \ingroup qmllint-warnings-and-errors
 
-\title multiline-strings
-\brief BRIEF
+\title Multiline strings
+\brief A string is spanning over multiple lines.
 
-\section1 multiline-strings
+\qmllintwarningcategory multiline-strings
+
+\section1 String contains unescaped line terminator, which is deprecated
 
 \section2 What happened?
-TODO
+A string spans over multiple lines.
 
 \section2 Why is this bad?
-TODO
+Strings spanning multiple lines are a non-standard extension
+of ECMAScript and deprecated in QML. Use template literals instead.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    property string multiLine: "first
+second
+third"
+
+    property string multiLine2: 'first
+second
+third'
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, use template literals or, alternatively,
+replace the newlines with '\n':
 \qml
+import QtQuick
+
+Item {
+    property string multiLine: `first
+second
+third`
+    property string multiLine2: `first
+second
+third`
+
+    property string alternative: "first\nsecond\nthird"
+    property string alternative2: "first\n" +
+"second\n" +
+"third"
+}
 \endqml
 */
 

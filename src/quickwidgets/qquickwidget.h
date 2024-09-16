@@ -65,6 +65,7 @@ public:
 public Q_SLOTS:
     void setSource(const QUrl&);
     void setContent(const QUrl& url, QQmlComponent *component, QObject *item);
+    void setInitialProperties(const QVariantMap &initialProperties);
 
 Q_SIGNALS:
     void statusChanged(QQuickWidget::Status);

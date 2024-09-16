@@ -28,7 +28,7 @@ public:
     constexpr static DomType kindValue = DomType::ModuleScope;
     DomType kind() const override { return kindValue; }
 
-    ModuleScope(QString uri = QString(), const Version &version = Version())
+    ModuleScope(const QString &uri = QString(), const Version &version = Version())
         : uri(uri), version(version)
     {
     }
@@ -61,8 +61,9 @@ public:
     constexpr static DomType kindValue = DomType::ModuleIndex;
     DomType kind() const override { return kindValue; }
 
-    ModuleIndex(QString uri, int majorVersion, int derivedFrom = 0,
-                QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC))
+    ModuleIndex(
+            const QString &uri, int majorVersion, int derivedFrom = 0,
+            const QDateTime &lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0, QTimeZone::UTC))
         : OwningItem(derivedFrom, lastDataUpdateAt), m_uri(uri), m_majorVersion(majorVersion)
     {
     }
@@ -85,7 +86,7 @@ public:
 
     QSet<QString> exportNames(const DomItem &self) const;
 
-    QList<DomItem> exportsWithNameAndMinorVersion(const DomItem &self, QString name,
+    QList<DomItem> exportsWithNameAndMinorVersion(const DomItem &self, const QString &name,
                                                   int minorVersion) const;
 
     QString uri() const { return m_uri; }
@@ -98,8 +99,8 @@ public:
         return m_moduleScope.keys();
     }
     ModuleScope *ensureMinorVersion(int minorVersion);
-    void mergeWith(std::shared_ptr<ModuleIndex> o);
-    void addQmltypeFilePath(Path p)
+    void mergeWith(const std::shared_ptr<ModuleIndex> &o);
+    void addQmltypeFilePath(const Path &p)
     {
         QMutexLocker l(mutex());
         if (!m_qmltypesFilesPaths.contains(p))

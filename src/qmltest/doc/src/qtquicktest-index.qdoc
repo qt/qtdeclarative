@@ -94,15 +94,67 @@
     \snippet src_qmltest_qquicktest_snippet.cpp 1
 
     Where "example" is the identifier to use to uniquely identify
-    this set of tests. Finally, add \c{CONFIG += qmltestcase} to the project
-    file:
+    this set of tests.
+
+    \if defined(onlinedocs)
+        \tab {run-qtquicktest}{tab-cmake}{CMake}{checked}
+        \tab {run-qtquicktest}{tab-qmake}{qmake}{}
+        \tabcontent {tab-cmake}
+    \else
+        \section1 Using CMake
+    \endif
+    Configure your CMakeLists.txt file and build your project using your
+    favorite generator.
+    \badcode
+        cmake_minimum_required(VERSION 3.2)
+
+        project(tst_example LANGUAGES CXX)
+
+        enable_testing()
+
+        find_package(Qt6 REQUIRED COMPONENTS QuickTest Qml)
+
+        #[[The test harness scans the specified source directory recursively
+        for "tst_*.qml" files. By default, it looks in the current directory,
+        which is usually where the executable is. This command makes it look
+        in the project's source directory instead.]]
+        add_definitions(-DQUICK_TEST_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+
+        qt_standard_project_setup(REQUIRES 6.6)
+
+        add_executable(tst_example tst_example.cpp)
+
+        add_test(NAME tst_example COMMAND tst_example)
+
+        target_link_libraries(tst_example
+            PRIVATE
+            Qt6::QuickTest
+            Qt6::Qml
+        )
+    \endcode
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-qmake}
+    \else
+        \section1 Using qmake
+    \endif
+    Add \c{CONFIG += qmltestcase} to your project file:
+    \badcode
+        TEMPLATE = app
+        TARGET = tst_example
+        CONFIG += warn_on qmltestcase
+        SOURCES += tst_example.cpp
+    \endcode
+
+    If \c IMPORTPATH is specified in your .pro file, each import path added to \c IMPORTPATH
+    will be passed as a command-line argument when the test is run using "make check":
 
     \badcode
-    TEMPLATE = app
-    TARGET = tst_example
-    CONFIG += warn_on qmltestcase
-    SOURCES += tst_example.cpp
+    IMPORTPATH += $$PWD/../imports/my_module1 $$PWD/../imports/my_module2
     \endcode
+    \if defined(onlinedocs)
+        \endtabcontent
+    \endif
 
     The test harness scans the specified source directory recursively
     for "tst_*.qml" files. If \c{QUICK_TEST_SOURCE_DIR} is not defined,
@@ -136,12 +188,6 @@
     If your test case needs QML imports, then you can add them as
     \c{-import} options to the test program command-line.
 
-    If \c IMPORTPATH is specified in your .pro file, each import path added to \c IMPORTPATH
-    will be passed as a command-line argument when the test is run using "make check":
-
-    \badcode
-    IMPORTPATH += $$PWD/../imports/my_module1 $$PWD/../imports/my_module2
-    \endcode
 
     The \c{-functions} command-line option will return a list of the current
     tests functions. It is possible to run a single test function using the name
@@ -168,7 +214,7 @@
     setting context properties on the QML engine, amongst other things.
 
     The macro is identical to \c QUICK_TEST_MAIN, except that it takes an
-    additional \c QObject* argument. The test framework will call slots and
+    additional type argument. The test framework will call slots and
     invokable functions with the following names:
 
     \table

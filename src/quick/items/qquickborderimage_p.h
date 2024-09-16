@@ -22,15 +22,15 @@ QT_BEGIN_NAMESPACE
 class QQuickScaleGrid;
 class QQuickGridScaledImage;
 class QQuickBorderImagePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickBorderImage : public QQuickImageBase
+class Q_QUICK_EXPORT QQuickBorderImage : public QQuickImageBase
 {
     Q_OBJECT
 
-    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT FINAL)
-    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged FINAL)
-    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged FINAL)
+    Q_PROPERTY(QQuickScaleGrid *border READ border CONSTANT)
+    Q_PROPERTY(TileMode horizontalTileMode READ horizontalTileMode WRITE setHorizontalTileMode NOTIFY horizontalTileModeChanged)
+    Q_PROPERTY(TileMode verticalTileMode READ verticalTileMode WRITE setVerticalTileMode NOTIFY verticalTileModeChanged)
     // read-only for BorderImage
-    Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged FINAL)
+    Q_PROPERTY(QSize sourceSize READ sourceSize NOTIFY sourceSizeChanged)
     QML_NAMED_ELEMENT(BorderImage)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -77,6 +77,5 @@ private:
 };
 
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQuickBorderImage)
 
 #endif // QQUICKBORDERIMAGE_P_H

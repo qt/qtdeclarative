@@ -35,7 +35,7 @@ class QQmlListModelWorkerAgent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count FINAL)
-    Q_PROPERTY(QV4::ExecutionEngine *engine READ engine WRITE setEngine NOTIFY engineChanged FINAL)
+    Q_PROPERTY(QQmlV4ExecutionEnginePtr engine READ engine WRITE setEngine NOTIFY engineChanged FINAL)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -52,9 +52,9 @@ public:
     int count() const;
 
     Q_INVOKABLE void clear();
-    Q_INVOKABLE void remove(QQmlV4Function *args);
-    Q_INVOKABLE void append(QQmlV4Function *args);
-    Q_INVOKABLE void insert(QQmlV4Function *args);
+    Q_INVOKABLE void remove(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void append(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void insert(QQmlV4FunctionPtr args);
     Q_INVOKABLE QJSValue get(int index) const;
     Q_INVOKABLE void set(int index, const QJSValue &value);
     Q_INVOKABLE void setProperty(int index, const QString& property, const QVariant& value);
@@ -64,7 +64,7 @@ public:
     void modelDestroyed();
 
 Q_SIGNALS:
-    void engineChanged(QV4::ExecutionEngine *engine);
+    void engineChanged(QQmlV4ExecutionEnginePtr engine);
 
 protected:
     bool event(QEvent *) override;

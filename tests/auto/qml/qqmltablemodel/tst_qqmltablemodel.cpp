@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -13,6 +13,7 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtLabsQmlModels/private/qqmltablemodel_p.h>
 
 class tst_QQmlTableModel : public QQmlDataTest
 {
@@ -177,6 +178,18 @@ void tst_QQmlTableModel::appendRemoveRow()
     QCOMPARE(model->columnCount(), 2);
     QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")), QVariant());
     QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")), QVariant());
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), ++rowCountSignalEmissions);
+
+    QVariantMap variantMap;
+    variantMap["name"] = QLatin1String("VariantMap");
+    variantMap["age"] = int(QMetaType::QVariantMap);
+    auto *tableModel = view.rootObject()->property("testModel") .value<QQmlTableModel *>();
+    tableModel->appendRow(QVariant::fromValue(variantMap));
+    QCOMPARE(model->rowCount(), 1);
+    QCOMPARE(model->columnCount(), 2);
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("VariantMap"));
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), int(QMetaType::QVariantMap));
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowCountSpy.size(), ++rowCountSignalEmissions);
 }
@@ -431,6 +444,31 @@ void tst_QQmlTableModel::insertRow()
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowCountSpy.size(), ++rowCountSignalEmissions);
     QTRY_COMPARE(tableView->rows(), 5);
+    QCOMPARE(tableView->columns(), 2);
+
+    // Pass variant map object to qml table model
+    QVariantMap variantMap;
+    variantMap["name"] = QLatin1String("VariantMap");
+    variantMap["age"] = int(QMetaType::QVariantMap);
+    auto *tableModel = view.rootObject()->property("testModel") .value<QQmlTableModel *>();
+    tableModel->insertRow(5, QVariant::fromValue(variantMap));
+    QCOMPARE(model->rowCount(), 6);
+    QCOMPARE(model->columnCount(), 2);
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Foo"));
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), 99);
+    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("John"));
+    QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toInt(), 22);
+    QCOMPARE(model->data(model->index(2, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Daisy"));
+    QCOMPARE(model->data(model->index(2, 1, QModelIndex()), roleNames.key("display")).toInt(), 30);
+    QCOMPARE(model->data(model->index(3, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Oliver"));
+    QCOMPARE(model->data(model->index(3, 1, QModelIndex()), roleNames.key("display")).toInt(), 33);
+    QCOMPARE(model->data(model->index(4, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Max"));
+    QCOMPARE(model->data(model->index(4, 1, QModelIndex()), roleNames.key("display")).toInt(), 40);
+    QCOMPARE(model->data(model->index(5, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("VariantMap"));
+    QCOMPARE(model->data(model->index(5, 1, QModelIndex()), roleNames.key("display")).toInt(), int(QMetaType::QVariantMap));
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), ++rowCountSignalEmissions);
+    QTRY_COMPARE(tableView->rows(), 6);
     QCOMPARE(tableView->columns(), 2);
 }
 
@@ -714,6 +752,24 @@ void tst_QQmlTableModel::setRow()
     QCOMPARE(model->data(model->index(2, 1, QModelIndex()), roleNames.key("display")).toInt(), 99);
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowCountSpy.size(), ++rowCountSignalEmissions);
+    QTRY_COMPARE(tableView->rows(), 3);
+    QCOMPARE(tableView->columns(), 2);
+
+    QVariantMap variantMap;
+    variantMap["name"] = QLatin1String("VariantMap");
+    variantMap["age"] = int(QMetaType::QVariantMap);
+    auto *tableModel = view.rootObject()->property("testModel") .value<QQmlTableModel *>();
+    tableModel->setRow(0, QVariant::fromValue(variantMap));
+    QCOMPARE(model->rowCount(), 3);
+    QCOMPARE(model->columnCount(), 2);
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("VariantMap"));
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toInt(), int(QMetaType::QVariantMap));
+    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Daisy"));
+    QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toInt(), 30);
+    QCOMPARE(model->data(model->index(2, 0, QModelIndex()), roleNames.key("display")).toString(), QLatin1String("Wot"));
+    QCOMPARE(model->data(model->index(2, 1, QModelIndex()), roleNames.key("display")).toInt(), 99);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), rowCountSignalEmissions);
     QTRY_COMPARE(tableView->rows(), 3);
     QCOMPARE(tableView->columns(), 2);
 }

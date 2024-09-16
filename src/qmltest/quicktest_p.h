@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_TEST_PRIVATE_EXPORT QTestRootObject : public QObject
+class Q_QMLTEST_EXPORT QTestRootObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool windowShown READ windowShown NOTIFY windowShownChanged)

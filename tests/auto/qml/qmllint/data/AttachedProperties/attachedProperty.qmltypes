@@ -18,4 +18,38 @@ Module {
         Property { name: "str"; type: "QString"; read: "getStr"; write: "setStr" }
         Property { name: "object"; type: "QObject"; isPointer: true; read: "getObject"; write: "setObject" }
     }
+    Component {
+        file: "Test.h"
+        name: "Test"
+        accessSemantics: "reference"
+        prototype: "QQuickAttachedPropertyPropagator"
+        exports: ["AttachedProperties/Test 1.0"]
+        isCreatable: false
+        exportMetaObjectRevisions: [256]
+        attachedType: "Test"
+        Property {
+            name: "value"
+            type: "int"
+            read: "value"
+            write: "setValue"
+            reset: "resetValue"
+            notify: "valueChanged"
+            index: 0
+            isFinal: true
+        }
+        Signal {
+            name: "valueChanged"
+            Parameter { name: "value"; type: "int" }
+        }
+        Method {
+            name: "setValue"
+            Parameter { name: "value"; type: "int" }
+        }
+        Method {
+            name: "inheritValue"
+            Parameter { name: "value"; type: "int" }
+        }
+        Method { name: "propagateValue" }
+        Method { name: "resetValue" }
+    }
 }

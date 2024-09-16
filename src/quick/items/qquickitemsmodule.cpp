@@ -85,10 +85,6 @@
 #include "handlers/qquicktaphandler_p.h"
 #include "handlers/qquickwheelhandler_p.h"
 
-QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcTransient)
-QT_END_NAMESPACE
-
 #include "moc_qquickitemsmodule_p.cpp"
 
 static QQmlPrivate::AutoParentResult qquickitem_autoParent(QObject *obj, QObject *parent)
@@ -145,7 +141,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype PointerEvent
-    \instantiates QPointerEvent
+    \nativetype QPointerEvent
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointerEvent.
 
@@ -154,7 +150,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype PointerDevice
-    \instantiates QPointingDevice
+    \nativetype QPointingDevice
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointingDevice.
 
@@ -222,7 +218,7 @@ void QQuickItemsModule::defineModule()
 
 /*!
     \qmltype pointingDeviceUniqueId
-    \instantiates QPointingDeviceUniqueId
+    \nativetype QPointingDeviceUniqueId
     \inqmlmodule QtQuick
     \brief QML equivalent for \l QPointingDeviceUniqueId.
 

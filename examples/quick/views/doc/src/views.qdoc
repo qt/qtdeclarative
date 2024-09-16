@@ -7,7 +7,7 @@
     \brief This is a collection of QML model-view examples.
     \image qml-modelviews-example.png
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     \e Views is a collection of small QML examples relating to model and view
     functionality. They demonstrate how to show data from a model using the
@@ -64,7 +64,7 @@
 
     \section1 Using Packages
 
-    \e Packages use the \l [QML]{Package} type to transition delegates between
+    \e Packages uses the \l [QML]{Package} type to transition delegates between
     two views.
 
     It has a Package object which defines delegate items for each view and an
@@ -76,6 +76,11 @@
     items from the shared package delegate.
 
     \snippet views/package/view.qml 0
+
+    \e{Draggable Selections} demonstrates the use of Package to group together
+    multiple selected delegates for drag-and-drop within an item view.
+
+    \snippet views/delegatemodel/dragselection.qml 0
 
     \section1 Using ObjectModel
 

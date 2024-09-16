@@ -18,6 +18,8 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qpointer.h>
 
+#include <QtGui/qpa/qplatformmenu.h>
+
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 
@@ -27,8 +29,10 @@ class QQuickAction;
 class QQmlComponent;
 class QQmlObjectModel;
 class QQuickMenuItem;
+class QQuickNativeMenuItem;
+class QQuickMenuBar;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickMenu)
@@ -42,10 +46,33 @@ public:
 
     void init();
 
+    QPlatformMenu *nativeHandle();
+    QPlatformMenu *maybeNativeHandle() const;
+    QQuickMenu *rootMenu() const;
+    bool useNativeMenu() const;
+    bool createNativeMenu();
+    void removeNativeMenu();
+    void syncWithNativeMenu();
+    void syncWithUseNativeMenu();
+    static void recursivelyDestroyNativeSubMenus(QQuickMenu *menu);
+    void setNativeMenuVisible(bool visible);
+
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);
+    void maybeCreateAndInsertNativeItem(int index, QQuickItem *item);
     void moveItem(int from, int to);
-    void removeItem(int index, QQuickItem *item);
+    enum class DestructionPolicy {
+        Destroy,
+        DoNotDestroy
+    };
+    void removeItem(int index, QQuickItem *item,
+        DestructionPolicy destructionPolicy = DestructionPolicy::DoNotDestroy);
+    void removeNativeItem(int index);
+    void resetNativeData();
+
+    static void recursivelyCreateNativeMenuItems(QQuickMenu *menu);
+
+    void printContentModelItems() const;
 
     QQuickItem *beginCreateItem();
     void completeCreateItem();
@@ -66,10 +93,12 @@ public:
     bool prepareEnterTransition() override;
     bool prepareExitTransition() override;
     bool blockInput(QQuickItem *item, const QPointF &point) const override;
+    bool handleReleaseWithoutGrab(const QEventPoint &eventPoint) override;
 
     void onItemHovered();
     void onItemTriggered();
     void onItemActiveFocusChanged();
+    void updateTextPadding();
 
     QQuickMenu *currentSubMenu() const;
     void setParentMenu(QQuickMenu *parent);
@@ -92,11 +121,14 @@ public:
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
     QPalette defaultPalette() const override;
+    virtual QQuickPopup::PopupType resolvedPopupType() const override;
 
     bool cascade = false;
+    bool triedToCreateNativeMenu = false;
     int hoverTimer = 0;
     int currentIndex = -1;
     qreal overlap = 0;
+    qreal textPadding = 0;
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
     QQuickItem *contentItem = nullptr; // TODO: cleanup
@@ -105,6 +137,12 @@ public:
     QQmlComponent *delegate = nullptr;
     QString title;
     QQuickIcon icon;
+
+    // For native menu support.
+    std::unique_ptr<QPlatformMenu> handle = nullptr;
+    QList<QQuickNativeMenuItem *> nativeItems;
+    QPointer<QQuickMenuBar> menuBar;
+    qreal lastDevicePixelRatio = 0;
 };
 
 QT_END_NAMESPACE

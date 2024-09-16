@@ -94,6 +94,8 @@ public:
 
     QPalette defaultPalette() const override;
 
+    bool setLastFocusChangeReason(Qt::FocusReason reason) override;
+
 #if QT_CONFIG(quicktemplates2_hover)
     bool hovered = false;
     bool explicitHoverEnabled = false;
@@ -118,7 +120,6 @@ public:
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     QColor placeholderColor;
-    Qt::FocusReason focusReason = Qt::OtherFocusReason;
     QQuickPressHandler pressHandler;
 };
 

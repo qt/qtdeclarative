@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -19,8 +19,12 @@ TestCase {
         Pane { }
     }
 
+    function init() {
+        failOnWarning(/.?/)
+    }
+
     function test_implicitContentItem() {
-        var control = createTemporaryObject(pane, testCase, {width: 100, height: 100})
+        let control = createTemporaryObject(pane, testCase, {width: 100, height: 100})
         verify(control)
 
         compare(control.width, 100)
@@ -30,9 +34,7 @@ TestCase {
     }
 
     function test_empty() {
-        failOnWarning(/.?/)
-
-        var control = createTemporaryObject(pane, testCase)
+        let control = createTemporaryObject(pane, testCase)
         verify(control)
 
         verify(control.contentItem)
@@ -53,7 +55,7 @@ TestCase {
     }
 
     function test_oneChild() {
-        var control = createTemporaryObject(oneChildPane, testCase)
+        let control = createTemporaryObject(oneChildPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
@@ -90,7 +92,7 @@ TestCase {
     }
 
     function test_twoChildren() {
-        var control = createTemporaryObject(twoChildrenPane, testCase)
+        let control = createTemporaryObject(twoChildrenPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 0)
@@ -112,7 +114,7 @@ TestCase {
     }
 
     function test_contentItem() {
-        var control = createTemporaryObject(contentPane, testCase)
+        let control = createTemporaryObject(contentPane, testCase)
         verify(control)
 
         compare(control.contentWidth, 100)
@@ -141,9 +143,7 @@ TestCase {
     }
 
     function test_paneBindingLoop() {
-        // Fails if there is any warning due to binding loop
-        failOnWarning(/.?/)
-        var control = createTemporaryObject(contentItemPane, testCase)
+        let control = createTemporaryObject(contentItemPane, testCase)
         verify(control)
         // Wait for content item to be polished
         waitForPolish(control.contentItem)
@@ -165,7 +165,7 @@ TestCase {
     }
 
     function test_press() {
-        var control = createTemporaryObject(pressPane, testCase)
+        let control = createTemporaryObject(pressPane, testCase)
         verify(control)
 
         compare(control.pressCount, 0)

@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickToolButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolButton : public QQuickButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickToolButton : public QQuickButton
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ToolButton)
@@ -38,7 +38,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickToolButton)
 
 #endif // QQUICKTOOLBUTTON_P_H

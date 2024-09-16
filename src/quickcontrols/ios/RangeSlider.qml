@@ -28,8 +28,8 @@ T.RangeSlider {
             source: IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }
@@ -47,8 +47,8 @@ T.RangeSlider {
             source: IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 ]
             }
         }
@@ -67,22 +67,24 @@ T.RangeSlider {
             width: control.horizontal ? control.background.width : control.background.height
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                 ]
             }
 
             NinePatchImage {
-                x: control.first.handle.width / 2 + control.first.position * (parent.width - control.first.handle.width)
+                readonly property real handleWidth: control.first.handle ? control.first.handle.width : 0
+
+                x: handleWidth / 2 + control.first.position * (parent.width - handleWidth)
                 y: (parent.height - height) / 2
-                width: control.second.position * (parent.width - control.first.handle.width) - control.first.position * (parent.width - control.first.handle.width)
+                width: control.second.position * (parent.width - handleWidth) - control.first.position * (parent.width - handleWidth)
                 height: parent.height
 
                 source: IOS.url + "slider-progress"
                 NinePatchImageSelector on source {
                     states: [
-                        {"light": Qt.styleHints.colorScheme === Qt.Light},
-                        {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                        {"light": Application.styleHints.colorScheme === Qt.Light},
+                        {"dark": Application.styleHints.colorScheme === Qt.Dark},
                     ]
                 }
             }

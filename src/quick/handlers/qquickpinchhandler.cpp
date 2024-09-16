@@ -17,11 +17,11 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
+Q_STATIC_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
 /*!
     \qmltype PinchHandler
-    \instantiates QQuickPinchHandler
+    \nativetype QQuickPinchHandler
     \inherits MultiPointHandler
     \inqmlmodule QtQuick
     \ingroup qtquick-input-handlers
@@ -32,7 +32,7 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     by default it is fully functional, and manipulates its \l target,
     which is the Item within which it is declared.
 
-    \snippet pointerHandlers/pinchHandler.qml 0
+    \snippet pointerHandlers/pinchHandlerSimple.qml 0
 
     It has properties to restrict the range of dragging, rotation, and zoom.
 
@@ -498,7 +498,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     QQuickMultiPointHandler::handlePointerEventImpl(event);
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
-        for (const QQuickHandlerPoint &p : currentPoints())
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints()))
             qCDebug(lcPinchHandler) << Qt::hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
 
@@ -533,7 +533,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
     {
         const bool containsReleasedPoints = event->isEndEvent();
         QVector<QEventPoint> chosenPoints;
-        for (const QQuickHandlerPoint &p : currentPoints()) {
+        for (const QQuickHandlerPoint &p : std::as_const(currentPoints())) {
             auto ep = event->pointById(p.id());
             Q_ASSERT(ep);
             chosenPoints << *ep;

@@ -19,9 +19,8 @@ Item {
             addExample("Sections", "ListView section headers and footers", Qt.resolvedUrl("listview/sections.qml"))
             addExample("Packages", "Transitions between a ListView and GridView", Qt.resolvedUrl("package/view.qml"))
             addExample("PathView", "A simple PathView", Qt.resolvedUrl("pathview/pathview-example.qml"))
-            addExample("ObjectModel", "Using a ObjectModel", Qt.resolvedUrl("objectmodel/objectmodel.qml"))
+            addExample("ObjectModel", "Using an ObjectModel", Qt.resolvedUrl("objectmodel/objectmodel.qml"))
             addExample("Display Margins", "A ListView with display margins", Qt.resolvedUrl("listview/displaymargin.qml"))
-            addExample("DelegateModel", "A PathView using DelegateModel to instantiate delegates", Qt.resolvedUrl("delegatemodel/slideshow.qml"))
             addExample("Draggable Selections", "Enabling drag-and-drop on DelegateModel delegates", Qt.resolvedUrl("delegatemodel/dragselection.qml"))
         }
     }

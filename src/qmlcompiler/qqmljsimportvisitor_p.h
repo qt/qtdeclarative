@@ -15,7 +15,7 @@
 // We mean it.
 
 #include <private/qqmljscontextualtypes_p.h>
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljsannotation_p.h"
 #include "qqmljsimporter_p.h"
@@ -39,7 +39,7 @@ class QQmlDomAstCreatorWithQQmlJSScope;
 }
 
 struct QQmlJSResourceFileMapper;
-class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
+class Q_QMLCOMPILER_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSImportVisitor();
@@ -85,6 +85,8 @@ public:
         std::function<QQmlJSMetaPropertyBinding()> create;
         QQmlJSScope::BindingTargetSpecifier specifier = QQmlJSScope::SimplePropertyTarget;
     };
+
+    QStringList seenModuleQualifiers() const { return m_seenModuleQualifiers; }
 
 protected:
     // Linter warnings, we might want to move this at some point
@@ -260,6 +262,7 @@ protected:
     void processPropertyBindings();
     void checkRequiredProperties();
     void processPropertyTypes();
+    void processMethodTypes();
     void processPropertyBindingObjects();
     void flushPendingSignalParameters();
 
@@ -283,6 +286,15 @@ protected:
         QQmlJSScope::Ptr scope;
         QString name;
         QQmlJS::SourceLocation location;
+    };
+
+    struct PendingMethodTypeAnnotations
+    {
+        QQmlJSScope::Ptr scope;
+        QString methodName;
+        // This keeps type annotations' locations in order (parameters then return type).
+        // If an annotation is not present, it is represented by an invalid source location.
+        QVarLengthArray<QQmlJS::SourceLocation, 3> locations;
     };
 
     struct PendingPropertyObjectBinding
@@ -322,6 +334,7 @@ protected:
 
     QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
     QVector<PendingPropertyType> m_pendingPropertyTypes;
+    QVector<PendingMethodTypeAnnotations> m_pendingMethodTypeAnnotations;
     QVector<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
     QVector<RequiredProperty> m_requiredProperties;
     QVector<QQmlJSScope::Ptr> m_objectBindingScopes;
@@ -332,6 +345,7 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
+    QStringList m_seenModuleQualifiers;
 
 private:
     void checkSignal(

@@ -17,7 +17,8 @@
 
 #include <QtQuickShapes/private/qquickshapesglobal_p.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
-#include <QtQuick/private/qquickitem_p.h>
+#include <private/qquickitem_p.h>
+#include <private/qsgtransform_p.h>
 #include <QPainterPath>
 #include <QColor>
 #include <QBrush>
@@ -37,16 +38,7 @@ public:
         SupportsAsync = 0x01
     };
     Q_DECLARE_FLAGS(Flags, Flag)
-
     enum FillGradientType { NoGradient = 0, LinearGradient, RadialGradient, ConicalGradient };
-    struct GradientDesc { // can fully describe a linear/radial/conical gradient
-        QGradientStops stops;
-        QQuickShapeGradient::SpreadMode spread = QQuickShapeGradient::PadSpread;
-        QPointF a; // start (L) or center point (R/C)
-        QPointF b; // end (L) or focal point (R)
-        qreal v0; // center radius (R) or start angle (C)
-        qreal v1; // focal radius (R)
-    };
 
     virtual ~QQuickAbstractPathRenderer() { }
 
@@ -56,6 +48,7 @@ public:
     virtual void setAsyncCallback(void (*)(void *), void *) { }
     virtual Flags flags() const { return {}; }
     virtual void setPath(int index, const QQuickPath *path) = 0;
+    virtual void setPath(int index, const QPainterPath &path, QQuickShapePath::PathHints pathHints = {}) = 0;
     virtual void setStrokeColor(int index, const QColor &color) = 0;
     virtual void setStrokeWidth(int index, qreal w) = 0;
     virtual void setFillColor(int index, const QColor &color) = 0;
@@ -65,7 +58,10 @@ public:
     virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
                                 qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
+    virtual void setFillTextureProvider(int index, QQuickItem *textureProviderItem) = 0;
+    virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
     virtual void setTriangulationScale(qreal) { }
+    virtual void handleSceneChange(QQuickWindow *window) = 0;
 
     // Render thread, with gui blocked
     virtual void updateNode() = 0;
@@ -88,9 +84,11 @@ struct QQuickShapeStrokeFillParams
     qreal dashOffset;
     QVector<qreal> dashPattern;
     QQuickShapeGradient *fillGradient;
+    QSGTransform fillTransform;
+    QQuickItem *fillItem;
 };
 
-class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
+class Q_QUICKSHAPES_EXPORT QQuickShapePathPrivate : public QQuickPathPrivate
 {
     Q_DECLARE_PUBLIC(QQuickShapePath)
 
@@ -104,19 +102,25 @@ public:
         DirtyStyle = 0x20,
         DirtyDash = 0x40,
         DirtyFillGradient = 0x80,
+        DirtyFillTransform = 0x100,
+        DirtyFillItem = 0x200,
 
-        DirtyAll = 0xFF
+        DirtyAll = 0x3FF
     };
 
     QQuickShapePathPrivate();
 
     void _q_pathChanged();
     void _q_fillGradientChanged();
+    void _q_fillItemDestroyed();
+
+    void handleSceneChange();
 
     static QQuickShapePathPrivate *get(QQuickShapePath *p) { return p->d_func(); }
 
     int dirty;
     QQuickShapeStrokeFillParams sfp;
+    QQuickShapePath::PathHints pathHints;
 };
 
 class QQuickShapePrivate : public QQuickItemPrivate
@@ -134,10 +138,14 @@ public:
 
     void _q_shapePathChanged();
     void setStatus(QQuickShape::Status newStatus);
+    void handleSceneChange(QQuickWindow *w);
 
     static QQuickShapePrivate *get(QQuickShape *item) { return item->d_func(); }
 
     static void asyncShapeReady(void *data);
+
+    qreal getImplicitWidth() const override;
+    qreal getImplicitHeight() const override;
 
     int effectRefCount;
     QVector<QQuickShapePath *> sp;
@@ -149,44 +157,16 @@ public:
     QQuickShape::RendererType rendererType = QQuickShape::UnknownRenderer;
     QQuickShape::RendererType preferredType = QQuickShape::UnknownRenderer;
     QQuickShape::ContainsMode containsMode = QQuickShape::BoundingRectContains;
+    QQuickShape::FillMode fillMode = QQuickShape::NoResize;
+    QQuickShape::HAlignment horizontalAlignment = QQuickShape::AlignLeft;
+    QQuickShape::VAlignment verticalAlignment = QQuickShape::AlignTop;
+
     bool spChanged = false;
     bool rendererChanged = false;
     bool async = false;
     bool enableVendorExts = false;
     bool syncTimingActive = false;
     qreal triangulationScale = 1.0;
-};
-
-struct QQuickShapeGradientCacheKey
-{
-    QQuickShapeGradientCacheKey(const QGradientStops &stops, QQuickShapeGradient::SpreadMode spread)
-        : stops(stops), spread(spread)
-    { }
-    QGradientStops stops;
-    QQuickShapeGradient::SpreadMode spread;
-    bool operator==(const QQuickShapeGradientCacheKey &other) const
-    {
-        return spread == other.spread && stops == other.stops;
-    }
-};
-
-inline size_t qHash(const QQuickShapeGradientCacheKey &v, size_t seed = 0)
-{
-    size_t h = seed + v.spread;
-    for (int i = 0; i < 3 && i < v.stops.size(); ++i)
-        h += v.stops[i].second.rgba();
-    return h;
-}
-
-class QQuickShapeGradientCache
-{
-public:
-    ~QQuickShapeGradientCache();
-    static QQuickShapeGradientCache *cacheForRhi(QRhi *rhi);
-    QSGTexture *get(const QQuickShapeGradientCacheKey &grad);
-
-private:
-    QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_textures;
 };
 
 QT_END_NAMESPACE

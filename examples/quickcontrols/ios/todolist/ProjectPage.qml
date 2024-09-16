@@ -24,7 +24,6 @@ Page {
 
         TextField {
             id: projectNameLabel
-            Layout.fillWidth: true
             text: root.projectName
             font.pointSize: AppSettings.fontSize + 10
             font.styleName: "Bold"
@@ -53,6 +52,7 @@ Page {
             value: root.completedTasks
             to: root.totalTasks
             Layout.leftMargin: 20
+            Layout.fillWidth: false
         }
     }
 
@@ -71,7 +71,6 @@ Page {
             wrapMode: TextArea.Wrap
             clip: true
 
-            Layout.fillWidth: true
             Layout.preferredHeight: 80
             Layout.topMargin: 20
 
@@ -96,8 +95,6 @@ Page {
             model: taskModel
             clip: true
 
-            Layout.fillWidth: true
-            Layout.fillHeight: true
             Layout.topMargin: 20
 
             ListModel {
@@ -201,7 +198,6 @@ Page {
                             addTaskButton.clicked()
                     }
 
-                    Layout.fillWidth: true
                     Layout.leftMargin: 10
                     Layout.rightMargin: 10
                     Layout.alignment: Qt.AlignHCenter

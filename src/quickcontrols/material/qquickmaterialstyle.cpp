@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickmaterialstyle_p.h"
+#include "qquickmaterialtheme_p.h"
 
 #include <QtCore/qdebug.h>
 #if QT_CONFIG(settings)
@@ -441,7 +442,8 @@ QQuickMaterialStyle::QQuickMaterialStyle(QObject *parent) : QQuickAttachedProper
     m_customBackground(globalBackgroundCustom),
     m_hasForeground(hasGlobalForeground),
     m_hasBackground(hasGlobalBackground),
-    m_theme(globalTheme),
+    m_systemTheme(globalTheme == System),
+    m_theme(effectiveTheme(globalTheme)),
     m_primary(globalPrimary),
     m_accent(globalAccent),
     m_foreground(globalForeground),
@@ -462,14 +464,26 @@ QQuickMaterialStyle::Theme QQuickMaterialStyle::theme() const
 
 void QQuickMaterialStyle::setTheme(Theme theme)
 {
-    if (theme == System)
-        theme = QQuickStylePrivate::isDarkSystemTheme() ? Dark : Light;
-
     m_explicitTheme = true;
-    if (m_theme == theme)
+
+    // If theme is System: m_theme is set to system's theme (Dark/Light)
+    // and m_systemTheme is set to true.
+    // If theme is Dark/Light: m_theme is set to the input theme (Dark/Light)
+    // and m_systemTheme is set to false.
+    const bool systemThemeChanged = (m_systemTheme != (theme == System));
+    // Check m_theme and m_systemTheme are changed.
+    if ((m_theme == effectiveTheme(theme)) && !systemThemeChanged)
         return;
 
-    m_theme = theme;
+    m_theme = effectiveTheme(theme);
+    m_systemTheme = (theme == System);
+    if (systemThemeChanged) {
+        if (m_systemTheme)
+            QQuickMaterialTheme::registerSystemStyle(this);
+        else
+            QQuickMaterialTheme::unregisterSystemStyle(this);
+    }
+
     propagateTheme();
     themeChange();
     if (!m_customAccent)
@@ -482,10 +496,14 @@ void QQuickMaterialStyle::setTheme(Theme theme)
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
 {
-    if (m_explicitTheme || m_theme == theme)
+    const bool systemThemeChanged = (m_systemTheme != (theme == System));
+    const bool themeChanged = systemThemeChanged || (m_theme != effectiveTheme(theme));
+    if (m_explicitTheme || !themeChanged)
         return;
 
-    m_theme = theme;
+    m_theme = effectiveTheme(theme);
+    m_systemTheme = (theme == System);
+
     propagateTheme();
     themeChange();
     if (!m_customAccent)
@@ -502,7 +520,10 @@ void QQuickMaterialStyle::propagateTheme()
     for (QQuickAttachedPropertyPropagator *child : styles) {
         QQuickMaterialStyle *material = qobject_cast<QQuickMaterialStyle *>(child);
         if (material)
-            material->inheritTheme(m_theme);
+            // m_theme is the effective theme, either Dark or Light.
+            // m_systemTheme indicates whether the theme is set by
+            // the system (true) or manually (false).
+            material->inheritTheme(m_systemTheme ? System : m_theme);
     }
 }
 
@@ -1269,6 +1290,32 @@ int QQuickMaterialStyle::touchTarget() const
     return globalVariant == Dense ? 44 : 48;
 }
 
+int QQuickMaterialStyle::buttonVerticalPadding() const
+{
+    return globalVariant == Dense ? 10 : 14;
+}
+
+// https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
+int QQuickMaterialStyle::buttonLeftPadding(bool flat, bool hasIcon) const
+{
+    static const int noIconPadding = globalVariant == Dense ? 12 : 24;
+    static const int iconPadding = globalVariant == Dense ? 8 : 16;
+    static const int flatPadding = globalVariant == Dense ? 6 : 12;
+    return !flat ? (!hasIcon ? noIconPadding : iconPadding) : flatPadding;
+}
+
+int QQuickMaterialStyle::buttonRightPadding(bool flat, bool hasIcon, bool hasText) const
+{
+    static const int noTextPadding = globalVariant == Dense ? 8 : 16;
+    static const int textPadding = globalVariant == Dense ? 12 : 24;
+    static const int flatNoIconPadding = globalVariant == Dense ? 6 : 12;
+    static const int flatNoTextPadding = globalVariant == Dense ? 6 : 12;
+    static const int flatTextPadding = globalVariant == Dense ? 8 : 16;
+    return !flat
+        ? (!hasText ? noTextPadding : textPadding)
+        : (!hasIcon ? flatNoIconPadding : (!hasText ? flatNoTextPadding : flatTextPadding));
+}
+
 int QQuickMaterialStyle::buttonHeight() const
 {
     // https://m3.material.io/components/buttons/specs#256326ad-f934-40e7-b05f-0bcb41aa4382
@@ -1284,6 +1331,19 @@ int QQuickMaterialStyle::delegateHeight() const
 int QQuickMaterialStyle::dialogButtonBoxHeight() const
 {
     return globalVariant == Dense ? 48 : 52;
+}
+
+int QQuickMaterialStyle::dialogTitleFontPixelSize() const
+{
+    return globalVariant == Dense ? 16 : 24;
+}
+
+// https://m3.material.io/components/dialogs/specs#6771d107-624e-47cc-b6d8-2b7b620ba2f1
+QQuickMaterialStyle::RoundedScale QQuickMaterialStyle::dialogRoundedScale() const
+{
+    return globalVariant == Dense
+        ? QQuickMaterialStyle::RoundedScale::LargeScale
+        : QQuickMaterialStyle::RoundedScale::ExtraLargeScale;
 }
 
 int QQuickMaterialStyle::frameVerticalPadding() const
@@ -1385,7 +1445,7 @@ void QQuickMaterialStyle::initGlobals()
     QByteArray themeValue = resolveSetting("QT_QUICK_CONTROLS_MATERIAL_THEME", settings, QStringLiteral("Theme"));
     Theme themeEnum = toEnumValue<Theme>(themeValue, &ok);
     if (ok)
-        globalTheme = effectiveTheme(themeEnum);
+        globalTheme = themeEnum;
     else if (!themeValue.isEmpty())
         qWarning().nospace().noquote() << "Material: unknown theme value: " << themeValue;
 

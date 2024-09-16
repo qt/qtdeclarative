@@ -3,11 +3,11 @@
 
 /*!
 \qmlmodule QtQml
-\title Qt QML QML Types
+\title Qt Qml QML Types
 \ingroup qmlmodules
-\brief List of QML types provided by the Qt QML module
+\brief List of QML types provided by the Qt Qml module.
 
-The \l{Qt QML} module provides the definition and implementation of various
+The \l{Qt Qml} module provides the definition and implementation of various
 convenience types that can be used with the QML language. This includes
 elementary QML types, which can provide the basis for further extensions to the
 QML language. The \l QtObject and \l Component object types are non-visual and
@@ -58,9 +58,9 @@ provided:
 
 \section1 Sequence Types
 
-The following \l{qtqml-typesystem-topic.html#sequence-types}{QML sequence types}
-are provided by the Qt QML module in addition to the ones registered with each
-value type and object type:
+The following \l{QML Sequence Types}{QML sequence types} are provided by the Qt
+QML module in addition to the ones registered with each value type and object
+type:
 
 \list
   \li \c {std::vector<QString>}

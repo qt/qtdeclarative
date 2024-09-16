@@ -10,7 +10,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Animator
-    \instantiates QQuickAnimator
+    \nativetype QQuickAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -272,7 +272,7 @@ QAbstractAnimationJob *QQuickAnimator::transition(QQuickStateActions &actions,
 
 /*!
     \qmltype XAnimator
-    \instantiates QQuickXAnimator
+    \nativetype QQuickXAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -305,7 +305,7 @@ QQuickAnimatorJob *QQuickXAnimator::createJob() const { return new QQuickXAnimat
 
 /*!
     \qmltype YAnimator
-    \instantiates QQuickYAnimator
+    \nativetype QQuickYAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -338,7 +338,7 @@ QQuickAnimatorJob *QQuickYAnimator::createJob() const { return new QQuickYAnimat
 
 /*!
     \qmltype ScaleAnimator
-    \instantiates QQuickScaleAnimator
+    \nativetype QQuickScaleAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -371,7 +371,7 @@ QQuickAnimatorJob *QQuickScaleAnimator::createJob() const { return new QQuickSca
 
 /*!
     \qmltype OpacityAnimator
-    \instantiates QQuickOpacityAnimator
+    \nativetype QQuickOpacityAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -403,7 +403,7 @@ QQuickAnimatorJob *QQuickOpacityAnimator::createJob() const { return new QQuickO
 
 /*!
     \qmltype RotationAnimator
-    \instantiates QQuickRotationAnimator
+    \nativetype QQuickRotationAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations
@@ -478,7 +478,7 @@ QQuickRotationAnimator::RotationDirection QQuickRotationAnimator::direction() co
 #if QT_CONFIG(quick_shadereffect)
 /*!
     \qmltype UniformAnimator
-    \instantiates QQuickUniformAnimator
+    \nativetype QQuickUniformAnimator
     \inqmlmodule QtQuick
     \since 5.2
     \ingroup qtquick-transitions-animations

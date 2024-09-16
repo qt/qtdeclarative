@@ -125,13 +125,23 @@ struct ModelObject : public QObjectWrapper {
     {
         QObjectWrapper::init(object);
         m_model = model;
-        QObjectPrivate *op = QObjectPrivate::get(object);
-        m_nodeModelMetaObject = static_cast<ModelNodeMetaObject *>(op->metaObject);
     }
-    void destroy() { QObjectWrapper::destroy(); }
-    int elementIndex() const { return m_nodeModelMetaObject->m_elementIndex; }
-    QQmlListModel *m_model;
-    ModelNodeMetaObject *m_nodeModelMetaObject;
+
+    void destroy()
+    {
+        m_model.destroy();
+        QObjectWrapper::destroy();
+    }
+
+    int elementIndex() const {
+        if (const QObject *o = object()) {
+            const QObjectPrivate *op = QObjectPrivate::get(o);
+            return static_cast<ModelNodeMetaObject *>(op->metaObject)->m_elementIndex;
+        }
+        return -1;
+    }
+
+    QV4QPointer<QQmlListModel> m_model;
 };
 
 }
@@ -140,8 +150,6 @@ struct ModelObject : public QObjectWrapper
 {
     V4_OBJECT2(ModelObject, QObjectWrapper)
     V4_NEEDS_DESTROY
-
-    ListModel *listModel() const { return d()->m_model->m_listModel; }
 
 protected:
     static bool virtualPut(Managed *m, PropertyKey id, const Value& value, Value *receiver);
@@ -390,6 +398,23 @@ private:
     void newElement(int index);
 
     void updateCacheIndices(int start = 0, int end = -1);
+
+    template<typename ArrayLike>
+    void setArrayLike(QV4::ScopedObject *o, QV4::String *propertyName, ListElement *e, ArrayLike *a)
+    {
+        const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+        if (r.type == ListLayout::Role::List) {
+            ListModel *subModel = new ListModel(r.subLayout, nullptr);
+
+            int arrayLength = a->getLength();
+            for (int j=0 ; j < arrayLength ; ++j) {
+                *o = a->get(j);
+                subModel->append(*o);
+            }
+
+            e->setListPropertyFast(r, subModel);
+        }
+    }
 
     friend class ListElement;
     friend class QQmlListModelWorkerAgent;

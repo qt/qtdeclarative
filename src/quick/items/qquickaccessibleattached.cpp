@@ -13,7 +13,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Accessible
-    \instantiates QQuickAccessibleAttached
+    \nativetype QQuickAccessibleAttached
     \brief Enables accessibility of QML items.
 
     \inqmlmodule QtQuick
@@ -118,6 +118,15 @@ QT_BEGIN_NAMESPACE
        \li \l {Accessible::increaseAction}{Accessible.increaseAction}, \l {Accessible::decreaseAction}{Accessible.decreaseAction}
        \li Actions to increase and decrease the value of the element.
     \endtable
+*/
+
+/*!
+    \qmlproperty string QtQuick::Accessible::id
+
+    This property sets an identifier for the object.
+    It can be used to provide stable identifiers to UI tests.
+    By default, the identifier is set to the ID of the QML object.
+    If the ID is not set the default of \l QAccessible::Identifier is used.
 */
 
 /*! \qmlproperty bool QtQuick::Accessible::focusable
@@ -301,15 +310,19 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
 {
     Q_ASSERT(parent);
-    if (!item()) {
-        qmlWarning(parent) << "Accessible must be attached to an Item";
-        return;
-    }
-
     // Enable accessibility for items with accessible content. This also
-    // enables accessibility for the ancestors of souch items.
-    item()->d_func()->setAccessible();
-    QAccessibleEvent ev(item(), QAccessible::ObjectCreated);
+    // enables accessibility for the ancestors of such items.
+    auto item = qobject_cast<QQuickItem *>(parent);
+    if (item) {
+        item->d_func()->setAccessible();
+    } else {
+        const QLatin1StringView className(QQmlData::ensurePropertyCache(parent)->firstCppMetaObject()->className());
+        if (className != QLatin1StringView("QQuickAction")) {
+            qmlWarning(parent) << "Accessible attached property must be attached to an object deriving from Item or Action";
+            return;
+        }
+    }
+    QAccessibleEvent ev(parent, QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
 
     if (const QMetaObject *pmo = parent->metaObject()) {
@@ -423,13 +436,15 @@ QQuickAccessibleAttached *QQuickAccessibleAttached::qmlAttachedProperties(QObjec
 
 bool QQuickAccessibleAttached::ignored() const
 {
-    return item() ? !item()->d_func()->isAccessible : false;
+    auto item = qobject_cast<QQuickItem *>(parent());
+    return item ? !item->d_func()->isAccessible : false;
 }
 
 void QQuickAccessibleAttached::setIgnored(bool ignored)
 {
-    if (this->ignored() != ignored && item()) {
-        item()->d_func()->isAccessible = !ignored;
+    auto item = qobject_cast<QQuickItem *>(parent());
+    if (item && this->ignored() != ignored) {
+        item->d_func()->isAccessible = !ignored;
         emit ignoredChanged();
     }
 }
@@ -457,8 +472,13 @@ bool QQuickAccessibleAttached::doAction(const QString &actionName)
         sig = &sigPreviousPage;
     else if (actionName == QAccessibleActionInterface::nextPageAction())
         sig = &sigNextPage;
-    if (sig && isSignalConnected(*sig))
-        return sig->invoke(this);
+    if (sig && isSignalConnected(*sig)) {
+        bool ret = false;
+        if (m_proxying)
+            ret = sig->invoke(m_proxying);
+        ret |= sig->invoke(this);
+        return ret;
+    }
     return false;
 }
 
@@ -495,6 +515,69 @@ QString QQuickAccessibleAttached::stripHtml(const QString &html)
 #else
     return html;
 #endif
+}
+
+void QQuickAccessibleAttached::setProxying(QQuickAccessibleAttached *proxying)
+{
+    if (proxying == m_proxying)
+        return;
+
+    const QMetaObject &mo = staticMetaObject;
+    if (m_proxying) {
+        // We disconnect all signals from the proxy into this object
+        auto mo = m_proxying->metaObject();
+        auto propertyCache = QQmlData::ensurePropertyCache(m_proxying);
+        for (int signalIndex = propertyCache->signalOffset();
+             signalIndex < propertyCache->signalCount(); ++signalIndex) {
+            const QMetaMethod m = mo->method(propertyCache->signal(signalIndex)->coreIndex());
+            Q_ASSERT(m.methodType() == QMetaMethod::Signal);
+            if (m.methodType() != QMetaMethod::Signal)
+                continue;
+
+            disconnect(m_proxying, m, this, m);
+        }
+    }
+
+    m_proxying = proxying;
+
+    if (m_proxying) {
+        // We connect all signals from the proxy into this object
+        auto propertyCache = QQmlData::ensurePropertyCache(m_proxying);
+        auto mo = m_proxying->metaObject();
+        for (int signalIndex = propertyCache->signalOffset();
+             signalIndex < propertyCache->signalCount(); ++signalIndex) {
+            const QMetaMethod m = mo->method(propertyCache->signal(signalIndex)->coreIndex());
+            Q_ASSERT(m.methodType() == QMetaMethod::Signal);
+            connect(proxying, m, this, m);
+        }
+    }
+
+    // We check all properties
+    for (int prop = mo.propertyOffset(); prop < mo.propertyCount(); ++prop) {
+        const QMetaProperty p = mo.property(prop);
+        if (!p.hasNotifySignal()) {
+            continue;
+        }
+
+        const QMetaMethod signal = p.notifySignal();
+        if (signal.parameterCount() == 0)
+            signal.invoke(this);
+        else
+            signal.invoke(this, Q_ARG(bool, p.read(this).toBool()));
+    }
+}
+
+/*!
+ * \since 6.8
+ * Issues an announcement event with a \a message with politeness \a politeness.
+ *
+ * \sa QAccessibleAnnouncementEvent
+ */
+void QQuickAccessibleAttached::announce(const QString &message, QAccessible::AnnouncementPoliteness politeness)
+{
+    QAccessibleAnnouncementEvent event(parent(), message);
+    event.setPoliteness(politeness);
+    QAccessible::updateAccessibility(&event);
 }
 
 QT_END_NAMESPACE

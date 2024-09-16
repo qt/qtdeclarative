@@ -4,6 +4,7 @@
 #include "quicktest_p.h"
 #include "quicktestresult_p.h"
 #include <QtTest/qtestsystem.h>
+#include <QtTest/private/qtestcrashhandler_p.h>
 #include "qtestoptions_p.h"
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
@@ -31,6 +32,8 @@
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
 #include <QtQml/QQmlFileSelector>
@@ -223,22 +226,45 @@ static void handleCompileErrors(
     results.stopLogging();
 }
 
+class SimpleReceiver : public QObject {
+    Q_OBJECT
+public:
+    bool signalReceived = false;
+public slots:
+    void slotFun() { signalReceived = true; }
+};
+
 bool qWaitForSignal(QObject *obj, const char* signal, int timeout)
 {
-    QSignalSpy spy(obj, signal);
-    QElapsedTimer timer;
-    timer.start();
-
-    while (!spy.size()) {
-        int remaining = timeout - int(timer.elapsed());
-        if (remaining <= 0)
-            break;
-        QCoreApplication::processEvents(QEventLoop::AllEvents, remaining);
-        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-        QTest::qSleep(10);
+    if (!obj || !signal) {
+        qWarning("qWaitForSignal: invalid arguments");
+        return false;
+    }
+    if (((signal[0] - '0') & 0x03) != QSIGNAL_CODE) {
+        qWarning("qWaitForSignal: not a valid signal, use the SIGNAL macro");
+        return false;
     }
 
-    return spy.size();
+    int sig = obj->metaObject()->indexOfSignal(signal + 1);
+    if (sig == -1) {
+        const QByteArray ba = QMetaObject::normalizedSignature(signal + 1);
+        sig = obj->metaObject()->indexOfSignal(ba.constData());
+        if (sig == -1) {
+            qWarning("qWaitForSignal: no such signal %s::%s", obj->metaObject()->className(),
+                     signal);
+            return false;
+        }
+    }
+
+    SimpleReceiver receiver;
+    static int slot = receiver.metaObject()->indexOfSlot("slotFun()");
+    if (!QMetaObject::connect(obj, sig, &receiver, slot)) {
+        qWarning("qWaitForSignal: failed to connect to signal %s::%s",
+                 obj->metaObject()->className(), signal);
+        return false;
+    }
+
+    return QTest::qWaitFor([&]() { return receiver.signalReceived; }, timeout);
 }
 
 template <typename... Args>
@@ -264,7 +290,7 @@ class TestCaseCollector
 public:
     typedef QList<QString> TestCaseList;
 
-    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine)
+    TestCaseCollector(const QFileInfo &fileInfo, QQmlEngine *engine) : m_engine(engine)
     {
         QString path = fileInfo.absoluteFilePath();
         if (path.startsWith(QLatin1String(":/")))
@@ -276,7 +302,8 @@ public:
         if (component.isReady()) {
             QQmlRefPointer<QV4::ExecutableCompilationUnit> rootCompilationUnit
                     = QQmlComponentPrivate::get(&component)->compilationUnit;
-            TestCaseEnumerationResult result = enumerateTestCases(rootCompilationUnit.data());
+            TestCaseEnumerationResult result = enumerateTestCases(
+                    rootCompilationUnit->baseCompilationUnit().data());
             m_testCases = result.testCases + result.finalizedPartialTestCases();
             m_errors += result.errors;
         }
@@ -288,6 +315,7 @@ public:
 private:
     TestCaseList m_testCases;
     QList<QQmlError> m_errors;
+    QQmlEngine *m_engine = nullptr;
 
     struct TestCaseEnumerationResult
     {
@@ -316,8 +344,8 @@ private:
     };
 
     TestCaseEnumerationResult enumerateTestCases(
-            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-            const Object *object = nullptr)
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
+            const QV4::CompiledData::Object *object = nullptr)
     {
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
@@ -330,7 +358,8 @@ private:
             if (!typeQualifier.isEmpty())
                 testCaseTypeName = typeQualifier % QLatin1Char('.') % testCaseTypeName;
 
-            testCaseType = compilationUnit->typeNameCache->query(testCaseTypeName).type;
+            testCaseType = compilationUnit->typeNameCache->query(
+                    testCaseTypeName, QQmlTypeLoader::get(m_engine)).type;
             if (testCaseType.isValid())
                 break;
         }
@@ -339,11 +368,11 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
-        if (object->hasFlag(Object::IsInlineComponentRoot))
+        if (object->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
             return result;
 
-        if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
-                    object->inheritedTypeNameIndex)->compilationUnit()) {
+        if (const auto superTypeUnit = compilationUnit->resolvedType(object->inheritedTypeNameIndex)
+                                               ->compilationUnit()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;
@@ -386,7 +415,7 @@ private:
 
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
             if (binding->type() == QV4::CompiledData::Binding::Type_Object) {
-                const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
+                const QV4::CompiledData::Object *child = compilationUnit->objectAt(binding->value.objectIndex);
                 result << enumerateTestCases(compilationUnit, child);
             }
         }
@@ -541,6 +570,11 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         return 1;
     }
 
+    std::optional<QTest::CrashHandler::FatalSignalHandler> handler;
+    QTest::CrashHandler::prepareStackTrace();
+    if (!QTest::Internal::noCrashHandler)
+        handler.emplace();
+
     qputenv("QT_QTESTLIB_RUNNING", "1");
 
     QSet<QString> commandLineTestFunctions(QTest::testFunctions.cbegin(), QTest::testFunctions.cend());
@@ -626,10 +660,12 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             qWarning().nospace()
                 << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
         }
-        view.requestActivate();
-        if (!QTest::qWaitForWindowActive(&view)) {
-            qWarning().nospace()
-                << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+        if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)) {
+            view.requestActivate();
+            if (!QTest::qWaitForWindowActive(&view)) {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+            }
         }
         if (view.isExposed()) {
             // Defer property update until event loop has started
@@ -667,3 +703,4 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 QT_END_NAMESPACE
 
 #include "moc_quicktest_p.cpp"
+#include "quicktest.moc"

@@ -36,11 +36,11 @@ struct Q_QML_EXPORT Script {
     Script(ExecutionContext *scope, QV4::Compiler::ContextType mode, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , context(scope), strictMode(false), inheritContext(false), parsed(false), contextType(mode)
-        , vmFunction(nullptr), parseAsBinding(false) {}
+        , parseAsBinding(false) {}
     Script(ExecutionEngine *engine, QmlContext *qml, bool parseAsBinding, const QString &sourceCode, const QString &source = QString(), int line = 1, int column = 0)
         : sourceFile(source), line(line), column(column), sourceCode(sourceCode)
         , context(engine->rootContext()), strictMode(false), inheritContext(true), parsed(false)
-        , vmFunction(nullptr), parseAsBinding(parseAsBinding) {
+        , parseAsBinding(parseAsBinding) {
         if (qml)
             qmlContext.set(engine, *qml);
     }
@@ -57,7 +57,7 @@ struct Q_QML_EXPORT Script {
     QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Eval;
     QV4::PersistentValue qmlContext;
     QQmlRefPointer<ExecutableCompilationUnit> compilationUnit;
-    Function *vmFunction;
+    QV4::WriteBarrier::Pointer<Function> vmFunction;
     bool parseAsBinding;
 
     void parse();
@@ -65,7 +65,7 @@ struct Q_QML_EXPORT Script {
 
     Function *function();
 
-    static QV4::CompiledData::CompilationUnit precompile(
+    static QQmlRefPointer<QV4::CompiledData::CompilationUnit> precompile(
             QV4::Compiler::Module *module, QQmlJS::Engine *jsEngine,
             Compiler::JSUnitGenerator *unitGenerator, const QString &fileName,
             const QString &finalUrl, const QString &source,

@@ -3,6 +3,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.impl
 import QtQuick.Dialogs
 import QtQuick.Dialogs.quickimpl
 import QtQuick.Layouts
@@ -40,6 +41,7 @@ MessageDialogImpl {
 
     header: Pane {
         palette.window: control.palette.light
+        visible: parent?.parent === Overlay.overlay
         padding: 20
 
         contentItem: Label {

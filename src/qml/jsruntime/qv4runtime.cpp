@@ -41,6 +41,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_STATIC_LOGGING_CATEGORY(lcCoercingTypeAssertion, "qt.qml.coercingTypeAssertion");
+
 namespace QV4 {
 
 #ifdef QV4_COUNT_RUNTIME_FUNCTIONS
@@ -380,11 +382,42 @@ QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval,
     else if (result->isBoolean())
         return Encode::null();
 
-    // Try to convert the value type
-    if (Scoped<QQmlTypeWrapper> typeWrapper(scope, rval); typeWrapper)
-        return coerce(engine, lval, typeWrapper->d()->type(), false);
+    if (engine->callingQmlContext()->valueTypesAreAssertable())
+        return Encode::undefined();
 
-    return Encode::undefined();
+    // Try to convert the value type
+    Scoped<QQmlTypeWrapper> typeWrapper(scope, rval);
+    if (!typeWrapper)
+        return Encode::undefined();
+
+    const auto *stackFrame = engine->currentStackFrame;
+    if (lval.as<QQmlValueTypeWrapper>()) {
+        qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+                << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+                << " Coercing between incompatible value types mistakenly yields null rather than"
+                << " undefined. Add 'pragma ValueTypeBehavior: Assertable' to prevent this.";
+        return Encode::null();
+    }
+
+    if (lval.as<QV4::QObjectWrapper>()) {
+        qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+                << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+                << " Coercing from instances of object types to value types mistakenly yields null"
+                << " rather than undefined. Add 'pragma ValueTypeBehavior: Assertable' to prevent"
+                << " this.";
+        return Encode::null();
+    }
+
+    result = coerce(engine, lval, typeWrapper->d()->type(), false);
+    if (result->isUndefined())
+        return Encode::undefined();
+
+    qCWarning(lcCoercingTypeAssertion).nospace().noquote()
+            << stackFrame->source() << ':' << stackFrame->lineNumber() << ':'
+            << " Coercing a value to " << typeWrapper->toQStringNoThrow()
+            << " using a type assertion. This behavior is deprecated."
+            << " Add 'pragma ValueTypeBehavior: Assertable' to prevent it.";
+    return result->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left, const Value &right)
@@ -584,7 +617,7 @@ Heap::String *RuntimeHelpers::convertToString(ExecutionEngine *engine, Value val
         goto redo;
     }
     case Value::Integer_Type:
-        return RuntimeHelpers::stringFromNumber(engine, value.int_32());
+        return engine->newString(QString::number(value.int_32()));
     default: // double
         return RuntimeHelpers::stringFromNumber(engine, value.doubleValue());
     } // switch
@@ -1029,7 +1062,7 @@ ReturnedValue Runtime::LoadName::call(ExecutionEngine *engine, int nameIndex)
 
 static Object *getSuperBase(Scope &scope)
 {
-    ScopedFunctionObject f(scope);
+    Scoped<JavaScriptFunctionObject> f(scope);
     ScopedObject homeObject(scope);
     if (scope.engine->currentStackFrame->isJSTypesFrame()) {
         JSTypesStackFrame *frame = static_cast<JSTypesStackFrame *>(
@@ -1188,7 +1221,7 @@ ReturnedValue Runtime::LoadSuperConstructor::call(ExecutionEngine *engine, const
     if (!f)
         return engine->throwTypeError();
     Heap::Object *c = static_cast<const Object &>(t).getPrototypeOf();
-    if (!c->vtable()->isFunctionObject || !static_cast<Heap::FunctionObject *>(c)->isConstructor())
+    if (!c->vtable()->callAsConstructor)
         return engine->throwTypeError();
     return c->asReturnedValue();
 }
@@ -1503,10 +1536,17 @@ ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const V
     // ok to have the value on the stack here
     Value f = Value::fromReturnedValue(l->getter(l, engine, base));
 
-    if (!f.isFunctionObject())
-        return engine->throwTypeError();
+    if (Q_LIKELY(f.isFunctionObject()))
+        return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
 
-    return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
+    if (QmlSignalHandler *handler = f.as<QmlSignalHandler>())
+        return checkedResult(engine, handler->call(&base, argv, argc));
+
+    const QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                                  .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                               ->runtimeStrings[l->nameIndex]->toQString())
+                                  .arg(base.toQStringNoThrow());
+    return engine->throwTypeError(message);
 }
 
 ReturnedValue Runtime::CallValue::call(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
@@ -1620,20 +1660,23 @@ ReturnedValue Runtime::TailCall::call(JSTypesStackFrame *frame, ExecutionEngine 
     int argc = tos[StackOffsets::tailCall_argc].int_32();
     Q_ASSERT(argc >= 0);
 
-    if (!function.isFunctionObject())
+    const JavaScriptFunctionObject *jsfo = function.as<JavaScriptFunctionObject>();
+    if (!jsfo) {
+        if (const FunctionObject *fo = function.as<FunctionObject>())
+            return checkedResult(engine, fo->call(&thisObject, argv, argc));
         return engine->throwTypeError();
+    }
 
-    const FunctionObject &fo = static_cast<const FunctionObject &>(function);
-    if (!frame->callerCanHandleTailCall() || !fo.canBeTailCalled() || engine->debugger()
-            || unsigned(argc) > fo.formalParameterCount()) {
+    if (!frame->callerCanHandleTailCall() || !jsfo->canBeTailCalled() || engine->debugger()
+            || unsigned(argc) > jsfo->formalParameterCount()) {
         // Cannot tailcall, do a normal call:
-        return checkedResult(engine, fo.call(&thisObject, argv, argc));
+        return checkedResult(engine, jsfo->call(&thisObject, argv, argc));
     }
 
     memmove(frame->jsFrame->args, argv, argc * sizeof(Value));
-    frame->init(fo.function(), frame->jsFrame->argValues<Value>(), argc,
+    frame->init(jsfo->function(), frame->jsFrame->argValues<Value>(), argc,
                 frame->callerCanHandleTailCall());
-    frame->setupJSFrame(frame->framePointer(), fo, fo.scope(), thisObject,
+    frame->setupJSFrame(frame->framePointer(), *jsfo, jsfo->scope(), thisObject,
                         Primitive::undefinedValue());
     engine->jsStackTop = frame->framePointer() + frame->requiredJSStackFrameSize();
     frame->setPendingTailCall(true);
@@ -1762,6 +1805,21 @@ void Runtime::ThrowOnNullOrUndefined::call(ExecutionEngine *engine, const Value 
 {
     if (v.isNullOrUndefined())
         engine->throwTypeError();
+}
+
+void Runtime::MarkCustom::call(const Value &toBeMarked)
+{
+    auto *h = toBeMarked.heapObject();
+    if (!h)
+        return;
+    Q_ASSERT(h->internalClass);
+    auto engine = h->internalClass->engine;
+    Q_ASSERT(engine);
+    // runtime function is only meant to be called while gc is ongoing
+    Q_ASSERT(engine->isGCOngoing);
+    QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *ms) {
+        h->mark(ms);
+    });
 }
 
 ReturnedValue Runtime::ConvertThisToObject::call(ExecutionEngine *engine, const Value &t)
@@ -2449,6 +2507,8 @@ QHash<const void *, const char *> Runtime::symbolTable()
             {symbol<ThrowOnNullOrUndefined>(), "ThrowOnNullOrUndefined" },
 
             {symbol<Closure>(), "Closure" },
+
+            {symbol<MarkCustom>(), "MarkCustom"},
 
             {symbol<ConvertThisToObject>(), "ConvertThisToObject" },
             {symbol<DeclareVar>(), "DeclareVar" },

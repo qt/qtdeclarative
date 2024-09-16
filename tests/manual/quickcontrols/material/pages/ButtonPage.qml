@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 import QtQuick
 import QtQuick.Controls.Material
 import QtQuick.Layouts
@@ -13,13 +13,22 @@ Page {
 
     header: RowLayout {
         CheckBox {
+            id: textCheckBox
+            text: "Text"
+            checked: true
+            Layout.fillWidth: false
+        }
+
+        CheckBox {
             id: iconCheckBox
             text: "Icon"
+            Layout.fillWidth: false
         }
 
         CheckBox {
             id: disabledCheckBox
             text: "Disabled"
+            Layout.fillWidth: false
         }
 
         Item {
@@ -88,7 +97,7 @@ Page {
                             model: 13
 
                             Button {
-                                text: modelData
+                                text: textCheckBox.checked ? modelData : ""
                                 flat: flatCheckBox.checked
                                 icon.source: iconCheckBox.checked ? "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png" : ""
 

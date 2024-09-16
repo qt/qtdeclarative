@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBehaviorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor, public QQmlFinalizerHook
+class Q_QUICK_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_INTERFACES(QQmlFinalizerHook)
@@ -34,10 +34,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropert
 
     Q_INTERFACES(QQmlPropertyValueInterceptor)
     Q_CLASSINFO("DefaultProperty", "animation")
-    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation FINAL)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
-    Q_PROPERTY(QVariant targetValue READ targetValue NOTIFY targetValueChanged REVISION(2, 13) FINAL)
-    Q_PROPERTY(QQmlProperty targetProperty READ targetProperty NOTIFY targetPropertyChanged REVISION(2, 15) FINAL)
+    Q_PROPERTY(QQuickAbstractAnimation *animation READ animation WRITE setAnimation)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(QVariant targetValue READ targetValue NOTIFY targetValueChanged REVISION(2, 13))
+    Q_PROPERTY(QQmlProperty targetProperty READ targetProperty NOTIFY targetPropertyChanged REVISION(2, 15))
     Q_CLASSINFO("DeferredPropertyNames", "animation")
     QML_NAMED_ELEMENT(Behavior)
     QML_ADDED_IN_VERSION(2, 0)
@@ -69,7 +69,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickBehavior)
 
 #endif // QQUICKBEHAVIOR_H

@@ -39,7 +39,7 @@ bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) 
 size_t qHash(const QSGSamplerDescription &s, size_t seed = 0) noexcept;
 
 #if QT_CONFIG(opengl)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformOpenGL : public QNativeInterface::QSGOpenGLTexture
+class Q_QUICK_EXPORT QSGTexturePlatformOpenGL : public QNativeInterface::QSGOpenGLTexture
 {
 public:
     QSGTexturePlatformOpenGL(QSGTexture *t) : m_texture(t) { }
@@ -50,7 +50,7 @@ public:
 #endif
 
 #ifdef Q_OS_WIN
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformD3D11 : public QNativeInterface::QSGD3D11Texture
+class Q_QUICK_EXPORT QSGTexturePlatformD3D11 : public QNativeInterface::QSGD3D11Texture
 {
 public:
     QSGTexturePlatformD3D11(QSGTexture *t) : m_texture(t) { }
@@ -58,7 +58,7 @@ public:
 
     void *nativeTexture() const override;
 };
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformD3D12 : public QNativeInterface::QSGD3D12Texture
+class Q_QUICK_EXPORT QSGTexturePlatformD3D12 : public QNativeInterface::QSGD3D12Texture
 {
 public:
     QSGTexturePlatformD3D12(QSGTexture *t) : m_texture(t) { }
@@ -69,19 +69,19 @@ public:
 };
 #endif
 
-#if defined(__OBJC__)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformMetal : public QNativeInterface::QSGMetalTexture
+#if QT_CONFIG(metal)
+class Q_QUICK_EXPORT QSGTexturePlatformMetal : public QNativeInterface::QSGMetalTexture
 {
 public:
     QSGTexturePlatformMetal(QSGTexture *t) : m_texture(t) { }
     QSGTexture *m_texture;
 
-    id<MTLTexture> nativeTexture() const override;
+    QT_OBJC_PROTOCOL(MTLTexture) nativeTexture() const override;
 };
 #endif
 
 #if QT_CONFIG(vulkan)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformVulkan : public QNativeInterface::QSGVulkanTexture
+class Q_QUICK_EXPORT QSGTexturePlatformVulkan : public QNativeInterface::QSGVulkanTexture
 {
 public:
     QSGTexturePlatformVulkan(QSGTexture *t) : m_texture(t) { }
@@ -92,7 +92,7 @@ public:
 };
 #endif
 
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePrivate : public QObjectPrivate
+class Q_QUICK_EXPORT QSGTexturePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QSGTexture)
 public:
@@ -121,7 +121,7 @@ public:
     QSGTexturePlatformD3D11 m_d3d11TextureAccessor;
     QSGTexturePlatformD3D12 m_d3d12TextureAccessor;
 #endif
-#if defined(__OBJC__)
+#if QT_CONFIG(metal)
     QSGTexturePlatformMetal m_metalTextureAccessor;
 #endif
 #if QT_CONFIG(vulkan)
@@ -129,7 +129,7 @@ public:
 #endif
 };
 
-Q_QUICK_PRIVATE_EXPORT bool qsg_safeguard_texture(QSGTexture *);
+Q_QUICK_EXPORT bool qsg_safeguard_texture(QSGTexture *);
 
 QT_END_NAMESPACE
 

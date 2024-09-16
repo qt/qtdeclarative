@@ -44,33 +44,18 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
     if (guard.setErrorFrom(itemsFound))
         return;
 
-    QQmlLSUtilsItemLocation &front = std::get<QList<QQmlLSUtilsItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front =
+            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
 
     auto usages = QQmlLSUtils::findUsagesOf(front.domItem);
 
     QQmlJS::Dom::DomItem files = front.domItem.top().field(QQmlJS::Dom::Fields::qmlFileWithPath);
 
-    QHash<QString, QString> codeCache;
-
-    for (const auto &usage : usages) {
+    // note: ignore usages in filenames here as that is not supported by the protocol.
+    for (const auto &usage : usages.usagesInFile()) {
         QLspSpecification::Location location;
-        location.uri = QUrl::fromLocalFile(usage.filename).toEncoded();
-
-        auto cacheEntry = codeCache.find(usage.filename);
-        if (cacheEntry == codeCache.end()) {
-            auto file = files.key(usage.filename)
-                                .field(QQmlJS::Dom::Fields::currentItem)
-                                .ownerAs<QQmlJS::Dom::QmlFile>();
-            if (!file) {
-                qDebug() << "File" << usage.filename << "not found in DOM! Available files are"
-                         << files.keys();
-                continue;
-            }
-            cacheEntry = codeCache.insert(usage.filename, file->code());
-        }
-
-        location.range =
-                QQmlLSUtils::qmlLocationToLspLocation(cacheEntry.value(), usage.sourceLocation);
+        location.uri = QUrl::fromLocalFile(usage.filename()).toEncoded();
+        location.range = QQmlLSUtils::qmlLocationToLspLocation(usage);
 
         results.append(location);
     }

@@ -14,17 +14,20 @@
 //
 // We mean it.
 
-#include <private/qtqmlcompilerexports_p.h>
+#include <qtqmlcompilerexports.h>
 
 #include "qqmljslogger_p.h"
 #include "qqmljsregistercontent_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 #include "qqmljsscope_p.h"
 #include "qqmljsmetatypes_p.h"
 
+#include <QtCore/qdir.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qstringview.h>
+
 #include <QtQml/private/qqmlsignalnames_p.h>
 #include <private/qduplicatetracker_p.h>
 
@@ -65,7 +68,7 @@ static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
 
 class QQmlJSTypeResolver;
 class QQmlJSScopesById;
-struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
+struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
 {
     /*! \internal
         Returns escaped version of \a s. This function is mostly useful for code
@@ -74,7 +77,10 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
     static QString escapeString(QString s)
     {
         using namespace Qt::StringLiterals;
-        return s.replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s).replace(u'\n', u"\\n"_s);
+        return s.replace('\\'_L1, "\\\\"_L1)
+                .replace('"'_L1, "\\\""_L1)
+                .replace('\n'_L1, "\\n"_L1)
+                .replace('?'_L1, "\\?"_L1);
     }
 
     /*! \internal
@@ -197,7 +203,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
                                       const AliasResolutionVisitor &visitor);
 
     template<typename QQmlJSScopePtr, typename Action>
-    static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
+    static bool searchBaseAndExtensionTypes(const QQmlJSScopePtr &type, const Action &check)
     {
         if (!type)
             return false;
@@ -361,19 +367,40 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 
     static std::variant<QString, QQmlJS::DiagnosticMessage>
     sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath);
+
+    template <typename Container>
+    static void deduplicate(Container &container)
+    {
+        std::sort(container.begin(), container.end());
+        auto erase = std::unique(container.begin(), container.end());
+        container.erase(erase, container.end());
+    }
+
+    static QStringList cleanPaths(QStringList &&paths)
+    {
+        for (QString &path : paths)
+            path = QDir::cleanPath(path);
+        return std::move(paths);
+    }
+
+    static QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders);
+    static QString qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
+                                              const QString &pathInBuildFolder);
+    static QString qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
+                                              const QString &pathInBuildFolder);
 };
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canStrictlyCompareWithVar(
-        const QQmlJSTypeResolver *typeResolver, const QQmlJSRegisterContent &lhsContent,
-        const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQObject(const QQmlJSTypeResolver *typeResolver,
-                                                        const QQmlJSRegisterContent &lhsContent,
-                                                        const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_EXPORT canCompareWithQObject(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
-bool Q_QMLCOMPILER_PRIVATE_EXPORT canCompareWithQUrl(const QQmlJSTypeResolver *typeResolver,
-                                                     const QQmlJSRegisterContent &lhsContent,
-                                                     const QQmlJSRegisterContent &rhsContent);
+bool Q_QMLCOMPILER_EXPORT canCompareWithQUrl(
+        const QQmlJSTypeResolver *typeResolver, const QQmlJSScope::ConstPtr &lhsType,
+        const QQmlJSScope::ConstPtr &rhsType);
 
 QT_END_NAMESPACE
 

@@ -11,7 +11,7 @@ T.DialogButtonBox {
                             (control.count === 1 ? implicitContentWidth * 2 : implicitContentWidth) + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
-    contentWidth: (contentItem as ListView).contentWidth // QTBUG-111283 blocks optional chaining + nullish coalescing
+    contentWidth: (contentItem as ListView)?.contentWidth
 
     spacing: 1
     padding: 12

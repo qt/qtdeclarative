@@ -25,7 +25,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlProxyMetaObject : public QDynamicMetaObjectData
+class Q_QML_EXPORT QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
     struct ProxyData {

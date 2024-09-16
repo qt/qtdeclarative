@@ -23,8 +23,8 @@
 
 #if !QT_CONFIG(qml_debug)
 
-#define Q_V4_PROFILE_ALLOC(engine, size, type) (!engine)
-#define Q_V4_PROFILE_DEALLOC(engine, size, type) (!engine)
+#define Q_V4_PROFILE_ALLOC(engine, size, type) Q_UNUSED(engine)
+#define Q_V4_PROFILE_DEALLOC(engine, size, type) Q_UNUSED(engine)
 
 QT_BEGIN_NAMESPACE
 

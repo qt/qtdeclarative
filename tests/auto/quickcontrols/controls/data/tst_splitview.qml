@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtCore
 import QtQuick
@@ -24,9 +24,9 @@ TestCase {
     }
 
     function findHandles(splitView) {
-        var handles = []
-        for (var i = 0; i < splitView.children.length; ++i) {
-            var child = splitView.children[i]
+        let handles = []
+        for (let i = 0; i < splitView.children.length; ++i) {
+            let child = splitView.children[i]
             if (child.objectName.toLowerCase().indexOf("handle") !== -1)
                 handles.push(child)
         }
@@ -42,14 +42,14 @@ TestCase {
         compare(control.count, Math.floor(expectedGeometries.length / 2) + 1,
             "Mismatch in actual vs expected number of split items" + context)
 
-        var handles = findHandles(control)
+        let handles = findHandles(control)
         compare(handles.length, Math.floor(expectedGeometries.length / 2),
             "Mismatch in actual vs expected number of handle items" + context)
 
-        for (var i = 0, splitItemIndex = 0, handleItemIndex = 0; i < expectedGeometries.length; ++i) {
-            var item = null
-            var itemType = ""
-            var typeSpecificIndex = -1
+        for (let i = 0, splitItemIndex = 0, handleItemIndex = 0; i < expectedGeometries.length; ++i) {
+            let item = null
+            let itemType = ""
+            let typeSpecificIndex = -1
             if (i % 2 == 0) {
                 item = control.itemAt(splitItemIndex)
                 itemType = "split item"
@@ -64,7 +64,7 @@ TestCase {
 
             verify(item, itemType + " at index " + typeSpecificIndex + " should not be null" + context)
 
-            var expectedGeometry = expectedGeometries[i]
+            let expectedGeometry = expectedGeometries[i]
             if (expectedGeometry.hasOwnProperty("hidden")) {
                 // It's geometry doesn't matter because it's hidden.
                 verify(!item.visible, itemType + " at index " + typeSpecificIndex + " should be hidden" + context)
@@ -74,19 +74,18 @@ TestCase {
             // Note that the indices mentioned here account for handles; they do not
             // match the indices reported by QQuickSplitView's logging categories.
             compare(item.x, expectedGeometry.x, "Mismatch in actual vs expected x value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.y, expectedGeometry.y, "Mismatch in actual vs expected y value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.width, expectedGeometry.width, "Mismatch in actual vs expected width value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
             compare(item.height, expectedGeometry.height, "Mismatch in actual vs expected height value of "
-                + itemType + " at index " + typeSpecificIndex + context)
+                + itemType + " " + item + " at index " + typeSpecificIndex + context)
         }
     }
 
     property real defaultHorizontalHandleWidth: 10
     property real defaultVerticalHandleHeight: 10
-
 
     Component {
         id: signalSpyComponent
@@ -96,14 +95,14 @@ TestCase {
     Component {
         id: handleComponent
         Rectangle {
-            objectName: "handle"
+            objectName: `handle ${x},${y} ${width}x${height} visible: ${visible}`
             implicitWidth: defaultHorizontalHandleWidth
             implicitHeight: defaultVerticalHandleHeight
             color: "#444"
 
             Text {
-                objectName: "handleText_" + text
-                text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
+                objectName: text + "_Text"
+                text: parent.objectName
                 color: "white"
                 anchors.centerIn: parent
                 rotation: 90
@@ -132,18 +131,20 @@ TestCase {
         Rectangle {}
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(defaultSplitView, testCase)
         verify(control)
     }
 
     function test_addItemsAfterCompletion() {
-        var control = createTemporaryObject(splitViewComponent, testCase)
+        let control = createTemporaryObject(splitViewComponent, testCase)
         verify(control)
 
-        var item0 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "salmon" })
+        let item0 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "salmon" })
         verify(item0)
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
@@ -153,7 +154,7 @@ TestCase {
         compare(item0.width, testCase.width)
         compare(item0.height, testCase.height)
 
-        var item1 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "steelblue" })
+        let item1 = rectangleComponent.createObject(control, { implicitWidth: 25, color: "steelblue" })
         verify(item1)
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
@@ -162,8 +163,8 @@ TestCase {
         compare(item0.y, 0)
         compare(item0.width, item0.implicitWidth)
         compare(item0.height, testCase.height)
-        var handles = findHandles(control)
-        var handle0 = handles[0]
+        let handles = findHandles(control)
+        let handle0 = handles[0]
         compare(handle0.x, item0.implicitWidth)
         compare(handle0.y, 0)
         compare(handle0.width, defaultHorizontalHandleWidth)
@@ -175,10 +176,10 @@ TestCase {
     }
 
     function test_addItemsWithNoSizeAfterCompletion() {
-        var control = createTemporaryObject(splitViewComponent, testCase)
+        let control = createTemporaryObject(splitViewComponent, testCase)
         verify(control)
 
-        var item0 = rectangleComponent.createObject(control, { color: "salmon" })
+        let item0 = rectangleComponent.createObject(control, { color: "salmon" })
         verify(item0)
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
@@ -187,7 +188,7 @@ TestCase {
         compare(item0.width, testCase.width)
         compare(item0.height, testCase.height)
 
-        var item1 = rectangleComponent.createObject(control, { color: "steelblue" })
+        let item1 = rectangleComponent.createObject(control, { color: "steelblue" })
         verify(item1)
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
@@ -195,8 +196,8 @@ TestCase {
         compare(item0.y, 0)
         compare(item0.width, 0)
         compare(item0.height, testCase.height)
-        var handles = findHandles(control)
-        var handle0 = handles[0]
+        let handles = findHandles(control)
+        let handle0 = handles[0]
         compare(handle0.x, 0)
         compare(handle0.y, 0)
         compare(handle0.width, defaultHorizontalHandleWidth)
@@ -230,35 +231,35 @@ TestCase {
     }
 
     function test_changeAttachedPropertiesAfterCompletion() {
-        var control = createTemporaryObject(threeZeroSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeZeroSizedItemsComponent, testCase)
         verify(control)
 
-        var item0 = control.itemAt(0)
+        let item0 = control.itemAt(0)
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, 0)
         compare(item0.height, testCase.height)
 
-        var handles = findHandles(control)
-        var handle0 = handles[0]
+        let handles = findHandles(control)
+        let handle0 = handles[0]
         compare(handle0.x, 0)
         compare(handle0.y, 0)
         compare(handle0.width, defaultHorizontalHandleWidth)
         compare(handle0.height, testCase.height)
 
-        var item1 = control.itemAt(1)
+        let item1 = control.itemAt(1)
         compare(item1.x, defaultHorizontalHandleWidth)
         compare(item1.y, 0)
         compare(item1.width, 0)
         compare(item1.height, testCase.height)
 
-        var handle1 = handles[1]
+        let handle1 = handles[1]
         compare(handle1.x, defaultHorizontalHandleWidth)
         compare(handle1.y, 0)
         compare(handle1.width, defaultHorizontalHandleWidth)
         compare(handle1.height, testCase.height)
 
-        var item2 = control.itemAt(2)
+        let item2 = control.itemAt(2)
         compare(item2.x, defaultHorizontalHandleWidth * 2)
         compare(item2.y, 0)
         compare(item2.width, testCase.width - item2.x)
@@ -396,19 +397,19 @@ TestCase {
     }
 
     function test_useAttachedPropertiesIncorrectly_data() {
-        var properties = [ "fillWidth", "fillHeight", "minimumWidth", "minimumHeight",
+        let properties = [ "fillWidth", "fillHeight", "minimumWidth", "minimumHeight",
             "preferredWidth", "preferredHeight",  "maximumWidth", "maximumHeight" ]
 
-        var data = []
+        let data = []
 
-        for (var i = 0; i < properties.length; ++i) {
-            var property = properties[i]
+        for (let i = 0; i < properties.length; ++i) {
+            let property = properties[i]
             data.push({ tag: "Item," + property, component: itemComponent, property: property,
                 expectedWarning: /.*SplitView: attached properties must be accessed through a direct child of SplitView/ })
         }
 
-        for (i = 0; i < properties.length; ++i) {
-            property = properties[i]
+        for (let i = 0; i < properties.length; ++i) {
+            let property = properties[i]
             data.push({ tag: "QtObject," + property, component: objectComponent, property: property,
                 expectedWarning: /.*SplitView: attached properties can only be used on Items/ })
         }
@@ -418,7 +419,7 @@ TestCase {
 
     function test_useAttachedPropertiesIncorrectly(data) {
         // The object (whatever it may be) is not managed by a SplitView.
-        var object = createTemporaryObject(data.component, testCase, { objectName: data.tag })
+        let object = createTemporaryObject(data.component, testCase, { objectName: data.tag })
         verify(object)
 
         ignoreWarning(data.expectedWarning)
@@ -427,9 +428,9 @@ TestCase {
     }
 
     function test_sizes_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
-        var data = [
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
+        let data = [
             {
                 // When the combined size of items is too large, make them fit.
                 tag: "fillItemOnLeft",
@@ -488,9 +489,9 @@ TestCase {
     }
 
     function test_sizes(data) {
-        var component = Qt.createComponent("splitview/" + data.tag + ".qml")
+        let component = Qt.createComponent("splitview/" + data.tag + ".qml")
         compare(component.status, Component.Ready, component.errorString());
-        var control = createTemporaryObject(component, testCase, { "handle": handleComponent })
+        let control = createTemporaryObject(component, testCase, { "handle": handleComponent })
         verify(control)
 
         compareSizes(control, data.expectedGeometries)
@@ -525,9 +526,9 @@ TestCase {
     }
 
     function test_resetAttachedProperties_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
-        var data = [
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
+        let data = [
             {
                 tag: "resetMinimumWidth",
                 orientation: Qt.Horizontal,
@@ -695,11 +696,11 @@ TestCase {
     }
 
     function test_resetAttachedProperties(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
-        var splitItem = control.itemAt(data.splitItemIndex)
+        let splitItem = control.itemAt(data.splitItemIndex)
         splitItem.SplitView[data.propertyName] = data.propertyValue
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
@@ -712,35 +713,35 @@ TestCase {
     }
 
     function test_orientation() {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
 
-        var item0 = control.itemAt(0)
+        let item0 = control.itemAt(0)
         compare(item0.x, 0)
         compare(item0.y, 0)
         compare(item0.width, item0.implicitWidth)
         compare(item0.height, testCase.height)
 
-        var handles = findHandles(control)
-        var handle0 = handles[0]
+        let handles = findHandles(control)
+        let handle0 = handles[0]
         compare(handle0.x, item0.implicitWidth)
         compare(handle0.y, 0)
         compare(handle0.width, defaultHorizontalHandleWidth)
         compare(handle0.height, testCase.height)
 
-        var item1 = control.itemAt(1)
+        let item1 = control.itemAt(1)
         compare(item1.x, item0.width + defaultHorizontalHandleWidth)
         compare(item1.y, 0)
         compare(item1.width, item1.implicitWidth)
         compare(item1.height, testCase.height)
 
-        var handle1 = handles[1]
+        let handle1 = handles[1]
         compare(handle1.x, item1.x + item1.width)
         compare(handle1.y, 0)
         compare(handle1.width, defaultHorizontalHandleWidth)
         compare(handle1.height, testCase.height)
 
-        var item2 = control.itemAt(2)
+        let item2 = control.itemAt(2)
         compare(item2.x, item0.width + item1.width + defaultHorizontalHandleWidth * 2)
         compare(item2.y, 0)
         compare(item2.width, testCase.width - item2.x)
@@ -944,9 +945,9 @@ TestCase {
     }
 
     function test_dragHandle_data() {
-        var splitViewWidth = testCase.width - splitViewMargins * 2
-        var splitViewHeight = testCase.height - splitViewMargins * 2
-        var data = [
+        let splitViewWidth = testCase.width - splitViewMargins * 2
+        let splitViewHeight = testCase.height - splitViewMargins * 2
+        let data = [
             {
                 tag: "fillThirdItemAndDragFirstHandlePastRightSide",
                 component: threeSizedItemsComponent,
@@ -1261,7 +1262,7 @@ TestCase {
     }
 
     function test_dragHandle(data) {
-        var control = createTemporaryObject(data.component, testCase)
+        let control = createTemporaryObject(data.component, testCase)
         verify(control)
 
         control.orientation = data.orientation
@@ -1269,7 +1270,7 @@ TestCase {
         // Ensure that there is space to drag outside of the SplitView.
         control.anchors.margins = splitViewMargins
 
-        var fillItem = control.itemAt(data.fillIndex)
+        let fillItem = control.itemAt(data.fillIndex)
         if (control.orientation === Qt.Horizontal)
             fillItem.SplitView.fillWidth = true
         else
@@ -1281,13 +1282,13 @@ TestCase {
         compareSizes(control, data.expectedGeometriesBeforeDrag, "before drag")
 
         // Drag the handle.
-        var handles = findHandles(control)
-        var targetHandle = handles[data.handleIndex]
+        let handles = findHandles(control)
+        let targetHandle = handles[data.handleIndex]
         verify(targetHandle.visible)
         mousePress(targetHandle)
         verify(control.resizing)
         // newHandlePos is in scene coordinates, so map it to coordinates local to the handle.
-        var localPos = testCase.mapToItem(targetHandle, data.newHandlePos.x, data.newHandlePos.y)
+        let localPos = testCase.mapToItem(targetHandle, data.newHandlePos.x, data.newHandlePos.y)
         mouseMove(targetHandle, localPos.x - targetHandle.width / 2, localPos.y - targetHandle.height / 2)
         verify(control.resizing)
         compareSizes(control, data.expectedGeometriesAfterDrag, "after drag move")
@@ -1299,10 +1300,10 @@ TestCase {
     }
 
     function test_splitViewGeometryChanges_data() {
-        var defaultSplitViewWidth = testCase.width
-        var defaultSplitViewHeight = testCase.height
+        let defaultSplitViewWidth = testCase.width
+        let defaultSplitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "growWidth",
                 orientation: Qt.Horizontal,
@@ -1366,7 +1367,7 @@ TestCase {
     }
 
     function test_splitViewGeometryChanges(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "handle": handleComponent, "anchors.fill": undefined, "orientation": data.orientation })
         verify(control)
 
@@ -1386,10 +1387,10 @@ TestCase {
     }
 
     function test_splitItemImplicitSizeChanges_data() {
-        var defaultSplitViewWidth = testCase.width
-        var defaultSplitViewHeight = testCase.height
+        let defaultSplitViewWidth = testCase.width
+        let defaultSplitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "growImplicitWidth",
                 orientation: Qt.Horizontal,
@@ -1424,11 +1425,11 @@ TestCase {
 
     // Tests that implicitWidth/Height changes in items are noticed by SplitView.
     function test_splitItemImplicitSizeChanges(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "handle": handleComponent, "orientation": data.orientation })
         verify(control)
 
-        var firstItem = control.itemAt(0)
+        let firstItem = control.itemAt(0)
 
         if (data.hasOwnProperty("splitItemImplicitWidth"))
             firstItem.implicitWidth = data.splitItemImplicitWidth
@@ -1462,10 +1463,10 @@ TestCase {
     }
 
     function test_handleChanges_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "growHandleWidth",
                 orientation: Qt.Horizontal,
@@ -1525,7 +1526,7 @@ TestCase {
     }
 
     function test_handleChanges(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
@@ -1536,10 +1537,10 @@ TestCase {
     }
 
     function test_insertRemoveItems_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "insertItemAtHorizontalEnd",
                 orientation: Qt.Horizontal,
@@ -1622,17 +1623,17 @@ TestCase {
     }
 
     function test_insertRemoveItems(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
         if (data.hasOwnProperty("removeItemAtIndex")) {
-            var itemToRemove = control.itemAt(data.removeItemAtIndex)
+            let itemToRemove = control.itemAt(data.removeItemAtIndex)
             verify(itemToRemove)
 
             control.removeItem(itemToRemove)
         } else if (data.hasOwnProperty("insertItemAtIndex")) {
-            var itemToAdd = smallRectComponent.createObject(control)
+            let itemToAdd = smallRectComponent.createObject(control)
             control.insertItem(data.insertItemAtIndex, itemToAdd)
         }
 
@@ -1642,19 +1643,19 @@ TestCase {
     }
 
     function test_removeAllItems() {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
 
         while (control.count > 0)
-            var itemToRemove = control.removeItem(control.itemAt(0))
+            control.removeItem(control.itemAt(0))
         // Shouldn't crash.
     }
 
     function test_hideItems_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "hideItemAtHorizontalEnd",
                 orientation: Qt.Horizontal,
@@ -1725,12 +1726,12 @@ TestCase {
     }
 
     function test_hideItems(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
-        for (var i = 0; i < data.hideIndices.length; ++i) {
-            var itemToHide = control.itemAt(data.hideIndices[i])
+        for (let i = 0; i < data.hideIndices.length; ++i) {
+            let itemToHide = control.itemAt(data.hideIndices[i])
             verify(itemToHide)
             itemToHide.visible = false
         }
@@ -1741,10 +1742,10 @@ TestCase {
     }
 
     function test_hideAndShowItems_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "hideLastTwoHorizontalItems",
                 orientation: Qt.Horizontal,
@@ -1774,12 +1775,12 @@ TestCase {
     }
 
     function test_hideAndShowItems(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
-        for (var i = 0; i < data.hideIndices.length; ++i) {
-            var itemToHide = control.itemAt(data.hideIndices[i])
+        for (let i = 0; i < data.hideIndices.length; ++i) {
+            let itemToHide = control.itemAt(data.hideIndices[i])
             verify(itemToHide)
             itemToHide.visible = false
         }
@@ -1787,8 +1788,8 @@ TestCase {
         verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterHiding, "after hiding")
 
-        for (i = 0; i < data.showIndices.length; ++i) {
-            var itemToShow = control.itemAt(data.showIndices[i])
+        for (let i = 0; i < data.showIndices.length; ++i) {
+            let itemToShow = control.itemAt(data.showIndices[i])
             verify(itemToShow)
             itemToShow.visible = true
         }
@@ -1798,10 +1799,10 @@ TestCase {
     }
 
     function test_moveHiddenItems_data() {
-        var splitViewWidth = testCase.width
-        var splitViewHeight = testCase.height
+        let splitViewWidth = testCase.width
+        let splitViewHeight = testCase.height
 
-        var data = [
+        let data = [
             {
                 tag: "hideSecondItemAndMoveItToFirst",
                 orientation: Qt.Horizontal,
@@ -1837,12 +1838,12 @@ TestCase {
     }
 
     function test_moveHiddenItems(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase,
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase,
             { "orientation": data.orientation })
         verify(control)
 
-        for (var i = 0; i < data.hideIndices.length; ++i) {
-            var itemToHide = control.itemAt(data.hideIndices[i])
+        for (let i = 0; i < data.hideIndices.length; ++i) {
+            let itemToHide = control.itemAt(data.hideIndices[i])
             verify(itemToHide)
             itemToHide.visible = false
         }
@@ -1852,8 +1853,8 @@ TestCase {
         verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesAfterMoving, "after moving")
 
-        for (i = 0; i < data.showIndices.length; ++i) {
-            var itemToShow = control.itemAt(data.showIndices[i])
+        for (let i = 0; i < data.showIndices.length; ++i) {
+            let itemToShow = control.itemAt(data.showIndices[i])
             verify(itemToShow)
             itemToShow.visible = true
         }
@@ -1872,10 +1873,10 @@ TestCase {
     }
 
     function test_draggingHandleInFlickable() {
-        var flickable = createTemporaryObject(flickableComponent, testCase)
+        let flickable = createTemporaryObject(flickableComponent, testCase)
         verify(flickable)
 
-        var control = threeSizedItemsComponent.createObject(flickable.contentItem)
+        let control = threeSizedItemsComponent.createObject(flickable.contentItem)
         verify(control)
 
         control.anchors.fill = undefined
@@ -1886,19 +1887,19 @@ TestCase {
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
 
-        var contentXSpy = signalSpyComponent.createObject(flickable,
+        let contentXSpy = signalSpyComponent.createObject(flickable,
             { target: flickable, signalName: "contentXChanged" })
         verify(contentXSpy.valid)
-        var contentYSpy = signalSpyComponent.createObject(flickable,
+        let contentYSpy = signalSpyComponent.createObject(flickable,
             { target: flickable, signalName: "contentYChanged" })
         verify(contentYSpy.valid)
 
         // Drag the first handle to the right;
         // the flickable's contentX and contentY shouldn't change.
-        var firstItem = control.itemAt(0)
-        var firstItemOriginalWidth = firstItem.width
-        var handles = findHandles(control)
-        var firstHandle = handles[0]
+        let firstItem = control.itemAt(0)
+        let firstItemOriginalWidth = firstItem.width
+        let handles = findHandles(control)
+        let firstHandle = handles[0]
         // Add some vertical movement in there as well.
         mouseDrag(firstHandle, firstHandle.width / 2, firstHandle.height / 2, 100, 50)
         compare(contentXSpy.count, 0)
@@ -1909,7 +1910,7 @@ TestCase {
         control.orientation = Qt.Vertical
         control.width = control.parent.width - 100
         control.height = 400
-        var firstItemOriginalHeight = firstItem.height
+        let firstItemOriginalHeight = firstItem.height
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
 
@@ -2354,14 +2355,14 @@ TestCase {
         if ((Qt.platform.pluginName === "offscreen") || (Qt.platform.pluginName === "minimal"))
             skip("Mouse hovering not functional on offscreen/minimal platforms")
 
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
         control.anchors.margins = 50
 
-        var handles = findHandles(control)
-        var firstHandle = handles[0]
+        let handles = findHandles(control)
+        let firstHandle = handles[0]
 
-        var handleCenter = control.mapFromItem(firstHandle, firstHandle.width / 2, firstHandle.height / 2)
+        let handleCenter = control.mapFromItem(firstHandle, firstHandle.width / 2, firstHandle.height / 2)
         // Test fails if we don't do two moves for some reason...
         mouseMove(control, handleCenter.x, handleCenter.y)
         mouseMove(control, handleCenter.x, handleCenter.y)
@@ -2386,15 +2387,15 @@ TestCase {
         if ((Qt.platform.pluginName === "offscreen") || (Qt.platform.pluginName === "minimal"))
             skip("Mouse hovering not functional on offscreen/minimal platforms")
 
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
         control.anchors.margins = 50
 
-        var handles = findHandles(control)
-        var firstHandle = handles[0]
+        let handles = findHandles(control)
+        let firstHandle = handles[0]
 
         // First, ensure that the handle is hovered + pressed.
-        var handleCenter = control.mapFromItem(firstHandle, firstHandle.width / 2, firstHandle.height / 2)
+        let handleCenter = control.mapFromItem(firstHandle, firstHandle.width / 2, firstHandle.height / 2)
         // Test fails if we don't do two moves for some reason...
         mouseMove(control, handleCenter.x, handleCenter.y)
         mouseMove(control, handleCenter.x, handleCenter.y)
@@ -2412,8 +2413,8 @@ TestCase {
         compare(handles.length, 1)
 
         // No handles should be hovered/pressed.
-        for (var i = 0; i < handles.length; ++i) {
-            var handle = handles[i]
+        for (let i = 0; i < handles.length; ++i) {
+            let handle = handles[i]
             verify(!handle.SplitHandle.hovered, "handle at index " + i + " should not be hovered")
             verify(!handle.SplitHandle.pressed, "handle at index " + i + " should not be hovered")
         }
@@ -2436,16 +2437,16 @@ TestCase {
     }
 
     function test_saveAndRestoreState(data) {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase, { orientation: data.orientation })
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase, { orientation: data.orientation })
         verify(control)
         compare(control.orientation, data.orientation)
 
-        var lastItem = control.itemAt(2)
+        let lastItem = control.itemAt(2)
         verify(lastItem)
         lastItem.SplitView[data.propertyName] = data.propertyValue
 
         // Save the state.
-        var settings = createTemporaryObject(settingsComponent, testCase)
+        let settings = createTemporaryObject(settingsComponent, testCase)
         verify(settings)
         settings.setValue("splitView", control.saveState())
 
@@ -2464,11 +2465,11 @@ TestCase {
     }
 
     function test_changePreferredSizeDuringLayout() {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
 
-        var firstItem = control.itemAt(0)
-        var secondItem = control.itemAt(1)
+        let firstItem = control.itemAt(0)
+        let secondItem = control.itemAt(1)
         secondItem.widthChanged.connect(function() {
             if (secondItem.width < 10)
                 firstItem.SplitView.preferredWidth = 50
@@ -2509,22 +2510,22 @@ TestCase {
     // m_ignoreNextDelayedLayoutRequest doesn't interfere with any action from
     // the user that results in a delayed layout.
     function test_changePreferredSizeDuringLayoutWhileDraggingHandle() {
-        var control = createTemporaryObject(threeSizedItemsComponent, testCase)
+        let control = createTemporaryObject(threeSizedItemsComponent, testCase)
         verify(control)
 
-        var firstItem = control.itemAt(0)
-        var secondItem = control.itemAt(1)
+        let firstItem = control.itemAt(0)
+        let secondItem = control.itemAt(1)
         firstItem.widthChanged.connect(function() {
             if (firstItem.width === 0)
                 secondItem.SplitView.preferredWidth = 50
         })
 
         // Start dragging the handle.
-        var handles = findHandles(control)
-        var targetHandle = handles[0]
+        let handles = findHandles(control)
+        let targetHandle = handles[0]
         mousePress(targetHandle)
         verify(control.resizing)
-        var localPos = testCase.mapToItem(targetHandle, 15, testCase.height / 2)
+        let localPos = testCase.mapToItem(targetHandle, 15, testCase.height / 2)
 
         // Move the handle to the very left, so that the item's width becomes zero.
         mouseMove(targetHandle, -100, targetHandle.height / 2)
@@ -2549,7 +2550,7 @@ TestCase {
 
     // QTBUG-79270
     function test_hideSplitViewWithOneItem() {
-        var control = createTemporaryObject(oneItemComponent, testCase)
+        let control = createTemporaryObject(oneItemComponent, testCase)
         verify(control)
         // Shouldn't be an assertion failure.
         control.visible = false
@@ -2558,7 +2559,7 @@ TestCase {
     // QTBUG-79302: ensure that the Repeater's items are actually generated.
     // test_dragHandle:repeater tests dragging behavior with a Repeater.
     function test_repeater(data) {
-        var control = createTemporaryObject(repeaterSplitViewComponent, testCase)
+        let control = createTemporaryObject(repeaterSplitViewComponent, testCase)
         verify(control)
         compare(control.repeater.count, 3)
         compare(control.contentChildren.length, 3)
@@ -2588,15 +2589,15 @@ TestCase {
         if (Qt.platform.pluginName === "offscreen" || Qt.platform.pluginName === "minimal")
             skip("Mouse hovering not functional on offscreen/minimal platforms")
 
-        var control = createTemporaryObject(hoverableChildrenSplitViewComponent, testCase)
+        let control = createTemporaryObject(hoverableChildrenSplitViewComponent, testCase)
         verify(control)
 
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
 
         // Move the mouse over the handle.
-        var handles = findHandles(control)
-        var targetHandle = handles[0]
+        let handles = findHandles(control)
+        let targetHandle = handles[0]
         // Test fails if we don't do two moves for some reason... QTBUG-94968
         mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
         mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
@@ -2675,5 +2676,89 @@ TestCase {
         touch.release(0, control, handleCenter.x + 100, handleCenter.y).commit()
         verify(!firstHandle.SplitHandle.pressed)
         compare(firstItem.width, 125)
+    }
+
+    Component {
+        id: hiddenItemComponent
+
+        SplitView {
+            anchors.fill: parent
+            handle: handleComponent
+            orientation: Qt.Horizontal
+
+            component SplitItem: Rectangle {
+                objectName: labelText
+
+                SplitView.preferredWidth: 50
+                SplitView.fillHeight: true
+
+                required property string labelText
+
+                Text {
+                    anchors.fill: parent
+                    wrapMode: Text.Wrap
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                    text: `${parent.labelText} - width: ${parent.width.toFixed(2)}`
+                }
+            }
+
+            SplitItem {
+                color: "blue"
+                labelText: "View 1"
+            }
+            SplitItem {
+                color: "red"
+                labelText: "View 2 (hidden)"
+                visible: false
+            }
+            SplitItem {
+                color: "purple"
+                labelText: "View 3"
+            }
+            SplitItem {
+                color: "yellow"
+                labelText: "View 4"
+            }
+        }
+    }
+
+    function test_resizeHiddenItem() {
+        let control = createTemporaryObject(hiddenItemComponent, testCase)
+        verify(control)
+
+        const standardItemWidth = 50
+        let expectedGeometries = [
+            // First item.
+            { x: 0, y: 0, width: standardItemWidth, height: control.height },
+            // First handle.
+            { x: standardItemWidth, y: 0, width: defaultHorizontalHandleWidth, height: control.height },
+            // The second item and its handle are hidden.
+            { hidden: true },
+            { hidden: true },
+            // Third item.
+            { x: standardItemWidth + defaultHorizontalHandleWidth, y: 0, width: standardItemWidth, height: control.height },
+            // Third handle.
+            { x: (standardItemWidth * 2) + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: control.height },
+            // Fourth item.
+            { x: (standardItemWidth * 2) + (defaultHorizontalHandleWidth * 2), y: 0,
+                width: control.width - (standardItemWidth * 2) - (defaultHorizontalHandleWidth * 2), height: control.height }
+        ]
+        compareSizes(control, expectedGeometries, "before dragging handle")
+
+        // Drag the third handle to the right.
+        let handles = findHandles(control)
+        let thirdHandle = handles[2]
+        // The third (index 4 here) item should get one pixel bigger, and the fourth one pixel smaller.
+        ++expectedGeometries[4].width
+        ++expectedGeometries[5].x // handle
+        ++expectedGeometries[6].x
+        --expectedGeometries[6].width
+        // Use individual events rather than mouseDrag because that will move it past the drag threshold,
+        // which we don't want, since we only want to move by 1 pixel.
+        mousePress(thirdHandle)
+        mouseMove(thirdHandle, thirdHandle.width / 2 + 1, thirdHandle.height / 2, 16)
+        mouseRelease(thirdHandle)
+        compareSizes(control, expectedGeometries, "after dragging handle")
     }
 }

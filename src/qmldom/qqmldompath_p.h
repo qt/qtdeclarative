@@ -74,7 +74,7 @@ public:
     bool hasSquareBrackets() const { return false; }
 
 protected:
-    void dump(Sink sink, const QString &name, bool hasSquareBrackets) const;
+    void dump(const Sink &sink, const QString &name, bool hasSquareBrackets) const;
 };
 
 class Empty final : public Base
@@ -83,7 +83,7 @@ public:
     Empty() = default;
     QString name() const { return QString(); }
     bool checkName(QStringView s) const { return s.isEmpty(); }
-    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
 };
 
 class Field final : public Base
@@ -94,7 +94,7 @@ public:
     QString name() const { return fieldName.toString(); }
     bool checkName(QStringView s) const { return s == fieldName; }
     QStringView stringView() const { return fieldName; }
-    void dump(Sink sink) const { sink(fieldName); }
+    void dump(const Sink &sink) const { sink(fieldName); }
 
     QStringView fieldName;
 };
@@ -107,7 +107,7 @@ public:
     QString name() const { return QString::number(indexValue); }
     bool checkName(QStringView s) const { return s == name(); }
     index_type index(index_type = -1) const { return indexValue; }
-    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
     bool hasSquareBrackets() const { return true; }
 
     index_type indexValue = -1;
@@ -117,11 +117,11 @@ class Key final : public Base
 {
 public:
     Key() = default;
-    Key(QString n) : keyValue(n) { }
+    Key(const QString &n) : keyValue(n) { }
     QString name() const { return keyValue; }
     bool checkName(QStringView s) const { return s == keyValue; }
     QStringView stringView() const { return keyValue; }
-    void dump(Sink sink) const {
+    void dump(const Sink &sink) const {
         sink(u"[");
         sinkEscaped(sink, keyValue);
         sink(u"]");
@@ -171,7 +171,7 @@ public:
         return s.startsWith(QChar::fromLatin1('$')) && s.mid(1) == contextName;
     }
     QStringView stringView() const { return contextName; }
-    void dump(Sink sink) const { sink(name()); }
+    void dump(const Sink &sink) const { sink(name()); }
 
     PathRoot contextKind = PathRoot::Other;
     QStringView contextName;
@@ -225,7 +225,7 @@ public:
         return s.startsWith(QChar::fromLatin1('@')) && s.mid(1) == contextName;
     }
     QStringView stringView() const { return contextName; }
-    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
 
     PathCurrent contextKind = PathCurrent::Other;
     QStringView contextName;
@@ -237,7 +237,7 @@ public:
     Any() = default;
     QString name() const { return QLatin1String("*"); }
     bool checkName(QStringView s) const { return s == u"*"; }
-    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
     bool hasSquareBrackets() const { return true; }
 };
 
@@ -245,12 +245,12 @@ class QMLDOM_EXPORT Filter final : public Base
 {
 public:
     Filter() = default;
-    Filter(std::function<bool(const DomItem &)> f,
+    Filter(const std::function<bool(const DomItem &)> &f,
            QStringView filterDescription = u"<native code filter>");
     QString name() const;
     bool checkName(QStringView s) const;
     QStringView stringView() const { return filterDescription; }
-    void dump(Sink sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
+    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
     bool hasSquareBrackets() const { return true; }
 
     std::function<bool(const DomItem &)> filterFunction;
@@ -288,7 +288,7 @@ public:
         return std::visit([defaultValue](auto &&d) { return d.index(defaultValue); }, m_data);
     }
 
-    void dump(Sink sink) const
+    void dump(const Sink &sink) const
     {
         return std::visit([sink](auto &&d) { return d.dump(sink); }, m_data);
     }
@@ -350,9 +350,13 @@ inline bool operator>=(const PathComponent& lhs, const PathComponent& rhs){ retu
 
 class PathData {
 public:
-    PathData(QStringList strData, QVector<PathComponent> components): strData(strData), components(components) {}
-    PathData(QStringList strData, QVector<PathComponent> components, std::shared_ptr<PathData> parent):
-        strData(strData), components(components), parent(parent) {}
+    PathData(const QStringList &strData, const QVector<PathComponent> &components)
+        : strData(strData), components(components)
+    {}
+    PathData(const QStringList &strData, const QVector<PathComponent> &components,
+             const std::shared_ptr<PathData> &parent)
+        : strData(strData), components(components), parent(parent)
+    {}
 
     QStringList strData;
     QVector<PathComponent> components;
@@ -398,6 +402,8 @@ QMLDOM_FIELD(canonicalPath);
 QMLDOM_FIELD(caseBlock);
 QMLDOM_FIELD(caseClause);
 QMLDOM_FIELD(caseClauses);
+QMLDOM_FIELD(catchBlock);
+QMLDOM_FIELD(catchParameter);
 QMLDOM_FIELD(children);
 QMLDOM_FIELD(classNames);
 QMLDOM_FIELD(code);
@@ -431,6 +437,8 @@ QMLDOM_FIELD(expressionType);
 QMLDOM_FIELD(extensionTypeName);
 QMLDOM_FIELD(fileLocationsTree);
 QMLDOM_FIELD(fileName);
+QMLDOM_FIELD(finallyBlock);
+QMLDOM_FIELD(regExpFlags);
 QMLDOM_FIELD(forStatement);
 QMLDOM_FIELD(fullRegion);
 QMLDOM_FIELD(get);
@@ -471,6 +479,7 @@ QMLDOM_FIELD(isValid);
 QMLDOM_FIELD(jsFileWithPath);
 QMLDOM_FIELD(kind);
 QMLDOM_FIELD(lastRevision);
+QMLDOM_FIELD(label);
 QMLDOM_FIELD(lastValidRevision);
 QMLDOM_FIELD(left);
 QMLDOM_FIELD(loadInfo);
@@ -488,11 +497,13 @@ QMLDOM_FIELD(minorVersion);
 QMLDOM_FIELD(moduleIndex);
 QMLDOM_FIELD(moduleIndexWithUri);
 QMLDOM_FIELD(moduleScope);
+QMLDOM_FIELD(moreCaseClauses);
 QMLDOM_FIELD(nAllLoadedCallbacks);
 QMLDOM_FIELD(nCallbacks);
 QMLDOM_FIELD(nLoaded);
 QMLDOM_FIELD(nNotdone);
 QMLDOM_FIELD(name);
+QMLDOM_FIELD(nameIdentifiers);
 QMLDOM_FIELD(newlinesBefore);
 QMLDOM_FIELD(nextComponent);
 QMLDOM_FIELD(nextScope);
@@ -505,6 +516,7 @@ QMLDOM_FIELD(parameters);
 QMLDOM_FIELD(parent);
 QMLDOM_FIELD(parentObject);
 QMLDOM_FIELD(path);
+QMLDOM_FIELD(regExpPattern);
 QMLDOM_FIELD(plugins);
 QMLDOM_FIELD(postCode);
 QMLDOM_FIELD(postCommentLocations);
@@ -529,7 +541,6 @@ QMLDOM_FIELD(qmldirWithPath);
 QMLDOM_FIELD(qmltypesFileWithPath);
 QMLDOM_FIELD(qmltypesFiles);
 QMLDOM_FIELD(qualifiedImports);
-QMLDOM_FIELD(queue);
 QMLDOM_FIELD(rawComment);
 QMLDOM_FIELD(read);
 QMLDOM_FIELD(referredObject);
@@ -545,6 +556,7 @@ QMLDOM_FIELD(rootComponent);
 QMLDOM_FIELD(scopeType);
 QMLDOM_FIELD(scriptElement);
 QMLDOM_FIELD(sources);
+QMLDOM_FIELD(statement);
 QMLDOM_FIELD(statements);
 QMLDOM_FIELD(status);
 QMLDOM_FIELD(stringValue);
@@ -555,9 +567,11 @@ QMLDOM_FIELD(symbol);
 QMLDOM_FIELD(symbols);
 QMLDOM_FIELD(target);
 QMLDOM_FIELD(targetPropertyName);
+QMLDOM_FIELD(templateLiteral);
 QMLDOM_FIELD(text);
 QMLDOM_FIELD(type);
 QMLDOM_FIELD(typeArgument);
+QMLDOM_FIELD(typeArgumentName);
 QMLDOM_FIELD(typeName);
 QMLDOM_FIELD(types);
 QMLDOM_FIELD(universe);
@@ -611,7 +625,7 @@ public:
     Path last() const;
     Source split() const;
 
-    void dump(Sink sink) const;
+    void dump(const Sink &sink) const;
     QString toString() const;
     Path dropFront(int n = 1) const;
     Path dropTail(int n = 1) const;
@@ -620,35 +634,35 @@ public:
     Path appendComponent(const PathEls::PathComponent &c);
 
     // # Path construction
-    static Path fromString(QString s, ErrorHandler errorHandler=nullptr);
-    static Path fromString(QStringView s, ErrorHandler errorHandler=nullptr);
+    static Path fromString(const QString &s, const ErrorHandler &errorHandler = nullptr);
+    static Path fromString(QStringView s, const ErrorHandler &errorHandler = nullptr);
     static Path Root(PathRoot r);
     static Path Root(QStringView s=u"");
-    static Path Root(QString s);
+    static Path Root(const QString &s);
     static Path Index(index_type i);
     static Path Field(QStringView s=u"");
-    static Path Field(QString s);
+    static Path Field(const QString &s);
     static Path Key(QStringView s=u"");
-    static Path Key(QString s);
+    static Path Key(const QString &s);
     static Path Current(PathCurrent c);
     static Path Current(QStringView s=u"");
-    static Path Current(QString s);
+    static Path Current(const QString &s);
     static Path Empty();
     // add
     Path empty() const;
-    Path field(QString name) const;
+    Path field(const QString &name) const;
     Path field(QStringView name) const;
-    Path key(QString name) const;
+    Path key(const QString &name) const;
     Path key(QStringView name) const;
     Path index(index_type i) const;
     Path any() const;
-    Path filter(std::function<bool(const DomItem &)>, QString) const;
-    Path filter(std::function<bool(const DomItem &)>,
+    Path filter(const std::function<bool(const DomItem &)> &, const QString &) const;
+    Path filter(const std::function<bool(const DomItem &)> &,
                 QStringView desc=u"<native code filter>") const;
     Path current(PathCurrent s) const;
-    Path current(QString s) const;
+    Path current(const QString &s) const;
     Path current(QStringView s=u"") const;
-    Path path(Path toAdd, bool avoidToAddAsBase = false) const;
+    Path path(const Path &toAdd, bool avoidToAddAsBase = false) const;
 
     Path expandFront() const;
     Path expandBack() const;
@@ -667,7 +681,8 @@ public:
 
 private:
     const Component &component(int i) const;
-    explicit Path(quint16 endOffset, quint16 length, std::shared_ptr<PathEls::PathData> data);
+    explicit Path(quint16 endOffset, quint16 length,
+                  const std::shared_ptr<PathEls::PathData> &data);
     friend class QQmlJS::Dom::PathEls::TestPaths;
     friend class FieldFilter;
     friend size_t qHash(const Path &, size_t);

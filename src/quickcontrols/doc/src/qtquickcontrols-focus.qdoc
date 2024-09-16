@@ -10,7 +10,7 @@
     Qt Quick Controls follows the standard
     \l {Keyboard Focus in Qt Quick}{Qt Quick focus system}, while also
     providing some added convenience. For example, the
-    \l {Control::}{focusPolicy} property can be used to control the ways in
+    \l [QML] {Item::}{focusPolicy} property can be used to control the ways in
     which a control receives focus.
 
     \section1 Focus Scope Controls

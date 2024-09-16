@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickDialogPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
+class Q_QUICKTEMPLATES2_EXPORT QQuickDialog : public QQuickPopup
 {
     Q_OBJECT
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
@@ -74,6 +74,8 @@ public:
     qreal implicitFooterWidth() const;
     qreal implicitFooterHeight() const;
 
+    void setOpacity(qreal opacity) override;
+
 public Q_SLOTS:
     virtual void accept();
     virtual void reject();
@@ -111,8 +113,31 @@ private:
     Q_DECLARE_PRIVATE(QQuickDialog)
 };
 
-QT_END_NAMESPACE
+// The dialog options are registered here because they conceptually belong to QPlatformDialogHelper
+// used as extension above. They may not be used QtQuick.Templates itself, but not registering them
+// here would cause every downstream module that uses them to produce a redundant registration.
 
-QML_DECLARE_TYPE(QQuickDialog)
+struct QColorDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QColorDialogOptions)
+};
+
+struct QFileDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QFileDialogOptions)
+};
+
+struct QFontDialogOptionsForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN_NAMESPACE(QFontDialogOptions)
+};
+
+QT_END_NAMESPACE
 
 #endif // QQUICKDIALOG_P_H

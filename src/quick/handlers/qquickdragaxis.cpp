@@ -7,7 +7,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcDragAxis, "qt.quick.pointer.dragaxis")
+Q_STATIC_LOGGING_CATEGORY(lcDragAxis, "qt.quick.pointer.dragaxis")
 
 QQuickDragAxis::QQuickDragAxis(QQuickPointerHandler *handler, const QString &propertyName, qreal initValue)
   : QObject(handler), m_accumulatedValue(initValue), m_propertyName(propertyName)

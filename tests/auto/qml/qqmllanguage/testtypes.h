@@ -1,11 +1,12 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #ifndef TESTTYPES_H
 #define TESTTYPES_H
 
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qdatetime.h>
+#include <QtCore/qjsonarray.h>
 #include <QtGui/qtransform.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qvector2d.h>
@@ -44,13 +45,86 @@ struct MyCustomVariantType
 };
 Q_DECLARE_METATYPE(MyCustomVariantType);
 
+
+class Group : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    Group(QObject *parent = nullptr) : QObject(parent) {}
+    int value = 0;
+};
+
+
+struct GroupGadget
+{
+    Q_GADGET
+
+    Q_PROPERTY(int value MEMBER value)
+
+public:
+    friend bool operator==(GroupGadget g1, GroupGadget g2) { return g1.value == g2.value; }
+    friend bool operator!=(GroupGadget g1, GroupGadget g2) { return !(g1 == g2); }
+    int value = 0;
+};
+
+struct FakeDynamicObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString value MEMBER value)
+
+public:
+    FakeDynamicObject() {}
+    QString value;
+};
+
+QT_BEGIN_NAMESPACE
+namespace QtPrivate {
+// don't do this at home – we override the meta-object which QMetaType collects for
+// FakeDynamicObject* properties
+template<>
+struct MetaObjectForType<FakeDynamicObject *, void>
+{
+    static const QMetaObject *metaObjectFunction(const QMetaTypeInterface *);
+};
+}
+QT_END_NAMESPACE
+
+class UnexposedBase : public QObject
+{
+    Q_OBJECT
+
+    Q_PROPERTY(Group *group MEMBER group)
+    Q_PROPERTY(GroupGadget groupGadget MEMBER groupGadget)
+    Q_PROPERTY(FakeDynamicObject *dynamic MEMBER dynamic)
+public:
+    UnexposedBase(QObject *parent = nullptr) : QObject(parent)
+    {
+        group = new Group(this);
+    }
+    Group *group;
+    GroupGadget groupGadget;
+    FakeDynamicObject *dynamic = nullptr;
+};
+
+class DerivedFromUnexposedBase : public UnexposedBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
+
 class MyAttachedObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
     Q_PROPERTY(int value2 READ value2 WRITE setValue2)
+    Q_PROPERTY(int length MEMBER length)
+    Q_PROPERTY(QString name MEMBER name)
 public:
-    MyAttachedObject(QObject *parent) : QObject(parent), m_value(0), m_value2(0) {}
+    MyAttachedObject(QObject *parent) : QObject(parent), m_value(0), m_value2(0), name("attached") {}
 
     int value() const { return m_value; }
     void setValue(int v) { if (m_value != v) { m_value = v; emit valueChanged(); } }
@@ -64,6 +138,8 @@ signals:
 private:
     int m_value;
     int m_value2;
+    int length = 10;
+    QString name;
 };
 
 class SomethingUnknown : public QObject {
@@ -237,6 +313,7 @@ class MyTypeObject : public QObject
     Q_PROPERTY(qreal realProperty READ realProperty WRITE setRealProperty NOTIFY realPropertyChanged)
     Q_PROPERTY(double doubleProperty READ doubleProperty WRITE setDoubleProperty NOTIFY doublePropertyChanged)
     Q_PROPERTY(float floatProperty READ floatProperty WRITE setFloatProperty NOTIFY floatPropertyChanged)
+    Q_PROPERTY(qsizetype qsizetypeProperty READ qsizetypeProperty WRITE setQsizetypeProperty NOTIFY qsizetypePropertyChanged)
     Q_PROPERTY(QColor colorProperty READ colorProperty WRITE setColorProperty NOTIFY colorPropertyChanged)
     Q_PROPERTY(QDate dateProperty READ dateProperty WRITE setDateProperty NOTIFY datePropertyChanged)
     Q_PROPERTY(QTime timeProperty READ timeProperty WRITE setTimeProperty NOTIFY timePropertyChanged)
@@ -388,6 +465,15 @@ public:
     void setIntProperty(const int &v) {
         intPropertyValue = v;
         emit intPropertyChanged();
+    }
+
+    qsizetype qsizetypePropertyValue;
+    qsizetype qsizetypeProperty() const {
+        return qsizetypePropertyValue;
+    }
+    void setQsizetypeProperty(const qsizetype &v) {
+        qsizetypePropertyValue = v;
+        emit qsizetypePropertyChanged();
     }
 
     qreal realPropertyValue;
@@ -606,6 +692,7 @@ signals:
     void byteArrayPropertyChanged();
     void uintPropertyChanged();
     void intPropertyChanged();
+    void qsizetypePropertyChanged();
     void realPropertyChanged();
     void doublePropertyChanged();
     void floatPropertyChanged();
@@ -1292,6 +1379,40 @@ public:
     Q_INVOKABLE bool byteArrayMethod_Overloaded(QVariant) {
         return false;
     }
+};
+
+class EnumPropsManyUnderlyingTypes : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    enum  si8 : qint8 { ResolvedValue = 1};
+    enum  ui8 : quint8 {};
+    enum si16 : qint16 {};
+    enum ui16 : quint16 {};
+    enum ui64 : qint64 {};
+    enum si64 : quint64 {};
+    Q_ENUM(si8)
+    Q_ENUM(ui8)
+    Q_ENUM(si16)
+    Q_ENUM(ui16)
+    Q_ENUM(si64)
+    Q_ENUM(ui64)
+
+
+    Q_PROPERTY(si8  si8prop MEMBER si8prop)
+    Q_PROPERTY(ui8  ui8prop MEMBER ui8prop)
+    Q_PROPERTY(si16 si16prop MEMBER si16prop)
+    Q_PROPERTY(ui16 ui16prop MEMBER ui16prop)
+    Q_PROPERTY(si64 si64prop MEMBER si64prop)
+    Q_PROPERTY(ui64 ui64prop MEMBER ui64prop)
+
+    si8 si8prop = si8(0);
+    ui8 ui8prop = ui8(0);
+    si16 si16prop = si16(0);
+    ui16 ui16prop = ui16(0);
+    si64 si64prop = si64(0);
+    ui64 ui64prop = ui64(0);
 };
 
 Q_DECLARE_METATYPE(MyEnum2Class::EnumB)
@@ -2464,6 +2585,35 @@ public:
     Q_INVOKABLE quint64 getQTrue() const { return 1; }
 };
 
+class EnumProviderSingleton : public QObject {
+    Q_OBJECT
+
+public:
+    enum class Expected {
+        Value = 42
+    };
+    Q_ENUM(Expected)
+
+    EnumProviderSingleton(QObject* parent = nullptr) : QObject(parent) {}
+};
+
+class EnumProviderSingletonQml {
+    Q_GADGET
+    QML_FOREIGN(EnumProviderSingleton)
+    QML_NAMED_ELEMENT(EnumProviderSingleton)
+    QML_SINGLETON
+
+public:
+    static EnumProviderSingleton* create(QQmlEngine*, QJSEngine*) {
+        return new EnumProviderSingleton();
+    }
+
+private:
+    EnumProviderSingletonQml() = default;
+};
+
+
+
 namespace TypedEnums {
 Q_NAMESPACE
 QML_ELEMENT
@@ -2768,6 +2918,144 @@ public:
     {
         return new CounterAttachedType(o);
     }
+};
+
+
+class Singleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    explicit Singleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
+    }
+};
+
+class NonSingleton: public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(EnumType enumProperty READ enumProperty CONSTANT)
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_ELEMENT
+public:
+    explicit NonSingleton(QObject* parent = nullptr) : QObject(parent) {}
+    enum class EnumType {
+        EnumValue1,
+        EnumValue2
+    };
+    Q_ENUM(EnumType);
+    EnumType enumProperty() const {
+        return EnumType::EnumValue2;
+    }
+};
+
+class TypeWithQJsonArrayProperty : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(QJsonArray jsonArray READ jsonArray WRITE setJsonArray NOTIFY jsonArrayChanged)
+
+public:
+    TypeWithQJsonArrayProperty(QObject *parent = nullptr) : QObject(parent) {}
+
+    const QJsonArray& jsonArray() { return m_jsonArray; }
+    void setJsonArray(const QJsonArray& a) { m_jsonArray = a; }
+
+signals:
+    void jsonArrayChanged();
+
+private:
+    QJsonArray m_jsonArray;
+};
+
+class InvokableSingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    InvokableSingleton() = default;
+    Q_INVOKABLE InvokableSingleton(int a, QObject *parent) : QObject(parent), m_a(a) {}
+
+    int m_a = 0;
+};
+
+class InvokableExtension : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE InvokableExtension(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+class InvokableExtended : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(InvokableExtension)
+
+public:
+    Q_INVOKABLE InvokableExtended() = default;
+};
+
+class InvokableUncreatable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("no")
+
+public:
+    Q_INVOKABLE InvokableUncreatable() = default;
+};
+
+class InvokableValueType
+{
+    Q_GADGET
+    QML_VALUE_TYPE(vv)
+public:
+    Q_INVOKABLE InvokableValueType() = default;
+    Q_INVOKABLE InvokableValueType(const QString &s) : m_s(s) {}
+    QString m_s;
+};
+
+class NestedVectors : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    NestedVectors(QObject *parent = nullptr) : QObject(parent)
+    {
+        std::vector<int> data;
+        data.push_back(1);
+        data.push_back(2);
+        data.push_back(3);
+        m_list.push_back(data);
+        data.clear();
+        data.push_back(4);
+        data.push_back(5);
+        m_list.push_back(data);
+    }
+
+    Q_INVOKABLE std::vector<std::vector<int>> getList()
+    {
+        return m_list;
+    }
+
+    Q_INVOKABLE void setList(std::vector<std::vector<int>> list)
+    {
+        m_list = list;
+    }
+
+private:
+    std::vector<std::vector<int>> m_list;
 };
 
 #endif // TESTTYPES_H

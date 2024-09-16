@@ -22,13 +22,18 @@ QQmlPlatform::~QQmlPlatform()
 
 QString QQmlPlatform::os()
 {
+    // ### Qt7: Consider implementing in terms of QSysInfo
+
 #if defined(Q_OS_ANDROID)
     return QStringLiteral("android");
 #elif defined(Q_OS_IOS)
     return QStringLiteral("ios");
 #elif defined(Q_OS_TVOS)
     return QStringLiteral("tvos");
-#elif defined(Q_OS_MAC)
+#elif defined(Q_OS_VISIONOS)
+    return QStringLiteral("visionos");
+#elif defined(Q_OS_MACOS)
+    // ### Qt7: Replace with "macos"
     return QStringLiteral("osx");
 #elif defined(Q_OS_WIN)
     return QStringLiteral("windows");

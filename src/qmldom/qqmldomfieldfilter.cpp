@@ -1,7 +1,9 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+
 #include "qqmldomfieldfilter_p.h"
 #include "qqmldompath_p.h"
+#include "qqmldomitem_p.h"
 #include "QtCore/qglobal.h"
 
 QT_BEGIN_NAMESPACE
@@ -61,7 +63,7 @@ QString FieldFilter::describeFieldsFilter() const
     return fieldFilterStr;
 }
 
-bool FieldFilter::operator()(const DomItem &obj, Path p, const DomItem &i) const
+bool FieldFilter::operator()(const DomItem &obj, const Path &p, const DomItem &i) const
 {
     if (p)
         return this->operator()(obj, p.component(0), i);
@@ -95,7 +97,7 @@ bool FieldFilter::operator()(const DomItem &base, const PathEls::PathComponent &
     return true;
 }
 
-bool FieldFilter::addFilter(QString fFields)
+bool FieldFilter::addFilter(const QString &fFields)
 {
     // parses a base filter of the form <op><typeName>:<fieldName> or <op><fieldName>
     // as described in this class documentation
@@ -117,6 +119,11 @@ bool FieldFilter::addFilter(QString fFields)
         }
     }
     return true;
+}
+
+FieldFilter FieldFilter::noFilter()
+{
+    return FieldFilter{ {}, {} };
 }
 
 FieldFilter FieldFilter::defaultFilter()

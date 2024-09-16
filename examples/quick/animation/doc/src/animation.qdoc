@@ -7,7 +7,7 @@
     \brief This is a collection of QML Animation examples.
     \image qml-animations-example.png
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     \e Animation is a collection of small QML examples relating to animation.
     Each example is a small QML file emphasizing a particular type or feature.

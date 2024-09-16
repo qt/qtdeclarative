@@ -23,9 +23,11 @@ qt_internal_add_test(tst_qmlls_qqmlcodemodel
         Qt::QuickTestUtilsPrivate
         Qt::QmlLSPrivate
     TESTDATA ${test_data}
+    DEFINES
+        QT_QQMLCODEMODEL_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
 )
 
 qt_internal_extend_target(tst_qmlls_qqmlcodemodel CONDITION ANDROID OR IOS
     DEFINES
-        QT_QMLLS_QQMLCODEMODEL_DATADIR=":/domdata"
+        QT_QQMLCODEMODEL_DATADIR=":/data"
 )

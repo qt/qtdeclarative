@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qsgdefaultrendercontext_p.h"
+#include "qsgcurveglyphatlas_p.h"
 
 #include <QtGui/QGuiApplication>
 
@@ -71,6 +72,9 @@ void QSGDefaultRenderContext::invalidateGlyphCaches()
         }
     }
 
+    qDeleteAll(m_curveGlyphAtlases);
+    m_curveGlyphAtlases.clear();
+
     {
         auto it = m_fontEnginesToClean.begin();
         while (it != m_fontEnginesToClean.end()) {
@@ -130,6 +134,9 @@ void QSGDefaultRenderContext::invalidate()
             delete it.key();
     }
     m_fontEnginesToClean.clear();
+
+    qDeleteAll(m_curveGlyphAtlases);
+    m_curveGlyphAtlases.clear();
 
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
@@ -220,27 +227,6 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
     return nullptr;
 }
 
-QString QSGDefaultRenderContext::fontKey(const QRawFont &font, int renderTypeQuality)
-{
-    QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
-    if (!fe->faceId().filename.isEmpty()) {
-        QByteArray keyName =
-                fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index)
-                + (font.style() != QFont::StyleNormal ? QByteArray(" I") : QByteArray())
-                + (font.weight() != QFont::Normal ? ' ' + QByteArray::number(font.weight()) : QByteArray())
-                + ' ' + QByteArray::number(renderTypeQuality)
-                + QByteArray(" DF");
-        return QString::fromUtf8(keyName);
-    } else {
-        return QString::fromLatin1("%1_%2_%3_%4_%5")
-            .arg(font.familyName())
-            .arg(font.styleName())
-            .arg(font.weight())
-            .arg(font.style())
-            .arg(renderTypeQuality);
-    }
-}
-
 void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)
 {
     QSGMaterialShaderPrivate::get(shader)->prepare(shaderVariant);
@@ -254,11 +240,23 @@ void QSGDefaultRenderContext::preprocess()
     }
 }
 
+QSGCurveGlyphAtlas *QSGDefaultRenderContext::curveGlyphAtlas(const QRawFont &font)
+{
+    FontKey key = FontKey(font, 0);
+    QSGCurveGlyphAtlas *atlas = m_curveGlyphAtlases.value(key, nullptr);
+    if (atlas == nullptr) {
+        atlas = new QSGCurveGlyphAtlas(font);
+        m_curveGlyphAtlases.insert(key, atlas);
+    }
+
+    return atlas;
+}
+
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality)
 {
-    QString key = fontKey(font, renderTypeQuality);
+    FontKey key(font, renderTypeQuality);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
-    if (!cache) {
+    if (!cache && font.isValid()) {
         cache = new QSGRhiDistanceFieldGlyphCache(this, font, renderTypeQuality);
         m_glyphCaches.insert(key, cache);
     }

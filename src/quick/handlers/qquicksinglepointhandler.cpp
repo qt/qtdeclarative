@@ -4,14 +4,15 @@
 #include "qquicksinglepointhandler_p.h"
 #include "qquicksinglepointhandler_p_p.h"
 
+#include <private/qquickdeliveryagent_p.h>
+
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype SinglePointHandler
     \qmlabstract
     \preliminary
-    \instantiates QQuickSinglePointHandler
+    \nativetype QQuickSinglePointHandler
     \inherits PointerDeviceHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for single-point Pointer Events.
@@ -117,11 +118,16 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QPointerEvent *event)
 
 void QQuickSinglePointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
-    if (point.state() != QEventPoint::Released)
-        return;
+    if (point.state() == QEventPoint::Released) {
+        // If it's a mouse or tablet event, with buttons,
+        // do not deactivate unless all acceptable buttons are released.
+        if (event->isSinglePointEvent()) {
+            const Qt::MouseButtons releasedButtons = static_cast<QSinglePointEvent *>(event)->buttons();
+            if ((releasedButtons & acceptedButtons()) != Qt::NoButton)
+                return;
+        }
 
-    const Qt::MouseButtons releasedButtons = static_cast<QSinglePointEvent *>(event)->buttons();
-    if ((releasedButtons & acceptedButtons()) == Qt::NoButton) {
+        // Deactivate this handler on release
         setExclusiveGrab(event, point, false);
         d_func()->reset();
     }

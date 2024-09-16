@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 #include <QProcess>
@@ -24,6 +24,7 @@ private Q_SLOTS:
     void modules_data();
     void modules();
     void qmldirPreference();
+    void resolveDirectoryImportPath();
 
 private:
     void runQmlimportscanner(const QString &mode, const QString &fileToScan,
@@ -65,6 +66,7 @@ void TestQmlimportscanner::cleanQmlCode_data()
     QTest::newRow("localAndModuleImport")      << QStringLiteral("ListProperty.qml");
     QTest::newRow("versionLessLocalImport")    << QStringLiteral("qmldirImportAndDepend.qml");
     QTest::newRow("versionLessModuleImport")   << QStringLiteral("parentEnum.qml");
+    QTest::newRow("cdUpImport")                << QStringLiteral("cdUpImport.qml");
 }
 
 void TestQmlimportscanner::cleanQmlCode()
@@ -118,12 +120,44 @@ void TestQmlimportscanner::qmldirPreference()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QCOMPARE(process.exitCode(), 0);
-        QVERIFY(process.readAllStandardError().isEmpty());
+        const auto &stdErr = process.readAllStandardError();
+        QVERIFY2(stdErr.isEmpty(), stdErr.constData());
         auto output = process.readAllStandardOutput();
         // check that the "With" path is used, and the "WithOut" path is ignored
         QVERIFY(output.contains("With/Module"));
         QVERIFY(!output.contains("WithOut/Module"));
     }
+}
+
+void TestQmlimportscanner::resolveDirectoryImportPath()
+{
+    QStringList args { "-qmlFiles", testFile("cdUpImport.qml") };
+    QString errors;
+    QProcess process;
+    process.start(m_qmlimportscannerPath, args);
+    QVERIFY(process.waitForFinished());
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+    const auto &stdErr = process.readAllStandardError();
+    QVERIFY2(stdErr.isEmpty(), stdErr.constData());
+
+    QJsonParseError error;
+    const QJsonDocument generated = QJsonDocument::fromJson(process.readAllStandardOutput(),
+                                                            &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    QVERIFY(generated.isArray());
+
+    const QJsonArray array = generated.array();
+    QCOMPARE(array.size(), 1);
+
+    const QJsonValue entry = array[0];
+    QVERIFY(entry.isObject());
+
+    const QJsonObject object = entry.toObject();
+    QCOMPARE(
+            object.value("path").toString(),
+            QDir::cleanPath(
+                    QFileInfo(dataDirectory()).absolutePath() + QLatin1Char('/') + "Fake"));
 }
 
 void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QString &pathToScan,
@@ -140,7 +174,8 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
     QVERIFY(process.waitForFinished());
     QCOMPARE(process.exitStatus(), QProcess::NormalExit);
     QCOMPARE(process.exitCode(), 0);
-    QVERIFY(process.readAllStandardError().isEmpty());
+    const auto &stdErr = process.readAllStandardError();
+    QVERIFY2(stdErr.isEmpty(), stdErr.constData());
 
     QJsonParseError error;
     const QJsonDocument generated = QJsonDocument::fromJson(process.readAllStandardOutput(),
@@ -149,7 +184,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
     QVERIFY(generated.isArray());
 
     QFile imports(resultFile);
-    imports.open(QIODevice::ReadOnly);
+    QVERIFY(imports.open(QIODevice::ReadOnly));
     QJsonDocument expected = QJsonDocument::fromJson(imports.readAll(), &error);
     QCOMPARE(error.error, QJsonParseError::NoError);
     QVERIFY(expected.isArray());
@@ -185,7 +220,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
         }
         QVERIFY2(found, qPrintable(QDebug::toString(object)));
     }
-    QVERIFY(expectedArray.isEmpty());
+    QVERIFY2(expectedArray.isEmpty(), QDebug::toString(expectedArray).toUtf8().constData());
 }
 
 QTEST_MAIN(TestQmlimportscanner)

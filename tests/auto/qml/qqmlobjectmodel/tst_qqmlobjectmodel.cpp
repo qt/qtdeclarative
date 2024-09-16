@@ -1,7 +1,10 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
+
+#include <QtQml/qqmlcomponent.h>
+
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 
@@ -11,6 +14,7 @@ class tst_QQmlObjectModel : public QObject
 
 private slots:
     void changes();
+    void objectDestroyed();
 };
 
 static bool compareItems(QQmlObjectModel *model, const QObjectList &items)
@@ -141,6 +145,52 @@ void tst_QQmlObjectModel::changes()
     QCOMPARE(childrenSpy.size(), ++childrenSignals);
     QCOMPARE(modelUpdateSpy.size(), ++modelUpdateSignals);
     QVERIFY(verifyChangeSet(modelUpdateSpy.last().first().value<QQmlChangeSet>(), 0, 2, false));
+}
+
+void tst_QQmlObjectModel::objectDestroyed()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        ObjectModel {
+            id: objectModel
+
+            property Component objectComponent: QtObject {}
+
+            Component.onCompleted: {
+                objectModel.append(objectComponent.createObject())
+                objectModel.get(0).objectName = "first";
+            }
+
+            property Timer t: Timer {
+                running: true
+                interval: 1
+                repeat: true
+                onTriggered: gc()
+            }
+        }
+    )", QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlObjectModel *model = qobject_cast<QQmlObjectModel *>(o.data());
+    QVERIFY(model);
+
+    QCOMPARE(model->count(), 1);
+    QQmlListProperty<QObject> children = model->children();
+    QObject *child = children.at(&children, 0);
+    QVERIFY(child);
+    QCOMPARE(child->objectName(), QStringLiteral("first"));
+
+    QSignalSpy spy(child, &QObject::destroyed);
+    QTRY_COMPARE(spy.count(), 1);
+
+    // Now we should not be able to get to the child anymore
+    QCOMPARE(children.at(&children, 0), nullptr);
 }
 
 QTEST_MAIN(tst_QQmlObjectModel)

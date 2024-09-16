@@ -9,7 +9,7 @@
 
 /*!
     \qmltype StackLayout
-    //! \instantiates QQuickStackLayout
+    //! \nativetype QQuickStackLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
@@ -402,7 +402,7 @@ QQuickStackLayoutAttached::QQuickStackLayoutAttached(QObject *object)
 {
     auto item = qobject_cast<QQuickItem*>(object);
     if (!item) {
-        qmlWarning(object) << "StackLayout must be attached to an Item";
+        qmlWarning(object) << "StackLayout attached property must be attached to an object deriving from Item";
         return;
     }
 

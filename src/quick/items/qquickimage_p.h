@@ -21,19 +21,19 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickImagePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickImage : public QQuickImageBase
+class Q_QUICK_EXPORT QQuickImage : public QQuickImageBase
 {
     Q_OBJECT
 
-    Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged FINAL)
-    Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedGeometryChanged FINAL)
-    Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged FINAL)
-    Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged FINAL)
-    Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged FINAL)
-    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged FINAL)
-    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION(2, 3) FINAL)
-    Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION(2, 5) FINAL)
-    Q_PROPERTY(QRectF sourceClipRect READ sourceClipRect WRITE setSourceClipRect RESET resetSourceClipRect NOTIFY sourceClipRectChanged REVISION(2, 15) FINAL)
+    Q_PROPERTY(FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged)
+    Q_PROPERTY(qreal paintedWidth READ paintedWidth NOTIFY paintedGeometryChanged)
+    Q_PROPERTY(qreal paintedHeight READ paintedHeight NOTIFY paintedGeometryChanged)
+    Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged)
+    Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged)
+    Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged)
+    Q_PROPERTY(bool mipmap READ mipmap WRITE setMipmap NOTIFY mipmapChanged REVISION(2, 3))
+    Q_PROPERTY(bool autoTransform READ autoTransform WRITE setAutoTransform NOTIFY autoTransformChanged REVISION(2, 5))
+    Q_PROPERTY(QRectF sourceClipRect READ sourceClipRect WRITE setSourceClipRect RESET resetSourceClipRect NOTIFY sourceClipRectChanged REVISION(2, 15))
     QML_NAMED_ELEMENT(Image)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -101,5 +101,5 @@ private:
 };
 
 QT_END_NAMESPACE
-QML_DECLARE_TYPE(QQuickImage)
+
 #endif // QQUICKIMAGE_P_H

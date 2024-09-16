@@ -13,11 +13,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlScriptData::QQmlScriptData()
-    : m_loaded(false)
-{
-}
-
 QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
         const QQmlRefPointer<QQmlContextData> &parentQmlContextData)
 {
@@ -86,7 +81,11 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(
                                                       /* scopeObject: */ nullptr);
     }
 
-    QV4::Scoped<QV4::Module> module(scope, m_precompiledScript->instantiate(v4));
+    QV4::Scoped<QV4::Module> module(
+            scope,
+            v4->executableCompilationUnit(QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
+                                                  m_precompiledScript))->instantiate());
+
     if (module) {
         if (qmlExecutionContext) {
             module->d()->scope->outer.set(v4, qmlExecutionContext->d());

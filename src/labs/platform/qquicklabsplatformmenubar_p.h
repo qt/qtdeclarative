@@ -84,6 +84,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformMenuBar)
-
 #endif // QQUICKLABSPLATFORMMENUBAR_P_H

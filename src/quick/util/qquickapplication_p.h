@@ -28,7 +28,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QQmlApplication
+class Q_QUICK_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged FINAL) // deprecated, use 'state' instead
@@ -73,7 +73,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickApplication)
 
 #endif // QQUICKAPPLICATION_P_H

@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFramePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickFrame : public QQuickPane
+class Q_QUICKTEMPLATES2_EXPORT QQuickFrame : public QQuickPane
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Frame)
@@ -43,7 +43,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFrame)
 
 #endif // QQUICKFRAME_P_H

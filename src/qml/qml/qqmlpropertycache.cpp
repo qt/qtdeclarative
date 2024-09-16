@@ -80,26 +80,43 @@ void QQmlPropertyData::load(const QMetaProperty &p)
 void QQmlPropertyData::load(const QMetaMethod &m)
 {
     setCoreIndex(m.methodIndex());
-    setPropType(m.returnMetaType());
-
     m_flags.setType(Flags::FunctionType);
-    if (m.methodType() == QMetaMethod::Signal) {
+
+    // We need to set the constructor, signal, constant, arguments, V4Function, cloned flags.
+    // These are specific to methods and change with each method.
+    // The same QQmlPropertyData may be loaded with multiple methods in sequence.
+
+    switch (m.methodType()) {
+    case QMetaMethod::Signal:
         m_flags.setIsSignal(true);
-    } else if (m.methodType() == QMetaMethod::Constructor) {
+        m_flags.setIsConstructor(false);
+        setPropType(m.returnMetaType());
+        break;
+    case QMetaMethod::Constructor:
+        m_flags.setIsSignal(false);
         m_flags.setIsConstructor(true);
-        setPropType(QMetaType::fromType<QObject *>());
+        break;
+    default:
+        m_flags.setIsSignal(false);
+        m_flags.setIsConstructor(false);
+        setPropType(m.returnMetaType());
+        break;
     }
+
     m_flags.setIsConstant(m.isConst());
 
     const int paramCount = m.parameterCount();
     if (paramCount) {
         m_flags.setHasArguments(true);
-        if ((paramCount == 1) && (m.parameterMetaType(0) == QMetaType::fromType<QQmlV4Function *>()))
-            m_flags.setIsV4Function(true);
+        m_flags.setIsV4Function(
+                paramCount == 1 &&
+                m.parameterMetaType(0) == QMetaType::fromType<QQmlV4FunctionPtr>());
+    } else {
+        m_flags.setHasArguments(false);
+        m_flags.setIsV4Function(false);
     }
 
-    if (m.attributes() & QMetaMethod::Cloned)
-        m_flags.setIsCloned(true);
+    m_flags.setIsCloned(m.attributes() & QMetaMethod::Cloned);
 
     Q_ASSERT(m.revision() <= std::numeric_limits<quint16>::max());
     setRevision(QTypeRevision::fromEncodedVersion(m.revision()));
@@ -669,28 +686,9 @@ const QQmlPropertyData *QQmlPropertyCache::findProperty(
     return nullptr;
 }
 
-QString QQmlPropertyData::name(QObject *object) const
-{
-    if (!object)
-        return QString();
 
-    return name(object->metaObject());
-}
 
-QString QQmlPropertyData::name(const QMetaObject *metaObject) const
-{
-    if (!metaObject || coreIndex() == -1)
-        return QString();
 
-    if (isFunction()) {
-        QMetaMethod m = metaObject->method(coreIndex());
-
-        return QString::fromUtf8(m.name().constData());
-    } else {
-        QMetaProperty p = metaObject->property(coreIndex());
-        return QString::fromUtf8(p.name());
-    }
-}
 
 bool QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
 {

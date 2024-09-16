@@ -18,9 +18,9 @@ DEFINE_OBJECT_VTABLE(UrlSearchParamsObject);
 DEFINE_OBJECT_VTABLE(UrlSearchParamsCtor);
 
 
-void Heap::UrlCtor::init(QV4::ExecutionContext *scope)
+void Heap::UrlCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QLatin1String("URL"));
+    Heap::FunctionObject::init(engine, QLatin1String("URL"));
 }
 
 void UrlPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -750,9 +750,9 @@ ReturnedValue UrlCtor::virtualCallAsConstructor(const FunctionObject *that, cons
 }
 
 
-void Heap::UrlSearchParamsCtor::init(QV4::ExecutionContext *scope)
+void Heap::UrlSearchParamsCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QLatin1String("URLSearchParams"));
+    Heap::FunctionObject::init(engine, QLatin1String("URLSearchParams"));
 }
 
 void UrlSearchParamsPrototype::init(ExecutionEngine *engine, Object *ctor)
@@ -1288,12 +1288,7 @@ ReturnedValue UrlSearchParamsPrototype::method_delete(const FunctionObject *b, c
         return Encode::undefined();
 
     QList<QStringList> params = o->params();
-
-    auto to_remove = std::remove_if(params.begin(), params.end(), [&name](QStringList pair) {
-                                                                      return pair[0] == name;
-                                                                  });
-
-    params.erase(to_remove, params.end());
+    params.removeIf([&name](const auto &pair) { return pair.at(0) == name; });
 
     o->setParams(params);
 

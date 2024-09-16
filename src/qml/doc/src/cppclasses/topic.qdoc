@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-cppclasses-topic.html
-\title Important C++ Classes Provided By The Qt QML Module
-\brief Overview of the C++ classes provided by the Qt QML module
+\title Important C++ Classes Provided By The Qt Qml Module
+\brief Overview of the C++ classes provided by the Qt Qml module.
 
-The \l{Qt QML} module provides C++ classes which implement the QML framework.
+The \l{Qt Qml} module provides C++ classes which implement the QML framework.
 Clients can use these classes to interact with the QML run-time (for example,
 by injecting data or invoking methods on objects), and to instantiate a
-hierarchy of objects from a QML document.  The Qt QML module provides more
+hierarchy of objects from a QML document.  The Qt Qml module provides more
 C++ API than just the classes listed here, however the classes listed here
 provide the foundations of the QML runtime and the core concepts of QML.
 

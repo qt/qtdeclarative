@@ -31,6 +31,31 @@ FileDialogImpl {
 
     standardButtons: T.Dialog.Open | T.Dialog.Cancel
 
+    Dialog {
+        id: overwriteConfirmationDialog
+        objectName: "confirmationDialog"
+        anchors.centerIn: parent
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+        dim: true
+        modal: true
+        title: qsTr("Overwrite file?")
+        width: control.width - control.leftPadding - control.rightPadding
+
+        contentItem: Label {
+            text: qsTr("“%1” already exists.\nDo you want to replace it?").arg(control.fileName)
+            wrapMode: Text.WordWrap
+        }
+
+        footer: DialogButtonBox {
+            alignment: Qt.AlignHCenter
+            standardButtons: DialogButtonBox.Yes | DialogButtonBox.No
+        }
+
+        Overlay.modal: Rectangle {
+            color: Fusion.darkShade
+        }
+    }
+
     /*
         We use attached properties because we want to handle logic in C++, and:
         - We can't assume the footer only contains a DialogButtonBox (which would allow us
@@ -45,6 +70,7 @@ FileDialogImpl {
     FileDialogImpl.breadcrumbBar: breadcrumbBar
     FileDialogImpl.fileNameLabel: fileNameLabel
     FileDialogImpl.fileNameTextField: fileNameTextField
+    FileDialogImpl.overwriteConfirmationDialog: overwriteConfirmationDialog
 
     background: Rectangle {
         implicitWidth: 600
@@ -75,6 +101,7 @@ FileDialogImpl {
             elide: Label.ElideRight
             font.bold: true
             padding: 6
+            visible: parent.parent?.parent === Overlay.overlay
 
             Layout.fillWidth: true
             Layout.leftMargin: 12
@@ -87,6 +114,7 @@ FileDialogImpl {
             id: breadcrumbBar
             dialog: control
 
+            Layout.topMargin: parent.parent?.parent === Overlay.overlay ? 0 : 12
             Layout.fillWidth: true
             Layout.leftMargin: 12
             Layout.rightMargin: 12
@@ -124,7 +152,7 @@ FileDialogImpl {
                 fileDetailRowWidth: nameFiltersComboBox.width
 
                 KeyNavigation.backtab: breadcrumbBar
-                KeyNavigation.tab: nameFiltersComboBox
+                KeyNavigation.tab: fileNameTextField.visible ? fileNameTextField : nameFiltersComboBox
             }
         }
     }
@@ -143,7 +171,6 @@ FileDialogImpl {
         TextField {
             id: fileNameTextField
             objectName: "fileNameTextField"
-            text: control.fileName
             visible: false
 
             Layout.fillWidth: true

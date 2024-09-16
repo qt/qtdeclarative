@@ -17,7 +17,6 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQuickControls2/qtquickcontrols2global.h>
-#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

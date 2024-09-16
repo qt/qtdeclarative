@@ -44,6 +44,6 @@ Rectangle {
     Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        text: grid.contentX + ", " + grid.contentY
+        text: grid.contentX.toFixed(2) + ", " + grid.contentY.toFixed(2)
     }
 }

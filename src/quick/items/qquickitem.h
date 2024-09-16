@@ -45,7 +45,6 @@ private:
 
 class QCursor;
 class QQuickItemLayer;
-class QQmlV4Function;
 class QQuickState;
 class QQuickAnchorLine;
 class QQuickTransition;
@@ -96,23 +95,25 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickAnchorLine baseline READ baseline CONSTANT FINAL)
     Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset NOTIFY baselineOffsetChanged)
 
-    Q_PROPERTY(bool clip READ clip WRITE setClip NOTIFY clipChanged FINAL)
+    Q_PROPERTY(bool clip READ clip WRITE setClip NOTIFY clipChanged)
 
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
     Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL REVISION(2, 1))
 
+    Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged REVISION(6, 7))
+
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
-    Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin NOTIFY transformOriginChanged FINAL)
-    Q_PROPERTY(QPointF transformOriginPoint READ transformOriginPoint FINAL)  // deprecated - see QTBUG-26423
+    Q_PROPERTY(TransformOrigin transformOrigin READ transformOrigin WRITE setTransformOrigin NOTIFY transformOriginChanged)
+    Q_PROPERTY(QPointF transformOriginPoint READ transformOriginPoint)  // deprecated - see QTBUG-26423
     Q_PROPERTY(QQmlListProperty<QQuickTransform> transform READ transform DESIGNABLE false FINAL)
 
-    Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged FINAL)
-    Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing FINAL)
+    Q_PROPERTY(bool smooth READ smooth WRITE setSmooth NOTIFY smoothChanged)
+    Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
-    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11) FINAL)
+    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11))
 
 #if QT_CONFIG(quick_shadereffect)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
@@ -120,7 +121,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("ParentProperty", "parent")
-    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
+    Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QQmlV4ExecutionEnginePtr)")
     QML_NAMED_ELEMENT(Item)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -270,6 +271,9 @@ public:
     bool isFocusScope() const;
     QQuickItem *scopedFocusItem() const;
 
+    Qt::FocusPolicy focusPolicy() const;
+    void setFocusPolicy(Qt::FocusPolicy policy);
+
     bool isAncestorOf(const QQuickItem *child) const;
 
     Qt::MouseButtons acceptedMouseButtons() const;
@@ -318,7 +322,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectFromItem")
-    void mapFromItem(QQmlV4Function*) const;
+    void mapFromItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapFromItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -328,7 +332,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use typed overload or mapRectToItem")
-    void mapToItem(QQmlV4Function*) const;
+    void mapToItem(QQmlV4FunctionPtr) const;
 #endif
     Q_INVOKABLE QPointF mapToItem(const QQuickItem *item, const QPointF &point) const;
     // overloads mainly exist for QML
@@ -338,7 +342,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapFromGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE QPointF mapFromGlobal(qreal x, qreal y) const;
     // overload mainly exists for QML
@@ -346,7 +350,7 @@ public:
 
 #if QT_DEPRECATED_SINCE(6, 5)
     QT_DEPRECATED_VERSION_X_6_5("Use the typed overload")
-    Q_REVISION(2, 7) void mapToGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) void mapToGlobal(QQmlV4FunctionPtr) const;
 #endif
     Q_REVISION(2, 7) Q_INVOKABLE  QPointF mapToGlobal(qreal x, qreal y) const;
     // overload only exist for QML
@@ -383,6 +387,7 @@ Q_SIGNALS:
     void stateChanged(const QString &);
     void focusChanged(bool);
     void activeFocusChanged(bool);
+    Q_REVISION(6, 7) void focusPolicyChanged(Qt::FocusPolicy);
     Q_REVISION(2, 1) void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);
@@ -465,7 +470,7 @@ protected:
 
 private:
     Q_PRIVATE_SLOT(d_func(), void _q_resourceObjectDeleted(QObject *))
-    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QV4::ExecutionEngine *))
+    Q_PRIVATE_SLOT(d_func(), quint64 _q_createJSWrapper(QQmlV4ExecutionEnginePtr))
 
     friend class QQuickWindowPrivate;
     friend class QQuickDeliveryAgentPrivate;
@@ -473,6 +478,10 @@ private:
     friend class QAccessibleQuickItem;
     friend class QQuickAccessibleAttached;
     friend class QQuickAnchorChanges;
+#ifndef QT_NO_DEBUG_STREAM
+    friend Q_QUICK_EXPORT QDebug operator<<(QDebug debug, QQuickItem *item);
+#endif
+
     Q_DISABLE_COPY(QQuickItem)
     Q_DECLARE_PRIVATE(QQuickItem)
 };
@@ -503,8 +512,5 @@ QDebug Q_QUICK_EXPORT operator<<(QDebug debug,
 #endif // QT_NO_DEBUG_STREAM
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickItem)
-QML_DECLARE_TYPE(QQuickTransform)
 
 #endif // QQUICKITEM_H

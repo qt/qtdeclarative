@@ -24,7 +24,7 @@ class QQuickSwipeDelegatePrivate;
 class QQuickSwipeDelegateAttached;
 class QQuickSwipeDelegateAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
     Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT FINAL)
@@ -64,7 +64,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickSwipeDelegate)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegateAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickSwipeDelegateAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
@@ -86,7 +86,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickSwipeDelegate)
 Q_DECLARE_METATYPE(QQuickSwipeDelegate::Side)
 
 #endif // QQUICKSWIPEDELEGATE_P_H

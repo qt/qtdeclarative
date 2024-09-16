@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlSettingsPrivate;
 
-class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
+class Q_LABSSETTINGS_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -63,7 +63,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQmlSettings)
 
 #endif // QQMLSETTINGS_P_H

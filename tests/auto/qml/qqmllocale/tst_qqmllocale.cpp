@@ -1,8 +1,10 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QDebug>
+
+#include <private/qqmllocale_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
@@ -476,10 +478,12 @@ void tst_qqmllocale::toString_data()
     QTest::newRow(qPrintable(functionCallScript)) << "ar" << functionCallScript << "١٦" << QString();
 
     functionCallScript = "locale.toString(new Date(2022, 7, 16), Locale.ShortFormat)";
-    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 12:00 AM" << QString();
+    QTest::newRow(qPrintable(functionCallScript))
+        << "en_AU" << functionCallScript << "16/8/22 12:00 am" << QString();
 
     functionCallScript = "locale.toString(new Date(2022, 7, 16, 1, 23, 4), Locale.ShortFormat)";
-    QTest::newRow(qPrintable(functionCallScript)) << "en_AU" << functionCallScript << "16/8/22 1:23 AM" << QString();
+    QTest::newRow(qPrintable(functionCallScript))
+        << "en_AU" << functionCallScript << "16/8/22 1:23 am" << QString();
 }
 
 void tst_qqmllocale::toString()
@@ -545,7 +549,7 @@ void tst_qqmllocale::weekDays()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("weekDays");
-    QCOMPARE(val.userType(), qMetaTypeId<QJSValue>());
+    QCOMPARE(val.metaType(), QMetaType::fromType<QList<QQmlLocale::DayOfWeek>>());
 
     QList<QVariant> qmlDays = val.toList();
     QList<Qt::DayOfWeek> days = QLocale(locale).weekdays();
@@ -585,7 +589,7 @@ void tst_qqmllocale::uiLanguages()
         Q_ARG(QVariant, QVariant(locale)));
 
     QVariant val = obj->property("uiLanguages");
-    QCOMPARE(val.userType(), qMetaTypeId<QJSValue>());
+    QCOMPARE(val.metaType(), QMetaType::fromType<QStringList>());
 
     QList<QVariant> qmlLangs = val.toList();
     QStringList langs = QLocale(locale).uiLanguages();
@@ -1509,6 +1513,9 @@ void tst_qqmllocale::timeZoneUpdated()
     setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
+#if QT_POINTER_SIZE == 4
+    QEXPECT_FAIL("", "QTBUG-89889", Continue);
+#endif
     QVERIFY(obj->property("success").toBool());
 }
 #endif // QT_CAN_CHANGE_SYSTEM_ZONE

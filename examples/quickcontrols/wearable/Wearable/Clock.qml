@@ -1,18 +1,21 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls as QQC2
+import QtQuick.Shapes
 import Wearable
 import WearableStyle
 
 SwipeViewPage {
     id: clock
 
+    required property real shift
+    required property string cityName
+
     property int hours
     property int minutes
     property int seconds
-    property real shift: timeShift
     property bool night: false
     property bool internationalTime: true //Unset for local time
 
@@ -31,38 +34,81 @@ SwipeViewPage {
         onTriggered: clock.timeChanged()
     }
 
-    Item {
+    Rectangle {
+
         anchors.centerIn: parent
 
+        id: background
+        color: clock.night ? "#000000" : "#FFFFFF"
+        radius: width / 2
         width: 200
-        height: 220
+        height: 200
 
-        Rectangle {
-            color: clock.night ? UIStyle.colorQtGray1 : UIStyle.colorQtGray10
-            radius: width / 2
-            width: parent.width
-            height: parent.width
+        Repeater {
+            model: 12
+            Rectangle {
+                id: minuteMarker
+                x: parent.width / 2 + 73 ; y: parent.height / 2 - 3
+                width: 14
+                height: 6
+                color: clock.night ? "#FFFFFF" : "#000000"
+                antialiasing: true
+                required property int index
+                transform: Rotation {
+                    angle: minuteMarker.index / 12 * 360
+                    origin.x: -73
+                    origin.y: 3
+                }
+            }
         }
 
-        Image {
-            id: background
-            source: UIStyle.imagePath("world-clock-swissdaydial")
-            visible: clock.night == false
-        }
-        Image {
-            source: UIStyle.imagePath("world-clock-swissnightdial")
-            visible: clock.night == true
+        Repeater {
+            model: 60
+            Rectangle {
+                id: secondMarker
+                x: parent.width / 2 + 90 ; y: parent.height / 2 - 1
+                width: 8
+                height: 2
+                color: clock.night ? "#FFFFFF" : "#000000"
+                antialiasing: true
+                required property int index
+                transform: Rotation {
+                    angle: secondMarker.index / 60 * 360
+                    origin.x: -90
+                    origin.y: 1
+                }
+            }
         }
 
-        Image {
-            x: 92.5
-            y: 27
-            source: UIStyle.imagePath(`world-clock-swiss${clock.night ? "night" : "day"}hour`)
+        Shape {
+            id: hourHand
+            x: parent.width / 2
+            y: parent.width / 2
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                fillColor: clock.night ? "#FFFFFF" : "#000000"
+                strokeWidth:0
+
+                startX: 5
+                startY: 14
+                PathLine {
+                    x: -5
+                    y: 14
+                }
+                PathLine {
+                    x: -4
+                    y: -71
+                }
+                PathLine {
+                    x: 4
+                    y: -71
+                }
+            }
+
             transform: Rotation {
                 id: hourRotation
-                origin.x: 7.5
-                origin.y: 73
-                angle: (clock.hours * 30) + (clock.minutes * 0.5)
+                angle: clock.hours * 6 + clock.minutes * 6 / 12
                 Behavior on angle {
                     SpringAnimation {
                         spring: 2
@@ -73,14 +119,34 @@ SwipeViewPage {
             }
         }
 
-        Image {
-            x: 93.5
-            y: 17
-            source: UIStyle.imagePath(`world-clock-swiss${clock.night ? "night" : "day"}minute`)
+        Shape {
+            id: minuteHand
+            x: parent.width / 2
+            y: parent.width / 2
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                fillColor: clock.night ? "#FFFFFF" : "#000000"
+                strokeWidth:0
+
+                startX: 5
+                startY: 14
+                PathLine {
+                    x: -5
+                    y: 14
+                }
+                PathLine {
+                    x: -4
+                    y: -89
+                }
+                PathLine {
+                    x: 4
+                    y: -89
+                }
+            }
+
             transform: Rotation {
                 id: minuteRotation
-                origin.x: 6.5
-                origin.y: 83
                 angle: clock.minutes * 6
                 Behavior on angle {
                     SpringAnimation {
@@ -92,14 +158,70 @@ SwipeViewPage {
             }
         }
 
-        Image {
-            x: 97.5
-            y: 20
-            source: UIStyle.imagePath("world-clock-second")
+        Shape {
+            id: secondHand
+            x: parent.width / 2
+            y: parent.width / 2
+            preferredRendererType: Shape.CurveRenderer
+
+            ShapePath {
+                fillColor: UIStyle.highlightColor
+                strokeWidth: 0
+
+                startX: 1
+                startY: 14
+                PathLine {
+                    x: -1
+                    y: 14
+                }
+                PathLine {
+                    x: -1
+                    y: -89
+                }
+                PathLine {
+                    x: 1
+                    y: -89
+                }
+            }
+
+            ShapePath {
+                fillColor: UIStyle.highlightColor
+                strokeWidth: 0
+
+                startX: 0
+                startY: 3
+                PathArc {
+                    x: 0
+                    y: -3
+                    radiusX: 3
+                    radiusY: 3
+                }
+                PathArc {
+                    x: 0
+                    y: 3
+                    radiusX: 3
+                    radiusY: 3
+                }
+                PathMove {
+                    x: 0
+                    y: -75
+                }
+                PathArc {
+                    x: 0
+                    y: -65
+                    radiusX: 5
+                    radiusY: 5
+                }
+                PathArc {
+                    x: 0
+                    y: -75
+                    radiusX: 5
+                    radiusY: 5
+                }
+            }
+
             transform: Rotation {
-                id: secondRotation
-                origin.x: 2.5
-                origin.y: 80
+                id: secondsRotation
                 angle: clock.seconds * 6
                 Behavior on angle {
                     SpringAnimation {
@@ -110,22 +232,17 @@ SwipeViewPage {
                 }
             }
         }
-
-        Image {
-            anchors.centerIn: background
-            source: UIStyle.imagePath("world-clock-center")
-        }
-
-        Text {
-            id: cityLabel
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 2
-            anchors.horizontalCenter: parent.horizontalCenter
-
-            text: cityName
-            color: UIStyle.themeColorQtGray1
-            font.pixelSize: UIStyle.fontSizeXS
-            font.letterSpacing: 2
-        }
     }
+
+    Text {
+        id: cityLabel
+        anchors.top: background.bottom
+        anchors.margins: 10
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        text: parent.cityName
+        color: UIStyle.textColor
+        font: UIStyle.h2
+    }
+
 }

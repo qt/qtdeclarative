@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollView
     \inherits Pane
-//!     \instantiates QQuickScrollView
+//!     \nativetype QQuickScrollView
     \inqmlmodule QtQuick.Controls
     \since 5.9
     \ingroup qtquickcontrols-containers
@@ -98,6 +98,7 @@ public:
     QQmlListProperty<QObject> contentData() override;
     QQmlListProperty<QQuickItem> contentChildren() override;
     QList<QQuickItem *> contentChildItems() const override;
+    QQuickItem* getFirstChild() const override;
 
     QQuickItem *getContentItem() override;
 
@@ -160,6 +161,11 @@ QQuickItem *QQuickScrollViewPrivate::getContentItem()
     // This function is called by QQuickControl::contentItem() to lazily create
     // a contentItem, so we don't need to try to set it again.
     return ensureFlickable(ContentItemFlag::DoNotSet);
+}
+
+QQuickItem* QQuickScrollViewPrivate::getFirstChild() const
+{
+    return contentChildItems().value(0);
 }
 
 QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(ContentItemFlag contentItemFlag)

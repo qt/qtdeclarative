@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBoundaryRulePrivate;
-class Q_LABSANIMATION_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor, public QQmlParserStatus
+class Q_LABSANIMATION_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -110,7 +110,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickBoundaryRule)
 
 #endif // QQUICKBOUNDARYRULE_H

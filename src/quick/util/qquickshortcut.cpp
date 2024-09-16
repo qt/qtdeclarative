@@ -12,7 +12,7 @@
 
 /*!
     \qmltype Shortcut
-    \instantiates QQuickShortcut
+    \nativetype QQuickShortcut
     \inqmlmodule QtQuick
     \since 5.5
     \ingroup qtquick-input
@@ -77,12 +77,12 @@ typedef bool (*ContextMatcher)(QObject *, Qt::ShortcutContext);
 
 Q_GLOBAL_STATIC_WITH_ARGS(ContextMatcher, ctxMatcher, (qQuickShortcutContextMatcher))
 
-Q_QUICK_PRIVATE_EXPORT ContextMatcher qt_quick_shortcut_context_matcher()
+Q_QUICK_EXPORT ContextMatcher qt_quick_shortcut_context_matcher()
 {
     return *ctxMatcher();
 }
 
-Q_QUICK_PRIVATE_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher)
+Q_QUICK_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher)
 {
     if (!ctxMatcher.isDestroyed())
         *ctxMatcher() = matcher;

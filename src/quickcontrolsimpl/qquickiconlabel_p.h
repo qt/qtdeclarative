@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickIconLabelPrivate;
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickIconLabel : public QQuickItem
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickIconLabel : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon FINAL)
@@ -103,7 +103,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickIconLabel)
 
 #endif // QQUICKICONLABEL_P_H

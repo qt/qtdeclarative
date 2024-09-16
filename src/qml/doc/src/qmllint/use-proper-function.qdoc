@@ -5,22 +5,169 @@
 \page qmllint-warnings-and-errors-use-proper-function.html
 \ingroup qmllint-warnings-and-errors
 
-\title use-proper-function
-\brief BRIEF
+\title Use proper function
+\brief Calling something that might not be a function.
 
-\section1 use-proper-function
+\qmllintwarningcategory use-proper-function
+
+\section1 Property is a variant property: It may or may not be a method
 
 \section2 What happened?
-TODO
+You used a property of the type \l{qml-var.html}{var} as if it were a callable function.
 
 \section2 Why is this bad?
-TODO
+
+This affects the readability of the code, the QML engine will error out if the
+property does not contain a callable function, and the QML tooling can't apply
+specific method optimizations.
+
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    property var fun: () => console.log("Hello")
+    Component.onCompleted: { fun(); }
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, declare \c fun as a function to be able to call it:
 \qml
+import QtQuick
+
+Item {
+    function fun() {
+        console.log("Hello")
+    }
+
+    Component.onCompleted: { fun(); }
+}
+
 \endqml
+
+\section1 Property is a QJSValue property: It may or may not be a method
+
+\section2 What happened?
+You used a property of the type \c QJSValue as if it were a callable function.
+
+\note Properties of the type QJSValue can only be defined in C++.
+
+\section2 Why is this bad?
+The property was very probably not meant to be called and will make the QML engine
+error out at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Rectangle {
+    // Rectangle has a property gradient of the type QJSValue
+    Component.onCompleted: { console.log(gradient()); }
+}
+
+\endqml
+To fix this warning, remove the call to \c gradient:
+\qml
+import QtQuick
+
+Item {
+    // Rectangle has a property gradient of the type QJSValue
+    Component.onCompleted: { console.log(gradient); }
+}
+
+\endqml
+
+Alternatively, consider replacing the property definition with a regular
+\l{Q_INVOKABLE} method or a \l{signalsandslots.html#slots}{slot} if you are
+the author of the property. This is only possible if the function is never
+meant to be changed in QML. If you actually need to store a callback, you're
+out of luck.
+
+\section1 Signal is shadowed by a property
+
+\section2 What happened?
+You called a signal that is shadowed by a property or you shadowed a signal
+with a property.
+
+\section2 Why is this bad?
+The caller very probably expected to call a signal, and not the shadowing
+property. This could make the QML engine error out at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    component Base: Item {
+        signal helloSignal
+    }
+
+    Base {
+        property int helloSignal // shadows helloSignal inherited from Base
+        Component.onCompleted: { helloSignal(); }
+    }
+}
+
+\endqml
+To fix this warning, rename the shadowing property:
+\qml
+import QtQuick
+
+Item {
+    component Base: Item {
+        signal helloSignal
+    }
+
+    Base {
+        property int helloSignal2 // does not shadow anymore
+        Component.onCompleted: { helloSignal(); }
+    }
+}
+
+\endqml
+
+\section1 Method is shadowed by a property
+
+See \{Signal is shadowed by a property}.
+
+\section1 Slot is shadowed by a property
+
+See \{Signal is shadowed by a property}.
+
+\section1 Property is not a method
+
+\section2 What happened?
+You used a property of a type other than \l{qml-var.html}{var} or \c QJSValue
+as if it were a callable function.
+
+\section2 Why is this bad?
+The property can't be called and will make the QML engine error out at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int hello
+    Component.onCompleted: { console.log(hello()); }
+}
+
+\endqml
+To fix this warning, remove the call or make \c hello a function:
+\qml
+import QtQuick
+
+Item {
+    property int hello
+    Component.onCompleted: { console.log(hello); }
+
+    // alternative:
+    function helloAlternative() { ... }
+    Component.onCompleted: { console.log(helloAlternative()); }
+}
+
+\endqml
+
 */
 

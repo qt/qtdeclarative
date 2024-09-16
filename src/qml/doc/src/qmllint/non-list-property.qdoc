@@ -5,10 +5,12 @@
 \page qmllint-warnings-and-errors-non-list-property.html
 \ingroup qmllint-warnings-and-errors
 
-\title Non-List Property
+\title Non-list property
 \brief Multiple values were assigned to a non-list property.
 
-\section1 Cannot Assign Multiple Objects To A Default Non-List Property
+\qmllintwarningcategory non-list-property
+
+\section1 Cannot assign multiple objects to a default non-list property
 
 \section2 What happened?
 A \l{Default Properties}{default property} has multiple bindings but the default
@@ -43,7 +45,7 @@ Item {
 }
 
 \endqml
-You can fix this warning by replacing the default property by a list:
+To fix this warning, replace the default property by a list:
 \qml
 import QtQuick
 
@@ -61,7 +63,7 @@ Item {
     }
 }
 \endqml
-You can also fix this warning by removing all the unwanted bindings, in case the default property
+To fix this warning, remove all the unwanted bindings in case the default property
 is not supposed to be a list:
 \qml
 import QtQuick

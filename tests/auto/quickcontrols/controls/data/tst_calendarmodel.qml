@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQml
 import QtQuick
@@ -27,6 +27,10 @@ TestCase {
                 readonly property int year: model.year
             }
         }
+    }
+
+    function init() {
+        failOnWarning(/.?/)
     }
 
     function test_indices_data() {
@@ -63,7 +67,7 @@ TestCase {
     }
 
     function test_invalid() {
-        var model = calendarModel.createObject(testCase)
+        let model = calendarModel.createObject(testCase)
         verify(model)
 
         compare(model.indexOf(-1, -1), -1)
@@ -73,11 +77,11 @@ TestCase {
     }
 
     function test_instantiator() {
-        var inst = instantiator.createObject(testCase)
+        let inst = instantiator.createObject(testCase)
         verify(inst)
 
         compare(inst.count, 12)
-        for (var m = 0; m < inst.count; ++m) {
+        for (let m = 0; m < inst.count; ++m) {
             compare(inst.objectAt(m).month, m)
             compare(inst.objectAt(m).year, 2016)
         }

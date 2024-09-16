@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype DelegateChoice
-//!    \instantiates QQmlDelegateChoice
+//!    \nativetype QQmlDelegateChoice
     \inqmlmodule Qt.labs.qmlmodels
     \brief Encapsulates a delegate and when to use it.
 
@@ -137,7 +137,7 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 
 /*!
     \qmltype DelegateChooser
-//!    \instantiates QQmlDelegateChooser
+//!    \nativetype QQmlDelegateChooser
     \inqmlmodule Qt.labs.qmlmodels
     \brief Allows a view to use different delegates for different types of items in the model.
 
@@ -193,6 +193,10 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
     \qmlproperty string Qt.labs.qmlmodels::DelegateChooser::role
     This property holds the role or the property name used to determine the delegate for a given model item.
 
+    \note For \l{QAbstractItemModel} based models, including \l{ListModel}, the DelegateChooser will
+    reevaluate the choice when the model signals that the role has changed. For any other type of model,
+    this choice will only be done once when the item for a given model index is created.
+
     \sa DelegateChoice
 */
 void QQmlDelegateChooser::setRole(const QString &role)
@@ -233,7 +237,7 @@ void QQmlDelegateChooser::choices_append(QQmlListProperty<QQmlDelegateChoice> *p
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser *>(prop->object);
     q->m_choices.append(choice);
     connect(choice, &QQmlDelegateChoice::changed, q, &QQmlAbstractDelegateComponent::delegateChanged);
-    q->delegateChanged();
+    emit q->delegateChanged();
 }
 
 qsizetype QQmlDelegateChooser::choices_count(QQmlListProperty<QQmlDelegateChoice> *prop)
@@ -254,7 +258,7 @@ void QQmlDelegateChooser::choices_clear(QQmlListProperty<QQmlDelegateChoice> *pr
     for (QQmlDelegateChoice *choice : q->m_choices)
         disconnect(choice, &QQmlDelegateChoice::changed, q, &QQmlAbstractDelegateComponent::delegateChanged);
     q->m_choices.clear();
-    q->delegateChanged();
+    emit q->delegateChanged();
 }
 
 void QQmlDelegateChooser::choices_replace(QQmlListProperty<QQmlDelegateChoice> *prop,
@@ -266,7 +270,7 @@ void QQmlDelegateChooser::choices_replace(QQmlListProperty<QQmlDelegateChoice> *
     q->m_choices[index] = choice;
     connect(choice, &QQmlDelegateChoice::changed, q,
             &QQmlAbstractDelegateComponent::delegateChanged);
-    q->delegateChanged();
+    emit q->delegateChanged();
 }
 
 void QQmlDelegateChooser::choices_removeLast(QQmlListProperty<QQmlDelegateChoice> *prop)
@@ -274,7 +278,7 @@ void QQmlDelegateChooser::choices_removeLast(QQmlListProperty<QQmlDelegateChoice
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser *>(prop->object);
     disconnect(q->m_choices.takeLast(), &QQmlDelegateChoice::changed,
                q, &QQmlAbstractDelegateComponent::delegateChanged);
-    q->delegateChanged();
+    emit q->delegateChanged();
 }
 
 QQmlComponent *QQmlDelegateChooser::delegate(QQmlAdaptorModel *adaptorModel, int row, int column) const

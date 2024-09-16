@@ -1,0 +1,116 @@
+/*! \internal
+    \page qq-ideal-pointer-event-delivery-parallel-drags Two touchpoints dragging two DragHandlers
+    \tableofcontents
+
+    In \ref qq-ideal-pointer-event-delivery-single-drag we began with a detailed
+    tour through the event delivery logic while one Rectangle is being dragged
+    on a touchscreen with one finger.  Let's now delve into parallel delivery:
+    two fingers dragging two Rectangles, each with its own DragHandler, on a touchscreen.
+
+    \snippet pointerHandlers/pinchAndDragHandlers.qml entire
+
+    \image html pinchAndDragHandlers-drag-two-rects.png "dragging two rectangles via touch"
+
+    \section qq-ideal-pointer-event-parallel-drags Dragging two DragHandlers with two fingers
+
+    The user presses two fingers on two of the small Rectangles simultaneously.
+
+    \startuml
+    !include pinchAndDragHandlers-doublePressDelivery.puml
+    \enduml
+
+    ① A QTouchEvent arrives, it contains two QEventPoints, and we have to
+    decide which items and handlers we're going to visit. QQuickWindow::event()
+    dispatches to ② QQuickDeliveryAgent::event().
+    ③ QQuickDeliveryAgentPrivate::deliverPointerEvent() calls
+    ④ QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(), which iterates
+    QPointerEvent::points() and calls
+    ⑤ QQuickDeliveryAgentPrivate::pointerTargets() to build a list of relevant
+    items and handlers that should have a chance to handle that point. If the
+    candidate is a pointer handler, ⑥⑦⑧⑨ QQuickPointerHandler::wantsEventPoint()
+    is the way of asking the handler whether or not it's interested. In this
+    case, for each of the two touchpoints, the
+    <a href="https://doc.qt.io/qt-6/qml-qtquick-pinchhandler.html">PinchHandler</a>
+    and one <a href="https://doc.qt.io/qt-6/qml-qtquick-draghandler.html">DragHandler</a>
+    both return \c true, so both handlers' parent items get added to the
+    \c targets list. Then it merges the lists, so that we end up with one list
+    of all relevant items for all points in the multi-touch event.
+
+    Then for each item in the \c targets list, we call
+    ⑩ QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(). Again we need
+    to call mapFromScene() and set QEventPoint::position() to item-local
+    coordinates, then ⑪ QQuickItemPrivate::handlePointerEvent() loops over any
+    handlers that are found in the list
+    QQuickItemPrivate::ExtraData::pointerHandlers and calls
+    QQuickPointerHandler::handlePointerEvent() on each of those. Note that the
+    event has not been split up: each \c DragHandler sees both touchpoints. So it
+    calls its own wantsPointerEvent(), which (according to its name) should
+    decide whether it wants any part of the multi-touch event; but the parent
+    class of \c DragHandler is QQuickMultiPointHandler.
+    QQuickMultiPointHandler::wantsPointerEvent() iterates the points again,
+    calls wantsEventPoint() again for each of those, and builds a list of
+    \c candidatePoints. In this case, each \c DragHandler is only interested in
+    one point: the one whose position is inside the Rectangle (DragHandler's
+    parent item).  That point goes into \c candidatePoints. For each of those,
+    a QQuickHandlerPoint instance in
+    QQuickMultiPointHandlerPrivate::currentPoints is initialized to remember
+    that this DragHandler is handling this point.
+
+    Then we get to the virtual ⑫ handlePointerEventImpl() function.
+    QQuickMultiPointHandler::handlePointerEventImpl() updates the QML-facing
+    \c centroid property, another QQuickHandlerPoint instance; and
+    QQuickDragHandler::handlePointerEventImpl() calls
+    QQuickPointerHandlerPrivate::dragOverThreshold() to check whether the
+    QEventPoint has been dragged past the dragThreshold. As long as it has not
+    been dragged that far, \c DragHandler is only monitoring to see what the user
+    will do, so it retains a ⑬ passive grab.
+
+    The PinchHandler \e also "wants" and passively grabs both points: they are
+    both inside its parent Rectangle.
+
+    Handling of subsequent move events proceeds in a similar way as the
+    \link qq-ideal-pointer-event-delivery-move-draghandler single-point case \endlink:
+    QQuickDeliveryAgentPrivate::deliverPointerEvent() calls
+    QQuickDeliveryAgentPrivate::deliverUpdatedPoints(), which iterates the
+    QEventPoints, and for each of those, iterates the passive grabbers in
+    QPointingDevicePrivate::EventPointData::passiveGrabbers (in the order that
+    they are stored, the same order that they added themselves as passive
+    grabbers) and calls QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers().
+    After QQuickDeliveryAgentPrivate::localizePointerEvent(), it calls
+    QQuickPointerHandler::handlePointerEvent().
+    QQuickMultiPointHandler::wantsPointerEvent() returns \c true because the
+    point in QQuickMultiPointHandlerPrivate::currentPoints still exists in this
+    QTouchEvent; so QQuickDragHandler::handlePointerEventImpl() is called. For
+    each point, it calculates the movement delta
+    `(scenePosition() - scenePressPosition())`; and
+    QQuickPointerHandlerPrivate::dragOverThreshold() checks whether it's moved
+    far enough to activate dragging. When the user begins the drag gesture by
+    dragging a finger far enough, the appropriate \c DragHandler will take the
+    exclusive grab by calling QQuickMultiPointHandler::grabPoints().
+    This is not a take-over scenario, so grabPoints() succeeds; therefore, it's
+    ok to call QQuickPointerHandler::setActive(). Since by default,
+    DragHandler's \c target is the same as its \c parent,
+    QQuickDragHandler::handlePointerEventImpl() ends with a call to
+    QQuickMultiPointHandler::moveTarget(). That uses QMetaProperty::write() to
+    change the Rectangle's \c x and \c y properties. And so each Rectangle moves
+    as far as the finger is dragged.
+
+    deliverUpdatedPoints() also visits the \c PinchHandler. Since at least one of
+    the DragHandlers got a chance to take the exclusive grab \e before delivery
+    to the PinchHandler, and we have declared
+    ```
+    grabPermissions: PointerHandler.TakeOverForbidden
+    ```
+    the PinchHandler does not have permission to "take over" the exclusive grab
+    from an existing handler. If the qt.quick.handler.grab logging category is
+    enabled, you will see a message like
+    ```
+    qt.quick.handler.grab QQuickPointerHandler::approveGrabTransition - point 1 permission "TakeOverForbidden" : QQuickPinchHandler(0x...) denied from QQuickDragHandler(0x..., name = "dh1") to QQuickPinchHandler(0x...)
+    ```
+
+    However if you drag two fingers on the root \c Rectangle, outside the
+    smaller Rectangles that have DragHandlers, pinching works, because the
+    \c PinchHandler is the only candidate to handle those points. This is
+    explained in the next chapter:
+    \ref qq-ideal-pointer-event-delivery-pinch
+*/

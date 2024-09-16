@@ -43,7 +43,7 @@ public:
     constexpr static DomType kindValue = DomType::MockObject;
     DomType kind() const override { return kindValue; }
 
-    MockObject(Path pathFromOwner = Path(), QMap<QString, MockObject> subObjects = {},
+    MockObject(const Path &pathFromOwner = Path(), QMap<QString, MockObject> subObjects = {},
                QMap<QString, QCborValue> subValues = {})
         : CommentableDomElement(pathFromOwner), subObjects(subObjects), subValues(subValues)
     {
@@ -68,7 +68,7 @@ public:
     constexpr static DomType kindValue = DomType::MockOwner;
     DomType kind() const override { return kindValue; }
 
-    MockOwner(Path pathFromTop = Path(), int derivedFrom = 0,
+    MockOwner(const Path &pathFromTop = Path(), int derivedFrom = 0,
               QMap<QString, MockObject> subObjects = {}, QMap<QString, QCborValue> subValues = {},
               QMap<QString, QMap<QString, MockObject>> subMaps = {},
               QMap<QString, QMultiMap<QString, MockObject>> subMultiMaps = {},
@@ -83,7 +83,7 @@ public:
     {
     }
 
-    MockOwner(Path pathFromTop, int derivedFrom, QDateTime dataRefreshedAt,
+    MockOwner(const Path &pathFromTop, int derivedFrom, QDateTime dataRefreshedAt,
               QMap<QString, MockObject> subObjects = {}, QMap<QString, QCborValue> subValues = {})
         : OwningItem(derivedFrom, dataRefreshedAt),
           pathFromTop(pathFromTop),

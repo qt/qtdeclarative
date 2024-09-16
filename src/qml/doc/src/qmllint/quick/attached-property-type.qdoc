@@ -1,0 +1,43 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-quick-attached-property-type.html
+\ingroup qmllint-warnings-and-errors
+
+\title Quick: Attached property type
+\brief Misuses of the Quick attached property types.
+
+\section1 Attached property must be attached to an object deriving from a particular type
+
+\section2 What happened?
+You instantiated an attached property in an object of the wrong type.
+
+\section2 Why is this bad?
+The attached property will not work.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    QtObject {
+        LayoutMirroring.enabled: true
+    }
+}
+
+\endqml
+To fix this warning, change the enclosing type to inherit from the type
+mentioned in the warning message:
+
+\qml
+import QtQuick
+
+Item {
+    Item {
+        LayoutMirroring.enabled: true
+    }
+}
+
+\endqml
+*/

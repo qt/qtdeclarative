@@ -11,6 +11,8 @@
 #include "qqmltyperegistrarconstants_p.h"
 #include "qqmltyperegistrarutils_p.h"
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 using namespace Qt::Literals;
 using namespace Constants;
@@ -20,6 +22,7 @@ using namespace QAnyStringViewUtils;
 
 struct ExclusiveVersionRange
 {
+    QAnyStringView fileName;
     QString claimerName;
     QTypeRevision addedIn;
     QTypeRevision removedIn;
@@ -58,12 +61,12 @@ bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments
             QString optionsFile = argument;
             optionsFile.remove(0, 1);
             if (optionsFile.isEmpty()) {
-                fprintf(stderr, "The @ option requires an input file");
+                warning(optionsFile) << "The @ option requires an input file";
                 return false;
             }
             QFile f(optionsFile);
             if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                fprintf(stderr, "Cannot open options file specified with @");
+                warning(optionsFile) << "Cannot open options file specified with @";
                 return false;
             }
             while (!f.atEnd()) {
@@ -81,56 +84,62 @@ bool QmlTypeRegistrar::argumentsFromCommandLineAndFile(QStringList &allArguments
 int QmlTypeRegistrar::runExtract(const QString &baseName, const MetaTypesJsonProcessor &processor)
 {
     if (processor.types().isEmpty()) {
-        fprintf(stderr, "Error: No types to register found in library\n");
+        error(baseName) << "No types to register found in library";
         return EXIT_FAILURE;
     }
     QFile headerFile(baseName + u".h");
     bool ok = headerFile.open(QFile::WriteOnly);
     if (!ok) {
-        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(headerFile.fileName()));
+        error(headerFile.fileName()) << "Cannot open header file for writing";
         return EXIT_FAILURE;
     }
+
+    QString includeGuard = baseName;
+    static const QRegularExpression nonAlNum(QLatin1String("[^a-zA-Z0-9_]"));
+    includeGuard.replace(nonAlNum, QLatin1String("_"));
+
     auto prefix = QString::fromLatin1(
             "#ifndef %1_H\n"
             "#define %1_H\n"
             "#include <QtQml/qqml.h>\n"
-            "#include <QtQml/qqmlmoduleregistration.h>\n").arg(baseName.toUpper());
+            "#include <QtQml/qqmlmoduleregistration.h>\n").arg(includeGuard);
     const QList<QString> includes = processor.includes();
     for (const QString &include: includes)
         prefix += u"\n#include <%1>"_s.arg(include);
-    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif");
+    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif\n");
 
     QFile sourceFile(baseName + u".cpp");
     ok = sourceFile.open(QFile::WriteOnly);
     if (!ok) {
-        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(sourceFile.fileName()));
+        error(sourceFile.fileName()) << "Cannot open implementation file for writing";
         return EXIT_FAILURE;
     }
     // the string split is necessaury because cmake's automoc scanner would otherwise pick up the include
     QString code = u"#include \"%1.h\"\n#include "_s.arg(baseName);
     code += uR"("moc_%1.cpp")"_s.arg(baseName);
     sourceFile.write(code.toUtf8());
+    sourceFile.write("\n");
     return EXIT_SUCCESS;
 }
 
-QCborValue QmlTypeRegistrar::findType(QAnyStringView name) const
+MetaType QmlTypeRegistrar::findType(QAnyStringView name) const
 {
-    for (const QCborMap &type : m_types) {
-        if (toStringView(type, S_QUALIFIED_CLASS_NAME) != name)
+    for (const MetaType &type : m_types) {
+        if (type.qualifiedClassName() != name)
             continue;
         return type;
     }
-    return QCborValue();
+    return MetaType();
 };
 
-QCborValue QmlTypeRegistrar::findTypeForeign(QAnyStringView name) const
+MetaType QmlTypeRegistrar::findTypeForeign(QAnyStringView name) const
 {
-    for (const QCborMap &type : m_foreignTypes) {
-        if (toStringView(type, S_QUALIFIED_CLASS_NAME) != name)
+    for (const MetaType &type : m_foreignTypes) {
+        if (type.qualifiedClassName() != name)
             continue;
         return type;
     }
-    return QCborValue();
+    return MetaType();
 };
 
 QString conflictingVersionToString(const ExclusiveVersionRange &r)
@@ -148,7 +157,18 @@ QString conflictingVersionToString(const ExclusiveVersionRange &r)
     return s;
 };
 
-void QmlTypeRegistrar::write(QTextStream &output)
+// Return a name for the registration variable containing the module to
+// avoid clashes in Unity builds.
+static QString registrationVarName(const QString &module)
+{
+    auto specialCharPred = [](QChar c) { return !c.isLetterOrNumber(); };
+    QString result = module;
+    result[0] = result.at(0).toLower();
+    result.erase(std::remove_if(result.begin(), result.end(), specialCharPred), result.end());
+    return result + "Registration"_L1;
+}
+
+void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) const
 {
     output << uR"(/****************************************************************************
 ** Generated QML type registration code
@@ -161,8 +181,11 @@ void QmlTypeRegistrar::write(QTextStream &output)
     output << u"#include <QtQml/qqml.h>\n"_s;
     output << u"#include <QtQml/qqmlmoduleregistration.h>\n"_s;
 
-    for (const QString &include : m_includes)
-        output << u"\n#include <%1>"_s.arg(include);
+    for (const QString &include : m_includes) {
+        output << u"\n#if __has_include(<%1>)"_s.arg(include);
+        output << u"\n#  include <%1>"_s.arg(include);
+        output << u"\n#endif"_s;
+    }
 
     output << u"\n\n"_s;
 
@@ -177,7 +200,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
     if (underscoredModuleAsSymbol != moduleAsSymbol
             || underscoredModuleAsSymbol.isEmpty()
             || underscoredModuleAsSymbol.front().isDigit()) {
-        qWarning() << m_module << "is an invalid QML module URI. You cannot import this.";
+        warning(outFileName) << m_module << "is an invalid QML module URI. You cannot import this.";
     }
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
@@ -209,56 +232,108 @@ void QmlTypeRegistrar::write(QTextStream &output)
                           .arg(majorVersion);
     }
 
+    output << uR"(
+    QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED)"_s;
+
     QVector<QAnyStringView> typesRegisteredAnonymously;
+
+    const auto fillTypesRegisteredAnonymously = [&](const auto &members, QAnyStringView typeName) {
+        bool foundRevisionEntry = false;
+        for (const auto &entry : members) {
+            if (entry.revision.isValid()) {
+                foundRevisionEntry = true;
+                break;
+            }
+        }
+
+        if (!foundRevisionEntry)
+            return false;
+
+        if (typesRegisteredAnonymously.contains(typeName))
+            return true;
+
+        typesRegisteredAnonymously.append(typeName);
+
+        if (m_followForeignVersioning) {
+            output << uR"(
+    qmlRegisterAnonymousTypesAndRevisions<%1>("%2", %3);)"_s.arg(typeName.toString(), m_module)
+                              .arg(majorVersion);
+            return true;
+        }
+
+        for (const auto &version
+                : m_pastMajorVersions + decltype(m_pastMajorVersions){ majorVersion }) {
+            output << uR"(
+    qmlRegisterAnonymousType<%1, 254>("%2", %3);)"_s.arg(typeName.toString(), m_module)
+                              .arg(version);
+        }
+
+        return true;
+    };
+
+
     QHash<QString, QList<ExclusiveVersionRange>> qmlElementInfos;
 
-    for (const QCborMap &classDef : m_types) {
-        const QString className = classDef[S_QUALIFIED_CLASS_NAME].toString();
+    for (const MetaType &classDef : std::as_const(m_types)) {
 
+        // Do not generate C++ registrations for JavaScript types.
+        if (classDef.inputFile().isEmpty())
+            continue;
+
+        QString className = classDef.qualifiedClassName().toString();
         QString targetName = className;
 
         // If either the foreign or the local part is a namespace we need to
         // generate a namespace registration.
-        bool targetIsNamespace = classDef.value(S_NAMESPACE).toBool();
+        bool targetIsNamespace = classDef.kind() == MetaType::Kind::Namespace;
 
         QAnyStringView extendedName;
-        bool seenQmlElement = false;
-        QString qmlElementName;
+        QList<QString> qmlElementNames;
         QTypeRevision addedIn;
         QTypeRevision removedIn;
 
-        const QCborArray classInfos = classDef.value(S_CLASS_INFOS).toArray();
-        for (const QCborValueConstRef info : classInfos) {
-            const QCborMap v = info.toMap();
-            const QAnyStringView name = toStringView(v, S_NAME);
+        for (const ClassInfo &v : classDef.classInfos()) {
+            const QAnyStringView name = v.name;
             if (name == S_ELEMENT) {
-                seenQmlElement = true;
-                qmlElementName = v[S_VALUE].toString();
+                qmlElementNames.append(v.value.toString());
             } else if (name == S_FOREIGN) {
-                targetName = v[S_VALUE].toString();
+                targetName = v.value.toString();
             } else if (name == S_FOREIGN_IS_NAMESPACE) {
-                targetIsNamespace = targetIsNamespace || (v[S_VALUE] == S_TRUE);
+                targetIsNamespace = targetIsNamespace || (v.value == S_TRUE);
             } else if (name == S_EXTENDED) {
-                extendedName = toStringView(v, S_VALUE);
+                extendedName = v.value;
             } else if (name == S_ADDED_IN_VERSION) {
-                int version = toInt(toStringView(v, S_VALUE));
+                int version = toInt(v.value);
                 addedIn = QTypeRevision::fromEncodedVersion(version);
                 addedIn = handleInMinorVersion(addedIn, majorVersion);
             } else if (name == S_REMOVED_IN_VERSION) {
-                int version = toInt(toStringView(v, S_VALUE));
+                int version = toInt(v.value);
                 removedIn = QTypeRevision::fromEncodedVersion(version);
                 removedIn = handleInMinorVersion(removedIn, majorVersion);
             }
         }
 
-        if (seenQmlElement && qmlElementName != S_ANONYMOUS) {
+        for (QString qmlElementName : std::as_const(qmlElementNames)) {
+            if (qmlElementName == S_ANONYMOUS)
+                continue;
             if (qmlElementName == S_AUTO)
                 qmlElementName = className;
-            qmlElementInfos[qmlElementName].append({ className, addedIn, removedIn });
+            qmlElementInfos[qmlElementName].append({
+                classDef.inputFile(),
+                className,
+                addedIn,
+                removedIn
+            });
         }
 
         // We want all related metatypes to be registered by name, so that we can look them up
         // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
+
+        const QList<QAnyStringView> namespaces
+                = MetaTypesJsonProcessor::namespaces(classDef);
+
+        const FoundType target = QmlTypesClassDescription::findType(
+                m_types, m_foreignTypes, targetName, namespaces);
 
         if (targetIsNamespace) {
             // We need to figure out if the _target_ is a namespace. If not, it already has a
@@ -266,19 +341,16 @@ void QmlTypeRegistrar::write(QTextStream &output)
 
             QString targetTypeName = targetName;
 
-            const QList<QAnyStringView> namespaces
-                    = MetaTypesJsonProcessor::namespaces(classDef);
+            if (!target.javaScript.isEmpty() && target.native.isEmpty())
+                warning(target.javaScript) << "JavaScript type cannot be used as namespace";
 
-            const QCborMap *target = QmlTypesClassDescription::findType(
-                    m_types, m_foreignTypes, targetName, namespaces);
-
-            if (target && target->value(S_OBJECT).toBool())
-                targetTypeName += QStringLiteral(" *");
+            if (target.native.kind() == MetaType::Kind::Object)
+                targetTypeName += " *"_L1;
 
             // If there is no foreign type, the local one is a namespace.
             // Otherwise, only do metaTypeForNamespace if the target _metaobject_ is a namespace.
             // Not if we merely consider it to be a namespace for QML purposes.
-            if (className == targetName || (target && target->value(S_NAMESPACE).toBool())) {
+            if (className == targetName || target.native.kind() == MetaType::Kind::Namespace) {
                 output << uR"(
     {
         Q_CONSTINIT static auto metaType = QQmlPrivate::metaTypeForNamespace(
@@ -287,6 +359,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
         QMetaType(&metaType).id();
     })"_s.arg(targetName, targetTypeName);
             } else {
+                Q_ASSERT(!targetTypeName.isEmpty());
                 output << u"\n    QMetaType::fromType<%1>().id();"_s.arg(targetTypeName);
             }
 
@@ -300,7 +373,7 @@ void QmlTypeRegistrar::write(QTextStream &output)
                 return result;
             };
 
-            if (seenQmlElement) {
+            if (!qmlElementNames.isEmpty()) {
                 output << uR"(
     qmlRegisterNamespaceAndRevisions(%1, "%2", %3, nullptr, %4, %5);)"_s
                                   .arg(metaObjectPointer(targetName), m_module)
@@ -310,27 +383,25 @@ void QmlTypeRegistrar::write(QTextStream &output)
                                                               : metaObjectPointer(extendedName));
             }
         } else {
-            if (seenQmlElement) {
-                auto checkRevisions = [&](const QCborArray &array, QLatin1StringView type) {
-                    for (auto it = array.constBegin(); it != array.constEnd(); ++it) {
-                        auto object = it->toMap();
-                        if (!object.contains(S_REVISION))
+            if (!qmlElementNames.isEmpty()) {
+                auto checkRevisions = [&](const auto &array, QLatin1StringView type) {
+                    for (auto it = array.begin(); it != array.end(); ++it) {
+                        if (!it->revision.isValid())
                             continue;
 
-                        QTypeRevision revision = QTypeRevision::fromEncodedVersion(
-                                object[S_REVISION].toInteger());
+                        QTypeRevision revision = it->revision;
                         if (m_moduleVersion < revision) {
-                            qWarning().noquote()
-                                    << "Warning:" << className << "is trying to register" << type
-                                    << object[S_NAME].toString()
+                            warning(classDef)
+                                    << className << "is trying to register" << type
+                                    << it->name
                                     << "with future version" << revision
                                     << "when module version is only" << m_moduleVersion;
                         }
                     }
                 };
 
-                const QCborArray methods = classDef[S_METHODS].toArray();
-                const QCborArray properties = classDef[S_PROPERTIES].toArray();
+                const Method::Container methods = classDef.methods();
+                const Property::Container properties = classDef.properties();
 
                 if (m_moduleVersion.isValid()) {
                     checkRevisions(properties, S_PROPERTY);
@@ -340,69 +411,37 @@ void QmlTypeRegistrar::write(QTextStream &output)
                 output << uR"(
     qmlRegisterTypesAndRevisions<%1>("%2", %3);)"_s.arg(className, m_module).arg(majorVersion);
 
-                const QCborValue superClasses = classDef[S_SUPER_CLASSES];
+                const BaseType::Container superClasses = classDef.superClasses();
 
-                if (superClasses.isArray()) {
-                    for (const QCborValueRef entry : superClasses.toArray()) {
-                        const QCborMap object = entry.toMap();
-                        if (object[S_ACCESS] != S_PUBLIC)
+                for (const BaseType &object : classDef.superClasses()) {
+                        if (object.access != Access::Public)
                             continue;
 
-                        QAnyStringView superClassName = toStringView(object, S_NAME);
+                        QAnyStringView superClassName = object.name;
 
                         QVector<QAnyStringView> classesToCheck;
 
                         auto checkForRevisions = [&](QAnyStringView typeName) -> void {
-                            auto type = findType(typeName);
+                            auto typeAsMap = findType(typeName);
 
-                            if (!type.isMap()) {
-                                type = findTypeForeign(typeName);
-                                if (!type.isMap())
+                            if (typeAsMap.isEmpty()) {
+                                typeAsMap = findTypeForeign(typeName);
+                                if (typeAsMap.isEmpty())
                                     return;
 
-                                const auto typeAsMap = type.toMap();
-                                for (QLatin1StringView section : { S_PROPERTIES, S_SIGNALS, S_METHODS }) {
-                                    bool foundRevisionEntry = false;
-                                    for (const QCborValueRef entry : typeAsMap[section].toArray()) {
-                                        if (entry.toMap().contains(S_REVISION)) {
-                                            foundRevisionEntry = true;
-                                            break;
-                                        }
-                                    }
-                                    if (foundRevisionEntry) {
-                                        if (typesRegisteredAnonymously.contains(typeName))
-                                            break;
-
-                                        typesRegisteredAnonymously.append(typeName);
-
-                                        if (m_followForeignVersioning) {
-                                            output << uR"(
-    qmlRegisterAnonymousTypesAndRevisions<%1>("%2", %3);)"_s.arg(typeName.toString(), m_module)
-                                                              .arg(majorVersion);
-                                            break;
-                                        }
-
-                                        for (const auto &version : m_pastMajorVersions
-                                                     + decltype(m_pastMajorVersions){
-                                                             majorVersion }) {
-                                            output << uR"(
-    qmlRegisterAnonymousType<%1, 254>("%2", %3);)"_s.arg(typeName.toString(), m_module)
-                                                              .arg(version);
-                                        }
-                                        break;
+                                if (!fillTypesRegisteredAnonymously(
+                                            typeAsMap.properties(), typeName)) {
+                                    if (!fillTypesRegisteredAnonymously(
+                                                typeAsMap.sigs(), typeName)) {
+                                        fillTypesRegisteredAnonymously(
+                                                typeAsMap.methods(), typeName);
                                     }
                                 }
                             }
 
-                            const QCborValue superClasses = type.toMap()[S_SUPER_CLASSES];
-
-                            if (superClasses.isArray()) {
-                                for (const QCborValueRef entry : superClasses.toArray()) {
-                                    const QCborMap object = entry.toMap();
-                                    if (object[S_ACCESS] != S_PUBLIC)
-                                        continue;
-                                    classesToCheck << toStringView(object, S_NAME);
-                                }
+                            for (const BaseType &object : typeAsMap.superClasses()) {
+                                if (object.access == Access::Public)
+                                    classesToCheck << object.name;
                             }
                         };
 
@@ -411,11 +450,27 @@ void QmlTypeRegistrar::write(QTextStream &output)
                         while (!classesToCheck.isEmpty())
                             checkForRevisions(classesToCheck.takeFirst());
                     }
-                }
             } else {
+                Q_ASSERT(!className.isEmpty());
+
+                // Since we don't have a QML name for this type, it can't refer to another type.
+                Q_ASSERT(className == targetName);
+
                 output << uR"(
     QMetaType::fromType<%1%2>().id();)"_s.arg(
-                    className, classDef.value(S_OBJECT).toBool() ? u" *" : u"");
+                        className, classDef.kind() == MetaType::Kind::Object ? u" *" : u"");
+            }
+        }
+
+        const auto enums = target.native.enums();
+        for (const auto &enumerator : enums) {
+            output << uR"(
+    QMetaType::fromType<%1::%2>().id();)"_s.arg(
+                    targetName, enumerator.name.toString());
+            if (!enumerator.alias.isEmpty()) {
+                output << uR"(
+    QMetaType::fromType<%1::%2>().id();)"_s.arg(
+                        targetName, enumerator.alias.toString());
             }
         }
     }
@@ -444,21 +499,23 @@ void QmlTypeRegistrar::write(QTextStream &output)
                           [&](const auto &q) {
                               registeringCppClasses += u", %1"_s.arg(conflictingVersionToString(q));
                           });
-            qWarning().noquote() << "Warning:" << qmlName
-                                 << "was registered multiple times by following Cpp classes: "
-                                 << registeringCppClasses;
+            warning(conflictingExportStartIt->fileName)
+                    << qmlName << "is registered multiple times by the following C++ classes:"
+                    << registeringCppClasses;
             conflictingExportStartIt = conflictingExportEndIt;
         }
     }
+
     output << uR"(
+    QT_WARNING_POP
     qmlRegisterModule("%1", %2, %3);
 }
 
-static const QQmlModuleRegistration registration("%1", %4);
+static const QQmlModuleRegistration %5("%1", %4);
 )"_s.arg(m_module)
                       .arg(majorVersion)
                       .arg(minorVersion)
-                      .arg(functionName);
+                      .arg(functionName, registrationVarName(m_module));
 
     if (!m_targetNamespace.isEmpty())
         output << u"} // namespace %1\n"_s.arg(m_targetNamespace);
@@ -470,6 +527,7 @@ bool QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile)
     creator.setOwnTypes(m_types);
     creator.setForeignTypes(m_foreignTypes);
     creator.setReferencedTypes(m_referencedTypes);
+    creator.setUsingDeclarations(m_usingDeclarations);
     creator.setModule(m_module.toUtf8());
     creator.setVersion(QTypeRevision::fromVersion(m_moduleVersion.majorVersion(), 0));
 
@@ -494,8 +552,8 @@ void QmlTypeRegistrar::setIncludes(const QList<QString> &includes)
 {
     m_includes = includes;
 }
-void QmlTypeRegistrar::setTypes(const QVector<QCborMap> &types,
-                                const QVector<QCborMap> &foreignTypes)
+void QmlTypeRegistrar::setTypes(
+        const QVector<MetaType> &types, const QVector<MetaType> &foreignTypes)
 {
     m_types = types;
     m_foreignTypes = foreignTypes;
@@ -503,6 +561,11 @@ void QmlTypeRegistrar::setTypes(const QVector<QCborMap> &types,
 void QmlTypeRegistrar::setReferencedTypes(const QList<QAnyStringView> &referencedTypes)
 {
     m_referencedTypes = referencedTypes;
+}
+
+void QmlTypeRegistrar::setUsingDeclarations(const QList<UsingDeclaration> &usingDeclarations)
+{
+    m_usingDeclarations = usingDeclarations;
 }
 
 QT_END_NAMESPACE

@@ -1,5 +1,5 @@
 // Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef TESTRHIITEM_H
 #define TESTRHIITEM_H
@@ -9,7 +9,7 @@
 
 class TestRenderer : public QQuickRhiItemRenderer
 {
-public:
+protected:
     void initialize(QRhiCommandBuffer *cb) override;
     void synchronize(QQuickRhiItem *item) override;
     void render(QRhiCommandBuffer *cb) override;
@@ -35,6 +35,8 @@ private:
 
     void initScene();
     void updateTexture();
+
+    friend class tst_QQuickRhiItem;
 };
 
 class TestRhiItem : public QQuickRhiItem

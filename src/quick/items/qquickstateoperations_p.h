@@ -25,19 +25,19 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickParentChangePrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickStateActionEvent
+class Q_QUICK_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentChange)
 
-    Q_PROPERTY(QQuickItem *target READ object WRITE setObject FINAL)
-    Q_PROPERTY(QQuickItem *parent READ parent WRITE setParent FINAL)
-    Q_PROPERTY(QQmlScriptString x READ x WRITE setX FINAL)
-    Q_PROPERTY(QQmlScriptString y READ y WRITE setY FINAL)
-    Q_PROPERTY(QQmlScriptString width READ width WRITE setWidth FINAL)
-    Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight FINAL)
-    Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale FINAL)
-    Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation FINAL)
+    Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
+    Q_PROPERTY(QQuickItem *parent READ parent WRITE setParent)
+    Q_PROPERTY(QQmlScriptString x READ x WRITE setX)
+    Q_PROPERTY(QQmlScriptString y READ y WRITE setY)
+    Q_PROPERTY(QQmlScriptString width READ width WRITE setWidth)
+    Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight)
+    Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
+    Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
     Q_CLASSINFO("ParentProperty", "parent")
     QML_NAMED_ELEMENT(ParentChange)
     QML_ADDED_IN_VERSION(2, 0)
@@ -91,7 +91,7 @@ public:
 
 class QQuickAnchorChanges;
 class QQuickAnchorSetPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchorSet : public QObject
+class Q_QUICK_EXPORT QQuickAnchorSet : public QObject
 {
     Q_OBJECT
 
@@ -146,13 +146,13 @@ private:
 };
 
 class QQuickAnchorChangesPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickStateActionEvent
+class Q_QUICK_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorChanges)
 
-    Q_PROPERTY(QQuickItem *target READ object WRITE setObject FINAL)
-    Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT FINAL)
+    Q_PROPERTY(QQuickItem *target READ object WRITE setObject)
+    Q_PROPERTY(QQuickAnchorSet *anchors READ anchors CONSTANT)
     QML_NAMED_ELEMENT(AnchorChanges)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -184,10 +184,6 @@ public:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickParentChange)
-QML_DECLARE_TYPE(QQuickAnchorSet)
-QML_DECLARE_TYPE(QQuickAnchorChanges)
 
 #endif // QQUICKSTATEOPERATIONS_P_H
 

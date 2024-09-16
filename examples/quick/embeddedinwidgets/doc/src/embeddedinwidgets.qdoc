@@ -6,7 +6,7 @@
     \image qml-embeddedinwidgets-example.jpg
     \brief Demonstrates embedding a QQuickWindow into a QWidget UI via QWidget::createWindowContainer().
     \ingroup qtquickexamples
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
 
     This example demonstrates one of the approaches to adding Qt Quick content
     into a QWidget-based application. QQuickView, and its parent class,

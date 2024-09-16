@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlFinalizerHook
+class Q_QML_EXPORT QQmlFinalizerHook
 {
 public:
     virtual ~QQmlFinalizerHook();

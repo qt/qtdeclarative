@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
@@ -34,6 +34,11 @@ ApplicationWindow {
             CheckBox {
                 id: useFileSystemModel
                 text: "Use file system model"
+            }
+
+            CheckBox {
+                id: interactiveMode
+                text: "Interactive"
             }
 
             Button {
@@ -88,12 +93,17 @@ ApplicationWindow {
             anchors.bottom: parent.bottom
             anchors.leftMargin: 100
             anchors.topMargin: 100
+            interactive: interactiveMode.checked
             clip: true
 
             selectionModel: ItemSelectionModel {}
 
             model: useFileSystemModel.checked ? fileSystemModel : testModel
             delegate: useCustomDelegate.checked ? customDelegate : treeViewDelegate
+        }
+
+        SelectionRectangle {
+            target: treeView
         }
     }
 
@@ -118,11 +128,13 @@ ApplicationWindow {
 
     Component {
         id: customDelegate
-        Item {
+        Rectangle {
             id: root
 
             implicitWidth: padding + label.x + label.implicitWidth + padding
             implicitHeight: label.implicitHeight * 1.5
+
+            required property bool selected
 
             readonly property real indentation: 20
             readonly property real padding: 5
@@ -133,6 +145,8 @@ ApplicationWindow {
             required property bool expanded
             required property int hasChildren
             required property int depth
+
+            color: selected ? "lightblue" : "transparent"
 
             Text {
                 id: indicator

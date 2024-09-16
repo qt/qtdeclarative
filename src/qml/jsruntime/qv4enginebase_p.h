@@ -45,7 +45,8 @@ struct Q_QML_EXPORT EngineBase {
 
     quint8 isExecutingInRegExpJIT = false;
     quint8 isInitialized = false;
-    quint8 padding[2];
+    quint8 inShutdown = false;
+    quint8 isGCOngoing = false; // incremental gc is ongoing (but mutator might be running)
     MemoryManager *memoryManager = nullptr;
 
     union {

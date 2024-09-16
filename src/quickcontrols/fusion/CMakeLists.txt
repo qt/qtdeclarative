@@ -92,7 +92,9 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 
-qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
+add_subdirectory(impl)
+
+qt_internal_add_qml_module(QuickControls2Fusion
     URI "QtQuick.Controls.Fusion"
     VERSION "${PROJECT_VERSION}"
     PAST_MAJOR_VERSIONS 2
@@ -107,7 +109,6 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
     SOURCES
         qquickfusionstyle.cpp qquickfusionstyle_p.h
         qquickfusiontheme.cpp qquickfusiontheme_p.h
-        qtquickcontrols2fusionstyleplugin.cpp
     QML_FILES
         ${qml_files}
     DEFINES
@@ -117,12 +118,23 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2FusionStyleImpl
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
 
-qt_internal_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
+target_sources(qtquickcontrols2fusionstyleplugin
+    PRIVATE
+        qtquickcontrols2fusionstyleplugin.cpp
+)
+
+target_link_libraries(qtquickcontrols2fusionstyleplugin
+    PRIVATE
+        Qt::QuickControls2Private
+)
+
+qt_internal_add_resource(QuickControls2Fusion "qtquickcontrols2fusionstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Fusion"
     FILES
@@ -139,8 +151,6 @@ qt_internal_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusi
         "images/progressmask@3x.png"
         "images/progressmask@4x.png"
 )
-
-add_subdirectory(impl)
 
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fusionstyleplugin quickwindow)
 _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fusionstyleplugin

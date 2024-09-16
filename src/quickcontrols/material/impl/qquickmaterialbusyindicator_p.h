@@ -51,6 +51,4 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickMaterialBusyIndicator)
-
 #endif // QQUICKMATERIALBUSYINDICATOR_P_H

@@ -78,11 +78,20 @@ Rectangle {
 
                 anchors.fill: directoryIcon
                 source: directoryIcon
-
-                colorizationColor: (treeDelegate.expanded && treeDelegate.hasChildren)
-                                         ? Colors.color2 : Colors.folder
                 colorization: 1.0
                 brightness: 1.0
+                colorizationColor: {
+                    const isFile = treeDelegate.index === fileSystemTreeView.lastIndex
+                                    && !treeDelegate.hasChildren;
+                    if (isFile)
+                        return Qt.lighter(Colors.folder, 3)
+
+                    const isExpandedFolder = treeDelegate.expanded && treeDelegate.hasChildren;
+                    if (isExpandedFolder)
+                        return Colors.color2
+                    else
+                        return Colors.folder
+                }
             }
 
             HoverHandler {

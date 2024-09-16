@@ -20,7 +20,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlV4Function;
 class QQuickTransition;
 class QQuickStackElement;
 class QQuickStackViewPrivate;
@@ -62,7 +61,7 @@ private:
     QVariantMap mProperties;
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickStackView : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(bool busy READ isBusy NOTIFY busyChanged FINAL)
@@ -142,9 +141,9 @@ public:
     };
     Q_ENUM(Operation)
 
-    Q_INVOKABLE void push(QQmlV4Function *args);
-    Q_INVOKABLE void pop(QQmlV4Function *args);
-    Q_INVOKABLE void replace(QQmlV4Function *args);
+    Q_INVOKABLE void push(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void pop(QQmlV4FunctionPtr args);
+    Q_INVOKABLE void replace(QQmlV4FunctionPtr args);
 
     Q_REVISION(6, 7) Q_INVOKABLE QQuickItem *pushItems(QList<QQuickStackViewArg> args,
         Operation operation = Immediate);
@@ -207,7 +206,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickStackView)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackViewAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickStackViewAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index NOTIFY indexChanged FINAL)
@@ -248,7 +247,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickStackView)
 
 #endif // QQUICKSTACKVIEW_P_H

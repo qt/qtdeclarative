@@ -21,14 +21,6 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QPlatformDialogHelperForeign
-{
-    Q_GADGET
-    QML_ANONYMOUS
-    QML_FOREIGN(QPlatformDialogHelper)
-    QML_ADDED_IN_VERSION(6, 2)
-};
-
 struct QQuickFileNameFilterQuickDialogs2Foreign
 {
     Q_GADGET

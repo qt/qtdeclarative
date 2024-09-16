@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QWavefrontMeshPrivate;
-class Q_LABSWAVEFRONTMESH_PRIVATE_EXPORT QWavefrontMesh : public QQuickShaderEffectMesh
+class Q_LABSWAVEFRONTMESH_EXPORT QWavefrontMesh : public QQuickShaderEffectMesh
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged FINAL)

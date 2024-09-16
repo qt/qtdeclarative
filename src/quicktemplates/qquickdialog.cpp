@@ -6,13 +6,14 @@
 #include "qquickdialogbuttonbox_p.h"
 #include "qquickabstractbutton_p.h"
 #include "qquickpopupitem_p_p.h"
+#include "qquickpopupwindow_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Dialog
     \inherits Popup
-//!     \instantiates QQuickDialog
+//!     \nativetype QQuickDialog
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols-dialogs
     \ingroup qtquickcontrols-popups
@@ -24,6 +25,10 @@ QT_BEGIN_NAMESPACE
     into three sections: \l header, \l {Popup::}{contentItem}, and \l footer.
 
     \image qtquickcontrols-page-wireframe.png
+
+    The \l {Popup::}{padding} properties only affect the contentItem. Use the
+    \l {Popup::}{spacing} property to affect the space between header,
+    contentItem and footer.
 
     By default, Dialogs have \l {QQuickItem::}{focus}.
 
@@ -160,6 +165,11 @@ void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
     }
 }
 
+Qt::WindowFlags QQuickDialogPrivate::popupWindowType() const
+{
+    return Qt::Dialog;
+}
+
 QQuickDialog::QQuickDialog(QObject *parent)
     : QQuickDialog(*(new QQuickDialogPrivate), parent)
 {
@@ -172,8 +182,6 @@ QQuickDialog::QQuickDialog(QQuickDialogPrivate &dd, QObject *parent)
 
     // Dialogs should get active focus when opened so that e.g. Cancel closes them.
     setFocus(true);
-
-    QObject::connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
     QObject::connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
     QObject::connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
     QObject::connect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
@@ -185,7 +193,6 @@ QQuickDialog::QQuickDialog(QQuickDialogPrivate &dd, QObject *parent)
 QQuickDialog::~QQuickDialog()
 {
     Q_D(QQuickDialog);
-    QObject::disconnect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
     QObject::disconnect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
     QObject::disconnect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
     QObject::disconnect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
@@ -214,13 +221,22 @@ QQuickDialog::~QQuickDialog()
 QString QQuickDialog::title() const
 {
     Q_D(const QQuickDialog);
-    return d->popupItem->title();
+    return d->m_title;
 }
 
 void QQuickDialog::setTitle(const QString &title)
 {
     Q_D(QQuickDialog);
-    d->popupItem->setTitle(title);
+    if (d->m_title == title)
+        return;
+    d->m_title = title;
+
+    if (d->popupWindow)
+        d->popupWindow->setTitle(title);
+    else
+        d->popupItem->setTitle(title);
+
+    emit titleChanged();
 }
 
 /*!
@@ -482,6 +498,12 @@ qreal QQuickDialog::implicitFooterHeight() const
 {
     Q_D(const QQuickDialog);
     return d->popupItem->implicitFooterHeight();
+}
+
+void QQuickDialog::setOpacity(qreal opacity)
+{
+    Q_D(QQuickDialog);
+    QQuickPopup::setOpacity(d->popupWindow ? qreal(!qFuzzyIsNull(opacity)) : opacity);
 }
 
 /*!

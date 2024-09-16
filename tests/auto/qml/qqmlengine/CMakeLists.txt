@@ -40,6 +40,8 @@ qt_add_qml_module(tst_qqmlengine_qml
     SOURCES
         "declarativelyregistered.h"
         "declarativelyregistered.cpp"
+        "objectListArgumentMethod.h"
+        "variantlistQJsonConversion.h"
     RESOURCE_PREFIX
         "/"
     OUTPUT_DIRECTORY

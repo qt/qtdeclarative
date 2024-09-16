@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS = \
-    painteditem \
-    maskedmousearea
+    painteditem
 
 EXAMPLE_FILES = \
     dialcontrol \

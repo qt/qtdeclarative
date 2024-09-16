@@ -45,7 +45,7 @@ struct QQmlImportRef {
 
 class QQmlType;
 class QQmlEngine;
-class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache final : public QQmlRefCounted<QQmlTypeNameCache>
+class Q_QML_EXPORT QQmlTypeNameCache final : public QQmlRefCounted<QQmlTypeNameCache>
 {
 public:
     QQmlTypeNameCache(const QQmlRefPointer<QQmlImports> &imports) : m_imports(imports) {}
@@ -74,27 +74,29 @@ public:
     // Restrict the types allowed for key. We don't want QV4::ScopedString, for  example.
 
     template<QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion>
-    Result query(const QHashedStringRef &key) const
+    Result query(const QHashedStringRef &key, QQmlTypeLoader *typeLoader) const
     {
-        return doQuery<const QHashedStringRef &, recursionRestriction>(key);
+        return doQuery<const QHashedStringRef &, recursionRestriction>(key, typeLoader);
     }
 
     template<QueryNamespaced queryNamespaced = QueryNamespaced::Yes>
-    Result query(const QHashedStringRef &key, const QQmlImportRef *importNamespace) const
+    Result query(const QHashedStringRef &key, const QQmlImportRef *importNamespace,
+                 QQmlTypeLoader *typeLoader) const
     {
-        return doQuery<const QHashedStringRef &, queryNamespaced>(key, importNamespace);
+        return doQuery<const QHashedStringRef &, queryNamespaced>(key, importNamespace, typeLoader);
     }
 
     template<QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion>
-    Result query(const QV4::String *key) const
+    Result query(const QV4::String *key, QQmlTypeLoader *typeLoader) const
     {
-        return doQuery<const QV4::String *, recursionRestriction>(key);
+        return doQuery<const QV4::String *, recursionRestriction>(key, typeLoader);
     }
 
     template<QueryNamespaced queryNamespaced = QueryNamespaced::Yes>
-    Result query(const QV4::String *key, const QQmlImportRef *importNamespace) const
+    Result query(const QV4::String *key, const QQmlImportRef *importNamespace,
+                 QQmlTypeLoader *typeLoader) const
     {
-        return doQuery<const QV4::String *, queryNamespaced>(key, importNamespace);
+        return doQuery<const QV4::String *, queryNamespaced>(key, importNamespace, typeLoader);
     }
 
 private:
@@ -122,7 +124,7 @@ private:
     static QString toQString(const QV4::String *key) { return key->toQStringNoThrow(); }
 
     template<typename Key, QQmlImport::RecursionRestriction recursionRestriction>
-    Result doQuery(Key name) const
+    Result doQuery(Key name, QQmlTypeLoader *typeLoader) const
     {
         Result result = doQuery(m_namedImports, name);
 
@@ -141,9 +143,9 @@ private:
             QQmlType t;
             bool typeRecursionDetected = false;
             const bool typeFound = m_imports->resolveType(
-                        toHashedStringRef(name), &t, nullptr, &typeNamespace, &errors,
-                        QQmlType::AnyRegistrationType,
-                        recursionRestriction == QQmlImport::AllowRecursion
+                    typeLoader, toHashedStringRef(name), &t, nullptr, &typeNamespace, &errors,
+                    QQmlType::AnyRegistrationType,
+                    recursionRestriction == QQmlImport::AllowRecursion
                             ? &typeRecursionDetected
                             : nullptr);
             if (typeFound)
@@ -155,7 +157,7 @@ private:
     }
 
     template<typename Key, QueryNamespaced queryNamespaced>
-    Result doQuery(Key name, const QQmlImportRef *importNamespace) const
+    Result doQuery(Key name, const QQmlImportRef *importNamespace, QQmlTypeLoader *typeLoader) const
     {
         Q_ASSERT(importNamespace && importNamespace->scriptIndex == -1);
 
@@ -183,7 +185,7 @@ private:
             QList<QQmlError> errors;
             QQmlType t;
             bool typeFound = m_imports->resolveType(
-                        qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
+                        typeLoader, qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
             if (typeFound)
                 return Result(t);
         }

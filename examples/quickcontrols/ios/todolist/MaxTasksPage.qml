@@ -29,6 +29,7 @@ Page {
 
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 10
+            Layout.fillWidth: false
 
             onValueModified: AppSettings.maxTasks = maxTasksSpinbox.value
         }

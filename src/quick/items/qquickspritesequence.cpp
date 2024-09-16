@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype SpriteSequence
-    \instantiates QQuickSpriteSequence
+    \nativetype QQuickSpriteSequence
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \inherits Item

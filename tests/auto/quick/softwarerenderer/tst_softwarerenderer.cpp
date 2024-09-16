@@ -1,5 +1,5 @@
 // Copyright (C) 2022 zccrs <zccrs@live.com>, JiDe Zhang <zhangjide@uniontech.com>.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtQuick>
 #include <QtQml>
@@ -56,10 +56,8 @@ void tst_SoftwareRenderer::renderTarget()
 
     rc.polishItems();
 
-    rc.beginFrame();
     rc.sync();
     rc.render();
-    rc.endFrame();
 
     QImage content = window->grabWindow();
     QString errorMessage;
@@ -74,10 +72,8 @@ void tst_SoftwareRenderer::renderTarget()
 
     rc.polishItems();
 
-    rc.beginFrame();
     rc.sync();
     rc.render();
-    rc.endFrame();
 
     content = window->grabWindow();
     QVERIFY2(QQuickVisualTestUtils::compareImages(content, renderTarget2, &errorMessage),

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsregistercontent_p.h"
-#include "qqmljstyperesolver_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -10,10 +9,9 @@ using namespace Qt::StringLiterals;
 
 QString QQmlJSRegisterContent::descriptiveName() const
 {
-    if (m_storedType.isNull())
+    if (m_storedType.isNull() && containedType().isNull())
         return u"(invalid type)"_s;
 
-    QString result = m_storedType->internalName() + u" of "_s;
     const auto scope = [this]() -> QString {
         if (m_scope.isNull())
             return u"(invalid type)::"_s;
@@ -25,49 +23,81 @@ QString QQmlJSRegisterContent::descriptiveName() const
                 + u"::"_s;
     };
 
-    switch (m_content.index()) {
-    case Type:
-        return result
-                + std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->internalName();
-    case Property: {
-        const QQmlJSMetaProperty prop = std::get<PropertyLookup>(m_content).property;
-        return result + scope() + prop.propertyName() + u" with type "_s + prop.typeName();
+    QString result;
+    switch (Kind(m_content.index())) {
+    case Kind::Type: {
+        const QQmlJSScope::ConstPtr contained = type();
+        result += contained->internalName();
+        if (m_storedType && m_storedType->internalName() != contained->internalName())
+            result += u" stored as "_s + m_storedType->internalName();
+        return result;
     }
-    case Method: {
-        const auto methods = std::get<QList<QQmlJSMetaMethod>>(m_content);
+    case Kind::Property: {
+        const QQmlJSMetaProperty prop = property();
+        result += scope() + prop.propertyName() + u" with type "_s + prop.typeName();
+        if (m_storedType && m_storedType->internalName() != prop.typeName())
+            result += u" (stored as "_s + m_storedType->internalName() + u")";
+        return result;
+    }
+    case Kind::Method: {
+        const auto methods = method();
         if (methods.isEmpty())
-            return result + scope() + u"(unknown method)"_s;
+            result = scope() + u"(unknown method)"_s;
         else
-            return result + scope() + methods[0].methodName() + u"(...)"_s;
+            result = scope() + methods[0].methodName() + u"(...)"_s;
+        if (m_storedType)
+            return result + u" (stored as "_s + m_storedType->internalName() + u")";
+        return result;
     }
-    case Enum: {
-        const auto e = std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content);
-        if (e.second.isEmpty())
-            return result + scope() + e.first.name();
+    case Kind::Enum: {
+        const QString enumName = enumeration().name();
+        const QString memberName = enumMember();
+        if (memberName.isEmpty())
+            result = scope() + enumName;
         else
-            return result + scope() + e.first.name() + u"::"_s + e.second;
+            result = scope() + enumName + u"::"_s + memberName;
+        if (m_storedType)
+            return result + u" (stored as "_s + m_storedType->internalName() + u")";
+        return result;
     }
-    case ImportNamespace: {
-        return u"import namespace %1"_s.arg(std::get<uint>(m_content));
+    case Kind::ImportNamespace: {
+        return u"import namespace %1"_s.arg(importNamespace());
     }
-    case Conversion: {
-        return u"conversion to %1"_s.arg(
-                    std::get<ConvertedTypes>(m_content).result->internalName());
+    case Kind::Conversion: {
+        return u"conversion to %1"_s.arg(conversionResult()->internalName());
     }
     }
+
     Q_UNREACHABLE_RETURN(result + u"wat?"_s);
+}
+
+QString QQmlJSRegisterContent::containedTypeName() const
+{
+    QQmlJSScope::ConstPtr type;
+
+    switch (variant()) {
+    case QQmlJSRegisterContent::MetaType:
+        type = scopeType();
+        break;
+    default:
+        type = containedType();
+        break;
+    }
+
+    return QQmlJSScope::prettyName(
+            type->internalName().isEmpty() ? type->baseTypeName() : type->internalName());
 }
 
 bool QQmlJSRegisterContent::isList() const
 {
-    switch (m_content.index()) {
-    case Type:
+    switch (Kind(m_content.index())) {
+    case Kind::Type:
         return std::get<std::pair<QQmlJSScope::ConstPtr, int>>(m_content).first->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
-    case Property:
+    case Kind::Property:
         return std::get<PropertyLookup>(m_content).property.type()->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
-    case Conversion:
+    case Kind::Conversion:
         return std::get<ConvertedTypes>(m_content).result->accessSemantics()
                 == QQmlJSScope::AccessSemantics::Sequence;
     default:
@@ -77,8 +107,8 @@ bool QQmlJSRegisterContent::isList() const
 
 bool QQmlJSRegisterContent::isWritable() const
 {
-    switch (m_content.index()) {
-    case Property:
+    switch (Kind(m_content.index())) {
+    case Kind::Property:
         return std::get<PropertyLookup>(m_content).property.isWritable();
 
     // TODO: What can we actually write?
@@ -89,67 +119,77 @@ bool QQmlJSRegisterContent::isWritable() const
     return true;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QQmlJSScope::ConstPtr &type,
-                                                    int resultLookupIndex,
-                                                    QQmlJSRegisterContent::ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSScope::ConstPtr QQmlJSRegisterContent::containedType() const
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
+    if (isType())
+        return type();
+    if (isProperty())
+        return property().type();
+    if (isEnumeration())
+        return enumeration().type();
+    if (isMethod())
+        return methodType();
+    if (isImportNamespace())
+        return importNamespaceType();
+    if (isConversion())
+        return conversionResult();
+
+    Q_UNREACHABLE_RETURN({});
+}
+
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QQmlJSScope::ConstPtr &type, int resultLookupIndex,
+        QQmlJSRegisterContent::ContentVariant variant, const QQmlJSScope::ConstPtr &scope)
+{
+    QQmlJSRegisterContent result(scope, variant);
     result.m_content = std::make_pair(type, resultLookupIndex);
     return result;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QQmlJSMetaProperty &property,
-                                                    int baseLookupIndex, int resultLookupIndex,
-                                                    QQmlJSRegisterContent::ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QQmlJSMetaProperty &property, int baseLookupIndex, int resultLookupIndex,
+        QQmlJSRegisterContent::ContentVariant variant, const QQmlJSScope::ConstPtr &scope)
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
+    QQmlJSRegisterContent result(scope, variant);
     result.m_content = PropertyLookup { property, baseLookupIndex, resultLookupIndex};
     return result;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QQmlJSMetaEnum &enumeration,
-                                                    const QString &enumMember,
-                                                    QQmlJSRegisterContent::ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QQmlJSMetaEnum &enumeration, const QString &enumMember,
+        QQmlJSRegisterContent::ContentVariant variant, const QQmlJSScope::ConstPtr &scope)
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
+    QQmlJSRegisterContent result(scope, variant);
     result.m_content = std::make_pair(enumeration, enumMember);
     return result;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QList<QQmlJSMetaMethod> &methods,
-                                                    QQmlJSRegisterContent::ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QList<QQmlJSMetaMethod> &methods, const QQmlJSScope::ConstPtr &methodType,
+        QQmlJSRegisterContent::ContentVariant variant, const QQmlJSScope::ConstPtr &scope)
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
-    result.m_content = methods;
+    // Methods can only be stored in QJSValue.
+    Q_ASSERT(methodType->internalName() == u"QJSValue"_s);
+    QQmlJSRegisterContent result(scope, variant);
+    result.m_content = std::make_pair(methods, methodType);
     return result;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    uint importNamespaceStringId,
-                                                    QQmlJSRegisterContent::ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        uint importNamespaceStringId, const QQmlJSScope::ConstPtr &importNamespaceType,
+        QQmlJSRegisterContent::ContentVariant variant, const QQmlJSScope::ConstPtr &scope)
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
-    result.m_content = importNamespaceStringId;
+    QQmlJSRegisterContent result(scope, variant);
+    result.m_content = std::make_pair(importNamespaceStringId, importNamespaceType);
     return result;
 }
 
-QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
-                                                    const QList<QQmlJSScope::ConstPtr> origins,
-                                                    const QQmlJSScope::ConstPtr &conversion,
-                                                    const QQmlJSScope::ConstPtr &conversionScope,
-                                                    ContentVariant variant,
-                                                    const QQmlJSScope::ConstPtr &scope)
+QQmlJSRegisterContent QQmlJSRegisterContent::create(
+        const QList<QQmlJSScope::ConstPtr> &origins, const QQmlJSScope::ConstPtr &conversion,
+        const QQmlJSScope::ConstPtr &conversionScope, ContentVariant variant,
+        const QQmlJSScope::ConstPtr &scope)
 {
-    QQmlJSRegisterContent result(storedType, scope, variant);
+    QQmlJSRegisterContent result(scope, variant);
     result.m_content = ConvertedTypes { origins, conversion, conversionScope };
     return result;
 }

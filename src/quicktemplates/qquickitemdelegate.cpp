@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ItemDelegate
     \inherits AbstractButton
-//!     \instantiates QQuickItemDelegate
+//!     \nativetype QQuickItemDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-delegates

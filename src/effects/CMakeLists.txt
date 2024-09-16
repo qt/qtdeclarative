@@ -25,9 +25,7 @@ qt_internal_add_qml_module(QuickEffectsPrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-    GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
-)
+    )
 
 qt_internal_add_resource(QuickEffectsPrivate "effects"
     PREFIX
@@ -54,6 +52,7 @@ set(EFFECT_SHADER_ARGS
         SILENT
         PRECOMPILE
         OPTIMIZED
+        MULTIVIEW
         PREFIX
             "/"
 )

@@ -48,6 +48,7 @@ public:
     QQuickDeferredPointer<QQuickItem> arrow;
     QQuickMenu *menu = nullptr;
     QQuickMenu *subMenu = nullptr;
+    qreal implicitTextPadding;
 };
 
 QT_END_NAMESPACE

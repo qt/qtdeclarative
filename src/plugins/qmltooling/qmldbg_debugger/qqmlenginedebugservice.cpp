@@ -761,7 +761,8 @@ bool QQmlEngineDebugServiceImpl::setMethodBody(int objectId, const QString &meth
     QV4::Scope scope(v4);
 
     int lineNumber = 0;
-    QV4::ScopedFunctionObject oldMethod(scope, vmeMetaObject->vmeMethod(prop->coreIndex()));
+    QV4::Scoped<QV4::JavaScriptFunctionObject> oldMethod(
+            scope, vmeMetaObject->vmeMethod(prop->coreIndex()));
     if (oldMethod && oldMethod->d()->function)
         lineNumber = oldMethod->d()->function->compiledFunction->location.line();
 

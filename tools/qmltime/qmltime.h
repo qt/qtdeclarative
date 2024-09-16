@@ -38,6 +38,5 @@ private:
     QQuickView m_view;
     QQuickItem *m_item;
 };
-QML_DECLARE_TYPE(Timer);
 
 #endif // QMLTIME_H

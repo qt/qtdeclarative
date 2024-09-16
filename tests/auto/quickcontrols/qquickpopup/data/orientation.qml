@@ -1,29 +1,36 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtQuick.Window
 import QtQuick.Controls
 
 Window {
-    width: 600
-    height: 300
+    width: 200
+    height: 100
 
     property alias popup: popup
 
     Rectangle {
-        width: 60
-        height: 30
+        width: 100
+        height: 80
         anchors.centerIn: parent
         border.width: 1
 
         Popup {
             id: popup
-            x: parent.width
-            y: parent.height
-            width: 30
-            height: 60
+            width: 50
+            height: 40
+            anchors.centerIn: parent
             visible: true
+            modal: false
+            dim: true
+            popupType: Popup.Item
+
+            Overlay.modeless: Rectangle {
+                opacity: 0.5
+                color: "blue"
+            }
         }
     }
 }

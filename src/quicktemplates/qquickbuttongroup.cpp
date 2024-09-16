@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ButtonGroup
     \inherits QtObject
-//!     \instantiates QQuickButtonGroup
+//!     \nativetype QQuickButtonGroup
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup utilities
@@ -84,6 +84,29 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
+    Another option is to filter the list of children. This is especially handy
+    if you're using a repeater to populate it, since the repeater will also be
+    a child of the parent layout:
+
+    \code
+    ButtonGroup {
+        buttons: column.children.filter((child) => child !== repeater)
+    }
+
+    Column {
+        id: column
+
+        Repeater {
+            id: repeater
+            model: [ qsTr("DAB"), qsTr("AM"), qsTr("FM") ]
+            RadioButton {
+                required property string modelData
+                text: modelData
+            }
+        }
+    }
+    \endcode
+
     More advanced use cases can be handled using the \c addButton() and
     \c removeButton() methods.
 
@@ -102,7 +125,9 @@ QT_BEGIN_NAMESPACE
     \code
     ButtonGroup {
         buttons: column.children
-        onClicked: console.log("clicked:", button.text)
+        onClicked: button => {
+            console.log("clicked:", button.text)
+        }
     }
 
     Column {

@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickTumblerAttached;
 class QQuickTumblerPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickTumbler : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
@@ -118,7 +118,7 @@ private:
 
 class QQuickTumblerAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumblerAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickTumblerAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickTumbler *tumbler READ tumbler CONSTANT FINAL)
@@ -139,7 +139,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickTumbler)
 
 #endif // QQUICKTUMBLER_P_H

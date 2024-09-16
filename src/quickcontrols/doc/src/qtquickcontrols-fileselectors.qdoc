@@ -8,7 +8,7 @@
     \l {QFileSelector}{File selectors} provide a convenient way of selecting
     file variants. Qt offers the platform name and the locale as built-in
     selectors. Qt Quick Controls extends the built-in selectors with the name
-    (lowercase) of the style that an application is running with.
+    (Capitalized) of the style that an application is running with.
 
     By using file selectors, style-specific tweaks can be applied without
     creating a hard dependency to a style. From the available file variants,
@@ -77,7 +77,7 @@
     \code
     // +Material/CustomButton.qml
     import QtQuick
-    import QtGraphicalEffects
+    import QtQuick.Effects
     import QtQuick.Controls
     import QtQuick.Controls.Material
 
@@ -93,11 +93,12 @@
             radius: width / 2
 
             layer.enabled: control.enabled
-            layer.effect: DropShadow {
-                verticalOffset: 1
-                color: Material.dropShadowColor
-                samples: control.pressed ? 20 : 10
-                spread: 0.5
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowHorizontalOffset: 3
+                shadowVerticalOffset: 3
+                shadowColor: Material.dropShadowColor
+                shadowBlur: control.pressed ? 0.8 : 0.4
             }
         }
     }

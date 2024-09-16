@@ -29,6 +29,4 @@ public:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickLabsPlatformMenuSeparator)
-
 #endif // QQUICKLABSPLATFORMMENUSEPARATOR_P_H

@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -56,6 +56,7 @@ private slots:
     void dragMargin();
 
     void reposition();
+    void rotate();
     void header();
 
     void dragHandlerInteraction();
@@ -63,8 +64,10 @@ private slots:
     void hover_data();
     void hover();
 
+#if QT_CONFIG(wheelevent)
     void wheel_data();
     void wheel();
+#endif
 
     void multiple();
 
@@ -488,6 +491,53 @@ void tst_QQuickDrawer::reposition()
     QTRY_COMPARE(popupItem2->x(), 0.0);
 }
 
+void tst_QQuickDrawer::rotate()
+{
+    QQuickControlsApplicationHelper helper(this, u"rotate.qml"_s);
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickDrawer *drawer_LR = window->property("drawer_LR").value<QQuickDrawer*>();
+    QVERIFY(drawer_LR);
+    QQuickItem *popupItem_LR = drawer_LR->popupItem();
+    QVERIFY(popupItem_LR);
+
+    QQuickDrawer *drawer_TB = window->property("drawer_TB").value<QQuickDrawer*>();
+    QVERIFY(drawer_TB);
+    QQuickItem *popupItem_TB = drawer_TB->popupItem();
+    QVERIFY(popupItem_TB);
+
+    drawer_LR->open();
+    drawer_TB->open();
+
+    const int drawerSize = window->property("drawerSize").toInt();
+    int virtualWidth = window->width();
+    int virtualHeight = window->height();
+
+    // First iteration tests an unrotated window; 2nd iteration repeats the test with a rotated window
+    for (int i = 0; i < 2; ++i) {
+        drawer_LR->setEdge(Qt::LeftEdge);
+        QTRY_COMPARE(geometry(popupItem_LR), QRectF(0, 0, drawerSize, virtualHeight));
+
+        drawer_TB->setEdge(Qt::TopEdge);
+        QTRY_COMPARE(geometry(popupItem_TB), QRectF(0, 0, virtualWidth, drawerSize));
+
+        drawer_LR->setEdge(Qt::RightEdge);
+        QTRY_COMPARE(geometry(popupItem_LR), QRectF(virtualWidth - drawerSize, 0, drawerSize, virtualHeight));
+
+        drawer_TB->setEdge(Qt::BottomEdge);
+        QTRY_COMPARE(geometry(popupItem_TB), QRectF(0, virtualHeight - drawerSize, virtualWidth, drawerSize));
+
+        if (i == 0) {
+            window->setProperty("rotated", true);
+            std::swap(virtualWidth, virtualHeight);
+        }
+    }
+}
+
 void tst_QQuickDrawer::header()
 {
     QQuickControlsApplicationHelper helper(this, QStringLiteral("header.qml"));
@@ -617,6 +667,7 @@ void tst_QQuickDrawer::hover()
     QVERIFY(!drawerItem->isHovered());
 }
 
+#if QT_CONFIG(wheelevent)
 void tst_QQuickDrawer::wheel_data()
 {
     QTest::addColumn<QString>("source");
@@ -703,6 +754,7 @@ void tst_QQuickDrawer::wheel()
         QVERIFY(qFuzzyCompare(drawerSlider->value(), oldDrawerValue)); // must not have moved
     }
 }
+#endif
 
 void tst_QQuickDrawer::multiple()
 {
@@ -1051,8 +1103,7 @@ void tst_QQuickDrawer::interactive_data()
 
 void tst_QQuickDrawer::interactive()
 {
-    if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)))
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION;
 
     QFETCH(QString, source);
     QQuickControlsApplicationHelper helper(this, source);
@@ -1441,14 +1492,24 @@ void tst_QQuickDrawer::touchOutsideOverlay() // QTBUG-103811
 
 void tst_QQuickDrawer::destroyWhileVisible()
 {
-    QQuickView window;
-    QVERIFY(QQuickTest::showView(window, testFileUrl("itemPartialOverlayModal.qml")));
-    auto *drawer = window.rootObject()->findChild<QQuickDrawer*>();
+    QScopedPointer<QQuickView> window(new QQuickView());
+    QVERIFY(QQuickTest::showView(*window, testFileUrl("itemPartialOverlayModal.qml")));
+    auto *drawer = window->rootObject()->findChild<QQuickDrawer*>();
     QVERIFY(drawer);
 
     drawer->open();
     QTRY_VERIFY(drawer->isOpened());
+
+    QQuickItem *dimmer = QQuickPopupPrivate::get(drawer)->dimmer;
+    QSignalSpy dimmerDeletedSpy(dimmer, &QObject::destroyed);
+
     // don't crash here when the drawer closes with an exit transition
+    window.reset();
+
+    // make sure the dimmer is deleted
+    QTRY_COMPARE(dimmerDeletedSpy.size(), 1);
+
+
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickDrawer)

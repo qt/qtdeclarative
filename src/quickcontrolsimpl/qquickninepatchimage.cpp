@@ -399,13 +399,13 @@ void QQuickNinePatchImage::pixmapChange()
         if (!d->resetNode)
             d->resetNode = d->ninePatch.isNull();
 
-        d->ninePatch = d->pix.image();
+        d->ninePatch = d->currentPix->image();
         if (d->ninePatch.depth() != 32)
             d->ninePatch = std::move(d->ninePatch).convertToFormat(QImage::Format_ARGB32);
 
         int w = d->ninePatch.width();
         int h = d->ninePatch.height();
-        d->pix.setImage(QImage(d->ninePatch.constBits() + 4 * (w + 1), w - 2, h - 2, d->ninePatch.bytesPerLine(), d->ninePatch.format()));
+        d->currentPix->setImage(QImage(d->ninePatch.constBits() + 4 * (w + 1), w - 2, h - 2, d->ninePatch.bytesPerLine(), d->ninePatch.format()));
 
         d->updatePatches();
     } else {
@@ -447,7 +447,7 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
         return QQuickImage::updatePaintNode(oldNode, data);
 
     QSizeF sz = size();
-    QImage image = d->pix.image();
+    QImage image = d->currentPix->image();
     if (!sz.isValid() || image.isNull()) {
         if (d->provider)
             d->provider->updateTexture(nullptr);

@@ -12,7 +12,7 @@
 
 /*!
     \qmltype Layout
-    //! \instantiates QQuickLayoutAttached
+    //! \nativetype QQuickLayoutAttached
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
     \brief Provides attached properties for items pushed onto a \l GridLayout,
@@ -80,6 +80,8 @@ QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
       m_fillHeight(false),
       m_isFillWidthSet(false),
       m_isFillHeightSet(false),
+      m_isUseDefaultSizePolicySet(false),
+      m_useDefaultSizePolicy(QQuickLayout::SizePolicyExplicit),
       m_isMinimumWidthSet(false),
       m_isMinimumHeightSet(false),
       m_isMaximumWidthSet(false),
@@ -303,15 +305,16 @@ void QQuickLayoutAttached::setMaximumImplicitSize(const QSizeF &sz)
     If this property is \c true, the item will be as wide as possible while respecting
     the given constraints. If the property is \c false, the item will have a fixed width
     set to the preferred width.
-    The default is \c false, except for layouts themselves, which default to \c true.
+    The default depends on implicit (built-in) size policy of item.
 
     \sa fillHeight
 */
 void QQuickLayoutAttached::setFillWidth(bool fill)
 {
+    bool oldFillWidth = fillWidth();
     m_isFillWidthSet = true;
-    if (m_fillWidth != fill) {
-        m_fillWidth = fill;
+    m_fillWidth = fill;
+    if (oldFillWidth != fill) {
         invalidateItem();
         emit fillWidthChanged();
     }
@@ -323,17 +326,42 @@ void QQuickLayoutAttached::setFillWidth(bool fill)
     If this property is \c true, the item will be as tall as possible while respecting
     the given constraints. If the property is \c false, the item will have a fixed height
     set to the preferred height.
-    The default is \c false, except for layouts themselves, which default to \c true.
+    The default depends on implicit (built-in) size policy of the item.
 
     \sa fillWidth
 */
 void QQuickLayoutAttached::setFillHeight(bool fill)
 {
+    bool oldFillHeight = fillHeight();
     m_isFillHeightSet = true;
-    if (m_fillHeight != fill) {
-        m_fillHeight = fill;
+    m_fillHeight = fill;
+    if (oldFillHeight != fill) {
         invalidateItem();
         emit fillHeightChanged();
+    }
+}
+
+/*!
+    \qmlattachedproperty enumeration Layout::useDefaultSizePolicy
+    \since 6.8
+
+    This property allows the user to configure the layout size policy at the component
+    level.
+
+    The default value will be inherited by querying the application attribute
+    \l Qt::AA_QtQuickUseDefaultSizePolicy. You can use this property to override that value.
+
+    \value Layout.SizePolicyImplicit
+        The item in the layout uses implicit or built-in size policy
+    \value Layout.SizePolicyExplicit
+        The item in the layout don't use implicit size policies.
+*/
+void QQuickLayoutAttached::setUseDefaultSizePolicy(QQuickLayout::SizePolicy sizePolicy)
+{
+    m_isUseDefaultSizePolicySet = true;
+    if (m_useDefaultSizePolicy != sizePolicy) {
+        m_useDefaultSizePolicy = sizePolicy;
+        emit useDefaultSizePolicyChanged();
     }
 }
 
@@ -731,7 +759,7 @@ QQuickLayout *QQuickLayoutAttached::parentLayout() const
         parentItem = parentItem->parentItem();
         return qobject_cast<QQuickLayout *>(parentItem);
     } else {
-        qmlWarning(parent()) << "Layout must be attached to Item elements";
+        qmlWarning(parent()) << "Layout attached property must be attached to an object deriving from Item";
     }
     return nullptr;
 }
@@ -833,20 +861,16 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
     d->m_dirtyArrangement = true;
 
     if (!qobject_cast<QQuickLayout *>(parentItem())) {
+        polish();
 
-        if (m_inUpdatePolish)
-            ++m_polishInsideUpdatePolish;
-        else
-            m_polishInsideUpdatePolish = 0;
-
-        if (m_polishInsideUpdatePolish <= 2) {
-            // allow at most two consecutive loops in order to respond to height-for-width
-            // (e.g QQuickText changes implicitHeight when its width gets changed)
-            qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
-            polish();
+        if (m_inUpdatePolish) {
+            if (++m_polishInsideUpdatePolish > 2)
+                // allow at most two consecutive loops in order to respond to height-for-width
+                // (e.g QQuickText changes implicitHeight when its width gets changed)
+                qCDebug(lcQuickLayouts) << "Layout polish loop detected for " << this
+                            << ". The polish request will still be scheduled.";
         } else {
-            qmlWarning(this).nospace() << "Layout polish loop detected for " << this
-                << ". Aborting after two iterations.";
+            m_polishInsideUpdatePolish = 0;
         }
     }
 }
@@ -925,7 +949,8 @@ void QQuickLayout::geometryChange(const QRectF &newGeometry, const QRectF &oldGe
 {
     Q_D(QQuickLayout);
     QQuickItem::geometryChange(newGeometry, oldGeometry);
-    if (d->m_disableRearrange || !isReady())
+    if ((invalidated() && !qobject_cast<QQuickLayout *>(parentItem())) ||
+        d->m_disableRearrange || !isReady())
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChange" << newGeometry << oldGeometry;
@@ -1255,21 +1280,33 @@ void QQuickLayout::effectiveSizeHints_helper(QQuickItem *item, QSizeF *cachedSiz
  */
 QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item, Qt::Orientation orientation, QQuickLayoutAttached *info)
 {
-    bool fillExtent = false;
+    QLayoutPolicy::Policy pol{QLayoutPolicy::Fixed};
     bool isSet = false;
     if (info) {
         if (orientation == Qt::Horizontal) {
             isSet = info->isFillWidthSet();
-            if (isSet) fillExtent = info->fillWidth();
+            if (isSet && info->fillWidth())
+                pol = QLayoutPolicy::Preferred;
         } else {
             isSet = info->isFillHeightSet();
-            if (isSet) fillExtent = info->fillHeight();
+            if (isSet && info->fillHeight())
+                pol = QLayoutPolicy::Preferred;
         }
     }
-    if (!isSet && qobject_cast<QQuickLayout*>(item))
-        fillExtent = true;
-    return fillExtent ? QLayoutPolicy::Preferred : QLayoutPolicy::Fixed;
+    if (!isSet && item) {
+        auto effectiveUseDefaultSizePolicy = [info]() {
+            return info ? info->useDefaultSizePolicy() == QQuickLayout::SizePolicyImplicit
+                        : QGuiApplication::testAttribute(Qt::AA_QtQuickUseDefaultSizePolicy);
+        };
+        if (qobject_cast<QQuickLayout*>(item)) {
+            pol = QLayoutPolicy::Preferred;
+        } else if (effectiveUseDefaultSizePolicy()) {
+            QLayoutPolicy sizePolicy = QQuickItemPrivate::get(item)->sizePolicy();
+            pol = (orientation == Qt::Horizontal) ? sizePolicy.horizontalPolicy() : sizePolicy.verticalPolicy();
+        }
+    }
 
+    return pol;
 }
 
 void QQuickLayout::_q_dumpLayoutTree() const

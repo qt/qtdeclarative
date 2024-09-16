@@ -23,17 +23,17 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFrameAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickFrameAnimation : public QObject, public QQmlParserStatus
+class Q_QUICK_EXPORT QQuickFrameAnimation : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickFrameAnimation)
     Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
-    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged FINAL)
-    Q_PROPERTY(int currentFrame READ currentFrame NOTIFY currentFrameChanged FINAL)
-    Q_PROPERTY(qreal frameTime READ frameTime NOTIFY frameTimeChanged FINAL)
-    Q_PROPERTY(qreal smoothFrameTime READ smoothFrameTime NOTIFY smoothFrameTimeChanged FINAL)
-    Q_PROPERTY(qreal elapsedTime READ elapsedTime NOTIFY elapsedTimeChanged FINAL)
+    Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged)
+    Q_PROPERTY(bool paused READ isPaused WRITE setPaused NOTIFY pausedChanged)
+    Q_PROPERTY(int currentFrame READ currentFrame NOTIFY currentFrameChanged)
+    Q_PROPERTY(qreal frameTime READ frameTime NOTIFY frameTimeChanged)
+    Q_PROPERTY(qreal smoothFrameTime READ smoothFrameTime NOTIFY smoothFrameTimeChanged)
+    Q_PROPERTY(qreal elapsedTime READ elapsedTime NOTIFY elapsedTimeChanged)
     QML_NAMED_ELEMENT(FrameAnimation)
     QML_ADDED_IN_VERSION(6, 4)
 
@@ -79,7 +79,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFrameAnimation)
 
 #endif

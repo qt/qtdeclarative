@@ -5,7 +5,7 @@
     \title QQuickRenderControl RHI Example
     \example rendercontrol/rendercontrol_rhi
     \brief Shows how to render a Qt Quick scene into a QRhiTexture.
-    \examplecategory {Graphics & Multimedia}
+    \examplecategory {Graphics}
     \image rendercontrol-rhi-example.jpg
 
     This example demonstrates how to set up a Qt Quick scene that has its

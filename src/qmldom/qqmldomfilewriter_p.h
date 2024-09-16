@@ -37,14 +37,15 @@ public:
 
     ~FileWriter()
     {
-        if (!silentWarnings)
-            for (QString w : warnings)
+        if (!silentWarnings) {
+            for (const QString &w : std::as_const(warnings))
                 qWarning() << w;
+        }
         if (shouldRemoveTempFile)
             tempFile.remove();
     }
 
-    Status write(QString targetFile, function_ref<bool(QTextStream &)> write, int nBk = 2);
+    Status write(const QString &targetFile, function_ref<bool(QTextStream &)> write, int nBk = 2);
 
     bool shouldRemoveTempFile = false;
     bool silentWarnings = false;

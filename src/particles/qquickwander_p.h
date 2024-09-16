@@ -28,13 +28,13 @@ struct WanderData{
     qreal y_var;
 };
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickWanderAffector : public QQuickParticleAffector
+class Q_QUICKPARTICLES_EXPORT QQuickWanderAffector : public QQuickParticleAffector
 {
     Q_OBJECT
-    Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged FINAL)
-    Q_PROPERTY(qreal xVariance READ xVariance WRITE setXVariance NOTIFY xVarianceChanged FINAL)
-    Q_PROPERTY(qreal yVariance READ yVariance WRITE setYVariance NOTIFY yVarianceChanged FINAL)
-    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged FINAL)
+    Q_PROPERTY(qreal pace READ pace WRITE setPace NOTIFY paceChanged)
+    Q_PROPERTY(qreal xVariance READ xVariance WRITE setXVariance NOTIFY xVarianceChanged)
+    Q_PROPERTY(qreal yVariance READ yVariance WRITE setYVariance NOTIFY yVarianceChanged)
+    Q_PROPERTY(AffectableParameters affectedParameter READ affectedParameter WRITE setAffectedParameter NOTIFY affectedParameterChanged)
     QML_NAMED_ELEMENT(Wander)
     QML_ADDED_IN_VERSION(2, 0)
 

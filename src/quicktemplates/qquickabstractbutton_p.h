@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAction;
 class QQuickAbstractButtonPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickAbstractButton : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(QString text READ text WRITE setText RESET resetText NOTIFY textChanged FINAL)
@@ -119,6 +119,8 @@ public:
 
 public Q_SLOTS:
     void toggle();
+    Q_REVISION(6, 8) void click();
+    Q_REVISION(6, 8) void animateClick();
 
 Q_SIGNALS:
     void pressed();
@@ -187,7 +189,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickAbstractButton)
 
 #endif // QQUICKABSTRACTBUTTON_P_H

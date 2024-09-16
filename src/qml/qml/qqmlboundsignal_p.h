@@ -24,7 +24,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression final
+class Q_QML_EXPORT QQmlBoundSignalExpression final
     : public QQmlJavaScriptExpression,
       public QQmlRefCounted<QQmlBoundSignalExpression>
 {
@@ -62,7 +62,7 @@ private:
     const QObject *m_target;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint
+class Q_QML_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint
 {
 public:
     QQmlBoundSignal(QObject *target, int signal, QObject *owner, QQmlEngine *engine);

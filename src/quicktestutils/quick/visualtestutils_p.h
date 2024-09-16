@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #ifndef QQUICKVISUALTESTUTILS_P_H
 #define QQUICKVISUALTESTUTILS_P_H
@@ -15,6 +15,8 @@
 // We mean it.
 //
 
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQuick/private/qquickitem_p.h>
 
@@ -62,7 +64,7 @@ namespace QQuickVisualTestUtils
         QPoint mFrom;
     };
 
-    [[nodiscard]] bool delegateVisible(QQuickItem *item);
+    [[nodiscard]] bool isDelegateVisible(QQuickItem *item);
 
     /*
        Find an item with the specified objectName.  If index is supplied then the
@@ -223,8 +225,17 @@ namespace QQuickVisualTestUtils
     QPoint mapToWindow(const QQuickItem *item, const QPointF &relativePos);
 }
 
-#define QQUICK_VERIFY_POLISH(item) \
-    QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
+#define SKIP_IF_NO_WINDOW_ACTIVATION \
+do { \
+    if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
+        QSKIP("Window activation is not supported on this platform"); \
+} while (false)
+
+#define SKIP_IF_NO_WINDOW_GRAB \
+do { \
+    if (QGuiApplication::platformName() == QLatin1String("minimal")) \
+        QSKIP("grabWindow is not supported on the minimal platform"); \
+} while (false)
 
 QT_END_NAMESPACE
 

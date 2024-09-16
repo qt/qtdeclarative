@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -146,6 +146,7 @@ TestCase {
             }
         }
     }
+
     Component {
         id: scrollableTextAreaWithSibling
         ScrollView {
@@ -156,21 +157,23 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(scrollView, testCase)
         verify(control)
     }
 
     function test_scrollBars() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200})
         verify(control)
 
-        var vertical = control.ScrollBar.vertical
+        let vertical = control.ScrollBar.vertical
         verify(vertical)
 
-        var horizontal = control.ScrollBar.horizontal
+        let horizontal = control.ScrollBar.horizontal
         verify(horizontal)
 
         control.contentHeight = 400
@@ -210,14 +213,14 @@ TestCase {
     }
 
     function test_oneChild(data) {
-        var control = createTemporaryObject(data.component, testCase)
+        let control = createTemporaryObject(data.component, testCase)
         verify(control)
 
-        var flickable = control.contentItem
+        let flickable = control.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
-        var label = flickable.contentItem.children[0]
+        let label = flickable.contentItem.children[0]
         compare(label.text, "ABC")
 
         compare(control.implicitWidth, label.implicitWidth)
@@ -241,34 +244,34 @@ TestCase {
     }
 
     function test_multipleChildren() {
-        var control = createTemporaryObject(scrollableLabels, testCase)
+        let control = createTemporaryObject(scrollableLabels, testCase)
         verify(control)
 
-        var flickable = control.contentItem
+        let flickable = control.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
         compare(control.contentChildren, flickable.contentItem.children)
 
-        var label1 = control.contentChildren[0]
+        let label1 = control.contentChildren[0]
         compare(label1.text, "First")
 
-        var label2 = control.contentChildren[1]
+        let label2 = control.contentChildren[1]
         compare(label2.text, "Second")
 
-        var label3 = control.contentChildren[2]
+        let label3 = control.contentChildren[2]
         compare(label3.text, "Third")
 
-        var expectedContentHeight = label1.implicitHeight + label2.implicitHeight + label3.implicitHeight
+        let expectedContentHeight = label1.implicitHeight + label2.implicitHeight + label3.implicitHeight
         compare(control.contentHeight, expectedContentHeight)
         compare(flickable.contentHeight, expectedContentHeight)
     }
 
     function test_listView() {
-        var control = createTemporaryObject(scrollableListView, testCase)
+        let control = createTemporaryObject(scrollableListView, testCase)
         verify(control)
 
-        var listview = control.contentItem
+        let listview = control.contentItem
         verify(listview.hasOwnProperty("contentX"))
         verify(listview.hasOwnProperty("contentY"))
         verify(listview.hasOwnProperty("model"))
@@ -284,10 +287,10 @@ TestCase {
         // children, even if the flickable has an empty or negative content
         // size. Some flickables (e.g ListView) sets a negative
         // contentWidth on purpose, which should be respected.
-        var scrollview = createTemporaryObject(scrollableFlickable, testCase)
+        let scrollview = createTemporaryObject(scrollableFlickable, testCase)
         verify(scrollview)
 
-        var flickable = scrollview.contentItem
+        let flickable = scrollview.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
@@ -302,10 +305,10 @@ TestCase {
         // not the flickable, then those values will be forwarded and used
         // by the flickable (rather than trying to calculate the content size
         // based on the flickables children).
-        var scrollview = createTemporaryObject(scrollableWithContentSize, testCase)
+        let scrollview = createTemporaryObject(scrollableWithContentSize, testCase)
         verify(scrollview)
 
-        var flickable = scrollview.contentItem
+        let flickable = scrollview.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
@@ -319,10 +322,10 @@ TestCase {
         // Check that if both the scrollview and the flickable has
         // contentWidth/Height set (which is an inconsistency/fault
         // by the app), the content size of the scrollview wins.
-        var scrollview = createTemporaryObject(scrollableAndFlicableWithContentSize, testCase)
+        let scrollview = createTemporaryObject(scrollableAndFlicableWithContentSize, testCase)
         verify(scrollview)
 
-        var flickable = scrollview.contentItem
+        let flickable = scrollview.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
@@ -333,14 +336,14 @@ TestCase {
     }
 
     function test_flickableWithExplicitContentSize() {
-        var control = createTemporaryObject(emptyFlickable, testCase)
+        let control = createTemporaryObject(emptyFlickable, testCase)
         verify(control)
 
-        var flickable = control.contentItem
+        let flickable = control.contentItem
         verify(flickable.hasOwnProperty("contentX"))
         verify(flickable.hasOwnProperty("contentY"))
 
-        var flickableContentSize = 1000;
+        let flickableContentSize = 1000;
         flickable.contentWidth = flickableContentSize;
         flickable.contentHeight = flickableContentSize;
 
@@ -366,13 +369,13 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
         verify(control)
 
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton)
         compare(control.contentItem.contentY, 0)
 
-        for (var y = control.height / 2; y >= 0; --y) {
+        for (let y = control.height / 2; y >= 0; --y) {
             mouseMove(control, control.width / 2, y, 10)
             compare(control.contentItem.contentY, 0)
         }
@@ -382,10 +385,10 @@ TestCase {
     }
 
     function test_hover() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
         verify(control)
 
-        var vertical = control.ScrollBar.vertical
+        let vertical = control.ScrollBar.vertical
         verify(vertical)
         vertical.hoverEnabled = true
 
@@ -397,10 +400,10 @@ TestCase {
     }
 
     function test_wheel() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
         verify(control)
 
-        var vertical = control.ScrollBar.vertical
+        let vertical = control.ScrollBar.vertical
         verify(vertical)
 
         mouseWheel(control, control.width / 2, control.height / 2, 0, -120)
@@ -410,21 +413,21 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentHeight: 400})
         verify(control)
 
-        var vertical = control.ScrollBar.vertical
+        let vertical = control.ScrollBar.vertical
         verify(vertical)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.contentItem.contentY, 0)
 
         compare(vertical.active, false)
         compare(vertical.interactive, false)
 
-        var maxContentY = 0
-        for (var y = control.height / 2; y >= 0; --y) {
+        let maxContentY = 0
+        for (let y = control.height / 2; y >= 0; --y) {
             touch.move(0, control, control.width / 2, y).commit()
             maxContentY = Math.max(maxContentY, control.contentItem.contentY)
         }
@@ -437,7 +440,7 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentWidth: 400, contentHeight: 400})
+        let control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentWidth: 400, contentHeight: 400})
         verify(control)
         // If the viewport is smaller than the size of the ScrollView
         // (like windows style does due to its opaque scrollbars),
@@ -448,31 +451,31 @@ TestCase {
         control.forceActiveFocus()
         verify(control.activeFocus)
 
-        var vertical = control.ScrollBar.vertical
+        let vertical = control.ScrollBar.vertical
         verify(vertical)
 
         compare(vertical.position, 0.0)
-        for (var i = 1; i <= 10; ++i) {
+        for (let i = 1; i <= 10; ++i) {
             keyClick(Qt.Key_Down)
             compare(vertical.position, Math.min(0.5, i * 0.1))
         }
         compare(vertical.position, 0.5)
-        for (i = 1; i <= 10; ++i) {
+        for (let i = 1; i <= 10; ++i) {
             keyClick(Qt.Key_Up)
             compare(vertical.position, Math.max(0.0, 0.5 - i * 0.1))
         }
         compare(vertical.position, 0.0)
 
-        var horizontal = control.ScrollBar.horizontal
+        let horizontal = control.ScrollBar.horizontal
         verify(horizontal)
 
         compare(horizontal.position, 0.0)
-        for (i = 1; i <= 10; ++i) {
+        for (let i = 1; i <= 10; ++i) {
             keyClick(Qt.Key_Right)
             compare(horizontal.position, Math.min(0.5, i * 0.1))
         }
         compare(horizontal.position, 0.5)
-        for (i = 1; i <= 10; ++i) {
+        for (let i = 1; i <= 10; ++i) {
             keyClick(Qt.Key_Left)
             compare(horizontal.position, Math.max(0.0, 0.5 - i * 0.1))
         }
@@ -481,13 +484,13 @@ TestCase {
 
     function test_textArea() {
         // TODO: verify no binding loop warnings (QTBUG-62325)
-        var control = createTemporaryObject(scrollableTextArea, testCase)
+        let control = createTemporaryObject(scrollableTextArea, testCase)
         verify(control)
 
-        var flickable = control.contentItem
+        let flickable = control.contentItem
         verify(flickable && flickable.hasOwnProperty("contentX"))
 
-        var textArea = flickable.contentItem.children[0]
+        let textArea = flickable.contentItem.children[0]
         verify(textArea && textArea.hasOwnProperty("text"))
 
         compare(control.contentWidth, flickable.contentWidth)
@@ -523,7 +526,7 @@ TestCase {
 
     function test_textAreaWithSibling() {
         // Checks that it does not crash when the ScrollView is deleted
-        var control = createTemporaryObject(scrollableTextAreaWithSibling, testCase)
+        let control = createTemporaryObject(scrollableTextAreaWithSibling, testCase)
         verify(control)
     }
 
@@ -727,5 +730,36 @@ TestCase {
         verify(verticalScrollBar.active)
 
         // Shouldn't crash.
+    }
+
+    Component {
+        id: scrollViewContentItemComp
+
+        ScrollView {
+            id: scrollView
+            anchors.fill: parent
+            Column {
+                width: parent.width
+                Repeater {
+                    model: 20
+                    Rectangle {
+                        width: scrollView.width
+                        height: 60
+                        color: (index % 2 == 0) ? "red" : "green"
+                    }
+                }
+            }
+        }
+    }
+
+    function test_scrollViewContentItemSize() {
+        let scrollview = createTemporaryObject(scrollViewContentItemComp, testCase)
+        verify(scrollview)
+        let contentItem = scrollview.contentItem
+        waitForRendering(contentItem)
+        compare(contentItem.contentWidth, 400)
+        compare(contentItem.contentHeight, 1200)
+        compare(scrollview.contentWidth, 400)
+        compare(scrollview.contentHeight, 1200)
     }
 }

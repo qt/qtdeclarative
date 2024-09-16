@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -20,7 +20,12 @@ TestCase {
 
     Component {
         id: tabBar
-        TabBar { }
+        TabBar {
+            topPadding: 0
+            bottomPadding: 0
+            leftPadding: 0
+            rightPadding: 0
+        }
     }
 
     Component {
@@ -53,10 +58,12 @@ TestCase {
         SignalSpy { }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
-        var control = createTemporaryObject(tabBar, testCase)
+    function test_defaults() {
+        let control = createTemporaryObject(tabBar, testCase)
         verify(control)
         compare(control.count, 0)
         compare(control.currentIndex, -1)
@@ -64,7 +71,7 @@ TestCase {
     }
 
     function test_current() {
-        var control = createTemporaryObject(tabBar, testCase)
+        let control = createTemporaryObject(tabBar, testCase)
 
         compare(control.count, 0)
         compare(control.currentIndex, -1)
@@ -110,7 +117,7 @@ TestCase {
     }
 
     function test_current_static() {
-        var control = createTemporaryObject(tabBarStaticTabs, testCase)
+        let control = createTemporaryObject(tabBarStaticTabs, testCase)
 
         compare(control.count, 2)
         compare(control.currentIndex, 0)
@@ -126,7 +133,7 @@ TestCase {
     }
 
     function test_addRemove() {
-        var control = createTemporaryObject(tabBar, testCase)
+        let control = createTemporaryObject(tabBar, testCase)
 
         function verifyCurrentIndexCountDiff() {
             verify(control.currentIndex < control.count)
@@ -134,7 +141,7 @@ TestCase {
         control.currentIndexChanged.connect(verifyCurrentIndexCountDiff)
         control.countChanged.connect(verifyCurrentIndexCountDiff)
 
-        var contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
+        let contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         compare(control.count, 0)
@@ -226,7 +233,7 @@ TestCase {
     }
 
     function test_removeCurrent() {
-        var control = createTemporaryObject(tabBar, testCase)
+        let control = createTemporaryObject(tabBar, testCase)
 
         control.addItem(tabButton.createObject(control, {text: "1"}))
         control.addItem(tabButton.createObject(control, {text: "2"}))
@@ -260,19 +267,19 @@ TestCase {
     }
 
     function test_content() {
-        var control = createTemporaryObject(contentBar, testCase)
+        let control = createTemporaryObject(contentBar, testCase)
 
         function compareObjectNames(content, names) {
             if (content.length !== names.length)
                 return false
-            for (var i = 0; i < names.length; ++i) {
+            for (let i = 0; i < names.length; ++i) {
                 if (content[i].objectName !== names[i])
                     return false
             }
             return true
         }
 
-        var contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
+        let contentChildrenSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "contentChildrenChanged"})
         verify(contentChildrenSpy.valid)
 
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", ""]))
@@ -312,20 +319,20 @@ TestCase {
     }
 
     function test_repeater() {
-        var control = createTemporaryObject(repeated, testCase)
+        let control = createTemporaryObject(repeated, testCase)
         verify(control)
 
-        var model = control.contentModel
+        let model = control.contentModel
         verify(model)
 
-        var repeater = control.repeater
+        let repeater = control.repeater
         verify(repeater)
 
         compare(repeater.count, 5)
         compare(model.count, 5)
 
-        for (var i = 0; i < 5; ++i) {
-            var item1 = control.itemAt(i)
+        for (let i = 0; i < 5; ++i) {
+            let item1 = control.itemAt(i)
             verify(item1)
             compare(item1.idx, i)
             compare(model.get(i), item1)
@@ -336,8 +343,8 @@ TestCase {
         compare(repeater.count, 3)
         compare(model.count, 3)
 
-        for (var j = 0; j < 3; ++j) {
-            var item2 = control.itemAt(j)
+        for (let j = 0; j < 3; ++j) {
+            let item2 = control.itemAt(j)
             verify(item2)
             compare(item2.idx, j)
             compare(model.get(j), item2)
@@ -366,7 +373,7 @@ TestCase {
     }
 
     function test_order() {
-        var control = createTemporaryObject(ordered, testCase)
+        let control = createTemporaryObject(ordered, testCase)
         verify(control)
 
         compare(control.count, 7)
@@ -415,12 +422,12 @@ TestCase {
     }
 
     function test_move(data) {
-        var control = createTemporaryObject(tabBar, testCase)
+        let control = createTemporaryObject(tabBar, testCase)
 
         compare(control.count, 0)
-        var titles = ["1", "2", "3"]
+        let titles = ["1", "2", "3"]
 
-        var i = 0;
+        let i = 0;
         for (i = 0; i < titles.length; ++i)
             control.addItem(tabButton.createObject(control, {text: titles[i]}))
 
@@ -434,7 +441,7 @@ TestCase {
         compare(control.count, titles.length)
         compare(control.currentIndex, data.currentAfter)
 
-        var title = titles[data.from]
+        let title = titles[data.from]
         titles.splice(data.from, 1)
         titles.splice(data.to, 0, title)
 
@@ -457,13 +464,13 @@ TestCase {
     }
 
     function test_dynamic() {
-        var control = createTemporaryObject(dynamicBar, testCase)
+        let control = createTemporaryObject(dynamicBar, testCase)
 
         // insertItem(), addItem(), createObject() and static TabButton {}
         compare(control.count, 4)
         compare(control.itemAt(0).text, "inserted")
 
-        var tab = tabButton.createObject(control, {text: "dying"})
+        let tab = tabButton.createObject(control, {text: "dying"})
         compare(control.count, 5)
         compare(control.itemAt(4).text, "dying")
 
@@ -482,13 +489,13 @@ TestCase {
     }
 
     function test_layout(data) {
-        var control = createTemporaryObject(tabBar, testCase, {spacing: data.spacing, width: 200})
+        let control = createTemporaryObject(tabBar, testCase, {spacing: data.spacing, width: 200})
 
         // remove the background so that it won't affect the implicit size of the tabbar,
         // so the implicit sizes tested below are entirely based on the content size
         control.background = null
 
-        var tab1 = tabButton.createObject(control, {text: "First"})
+        let tab1 = tabButton.createObject(control, {text: "First"})
         control.addItem(tab1)
         tryCompare(tab1, "width", control.width)
         compare(tab1.height, control.height)
@@ -499,7 +506,7 @@ TestCase {
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        var tab2 = tabButton.createObject(control, {implicitHeight: tab1.implicitHeight + 10, text: "Second"})
+        let tab2 = tabButton.createObject(control, {implicitHeight: tab1.implicitHeight + 10, text: "Second"})
         control.addItem(tab2)
         tryCompare(tab1, "width", (control.width - data.spacing) / 2)
         compare(tab1.height, control.height)
@@ -512,7 +519,7 @@ TestCase {
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        var tab3 = tabButton.createObject(control, {width: 50, height: tab1.implicitHeight - 10, text: "Third"})
+        let tab3 = tabButton.createObject(control, {width: 50, height: tab1.implicitHeight - 10, text: "Third"})
         control.addItem(tab3)
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - 50) / 2)
         compare(tab1.y, 0)
@@ -531,7 +538,8 @@ TestCase {
         compare(control.implicitWidth, control.contentWidth + control.leftPadding + control.rightPadding)
         compare(control.implicitHeight, control.contentHeight + control.topPadding + control.bottomPadding)
 
-        var expectedWidth = tab3.contentItem.implicitWidth + tab3.leftPadding + tab3.rightPadding
+        let expectedWidth = Math.max(tab3.implicitBackgroundWidth + tab3.leftInset + tab3.rightInset,
+                                     tab3.implicitContentWidth + tab3.leftPadding + tab3.rightPadding)
         tab3.width = tab3.implicitWidth
         tab3.height = tab3.implicitHeight
         tryCompare(tab1, "width", (control.width - 2 * data.spacing - expectedWidth) / 2)
@@ -621,10 +629,10 @@ TestCase {
     }
 
     function test_attached() {
-        var control = createTemporaryObject(tabBar, testCase, {position: TabBar.Footer})
+        let control = createTemporaryObject(tabBar, testCase, {position: TabBar.Footer})
 
         // append
-        var tab1 = createTemporaryObject(attachedButton, testCase)
+        let tab1 = createTemporaryObject(attachedButton, testCase)
         compare(tab1.index, -1)
         compare(tab1.tabBar, null)
         compare(tab1.position, TabBar.Header)
@@ -635,7 +643,7 @@ TestCase {
         compare(tab1.position, TabBar.Footer)
 
         // insert in the beginning
-        var tab2 = createTemporaryObject(attachedButton, testCase)
+        let tab2 = createTemporaryObject(attachedButton, testCase)
         compare(tab2.index, -1)
         compare(tab2.tabBar, null)
         compare(tab2.position, TabBar.Header)
@@ -648,7 +656,7 @@ TestCase {
         compare(tab1.index, 1)
 
         // insert in the middle
-        var tab3 = createTemporaryObject(attachedButton, testCase)
+        let tab3 = createTemporaryObject(attachedButton, testCase)
         compare(tab3.index, -1)
         compare(tab3.tabBar, null)
         compare(tab3.position, TabBar.Header)
@@ -662,7 +670,7 @@ TestCase {
         compare(tab1.index, 2)
 
         // insert in the end
-        var tab4 = createTemporaryObject(attachedButton, testCase)
+        let tab4 = createTemporaryObject(attachedButton, testCase)
         compare(tab4.index, -1)
         compare(tab4.tabBar, null)
         compare(tab4.position, TabBar.Header)

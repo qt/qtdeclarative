@@ -25,7 +25,7 @@ class QQuickOverlayPrivate;
 class QQuickOverlayAttached;
 class QQuickOverlayAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
+class Q_QUICKTEMPLATES2_EXPORT QQuickOverlay : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
@@ -76,7 +76,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickOverlay)
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlayAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickOverlayAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
@@ -107,7 +107,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickOverlay)
 
 #endif // QQUICKOVERLAY_P_H

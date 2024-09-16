@@ -22,7 +22,7 @@ using namespace Qt::StringLiterals;
 /*!
     \qmltype TextField
     \inherits TextInput
-//!     \instantiates QQuickTextField
+//!     \nativetype QQuickTextField
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-input
@@ -364,6 +364,16 @@ QPalette QQuickTextFieldPrivate::defaultPalette() const
     return QQuickTheme::palette(QQuickTheme::TextField);
 }
 
+bool QQuickTextFieldPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
+{
+    Q_Q(QQuickTextField);
+    const auto focusReasonChanged = QQuickItemPrivate::setLastFocusChangeReason(reason);
+    if (focusReasonChanged)
+        emit q->focusReasonChanged();
+
+    return focusReasonChanged;
+}
+
 QQuickTextField::QQuickTextField(QQuickItem *parent)
     : QQuickTextInput(*(new QQuickTextFieldPrivate), parent)
 {
@@ -523,22 +533,32 @@ void QQuickTextField::setPlaceholderTextColor(const QColor &color)
 /*!
     \qmlproperty enumeration QtQuick.Controls::TextField::focusReason
 
-    \include qquickcontrol-focusreason.qdocinc
+    This property holds the reason of the last focus change.
+
+    \note This property does not indicate whether the item has \l {Item::activeFocus}
+        {active focus}, but the reason why the item either gained or lost focus.
+
+    \value Qt.MouseFocusReason         A mouse action occurred.
+    \value Qt.TabFocusReason           The Tab key was pressed.
+    \value Qt.BacktabFocusReason       A Backtab occurred. The input for this may include the Shift or Control keys; e.g. Shift+Tab.
+    \value Qt.ActiveWindowFocusReason  The window system made this window either active or inactive.
+    \value Qt.PopupFocusReason         The application opened/closed a pop-up that grabbed/released the keyboard focus.
+    \value Qt.ShortcutFocusReason      The user typed a label's buddy shortcut
+    \value Qt.MenuBarFocusReason       The menu bar took focus.
+    \value Qt.OtherFocusReason         Another reason, usually application-specific.
+
+    \note Prefer \l {QtQuick.Controls::Control::focusReason} to this property.
 */
 Qt::FocusReason QQuickTextField::focusReason() const
 {
     Q_D(const QQuickTextField);
-    return d->focusReason;
+    return d->lastFocusChangeReason();
 }
 
 void QQuickTextField::setFocusReason(Qt::FocusReason reason)
 {
     Q_D(QQuickTextField);
-    if (d->focusReason == reason)
-        return;
-
-    d->focusReason = reason;
-    emit focusReasonChanged();
+    d->setLastFocusChangeReason(reason);
 }
 
 /*!
@@ -837,13 +857,11 @@ QSGNode *QQuickTextField::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 void QQuickTextField::focusInEvent(QFocusEvent *event)
 {
     QQuickTextInput::focusInEvent(event);
-    setFocusReason(event->reason());
 }
 
 void QQuickTextField::focusOutEvent(QFocusEvent *event)
 {
     QQuickTextInput::focusOutEvent(event);
-    setFocusReason(event->reason());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)

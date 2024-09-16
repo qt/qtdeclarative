@@ -50,7 +50,7 @@ protected:
 namespace Heap {
 
 struct PromiseCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(ExecutionEngine *engine);
 };
 
 #define PromiseObjectMembers(class, Member) \
@@ -181,7 +181,7 @@ struct PromiseExecutionState : Object
     V4_OBJECT2(PromiseExecutionState, Object)
 };
 
-struct Q_QML_PRIVATE_EXPORT PromiseObject : Object
+struct Q_QML_EXPORT PromiseObject : Object
 {
     V4_OBJECT2(PromiseObject, Object)
     V4_NEEDS_DESTROY

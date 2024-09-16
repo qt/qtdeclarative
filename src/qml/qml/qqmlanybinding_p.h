@@ -73,10 +73,10 @@ public:
     {
         QQmlAnyBinding binding;
         Q_ASSERT(object);
-        QQmlData *data = QQmlData::get(object, true);
         auto coreIndex = index.coreIndex();
         // we don't support bindable properties on value types so far
-        if (!index.hasValueTypeIndex() && data->propertyCache->property(coreIndex)->isBindable()) {
+        if (!index.hasValueTypeIndex()
+            && QQmlData::ensurePropertyCache(object)->property(coreIndex)->isBindable()) {
             auto metaProp = object->metaObject()->property(coreIndex);
             QUntypedBindable bindable = metaProp.bindable(object);
             binding = bindable.binding();
@@ -459,8 +459,7 @@ private:
                 delete  qqmlptr;
         } else if (d.isT2()) {
             QPropertyBindingPrivate *priv = d.asT2();
-            priv->ref--;
-            if (!priv->ref)
+            if (!priv->deref())
                 QPropertyBindingPrivate::destroyAndFreeMemory(priv);
         }
         d = static_cast<QQmlAbstractBinding *>(nullptr);

@@ -2,14 +2,13 @@ import QtQuick 2.0
 
 Item {
     width: 320
-    height: 480
-
+    height: 680
     Component {
         id: component
         Column {
             property variant listModel: model
             Repeater {
-                model: [Text.NativeRendering, Text.QtRendering]
+                model: [Text.NativeRendering, Text.QtRendering, Text.CurveRendering]
                 Rectangle {
                     width: text.implicitWidth
                     height: text.implicitHeight

@@ -23,19 +23,19 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSpringAnimationPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
+class Q_QUICK_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickSpringAnimation)
     Q_DECLARE_PRIVATE(QQuickSpringAnimation)
     Q_INTERFACES(QQmlPropertyValueSource)
 
-    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity FINAL)
-    Q_PROPERTY(qreal spring READ spring WRITE setSpring FINAL)
-    Q_PROPERTY(qreal damping READ damping WRITE setDamping FINAL)
-    Q_PROPERTY(qreal epsilon READ epsilon WRITE setEpsilon FINAL)
-    Q_PROPERTY(qreal modulus READ modulus WRITE setModulus NOTIFY modulusChanged FINAL)
-    Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged FINAL)
+    Q_PROPERTY(qreal velocity READ velocity WRITE setVelocity)
+    Q_PROPERTY(qreal spring READ spring WRITE setSpring)
+    Q_PROPERTY(qreal damping READ damping WRITE setDamping)
+    Q_PROPERTY(qreal epsilon READ epsilon WRITE setEpsilon)
+    Q_PROPERTY(qreal modulus READ modulus WRITE setModulus NOTIFY modulusChanged)
+    Q_PROPERTY(qreal mass READ mass WRITE setMass NOTIFY massChanged)
     QML_NAMED_ELEMENT(SpringAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -73,7 +73,5 @@ Q_SIGNALS:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickSpringAnimation)
 
 #endif // QQUICKSPRINGANIMATION_H

@@ -5,6 +5,7 @@
 
 add_subdirectory(binding)
 add_subdirectory(compilation)
+add_subdirectory(deltablue)
 add_subdirectory(javascript)
 add_subdirectory(holistic)
 add_subdirectory(qqmlchangeset)

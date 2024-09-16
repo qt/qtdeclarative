@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
@@ -31,6 +31,8 @@ private slots:
     void override();
 
     void ordering();
+
+    void actionAccessibility();
 private:
     QQmlEngine engine;
 };
@@ -271,6 +273,26 @@ void tst_accessibility::ordering()
     QStringList strings;
     a11yDescendants(iface, [&](QAccessibleInterface *iface) {strings << iface->text(QAccessible::Name);});
     QCOMPARE(strings.join(QLatin1String(", ")), "Header, Content item 1, Content item 2, Footer");
+#endif
+}
+
+void tst_accessibility::actionAccessibility()
+{
+#if QT_CONFIG(accessibility)
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("actionAccessibility/button.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
+    QVERIFY(item);
+    const QString description = "Show peaches some love";
+    QCOMPARE(item->property("text"), description);
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item);
+    QVERIFY(iface);
+    QCOMPARE(iface->text(QAccessible::Name), "Peach");
+    QCOMPARE(iface->text(QAccessible::Description), description);
 #endif
 }
 

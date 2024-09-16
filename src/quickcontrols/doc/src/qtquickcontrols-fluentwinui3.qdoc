@@ -1,0 +1,46 @@
+// Copyright (C) 2024 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquickcontrols-fluentwinui3.html
+    \title FluentWinUI3 Style
+
+    The FluentWinUI3 Style is a modern, native-looking style designed for platforms
+    running Windows 11 and above.
+    \l {detailed-desc-FluentWinUI3}{More...}
+
+    \styleimport {QtQuick.Controls.FluentWinUI3} {Qt 6.8}
+
+    \section1 Detailed Description
+    \target detailed-desc-FluentWinUI3
+
+    The FluentWinUI3 style draws inspiration from the Fluent UI design and the WinUI3 framework.
+    It utilizes image assets for most of the visual elements while at the same time adhering
+    to the global theme colors configured on Windows systems and the \l {fluentwinui3-palette}{palette}.
+
+    The FluentWinUI3 style is not a native style and can be run on all supported platforms,
+    looking more or less identical everywhere. Minor differences may occur due to differences
+    in available system fonts and font rendering engines.
+
+    \include style-screenshots.qdocinc {file} {FluentWinUI3} {fluentwinui3}
+
+    To run an application with the FluentWinUI3 style, see
+    \l {Using Styles in Qt Quick Controls}.
+
+    \section2 Current state
+
+    The FluentWinUI3 style is under development, and some controls are not yet supported. Those controls
+    are: \l Dial, \l Drawer, \l HorizontalHeaderView, \l SplitView, \l StackView, \l SwipeDelegate,
+    \l SwipeView, \l TreeViewDelegate, \l Tumbler, and \l VerticalHeaderView. Those will fall back to
+    use the \l {Fusion Style}.
+
+    \section2 Customization
+
+    \section3 Palette
+    \target fluentwinui3-palette
+
+    The FluentWinUI3 style supports palette customization via the \l {Item::}{palette}
+    property and the \l {Palette Configuration}{qtquickcontrols2.conf} file. As with other styles,
+    the exact \l[QML]{Palette}{palette roles} that the FluentWinUI3 style uses are style-dependent.
+    \note Since the style incorporates image assets, certain elements of the control may not be customizable.
+*/

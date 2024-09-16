@@ -55,6 +55,18 @@ public:
     // map from register index to expected type
     using VirtualRegisters = QFlatMap<int, VirtualRegister>;
 
+    struct BasicBlock
+    {
+        QList<int> jumpOrigins;
+        QList<int> readRegisters;
+        int jumpTarget = -1;
+        bool jumpIsUnconditional = false;
+        bool isReturnBlock = false;
+        bool isThrowBlock = false;
+    };
+
+    using BasicBlocks = QFlatMap<int, BasicBlock>;
+
     struct InstructionAnnotation
     {
         // Registers explicit read as part of the instruction.
@@ -70,20 +82,38 @@ public:
     };
 
     using InstructionAnnotations = QFlatMap<int, InstructionAnnotation>;
+    struct BlocksAndAnnotations
+    {
+        BasicBlocks basicBlocks;
+        InstructionAnnotations annotations;
+    };
 
     struct Function
     {
         QQmlJSScopesById addressableScopes;
         QList<QQmlJSRegisterContent> argumentTypes;
         QList<QQmlJSRegisterContent> registerTypes;
-        QQmlJSScope::ConstPtr returnType;
-        QQmlJSScope::ConstPtr qmlScope;
+        QQmlJSRegisterContent returnType;
+        QQmlJSRegisterContent qmlScope;
         QByteArray code;
         const SourceLocationTable *sourceLocations = nullptr;
         bool isSignalHandler = false;
         bool isQPropertyBinding = false;
         bool isProperty = false;
         bool isFullyTyped = false;
+    };
+
+    struct ObjectOrArrayDefinition
+    {
+        enum {
+            ArrayClassId = -1,
+            ArrayConstruct1ArgId = -2,
+        };
+
+        int instructionOffset = -1;
+        int internalClassId = ArrayClassId;
+        int argc = 0;
+        int argv = -1;
     };
 
     struct State
@@ -233,10 +263,15 @@ public:
     };
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
+                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                      QList<QQmlJS::DiagnosticMessage> *errors, const BasicBlocks &basicBlocks = {},
+                      const InstructionAnnotations &annotations = {})
         : m_jsUnitGenerator(jsUnitGenerator)
         , m_typeResolver(typeResolver)
         , m_logger(logger)
+        , m_errors(errors)
+        , m_basicBlocks(basicBlocks)
+        , m_annotations(annotations)
     {}
 
 protected:
@@ -245,7 +280,9 @@ protected:
     QQmlJSLogger *m_logger = nullptr;
 
     const Function *m_function = nullptr;
-    QQmlJS::DiagnosticMessage *m_error = nullptr;
+    QList<QQmlJS::DiagnosticMessage> *m_errors;
+    BasicBlocks m_basicBlocks;
+    InstructionAnnotations m_annotations;
 
     int firstRegisterIndex() const
     {
@@ -334,18 +371,17 @@ protected:
         return sourceLocation(currentInstructionOffset());
     }
 
-    void setError(const QString &message, int instructionOffset)
+    void addError(const QString &message, int instructionOffset)
     {
-        Q_ASSERT(m_error);
-        if (m_error->isValid())
-            return;
-        m_error->message = message;
-        m_error->loc = sourceLocation(instructionOffset);
+        QQmlJS::DiagnosticMessage diagnostic;
+        diagnostic.message = message;
+        diagnostic.loc = sourceLocation(instructionOffset);
+        m_errors->append(diagnostic);
     }
 
-    void setError(const QString &message)
+    void addError(const QString &message)
     {
-        setError(message, currentInstructionOffset());
+        addError(message, currentInstructionOffset());
     }
 
     static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)

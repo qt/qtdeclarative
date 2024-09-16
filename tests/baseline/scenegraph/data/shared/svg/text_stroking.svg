@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="550" height="450">
+<!--Testing different values of stroke-linejoin-->
+  <g transform="translate(5, 70)">
+    <rect y="-55" width="250" height="210" fill="none" stroke="black" stroke-width="1"/>
+    <text y="0" style="font-size: 60px; font-weight: bold; font-family: sans-serif; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linejoin: bevel">QtQuick</text>
+    <text y="70" style="font-size: 60px; font-weight: bold; font-family: sans-serif; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linejoin: miter">QtQuick</text>
+    <text y="140" style="font-size: 60px; font-weight: bold; font-family: sans-serif; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linejoin: round">QtQuick</text>
+  </g>
+<!--Testing dash arrays with different values for stroke-linecap-->
+  <g transform="translate(5, 280)">
+    <rect y="-55" width="250" height="210" fill="none" stroke="black" stroke-width="1"/>
+    <text style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:3,5; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: square;">QtQuick</text>
+    <text y="70" style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:3,5; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: round">QtQuick</text>
+    <text y="140" style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:3,5; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: butt">QtQuick</text>
+  </g>
+<!--Testing dash arrays and dash offsets-->
+  <g transform="translate(270, 70)">
+    <rect y="-55" width="250" height="210" fill="none" stroke="black" stroke-width="1"/>
+    <text style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:0; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: square;">QtQuick</text>
+    <text y="70" style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:3, 5; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: square">QtQuick</text>
+    <text y="140" style="font-size: 60; font-weight: bold; font-family: sans-serif; stroke-dasharray:3,5; stroke-dashoffset:3; fill: peachpuff; stroke: black; stroke-width:3.1px; stroke-linecap: square">QtQuick</text>
+  </g>
+</svg>

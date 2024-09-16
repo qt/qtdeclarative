@@ -5,22 +5,113 @@
 \page qmllint-warnings-and-errors-missing-property.html
 \ingroup qmllint-warnings-and-errors
 
-\title missing-property
-\brief BRIEF
+\title Missing property
+\brief Binding a value to a non-existing property.
 
-\section1 missing-property
+\qmllintwarningcategory missing-property
+
+\section1 Can't assign to non-existent default property
 
 \section2 What happened?
-TODO
+You assigned an object to a non-existing default property.
 
 \section2 Why is this bad?
-TODO
+The QML engine can't assign this object at runtime.
 
 \section2 Example
 \qml
+import QtQuick
+
+Item {
+    component MyType: QtObject { property Item myItem; }
+
+    MyType {
+        Item {}
+    }
+}
+
 \endqml
-You can fix this warning by TODO
+To fix this warning, specify the property you want to bind to or, if you are the author
+of the type, mark a property as default:
 \qml
+import QtQuick
+
+Item {
+    component MyType: QtObject { property Item myItem; }
+
+    MyType {
+        myItem: Item {}
+    }
+
+    component AlternativeMyType: QtObject { default property Item myItem; }
+
+    AlternativeMyType {
+        Item {} // bound to myItem via default property
+    }
+}
 \endqml
+
+\section1 Property does not exist
+
+\section2 What happened?
+You assigned an expression to a non-existing property.
+
+\section2 Why is this bad?
+The QML engine can't assign this expression at runtime.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    property int myInt
+    myItn: 42
+}
+
+\endqml
+To fix this warning, remove the binding or correct a possible typo:
+\qml
+import QtQuick
+
+Item {
+    property int myInt
+    myInt: 42
+}
+
+\endqml
+
+\section1 Member not found on type
+
+\section2 What happened?
+You accessed a member in a field member expression that can't be found by QML tooling.
+
+A field member expression is an expression of the form \c {someId.someProperty}.
+
+\section2 Why is this bad?
+The QML tooling can't find this member, and the QML engine probably can't either.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    id: self
+    property int myInt
+    property int myInt2: 1 + self.myItn
+}
+
+\endqml
+To fix this warning, remove the binding or correct a possible typo:
+\qml
+import QtQuick
+
+Item {
+    id: self
+    property int myInt
+    property int myInt2: 1 + self.myInt
+}
+
+\endqml
+
 */
 

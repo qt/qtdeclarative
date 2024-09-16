@@ -52,7 +52,7 @@ struct Binding;
 // default state for elemental object allocations.  This is crucial in the
 // workings of the QQmlInstruction::CreateSimpleObject instruction.
 // Don't change anything here without first considering that case!
-class Q_QML_PRIVATE_EXPORT QQmlData : public QAbstractDeclarativeData
+class Q_QML_EXPORT QQmlData : public QAbstractDeclarativeData
 {
 public:
     enum Ownership { DoesNotOwnMemory, OwnsMemory };

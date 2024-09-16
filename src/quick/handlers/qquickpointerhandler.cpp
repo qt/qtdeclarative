@@ -13,15 +13,14 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
-Q_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
-Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
-Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
+Q_STATIC_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
+Q_STATIC_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 
 /*!
     \qmltype PointerHandler
     \qmlabstract
     \since 5.10
-    \instantiates QQuickPointerHandler
+    \nativetype QQuickPointerHandler
     \inqmlmodule QtQuick
     \brief Abstract handler for pointer events.
 
@@ -197,11 +196,13 @@ void QQuickPointerHandler::setCursorShape(Qt::CursorShape shape)
         return;
     d->cursorShape = shape;
     d->cursorSet = true;
+    d->cursorDirty = true;
     if (auto *parent = parentItem()) {
         QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
         itemPriv->hasCursorHandler = true;
         itemPriv->setHasCursorInChild(true);
     }
+
     emit cursorShapeChanged();
 }
 
@@ -558,10 +559,10 @@ bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
 {
     if (QQuickItem *par = parentItem()) {
         if (par->window()) {
-            QRect windowGeometry = par->window()->geometry();
+            QRectF windowGeometry = par->window()->geometry();
             if (!par->window()->isTopLevel())
-                windowGeometry = QRect(QWindowPrivate::get(par->window())->globalPosition(), par->window()->size());
-            QPoint screenPosition = par->window()->mapToGlobal(scenePosition.toPoint());
+                windowGeometry = QRectF(QWindowPrivate::get(par->window())->globalPosition(), par->window()->size());
+            QPointF screenPosition = par->window()->mapToGlobal(scenePosition);
             if (!windowGeometry.contains(screenPosition))
                 return false;
         }
@@ -877,6 +878,7 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
   , hadKeepMouseGrab(false)
   , hadKeepTouchGrab(false)
   , cursorSet(false)
+  , cursorDirty(false)
 {
 }
 

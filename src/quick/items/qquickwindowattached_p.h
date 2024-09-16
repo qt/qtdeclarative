@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 class QQuickItem;
 class QQuickWindow;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickWindowAttached : public QObject
+class Q_QUICK_EXPORT QQuickWindowAttached : public QObject
 {
     Q_OBJECT
 

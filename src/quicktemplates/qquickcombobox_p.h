@@ -30,7 +30,7 @@ class QQuickPopup;
 class QQmlInstanceModel;
 class QQuickComboBoxPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
+class Q_QUICKTEMPLATES2_EXPORT QQuickComboBox : public QQuickControl
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
@@ -242,7 +242,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickComboBox)
 
 #endif // QQUICKCOMBOBOX_P_H

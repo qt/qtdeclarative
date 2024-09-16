@@ -240,7 +240,7 @@ private:
     int scanToken();
     int scanNumber(QChar ch);
     int scanVersionNumber(QChar ch);
-    enum ScanStringMode {
+    enum ScanStringMode : char16_t {
         SingleQuote = '\'',
         DoubleQuote = '"',
         TemplateHead = '`',

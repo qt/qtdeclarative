@@ -17,7 +17,7 @@
 
 #include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQmlWorkerScript/qtqmlworkerscriptglobal.h>
-#include <QtQmlWorkerScript/private/qtqmlworkerscriptexports_p.h>
+#include <QtQmlWorkerScript/qtqmlworkerscriptexports.h>
 
 #define Q_QMLWORKERSCRIPT_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 

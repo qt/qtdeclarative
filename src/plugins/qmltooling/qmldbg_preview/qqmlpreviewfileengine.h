@@ -22,6 +22,8 @@
 #include <private/qfsfileengine_p.h>
 #include <QtCore/qbuffer.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlPreviewFileEngine : public QAbstractFileEngine
@@ -43,8 +45,9 @@ public:
     QString fileName(QAbstractFileEngine::FileName file) const override;
     uint ownerId(FileOwner) const override;
 
-    Iterator *beginEntryList(QDir::Filters filters, const QStringList &filterNames) override;
-    Iterator *endEntryList() override;
+    IteratorUniquePtr beginEntryList(const QString &path, QDir::Filters filters,
+                                     const QStringList &filterNames) override;
+    IteratorUniquePtr endEntryList() override;
 
     // Forwarding to fallback if exists
     bool flush() override;
@@ -65,7 +68,7 @@ public:
     bool setPermissions(uint perms) override;
     QByteArray id() const override;
     QString owner(FileOwner) const override;
-    QDateTime fileTime(FileTime time) const override;
+    QDateTime fileTime(QFile::FileTime time) const override;
     int handle() const override;
     qint64 readLine(char *data, qint64 maxlen) override;
     qint64 write(const char *data, qint64 len) override;
@@ -81,15 +84,16 @@ private:
 
     mutable QBuffer m_contents;
     mutable QStringList m_entries;
-    mutable QScopedPointer<QAbstractFileEngine> m_fallback;
+    mutable std::unique_ptr<QAbstractFileEngine> m_fallback;
     mutable QQmlPreviewFileLoader::Result m_result = QQmlPreviewFileLoader::Unknown;
 };
 
 class QQmlPreviewFileEngineHandler : public QAbstractFileEngineHandler
 {
+    Q_DISABLE_COPY_MOVE(QQmlPreviewFileEngineHandler)
 public:
     QQmlPreviewFileEngineHandler(QQmlPreviewFileLoader *loader);
-    QAbstractFileEngine *create(const QString &fileName) const override;
+    std::unique_ptr<QAbstractFileEngine> create(const QString &fileName) const override;
 
 private:
     QPointer<QQmlPreviewFileLoader> m_loader;

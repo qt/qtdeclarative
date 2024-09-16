@@ -21,7 +21,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlDebugServer;
-class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnection : public QObject
+class Q_QML_EXPORT QQmlDebugServerConnection : public QObject
 {
     Q_OBJECT
 public:
@@ -37,7 +37,7 @@ public:
     virtual void flush() = 0;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServerConnectionFactory : public QObject
+class Q_QML_EXPORT QQmlDebugServerConnectionFactory : public QObject
 {
     Q_OBJECT
 public:

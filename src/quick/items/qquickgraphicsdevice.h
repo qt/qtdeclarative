@@ -10,7 +10,7 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
 Q_FORWARD_DECLARE_OBJC_CLASS(MTLDevice);
 Q_FORWARD_DECLARE_OBJC_CLASS(MTLCommandQueue);
 #endif
@@ -40,7 +40,7 @@ public:
     static QQuickGraphicsDevice fromDeviceAndContext(void *device, void *context);
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_QDOC)
+#if QT_CONFIG(metal) || defined(Q_QDOC)
     static QQuickGraphicsDevice fromDeviceAndCommandQueue(MTLDevice *device, MTLCommandQueue *commandQueue);
 #endif
 

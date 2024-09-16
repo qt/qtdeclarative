@@ -21,6 +21,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QDeadlineTimer;
+
 namespace QV4 {
 
 struct MarkStack;
@@ -227,9 +229,9 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
-struct Q_QML_PRIVATE_EXPORT MarkStack {
+struct Q_QML_EXPORT MarkStack {
     MarkStack(ExecutionEngine *engine);
-    ~MarkStack() { drain(); }
+    ~MarkStack() { /* we drain manually */ }
 
     void push(Heap::Base *m) {
         *(m_top++) = m;
@@ -250,17 +252,28 @@ struct Q_QML_PRIVATE_EXPORT MarkStack {
         }
     }
 
+    bool isEmpty() const { return m_top == m_base; }
+
+    qptrdiff remainingBeforeSoftLimit() const
+    {
+        return m_softLimit - m_top;
+    }
+
     ExecutionEngine *engine() const { return m_engine; }
 
+    void drain();
+    enum class DrainState { Ongoing, Complete };
+    DrainState drain(QDeadlineTimer deadline);
 private:
     Heap::Base *pop() { return *(--m_top); }
-    void drain();
 
     Heap::Base **m_top = nullptr;
     Heap::Base **m_base = nullptr;
     Heap::Base **m_softLimit = nullptr;
     Heap::Base **m_hardLimit = nullptr;
+
     ExecutionEngine *m_engine = nullptr;
+
     quintptr m_drainRecursion = 0;
 };
 

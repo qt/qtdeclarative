@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.1
 import QtTest 1.1
@@ -38,12 +38,16 @@ Item {
 
     ListView {
         id: modelchange
+        width: 100
+        height: 100
         model: firstmodel
         delegate: Text { text: model.name }
     }
 
     ListView {
         id: modelalter
+        width: 100
+        height: 100
         model: altermodel
         delegate: Text { text: model.name }
     }

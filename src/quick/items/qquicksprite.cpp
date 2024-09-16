@@ -12,7 +12,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Sprite
-    \instantiates QQuickSprite
+    \nativetype QQuickSprite
     \inqmlmodule QtQuick
     \ingroup qtquick-visual-utility
     \brief Specifies sprite animations.

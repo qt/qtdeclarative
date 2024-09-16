@@ -44,7 +44,11 @@ layout(location = 2) out float fFade;
 #endif
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     float opacity;
     float entry;
     float timestamp;
@@ -53,18 +57,22 @@ layout(std140, binding = 0) uniform buf {
     float opacitytable[64];
 } ubuf;
 
-out gl_PerVertex { vec4 gl_Position; float gl_PointSize; };
-
 void main()
 {
     float t = (ubuf.timestamp - vData.x) / vData.y;
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix = ubuf.matrix[gl_ViewIndex];
+#else
+    mat4 matrix = ubuf.matrix;
+#endif
+
     if (t < 0. || t > 1.) {
 #if defined(DEFORM)
-        gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
+        gl_Position = matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
 #elif defined(POINT)
         gl_PointSize = 0.;
 #else
-        gl_Position = ubuf.matrix * vec4(vPos.x, vPos.y, 0., 1.);
+        gl_Position = matrix * vec4(vPos.x, vPos.y, 0., 1.);
 #endif
     } else {
 #if defined(SPRITE)
@@ -96,11 +104,11 @@ void main()
 
         if (currentSize <= 0.) {
 #if defined(DEFORM)
-            gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
+            gl_Position = matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
 #elif defined(POINT)
             gl_PointSize = 0.;
 #else
-            gl_Position = ubuf.matrix * vec4(vPos.x, vPos.y, 0., 1.);
+            gl_Position = matrix * vec4(vPos.x, vPos.y, 0., 1.);
 #endif
 
         } else {
@@ -146,7 +154,7 @@ void main()
                   + vVec.xy * t * vData.y         // apply velocity
                   + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration
 #endif
-            gl_Position = ubuf.matrix * vec4(pos.x, pos.y, 0, 1);
+            gl_Position = matrix * vec4(pos.x, pos.y, 0, 1);
 
 #if defined(COLOR)
             fColor = vColor * fade;

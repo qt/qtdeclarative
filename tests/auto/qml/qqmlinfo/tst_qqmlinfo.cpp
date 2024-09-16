@@ -1,5 +1,5 @@
 // Copyright (C) 2016 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QtTest/qsignalspy.h>
@@ -220,7 +220,8 @@ void tst_qqmlinfo::attachedObject()
     const QString qmlBindingLoopMessageFull = component.url().toString() + ":8:9: " + qmlBindingLoopMessage;
     QTest::ignoreMessage(QtWarningMsg, qPrintable(qmlBindingLoopMessageFull));
 
-    const QString cppBindingLoopMessage = "QML AttachedObject (parent or ancestor of Attached): Binding loop detected for property \"a\"";
+    const QString cppBindingLoopMessage = "QML AttachedObject (parent or ancestor of Attached): Binding loop detected for property \"a\":\n"
+        + component.url().toString() + ":5:5";
     const QString cppBindingLoopMessageFull = component.url().toString() + ":4:1: " + cppBindingLoopMessage;
     QTest::ignoreMessage(QtWarningMsg, qPrintable(cppBindingLoopMessageFull));
 

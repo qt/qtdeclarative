@@ -27,7 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
 
-class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
+class Q_QUICK_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
 public:
     QSGPainterTexture();
@@ -40,7 +40,7 @@ private:
     QRect m_dirty_rect;
 };
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultPainterNode : public QSGPainterNode
+class Q_QUICK_EXPORT QSGDefaultPainterNode : public QSGPainterNode
 {
 public:
     QSGDefaultPainterNode(QQuickPaintedItem *item);

@@ -18,13 +18,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickPointDirection : public QQuickDirection
+class Q_QUICKPARTICLES_EXPORT QQuickPointDirection : public QQuickDirection
 {
     Q_OBJECT
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
-    Q_PROPERTY(qreal xVariation READ xVariation WRITE setXVariation NOTIFY xVariationChanged FINAL)
-    Q_PROPERTY(qreal yVariation READ yVariation WRITE setYVariation NOTIFY yVariationChanged FINAL)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged)
+    Q_PROPERTY(qreal xVariation READ xVariation WRITE setXVariation NOTIFY xVariationChanged)
+    Q_PROPERTY(qreal yVariation READ yVariation WRITE setYVariation NOTIFY yVariationChanged)
     QML_NAMED_ELEMENT(PointDirection)
     QML_ADDED_IN_VERSION(2, 0)
 public:

@@ -10,7 +10,11 @@ layout(location = 3) out vec3 sampleNearRight;
 layout(location = 4) out vec3 sampleFarRight;
 
 layout(std140, binding = 0) uniform buf {
+#if QSHADER_VIEW_COUNT >= 2
+    mat4 matrix[QSHADER_VIEW_COUNT];
+#else
     mat4 matrix;
+#endif
     vec2 textureScale;
     vec4 color;
     float alphaMin;
@@ -18,24 +22,26 @@ layout(std140, binding = 0) uniform buf {
     // up to this point it must match distancefieldtext
     float fontScale;
     vec4 vecDelta;
-} ubuf;
-
-out gl_PerVertex { vec4 gl_Position; };
+};
 
 void main()
 {
-    sampleCoord = tCoord * ubuf.textureScale;
-    gl_Position = ubuf.matrix * vCoord;
+    sampleCoord = tCoord * textureScale;
+#if QSHADER_VIEW_COUNT >= 2
+    gl_Position = matrix[gl_ViewIndex] * vCoord;
+#else
+    gl_Position = matrix * vCoord;
+#endif
 
     // Calculate neighbor pixel position in item space.
-    vec3 wDelta = gl_Position.w * ubuf.vecDelta.xyw;
+    vec3 wDelta = gl_Position.w * vecDelta.xyw;
     vec3 farLeft = vCoord.xyw - 0.667 * wDelta;
     vec3 nearLeft = vCoord.xyw - 0.333 * wDelta;
     vec3 nearRight = vCoord.xyw + 0.333 * wDelta;
     vec3 farRight = vCoord.xyw + 0.667 * wDelta;
 
     // Calculate neighbor texture coordinate.
-    vec2 scale = ubuf.textureScale / ubuf.fontScale;
+    vec2 scale = textureScale / fontScale;
     vec2 base = sampleCoord - scale * vCoord.xy;
     sampleFarLeft = vec3(base * farLeft.z + scale * farLeft.xy, farLeft.z);
     sampleNearLeft = vec3(base * nearLeft.z + scale * nearLeft.xy, nearLeft.z);

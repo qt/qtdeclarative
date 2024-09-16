@@ -23,7 +23,7 @@ class QQuickSplitView;
 class QQuickSplitViewAttached;
 class QQuickSplitHandleAttached;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitViewPrivate : public QQuickContainerPrivate
+class Q_QUICKTEMPLATES2_EXPORT QQuickSplitViewPrivate : public QQuickContainerPrivate
 {
     Q_DECLARE_PUBLIC(QQuickSplitView)
 

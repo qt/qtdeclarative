@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
 #include <QLibraryInfo>
@@ -68,7 +68,6 @@ tst_examples::tst_examples()
 
 #if !QT_CONFIG(opengl)
     //No support for Particles
-    excludedFiles << "examples/qml/dynamicscene/dynamicscene.qml";
     excludedFiles << "examples/quick/animation/basics/color-animation.qml";
     excludedFiles << "examples/quick/particles/affectors/content/age.qml";
     excludedFiles << "examples/quick/pointerhandlers/multiflame.qml";

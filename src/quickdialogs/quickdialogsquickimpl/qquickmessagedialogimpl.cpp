@@ -21,8 +21,6 @@ void QQuickMessageDialogImplPrivate::handleClick(QQuickAbstractButton *button)
 
         emit q->buttonClicked(standardButton, role);
     }
-
-    QQuickDialogPrivate::handleClick(button);
 }
 
 QQuickMessageDialogImplAttached *QQuickMessageDialogImplPrivate::attachedOrWarn()
@@ -38,6 +36,7 @@ QQuickMessageDialogImplAttached *QQuickMessageDialogImplPrivate::attachedOrWarn(
 QQuickMessageDialogImpl::QQuickMessageDialogImpl(QObject *parent)
     : QQuickDialog(*(new QQuickMessageDialogImplPrivate), parent)
 {
+    setPopupType(QQuickPopup::Window);
 }
 
 QSharedPointer<QMessageDialogOptions> QQuickMessageDialogImpl::options() const
@@ -125,13 +124,9 @@ void QQuickMessageDialogImplAttached::setButtonBox(QQuickDialogButtonBox *button
         QQuickMessageDialogImpl *messageDialogImpl =
                 qobject_cast<QQuickMessageDialogImpl *>(parent());
         if (messageDialogImpl) {
-            auto dialogPrivate = QQuickDialogPrivate::get(messageDialogImpl);
-            QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::accepted,
-                                       dialogPrivate, &QQuickDialogPrivate::handleAccept);
-            QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::rejected,
-                                       dialogPrivate, &QQuickDialogPrivate::handleReject);
+            auto dialogPrivate = QQuickMessageDialogImplPrivate::get(messageDialogImpl);
             QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::clicked, dialogPrivate,
-                                       &QQuickDialogPrivate::handleClick);
+                                       &QQuickMessageDialogImplPrivate::handleClick);
         }
     }
 
@@ -141,13 +136,9 @@ void QQuickMessageDialogImplAttached::setButtonBox(QQuickDialogButtonBox *button
         QQuickMessageDialogImpl *messageDialogImpl =
                 qobject_cast<QQuickMessageDialogImpl *>(parent());
         if (messageDialogImpl) {
-            auto dialogPrivate = QQuickDialogPrivate::get(messageDialogImpl);
-            QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::accepted, dialogPrivate,
-                                    &QQuickDialogPrivate::handleAccept);
-            QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::rejected, dialogPrivate,
-                                    &QQuickDialogPrivate::handleReject);
+            auto dialogPrivate = QQuickMessageDialogImplPrivate::get(messageDialogImpl);
             QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::clicked, dialogPrivate,
-                                    &QQuickDialogPrivate::handleClick);
+                                    &QQuickMessageDialogImplPrivate::handleClick);
         }
     }
 

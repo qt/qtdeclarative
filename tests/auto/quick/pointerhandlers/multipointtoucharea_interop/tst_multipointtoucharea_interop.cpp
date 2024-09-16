@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QtTest>
 
@@ -252,7 +252,7 @@ void tst_MptaInterop::touchesThenPinch()
     }
     qCDebug(lcPointerTests) << "drag started after" << dragTookGrab
                             << "moves; ended with translation" << drag->activeTranslation();
-    QCOMPARE(devPriv->pointById(1)->exclusiveGrabber, drag);
+    QCOMPARE(devPriv->pointById(2)->exclusiveGrabber, drag);
     QTRY_VERIFY(drag->activeTranslation().x() > 0);
 
     touch.release(2, p2).commit();

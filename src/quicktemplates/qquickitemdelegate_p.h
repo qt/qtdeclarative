@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItemDelegatePrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickItemDelegate : public QQuickAbstractButton
+class Q_QUICKTEMPLATES2_EXPORT QQuickItemDelegate : public QQuickAbstractButton
 {
     Q_OBJECT
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
@@ -53,7 +53,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickItemDelegate)
 
 #endif // QQUICKITEMDELEGATE_P_H

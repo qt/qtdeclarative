@@ -42,7 +42,8 @@ T.TextField {
 
     FloatingPlaceholderText {
         id: placeholder
-        x: control.leftPadding
+        // Don't set this to control.leftPadding, because we don't want it to change if the user changes leftPadding.
+        x: control.Material.textFieldHorizontalPadding
         width: control.width - (control.leftPadding + control.rightPadding)
         text: control.placeholderText
         font: control.font
@@ -69,6 +70,7 @@ T.TextField {
         // When the control's size is set larger than its implicit size, use whatever size is smaller
         // so that the gap isn't too big.
         placeholderTextWidth: Math.min(placeholder.width, placeholder.implicitWidth) * placeholder.scale
+        placeholderTextHAlign: control.effectiveHorizontalAlignment
         controlHasActiveFocus: control.activeFocus
         controlHasText: control.length > 0
         placeholderHasText: placeholder.text.length > 0

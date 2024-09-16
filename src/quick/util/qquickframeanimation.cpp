@@ -95,7 +95,7 @@ private:
 
 /*!
     \qmltype FrameAnimation
-    \instantiates QQuickFrameAnimation
+    \nativetype QQuickFrameAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-interceptors
     \since 6.4

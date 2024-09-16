@@ -52,14 +52,12 @@ QSmoothedAnimation::~QSmoothedAnimation()
     delete delayedStopTimer;
     if (animationTemplate) {
         if (target.object()) {
-            QHash<QQmlProperty, QSmoothedAnimation* >::iterator it =
-                    animationTemplate->activeAnimations.find(target);
-            if (it != animationTemplate->activeAnimations.end() && it.value() == this)
+            auto it = animationTemplate->activeAnimations.constFind(target);
+            if (it != animationTemplate->activeAnimations.cend() && it.value() == this)
                 animationTemplate->activeAnimations.erase(it);
         } else {
             //target is no longer valid, need to search linearly
-            QHash<QQmlProperty, QSmoothedAnimation* >::iterator it;
-            for (it = animationTemplate->activeAnimations.begin(); it != animationTemplate->activeAnimations.end(); ++it) {
+            for (auto it = animationTemplate->activeAnimations.cbegin(); it != animationTemplate->activeAnimations.cend(); ++it) {
                 if (it.value() == this) {
                     animationTemplate->activeAnimations.erase(it);
                     break;
@@ -284,7 +282,7 @@ void QSmoothedAnimation::debugAnimation(QDebug d) const
 
 /*!
     \qmltype SmoothedAnimation
-    \instantiates QQuickSmoothedAnimation
+    \nativetype QQuickSmoothedAnimation
     \inqmlmodule QtQuick
     \ingroup qtquick-transitions-animations
     \inherits NumberAnimation

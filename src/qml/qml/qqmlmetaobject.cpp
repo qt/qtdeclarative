@@ -56,42 +56,4 @@ QMetaType QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteAr
     return QMetaType();
 }
 
-bool QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
-                                          QByteArray *unknownTypeError) const
-{
-    Q_ASSERT(_m && index >= 0);
-
-    QMetaMethod m = _m->method(index);
-    return methodParameterTypes(m, argStorage, unknownTypeError);
-}
-
-bool QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
-                                                     QByteArray *unknownTypeError) const
-{
-    QMetaMethod m = _m->constructor(index);
-    return methodParameterTypes(m, dummy, unknownTypeError);
-}
-
-bool QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
-                                          QByteArray *unknownTypeError)
-{
-    Q_ASSERT(argStorage);
-
-    int argc = m.parameterCount();
-    argStorage->resize(argc);
-    for (int ii = 0; ii < argc; ++ii) {
-        QMetaType type = m.parameterMetaType(ii);
-        // we treat enumerations as int
-        if (type.flags().testFlag(QMetaType::IsEnumeration))
-            type = type.underlyingType();
-        if (!type.isValid()) {
-            if (unknownTypeError)
-                *unknownTypeError =  m.parameterTypeName(ii);
-            return false;
-        }
-        argStorage->operator[](ii) = type;
-    }
-    return true;
-}
-
 QT_END_NAMESPACE

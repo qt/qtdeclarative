@@ -55,12 +55,14 @@ static QString bindingTypeDescription(QmlIR::Binding::Type type)
 
 void QQmlJSFunctionInitializer::populateSignature(
         const QV4::Compiler::Context *context, QQmlJS::AST::FunctionExpression *ast,
-        QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error)
+        QQmlJSCompilePass::Function *function, QList<QQmlJS::DiagnosticMessage> *errors)
 {
     const auto signatureError = [&](const QString &message) {
-        error->type = QtWarningMsg;
-        error->loc = ast->firstSourceLocation();
-        error->message = message;
+        QQmlJS::DiagnosticMessage error;
+        error.type = QtWarningMsg;
+        error.loc = ast->firstSourceLocation();
+        error.message = message;
+        *errors << error;
         function->isFullyTyped = false;
     };
 
@@ -80,6 +82,7 @@ void QQmlJSFunctionInitializer::populateSignature(
     function->isFullyTyped = !arguments.isEmpty() || ast->typeAnnotation;
 
     if (function->argumentTypes.isEmpty()) {
+        bool alreadyWarnedAboutMissingAnnotations = false;
         for (const QQmlJS::AST::BoundName &argument : std::as_const(arguments)) {
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
@@ -94,10 +97,13 @@ void QQmlJSFunctionInitializer::populateSignature(
                                    .arg(argument.typeAnnotation->type->toString()));
                 }
             } else {
-                function->argumentTypes.append(
-                            m_typeResolver->tracked(
-                                m_typeResolver->globalType(m_typeResolver->varType())));
-                signatureError(u"Functions without type annotations won't be compiled"_s);
+                if (!alreadyWarnedAboutMissingAnnotations) {
+                    alreadyWarnedAboutMissingAnnotations = true;
+                    function->argumentTypes.append(
+                                m_typeResolver->tracked(
+                                    m_typeResolver->globalType(m_typeResolver->varType())));
+                    signatureError(u"Functions without type annotations won't be compiled"_s);
+                }
             }
         }
     } else {
@@ -116,10 +122,11 @@ void QQmlJSFunctionInitializer::populateSignature(
         }
     }
 
-    if (!function->returnType) {
+    if (!function->returnType.isValid()) {
         if (ast->typeAnnotation) {
-            function->returnType = m_typeResolver->typeFromAST(ast->typeAnnotation->type);
-            if (!function->returnType)
+            function->returnType = m_typeResolver->globalType(
+                    m_typeResolver->typeFromAST(ast->typeAnnotation->type));
+            if (!function->returnType.isValid())
                 signatureError(u"Cannot resolve return type %1"_s.arg(
                                    QmlIR::IRBuilder::asString(ast->typeAnnotation->type->typeId)));
         }
@@ -138,13 +145,9 @@ void QQmlJSFunctionInitializer::populateSignature(
 
 static void diagnose(
         const QString &message, QtMsgType type, const QQmlJS::SourceLocation &location,
-        QQmlJS::DiagnosticMessage *error)
+        QList<QQmlJS::DiagnosticMessage> *errors)
 {
-    *error = QQmlJS::DiagnosticMessage{
-        message,
-        type,
-        location
-    };
+    *errors << QQmlJS::DiagnosticMessage{ message, type, location };
 }
 
 QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
@@ -152,19 +155,19 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         const QString &propertyName,
         QQmlJS::AST::Node *astNode,
         const QmlIR::Binding &irBinding,
-        QQmlJS::DiagnosticMessage *error)
+        QList<QQmlJS::DiagnosticMessage> *errors)
 {
     QQmlJS::SourceLocation bindingLocation;
     bindingLocation.startLine = irBinding.location.line();
     bindingLocation.startColumn = irBinding.location.column();
 
     QQmlJSCompilePass::Function function;
-    function.qmlScope = m_scopeType;
+    function.qmlScope = m_typeResolver->globalType(m_scopeType);
 
     if (irBinding.type() != QmlIR::Binding::Type_Script) {
         diagnose(u"Binding is not a script binding, but %1."_s.arg(
                      bindingTypeDescription(QmlIR::Binding::Type(quint32(irBinding.type())))),
-                 QtDebugMsg, bindingLocation, error);
+                 QtDebugMsg, bindingLocation, errors);
     }
 
     function.isProperty = m_objectType->hasProperty(propertyName);
@@ -188,7 +191,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                             if (type.isNull()) {
                                 diagnose(u"Cannot resolve the argument type %1."_s.arg(
                                                  arguments[i].typeName()),
-                                         QtDebugMsg, bindingLocation, error);
+                                         QtDebugMsg, bindingLocation, errors);
                                 function.argumentTypes.append(
                                         m_typeResolver->tracked(
                                                 m_typeResolver->globalType(m_typeResolver->varType())));
@@ -203,7 +206,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                 if (!function.isSignalHandler) {
                     diagnose(u"Could not compile signal handler for %1: The signal does not exist"_s.arg(
                                      *signalName),
-                             QtWarningMsg, bindingLocation, error);
+                             QtWarningMsg, bindingLocation, errors);
                 }
             }
         }
@@ -213,14 +216,14 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         if (!function.isProperty) {
             diagnose(u"Could not compile binding for %1: The property does not exist"_s.arg(
                          propertyName),
-                     QtWarningMsg, bindingLocation, error);
+                     QtWarningMsg, bindingLocation, errors);
         }
 
         const auto property = m_objectType->property(propertyName);
         if (const QQmlJSScope::ConstPtr propertyType = property.type()) {
-            function.returnType = propertyType->isListProperty()
-                    ? m_typeResolver->qObjectListType()
-                    : propertyType;
+            function.returnType = m_typeResolver->globalType(propertyType->isListProperty()
+                ? m_typeResolver->qObjectListType()
+                : QQmlJSScope::ConstPtr(property.type()));
         } else {
             QString message = u"Cannot resolve property type %1 for binding on %2."_s
                     .arg(property.typeName(), propertyName);
@@ -230,7 +233,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
                 // most commonly used to enable generalized grouped properties.
                 message += u" You may want use ID-based grouped properties here.";
             }
-            diagnose(message, QtWarningMsg, bindingLocation, error);
+            diagnose(message, QtWarningMsg, bindingLocation, errors);
         }
 
         if (!property.bindable().isEmpty() && !property.isPrivate())
@@ -251,30 +254,30 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
 
         QString name = u"binding for "_s; // ####
         ast = new (&pool) QQmlJS::AST::FunctionDeclaration(
-                pool.newString(name), /*formals*/ nullptr, body);
+                pool.newString(std::move(name)), /*formals*/ nullptr, body);
         ast->lbraceToken = astNode->firstSourceLocation();
         ast->functionToken = ast->lbraceToken;
         ast->rbraceToken = astNode->lastSourceLocation();
     }
 
-    populateSignature(context, ast, &function, error);
+    populateSignature(context, ast, &function, errors);
     return function;
 }
 
 QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         const QV4::Compiler::Context *context,
         const QString &functionName, QQmlJS::AST::Node *astNode,
-        QQmlJS::DiagnosticMessage *error)
+        QList<QQmlJS::DiagnosticMessage> *errors)
 {
     Q_UNUSED(functionName);
 
     QQmlJSCompilePass::Function function;
-    function.qmlScope = m_scopeType;
+    function.qmlScope = m_typeResolver->globalType(m_scopeType);
 
     auto ast = astNode->asFunctionDefinition();
     Q_ASSERT(ast);
 
-    populateSignature(context, ast, &function, error);
+    populateSignature(context, ast, &function, errors);
     return function;
 }
 

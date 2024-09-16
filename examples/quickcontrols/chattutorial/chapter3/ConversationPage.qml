@@ -1,5 +1,7 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+
+pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
@@ -21,7 +23,7 @@ Page {
 
         Label {
             id: pageTitle
-            text: inConversationWith
+            text: root.inConversationWith
             font.pixelSize: 20
             anchors.centerIn: parent
         }
@@ -41,28 +43,30 @@ Page {
             spacing: 12
             model: 10
             delegate: Row {
-                readonly property bool sentByMe: index % 2 == 0
-
+                id: messageDelegate
                 anchors.right: sentByMe ? listView.contentItem.right : undefined
                 spacing: 6
+
+                required property int index
+                readonly property bool sentByMe: index % 2 == 0
 
                 Rectangle {
                     id: avatar
                     width: height
                     height: parent.height
                     color: "grey"
-                    visible: !sentByMe
+                    visible: !messageDelegate.sentByMe
                 }
 
                 Rectangle {
                     width: 80
                     height: 40
-                    color: sentByMe ? "lightgrey" : "steelblue"
+                    color: messageDelegate.sentByMe ? "lightgrey" : "steelblue"
 
                     Label {
                         anchors.centerIn: parent
-                        text: index
-                        color: sentByMe ? "black" : "white"
+                        text: messageDelegate.index
+                        color: messageDelegate.sentByMe ? "black" : "white"
                     }
                 }
             }
@@ -73,6 +77,7 @@ Page {
         Pane {
             id: pane
             Layout.fillWidth: true
+            Layout.fillHeight: false
 
             RowLayout {
                 width: parent.width
@@ -88,6 +93,7 @@ Page {
                     id: sendButton
                     text: qsTr("Send")
                     enabled: messageField.length > 0
+                    Layout.fillWidth: false
                 }
             }
         }

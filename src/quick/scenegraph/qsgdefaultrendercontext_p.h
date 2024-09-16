@@ -32,7 +32,7 @@ namespace QSGRhiAtlasTexture {
     class Manager;
 }
 
-class Q_QUICK_PRIVATE_EXPORT QSGDefaultRenderContext : public QSGRenderContext
+class Q_QUICK_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 {
     Q_OBJECT
 public:
@@ -70,6 +70,7 @@ public:
     void preprocess() override;
     void invalidateGlyphCaches() override;
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality) override;
+    QSGCurveGlyphAtlas *curveGlyphAtlas(const QRawFont &font) override;
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer(QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D) override;
@@ -107,8 +108,6 @@ public:
     void resetGlyphCacheResources();
 
 protected:
-    static QString fontKey(const QRawFont &font, int renderTypeQuality);
-
     InitParams m_initParams;
     QRhi *m_rhi;
     int m_maxTextureSize;
@@ -119,6 +118,7 @@ protected:
     bool m_useDepthBufferFor2D;
     QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
     QSet<QRhiTexture *> m_pendingGlyphCacheTextures;
+    QHash<FontKey, QSGCurveGlyphAtlas *> m_curveGlyphAtlases;
 };
 
 QT_END_NAMESPACE

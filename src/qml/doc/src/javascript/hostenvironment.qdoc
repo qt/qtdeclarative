@@ -41,7 +41,8 @@ takes an \c int and a \c string parameter, and returns a \c QtObject:
 function doThings(a: int, b: string) : QtObject { ... }
 \endqml
 
-Type annotations help tools like \l{Qt Creator} and \l{qmllint} to make sense
+Type annotations help tools like \l{\QC Documentation}{\QC}
+and \l{qmllint Reference}{qmllint} to make sense
 of the code and provide better diagnostics. Moreover, they make functions easier
 to use from C++. See
 \l {qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}

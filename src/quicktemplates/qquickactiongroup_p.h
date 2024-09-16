@@ -26,7 +26,7 @@ class QQuickActionGroupPrivate;
 class QQuickActionGroupAttached;
 class QQuickActionGroupAttachedPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickActionGroup : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickActionGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickAction *checkedAction READ checkedAction WRITE setCheckedAction NOTIFY checkedActionChanged FINAL)
@@ -73,7 +73,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_updateCurrent())
 };
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickActionGroupAttached : public QObject
+class Q_QUICKTEMPLATES2_EXPORT QQuickActionGroupAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickActionGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
@@ -93,7 +93,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickActionGroup)
 
 #endif // QQUICKACTIONGROUP_P_H

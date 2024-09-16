@@ -20,7 +20,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickPaddedRectangle : public QQuickRectangle
+class Q_QUICKCONTROLS2IMPL_EXPORT QQuickPaddedRectangle : public QQuickRectangle
 {
     Q_OBJECT
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged FINAL)
@@ -82,7 +82,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPaddedRectangle)
 
 #endif // QQUICKPADDEDRECTANGLE_P_H

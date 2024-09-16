@@ -189,7 +189,7 @@ private:
 
 
 struct DateCtor : FunctionObject {
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionEngine *engine);
 };
 
 }
@@ -202,7 +202,7 @@ struct DateObject: ReferenceObject {
     void setDate(double date) { d()->setDate(date); }
     double date() const { return d()->date(); }
 
-    Q_QML_PRIVATE_EXPORT QDateTime toQDateTime() const;
+    Q_QML_EXPORT QDateTime toQDateTime() const;
     QString toString() const;
 
     static QString dateTimeToString(const QDateTime &dateTime, ExecutionEngine *engine);

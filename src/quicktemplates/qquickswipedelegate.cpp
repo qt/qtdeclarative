@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SwipeDelegate
     \inherits ItemDelegate
-//!     \instantiates QQuickSwipeDelegate
+//!     \nativetype QQuickSwipeDelegate
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols-delegates
@@ -771,11 +771,20 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     if (!swipePrivate->left && !swipePrivate->right && !swipePrivate->behind)
         return false;
 
+    if (item != q && swipePrivate->complete) {
+        // If the delegate is swiped open, send the event to the exposed item,
+        // in case it's an interactive child (like a Button).
+        const auto posInItem = item->mapToItem(q, event->position().toPoint());
+        forwardMouseEvent(event, item, posInItem);
+    }
+
     // Don't handle move events for the control if it wasn't pressed.
     if (item == q && !pressed)
         return false;
 
-    const qreal distance = (event->globalPosition() - event->points().first().globalPressPosition()).x();
+    const qreal distance = (event->globalPosition().x() != qInf() && event->globalPosition().y() != qInf()) ?
+                              (item->mapFromGlobal(event->globalPosition()) -
+                               item->mapFromGlobal(event->points().first().globalPressPosition())).x() : 0;
     if (!q->keepMouseGrab()) {
         // We used to use the custom threshold that QQuickDrawerPrivate::grabMouse used,
         // but since it's larger than what Flickable uses, it results in Flickable
@@ -1402,7 +1411,7 @@ QQuickSwipeDelegateAttached::QQuickSwipeDelegateAttached(QObject *object)
         // the first one with an attached object.
         item->setAcceptedMouseButtons(Qt::AllButtons);
     } else {
-        qWarning() << "Attached properties of SwipeDelegate must be accessed through an Item";
+        qWarning() << "SwipeDelegate attached property must be attached to an object deriving from Item";
     }
 }
 

@@ -11,7 +11,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBarItem
     \inherits AbstractButton
-//!     \instantiates QQuickMenuBarItem
+//!     \nativetype QQuickMenuBarItem
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols-menus
@@ -92,6 +92,7 @@ QQuickMenuBarItem::QQuickMenuBarItem(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickMenuBarItemPrivate), parent)
 {
     setFocusPolicy(Qt::NoFocus);
+    d_func()->setSizePolicy(QLayoutPolicy::Fixed, QLayoutPolicy::Fixed);
 }
 
 /*!

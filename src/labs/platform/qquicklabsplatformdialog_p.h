@@ -116,16 +116,6 @@ private:
     QPlatformDialogHelper *m_handle;
 };
 
-class QPlatformDialogHelperQuickLabsForeign
-{
-    Q_GADGET
-    QML_FOREIGN(QPlatformDialogHelper)
-    QML_NAMED_ELEMENT(StandardButton)
-    QML_UNCREATABLE("Cannot create an instance of StandardButton")
-};
-
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickLabsPlatformDialog)
 
 #endif // QQUICKLABSPLATFORMDIALOG_P_H

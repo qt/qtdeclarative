@@ -30,7 +30,7 @@ namespace QV4 {
 struct ExecutionEngine;
 }
 
-class Q_QML_PRIVATE_EXPORT QJSEnginePrivate : public QObjectPrivate
+class Q_QML_EXPORT QJSEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QJSEngine)
 

@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
 import QtTest
@@ -25,15 +25,17 @@ TestCase {
         }
     }
 
-    function test_defaults() {
+    function init() {
         failOnWarning(/.?/)
+    }
 
+    function test_defaults() {
         let control = createTemporaryObject(radioButton, testCase)
         verify(control)
     }
 
     function test_text() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
         compare(control.text, "")
@@ -44,10 +46,10 @@ TestCase {
     }
 
     function test_checked() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = [] // No change expected
         compare(control.checked, false)
@@ -65,10 +67,10 @@ TestCase {
     }
 
     function test_mouse() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // check
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
@@ -127,12 +129,12 @@ TestCase {
     }
 
     function test_touch() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
-        var touch = touchEvent(control)
+        let touch = touchEvent(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         // check
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
@@ -154,7 +156,7 @@ TestCase {
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                         "pressed"]
         // Don't want to double-click.
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(sequenceSpy.success)
@@ -169,7 +171,7 @@ TestCase {
         // release outside
         sequenceSpy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": true }],
                                         "pressed"]
-        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        wait(Application.styleHints.mouseDoubleClickInterval + 50)
         touch.press(0, control, control.width / 2, control.height / 2).commit()
         compare(control.pressed, true)
         verify(sequenceSpy.success)
@@ -184,10 +186,10 @@ TestCase {
     }
 
     function test_keys() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
 
-        var sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
+        let sequenceSpy = signalSequenceSpy.createObject(control, {target: control})
 
         sequenceSpy.expectedSequence = []
         control.forceActiveFocus()
@@ -220,8 +222,8 @@ TestCase {
         sequenceSpy.expectedSequence = []
         // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
         // pressing buttons and the CI uses the QGnomeTheme platform theme.
-        var keys = [Qt.Key_Escape, Qt.Key_Tab]
-        for (var i = 0; i < keys.length; ++i) {
+        let keys = [Qt.Key_Escape, Qt.Key_Tab]
+        for (let i = 0; i < keys.length; ++i) {
             sequenceSpy.reset()
             keyClick(keys[i])
             compare(control.checked, true)
@@ -238,7 +240,7 @@ TestCase {
     }
 
     function test_binding() {
-        var container = createTemporaryObject(twoRadioButtons, testCase)
+        let container = createTemporaryObject(twoRadioButtons, testCase)
         verify(container)
 
         compare(container.rb1.checked, false)
@@ -277,65 +279,65 @@ TestCase {
     }
 
     function test_autoExclusive() {
-        var container = createTemporaryObject(radioButtonGroup, testCase)
+        let container = createTemporaryObject(radioButtonGroup, testCase)
         compare(container.children.length, 8)
 
-        var checkStates = [false, false, false, false, false, false, false, false]
-        for (var i = 0; i < 8; ++i)
+        let checkStates = [false, false, false, false, false, false, false, false]
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[0].checked = true
         checkStates[0] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[1].checked = true
         checkStates[0] = false
         checkStates[1] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[2].checked = true
         checkStates[2] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[3].checked = true
         checkStates[2] = false
         checkStates[3] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[4].checked = true
         checkStates[4] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[5].checked = true
         checkStates[4] = false
         checkStates[5] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[6].checked = true
         checkStates[6] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[7].checked = true
         checkStates[7] = true
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
 
         container.children[0].checked = true
         checkStates[0] = true
         checkStates[1] = false
-        for (i = 0; i < 8; ++i)
+        for (let i = 0; i < 8; ++i)
             compare(container.children[i].checked, checkStates[i])
     }
 
     function test_baseline() {
-        var control = createTemporaryObject(radioButton, testCase)
+        let control = createTemporaryObject(radioButton, testCase)
         verify(control)
         compare(control.baselineOffset, control.contentItem.y + control.contentItem.baselineOffset)
     }

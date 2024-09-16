@@ -27,25 +27,25 @@ QT_BEGIN_NAMESPACE
 
 class QFont;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickFontMetrics : public QObject
+class Q_QUICK_EXPORT QQuickFontMetrics : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal ascent READ ascent NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal descent READ descent NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal height READ height NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal leading READ leading NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal lineSpacing READ lineSpacing NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal minimumLeftBearing READ minimumLeftBearing NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal minimumRightBearing READ minimumRightBearing NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal maximumCharacterWidth READ maximumCharacterWidth NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal xHeight READ xHeight NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal averageCharacterWidth READ averageCharacterWidth NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal underlinePosition READ underlinePosition NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal overlinePosition READ overlinePosition NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal strikeOutPosition READ strikeOutPosition NOTIFY fontChanged FINAL)
-    Q_PROPERTY(qreal lineWidth READ lineWidth NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
+    Q_PROPERTY(qreal ascent READ ascent NOTIFY fontChanged)
+    Q_PROPERTY(qreal descent READ descent NOTIFY fontChanged)
+    Q_PROPERTY(qreal height READ height NOTIFY fontChanged)
+    Q_PROPERTY(qreal leading READ leading NOTIFY fontChanged)
+    Q_PROPERTY(qreal lineSpacing READ lineSpacing NOTIFY fontChanged)
+    Q_PROPERTY(qreal minimumLeftBearing READ minimumLeftBearing NOTIFY fontChanged)
+    Q_PROPERTY(qreal minimumRightBearing READ minimumRightBearing NOTIFY fontChanged)
+    Q_PROPERTY(qreal maximumCharacterWidth READ maximumCharacterWidth NOTIFY fontChanged)
+    Q_PROPERTY(qreal xHeight READ xHeight NOTIFY fontChanged)
+    Q_PROPERTY(qreal averageCharacterWidth READ averageCharacterWidth NOTIFY fontChanged)
+    Q_PROPERTY(qreal underlinePosition READ underlinePosition NOTIFY fontChanged)
+    Q_PROPERTY(qreal overlinePosition READ overlinePosition NOTIFY fontChanged)
+    Q_PROPERTY(qreal strikeOutPosition READ strikeOutPosition NOTIFY fontChanged)
+    Q_PROPERTY(qreal lineWidth READ lineWidth NOTIFY fontChanged)
     QML_NAMED_ELEMENT(FontMetrics)
     QML_ADDED_IN_VERSION(2, 4)
 public:
@@ -85,7 +85,5 @@ private:
 };
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickFontMetrics)
 
 #endif // QQUICKFONTMETRICS_H

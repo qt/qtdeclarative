@@ -22,11 +22,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticlePainter : public QQuickItem
+class Q_QUICKPARTICLES_EXPORT QQuickParticlePainter : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged FINAL)
-    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged FINAL)
+    Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
+    Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
 
     QML_NAMED_ELEMENT(ParticlePainter)
     QML_ADDED_IN_VERSION(2, 0)

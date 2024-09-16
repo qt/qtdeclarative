@@ -12,7 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcCanvas, "qt.quick.canvas")
+Q_STATIC_LOGGING_CATEGORY(lcCanvas, "qt.quick.canvas")
 
 QQuickContext2DTexture::QQuickContext2DTexture()
     : m_context(nullptr)

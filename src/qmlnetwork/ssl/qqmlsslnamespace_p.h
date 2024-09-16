@@ -15,7 +15,7 @@
 // We mean it.
 //
 
-#include <private/qtqmlnetworkexports_p.h>
+#include <qtqmlnetworkexports.h>
 
 #include <QtCore/QMetaType>
 #include <QtQml/qqml.h>

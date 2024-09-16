@@ -7,4 +7,7 @@
 \brief Overview of the qmltyperegistrar utility.
 \ingroup qtqml-tooling
 
+\c qmltyperegistrar is an internal tool shipped with Qt Qml. It is meant to be
+invoked by the build system only, you don't need to execute it directly.
+
 */

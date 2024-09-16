@@ -13,9 +13,9 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(DataViewCtor);
 DEFINE_OBJECT_VTABLE(DataView);
 
-void Heap::DataViewCtor::init(QV4::ExecutionContext *scope)
+void Heap::DataViewCtor::init(QV4::ExecutionEngine *engine)
 {
-    Heap::FunctionObject::init(scope, QStringLiteral("DataView"));
+    Heap::FunctionObject::init(engine, QStringLiteral("DataView"));
 }
 
 static uint toIndex(ExecutionEngine *e, const Value &v)

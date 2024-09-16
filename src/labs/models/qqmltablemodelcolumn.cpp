@@ -9,7 +9,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TableModelColumn
-//!  \instantiates QQmlTableModelColumn
+//!  \nativetype QQmlTableModelColumn
     \inqmlmodule Qt.labs.qmlmodels
     \brief Represents a column in a model.
     \since 5.14
@@ -18,27 +18,50 @@ QT_BEGIN_NAMESPACE
 
     TableModelColumn supports all of \l {Qt::ItemDataRole}{Qt's roles},
     with the exception of \c Qt::InitialSortOrderRole.
+    Roles can be accessed by as listed below, e.g.
+    \code
+    text: display
+
+    required property string display
+    \endcode
+
+    \table
+    \row \li Qt::DisplayRole \li display
+    \row \li Qt::DecorationRole \li decoration
+    \row \li Qt::EditRole \li edit
+    \row \li Qt::ToolTipRole \li toolTip
+    \row \li Qt::StatusTipRole \li statusTip
+    \row \li Qt::WhatsThisRole \li whatsThis
+    \row \li Qt::FontRole \li font
+    \row \li Qt::TextAlignmentRole \li textAlignment
+    \row \li Qt::BackgroundRole \li background
+    \row \li Qt::ForegroundRole \li foreground
+    \row \li Qt::CheckStateRole \li checkState
+    \row \li Qt::AccessibleTextRole \li accessibleText
+    \row \li Qt::AccessibleDescriptionRole \li accessibleDescription
+    \row \li Qt::SizeHintRole \li sizeHintRoleNam
+    \endtable
 
     \sa TableModel, TableView
 */
 
-static const QString displayRoleName = QStringLiteral("display");
-static const QString decorationRoleName = QStringLiteral("decoration");
-static const QString editRoleName = QStringLiteral("edit");
-static const QString toolTipRoleName = QStringLiteral("toolTip");
-static const QString statusTipRoleName = QStringLiteral("statusTip");
-static const QString whatsThisRoleName = QStringLiteral("whatsThis");
+static constexpr QLatin1StringView displayRoleName("display");
+static constexpr QLatin1StringView decorationRoleName("decoration");
+static constexpr QLatin1StringView editRoleName("edit");
+static constexpr QLatin1StringView toolTipRoleName("toolTip");
+static constexpr QLatin1StringView statusTipRoleName("statusTip");
+static constexpr QLatin1StringView whatsThisRoleName("whatsThis");
 
-static const QString fontRoleName = QStringLiteral("font");
-static const QString textAlignmentRoleName = QStringLiteral("textAlignment");
-static const QString backgroundRoleName = QStringLiteral("background");
-static const QString foregroundRoleName = QStringLiteral("foreground");
-static const QString checkStateRoleName = QStringLiteral("checkState");
+static constexpr QLatin1StringView fontRoleName("font");
+static constexpr QLatin1StringView textAlignmentRoleName("textAlignment");
+static constexpr QLatin1StringView backgroundRoleName("background");
+static constexpr QLatin1StringView foregroundRoleName("foreground");
+static constexpr QLatin1StringView checkStateRoleName("checkState");
 
-static const QString accessibleTextRoleName = QStringLiteral("accessibleText");
-static const QString accessibleDescriptionRoleName = QStringLiteral("accessibleDescription");
+static constexpr QLatin1StringView accessibleTextRoleName("accessibleText");
+static constexpr QLatin1StringView accessibleDescriptionRoleName("accessibleDescription");
 
-static const QString sizeHintRoleName = QStringLiteral("sizeHint");
+static constexpr QLatin1StringView sizeHintRoleName("sizeHint");
 
 
 QQmlTableModelColumn::QQmlTableModelColumn(QObject *parent)
@@ -143,21 +166,22 @@ const QHash<QString, QJSValue> QQmlTableModelColumn::getters() const
 
 const QHash<int, QString> QQmlTableModelColumn::supportedRoleNames()
 {
-    QHash<int, QString> names;
-    names[Qt::DisplayRole] = QLatin1String("display");
-    names[Qt::DecorationRole] = QLatin1String("decoration");
-    names[Qt::EditRole] = QLatin1String("edit");
-    names[Qt::ToolTipRole] = QLatin1String("toolTip");
-    names[Qt::StatusTipRole] = QLatin1String("statusTip");
-    names[Qt::WhatsThisRole] = QLatin1String("whatsThis");
-    names[Qt::FontRole] = QLatin1String("font");
-    names[Qt::TextAlignmentRole] = QLatin1String("textAlignment");
-    names[Qt::BackgroundRole] = QLatin1String("background");
-    names[Qt::ForegroundRole] = QLatin1String("foreground");
-    names[Qt::CheckStateRole] = QLatin1String("checkState");
-    names[Qt::AccessibleTextRole] = QLatin1String("accessibleText");
-    names[Qt::AccessibleDescriptionRole] = QLatin1String("accessibleDescription");
-    names[Qt::SizeHintRole] = QLatin1String("sizeHint");
+    static const QHash<int, QString> names {
+        {Qt::DisplayRole, displayRoleName},
+        {Qt::DecorationRole, decorationRoleName},
+        {Qt::EditRole, editRoleName},
+        {Qt::ToolTipRole, toolTipRoleName},
+        {Qt::StatusTipRole, statusTipRoleName},
+        {Qt::WhatsThisRole, whatsThisRoleName},
+        {Qt::FontRole, fontRoleName},
+        {Qt::TextAlignmentRole, textAlignmentRoleName},
+        {Qt::BackgroundRole, backgroundRoleName},
+        {Qt::ForegroundRole, foregroundRoleName},
+        {Qt::CheckStateRole, checkStateRoleName},
+        {Qt::AccessibleTextRole, accessibleTextRoleName},
+        {Qt::AccessibleDescriptionRole, accessibleDescriptionRoleName},
+        {Qt::SizeHintRole, sizeHintRoleName}
+    };
     return names;
 }
 

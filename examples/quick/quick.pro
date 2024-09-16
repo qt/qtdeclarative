@@ -23,10 +23,9 @@ SUBDIRS =   quick-accessibility \
             imageresponseprovider \
             window \
             particles \
-            delegatechooser \
-            shapes \
             itemvariablerefreshrate \
-            multieffect
+            multieffect \
+            quickshapes
 
 #OpenGL Support Required
 qtConfig(opengl(es1|es2)?) {

@@ -15,14 +15,17 @@
 // We mean it.
 //
 
+#include <QtQmlIntegration/qqmlintegration.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qvector.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlChangeSet
+class Q_QMLMODELS_EXPORT QQmlChangeSet
 {
+    Q_GADGET
+    QML_ANONYMOUS
 public:
     struct MoveKey
     {
@@ -117,8 +120,8 @@ inline size_t qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(
 inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
-Q_QMLMODELS_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
-Q_QMLMODELS_PRIVATE_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
+Q_QMLMODELS_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet::Change &change);
+Q_QMLMODELS_EXPORT QDebug operator <<(QDebug debug, const QQmlChangeSet &change);
 
 QT_END_NAMESPACE
 
