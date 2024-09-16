@@ -133,6 +133,8 @@ public:
     Error errorCode() const;
     QString errorMessage() const;
 
+    std::optional<DiagnosticMessage> illegalFileLengthError() const;
+
     bool canInsertAutomaticSemicolon(int token) const;
 
     enum ParenthesesState {

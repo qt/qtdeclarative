@@ -19,6 +19,7 @@
 
 QT_BEGIN_NAMESPACE
 using namespace QQmlJS;
+using namespace Qt::StringLiterals;
 
 static inline int regExpFlagFromChar(const QChar &ch)
 {
@@ -62,6 +63,24 @@ bool Lexer::qmlMode() const
 QString Lexer::code() const
 {
     return _code;
+}
+
+std::optional<DiagnosticMessage> Lexer::illegalFileLengthError() const
+{
+    Q_ASSERT(_currentOffset >= 0);
+
+    constexpr bool quint32IsBigger = sizeof(qsizetype) <= sizeof(quint32);
+    using BiggerInt = std::conditional_t<quint32IsBigger, quint32, qsizetype>;
+    using SmallerInt = std::conditional_t<!quint32IsBigger, quint32, qsizetype>;
+
+    const BiggerInt codeLength = BiggerInt(_currentOffset) + BiggerInt(_code.size());
+    const BiggerInt maxLength = BiggerInt(std::numeric_limits<SmallerInt>::max());
+    if (codeLength < maxLength)
+        return {};
+
+    constexpr int limit = quint32IsBigger ? 2 : 4;
+    return DiagnosticMessage{ u"File exceeds maximum length (%1GB)."_s.arg(limit), QtCriticalMsg,
+                              SourceLocation{ 0, 1, 1, 1 } };
 }
 
 void Lexer::setCode(const QString &code, int lineno, bool qmlMode,

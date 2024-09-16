@@ -434,6 +434,7 @@ protected:
 #define UNIMPLEMENTED syntaxError(loc(1), "Unimplemented"); return false
 
 using namespace QQmlJS;
+using namespace Qt::StringLiterals;
 
 QT_BEGIN_NAMESPACE
 
@@ -566,6 +567,12 @@ bool Parser::ensureNoFunctionTypeAnnotations(AST::TypeAnnotation *returnValueAnn
 bool Parser::parse(int startToken)
 {
     Lexer *lexer = driver->lexer();
+
+    if (auto diagnosticMessage = lexer->illegalFileLengthError()) {
+        diagnostic_messages.append(*diagnosticMessage);
+        return false;
+    }
+
     bool hadErrors = false;
     yytoken = -1;
     int action = 0;

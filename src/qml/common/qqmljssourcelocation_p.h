@@ -24,11 +24,45 @@ namespace QQmlJS {
 
 class SourceLocation
 {
+    // see also Lexer::illegalFileLengthError() and its enforcement in qqmljs.g
+    static constexpr bool qSizeTypeCanHoldQuint32()
+    {
+        return sizeof(qsizetype) > sizeof(quint32);
+    }
 public:
     explicit SourceLocation(quint32 offset = 0, quint32 length = 0, quint32 line = 0, quint32 column = 0)
         : offset(offset), length(length),
           startLine(line), startColumn(column)
-    { }
+    {
+        if constexpr (!qSizeTypeCanHoldQuint32()) {
+            constexpr quint32 maxLength = quint32(std::numeric_limits<qsizetype>::max());
+
+            // note: no overflow when adding offset and length because:
+            // offset + length <= (maxLength - 1) + (maxLength - 1) = std::numeric_limits<quint32>::max()
+            Q_ASSERT_X(length < maxLength && offset < maxLength && offset + length < maxLength,
+                       "QQmlJS::SourceLocation", "File size is limited to 2GB!");
+            Q_ASSERT_X(line <= offset, "QQmlJS::SourceLocation",
+                       "Invalid line or offset: line can't be greater than the offset!");
+            Q_ASSERT_X(column <= offset, "QQmlJS::SourceLocation",
+                       "Invalid column or offset: column can't be greater than the offset!");
+        }
+    }
+
+    static SourceLocation fromQSizeType(qsizetype offset, qsizetype length = 0, qsizetype line = 0,
+                                        qsizetype column = 0)
+    {
+        if constexpr (qSizeTypeCanHoldQuint32()) {
+            constexpr qsizetype maxLength = qsizetype(std::numeric_limits<quint32>::max());
+
+            Q_ASSERT_X(offset + length < maxLength, "QQmlJS::SourceLocation",
+                       "File size is limited to 4GB!");
+            Q_ASSERT_X(line <= offset, "QQmlJS::SourceLocation",
+                       "Invalid line or offset: line can't be greater than the offset!");
+            Q_ASSERT_X(column <= offset, "QQmlJS::SourceLocation",
+                       "Invalid column or offset: column can't be greater than the offset!");
+        }
+        return SourceLocation(quint32(offset), quint32(length), quint32(line), quint32(column));
+    }
 
     bool isValid() const { return *this != SourceLocation(); }
 
@@ -67,6 +101,9 @@ public:
 
 // attributes
     // ### encode
+
+    // Those quint32 can be casted to qsizetype because the Parser aborts on files with size >=
+    // std::min(std::numeric_limits<quint32>::max(), std::numeric_limits<qsizetype>::max()).
     quint32 offset;
     quint32 length;
     quint32 startLine;
