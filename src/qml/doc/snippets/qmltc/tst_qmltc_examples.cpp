@@ -51,6 +51,8 @@ void tst_qmltc_examples::app()
     app.setApplicationDisplayName(QStringLiteral("This example is powered by qmltc!"));
 
     QQmlEngine e;
+    // If the root element is Window, you don't need to create a Window.
+    // The snippet is for the cases where the root element is not a Window.
     QQuickWindow window;
 
     QScopedPointer<QmltcExample::myApp> documentRoot(
@@ -81,6 +83,8 @@ void tst_qmltc_examples::appComponent()
     app.setApplicationDisplayName(QStringLiteral("This example is powered by QQmlComponent :("));
 
     QQmlEngine e;
+    // If the root element is Window, you don't need to create a Window.
+    // The snippet is for the cases where the root element is not a Window.
     QQuickWindow window;
 
     QQmlComponent component(&e);
