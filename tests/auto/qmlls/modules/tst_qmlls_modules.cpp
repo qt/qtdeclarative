@@ -787,6 +787,10 @@ void tst_qmlls_modules::documentFormatting_data()
     QTest::newRow("leading-and-trailing-blanklines")
             << testFile("formatting/blanklines.qml")
             << testFile("formatting/blanklines.formatted.qml");
+
+    QTest::newRow("read-qmlformat-ini")
+            << directory.filePath(u"settings/Example1.qml"_s)
+            << directory.filePath(u"settings/Example1.formatted_mac_cr.qml"_s);
 }
 
 void tst_qmlls_modules::documentFormatting()

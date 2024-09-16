@@ -19,6 +19,8 @@
 #include "qqmlbasemodule_p.h"
 #include "qqmlcodemodel_p.h"
 
+#include <QtQmlFormat/private/qqmlformatoptions_p.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(formatLog)
@@ -39,6 +41,9 @@ public:
     void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                            QLspSpecification::InitializeResult &) override;
     void process(RequestPointerArgument req) override;
+
+private:
+    QQmlFormatOptions m_formatOptions;
 };
 
 QT_END_NAMESPACE

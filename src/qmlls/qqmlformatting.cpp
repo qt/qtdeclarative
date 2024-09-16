@@ -8,6 +8,7 @@
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomindentinglinewriter_p.h>
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
+#include <QtQmlFormat/private/qqmlformatsettings_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -71,14 +72,17 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
         return;
     }
 
-    // TODO: implement formatting options
-    // For now, qmlformat's default options.
-    LineWriterOptions options;
-    options.updateOptions = LineWriterOptions::Update::None;
-    options.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    // TODO: implement formatting options via LSP
+    // For now, qmlformat's default options via m_formatOptions and read .qmlformat.ini
+    QQmlFormatSettings settings(QLatin1String("qmlformat"));
+    settings.search(qmlFile->canonicalFilePath());
+
+    QQmlFormatOptions currentFormatOptions = m_formatOptions;
+    currentFormatOptions.applySettings(settings);
 
     QLspSpecification::TextEdit formattedText;
-    LineWriter lw([&formattedText](QStringView s) {formattedText.newText += s.toUtf8(); }, QString(), options);
+    LineWriter lw([&formattedText](QStringView s) { formattedText.newText += s.toUtf8(); },
+                  QString(), currentFormatOptions.optionsForCode(qmlFile->code()));
     OutWriter ow(lw);
     file.writeOutForFile(ow, WriteOutCheck::None);
     ow.flush();
