@@ -445,14 +445,20 @@ bool QQuickMenuPrivate::createNativeMenu()
         emit q->openedChanged();
         opened();
     });
-    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [q, this](){
+    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [q](){
         qCDebug(lcNativeMenus) << "QPlatformMenu::aboutToHide called; about to call setVisible(false) on Menu";
         emit q->aboutToHide();
+    });
+    // On some platforms (Windows and macOS), it can happen that QPlatformMenuItem::activated
+    // is emitted after QPlatformMenu::aboutToHide. Since sending signals out of order can
+    // cause an application to fail (QTBUG-128158) we use Qt::QueuedConnection to work around
+    // this, so that we emit the signals in the right order.
+    q->connect(handle.get(), &QPlatformMenu::aboutToHide, q, [q, this](){
         visible = false;
         emit q->visibleChanged();
         emit q->openedChanged();
         emit q->closed();
-    });
+    }, Qt::QueuedConnection);
 
     recursivelyCreateNativeMenuItems(q);
     syncWithNativeMenu();
