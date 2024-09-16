@@ -77,8 +77,8 @@ public:
     {
         if (! nodeStack.isEmpty()) {
             AST::Node *parent = nodeStack.last();
-            const quint32 parentBegin = parent->firstSourceLocation().begin();
-            const quint32 parentEnd = parent->lastSourceLocation().end();
+            const qsizetype parentBegin = parent->firstSourceLocation().begin();
+            const qsizetype parentEnd = parent->lastSourceLocation().end();
 
             if (node->firstSourceLocation().begin() < parentBegin)
                 qDebug() << "first source loc failed: node:" << node->kind << "at" << node->firstSourceLocation().startLine << "/" << node->firstSourceLocation().startColumn
@@ -195,7 +195,7 @@ public:
             ++startLine;
         }
         QCOMPARE(expected, found);
-        SourceLocation combined(first.offset, last.end() - first.begin(),
+        SourceLocation combined(first.offset, quint32(last.end() - first.begin()),
                                 first.startLine, first.startColumn);
         SourceLocation cStart = combined.startZeroLengthLocation();
         SourceLocation cEnd = combined.endZeroLengthLocation(m_codeStr);
@@ -338,7 +338,7 @@ void tst_qqmlparser::stringLiteral()
     auto *literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expression);
     QVERIFY(literal);
     QCOMPARE(literal->value, u"hello string");
-    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
 
     // test for correct handling escape sequences inside strings
@@ -357,7 +357,7 @@ void tst_qqmlparser::stringLiteral()
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
     QVERIFY(literal);
     QCOMPARE(literal->value, u"hello\n\tstring");
-    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(leftCode.size()));
 
@@ -365,7 +365,7 @@ void tst_qqmlparser::stringLiteral()
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
     QVERIFY(literal);
     QCOMPARE(literal->value, u"\nbye");
-    quint32 offset = quint32(leftCode.size() + plusCode.size());
+    qsizetype offset = leftCode.size() + plusCode.size();
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
@@ -383,14 +383,14 @@ void tst_qqmlparser::stringLiteral()
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
     QVERIFY(literal);
     QCOMPARE(literal->value, u"\nhello\nbye");
-    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), leftCode.size());
 
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
     QVERIFY(literal);
     QCOMPARE(literal->value, u"\nbye");
-    offset = quint32(leftCode.size() + plusCode.size());
+    offset = leftCode.size() + plusCode.size();
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->lastSourceLocation().startLine, 3u);
     QCOMPARE(literal->lastSourceLocation().end(), code.size());
@@ -495,7 +495,7 @@ void tst_qqmlparser::templateLiteral()
     auto *templateLiteral = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
     QVERIFY(templateLiteral);
 
-    QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0u);
+    QCOMPARE(templateLiteral->firstSourceLocation().begin(), 0);
     auto *e = templateLiteral->expression;
     QVERIFY(e);
 }
@@ -538,7 +538,7 @@ void tst_qqmlparser::numericSeparator() {
     QVERIFY(literal);
 
     QCOMPARE(literal->value, expected_value);
-    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().begin(), 0);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
 }
 

@@ -87,8 +87,8 @@ public:
     QQmlJS::SourceLocation sourceLocation() const { return m_sourceLocation; }
     TextPosition end() const { return m_end; }
 
-    static Location from(const QString &fileName, const QString &code, quint32 startLine,
-                         quint32 startCharacter, quint32 length);
+    static Location from(const QString &fileName, const QString &code, qsizetype startLine,
+                         qsizetype startCharacter, qsizetype length);
     static Location from(const QString &fileName, const QQmlJS::SourceLocation &sourceLocation,
                          const QString &code);
     static std::optional<Location> tryFrom(const QString &fileName,
@@ -141,8 +141,8 @@ struct Edit
     Location location;
     QString replacement;
 
-    static Edit from(const QString &fileName, const QString &code, quint32 startLine,
-                     quint32 startCharacter, quint32 length, const QString &newName);
+    static Edit from(const QString &fileName, const QString &code, qsizetype startLine,
+                     qsizetype startCharacter, qsizetype length, const QString &newName);
 
     friend bool operator<(const Edit &a, const Edit &b)
     {

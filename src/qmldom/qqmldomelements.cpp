@@ -1629,20 +1629,17 @@ bool ScriptExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor 
 class FirstNodeVisitor : public VisitAll
 {
 public:
-    quint32 minStart = 0;
-    quint32 maxEnd = std::numeric_limits<quint32>::max();
+    qsizetype minStart = 0;
+    qsizetype maxEnd = std::numeric_limits<qint32>::max(); // see also Lexer::checkFileLength().
     AST::Node *firstNodeInRange = nullptr;
 
-    FirstNodeVisitor(quint32 minStart = 0, quint32 maxEnd = std::numeric_limits<quint32>::max())
-        : minStart(minStart), maxEnd(maxEnd)
-    {
-    }
+    FirstNodeVisitor(qsizetype minStart, qsizetype maxEnd) : minStart(minStart), maxEnd(maxEnd) { }
 
     bool preVisit(AST::Node *n) override
     {
         if (!VisitAll::uiKinds().contains(n->kind)) {
-            quint32 start = n->firstSourceLocation().begin();
-            quint32 end = n->lastSourceLocation().end();
+            qsizetype start = n->firstSourceLocation().begin();
+            qsizetype end = n->lastSourceLocation().end();
             if (!firstNodeInRange && minStart <= start && end <= maxEnd && start < end)
                 firstNodeInRange = n;
         }
@@ -1650,7 +1647,7 @@ public:
     }
 };
 
-AST::Node *firstNodeInRange(AST::Node *n, quint32 minStart = 0, quint32 maxEnd = ~quint32(0))
+AST::Node *firstNodeInRange(AST::Node *n, qsizetype minStart = 0, qsizetype maxEnd = std::numeric_limits<qint32>::max())
 {
     FirstNodeVisitor visitor(minStart, maxEnd);
     AST::Node::accept(n, &visitor);

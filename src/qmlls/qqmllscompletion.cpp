@@ -645,7 +645,7 @@ bool QQmlLSCompletion::cursorInFrontOfItem(const DomItem &parentForContext,
                                            const QQmlLSCompletionPosition &positionInfo)
 {
     auto fileLocations = FileLocations::treeOf(parentForContext)->info().fullRegion;
-    return positionInfo.offset() <= fileLocations.offset;
+    return positionInfo.offset() <= fileLocations.begin();
 }
 
 bool QQmlLSCompletion::cursorAfterColon(const DomItem &currentItem,
@@ -657,7 +657,7 @@ bool QQmlLSCompletion::cursorAfterColon(const DomItem &currentItem,
     if (region == location.regions.constEnd())
         return false;
 
-    if (region.value().isValid() && region.value().offset < positionInfo.offset()) {
+    if (region.value().isValid() && region.value().begin() < positionInfo.offset()) {
         return true;
     }
     return false;
@@ -815,7 +815,7 @@ void QQmlLSCompletion::insidePropertyDefinitionCompletion(
     const QQmlJS::SourceLocation propertyKeyword = info.regions[PropertyKeywordRegion];
 
     // do completions for the keywords
-    if (positionInfo.offset() < propertyKeyword.offset + propertyKeyword.length) {
+    if (positionInfo.offset() < propertyKeyword.end()) {
         const QQmlJS::SourceLocation readonlyKeyword = info.regions[ReadonlyKeywordRegion];
         const QQmlJS::SourceLocation defaultKeyword = info.regions[DefaultKeywordRegion];
         const QQmlJS::SourceLocation requiredKeyword = info.regions[RequiredKeywordRegion];
@@ -825,21 +825,21 @@ void QQmlLSCompletion::insidePropertyDefinitionCompletion(
         bool completeDefault = true;
 
         // if there is already a readonly keyword before the cursor: do not auto complete it again
-        if (readonlyKeyword.isValid() && readonlyKeyword.offset < positionInfo.offset()) {
+        if (readonlyKeyword.isValid() && readonlyKeyword.begin() < positionInfo.offset()) {
             completeReadonly = false;
             // also, required keywords do not like readonly keywords
             completeRequired = false;
         }
 
         // same for required
-        if (requiredKeyword.isValid() && requiredKeyword.offset < positionInfo.offset()) {
+        if (requiredKeyword.isValid() && requiredKeyword.begin() < positionInfo.offset()) {
             completeRequired = false;
             // also, required keywords do not like readonly keywords
             completeReadonly = false;
         }
 
         // same for default
-        if (defaultKeyword.isValid() && defaultKeyword.offset < positionInfo.offset()) {
+        if (defaultKeyword.isValid() && defaultKeyword.begin() < positionInfo.offset()) {
             completeDefault = false;
         }
         auto addCompletionKeyword = [&result](QUtf8StringView view, bool complete) {
@@ -860,7 +860,7 @@ void QQmlLSCompletion::insidePropertyDefinitionCompletion(
 
     const QQmlJS::SourceLocation propertyIdentifier = info.regions[IdentifierRegion];
     if (propertyKeyword.end() <= positionInfo.offset()
-        && positionInfo.offset() < propertyIdentifier.offset) {
+        && positionInfo.offset() < propertyIdentifier.begin()) {
         suggestReachableTypes(currentItem,
                               LocalSymbolsType::ObjectType | LocalSymbolsType::ValueType,
                               CompletionItemKind::Class, result);

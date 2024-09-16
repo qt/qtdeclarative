@@ -282,8 +282,8 @@ public:
 class ElementRef
 {
 public:
-    ElementRef(AST::Node *node, quint32 size) : element(node), size(size) { }
-    ElementRef(const Path &path, FileLocationRegion region, quint32 size)
+    ElementRef(AST::Node *node, qsizetype size) : element(node), size(size) { }
+    ElementRef(const Path &path, FileLocationRegion region, qsizetype size)
         : element(RegionRef{ path, region }), size(size)
     {
     }
@@ -294,7 +294,7 @@ public:
     ElementRef() = default;
 
     std::variant<AST::Node *, RegionRef> element;
-    quint32 size = 0;
+    qsizetype size = 0;
 };
 
 /*!
@@ -350,8 +350,8 @@ public:
     bool preVisit(Node *n) override
     {
         if (!kindsToSkip().contains(n->kind)) {
-            quint32 start = n->firstSourceLocation().begin();
-            quint32 end = n->lastSourceLocation().end();
+            qsizetype start = n->firstSourceLocation().begin();
+            qsizetype end = n->lastSourceLocation().end();
             if (!starts.contains(start))
                 starts.insert(start, { n, end - start });
             if (!ends.contains(end))
@@ -360,8 +360,8 @@ public:
         return true;
     }
 
-    QMap<quint32, ElementRef> starts;
-    QMap<quint32, ElementRef> ends;
+    QMap<qsizetype, ElementRef> starts;
+    QMap<qsizetype, ElementRef> ends;
 };
 
 void AstRangesVisitor::addNodeRanges(AST::Node *rootNode)
@@ -381,12 +381,12 @@ void AstRangesVisitor::addItemRanges(
     if (comments) {
         auto regs = itemLocations->info().regions;
         for (auto it = regs.cbegin(), end = regs.cend(); it != end; ++it) {
-            quint32 startI = it.value().begin();
-            quint32 endI = it.value().end();
+            qsizetype startI = it.value().begin();
+            qsizetype endI = it.value().end();
 
             if (!shouldSkipRegion(item, it.key())) {
                 if (!starts.contains(startI))
-                    starts.insert(startI, { currentP, it.key(), quint32(endI - startI) });
+                    starts.insert(startI, { currentP, it.key(), endI - startI });
                 if (!ends.contains(endI))
                     ends.insert(endI, { currentP, it.key(), endI - startI });
             }
@@ -452,7 +452,7 @@ bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion 
 class CommentLinker
 {
 public:
-    CommentLinker(QStringView code, ElementRef &commentedElement, const AstRangesVisitor &ranges, quint32 &lastPostCommentPostEnd,
+    CommentLinker(QStringView code, ElementRef &commentedElement, const AstRangesVisitor &ranges, qsizetype &lastPostCommentPostEnd,
                   const SourceLocation &commentLocation)
         : m_code{ code },
           m_commentedElement{ commentedElement },
@@ -481,18 +481,16 @@ public:
     [[nodiscard]] Comment createComment() const
     {
         const auto [preSpacesIndex, postSpacesIndex, preNewlineCount] = m_spaces;
-        return Comment{ m_code.mid(preSpacesIndex, quint32(postSpacesIndex) - preSpacesIndex),
-                        m_commentLocation,
-                        static_cast<int>(preNewlineCount),
-                        m_commentType};
+        return Comment{ m_code.mid(preSpacesIndex, postSpacesIndex - preSpacesIndex),
+                        m_commentLocation, static_cast<int>(preNewlineCount), m_commentType };
     }
 
 private:
     struct SpaceTrace
     {
-        quint32 iPre;
+        qsizetype iPre;
         qsizetype iPost;
-        int preNewline;
+        qsizetype preNewline;
     };
 
     /*! \internal
@@ -505,9 +503,9 @@ private:
     */
     [[nodiscard]] SpaceTrace findSpacesAroundComment() const
     {
-        quint32 iPre = m_commentLocation.begin();
-        int preNewline = 0;
-        int postNewline = 0;
+        qsizetype iPre = m_commentLocation.begin();
+        qsizetype preNewline = 0;
+        qsizetype postNewline = 0;
         QStringView commentStartStr;
         while (iPre > 0) {
             QChar c = m_code.at(iPre - 1);
@@ -522,7 +520,7 @@ private:
             } else if (c == QLatin1Char('\n') || c == QLatin1Char('\r')) {
                 preNewline = 1;
                 // possibly add an empty line if it was there (but never more than one)
-                int i = iPre - 1;
+                qsizetype i = iPre - 1;
                 if (c == QLatin1Char('\n') && i > 0 && m_code.at(i - 1) == QLatin1Char('\r'))
                     --i;
                 while (i > 0 && m_code.at(--i).isSpace()) {
@@ -589,7 +587,7 @@ private:
                 // expression (think a + //comment\n b  ==> a // comment\n + b), in this
                 // case attaching as preComment of iStart (b in the example) should be
                 // preferred as it is safe
-                quint32 i = m_spaces.iPre;
+                qsizetype i = m_spaces.iPre;
                 while (i != 0 && m_code.at(--i).isSpace())
                     ;
                 if (i <= preEnd.key() || i < m_lastPostCommentPostEnd
@@ -648,7 +646,7 @@ private:
 private:
     QStringView m_code;
     ElementRef &m_commentedElement;
-    quint32 &m_lastPostCommentPostEnd;
+    qsizetype &m_lastPostCommentPostEnd;
     Comment::CommentType m_commentType = Comment::Pre;
     const AstRangesVisitor &m_ranges;
     const SourceLocation &m_commentLocation;
@@ -714,7 +712,7 @@ void CommentCollector::collectComments(
     ranges.addItemRanges(m_rootItem.item(), m_fileLocations, Path());
     ranges.addNodeRanges(rootNode);
     QStringView code = engine->code();
-    quint32 lastPostCommentPostEnd = 0;
+    qsizetype lastPostCommentPostEnd = 0;
     for (const SourceLocation &commentLocation : engine->comments()) {
         // collect whitespace before and after cLoc -> iPre..iPost contains whitespace,
         // do not add newline before, but add the one after

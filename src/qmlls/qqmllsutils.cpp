@@ -290,7 +290,7 @@ handlePropertyDefinitionAndBindingOverlap(const QList<ItemLocation> &items, qsiz
         // sanity check: is it the definition of the current binding? check if they both have their
         // ':' at the same location
         if (propertyDefinitionColon.isValid() && propertyDefinitionColon == smallestColon
-            && offsetInFile < smallestColon.offset) {
+            && offsetInFile < smallestColon.begin()) {
             return smallestPropertyDefinition;
         }
     }
@@ -316,16 +316,16 @@ static QList<ItemLocation> filterItemsFromTextLocation(const QList<ItemLocation>
     filteredItems.append(*smallest);
 
     const QQmlJS::SourceLocation smallestLoc = smallest->fileLocation->info().fullRegion;
-    const quint32 smallestBegin = smallestLoc.begin();
-    const quint32 smallestEnd = smallestLoc.end();
+    const qsizetype smallestBegin = smallestLoc.begin();
+    const qsizetype smallestEnd = smallestLoc.end();
 
     for (auto it = items.begin(); it != items.end(); it++) {
         if (it == smallest)
             continue;
 
         const QQmlJS::SourceLocation itLoc = it->fileLocation->info().fullRegion;
-        const quint32 itBegin = itLoc.begin();
-        const quint32 itEnd = itLoc.end();
+        const qsizetype itBegin = itLoc.begin();
+        const qsizetype itEnd = itLoc.end();
         if (itBegin == smallestEnd || smallestBegin == itEnd) {
             filteredItems.append(*it);
         }
@@ -364,11 +364,7 @@ QList<ItemLocation> itemsFromTextLocation(const DomItem &file, int line, int cha
 
     enum ComparisonOption { Normal, ExcludePositionAfterLast };
     auto containsTarget = [targetPos](QQmlJS::SourceLocation l, ComparisonOption c) {
-        if constexpr (sizeof(qsizetype) <= sizeof(quint32)) {
-            return l.begin() <= quint32(targetPos) && quint32(targetPos) < l.end() + (c == Normal ? 1 : 0) ;
-        } else {
-            return l.begin() <= targetPos && targetPos < l.end() + (c == Normal ? 1 : 0);
-        }
+        return l.begin() <= targetPos && targetPos < l.end() + (c == Normal ? 1 : 0);
     };
     if (containsTarget(t->info().fullRegion, Normal)) {
         ItemLocation loc;
@@ -2372,16 +2368,17 @@ Location Location::from(const QString &fileName, const QQmlJS::SourceLocation &s
     return Location{ fileName, sourceLocation, textRowAndColumnFrom(code, sourceLocation.end()) };
 }
 
-Location Location::from(const QString &fileName, const QString &code, quint32 startLine,
-                        quint32 startCharacter, quint32 length)
+Location Location::from(const QString &fileName, const QString &code, qsizetype startLine,
+                        qsizetype startCharacter, qsizetype length)
 {
-    const quint32 offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
-    return from(fileName, QQmlJS::SourceLocation{ offset, length, startLine, startCharacter },
+    const auto offset = QQmlLSUtils::textOffsetFrom(code, startLine - 1, startCharacter - 1);
+    return from(fileName,
+                QQmlJS::SourceLocation::fromQSizeType(offset, length, startLine, startCharacter),
                 code);
 }
 
-Edit Edit::from(const QString &fileName, const QString &code, quint32 startLine,
-                quint32 startCharacter, quint32 length, const QString &newName)
+Edit Edit::from(const QString &fileName, const QString &code, qsizetype startLine,
+                qsizetype startCharacter, qsizetype length, const QString &newName)
 {
     Edit rename;
     rename.location = Location::from(fileName, code, startLine, startCharacter, length);
