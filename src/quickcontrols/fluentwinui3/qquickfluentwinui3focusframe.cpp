@@ -18,12 +18,14 @@ QScopedPointer<QQuickItem> QQuickFluentWinUI3FocusFrame::m_focusFrame;
 
 QQuickFluentWinUI3FocusFrame::QQuickFluentWinUI3FocusFrame()
 {
-    connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this]{
-        if (auto control = qobject_cast<QQuickControl *>(qGuiApp->focusObject())) {
+    connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this](QObject *focusObject){
+        if (auto control = qobject_cast<QQuickControl *>(focusObject)) {
             if (control->focusReason() == Qt::FocusReason::TabFocusReason
                 || control->focusReason() == Qt::FocusReason::BacktabFocusReason) {
                 moveToItem(control);
             }
+        } else {
+            m_focusFrame.reset();
         }
     });
 }
