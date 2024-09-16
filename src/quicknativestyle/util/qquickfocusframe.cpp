@@ -24,9 +24,11 @@ QScopedPointer<QQuickItem> QQuickFocusFrame::m_focusFrame;
 
 QQuickFocusFrame::QQuickFocusFrame()
 {
-    connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this]{
-        if (auto item = qobject_cast<QQuickItem *>(qGuiApp->focusObject()))
+    connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this](QObject *focusObject){
+        if (auto item = qobject_cast<QQuickItem *>(focusObject))
             moveToItem(item);
+        else
+            m_focusFrame.reset();
     });
 }
 
