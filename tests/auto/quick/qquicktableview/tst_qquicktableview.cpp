@@ -6563,9 +6563,12 @@ void tst_QQuickTableView::columnResizing()
     QTest::mouseMove(window, startPos + dragLength);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
 
+    // There is a probable chance that the polish scheduled during the resize would have
+    // been completed even before the mouse release events, so it's better to try to verify
+    // instead of always assuming that the polish has been scheduled at this stage.
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
     const qreal newColumnWidth = columnStartWidth + dragLength.x() - startDragDist.x();
     QCOMPARE(tableView->explicitColumnWidth(column), newColumnWidth);
-    WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->columnWidth(column), newColumnWidth);
 
     QCOMPARE(currentIndexSpy.count(), 0);
@@ -6614,9 +6617,12 @@ void tst_QQuickTableView::rowResizing()
     QTest::mouseMove(window, startPos + dragLength);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
 
+    // There is a probable chance that the polish scheduled during the resize would have
+    // been completed even before the mouse release events, so it's better to try to verify
+    // instead of always assuming that the polish has been scheduled at this stage.
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
     const qreal newRowHeight = rowStartHeight + dragLength.y() - startDragDist.y();
     QCOMPARE(tableView->explicitRowHeight(row), newRowHeight);
-    WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->rowHeight(row), newRowHeight);
 
     QCOMPARE(currentIndexSpy.count(), 0);
@@ -6679,11 +6685,14 @@ void tst_QQuickTableView::rowAndColumnResizing()
     QTest::mouseMove(window, startPos + dragLength);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
 
+    // There is a probable chance that the polish scheduled during the resize would have
+    // been completed even before the mouse release events, so it's better to try to verify
+    // instead of always assuming that the polish has been scheduled at this stage.
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
     const qreal newColumnWidth = columnStartWidth + dragLength.x() - startDragDist.x();
     const qreal newRowHeight = rowStartHeight + dragLength.y() - startDragDist.y();
     QCOMPARE(tableView->explicitColumnWidth(rowAndColumn), newColumnWidth);
     QCOMPARE(tableView->explicitRowHeight(rowAndColumn), newRowHeight);
-    WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->columnWidth(rowAndColumn), newColumnWidth);
     QCOMPARE(tableView->rowHeight(rowAndColumn), newRowHeight);
 
@@ -7850,8 +7859,10 @@ void tst_QQuickTableView::checkColumnRowResizeAfterReorder()
     QTest::mouseMove(window, startPos + dragLength);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos + dragLength);
 
-    WAIT_UNTIL_POLISHED;
-
+    // There is a probable chance that the polish scheduled during the resize would have
+    // been completed even before the mouse release events, so it's better to try to verify
+    // instead of always assuming that the polish has been scheduled at this stage.
+    QTRY_VERIFY(!QQuickTest::qIsPolishScheduled(tableView));
     QCOMPARE(tableView->explicitColumnWidth(moveIndex), columnStartWidth + dragLength.x() - startDragDist.x());
     QCOMPARE(tableView->explicitRowHeight(moveIndex), rowStartHeight + dragLength.y() - startDragDist.y());
 }
