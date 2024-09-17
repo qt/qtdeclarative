@@ -2231,8 +2231,26 @@ QString GlobalExtensions::currentTranslationContext(ExecutionEngine *engine)
     otherwise returns \a sourceText itself if no appropriate translated string
     is available.
 
-    Example:
-    \snippet qml/qsTr.qml 0
+    Examples with \a sourceText and \a {n}:
+
+    \if defined(onlinedocs)
+      \tab {qstr}{qstr-1}{sourceText}{checked}
+      \tab {qstr}{qstr-2}{sourceText and n}{}
+      \tabcontent {qstr-1}
+    \else
+      \section1 Only sourceText
+    \endif
+        \snippet qml/qsTr.qml 0
+    \if defined(onlinedocs)
+      \endtabcontent
+      \tabcontent {qstr-2}
+    \else
+      \section1 SourceText and n
+    \endif
+      \snippet qml/qsTr.qml 1
+    \if defined(onlinedocs)
+      \endtabcontent
+    \endif
 
     If the same \a sourceText is used in different roles within the
     same translation context, an additional identifying string may be passed in
