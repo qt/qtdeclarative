@@ -303,7 +303,7 @@ class QQuickPixmapData
 public:
     QQuickPixmapData(const QUrl &u, const QRect &r, const QSize &rs,
                      const QQuickImageProviderOptions &po, const QString &e)
-    : refCount(1), frameCount(1), frame(0), inCache(false), pixmapStatus(QQuickPixmap::Error),
+    : refCount(1), frameCount(1), frame(0), inCache(false), fromSpecialDevice(false), pixmapStatus(QQuickPixmap::Error),
       url(u), errorString(e), requestRegion(r), requestSize(rs),
       providerOptions(po), appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
       textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr),
@@ -316,7 +316,7 @@ public:
 
     QQuickPixmapData(const QUrl &u, const QRect &r, const QSize &s, const QQuickImageProviderOptions &po,
                      QQuickImageProviderOptions::AutoTransform aTransform, int frame=0, int frameCount=1)
-    : refCount(1), frameCount(frameCount), frame(frame), inCache(false), pixmapStatus(QQuickPixmap::Loading),
+    : refCount(1), frameCount(frameCount), frame(frame), inCache(false), fromSpecialDevice(false), pixmapStatus(QQuickPixmap::Loading),
       url(u), requestRegion(r), requestSize(s),
       providerOptions(po), appliedTransform(aTransform),
       textureFactory(nullptr), reply(nullptr), prevUnreferenced(nullptr), prevUnreferencedPtr(nullptr),
@@ -330,7 +330,7 @@ public:
     QQuickPixmapData(const QUrl &u, QQuickTextureFactory *texture,
                      const QSize &s, const QRect &r, const QSize &rs, const QQuickImageProviderOptions &po,
                      QQuickImageProviderOptions::AutoTransform aTransform, int frame=0, int frameCount=1)
-    : refCount(1), frameCount(frameCount), frame(frame), inCache(false), pixmapStatus(QQuickPixmap::Ready),
+    : refCount(1), frameCount(frameCount), frame(frame), inCache(false), fromSpecialDevice(false), pixmapStatus(QQuickPixmap::Ready),
       url(u), implicitSize(s), requestRegion(r), requestSize(rs),
       providerOptions(po), appliedTransform(aTransform),
       textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
@@ -342,7 +342,7 @@ public:
     }
 
     QQuickPixmapData(QQuickTextureFactory *texture)
-    : refCount(1), frameCount(1), frame(0), inCache(false), pixmapStatus(QQuickPixmap::Ready),
+    : refCount(1), frameCount(1), frame(0), inCache(false), fromSpecialDevice(false), pixmapStatus(QQuickPixmap::Ready),
       appliedTransform(QQuickImageProviderOptions::UsePluginDefaultTransform),
       textureFactory(texture), reply(nullptr), prevUnreferenced(nullptr),
       prevUnreferencedPtr(nullptr), nextUnreferenced(nullptr)
@@ -370,6 +370,7 @@ public:
     int frame;
 
     bool inCache:1;
+    bool fromSpecialDevice:1;
 
     QQuickPixmap::Status pixmapStatus;
     QUrl url;
@@ -381,7 +382,7 @@ public:
     QQuickImageProviderOptions::AutoTransform appliedTransform;
     QColorSpace targetColorSpace;
 
-    QIODevice *specialDevice = nullptr;
+    QPointer<QIODevice> specialDevice;
 
     // actual image data, after loading
     QQuickTextureFactory *textureFactory;
@@ -1005,9 +1006,22 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QString errorStr;
             QSize readSize;
 
-            if (runningJob->data && runningJob->data->specialDevice) {
+            if (runningJob->data && runningJob->data->fromSpecialDevice) {
+                auto specialDevice = runningJob->data->specialDevice;
+                if (specialDevice.isNull() || QObjectPrivate::get(specialDevice.data())->deleteLaterCalled) {
+                    qCDebug(lcImg) << "readImage job aborted" << url;
+                    return;
+                }
                 int frameCount;
-                if (!readImage(url, runningJob->data->specialDevice, &image, &errorStr, &readSize, &frameCount,
+                // Ensure that specialDevice's thread affinity is _this_ thread, to avoid deleteLater()
+                // deleting prematurely, before readImage() is done. But this is only possible if it has already
+                // relinquished its initial thread affinity.
+                if (!specialDevice->thread()) {
+                    qCDebug(lcQsgLeak) << specialDevice.data() << ": changing thread affinity so that"
+                                       << QThread::currentThread() << "will handle any deleteLater() calls";
+                    specialDevice->moveToThread(QThread::currentThread());
+                }
+                if (!readImage(url, specialDevice.data(), &image, &errorStr, &readSize, &frameCount,
                                runningJob->requestRegion, runningJob->requestSize,
                                runningJob->providerOptions, nullptr, runningJob->data->frame)) {
                     errorCode = QQuickPixmapReply::Loading;
@@ -1958,6 +1972,7 @@ void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, co
         d = new QQuickPixmapData(url, requestRegion, requestSize, providerOptions,
                                  QQuickImageProviderOptions::UsePluginDefaultTransform, frame, frameCount);
         d->specialDevice = device;
+        d->fromSpecialDevice = true;
         d->addToCache();
 
         QQuickPixmapReader::readerMutex.lock();
