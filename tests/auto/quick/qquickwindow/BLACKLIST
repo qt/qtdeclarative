@@ -13,3 +13,5 @@ android
 android
 [attachedProperty]
 android
+[visibilityDoesntClobberWindowState]
+xcb ubuntu-24.04 # QTBUG-129030
