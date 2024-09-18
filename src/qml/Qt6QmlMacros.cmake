@@ -986,6 +986,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
             list(APPEND _qmlls_ini_build_folders "${build_folder}")
             set_directory_properties(PROPERTIES _qmlls_ini_build_folders "${_qmlls_ini_build_folders}")
+            set_property(DIRECTORY APPEND PROPERTY _qmlls_ini_import_path_targets "${target}")
 
             # if no call with id 'qmlls_ini_generation_id' was deferred for this directory, do it now
             cmake_language(DEFER GET_CALL qmlls_ini_generation_id call)
@@ -1133,14 +1134,28 @@ function(_qt_internal_write_deferred_qmlls_ini_file target)
     set(qmlls_ini_file "${CMAKE_CURRENT_SOURCE_DIR}/.qmlls.ini")
     get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
     list(REMOVE_DUPLICATES _qmlls_ini_build_folders)
+    get_directory_property(_qmlls_ini_import_path_targets _qmlls_ini_import_path_targets)
+    set(_import_paths "")
+    foreach(import_path_target IN LISTS _qmlls_ini_import_path_targets)
+        get_target_property(import_path ${import_path_target} QT_QML_IMPORT_PATH)
+        list(APPEND _import_paths "${import_path}")
+    endforeach()
+
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
         # replace cmake list separator ';' with unix path separator ':'
         string(REPLACE ";" ":" concatenated_build_dirs "${_qmlls_ini_build_folders}")
+        list(JOIN _import_paths ":" concatenated_import_paths)
     else()
         # cmake list separator and windows path separator are both ';', so no replacement needed
         set(concatenated_build_dirs "${_qmlls_ini_build_folders}")
+        set(concatenated_import_paths "${_import_paths}")
     endif()
-    _populate_qmlls_ini_file(${target} "${qmlls_ini_file}" "${concatenated_build_dirs}")
+
+    _populate_qmlls_ini_file(
+        ${target}
+        "${qmlls_ini_file}"
+        "${concatenated_build_dirs}"
+        "${concatenated_import_paths}")
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
@@ -1153,9 +1168,10 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-function(_populate_qmlls_ini_file target qmlls_ini_file concatenated_build_dirs)
+function(_populate_qmlls_ini_file target qmlls_ini_file concatenated_build_dirs import_paths)
     get_target_property(qtpaths ${QT_CMAKE_EXPORT_NAMESPACE}::qtpaths LOCATION)
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
+
     add_custom_command(
         OUTPUT
             ${qmlls_ini_file}
@@ -1167,6 +1183,7 @@ function(_populate_qmlls_ini_file target qmlls_ini_file concatenated_build_dirs)
             ${tool_wrapper}
             ${qtpaths}
             --query QT_INSTALL_DOCS >> ${qmlls_ini_file}
+        COMMAND ${CMAKE_COMMAND} -E echo "importPaths=${import_paths}" >> ${qmlls_ini_file}
         COMMENT "Populating .qmlls.ini file"
         VERBATIM
     )

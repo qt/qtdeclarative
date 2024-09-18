@@ -34,7 +34,15 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QSKIP(u"Cannot find source directory '%1', skipping test..."_s.arg(SOURCE_DIRECTORY)
                       .toLatin1());
 
+    const QString qmllsIniTemplate = uR"([General]
+buildDir=%1
+no-cmake-calls=false
+docDir=%3
+importPaths=%4
+)"_s;
+
     const QString &docPath = QLibraryInfo::path(QLibraryInfo::DocumentationPath);
+    const QString emptyImportPath;
     {
         auto file = QFile(source.absoluteFilePath(qmllsIniName));
         QVERIFY(file.exists());
@@ -43,8 +51,10 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         auto secondFolder = QDir(build.absolutePath().append(u"/qml/hello/subfolders"_s));
         QVERIFY(secondFolder.exists());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1%2%3\nno-cmake-calls=false\ndocDir=%4\n"_s.arg(build.absolutePath(), QDir::listSeparator(),
-                                                       secondFolder.absolutePath(), docPath));
+                 qmllsIniTemplate.arg(build.absolutePath()
+                                              .append(QDir::listSeparator())
+                                              .append(secondFolder.absolutePath()),
+                                      docPath, emptyImportPath));
     }
 
     {
@@ -57,7 +67,7 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
         QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
         const auto fileContent = QString::fromUtf8(file.readAll());
         QCOMPARE(fileContent,
-                 u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(buildSubfolder.absolutePath(), docPath));
+                 qmllsIniTemplate.arg(buildSubfolder.absolutePath(), docPath, emptyImportPath));
     }
     }
 
@@ -70,9 +80,8 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
             QVERIFY(file.exists());
             QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
             const auto fileContent = QString::fromUtf8(file.readAll());
-            QCOMPARE(
-                    fileContent,
-                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
+            QCOMPARE(fileContent,
+                     qmllsIniTemplate.arg(build.absolutePath(), docPath, emptyImportPath));
         }
     }
     {
@@ -86,9 +95,22 @@ void tst_generate_qmlls_ini::qmllsIniAreCorrect()
             QVERIFY(file.exists());
             QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
             const auto fileContent = QString::fromUtf8(file.readAll());
-            QCOMPARE(
-                    fileContent,
-                    u"[General]\nbuildDir=%1\nno-cmake-calls=false\ndocDir=%2\n"_s.arg(build.absolutePath(), docPath));
+            QCOMPARE(fileContent,
+                     qmllsIniTemplate.arg(build.absolutePath(), docPath, emptyImportPath));
+        }
+    }
+    {
+        QDir dottedUriSubfolder = source;
+        QVERIFY(dottedUriSubfolder.cd(u"ModuleWithDependency"_s));
+        QVERIFY(dottedUriSubfolder.cd(u"MyModule"_s));
+        {
+            auto file = QFile(dottedUriSubfolder.absoluteFilePath(qmllsIniName));
+            QVERIFY(file.exists());
+            QVERIFY(file.open(QFile::ReadOnly | QFile::Text));
+            const auto fileContent = QString::fromUtf8(file.readAll());
+            QCOMPARE(fileContent,
+                     qmllsIniTemplate.arg(build.absoluteFilePath(u"ModuleWithDependency"_s),
+                                          docPath, build.absoluteFilePath(u"Dependency"_s)));
         }
     }
 }
