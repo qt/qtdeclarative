@@ -249,7 +249,7 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     if (res == -1)
         QSKIP("Could not establish case sensitivity of file system");
     caseSensitive = res != 0 && res != -1;
-#ifdef QT_DEBUG
+#if QT_CONFIG(debug) && !QT_CONFIG(framework)
     QString libname = "libPluGin_debug.dylib";
 #else
     QString libname = "libPluGin.dylib";
