@@ -1,0 +1,86 @@
+/*! \internal
+    \page qq-pixmap-cache-special-device Image asynchronous loading with QIODevice subclass
+    \tableofcontents
+
+    This feature was created to handle the rendering case in Qt PDF:
+
+    - we want to be able to use an ordinary Image to render a PDF page
+      (PDF is treated as an image format, like SVG)
+    - in PdfMultiPageView, the images are used in TableView delegates, so the
+      user is free to scroll through a lot of pages, triggering a lot
+      of rendering work very quickly
+    - loading is asynchronous to keep the scrolling "fluid"
+    - pages that we began rendering might not need to continue, if the
+      user quickly scrolls them out of view again
+    - the user can also change the zoom level, which needs to trigger
+      re-rendering
+    - the user can load a different PDF file: pages from the previous
+      one might still be rendering, but those are now irrelevant.
+      At the very least, it should not crash in this situation.
+    - PDFium is not reentrant: we have only one worker thread to do all the
+      page rendering, to avoid crashing.
+    - QPdfIOHandler is a subclass of QImageIOHandler.
+    - QImageIOHandler::setDevice() sets the expectation that it loads from an
+      open file. But it's a nice optimization to share the QPdfDocument object
+      with the QImageIOHandler.
+    - QPdfFile is the means by which QPdfIOHandler receives the QPdfDocument
+      object. It's a subclass of QIODevice so that it can "carry" some extra
+      information along when it's passed to QPdfIOHandler::setDevice() (the
+      document object).
+    - So in realistically full-featured applications, we need a PdfPageImage
+      after all, just to add API to bind the QQuickPdfDocument which may have
+      already been needed for other reasons. But a plain Image can also
+      work: it comes at the cost that QPdfIOHandler::load() needs to
+      make its own instance of QPdfDocument.
+
+    Multi-threading tends to lead to race conditions, in general.
+    But the Image.asynchronous API blithely sets the expectation that
+    loading of any image format can be threaded, to avoid UI stuttering.
+    For most image formats, reading consists of nothing more than reading from a
+    file or network connection, and straightforward format interpretation.
+    But since PDF is treated as an image format (in spite of its complexity), we
+    need to at least support the use of one worker thread to separate PDFium's
+    work from the UI thread. But the work may need to be interrupted when
+    a page-rendering job is no longer relevant, due to delegates scrolling out
+    of view, change in zoom level, closing the document etc.
+
+    Here are some details about how we handle opening a different document
+    while pages from the previous document are still being rendered:
+
+    \startuml
+    !include pixmapcache-specialDevice.puml
+    \enduml
+
+    ① QQuickPdfPageImage::load() calls ② carrierFile() to get a
+    ③ QPdfFile instance (a subclass of QIODevice), and calls
+    ④ QQuickPixmap::loadImageFromDevice() which ⑤ saves the device to
+    c, a QPointer. Then it calls
+    ⑥ QQuickPixmapReader::startJob() which ⑦ posts a ProcessJobs event.
+    The worker thread ⑪ handles it in QQuickPixmapReader::processJob()
+    and calls ⑫ readImage(), passing a simple QIODevice pointer extracted from
+    the specialDevice QPointer. readImage() relies on that pointer being valid
+    until the work is done. This work includes calling ⑬ QPdfIOHandler::load(),
+    which gets the QPdfDocument pointer from QPdfFile::document() and then
+    calls ⑮ QPdfFile::render().
+
+    The rendering job may be cancelled at any time: the user may continue
+    scrolling through delegates in a TableView or ListView, or may load a
+    different document. In the latter case, ⑨ QQuickPdfDocument::setSource()
+    calls ⑩ deleteLater() on the same QPdfFile instance that is being stored in
+    QQuickPixmapData::specialDevice. If the rendering job has not yet started,
+    QQuickPixmapReader::processJob() detects that either deleteLater() has been
+    called or the QPointer is already null, and cancels the job. But what if it
+    happens while the rendering job is already running? In practice, we do not
+    see a crash in this case. But for the sake of prevention, if we change the
+    thread affinity of `specialDevice` to the rendering job's thread, we can
+    ensure that it cannot happen until after readImage() is done (it doesn't
+    return to the event loop until it's done). This requires cooperation
+    because QObject::moveToThread() <blockquote>can only "push" an object from
+    the current thread to another thread, it cannot "pull" an object from any
+    arbitrary thread to the current thread.</blockquote> The expectation is
+    that QPdfFile's constructor calls `moveToThread(nullptr)`. If that has been
+    done, QQuickPixmapReader::processJob() can see that
+    `specialDevice->thread() == nullptr`, and can change the affinity to its
+    own thread. Otherwise, it crosses its fingers and leaves the thread
+    affinity as-is.
+*/

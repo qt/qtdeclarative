@@ -1,0 +1,34 @@
+\startuml
+    object "QImageIOHandler" as iohandler
+    object "QPdfIOHandler" as pdfiohandler
+    object "QQuickPdfPageImage" as pageimage
+    object "QQuickImage" as image
+    object "QPdfFile" as pdffile
+    object "QQuickPdfDocument" as qpdfdoc
+    object "QPdfDocument" as pdfdoc
+    object "QQuickPixmap" as qpm
+    object "QQuickPixmapData" as qpmd
+    object "QQuickPixmapReader" as qprdr
+    object "QCoreApplication" as coreapp
+
+    image <|-- pageimage
+    iohandler <|-- pdfiohandler
+
+    qpdfdoc o-- pdfdoc
+
+    image -r- pageimage : ① load() >
+    pageimage o-- qpdfdoc : ② carrierFile() >
+    qpdfdoc o-- pdffile : ③ new(doc) >
+    pageimage o-- qpm : ④ loadImageFromDevice() >
+    qpm o-- qpmd : ⑤ specialDevice = pdfFile >
+    qpm -r- qprdr : ⑥ startJob() >
+    qprdr -r- coreapp : ⑦ postEvent(new QEvent(ProcessJobs)) >
+    coreapp -r- qpdfdoc : ⑧ notify() \n⑨ setSource() >
+    qpdfdoc -r- pdffile : ⑩ deleteLater() >
+
+    coreapp -r- qprdr : \n\n\n<color:green> ⑪ notify(QObject *, QEvent *)\n<color:green> ⑫ readImage(QIODevice *dev) >
+    qprdr o-- pdfiohandler : <color:green> ⑬ load(QIODevice *dev) >
+    pdfiohandler -r- pdffile : <color:green> ⑭ document() >
+    pdfiohandler o-- pdfdoc : <color:green> ⑮ render() >
+
+\enduml
