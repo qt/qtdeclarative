@@ -9436,6 +9436,10 @@
                         "type": "number"
                     },
                     {
+                        "name": "Invalid",
+                        "type": "number"
+                    },
+                    {
                         "name": "NoScrollPhase",
                         "type": "number"
                     },
