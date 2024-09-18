@@ -10,6 +10,11 @@
 #include <qmath.h>
 #include <qpainter.h>
 
+#if QT_CONFIG(opengl)
+#include <private/qopenglextensions_p.h>
+#include <rhi/qrhi.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #define QT_MINIMUM_DYNAMIC_FBO_SIZE 64U
@@ -36,6 +41,12 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
     , m_item(item)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_texture(nullptr)
+#if QT_CONFIG(opengl)
+    , m_fbo(nullptr)
+    , m_multisampledFbo(nullptr)
+    , m_gl_device(nullptr)
+    , m_wrapperTexture(nullptr)
+#endif
     , m_fillColor(Qt::transparent)
     , m_contentsScale(1.0)
     , m_dirtyContents(false)
@@ -43,13 +54,15 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
     , m_linear_filtering(false)
     , m_mipmapping(false)
     , m_smoothPainting(false)
+#if QT_CONFIG(opengl)
+    , m_extensionsChecked(false)
     , m_multisamplingSupported(false)
+#endif
     , m_fastFBOResizing(false)
     , m_dirtyGeometry(false)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
 {
-    Q_UNUSED(m_multisamplingSupported);
     m_context = static_cast<QSGDefaultRenderContext *>(static_cast<QQuickPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphRenderContext());
 
     setMaterial(&m_materialO);
@@ -64,6 +77,13 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
 QSGDefaultPainterNode::~QSGDefaultPainterNode()
 {
     delete m_texture;
+
+#if QT_CONFIG(opengl)
+    delete m_wrapperTexture;
+    delete m_fbo;
+    delete m_multisampledFbo;
+    delete m_gl_device;
+#endif
 }
 
 void QSGDefaultPainterNode::paint()
@@ -71,10 +91,27 @@ void QSGDefaultPainterNode::paint()
     QRect dirtyRect = m_dirtyRect.isNull() ? QRect(0, 0, m_size.width(), m_size.height()) : m_dirtyRect;
 
     QPainter painter;
-    Q_ASSERT(m_actualRenderTarget == QQuickPaintedItem::Image);
-    if (m_image.isNull())
-        return;
-    painter.begin(&m_image);
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2 && m_actualRenderTarget != QQuickPaintedItem::Image) {
+        if (!m_gl_device) {
+            m_gl_device = new QOpenGLPaintDevice(m_fboSize);
+            m_gl_device->setPaintFlipped(true);
+        }
+
+        if (m_multisampledFbo)
+            m_multisampledFbo->bind();
+        else
+            m_fbo->bind();
+
+        painter.begin(m_gl_device);
+    } else
+#endif
+    {
+        Q_ASSERT(m_actualRenderTarget == QQuickPaintedItem::Image);
+        if (m_image.isNull())
+            return;
+        painter.begin(&m_image);
+    }
 
     if (m_smoothPainting) {
         painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::SmoothPixmapTransform);
@@ -115,8 +152,20 @@ void QSGDefaultPainterNode::paint()
     m_item->paint(&painter);
     painter.end();
 
-    m_texture->setImage(m_image);
-    m_texture->setDirtyRect(dirtyTextureRect);
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2 && m_actualRenderTarget != QQuickPaintedItem::Image) {
+        if (m_multisampledFbo) {
+            QOpenGLFramebufferObject::blitFramebuffer(m_fbo, dirtyTextureRect, m_multisampledFbo, dirtyTextureRect);
+            m_multisampledFbo->release();
+        } else if (m_fbo) {
+            m_fbo->release();
+        }
+    } else
+#endif
+    {
+        m_texture->setImage(m_image);
+        m_texture->setDirtyRect(dirtyTextureRect);
+    }
 
     m_dirtyRect = QRect();
 }
@@ -150,7 +199,15 @@ void QSGDefaultPainterNode::updateTexture()
 
 void QSGDefaultPainterNode::updateGeometry()
 {
-    QRectF source(0, 0, 1, 1);
+    QRectF source;
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2 && m_actualRenderTarget != QQuickPaintedItem::Image) {
+        source = QRectF(0, 0, qreal(m_textureSize.width()) / m_fboSize.width(), qreal(m_textureSize.height()) / m_fboSize.height());
+    } else
+#endif
+    {
+        source = QRectF(0, 0, 1, 1);
+    }
     QRectF dest(0, 0, m_size.width(), m_size.height());
     if (m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
         dest = QRectF(QPointF(0, m_size.height()), QPointF(m_size.width(), 0));
@@ -164,19 +221,123 @@ void QSGDefaultPainterNode::updateRenderTarget()
 {
     m_dirtyContents = true;
 
-    m_actualRenderTarget = QQuickPaintedItem::Image;
-    if (!m_image.isNull() && !m_dirtyGeometry)
-        return;
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2) {
+        if (!m_extensionsChecked) {
+            QOpenGLExtensions *e = static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions());
+            m_multisamplingSupported = e->hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)
+                                       && e->hasOpenGLExtension(QOpenGLExtensions::FramebufferBlit);
+            m_extensionsChecked = true;
+        }
+        QQuickPaintedItem::RenderTarget oldTarget = m_actualRenderTarget;
+        if (m_preferredRenderTarget == QQuickPaintedItem::Image) {
+            m_actualRenderTarget = QQuickPaintedItem::Image;
+        } else {
+            // Image is the only option when there is no multisample framebuffer
+            // support and smooth painting is wanted, and when using the RHI. The
+            // latter may change in the future.
+            if (!m_multisamplingSupported && m_smoothPainting)
+                m_actualRenderTarget = QQuickPaintedItem::Image;
+            else
+                m_actualRenderTarget = m_preferredRenderTarget;
+        }
+        if (oldTarget != m_actualRenderTarget) {
+            m_image = QImage();
+            delete m_fbo;
+            delete m_multisampledFbo;
+            delete m_gl_device;
+            m_fbo = m_multisampledFbo = nullptr;
+            m_gl_device = nullptr;
+        }
 
-    m_image = QImage(m_textureSize, QImage::Format_RGBA8888_Premultiplied);
-    m_image.fill(Qt::transparent);
+        if (m_actualRenderTarget == QQuickPaintedItem::FramebufferObject
+            || m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
+        {
+            const QOpenGLContext *ctx = static_cast<const QRhiGles2NativeHandles *>(m_context->rhi()->nativeHandles())->context;
+            if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
+                return;
 
-    if (!m_texture) {
-        m_texture = new QSGPainterTexture;
-        m_texture->setOwnsTexture(true);
+            if (m_fboSize.isEmpty())
+                updateFBOSize();
+
+            delete m_fbo;
+            delete m_multisampledFbo;
+            m_fbo = m_multisampledFbo = nullptr;
+            if (m_gl_device)
+                m_gl_device->setSize(m_fboSize);
+
+            if (m_smoothPainting && ctx->format().samples() && m_multisamplingSupported) {
+                QOpenGLFramebufferObjectFormat msaaFormat;
+                msaaFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+                msaaFormat.setSamples(8);
+                m_multisampledFbo = new QOpenGLFramebufferObject(m_fboSize, msaaFormat);
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::NoAttachment);
+                m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            } else {
+                QOpenGLFramebufferObjectFormat format;
+                format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+                m_fbo = new QOpenGLFramebufferObject(m_fboSize, format);
+            }
+        } else {
+            if (!m_image.isNull() && !m_dirtyGeometry)
+                return;
+
+            m_image = QImage(m_textureSize, QImage::Format_RGBA8888_Premultiplied);
+            m_image.fill(Qt::transparent);
+        }
+
+        QSGPainterTexture *texture = new QSGPainterTexture;
+        if (m_actualRenderTarget == QQuickPaintedItem::Image) {
+            texture->setOwnsTexture(true);
+            texture->setTextureSize(m_textureSize);
+        } else {
+            if (!m_wrapperTexture)
+                m_wrapperTexture = m_context->rhi()->newTexture(QRhiTexture::RGBA8, m_fboSize);
+            m_wrapperTexture->createFrom({ m_fbo->texture(), 0 });
+            texture->setTexture(m_wrapperTexture);
+            texture->setOwnsTexture(false);
+            texture->setTextureSize(m_fboSize);
+        }
+
+        if (m_texture)
+            delete m_texture;
+
+        m_texture = texture;
+    } else
+#endif
+    {
+        m_actualRenderTarget = QQuickPaintedItem::Image;
+        if (!m_image.isNull() && !m_dirtyGeometry)
+            return;
+
+        m_image = QImage(m_textureSize, QImage::Format_RGBA8888_Premultiplied);
+        m_image.fill(Qt::transparent);
+
+        if (!m_texture) {
+            m_texture = new QSGPainterTexture;
+            m_texture->setOwnsTexture(true);
+        }
+        m_texture->setTextureSize(m_textureSize);
     }
-    m_texture->setTextureSize(m_textureSize);
 }
+
+#if QT_CONFIG(opengl)
+void QSGDefaultPainterNode::updateFBOSize()
+{
+    int fboWidth;
+    int fboHeight;
+    if (m_fastFBOResizing) {
+        fboWidth = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_textureSize.width() - 1));
+        fboHeight = qMax(QT_MINIMUM_DYNAMIC_FBO_SIZE, qNextPowerOfTwo(m_textureSize.height() - 1));
+    } else {
+        QSize minimumFBOSize = m_context->sceneGraphContext()->minimumFBOSize();
+        fboWidth = qMax(minimumFBOSize.width(), m_textureSize.width());
+        fboHeight = qMax(minimumFBOSize.height(), m_textureSize.height());
+    }
+    m_fboSize = QSize(fboWidth, fboHeight);
+}
+#endif
 
 void QSGDefaultPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
 {
@@ -205,7 +366,20 @@ void QSGDefaultPainterNode::setTextureSize(const QSize &size)
         return;
 
     m_textureSize = size;
-    m_dirtyRenderTarget = true;
+
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2) {
+        updateFBOSize();
+        if (m_fbo)
+            m_dirtyRenderTarget = m_fbo->size() != m_fboSize || m_dirtyRenderTarget;
+        else
+            m_dirtyRenderTarget = true;
+    } else
+#endif
+    {
+        m_dirtyRenderTarget = true;
+    }
+
     m_dirtyGeometry = true;
     m_dirtyTexture = true;
 }
@@ -286,12 +460,33 @@ void QSGDefaultPainterNode::setFastFBOResizing(bool fastResizing)
         return;
 
     m_fastFBOResizing = fastResizing;
+
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2) {
+        updateFBOSize();
+        if ((m_preferredRenderTarget == QQuickPaintedItem::FramebufferObject
+            || m_preferredRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
+                && (!m_fbo || (m_fbo && m_fbo->size() != m_fboSize))) {
+            m_dirtyRenderTarget = true;
+            m_dirtyGeometry = true;
+            m_dirtyTexture = true;
+        }
+    }
+#endif
 }
 
 QImage QSGDefaultPainterNode::toImage() const
 {
-    Q_ASSERT(m_actualRenderTarget == QQuickPaintedItem::Image);
-    return m_image;
+#if QT_CONFIG(opengl)
+    if (m_context->rhi()->backend() == QRhi::OpenGLES2 && m_actualRenderTarget != QQuickPaintedItem::Image) {
+        Q_ASSERT(m_fbo);
+        return m_fbo->toImage();
+    } else
+#endif
+    {
+        Q_ASSERT(m_actualRenderTarget == QQuickPaintedItem::Image);
+        return m_image;
+    }
 }
 
 QT_END_NAMESPACE

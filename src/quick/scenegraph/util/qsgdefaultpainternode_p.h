@@ -23,9 +23,15 @@
 
 #include <QtGui/qcolor.h>
 
+#if QT_CONFIG(opengl)
+#include <QOpenGLFramebufferObject>
+#include <QOpenGLPaintDevice>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
+class QRhiTexture;
 
 class Q_QUICK_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
@@ -89,6 +95,10 @@ private:
     void updateGeometry();
     void updateRenderTarget();
 
+#if QT_CONFIG(opengl)
+    void updateFBOSize();
+#endif
+
     QSGDefaultRenderContext *m_context;
 
     QQuickPaintedItem::RenderTarget m_preferredRenderTarget;
@@ -103,6 +113,14 @@ private:
     QSGGeometry m_geometry;
     QSGPainterTexture *m_texture;
 
+#if QT_CONFIG(opengl)
+    QOpenGLFramebufferObject *m_fbo;
+    QOpenGLFramebufferObject *m_multisampledFbo;
+    QOpenGLPaintDevice *m_gl_device;
+    QRhiTexture *m_wrapperTexture;
+    QSize m_fboSize;
+#endif
+
     QSize m_size;
     QSize m_textureSize;
     QRect m_dirtyRect;
@@ -114,7 +132,10 @@ private:
     bool m_linear_filtering : 1;
     bool m_mipmapping : 1;
     bool m_smoothPainting : 1;
+#if QT_CONFIG(opengl)
+    bool m_extensionsChecked : 1;
     bool m_multisamplingSupported : 1;
+#endif
     bool m_fastFBOResizing : 1;
     bool m_dirtyGeometry : 1;
     bool m_dirtyRenderTarget : 1;
