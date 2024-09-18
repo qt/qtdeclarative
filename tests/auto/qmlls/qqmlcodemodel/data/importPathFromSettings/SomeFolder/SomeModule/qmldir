@@ -1,0 +1,3 @@
+module SomeModule
+prefer :/qt/qml/SomeModule/
+SomeComponent 1.0 SomeComponent.qml

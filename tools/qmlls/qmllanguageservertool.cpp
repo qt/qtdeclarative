@@ -201,11 +201,12 @@ int main(int argv, char *argc[])
     parser.addOption(buildDirOption);
     settings.addOption(buildDir);
 
-    QString qmlImportPath = QStringLiteral(u"qml-import-path");
+    QString qmlImportPath = QStringLiteral(u"importPaths");
     QCommandLineOption qmlImportPathOption(
             QStringList() << "I", QLatin1String("Look for QML modules in the specified directory"),
             qmlImportPath);
     parser.addOption(qmlImportPathOption);
+    settings.addOption(qmlImportPath);
 
     QCommandLineOption environmentOption(
             QStringList() << "E",

@@ -633,20 +633,18 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
         m_rebuildRequired = false;
     }
 
-    loadPaths.append(m_importPaths);
+    loadPaths.append(importPathsForFile(fPath));
     if (std::shared_ptr<DomEnvironment> newCurrentPtr = newCurrent.ownerAs<DomEnvironment>()) {
         newCurrentPtr->setLoadPaths(loadPaths);
     }
 
     // if the documentation root path is not set through the commandline,
     // try to set it from the settings file (.qmlls.ini file)
-    if (m_documentationRootPath.isEmpty()) {
-        const QString path = url2Path(url);
-        if (m_settings && m_settings->search(path)) {
-            const QString docDir = QStringLiteral(u"docDir");
-            if (m_settings->isSet(docDir))
-                setDocumentationRootPath(m_settings->value(docDir).toString());
-        }
+    if (m_documentationRootPath.isEmpty() && m_settings) {
+        // note: settings already searched current file in importPathsForFile() call above
+        const QString docDir = QStringLiteral(u"docDir");
+        if (m_settings->isSet(docDir))
+            setDocumentationRootPath(m_settings->value(docDir).toString());
     }
 
     Path p;
@@ -753,6 +751,18 @@ QStringList QQmlCodeModel::buildPathsForRootUrl(const QByteArray &url)
 static bool isNotSeparator(char c)
 {
     return c != '/';
+}
+
+QStringList QQmlCodeModel::importPathsForFile(const QString &fileName) const
+{
+    QStringList result = importPaths();
+
+    const QString importPaths = u"importPaths"_s;
+    if (m_settings && m_settings->search(fileName) && m_settings->isSet(importPaths)) {
+        result.append(m_settings->value(importPaths).toString().split(QDir::listSeparator()));
+    }
+
+    return result;
 }
 
 QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)

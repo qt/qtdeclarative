@@ -202,4 +202,44 @@ void tst_qmlls_qqmlcodemodel::openFiles()
     }
 }
 
+void tst_qmlls_qqmlcodemodel::importPathViaSettings()
+{
+    // prepare the qmlls.ini file
+    QFile settingsTemplate(testFile(u"importPathFromSettings/.qmlls.ini.template"_s));
+    QVERIFY(settingsTemplate.open(QFile::ReadOnly | QFile::Text));
+    const QString data = QString::fromUtf8(settingsTemplate.readAll())
+                                 .arg(QDir::cleanPath(testFile(u"."_s)), QDir::listSeparator(),
+                                      testFile(u"SomeFolder"_s));
+
+    QFile settingsFile(testFile(u"importPathFromSettings/.qmlls.ini"_s));
+    auto guard = qScopeGuard([&settingsFile]() { settingsFile.remove(); });
+
+    QVERIFY(settingsFile.open(QFile::WriteOnly | QFile::Truncate | QFile::Text));
+    settingsFile.write(data.toUtf8());
+    settingsFile.flush();
+
+    // actually test the qqmlcodemodel
+    QQmlToolingSettings settings(u"qmlls"_s);
+    settings.addOption(u"importPaths"_s);
+    QmlLsp::QQmlCodeModel model(nullptr, &settings);
+
+    const QString someFile = u"importPathFromSettings/SomeFile.qml"_s;
+    const QByteArray fileUrl = testFileUrl(someFile).toEncoded();
+    const QString filePath = testFile(someFile);
+
+    model.newOpenFile(fileUrl, 0, readFile(someFile));
+
+    QTRY_VERIFY_WITH_TIMEOUT(model.validEnv().field(Fields::qmlFileWithPath).key(filePath), 3000);
+
+    {
+        const DomItem fileAComponents = model.validEnv()
+                                                .field(Fields::qmlFileWithPath)
+                                                .key(filePath)
+                                                .field(Fields::currentItem)
+                                                .field(Fields::components);
+        // if there is no component then the import path was not used by qqmlcodemodel ?
+        QCOMPARE(fileAComponents.size(), 1);
+    }
+}
+
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)
