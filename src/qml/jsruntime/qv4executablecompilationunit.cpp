@@ -299,8 +299,8 @@ void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack) const
             runtimeLookups[i].markObjects(markStack);
     }
 
-    if (auto mod = module())
-        mod->mark(markStack);
+    if (Heap::Base *v = m_valueOrModule.heapObject())
+        v->mark(markStack);
 }
 
 IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int componentObjectIndex)
@@ -703,6 +703,18 @@ QString ExecutableCompilationUnit::translateFrom(TranslationDataIndex index) con
     QByteArray text = stringAt(translation.stringIndex).toUtf8();
     return QCoreApplication::translate(context, text, comment, translation.number);
 #endif
+}
+
+Heap::Module *ExecutableCompilationUnit::module() const
+{
+    if (const Module *m = m_valueOrModule.as<QV4::Module>())
+        return m->d();
+    return nullptr;
+}
+
+void ExecutableCompilationUnit::setModule(Heap::Module *module)
+{
+    m_valueOrModule = module;
 }
 
 } // namespace QV4

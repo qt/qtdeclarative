@@ -65,54 +65,57 @@ QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
     return qmlContextData;
 }
 
+QV4::ReturnedValue QQmlScriptData::ownScriptValue(QV4::ExecutionEngine *v4) const
+{
+    return handleOwnScriptValueOrExecutableCU(
+            v4, [](const QQmlRefPointer<QV4::ExecutableCompilationUnit> &executableCU) {
+        return executableCU->value();
+    });
+}
+
 QV4::ReturnedValue QQmlScriptData::scriptValueForContext(
         const QQmlRefPointer<QQmlContextData> &parentQmlContextData)
 {
-    if (m_loaded)
-        return m_value.value();
-
-    Q_ASSERT(parentQmlContextData && parentQmlContextData->engine());
     QV4::ExecutionEngine *v4 = parentQmlContextData->engine()->handle();
-    QV4::Scope scope(v4);
+    return handleOwnScriptValueOrExecutableCU(
+            v4, [&](const QQmlRefPointer<QV4::ExecutableCompilationUnit> &executableCU) {
+        QV4::Scope scope(v4);
+        QV4::ScopedValue value(scope, executableCU->value());
+        if (!value->isEmpty())
+            return value->asReturnedValue();
 
-    QV4::Scoped<QV4::QmlContext> qmlExecutionContext(scope);
-    if (auto qmlContextData = qmlContextDataForContext(parentQmlContextData)) {
-        qmlExecutionContext = QV4::QmlContext::create(v4->rootContext(), std::move(qmlContextData),
-                                                      /* scopeObject: */ nullptr);
-    }
-
-    QV4::Scoped<QV4::Module> module(
-            scope,
-            v4->executableCompilationUnit(QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
-                                                  m_precompiledScript))->instantiate());
-
-    if (module) {
-        if (qmlExecutionContext) {
-            module->d()->scope->outer.set(v4, qmlExecutionContext->d());
-            qmlExecutionContext->d()->qml()->module.set(v4, module->d());
+        QV4::Scoped<QV4::QmlContext> qmlExecutionContext(scope);
+        if (auto qmlContextData = qmlContextDataForContext(parentQmlContextData)) {
+            qmlExecutionContext = QV4::QmlContext::create(
+                    v4->rootContext(), std::move(qmlContextData), /* scopeObject: */ nullptr);
         }
 
-        module->evaluate();
-    }
+        QV4::Scoped<QV4::Module> module(scope, executableCU->instantiate());
+        if (module) {
+            if (qmlExecutionContext) {
+                module->d()->scope->outer.set(v4, qmlExecutionContext->d());
+                qmlExecutionContext->d()->qml()->module.set(v4, module->d());
+            }
 
-    if (v4->hasException) {
-        QQmlError error = v4->catchExceptionAsQmlError();
-        if (error.isValid())
-            QQmlEnginePrivate::get(v4)->warning(error);
-    }
+            module->evaluate();
+        }
 
-    QV4::ScopedValue value(scope);
-    if (qmlExecutionContext)
-        value = qmlExecutionContext->d()->qml();
-    else if (module)
-        value = module->d();
+        if (v4->hasException) {
+            QQmlError error = v4->catchExceptionAsQmlError();
+            if (error.isValid())
+                QQmlEnginePrivate::get(v4)->warning(error);
+        }
 
-    if (m_precompiledScript->isSharedLibrary() || m_precompiledScript->isESModule()) {
-        m_loaded = true;
-        m_value.set(v4, value);
-    }
+        if (qmlExecutionContext)
+            value = qmlExecutionContext->d()->qml();
+        else if (module)
+            value = module->d();
 
-    return value->asReturnedValue();
+        if (m_precompiledScript->isSharedLibrary() || m_precompiledScript->isESModule())
+            executableCU->setValue(value);
+
+        return value->asReturnedValue();
+    });
 }
 
 QT_END_NAMESPACE

@@ -69,6 +69,7 @@ qt6_add_qml_module(tst_qqmllanguage
         data/InnerObject.qml
         data/ObjectWithProperty.qml
         data/outerObject.qml
+        data/testlib.js
     RESOURCE_PREFIX "/"
     NO_GENERATE_EXTRA_QMLDIRS
 )

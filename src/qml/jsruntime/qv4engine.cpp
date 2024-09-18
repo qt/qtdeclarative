@@ -2162,7 +2162,7 @@ QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Va
 
     // Make sure the type loader doesn't try to resolve the script anymore.
     if (m_qmlEngine)
-        QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectScript(url, *val);
+        QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectScript(url);
 
     return val;
 }

@@ -188,8 +188,11 @@ public:
 
     QString translateFrom(TranslationDataIndex index) const;
 
-    Heap::Module *module() const { return m_module; }
-    void setModule(Heap::Module *module) { m_module = module; }
+    Heap::Module *module() const;
+    void setModule(Heap::Module *module);
+
+    ReturnedValue value() const { return m_valueOrModule.asReturnedValue(); }
+    void setValue(const QV4::Value &value) { m_valueOrModule = value; }
 
     const CompiledData::Unit *unitData() const { return m_compilationUnit->data; }
 
@@ -233,7 +236,7 @@ private:
     friend struct ExecutionEngine;
 
     QQmlRefPointer<CompiledData::CompilationUnit> m_compilationUnit;
-    Heap::Module *m_module = nullptr;
+    Value m_valueOrModule = QV4::Value::emptyValue();
 
     struct ResolveSetEntry
     {
