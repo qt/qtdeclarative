@@ -32,9 +32,16 @@ QQmlRefPointer<QQmlScriptData> QQmlScriptBlob::scriptData() const
     return m_scriptData;
 }
 
-bool QQmlScriptBlob::isNative() const
+bool QQmlScriptBlob::hasScriptValue() const
 {
-    return m_scriptData && !m_scriptData->m_value.isEmpty();
+    if (!m_scriptData)
+        return false;
+
+    QV4::ExecutionEngine *v4 = m_typeLoader->engine()->handle();
+    Q_ASSERT(v4);
+    QV4::Scope scope(v4);
+    QV4::ScopedValue value(scope, m_scriptData->ownScriptValue(v4));
+    return !value->isEmpty();
 }
 
 void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
@@ -241,14 +248,12 @@ void QQmlScriptBlob::initializeFromCompilationUnit(
 
     \sa QJSEngine::registerModule()
  */
-void QQmlScriptBlob::initializeFromNative(const QV4::Value &value)
+void QQmlScriptBlob::initializeFromNative()
 {
     Q_ASSERT(!m_scriptData);
     m_scriptData.adopt(new QQmlScriptData());
     m_scriptData->url = finalUrl();
     m_scriptData->urlString = finalUrlString();
-    m_scriptData->m_loaded = true;
-    m_scriptData->m_value.set(QQmlEnginePrivate::getV4Engine(typeLoader()->engine()), value);
     m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 }
 

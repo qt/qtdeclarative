@@ -9005,6 +9005,7 @@ public:
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         object.reset(component.create());
         QVERIFY(object);
+        QCOMPARE(object->property("logger"), QVariant::fromValue<int>(12));
     }
 
     void wreck(const QUrl &inner) {

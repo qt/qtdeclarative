@@ -1006,12 +1006,12 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
     return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
 }
 
-void QQmlTypeLoader::injectScript(const QUrl &relativeUrl, const QV4::Value &value)
+void QQmlTypeLoader::injectScript(const QUrl &relativeUrl)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
     QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this);
-    blob->initializeFromNative(value);
+    blob->initializeFromNative();
     blob->m_isDone = true;
     blob->m_data.setStatus(QQmlDataBlob::Complete);
     m_scriptCache.insert(relativeUrl, blob);
@@ -1021,7 +1021,7 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::injectedScript(const QUrl &relati
 {
     LockHolder<QQmlTypeLoader> holder(this);
     const auto it = m_scriptCache.constFind(relativeUrl);
-    return (it != m_scriptCache.constEnd() && (*it)->isNative())
+    return (it != m_scriptCache.constEnd() && (*it)->hasScriptValue())
             ? *it
             : QQmlRefPointer<QQmlScriptBlob>();
 }

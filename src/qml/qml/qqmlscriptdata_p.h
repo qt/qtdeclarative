@@ -20,6 +20,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4scopedvalue_p.h>
 
 #include <QtCore/qurl.h>
 
@@ -41,6 +42,7 @@ public:
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     QVector<QQmlRefPointer<QQmlScriptBlob>> scripts;
 
+    QV4::ReturnedValue ownScriptValue(QV4::ExecutionEngine *v4) const;
     QV4::ReturnedValue scriptValueForContext(const QQmlRefPointer<QQmlContextData> &parentCtxt);
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit() const
@@ -54,9 +56,25 @@ private:
     QQmlRefPointer<QQmlContextData> qmlContextDataForContext(
             const QQmlRefPointer<QQmlContextData> &parentQmlContextData);
 
-    bool m_loaded = false;
+    template<typename WithExecutableCU>
+    QV4::ReturnedValue handleOwnScriptValueOrExecutableCU(
+            QV4::ExecutionEngine *v4,
+            WithExecutableCU &&withExecutableCU) const
+    {
+        QV4::Scope scope(v4);
+
+        QV4::ScopedValue value(scope, v4->nativeModule(url));
+        if (!value->isEmpty())
+            return value->asReturnedValue();
+
+        if (!m_precompiledScript)
+            return QV4::Value::emptyValue().asReturnedValue();
+
+        return withExecutableCU(v4->executableCompilationUnit(
+                QQmlRefPointer<QV4::CompiledData::CompilationUnit>(m_precompiledScript)));
+    }
+
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> m_precompiledScript;
-    QV4::PersistentValue m_value;
 };
 
 QT_END_NAMESPACE

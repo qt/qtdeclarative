@@ -814,6 +814,14 @@ public:
         return ok ? QJSPrimitiveValue(result) : QJSPrimitiveValue(QJSPrimitiveUndefined());
     }
 
+    ReturnedValue nativeModule(const QUrl &url) const
+    {
+        const auto it = nativeModules.find(url);
+        return it == nativeModules.end()
+                ? QV4::Value::emptyValue().asReturnedValue()
+                : (*it)->asReturnedValue();
+    }
+
 private:
     template<int Frames>
     friend struct ExecutionEngineCallDepthRecorder;
