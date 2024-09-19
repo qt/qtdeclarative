@@ -8,7 +8,6 @@
 #include <QtCore/qtimezone.h>
 
 #include <private/qlocale_p.h>
-#include <private/qlocale_data_p.h>
 
 #include <private/qv4dateobject_p.h>
 #include <private/qv4numberobject_p.h>
