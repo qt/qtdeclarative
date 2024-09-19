@@ -6,7 +6,7 @@
 
 #include <QListView>
 #include <QQmlEngine>
-#include <QQuickWidget>
+#include <QQuickView>
 #include <QSplitter>
 #include <QVBoxLayout>
 
@@ -14,7 +14,7 @@ PreviewWidget::PreviewWidget(QWidget *parent)
     : QWidget{parent}
     , m_errorListModel{this}
     , m_errorListView{new QListView}
-    , m_quickWidget{new QQuickWidget}
+    , m_quickView{new QQuickView}
 {
     initUI();
     setupConnections();
@@ -22,13 +22,13 @@ PreviewWidget::PreviewWidget(QWidget *parent)
 
 QString PreviewWidget::sourcePath() const
 {
-    return m_quickWidget->source().toString();
+    return m_quickView->source().toString();
 }
 
 void PreviewWidget::setSourcePath(const QString &path)
 {
-    m_quickWidget->engine()->clearComponentCache();
-    m_quickWidget->setSource(QUrl::fromLocalFile(path));
+    m_quickView->engine()->clearComponentCache();
+    m_quickView->setSource(QUrl::fromLocalFile(path));
 }
 
 void PreviewWidget::initUI()
@@ -38,15 +38,15 @@ void PreviewWidget::initUI()
     m_errorListView->setWordWrap(true);
     m_errorListView->setSpacing(4);
 
-    m_quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    m_quickView->setResizeMode(QQuickView::SizeRootObjectToView);
 
-    QSizePolicy sizePolicy = m_quickWidget->sizePolicy();
-    sizePolicy.setVerticalStretch(1);
-    m_quickWidget->setSizePolicy(sizePolicy);
+    QWidget *container = QWidget::createWindowContainer(m_quickView);
+    container->setMinimumSize(m_quickView->size());
+    container->setFocusPolicy(Qt::TabFocus);
 
     QSplitter *splitter = new QSplitter{this};
     splitter->setOrientation(Qt::Vertical);
-    splitter->addWidget(m_quickWidget);
+    splitter->addWidget(container);
     splitter->addWidget(m_errorListView);
 
     QVBoxLayout *layout = new QVBoxLayout;
@@ -59,7 +59,7 @@ void PreviewWidget::setupConnections()
 {
     connect(StateController::instance(), &StateController::stateChanged, this,
             &PreviewWidget::onAppStateChanged);
-    connect(m_quickWidget, &QQuickWidget::statusChanged, this,
+    connect(m_quickView, &QQuickView::statusChanged, this,
             &PreviewWidget::onQuickWidetStatusChanged);
     connect(m_errorListView, &QAbstractItemView::doubleClicked, &m_errorListModel,
             &ErrorListModel::selectIndex);
@@ -84,8 +84,8 @@ void PreviewWidget::onAppStateChanged(int oldState, int newState)
 void PreviewWidget::onQuickWidetStatusChanged(int status)
 {
     switch (status) {
-    case QQuickWidget::Error:
-        m_errorListModel.setErrorList(m_quickWidget->errors());
+    case QQuickView::Error:
+        m_errorListModel.setErrorList(m_quickView->errors());
         break;
     default:
         m_errorListModel.setErrorList({});
