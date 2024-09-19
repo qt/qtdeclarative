@@ -7,12 +7,12 @@
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLineEdit>
-#include <QToolButton>
+#include <QPushButton>
 
 PathEditWidget::PathEditWidget(QWidget *parent)
     : QWidget{parent}
     , m_lineEdit{new QLineEdit}
-    , m_toolButton{new QToolButton}
+    , m_urlButton{new QPushButton}
 {
     initUI();
 
@@ -48,14 +48,14 @@ void PathEditWidget::initUI()
 {
     QHBoxLayout *layout = new QHBoxLayout;
     layout->addWidget(m_lineEdit, 1);
-    layout->addWidget(m_toolButton);
+    layout->addWidget(m_urlButton);
     layout->setContentsMargins(0,0,0,0);
     setLayout(layout);
 
     m_lineEdit->setPlaceholderText(tr("File Path"));
-    m_lineEdit->setReadOnly(true);
 
-    m_toolButton->setText(tr("..."));
+    m_urlButton->setText(tr("Choose"));
+    m_urlButton->setToolTip(tr("Select path to QML file to load"));
 }
 
 void PathEditWidget::setupConnections()
@@ -63,7 +63,8 @@ void PathEditWidget::setupConnections()
     connect(StateController::instance(), &StateController::stateChanged, this,
             &PathEditWidget::onAppStateChanged);
 
-    connect(m_toolButton, &QToolButton::clicked, this, &PathEditWidget::openFileRequested);
+    connect(m_lineEdit, &QLineEdit::editingFinished, this, &PathEditWidget::validatePath);
+    connect(m_urlButton, &QPushButton::clicked, this, &PathEditWidget::openFileRequested);
 }
 
 void PathEditWidget::setFilePath(const QString &filePath)
@@ -93,4 +94,12 @@ void PathEditWidget::onAppStateChanged(int oldState, int newState)
     default:
         break;
     }
+}
+
+void PathEditWidget::validatePath()
+{
+    const auto filePath = m_lineEdit->text();
+    QUrl url = QUrl::fromUserInput(filePath);
+    if (url.isValid())
+        emit fileSelected(filePath);
 }

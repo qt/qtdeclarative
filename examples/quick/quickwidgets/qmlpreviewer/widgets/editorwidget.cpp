@@ -65,8 +65,8 @@ void EditorWidget::openFile()
     case StateController::NewState:
     case StateController::DirtyState: {
         const auto answer = QMessageBox::question(this, tr("About to Open File"),
-                                                  tr("There are some unsaved changes. "
-                                                     "Do you want to discard the changes?"),
+                                                  tr("You have unsaved changes. "
+                                                     "Are you sure you want to discard them?"),
                                                   QMessageBox::Yes | QMessageBox::No,
                                                   QMessageBox::No);
         if (answer != QMessageBox::Yes)

@@ -88,8 +88,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     case StateController::DirtyState: {
         const QMessageBox::StandardButton answer =
             QMessageBox::question(this, tr("About to Close"),
-                                  tr("There are some unsaved changes. "
-                                     "Do you want to close withou saving?"),
+                                  tr("You have unsaved changes. "
+                                     "Are you sure you want to close without saving?"),
                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if (answer == QMessageBox::Yes)
             event->accept();
