@@ -4,7 +4,7 @@
 /*!
     \title QML Previewer Example
     \example quickwidgets/qmlpreviewer
-    \brief Demonstrates how to mix QML with a Qt Widgets application using the QQuickWidget class.
+    \brief Demonstrates how to mix QML with a Qt Widgets application using QWidget::createWindowContainer().
     \examplecategory {User Interface Components}
 
     \image qmlpreviewer-example.png
@@ -16,6 +16,8 @@
         \li Tab focusing between widgets and Qt Quick
         \li Drag and drop between widgets and Qt Quick
         \li Shortcuts defined in the embedded QML file
-        \li Embedding a QQuickWidget inside a layout
+        \li Embedding a QQuickView inside a QLayout
     \endlist
+
+    \sa QWidget::createWindowContainer()
 */
