@@ -245,9 +245,8 @@ import "testlogger.js" as TestLogger
     \badcode
     .
     | — CMakeLists.txt
+    | — main.cpp
     | - main.qml
-    | — src
-        | — main.cpp
     | — MyModule
         | — MyButton.qml
         | — CMakeLists.txt
