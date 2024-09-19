@@ -7702,10 +7702,9 @@ void tst_QQuickTableView::invalidateTableInstanceModelContextObject()
 
     auto tableView = window->property("tableView").value<QQuickTableView *>();
     QVERIFY(tableView);
-    WAIT_UNTIL_POLISHED;
 
     const int modelData = window->property("modelData").toInt();
-    QCOMPARE(tableView->rows(), modelData);
+    QTRY_COMPARE(tableView->rows(), modelData);
 
     bool tableViewDestroyed = false;
     connect(tableView, &QObject::destroyed, [&] {
