@@ -666,6 +666,11 @@ QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)
     // super types should be registered as CppType (or not at all). We only need the object and its
     // QML engine to resolve composite types. Therefore, the function is actually a static property
     // of the C++ type system and we can cache it here for improved performance on further lookups.
+    if (const auto func = QQmlPrivate::attachedPropertiesFunc<T>())
+        return qmlAttachedPropertiesObject(const_cast<QObject *>(obj), func, create);
+
+    // Usually the above func should not be nullptr. However, to be safe, keep this fallback
+    // via the metaobject.
     static const auto func = qmlAttachedPropertiesFunction(nullptr, &T::staticMetaObject);
     return qmlAttachedPropertiesObject(const_cast<QObject *>(obj), func, create);
 }
