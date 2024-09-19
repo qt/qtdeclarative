@@ -84,6 +84,7 @@ private slots:
     void bindingInstallUseAfterFree();
     void objectListArgumentMethod();
     void variantListQJsonConversion();
+    void attachedObjectOfUnregistered();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1774,6 +1775,42 @@ void tst_qqmlengine::variantListQJsonConversion()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
+}
+
+class UnregisteredAttached : public QObject
+{
+    Q_OBJECT
+public:
+    UnregisteredAttached(QObject *parent = nullptr) : QObject(parent) {}
+};
+
+class Unregistered : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(UnregisteredAttached)
+public:
+    static UnregisteredAttached *qmlAttachedProperties(QObject *obj)
+    {
+        return new UnregisteredAttached(obj);
+    }
+};
+
+void tst_qqmlengine::attachedObjectOfUnregistered()
+{
+    QObject o;
+
+    QObject *a = qmlAttachedPropertiesObject<Unregistered>(&o);
+    QVERIFY(a);
+    QVERIFY(qobject_cast<UnregisteredAttached *>(a));
+
+    QObject *b = qmlAttachedPropertiesObject<Unregistered>(&o);
+    QCOMPARE(a, b);
+
+    QObject o2;
+    QObject *c = qmlAttachedPropertiesObject<Unregistered>(&o2);
+    QVERIFY(c);
+    QVERIFY(qobject_cast<UnregisteredAttached *>(c));
+    QVERIFY(c != a);
 }
 
 QTEST_MAIN(tst_qqmlengine)
