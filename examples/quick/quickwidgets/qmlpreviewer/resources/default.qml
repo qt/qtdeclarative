@@ -16,7 +16,6 @@ Rectangle {
 
         TextField {
             id: textField
-            implicitHeight: 40
             Layout.fillWidth: true
             focus: true
 
@@ -41,7 +40,6 @@ Rectangle {
         Button {
             id: button
             text: qsTr("Click Me!")
-            implicitHeight: 40
             Layout.fillHeight: true
             focus: true
 

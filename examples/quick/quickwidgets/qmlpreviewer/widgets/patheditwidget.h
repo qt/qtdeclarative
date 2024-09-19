@@ -7,7 +7,7 @@
 #include <QWidget>
 
 class QLineEdit;
-class QToolButton;
+class QPushButton;
 
 class PathEditWidget : public QWidget
 {
@@ -33,10 +33,11 @@ private:
 
 private slots:
     void onAppStateChanged(int oldState, int newState);
+    void validatePath();
 
 private:
     QLineEdit *m_lineEdit = nullptr;
-    QToolButton *m_toolButton = nullptr;
+    QPushButton *m_urlButton = nullptr;
 };
 
 #endif // PATHEDITWIDGET_H
