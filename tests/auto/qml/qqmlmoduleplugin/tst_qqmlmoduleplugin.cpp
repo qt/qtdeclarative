@@ -243,19 +243,15 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     QString expectedError = QLatin1String("module \"org.qtproject.WrongCase\" plugin \"PluGin\" not found");
 
 #if defined(Q_OS_DARWIN) || defined(Q_OS_WIN32)
-    bool caseSensitive = true;
 #if defined(Q_OS_DARWIN)
-    int res = pathconf(QDir::currentPath().toLatin1().constData(), _PC_CASE_SENSITIVE);
-    if (res == -1)
-        QSKIP("Could not establish case sensitivity of file system");
-    caseSensitive = res != 0 && res != -1;
+    bool caseSensitive = pathconf(QDir::currentPath().toLatin1().constData(), _PC_CASE_SENSITIVE) == 1;
 #if QT_CONFIG(debug) && !QT_CONFIG(framework)
     QString libname = "libPluGin_debug.dylib";
 #else
     QString libname = "libPluGin.dylib";
 #endif
 #elif defined(Q_OS_WIN32)
-    caseSensitive = false;
+    bool caseSensitive = false;
     QString libname = "PluGin.dll";
 #endif
     if (!caseSensitive) {
