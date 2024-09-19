@@ -228,7 +228,7 @@ void EditorWidget::onFileSelected(const QString &filePath)
         closeFile();
         break;
     case StateController::DirtyState:
-        stateController->setDirty(false);
+        stateController->changesSaved(filePath);
         closeFile();
         break;
     default:
