@@ -2219,6 +2219,12 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
     const auto propertyName = getScopeName(m_currentScope, QQmlSA::ScopeType::QMLScope);
     leaveEnvironment();
 
+    if (m_currentScope->isInCustomParserParent()) {
+        // These warnings do not apply for custom parsers and their children and need to be handled
+        // on a case by case basis
+        return;
+    }
+
     qsizetype i = 0;
     for (auto element = arrayBinding->members; element; element = element->next, ++i) {
         const auto &type = children[i];
