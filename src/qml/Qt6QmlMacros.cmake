@@ -984,9 +984,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             foreach(bit IN LISTS uri_bits)
                 get_filename_component(build_folder "${build_folder}" DIRECTORY)
             endforeach()
-            get_directory_property(_qmlls_ini_build_folders _qmlls_ini_build_folders)
-            list(APPEND _qmlls_ini_build_folders "${build_folder}")
-            set_directory_properties(PROPERTIES _qmlls_ini_build_folders "${_qmlls_ini_build_folders}")
+            set_property(DIRECTORY APPEND PROPERTY _qmlls_ini_build_folders "${build_folder}")
             set_property(DIRECTORY APPEND PROPERTY _qmlls_ini_import_path_targets "${target}")
 
             # if no call with id 'qmlls_ini_generation_id' was deferred for this directory, do it now
@@ -1144,7 +1142,7 @@ function(_qt_internal_write_deferred_qmlls_ini_file target)
 
     if(NOT CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
         # replace cmake list separator ';' with unix path separator ':'
-        string(REPLACE ";" ":" concatenated_build_dirs "${_qmlls_ini_build_folders}")
+        list(JOIN _qmlls_ini_build_folders ":" concatenated_build_dirs)
         list(JOIN _import_paths ":" concatenated_import_paths)
     else()
         # cmake list separator and windows path separator are both ';', so no replacement needed
