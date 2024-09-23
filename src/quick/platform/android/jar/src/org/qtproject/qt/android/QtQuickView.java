@@ -21,8 +21,6 @@ import java.security.InvalidParameterException;
  * It brings the power of Qt Quick into your Android app, making it possible to use various Qt Quick
  * APIs, in Android Java or Kotlin apps.
  * </p>
- * <b>Note:</b> This class is a technical preview. It is subject to change, and no source nor
- * binary compatibility guarantees exist.
  * <p>
  * <b>Known limitations:</b>
  * <p><ul>
