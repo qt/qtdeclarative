@@ -4453,6 +4453,9 @@ void tst_QQuickItem::embeddedInWidgetsFocus_data()
 
 void tst_QQuickItem::embeddedInWidgetsFocus()
 {
+    if (!qt_tab_all_widgets())
+        QSKIP("Test requires Qt::TabFocusAllControls tab focus behavior");
+
     QFETCH(QUrl, source);
     QWidget root;
     QVBoxLayout *layout = new QVBoxLayout(&root);
