@@ -581,10 +581,12 @@ constexpr size_t sizeofOffsetsAndSizes(const T &)
     return SizeofOffsetsAndSizes_helper<T>::value;
 }
 
-#define TEST_CLASS(Class) \
+// NOTE: ScopeCounter might change new metaobjects are added
+// check the moc file and adjust as necessary if tests fails to compile
+#define TEST_CLASS(Class, ScopeCounter) \
     QTest::newRow(#Class) \
-            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_CLASS##Class##ENDCLASS) \
-            << int(sizeofOffsetsAndSizes(qt_meta_stringdata_CLASS##Class##ENDCLASS) / (sizeof(uint) * 2))
+            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_ZN##ScopeCounter##Class##E) \
+            << int(sizeofOffsetsAndSizes(qt_meta_stringdata_ZN##ScopeCounter##Class##E) / (sizeof(uint) * 2))
 
 Q_DECLARE_METATYPE(const QMetaObject*);
 
@@ -594,9 +596,9 @@ void tst_qqmlpropertycache::metaObjectSize_data()
     QTest::addColumn<int>("expectedFieldCount");
     QTest::addColumn<int>("expectedStringCount");
 
-    TEST_CLASS(TestClass);
-    TEST_CLASS(TestClassWithParameters);
-    TEST_CLASS(TestClassWithClassInfo);
+    TEST_CLASS(TestClass, 9);
+    TEST_CLASS(TestClassWithParameters, 23);
+    TEST_CLASS(TestClassWithClassInfo, 22);
 }
 
 void tst_qqmlpropertycache::metaObjectSize()
