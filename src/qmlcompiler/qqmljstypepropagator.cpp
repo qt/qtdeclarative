@@ -2470,11 +2470,12 @@ void QQmlJSTypePropagator::generate_As(int lhs)
             output = input;
         else
             output = m_typeResolver->cast(input, outContained);
-    } else if (!m_typeResolver->canAddressValueTypes()) {
-        addError(u"invalid cast from %1 to %2. You can only cast object types."_s
-                 .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
-        return;
     } else {
+        if (!m_typeResolver->canAddressValueTypes()) {
+            addError(u"invalid cast from %1 to %2. You can only cast object types."_s.arg(
+                    input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
+        }
+
         if (m_typeResolver->inherits(inContained, outContained)) {
             // A "slicing" cannot result in void
             output = m_typeResolver->cast(input, outContained);

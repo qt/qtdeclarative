@@ -57,6 +57,7 @@ private slots:
     void blockComments();
     void boolCoercions();
     void boolPointerMerge();
+    void brokenAs();
     void boundComponents();
     void callContextPropertyLookupResult();
     void callWithSpread();
@@ -957,6 +958,18 @@ void tst_QmlCppCodegen::boolPointerMerge()
     QObject *item = o->property("item").value<QObject *>();
     QVERIFY(item);
     QCOMPARE(item->property("ppp").toInt(), -99);
+}
+
+void tst_QmlCppCodegen::brokenAs()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, QUrl(u"qrc:/qt/qml/TestTypes/brokenAs.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QVERIFY(o->property("a").value<QObject *>() != nullptr);
+    QCOMPARE(o->property("b").value<QObject *>(), nullptr);
 }
 
 void tst_QmlCppCodegen::boundComponents()

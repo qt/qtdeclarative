@@ -96,6 +96,7 @@ set(qml_files
     blockComments.qml
     boolCoercions.qml
     boolPointerMerge.qml
+    brokenAs.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
     callWithSpread.qml
