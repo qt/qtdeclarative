@@ -45,7 +45,7 @@ public:
     QString fileName(QAbstractFileEngine::FileName file) const override;
     uint ownerId(FileOwner) const override;
 
-    IteratorUniquePtr beginEntryList(const QString &path, QDir::Filters filters,
+    IteratorUniquePtr beginEntryList(const QString &path, QDirListing::IteratorFlags filters,
                                      const QStringList &filterNames) override;
     IteratorUniquePtr endEntryList() override;
 
