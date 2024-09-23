@@ -75,8 +75,13 @@ QString AttachedPropertyTypeValidatorPass::addWarning(TypeDescription attachType
 {
     QVarLengthArray<QQmlSA::Element, 4> elements;
 
-    const QQmlSA::Element baseType = resolveType(attachType.module, attachType.name);
     const QQmlSA::Element attachedType = resolveAttached(attachType.module, attachType.name);
+    if (!attachedType) {
+        emitWarning(
+                "Cannot find attached type for %1/%2"_L1.arg(attachType.module, attachType.name),
+                quickAttachedPropertyType);
+        return QString();
+    }
 
     for (const TypeDescription &desc : allowedTypes) {
         const QQmlSA::Element type = resolveType(desc.module, desc.name);
@@ -656,6 +661,9 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                   QAnyStringView warning, bool allowInDelegate = false) {
         QString attachedTypeName = attachedPropertyType->addWarning(attachedType, allowedTypes,
                                                                     allowInDelegate, warning);
+        if (attachedTypeName.isEmpty())
+            return;
+
         manager->registerPropertyPass(attachedPropertyType, attachedType.module,
                                       u"$internal$."_s + attachedTypeName, {}, false);
     };
