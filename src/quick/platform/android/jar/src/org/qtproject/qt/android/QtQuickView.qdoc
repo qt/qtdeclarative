@@ -61,6 +61,23 @@
 
     For a more detailed example, see \l {QML in Android Studio Projects}.
 
+    \section1 Known issues
+
+    Here are the known issues with this API. They may be resolved and removed in a patch
+    release.
+
+    \section2 Activity recreation leads to an application crash
+
+    \warning Activity recreation may lead to a crash. This is due to resources not being released
+     properly.
+
+    Orientation and other configuration changes will recreate the Activity.
+
+    See {https://bugreports.qt.io/browse/QTBUG-123711}{QTBUG-123711} for more information.
+
+    See \l{QML in Android Studio Projects} for an example of how to handle rotation
+    manually inside an application without recreating the Activity.
+
     \section1 QtQuickView in an Android Service
 
     It is also possible to add a QtQuickView from a Service context by using
