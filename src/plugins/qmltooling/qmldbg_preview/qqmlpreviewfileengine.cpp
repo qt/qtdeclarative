@@ -40,7 +40,7 @@ bool isRootPath(const QString &path)
 class QQmlPreviewFileEngineIterator : public QAbstractFileEngineIterator
 {
 public:
-    QQmlPreviewFileEngineIterator(const QString &path, QDir::Filters filters,
+    QQmlPreviewFileEngineIterator(const QString &path, QDirListing::IteratorFlags filters,
                                   const QStringList &filterNames, const QStringList &m_entries);
     ~QQmlPreviewFileEngineIterator();
 
@@ -53,7 +53,7 @@ private:
 };
 
 QQmlPreviewFileEngineIterator::QQmlPreviewFileEngineIterator(const QString &path,
-                                                             QDir::Filters filters,
+                                                             QDirListing::IteratorFlags filters,
                                                              const QStringList &filterNames,
                                                              const QStringList &entries)
     : QAbstractFileEngineIterator(path, filters, filterNames), m_entries(entries), m_index(0)
@@ -212,7 +212,7 @@ uint QQmlPreviewFileEngine::ownerId(QAbstractFileEngine::FileOwner owner) const
 }
 
 QAbstractFileEngine::IteratorUniquePtr QQmlPreviewFileEngine::beginEntryList(
-        const QString &path, QDir::Filters filters, const QStringList &filterNames)
+        const QString &path, QDirListing::IteratorFlags filters, const QStringList &filterNames)
 {
     return m_fallback ? m_fallback->beginEntryList(path, filters, filterNames)
                       : std::make_unique<QQmlPreviewFileEngineIterator>(
