@@ -6,7 +6,6 @@
     \title Qt Quick View Android Class
     \ingroup qt_android_classes
     \brief Allows you to add QML content to your Android app as a View.
-    \techpreview
     \since 6.7
 
     The QtQuickView class lets you easily add QML content to your Android app as
