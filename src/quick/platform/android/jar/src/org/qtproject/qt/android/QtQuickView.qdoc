@@ -60,6 +60,23 @@
     }
     \endcode
 
+    \section2 Changes needed in main.cpp compared to a Qt for Android application
+
+    QtQuickView will handle creating the app's window and loading any QML content. The main
+    function of the QML project you are embedding into your Android project shouldn't do either.
+    Creating the \l QGuiApplication and \l{QGuiApplication::exec()}{starting the event loop}
+    is enough. Below is the minimum required \c main.cpp for your QML project.
+
+    \code
+    #include <QGuiApplication>
+
+    int main(int argc, char *argv[])
+    {
+        QGuiApplication app(argc, argv);
+        return app.exec();
+    }
+    \endcode
+
     For a more detailed example, see \l {QML in Android Studio Projects}.
 
     \section1 QtQuickView in an Android Service
