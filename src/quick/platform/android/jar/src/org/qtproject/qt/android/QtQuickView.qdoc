@@ -95,6 +95,13 @@
     See \l{QML in Android Studio Projects} for an example of how to handle rotation
     manually inside an application without recreating the Activity.
 
+    \section2 Multiple QtQuickViews in one application causes undefined behavior
+
+    Using multiple QtQuickViews in one application may cause undefined behavior during cleanup.
+    Removing a QtQuickView from the application layout may cause a crash.
+
+    See {https://bugreports.qt.io/browse/QTBUG-127422}{QTBUG-127422} for more information.
+
     \section1 QtQuickView in an Android Service
 
     It is also possible to add a QtQuickView from a Service context by using
