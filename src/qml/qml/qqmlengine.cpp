@@ -29,9 +29,11 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qdiriterator.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qstandardpaths.h>
+#include <QtCore/qstorageinfo.h>
 #include <QtCore/qthread.h>
 
 #if QT_CONFIG(qml_network)
@@ -49,6 +51,8 @@
 #endif // Q_OS_WIN
 
 QT_BEGIN_NAMESPACE
+
+using namespace Qt::StringLiterals;
 
 void qml_register_types_QML();
 
@@ -2052,12 +2056,31 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
     QFileInfo info(fileName);
     const QString absolute = info.absoluteFilePath();
 
-#if defined(Q_OS_DARWIN)
-    const QString canonical = info.canonicalFilePath();
-#elif defined(Q_OS_WIN)
     // No difference if the path is qrc based
     if (absolute[0] == QLatin1Char(':'))
         return true;
+
+#if defined(Q_OS_DARWIN)
+    const QString canonical = info.canonicalFilePath();
+    if (const auto suffix = info.suffix();
+        (suffix == "qml"_L1 || suffix == "dylib"_L1) && info.exists()) {
+        // APFS and HFS+ are both case preserving, in which case we can trust that the
+        // canonical file path reported above is correct. But if any of these file systems
+        // are mounted via SMB or Virtiofs (Virtualization.framework) macOS will report
+        // that the canonical file name of "Foo" is "Foo", even if the underlying file
+        // on the host file system has a canonical name of "foo". As we can't trust the
+        // canonical name in this case, we go though QDirIterator instead, as the directory
+        // listing for the mounted filesystem _does_ report the correct canonical file name.
+        if (pathconf(canonical.toUtf8().constData(), _PC_CASE_PRESERVING) != 1) {
+            qCDebug(lcQmlImport) << "Detected QML file on non-case-preserving file system"
+                << QStorageInfo(canonical) << "Verifying file case via directory listing";
+            QDirIterator dirIterator(info.absolutePath(), { info.fileName() },
+                QDir::Files | QDir::CaseSensitive, QDirIterator::FollowSymlinks);
+            if (!dirIterator.hasNext())
+                return false;
+        }
+    }
+#elif defined(Q_OS_WIN)
     const QString canonical = shellNormalizeFileName(absolute);
 #endif
 
