@@ -1180,8 +1180,10 @@ bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fie
                                                  int *stringCount)
 {
     const QMetaObjectPrivate *priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    if (priv->revision != QMetaObjectPrivate::OutputRevision)
+    if (priv->revision > QMetaObjectPrivate::OutputRevision
+            || priv->revision < QMetaObjectPrivate::OutputRevision - 1) {
         return false;
+    }
 
     uint highestStringIndex = 0;
     const auto stringIndexVisitor = [&highestStringIndex](uint index) {
