@@ -3,6 +3,8 @@
 
 #include "qqmldelegatemodel_p_p.h"
 
+#include <QtCore/private/qabstractitemmodel_p.h>
+
 #include <QtQml/qqmlinfo.h>
 
 #include <private/qqmlabstractdelegatecomponent_p.h>
@@ -408,6 +410,21 @@ void QQmlDelegateModel::setModel(const QVariant &model)
     if (d->m_complete) {
         _q_itemsInserted(0, d->adaptorModelCount());
         d->requestMoreIfNecessary();
+    }
+
+    // Since 837c2f18cd223707e7cedb213257b0158ea07146, we connect to modelAboutToBeReset
+    // rather than modelReset so that we can handle role name changes. _q_modelAboutToBeReset
+    // now connects modelReset to handleModelReset with a single shot connection instead.
+    // However, it's possible for user code to begin the reset before connectToAbstractItemModel is called
+    // (QTBUG-125053), in which case we connect to modelReset too late and handleModelReset is never called,
+    // resulting in delegates not being created in certain cases.
+    // So, we check at the earliest point we can if the model is in the process of being reset,
+    // and if so, connect modelReset to handleModelReset.
+    if (d->m_adaptorModel.adaptsAim()) {
+        auto *aim = d->m_adaptorModel.aim();
+        auto *aimPrivate = QAbstractItemModelPrivate::get(aim);
+        if (aimPrivate->resetting)
+            QObject::connect(aim, &QAbstractItemModel::modelReset, this, &QQmlDelegateModel::handleModelReset, Qt::SingleShotConnection);
     }
 }
 
