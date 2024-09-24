@@ -2929,11 +2929,10 @@ void QQuickPopup::resetBottomInset()
     well. And if the menu is a sub-menu inside another menu, the parent (or root) menu
     will decide the type.
 
-    The default value is style-dependent, and can change in future versions of Qt.
-    The \l {macOS Style}, for example, sets \c {Menu.popupType} to be \c Popup.Native, while
-    the \l{Imagine Style} uses \c Popup.Window (which is the default when the style doesn't
-    set a popup type). If you always want to use native menus for all styles on macOS, for
-    example, you can do:
+    The default value is usually \c Popup.Item, with some exceptions, mentioned above.
+    This might change in future versions of Qt, for certain styles and platforms that benefit
+    from using other popup types.
+    If you always want to use native menus for all styles on macOS, for example, you can do:
 
     \code
     Menu {
