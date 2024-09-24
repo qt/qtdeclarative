@@ -18,6 +18,8 @@ Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
+static const int oneSecondInMs = 1000;
+
 class tst_QQuickListView2 : public QQmlDataTest
 {
     Q_OBJECT
@@ -63,6 +65,7 @@ private slots:
 
     void changingOrientationResetsPreviousAxisValues_data();
     void changingOrientationResetsPreviousAxisValues();
+    void visibleBoundToCountGreaterThanZero();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -1213,6 +1216,23 @@ void tst_QQuickListView2::changingOrientationResetsPreviousAxisValues() // QTBUG
     // X should be 0 for all delegates, but not Y.
     QVERIFY(listView->property("isXReset").toBool());
     QVERIFY(!listView->property("isYReset").toBool());
+}
+
+void tst_QQuickListView2::visibleBoundToCountGreaterThanZero()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("visibleBoundToCountGreaterThanZero.qml")));
+
+    auto *listView = window.rootObject()->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+
+    QSignalSpy countChangedSpy(listView, SIGNAL(countChanged()));
+    QVERIFY(countChangedSpy.isValid());
+
+    QTRY_COMPARE_GT_WITH_TIMEOUT(listView->count(), 1, oneSecondInMs);
+    // Using the TRY variant here as well is necessary.
+    QTRY_COMPARE_GT_WITH_TIMEOUT(countChangedSpy.count(), 1, oneSecondInMs);
+    QVERIFY(listView->isVisible());
 }
 
 QTEST_MAIN(tst_QQuickListView2)
