@@ -229,6 +229,8 @@ public:
             releaseItem(item, reusableFlag);
     }
 
+    void emitCountChanged();
+
     virtual QQuickItemViewAttached *getAttachedObject(const QObject *) const { return nullptr; }
 
     QPointer<QQmlInstanceModel> model;
