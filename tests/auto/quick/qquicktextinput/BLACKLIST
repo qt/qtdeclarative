@@ -2,9 +2,10 @@
 [mouseSelectionMode]
 opensuse-leap
 
-# QTBUG-82058
-[setInputMask]
-macos ci
+[setInputMask:keys any_opt]
+macos # QTBUG-82058
+[setInputMask:keys any_req]
+macos # QTBUG-82058
 
 # QTQAINFRA-4127
 [passwordCharacter]
