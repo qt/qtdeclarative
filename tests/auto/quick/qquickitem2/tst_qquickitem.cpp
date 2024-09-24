@@ -1058,7 +1058,6 @@ void tst_QQuickItem::activeFocusOnTab9()
         QGuiApplication::sendEvent(window, &key);
         QVERIFY(key.isAccepted());
 
-        QEXPECT_FAIL("", "TextEdit is not skipped", Continue);
         QVERIFY(textedit1->hasActiveFocus());
     }
 
