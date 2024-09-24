@@ -2172,12 +2172,12 @@ void tst_qquicktext::embeddedImages_data()
 
     QTest::newRow("local") << testFileUrl("embeddedImagesLocal.qml") << "" << QSize(100, 100);
     QTest::newRow("local-error") << testFileUrl("embeddedImagesLocalError.qml")
-        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML Text: Cannot open: " + testFileUrl("http/notexists.png").toString()
+        << testFileUrl("embeddedImagesLocalError.qml").toString()+":3:1: QML (QQuick)?Text: Cannot open: " + testFileUrl("http/notexists.png").toString()
          << QSize();
     QTest::newRow("local-relative") << testFileUrl("embeddedImagesLocalRelative.qml") << "" << QSize(100, 100);
     QTest::newRow("remote") << testFileUrl("embeddedImagesRemote.qml") << "" << QSize(100, 100);
     QTest::newRow("remote-error") << testFileUrl("embeddedImagesRemoteError.qml")
-                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found"
+                                  << testFileUrl("embeddedImagesRemoteError.qml").toString()+":3:1: QML (QQuick)?Text: Error transferring {{ServerBaseUrl}}/notexists.png - server replied: Not found"
                                    << QSize();
     QTest::newRow("remote-relative") << testFileUrl("embeddedImagesRemoteRelative.qml") << "" << QSize(100, 100);
     QTest::newRow("resource") << testFileUrl("embeddedImageResource.qml") << "" << QSize(16, 16);
@@ -2197,7 +2197,7 @@ void tst_qquicktext::embeddedImages()
     error.replace(QStringLiteral("{{ServerBaseUrl}}"), server.baseUrl().toString());
 
     if (!error.isEmpty())
-        QTest::ignoreMessage(QtWarningMsg, error.toLatin1());
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(error.toLatin1()));
 
     QQuickView view;
     view.rootContext()->setContextProperty(QStringLiteral("serverBaseUrl"), server.baseUrl());
@@ -3430,9 +3430,9 @@ void tst_qquicktext::imgTagsError()
     QQmlComponent textComponent(&engine);
     const QString expectedMessage(
             testFileUrl(".").toString()
-            + ":2:1: QML Text: Cannot open: "
+            + ":2:1: QML (QQuick)?Text: Cannot open: "
             + testFileUrl("images/starfish_2.pn").toString());
-    QTest::ignoreMessage(QtWarningMsg, expectedMessage.toLatin1());
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(expectedMessage.toLatin1()));
     textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
     QScopedPointer<QObject> object(textComponent.create());
     QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
