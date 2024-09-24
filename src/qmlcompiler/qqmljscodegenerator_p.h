@@ -260,6 +260,8 @@ protected:
                         const QString &resultPreparation = QString());
     QString getLookupPreparation(
             const QQmlJSRegisterContent &content, const QString &var, int lookup);
+    QString setLookupPreparation(
+            const QQmlJSRegisterContent &content, const QString &arg, int lookup);
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
@@ -314,14 +316,7 @@ private:
 
 
     QString eqIntExpression(int lhsConst);
-
-    struct ArgumentsAndTypes
-    {
-        QString arguments;
-        QString types;
-    };
-
-    ArgumentsAndTypes argumentsList(int argc, int argv, QString *outVar);
+    QString argumentsList(int argc, int argv, QString *outVar);
     QString castTargetName(const QQmlJSScope::ConstPtr &type) const;
 
     bool inlineStringMethod(const QString &name, int base, int argc, int argv);
