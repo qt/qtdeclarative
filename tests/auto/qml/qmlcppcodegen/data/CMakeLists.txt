@@ -166,6 +166,7 @@ set(qml_files
     indirectlyShadowable.qml
     infinities.qml
     infinitiesToInt.qml
+    insertContextOnInvalidType.qml
     intEnumCompare.qml
     intOverflow.qml
     intToEnum.qml

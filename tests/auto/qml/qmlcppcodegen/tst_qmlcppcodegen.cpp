@@ -129,6 +129,7 @@ private slots:
     void infinities();
     void infinitiesToInt();
     void innerObjectNonShadowable();
+    void insertContextOnInvalidType();
     void intEnumCompare();
     void intOverflow();
     void intToEnum();
@@ -2460,6 +2461,36 @@ void tst_QmlCppCodegen::innerObjectNonShadowable()
     QVERIFY(rootObject);
 
     QCOMPARE(rootObject->objectName(), u"foo"_s);
+}
+
+class HandleHandler : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlComponent *handle MEMBER m_handle)
+
+private:
+    QQmlComponent *m_handle = nullptr;
+};
+
+void tst_QmlCppCodegen::insertContextOnInvalidType()
+{
+    qmlRegisterType<HandleHandler>("Handlerei", 1, 0, "HandleHandler");
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/insertContextOnInvalidType.qml"_s));
+
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "qrc:/qt/qml/TestTypes/insertContextOnInvalidType.qml:5: "
+            "ReferenceError: handleDelegate is not defined");
+    QScopedPointer<QObject> rootObject(component.create());
+    QVERIFY(rootObject);
+
+    const char *outter = "handleDelegateOutter";
+    QVERIFY(rootObject->metaObject()->indexOfProperty(outter) != -1);
+    QVERIFY(!rootObject->property(outter).isValid());
 }
 
 void tst_QmlCppCodegen::intEnumCompare()
