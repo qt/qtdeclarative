@@ -3,6 +3,7 @@
 
 #include "qquickpopupwindow_p_p.h"
 #include "qquickcombobox_p.h"
+#include "qquickdialog_p.h"
 #include "qquickpopup_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickmenu_p_p.h"
@@ -88,8 +89,13 @@ void QQuickPopupWindow::hideEvent(QHideEvent *e)
     QQuickWindow::hideEvent(e);
     // Avoid potential infinite recursion, between QWindowPrivate::setVisible(false) and this function.
     QScopedValueRollback<bool>inHideEventRollback(d->m_inHideEvent, true);
-    if (QQuickPopup *popup = d->m_popup)
-        popup->setVisible(false);
+    if (QQuickPopup *popup = d->m_popup) {
+        QQuickDialog *dialog = qobject_cast<QQuickDialog *>(popup);
+        if (dialog && QQuickPopupPrivate::get(dialog)->visible)
+            dialog->reject();
+        else
+            popup->setVisible(false);
+    }
 }
 
 void QQuickPopupWindow::moveEvent(QMoveEvent *e)
