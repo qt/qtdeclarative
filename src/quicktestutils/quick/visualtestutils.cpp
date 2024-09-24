@@ -60,9 +60,7 @@ void QQuickVisualTestUtils::moveMouseAway(QQuickWindow *window)
 
 void QQuickVisualTestUtils::centerOnScreen(QQuickWindow *window)
 {
-    const QRect screenGeometry = window->screen()->availableGeometry();
-    const QPoint offset = QPoint(window->width() / 2, window->height() / 2);
-    window->setFramePosition(screenGeometry.center() - offset);
+    QQuickViewTestUtils::centerOnScreen(window);
 }
 
 QPoint QQuickVisualTestUtils::lerpPoints(const QPoint &point1, const QPoint &point2, qreal t)
