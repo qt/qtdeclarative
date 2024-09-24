@@ -92,6 +92,7 @@ private slots:
     void selectExistingFileShouldWarnUserWhenFileModeEqualsSaveFile();
     void fileNameTextFieldOnlyChangesWhenSelectingFiles();
     void setSchemeForSelectedFile();
+    void reopenAfterHideEvent();
 
 private:
     enum DelegateOrderPolicy
@@ -1720,6 +1721,30 @@ void tst_QQuickFileDialogImpl::setSchemeForSelectedFile()
     QVERIFY(!newFilePath.scheme().isEmpty());
     QVERIFY(!dialogHelper.dialog->selectedFile().scheme().isEmpty());
     QCOMPARE(dialogHelper.dialog->selectedFile(), newFilePath);
+}
+
+void tst_QQuickFileDialogImpl::reopenAfterHideEvent()
+{
+    // Open the dialog.
+    FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+
+    QQuickWindow *popupWindow = dialogHelper.popupWindow();
+    QVERIFY(popupWindow);
+    QVERIFY(dialogHelper.dialog->isVisible());
+    QVERIFY(popupWindow->isVisible());
+
+    QHideEvent hideEvent;
+    QCoreApplication::sendEvent(popupWindow, &hideEvent);
+    QVERIFY(!dialogHelper.isQuickDialogOpen());
+    QVERIFY(!dialogHelper.dialog->isVisible());
+
+    QVERIFY(dialogHelper.openDialog());
+    QVERIFY(dialogHelper.isQuickDialogOpen());
+    QVERIFY(dialogHelper.dialog->isVisible());
+
+    dialogHelper.dialog->close();
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)
