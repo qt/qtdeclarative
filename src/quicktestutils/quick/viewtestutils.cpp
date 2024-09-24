@@ -32,14 +32,14 @@ QQuickView *QQuickViewTestUtils::createView()
     return window;
 }
 
-void QQuickViewTestUtils::centerOnScreen(QQuickView *window, const QSize &size)
+void QQuickViewTestUtils::centerOnScreen(QQuickWindow *window, const QSize &size)
 {
     const QRect screenGeometry = window->screen()->availableGeometry();
     const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
     window->setFramePosition(screenGeometry.center() - offset);
 }
 
-void QQuickViewTestUtils::centerOnScreen(QQuickView *window)
+void QQuickViewTestUtils::centerOnScreen(QQuickWindow *window)
 {
     QQuickViewTestUtils::centerOnScreen(window, window->size());
 }
