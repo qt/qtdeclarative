@@ -356,34 +356,48 @@ QQuickMenu *QQuickMenuPrivate::rootMenu() const
     return const_cast<QQuickMenu *>(rootMenu);
 }
 
- QQuickPopup::PopupType QQuickMenuPrivate::resolvedPopupType() const
+QQuickPopup::PopupType QQuickMenuPrivate::resolvedPopupType() const
 {
-    // The resolved popup type is decided by the root
-    // menu (which can be this menu, unless it's a child menu).
+    // The root menu (which can be this menu, unless it's a
+    // sub menu) decides the popup type for all sub menus.
+    QQuickMenu *root = rootMenu();
     QQuickMenuPrivate *root_d = QQuickMenuPrivate::get(rootMenu());
 
-    // If the root menu is native, then so should we. We assume here that
-    // the root menu is always shown and created first, before we try to
-    // show and create a child menu.
-    if (root_d->maybeNativeHandle())
-        return QQuickPopup::PopupType::Native;
+    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get()) {
+        // When a menu is inside a MenuBar, the MenuBar decides if the menu
+        // should be native or not. The menu's popupType is therefore ignored.
+        // Basically, a native MenuBar can only contain native Menus, and
+        // a non-native MenuBar can only contain non-native Menus.
+        if (QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func()))
+            return QQuickPopup::Native;
+    } else {
+        // If the root menu is native, this menu needs to be native as well
+        if (root_d->maybeNativeHandle()) {
+            return QQuickPopup::Native;
+        } else if (!root_d->triedToCreateNativeMenu) {
+            // If popupType is Native, and native popups seems to be available, then we return
+            // the resolved type to be Native. But note that this doesn't guarantee that the
+            // menu will actually become native. QPA can still refuse to create a QPlaformMenu,
+            // if the QPA plugin or theme doesn't support it. The only way to know for sure if
+            // a menu became native, is to also check QQuickMenuPrivate::nativeHandle().
+            if (root->popupType() == QQuickPopup::Native
+                && !QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows)) {
+                return QQuickPopup::Native;
+            }
+        }
+    }
 
-    return root_d->QQuickPopupPrivate::resolvedPopupType();
+    // Let QQuickPopup decide if the menu should be Popup.Window or Popup.Item, based
+    // on e.g popuptype and platform limitations. QQuickPopupPrivate should never resolve
+    // the popup type to be Native, since that's up to the individual subclasses to decide.
+    const auto type = root_d->QQuickPopupPrivate::resolvedPopupType();
+    Q_ASSERT(type != QQuickPopup::Native);
+    return type;
 }
 
 bool QQuickMenuPrivate::useNativeMenu() const
 {
-    // If we're inside a MenuBar, it'll decide whether or not we should be
-    // native. Otherwise, the root menu (which might be this menu) will decide.
-    // Note that this is just a preference, QPA can still fail to create a native
-    // menu. In that case we'll fall back to let QQuickPopup create the menu/popup
-    // instead, and end up with Window or Item as resolved popup type.
-    QQuickMenu *root = rootMenu();
-    if (auto menuBar = QQuickMenuPrivate::get(root)->menuBar.get())
-        return QQuickMenuBarPrivate::get(menuBar)->useNativeMenu(q_func());
-    if (QGuiApplication::testAttribute(Qt::AA_DontUseNativeMenuWindows))
-        return false;
-    return root->popupType() == QQuickPopup::Native;
+    return resolvedPopupType() == QQuickPopup::Native;
 }
 
 QPlatformMenu *QQuickMenuPrivate::nativeHandle()

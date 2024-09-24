@@ -2691,7 +2691,7 @@ void tst_QQuickMenu::nativeStatic()
     QQuickMenu *contextMenu = window->property("contextMenu").value<QQuickMenu*>();
     QVERIFY(contextMenu);
     auto *contextMenuPrivate = QQuickMenuPrivate::get(contextMenu);
-    QVERIFY(contextMenuPrivate->useNativeMenu());
+    QCOMPARE(contextMenuPrivate->useNativeMenu(), nativeMenuSupported);
 
     // Check that the actions of the parent menu can be accessed
     // and are in the appropriate places in contentModel and contentData.
