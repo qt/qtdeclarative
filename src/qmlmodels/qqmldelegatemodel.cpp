@@ -167,7 +167,6 @@ QQmlDelegateModelPrivate::QQmlDelegateModelPrivate(QQmlContext *ctxt)
     , m_transaction(false)
     , m_incubatorCleanupScheduled(false)
     , m_waitingToFetchMore(false)
-    , m_maybeResetRoleNames(false)
     , m_cacheItems(nullptr)
     , m_items(nullptr)
     , m_persistedItems(nullptr)
@@ -372,8 +371,6 @@ void QQmlDelegateModelPrivate::connectToAbstractItemModel()
     QObject::connect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                       q, QQmlDelegateModel, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
-    QObject::connect(aim, &QAbstractItemModel::modelReset, q, &QQmlDelegateModel::handleModelReset);
-    QObject::connect(aim, &QAbstractItemModel::layoutChanged, q, &QQmlDelegateModel::_q_layoutChanged);
 }
 
 void QQmlDelegateModelPrivate::disconnectFromAbstractItemModel()
@@ -403,8 +400,6 @@ void QQmlDelegateModelPrivate::disconnectFromAbstractItemModel()
     QObject::disconnect(aim, &QAbstractItemModel::modelAboutToBeReset, q, &QQmlDelegateModel::_q_modelAboutToBeReset);
     QObject::disconnect(aim, SIGNAL(layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)),
                         q, SLOT(_q_layoutChanged(QList<QPersistentModelIndex>,QAbstractItemModel::LayoutChangeHint)));
-    QObject::disconnect(aim, &QAbstractItemModel::modelReset, q, &QQmlDelegateModel::handleModelReset);
-    QObject::disconnect(aim, &QAbstractItemModel::layoutChanged, q, &QQmlDelegateModel::_q_layoutChanged);
 }
 
 void QQmlDelegateModel::setModel(const QVariant &model)
@@ -1856,28 +1851,28 @@ void QQmlDelegateModelPrivate::emitChanges()
 
 void QQmlDelegateModel::_q_modelAboutToBeReset()
 {
-    /*
-        roleNames are generally guaranteed to be stable (given that QAIM has no
-        change signal for them), except that resetting the model is allowed to
-        invalidate them (QTBUG-32132). DelegateModel must take this into account by
-        snapshotting the current roleNames before the model is reset.
-        Afterwards, if we detect that roleNames has changed, we throw the
-        current model set up away and rebuild everything from scratch – it is
-        unlikely that a more efficient implementation would be worth it.
-
-        If we detect no changes, we simply use the existing logic to handle the
-        model reset.
-
-        This (role name resetting) logic relies on the fact that
-        modelAboutToBeReset must be followed by a modelReset signal before any
-        further modelAboutToBeReset can occur. However, it's possible for user
-        code to begin the reset before connectToAbstractItemModel is called
-        (QTBUG-125053), in which case we don't attempt to reset the role names.
-    */
     Q_D(QQmlDelegateModel);
-    Q_ASSERT(!d->m_maybeResetRoleNames);
-    d->m_maybeResetRoleNames = true;
-    d->m_roleNamesBeforeReset = d->m_adaptorModel.aim()->roleNames();
+    if (!d->m_adaptorModel.adaptsAim())
+        return;
+    auto aim = d->m_adaptorModel.aim();
+    auto oldRoleNames = aim->roleNames();
+    // this relies on the fact that modelAboutToBeReset must be followed
+    // by a modelReset signal before any further modelAboutToBeReset can occur
+    QObject::connect(aim, &QAbstractItemModel::modelReset, this, [this, d, oldRoleNames, aim](){
+        if (!d->m_adaptorModel.adaptsAim() || d->m_adaptorModel.aim() != aim)
+            return;
+        if (oldRoleNames == aim->roleNames()) {
+            // if the rolenames stayed the same (most common case), then we don't have
+            // to throw away all the setup that we did
+            handleModelReset();
+        } else {
+            // If they did change, we give up and just start from scratch via setMode
+            setModel(QVariant::fromValue(model()));
+            // but we still have to call handleModelReset, otherwise views will
+            // not refresh
+            handleModelReset();
+        }
+    }, Qt::SingleShotConnection);
 }
 
 void QQmlDelegateModel::handleModelReset()
@@ -1887,23 +1882,6 @@ void QQmlDelegateModel::handleModelReset()
         return;
 
     int oldCount = d->m_count;
-
-    if (d->m_maybeResetRoleNames) {
-        auto aim = d->m_adaptorModel.aim();
-        if (!d->m_adaptorModel.adaptsAim() || d->m_adaptorModel.aim() != aim)
-            return;
-
-        // If the role names stayed the same (most common case), then we don't have
-        // to throw away all the setup that we did.
-        // If they did change, we give up and just start from scratch via setModel.
-        // We do this before handling the reset to ensure that views refresh.
-        if (aim->roleNames() != d->m_roleNamesBeforeReset)
-            setModel(QVariant::fromValue(model()));
-
-        d->m_maybeResetRoleNames = false;
-        d->m_roleNamesBeforeReset.clear();
-    }
-
     d->m_adaptorModel.rootIndex = QModelIndex();
 
     if (d->m_complete) {
