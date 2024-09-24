@@ -2438,6 +2438,20 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
     if (item == item->window()->contentItem())
         return true;
 
+    const auto tabFocus = QGuiApplication::styleHints()->tabFocusBehavior();
+    if (tabFocus == Qt::NoTabFocus)
+        return false;
+    if (tabFocus == Qt::TabFocusAllControls)
+        return true;
+
+    QVariant editable = item->property("editable");
+    if (editable.isValid())
+        return editable.toBool();
+
+    QVariant readonly = item->property("readOnly");
+    if (readonly.isValid())
+        return !readonly.toBool() && item->property("text").isValid();
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role role = QQuickItemPrivate::get(item)->effectiveAccessibleRole();
     if (role == QAccessible::EditableText || role == QAccessible::Table || role == QAccessible::List) {
@@ -2447,14 +2461,6 @@ bool QQuickItemPrivate::canAcceptTabFocus(QQuickItem *item)
             return iface->state().editable;
     }
 #endif
-
-    QVariant editable = item->property("editable");
-    if (editable.isValid())
-        return editable.toBool();
-
-    QVariant readonly = item->property("readOnly");
-    if (readonly.isValid() && !readonly.toBool() && item->property("text").isValid())
-        return true;
 
     return false;
 }
@@ -2555,8 +2561,6 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
     const QQuickItem * const contentItem = item->window()->contentItem();
     if (!contentItem)
         return item;
-
-    bool all = QGuiApplication::styleHints()->tabFocusBehavior() == Qt::TabFocusAllControls;
 
     QQuickItem *from = nullptr;
     bool isTabFence = item->d_func()->isTabFence;
@@ -2684,7 +2688,7 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             }
         }
     } while (skip || !current->activeFocusOnTab() || !current->isEnabled() || !current->isVisible()
-                  || !(all || QQuickItemPrivate::canAcceptTabFocus(current)));
+                  || !(QQuickItemPrivate::canAcceptTabFocus(current)));
 
     return current;
 }
@@ -6955,12 +6959,26 @@ void QQuickItem::setSmooth(bool smooth)
     key events used by Keys or KeyNavigation have precedence over
     focus chain behavior; ignore the events in other key handlers
     to allow it to propagate.
+
+    \note {QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
+    to only specific types of controls, such as only text or list controls. This is
+    the case on macOS, where focus to particular controls may be restricted based on
+    system settings.
+
+    \sa QStyleHints::tabFocusBehavior, focusPolicy
 */
 /*!
     \property QQuickItem::activeFocusOnTab
 
     This property holds whether the item wants to be in the tab focus
     chain. By default, this is set to \c false.
+
+    \note {QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
+    to only specific types of controls, such as only text or list controls. This is
+    the case on macOS, where focus to particular controls may be restricted based on
+    system settings.
+
+    \sa QStyleHints::tabFocusBehavior, focusPolicy
 */
 // TODO FOCUS: Deprecate
 bool QQuickItem::activeFocusOnTab() const
