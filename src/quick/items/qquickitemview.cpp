@@ -10,6 +10,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcItemViewDelegateLifecycle, "qt.quick.itemview.lifecycle")
+Q_LOGGING_CATEGORY(lcCount, "qt.quick.itemview.count")
 
 // Default cacheBuffer for all views.
 #ifndef QML_VIEW_DEFAULTCACHEBUFFER
@@ -223,7 +224,7 @@ void QQuickItemView::setModel(const QVariant &m)
                 this, SLOT(modelUpdated(QQmlChangeSet,bool)));
         if (QQmlDelegateModel *dataModel = qobject_cast<QQmlDelegateModel*>(d->model))
             QObjectPrivate::connect(dataModel, &QQmlDelegateModel::delegateChanged, d, &QQuickItemViewPrivate::applyDelegateChange);
-        emit countChanged();
+        d->emitCountChanged();
     }
     emit modelChanged();
     d->moveReason = QQuickItemViewPrivate::Other;
@@ -255,7 +256,7 @@ void QQuickItemView::setDelegate(QQmlComponent *delegate)
         int oldCount = dataModel->count();
         dataModel->setDelegate(delegate);
         if (oldCount != dataModel->count())
-            emit countChanged();
+            d->emitCountChanged();
     }
     emit delegateChanged();
     d->delegateValidated = false;
@@ -1125,6 +1126,14 @@ void QQuickItemViewPrivate::showVisibleItems() const
     }
 }
 
+// Simplifies debugging of count.
+void QQuickItemViewPrivate::emitCountChanged()
+{
+    Q_Q(QQuickItemView);
+    qCDebug(lcCount).nospace() << "about to emit countChanged for " << q << "; count changed to " << q->count();
+    emit q->countChanged();
+}
+
 void QQuickItemViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change,
                                                 const QRectF &oldGeometry)
 {
@@ -1224,7 +1233,7 @@ void QQuickItemView::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
             d->updateTrackedItem();
         }
         d->moveReason = QQuickItemViewPrivate::Other;
-        emit countChanged();
+        d->emitCountChanged();
 #if QT_CONFIG(quick_viewtransitions)
         if (d->transitioner && d->transitioner->populateTransition)
             d->forceLayoutPolish();
@@ -1487,7 +1496,7 @@ void QQuickItemView::componentComplete()
         d->fixupPosition();
     }
     if (d->model && d->model->count())
-        emit countChanged();
+        d->emitCountChanged();
 }
 
 
@@ -1813,7 +1822,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         }
 
         if (prevCount != itemCount)
-            emit q->countChanged();
+            emitCountChanged();
     } while (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges());
     storeFirstVisibleItemPosition();
 }
@@ -1864,6 +1873,16 @@ void QQuickItemViewPrivate::layout()
     // if either dimension is negative, but apparently we support negative-sized
     // views (see tst_QQuickListView::resizeView).
     if ((!isValid() && !visibleItems.size()) || q->size().isNull()) {
+        if (q->size().isNull() && hasPendingChanges()) {
+            // count() refers to the number of items in the model, not in the view
+            // (which is why we don't emit for the !visibleItems.size() case).
+            // If there are pending model changes, emit countChanged in order to
+            // support the use case of QTBUG-129165, where visible is bound to count > 0
+            // and the ListView is in a layout with Layout.preferredHeight bound to
+            // contentHeight. This ensures that a hidden ListView will become visible.
+            emitCountChanged();
+        }
+
         clear();
         setPosition(contentStartOffset());
         updateViewport();
@@ -2138,7 +2157,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
     updateSections();
     if (prevItemCount != itemCount)
-        emit q->countChanged();
+        emitCountChanged();
     if (!visibleAffected && viewportChanged)
         updateViewport();
 
