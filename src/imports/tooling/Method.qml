@@ -2,9 +2,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 import QML
+import QtQuick.tooling as Tooling
 
-Member {
-    default property list<Parameter> parameters
+Tooling.Member {
+    default property list<Tooling.Parameter> parameters
     property string type
     property int revision: 0
     property bool isConstructor: false

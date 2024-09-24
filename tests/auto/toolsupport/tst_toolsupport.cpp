@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest>
-
-// Don't do this at home. This is test code, not production.
-#define protected public
-#define private public
+#include <QtQml/qqmlcomponent.h>
 
 #include <private/qobject_p.h>
 #include <private/qv4compileddata_p.h>
@@ -43,6 +40,9 @@ class tst_toolsupport : public QObject
 private slots:
     void offsets();
     void offsets_data();
+
+    void instantiateTooling_data();
+    void instantiateTooling();
 };
 
 void tst_toolsupport::offsets()
@@ -100,8 +100,36 @@ void tst_toolsupport::offsets_data()
 #endif // RUN_MEMBER_OFFSET_TEST
 }
 
+void tst_toolsupport::instantiateTooling_data()
+{
+    QTest::addColumn<QString>("file");
 
-QTEST_APPLESS_MAIN(tst_toolsupport);
+    const QString importsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+    QDirIterator it(importsPath + "/QtQuick/tooling", { "*.qml" }, QDir::Files);
+    while (it.hasNext())
+        QTest::addRow("%s", qPrintable(it.nextFileInfo().fileName())) << it.filePath();
+}
+
+void tst_toolsupport::instantiateTooling()
+{
+    // On platforms that require deployment with an app bundle we cannot do this.
+    if (!QTest::currentDataTag())
+        QSKIP("QtQuick.tooling is not available here");
+
+    QFETCH(QString, file);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl::fromLocalFile(file));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    const QVariantMap properties = file.endsWith("Module.qml")
+            ? QVariantMap()
+            : QVariantMap {{ QStringLiteral("name"), QStringLiteral("foo")}};
+
+    QScopedPointer<QObject> o(c.createWithInitialProperties(properties));
+    QVERIFY2(!o.isNull(), qPrintable(c.errorString()));
+}
+
+QTEST_MAIN(tst_toolsupport);
 
 #include "tst_toolsupport.moc"
 
