@@ -64,6 +64,8 @@ Q_LOGGING_CATEGORY(lcGcStateTransitions, "qt.qml.gc.stateTransitions")
 Q_DECLARE_LOGGING_CATEGORY(lcGcStateTransitions)
 Q_LOGGING_CATEGORY(lcGcForcedRuns, "qt.qml.gc.forcedRuns")
 Q_DECLARE_LOGGING_CATEGORY(lcGcForcedRuns)
+Q_LOGGING_CATEGORY(lcGcStepExecution, "qt.qml.gc.stepExecution")
+Q_DECLARE_LOGGING_CATEGORY(lcGcStepExecution)
 
 using namespace WTF;
 
@@ -1472,6 +1474,7 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
 }
 
 GCStateMachine::GCStateMachine()
+    : collectTimings(lcGcStepExecution().isDebugEnabled())
 {
     // base assumption: target 60fps, use at most 1/3 of time for gc
     // unless overridden by env variable
@@ -1483,6 +1486,45 @@ GCStateMachine::GCStateMachine()
         timeLimit = std::chrono::milliseconds { envTimeLimit };
     else
         timeLimit = std::chrono::milliseconds { 0 };
+}
+
+static void logStepTiming(GCStateMachine* that, quint64 timing) {
+    auto registerTimingWithResetOnOverflow = [](
+        GCStateMachine::StepTiming& storage, quint64 timing, GCState state
+    ) {
+        auto wouldOverflow = [](quint64 lhs, quint64 rhs) {
+            return rhs > 0 && lhs > std::numeric_limits<quint64>::max() - rhs;
+        };
+
+        if (wouldOverflow(storage.rolling_sum, timing) || wouldOverflow(storage.count, 1)) {
+            qDebug(lcGcStepExecution) << "Resetting timings storage for"
+                                      << QMetaEnum::fromType<GCState>().key(state) << "due to overflow.";
+            storage.rolling_sum = timing;
+            storage.count = 1;
+        } else {
+            storage.rolling_sum += timing;
+            storage.count += 1;
+        }
+    };
+
+    GCStateMachine::StepTiming& storage = that->executionTiming[that->state];
+    registerTimingWithResetOnOverflow(storage, timing, that->state);
+
+    qDebug(lcGcStepExecution) << "Performed" << QMetaEnum::fromType<GCState>().key(that->state)
+                              << "in" << timing << "microseconds";
+    qDebug(lcGcStepExecution) << "This step was performed" << storage.count << " time(s), executing in"
+                              << (storage.rolling_sum / storage.count) << "microseconds on average.";
+}
+
+static GCState executeWithLoggingIfEnabled(GCStateMachine* that, GCStateInfo& stateInfo) {
+    if (!that->collectTimings)
+        return stateInfo.execute(that, that->stateData);
+
+    QElapsedTimer timer;
+    timer.start();
+    GCState next = stateInfo.execute(that, that->stateData);
+    logStepTiming(that, timer.nsecsElapsed()/1000);
+    return next;
 }
 
 void GCStateMachine::transition() {
@@ -1505,7 +1547,7 @@ void GCStateMachine::transition() {
             qCDebug(lcGcStateTransitions) << "Preparing to execute the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
-            state = stateInfo.execute(this, stateData);
+            state = executeWithLoggingIfEnabled(this, stateInfo);
             qCDebug(lcGcStateTransitions) << "Transitioning to the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             if (stateInfo.breakAfter)
@@ -1523,7 +1565,7 @@ void GCStateMachine::transition() {
             qCDebug(lcGcStateTransitions) << "Preparing to execute the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
-            state = stateInfo.execute(this, stateData);
+            state = executeWithLoggingIfEnabled(this, stateInfo);
             qCDebug(lcGcStateTransitions) << "Transitioning to the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
         }
