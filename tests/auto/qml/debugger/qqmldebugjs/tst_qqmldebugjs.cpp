@@ -162,7 +162,7 @@ void tst_QQmlDebugJS::initTestCase()
 {
     QQmlDebugTest::initTestCase();
 }
-#include <iostream>
+
 QQmlDebugTest::ConnectResult tst_QQmlDebugJS::runAndConnect(bool qmlscene, const QString &qmlFile,
                                                    bool blockMode, bool restrictServices)
 {
