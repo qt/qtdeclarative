@@ -26,6 +26,8 @@ public:
 private:
     ConnectResult startQmlProcess(const QString &qmlFile);
     void serveRequest(const QString &path);
+    void serveFile(const QString &path, const QByteArray &contents);
+
     QList<QQmlDebugClient *> createClients() override;
     void verifyProcessOutputContains(const QString &string) const;
 
@@ -42,6 +44,7 @@ private slots:
 
     void connect();
     void load();
+    void loadFromQrc();
     void rerun();
     void blacklist();
     void error();
@@ -72,13 +75,18 @@ void tst_QQmlPreview::serveRequest(const QString &path)
     } else {
         QFile file(path);
         if (file.open(QIODevice::ReadOnly)) {
-            m_files.append(path);
-            m_client->sendFile(path, file.readAll());
+            serveFile(path, file.readAll());
         } else {
             m_filesNotFound.append(path);
             m_client->sendError(path);
         }
     }
+}
+
+void tst_QQmlPreview::serveFile(const QString &path, const QByteArray &contents)
+{
+    m_files.append(path);
+    m_client->sendFile(path, contents);
 }
 
 QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
@@ -158,6 +166,34 @@ void tst_QQmlPreview::load()
         QTRY_VERIFY(m_files.contains(testFile(newFile)));
         verifyProcessOutputContains(newFile);
     }
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::loadFromQrc()
+{
+    // One of the configuration files built into the "qml" executable.
+    const QString fromQrc(":/qt-project.org/imports/QmlRuntime/Config/default.qml");
+
+    QCOMPARE(QQmlDebugTest::connectTo(
+                     QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qml",
+                     QStringLiteral("QmlPreview"), fromQrc, true),
+             ConnectSuccess);
+
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    serveFile(fromQrc, R"(
+        import QtQuick
+        Item {
+            Component.onCompleted: console.log("default.qml replaced")
+        }
+    )");
+
+    m_client->triggerLoad(QUrl("qrc" + fromQrc));
+    verifyProcessOutputContains("default.qml replaced");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
