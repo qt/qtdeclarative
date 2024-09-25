@@ -75,8 +75,10 @@ public:
     std::chrono::microseconds timeLimit{};
     QDeadlineTimer deadline;
     std::array<GCStateInfo, GCState::Count> stateInfoMap;
+    std::array<StepTiming, GCState::Count> executionTiming{};
     MemoryManager *mm = nullptr;
     ExtraData stateData; // extra date for specific states
+    bool collectTimings = false;
 
     GCStateMachine();
 
