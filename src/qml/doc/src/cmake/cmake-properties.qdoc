@@ -225,5 +225,36 @@ source property to \c TRUE. The source property must be set before
 an uppercase letter and define a QML component. This property is valid only if
 \l QT_ANDROID_GENERATE_JAVA_QML_COMPONENTS is defined.
 
+The source file property can be set like so:
+
+\badcode
+set_source_files_properties(MyMainItem.qml
+    PROPERTIES QT_QML_GENERATE_ANDROID_JAVA_CLASS TRUE)
+\endcode
+
+You can pass multiple files at once to set_source_files_properties:
+\badcode
+set(plain_qml_files
+    MyItem1.qml
+    MyItem2.qml
+    FancyButton.qml
+
+)
+
+set(qml_to_java_files
+    MyMainItem.qml
+    MyOtherMain.qml
+)
+
+set_source_files_properties(${qml_to_java_files}
+    PROPERTIES QT_QML_GENERATE_ANDROID_JAVA_CLASS TRUE
+)
+
+qt_add_qml_module(myapp
+    URI MyModule
+    QML_FILES ${plain_qml_files} ${qml_to_java_files}
+)
+\endcode
+
 \sa {Naming Custom QML Object Types}
 */
