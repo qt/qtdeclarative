@@ -67,6 +67,8 @@ QQuickImagePrivate::QQuickImagePrivate()
     to be scaled to that size. This behavior can be changed by setting the
     \l fillMode property, allowing the image to be stretched and tiled instead.
 
+    It is possible to provide \l {High Resolution Versions of Images}{"@nx" high DPI syntax}.
+
     \section1 Example Usage
 
     The following example shows the simplest usage of the Image type.
