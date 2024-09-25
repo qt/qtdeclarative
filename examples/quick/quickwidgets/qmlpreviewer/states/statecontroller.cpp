@@ -66,6 +66,11 @@ void StateController::fileLoaded(const QString &filePath)
         setCurrentState(OpenState);
         break;
 
+    case OpenState:
+        setFilePath(filePath);
+        emit stateChanged(OpenState, OpenState);
+        break;
+
     default:
         break;
     }

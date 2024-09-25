@@ -99,6 +99,8 @@ void PathEditWidget::onAppStateChanged(int oldState, int newState)
 void PathEditWidget::validatePath()
 {
     const auto filePath = m_lineEdit->text();
+    if (filePath == StateController::instance()->filePath())
+        return;
     QUrl url = QUrl::fromUserInput(filePath);
     if (url.isValid())
         emit fileSelected(filePath);
