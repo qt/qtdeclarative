@@ -18,7 +18,6 @@
 #include <QMap>
 #include <QScopedValueRollback>
 
-#include <iostream>
 #include <cstdlib>
 #include <algorithm>
 #include "qv4profiling_p.h"
