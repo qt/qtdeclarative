@@ -105,7 +105,8 @@ using namespace QV4;
 // odd while the statics are being initialized, and stays even afterwards.
 // Any further engines created while the statics are being initialized busy-wait until engineSerial
 // is even.
-static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
+Q_CONSTINIT static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
+Q_CONSTINIT static QBasicAtomicInt hasPreview = Q_BASIC_ATOMIC_INITIALIZER(0);
 int ExecutionEngine::s_maxCallDepth = -1;
 int ExecutionEngine::s_jitCallCountThreshold = 3;
 int ExecutionEngine::s_maxJSStackSize = 4 * 1024 * 1024;
@@ -889,6 +890,12 @@ void ExecutionEngine::setProfiler(Profiling::Profiler *profiler)
     Q_ASSERT(!m_profiler);
     m_profiler.reset(profiler);
 }
+
+void ExecutionEngine::setPreviewing(bool enabled)
+{
+    hasPreview.storeRelease(enabled);
+}
+
 #endif // QT_CONFIG(qml_debug)
 
 void ExecutionEngine::initRootContext()
@@ -2212,7 +2219,7 @@ QV4::Value *ExecutionEngine::registerNativeModule(const QUrl &url, const QV4::Va
 
 bool ExecutionEngine::diskCacheEnabled() const
 {
-    return (!disableDiskCache() && !debugger()) || forceDiskCache();
+    return (!disableDiskCache() && !debugger() && !hasPreview.loadAcquire()) || forceDiskCache();
 }
 
 void ExecutionEngine::callInContext(QV4::Function *function, QObject *self,
