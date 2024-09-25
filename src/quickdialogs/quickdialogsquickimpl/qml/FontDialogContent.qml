@@ -41,7 +41,7 @@ GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             background: Rectangle {
-                color: "white"
+                color: palette.base
             }
             ListView {
                 id: fontFamilyListView
@@ -90,7 +90,7 @@ GridLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
             background: Rectangle {
-                color: "white"
+                color: palette.base
             }
             ListView {
                 id: fontStyleListView
@@ -140,7 +140,7 @@ GridLayout {
             Layout.fillHeight: true
 
             background: Rectangle {
-                color: "white"
+                color: palette.base
             }
             ListView {
                 id: fontSizeListView
@@ -217,6 +217,7 @@ GridLayout {
             width: sample.width - sample.leftPadding + sample.rightPadding
             height: sample.height - sample.topPadding + sample.bottomPadding
             radius: 3
+            color: palette.base
         }
 
         label: Label {
@@ -229,6 +230,7 @@ GridLayout {
             objectName: "sampleEdit"
             anchors.centerIn: parent
             readOnly: true
+            color: palette.text
         }
     }
 }
