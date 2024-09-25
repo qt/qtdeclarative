@@ -2239,40 +2239,49 @@ void TestQmllint::testPlugin_data()
             << Result{
                    {
                        // Property on any type
-                       Message{ u"Saw read on Text property x in scope Text"_s },
-                       Message{ u"Saw read on Text property x in scope Item"_s },
+                       Message{ u"Saw read on Text property x in scope Text"_s, 8, 12 },
+                       Message{ u"Saw read on Text property x in scope Item"_s, 21, 25 },
                        // JavaScript
-                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
-                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
+                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s, 21, 17 },
+                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s, 22, 14 },
                    },
-                   {},
-                   {},
-                   Result::HasDuplicates
                };
     QTest::addRow("propertypass_pluginTest_write")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
             << Result{
                    {
-                       Message{ u"Saw write on Text property x with value int in scope Item"_s },
+                       Message{ u"Saw write on Text property x with value int in scope Item"_s, 23, 9 },
                    },
-                   {},
-                   {},
-                   Result::HasDuplicates
                };
     QTest::addRow("propertypass_pluginTest_binding")
             << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
             << Result{
                    {
                      // Specific binding for specific property
-                     Message{ u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s },
-                     Message{ u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s },
-                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
-                     Message{ u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
-                     Message{ u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s }
+                     Message{ u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s, 6, 15 },
+                     Message{ u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s, 7, 12 },
+                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s, 11, 8 },
+                     Message{ u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s, 16, 16 },
+                     Message{ u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s, 17, 17 }
                    },
-                   {},
-                   {},
-                   Result::HasDuplicates
+               };
+
+    QTest::addRow("sourceLocations")
+            << testFile(u"testPluginData/sourceLocations_pluginTest.qml"_s)
+            << Result{
+                   {
+                     // Specific binding for specific property
+                     Message{ u"Saw binding on Item property x with value QString (and type 8) in scope Item"_s, 5, 12 },
+                     Message{ u"Saw binding on Item property EnterKey.type with value Qt::EnterKeyType (and type 8) in scope QQuickEnterKeyAttached"_s, 8, 24 },
+                     Message{ u"Saw binding on Item property x with value QJSPrimitiveValue (and type 8) in scope Item"_s, 11, 12 },
+                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s, 14, 12 },
+                     Message{ u"Saw binding on Item property onXChanged with value function (and type 8) in scope Item"_s, 18, 21 },
+                     Message{ u"Saw read on ObjectPrototype property log in scope Ite"_s, 21, 36 },
+                     Message{ u"Saw binding on Item property onXChanged with value QVariant (and type 8) in scope Item"_s, 22, 21 },
+                     Message{ u"Saw write on Item property x with value double in scope Item"_s, 30, 17 },
+                     Message{ u"Saw write on Item property x with value int in scope Item"_s, 35, 31 },
+                     Message{ u"Saw read on Item property x in scope Item"_s, 35, 46 },
+                   },
                };
     QTest::addRow("controlsWithQuick_pluginTest")
             << testFile(u"testPluginData/controlsWithQuick_pluginTest.qml"_s)

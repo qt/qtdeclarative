@@ -205,6 +205,7 @@ private:
     PropertyResolution propertyResolution(QQmlJSScope::ConstPtr scope, const QString &type) const;
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
+    QQmlJS::SourceLocation getCurrentNonEmptySourceLocation() const;
 
     void checkConversion(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to);
     void generateUnaryArithmeticOperation(QQmlJSTypeResolver::UnaryOperator op);

@@ -87,15 +87,14 @@ QQmlJSCompilePass::BlocksAndAnnotations QQmlJSTypePropagator::run(const Function
 
 void QQmlJSTypePropagator::generate_ret_SAcheck()
 {
-    if (!m_function->isProperty)
-        return;
+    const QQmlJS::SourceLocation location = m_function->isProperty
+            ? getCurrentBindingSourceLocation()
+            : getCurrentNonEmptySourceLocation();
     QQmlSA::PassManagerPrivate::get(m_passManager)
-            ->analyzeBinding(QQmlJSScope::createQQmlSAElement(
-                                     m_function->qmlScope.containedType()),
-                             QQmlJSScope::createQQmlSAElement(
-                                     m_state.accumulatorIn().containedType()),
-                             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                                     getCurrentBindingSourceLocation()));
+            ->analyzeBinding(
+                    QQmlJSScope::createQQmlSAElement(m_function->qmlScope.containedType()),
+                    QQmlJSScope::createQQmlSAElement(m_state.accumulatorIn().containedType()),
+                    QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(location));
 }
 void QQmlJSTypePropagator::generate_Ret()
 {
@@ -304,6 +303,22 @@ QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentBindingSourceLocation() c
 
     Q_ASSERT(!entries.isEmpty());
     return combine(entries.constFirst().location, entries.constLast().location);
+}
+
+QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentNonEmptySourceLocation() const
+{
+    Q_ASSERT(m_function->sourceLocations);
+    const auto &entries = m_function->sourceLocations->entries;
+
+    auto item = std::lower_bound(entries.cbegin(), entries.cend(), currentInstructionOffset(),
+                                 [](auto entry, uint offset) { return entry.offset < offset; });
+    Q_ASSERT(item != entries.end());
+
+    // filter out empty locations
+    while (item->location.length == 0 && item != entries.begin()) {
+        --item;
+    }
+    return item->location;
 }
 
 void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isMethod) const
@@ -570,7 +585,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup_SAcheck(const Q
             QQmlJSScope::createQQmlSAElement(qmlScope), name,
             QQmlJSScope::createQQmlSAElement(qmlScope),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                    getCurrentBindingSourceLocation()));
+                    getCurrentNonEmptySourceLocation()));
 }
 
 
@@ -624,7 +639,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon_SAcheck(const QQmlJSRegister
             QQmlJSScope::createQQmlSAElement(in.containedType()),
             QQmlJSScope::createQQmlSAElement(qmlScope),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                    getCurrentBindingSourceLocation()));
+                    getCurrentNonEmptySourceLocation()));
 }
 
 /*!
@@ -820,7 +835,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup_SAcheck(const QString &proper
                     ? m_attachedContext
                     : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                    getCurrentBindingSourceLocation()));
+                    getCurrentNonEmptySourceLocation()));
 }
 
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, int lookupIndex)
@@ -1021,7 +1036,7 @@ void QQmlJSTypePropagator::generate_StoreProperty_SAcheck(const QString property
                     ? m_attachedContext
                     : m_function->qmlScope.containedType()),
             QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                    getCurrentBindingSourceLocation()));
+                    getCurrentNonEmptySourceLocation()));
 }
 
 void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
@@ -1202,11 +1217,11 @@ void QQmlJSTypePropagator::generate_CallProperty_SCconsole(int base, int argc, i
 void QQmlJSTypePropagator::generate_callProperty_SAcheck(const QString propertyName, const QQmlJSScope::ConstPtr &baseType)
 {
     // TODO: Should there be an analyzeCall() in the future? (w. corresponding onCall in Pass)
-    QQmlSA::PassManagerPrivate::get(m_passManager)->analyzeRead(
-            QQmlJSScope::createQQmlSAElement(baseType), propertyName,
-            QQmlJSScope::createQQmlSAElement(m_function->qmlScope.containedType()),
-            QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
-                    getCurrentBindingSourceLocation()));
+    QQmlSA::PassManagerPrivate::get(m_passManager)
+            ->analyzeRead(QQmlJSScope::createQQmlSAElement(baseType), propertyName,
+                          QQmlJSScope::createQQmlSAElement(m_function->qmlScope.containedType()),
+                          QQmlSA::SourceLocationPrivate::createQQmlSASourceLocation(
+                                  getCurrentSourceLocation()));
 }
 
 void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int argc, int argv)
