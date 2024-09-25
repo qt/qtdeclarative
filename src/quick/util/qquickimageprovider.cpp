@@ -259,6 +259,8 @@ void QQuickImageResponse::cancel()
     Note that the example registers the provider via a \l{QQmlEngineExtensionPlugin}{plugin}
     instead of registering it in the application \c main() function as shown above.
 
+    It is possible to provide \l {High Resolution Versions of Images}{"@nx" high DPI syntax}.
+
 
     \section2 Asynchronous Image Loading
 
