@@ -1501,6 +1501,11 @@ void tst_QQuickMenu::subMenuMouse()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
+    // Ensure Qt's view of where the mouse is is outside of the
+    // window, even if moveMouseAway() could not use QCursor::setPos()
+    // to do that.
+    QTest::mouseMove(window, QPoint(-1, -1));
+
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
     mainMenu->setCascade(cascade);
