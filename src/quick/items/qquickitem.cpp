@@ -2128,6 +2128,13 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 
     \value ItemEnabledHasChanged The item's enabled state has changed.
     ItemChangeData::boolValue contains the new enabled state. (since Qt 5.10)
+
+    \value ItemScaleHasChanged The item's scale has changed.
+    ItemChangeData::realValue contains the scale. (since Qt 6.9)
+
+    \value ItemTransformHasChanged The item's transform has changed. This
+    occurs when the item's position, size, rotation, scale, transformOrigin
+    or attached transforms change. (since Qt 6.9)
 */
 
 /*!
@@ -2165,6 +2172,7 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
     \variable QQuickItem::ItemChangeData::realValue
     The numeric value that has changed: \l {QQuickItem::opacity()}{opacity},
     \l {QQuickItem::rotation()}{rotation}, or
+    \l {QQuickItem::scale()}{scale}, or
     \l {QScreen::devicePixelRatio}{device pixel ratio}.
     \sa QQuickItem::ItemChange
  */
@@ -5453,6 +5461,8 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
     // so each time the item moves in the viewport, its clipnode needs to be updated.
     if (thisWantsIt && q->clip() && !(dirtyAttributes & QQuickItemPrivate::Clip))
         dirty(QQuickItemPrivate::Clip);
+
+    itemChange(QQuickItem::ItemTransformHasChanged, true);
     return ret;
 }
 
@@ -6291,6 +6301,8 @@ void QQuickItem::setScale(qreal s)
 
     d->dirty(QQuickItemPrivate::BasicTransform);
 
+    d->itemChange(ItemScaleHasChanged, s);
+
     emit scaleChanged();
 }
 
@@ -6884,6 +6896,16 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     case QQuickItem::ItemRotationHasChanged: {
         q->itemChange(change, data);
         notifyChangeListeners(QQuickItemPrivate::Rotation, &QQuickItemChangeListener::itemRotationChanged, q);
+        break;
+    }
+    case QQuickItem::ItemScaleHasChanged: {
+        q->itemChange(change, data);
+        notifyChangeListeners(QQuickItemPrivate::Scale, &QQuickItemChangeListener::itemScaleChanged, q);
+        break;
+    }
+    case QQuickItem::ItemTransformHasChanged: {
+        q->itemChange(change, data);
+        notifyChangeListeners(QQuickItemPrivate::Matrix, &QQuickItemChangeListener::itemTransformChanged, q);
         break;
     }
     case QQuickItem::ItemAntialiasingHasChanged:

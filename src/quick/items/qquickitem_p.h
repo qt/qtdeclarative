@@ -313,6 +313,8 @@ public:
         ImplicitHeight = 0x200,
         Enabled = 0x400,
         Focus = 0x800,
+        Scale = 0x1000,
+        Matrix = 0x2000,
         AllChanges = 0xFFFFFFFF
     };
 

@@ -15,6 +15,7 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickanchors_p.h>
+#include <QtQuick/private/qquicktranslate_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -3309,6 +3310,14 @@ struct TestListener : public QQuickItemChangeListener
     {
         record(item, QQuickItemPrivate::Rotation);
     }
+    void itemScaleChanged(QQuickItem *item) override
+    {
+        record(item, QQuickItemPrivate::Scale);
+    }
+    void itemTransformChanged(QQuickItem *item) override
+    {
+        record(item, QQuickItemPrivate::Matrix);
+    }
     void itemImplicitWidthChanged(QQuickItem *item) override
     {
         record(item, QQuickItemPrivate::ImplicitWidth);
@@ -3372,19 +3381,23 @@ void tst_QQuickItem::changeListener()
 
     item->setImplicitWidth(10);
     QCOMPARE(itemListener.count(QQuickItemPrivate::ImplicitWidth), 1);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 1);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 1);
     QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,0,0)));
 
     item->setImplicitHeight(20);
     QCOMPARE(itemListener.count(QQuickItemPrivate::ImplicitHeight), 1);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 2);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 2);
     QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,10,0)));
 
     item->setWidth(item->width() + 30);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 3);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 3);
     QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,10,20)));
 
     item->setHeight(item->height() + 40);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 4);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Geometry), 4);
     QCOMPARE(itemListener.value(QQuickItemPrivate::Geometry), QVariant(QRectF(0,0,40,20)));
 
@@ -3392,10 +3405,25 @@ void tst_QQuickItem::changeListener()
     QCOMPARE(itemListener.count(QQuickItemPrivate::Opacity), 1);
 
     item->setRotation(90);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 5);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Rotation), 1);
 
+    item->setScale(2);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 6);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Scale), 1);
+
     item->setParentItem(window.contentItem());
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 7);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Parent), 1);
+
+    auto itemTransform = new QQuickTranslate(item);
+    itemTransform->setX(1);
+    auto list = item->transform();
+    list.append(&list, itemTransform);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 8);
+
+    itemTransform->setX(2);
+    QCOMPARE(itemListener.count(QQuickItemPrivate::Matrix), 9);
 
     item->setVisible(false);
     QCOMPARE(itemListener.count(QQuickItemPrivate::Visibility), 1);
@@ -3469,6 +3497,24 @@ void tst_QQuickItem::changeListener()
     parent->setRotation(90);
     for (TestListener *listener : std::as_const(listeners))
         QCOMPARE(listener->count(QQuickItemPrivate::Rotation), 1);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
+
+    // itemScaleChanged x 5
+    for (TestListener *listener : std::as_const(listeners))
+        QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Scale);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
+    parent->setScale(0.5);
+    for (TestListener *listener : std::as_const(listeners))
+        QCOMPARE(listener->count(QQuickItemPrivate::Scale), 1);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
+
+    // itemTransformChanged x 5
+    for (TestListener *listener : std::as_const(listeners))
+        QQuickItemPrivate::get(parent)->addItemChangeListener(listener, QQuickItemPrivate::Matrix);
+    QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), listeners.size());
+    parent->setX(parent->x() + 1);
+    for (TestListener *listener : std::as_const(listeners))
+        QCOMPARE(listener->count(QQuickItemPrivate::Matrix), 1);
     QCOMPARE(QQuickItemPrivate::get(parent)->changeListeners.size(), 0);
 
     // itemOpacityChanged x 5

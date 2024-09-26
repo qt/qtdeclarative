@@ -152,7 +152,9 @@ public:
         ItemRotationHasChanged,    // value.realValue
         ItemAntialiasingHasChanged, // value.boolValue
         ItemDevicePixelRatioHasChanged, // value.realValue
-        ItemEnabledHasChanged      // value.boolValue
+        ItemEnabledHasChanged,     // value.boolValue
+        ItemScaleHasChanged,       // value.realValue
+        ItemTransformHasChanged    // value.boolValue
     };
     Q_ENUM(ItemChange)
 

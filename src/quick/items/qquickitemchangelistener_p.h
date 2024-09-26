@@ -99,6 +99,8 @@ public:
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}
     virtual void itemFocusChanged(QQuickItem *, Qt::FocusReason /* reason */) {}
+    virtual void itemScaleChanged(QQuickItem *) {}
+    virtual void itemTransformChanged(QQuickItem *) {}
 
     virtual QQuickAnchorsPrivate *anchorPrivate() { return nullptr; }
 };
