@@ -15,6 +15,7 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qjsvalue_p.h>
+#include <QtCore/private/qcoreapplication_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -2501,8 +2502,10 @@ void QQmlDelegateModelItem::destroyObject()
      * application exit, normal event loop will handle the deferred deletion
      * earlier.
      */
-    if (object->parent() == nullptr)
-        object->setParent(QCoreApplication::instance());
+    if (Q_UNLIKELY(static_cast<QCoreApplicationPrivate *>(QCoreApplicationPrivate::get(QCoreApplication::instance()))->aboutToQuitEmitted)) {
+        if (object->parent() == nullptr)
+            object->setParent(QCoreApplication::instance());
+    }
     object->deleteLater();
 
     if (attached) {
