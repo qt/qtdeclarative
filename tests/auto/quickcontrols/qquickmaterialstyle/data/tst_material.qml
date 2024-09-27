@@ -1401,4 +1401,15 @@ TestCase {
         TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
         tryCompare(window.Material, "theme", TestHelper.platformTheme)
     }
+
+    // QTBUG-85860
+    function test_busyIndicatorRunningChangedQuickly() {
+        let busyIndicator = createTemporaryObject(busyIndicatorComponent, testCase)
+        verify(busyIndicator)
+
+        busyIndicator.running = false
+        busyIndicator.running = true
+
+        tryCompare(busyIndicator.contentItem, "visible", true)
+    }
 }
