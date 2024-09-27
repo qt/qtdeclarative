@@ -1153,9 +1153,9 @@ namespace QQmlPrivate
     Q_QML_EXPORT void qmlRegistrationWarning(QmlRegistrationWarning warning, QMetaType type);
 
     Q_QML_EXPORT QMetaType compositeMetaType(
-            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
+            QV4::ExecutableCompilationUnit *unit, int elementNameId);
     Q_QML_EXPORT QMetaType compositeListMetaType(
-            QV4::ExecutableCompilationUnit *unit, const QString &elementName);
+            QV4::ExecutableCompilationUnit *unit, int elementNameId);
 
 } // namespace QQmlPrivate
 

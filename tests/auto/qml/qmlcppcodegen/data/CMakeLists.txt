@@ -174,6 +174,7 @@ set(qml_files
     interactive.qml
     interceptor.qml
     internalConversion.qml
+    invalidateCompositeType.qml
     invisibleBase.qml
     invisibleListElementType.qml
     invisibleTypes.qml

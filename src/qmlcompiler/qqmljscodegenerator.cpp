@@ -77,18 +77,14 @@ QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type)
 
 QString QQmlJSCodeGenerator::compositeListMetaType(const QString &elementName) const
 {
-    return u"[](auto *aotContext) { static const auto t = QQmlPrivate::compositeListMetaType("
-           "aotContext->compilationUnit, QStringLiteral(\""_s
-            + elementName
-            + u"\")); return t; }(aotContext)"_s;
+    return u"QQmlPrivate::compositeListMetaType(aotContext->compilationUnit, "_s
+            + QString::number(m_jsUnitGenerator->getStringId(elementName)) + u")"_s;
 }
 
 QString QQmlJSCodeGenerator::compositeMetaType(const QString &elementName) const
 {
-    return u"[](auto *aotContext) { static const auto t = QQmlPrivate::compositeMetaType("
-           "aotContext->compilationUnit, QStringLiteral(\""_s
-            + elementName
-            + u"\")); return t; }(aotContext)"_s;
+    return u"QQmlPrivate::compositeMetaType(aotContext->compilationUnit, "_s
+            + QString::number(m_jsUnitGenerator->getStringId(elementName)) + u")"_s;
 }
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)

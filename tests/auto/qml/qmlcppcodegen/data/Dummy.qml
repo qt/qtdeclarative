@@ -6,6 +6,7 @@ Item {
     enum DummyEnum { DummyValue1, DummyValue2, DummyValue3 = 33 }
     property int value
     property Dummy child
+    property Dummy2 child2 : Dummy2 {}
     property int dummyEnum
 
     component Group: QtObject {
