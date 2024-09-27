@@ -15,15 +15,17 @@
 // We mean it.
 //
 
-#include <private/qqmltype_p.h>
-#include <private/qstringhash_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmlpropertycache_p.h>
 #include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmlrefcount_p.h>
-#include <private/qqmlpropertycache_p.h>
-#include <private/qqmlmetatype_p.h>
+#include <private/qqmltype_p.h>
 #include <private/qqmltypeloader_p.h>
-#include <private/qv4executablecompilationunit_p.h>
+#include <private/qstringhash_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4resolvedtypereference_p.h>
 
 #include <QAtomicInteger>
 
@@ -234,25 +236,41 @@ public:
         return nullptr;
     }
 
-    static QQmlType compositeQmlType(
-            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit,
-            QQmlTypeLoader *typeLoader, const QString &type)
+    // Tries the base unit's resolvedTypes first. If successful, that is cheap
+    // because it's just a hash. Otherwise falls back to typeNameCache.
+    // typeNameCache is slower because it will do a generic type search on all imports.
+    // This can involve iterating all the types of an import or querying QQmlMetaType for
+    // further details.
+    // TODO: Not all referenced types are pre-resolved when loading. That should be fixed.
+    //       In particular, types only used in function signatures are not resolved.
+    static QQmlType visibleQmlTypeByName(
+            const QV4::ExecutableCompilationUnit *unit, int elementNameId,
+            QQmlTypeLoader *typeLoader = nullptr)
     {
-        Q_ASSERT(typeLoader);
+        const auto &base = unit->baseCompilationUnit();
+        const auto it = base->resolvedTypes.constFind(elementNameId);
+        if (it == base->resolvedTypes.constEnd()) {
+            const QQmlType qmltype = base->typeNameCache->query<QQmlImport::AllowRecursion>(
+                    base->stringAt(elementNameId),
+                    typeLoader ? typeLoader : unit->engine->typeLoader()).type;
 
-        const QQmlType qmltype
-                = unit->typeNameCache->query<QQmlImport::AllowRecursion>(type, typeLoader).type;
-        if (!qmltype.isValid())
+            if (qmltype.isValid() && qmltype.isInlineComponentType()
+                    && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
+                // If it seems to be an IC type, make sure there is an actual
+                // compilation unit for it. We create inline component types speculatively.
+                return QQmlType();
+            }
+
             return qmltype;
-
-        if (qmltype.isInlineComponentType()
-                && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
-            // If it seems to be an IC type, make sure there is an actual
-            // compilation unit for it. We create inline component types speculatively.
-            return QQmlType();
         }
 
-        return qmltype;
+        if (const QQmlType type = (*it)->type(); type.isValid())
+            return type;
+
+        if (const auto cu = (*it)->compilationUnit())
+            return cu->qmlType;
+
+        return QQmlType();
     }
 
 private:
