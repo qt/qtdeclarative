@@ -158,9 +158,7 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
         if (type == 0 || !typeLoader)
             return QQmlType();
 
-        const auto &base = unit->baseCompilationUnit();
-        const QQmlType qmltype = QQmlTypePrivate::compositeQmlType(
-                base, typeLoader, base->stringAt(type));
+        const QQmlType qmltype = QQmlTypePrivate::visibleQmlTypeByName(unit, type, typeLoader);
         return qmltype.typeId().isValid() ? qmltype : QQmlType();
     };
 

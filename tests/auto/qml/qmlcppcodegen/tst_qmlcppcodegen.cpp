@@ -138,6 +138,7 @@ private slots:
     void interestingFiles_data();
     void internalConversion();
     void invalidPropertyType();
+    void invalidateCompositeType();
     void invisibleBase();
     void invisibleListElementType();
     void invisibleSingleton();
@@ -2638,6 +2639,25 @@ void tst_QmlCppCodegen::invalidPropertyType()
 
     o->setProperty("useListDelegate", QVariant::fromValue<bool>(true));
     QVERIFY(myCppType->useListDelegate());
+}
+
+void tst_QmlCppCodegen::invalidateCompositeType()
+{
+    for (int i = 0; i < 3; ++i) {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/invalidateCompositeType.qml"_s));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+
+        QObject *d = o->property("d").value<QObject *>();
+        QVERIFY(d);
+        QCOMPARE(o->property("d2").value<QObject *>(), d);
+
+        QObject *group = d->property("child2").value<QObject *>();
+        QVERIFY(group);
+        QCOMPARE(o->property("d3").value<QObject *>(), group);
+    }
 }
 
 void tst_QmlCppCodegen::invisibleBase()
