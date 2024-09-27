@@ -44,6 +44,7 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
 
 private:
+    bool m_running = false;
     QColor m_color;
 };
 
