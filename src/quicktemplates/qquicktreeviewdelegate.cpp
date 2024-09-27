@@ -26,14 +26,14 @@ QT_BEGIN_NAMESPACE
     It renders the tree, as well as the other columns, in the view
     using the application style.
 
-    \code
+    \qml
     TreeView {
         anchors.fill: parent
         delegate: TreeViewDelegate {}
         // The model needs to be a QAbstractItemModel
         // model: yourTreeModel
     }
-    \endcode
+    \endqml
 
     TreeViewDelegate inherits \l ItemDelegate, which means that
     it's composed of three items: a \l[QML]{Control::}{background},
@@ -49,13 +49,13 @@ QT_BEGIN_NAMESPACE
     \l [QML] {Item::x}{x position} of the indicator, taking the \l depth and
     \l indentation into account. Below is an example of how to do that:
 
-    \code
+    \qml
     TreeViewDelegate {
         indicator: Item {
             x: leftMargin + (depth * indentation)
         }
     }
-    \endcode
+    \endqml
 
     The position of the contentItem is controlled with \l [QML]{Control::}{padding}.
     This means that you can change the contentItem without dealing with indentation.
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
     click, or which modifiers are being held. If this is needed, a better approach would
     be to use pointer handlers, for example:
 
-    \code
+    \qml
     TreeView {
         id: treeView
         delegate: TreeViewDelegate {
@@ -97,7 +97,7 @@ QT_BEGIN_NAMESPACE
             }
         }
     }
-    \endcode
+    \endqml
 
     \note If you want to disable the default behavior that occurs when the
     user clicks on the delegate (like changing the current index), you can set

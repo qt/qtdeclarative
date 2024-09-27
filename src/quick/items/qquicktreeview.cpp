@@ -29,13 +29,46 @@
     parent-child depth in the model, it will end up looking like a tree, even
     if it's technically still just a flat list of items.
 
-    To allow for maximum flexibility, TreeView itself will not position the delegate
-    items into a tree structure. This burden is placed on the delegate.
-    \l {Qt Quick Controls} offers a ready-made TreeViewDelegate that can be
-    used for this, which has the advantage that it works out-of-the-box and
-    renders a tree which follows the style of the platform where the application runs.
+    \section2 Declare a TreeView
 
-    Even if TreeViewDelegate is customizable, there might be situations
+    TreeView is a data bound control, so it cannot show anything without a
+    data model. You cannot declare tree nodes in QML.
+
+    When you declare a TreeView, you need to specify:
+
+    \list
+      \li \b{A data model}. TreeView can work with data models that derive from
+        \l QAbstractItemModel.
+      \li \b{A delegate}. A delegate is a template that specifies how the tree
+        nodes are displayed in the UI.
+    \endlist
+
+    \qml
+    TreeView {
+        // The model needs to be a QAbstractItemModel
+        model: myTreeModel
+        // You can set a custom delegate or use a built-in TreeViewDelegate
+        delegate: TreeViewDelegate {}
+    }
+    \endqml
+
+    \section2 Creating a data model
+
+    A TreeView only accepts a model that inherits \l QAbstractItemModel.
+
+    For information on how to create and use a custom tree model, see the
+    example: \l {Qt Quick Controls - Table of Contents}.
+
+    \section2 Customize tree nodes
+
+    For better flexibility, TreeView itself doesn't position the delegate items
+    into a tree structure. This burden is placed on the delegate.
+    \l {Qt Quick Controls} offers a ready-made \l TreeViewDelegate that can be
+    used for this, which has the advantage that it works out-of-the-box and
+    renders a tree which follows the style of the platform where the application
+    runs.
+
+    Even if \l TreeViewDelegate is customizable, there might be situations
     where you want to render the tree in a different way, or ensure that
     the delegate ends up as minimal as possible, perhaps for performance reasons.
     Creating your own delegate from scratch is easy, since TreeView offers
@@ -46,8 +79,6 @@
 
     \snippet qml/treeview/qml-customdelegate.qml 0
 
-    More information on how to create and use a custom tree model can be found
-    in the example \l {Qt Quick Controls - Table of Contents}
 
     The properties that are marked as \c required will be filled in by
     TreeView, and are similar to attached properties. By marking them as
@@ -82,6 +113,8 @@
 
     See also \l {Required Properties}.
 
+    \section2 End-user interaction
+
     By default, TreeView \l {toggleExpanded()}{toggles} the expanded state
     of a row when you double tap on it. Since this is in conflict with
     double tapping to edit a cell, TreeView sets \l {TableView::}{editTriggers} to
@@ -90,7 +123,6 @@
     If you change \l {TableView::}{editTriggers} to also contain \c TableView.DoubleTapped,
     toggling the expanded state with a double tap will be disabled.
 
-    \note A TreeView only accepts a model that inherits \l QAbstractItemModel.
 */
 
 /*!
