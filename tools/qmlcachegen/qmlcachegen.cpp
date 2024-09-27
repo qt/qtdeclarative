@@ -141,16 +141,15 @@ int main(int argc, char **argv)
         target = GenerateLoaderStandAlone;
 
     if (parser.isSet(onlyBytecode)) {
-        const std::array<QCommandLineOption *, 5> compilerOnlyOptions{
-            &directCallsOption, &staticOption, &validateBasicBlocksOption, &dumpAotStatsOption,
-            &moduleIdOption
+        const std::array<QCommandLineOption *, 3> compilerOnlyOptions{
+            &directCallsOption, &staticOption, &validateBasicBlocksOption
         };
 
         for (auto *compilerOnlyOption : compilerOnlyOptions) {
             if (parser.isSet(*compilerOnlyOption)) {
                 std::string name = compilerOnlyOption->names().first().toStdString();
                 fprintf(stderr, "Passing mutually exclusive options \"only-bytecode\" and \"%s\".\n"
-                                "Remove --only-bytecode to be able to use compiler options like --%s",
+                                "Remove --only-bytecode to be able to use compiler options like --%s\n",
                         name.c_str(), name.c_str());
                 return EXIT_FAILURE;
             }
