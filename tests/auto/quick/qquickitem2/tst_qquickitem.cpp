@@ -62,6 +62,9 @@ private slots:
     void nextItemInFocusChain2();
     void nextItemInFocusChain3();
 
+    void nextItemInFocusChainWrap_data();
+    void nextItemInFocusChainWrap();
+
     void tabFence();
     void qtbug_50516();
     void qtbug_50516_2_data();
@@ -1328,6 +1331,64 @@ void tst_QQuickItem::nextItemInFocusChain3()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QCOMPARE(QGuiApplication::focusWindow(), window);
+}
+
+void tst_QQuickItem::nextItemInFocusChainWrap_data()
+{
+    QTest::addColumn<bool>("wrap");
+    QTest::addColumn<bool>("forward");
+    QTest::addRow("Wrap: true, Tab") << true << true;
+    QTest::addRow("Wrap: false, Tab") << false << true;
+    QTest::addRow("Wrap: true, Backtab") << true << false;
+    QTest::addRow("Wrap: false, Backtab") << false << false;
+}
+
+void tst_QQuickItem::nextItemInFocusChainWrap()
+{
+    if (!qt_tab_all_widgets())
+        QSKIP("This function doesn't support NOT iterating all.");
+
+    QFETCH(bool, wrap);
+    QFETCH(bool, forward);
+
+    QQuickView window;
+    window.setBaseSize(QSize(300, 300));
+    window.setSource(testFileUrl("focusChainWrap.qml"));
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(&window));
+    QCOMPARE(QGuiApplication::focusWindow(), &window);
+
+    QQuickItem *rect1 = findItem<QQuickItem>(window.rootObject(), "rect1");
+    QQuickItem *rect11 = findItem<QQuickItem>(window.rootObject(), "rect11");
+    QQuickItem *rect12 = findItem<QQuickItem>(window.rootObject(), "rect12");
+    QQuickItem *rect13 = findItem<QQuickItem>(window.rootObject(), "rect13");
+    QQuickItem *rect2 = findItem<QQuickItem>(window.rootObject(), "rect2");
+    QQuickItem *rect21 = findItem<QQuickItem>(window.rootObject(), "rect21");
+    QQuickItem *rect22 = findItem<QQuickItem>(window.rootObject(), "rect22");
+    QQuickItem *rect23 = findItem<QQuickItem>(window.rootObject(), "rect23");
+
+    QList<QQuickItem *> expectedFocusChain = { rect1, rect11, rect12, rect13,
+                                            rect2, rect21, rect22, rect23 };
+    if (!forward)
+        std::reverse(expectedFocusChain.begin(), expectedFocusChain.end());
+
+    expectedFocusChain.at(0)->forceActiveFocus();
+    QQuickItem *activeFocusItem = window.activeFocusItem();
+    QTRY_COMPARE(activeFocusItem, expectedFocusChain.at(0));
+
+    const Qt::Key tabKey = forward ? Qt::Key_Tab : Qt::Key_Backtab;
+    for (int i = 1; i < expectedFocusChain.size(); i++) {
+        QVERIFY(activeFocusItem);
+        const auto nextPrev = QQuickItemPrivate::nextPrevItemInTabFocusChain(activeFocusItem, forward, wrap);
+        QCOMPARE(nextPrev, expectedFocusChain.at(i));
+        QTest::keyClick(&window, tabKey);
+        QTRY_VERIFY(nextPrev->hasActiveFocus());
+        activeFocusItem = window.activeFocusItem();
+    }
+    QCOMPARE(activeFocusItem, expectedFocusChain.last());
+    const auto nextPrev = QQuickItemPrivate::nextPrevItemInTabFocusChain(activeFocusItem, forward, wrap);
+    QCOMPARE(nextPrev, wrap ? expectedFocusChain.at(0) : nullptr);
 }
 
 void verifyTabFocusChain(QQuickView *window, const char **focusChain, bool forward)
