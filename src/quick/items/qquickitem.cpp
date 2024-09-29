@@ -2635,11 +2635,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             }
             current = parent;
         } else if (hasChildren) {
-            if (!wrap && (forward || firstFromItem != from)) {
+            if (!wrap) {
                 qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain:"
-                                 << "Focus chain about to wrap.";
-                // If focus chain wraps, we should give the parent window
-                // a chance to get focus, so we should stop here
+                                 << "Focus chain about to wrap but wrapping was set to false."
+                                 << "Returning.";
                 return nullptr;
             }
 
