@@ -1463,7 +1463,15 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
 GCStateMachine::GCStateMachine()
 {
     // base assumption: target 60fps, use at most 1/3 of time for gc
-    timeLimit = std::chrono::milliseconds { (1000 / 60) / 3 };
+    // unless overridden by env variable
+    bool ok = false;
+    auto envTimeLimit = qEnvironmentVariableIntValue("QV4_GC_TIMELIMIT", &ok );
+    if (!ok)
+        envTimeLimit = (1000 / 60) / 3;
+    if (envTimeLimit > 0)
+        timeLimit = std::chrono::milliseconds { envTimeLimit };
+    else
+        timeLimit = std::chrono::milliseconds { 0 };
 }
 
 void GCStateMachine::transition() {
