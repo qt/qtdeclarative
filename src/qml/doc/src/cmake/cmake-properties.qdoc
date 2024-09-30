@@ -223,7 +223,7 @@ To mark a \c {.qml} file for code generation, set its \c QT_QML_GENERATE_ANDROID
 source property to \c TRUE. The source property must be set before
 \l {qt_add_qml_module}{creating} the module. \note The \c {.qml} file name must start with
 an uppercase letter and define a QML component. This property is valid only if
-\l QT_ANDROID_GENERATE_JAVA_QML_COMPONENTS is defined.
+\l QT_ANDROID_GENERATE_JAVA_QTQUICKVIEW_CONTENTS is defined.
 
 \sa {Naming Custom QML Object Types}
 */

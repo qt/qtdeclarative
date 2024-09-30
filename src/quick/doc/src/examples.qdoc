@@ -186,5 +186,13 @@ Creator.
         \li \l{Qt Quick Examples - Embedded in Widgets}{Embedding a QQuickView as Native Window}
         \endlist
     \enddiv
+        \div {class="doc-column"}
+        \b{Qt Quick for Android}
+        \list
+        \li \l{Qt Quick for Android Studio Projects}
+        \li \l{Exposing QtAbstractListModel to QML}
+        \li \l{Using QtAbstractItemModel in Android Studio Projects}
+        \endlist
+    \enddiv
 \enddiv
 */
