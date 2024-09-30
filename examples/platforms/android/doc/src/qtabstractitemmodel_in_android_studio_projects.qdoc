@@ -3,7 +3,7 @@
 
 /*!
     \page qtabstractitemmodel-in-android-studio-projects-example.html
-    \title QtAbstractItemModel Example in Android Studio Projects
+    \title Using QtAbstractItemModel in Android Studio Projects
     \brief Shows how to handle complex data types and apply conditional
     formatting to a table view format using QtAbstractItemModel class and
     QtModelIndex class.
