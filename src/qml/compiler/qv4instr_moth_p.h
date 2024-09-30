@@ -525,6 +525,78 @@ union Instr
     static bool isNarrow(Type t) { return !(int(t) & 1); }
     static int encodedLength(Type t) { return int(t) >= 256 ? 2 : 1; }
 
+    /*!
+     * \internal
+     *
+     * Bytecode format:
+     *
+     * Instructions are compacted in the bytecode to save space. Every instruction gets compacted
+     * independently. There are many possible layouts coming in 4 main varieties based on two
+     * factors:
+     *
+     * If the instruction's Type <= 255, the OP code is encoded using only one byte.
+     * Otherwise, the first byte is 0x1 and the second byte is Type & 0xff.
+     *
+     * If the instruction takes arguments and they each fit in one byte, encode them this way.
+     * Otherwise, each argument is encoded using 4 bytes in little endian. In both cases, only
+     * the arguments actually needed by the instruction are encoded.
+     * Each instruction type receives two consecutive values in Instr::Type. The even variant has
+     * narrow arguments and the odd one has wide arguments and gets the suffix "_Wide".
+     *
+     * The 4 main formats with arg counts ranging from 0 to 4 (x: OP code bits, abcd: argument bits):
+     * 1. 00000001 xxxxxxx0 aaaaaaaa bbbbbbbb cccccccc dddddddd
+     * 2. 00000001 xxxxxxx1 aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb bbbbbbbb bbbbbbbb cccccccc cccccccc cccccccc cccccccc dddddddd dddddddd dddddddd dddddddd
+     * 3. xxxxxxx0 aaaaaaaa bbbbbbbb cccccccc dddddddd
+     * 4. xxxxxxx1 aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa bbbbbbbb bbbbbbbb bbbbbbbb bbbbbbbb cccccccc cccccccc cccccccc cccccccc dddddddd dddddddd dddddddd dddddddd
+     *
+     * 1. Wide instruction OP code, Narrow arguments
+     * 2. Wide instruction OP code, Wide arguments
+     * 3. Narrow instruction OP code, Narrow arguments
+     * 4. Narrow instruction OP code, Wide arguments
+     *
+     *
+     * The current design has a few nice properties:
+     * -The argument encoding width can be determined by simply checking for the lowest bit of the
+     *  instruction Type.
+     * -The 127 first instructions (Nop is first and each instruction has a normal and Wide
+     *  argument encoding variant) will have their OP code encoded on 1 byte. This is currently the
+     *  vast majority of them. All but the rarest or slowest instructions can therefore have a
+     *  compact encoding of their OP code.
+     *
+     *
+     * Examples:
+     *
+     * LoadInt 127:
+     *  LoadInt is the 8th instruction added after Nop. Its value in Type is <= 255 so its OP code
+     *  is encoded on 1 byte. It takes one argument which can be encoded losslessly in a signed
+     *  byte. It therefore uses narrow argument encoding. Its bytecode encoding in HEX is thus:
+     *  10 7f
+     *  |  |
+     *  |  --> ARG1: 127
+     *  -----> OP: 8th instruction; each comes in normal and _Wide variant => 2*8=16 or 0x10
+     *
+     * LoadInt 128:
+     *  This time, not all arguments fit in one byte. Wide argument encoding is used.
+     *  The bytecode encoding in HEX is thus.
+     *  11 80 00 00 00
+     *  |  |  |  |  |
+     *  |  -----------> ARG1: Little endian representation of 128 (not in two's complement form)
+     *  --------------> OP: The instruction became LoadInt_Wide.
+     *
+     * InitializeBlockDeadTemporalZone r1, 1
+     *  This instruction is the 129th instruction added after Nop. Its value is > 255 so its OP
+     *  code is encoded on 2 bytes. It takes 2 arguments which each fit in one byte.
+     *  The bytecode encoding in HEX is thus:
+     *  01 02 07 01
+     *  |  |  |  |
+     *  |  |  |  --> ARG2
+     *  |  |  -----> ARG1
+     *  |  --------> OP: 2-byte OP code -> Type value 258 & 0xff = 2
+     *  -----------> OP: 2-byte OP code -> 0x1 prefix
+     *
+     *
+     * See also: QV4_SHOW_BYTECODE and dumpBytecode for much easier debugging
+     */
     static Type unpack(const uchar *c) { if (c[0] == 0x1) return Type(0x100 + c[1]); return Type(c[0]); }
     static uchar *pack(uchar *c, Type t) {
         if (uint(t) >= 256) {
