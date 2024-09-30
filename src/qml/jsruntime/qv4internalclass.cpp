@@ -448,7 +448,9 @@ Heap::InternalClass *InternalClass::changeMember(
         return t.lookup;
 
     // create a new class and add it to the tree
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     if (data.isAccessor() && e->setterIndex == UINT_MAX) {
         Q_ASSERT(!propertyData.at(idx).isAccessor());
 
@@ -484,7 +486,8 @@ Heap::InternalClass *InternalClass::changePrototypeImpl(Heap::Object *proto)
         return t.lookup;
 
     // create a new class and add it to the tree
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     QV4::WriteBarrier::markCustom(engine, [&](QV4::MarkStack *stack) {
         if (proto && QV4::WriteBarrier::isInsertionBarrier)
             proto->mark(stack);
@@ -507,7 +510,9 @@ Heap::InternalClass *InternalClass::changeVTableImpl(const VTable *vt)
         return t.lookup;
 
     // create a new class and add it to the tree
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     newClass->vtable = vt;
 
     t.lookup = newClass;
@@ -528,7 +533,9 @@ Heap::InternalClass *InternalClass::nonExtensible()
     if (t.lookup)
         return t.lookup;
 
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     newClass->flags |= NotExtensible;
 
     t.lookup = newClass;
@@ -546,7 +553,9 @@ InternalClass *InternalClass::locked()
     if (t.lookup)
         return t.lookup;
 
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     newClass->flags |= Locked;
 
     t.lookup = newClass;
@@ -750,7 +759,9 @@ Heap::InternalClass *InternalClass::asProtoClass()
     if (t.lookup)
         return t.lookup;
 
-    Heap::InternalClass *newClass = engine->newClass(this);
+    Scope scope(engine);
+    Scoped<QV4::InternalClass> scopedNewClass(scope, engine->newClass(this));
+    auto newClass = scopedNewClass->d();
     newClass->flags |= UsedAsProto;
 
     t.lookup = newClass;
