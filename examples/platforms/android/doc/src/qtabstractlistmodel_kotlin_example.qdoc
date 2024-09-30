@@ -4,7 +4,7 @@
 /*!
     \page qtabstractlistmoder-kotlin-example.html
     \title Exposing QtAbstractListModel to QML
-    \brief Uses a \l QtAbstractListModel to share data between Android code and
+    \brief Uses the \l{QtAbstractListModel Android Class} to share data between Android code and
     a QML view.
     \ingroup qtquickexamples
 
@@ -13,7 +13,8 @@
     \image qtabstractlistmodel_portrait.png
 
     This example consists of two separate projects: A QML project and a Kotlin-based Android
-    project which will host and display the QML content. It shows how to use \l QtAbstractListModel
+    project which will host and display the QML content. It shows how to use
+    \l{QtAbstractListModel Android Class}{QtAbstractListModel}
     to share data from the Android side to the QML view which displays the data using a
     \l ListView.
 
@@ -29,7 +30,7 @@
     \snippet android/models/qtabstractlistmodel_kotlin/app/build.gradle.kts build.gradle QtBuild config
 
     For further configuration of the plugin, please refer to the
-    \l [Qt Gradle Plugin]{Configure the plugin}{Qt Gradle Plugin documentation}.
+    \l {Qt Gradle Plugin}{Qt Gradle Plugin documentation}.
 
     \section1 QML project
 
@@ -56,7 +57,7 @@
 
     \section2 Data model
 
-    The data model \c MyListModel is a child class of QtAbstractListModel, with
+    The data model \c MyListModel is a child class of \l{QtAbstractListModel Android Class}{QtAbstractListModel}, with
     \c ArrayList<String> as the internal storage system for data. In the initializer block of
     \c MyListModel, it generates some random data for the list.
 
@@ -77,7 +78,7 @@
     \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::DataRole enum
 
     When it comes to returning data from the data model, the class must override the
-    \c "QtAbstractListModel::data()" method. This method takes two parameters: \l QtModelIndex and
+    \c "QtAbstractListModel::data()" method. This method takes two parameters: \l{QtModelIndex Android Class}{QtModelIndex} and
     \c Int, which refer to the index and role of the data element, respectively.
 
     In \c "MyDataModel::data()", the \c UUID role returns the data from the given index in the
@@ -101,7 +102,7 @@
     \section2 Main activity
 
     The \c MainActivity class is a simple Kotlin-based Activity but also implements the
-    interface \c QtQmlStatusChangeListener to listen to QML loading status events. It also
+    \l{interface QtQmlStatusChangeListener} to listen to QML loading status events. It also
     stores the \c QtQuickViewContent object for the main view of the QML application and an instance
     of the data model detailed above.
 
