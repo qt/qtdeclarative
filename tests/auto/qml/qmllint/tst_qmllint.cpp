@@ -114,7 +114,10 @@ private Q_SLOTS:
     void maxWarnings();
 
 #if QT_CONFIG(library)
+    void hasTestPlugin();
+    void testPlugin_data();
     void testPlugin();
+    void testPluginOnSettings();
     void quickPlugin();
 #endif
 
@@ -2206,7 +2209,7 @@ void TestQmllint::valueTypesFromString()
 }
 
 #if QT_CONFIG(library)
-void TestQmllint::testPlugin()
+void TestQmllint::hasTestPlugin()
 {
     bool pluginFound = false;
     for (const QQmlJSLinter::Plugin &plugin : m_linter.plugins()) {
@@ -2219,41 +2222,80 @@ void TestQmllint::testPlugin()
         }
     }
     QVERIFY(pluginFound);
+}
+void TestQmllint::testPlugin_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<Result>("expectedErrors");
 
-    runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_s, 4, 5 } } });
-    runTest("propertypass_pluginTest.qml",
-            Result{ { // Specific binding for specific property
-                      Message{
-                              u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s },
+    QTest::addRow("elementpass_pluginTest")
+            << testFile(u"testPluginData/elementpass_pluginTest.qml"_s)
+            << Result{ { Message{ u"ElementTest OK"_s, 4, 5 } } };
+    QTest::addRow("propertypass_pluginTest_read")
+            << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
+            << Result{
+                   {
+                       // Property on any type
+                       Message{ u"Saw read on Text property x in scope Text"_s },
+                       Message{ u"Saw read on Text property x in scope Item"_s },
+                       // JavaScript
+                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
+                       Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
+                   },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
+    QTest::addRow("propertypass_pluginTest_write")
+            << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
+            << Result{
+                   {
+                       Message{ u"Saw write on Text property x with value int in scope Item"_s },
+                   },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
+    QTest::addRow("propertypass_pluginTest_binding")
+            << testFile(u"testPluginData/propertypass_pluginTest.qml"_s)
+            << Result{
+                   {
+                     // Specific binding for specific property
+                     Message{ u"Saw binding on Text property text with value NULL (and type 3) in scope Text"_s },
+                     Message{ u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s },
+                     Message{ u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
+                     Message{ u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
+                     Message{ u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s }
+                   },
+                   {},
+                   {},
+                   Result::HasDuplicates
+               };
+    QTest::addRow("controlsWithQuick_pluginTest")
+            << testFile(u"testPluginData/controlsWithQuick_pluginTest.qml"_s)
+            << Result{ { Message{ u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } };
+    QTest::addRow("controlsWithoutQuick_pluginTest")
+            << testFile(u"testPluginData/controlsWithoutQuick_pluginTest.qml"_s)
+            << Result{ { Message{ u"QtQuick.Controls and NO QtQuick present"_s } } };
 
-                      // Property on any type
-                      Message{ u"Saw read on Text property x in scope Text"_s },
-                      Message{
-                              u"Saw binding on Text property x with value NULL (and type 2) in scope Text"_s },
-                      Message{ u"Saw read on Text property x in scope Item"_s },
-                      Message{ u"Saw write on Text property x with value int in scope Item"_s },
-                      Message{
-                              u"Saw binding on Item property x with value NULL (and type 2) in scope Item"_s },
-                      // JavaScript
-                      Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
-                      Message{ u"Saw read on ObjectPrototype property log in scope Item"_s },
-                      // ListModel
-                      Message{
-                              u"Saw binding on ListView property model with value ListModel (and type 8) in scope ListView"_s },
-                      Message{
-                              u"Saw binding on ListView property height with value NULL (and type 2) in scope ListView"_s } },
-                    {},
-                    {},
-                    Result::HasDuplicates });
-    runTest("controlsWithQuick_pluginTest.qml",
-            Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } });
-    runTest("controlsWithoutQuick_pluginTest.qml",
-            Result { { Message { u"QtQuick.Controls and NO QtQuick present"_s } } });
     // Verify that none of the passes do anything when they're not supposed to
-    runTest("nothing_pluginTest.qml", Result::clean());
+    QTest::addRow("nothing_pluginTest")
+            << testFile(u"testPluginData/nothing_pluginTest.qml"_s) << Result::clean();
+}
 
-    QVERIFY(runQmllint("settings/plugin/elemenpass_pluginSettingTest.qml", true, QStringList(), false)
-                    .isEmpty());
+void TestQmllint::testPlugin()
+{
+    QFETCH(QString, fileName);
+    QFETCH(Result, expectedErrors);
+
+    runTest(fileName, expectedErrors);
+}
+
+void TestQmllint::testPluginOnSettings()
+{
+    // Verify that none of the passes do anything when they're not supposed to
+    QVERIFY(runQmllint("settings/plugin/elemenpass_pluginSettingTest.qml", true, QStringList(),
+                       false).isEmpty());
 }
 
 // TODO: Eventually tests for (real) plugins need to be moved into a separate file
