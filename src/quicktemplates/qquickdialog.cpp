@@ -156,6 +156,7 @@ void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
         break;
     case QPlatformDialogHelper::DestructiveRole:
         emit q->discarded();
+        q->close();
         break;
     case QPlatformDialogHelper::HelpRole:
         emit q->helpRequested();
