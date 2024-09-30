@@ -76,7 +76,7 @@
     }
     \endcode
 
-    For a more detailed example, see \l {QML in Android Studio Projects}.
+    For a more detailed example, see \l {Qt Quick for Android Studio Projects}.
 
     \section1 Known issues
 

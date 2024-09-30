@@ -3,9 +3,9 @@
 
 /*!
     \page qml-in-android-studio-projects-example.html
-    \title QML in Android Studio Projects
+    \title Qt Quick for Android Studio Projects
     \brief Uses a \l {Qt Quick View Android Class}{QtQuickView}
-    to embed a QML component into Android projects.
+    to embed Qt Quick content in Android projects.
     \ingroup qtquickexamples
 
     \section1 Overview
