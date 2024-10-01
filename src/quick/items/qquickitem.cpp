@@ -8524,7 +8524,7 @@ void QQuickItem::ungrabMouse()
 /*!
     Returns whether mouse input should exclusively remain with this item.
 
-    \sa setKeepMouseGrab()
+    \sa setKeepMouseGrab(), QEvent::accept(), QEvent::ignore()
  */
 bool QQuickItem::keepMouseGrab() const
 {
@@ -8593,7 +8593,7 @@ void QQuickItem::ungrabTouchPoints()
     Returns whether the touch points grabbed by this item should exclusively
     remain with this item.
 
-    \sa setKeepTouchGrab(), keepMouseGrab()
+    \sa setKeepTouchGrab(), keepMouseGrab(), QEvent::accept(), QEvent::ignore()
 */
 bool QQuickItem::keepTouchGrab() const
 {
