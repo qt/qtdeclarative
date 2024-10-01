@@ -179,10 +179,26 @@ QMetaType QQmlPrivate::compositeMetaType(
     return QQmlTypePrivate::visibleQmlTypeByName(unit, elementNameId).typeId();
 }
 
+QMetaType QQmlPrivate::compositeMetaType(
+        QV4::ExecutableCompilationUnit *unit, const QString &elementName)
+{
+    return QQmlTypePrivate::visibleQmlTypeByName(
+                   unit->baseCompilationUnit(), elementName, unit->engine->typeLoader())
+            .typeId();
+}
+
 QMetaType QQmlPrivate::compositeListMetaType(
         QV4::ExecutableCompilationUnit *unit, int elementNameId)
 {
     return QQmlTypePrivate::visibleQmlTypeByName(unit, elementNameId).qListTypeId();
+}
+
+QMetaType QQmlPrivate::compositeListMetaType(
+        QV4::ExecutableCompilationUnit *unit, const QString &elementName)
+{
+    return QQmlTypePrivate::visibleQmlTypeByName(
+                   unit->baseCompilationUnit(), elementName, unit->engine->typeLoader())
+            .qListTypeId();
 }
 
 int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,

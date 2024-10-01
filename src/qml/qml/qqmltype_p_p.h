@@ -236,6 +236,23 @@ public:
         return nullptr;
     }
 
+    static QQmlType visibleQmlTypeByName(
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit,
+            const QString &elementName, QQmlTypeLoader *typeLoader)
+    {
+        const QQmlType qmltype = unit->typeNameCache->query<QQmlImport::AllowRecursion>(
+                                                            elementName, typeLoader).type;
+
+        if (qmltype.isValid() && qmltype.isInlineComponentType()
+                && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
+            // If it seems to be an IC type, make sure there is an actual
+            // compilation unit for it. We create inline component types speculatively.
+            return QQmlType();
+        }
+
+        return qmltype;
+    }
+
     // Tries the base unit's resolvedTypes first. If successful, that is cheap
     // because it's just a hash. Otherwise falls back to typeNameCache.
     // typeNameCache is slower because it will do a generic type search on all imports.
@@ -250,18 +267,9 @@ public:
         const auto &base = unit->baseCompilationUnit();
         const auto it = base->resolvedTypes.constFind(elementNameId);
         if (it == base->resolvedTypes.constEnd()) {
-            const QQmlType qmltype = base->typeNameCache->query<QQmlImport::AllowRecursion>(
-                    base->stringAt(elementNameId),
-                    typeLoader ? typeLoader : unit->engine->typeLoader()).type;
-
-            if (qmltype.isValid() && qmltype.isInlineComponentType()
-                    && !QQmlMetaType::obtainCompilationUnit(qmltype.typeId())) {
-                // If it seems to be an IC type, make sure there is an actual
-                // compilation unit for it. We create inline component types speculatively.
-                return QQmlType();
-            }
-
-            return qmltype;
+            return visibleQmlTypeByName(
+                    base, base->stringAt(elementNameId),
+                    typeLoader ? typeLoader : unit->engine->typeLoader());
         }
 
         if (const QQmlType type = (*it)->type(); type.isValid())
