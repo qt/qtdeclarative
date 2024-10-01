@@ -2450,8 +2450,8 @@ QTextDocument *QQuickTextEdit::document() const
 void QQuickTextEdit::setDocument(QTextDocument *doc)
 {
     Q_D(QQuickTextEdit);
-    if (d->ownsDocument)
-        delete d->document;
+    // do not delete the owned document till after control has been updated
+    std::unique_ptr<QTextDocument> cleanup(d->ownsDocument ? d->document : nullptr);
     d->document = doc;
     d->ownsDocument = false;
     d->control->setDocument(doc);
@@ -2871,6 +2871,7 @@ void QQuickTextEditPrivate::init()
     QObject::connect(control, &QQuickTextControl::linkHovered, q, &QQuickTextEdit::q_linkHovered);
     QObject::connect(control, &QQuickTextControl::markerHovered, q, &QQuickTextEdit::q_markerHovered);
 
+    document->setPageSize(QSizeF(0, 0));
     document->setDefaultFont(font);
     document->setDocumentMargin(textMargin);
     document->setUndoRedoEnabled(false); // flush undo buffer.

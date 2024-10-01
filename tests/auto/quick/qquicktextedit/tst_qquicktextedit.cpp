@@ -237,6 +237,8 @@ private slots:
     void fontManipulationWithCursorSelection();
     void resizeTextEditPolish();
 
+    void setTextDocument();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -6728,6 +6730,55 @@ void tst_qquicktextedit::resizeTextEditPolish()
     auto *editPriv = QQuickTextEditPrivate::get(edit);
     QCOMPARE(editPriv->xoff, 0);
     QCOMPARE(editPriv->yoff, 0);
+}
+
+void tst_qquicktextedit::setTextDocument()
+{
+    QString componentStr = "import QtQuick\nTextEdit {}";
+    QQmlComponent texteditComponent(&engine);
+    texteditComponent.setData(componentStr.toLatin1(), QUrl());
+    auto textEdit = qobject_cast<QQuickTextEdit *>(texteditComponent.create());
+    QVERIFY(textEdit != nullptr);
+
+    QPointer<QTextDocument> docPtr = textEdit->textDocument()->textDocument();
+    QVERIFY(!docPtr.isNull());
+
+    // make sure the setter replaces the document and cleans up the default-created document
+    auto firstDoc = std::make_unique<QTextDocument>();
+    textEdit->textDocument()->setTextDocument(firstDoc.get());
+    QCOMPARE(textEdit->textDocument()->textDocument(), firstDoc.get());
+
+    QVERIFY(docPtr.isNull());
+    docPtr = firstDoc.get();
+
+    // make sure replacing a custom document does not delete the document
+    auto secondDoc = std::make_unique<QTextDocument>();
+    textEdit->textDocument()->setTextDocument(secondDoc.get());
+    QCOMPARE(textEdit->textDocument()->textDocument(), secondDoc.get());
+    QCOMPARE(docPtr.data(), firstDoc.get());
+
+    auto currentDoc = textEdit->textDocument()->textDocument();
+    docPtr = currentDoc;
+
+    // ensure two independent edits can both watch the same document
+    auto textEdit2 = qobject_cast<QQuickTextEdit *>(texteditComponent.create());
+    QVERIFY(textEdit2 != nullptr);
+
+    textEdit2->textDocument()->setTextDocument(currentDoc);
+    QVERIFY(!docPtr.isNull());
+
+    currentDoc->setPlainText("reset document");
+    QCOMPARE(textEdit->text(), textEdit2->text());
+
+    // resizing a single TextEdit should not break or livelock
+    textEdit2->setWidth(100);
+
+    // verify that deleting the textedit doesn't delete the document
+    // or leave behind connections to the document
+    delete textEdit;
+    textEdit = nullptr;
+    QCOMPARE(docPtr.data(), currentDoc);
+    currentDoc->setPlainText("hello world");
 }
 
 QT_END_NAMESPACE
