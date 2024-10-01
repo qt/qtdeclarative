@@ -467,7 +467,8 @@ bool QQuickPopupPrivate::blockInput(QQuickItem *item, const QPointF &point) cons
     // don't block presses and releases
     // a) outside a non-modal popup,
     // b) to popup children/content, or
-    // b) outside a modal popups's background dimming
+    // c) outside a modal popups's background dimming
+
     return modal && ((popupItem != item) && !popupItem->isAncestorOf(item)) && (!dimmer || dimmer->contains(dimmer->mapFromScene(point)));
 }
 
@@ -2797,6 +2798,18 @@ void QQuickPopup::mouseUngrabEvent()
     d->handleUngrab();
 }
 
+/*!
+    \internal
+
+    Called whenever the window receives a Wheel/Hover/Mouse/Touch event,
+    and has an active popup (with popupType: Popup.Item) in its scene.
+
+    The purpose is to close popups when the press/release event happened outside of it,
+    and the closePolicy allows for it to happen.
+
+    If the function is called from childMouseEventFilter, then the return value of this
+    function will determine whether the event will be filtered, or delivered to \a item.
+*/
 bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickPopup);
