@@ -14,5 +14,8 @@ qt_add_qml_module(tst_qmllint_import_rel_script
         tst_qmllint_import_rel_script
 )
 
-qt_autogen_tools_initial_setup(tst_qmllint_import_rel_script)
+qt_autogen_tools(tst_qmllint_import_rel_script ENABLE_AUTOGEN_TOOLS moc)
+if(TARGET tst_qmllint_import_rel_script_init)
+    qt_autogen_tools(tst_qmllint_import_rel_script_init ENABLE_AUTOGEN_TOOLS moc)
+endif()
 add_dependencies(tst_qmllint_import_rel_script Qt::qmllint)
