@@ -130,7 +130,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>QML generator</string>
+           <string>VectorImage</string>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>
@@ -173,7 +173,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>VectorImage</string>
+           <string>QML generator</string>
           </property>
           <property name="widgetResizable">
            <bool>true</bool>

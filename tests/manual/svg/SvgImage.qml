@@ -13,5 +13,6 @@ Item {
     VectorImage {
         id: vectorImage
         source: SvgManager.currentSource
+        preferredRendererType: VectorImage.CurveRenderer
     }
 }
