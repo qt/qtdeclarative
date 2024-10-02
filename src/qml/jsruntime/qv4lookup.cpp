@@ -450,6 +450,70 @@ ReturnedValue Lookup::getterQObjectMethod(Lookup *lookup, ExecutionEngine *engin
     return QObjectWrapper::lookupMethodGetterImpl(lookup, engine, object, flags, revertLookup);
 }
 
+ReturnedValue Lookup::getterQObjectMethodAsVariant(
+        Lookup *lookup, ExecutionEngine *engine, const Value &object)
+{
+    if (&Lookup::getterQObjectMethod == &Lookup::getterQObjectMethodAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
+    // This getter marks the presence of a qobject method lookup with variant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return getterQObjectMethod(lookup, engine, object);
+}
+
+ReturnedValue Lookup::getterFallbackMethod(Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    const auto revertLookup = [l, engine, &object]() {
+        l->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(l, engine, object);
+    };
+
+    const Object *o = object.as<Object>();
+    if (!o || o->internalClass() != l->qobjectMethodLookup.ic)
+        return revertLookup();
+
+    const QObjectWrapper *This = static_cast<const QObjectWrapper *>(o);
+    QObject *qobj = This->d()->object();
+    if (QQmlData::wasDeleted(qobj))
+        return QV4::Encode::undefined();
+
+    Scope scope(engine);
+    ScopedString name(
+            scope,
+            engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]);
+
+    QV4::ScopedValue result(
+            scope, QObjectWrapper::getMethodFallback(
+                           engine, This->d(), qobj, name,
+                           l->forCall ? QObjectWrapper::NoFlag : QObjectWrapper::AttachMethods));
+
+    // In the general case we cannot rely on the method to exist or stay the same across calls.
+    // However, the AOT compiler can prove it in certain cases. For these, we store the method.
+    if (QObjectMethod *method = result->as<QV4::QObjectMethod>())
+        l->qobjectMethodLookup.method.set(engine, method->d());
+
+    return result->asReturnedValue();
+}
+
+ReturnedValue Lookup::getterFallbackMethodAsVariant(
+        Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    if (&Lookup::getterFallbackMethod == &Lookup::getterFallbackMethodAsVariant) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
+    // This getter marks the presence of a fallback method lookup with variant conversion.
+    // It only does anything with it when running AOT-compiled code.
+    return getterFallbackMethod(l, engine, object);
+}
+
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
     // Otherwise we cannot trust the protoIds

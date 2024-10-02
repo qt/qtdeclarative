@@ -40,3 +40,62 @@ bool QQmlPrivate::AOTCompiledContext::getEnumLookup(uint index, int *target) con
     return true;
 }
 #endif
+
+#if QT_QML_REMOVED_SINCE(6, 9)
+#include <QtQml/qqmlprivate.h>
+#include <QtQml/private/qv4executablecompilationunit_p.h>
+#include <QtQml/private/qv4lookup_p.h>
+#include <QtQml/private/qv4qobjectwrapper_p.h>
+
+bool QQmlPrivate::AOTCompiledContext::callObjectPropertyLookup(
+        uint index, QObject *object, void **args, const QMetaType *types, int argc) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
+    QV4::ScopedFunctionObject function(scope, l->getter(l, engine->handle(), thisObject));
+    if (!function) {
+        scope.engine->throwTypeError(
+                QStringLiteral("Property '%1' of object [object Object] is not a function")
+                        .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
+        return false;
+    }
+
+    function->call(object, args, types, argc);
+    return !scope.hasException();
+}
+
+void QQmlPrivate::AOTCompiledContext::initCallObjectPropertyLookup(uint index) const
+{
+    Q_UNUSED(index);
+    Q_ASSERT(engine->hasError());
+    engine->handle()->amendException();
+}
+
+bool QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(
+        uint index, void **args, const QMetaType *types, int argc) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue thisObject(scope);
+    QV4::ScopedFunctionObject function(
+            scope, l->qmlContextPropertyGetter(l, scope.engine, thisObject));
+    if (!function) {
+        scope.engine->throwTypeError(
+                QStringLiteral("Property '%1' of object [null] is not a function").arg(
+                        compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
+        return false;
+    }
+
+    function->call(qmlScopeObject, args, types, argc);
+    return !scope.hasException();
+}
+
+void QQmlPrivate::AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
+{
+    Q_UNUSED(index);
+    Q_ASSERT(engine->hasError());
+    engine->handle()->amendException();
+}
+
+#endif

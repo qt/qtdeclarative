@@ -314,7 +314,10 @@ private:
 
 
     QString eqIntExpression(int lhsConst);
-    QString argumentsList(int argc, int argv, QString *outVar);
+
+    QString initAndCall(
+            int argc, int argv, const QString &callMethodTemplate,
+            const QString &initMethodTemplate, QString *outVar);
     QString castTargetName(const QQmlJSScope::ConstPtr &type) const;
 
     bool inlineStringMethod(const QString &name, int base, int argc, int argv);

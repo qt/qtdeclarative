@@ -687,16 +687,27 @@ namespace QQmlPrivate
         // exception is present after the initialization there is no way to carry out the lookup and
         // the exception should be propagated. If not, the original lookup can be tried again.
 
+        bool callQmlContextPropertyLookup(uint index, void **args, int argc) const;
+        void initCallQmlContextPropertyLookup(uint index, const QMetaType *types, int argc) const;
+
+#if QT_QML_REMOVED_SINCE(6, 9)
         bool callQmlContextPropertyLookup(
                 uint index, void **args, const QMetaType *types, int argc) const;
         void initCallQmlContextPropertyLookup(uint index) const;
+#endif
 
         bool loadContextIdLookup(uint index, void *target) const;
         void initLoadContextIdLookup(uint index) const;
 
-        bool callObjectPropertyLookup(uint index, QObject *object,
-                                      void **args, const QMetaType *types, int argc) const;
+        bool callObjectPropertyLookup(uint index, QObject *object, void **args, int argc) const;
+        void initCallObjectPropertyLookup(
+                uint index, QObject *object, const QMetaType *types, int argc) const;
+
+#if QT_QML_REMOVED_SINCE(6, 9)
+        bool callObjectPropertyLookup(
+                uint index, QObject *object, void **args, const QMetaType *types, int argc) const;
         void initCallObjectPropertyLookup(uint index) const;
+#endif
 
         bool callGlobalLookup(uint index, void **args, const QMetaType *types, int argc) const;
         void initCallGlobalLookup(uint index) const;

@@ -17,6 +17,7 @@
 #include <private/qqmltypemodule_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetypewrapper_p.h>
+#include <private/qv4alloca_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4errorobject_p.h>
 #include <private/qv4identifiertable_p.h>
@@ -986,6 +987,8 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
     qmlregister(TypeAndRevisionsRegistration, &type);
 }
 
+struct LookupNotInitialized {};
+
 QObject *AOTCompiledContext::thisObject() const
 {
     return static_cast<QV4::MetaTypesStackFrame *>(engine->handle()->currentStackFrame)
@@ -1295,8 +1298,8 @@ static ObjectPropertyResult resetFallbackProperty(
 
 static bool isTypeCompatible(QMetaType lookupType, QMetaType propertyType)
 {
-    if (!lookupType.isValid()) {
-        // If type is invalid, then the calling code depends on the lookup
+    if (lookupType == QMetaType::fromType<LookupNotInitialized>()) {
+        // If lookup is not initialized, then the calling code depends on the lookup
         // to be set up in order to query the type, via lookupResultMetaType.
         // We cannot verify the type in this case.
     } else if ((lookupType.flags() & QMetaType::IsQmlList)
@@ -1351,6 +1354,11 @@ static bool isTypeCompatible(QMetaType lookupType, QMetaType propertyType)
         }
 
         return false;
+    } else if (!propertyType.isValid()) {
+        // We cannot directly store void, but we can put it into QVariant or QJSPrimitiveValue
+        return !lookupType.isValid()
+                || lookupType == QMetaType::fromType<QVariant>()
+                || lookupType == QMetaType::fromType<QJSPrimitiveValue>();
     } else if (propertyType != lookupType) {
         return false;
     }
@@ -1564,25 +1572,40 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
             || l->getter == QV4::Lookup::getterQObject
             || l->getter == QV4::Lookup::getterQObjectAsVariant) {
         return l->qobjectLookup.propertyData->propType();
-    } else if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter) {
+    }
+
+    if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter)
         return QMetaType(l->qgadgetLookup.metaType);
-    } else if (l->getter == QV4::QQmlTypeWrapper::lookupEnumValue) {
+
+    if (l->getter == QV4::QQmlTypeWrapper::lookupEnumValue)
         return QMetaType(l->qmlEnumValueLookup.metaType);
-    } else if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupIdObject
-               || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType
-               || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton
-               || l->getter == QV4::QObjectWrapper::lookupAttached) {
+
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupIdObject
+            || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType
+            || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton
+            || l->getter == QV4::QObjectWrapper::lookupAttached) {
         return QMetaType::fromType<QObject *>();
-    } else if (l->getter == QV4::Lookup::getterFallback
-               || l->getter == QV4::Lookup::getterFallbackAsVariant
-               || l->qmlContextPropertyGetter
+    }
+
+    if (l->getter == QV4::Lookup::getterFallback
+            || l->getter == QV4::Lookup::getterFallbackAsVariant
+            || l->qmlContextPropertyGetter
                     == QV4::QQmlContextWrapper::lookupScopeFallbackProperty) {
         const QMetaObject *metaObject
                 = reinterpret_cast<const QMetaObject *>(l->qobjectFallbackLookup.metaObject - 1);
         const int coreIndex = l->qobjectFallbackLookup.coreIndex;
         return metaObject->property(coreIndex).metaType();
     }
-    return QMetaType();
+
+    if (l->getter == QV4::Lookup::getterQObjectMethod
+            || l->getter == QV4::Lookup::getterQObjectMethodAsVariant
+            || l->getter == QV4::Lookup::getterFallbackMethod
+            || l->getter == QV4::Lookup::getterFallbackMethodAsVariant
+            || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectMethod) {
+        return l->qobjectMethodLookup.propertyData->propType();
+    }
+
+    return QMetaType::fromType<LookupNotInitialized>();
 }
 
 static bool isUndefined(const void *value, QMetaType type)
@@ -1609,7 +1632,7 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     l.nameIndex = nameIndex;
     l.forCall = false;
     ObjectPropertyResult storeResult = ObjectPropertyResult::NeedsInit;
-    switch (initObjectLookup(this, &l, qmlScopeObject, QMetaType())) {
+    switch (initObjectLookup(this, &l, qmlScopeObject, QMetaType::fromType<LookupNotInitialized>())) {
     case ObjectLookupResult::ObjectAsVariant:
     case ObjectLookupResult::Object: {
         const QMetaType propType = l.qobjectLookup.propertyData->propType();
@@ -1749,30 +1772,364 @@ QDateTime AOTCompiledContext::constructDateTime(
             year, month, day, hours, minutes, seconds, msecs, engine->handle()));
 }
 
-bool AOTCompiledContext::callQmlContextPropertyLookup(
-        uint index, void **args, const QMetaType *types, int argc) const
+static QMetaType jsTypedFunctionArgument(
+        const QQmlType &type, const QV4::CompiledData::ParameterType &parameter)
 {
+    return parameter.isList() ? type.qListTypeId() : type.typeId();
+}
+
+static bool callQObjectMethodWithTypes(
+        QV4::ExecutionEngine *engine, QV4::Lookup *l, QObject *thisObject, void **args,
+        QMetaType *types, int argc)
+{
+    QV4::Scope scope(engine);
+    QV4::Scoped<QV4::QObjectMethod> function(scope, l->qobjectMethodLookup.method);
+    Q_ASSERT(function);
+    function->call(thisObject, args, types, argc);
+    return !scope.hasException();
+}
+
+static void setVariantGetter(QV4::Lookup *l)
+{
+    if (l->getter == QV4::Lookup::getterQObjectMethod) {
+        l->getter = QV4::Lookup::getterQObjectMethodAsVariant;
+        return;
+    }
+
+    if (l->getter == QV4::Lookup::getterFallbackMethod) {
+        l->getter = QV4::Lookup::getterFallbackMethodAsVariant;
+        return;
+    }
+
+    if (l->getter == QV4::Lookup::getterQObject) {
+        l->getter = QV4::Lookup::getterQObjectAsVariant;
+        return;
+    }
+
+    if (l->getter == QV4::Lookup::getterFallback) {
+        l->getter = QV4::Lookup::getterFallbackAsVariant;
+        return;
+    }
+}
+
+static bool callQObjectMethodAsVariant(
+        QV4::ExecutionEngine *engine, QV4::Lookup *l,
+        QObject *thisObject, void **args, int argc)
+{
+    // We need to re-fetch the method on every call because it can be shadowed.
+
+    QV4::Scope scope(engine);
+    QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, thisObject));
+    QV4::ScopedFunctionObject function(scope, l->getter(l, scope.engine, wrappedObject));
+    Q_ASSERT(function);
+
+    // The getter may have reset the lookup, but the method is still shadowable.
+    setVariantGetter(l);
+
+    Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
+    std::fill(types, types + argc + 1, QMetaType::fromType<QVariant>());
+
+    function->call(thisObject, args, types, argc);
+    return !scope.hasException();
+}
+
+static bool callQObjectMethod(
+        QV4::ExecutionEngine *engine, QV4::Lookup *l,
+        QObject *thisObject, void **args, int argc)
+{
+    Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
+    const QMetaMethod method = l->qobjectMethodLookup.propertyData->metaMethod();
+    Q_ASSERT(argc == method.parameterCount());
+    types[0] = method.returnMetaType();
+    for (int i = 0; i < argc; ++i)
+        types[i + 1] = method.parameterMetaType(i);
+
+    return callQObjectMethodWithTypes(engine, l, thisObject, args, types, argc);
+}
+
+static bool callArrowFunction(
+        QV4::ExecutionEngine *engine, QV4::ArrowFunction *function,
+        QObject *thisObject, void **args, int argc)
+{
+    QV4::Function *v4Function = function->function();
+    Q_ASSERT(v4Function);
+    Q_ASSERT(v4Function->nFormals == argc);
+
+    switch (v4Function->kind) {
+    case QV4::Function::AotCompiled: {
+        const auto *types = v4Function->aotCompiledFunction.types.data();
+        function->call(thisObject, args, types, argc);
+        return !engine->hasException;
+    }
+    case QV4::Function::JsTyped: {
+        const auto *compiledFunction = v4Function->compiledFunction;
+        const QV4::CompiledData::Parameter *formals
+                = v4Function->compiledFunction->formalsTable();
+
+        Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
+        types[0] = jsTypedFunctionArgument(
+                v4Function->jsTypedFunction.types[0], compiledFunction->returnType);
+        for (qsizetype i = 0; i != argc; ++i) {
+            types[i + 1] = jsTypedFunctionArgument(
+                    v4Function->jsTypedFunction.types[i + 1], formals[i].type);
+        }
+
+        function->call(thisObject, args, types, argc);
+        return !engine->hasException;
+    }
+    case QV4::Function::JsUntyped: {
+        // We can call untyped functions if we're not expecting a specific return value and don't
+        // have to pass any arguments. The compiler verifies this.
+        Q_ASSERT(argc == 0);
+        QMetaType variantType = QMetaType::fromType<QVariant>();
+        function->call(thisObject, args, &variantType, 0);
+        return !engine->hasException;
+    }
+    case QV4::Function::Eval:
+        break;
+    }
+
+    Q_UNREACHABLE_RETURN(false);
+}
+
+static bool callArrowFunctionAsVariant(
+        QV4::ExecutionEngine *engine, QV4::ArrowFunction *function,
+        QObject *thisObject, void **args, int argc)
+{
+    QV4::Function *v4Function = function->function();
+    Q_ASSERT(v4Function);
+
+    switch (v4Function->kind) {
+    case QV4::Function::JsUntyped:
+        // We cannot assert anything here because the method can be shadowed.
+        // That's why we wrap everything in QVariant.
+    case QV4::Function::AotCompiled:
+    case QV4::Function::JsTyped: {
+        Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
+        std::fill(types, types + argc + 1, QMetaType::fromType<QVariant>());
+        function->call(thisObject, args, types, argc);
+        return !engine->hasException;
+    }
+    case QV4::Function::Eval:
+        break;
+    }
+
+    Q_UNREACHABLE_RETURN(false);
+}
+
+bool AOTCompiledContext::callQmlContextPropertyLookup(uint index, void **args, int argc) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectMethod)
+        return callQObjectMethod(engine->handle(), l, qmlScopeObject, args, argc);
+
+    const auto doCall = [&](auto &&call) {
+        QV4::Scope scope(engine->handle());
+        QV4::ScopedValue undefined(scope);
+        QV4::Scoped<QV4::ArrowFunction> function(
+                scope, l->qmlContextPropertyGetter(l, scope.engine, undefined));
+        Q_ASSERT(function);
+        return call(scope.engine, function, qmlScopeObject, args, argc);
+    };
+
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty)
+        return doCall(&callArrowFunction);
+
+    return false;
+}
+
+enum MatchScore {
+    NoMatch           = 0x0,
+    VariantMatch      = 0x1,
+    VariantExactMatch = 0x2,
+    ExactMatch        = 0x4,
+
+    // VariantMatch and ExactMatch for different arguments are incompatible because the ExactMatch
+    // tells us that the variant was not meant as a generic argument but rather as a concrete one.
+    IncompatibleMatch = VariantMatch | ExactMatch,
+
+    // If we're calling a scope method we know that it cannot be shadowed. Therefore an all-variant
+    // method matched by an all-variant call is fine.
+    ScopeAccepted     = ExactMatch | VariantExactMatch,
+
+    // If we're calling an object method it may be shadowed. We cannot nail down an all-variant
+    // call to an all-variant method.
+    ObjectAccepted    = ExactMatch,
+
+};
+
+Q_DECLARE_FLAGS(MatchScores, MatchScore);
+
+static MatchScore overloadTypeMatch(QMetaType passed, QMetaType expected)
+{
+    const bool isVariant = (passed == QMetaType::fromType<QVariant>());
+    if (isTypeCompatible(passed, expected))
+        return isVariant ? VariantExactMatch : ExactMatch;
+    if (isVariant)
+        return VariantMatch;
+    return NoMatch;
+}
+
+static MatchScore resolveQObjectMethodOverload(
+        QV4::QObjectMethod *method, QV4::Lookup *l, const QMetaType *types, int argc,
+        MatchScore acceptedScores)
+{
+    Q_ASSERT(l->qobjectMethodLookup.method.get() == method->d());
+
+    const auto *d = method->d();
+    for (int i = 0, end = d->methodCount; i != end; ++i) {
+        const QMetaMethod metaMethod = d->methods[i].metaMethod();
+        if (metaMethod.parameterCount() != argc)
+            continue;
+
+        MatchScores finalScore = NoMatch;
+
+        if (!types[0].isValid()) {
+            if (argc == 0) {
+                // No arguments given and we're not interested in the return value:
+                // The overload with 0 arguments matches (but it may still be shadowable).
+                finalScore = VariantExactMatch;
+            }
+        } else {
+            const MatchScore score = overloadTypeMatch(types[0], metaMethod.returnMetaType());
+            if (score == NoMatch)
+                continue;
+            finalScore = score;
+        }
+
+        for (int j = 0; j < argc; ++j) {
+            const MatchScore score
+                    = overloadTypeMatch(types[j + 1], metaMethod.parameterMetaType(j));
+
+            if (score == NoMatch) {
+                finalScore = NoMatch;
+                break;
+            }
+
+            finalScore.setFlag(score);
+            if (finalScore.testFlags(IncompatibleMatch)) {
+                finalScore = NoMatch;
+                break;
+            }
+        }
+
+        if (finalScore == NoMatch)
+            continue;
+
+        if (finalScore.testAnyFlags(acceptedScores)) {
+            l->qobjectMethodLookup.propertyData = d->methods + i;
+            return ExactMatch;
+        }
+    }
+
+    // No adjusting of the lookup's propertyData here. We re-fetch the method on every call.
+    // Furthermore, the first propertyData of the collection of possible overloads has the
+    // isOverridden flag we use to determine whether to invalidate a lookup. Therefore, we
+    // have to store that one if the method can be overridden (or shadowed).
+    return VariantMatch;
+}
+
+static inline bool allTypesAreVariant(const QMetaType *types, int argc)
+{
+    for (int i = 0; i <= argc; ++i) { // Yes, i <= argc, because of return type
+        if (types[i] != QMetaType::fromType<QVariant>())
+            return false;
+    }
+    return true;
+}
+
+static bool isArrowFunctionVariantCall(
+        QV4::ArrowFunction *function, const QMetaType *types, int argc)
+{
+    QV4::Function *v4Function = function->function();
+    Q_ASSERT(v4Function);
+
+    switch (v4Function->kind) {
+    case QV4::Function::AotCompiled: {
+        Q_ASSERT(argc + 1 == v4Function->aotCompiledFunction.types.size());
+        const QMetaType *parameterTypes = v4Function->aotCompiledFunction.types.data();
+
+        if (types[0].isValid() && !isTypeCompatible(types[0], parameterTypes[0])) {
+            Q_ASSERT(allTypesAreVariant(types, argc));
+            return true;
+        }
+
+        for (int i = 1; i <= argc; ++i) { // Yes, i <= argc, because of return type
+            if (!isTypeCompatible(types[i], parameterTypes[i])) {
+                Q_ASSERT(allTypesAreVariant(types, argc));
+                return true;
+            }
+        }
+
+        return false;
+    }
+    case QV4::Function::JsTyped: {
+        const auto *compiledFunction = v4Function->compiledFunction;
+        const QV4::CompiledData::Parameter *formals
+                = v4Function->compiledFunction->formalsTable();
+
+        if (types[0].isValid()
+                && !isTypeCompatible(types[0], jsTypedFunctionArgument(
+                       v4Function->jsTypedFunction.types[0], compiledFunction->returnType))) {
+            Q_ASSERT(allTypesAreVariant(types, argc));
+            return true;
+        }
+
+        for (int i = 1; i <= argc; ++i) { // Yes, i <= argc, because of return type
+            if (!isTypeCompatible(types[i], jsTypedFunctionArgument(
+                        v4Function->jsTypedFunction.types[i], formals[i - 1].type))) {
+                Q_ASSERT(allTypesAreVariant(types, argc));
+                return true;
+            }
+        }
+
+        return false;
+    }
+    case QV4::Function::JsUntyped: {
+        // We can call untyped functions if we're not expecting a specific return value and don't
+        // have to pass any arguments. The compiler verifies this.
+        Q_ASSERT(v4Function->nFormals == 0);
+        Q_ASSERT(!types[0].isValid() || types[0] == QMetaType::fromType<QVariant>());
+        return types[0] == QMetaType::fromType<QVariant>();
+    }
+    case QV4::Function::Eval:
+        break;
+    }
+
+    Q_UNREACHABLE_RETURN(false);
+}
+
+void AOTCompiledContext::initCallQmlContextPropertyLookup(
+        uint index, const QMetaType *types, int argc) const
+{
+    if (engine->hasError()) {
+        engine->handle()->amendException();
+        return;
+    }
+
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue thisObject(scope);
     QV4::ScopedFunctionObject function(
                 scope, l->qmlContextPropertyGetter(l, scope.engine, thisObject));
-    if (!function) {
-        scope.engine->throwTypeError(
-                    QStringLiteral("Property '%1' of object [null] is not a function").arg(
-                        compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
-        return false;
+    if (auto *method = function->as<QV4::QObjectMethod>()) {
+        Q_ASSERT(l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectMethod);
+        method->d()->ensureMethodsCache(qmlScopeObject->metaObject());
+        const auto match = resolveQObjectMethodOverload(method, l, types, argc, ScopeAccepted);
+        Q_ASSERT(match == ExactMatch);
+        return;
     }
 
-    function->call(qmlScopeObject, args, types, argc);
-    return !scope.hasException();
-}
+    if (function->as<QV4::ArrowFunction>()) {
+        // Can't have overloads of JavaScript functions.
+        Q_ASSERT(l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty);
+        return;
+    }
 
-void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
-{
-    Q_UNUSED(index);
-    Q_ASSERT(engine->hasError());
-    engine->handle()->amendException();
+    scope.engine->throwTypeError(
+            QStringLiteral("Property '%1' of object [null] is not a function").arg(
+                    compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
 }
 
 bool AOTCompiledContext::loadContextIdLookup(uint index, void *target) const
@@ -1833,28 +2190,76 @@ void AOTCompiledContext::initLoadContextIdLookup(uint index) const
 }
 
 bool AOTCompiledContext::callObjectPropertyLookup(
-        uint index, QObject *object, void **args, const QMetaType *types, int argc) const
+        uint index, QObject *object, void **args, int argc) const
 {
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+
+    if (l->getter == QV4::Lookup::getterQObjectMethod
+            || l->getter == QV4::Lookup::getterFallbackMethod) {
+        return callQObjectMethod(engine->handle(), l, object, args, argc);
+    }
+
+    if (l->getter == QV4::Lookup::getterQObjectMethodAsVariant
+            || l->getter == QV4::Lookup::getterFallbackMethodAsVariant) {
+        return callQObjectMethodAsVariant(engine->handle(), l, object, args, argc);
+    }
+
+    const auto doCall = [&](auto &&call) {
+        // Here we always retrieve a fresh method via the getter. No need to re-init.
+        QV4::Scope scope(engine->handle());
+        QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
+        QV4::Scoped<QV4::ArrowFunction> function(scope, l->getter(l, scope.engine, thisObject));
+        Q_ASSERT(function);
+        return call(scope.engine, function, qmlScopeObject, args, argc);
+    };
+
+    if (l->getter == QV4::Lookup::getterQObject
+            || l->getter == QV4::Lookup::getterFallback) {
+        return doCall(&callArrowFunction);
+    }
+
+    if (l->getter == QV4::Lookup::getterQObjectAsVariant
+            || l->getter == QV4::Lookup::getterFallbackAsVariant) {
+        const bool result = doCall(&callArrowFunctionAsVariant);
+
+        // The getter may have reset the lookup, but the method is still shadowable.
+        setVariantGetter(l);
+
+        return result;
+    }
+
+    return false;
+}
+
+void AOTCompiledContext::initCallObjectPropertyLookup(
+        uint index, QObject *object, const QMetaType *types, int argc) const
+{
+    if (engine->hasError()) {
+        engine->handle()->amendException();
+        return;
+    }
+
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
-    QV4::ScopedFunctionObject function(scope, l->getter(l, engine->handle(), thisObject));
-    if (!function) {
-        scope.engine->throwTypeError(
-                    QStringLiteral("Property '%1' of object [object Object] is not a function")
-                    .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
-        return false;
+    QV4::ScopedFunctionObject function(scope, l->getter(l, scope.engine, thisObject));
+    if (auto *method = function->as<QV4::QObjectMethod>()) {
+        method->d()->ensureMethodsCache(object->metaObject());
+        if (resolveQObjectMethodOverload(method, l, types, argc, ObjectAccepted) == VariantMatch)
+            setVariantGetter(l);
+        return;
     }
 
-    function->call(object, args, types, argc);
-    return !scope.hasException();
-}
+    if (QV4::ArrowFunction *arrowFunction = function->as<QV4::ArrowFunction>()) {
+        // Can't have overloads of JavaScript functions.
+        if (isArrowFunctionVariantCall(arrowFunction, types, argc))
+            setVariantGetter(l);
+        return;
+    }
 
-void AOTCompiledContext::initCallObjectPropertyLookup(uint index) const
-{
-    Q_UNUSED(index);
-    Q_ASSERT(engine->hasError());
-    engine->handle()->amendException();
+    scope.engine->throwTypeError(
+            QStringLiteral("Property '%1' of object [object Object] is not a function")
+                    .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
 }
 
 bool AOTCompiledContext::callGlobalLookup(

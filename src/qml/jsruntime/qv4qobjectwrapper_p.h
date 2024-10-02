@@ -177,6 +177,10 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
             const QQmlPropertyData *property, Flags flags);
 
+    static ReturnedValue getMethodFallback(
+            ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
+            QV4::String *name, Flags flags);
+
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static ReturnedValue lookupAttached(Lookup *l, ExecutionEngine *engine, const Value &object);
 

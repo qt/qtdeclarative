@@ -376,6 +376,18 @@ ReturnedValue QObjectWrapper::getProperty(
     }
 }
 
+ReturnedValue QObjectWrapper::getMethodFallback(
+        ExecutionEngine *engine, Heap::Object *wrapper, QObject *qobject,
+        QV4::String *name, Flags flags)
+{
+    QQmlPropertyData local;
+    const QQmlPropertyData *property = QQmlPropertyCache::property(
+            qobject, name, engine->callingQmlContext(), &local);
+    return property
+            ? getProperty(engine, wrapper, qobject, property, flags)
+            : Encode::undefined();
+}
+
 static OptionalReturnedValue getDestroyOrToStringMethod(
         ExecutionEngine *v4, String *name, Heap::Object *qobj, bool *hasProperty = nullptr)
 {
@@ -1101,13 +1113,13 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     }
 
     if (!ddata || !ddata->propertyCache) {
-        QQmlPropertyData local;
-        const QQmlPropertyData *property = QQmlPropertyCache::property(
-                    qobj, name, qmlContext, &local);
-        return property
-                ? getProperty(engine, This->d(), qobj, property,
-                              lookup->forCall ? NoFlag : AttachMethods)
-                : Encode::undefined();
+        QV4::ScopedValue result(scope, getMethodFallback(
+                engine, This->d(), qobj, name, lookup->forCall ? NoFlag : AttachMethods));
+        lookup->qobjectMethodLookup.ic.set(engine, object->internalClass());
+        if (QObjectMethod *method = result->as<QObjectMethod>())
+            lookup->qobjectMethodLookup.method.set(engine, method->d());
+        lookup->getter = Lookup::getterFallbackMethod;
+        return result->asReturnedValue();
     }
     const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 

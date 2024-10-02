@@ -185,6 +185,9 @@ struct Q_QML_EXPORT Lookup {
     static ReturnedValue getterQObject(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterQObjectAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterQObjectMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectMethodAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackMethodAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -226,6 +229,7 @@ struct Q_QML_EXPORT Lookup {
             if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
         } else if (getter == getterQObjectMethod
+                   || getter == getterQObjectMethodAsVariant
                    || getter == QQmlTypeWrapper::lookupSingletonMethod
                    || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectMethod
                    || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectMethod) {
