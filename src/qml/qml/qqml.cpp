@@ -1586,9 +1586,7 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
             || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty
             || l->getter == QV4::QQmlTypeWrapper::lookupSingletonProperty
             || l->getter == QV4::Lookup::getterQObject
-            || l->setter == QV4::Lookup::setterQObject
-            || l->getter == QV4::Lookup::getterQObjectAsVariant
-            || l->setter == QV4::Lookup::setterQObjectAsVariant) {
+            || l->getter == QV4::Lookup::getterQObjectAsVariant) {
         return l->qobjectLookup.propertyData->propType();
     } else if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter) {
         return QMetaType(l->qgadgetLookup.metaType);
@@ -1600,9 +1598,7 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
                || l->getter == QV4::QObjectWrapper::lookupAttached) {
         return QMetaType::fromType<QObject *>();
     } else if (l->getter == QV4::Lookup::getterFallback
-               || l->setter == QV4::Lookup::setterFallback
                || l->getter == QV4::Lookup::getterFallbackAsVariant
-               || l->setter == QV4::Lookup::setterFallbackAsVariant
                || l->qmlContextPropertyGetter
                     == QV4::QQmlContextWrapper::lookupScopeFallbackProperty) {
         const QMetaObject *metaObject

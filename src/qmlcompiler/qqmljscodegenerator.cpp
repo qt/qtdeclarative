@@ -1554,22 +1554,6 @@ void QQmlJSCodeGenerator::generate_StoreProperty(int nameIndex, int baseReg)
     reject(u"StoreProperty"_s);
 }
 
-QString QQmlJSCodeGenerator::setLookupPreparation(
-        const QQmlJSRegisterContent &content, const QString &arg, int lookup)
-{
-    if (m_typeResolver->registerContains(content, content.storedType()))
-        return QString();
-
-    if (registerIsStoredIn(content, m_typeResolver->varType())) {
-        return u"const QMetaType argType = aotContext->lookupResultMetaType("_s
-                + QString::number(lookup) + u");\n"_s
-                + u"if (argType.isValid())\n    "_s + arg + u".convert(argType)";
-    }
-    // TODO: We could make sure they're compatible, for example QObject pointers.
-    return QString();
-}
-
-
 void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
 {
     INJECT_TRACE_INFO(generate_SetLookup);
@@ -1608,7 +1592,6 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
     m_body += u"{\n"_s;
     QString variableIn;
     QString variableInType;
-    QString preparation;
     QString argType;
     if (!m_typeResolver->registerContains(
                 m_state.accumulatorIn(), property.containedType())) {
@@ -1617,11 +1600,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u";\n"_s;
         variableIn = contentPointer(property, u"converted"_s);
         variableInType = contentType(property, u"converted"_s);
-        preparation = setLookupPreparation(property, u"converted"_s, index);
-        if (preparation.isEmpty())
-            argType = contentType(property, u"converted"_s);
-        else
-            argType = u"argType"_s;
+        argType = contentType(property, u"converted"_s);
     } else {
         variableIn = contentPointer(property, m_state.accumulatorVariableIn);
         variableInType = contentType(property, m_state.accumulatorVariableIn);
@@ -1638,7 +1617,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + u", "_s + basePointer + u", "_s + variableIn + u')';
         const QString initialization = u"aotContext->initSetObjectLookup("_s
                 + indexString + u", "_s + basePointer + u", "_s + argType + u')';
-        generateLookup(lookup, initialization, preparation);
+        generateLookup(lookup, initialization);
         break;
     }
     case QQmlJSScope::AccessSemantics::Sequence: {
@@ -1678,7 +1657,7 @@ void QQmlJSCodeGenerator::generate_SetLookup(int index, int baseReg)
                 + indexString + u", "_s + metaObject(originalScope)
                 + u", "_s + argType + u')';
 
-        generateLookup(lookup, initialization, preparation);
+        generateLookup(lookup, initialization);
         generateWriteBack(baseReg);
 
         break;
