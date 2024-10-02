@@ -2945,6 +2945,33 @@ void tst_QQuickItem::mapCoordinatesWithWindows()
         globalItemOffset(childItemInChildWindow, childItemInOtherWindow));
     QCOMPARE(childItemInChildWindow->mapFromItem(childItemInOtherWindow, {0, 0}),
         globalItemOffset(childItemInOtherWindow, childItemInChildWindow));
+
+    // If one or both of the items are not in a scene (yet), they are assumed
+    // to eventually be in the same scene.
+
+    auto *itemWithoutWindowA = root->property("itemWithoutWindowA").value<QQuickItem*>();
+    QVERIFY(itemWithoutWindowA);
+    auto *itemWithoutWindowB = root->property("itemWithoutWindowB").value<QQuickItem*>();
+    QVERIFY(itemWithoutWindowB);
+    auto *childItemWithoutWindow = itemWithoutWindowB->findChild<QQuickItem*>("childItemWithoutWindow");
+    QVERIFY(childItemWithoutWindow);
+
+    QPoint itemWithoutWindowAPos = itemWithoutWindowA->position().toPoint();
+    QPoint itemWithoutWindowBPos = itemWithoutWindowB->position().toPoint();
+
+    QCOMPARE(itemWithoutWindowA->mapToItem(childItemWithoutWindow, {0, 0}),
+        itemWithoutWindowAPos - (itemWithoutWindowBPos + childItemWithoutWindow->position()));
+    QCOMPARE(itemWithoutWindowA->mapFromItem(childItemWithoutWindow, {0, 0}),
+        (itemWithoutWindowBPos + childItemWithoutWindow->position()) - itemWithoutWindowAPos);
+
+    QCOMPARE(itemWithoutWindowA->mapToItem(childItem, {0, 0}),
+        itemWithoutWindowAPos - itemPos);
+    QCOMPARE(itemWithoutWindowA->mapFromItem(childItem, {0, 0}),
+        itemPos - itemWithoutWindowAPos);
+    QCOMPARE(childItem->mapToItem(itemWithoutWindowA, {0, 0}),
+        itemPos - itemWithoutWindowAPos);
+    QCOMPARE(childItem->mapFromItem(itemWithoutWindowA, {0, 0}),
+        itemWithoutWindowAPos - itemPos);
 }
 
 void tst_QQuickItem::transforms_data()
