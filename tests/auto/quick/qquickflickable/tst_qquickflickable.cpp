@@ -183,6 +183,8 @@ private slots:
     void movingAndFlicking();
     void movingAndFlicking_data();
     void movingAndDragging();
+    void dragAndSwitchDirection_data();
+    void dragAndSwitchDirection();
     void movingAndDragging_data();
     void flickOnRelease();
     void pressWhileFlicking();
@@ -1488,6 +1490,88 @@ void tst_qquickflickable::movingAndDragging()
 
      QCOMPARE(flickable->contentX(), 0.0);
      QCOMPARE(flickable->contentY(), 0.0);
+}
+
+void tst_qquickflickable::dragAndSwitchDirection_data()
+{
+    QTest::addColumn<const QPointingDevice *>("device");
+    QTest::addColumn<bool>("dragH");
+
+    const QPointingDevice *constTouchDevice = touchDevice;
+    QTest::newRow("mouse, drag horizontally") << mouseDevice << true;
+    QTest::newRow("device, drag horizontally") << constTouchDevice << true;
+    QTest::newRow("mouse, drag vertically") << mouseDevice << false;
+    QTest::newRow("device, drag vertically") << constTouchDevice << false;
+}
+
+void tst_qquickflickable::dragAndSwitchDirection()
+{
+    // Check that you can start a drag in one direction, but then, without
+    // lifting the mouse/finger, drag in the opposite direction, passing the
+    // initial starting point of the drag.
+    QFETCH(const QPointingDevice *, device);
+    QFETCH(const bool, dragH);
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("flickable01.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
+    QVERIFY(window->rootObject() != nullptr);
+    window->resize(400, 400);
+
+    QQuickFlickable *flickable = qobject_cast<QQuickFlickable*>(window->rootObject());
+    QVERIFY(flickable != nullptr);
+    flickable->setWidth(window->width());
+    flickable->setHeight(window->height());
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    // Flick the content item at bit away from the origin, to avoid
+    // overshooting it while executing the rest of the test.
+    flickable->setContentWidth(flickable->width() * 2);
+    flickable->setContentHeight(flickable->height() * 2);
+    flickable->setContentX(flickable->width() / 2);
+    flickable->setContentY(flickable->height() / 2);
+
+    const QPoint initialContentPos = QPoint(flickable->contentX(), flickable->contentY());
+    const QPoint dragDirection = QPoint(dragH ? 1 : 0, dragH ? 0 : 1);
+    const QPoint dragIncrement = dragDirection * qApp->styleHints()->startDragDistance() / 2;
+    const QPoint dragFrom = QPoint(flickable->width(), flickable->height()) / 2;
+    QPoint dragTo = dragFrom;
+
+    // Start a drag in the direction we're testing
+    QVERIFY(!flickable->isDragging());
+    QQuickTest::pointerMoveAndPress(device, window.data(), 0, dragTo);
+    for (int i = 0; i <= 6; ++i) {
+        dragTo += dragIncrement;
+        QQuickTest::pointerMove(device, window.data(), 0, dragTo);
+    }
+
+    // At this point, we don't care about the exact position of the contentItem.
+    // What matters is that the flickable is now in a dragging state, and that
+    // the contentItem has moved a bit in the expected direction.
+    QVERIFY(flickable->isDragging());
+    QPoint expectedContentPos(flickable->contentX(), flickable->contentY());
+    QCOMPARE_NE(initialContentPos, expectedContentPos);
+
+    // We now reverse the drag direction, and drag beyond the initial starting
+    // position. We expect the content item to move for each movement of the
+    // pointer, even if the expectedContentPos lands exactly on the initialContentPos.
+    // If the flickable were to only look at the delta moved since the start of the
+    // drag, it could easily be fooled into beliving that the drag threshold has yet
+    // to be exceeded, and therefore not move.
+    for (int i = 0; i <= 6; ++i) {
+        dragTo -= dragIncrement;
+        expectedContentPos += dragIncrement;
+        QQuickTest::pointerMove(device, window.data(), 0, dragTo);
+        QCOMPARE(flickable->contentX(), expectedContentPos.x());
+        QCOMPARE(flickable->contentY(), expectedContentPos.y());
+    }
+
+    QQuickTest::pointerRelease(device, window.data(), 0, dragTo);
+    QVERIFY(!flickable->isDragging());
 }
 
 void tst_qquickflickable::flickOnRelease()
