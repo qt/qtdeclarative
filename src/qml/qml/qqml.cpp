@@ -1593,7 +1593,7 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
     } else if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter) {
         return QMetaType(l->qgadgetLookup.metaType);
     } else if (l->getter == QV4::QQmlTypeWrapper::lookupEnumValue) {
-        return QMetaType::fromType<int>();
+        return QMetaType(l->qmlEnumValueLookup.metaType);
     } else if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupIdObject
                || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType
                || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton
