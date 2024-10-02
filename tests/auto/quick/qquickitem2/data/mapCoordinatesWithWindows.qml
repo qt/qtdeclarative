@@ -48,4 +48,15 @@ QtObject {
             color: "cyan"
         }
     }
+
+    property Item itemWithoutWindowA: Item {
+        x: 20; y: 20
+    }
+    property Item itemWithoutWindowB: Item {
+        x: 40; y: 40
+        Item {
+            objectName: "childItemWithoutWindow"
+            x: 30; y: 30
+        }
+    }
 }

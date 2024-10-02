@@ -8755,9 +8755,10 @@ QPointF QQuickItem::mapToItem(const QQuickItem *item, const QPointF &point) cons
 {
     QPointF p = mapToScene(point);
     if (item) {
-        const QQuickWindow *itemWindow = item->window();
-        if (itemWindow != nullptr && itemWindow != window())
-            p = itemWindow->mapFromGlobal(window()->mapToGlobal(p));
+        const auto *itemWindow = item->window();
+        const auto *thisWindow = window();
+        if (thisWindow && itemWindow && itemWindow != thisWindow)
+            p = itemWindow->mapFromGlobal(thisWindow->mapToGlobal(p));
 
         p = item->mapFromScene(p);
     }
@@ -8862,9 +8863,10 @@ QPointF QQuickItem::mapFromItem(const QQuickItem *item, const QPointF &point) co
     QPointF p = point;
     if (item) {
         p = item->mapToScene(point);
-
-        if (item->window() != window())
-            p = window()->mapFromGlobal(item->window()->mapToGlobal(p));
+        const auto *itemWindow = item->window();
+        const auto *thisWindow = window();
+        if (thisWindow && itemWindow && itemWindow != thisWindow)
+            p = thisWindow->mapFromGlobal(itemWindow->mapToGlobal(p));
     }
     return mapFromScene(p);
 }
