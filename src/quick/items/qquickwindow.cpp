@@ -4344,8 +4344,8 @@ void QQuickWindow::setGraphicsConfiguration(const QQuickGraphicsConfiguration &c
 }
 
 /*!
-    \return the QQuickGraphicsDevice passed to setGraphicsDevice(), or a
-    default constructed one otherwise
+    \return the QQuickGraphicsConfiguration passed to
+    setGraphicsConfiguration(), or a default constructed one otherwise.
 
     \since 6.0
 
