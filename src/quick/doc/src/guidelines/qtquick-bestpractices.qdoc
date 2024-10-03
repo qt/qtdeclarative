@@ -294,6 +294,83 @@ Rectangle {
 }
 \endcode
 
+\section1 Don't store state in delegates
+
+Don't store a state in a delegate. The issue here is that the delegate is
+created and destroyed multiple times, so the saved state will be lost.
+
+\qml
+// Wrong approach:
+ListView {
+    // ...
+
+    delegate: Button {
+        // ...
+        property bool someStateProperty
+        onClicked: someStateProperty = true
+    }
+}
+\endqml
+
+Instead, store the state outside of the delegate. For example, in a model.
+When the delegate is destroyed, the saved state is not lost.
+
+\qml
+// Right approach:
+ListView {
+    // ...
+
+    delegate: Button {
+        // ...
+        onClicked: model.someStateProperty = true
+    }
+}
+\endqml
+
+\section1 Make user-facing strings translatable
+
+It is recommended to make user-facing strings translatable from the beginning.
+See \l {Writing Source Code for Translation}.
+
+\qml
+ToolButton {
+    id: selectionToolButton
+    // ...
+    icon.source: "qrc:/images/selection.png"
+
+    Tooltip.Text: qsTr("Select pixels within an area and move them")
+
+    onClicked: canvas.tool = ImageCanvas.SelectionTool
+}
+\endqml
+
+\section1 Do not customize native styles
+
+Native styles (Windows and macOS styles) don't support customization.
+Ensure you don't customize a native style.
+
+\qml *
+// Wrong approach:
+import QtQuick.Controls.Windows
+
+// Don't customize a native style
+Button {
+    background: Rectangle { /\1...\1/ }
+}
+\endqml
+
+\include customizing-native-styles.qdocinc
+
+\qml *
+// Right approach:
+import QtQuick.Controls.Basic
+
+// You can customize a commonly available style
+Button {
+    background: Rectangle { /\1...\1/ }
+}
+\endqml
+
 \section1 Tools and Utilities
 
 For information on useful tools and utilies that make working with QML and

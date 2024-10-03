@@ -66,7 +66,8 @@ depends += \
     ../../quicklayouts \
     ../../labs \
     ../../quick/platform/android/jar/src/org/qtproject/qt/android \
-    ../../../examples/platforms
+    ../../../examples/platforms \
+    ../../quickcontrols/doc/src/includes/
 
 # both have their own documentation project
 excludedirs += \
