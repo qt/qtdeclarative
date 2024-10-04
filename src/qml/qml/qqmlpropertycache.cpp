@@ -389,7 +389,6 @@ static QHashedString signalNameToHandlerName(const QHashedCStringRef &methodName
             QLatin1StringView{ methodName.constData(), methodName.length() });
 }
 
-
 void QQmlPropertyCache::append(const QMetaObject *metaObject,
                                QTypeRevision typeVersion,
                                QQmlPropertyData::Flags propertyFlags,
@@ -442,14 +441,14 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     for (int ii = methodOffset; ii < methodCount; ++ii) {
         if (preventDestruction && (ii == destroyedIdx1 || ii == destroyedIdx2 || ii == deleteLaterIdx))
             continue;
-        QMetaMethod m = metaObject->method(ii);
+        const QMetaMethod &m = metaObject->method(ii);
         if (m.access() == QMetaMethod::Private)
             continue;
 
         // Extract method name
         // It's safe to keep the raw name pointer
         Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 7);
-        const char *rawName = m.name().constData();
+        const char *rawName = m.nameView().constData();
         const char *cptr = rawName;
         char utf8 = 0;
         while (*cptr) {
