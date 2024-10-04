@@ -99,6 +99,7 @@ private slots:
     void mapCoordinatesRect();
     void mapCoordinatesRect_data();
     void mapCoordinatesWithWindows();
+    void mapCoordinatesWithFraction();
     void propertyChanges();
     void nonexistentPropertyConnection();
     void transforms();
@@ -2988,6 +2989,14 @@ void tst_QQuickItem::transforms_data()
         << QTransform(1.5,0,0,0,-2,0,0,0,1);
     QTest::newRow("sequence") << QByteArray("[ Translate { x: 10; y: 20 }, Scale { xScale: 1.5; yScale: -2  } ]")
         << QTransform(1,0,0,0,1,0,10,20,1) * QTransform(1.5,0,0,0,-2,0,0,0,1);
+}
+
+void tst_QQuickItem::mapCoordinatesWithFraction()
+{
+    QQuickItem parent;
+    QQuickItem child(&parent);
+    const QPointF result = child.mapToItem(&parent, 1.5, 1.5);
+    QCOMPARE(result, QPointF(1.5, 1.5));
 }
 
 void tst_QQuickItem::transforms()
