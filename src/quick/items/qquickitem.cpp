@@ -10068,7 +10068,7 @@ QRectF QQuickItem::mapFromItem(const QQuickItem *item, qreal x, qreal y, qreal w
 
 //! \internal
 QPointF QQuickItem::mapToItem(const QQuickItem *item, qreal x, qreal y)
-{ return mapToItem(item, QPoint(x, y)); }
+{ return mapToItem(item, QPointF(x, y)); }
 
 //! \internal
 QRectF QQuickItem::mapToItem(const QQuickItem *item, const QRectF &rect) const
