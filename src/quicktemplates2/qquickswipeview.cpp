@@ -110,7 +110,7 @@ class QQuickSwipeViewPrivate : public QQuickContainerPrivate
     Q_DECLARE_PUBLIC(QQuickSwipeView)
 
 public:
-    void resizeItem(QQuickItem *item);
+    void resizeItem(int index, QQuickItem *item);
     void resizeItems();
 
     static QQuickSwipeViewPrivate *get(QQuickSwipeView *view);
@@ -144,25 +144,29 @@ public:
     int currentIndex = -1;
 };
 
+void QQuickSwipeViewPrivate::resizeItem(int index, QQuickItem *item)
+{
+    QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
+    // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
+    if (anchors && (anchors->fill() || anchors->centerIn()) && !item->property("_q_QQuickSwipeView_warned").toBool()) {
+        qmlWarning(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
+        item->setProperty("_q_QQuickSwipeView_warned", true);
+    }
+    if (orientation == Qt::Horizontal)
+        item->setPosition({index * (contentItem->width() + spacing), 0});
+    else
+        item->setPosition({0, index * (contentItem->height() + spacing)});
+    item->setSize(QSizeF(contentItem->width(), contentItem->height()));
+}
+
 void QQuickSwipeViewPrivate::resizeItems()
 {
     Q_Q(QQuickSwipeView);
     const int count = q->count();
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = itemAt(i);
-        if (item) {
-            QQuickAnchors *anchors = QQuickItemPrivate::get(item)->_anchors;
-            // TODO: expose QQuickAnchorLine so we can test for other conflicting anchors
-            if (anchors && (anchors->fill() || anchors->centerIn()) && !item->property("_q_QQuickSwipeView_warned").toBool()) {
-                qmlWarning(item) << "SwipeView has detected conflicting anchors. Unable to layout the item.";
-                item->setProperty("_q_QQuickSwipeView_warned", true);
-            }
-            if (orientation == Qt::Horizontal)
-                item->setPosition({i * (contentItem->width() + spacing), 0});
-            else
-                item->setPosition({0, i * (contentItem->height() + spacing)});
-            item->setSize(QSizeF(contentItem->width(), contentItem->height()));
-        }
+        if (item)
+            resizeItem(i, item);
     }
 }
 
@@ -301,6 +305,13 @@ QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
     return new QQuickSwipeViewAttached(object);
 }
 
+void QQuickSwipeView::componentComplete()
+{
+    Q_D(QQuickSwipeView);
+    QQuickContainer::componentComplete();
+    d->resizeItems();
+}
+
 void QQuickSwipeView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeView);
@@ -312,7 +323,7 @@ void QQuickSwipeView::itemAdded(int index, QQuickItem *item)
 {
     Q_D(QQuickSwipeView);
     if (isComponentComplete())
-        item->setSize(QSizeF(d->contentItem->width(), d->contentItem->height()));
+        d->resizeItem(index, item);
     QQuickSwipeViewAttached *attached = qobject_cast<QQuickSwipeViewAttached *>(qmlAttachedPropertiesObject<QQuickSwipeView>(item));
     if (attached)
         QQuickSwipeViewAttachedPrivate::get(attached)->update(this, index);

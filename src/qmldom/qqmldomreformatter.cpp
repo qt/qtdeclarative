@@ -585,16 +585,27 @@ protected:
         return false;
     }
 
+
+    void outputScope(VariableScope scope) {
+        switch (scope) {
+        case VariableScope::Const:
+            out("const ");
+            break;
+        case VariableScope::Let:
+            out("let ");
+            break;
+        case VariableScope::Var:
+            out("var ");
+            break;
+        default:
+            break;
+        }
+    }
+
     bool visit(PatternElement *ast) override
     {
         if (ast->isForDeclaration) {
-            if (ast->scope == VariableScope::Var) {
-                out("var ");
-            } else if (ast->scope == VariableScope::Let) {
-                out("let ");
-            } else if (ast->scope == VariableScope::Const) {
-                out("const ");
-            }
+            outputScope(ast->scope);
         }
         accept(ast->bindingTarget);
         switch (ast->type) {
@@ -678,7 +689,7 @@ protected:
         if (ast->initialiser) {
             accept(ast->initialiser);
         } else if (ast->declarations) {
-            out("var ");
+            outputScope(ast->declarations->declaration->scope);
             accept(ast->declarations);
         }
         out("; "); // ast->firstSemicolonToken
@@ -867,12 +878,15 @@ protected:
                 out(ast->identifierToken);
         }
         out(ast->lparenToken);
-        if (ast->isArrowFunction && ast->formals && ast->formals->next)
+        const bool needParentheses = ast->formals &&
+                (ast->formals->next ||
+                 (ast->formals->element && ast->formals->element->bindingTarget));
+        if (ast->isArrowFunction && needParentheses)
             out("(");
         int baseIndent = lw.increaseIndent(1);
         accept(ast->formals);
         lw.decreaseIndent(1, baseIndent);
-        if (ast->isArrowFunction && ast->formals && ast->formals->next)
+        if (ast->isArrowFunction && needParentheses)
             out(")");
         out(ast->rparenToken);
         if (ast->isArrowFunction && !ast->formals)
@@ -963,7 +977,11 @@ protected:
     bool visit(FormalParameterList *ast) override
     {
         for (FormalParameterList *it = ast; it; it = it->next) {
-            out(it->element->bindingIdentifier.toString()); // TODO
+            // compare FormalParameterList::finish
+            if (auto id = it->element->bindingIdentifier.toString(); !id.startsWith(u"arg#"))
+                out(id);
+            if (it->element->bindingTarget)
+                accept(it->element->bindingTarget);
             if (it->next)
                 out(", ");
         }

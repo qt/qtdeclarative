@@ -163,6 +163,7 @@ public:
     int typeId() const;
     QMetaType type() const;
     bool write(QObject *target, int propertyIndex) const;
+    const QMetaObject *metaObject() const { return d()->metaObject(); }
 
     QQmlPropertyData dataForPropertyKey(PropertyKey id) const;
 

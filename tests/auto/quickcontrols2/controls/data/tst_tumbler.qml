@@ -1278,4 +1278,46 @@ TestCase {
         tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: false});
         compare(tumbler.currentIndex, 4);
     }
+
+    // QTBUG-109995
+    Component {
+        id: flickTumbler
+        Flickable {
+          width: 50
+          height: 200
+          interactive: true
+          contentHeight: 400
+          property alias tumblerItem: noWrapTumbler
+          Tumbler {
+              id: noWrapTumbler
+              anchors.fill: parent
+              model: 20
+              wrap: false
+          }
+       }
+    }
+
+    function test_flick() {
+        let control = createTemporaryObject(flickTumbler, testCase)
+        verify(control)
+
+        let tumbler = control.tumblerItem
+        compare(tumbler.count, 20)
+        compare(tumbler.wrap, false)
+
+        let touch = touchEvent(tumbler)
+        let tumblerView = findView(tumbler)
+        let delegateHeight = tumblerView.children[0].children[0].height
+
+        // Move delegates through touch operation and check the current index
+        touch.press(0, tumblerView, control.width / 2, control.height / 2).commit()
+        // Move slowly, otherwise its considered as flick which cause current index
+        // to be varied according to its velocity
+        var scrollOffset = control.height / 2
+        for (; scrollOffset > delegateHeight / 2; scrollOffset-=5) {
+            touch.move(0, tumblerView, control.width / 2, scrollOffset).commit()
+        }
+        touch.release(0, tumblerView, control.width / 2, scrollOffset).commit()
+        tryCompare(tumblerView, "currentIndex", 2)
+    }
 }

@@ -75,6 +75,8 @@ private slots:
     void contextObjectHierarchy();
     void destroyContextProperty();
 
+    void numericContextProperty();
+
 private:
     QQmlEngine engine;
 };
@@ -1002,6 +1004,14 @@ void tst_qqmlcontext::destroyContextProperty()
 
     // We're not allowed to call context->contextProperty("b") anymore.
     // TODO: Or are we?
+}
+
+void tst_qqmlcontext::numericContextProperty()
+{
+    QQmlEngine engine;
+    auto context = engine.rootContext();
+    context->setContextProperty(QLatin1String("11"), 42);
+    QCOMPARE(context->contextProperty(QLatin1String("11")).toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmlcontext)

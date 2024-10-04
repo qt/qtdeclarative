@@ -96,32 +96,29 @@ private:
 };
 
 #define QObjectMethodMembers(class, Member) \
-    Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
+    Member(class, Pointer, Object *, wrapper) \
     Member(class, NoMark, QV4QPointer<QObject>, qObj) \
     Member(class, NoMark, int, index)
 
-DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
-    DECLARE_MARKOBJECTS(QObjectMethod);
+DECLARE_EXPORTED_HEAP_OBJECT(QObjectMethod, FunctionObject) {
+    DECLARE_MARKOBJECTS(QObjectMethod)
 
     QQmlPropertyData *methods;
     int methodCount;
     alignas(alignof(QQmlPropertyData)) std::byte _singleMethod[sizeof(QQmlPropertyData)];
 
-    void init(QV4::ExecutionContext *scope);
+    void init(QV4::ExecutionContext *scope, Object *wrapper, int index);
     void destroy()
     {
         if (methods != reinterpret_cast<QQmlPropertyData *>(&_singleMethod))
             delete[] methods;
-        qObj.destroy();
         FunctionObject::destroy();
     }
 
     void ensureMethodsCache();
 
     const QMetaObject *metaObject();
-    QObject *object() const { return qObj.data(); }
-    void setObject(QObject *o) { qObj = o; }
-
+    QObject *object() const;
 };
 
 struct QMetaObjectWrapper : FunctionObject {
@@ -160,6 +157,13 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     static void initializeBindings(ExecutionEngine *engine);
 
+    const QMetaObject *metaObject() const
+    {
+        if (QObject *o = object())
+            return o->metaObject();
+        return nullptr;
+    }
+
     QObject *object() const { return d()->object(); }
 
     ReturnedValue getQmlProperty(
@@ -169,8 +173,8 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     \
     static ReturnedValue getQmlProperty(
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
-            QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr,
-            QQmlPropertyData **property = nullptr);
+            Heap::Object *wrapper, QObject *object, String *name, RevisionMode revisionMode,
+            bool *hasProperty = nullptr, QQmlPropertyData **property = nullptr);
 
     static bool setQmlProperty(
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
@@ -186,7 +190,9 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     void destroyObject(bool lastCall);
 
-    static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property);
+    static ReturnedValue getProperty(
+            ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
+            QQmlPropertyData *property);
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static ReturnedValue lookupAttached(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -243,7 +249,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
     if (!o || o->internalClass != lookup->qobjectLookup.ic)
         return revertLookup();
 
-    const Heap::QObjectWrapper *This = static_cast<const Heap::QObjectWrapper *>(o);
+    Heap::QObjectWrapper *This = static_cast<Heap::QObjectWrapper *>(o);
     QObject *qobj = This->object();
     if (QQmlData::wasDeleted(qobj))
         return QV4::Encode::undefined();
@@ -271,7 +277,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
             return revertLookup();
     }
 
-    return getProperty(engine, qobj, property);
+    return getProperty(engine, This, qobj, property);
 }
 
 struct QQmlValueTypeWrapper;
@@ -283,7 +289,7 @@ struct Q_QML_EXPORT QObjectMethod : public QV4::FunctionObject
 
     enum { DestroyMethod = -1, ToStringMethod = -2 };
 
-    static ReturnedValue create(QV4::ExecutionContext *scope, QObject *object, int index);
+    static ReturnedValue create(QV4::ExecutionContext *scope, Heap::Object *wrapper, int index);
     static ReturnedValue create(QV4::ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index);
 
     int methodIndex() const { return d()->index; }

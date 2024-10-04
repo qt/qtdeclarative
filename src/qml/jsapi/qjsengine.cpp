@@ -509,6 +509,9 @@ static QUrl urlForFileName(const QString &fileName)
 
     The script code will be evaluated in the context of the global object.
 
+    \note If you need to evaluate inside a QML context, use \l QQmlExpression
+    instead.
+
     The evaluation of \a program can cause an \l{Script Exceptions}{exception} in the
     engine; in this case the return value will be the exception
     that was thrown (typically an \c{Error} object; see
@@ -539,6 +542,8 @@ static QUrl urlForFileName(const QString &fileName)
     exception value will still be returned. Use \c exceptionStackTrace->isEmpty()
     to distinguish whether the value was a normal or an exceptional return
     value.
+
+    \sa QQmlExpression::evaluate
 */
 QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber, QStringList *exceptionStackTrace)
 {

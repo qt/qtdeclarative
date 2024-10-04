@@ -2567,7 +2567,38 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 {
     Q_D(QQuickPropertyAnimation);
-    return QQmlListProperty<QObject>(this, &(d->targets));
+    using ListPtr = QList<QPointer<QObject>> *;
+    using LP = QQmlListProperty<QObject>;
+    LP::AppendFunction appendFn = [](LP *prop, QObject *value)
+    {
+        static_cast<ListPtr>(prop->data)->append(value);
+    };
+    LP::CountFunction countFn = [](LP *prop)
+    {
+        return static_cast<ListPtr>(prop->data)->size();
+    };
+
+    LP::AtFunction atFn = [](LP *prop, qsizetype index) -> QObject *
+    {
+        return static_cast<ListPtr>(prop->data)->at(index);
+    };
+
+    LP::ClearFunction clearFN = [](LP *prop)
+    {
+        return static_cast<ListPtr>(prop->data)->clear();
+    };
+
+    LP::ReplaceFunction replaceFn = [](LP *prop, qsizetype index, QObject *value)
+    {
+        static_cast<ListPtr>(prop->data)->replace(index, value);
+    };
+
+    LP::RemoveLastFunction removeLastFn = [](LP *prop)
+    {
+        static_cast<ListPtr>(prop->data)->removeLast();
+    };
+
+    return QQmlListProperty<QObject>(this, &(d->targets), appendFn, countFn, atFn, clearFN, replaceFn, removeLastFn);
 }
 
 /*!
@@ -2639,7 +2670,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
     if (!d->propertyName.isEmpty())
         props << d->propertyName;
 
-    QList<QObject*> targets = d->targets;
+    QList<QPointer<QObject>> targets = d->targets;
     if (d->target)
         targets.append(d->target);
 
@@ -2668,10 +2699,14 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
 
         for (int i = 0; i < props.count(); ++i) {
             for (int j = 0; j < targets.count(); ++j) {
+                const auto& guarded = targets.at(j);
+                if (guarded.isNull())
+                    continue;
+                QObject *target = guarded.get();
                 QQuickStateAction myAction;
                 QString errorMessage;
                 const QString &propertyName = props.at(i);
-                myAction.property = d->createProperty(targets.at(j), propertyName, this, &errorMessage);
+                myAction.property = d->createProperty(target, propertyName, this, &errorMessage);
                 if (myAction.property.isValid()) {
                     if (usingDefaultProperties)
                         successfullyCreatedDefaultProperty = true;

@@ -9,6 +9,7 @@ qt_internal_add_qml_module(QuickDialogs2
     PLUGIN_TARGET qtquickdialogsplugin
     DEPENDENCIES
         QtQuick/auto
+        QtQuick.Dialogs.quickimpl/auto
     SOURCES
         qquickabstractdialog.cpp
         qquickabstractdialog_p.h

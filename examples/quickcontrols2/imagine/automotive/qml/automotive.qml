@@ -160,7 +160,7 @@ ApplicationWindow {
                 Item {}
 
                 ColumnLayout {
-                    spacing: 16
+                    spacing: 12
 
                     ButtonGroup {
                         id: viewButtonGroup
@@ -176,6 +176,7 @@ ApplicationWindow {
                         Button {
                             text: qsTr("Compact")
                             font.pixelSize: fontSizeExtraSmall
+                            checkable: true
                             checked: true
 
                             Layout.fillWidth: true
@@ -203,13 +204,8 @@ ApplicationWindow {
                         stepSize: 1
 
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.minimumWidth: 64
-                        Layout.minimumHeight: 64
                         Layout.preferredWidth: 128
                         Layout.preferredHeight: 128
-                        Layout.maximumWidth: 128
-                        Layout.maximumHeight: 128
-                        Layout.fillHeight: true
 
                         Label {
                             text: volumeDial.value.toFixed(0)
@@ -224,7 +220,7 @@ ApplicationWindow {
                     }
 
                     RowLayout {
-                        Layout.topMargin: 16
+                        Layout.topMargin: 8
 
                         LargeLabel {
                             id: radioOption
@@ -282,18 +278,18 @@ ApplicationWindow {
                             }
 
                             model: ListModel {
-                                ListElement { name: "V-Radio"; frequency: "105.5 MHz" }
-                                ListElement { name: "World News"; frequency: "93.4 MHz" }
-                                ListElement { name: "TekStep FM"; frequency: "95.0 MHz" }
-                                ListElement { name: "Classic Radio"; frequency: "89.9 MHz" }
-                                ListElement { name: "Buena Vista FM"; frequency: "100.8 MHz" }
-                                ListElement { name: "Drive-by Radio"; frequency: "99.1 MHz" }
-                                ListElement { name: "Unknown #1"; frequency: "104.5 MHz" }
-                                ListElement { name: "Unknown #2"; frequency: "91.2 MHz" }
-                                ListElement { name: "Unknown #3"; frequency: "93.8 MHz" }
-                                ListElement { name: "Unknown #4"; frequency: "80.4 MHz" }
-                                ListElement { name: "Unknown #5"; frequency: "101.1 MHz" }
-                                ListElement { name: "Unknown #6"; frequency: "92.2 MHz" }
+                                ListElement { name: "V-Radio"; frequency: "105.5" }
+                                ListElement { name: "World News"; frequency: "93.4" }
+                                ListElement { name: "TekStep FM"; frequency: "95.0" }
+                                ListElement { name: "Classic Radio"; frequency: "89.9" }
+                                ListElement { name: "Buena Vista FM"; frequency: "100.8" }
+                                ListElement { name: "Drive-by Radio"; frequency: "99.1" }
+                                ListElement { name: "Unknown #1"; frequency: "104.5" }
+                                ListElement { name: "Unknown #2"; frequency: "91.2" }
+                                ListElement { name: "Unknown #3"; frequency: "93.8" }
+                                ListElement { name: "Unknown #4"; frequency: "80.4" }
+                                ListElement { name: "Unknown #5"; frequency: "101.1" }
+                                ListElement { name: "Unknown #6"; frequency: "92.2" }
                             }
                             delegate: ItemDelegate {
                                 id: stationDelegate
@@ -309,12 +305,16 @@ ApplicationWindow {
                                         text: model.name
                                         font: stationDelegate.font
                                         horizontalAlignment: Text.AlignLeft
+                                        elide: Text.ElideRight
+
                                         Layout.fillWidth: true
                                     }
                                     Label {
                                         text: model.frequency
                                         font: stationDelegate.font
                                         horizontalAlignment: Text.AlignRight
+                                        elide: Text.ElideRight
+
                                         Layout.fillWidth: true
                                     }
                                 }
@@ -325,14 +325,12 @@ ApplicationWindow {
                     Frame {
                         Layout.fillWidth: true
 
-                        RowLayout {
+                        ColumnLayout {
                             anchors.fill: parent
 
                             Label {
                                 text: qsTr("Sort by")
                                 font.pixelSize: fontSizeExtraSmall
-
-                                Layout.alignment: Qt.AlignTop
                             }
 
                             ColumnLayout {

@@ -1053,7 +1053,7 @@ function(qt6_add_qml_plugin target)
 
     if(NOT arg_CLASS_NAME)
         if(NOT "${arg_BACKING_TARGET}" STREQUAL "")
-            get_target_property(arg_CLASS_NAME ${target} QT_QML_MODULE_CLASS_NAME)
+            get_target_property(arg_CLASS_NAME ${arg_BACKING_TARGET} QT_QML_MODULE_CLASS_NAME)
         endif()
         if(NOT arg_CLASS_NAME)
             _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
@@ -1429,9 +1429,11 @@ function(qt6_target_qml_sources target)
             get_filename_component(file_out_dir ${file_out} DIRECTORY)
             file(MAKE_DIRECTORY ${file_out_dir})
 
-            execute_process(COMMAND
-                ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
-            )
+            if(EXISTS "${file_absolute}")
+                execute_process(COMMAND
+                    ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+                )
+            endif()
 
             add_custom_command(OUTPUT ${file_out}
                 COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
@@ -1517,6 +1519,12 @@ function(qt6_target_qml_sources target)
 
                 get_source_file_property(qml_file_singleton ${qml_file_src} QT_QML_SINGLETON_TYPE)
                 get_source_file_property(qml_file_internal  ${qml_file_src} QT_QML_INTERNAL_TYPE)
+
+                if (qml_file_singleton AND qml_file_internal)
+                   message(FATAL_ERROR
+                       "${qml_file_src} is marked as both internal and as a "
+                       "singleton, but singletons cannot be internal!")
+                endif()
 
                 if (NOT qml_file_versions)
                     set(qml_file_versions ${qml_module_files_versions})
@@ -1822,28 +1830,6 @@ function(_qt_internal_qml_type_registration target)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
-    cmake_policy(PUSH)
-
-    set(registration_cpp_file_dep_args)
-    if (CMAKE_GENERATOR MATCHES "Ninja" OR
-        (CMAKE_VERSION VERSION_GREATER_EQUAL 3.20 AND CMAKE_GENERATOR MATCHES "Makefiles"))
-        if(POLICY CMP0116)
-            # Without explicitly setting this policy to NEW, we get a warning
-            # even though we ensure there's actually no problem here.
-            # See https://gitlab.kitware.com/cmake/cmake/-/issues/21959
-            cmake_policy(SET CMP0116 NEW)
-            set(relative_to_dir ${CMAKE_CURRENT_BINARY_DIR})
-        else()
-            set(relative_to_dir ${CMAKE_BINARY_DIR})
-        endif()
-        set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
-        set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
-        file(RELATIVE_PATH cpp_file_name "${relative_to_dir}" "${type_registration_cpp_file}")
-        file(GENERATE OUTPUT "${dependency_file_cpp}"
-            CONTENT "${cpp_file_name}: $<IF:$<BOOL:${genex_list}>,\\\n$<JOIN:${genex_list}, \\\n>, \\\n>"
-        )
-    endif()
-
     add_custom_command(
         OUTPUT
             ${type_registration_cpp_file}
@@ -1863,11 +1849,8 @@ function(_qt_internal_qml_type_registration target)
             ${CMAKE_COMMAND} -E make_directory "${generated_marker_dir}"
         COMMAND
             ${CMAKE_COMMAND} -E touch "${generated_marker_file}"
-        ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
     )
-
-    cmake_policy(POP)
 
     # The ${target}_qmllint targets need to depend on the generation of all
     # *.qmltypes files in the build. We have no way of reliably working out
@@ -2166,7 +2149,8 @@ but this file does not exist.  Possible reasons include:
             # across those libraries to the end target (executable or shared library).
             # The plugin initializers will be linked via usage requirements from the plugin target.
             get_target_property(target_type ${target} TYPE)
-            if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY")
+            if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY"
+                OR target_type STREQUAL "MODULE_LIBRARY")
                 set(link_type "PRIVATE")
             else()
                 set(link_type "INTERFACE")

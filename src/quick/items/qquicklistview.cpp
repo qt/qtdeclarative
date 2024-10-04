@@ -2213,6 +2213,10 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     \note While an item is in the pool, it might still be alive and respond
     to connected signals and bindings.
 
+    \note For an item to be pooled, it needs to be completely flicked out of the bounds
+    of the view, \e including the extra margins set with \l {ListView::}{cacheBuffer.}
+    Some items will also never be pooled or reused, such as \l currentItem.
+
     The following example shows a delegate that animates a spinning rectangle. When
     it is pooled, the animation is temporarily paused:
 

@@ -1833,7 +1833,7 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
     qCDebug(lcPtrLoc) << q << "point" << point.id() << point.scenePosition() << "->" << itemPos << ": relevant?" << relevant << "to" << item << point;
     // if the item clips, we can potentially return early
     if (itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
-        if (!relevant)
+        if (!item->clipRect().contains(itemPos))
             return targets;
     }
 
@@ -2115,11 +2115,6 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
 
     if (item->acceptTouchEvents()) {
         qCDebug(lcTouch) << "considering delivering" << &touchEvent << " to " << item;
-
-        // If any parent filters the event, we're done.
-        hasFiltered.clear();
-        if (sendFilteredPointerEvent(&touchEvent, item))
-            return;
 
         // Deliver the touch event to the given item
         qCDebug(lcTouch) << "actually delivering" << &touchEvent << " to " << item;

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2014 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
+** Copyright (C) 2023 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -48,50 +48,57 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+//! [entire]
+import QtQuick
 
-Item {
-    width: 320
-    height: 480
+Window {
+    id: mainWindow
+    title: "Main Window"
+    color: "#456"
+    property real defaultSpacing: 10
 
-//! [grab-source]
-Rectangle {
-    id: source
-    width: 100
-    height: 100
-    gradient: Gradient {
-        GradientStop { position: 0; color: "steelblue" }
-        GradientStop { position: 1; color: "black" }
+    property Splash splash: Splash {
+        onTimeout: mainWindow.show()
     }
-}
-//! [grab-source]
 
-//! [grab-image-target]
-Image {
-    id: image
-}
-//! [grab-image-target]
-    Timer {
-        repeat: false
-        running: true
-        interval: 1000
-        onTriggered: {
-//! [grab-to-file]
+    component Splash: Window {
+        id: splash
 
-    // ...
-    source.grabToImage(function(result) {
-                           result.saveToFile("something.png");
-                       });
-//! [grab-to-file]
+        // a splash screen has no titlebar
+        flags: Qt.SplashScreen
+        // the transparent color lets background behind the image edges show through
+        color: "transparent"
+        modality: Qt.ApplicationModal // in case another application window is showing
+        title: "Splash Window" // for the taskbar/dock, task switcher etc.
+        visible: true
 
-//! [grab-to-cache]
+        // here we use the Screen attached property to center the splash window
+        //! [screen-properties]
+        x: (Screen.width - splashImage.width) / 2
+        y: (Screen.height - splashImage.height) / 2
+        //! [screen-properties]
+        width: splashImage.width
+        height: splashImage.height
 
-    // ...
-    source.grabToImage(function(result) {
-                           image.source = result.url;
-                       },
-                       Qt.size(50, 50));
-//! [grab-to-cache]
+        property int timeoutInterval: 2000
+        signal timeout
+
+        Image {
+            id: splashImage
+            source: "images/qt-logo.png"
+        }
+
+        TapHandler {
+            onTapped: splash.timeout()
+        }
+
+        Timer {
+            interval: splash.timeoutInterval; running: true; repeat: false
+            onTriggered: {
+                splash.visible = false
+                splash.timeout()
+            }
         }
     }
 }
+//! [entire]

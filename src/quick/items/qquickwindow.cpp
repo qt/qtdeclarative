@@ -3269,10 +3269,12 @@ void QQuickWindow::endExternalCommands()
     whether it's a dialog, popup, or a regular window, and whether it should
     have a title bar, etc.
 
-    The flags which you read from this property might differ from the ones
+    The flags that you read from this property might differ from the ones
     that you set if the requested flags could not be fulfilled.
 
-    \sa Qt::WindowFlags
+    \snippet qml/splashWindow.qml entire
+
+    \sa Qt::WindowFlags, {Qt Quick Examples - Window and Screen}
  */
 
 /*!
@@ -3357,10 +3359,12 @@ void QQuickWindow::endExternalCommands()
     visibility property you will always get the actual state, never
     \c AutomaticVisibility.
 
-    When a window is not visible its visibility is Hidden, and setting
+    When a window is not visible, its visibility is \c Hidden, and setting
     visibility to \l {QWindow::}{Hidden} is the same as setting \l visible to \c false.
 
-    \sa visible
+    \snippet qml/windowVisibility.qml entire
+
+    \sa visible, {Qt Quick Examples - Window and Screen}
     \since 5.1
  */
 
@@ -3466,17 +3470,8 @@ void QQuickWindow::endExternalCommands()
     Item or Window within which it was declared, you can remove that
     relationship by setting \c transientParent to \c null:
 
-    \qml
-    import QtQuick.Window 2.13
-
-    Window {
-        // visible is false by default
-        Window {
-            transientParent: null
-            visible: true
-        }
-    }
-    \endqml
+    \snippet qml/nestedWindowTransientParent.qml 0
+    \snippet qml/nestedWindowTransientParent.qml 1
 
     In order to cause the window to be centered above its transient parent by
     default, depending on the window manager, it may also be necessary to set
@@ -3522,6 +3517,9 @@ void QQuickWindow::endExternalCommands()
 
     The active status of the window.
 
+    \snippet qml/windowPalette.qml declaration-and-color
+    \snippet qml/windowPalette.qml closing-brace
+
     \sa requestActivate()
  */
 
@@ -3535,14 +3533,7 @@ void QQuickWindow::endExternalCommands()
     Here is an example which changes a label to show the active state of the
     window in which it is shown:
 
-    \qml
-    import QtQuick 2.4
-    import QtQuick.Window 2.2
-
-    Text {
-        text: Window.active ? "active" : "inactive"
-    }
-    \endqml
+    \snippet qml/windowActiveAttached.qml entire
 */
 
 /*!
@@ -4150,9 +4141,10 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
     palette which serves as a default for all application windows. You can also set the default palette
     for windows by passing a custom palette to QGuiApplication::setPalette(), before loading any QML.
 
-    ApplicationWindow propagates explicit palette properties to child controls. If you change a specific
-    property on the window's palette, that property propagates to all child controls in the window,
+    Window propagates explicit palette properties to child items and controls,
     overriding any system defaults for that property.
+
+    \snippet qml/windowPalette.qml entire
 
     \sa Item::palette, Popup::palette, ColorGroup, SystemPalette
     //! internal \sa QQuickAbstractPaletteProvider, QQuickPalette

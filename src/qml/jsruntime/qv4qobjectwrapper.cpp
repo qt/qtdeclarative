@@ -248,7 +248,9 @@ QQmlPropertyData *QObjectWrapper::findProperty(
     return result;
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property)
+ReturnedValue QObjectWrapper::getProperty(
+        ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
+        QQmlPropertyData *property)
 {
     QQmlData::flushPendingBinding(object, property->coreIndex());
 
@@ -262,13 +264,13 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
             ScopedContext global(scope, engine->qmlContext());
             if (!global)
                 global = engine->rootContext();
-            return QV4::QObjectMethod::create(global, object, property->coreIndex());
+            return QV4::QObjectMethod::create(global, wrapper, property->coreIndex());
         } else if (property->isSignalHandler()) {
             QmlSignalHandler::initProto(engine);
             return engine->memoryManager->allocate<QV4::QmlSignalHandler>(object, property->coreIndex())->asReturnedValue();
         } else {
             ExecutionContext *global = engine->rootContext();
-            return QV4::QObjectMethod::create(global, object, property->coreIndex());
+            return QV4::QObjectMethod::create(global, wrapper, property->coreIndex());
         }
     }
 
@@ -287,7 +289,8 @@ ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *obje
     }
 }
 
-static OptionalReturnedValue getDestroyOrToStringMethod(ExecutionEngine *v4, String *name, QObject *qobj, bool *hasProperty = nullptr)
+static OptionalReturnedValue getDestroyOrToStringMethod(
+        ExecutionEngine *v4, String *name, Heap::Object *qobj, bool *hasProperty = nullptr)
 {
     int index = 0;
     if (name->equals(v4->id_destroy()))
@@ -345,7 +348,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 
     ExecutionEngine *v4 = engine();
 
-    if (auto methodValue = getDestroyOrToStringMethod(v4, name, d()->object(), hasProperty))
+    if (auto methodValue = getDestroyOrToStringMethod(v4, name, d(), hasProperty))
         return *methodValue;
 
     QQmlPropertyData local;
@@ -373,13 +376,13 @@ ReturnedValue QObjectWrapper::getQmlProperty(
     if (hasProperty)
         *hasProperty = true;
 
-    return getProperty(v4, d()->object(), result);
+    return getProperty(v4, d(), d()->object(), result);
 }
 
 ReturnedValue QObjectWrapper::getQmlProperty(
         QV4::ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
-        QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty,
-        QQmlPropertyData **property)
+        Heap::Object *wrapper, QObject *object, String *name,
+        QObjectWrapper::RevisionMode revisionMode, bool *hasProperty, QQmlPropertyData **property)
 {
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
@@ -387,7 +390,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         return QV4::Encode::null();
     }
 
-    if (auto methodValue = getDestroyOrToStringMethod(engine, name, object, hasProperty))
+    if (auto methodValue = getDestroyOrToStringMethod(engine, name, wrapper, hasProperty))
         return *methodValue;
 
     QQmlData *ddata = QQmlData::get(object, false);
@@ -409,7 +412,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         if (property && result != &local)
             *property = result;
 
-        return getProperty(engine, object, result);
+        return getProperty(engine, wrapper, object, result);
     } else {
         // Check if this object is already wrapped.
         if (!ddata || (ddata->jsWrapper.isUndefined() &&
@@ -429,13 +432,13 @@ ReturnedValue QObjectWrapper::getQmlProperty(
     Q_ASSERT(ddata);
 
     QV4::Scope scope(engine);
-    QV4::Scoped<QObjectWrapper> wrapper(scope, wrap(engine, object));
-    if (!wrapper) {
+    QV4::Scoped<QObjectWrapper> rewrapped(scope, wrap(engine, object));
+    if (!rewrapped) {
         if (hasProperty)
             *hasProperty = false;
         return QV4::Encode::null();
     }
-    return wrapper->getQmlProperty(qmlContext, name, revisionMode, hasProperty);
+    return rewrapped->getQmlProperty(qmlContext, name, revisionMode, hasProperty);
 }
 
 
@@ -867,7 +870,7 @@ PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const QV4::Object *o, Pro
             if (pd) {
                 QQmlPropertyData local;
                 local.load(property);
-                pd->value = that->getProperty(thatEngine, thatObject, &local);
+                pd->value = that->getProperty(thatEngine, that->d(), thatObject, &local);
             }
             return propName->toPropertyKey();
         }
@@ -892,7 +895,7 @@ PropertyKey QObjectWrapperOwnPropertyKeyIterator::next(const QV4::Object *o, Pro
             if (pd) {
                 QQmlPropertyData local;
                 local.load(method);
-                pd->value = that->getProperty(thatEngine, thatObject, &local);
+                pd->value = that->getProperty(thatEngine, that->d(), thatObject, &local);
             }
             return methodName->toPropertyKey();
         }
@@ -925,14 +928,14 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     if (QQmlData::wasDeleted(qobj))
         return QV4::Encode::undefined();
 
-    if (auto methodValue = getDestroyOrToStringMethod(engine, name, qobj))
+    if (auto methodValue = getDestroyOrToStringMethod(engine, name, This->d()))
         return *methodValue;
 
     QQmlData *ddata = QQmlData::get(qobj, false);
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
         QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, &local);
-        return property ? getProperty(engine, qobj, property) : QV4::Encode::undefined();
+        return property ? getProperty(engine, This->d(), qobj, property) : QV4::Encode::undefined();
     }
     QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 
@@ -1246,6 +1249,8 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 if (ddata && ddata->ownContext) {
                     Q_ASSERT(ddata->ownContext.data() == ddata->context);
                     ddata->ownContext->emitDestruction();
+                    if (ddata->ownContext->contextObject() == h->object())
+                        ddata->ownContext->setContextObject(nullptr);
                     ddata->ownContext = nullptr;
                     ddata->context = nullptr;
                 }
@@ -1884,12 +1889,24 @@ bool CallArgument::fromValue(QMetaType metaType, QV4::ExecutionEngine *engine, c
     } else if (callType == QMetaType::QObjectStar) {
         qobjectPtr = nullptr;
         type = callType;
-        if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>())
+        if (const QV4::QObjectWrapper *qobjectWrapper = value.as<QV4::QObjectWrapper>()) {
             qobjectPtr = qobjectWrapper->object();
-        else if (const QV4::QQmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QQmlTypeWrapper>())
-            queryEngine = qmlTypeWrapper->isSingleton();
-        else if (!value.isNull() && !value.isUndefined()) // null and undefined are nullptr
+        } else if (const QV4::QQmlTypeWrapper *qmlTypeWrapper = value.as<QV4::QQmlTypeWrapper>()) {
+            if (qmlTypeWrapper->isSingleton()) {
+                queryEngine = true;
+            } else if (QObject *obj = qmlTypeWrapper->object()) {
+                // attached object case
+                qobjectPtr = obj;
+                return true;
+            } else {
+                // If this is a plain type wrapper without an instance,
+                // then we got a namespace, and that's a type error
+                type = QMetaType::UnknownType;
+                return false;
+            }
+        } else if (!value.isNull() && !value.isUndefined()) { // null and undefined are nullptr
             return false;
+        }
     } else if (callType == qMetaTypeId<QVariant>()) {
         qvariantPtr = new (&allocData) QVariant(scope.engine->toVariant(value, QMetaType {}));
         type = callType;
@@ -2069,35 +2086,49 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
     }
 }
 
-ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, int index)
+ReturnedValue QObjectMethod::create(ExecutionContext *scope, Heap::Object *wrapper, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
-    method->d()->setObject(object);
-
-    method->d()->index = index;
+    Scoped<QObjectMethod> method(
+            valueScope,
+            valueScope.engine->memoryManager->allocate<QObjectMethod>(scope, wrapper, index));
     return method.asReturnedValue();
 }
 
 ReturnedValue QObjectMethod::create(ExecutionContext *scope, Heap::QQmlValueTypeWrapper *valueType, int index)
 {
     Scope valueScope(scope);
-    Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
-    method->d()->index = index;
-    method->d()->valueTypeWrapper.set(valueScope.engine, valueType);
+    Scoped<QObjectMethod> method(
+            valueScope,
+            valueScope.engine->memoryManager->allocate<QObjectMethod>(scope, valueType, index));
     return method.asReturnedValue();
 }
 
-void Heap::QObjectMethod::init(QV4::ExecutionContext *scope)
+void Heap::QObjectMethod::init(QV4::ExecutionContext *scope, Object *object, int methodIndex)
 {
     Heap::FunctionObject::init(scope);
+    wrapper.set(internalClass->engine, object);
+    index = methodIndex;
 }
 
 const QMetaObject *Heap::QObjectMethod::metaObject()
 {
-    if (valueTypeWrapper)
-        return valueTypeWrapper->metaObject();
-    return object()->metaObject();
+    Scope scope(internalClass->engine);
+    if (Scoped<QV4::QQmlValueTypeWrapper> valueWrapper(scope, wrapper); valueWrapper)
+        return valueWrapper->metaObject();
+    if (QObject *self = object())
+        return self->metaObject();
+    return nullptr;
+}
+
+QObject *Heap::QObjectMethod::object() const
+{
+    Scope scope(internalClass->engine);
+    if (Scoped<QV4::QObjectWrapper> objectWrapper(scope, wrapper); objectWrapper)
+        return objectWrapper->object();
+    if (Scoped<QV4::QQmlTypeWrapper> typeWrapper(scope, wrapper); typeWrapper)
+        return typeWrapper->object();
+    return nullptr;
 }
 
 void Heap::QObjectMethod::ensureMethodsCache()
@@ -2193,14 +2224,19 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     d()->ensureMethodsCache();
 
     Scope scope(v4);
-    QQmlObjectOrGadget object(d()->object());
-
-    if (!d()->object()) {
-        if (!d()->valueTypeWrapper)
-            return Encode::undefined();
-
-        object = QQmlObjectOrGadget(d()->metaObject(), d()->valueTypeWrapper->gadgetPtr());
-    }
+    Heap::QQmlValueTypeWrapper *valueWrapper = nullptr;
+    QQmlObjectOrGadget object = [&]() {
+        QV4::Scope scope(v4);
+        if (QV4::Scoped<QV4::QObjectWrapper> qobject(scope, d()->wrapper); qobject)
+            return QQmlObjectOrGadget(qobject->object());
+        if (QV4::Scoped<QV4::QQmlTypeWrapper> type(scope, d()->wrapper); type)
+            return QQmlObjectOrGadget(type->object());
+        if (QV4::Scoped<QV4::QQmlValueTypeWrapper> value(scope, d()->wrapper); value) {
+            valueWrapper = value->d();
+            return QQmlObjectOrGadget(valueWrapper->metaObject(), valueWrapper->gadgetPtr());
+        }
+        Q_UNREACHABLE();
+    }();
 
     JSCallData cData(thisObject, argv, argc);
     CallData *callData = cData.callData(scope);
@@ -2211,8 +2247,7 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     // The method might change the value.
     const auto doCall = [&](const auto &call) {
         if (!method->isConstant()) {
-            QV4::Scoped<QQmlValueTypeReference> valueTypeReference(
-                        scope, d()->valueTypeWrapper.get());
+            QV4::Scoped<QQmlValueTypeReference> valueTypeReference(scope, valueWrapper);
             if (valueTypeReference) {
                 QV4::ScopedValue rv(scope, call());
                 valueTypeReference->d()->writeBack();
@@ -2335,9 +2370,11 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
                     objectOrGadget, d()->constructors, d()->constructorCount, v4, callData)) {
         object = CallPrecise(objectOrGadget, *ctor, v4, callData, QMetaObject::CreateInstance);
     }
-    Scoped<QMetaObjectWrapper> metaObject(scope, this);
-    object->defineDefaultProperty(v4->id_constructor(), metaObject);
-    object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
+    if (object) {
+        Scoped<QMetaObjectWrapper> metaObject(scope, this);
+        object->defineDefaultProperty(v4->id_constructor(), metaObject);
+        object->setPrototypeOf(const_cast<QMetaObjectWrapper*>(this));
+    }
     return object.asReturnedValue();
 
 }

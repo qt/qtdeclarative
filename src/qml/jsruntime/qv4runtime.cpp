@@ -1544,6 +1544,11 @@ static CallArgs createSpreadArguments(Scope &scope, Value *argv, int argc)
             if (done->booleanValue())
                 break;
             ++argCount;
+            constexpr auto safetyMargin = 100; // leave some space on the stack for actual work with the elements
+            if (qint64(scope.engine->jsStackLimit - scope.engine->jsStackTop) < safetyMargin) {
+                scope.engine->throwRangeError(QLatin1String("Too many elements in array to use it with the spread operator"));
+                        return { nullptr, 0 };
+            }
             v = scope.alloc<Scope::Uninitialized>();
         }
     }
@@ -1608,7 +1613,7 @@ ReturnedValue Runtime::TailCall::call(JSTypesStackFrame *frame, ExecutionEngine 
         return checkedResult(engine, fo.call(&thisObject, argv, argc));
     }
 
-    memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));
+    memmove(frame->jsFrame->args, argv, argc * sizeof(Value));
     frame->init(fo.function(), frame->jsFrame->argValues<Value>(), argc,
                 frame->callerCanHandleTailCall());
     frame->setupJSFrame(frame->framePointer(), fo, fo.scope(), thisObject,

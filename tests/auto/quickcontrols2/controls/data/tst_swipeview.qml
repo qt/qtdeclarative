@@ -691,7 +691,10 @@ TestCase {
         id: translucentPages
         SwipeView {
             spacing: 10
-            padding: 10
+            leftPadding: 10
+            topPadding: 10
+            rightPadding: 10
+            bottomPadding: 10
             Text { text: "page 0" }
             Text { text: "page 1"; font.pointSize: 16 }
             Text { text: "page 2"; font.pointSize: 24 }
@@ -702,18 +705,33 @@ TestCase {
     function test_initialPositions() { // QTBUG-102487
         const control = createTemporaryObject(translucentPages, testCase, {width: 320, height: 200})
         verify(control)
+        compare(control.contentItem.width, control.width - control.leftPadding - control.rightPadding)
+        compare(control.spacing, 10)
+
         compare(control.orientation, Qt.Horizontal)
-        for (var i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             const page = control.itemAt(i)
-            // control.contentItem.width + control.spacing == 310; except Imagine style has contentItem.width == 320
-            compare(page.x, i * 310)
+            compare(page.x, i * (control.contentItem.width + control.spacing))
             compare(page.y, 0)
+            compare(page.width, control.contentItem.width)
+            compare(page.height, control.contentItem.height)
         }
         control.orientation = Qt.Vertical
-        for (var i = 0; i < control.count; ++i) {
+        for (let i = 0; i < control.count; ++i) {
             const page = control.itemAt(i)
             compare(page.y, i * (control.contentItem.height + control.spacing))
             compare(page.x, 0)
+            compare(page.width, control.contentItem.width)
+            compare(page.height, control.contentItem.height)
         }
+
+        // QTBUG-115468: add a page after startup and check that that works too.
+        control.orientation = Qt.Horizontal
+        let page4 = page.createObject(control, { text: "page 4", "font.pointSize": 40 })
+        control.insertItem(control.count, page4)
+        compare(page4.x, (control.count - 1) * 310)
+        compare(page4.y, 0)
+        compare(page4.width, control.contentItem.width)
+        compare(page4.height, control.contentItem.height)
     }
 }

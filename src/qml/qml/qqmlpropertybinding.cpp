@@ -163,7 +163,8 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 
 void QQmlPropertyBindingJS::expressionChanged()
 {
-    if (!asBinding()->propertyDataPtr)
+    auto binding = asBinding();
+    if (!binding->propertyDataPtr)
         return;
     if (QQmlData::wasDeleted(asBinding()->target()))
         return;
@@ -185,8 +186,9 @@ void QQmlPropertyBindingJS::expressionChanged()
         return;
     }
     m_error.setTag(InEvaluationLoop);
-    asBinding()->evaluateRecursive();
-    asBinding()->notifyRecursive();
+    PendingBindingObserverList bindingObservers;
+    binding->evaluateRecursive(bindingObservers);
+    binding->notifyNonRecursive(bindingObservers);
     m_error.setTag(NoTag);
 }
 
@@ -263,10 +265,17 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         setIsUndefined(true);
         //suspend binding evaluation state for reset and subsequent read
         auto state = QtPrivate::suspendCurrentBindingStatus();
-        prop.reset();
+        prop.reset(); // May re-allocate the bindingData
         QVariant currentValue = QVariant(prop.propertyMetaType(), propertyDataPtr);
         QtPrivate::restoreBindingStatus(state);
         writeBackCurrentValue(std::move(currentValue));
+
+        // Re-fetch binding data
+        bindingData = storage->bindingData(propertyDataPtr);
+        if (!bindingData)
+            bindingData = bindingDataFromPropertyData(propertyDataPtr, propertyData->propType());
+        bindingDataPointer = QPropertyBindingDataPointer {bindingData};
+
         // reattach the binding (without causing a new notification)
         if (Q_UNLIKELY(bindingData->d() & QtPrivate::QPropertyBindingData::BindingBit)) {
             qCWarning(lcQQPropertyBinding) << "Resetting " << prop.name() << "due to the binding becoming undefined  caused a new binding to be installed\n"
@@ -278,7 +287,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         firstObserver = bindingDataPointer.firstObserver();
         bindingData->d_ref() = reinterpret_cast<quintptr>(this) | QtPrivate::QPropertyBindingData::BindingBit;
         if (firstObserver)
-            bindingDataPointer.setObservers(firstObserver.ptr);
+            prependObserver(firstObserver);
     } else {
         QQmlError qmlError;
         auto location = jsExpression()->sourceLocation();

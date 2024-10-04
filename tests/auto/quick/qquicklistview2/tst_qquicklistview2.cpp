@@ -66,6 +66,9 @@ private slots:
     void isCurrentItem_DelegateModel();
     void isCurrentItem_NoRegressionWithDelegateModelGroups();
 
+    void fetchMore_data();
+    void fetchMore();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -260,29 +263,31 @@ void tst_QQuickListView2::tapDelegateDuringFlicking_data()
 {
     QTest::addColumn<QByteArray>("qmlFile");
     QTest::addColumn<QQuickFlickable::BoundsBehavior>("boundsBehavior");
+    QTest::addColumn<bool>("expectCanceled");
 
     QTest::newRow("Button StopAtBounds") << QByteArray("buttonDelegate.qml")
-                                         << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds);
+                                         << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds) << false;
     QTest::newRow("MouseArea StopAtBounds") << QByteArray("mouseAreaDelegate.qml")
-                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds);
+                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::StopAtBounds) << true;
     QTest::newRow("Button DragOverBounds") << QByteArray("buttonDelegate.qml")
-                                           << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds);
+                                           << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds) << false;
     QTest::newRow("MouseArea DragOverBounds") << QByteArray("mouseAreaDelegate.qml")
-                                              << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds);
+                                              << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragOverBounds) << true;
     QTest::newRow("Button OvershootBounds") << QByteArray("buttonDelegate.qml")
-                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds);
+                                            << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds) << false;
     QTest::newRow("MouseArea OvershootBounds") << QByteArray("mouseAreaDelegate.qml")
-                                               << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds);
+                                               << QQuickFlickable::BoundsBehavior(QQuickFlickable::OvershootBounds) << true;
     QTest::newRow("Button DragAndOvershootBounds") << QByteArray("buttonDelegate.qml")
-                                                   << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
+                                                   << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds) << false;
     QTest::newRow("MouseArea DragAndOvershootBounds") << QByteArray("mouseAreaDelegate.qml")
-                                                      << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds);
+                                                      << QQuickFlickable::BoundsBehavior(QQuickFlickable::DragAndOvershootBounds) << true;
 }
 
 void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
 {
     QFETCH(QByteArray, qmlFile);
     QFETCH(QQuickFlickable::BoundsBehavior, boundsBehavior);
+    QFETCH(bool, expectCanceled);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFile.constData())));
@@ -295,7 +300,16 @@ void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
     QVERIFY(listView->isFlicking()); // we want to test the case when it's still moving while we tap
     // @y = 400 we pressed the 4th delegate; started flicking, and the press was canceled
     QCOMPARE(listView->property("pressedDelegates").toList().first(), 4);
-    QCOMPARE(listView->property("canceledDelegates").toList().first(), 4);
+    // At first glance one would expect MouseArea and Button would be consistent about this;
+    // but in fact, before ListView takes over the grab via filtering,
+    // Button.pressed transitions to false because QQuickAbstractButtonPrivate::handleMove
+    // sees that the touchpoint has strayed outside its bounds, but it does NOT emit the canceled signal
+    if (expectCanceled) {
+        const QVariantList canceledDelegates = listView->property("canceledDelegates").toList();
+        QCOMPARE(canceledDelegates.size(), 1);
+        QCOMPARE(canceledDelegates.first(), 4);
+    }
+    QCOMPARE(listView->property("releasedDelegates").toList().size(), 0);
 
     // press a delegate during flicking (at y > 501 + 100, so likely delegate 6)
     QTest::touchEvent(&window, touchDevice.data()).press(0, {100, 100});
@@ -318,7 +332,7 @@ void tst_QQuickListView2::tapDelegateDuringFlicking() // QTBUG-103832
     QVERIFY(lastPressed > 5);
     QCOMPARE(releasedDelegates.last(), lastPressed);
     QCOMPARE(tappedDelegates.last(), lastPressed);
-    QCOMPARE(canceledDelegates.count(), 1); // only the first press was canceled, not the second
+    QCOMPARE(canceledDelegates.size(), expectCanceled ? 1 : 0); // only the first press was canceled, not the second
 }
 
 void tst_QQuickListView2::flickDuringFlicking_data()
@@ -462,6 +476,81 @@ void tst_QQuickListView2::isCurrentItem_NoRegressionWithDelegateModelGroups()
 
     QTRY_COMPARE(item0->property("isCurrent").toBool(), true);
     QCOMPARE(item3->property("isCurrent").toBool(), false);
+}
+
+class TestFetchMoreModel : public QAbstractListModel
+{
+    Q_OBJECT
+
+public:
+    QVariant data(const QModelIndex& index, int role) const override
+    {
+        if (role == Qt::DisplayRole)
+            return QString::number(index.row());
+        return {};
+    }
+
+    int columnCount(const QModelIndex&) const override { return 1; }
+
+    int rowCount(const QModelIndex& parent) const override
+    {
+        return parent.isValid() ? 0 : m_lines;
+    }
+
+    QModelIndex parent(const QModelIndex&) const override { return {}; }
+
+    bool canFetchMore(const QModelIndex &) const override { return true; }
+
+    void fetchMore(const QModelIndex & parent) override
+    {
+        if (Q_UNLIKELY(parent.isValid()))
+            return;
+        beginInsertRows(parent, m_lines, m_lines);
+        m_lines++;
+        endInsertRows();
+    }
+
+    int m_lines = 3;
+};
+
+void tst_QQuickListView2::fetchMore_data()
+{
+    QTest::addColumn<bool>("reuseItems");
+    QTest::addColumn<int>("cacheBuffer");
+
+    QTest::newRow("no reuseItems, default buffer") << false << -1;
+    QTest::newRow("reuseItems, default buffer") << true << -1;
+    QTest::newRow("no reuseItems, no buffer") << false << 0;
+    QTest::newRow("reuseItems, no buffer") << true << 0;
+    QTest::newRow("no reuseItems, buffer 100 px") << false << 100;
+    QTest::newRow("reuseItems, buffer 100 px") << true << 100;
+}
+
+void tst_QQuickListView2::fetchMore() // QTBUG-95107
+{
+    QFETCH(bool, reuseItems);
+    QFETCH(int, cacheBuffer);
+
+    TestFetchMoreModel model;
+    qmlRegisterSingletonInstance("org.qtproject.Test", 1, 0, "FetchMoreModel", &model);
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("fetchMore.qml")));
+    auto *listView = qobject_cast<QQuickListView*>(window.rootObject());
+    QVERIFY(listView);
+    listView->setReuseItems(reuseItems);
+    if (cacheBuffer >= 0)
+        listView->setCacheBuffer(cacheBuffer);
+
+    for (int i = 0; i < 3; ++i) {
+        const int rowCount = listView->count();
+        if (lcTests().isDebugEnabled()) QTest::qWait(1000);
+        listView->flick(0, -5000);
+        QTRY_VERIFY(!listView->isMoving());
+        qCDebug(lcTests) << "after flick: contentY" << listView->contentY()
+                         << "rows" << rowCount << "->" << listView->count();
+        QVERIFY(listView->count() > rowCount);
+        QVERIFY(model.m_lines >= listView->count()); // fetchMore() was called
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView2)

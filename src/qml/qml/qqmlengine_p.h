@@ -130,9 +130,16 @@ public:
 };
 
 struct QPropertyChangeTrigger : QPropertyObserver {
-    QPropertyChangeTrigger(QQmlJavaScriptExpression *expression) : QPropertyObserver(&QPropertyChangeTrigger::trigger), m_expression(expression) {}
-    QQmlJavaScriptExpression * m_expression;
-    QObject *target = nullptr;
+    Q_DISABLE_COPY_MOVE(QPropertyChangeTrigger)
+
+    QPropertyChangeTrigger(QQmlJavaScriptExpression *expression)
+        : QPropertyObserver(&QPropertyChangeTrigger::trigger)
+        , m_expression(expression)
+    {
+    }
+
+    QPointer<QObject> target;
+    QQmlJavaScriptExpression *m_expression;
     int propertyIndex = 0;
     static void trigger(QPropertyObserver *, QUntypedPropertyData *);
 

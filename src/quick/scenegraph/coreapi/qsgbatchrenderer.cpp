@@ -3251,7 +3251,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     // unmerged batch since the material (and so the shaders) is the same.
     QSGGeometry *g = gn->geometry();
     QSGMaterial *material = gn->activeMaterial();
-    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g);
+    ShaderManager::Shader *sms = m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode);
     if (!sms)
         return false;
 

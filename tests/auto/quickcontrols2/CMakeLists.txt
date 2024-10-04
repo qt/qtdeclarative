@@ -6,6 +6,7 @@ add_subdirectory(controls)
 endif()
 add_subdirectory(cursor)
 add_subdirectory(customization)
+add_subdirectory(deferred)
 add_subdirectory(designer)
 if(NOT ANDROID) # QTBUG-100258
 add_subdirectory(focus)

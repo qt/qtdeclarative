@@ -294,8 +294,12 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
             bool hasProp = false;
 
             QQmlPropertyData *propertyData = nullptr;
-            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4, context, scopeObject,
-                                                                               name, QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData));
+
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, scopeObject));
+            QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(
+                                        v4, context, wrapper->d(), scopeObject, name,
+                                        QV4::QObjectWrapper::CheckRevision, &hasProp,
+                                        &propertyData));
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -321,9 +325,10 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
             QQmlPropertyData *propertyData = nullptr;
-            result = QV4::QObjectWrapper::getQmlProperty(v4, context, contextObject,
-                                                         name, QV4::QObjectWrapper::CheckRevision,
-                                                         &hasProp, &propertyData);
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(v4, contextObject));
+            result = QV4::QObjectWrapper::getQmlProperty(
+                    v4, context, wrapper->d(), contextObject, name,
+                    QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData);
             if (hasProp) {
                 if (hasProperty)
                     *hasProperty = true;
@@ -682,8 +687,9 @@ ReturnedValue QQmlContextWrapper::lookupInParentContextHierarchy(Lookup *l, Exec
         // Search context object
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
+            QV4::ScopedObject wrapper(scope, QV4::QObjectWrapper::wrap(engine, contextObject));
             result = QV4::QObjectWrapper::getQmlProperty(
-                        engine, context, contextObject, name,
+                        engine, context, wrapper->d(), contextObject, name,
                         QV4::QObjectWrapper::CheckRevision, &hasProp);
             if (hasProp) {
                 if (base)

@@ -52,6 +52,8 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <QtCore/private/qproperty_p.h>
+#include <QtQuick/qquickwindow.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 
@@ -312,6 +314,7 @@ private slots:
     void bindingBoundFunctions();
     void qpropertyAndQtBinding();
     void qpropertyBindingReplacement();
+    void qpropertyBindingNoQPropertyCapture();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -393,6 +396,8 @@ private slots:
     void qpropertyBindingHandlesUndefinedCorrectly();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
     void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
+    void qpropertyBindingRestoresObserverAfterReset();
+    void qpropertyBindingObserverCorrectlyLinkedAfterReset();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -3070,6 +3075,26 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->invoked(), 13);
     QCOMPARE(o->actuals().count(), 1);
     QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
+
+    {
+        o->reset();
+        QQmlComponent comp(&qmlengine, testFileUrl("qmlTypeWrapperArgs.qml"));
+        QScopedPointer<QObject> root {comp.createWithInitialProperties({{"invokableObject", QVariant::fromValue(o)}}) };
+        QVERIFY(root);
+        QCOMPARE(o->error(), false);
+        QCOMPARE(o->invoked(), 13);
+        QCOMPARE(o->actuals().count(), 1);
+        QCOMPARE(o->actuals().at(0).value<QObject *>()->metaObject()->className(), "QQmlComponentAttached");
+    }
+
+    {
+        o->reset();
+        QQmlComponent comp(&qmlengine, testFileUrl("qmlTypeWrapperArgs2.qml"));
+        QScopedPointer<QObject> root {comp.createWithInitialProperties({{"invokableObject", QVariant::fromValue(o)}}) };
+        QVERIFY(root);
+        QCOMPARE(o->error(), false);
+        QCOMPARE(o->invoked(), -1); // no function got called due to incompatible arguments
+    }
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(undefined)", QV4::Primitive::undefinedValue()));
@@ -7640,6 +7665,28 @@ void tst_qqmlecmascript::qpropertyBindingReplacement()
     QCOMPARE(root->objectName(), u"overwritten"_qs);
 }
 
+void tst_qqmlecmascript::qpropertyBindingNoQPropertyCapture()
+{
+
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("qpropertyBindingNoQPropertyCapture.qml"));
+    std::unique_ptr<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+    auto redRectangle = root.get();
+
+    QQmlProperty blueRectangleWidth(redRectangle, "blueRectangleWidth", &engine);
+
+    auto toggle = [&](){
+        QMetaObject::invokeMethod(root.get(), "toggle");
+    };
+
+    QCOMPARE(blueRectangleWidth.read().toInt(), 25);
+    toggle();
+    QCOMPARE(blueRectangleWidth.read().toInt(), 600);
+    toggle();
+    QCOMPARE(blueRectangleWidth.read().toInt(), 25);
+}
+
 void tst_qqmlecmascript::deleteRootObjectInCreation()
 {
     QQmlEngine engine;
@@ -9193,6 +9240,32 @@ void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedWithoutResetCorrectly()
     root->setProperty("anotherValue", 2);
     root->setProperty("toggle", false);
     QCOMPARE(root->property("value2").toInt(), 2);
+}
+
+void tst_qqmlecmascript::qpropertyBindingRestoresObserverAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreObserverAfterReset.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("height").toDouble(), 60.0);
+    QVERIFY(o->property("steps").toInt() > 3);
+}
+
+void tst_qqmlecmascript::qpropertyBindingObserverCorrectlyLinkedAfterReset()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("qpropertyResetCorrectlyLinked.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("width"), 200);
+    auto item = qobject_cast<QQuickItem *>(o.get());
+    auto itemPriv = QQuickItemPrivate::get(item);
+    QBindingStorage *storage = qGetBindingStorage(itemPriv);
+    QPropertyBindingDataPointer ptr { storage->bindingData(&itemPriv->width) };
+    QCOMPARE(ptr.observerCount(), 1);
 }
 
 void tst_qqmlecmascript::hugeRegexpQuantifiers()
