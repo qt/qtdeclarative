@@ -249,18 +249,24 @@ int main(int argc, char *argv[])
     if (options.writeDefaultSettingsEnabled())
         return settings.writeDefaults() ? 0 : -1;
 
-    auto getSettings = [&](const QString &file, QQmlFormatOptions options) {
+    auto getSettings = [&](const QString &file, const QQmlFormatOptions &options) {
         // Perform formatting inplace if --files option is set.
-        if (!options.files().isEmpty())
-            options.setIsInplace(true);
+        const bool hasFiles = !options.files().isEmpty();
 
-        if (options.ignoreSettingsEnabled() || !settings.search(file))
-            return options;
+        if (options.ignoreSettingsEnabled() || !settings.search(file)) {
+            if (!hasFiles)
+                return options;
+
+            QQmlFormatOptions perFileOptions = options;
+            perFileOptions.setIsInplace(true);
+            return perFileOptions;
+        }
 
         QQmlFormatOptions perFileOptions = options;
+        if (hasFiles)
+            perFileOptions.setIsInplace(true);
 
         perFileOptions.applySettings(settings);
-
         return perFileOptions;
     };
 
