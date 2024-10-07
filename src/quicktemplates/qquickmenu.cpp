@@ -80,11 +80,11 @@ static const int SUBMENU_DELAY = 225;
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: {
+        onClicked: (mouse) => {
             if (mouse.button === Qt.RightButton)
                 contextMenu.popup()
         }
-        onPressAndHold: {
+        onPressAndHold: (mouse) => {
             if (mouse.source === Qt.MouseEventNotSynthesized)
                 contextMenu.popup()
         }
