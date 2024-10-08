@@ -1487,6 +1487,29 @@ QQmlError ExecutionEngine::catchExceptionAsQmlError()
     return error;
 }
 
+void ExecutionEngine::amendException()
+{
+    const int missingLineNumber = currentStackFrame->missingLineNumber();
+    const int lineNumber = currentStackFrame->lineNumber();
+    Q_ASSERT(missingLineNumber != lineNumber);
+
+    auto amendStackTrace = [&](QV4::StackTrace *stackTrace) {
+        for (auto it = stackTrace->begin(), end = stackTrace->end(); it != end; ++it) {
+            if (it->line == missingLineNumber) {
+                it->line = lineNumber;
+                break;
+            }
+        }
+    };
+
+    amendStackTrace(&exceptionStackTrace);
+
+    QV4::Scope scope(this);
+    QV4::Scoped<QV4::ErrorObject> error(scope, *exceptionValue);
+    if (error) // else some other value was thrown
+        amendStackTrace(error->d()->stackTrace);
+}
+
 // Variant conversion code
 
 typedef QSet<QV4::Heap::Object *> V4ObjectSet;

@@ -1490,30 +1490,6 @@ static bool initValueLookup(QV4::Lookup *l, QV4::ExecutableCompilationUnit *comp
     return true;
 }
 
-static void amendException(QV4::ExecutionEngine *engine)
-{
-    const int missingLineNumber = engine->currentStackFrame->missingLineNumber();
-    const int lineNumber = engine->currentStackFrame->lineNumber();
-    Q_ASSERT(missingLineNumber != lineNumber);
-
-    auto amendStackTrace = [&](QV4::StackTrace *stackTrace) {
-        for (auto it = stackTrace->begin(), end = stackTrace->end(); it != end; ++it) {
-            if (it->line == missingLineNumber) {
-                it->line = lineNumber;
-                break;
-            }
-        }
-    };
-
-    amendStackTrace(&engine->exceptionStackTrace);
-
-    QV4::Scope scope(engine);
-    QV4::Scoped<QV4::ErrorObject> error(scope, *engine->exceptionValue);
-    if (error) // else some other value was thrown
-        amendStackTrace(error->d()->stackTrace);
-}
-
-
 bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
 {
     if (!object)
@@ -1796,7 +1772,7 @@ void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
 {
     Q_UNUSED(index);
     Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    engine->handle()->amendException();
 }
 
 bool AOTCompiledContext::loadContextIdLookup(uint index, void *target) const
@@ -1878,7 +1854,7 @@ void AOTCompiledContext::initCallObjectPropertyLookup(uint index) const
 {
     Q_UNUSED(index);
     Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    engine->handle()->amendException();
 }
 
 bool AOTCompiledContext::callGlobalLookup(
@@ -1902,7 +1878,7 @@ void AOTCompiledContext::initCallGlobalLookup(uint index) const
 {
     Q_UNUSED(index);
     Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    engine->handle()->amendException();
 }
 
 bool AOTCompiledContext::loadGlobalLookup(uint index, void *target, QMetaType type) const
@@ -1919,7 +1895,7 @@ void AOTCompiledContext::initLoadGlobalLookup(uint index) const
 {
     Q_UNUSED(index);
     Q_ASSERT(engine->hasError());
-    amendException(engine->handle());
+    engine->handle()->amendException();
 }
 
 bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target) const
@@ -1984,7 +1960,7 @@ void AOTCompiledContext::initLoadScopeObjectPropertyLookup(uint index, QMetaType
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
 
     if (v4->hasException) {
-        amendException(v4);
+        v4->amendException();
         return;
     }
 
@@ -2212,7 +2188,7 @@ void AOTCompiledContext::initGetObjectLookup(uint index, QObject *object, QMetaT
 {
     QV4::ExecutionEngine *v4 = engine->handle();
     if (v4->hasException) {
-        amendException(v4);
+        v4->amendException();
     } else {
         QV4::Lookup *l = compilationUnit->runtimeLookups + index;
         switch (initObjectLookup(this, l, object, type)) {
@@ -2383,7 +2359,7 @@ void AOTCompiledContext::initSetObjectLookup(uint index, QObject *object, QMetaT
 {
     QV4::ExecutionEngine *v4 = engine->handle();
     if (v4->hasException) {
-        amendException(v4);
+        v4->amendException();
     } else {
         QV4::Lookup *l = compilationUnit->runtimeLookups + index;
         switch (initObjectLookup(this, l, object, type)) {

@@ -673,6 +673,8 @@ public:
     // Use only inside catch(...) -- will re-throw if no JS exception
     QQmlError catchExceptionAsQmlError();
 
+    void amendException();
+
     // variant conversions
     static QVariant toVariant(
         const QV4::Value &value, QMetaType typeHint, bool createJSValueForObjectsAndSymbols = true);
