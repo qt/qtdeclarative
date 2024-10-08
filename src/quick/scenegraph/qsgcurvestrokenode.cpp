@@ -93,7 +93,9 @@ void QSGCurveStrokeNode::cookGeometry()
            g->indexCount() * g->sizeOfIndex());
 
     m_uncookedIndexes.clear();
+    m_uncookedIndexes.squeeze();
     m_uncookedVertexes.clear();
+    m_uncookedVertexes.squeeze();
 }
 
 const QSGGeometry::AttributeSet &QSGCurveStrokeNode::attributes()
