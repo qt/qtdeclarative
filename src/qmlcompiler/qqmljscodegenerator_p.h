@@ -260,8 +260,6 @@ protected:
                         const QString &resultPreparation = QString());
     QString getLookupPreparation(
             const QQmlJSRegisterContent &content, const QString &var, int lookup);
-    QString setLookupPreparation(
-            const QQmlJSRegisterContent &content, const QString &arg, int lookup);
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
