@@ -52,6 +52,14 @@ if (TARGET qmllint)
     add_dependencies(tst_qmllint Qt::qmllint)
 endif()
 
+if (TARGET QuickControls2Basic)
+    add_dependencies(tst_qmllint QuickControls2Basic)
+    qt_internal_extend_target(tst_qmllint
+        DEFINES
+            HAS_QC_BASIC=1
+    )
+endif()
+
 if (TARGET qmljsrootgen)
     qt_internal_extend_target(tst_qmllint
         DEFINES
