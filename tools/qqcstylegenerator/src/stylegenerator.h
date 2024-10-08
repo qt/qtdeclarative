@@ -105,6 +105,8 @@ public:
                 generateIndexThemeFile();
             if (!m_abort)
                 generateQrcFile();
+            if (!m_abort)
+                generateCMakeFile();
         } catch (std::exception &e) {
             error(e.what());
         }
@@ -1202,6 +1204,82 @@ private:
         progress();
     }
 
+    QString generateCMakeContent(const QString &styleName)
+    {
+        const QString styleTargetDir = QFileInfo(m_bridge->m_targetDirectory).absoluteFilePath();
+
+        QString content;
+        content += "cmake_minimum_required(VERSION 3.16)\n";
+        content += "project(" + styleName + "LANGUAGES CXX)\n\n";
+        content += "set(CMAKE_AUTOMOC ON)\n\n";
+        content += "find_package(Qt6 REQUIRED COMPONENTS Quick QuickControls2)\n\n";
+        content += "set_source_files_properties(Config.qml\n";
+        content += "    PROPERTIES\n";
+        content += "        QT_QML_SINGLETON_TYPE TRUE\n";
+        content += ")\n\n";
+        content += "qt_add_qml_module(${PROJECT_NAME}\n";
+        content += "    URI " + styleName + "\n";
+
+        QStringList qmlFiles;
+        QStringList resourceFiles;
+
+        QDirIterator it(styleTargetDir, QDirIterator::Subdirectories);
+        while (it.hasNext()) {
+            QString filePath = it.next();
+            QFileInfo fileInfo(filePath);
+
+            if (fileInfo.isDir())
+                continue;
+
+            if (fileInfo.isFile()) {
+                QString relativeFilePath = QDir(styleTargetDir).relativeFilePath(filePath);
+
+                if (fileInfo.suffix() == "qml")
+                    qmlFiles << relativeFilePath;
+                else
+                    resourceFiles << relativeFilePath;
+            }
+        }
+
+        content += "    QML_FILES\n";
+        for (const QString& qmlFile : qmlFiles) {
+            content += "        " + qmlFile + "\n";
+        }
+
+        content += "    RESOURCES\n";
+        for (const QString& resourceFile : resourceFiles) {
+            content += "        " + resourceFile + "\n";
+        }
+
+        content += ")\n\n";
+
+        content += "target_link_libraries(${PROJECT_NAME} PRIVATE\n";
+        content += "    Qt6::Quick\n";
+        content += "    Qt6::QuickControls2\n";
+        content += ")\n\n";
+
+        content += "install(TARGETS ${PROJECT_NAME}\n";
+        content += "    RUNTIME DESTINATION \"${CMAKE_INSTALL_BINDIR}/" + styleName + "\"\n";
+        content += "    LIBRARY DESTINATION \"${CMAKE_INSTALL_BINDIR}/" + styleName + "\"\n";
+        content += ")\n";
+
+        content += "install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qmldir\n";
+        content += "    DESTINATION \"${CMAKE_INSTALL_BINDIR}/" + styleName + "\"\n";
+        content += ")\n";
+
+        return content;
+    }
+
+    void generateCMakeFile()
+    {
+        debug("Generating CMake file");
+        const QString styleName = QFileInfo(m_bridge->m_targetDirectory).fileName();
+
+        QString content = generateCMakeContent(styleName);
+
+        createTextFileInStylefolder("CMakeLists.txt", content);
+        progress();
+    }
     void generateIndexThemeFile()
     {
         if (!m_bridge->m_selectedControls.contains("Icons"))
