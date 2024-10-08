@@ -1799,11 +1799,11 @@ void tst_QmlCppCodegen::equalityVarAndStorable()
 
     QVERIFY(p->objectName().isEmpty());
     QMetaObject::invokeMethod(p.data(), "typeErasedRemoveOne", v.data());
-    QCOMPARE(p->objectName(), u"n");
+    QCOMPARE(p->objectName(), u"n"_s);
 
     v->setProperty("value", 1);
     QMetaObject::invokeMethod(p.data(), "typeErasedRemoveOne", v.data());
-    QCOMPARE(p->objectName(), u"nd");
+    QCOMPARE(p->objectName(), u"nd"_s);
 
     QQmlComponent constraint(&engine, QUrl(u"qrc:/qt/qml/TestTypes/BaseConstraint.qml"_s));
     QVERIFY2(!constraint.isError(), qPrintable(constraint.errorString()));
