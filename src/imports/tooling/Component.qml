@@ -23,6 +23,7 @@ QtObject {
     property bool isCreatable: accessSemantics === "reference" && name.length > 0
     property bool isStructured: false
     property bool isComposite: false
+    property bool isJavaScriptBuiltin: false
     property bool hasCustomParser: false
     property bool extensionIsJavaScript: false
     property bool extensionIsNamespace: false

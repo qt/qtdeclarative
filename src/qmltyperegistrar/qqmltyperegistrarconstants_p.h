@@ -52,6 +52,7 @@ static constexpr QLatin1StringView S_IS_CREATABLE                 { "isCreatable
 static constexpr QLatin1StringView S_IS_FINAL                     { "isFinal" };
 static constexpr QLatin1StringView S_IS_FLAG                      { "isFlag" };
 static constexpr QLatin1StringView S_IS_JAVASCRIPT_FUNCTION       { "isJavaScriptFunction" };
+static constexpr QLatin1StringView S_IS_JAVASCRIPT_BUILTIN        { "isJavaScriptBuiltin" };
 static constexpr QLatin1StringView S_IS_LIST                      { "isList" };
 static constexpr QLatin1StringView S_IS_POINTER                   { "isPointer" };
 static constexpr QLatin1StringView S_IS_READONLY                  { "isReadonly" };

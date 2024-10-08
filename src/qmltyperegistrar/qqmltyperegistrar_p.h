@@ -42,7 +42,7 @@ class QmlTypeRegistrar
 
 public:
     void write(QTextStream &os, QAnyStringView outFileName) const;
-    bool generatePluginTypes(const QString &pluginTypesFile);
+    bool generatePluginTypes(const QString &pluginTypesFile, bool generatingJSRoot = false);
     void setModuleNameAndNamespace(const QString &module, const QString &targetNamespace);
     void setModuleVersions(QTypeRevision moduleVersion, const QList<quint8> &pastMajorVersions,
                            bool followForeignVersioning);

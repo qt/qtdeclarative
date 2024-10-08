@@ -155,18 +155,19 @@ public:
     enum Flag {
         Creatable = 0x1,
         Composite = 0x2,
-        Singleton = 0x4,
-        Script = 0x8,
-        CustomParser = 0x10,
-        Array = 0x20,
-        InlineComponent = 0x40,
-        WrappedInImplicitComponent = 0x80,
-        HasBaseTypeError = 0x100,
-        ExtensionIsNamespace = 0x200,
-        IsListProperty = 0x400,
-        Structured = 0x800,
-        ExtensionIsJavaScript = 0x1000,
-        EnforcesScopedEnums = 0x2000,
+        JavaScriptBuiltin = 0x4,
+        Singleton = 0x8,
+        Script = 0x10,
+        CustomParser = 0x20,
+        Array = 0x40,
+        InlineComponent = 0x80,
+        WrappedInImplicitComponent = 0x100,
+        HasBaseTypeError = 0x200,
+        ExtensionIsNamespace = 0x400,
+        IsListProperty = 0x800,
+        Structured = 0x1000,
+        ExtensionIsJavaScript = 0x2000,
+        EnforcesScopedEnums = 0x4000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -374,6 +375,14 @@ public:
      */
     bool isComposite() const { return m_flags.testFlag(Composite); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
+
+    /*!
+     * \internal
+     *
+     * Returns true for JavaScript types, false for QML and C++ types.
+     */
+    bool isJavaScriptBuiltin() const { return m_flags.testFlag(JavaScriptBuiltin); }
+    void setIsJavaScriptBuiltin(bool v) { m_flags.setFlag(JavaScriptBuiltin, v); }
 
     bool isScript() const { return m_flags.testFlag(Script); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }

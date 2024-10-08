@@ -60,6 +60,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_VALUE_TYPE, name);
     }
 
+    if (m_generatingJSRoot)
+        m_qml.writeBooleanBinding(S_IS_JAVASCRIPT_BUILTIN, true);
+
     if (collector.extensionIsJavaScript) {
         if (!collector.javaScriptExtensionType.isEmpty()) {
             m_qml.writeStringBinding(S_EXTENSION, collector.javaScriptExtensionType);

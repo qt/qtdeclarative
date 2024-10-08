@@ -118,6 +118,7 @@ private Q_SLOTS:
     void builtinTypeResolution();
     void methodAndSignalSourceLocation();
     void modulePrefixes();
+    void javaScriptBuiltinFlag();
 
 public:
     tst_qqmljsscope()
@@ -1015,6 +1016,33 @@ void tst_qqmljsscope::modulePrefixes()
     QVERIFY(prefixes.contains("QML"_L1));
     QVERIFY(prefixes.contains("CD"_L1));
     QVERIFY(prefixes.contains("QQ"_L1));
+}
+
+void tst_qqmljsscope::javaScriptBuiltinFlag()
+{
+    const auto url = testFile("ComponentType.qml");
+    QQmlJSLogger logger;
+    logger.setFileName(url);
+    logger.setCode(loadUrl(url));
+
+    QQmlJSScope::Ptr target = QQmlJSScope::create();
+    QmlIR::Document document(false);
+    QQmlJSSaveFunction noop([](auto &&...) { return true; });
+    QQmlJSCompileError error;
+    [&]() {
+        QVERIFY2(qCompileQmlFile(document, url, noop, nullptr, &error), qPrintable(error.message));
+    }();
+    if (!error.message.isEmpty())
+        return;
+
+    QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
+    QQmlJSTypeResolver typeResolver{ &m_importer };
+    typeResolver.init(&visitor, document.program);
+
+
+    QVERIFY(typeResolver.mathObject()->isJavaScriptBuiltin()); // JS
+    QVERIFY(!typeResolver.typeForName("ComponentType")->isJavaScriptBuiltin()); // QML
+    QVERIFY(!typeResolver.varType()->isJavaScriptBuiltin()); // C++
 }
 
 QTEST_MAIN(tst_qqmljsscope)

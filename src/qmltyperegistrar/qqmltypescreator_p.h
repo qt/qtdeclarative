@@ -36,6 +36,7 @@ public:
     void setModule(QByteArray module) { m_module = std::move(module); }
     void setVersion(QTypeRevision version) { m_version = version; }
     void setUsingDeclarations(QList<UsingDeclaration> usingDeclarations) { m_usingDeclarations = std::move(usingDeclarations);}
+    void setGeneratingJSRoot(bool jsroot) { m_generatingJSRoot = jsroot; }
 
 private:
     void writeComponent(const QmlTypesClassDescription &collector);
@@ -55,6 +56,7 @@ private:
     QList<UsingDeclaration> m_usingDeclarations;
     QByteArray m_module;
     QTypeRevision m_version = QTypeRevision::zero();
+    bool m_generatingJSRoot = false;
 };
 
 QT_END_NAMESPACE
