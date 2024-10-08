@@ -157,6 +157,7 @@ qt_internal_add_qml_module(QuickControls2Basic
     CLASS_NAME QtQuickControls2BasicStylePlugin
     DEPENDENCIES
         QtQuick/auto
+        QtQuick.Templates/auto # needed for e.g. Overlay
     PLUGIN_TARGET qtquickcontrols2basicstyleplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE

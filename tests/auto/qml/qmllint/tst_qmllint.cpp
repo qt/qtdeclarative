@@ -1470,6 +1470,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml");
     QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
     QTest::newRow("dependsOnDuplicateType") << QStringLiteral("dependsOnDuplicateType.qml");
+#ifdef HAS_QC_BASIC
+    QTest::newRow("overlay") << QStringLiteral("overlayFromControls.qml");
+#endif
 }
 
 void TestQmllint::cleanQmlCode()
