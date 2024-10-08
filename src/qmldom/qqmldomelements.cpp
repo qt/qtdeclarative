@@ -1040,6 +1040,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
     ow.ensureNewline().writeRegion(RightBraceRegion);
 }
 
+Binding::Binding(const QString &name) : Binding(name, std::unique_ptr<BindingValue>()) { }
+
 Binding::Binding(const QString &name, std::unique_ptr<BindingValue> value, BindingType bindingType)
     : m_bindingType(bindingType), m_name(name), m_value(std::move(value))
 {
