@@ -34,6 +34,7 @@ private slots:
     void initial();
     void noApplicationIdentifiersSet();
     void fromResources();
+    void overridenSettings();
 };
 
 // ### Replace keyValueMap("foo", "bar") with QVariantMap({{"foo", "bar"}})
@@ -503,6 +504,27 @@ void tst_QQmlSettings::fromResources()
     QVERIFY(!root.isNull());
 
     QCOMPARE(root->property("text").toString(), QLatin1String("from resource"));
+}
+
+void tst_QQmlSettings::overridenSettings() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("override.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    delete component.create();
+
+    QSettings qs;
+
+    QVERIFY(qs.childGroups().contains("Parent"));
+    qs.beginGroup("Parent");
+    QVERIFY(qs.childKeys().contains("overriddenProperty"));
+    QCOMPARE(qs.value("overriddenProperty").toString(), QStringLiteral("parentChanged"));
+    qs.endGroup();
+
+    QVERIFY(qs.childGroups().contains("Child"));
+    qs.beginGroup("Child");
+    QVERIFY(qs.childKeys().contains("overriddenProperty"));
+    QCOMPARE(qs.value("overriddenProperty").toString(), QStringLiteral("childChanged"));
+    qs.endGroup();
 }
 
 QTEST_MAIN(tst_QQmlSettings)
