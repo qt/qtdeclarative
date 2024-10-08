@@ -69,6 +69,14 @@
     The \l {Windows Style} is a native-looking style for Windows.
     \note this style is only available for applications running on Windows.
 
+    \section2 FluentWinUI3 Style
+
+    \include style-screenshots.qdocinc {file} {FluentWinUI3} {fluentwinui3}
+
+    The \l {FluentWinUI3 Style} is a modern, native-looking style designed for platforms
+    running Windows 11 and above, which follows the Fluent UI and the WinUI 3 design guidelines.
+    The FluentWinUI3 can be run on all supported platforms.
+
     \section1 Using Styles in Qt Quick Controls
 
     \section2 Default Styles
