@@ -784,9 +784,9 @@ void tst_qquickwidget::tabKey()
     qqw2->setSource(testFileUrl("noActiveFocusOnTab.qml"));
     qqw2->move(100, 0);
     window1.show();
-    qqw->setFocus();
     QVERIFY(QTest::qWaitForWindowExposed(&window1, 5000));
-    QVERIFY(qqw->hasFocus());
+    qqw->setFocus();
+    QTRY_VERIFY(qqw->hasFocus());
     QQuickItem *item = qobject_cast<QQuickItem *>(qqw->rootObject());
     QQuickItem *topItem = item->findChild<QQuickItem *>("topRect");
     QQuickItem *middleItem = item->findChild<QQuickItem *>("middleRect");
