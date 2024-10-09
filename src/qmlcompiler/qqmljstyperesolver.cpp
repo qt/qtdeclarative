@@ -1036,6 +1036,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::conversionType(const QQmlJSScope::Cons
             type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Conversion);
 }
 
+/*!
+ * \internal
+ * A type named explicitly, for example in "as"-casts or as function annotation.
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::namedType(const QQmlJSScope::ConstPtr &type)
+{
+    return QQmlJSRegisterContent::create(
+            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::TypeByName);
+}
+
 static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::ExtensionKind mode,
                                                                  bool isMethod)
 {
