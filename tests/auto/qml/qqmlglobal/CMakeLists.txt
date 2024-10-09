@@ -20,6 +20,7 @@ qt_internal_add_test(tst_qqmlglobal
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
 )
 

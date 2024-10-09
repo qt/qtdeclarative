@@ -26,6 +26,7 @@ qt_internal_add_test(tst_qmlcachegen
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
         Qt::QmlCompilerPrivate

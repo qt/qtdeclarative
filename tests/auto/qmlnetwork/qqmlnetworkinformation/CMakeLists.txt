@@ -18,6 +18,7 @@ qt_internal_add_test(tst_qqmlnetworkinformation
     SOURCES
         tst_qqmlnetworkinformation.cpp
     LIBRARIES
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
         Qt::Network

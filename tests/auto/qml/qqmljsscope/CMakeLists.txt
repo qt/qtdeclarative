@@ -17,6 +17,7 @@ qt_internal_add_test(tst_qqmljsscope
     SOURCES
         tst_qqmljsscope.cpp
     LIBRARIES
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QmlCompilerPrivate
         Qt::QuickTestUtilsPrivate

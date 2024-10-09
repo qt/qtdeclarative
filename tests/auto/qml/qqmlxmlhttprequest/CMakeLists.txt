@@ -27,6 +27,7 @@ qt_internal_add_test(tst_qqmlxmlhttprequest
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

@@ -18,6 +18,7 @@ qt_internal_add_test(tst_propertyrequirements
         tst_propertyrequirements.cpp
     LIBRARIES
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
 )
 

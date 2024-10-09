@@ -34,6 +34,7 @@ qt_internal_add_test(tst_qqmldebugservice
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

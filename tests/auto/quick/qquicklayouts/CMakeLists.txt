@@ -28,6 +28,7 @@ qt_internal_add_test(tst_qquicklayouts
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
     TESTDATA ${test_data}
 )

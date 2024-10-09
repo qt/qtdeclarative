@@ -27,6 +27,7 @@ qt_internal_add_test(tst_qquicktextedit
         Qt::Gui
         Qt::GuiPrivate
         Qt::NetworkPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

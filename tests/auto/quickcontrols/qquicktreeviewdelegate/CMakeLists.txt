@@ -26,6 +26,7 @@ qt_internal_add_test(tst_qquicktreeviewdelegate
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTest

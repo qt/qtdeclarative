@@ -18,6 +18,7 @@ qt_internal_add_test(tst_qabstractanimationjob
         tst_qabstractanimationjob.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
 )
 

@@ -28,6 +28,7 @@ qt_internal_add_test(tst_qqmlinstantiator
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlModelsPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

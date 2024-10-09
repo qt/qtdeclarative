@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qmldiskcache
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
 )
 

@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qquickpalette
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

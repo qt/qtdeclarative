@@ -20,6 +20,7 @@ qt_internal_add_test(tst_qqmltimer
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QmlMetaPrivate
         Qt::QuickPrivate

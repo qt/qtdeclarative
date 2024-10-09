@@ -28,6 +28,7 @@ qt_internal_add_test(tst_qquickpixmapcache
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

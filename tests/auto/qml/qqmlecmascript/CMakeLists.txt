@@ -28,6 +28,7 @@ qt_internal_add_test(tst_qqmlecmascript
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
         Qt::QuickPrivate

@@ -15,6 +15,7 @@ qt_internal_add_test(tst_registrationmacros
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
 )
 

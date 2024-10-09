@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qmltc_manual
         tst_qmltc_manual.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

@@ -20,6 +20,7 @@ qt_internal_add_test(tst_qqmlsysteminformation
         tst_qqmlsysteminformation.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

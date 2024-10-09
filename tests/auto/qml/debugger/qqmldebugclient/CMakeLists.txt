@@ -29,6 +29,7 @@ qt_internal_add_test(tst_qqmldebugclient
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
 )

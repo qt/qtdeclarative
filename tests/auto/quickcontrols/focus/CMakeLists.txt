@@ -28,6 +28,7 @@ qt_internal_add_test(tst_focus
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickControls2
         Qt::QuickControls2Private

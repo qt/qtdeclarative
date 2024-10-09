@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qpauseanimationjob
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
 )
 

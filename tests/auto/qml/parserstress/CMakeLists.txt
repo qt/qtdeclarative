@@ -26,6 +26,7 @@ qt_internal_add_test(tst_parserstress
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
     TESTDATA ${test_data} "dummy_imports.qml"
 )

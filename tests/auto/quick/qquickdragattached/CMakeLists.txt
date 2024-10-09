@@ -18,6 +18,7 @@ qt_internal_add_test(tst_qquickdragattached
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

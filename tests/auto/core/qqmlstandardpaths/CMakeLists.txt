@@ -20,6 +20,7 @@ qt_internal_add_test(tst_qqmlstandardpaths
         tst_qqmlstandardpaths.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

@@ -28,6 +28,7 @@ qt_internal_add_test(tst_styleimportscompiletimematerial
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickControls2
         Qt::QuickControls2Private

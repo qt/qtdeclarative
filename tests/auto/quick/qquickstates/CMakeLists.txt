@@ -26,6 +26,7 @@ qt_internal_add_test(tst_qquickstates
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
@@ -39,6 +40,7 @@ qt_internal_add_test(tst_qquickstates_no_deferred_properties
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate

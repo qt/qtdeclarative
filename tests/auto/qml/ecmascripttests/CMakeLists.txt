@@ -23,6 +23,7 @@ qt_internal_add_test(tst_ecmascripttests
         test262runner.cpp test262runner.h
         tst_ecmascripttests.cpp
     LIBRARIES
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA

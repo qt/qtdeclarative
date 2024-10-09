@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qv4assembler
         tst_qv4assembler.cpp
     LIBRARIES
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}

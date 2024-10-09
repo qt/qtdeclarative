@@ -21,6 +21,7 @@ qt_internal_add_test(tst_qqmlobjectmodel
         Qt::Gui
         Qt::Qml
         Qt::QmlModelsPrivate
+        Qt::Qml
         Qt::QmlPrivate
 )
 

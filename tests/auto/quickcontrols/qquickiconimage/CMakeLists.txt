@@ -73,7 +73,6 @@ qt_internal_add_resource(tst_qquickiconimage "resources"
         ${resources_resource_files}
 )
 
-
 ## Scopes:
 #####################################################################
 

@@ -27,6 +27,7 @@ qt_internal_add_test(tst_qqmlbinding
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QmlMetaPrivate
         Qt::QuickPrivate
@@ -42,6 +43,7 @@ qt_internal_add_test(tst_qqmlbinding_no_deferred_properties
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QmlMetaPrivate
         Qt::QuickPrivate

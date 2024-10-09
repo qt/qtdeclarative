@@ -26,6 +26,7 @@ qt_internal_add_test(tst_qqmlparser
         SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}"
     LIBRARIES
         Qt::Gui
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
         Qt::QmlDomPrivate

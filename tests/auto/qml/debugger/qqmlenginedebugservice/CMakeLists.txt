@@ -31,6 +31,7 @@ qt_internal_add_test(tst_qqmlenginedebugservice
     LIBRARIES
         Qt::Gui
         Qt::QmlDebugPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickTestUtilsPrivate

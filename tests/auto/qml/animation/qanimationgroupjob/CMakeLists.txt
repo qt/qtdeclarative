@@ -18,6 +18,7 @@ qt_internal_add_test(tst_qanimationgroupjob
         tst_qanimationgroupjob.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
 )
 

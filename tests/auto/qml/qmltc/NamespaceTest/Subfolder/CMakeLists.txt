@@ -13,6 +13,7 @@ set(js_sources
 
 set(common_libraries
     Qt::Core
+    Qt::Qml
     Qt::QmlPrivate
     Qt::QuickPrivate
     Qt::TestPrivate

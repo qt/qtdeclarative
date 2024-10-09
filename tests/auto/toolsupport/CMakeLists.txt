@@ -18,5 +18,6 @@ qt_internal_add_test(tst_qml_toolsupport
         tst_toolsupport.cpp
     LIBRARIES
         Qt::CorePrivate
+        Qt::Qml
         Qt::QmlPrivate
 )

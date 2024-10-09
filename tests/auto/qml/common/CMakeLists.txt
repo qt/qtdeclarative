@@ -7,5 +7,6 @@ qt_internal_add_test(tst_qml_common
     SOURCES
         tst_qml_common.cpp tst_qml_common.h
     LIBRARIES
+        Qt::Qml
         Qt::QmlPrivate
 )

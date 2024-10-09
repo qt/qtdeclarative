@@ -34,6 +34,7 @@ qt_internal_add_test(tst_qqmlmoduleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::Network
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickShapesPrivate
         Qt::QuickTestUtilsPrivate

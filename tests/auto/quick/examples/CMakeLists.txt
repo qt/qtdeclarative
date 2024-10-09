@@ -22,6 +22,7 @@ qt_internal_add_test(tst_quick_examples
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
+        Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
 )
