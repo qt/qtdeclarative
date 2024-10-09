@@ -260,7 +260,7 @@ void QQmlJSTypePropagator::generate_StoreScopedLocal(int scope, int index)
 void QQmlJSTypePropagator::generate_LoadRuntimeString(int stringId)
 {
     Q_UNUSED(stringId)
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_MoveRegExp(int regExpId, int destReg)
@@ -1662,7 +1662,7 @@ void QQmlJSTypePropagator::propagateStringArgCall(const QQmlJSRegisterContent &b
     if (m_typeResolver->equals(input, m_typeResolver->uint32Type())
             || m_typeResolver->equals(input, m_typeResolver->int64Type())
             || m_typeResolver->equals(input, m_typeResolver->uint64Type())) {
-        addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
+        addReadRegister(argv, m_typeResolver->conversionType(m_typeResolver->realType()));
         return;
     }
 

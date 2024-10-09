@@ -994,20 +994,6 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(
     return m_varType;
 }
 
-QQmlJSRegisterContent QQmlJSTypeResolver::builtinType(const QQmlJSScope::ConstPtr &type) const
-{
-    Q_ASSERT(storedType(type) == type);
-    return QQmlJSRegisterContent::create(
-            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Builtin);
-}
-
-QQmlJSRegisterContent QQmlJSTypeResolver::globalType(const QQmlJSScope::ConstPtr &type) const
-{
-    return QQmlJSRegisterContent::create(
-            type, QQmlJSRegisterContent::InvalidLookupIndex,
-            QQmlJSRegisterContent::Unknown);
-}
-
 /*!
  * \internal
  * The type of a JavaScript literal value appearing in script code

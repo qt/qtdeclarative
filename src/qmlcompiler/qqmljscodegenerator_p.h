@@ -344,19 +344,9 @@ private:
         return restored.storedIn(m_typeResolver->originalType(tracked.storedType()));
     }
 
-    QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &contained)
-    {
-        return m_typeResolver->globalType(contained).storedIn(contained);
-    }
-
     QQmlJSRegisterContent conversionType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_typeResolver->conversionType(contained).storedIn(contained);
-    }
-
-    QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &contained)
-    {
-        return m_typeResolver->builtinType(contained).storedIn(contained);
     }
 
     QQmlJSRegisterContent literalType(const QQmlJSScope::ConstPtr &contained)

@@ -46,7 +46,7 @@ public:
 
         ListValue,
         ListIterator,
-        Builtin,
+
         Literal,
         Operation,
         Conversion,
