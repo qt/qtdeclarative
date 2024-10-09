@@ -505,12 +505,12 @@ void tst_QmlCppCodegen::cleanupTestCase()
 {
     // This code checks for basic blocks validation failures in the tests
     QStringList expectedFailures = {
-        "codegen_test_module_basicBlocksWithBackJump_infinite_qml.cpp",
-        "codegen_test_module_verify_basicBlocksWithBackJump_infinite_qml.cpp",
+        u"codegen_test_module_basicBlocksWithBackJump_infinite_qml.cpp"_s,
+        u"codegen_test_module_verify_basicBlocksWithBackJump_infinite_qml.cpp"_s,
     };
 
-    QString generatedCppFolder = GENERATED_CPP_FOLDER;
-    QDirIterator dirIterator(generatedCppFolder, { "*.cpp" }, QDir::Files);
+    QString generatedCppFolder = QStringLiteral(GENERATED_CPP_FOLDER);
+    QDirIterator dirIterator(generatedCppFolder, { u"*.cpp"_s }, QDir::Files);
     while (dirIterator.hasNext()) {
         QFile file(dirIterator.next());
         if (!file.open(QIODeviceBase::ReadOnly | QIODeviceBase::Text)) {
@@ -523,7 +523,7 @@ void tst_QmlCppCodegen::cleanupTestCase()
             if (expectedFailures.contains(dirIterator.fileInfo().fileName())) {
                 QEXPECT_FAIL("", "Expected failure", Continue);
             }
-            const auto message = file.fileName() + ": Basic blocks validation failed.";
+            const auto message = file.fileName() + u": Basic blocks validation failed."_s;
             QVERIFY2(!validationFailed, message.toStdString().c_str());
         }
     }
@@ -949,13 +949,13 @@ void tst_QmlCppCodegen::boolCoercions()
     QScopedPointer<QObject> o(c.create());
 
     for (char p = '1'; p <= '8'; ++p) {
-        const QVariant t = o->property(qPrintable(QLatin1String("t%1").arg(p)));
+        const QVariant t = o->property((u"t"_s + QLatin1Char(p)).toLatin1());
         QCOMPARE(t.metaType(), QMetaType::fromType<bool>());
         QVERIFY(t.toBool());
     }
 
     for (char p = '1'; p <= '5'; ++p) {
-        const QVariant f = o->property(qPrintable(QLatin1String("f%1").arg(p)));
+        const QVariant f = o->property((u"f"_s + QLatin1Char(p)).toLatin1());
         QCOMPARE(f.metaType(), QMetaType::fromType<bool>());
         QVERIFY(!f.toBool());
     }
@@ -2178,7 +2178,7 @@ void tst_QmlCppCodegen::getOptionalLookup_data()
 
     // Objects
     QTest::addRow("int on object") << u"to1"_s << QVariant(5);
-    QTest::addRow("string on object") << u"to2"_s << QVariant("6");
+    QTest::addRow("string on object") << u"to2"_s << QVariant(u"6"_s);
     QTest::addRow("object on object") << u"to3"_s << QVariant::fromValue<QObject *>(nullptr);
     QTest::addRow("int on null") << u"to4"_s << QVariant(); // undefined
     QTest::addRow("any on undefined as object") << u"to5"_s << QVariant(); // undefined
@@ -2239,7 +2239,7 @@ void tst_QmlCppCodegen::getOptionalLookupShadowed()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
 
-    QCOMPARE(o->property("res").toString(), "a");
+    QCOMPARE(o->property("res").toString(), u"a"_s);
 }
 
 void tst_QmlCppCodegen::globals()
@@ -2782,9 +2782,10 @@ void tst_QmlCppCodegen::javaScriptArgument()
     QCOMPARE(o->property("f").toString(), u"-10"_s);
 
     const QStringList scales {
-        "0 ", "1 ", "10 ", "100 ", "1000 ", "9.77k", "97.7k", "977k", "9.54M", "95.4M", "954M",
-        "9.31G", "93.1G", "931G", "9.09T", "-1 ", "-10 ", "-100 ", "-1000 ", "-9.77k", "-97.7k",
-        "-977k", "-9.54M", "-95.4M", "-954M", "-9.31G", "-93.1G", "-931G", "-9.09T"
+        u"0 "_s, u"1 "_s, u"10 "_s, u"100 "_s, u"1000 "_s, u"9.77k"_s, u"97.7k"_s, u"977k"_s,
+        u"9.54M"_s, u"95.4M"_s, u"954M"_s, u"9.31G"_s, u"93.1G"_s, u"931G"_s, u"9.09T"_s, u"-1 "_s,
+        u"-10 "_s, u"-100 "_s, u"-1000 "_s, u"-9.77k"_s, u"-97.7k"_s, u"-977k"_s, u"-9.54M"_s,
+        u"-95.4M"_s, u"-954M"_s, u"-9.31G"_s, u"-93.1G"_s, u"-931G"_s, u"-9.09T"_s
     };
 
     QCOMPARE(o->property("scales").value<QStringList>(), scales);
@@ -3173,12 +3174,12 @@ void tst_QmlCppCodegen::listToString()
     QTest::ignoreMessage(QtDebugMsg, "1,2");
     QTest::ignoreMessage(
             QtDebugMsg,
-            QRegularExpression("\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
-                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"));
+            QRegularExpression(u"\\[QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"_s
+                               u"QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)\\]"_s));
     QTest::ignoreMessage(
             QtDebugMsg,
-            QRegularExpression("QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"
-                               "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)"));
+            QRegularExpression(u"QObject_QML_[0-9]+\\(0x[0-9a-f]+\\),"_s
+                               u"QObject_QML_[0-9]+\\(0x[0-9a-f]+\\)"_s));
 
     QTest::ignoreMessage(QtDebugMsg, "[a,b]");
 
@@ -3411,7 +3412,7 @@ void tst_QmlCppCodegen::mergedObjectReadWrite()
         QVERIFY2(c.isReady(), qPrintable(c.errorString()));
         QTest::ignoreMessage(QtDebugMsg, "null");
         QTest::ignoreMessage(
-                QtWarningMsg, QRegularExpression("TypeError: Cannot read property 'x' of null"));
+                QtWarningMsg, QRegularExpression(u"TypeError: Cannot read property 'x' of null"_s));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(!o.isNull());
     }
@@ -3422,7 +3423,7 @@ void tst_QmlCppCodegen::mergedObjectReadWrite()
         QTest::ignoreMessage(
                 QtWarningMsg,
                 QRegularExpression(
-                        "TypeError: Value is null and could not be converted to an object"));
+                        u"TypeError: Value is null and could not be converted to an object"_s));
         QScopedPointer<QObject> o(c.create());
         QVERIFY(!o.isNull());
     }
@@ -3741,23 +3742,23 @@ void tst_QmlCppCodegen::nullishCoalescing_data()
     const auto nullValue = QVariant::fromMetaType(QMetaType::fromType<std::nullptr_t>(), nullptr);
 
     QTest::addRow("trivial-good-int") << "p1" << QVariant(5);
-    QTest::addRow("trivial-good-string") << "p2" << QVariant("6");
+    QTest::addRow("trivial-good-string") << "p2" << QVariant(u"6"_s);
 
     QTest::addRow("trivial-bad-undefined-undefined") << "p3" << undefinedValue;
     QTest::addRow("trivial-bad-undefined-null") << "p4" << nullValue;
     QTest::addRow("trivial-bad-undefined-int") << "p5" << QVariant(-1);
-    QTest::addRow("trivial-bad-undefined-string") << "p6" << QVariant("-1");
+    QTest::addRow("trivial-bad-undefined-string") << "p6" << QVariant(u"-1"_s);
 
     QTest::addRow("trivial-bad-null-undefined") << "p7" << undefinedValue;
     QTest::addRow("trivial-bad-null-null") << "p8" << nullValue;
     QTest::addRow("trivial-bad-null-int") << "p9" << QVariant(-1);
-    QTest::addRow("trivial-bad-null-string") << "p10" << QVariant("-1");
+    QTest::addRow("trivial-bad-null-string") << "p10" << QVariant(u"-1"_s);
 
     QTest::addRow("enum1") << "p11" << QVariant(1);
 
     QTest::addRow("multiple ?? int") << "p12" << QVariant(1);
-    QTest::addRow("multiple ?? string") << "p13" << QVariant("1");
-    QTest::addRow("multiple ?? mixed2") << "p14" << QVariant("2");
+    QTest::addRow("multiple ?? string") << "p13" << QVariant(u"1"_s);
+    QTest::addRow("multiple ?? mixed2") << "p14" << QVariant(u"2"_s);
     QTest::addRow("multiple ?? mixed3") << "p15" << QVariant(1);
 
     QTest::addRow("optional + nullish bad") << "p16" << QVariant(-1);
@@ -4453,7 +4454,7 @@ void tst_QmlCppCodegen::sequenceToIterable()
 
     QQmlListReference children(object.data(), "children");
     QCOMPARE(children.count(), 11);
-    static const QRegularExpression name("Entry\\(0x[0-9a-f]+, \"Item ([0-9])\"\\): ([0-9])");
+    static const QRegularExpression name(u"Entry\\(0x[0-9a-f]+, \"Item ([0-9])\"\\): ([0-9])"_s);
     for (int i = 0; i < 10; ++i) {
         const auto match = name.match(children.at(i)->objectName());
         QVERIFY(match.hasMatch());
@@ -4728,7 +4729,7 @@ void tst_QmlCppCodegen::structuredValueType()
     QCOMPARE(o->property("r2").value<QRectF>(), QRectF(42, 0, 0, 0));
 
     WeatherModelUrl w;
-    w.setStrings(QStringList({"one", "two", "three"}));
+    w.setStrings(QStringList({u"one"_s, u"two"_s, u"three"_s}));
 
     QCOMPARE(o->property("w").value<WeatherModelUrl>(), w);
 }

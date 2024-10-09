@@ -13,5 +13,5 @@ public:
     VariantMapLookupFoo(QObject *parent = nullptr) : QObject(parent) { }
 
 private:
-    QVariantMap data() const { return { { "value", 42 } }; }
+    QVariantMap data() const { return { { QStringLiteral("value"), 42 } }; }
 };

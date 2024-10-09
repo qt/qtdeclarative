@@ -79,8 +79,8 @@ class ObjectWithStringListMethod : public QObject
 public:
     explicit ObjectWithStringListMethod(QObject *parent = nullptr) : QObject(parent)
     {
-        m_names.append("One");
-        m_names.append("Two");
+        m_names.append(QStringLiteral("One"));
+        m_names.append(QStringLiteral("Two"));
     }
 
     Q_INVOKABLE QStringList names() const { return m_names; }

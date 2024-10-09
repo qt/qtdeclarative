@@ -35,7 +35,7 @@ signals:
 
 private:
     int m_i = 5;
-    QString m_s = "6";
+    QString m_s = QStringLiteral("6");
     GOL_Object *m_childA = nullptr;
 };
 

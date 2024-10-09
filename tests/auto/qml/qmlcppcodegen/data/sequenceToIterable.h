@@ -44,7 +44,7 @@ class EntrySource : public QObject {
 public:
     explicit EntrySource(QObject* parent = nullptr) : QObject(parent) {
         for (int i = 0; i < 10; i++) {
-            m_entries.push_back(new Entry(QString("Item %1").arg(i), this));
+            m_entries.push_back(new Entry(QStringLiteral("Item %1").arg(i), this));
         }
     }
     Q_INVOKABLE QList<Entry*> getEntries() const { return m_entries; }

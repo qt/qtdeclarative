@@ -397,6 +397,7 @@ set_target_properties(codegen_test_module PROPERTIES
 
 target_compile_definitions(codegen_test_module PUBLIC
     -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
+    -DQT_NO_CAST_FROM_ASCII
 )
 
 qt6_add_qml_module(codegen_test_module
