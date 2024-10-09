@@ -267,7 +267,7 @@ HelpManager::collectDocumentationLinks(const DomItem &item, const QQmlJSScope::C
     std::vector<QQmlLSHelpProviderBase::DocumentLink> links;
     const auto &foundScopeName = definingScope->internalName();
     if (m_cppTypesToQmlTypes.contains(foundScopeName)) {
-        const QString id = m_cppTypesToQmlTypes.value(foundScopeName) + "::" + name;
+        const QString id = m_cppTypesToQmlTypes.value(foundScopeName) + u"::"_s + name;
         links = m_helpPlugin->documentsForIdentifier(id);
         if (!links.empty())
             return links;
@@ -276,7 +276,7 @@ HelpManager::collectDocumentationLinks(const DomItem &item, const QQmlJSScope::C
     const auto &containingObjectName = item.qmlObject().name();
     auto scope = item.nearestSemanticScope();
     while (scope && scope->isComposite()) {
-        const QString id = containingObjectName + "::" + name;
+        const QString id = containingObjectName + u"::"_s + name;
         links = m_helpPlugin->documentsForIdentifier(id);
         if (!links.empty())
             return links;
@@ -284,7 +284,7 @@ HelpManager::collectDocumentationLinks(const DomItem &item, const QQmlJSScope::C
     }
 
     while (scope && !m_cppTypesToQmlTypes.contains(scope->internalName())) {
-        const QString id = m_cppTypesToQmlTypes.value(scope->internalName()) + "::" + name;
+        const QString id = m_cppTypesToQmlTypes.value(scope->internalName()) + u"::"_s + name;
         links = m_helpPlugin->documentsForIdentifier(id);
         if (!links.empty())
             return links;
