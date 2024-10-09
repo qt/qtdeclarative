@@ -343,7 +343,6 @@ bool QQmlJSTypeResolver::isIntegral(const QQmlJSRegisterContent &type) const
 
 bool QQmlJSTypeResolver::isIntegral(const QQmlJSScope::ConstPtr &type) const
 {
-    // Only types of length <= 32bit count as integral
     return isSignedInteger(type) || isUnsignedInteger(type);
 }
 

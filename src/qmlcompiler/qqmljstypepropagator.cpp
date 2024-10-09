@@ -1611,7 +1611,9 @@ void QQmlJSTypePropagator::propagateStringArgCall(const QQmlJSRegisterContent &b
 
     const QQmlJSScope::ConstPtr input = m_state.registers[argv].content.containedType();
 
-    if (m_typeResolver->equals(input, m_typeResolver->uint32Type())) {
+    if (m_typeResolver->equals(input, m_typeResolver->uint32Type())
+            || m_typeResolver->equals(input, m_typeResolver->int64Type())
+            || m_typeResolver->equals(input, m_typeResolver->uint64Type())) {
         addReadRegister(argv, m_typeResolver->globalType(m_typeResolver->realType()));
         return;
     }
