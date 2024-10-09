@@ -46,6 +46,7 @@ class Q_QUICK_EXPORT QQuickFontMetrics : public QObject
     Q_PROPERTY(qreal overlinePosition READ overlinePosition NOTIFY fontChanged)
     Q_PROPERTY(qreal strikeOutPosition READ strikeOutPosition NOTIFY fontChanged)
     Q_PROPERTY(qreal lineWidth READ lineWidth NOTIFY fontChanged)
+    Q_PROPERTY(qreal capitalHeight READ capitalHeight NOTIFY fontChanged)
     QML_NAMED_ELEMENT(FontMetrics)
     QML_ADDED_IN_VERSION(2, 4)
 public:
@@ -56,6 +57,7 @@ public:
 
     qreal ascent() const;
     qreal descent() const;
+    qreal capitalHeight() const;
     qreal height() const;
     qreal leading() const;
     qreal lineSpacing() const;

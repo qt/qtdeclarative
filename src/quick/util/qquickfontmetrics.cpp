@@ -308,6 +308,24 @@ QString QQuickFontMetrics::elidedText(const QString &text, Qt::TextElideMode mod
     return m_metrics.elidedText(text, mode, width, flags);
 }
 
+/*!
+    \qmlproperty real QtQuick::FontMetrics::capitalHeight
+
+    \since 6.9
+
+    Returns the capital height as specified by the font.
+
+    The cap-height of a font is defined as the height of a capital letter above the baseline. It
+    specifically refers to the height of capital letters that are flat - such as H or I - as opposed
+    to round letters such as O, or pointed letters like A, both of which may display overshoot.
+
+    \sa {QFontMetricsF::capHeight}, ascent, descent, height, xHeight
+*/
+qreal QQuickFontMetrics::capitalHeight() const
+{
+    return m_metrics.capHeight();
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickfontmetrics_p.cpp"
