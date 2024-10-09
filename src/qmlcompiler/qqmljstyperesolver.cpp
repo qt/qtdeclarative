@@ -1570,7 +1570,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(
     prop.setIsWritable(isWritable);
     return QQmlJSRegisterContent::create(
             prop, QQmlJSRegisterContent::InvalidLookupIndex,
-            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Builtin, scope);
+            QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Property, scope);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::memberType(

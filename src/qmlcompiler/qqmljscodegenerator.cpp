@@ -242,7 +242,8 @@ QT_WARNING_POP
 
             const auto originalContained = m_typeResolver->originalContainedType(argument);
             QString originalValue;
-            const bool needsQVariantWrapping = !m_typeResolver->globalType(storedType).isList()
+            const bool needsQVariantWrapping =
+                    storedType->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence
                     && !originalContained->isReferenceType()
                     && m_typeResolver->equals(storedType, m_typeResolver->varType())
                     && !m_typeResolver->equals(originalContained, m_typeResolver->varType());
@@ -1467,7 +1468,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         if (stored->isListProperty()) {
             m_body += m_state.accumulatorVariableOut + u" = "_s;
             m_body += conversion(
-                        globalType(m_typeResolver->sizeType()),
+                        originalType(m_state.accumulatorOut()),
                         m_state.accumulatorOut(),
                         m_state.accumulatorVariableIn + u".count("_s + u'&'
                             + m_state.accumulatorVariableIn + u')');
@@ -1475,7 +1476,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         } else if (stored->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
                    || m_typeResolver->equals(stored, m_typeResolver->stringType())) {
             m_body += m_state.accumulatorVariableOut + u" = "_s
-                    + conversion(globalType(m_typeResolver->sizeType()),
+                    + conversion(originalType(m_state.accumulatorOut()),
                                  m_state.accumulatorOut(),
                                  m_state.accumulatorVariableIn + u".length()"_s)
                     + u";\n"_s;

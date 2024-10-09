@@ -755,10 +755,24 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
 void QQmlJSTypePropagator::generate_LoadElement(int base)
 {
     const auto fallback = [&]() {
-        const auto jsValue = m_typeResolver->conversionType(m_typeResolver->jsValueType());
-        addReadAccumulator(jsValue);
-        addReadRegister(base, jsValue);
-        setAccumulator(jsValue);
+        const QQmlJSScope::ConstPtr jsValue = m_typeResolver->jsValueType();
+
+        // TODO: Make this more granular once we can. There are multiple conversion from different
+        //       origin types here.
+        const QQmlJSRegisterContent jsValueConversion = m_typeResolver->conversionType(jsValue);
+
+        addReadAccumulator(jsValueConversion);
+        addReadRegister(base, jsValueConversion);
+
+        QQmlJSMetaProperty property;
+        property.setPropertyName(u"[]"_s);
+        property.setTypeName(jsValue->internalName());
+        property.setType(jsValue);
+
+        setAccumulator(QQmlJSRegisterContent::create(
+                property, QQmlJSRegisterContent::InvalidLookupIndex,
+                QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ListValue,
+                jsValueConversion));
     };
 
     const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
@@ -2097,9 +2111,18 @@ void QQmlJSTypePropagator::generate_GetIterator(int iterator)
 {
     const QQmlJSRegisterContent listType = m_state.accumulatorIn();
     if (!listType.isList()) {
-        const auto jsValue = m_typeResolver->conversionType(m_typeResolver->jsValueType());
-        addReadAccumulator(jsValue);
-        setAccumulator(jsValue);
+        const QQmlJSScope::ConstPtr jsValue = m_typeResolver->jsValueType();
+        const QQmlJSRegisterContent jsValueConversion = m_typeResolver->conversionType(jsValue);
+        addReadAccumulator(jsValueConversion);
+
+        QQmlJSMetaProperty prop;
+        prop.setPropertyName(u"<>"_s);
+        prop.setTypeName(jsValue->internalName());
+        prop.setType(jsValue);
+        setAccumulator(QQmlJSRegisterContent::create(
+                prop, currentInstructionOffset(),
+                QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::ListIterator,
+                jsValueConversion));
         return;
     }
 
