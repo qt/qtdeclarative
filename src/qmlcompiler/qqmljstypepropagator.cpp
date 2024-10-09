@@ -149,43 +149,43 @@ void QQmlJSTypePropagator::generate_Debug()
 void QQmlJSTypePropagator::generate_LoadConst(int index)
 {
     auto encodedConst = m_jsUnitGenerator->constant(index);
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->typeForConst(encodedConst)));
 }
 
 void QQmlJSTypePropagator::generate_LoadZero()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_LoadTrue()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadFalse()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadNull()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->nullType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->nullType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadUndefined()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->voidType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->voidType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadInt(int)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->int32Type()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->int32Type()));
 }
 
 void QQmlJSTypePropagator::generate_MoveConst(int constIndex, int destTemp)
 {
     auto encodedConst = m_jsUnitGenerator->constant(constIndex);
-    setRegister(destTemp, m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
+    setRegister(destTemp, m_typeResolver->literalType(m_typeResolver->typeForConst(encodedConst)));
 }
 
 void QQmlJSTypePropagator::generate_LoadReg(int reg)
@@ -265,7 +265,7 @@ void QQmlJSTypePropagator::generate_LoadClosure(int value)
     Q_UNUSED(value)
     // TODO: Check the function at index and see whether it's a generator to return another type
     // instead.
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->functionType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->functionType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadName(int nameIndex)
@@ -788,7 +788,7 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
     // We can end up with undefined.
     setAccumulator(m_typeResolver->merge(
             m_typeResolver->valueType(baseRegister),
-            m_typeResolver->globalType(m_typeResolver->voidType())));
+            m_typeResolver->literalType(m_typeResolver->voidType())));
 }
 
 void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
@@ -2105,7 +2105,7 @@ void QQmlJSTypePropagator::generate_IteratorNext(int value, int offset)
     addReadAccumulator(iteratorType);
     setRegister(value, m_typeResolver->merge(
                                 m_typeResolver->valueType(iteratorType),
-                                m_typeResolver->globalType(m_typeResolver->voidType())));
+                                m_typeResolver->literalType(m_typeResolver->voidType())));
     saveRegisterStateForJump(offset);
     m_state.setHasSideEffects(true);
 }
@@ -2387,18 +2387,18 @@ void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
 {
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
-    setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->int32Type()),
-            m_state.accumulatorIn())));
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
+            QSOperator::Op::Equal, m_typeResolver->literalType(m_typeResolver->int32Type()),
+            m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_CmpNeInt(int lhsConst)
 {
     recordEqualsIntType();
     Q_UNUSED(lhsConst)
-    setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
-            QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->int32Type()),
-            m_state.accumulatorIn())));
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
+            QSOperator::Op::NotEqual, m_typeResolver->literalType(m_typeResolver->int32Type()),
+            m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_CmpEq(int lhs)
@@ -2584,7 +2584,7 @@ void QQmlJSTypePropagator::generateBinaryConstArithmeticOperation(QSOperator::Op
 {
     const QQmlJSRegisterContent type = m_typeResolver->typeForBinaryOperation(
                 op, m_state.accumulatorIn(),
-                m_typeResolver->builtinType(m_typeResolver->int32Type()));
+                m_typeResolver->literalType(m_typeResolver->int32Type()));
 
     checkConversion(m_state.accumulatorIn(), type);
     addReadAccumulator(type);
@@ -2689,9 +2689,9 @@ void QQmlJSTypePropagator::generate_Sub(int lhs)
 
 void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg, int count)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->emptyType()));
+    setAccumulator(m_typeResolver->literalType(m_typeResolver->emptyType()));
     for (int reg = firstReg, end = firstReg + count; reg < end; ++reg)
-        setRegister(reg, m_typeResolver->globalType(m_typeResolver->emptyType()));
+        setRegister(reg, m_typeResolver->literalType(m_typeResolver->emptyType()));
 }
 
 void QQmlJSTypePropagator::generate_ThrowOnNullOrUndefined()

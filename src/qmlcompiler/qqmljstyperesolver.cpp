@@ -1006,6 +1006,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::globalType(const QQmlJSScope::ConstPtr
             QQmlJSRegisterContent::Unknown);
 }
 
+/*!
+ * \internal
+ * The type of a JavaScript literal value appearing in script code
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::literalType(const QQmlJSScope::ConstPtr &type)
+{
+    return QQmlJSRegisterContent::create(
+            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Literal);
+}
+
 static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::ExtensionKind mode,
                                                                  bool isMethod)
 {

@@ -785,7 +785,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     }
 
     const QString voidAssignment = u"    "_s + m_state.accumulatorVariableOut + u" = "_s +
-            conversion(global(m_typeResolver->voidType()),
+            conversion(literal(m_typeResolver->voidType()),
                        m_state.accumulatorOut(), QString()) + u";\n"_s;
 
     QString indexName = m_state.accumulatorVariableIn;
@@ -2880,13 +2880,13 @@ void QQmlJSCodeGenerator::generate_CheckException()
 void QQmlJSCodeGenerator::generate_CmpEqNull()
 {
     INJECT_TRACE_INFO(generate_CmpEqNull);
-    generateEqualityOperation(global(m_typeResolver->nullType()), QString(), u"equals"_s, false);
+    generateEqualityOperation(literal(m_typeResolver->nullType()), QString(), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeNull()
 {
     INJECT_TRACE_INFO(generate_CmlNeNull);
-    generateEqualityOperation(global(m_typeResolver->nullType()), QString(), u"equals"_s, true);
+    generateEqualityOperation(literal(m_typeResolver->nullType()), QString(), u"equals"_s, true);
 }
 
 QString QQmlJSCodeGenerator::getLookupPreparation(
@@ -2960,7 +2960,7 @@ void QQmlJSCodeGenerator::generate_CmpEqInt(int lhsConst)
     INJECT_TRACE_INFO(generate_CmpEqInt);
 
     generateEqualityOperation(
-            global(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, false);
+            literal(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, false);
 }
 
 void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
@@ -2968,7 +2968,7 @@ void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
     INJECT_TRACE_INFO(generate_CmpNeInt);
 
     generateEqualityOperation(
-            global(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, true);
+            literal(m_typeResolver->int32Type()), QString::number(lhsConst), u"equals"_s, true);
 }
 
 void QQmlJSCodeGenerator::generate_CmpEq(int lhs)
@@ -3086,7 +3086,7 @@ void QQmlJSCodeGenerator::generate_As(int lhs)
             m_body += input + u".metaType() == "_s + metaType(target)
                     + u" ? " + conversion(inputContent, outputContent, input)
                     + u" : " + conversion(
-                                  global(m_typeResolver->voidType()), outputContent, QString());
+                                  literal(m_typeResolver->voidType()), outputContent, QString());
             m_body += u";\n"_s;
             return;
         }
@@ -3640,7 +3640,7 @@ void QQmlJSCodeGenerator::generateArithmeticConstOperation(int rhsConst, const Q
     generateArithmeticOperation(
                 conversion(m_state.accumulatorIn(), m_state.readAccumulator(),
                            consumedAccumulatorVariableIn()),
-                conversion(global(m_typeResolver->int32Type()),
+                conversion(literal(m_typeResolver->int32Type()),
                            m_state.readAccumulator(), QString::number(rhsConst)),
                 cppOperator);
 }

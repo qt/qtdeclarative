@@ -351,6 +351,11 @@ private:
         return m_typeResolver->builtinType(contained).storedIn(contained);
     }
 
+    QQmlJSRegisterContent literal(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->literalType(contained).storedIn(contained);
+    }
+
     bool registerIsStoredIn(
             const QQmlJSRegisterContent &reg, const QQmlJSScope::ConstPtr &type) const
     {

@@ -50,6 +50,7 @@ public:
         ListValue,
         ListIterator,
         Builtin,
+        Literal,
 
         BaseType,
         Unknown,
