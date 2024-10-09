@@ -253,8 +253,8 @@ private:
     // helper functions to deal with special cases in generate_ methods
     void generate_CallProperty_SCMath(const QString &name, int base, int arcg, int argv);
     void generate_CallProperty_SCconsole(const QString &name, int base, int argc, int argv);
-    void generate_Construct_SCDate(int argc, int argv);
-    void generate_Construct_SCArray(int argc, int argv);
+    void generate_Construct_SCDate(const QQmlJSMetaMethod &ctor, int argc, int argv);
+    void generate_Construct_SCArray(const QQmlJSMetaMethod &ctor, int argc, int argv);
 
     // helper functions to perform QQmlSA checks
     void generate_ret_SAcheck();

@@ -1899,9 +1899,10 @@ void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc,
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
-void QQmlJSTypePropagator::generate_Construct_SCDate(int argc, int argv)
+void QQmlJSTypePropagator::generate_Construct_SCDate(
+        const QQmlJSMetaMethod &ctor, int argc, int argv)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->dateTimeType()));
+    setAccumulator(m_typeResolver->returnType(ctor, m_typeResolver->dateTimeType(), {}));
 
     if (argc == 1) {
         const QQmlJSRegisterContent argType = m_state.registers[argv].content;
@@ -1924,11 +1925,12 @@ void QQmlJSTypePropagator::generate_Construct_SCDate(int argc, int argv)
     }
 }
 
-void QQmlJSTypePropagator::generate_Construct_SCArray(int argc, int argv)
+void QQmlJSTypePropagator::generate_Construct_SCArray(
+        const QQmlJSMetaMethod &ctor, int argc, int argv)
 {
     if (argc == 1) {
         if (m_typeResolver->isNumeric(m_state.registers[argv].content)) {
-            setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
+            setAccumulator(m_typeResolver->returnType(ctor, m_typeResolver->variantListType(), {}));
             addReadRegister(argv, m_typeResolver->conversionType(m_typeResolver->realType()));
         } else {
             generate_DefineArray(argc, argv);
@@ -1942,23 +1944,35 @@ void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
     const QQmlJSRegisterContent type = m_state.registers[func].content;
     if (!type.isMethod()) {
         m_state.setHasSideEffects(true);
-        setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+        QQmlJSMetaMethod method;
+        method.setMethodName(type.containedTypeName());
+        method.setIsJavaScriptFunction(true);
+        method.setIsConstructor(true);
+        setAccumulator(m_typeResolver->returnType(method, m_typeResolver->jsValueType(), {}));
         return;
     }
 
-    if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
-        generate_Construct_SCDate(argc, argv);
+    if (const auto methods = type.method();
+            methods == m_typeResolver->jsGlobalObject()->methods(u"Date"_s)) {
+        Q_ASSERT(methods.length() == 1);
+        generate_Construct_SCDate(methods[0], argc, argv);
         return;
     }
 
-    if (type.method() == m_typeResolver->jsGlobalObject()->methods(u"Array"_s)) {
-        generate_Construct_SCArray(argc, argv);
-
+    if (const auto methods = type.method();
+            methods == m_typeResolver->jsGlobalObject()->methods(u"Array"_s)) {
+        Q_ASSERT(methods.length() == 1);
+        generate_Construct_SCArray(methods[0], argc, argv);
         return;
     }
 
     m_state.setHasSideEffects(true);
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+
+    QStringList errors;
+    QQmlJSMetaMethod match = bestMatchForCall(type.method(), argc, argv, &errors);
+    if (!match.isValid())
+        addError(u"Cannot determine matching constructor. Candidates:\n"_s + errors.join(u'\n'));
+    setAccumulator(m_typeResolver->returnType(match, m_typeResolver->jsValueType(), {}));
 }
 
 void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int argv)
