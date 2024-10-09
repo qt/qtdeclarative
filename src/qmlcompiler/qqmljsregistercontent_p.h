@@ -52,6 +52,7 @@ public:
         Builtin,
         Literal,
         Operation,
+        Conversion,
 
         BaseType,
         Unknown,

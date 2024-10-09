@@ -183,7 +183,7 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
 
         // Make it "var". We don't know what it is.
         const QQmlJSScope::ConstPtr varType = m_typeResolver->varType();
-        const QQmlJSRegisterContent varContent = m_typeResolver->globalType(varType);
+        const QQmlJSRegisterContent varContent = m_typeResolver->conversionType(varType);
         InstructionAnnotation &currentAnnotation = m_annotations[currentInstructionOffset()];
 
         if (currentAnnotation.changedRegisterIndex != InvalidRegister) {
@@ -220,7 +220,7 @@ void QQmlJSShadowCheck::checkResettable(
     if (!m_typeResolver->canHoldUndefined(accumulatorIn.storedIn(varType)))
         return;
 
-    const QQmlJSRegisterContent varContent = m_typeResolver->globalType(varType);
+    const QQmlJSRegisterContent varContent = m_typeResolver->conversionType(varType);
 
     QQmlJSRegisterContent &readAccumulator
             = m_annotations[instructionOffset].readRegisters[Accumulator].content;

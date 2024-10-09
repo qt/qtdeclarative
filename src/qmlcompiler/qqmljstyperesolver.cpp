@@ -1026,6 +1026,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::operationType(const QQmlJSScope::Const
             type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Operation);
 }
 
+/*!
+ * \internal
+ * The type of the result of a type conversion
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::conversionType(const QQmlJSScope::ConstPtr &type)
+{
+    return QQmlJSRegisterContent::create(
+            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Conversion);
+}
+
 static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::ExtensionKind mode,
                                                                  bool isMethod)
 {

@@ -231,7 +231,7 @@ protected:
             return convertStored(from, to.storedType(), variable);
         } else {
             return convertContained(
-                    m_typeResolver->globalType(from).storedIn(m_typeResolver->storedType(from)),
+                    m_typeResolver->conversionType(from).storedIn(m_typeResolver->storedType(from)),
                     to, variable);
         }
     }
@@ -347,6 +347,11 @@ private:
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_typeResolver->globalType(contained).storedIn(contained);
+    }
+
+    QQmlJSRegisterContent conversionType(const QQmlJSScope::ConstPtr &contained)
+    {
+        return m_typeResolver->conversionType(contained).storedIn(contained);
     }
 
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &contained)
