@@ -152,6 +152,10 @@ QQmlJSShadowCheck::Shadowability QQmlJSShadowCheck::checkShadowing(
     else
         m_baseTypes.append(baseType);
 
+    // JavaScript objects are not shadowable, as far as we can analyze them at all.
+    if (baseType.containedType()->isJavaScriptBuiltin())
+        return NotShadowable;
+
     if (!baseType.containedType()->isReferenceType())
         return NotShadowable;
 

@@ -35,8 +35,6 @@ public:
         ScopeObject,
         ParentScope,
 
-        JavaScriptGlobal,
-
         Property,
         Method,
         Enum,

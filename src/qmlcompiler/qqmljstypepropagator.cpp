@@ -1872,7 +1872,8 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
             = m_typeResolver->scopedType(m_function->qmlScope, functionName);
     if (resolvedContent.isMethod()) {
         const auto methods = resolvedContent.method();
-        if (resolvedContent.variant() == QQmlJSRegisterContent::JavaScriptGlobal) {
+        if (m_typeResolver->registerContains(
+                    resolvedContent.scopeType(), m_typeResolver->jsGlobalObject())) {
             if (propagateTranslationMethod(methods, argc, argv))
                 return;
         }

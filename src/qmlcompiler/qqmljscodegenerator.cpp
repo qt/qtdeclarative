@@ -694,7 +694,8 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
 
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-    if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::JavaScriptGlobal) {
+    if (m_typeResolver->registerContains(
+                m_state.accumulatorOut().scopeType(), m_typeResolver->jsGlobalObject())) {
         // This produces a QJSValue. The QQmlJSMetaProperty used to analyze it may have more details
         // but the QQmlJSAotContext API does not reflect them.
         m_body += m_state.accumulatorVariableOut + u" = "_s
