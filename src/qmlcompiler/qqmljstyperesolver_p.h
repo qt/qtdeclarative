@@ -145,6 +145,7 @@ public:
                 ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
 
     static QQmlJSRegisterContent literalType(const QQmlJSScope::ConstPtr &type);
+    static QQmlJSRegisterContent operationType(const QQmlJSScope::ConstPtr &type);
     QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr scopedType(

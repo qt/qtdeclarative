@@ -264,38 +264,38 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
     case QSOperator::Op::Ge:
     case QSOperator::Op::In:
     case QSOperator::Op::Le:
-        return globalType(boolType());
+        return operationType(boolType());
     case QSOperator::Op::BitAnd:
     case QSOperator::Op::BitOr:
     case QSOperator::Op::BitXor:
     case QSOperator::Op::LShift:
     case QSOperator::Op::RShift:
-        return builtinType(int32Type());
+        return operationType(int32Type());
     case QSOperator::Op::URShift:
-        return builtinType(uint32Type());
+        return operationType(uint32Type());
     case QSOperator::Op::Add: {
         const auto leftContents = left.containedType();
         const auto rightContents = right.containedType();
         if (equals(leftContents, stringType()) || equals(rightContents, stringType()))
-            return builtinType(stringType());
+            return operationType(stringType());
 
         const QQmlJSScope::ConstPtr result = merge(leftContents, rightContents);
         if (equals(result, boolType()))
-            return builtinType(int32Type());
+            return operationType(int32Type());
         if (isNumeric(result))
-            return builtinType(realType());
+            return operationType(realType());
 
-        return builtinType(jsPrimitiveType());
+        return operationType(jsPrimitiveType());
     }
     case QSOperator::Op::Sub:
     case QSOperator::Op::Mul:
     case QSOperator::Op::Exp: {
         const QQmlJSScope::ConstPtr result = merge(left.containedType(), right.containedType());
-        return builtinType(equals(result, boolType()) ? int32Type() : realType());
+        return operationType(equals(result, boolType()) ? int32Type() : realType());
     }
     case QSOperator::Op::Div:
     case QSOperator::Op::Mod:
-        return builtinType(realType());
+        return operationType(realType());
     case QSOperator::Op::As:
         return right;
     default:
@@ -310,20 +310,20 @@ QQmlJSRegisterContent QQmlJSTypeResolver::typeForArithmeticUnaryOperation(
 {
     switch (op) {
     case UnaryOperator::Not:
-        return builtinType(boolType());
+        return operationType(boolType());
     case UnaryOperator::Complement:
-        return builtinType(int32Type());
+        return operationType(int32Type());
     case UnaryOperator::Plus:
         if (isIntegral(operand))
             return operand;
         Q_FALLTHROUGH();
     default:
         if (equals(operand.containedType(), boolType()))
-            return builtinType(int32Type());
+            return operationType(int32Type());
         break;
     }
 
-    return builtinType(realType());
+    return operationType(realType());
 }
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSRegisterContent &type) const
@@ -1014,6 +1014,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::literalType(const QQmlJSScope::ConstPt
 {
     return QQmlJSRegisterContent::create(
             type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Literal);
+}
+
+/*!
+ * \internal
+ * The type of the result of a JavaScript operation
+ */
+QQmlJSRegisterContent QQmlJSTypeResolver::operationType(const QQmlJSScope::ConstPtr &type)
+{
+    return QQmlJSRegisterContent::create(
+            type, QQmlJSRegisterContent::InvalidLookupIndex, QQmlJSRegisterContent::Operation);
 }
 
 static QQmlJSRegisterContent::ContentVariant scopeContentVariant(QQmlJSScope::ExtensionKind mode,

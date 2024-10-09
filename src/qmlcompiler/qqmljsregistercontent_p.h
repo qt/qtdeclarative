@@ -51,6 +51,7 @@ public:
         ListIterator,
         Builtin,
         Literal,
+        Operation,
 
         BaseType,
         Unknown,

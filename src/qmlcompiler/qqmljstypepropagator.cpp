@@ -2144,12 +2144,12 @@ void QQmlJSTypePropagator::generate_DeleteName(int name)
 void QQmlJSTypePropagator::generate_TypeofName(int name)
 {
     Q_UNUSED(name);
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_TypeofValue()
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
@@ -2161,7 +2161,7 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->variantListType()));
 
     // Track all arguments as the same type.
     const QQmlJSRegisterContent elementType
@@ -2199,7 +2199,7 @@ void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int
                 m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->varType())));
     }
 
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantMapType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->variantMapType()));
 }
 
 void QQmlJSTypePropagator::generate_CreateClass(int classIndex, int heritage, int computedNames)
@@ -2374,13 +2374,13 @@ void QQmlJSTypePropagator::recordCompareType(int lhs)
 void QQmlJSTypePropagator::generate_CmpEqNull()
 {
     recordEqualsNullType();
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_CmpNeNull()
 {
     recordEqualsNullType();
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->operationType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
