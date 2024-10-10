@@ -560,9 +560,6 @@ class TestClassWithClassInfo : public QObject
 
 #include "tst_qqmlpropertycache.moc"
 
-#define ARRAY_SIZE(arr) \
-    int(sizeof(arr) / sizeof(arr[0]))
-
 template <typename T, typename = void>
 struct SizeofOffsetsAndSizes_helper
 {
@@ -585,7 +582,7 @@ constexpr size_t sizeofOffsetsAndSizes(const T &)
 // check the moc file and adjust as necessary if tests fails to compile
 #define TEST_CLASS(Class, ScopeCounter) \
     QTest::newRow(#Class) \
-            << &Class::staticMetaObject << ARRAY_SIZE(qt_meta_data_ZN##ScopeCounter##Class##E) \
+            << &Class::staticMetaObject << int(::qt_call_create_metaobjectdata<qt_meta_tag_ZN##ScopeCounter##Class##E_t>().data.size()) \
             << int(sizeofOffsetsAndSizes(qt_meta_stringdata_ZN##ScopeCounter##Class##E) / (sizeof(uint) * 2))
 
 Q_DECLARE_METATYPE(const QMetaObject*);
