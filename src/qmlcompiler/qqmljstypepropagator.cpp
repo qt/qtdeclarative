@@ -1466,7 +1466,7 @@ void QQmlJSTypePropagator::propagateCall(
         return;
     }
 
-    const auto returnType = match.isJavaScriptFunction()
+    const QQmlJSScope::ConstPtr returnType = match.isJavaScriptFunction()
             ? m_typeResolver->jsValueType()
             : QQmlJSScope::ConstPtr(match.returnType());
     setAccumulator(m_typeResolver->returnType(
