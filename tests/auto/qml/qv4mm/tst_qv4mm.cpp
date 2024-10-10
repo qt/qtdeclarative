@@ -680,6 +680,9 @@ QV4::ReturnedValue method_force_jit(const QV4::FunctionObject *b, const QV4::Val
     QV4::JIT::BaselineJIT(func).generate();
     return QV4::StaticValue::fromBoolean(true).asReturnedValue();
 #else
+    Q_UNUSED(b);
+    Q_UNUSED(argv);
+    Q_UNUSED(argc);
     return QV4::StaticValue::fromBoolean(false).asReturnedValue();
 #endif
 }
