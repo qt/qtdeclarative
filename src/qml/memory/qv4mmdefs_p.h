@@ -264,6 +264,7 @@ struct Q_QML_EXPORT MarkStack {
     void drain();
     enum class DrainState { Ongoing, Complete };
     DrainState drain(QDeadlineTimer deadline);
+    void setSoftLimit(size_t size);
 private:
     Heap::Base *pop() { return *(--m_top); }
 
