@@ -1039,8 +1039,8 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable
             Chunk::setBit(c->objectBitmap, index);
             Chunk::clearBit(c->extendsBitmap, index);
         }
-        o->memberData.set(engine, m);
         m->internalClass.set(engine, engine->internalClasses(EngineBase::Class_MemberData));
+        o->memberData.set(engine, m);
         Q_ASSERT(o->memberData->internalClass);
         m->values.alloc = static_cast<uint>((memberSize - sizeof(Heap::MemberData) + sizeof(Value))/sizeof(Value));
         m->values.size = o->memberData->values.alloc;
@@ -1070,6 +1070,7 @@ void MarkStack::drain()
         Heap::Base *h = pop();
         ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
+        Q_ASSERT(h->internalClass);
         h->internalClass->vtable->markObjects(h, this);
     }
 }
@@ -1083,10 +1084,17 @@ MarkStack::DrainState MarkStack::drain(QDeadlineTimer deadline)
             Heap::Base *h = pop();
             ++markStackSize;
             Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
+            Q_ASSERT(h->internalClass);
             h->internalClass->vtable->markObjects(h, this);
         }
     } while (!deadline.hasExpired());
     return DrainState::Ongoing;
+}
+
+void MarkStack::setSoftLimit(size_t size)
+{
+    m_softLimit = m_base + size;
+    Q_ASSERT(m_softLimit < m_hardLimit);
 }
 
 void MemoryManager::onEventLoop()

@@ -45,6 +45,7 @@ private slots:
     void mapAndSetKeepValuesAlive();
     void jittedStoreLocalMarksValue();
     void forInOnProxyMarksTarget();
+    void allocWithMemberDataMidwayDrain();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -755,6 +756,43 @@ void tst_qv4mm::forInOnProxyMarksTarget() {
     QVERIFY(root);
     QVERIFY(root->property("wasInUseBeforeRevoke").toBool());
     QVERIFY(root->property("wasInUseAfterRevoke").toBool());
+}
+
+
+struct DebugMemoryManager : QV4::MemoryManager
+{
+public:
+     QV4::Heap::Object *allocObjectWithMemberData(const QV4::VTable *vtable, uint nMembers)
+    {
+        return  QV4::MemoryManager::allocObjectWithMemberData(vtable, nMembers);
+    }
+};
+
+void tst_qv4mm::allocWithMemberDataMidwayDrain()
+{
+    QV4::ExecutionEngine v4 {};
+
+
+    QCOMPARE(v4.memoryManager->gcBlocked, QV4::MemoryManager::Unblocked);
+
+    auto sm = v4.memoryManager->gcStateMachine.get();
+    sm->reset();
+    v4.memoryManager->gcBlocked = QV4::MemoryManager::NormalBlocked;
+    while (sm->state != QV4::GCState::InitCallDestroyObjects) {
+        QV4::GCStateInfo& stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QCOMPARE(sm->state, QV4::GCState::InitCallDestroyObjects);
+
+    v4.memoryManager->markStack()->setSoftLimit(0);
+    // UB cast, but works in practice
+    auto *debugMM =  static_cast<DebugMemoryManager *>(v4.memoryManager);
+    // should not trigger an assertion!
+    auto *o = debugMM->allocObjectWithMemberData(QV4::Object::staticVTable(), 1024);
+    // need to set the IC of the object itself, otherwise it will cause issues during
+    // engine shutdown
+    o->internalClass.set(&v4, QV4::Object::defaultInternalClass(&v4));
+    QVERIFY(o); // dummy check
 }
 
 QTEST_MAIN(tst_qv4mm)
