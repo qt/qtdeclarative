@@ -1550,7 +1550,11 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     if (auto scope = methodFromReferrerScope(referrerScope, name, options))
         return scope;
 
-    const auto resolver = item.containingFile().ownerAs<QmlFile>()->typeResolver();
+    const auto qmlFile = item.containingFile().ownerAs<QmlFile>();
+    if (!qmlFile)
+        return {};
+
+    const auto resolver = qmlFile->typeResolver();
     if (!resolver)
         return {};
 
