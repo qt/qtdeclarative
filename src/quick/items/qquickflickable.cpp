@@ -1239,7 +1239,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                     }
                 }
             }
-            if (!rejectY && stealMouse && dy != vData.previousDragDelta) {
+            if (!rejectY && stealMouse && dy != 0.0 && dy != vData.previousDragDelta) {
                 clearTimeline();
                 vData.move.setValue(newY);
                 vMoved = true;
@@ -1312,7 +1312,8 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                     }
                 }
             }
-            if (!rejectX && stealMouse && dx != hData.previousDragDelta) {
+
+            if (!rejectX && stealMouse && dx != 0.0 && dx != hData.previousDragDelta) {
                 clearTimeline();
                 hData.move.setValue(newX);
                 hMoved = true;
@@ -1372,7 +1373,7 @@ void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
     const auto &pos = firstPoint.position();
     const QVector2D deltas = QVector2D(pos - q->mapFromGlobal(firstPoint.globalPressPosition()));
     const QVector2D velocity = firstPointLocalVelocity(event);
-    bool overThreshold = q->isDragging();
+    bool overThreshold = false;
 
     if (event->pointCount() == 1) {
         if (q->yflick())
