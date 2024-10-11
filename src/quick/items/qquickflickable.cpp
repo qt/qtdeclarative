@@ -1814,7 +1814,9 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 || (yflick() && qAbs(d->accumulatedWheelPixelDelta.y()) > qAbs(d->accumulatedWheelPixelDelta.x() * 2))) {
             d->drag(currentTimestamp, event->type(), event->position(), d->accumulatedWheelPixelDelta,
                     true, !d->scrollingPhase, true, velocity);
-            event->accept();
+            d->updateBeginningEnd();
+            if ((xflick() && !isAtXBeginning() && !isAtXEnd()) || (yflick() && !isAtYBeginning() && !isAtYEnd()))
+                event->accept();
         } else {
             qCDebug(lcWheel) << "not dragging: accumulated deltas" << d->accumulatedWheelPixelDelta <<
                                 "moving?" << isMoving() << "can flick horizontally?" << xflick() << "vertically?" << yflick();
