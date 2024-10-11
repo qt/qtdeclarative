@@ -338,23 +338,23 @@ private:
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
 
-    QQmlJSRegisterContent original(const QQmlJSRegisterContent &tracked)
+    QQmlJSRegisterContent originalType(const QQmlJSRegisterContent &tracked)
     {
         const QQmlJSRegisterContent restored = m_typeResolver->original(tracked);
         return restored.storedIn(m_typeResolver->originalType(tracked.storedType()));
     }
 
-    QQmlJSRegisterContent global(const QQmlJSScope::ConstPtr &contained)
+    QQmlJSRegisterContent globalType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_typeResolver->globalType(contained).storedIn(contained);
     }
 
-    QQmlJSRegisterContent builtin(const QQmlJSScope::ConstPtr &contained)
+    QQmlJSRegisterContent builtinType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_typeResolver->builtinType(contained).storedIn(contained);
     }
 
-    QQmlJSRegisterContent literal(const QQmlJSScope::ConstPtr &contained)
+    QQmlJSRegisterContent literalType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_typeResolver->literalType(contained).storedIn(contained);
     }
