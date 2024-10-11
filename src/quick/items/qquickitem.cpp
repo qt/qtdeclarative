@@ -2771,9 +2771,10 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
             if (d->window) {
-                d->deliveryAgentPrivate()->
-                        clearFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
+                if (QQuickDeliveryAgentPrivate *da = d->deliveryAgentPrivate()) {
+                    da->clearFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
                                           QQuickDeliveryAgentPrivate::DontChangeFocusProperty);
+                }
                 if (scopeFocusedItem != this)
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
             } else {
@@ -2847,9 +2848,10 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
                 emit scopeFocusedItem->focusChanged(false);
             } else {
                 if (d->window) {
-                    d->deliveryAgentPrivate()->
-                            setFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
+                    if (QQuickDeliveryAgentPrivate *da = d->deliveryAgentPrivate()) {
+                        da->setFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
                                             QQuickDeliveryAgentPrivate::DontChangeFocusProperty);
+                    }
                 } else {
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, true);
                 }
@@ -6618,9 +6620,10 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     dirty(Visible);
     if (parentItem)
         QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
-    if (window)
-        if (auto agent = deliveryAgentPrivate(); agent)
+    if (window) {
+        if (auto agent = deliveryAgentPrivate())
             agent->removeGrabber(q, true, true, true);
+    }
 
     bool childVisibilityChanged = false;
     for (int ii = 0; ii < childItems.size(); ++ii)
@@ -8586,7 +8589,8 @@ void QQuickItem::ungrabTouchPoints()
     Q_D(QQuickItem);
     if (!d->window)
         return;
-    d->deliveryAgentPrivate()->removeGrabber(this, false, true);
+    if (QQuickDeliveryAgentPrivate *da = d->deliveryAgentPrivate())
+        da->removeGrabber(this, false, true);
 }
 
 /*!
