@@ -343,8 +343,10 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     bool overThreshold = false;
     Qt::Edge effEdge = effectiveEdge();
     if (position > 0 || dragMargin > 0) {
-        const bool xOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, event, threshold);
-        const bool yOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, event, threshold);
+        const bool xOverThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(),
+                                                                    Qt::XAxis, event, threshold);
+        const bool yOverThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(),
+                                                                    Qt::YAxis, event, threshold);
         if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
             overThreshold = xOverThreshold && !yOverThreshold;
         else
@@ -396,8 +398,10 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         const int threshold = qMax(20, QGuiApplication::styleHints()->startDragDistance() + 5);
         const Qt::Edge effEdge = effectiveEdge();
         if (position > 0 || dragMargin > 0) {
-            const bool xOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(), Qt::XAxis, &point, threshold);
-            const bool yOverThreshold = QQuickWindowPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(), Qt::YAxis, &point, threshold);
+            const bool xOverThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(movePoint.x() - pressPoint.x(),
+                                                                    Qt::XAxis, point, threshold);
+            const bool yOverThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(movePoint.y() - pressPoint.y(),
+                                                                    Qt::YAxis, point, threshold);
             if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
                 overThreshold = xOverThreshold && !yOverThreshold;
             else

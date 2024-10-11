@@ -805,10 +805,13 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
                 break;
             case QEventPoint::Updated:
                 if (!keepTouchGrab()) {
-                    if (d->orientation == Qt::Horizontal)
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point, qRound(d->touchDragThreshold)));
-                    else
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().y() - d->pressPoint.y(), Qt::YAxis, &point, qRound(d->touchDragThreshold)));
+                    if (d->orientation == Qt::Horizontal) {
+                        setKeepTouchGrab(QQuickDeliveryAgentPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(),
+                                            Qt::XAxis, point, qRound(d->touchDragThreshold)));
+                    } else {
+                        setKeepTouchGrab(QQuickDeliveryAgentPrivate::dragOverThreshold(point.position().y() - d->pressPoint.y(),
+                                            Qt::YAxis, point, qRound(d->touchDragThreshold)));
+                    }
                 }
                 if (keepTouchGrab())
                     d->handleMove(point.position(), event->timestamp());

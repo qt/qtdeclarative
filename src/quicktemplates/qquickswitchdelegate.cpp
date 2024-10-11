@@ -147,8 +147,10 @@ void QQuickSwitchDelegate::mouseMoveEvent(QMouseEvent *event)
     Q_D(QQuickSwitchDelegate);
     if (!keepMouseGrab()) {
         const QPointF movePoint = event->position();
-        if (d->canDrag(movePoint))
-            setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
+        if (d->canDrag(movePoint)) {
+            setKeepMouseGrab(QQuickDeliveryAgentPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(),
+                                                                           Qt::XAxis, event));
+        }
     }
     QQuickItemDelegate::mouseMoveEvent(event);
 }
@@ -161,8 +163,10 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
         for (const QTouchEvent::TouchPoint &point : event->points()) {
             if (point.id() != d->touchId || point.state() != QEventPoint::Updated)
                 continue;
-            if (d->canDrag(point.position()))
-                setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point));
+            if (d->canDrag(point.position())) {
+                setKeepTouchGrab(QQuickDeliveryAgentPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(),
+                                                                               Qt::XAxis, point));
+            }
         }
     }
     QQuickItemDelegate::touchEvent(event);

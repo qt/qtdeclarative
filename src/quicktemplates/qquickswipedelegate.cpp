@@ -789,7 +789,8 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
         // We used to use the custom threshold that QQuickDrawerPrivate::grabMouse used,
         // but since it's larger than what Flickable uses, it results in Flickable
         // stealing events from us (QTBUG-50045), so now we use the default.
-        const bool overThreshold = QQuickWindowPrivate::dragOverThreshold(distance, Qt::XAxis, event);
+        const bool overThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(distance,
+                                                                                 Qt::XAxis, event);
         if (window && overThreshold) {
             QQuickItem *grabber = q->window()->mouseGrabberItem();
             if (!grabber || !grabber->keepMouseGrab()) {

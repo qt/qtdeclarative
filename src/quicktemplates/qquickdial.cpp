@@ -939,11 +939,13 @@ void QQuickDial::touchEvent(QTouchEvent *event)
             switch (point.state()) {
             case QEventPoint::Updated:
                 if (!keepTouchGrab()) {
-                    bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point);
+                    bool overXDragThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(),
+                                                                            Qt::XAxis, point);
                     setKeepTouchGrab(overXDragThreshold);
 
                     if (!overXDragThreshold) {
-                        bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.position().y() - d->pressPoint.y(), Qt::YAxis, &point);
+                        bool overYDragThreshold = QQuickDeliveryAgentPrivate::dragOverThreshold(point.position().y() - d->pressPoint.y(),
+                                                                            Qt::YAxis, point);
                         setKeepTouchGrab(overYDragThreshold);
                     }
                 }
