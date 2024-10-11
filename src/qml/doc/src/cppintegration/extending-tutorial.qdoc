@@ -64,7 +64,7 @@ We want this \c PieChart type to be usable from QML like this:
     }
 \endqml
 
-To do this, we need a C++ class that encapsulates this \c PieChart type and its two
+To do this, we need a C++ class that encapsulates this \c PieChart type and its
 properties. Since QML makes extensive use of Qt's \l{Meta-Object System}{meta object system},
 this new class must:
 
@@ -185,11 +185,13 @@ to our C++ class:
 \snippet tutorials/extending-qml/chapter2-methods/piechart.h 3
 
 The use of Q_INVOKABLE makes the \c clearChart() method available to the
-Qt Meta-Object system, and in turn, to QML. Note that it could have
-been declared as a Qt slot instead of using Q_INVOKABLE, as
-slots are also callable from QML. Both of these approaches are valid.
+Qt Meta-Object system, and in turn, to QML.
 
-The \c clearChart() method simply changes the color to Qt::transparent,
+\note You can also declare the method as a Qt slot instead of using Q_INVOKABLE,
+because public and protected slots are also callable from QML (you cannot call
+private slots).
+
+The \c clearChart() method changes the color to Qt::transparent,
 repaints the chart, then emits the \c chartCleared() signal:
 
 \snippet tutorials/extending-qml/chapter2-methods/piechart.cpp 0
