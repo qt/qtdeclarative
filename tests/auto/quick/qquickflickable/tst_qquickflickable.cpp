@@ -180,6 +180,7 @@ private slots:
     void wheelBackwards();
     void trackpad();
     void nestedTrackpad();
+    void nestedSameDirectionTrackpad();
     void movingAndFlicking();
     void movingAndFlicking_data();
     void movingAndDragging();
@@ -240,6 +241,9 @@ private:
             "test mouse", 1000, QInputDevice::DeviceType::Mouse, QPointingDevice::PointerType::Generic,
             QInputDevice::Capability::Position | QInputDevice::Capability::Hover | QInputDevice::Capability::Scroll,
             1, 5, QString(), QPointingDeviceUniqueId(), this);
+    QScopedPointer<QPointingDevice> touchpad = QScopedPointer<QPointingDevice>(
+            QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad,
+                                     QInputDevice::Capability::Position | QInputDevice::Capability::PixelScroll));
 };
 
 void tst_qquickflickable::initTestCase()
@@ -1051,7 +1055,7 @@ void tst_qquickflickable::nestedTrackpad()
     for (int i = 0; i < 10 && qFuzzyIsNull(innerFlickable->contentX()); ++i) {
         QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(-10,4), QPoint(-20,8),
                           Qt::NoButton, Qt::NoModifier, i ? Qt::ScrollUpdate : Qt::ScrollBegin, false,
-                          Qt::MouseEventSynthesizedBySystem);
+                          Qt::MouseEventSynthesizedBySystem, touchpad.get());
         event.setAccepted(false);
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
@@ -1061,7 +1065,7 @@ void tst_qquickflickable::nestedTrackpad()
     {
         QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
                           Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false,
-                          Qt::MouseEventSynthesizedBySystem);
+                          Qt::MouseEventSynthesizedBySystem, touchpad.get());
         event.setAccepted(false);
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
@@ -1075,7 +1079,7 @@ void tst_qquickflickable::nestedTrackpad()
     for (int i = 0; i < 10 && qFuzzyIsNull(innerFlickable->contentY()); ++i) {
         QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(4,-10), QPoint(8,-20),
                           Qt::NoButton, Qt::NoModifier, i ? Qt::ScrollUpdate : Qt::ScrollBegin, false,
-                          Qt::MouseEventSynthesizedBySystem);
+                          Qt::MouseEventSynthesizedBySystem, touchpad.get());
         event.setAccepted(false);
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
@@ -1085,12 +1089,54 @@ void tst_qquickflickable::nestedTrackpad()
     {
         QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
                           Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false,
-                          Qt::MouseEventSynthesizedBySystem);
+                          Qt::MouseEventSynthesizedBySystem, touchpad.get());
         event.setAccepted(false);
         event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(&window, &event);
     }
     QTRY_COMPARE(outerMoveEndSpy.size(), 1);
+}
+
+void tst_qquickflickable::nestedSameDirectionTrackpad() // QTBUG-124478
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nestedSameDirection.qml")));
+    QQuickFlickable *rootFlickable = qmlobject_cast<QQuickFlickable *>(window.rootObject());
+    QVERIFY(rootFlickable);
+    QQuickFlickable *flickable1 = rootFlickable->findChild<QQuickFlickable *>("nested1");
+    QVERIFY(flickable1);
+    QQuickFlickable *flickable2 = rootFlickable->findChild<QQuickFlickable *>("nested2");
+    QVERIFY(flickable2);
+
+    QVERIFY(rootFlickable->isAtYBeginning());
+    const QPoint pixelDelta(0, -100);
+    const QPointF pos(50, 50);
+    const int interval = 20;
+    quint64 timestamp = 1000;
+
+    auto sendTrackpadScroll = [pixelDelta, pos, &timestamp, &window, this](Qt::ScrollPhase phase) {
+        QWheelEvent ev(pos, window.mapToGlobal(pos), pixelDelta, pixelDelta, Qt::NoButton, Qt::NoModifier,
+                       phase, false, Qt::MouseEventSynthesizedBySystem, touchpad.get());
+        ev.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(&window, &ev);
+        timestamp += interval; // for next time
+    };
+
+    // Send enough pixelDelta wheel events for flickable1 to reach its end.
+    sendTrackpadScroll(Qt::ScrollBegin);
+
+    for (int i = 1; i < 50; ++i) {
+        if (lcTests().isDebugEnabled())
+            QTest::qWait(interval);
+        sendTrackpadScroll(Qt::ScrollUpdate);
+    }
+
+    // We expect that the rootFlickable has moved, due to receiving some of the
+    // wheel events that were sent after flickable1 reached its end.
+    // Then flickable2 began to move as well, after it got under the mouse position.
+    QTRY_VERIFY(flickable1->isAtYEnd());
+    QCOMPARE(rootFlickable->isAtYBeginning(), false);
+    QCOMPARE(flickable2->isAtYBeginning(), false);
 }
 
 void tst_qquickflickable::movingAndFlicking_data()
