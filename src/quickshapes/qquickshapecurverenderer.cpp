@@ -523,15 +523,15 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
     if (dirtyFlags & StrokeDirty) {
         if (pathData->isStrokeVisible()) {
             const QPen &pen = pathData->pen;
-            if (pen.style() == Qt::SolidLine)
-                pathData->strokePath = pathData->path;
-            else
-                pathData->strokePath = pathData->path.dashed(pen.widthF(), pen.dashPattern(), pen.dashOffset());
-
+            const bool solid = (pen.style() == Qt::SolidLine);
+            const QQuadPath &strokePath = solid ? pathData->path
+                                                : pathData->path.dashed(pen.widthF(),
+                                                                        pen.dashPattern(),
+                                                                        pen.dashOffset());
             if (useTriangulatingStroker)
-                pathData->strokeNodes = addTriangulatingStrokerNodes(*pathData);
+                pathData->strokeNodes = addTriangulatingStrokerNodes(strokePath, pen);
             else
-                pathData->strokeNodes = addCurveStrokeNodes(*pathData);
+                pathData->strokeNodes = addCurveStrokeNodes(strokePath, pen);
         }
     }
 }
@@ -603,21 +603,19 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
     return ret;
 }
 
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const PathData &pathData)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStrokerNodes(const QQuadPath &path, const QPen &pen)
 {
     NodeList ret;
-    const QColor &color = pathData.pen.color();
+    const QColor &color = pen.color();
 
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
 
     QTriangulatingStroker stroker;
-    const auto painterPath = pathData.strokePath.toPainterPath();
+    const auto painterPath = path.toPainterPath();
     const QVectorPath &vp = qtVectorPathForPath(painterPath);
-    QPen pen = pathData.pen;
     stroker.process(vp, pen, {}, {});
 
     auto *node = new QSGCurveFillNode;
-    node->setGradientType(pathData.gradientType);
 
     auto uvForPoint = [](QVector2D v1, QVector2D v2, QVector2D p)
     {
@@ -693,7 +691,6 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
     QVector<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
         node->setColor(color);
-        node->setFillGradient(pathData.gradient);
 
         node->cookGeometry();
         ret.append(node);
@@ -750,26 +747,24 @@ void QQuickShapeCurveRenderer::setDebugVisualization(int options)
     debugVisualizationFlags = options;
 }
 
-QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes(const PathData &pathData)
+QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes(const QQuadPath &path, const QPen &pen)
 {
     NodeList ret;
-    const QColor &color = pathData.pen.color();
 
     const bool debug = debugVisualization() & DebugCurves;
     auto *node = new QSGCurveStrokeNode;
     node->setDebug(0.2f * debug);
     QVector<QQuickShapeWireFrameNode::WireFrameVertex> wfVertices;
 
-    const float miterLimit = pathData.pen.miterLimit();
-    const float penWidth = pathData.pen.widthF();
+    const float penWidth = pen.widthF();
 
     static const int subdivisions = qEnvironmentVariable("QT_QUICKSHAPES_STROKE_SUBDIVISIONS", QStringLiteral("3")).toInt();
 
-    QSGCurveProcessor::processStroke(pathData.strokePath,
-                                     miterLimit,
+    QSGCurveProcessor::processStroke(path,
+                                     pen.miterLimit(),
                                      penWidth,
-                                     pathData.pen.joinStyle(),
-                                     pathData.pen.capStyle(),
+                                     pen.joinStyle(),
+                                     pen.capStyle(),
                                      [&wfVertices, &node](const std::array<QVector2D, 3> &s,
                                                           const std::array<QVector2D, 3> &p,
                                                           const std::array<QVector2D, 3> &n,
@@ -791,7 +786,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes
 
     auto indexCopy = node->uncookedIndexes(); // uncookedIndexes get delete on cooking
 
-    node->setColor(color);
+    node->setColor(pen.color());
     node->setStrokeWidth(penWidth);
     node->cookGeometry();
     ret.append(node);
