@@ -200,7 +200,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
-    qDeleteAll(cachedValueTypeInstances);
 }
 
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
@@ -553,6 +552,10 @@ QQmlEngine::~QQmlEngine()
     d->rootContext = nullptr;
 
     d->typeLoader.invalidate();
+
+    // QQmlGadgetPtrWrapper can have QQmlData with various references.
+    qDeleteAll(d->cachedValueTypeInstances);
+    d->cachedValueTypeInstances.clear();
 }
 
 /*! \fn void QQmlEngine::quit()
