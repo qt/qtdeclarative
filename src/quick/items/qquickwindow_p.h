@@ -242,11 +242,6 @@ public:
     static bool defaultAlphaBuffer;
     static QQuickWindow::TextRenderType textRenderType;
 
-    // vvv currently in use in Controls 2; TODO remove
-    void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason)
-    { deliveryAgentPrivate()->clearFocusInScope(scope, item, reason); }
-    // ^^^ currently in use in Controls 2; TODO remove
-
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
     static qsizetype data_count(QQmlListProperty<QObject> *);

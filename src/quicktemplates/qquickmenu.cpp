@@ -1250,8 +1250,10 @@ void QQuickMenuPrivate::setCurrentIndex(int index, Qt::FocusReason reason)
             currentItem->setHighlighted(false);
             if (!newCurrentItem && window) {
                 QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
-                if (focusItem)
-                    QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+                if (focusItem) {
+                    auto *daPriv = QQuickWindowPrivate::get(window)->deliveryAgentPrivate();
+                    daPriv->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+                }
             }
         }
         if (newCurrentItem) {

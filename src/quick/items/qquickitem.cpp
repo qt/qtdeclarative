@@ -88,7 +88,7 @@ static void setActiveFocus(QQuickItem *item, Qt::FocusReason reason)
 {
     QQuickItemPrivate *d = QQuickItemPrivate::get(item);
     if (d->subFocusItem && d->window && d->flags & QQuickItem::ItemIsFocusScope)
-        QQuickWindowPrivate::get(d->window)->clearFocusInScope(item, d->subFocusItem, reason);
+        d->deliveryAgentPrivate()->clearFocusInScope(item, d->subFocusItem, reason);
     item->forceActiveFocus(reason);
 }
 

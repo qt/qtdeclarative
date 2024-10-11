@@ -185,7 +185,7 @@ void QQuickContainerPrivate::cleanup()
     if (contentItem) {
         QQuickItem *focusItem = QQuickItemPrivate::get(contentItem)->subFocusItem;
         if (focusItem && window)
-            QQuickWindowPrivate::get(window)->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
+            deliveryAgentPrivate()->clearFocusInScope(contentItem, focusItem, Qt::OtherFocusReason);
 
         q->contentItemChange(nullptr, contentItem);
         QQuickControlPrivate::hideOldItem(contentItem);

@@ -1832,7 +1832,7 @@ void QQuickWindowPrivate::setFocusToTarget(FocusTarget target, Qt::FocusReason r
         if (newFocusItem) {
             const auto *itemPriv = QQuickItemPrivate::get(newFocusItem);
             if (itemPriv->subFocusItem && itemPriv->flags & QQuickItem::ItemIsFocusScope)
-                clearFocusInScope(newFocusItem, itemPriv->subFocusItem, reason);
+                deliveryAgentPrivate()->clearFocusInScope(newFocusItem, itemPriv->subFocusItem, reason);
         }
         break;
     }
