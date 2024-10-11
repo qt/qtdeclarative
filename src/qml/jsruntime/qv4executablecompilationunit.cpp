@@ -263,6 +263,10 @@ void ExecutableCompilationUnit::clear()
     runtimeRegularExpressions = nullptr;
     free(runtimeClasses);
     runtimeClasses = nullptr;
+
+    static QQmlRefPointer<CompiledData::CompilationUnit> nullUnit
+            = QQml::makeRefPointer<CompiledData::CompilationUnit>();
+    m_compilationUnit = nullUnit;
 }
 
 void ExecutableCompilationUnit::markObjects(QV4::MarkStack *markStack) const
