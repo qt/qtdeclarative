@@ -193,8 +193,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (incubationController) incubationController->d = nullptr;
     incubationController = nullptr;
 
-    QQmlMetaType::freeUnusedTypesAndCaches();
-
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
