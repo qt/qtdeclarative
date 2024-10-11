@@ -1,5 +1,7 @@
 [mouseSelection]
 opensuse-leap
+macos arm 12
+macos arm 13
 
 # QTBUG-78846
 [mouseSelectionMode]
