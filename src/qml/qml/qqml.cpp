@@ -1548,8 +1548,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
 bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty
-            && l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty) {
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty) {
         const QQmlPropertyData *property = l->qobjectLookup.propertyData;
         QQmlData::flushPendingBinding(qmlScopeObject, property->coreIndex());
         captureObjectProperty(qmlScopeObject, l->qobjectLookup.propertyCache, property, this);
@@ -1586,7 +1585,6 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty
-            || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty
             || l->getter == QV4::QQmlTypeWrapper::lookupSingletonProperty
             || l->getter == QV4::Lookup::getterQObject
             || l->setter == QV4::Lookup::setterQObject
