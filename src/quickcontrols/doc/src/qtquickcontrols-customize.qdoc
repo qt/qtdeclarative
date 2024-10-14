@@ -52,7 +52,7 @@
     your application, refer to it by its filename:
 
     \qml
-    import QtQuick.Controls
+    import QtQuick.Controls.Basic
 
     ApplicationWindow {
         MyButton {
@@ -68,7 +68,7 @@
     control, first import the folder into a namespace:
 
     \qml
-    import QtQuick.Controls
+    import QtQuick.Controls.Basic
     import "controls" as MyControls
 
     ApplicationWindow {
