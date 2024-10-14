@@ -1040,10 +1040,15 @@ void QQuickComboBox::setModel(const QVariant& m)
 }
 
 /*!
-    \internal
+    \readonly
     \qmlproperty model QtQuick.Controls::ComboBox::delegateModel
 
-    This property holds the model providing delegate instances for the combo box.
+    This property holds the model that provides delegate instances for the combo box.
+
+    It is typically assigned to a \l ListView in the \l {Popup::}{contentItem}
+    of the \l popup.
+
+    \sa {Customizing ComboBox}
 */
 QQmlInstanceModel *QQuickComboBox::delegateModel() const
 {
