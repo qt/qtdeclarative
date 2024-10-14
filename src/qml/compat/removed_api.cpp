@@ -53,7 +53,7 @@ bool QQmlPrivate::AOTCompiledContext::callObjectPropertyLookup(
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
-    QV4::ScopedFunctionObject function(scope, lookup->getter(lookup, engine->handle(), thisObject));
+    QV4::ScopedFunctionObject function(scope, lookup->getter(engine->handle(), thisObject));
     if (!function) {
         scope.engine->throwTypeError(
                 QStringLiteral("Property '%1' of object [object Object] is not a function")
@@ -79,7 +79,7 @@ bool QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue thisObject(scope);
     QV4::ScopedFunctionObject function(
-            scope, lookup->qmlContextPropertyGetter(lookup, scope.engine, thisObject));
+            scope, lookup->contextGetter(scope.engine, thisObject));
     if (!function) {
         scope.engine->throwTypeError(
                 QStringLiteral("Property '%1' of object [null] is not a function").arg(

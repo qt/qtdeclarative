@@ -1108,7 +1108,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
         Scoped<QObjectMethod> method(scope, *methodValue);
         setupQObjectMethodLookup(
                     lookup, ddata ? ddata : QQmlData::get(qobj, true), nullptr, This, method->d());
-        lookup->getter = Lookup::getterQObjectMethod;
+        lookup->call = Lookup::Call::GetterQObjectMethod;
         return method.asReturnedValue();
     }
 
@@ -1118,7 +1118,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
         lookup->qobjectMethodLookup.ic.set(engine, object->internalClass());
         if (QObjectMethod *method = result->as<QObjectMethod>())
             lookup->qobjectMethodLookup.method.set(engine, method->d());
-        lookup->getter = Lookup::getterFallbackMethod;
+        lookup->call = Lookup::Call::GetterQObjectMethodFallback;
         return result->asReturnedValue();
     }
     const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
@@ -1138,29 +1138,14 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
             && !property->isSignalHandler()) { // TODO: Optimize SignalHandler, too
         QV4::Heap::QObjectMethod *method = nullptr;
         setupQObjectMethodLookup(lookup, ddata, property, This, method);
-        lookup->getter = Lookup::getterQObjectMethod;
-        return lookup->getter(lookup, engine, *object);
+        lookup->call = Lookup::Call::GetterQObjectMethod;
+        return lookup->getter(engine, *object);
     }
 
     setupQObjectLookup(lookup, ddata, property, This);
-    lookup->getter = Lookup::getterQObject;
-    return lookup->getter(lookup, engine, *object);
-}
 
-ReturnedValue QObjectWrapper::lookupAttached(
-            Lookup *l, ExecutionEngine *engine, const Value &object)
-{
-    if (&QObjectWrapper::lookupAttached == &Lookup::getterGeneric) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This getter marks the presence of a lookup for an attached object.
-    // It falls back to the generic lookup when run through the interpreter, but AOT-compiled
-    // code can get clever with it.
-    return Lookup::getterGeneric(l, engine, object);
+    lookup->call = Lookup::Call::GetterQObjectProperty;
+    return lookup->getter(engine, *object);
 }
 
 bool QObjectWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,

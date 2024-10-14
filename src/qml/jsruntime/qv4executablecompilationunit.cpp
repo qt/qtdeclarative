@@ -112,13 +112,13 @@ void ExecutableCompilationUnit::populate()
             CompiledData::Lookup::Type type
                     = CompiledData::Lookup::Type(uint(compiledLookups[i].type()));
             if (type == CompiledData::Lookup::Type_Getter)
-                l->getter = QV4::Lookup::getterGeneric;
+                l->call = Lookup::Call::GetterGeneric;
             else if (type == CompiledData::Lookup::Type_Setter)
-                l->setter = QV4::Lookup::setterGeneric;
+                l->call = Lookup::Call::SetterGeneric;
             else if (type == CompiledData::Lookup::Type_GlobalGetter)
-                l->globalGetter = QV4::Lookup::globalGetterGeneric;
+                l->call = Lookup::Call::GlobalGetterGeneric;
             else if (type == CompiledData::Lookup::Type_QmlContextPropertyGetter)
-                l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;
+                l->call = Lookup::Call::ContextGetterGeneric;
             l->forCall = compiledLookups[i].mode() == CompiledData::Lookup::Mode_ForCall;
             l->nameIndex = compiledLookups[i].nameIndex();
         }

@@ -599,14 +599,14 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
     MOTH_BEGIN_INSTR(LoadGlobalLookup)
         STORE_IP();
         QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
-        acc = l->globalGetter(l, engine);
+        acc = l->globalGetter(engine);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadGlobalLookup)
 
     MOTH_BEGIN_INSTR(LoadQmlContextPropertyLookup)
         STORE_IP();
         QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
-        acc = l->qmlContextPropertyGetter(l, engine, nullptr);
+        acc = l->contextGetter(engine, nullptr);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadQmlContextPropertyLookup)
 
@@ -671,7 +671,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
             goto handleUnwind;
         }
 
-        acc = l->getter(l, engine, accumulator);
+        acc = l->getter(engine, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetLookup)
 
@@ -684,7 +684,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         if (accumulator.isNullOrUndefined()) {
             code += offset;
         } else {
-            acc = l->getter(l, engine, accumulator);
+            acc = l->getter(engine, accumulator);
         }
     CHECK_EXCEPTION;
     MOTH_END_INSTR(GetOptionalLookup)
@@ -700,7 +700,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         STORE_IP();
         STORE_ACC();
         QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
-        if (!l->setter(l, engine, STACK_VALUE(base), accumulator) && function->isStrict())
+        if (!l->setter(engine, STACK_VALUE(base), accumulator) && function->isStrict())
             engine->throwTypeError();
         CHECK_EXCEPTION;
     MOTH_END_INSTR(SetLookup)
@@ -792,7 +792,7 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         }
 
         // ok to have the value on the stack here
-        Value f = Value::fromReturnedValue(l->getter(l, engine, STACK_VALUE(base)));
+        Value f = Value::fromReturnedValue(l->getter(engine, STACK_VALUE(base)));
 
         if (Q_LIKELY(f.isFunctionObject())) {
             acc = static_cast<FunctionObject &>(f).call(stack + base, stack + argv, argc);

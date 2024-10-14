@@ -23,16 +23,16 @@ void Lookup::resolveProtoGetter(PropertyKey name, const Heap::Object *proto)
             PropertyAttributes attrs = index.attrs;
             protoLookup.data = proto->propertyData(index.index);
             if (attrs.isData()) {
-                getter = getterProto;
+                call = Call::GetterProto;
             } else {
-                getter = getterProtoAccessor;
+                call = Call::GetterProtoAccessor;
             }
             return;
         }
         proto = proto->prototype();
     }
     // ### put in a getterNotFound!
-    getter = getterFallback;
+    call = Call::GetterQObjectPropertyFallback;
 }
 
 ReturnedValue Lookup::resolveGetter(ExecutionEngine *engine, const Object *object)
@@ -67,7 +67,7 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
         ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
         if (object.isString() && name->equals(engine->id_length())) {
             // special case, as the property is on the object itself
-            getter = stringLengthGetter;
+            call = Call::GetterStringLength;
             return stringLengthGetter(this, engine, object);
         }
         break;
@@ -81,11 +81,18 @@ ReturnedValue Lookup::resolvePrimitiveGetter(ExecutionEngine *engine, const Valu
     protoLookup.protoId = primitiveLookup.proto->internalClass->protoId;
     resolveProtoGetter(name, primitiveLookup.proto);
 
-    if (getter == getterProto)
-        getter = primitiveGetterProto;
-    else if (getter == getterProtoAccessor)
-        getter = primitiveGetterAccessor;
-    return getter(this, engine, object);
+    switch (call) {
+    case Call::GetterProto:
+        call = Call::GetterProtoPrimitive;
+        break;
+    case Call::GetterProtoAccessor:
+        call = Call::GetterAccessorPrimitive;
+        break;
+    default:
+        break;
+    }
+
+    return getter(engine, object);
 }
 
 ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
@@ -98,17 +105,21 @@ ReturnedValue Lookup::resolveGlobalGetter(ExecutionEngine *engine)
     protoLookup.protoId = o->internalClass()->protoId;
     resolveProtoGetter(name, o->d());
 
-    if (getter == getterProto)
-        globalGetter = globalGetterProto;
-    else if (getter == getterProtoAccessor)
-        globalGetter = globalGetterProtoAccessor;
-    else {
-        globalGetter = globalGetterGeneric;
+    switch (call) {
+    case Call::GetterProto:
+        call = Call::GlobalGetterProto;
+        break;
+    case Call::GetterProtoAccessor:
+        call = Call::GlobalGetterProtoAccessor;
+        break;
+    default:
+        call = Call::GlobalGetterGeneric;
         Scope scope(engine);
         ScopedString n(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[nameIndex]);
         return engine->throwReferenceError(n);
     }
-    return globalGetter(this, engine);
+
+    return globalGetter(engine);
 }
 
 ReturnedValue Lookup::getterGeneric(Lookup *lookup, ExecutionEngine *engine, const Value &object)
@@ -154,45 +165,68 @@ ReturnedValue Lookup::getterTwoClasses(Lookup *lookup, ExecutionEngine *engine, 
         memset(&second, 0, sizeof(Lookup));
         second.nameIndex = lookup->nameIndex;
         second.forCall = lookup->forCall;
-        second.getter = getterGeneric;
+        second.call = Call::GetterGeneric;
         const ReturnedValue result = second.resolveGetter(engine, o);
 
-        if (lookup->getter == getter0Inline
-                && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
-            setupObjectLookupTwoClasses(lookup, *lookup, second);
-            lookup->getter = (second.getter == getter0Inline)
-                    ? getter0Inlinegetter0Inline
-                    : getter0Inlinegetter0MemberData;
-            return result;
+        switch (lookup->call) {
+        case Call::Getter0Inline: {
+            switch (second.call) {
+            case Call::Getter0Inline:
+                setupObjectLookupTwoClasses(lookup, *lookup, second);
+                lookup->call = Call::Getter0InlineGetter0Inline;
+                return result;
+            case Call::Getter0MemberData:
+                setupObjectLookupTwoClasses(lookup, *lookup, second);
+                lookup->call = Call::Getter0InlineGetter0MemberData;
+                return result;
+            default:
+                break;
+            }
+            break;
         }
-
-        if (lookup->getter == getter0MemberData
-                && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
-            setupObjectLookupTwoClasses(lookup, second, *lookup);
-            lookup->getter = (second.getter == getter0Inline)
-                    ? getter0Inlinegetter0MemberData
-                    : getter0MemberDatagetter0MemberData;
-            return result;
-        }
-
-
-        if (lookup->getter == getterProto && second.getter == getterProto) {
-            setupProtoLookupTwoClasses(lookup, *lookup, second);
-            lookup->getter = getterProtoTwoClasses;
-            return result;
-        }
-
-        if (lookup->getter == getterProtoAccessor && second.getter == getterProtoAccessor) {
-            setupProtoLookupTwoClasses(lookup, *lookup, second);
-            lookup->getter = getterProtoAccessorTwoClasses;
-            return result;
+        case Call::Getter0MemberData:
+            switch (second.call) {
+            case Call::Getter0Inline:
+                setupObjectLookupTwoClasses(lookup, *lookup, second);
+                lookup->call = Call::Getter0InlineGetter0MemberData;
+                return result;
+            case Call::Getter0MemberData:
+                setupObjectLookupTwoClasses(lookup, *lookup, second);
+                lookup->call = Call::Getter0MemberDataGetter0MemberData;
+                return result;
+            default:
+                break;
+            }
+            break;
+        case Call::GetterProto:
+            switch (second.call) {
+            case Call::GetterProto:
+                setupProtoLookupTwoClasses(lookup, *lookup, second);
+                lookup->call =  Call::GetterProtoTwoClasses;
+                return result;
+            default:
+                break;
+            }
+            break;
+        case Call::GetterProtoAccessor:
+            switch (second.call) {
+            case Call::GetterProtoAccessor:
+                setupProtoLookupTwoClasses(lookup, *lookup, second);
+                lookup->call = Call::GetterProtoAccessorTwoClasses;
+                return result;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
         }
 
         // If any of the above options were true, the propertyCache was inactive.
         second.releasePropertyCache();
     }
 
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -204,21 +238,6 @@ ReturnedValue Lookup::getterFallback(Lookup *lookup, ExecutionEngine *engine, co
         return Encode::undefined();
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
     return o->get(name);
-}
-
-ReturnedValue Lookup::getterFallbackAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    if (&Lookup::getterFallback == &Lookup::getterFallbackAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This getter just marks the presence of a fallback lookup with variant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return getterFallback(lookup, engine, object);
 }
 
 ReturnedValue Lookup::getter0MemberData(Lookup *lookup, ExecutionEngine *engine, const Value &object)
@@ -271,7 +290,7 @@ ReturnedValue Lookup::getter0Inlinegetter0Inline(Lookup *lookup, ExecutionEngine
         if (lookup->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->inlinePropertyDataWithOffset(lookup->objectLookupTwoClasses.offset2)->asReturnedValue();
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -286,7 +305,7 @@ ReturnedValue Lookup::getter0Inlinegetter0MemberData(Lookup *lookup, ExecutionEn
         if (lookup->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->memberData->values.data()[lookup->objectLookupTwoClasses.offset2].asReturnedValue();
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -301,7 +320,7 @@ ReturnedValue Lookup::getter0MemberDatagetter0MemberData(Lookup *lookup, Executi
         if (lookup->objectLookupTwoClasses.ic2 == o->internalClass)
             return o->memberData->values.data()[lookup->objectLookupTwoClasses.offset2].asReturnedValue();
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -320,7 +339,7 @@ ReturnedValue Lookup::getterProtoTwoClasses(Lookup *lookup, ExecutionEngine *eng
             return lookup->protoLookupTwoClasses.data2->asReturnedValue();
         return getterFallback(lookup, engine, object);
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -339,7 +358,7 @@ ReturnedValue Lookup::getterAccessor(Lookup *lookup, ExecutionEngine *engine, co
                                      &object, nullptr, 0));
         }
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -384,7 +403,7 @@ ReturnedValue Lookup::getterProtoAccessorTwoClasses(Lookup *lookup, ExecutionEng
                                      &object, nullptr, 0));
         }
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -401,7 +420,7 @@ ReturnedValue Lookup::getterIndexed(Lookup *lookup, ExecutionEngine *engine, con
         }
         return o->get(lookup->indexedLookup.index);
     }
-    lookup->getter = getterFallback;
+    lookup->call = Call::GetterQObjectPropertyFallback;
     return getterFallback(lookup, engine, object);
 }
 
@@ -410,7 +429,7 @@ ReturnedValue Lookup::getterQObject(Lookup *lookup, ExecutionEngine *engine, con
     const auto revertLookup = [lookup, engine, &object]() {
         lookup->qobjectLookup.propertyCache->release();
         lookup->qobjectLookup.propertyCache = nullptr;
-        lookup->getter = Lookup::getterGeneric;
+        lookup->call = Call::GetterGeneric;
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
@@ -421,27 +440,12 @@ ReturnedValue Lookup::getterQObject(Lookup *lookup, ExecutionEngine *engine, con
     return QObjectWrapper::lookupPropertyGetterImpl(lookup, engine, object, flags, revertLookup);
 }
 
-ReturnedValue Lookup::getterQObjectAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    if (&Lookup::getterQObject == &Lookup::getterQObjectAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This getter marks the presence of a qobjectlookup with variant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return getterQObject(lookup, engine, object);
-}
-
 ReturnedValue Lookup::getterQObjectMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object)
 {
     const auto revertLookup = [lookup, engine, &object]() {
         lookup->qobjectMethodLookup.propertyCache->release();
         lookup->qobjectMethodLookup.propertyCache = nullptr;
-        lookup->getter = Lookup::getterGeneric;
+        lookup->call = Call::GetterGeneric;
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
@@ -452,25 +456,10 @@ ReturnedValue Lookup::getterQObjectMethod(Lookup *lookup, ExecutionEngine *engin
     return QObjectWrapper::lookupMethodGetterImpl(lookup, engine, object, flags, revertLookup);
 }
 
-ReturnedValue Lookup::getterQObjectMethodAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    if (&Lookup::getterQObjectMethod == &Lookup::getterQObjectMethodAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This getter marks the presence of a qobject method lookup with variant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return getterQObjectMethod(lookup, engine, object);
-}
-
 ReturnedValue Lookup::getterFallbackMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object)
 {
     const auto revertLookup = [lookup, engine, &object]() {
-        lookup->getter = Lookup::getterGeneric;
+        lookup->call = Call::GetterGeneric;
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
@@ -501,26 +490,11 @@ ReturnedValue Lookup::getterFallbackMethod(Lookup *lookup, ExecutionEngine *engi
     return result->asReturnedValue();
 }
 
-ReturnedValue Lookup::getterFallbackMethodAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    if (&Lookup::getterFallbackMethod == &Lookup::getterFallbackMethodAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This getter marks the presence of a fallback method lookup with variant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return getterFallbackMethod(lookup, engine, object);
-}
-
 ReturnedValue Lookup::getterValueType(Lookup *lookup, ExecutionEngine *engine, const Value &object)
 {
     const auto revertLookup = [lookup, engine, &object]() {
         lookup->qgadgetLookup.metaObject = quintptr(0);
-        lookup->getter = Lookup::getterGeneric;
+        lookup->call = Call::GetterGeneric;
         return Lookup::getterGeneric(lookup, engine, object);
     };
 
@@ -554,7 +528,7 @@ ReturnedValue Lookup::primitiveGetterProto(Lookup *lookup, ExecutionEngine *engi
         if (lookup->primitiveLookup.protoId == o->internalClass->protoId)
             return lookup->primitiveLookup.data->asReturnedValue();
     }
-    lookup->getter = getterGeneric;
+    lookup->call = Call::GetterGeneric;
     return getterGeneric(lookup, engine, object);
 }
 
@@ -574,7 +548,7 @@ ReturnedValue Lookup::primitiveGetterAccessor(Lookup *lookup, ExecutionEngine *e
                                      &object, nullptr, 0));
         }
     }
-    lookup->getter = getterGeneric;
+    lookup->call = Call::GetterGeneric;
     return getterGeneric(lookup, engine, object);
 }
 
@@ -583,7 +557,7 @@ ReturnedValue Lookup::stringLengthGetter(Lookup *lookup, ExecutionEngine *engine
     if (const String *s = object.as<String>())
         return Encode(s->d()->length());
 
-    lookup->getter = getterGeneric;
+    lookup->call = Call::GetterGeneric;
     return getterGeneric(lookup, engine, object);
 }
 
@@ -600,7 +574,7 @@ ReturnedValue Lookup::globalGetterProto(Lookup *lookup, ExecutionEngine *engine)
     Heap::Object *o = engine->globalObject->d();
     if (lookup->protoLookup.protoId == o->internalClass->protoId)
         return lookup->protoLookup.data->asReturnedValue();
-    lookup->globalGetter = globalGetterGeneric;
+    lookup->call = Call::GlobalGetterGeneric;
     return globalGetterGeneric(lookup, engine);
 }
 
@@ -618,7 +592,8 @@ ReturnedValue Lookup::globalGetterProtoAccessor(Lookup *lookup, ExecutionEngine 
         return checkedResult(engine, static_cast<const FunctionObject *>(getter)->call(
                                   engine->globalObject, nullptr, 0));
     }
-    lookup->globalGetter = globalGetterGeneric;
+
+    lookup->call = Call::GlobalGetterGeneric;
     return globalGetterGeneric(lookup, engine);
 }
 
@@ -646,7 +621,7 @@ bool Lookup::setterGeneric(Lookup *lookup, ExecutionEngine *engine, Value &objec
 bool Lookup::setterTwoClasses(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value)
 {
     // A precondition of this method is that lookup->objectLookup is the active variant of the union.
-    Q_ASSERT(lookup->setter == setter0MemberData || lookup->setter == setter0Inline);
+    Q_ASSERT(lookup->call == Call::Setter0MemberData || lookup->call == Call::Setter0Inline);
 
     if (object.isObject()) {
 
@@ -655,24 +630,24 @@ bool Lookup::setterTwoClasses(Lookup *lookup, ExecutionEngine *engine, Value &ob
         const uint index = lookup->objectLookup.index;
 
         if (!lookup->resolveSetter(engine, static_cast<Object *>(&object), value)) {
-            lookup->setter = setterFallback;
+            lookup->call = Call::SetterQObjectPropertyFallback;
             return false;
         }
 
-        if (lookup->setter == Lookup::setter0MemberData || lookup->setter == Lookup::setter0Inline) {
+        if (lookup->call == Call::Setter0MemberData || lookup->call == Call::Setter0Inline) {
             auto engine = ic->engine;
             lookup->objectLookupTwoClasses.ic.set(engine, ic);
             lookup->objectLookupTwoClasses.ic2.set(engine, ic);
             lookup->objectLookupTwoClasses.offset = index;
             lookup->objectLookupTwoClasses.offset2 = index;
-            lookup->setter = setter0setter0;
+            lookup->call = Call::Setter0Setter0;
             return true;
         }
 
         lookup->releasePropertyCache();
     }
 
-    lookup->setter = setterFallback;
+    lookup->call = Call::SetterQObjectPropertyFallback;
     return setterFallback(lookup, engine, object, value);
 }
 
@@ -685,21 +660,6 @@ bool Lookup::setterFallback(Lookup *lookup, ExecutionEngine *engine, Value &obje
 
     ScopedString name(scope, engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
     return o->put(name, value);
-}
-
-bool Lookup::setterFallbackAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value)
-{
-    if (&Lookup::setterFallback == &Lookup::setterFallbackAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This setter just marks the presence of a fallback lookup with QVariant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return setterFallback(lookup, engine, object, value);
 }
 
 bool Lookup::setter0MemberData(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value)
@@ -738,7 +698,7 @@ bool Lookup::setter0setter0(Lookup *lookup, ExecutionEngine *engine, Value &obje
         }
     }
 
-    lookup->setter = setterFallback;
+    lookup->call = Call::SetterQObjectPropertyFallback;
     return setterFallback(lookup, engine, object, value);
 }
 
@@ -754,7 +714,7 @@ bool Lookup::setterInsert(Lookup *lookup, ExecutionEngine *engine, Value &object
         return true;
     }
 
-    lookup->setter = setterFallback;
+    lookup->call = Call::SetterQObjectPropertyFallback;
     return setterFallback(lookup, engine, object, value);
 }
 
@@ -764,22 +724,6 @@ bool Lookup::setterQObject(Lookup *lookup, ExecutionEngine *engine, Value &objec
     // running AOT-compiled code, though.
     return setterFallback(lookup, engine, object, v);
 }
-
-bool Lookup::setterQObjectAsVariant(
-        Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &v)
-{
-    if (&Lookup::setterQObject == &Lookup::setterQObjectAsVariant) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This setter marks the presence of a qobjectlookup with QVariant conversion.
-    // It only does anything with it when running AOT-compiled code.
-    return setterQObject(lookup, engine, object, v);
-}
-
 
 bool Lookup::arrayLengthSetter(Lookup *, ExecutionEngine *engine, Value &object, const Value &value)
 {

@@ -750,13 +750,13 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
     if (object->as<QV4::ProxyObject>()) {
         // proxies invalidate assumptions that we normally maek in lookups
         // so we always need to use the fallback path
-        lookup->getter = Lookup::getterFallback;
-        return lookup->getter(lookup, engine, *object);
+        lookup->call = Lookup::Call::GetterQObjectPropertyFallback;
+        return lookup->getter(engine, *object);
     }
     if (name.isArrayIndex()) {
         lookup->indexedLookup.index = name.asArrayIndex();
-        lookup->getter = Lookup::getterIndexed;
-        return lookup->getter(lookup, engine, *object);
+        lookup->call = Lookup::Call::GetterIndexed;
+        return lookup->getter(engine, *object);
     }
 
     auto index = obj->internalClass->findValueOrGetter(name);
@@ -766,22 +766,22 @@ ReturnedValue Object::virtualResolveLookupGetter(const Object *object, Execution
         if (attrs.isData()) {
             if (index.index < obj->vtable()->nInlineProperties) {
                 index.index += obj->vtable()->inlinePropertyOffset;
-                lookup->getter = Lookup::getter0Inline;
+                lookup->call = Lookup::Call::Getter0Inline;
             } else {
                 index.index -= nInline;
-                lookup->getter = Lookup::getter0MemberData;
+                lookup->call = Lookup::Call::Getter0MemberData;
             }
         } else {
-            lookup->getter = Lookup::getterAccessor;
+            lookup->call = Lookup::Call::GetterAccessor;
         }
         lookup->objectLookup.ic.set(engine, obj->internalClass.get());
         lookup->objectLookup.offset = index.index;
-        return lookup->getter(lookup, engine, *object);
+        return lookup->getter(engine, *object);
     }
 
     lookup->protoLookup.protoId = obj->internalClass->protoId;
     lookup->resolveProtoGetter(name, obj->prototype());
-    return lookup->getter(lookup, engine, *object);
+    return lookup->getter(engine, *object);
 }
 
 bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value)
@@ -798,46 +798,46 @@ bool Object::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine,
     if (idx.isValid()) {
         if (object->isArrayObject() && idx.index == Heap::ArrayObject::LengthPropertyIndex) {
             Q_ASSERT(!idx.attrs.isAccessor());
-            lookup->setter = Lookup::arrayLengthSetter;
-            return lookup->setter(lookup, engine, *object, value);
+            lookup->call = Lookup::Call::SetterArrayLength;
+            return lookup->setter(engine, *object, value);
         } else if (idx.attrs.isData() && idx.attrs.isWritable()) {
             lookup->objectLookup.ic.set(engine, object->internalClass());
             lookup->objectLookup.index = idx.index;
             const auto nInline = object->d()->vtable()->nInlineProperties;
             if (idx.index < nInline) {
-                lookup->setter = Lookup::setter0Inline;
+                lookup->call = Lookup::Call::Setter0Inline;
                 lookup->objectLookup.offset = idx.index + object->d()->vtable()->inlinePropertyOffset;
             } else {
-                lookup->setter = Lookup::setter0MemberData;
+                lookup->call = Lookup::Call::Setter0MemberData;
                 lookup->objectLookup.offset = idx.index - nInline;
             }
-            return lookup->setter(lookup, engine, *object, value);
+            return lookup->setter(engine, *object, value);
         } else {
             // ### handle setter
-            lookup->setter = Lookup::setterFallback;
+            lookup->call = Lookup::Call::SetterQObjectPropertyFallback;
         }
-        return lookup->setter(lookup, engine, *object, value);
+        return lookup->setter(engine, *object, value);
     }
 
     lookup->insertionLookup.protoId = c->protoId;
     if (!object->put(key, value)) {
-        lookup->setter = Lookup::setterFallback;
+        lookup->call = Lookup::Call::SetterQObjectPropertyFallback;
         return false;
     }
 
     if (object->internalClass() == c) {
         // ### setter in the prototype, should handle this
-        lookup->setter = Lookup::setterFallback;
+        lookup->call = Lookup::Call::SetterQObjectPropertyFallback;
         return true;
     }
     idx = object->internalClass()->findValueOrSetter(key);
     if (!idx.isValid() || idx.attrs.isAccessor()) { // ### can this even happen?
-        lookup->setter = Lookup::setterFallback;
+        lookup->call = Lookup::Call::SetterQObjectPropertyFallback;
         return false;
     }
     lookup->insertionLookup.newClass.set(engine, object->internalClass());
     lookup->insertionLookup.offset = idx.index;
-    lookup->setter = Lookup::setterInsert;
+    lookup->call = Lookup::Call::SetterInsert;
     return true;
 }
 

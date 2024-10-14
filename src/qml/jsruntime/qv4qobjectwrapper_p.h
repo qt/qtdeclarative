@@ -182,7 +182,6 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             QV4::String *name, Flags flags);
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
-    static ReturnedValue lookupAttached(Lookup *l, ExecutionEngine *engine, const Value &object);
 
     template <typename ReversalFunctor> static ReturnedValue lookupPropertyGetterImpl(
             Lookup *l, ExecutionEngine *engine, const Value &object,

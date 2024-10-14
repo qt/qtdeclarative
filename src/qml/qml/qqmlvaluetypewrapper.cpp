@@ -644,24 +644,8 @@ ReturnedValue QQmlValueTypeWrapper::virtualResolveLookupGetter(const Object *obj
     lookup->qgadgetLookup.coreIndex = result.coreIndex();
     lookup->qgadgetLookup.isFunction = result.isFunction();
     lookup->qgadgetLookup.isEnum = result.isEnum();
-    lookup->getter = Lookup::getterValueType;
-    return lookup->getter(lookup, engine, *object);
-}
-
-bool QQmlValueTypeWrapper::lookupSetter(
-        Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
-{
-    if (&QQmlValueTypeWrapper::lookupSetter == &QV4::Lookup::setterFallback) {
-        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
-        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
-        // decides how to retrieve the property.
-        qFatal("Your C++ compiler is broken.");
-    }
-
-    // This setter marks the presence of a value type setter lookup.
-    // It falls back to the fallback lookup when run through the interpreter, but AOT-compiled
-    // code can get clever with it.
-    return QV4::Lookup::setterFallback(l, engine, object, value);
+    lookup->call = Lookup::Call::GetterValueTypeProperty;
+    return lookup->getter(engine, *object);
 }
 
 bool QQmlValueTypeWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,

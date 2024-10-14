@@ -1709,8 +1709,8 @@ ReturnedValue ModelObject::virtualGet(const Managed *m, PropertyKey id, const Va
 
 ReturnedValue ModelObject::virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup)
 {
-    lookup->getter = Lookup::getterFallback;
-    return lookup->getter(lookup, engine, *object);
+    lookup->call = Lookup::Call::GetterQObjectPropertyFallback;
+    return lookup->getter(engine, *object);
 }
 
 struct ModelObjectOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
