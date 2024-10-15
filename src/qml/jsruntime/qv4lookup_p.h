@@ -73,13 +73,9 @@ struct Q_QML_EXPORT Lookup {
         GetterProtoTwoClasses,
         GetterQObjectAttached,
         GetterQObjectMethod,
-        GetterQObjectMethodAsVariant,
         GetterQObjectMethodFallback,
-        GetterQObjectMethodFallbackAsVariant,
         GetterQObjectProperty,
-        GetterQObjectPropertyAsVariant,
         GetterQObjectPropertyFallback,
-        GetterQObjectPropertyFallbackAsVariant,
         GetterScopedEnum,
         GetterSingletonMethod,
         GetterSingletonProperty,
@@ -93,9 +89,7 @@ struct Q_QML_EXPORT Lookup {
         SetterGeneric,
         SetterInsert,
         SetterQObjectProperty,
-        SetterQObjectPropertyAsVariant,
         SetterQObjectPropertyFallback,
-        SetterQObjectPropertyFallbackAsVariant,
         SetterValueTypeProperty,
     };
 
@@ -219,7 +213,8 @@ struct Q_QML_EXPORT Lookup {
 
     uint nameIndex: 28; // Same number of bits we store in the compilation unit for name indices
     uint forCall: 1;    // Whether we are looking up a value in order to call it right away
-    uint reserved: 3;
+    uint asVariant: 1;  // Whether all types are to be converted from/to QVariant
+    uint reserved: 2;
 
     ReturnedValue resolveGetter(ExecutionEngine *engine, const Object *object);
     ReturnedValue resolvePrimitiveGetter(ExecutionEngine *engine, const Value &object);
@@ -350,10 +345,8 @@ struct Q_QML_EXPORT Lookup {
         case Call::GetterEnumValue:
             return QQmlTypeWrapper::lookupEnumValue(this, engine, object);
         case Call::GetterQObjectPropertyFallback:
-        case Call::GetterQObjectPropertyFallbackAsVariant:
             return getterFallback(this, engine, object);
         case Call::GetterQObjectMethodFallback:
-        case Call::GetterQObjectMethodFallbackAsVariant:
             return getterFallbackMethod(this, engine, object);
         case Call::GetterGeneric:
             return getterGeneric(this, engine, object);
@@ -370,13 +363,11 @@ struct Q_QML_EXPORT Lookup {
         case Call::GetterProtoTwoClasses:
             return getterProtoTwoClasses(this, engine, object);
         case Call::GetterQObjectProperty:
-        case Call::GetterQObjectPropertyAsVariant:
             return getterQObject(this, engine, object);
         case Call::GetterQObjectAttached:
             // TODO: more specific implementation for interpreter / JIT
             return getterGeneric(this, engine, object);
         case Call::GetterQObjectMethod:
-        case Call::GetterQObjectMethodAsVariant:
             return getterQObjectMethod(this, engine, object);
         case Call::GetterSingletonMethod:
             return QQmlTypeWrapper::lookupSingletonMethod(this, engine, object);
@@ -407,14 +398,12 @@ struct Q_QML_EXPORT Lookup {
         case Call::SetterArrayLength:
             return arrayLengthSetter(this, engine, object, value);
         case Call::SetterQObjectPropertyFallback:
-        case Call::SetterQObjectPropertyFallbackAsVariant:
             return setterFallback(this, engine, object, value);
         case Call::SetterGeneric:
             return setterGeneric(this, engine, object, value);
         case Call::SetterInsert:
             return setterInsert(this, engine, object, value);
         case Call::SetterQObjectProperty:
-        case Call::SetterQObjectPropertyAsVariant:
             return setterQObject(this, engine, object, value);
         case Call::SetterValueTypeProperty:
             // TODO: more specific implementation for interpreter / JIT
@@ -432,17 +421,14 @@ struct Q_QML_EXPORT Lookup {
         case Call::ContextGetterContextObjectProperty:
         case Call::ContextGetterScopeObjectProperty:
         case Call::GetterQObjectProperty:
-        case Call::GetterQObjectPropertyAsVariant:
         case Call::GetterSingletonProperty:
         case Call::SetterQObjectProperty:
-        case Call::SetterQObjectPropertyAsVariant:
             if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
             break;
         case Call::ContextGetterContextObjectMethod:
         case Call::ContextGetterScopeObjectMethod:
         case Call::GetterQObjectMethod:
-        case Call::GetterQObjectMethodAsVariant:
         case Call::GetterSingletonMethod:
             if (const QQmlPropertyCache *pc = qobjectMethodLookup.propertyCache)
                 pc->release();
