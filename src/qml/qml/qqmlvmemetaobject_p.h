@@ -208,9 +208,13 @@ public:
     QQmlGuardedContextData ctxt;
 
     inline int propOffset() const;
-    inline int methodOffset() const;
+    inline int propCount() const;
+    inline int aliasOffset() const;
+    inline int aliasCount() const;
     inline int signalOffset() const;
     inline int signalCount() const;
+    inline int methodOffset() const;
+    inline int methodCount() const;
 
     QQmlVMEMetaObjectEndpoint *aliasEndpoints;
 
@@ -259,14 +263,13 @@ public:
 
     void mark(QV4::MarkStack *markStack);
 
-    void connectAlias(int aliasId);
+    void connectAlias(const QV4::CompiledData::Object *compiledObject, int aliasId);
 
     QV4::ReturnedValue method(int) const;
 
     QV4::ReturnedValue readVarProperty(int) const;
     void writeVarProperty(int, const QV4::Value &);
     QVariant readPropertyAsVariant(int) const;
-    void writeProperty(int, const QVariant &);
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
 
@@ -276,11 +279,25 @@ public:
 
     QQmlVMEVariantQObjectPtr *getQObjectGuardForProperty(int) const;
 
+private:
+    friend class QQmlVMEMetaObjectEndpoint;
 
     // keep a reference to the compilation unit in order to still
     // do property access when the context has been invalidated.
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
-    const QV4::CompiledData::Object *compiledObject;
+    int qmlObjectId = -1;
+    int numAliases = 0;
+
+    const QV4::CompiledData::Object *findCompiledObject() const {
+        // If the executable CU has been stripped of its engine, it has an empty base CU
+        if (!compilationUnit || !compilationUnit->engine)
+            return nullptr;
+
+        Q_ASSERT(qmlObjectId >= 0 && qmlObjectId < compilationUnit->objectCount());
+        return compilationUnit->objectAt(qmlObjectId);
+    }
+
+    void writeKnownVarProperty(int id, const QVariant &value);
 };
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
@@ -297,22 +314,50 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::get(QObject *obj)
 
 int QQmlVMEMetaObject::propOffset() const
 {
+    // Regular properties are before aliases
     return cache->propertyOffset();
 }
 
-int QQmlVMEMetaObject::methodOffset() const
+int QQmlVMEMetaObject::propCount() const
 {
-    return cache->methodOffset();
+    // Properties excluding aliases
+    return cache->ownPropertyCount() - numAliases;
+}
+
+int QQmlVMEMetaObject::aliasOffset() const
+{
+    // Aliases are after regular properties
+    return propOffset() + propCount();
+}
+
+int QQmlVMEMetaObject::aliasCount() const
+{
+    // We need to cache this since we don't want to count over and over.
+    return numAliases;
 }
 
 int QQmlVMEMetaObject::signalOffset() const
 {
-    return cache->signalOffset();
+    // Signals are before regular methods
+    return cache->methodOffset();
 }
 
 int QQmlVMEMetaObject::signalCount() const
 {
-    return cache->signalCount();
+    // Signals including signals for properties and aliases
+    return cache->ownSignalCount();
+}
+
+int QQmlVMEMetaObject::methodOffset() const
+{
+    // Regular methods are after signals
+    return signalOffset() + signalCount();
+}
+
+int QQmlVMEMetaObject::methodCount() const
+{
+    // Methods excluding signals
+    return cache->ownMethodCount() - signalCount();
 }
 
 QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const

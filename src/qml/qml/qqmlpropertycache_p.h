@@ -209,10 +209,13 @@ public:
     const char *className() const;
 
     inline int propertyCount() const;
+    inline int ownPropertyCount() const { return int(propertyIndexCache.count()); }
     inline int propertyOffset() const;
     inline int methodCount() const;
+    inline int ownMethodCount() const { return int(methodIndexCache.count()); }
     inline int methodOffset() const;
     inline int signalCount() const;
+    inline int ownSignalCount() const { return int(signalHandlerIndexCache.count()); }
     inline int signalOffset() const;
     inline int qmlEnumCount() const;
 

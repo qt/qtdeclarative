@@ -124,6 +124,45 @@ public:
         return QMetaType {};
     }
 
+    static QV4::CompiledData::CommonType propertyTypeForMetaType(QMetaType metaType) {
+        if (!metaType.isValid())
+            return QV4::CompiledData::CommonType::Void;
+
+        switch (metaType.id()) {
+        case QMetaType::QVariant:
+            return QV4::CompiledData::CommonType::Var;
+        case QMetaType::Int:
+            return QV4::CompiledData::CommonType::Int;
+        case QMetaType::Bool:
+            return QV4::CompiledData::CommonType::Bool;
+        case QMetaType::QReal:
+            return QV4::CompiledData::CommonType::Real;
+        case QMetaType::QString:
+            return QV4::CompiledData::CommonType::String;
+        case QMetaType::QUrl:
+            return QV4::CompiledData::CommonType::Url;
+        case QMetaType::QTime:
+            return QV4::CompiledData::CommonType::Time;
+        case QMetaType::QDate:
+            return QV4::CompiledData::CommonType::Date;
+        case QMetaType::QDateTime:
+            return QV4::CompiledData::CommonType::DateTime;
+#if QT_CONFIG(regularexpression)
+        case QMetaType::QRegularExpression:
+            return QV4::CompiledData::CommonType::RegExp;
+#endif
+        case QMetaType::QRectF:
+            return QV4::CompiledData::CommonType::Rect;
+        case QMetaType::QPointF:
+            return QV4::CompiledData::CommonType::Point;
+        case QMetaType::QSizeF:
+            return QV4::CompiledData::CommonType::Size;
+        default:
+            break;
+        }
+        return QV4::CompiledData::CommonType::Invalid;
+    }
+
     static bool canCreateClassNameTypeByUrl(const QUrl &url);
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
