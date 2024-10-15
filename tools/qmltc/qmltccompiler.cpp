@@ -608,7 +608,7 @@ static void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::Co
                 current.propertyInitializer.component.name, property.write(), name);
         }
 
-        compiledSetter.body << u"%1.insert(\"%2\");"_s.arg(
+        compiledSetter.body << u"%1.insert(QStringLiteral(\"%2\"));"_s.arg(
             current.propertyInitializer.initializedCache.name, name);
     }
 }
