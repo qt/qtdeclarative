@@ -42,19 +42,22 @@
     A typical use of the class:
 
     \code
+    import org.qtproject.qt.qml.target.Main;
+    ...
+
+    private Main m_mainQmlContent;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ...
+        m_mainQmlContent = new Main();
+        QtQuickView qmlView = new QtQuickView(this);
 
-        QtQuickView qmlView = new QtQuickView(this, "qrc:/qt/qml/target/main.qml", "target");
-        qmlView.setStatusChangeListener(status -> {
-            Log.i(TAG, "QML loading status changed to " + status);
-        });
-
-        // Add QML to your layout
         layout.addView(qmlView, params);
+
+        qmlView.loadContent(m_mainQmlContent);
         ...
     }
     \endcode
@@ -101,16 +104,25 @@
     the Android WindowManager interface:
 
     \code
+    import org.qtproject.qt.qml.target.Main;
+    ...
+    private Main m_mainQmlContent;
     @Override
     public void onCreate() {
         m_windowManager = getSystemService(WindowManager.class);
-        m_qtView = new QtQuickView(this, "qrc:/qt/qml/target/main.qml", "target");
+
+        m_mainQmlContent = new Main();
+        QtQuickView qmlView = new QtQuickView(this)
+
         WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                 640, 320,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                 PixelFormat.TRANSLUCENT);
+
         m_windowManager.addView(m_qtView, layoutParams);
+
+        qmlView.loadContent(m_mainQmlContent);
     }
     \endcode
 
