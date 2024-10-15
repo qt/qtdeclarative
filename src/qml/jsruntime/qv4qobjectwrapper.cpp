@@ -1150,6 +1150,16 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
 ReturnedValue QObjectWrapper::lookupAttached(
             Lookup *l, ExecutionEngine *engine, const Value &object)
 {
+    if (&QObjectWrapper::lookupAttached == &Lookup::getterGeneric) {
+        // Certain compilers, e.g. MSVC, will "helpfully" deduplicate methods that are completely
+        // equal. As a result, the pointers are the same, which wreaks havoc on the logic that
+        // decides how to retrieve the property.
+        qFatal("Your C++ compiler is broken.");
+    }
+
+    // This getter marks the presence of a lookup for an attached object.
+    // It falls back to the generic lookup when run through the interpreter, but AOT-compiled
+    // code can get clever with it.
     return Lookup::getterGeneric(l, engine, object);
 }
 
