@@ -37,10 +37,10 @@ using HeapObjectWrapper = WriteBarrier::HeapObjectWrapper<T, PhantomTag>;
 //       in there.
 struct Q_QML_EXPORT Lookup {
     union {
-        ReturnedValue (*getter)(Lookup *l, ExecutionEngine *engine, const Value &object);
-        ReturnedValue (*globalGetter)(Lookup *l, ExecutionEngine *engine);
-        ReturnedValue (*qmlContextPropertyGetter)(Lookup *l, ExecutionEngine *engine, Value *thisObject);
-        bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
+        ReturnedValue (*getter)(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+        ReturnedValue (*globalGetter)(Lookup *lookup, ExecutionEngine *engine);
+        ReturnedValue (*qmlContextPropertyGetter)(Lookup *lookup, ExecutionEngine *engine, Value *thisObject);
+        bool (*setter)(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &v);
     };
     // NOTE: gc assumes the first two entries in the struct are pointers to heap objects or null
     //       or that the least significant bit is 1 (see the Lookup::markObjects function)
@@ -139,7 +139,7 @@ struct Q_QML_EXPORT Lookup {
             quintptr reserved1;
             quintptr reserved2;
             quintptr reserved3;
-            ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
+            ReturnedValue (*getterTrampoline)(Lookup *lookup, ExecutionEngine *engine);
         } qmlContextGlobalLookup;
         struct {
             HeapObjectWrapper<Heap::Base, 11> qmlTypeWrapper;
@@ -166,49 +166,49 @@ struct Q_QML_EXPORT Lookup {
     ReturnedValue resolveGlobalGetter(ExecutionEngine *engine);
     void resolveProtoGetter(PropertyKey name, const Heap::Object *proto);
 
-    static ReturnedValue getterGeneric(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterFallback(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterFallbackAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterGeneric(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterTwoClasses(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallback(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackAsVariant(Lookup *lookup, ExecutionEngine *engine, const Value &object);
 
-    static ReturnedValue getter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0Inlinegetter0Inline(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0Inlinegetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getter0MemberDatagetter0MemberData(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterProtoTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterProtoAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterProtoAccessorTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterIndexed(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterQObject(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterQObjectAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterQObjectMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterQObjectMethodAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterFallbackMethod(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue getterFallbackMethodAsVariant(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getter0MemberData(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getter0Inline(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProto(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getter0Inlinegetter0Inline(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getter0Inlinegetter0MemberData(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getter0MemberDatagetter0MemberData(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoTwoClasses(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterAccessor(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoAccessor(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterProtoAccessorTwoClasses(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterIndexed(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObject(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectAsVariant(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterQObjectMethodAsVariant(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue getterFallbackMethodAsVariant(Lookup *lookup, ExecutionEngine *engine, const Value &object);
 
-    static ReturnedValue primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue primitiveGetterAccessor(Lookup *l, ExecutionEngine *engine, const Value &object);
-    static ReturnedValue stringLengthGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetterProto(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue primitiveGetterAccessor(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static ReturnedValue stringLengthGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object);
 
-    static ReturnedValue globalGetterGeneric(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetterProto(Lookup *l, ExecutionEngine *engine);
-    static ReturnedValue globalGetterProtoAccessor(Lookup *l, ExecutionEngine *engine);
+    static ReturnedValue globalGetterGeneric(Lookup *lookup, ExecutionEngine *engine);
+    static ReturnedValue globalGetterProto(Lookup *lookup, ExecutionEngine *engine);
+    static ReturnedValue globalGetterProtoAccessor(Lookup *lookup, ExecutionEngine *engine);
 
     bool resolveSetter(ExecutionEngine *engine, Object *object, const Value &value);
-    static bool setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    Q_NEVER_INLINE static bool setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterFallback(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterFallbackAsVariant(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setter0MemberData(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setter0Inline(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setter0setter0(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterQObject(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool setterQObjectAsVariant(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
-    static bool arrayLengthSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterGeneric(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    Q_NEVER_INLINE static bool setterTwoClasses(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterFallback(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterFallbackAsVariant(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setter0MemberData(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setter0Inline(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setter0setter0(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterInsert(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterQObject(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool setterQObjectAsVariant(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
+    static bool arrayLengthSetter(Lookup *lookup, ExecutionEngine *engine, Value &object, const Value &value);
 
     void markObjects(MarkStack *stack) {
         if (markDef.h1 && !(reinterpret_cast<quintptr>(markDef.h1) & 1))
