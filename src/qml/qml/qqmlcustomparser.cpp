@@ -135,7 +135,7 @@ int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
             // Allow recursion so that we can find enums from the same document.
             const QQmlTypeNameCache::Result result
                     = imports.asT2()->query<QQmlImport::AllowRecursion>(scope, typeLoader);
-            if (result.isValid()) {
+            if (result.type.isValid()) {
                 type = result.type;
             } else if (result.importNamespace) {
                 dot = nextDot(dot);
