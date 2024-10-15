@@ -539,10 +539,10 @@ void TestQmllint::dirtyQmlCode_data()
                        25 } } };
     QTest::newRow("badAlias")
             << QStringLiteral("badAlias.qml")
-            << Result { { Message { QStringLiteral("Cannot resolve alias \"wrong\""), 3, 1 } } };
+            << Result { { Message { QStringLiteral("Cannot resolve alias \"wrong\""), 4, 5 } } };
     QTest::newRow("badAliasProperty1")
             << QStringLiteral("badAliasProperty.qml")
-            << Result { { Message { QStringLiteral("Cannot resolve alias \"wrong\""), 3, 1 } } };
+            << Result { { Message { QStringLiteral("Cannot resolve alias \"wrong\""), 5, 5 } } };
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
             << Result { { Message {
@@ -558,11 +558,11 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("aliasCycle1") << QStringLiteral("aliasCycle.qml")
                                  << Result { { Message {
                                             QStringLiteral("Alias \"b\" is part of an alias cycle"),
-                                            3, 1 } } };
+                                            6, 5 } } };
     QTest::newRow("aliasCycle2") << QStringLiteral("aliasCycle.qml")
                                  << Result { { Message {
                                             QStringLiteral("Alias \"a\" is part of an alias cycle"),
-                                            3, 1 } } };
+                                            5, 5 } } };
     QTest::newRow("invalidAliasTarget1") << QStringLiteral("invalidAliasTarget.qml")
                                          << Result { { Message {
                                             QStringLiteral("Invalid alias expression – an initalizer is needed."),

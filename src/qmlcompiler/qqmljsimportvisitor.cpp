@@ -302,11 +302,11 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 if (foundProperty) {
                     m_logger->log(QStringLiteral("Cannot deduce type of alias \"%1\"")
                                           .arg(property.propertyName()),
-                                  qmlMissingType, object->sourceLocation());
+                                  qmlMissingType, property.sourceLocation());
                 } else {
                     m_logger->log(QStringLiteral("Cannot resolve alias \"%1\"")
                                           .arg(property.propertyName()),
-                                  qmlUnresolvedAlias, object->sourceLocation());
+                                  qmlUnresolvedAlias, property.sourceLocation());
                 }
 
                 Q_ASSERT(property.index() >= 0); // this property is already in object
@@ -367,7 +367,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 continue;
             m_logger->log(QStringLiteral("Alias \"%1\" is part of an alias cycle")
                                   .arg(property.propertyName()),
-                          qmlAliasCycle, object->sourceLocation());
+                          qmlAliasCycle, property.sourceLocation());
         }
     }
 }
@@ -1667,6 +1667,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonly());
         prop.setAliasExpression(aliasExpr);
+        prop.setSourceLocation(
+                combine(publicMember->firstSourceLocation(), publicMember->colonToken));
         const auto type =
                 isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.type(typeName).scope;
         if (type) {

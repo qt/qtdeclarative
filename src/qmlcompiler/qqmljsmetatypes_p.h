@@ -369,6 +369,7 @@ class QQmlJSMetaProperty
     QString m_privateClass;
     QString m_aliasExpr;
     QWeakPointer<const QQmlJSScope> m_type;
+    QQmlJS::SourceLocation m_sourceLocation;
     QVector<QQmlJSAnnotation> m_annotations;
     bool m_isList = false;
     bool m_isWritable = false;
@@ -409,6 +410,10 @@ public:
 
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
+
+    void setSourceLocation(const QQmlJS::SourceLocation &newSourceLocation)
+    { m_sourceLocation = newSourceLocation; }
+    QQmlJS::SourceLocation sourceLocation() const { return m_sourceLocation; }
 
     void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = annotation; }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
