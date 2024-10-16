@@ -2029,7 +2029,7 @@ void QmltcCompiler::compileScriptBinding(QmltcType &current,
         current.children << compileScriptBindingPropertyChangeHandler(
                 binding, objectType, m_urlMethodName, bindingFunctorName, objectClassName);
 
-        current.setComplexBindings.body << u"if (!%1.contains(\"%2\"))"_s.arg(
+        current.setComplexBindings.body << u"if (!%1.contains(QStringLiteral(\"%2\")))"_s.arg(
             current.propertyInitializer.initializedCache.name, propertyName);
 
         // TODO: this could be dropped if QQmlEngine::setContextForObject() is
