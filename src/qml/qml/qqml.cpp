@@ -2046,7 +2046,13 @@ static void initTypeWrapperLookup(
             QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
                         scope, QV4::QQmlTypeWrapper::create(
                             scope.engine, nullptr, context->qmlContext->imports(), importRef));
-            wrapper = l->qmlContextPropertyGetter(l, context->engine->handle(), wrapper);
+
+            // This is not a contextGetter since we actually load from the namespace.
+            wrapper = l->getter(l, context->engine->handle(), wrapper);
+
+            // In theory, the getter may have populated the lookup's property cache.
+            l->releasePropertyCache();
+
             l->qmlContextPropertyGetter = qmlContextPropertyGetter;
             if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton)
                 l->qmlContextSingletonLookup.singletonObject.set(scope.engine, wrapper->heapObject());
