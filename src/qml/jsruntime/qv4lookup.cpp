@@ -1,9 +1,11 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qv4lookup_p.h"
+
+#include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4identifiertable_p.h>
-#include <private/qv4lookup_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4stackframe_p.h>
@@ -512,6 +514,34 @@ ReturnedValue Lookup::getterFallbackMethodAsVariant(
     // This getter marks the presence of a fallback method lookup with variant conversion.
     // It only does anything with it when running AOT-compiled code.
     return getterFallbackMethod(lookup, engine, object);
+}
+
+ReturnedValue Lookup::getterValueType(Lookup *lookup, ExecutionEngine *engine, const Value &object)
+{
+    const auto revertLookup = [lookup, engine, &object]() {
+        lookup->qgadgetLookup.metaObject = quintptr(0);
+        lookup->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(lookup, engine, object);
+    };
+
+    // we can safely cast to a QV4::Object here. If object is something else,
+    // the internal class won't match
+    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
+    if (!o || o->internalClass != lookup->qgadgetLookup.ic)
+        return revertLookup();
+
+    Heap::QQmlValueTypeWrapper *valueTypeWrapper =
+            const_cast<Heap::QQmlValueTypeWrapper*>(static_cast<const Heap::QQmlValueTypeWrapper *>(o));
+    if (valueTypeWrapper->metaObject() != reinterpret_cast<const QMetaObject *>(lookup->qgadgetLookup.metaObject - 1))
+        return revertLookup();
+
+    if (valueTypeWrapper->isReference() && !valueTypeWrapper->readReference())
+        return Encode::undefined();
+
+    return QQmlValueTypeWrapper::getGadgetProperty(
+            engine, valueTypeWrapper, QMetaType(lookup->qgadgetLookup.metaType),
+            lookup->qgadgetLookup.coreIndex, lookup->qgadgetLookup.isFunction,
+            lookup->qgadgetLookup.isEnum);
 }
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *lookup, ExecutionEngine *engine, const Value &object)

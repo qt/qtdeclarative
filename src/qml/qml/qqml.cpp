@@ -1572,7 +1572,7 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
         return lookup->qobjectLookup.propertyData->propType();
     }
 
-    if (lookup->getter == QV4::QQmlValueTypeWrapper::lookupGetter)
+    if (lookup->getter == QV4::Lookup::getterValueType)
         return QMetaType(lookup->qgadgetLookup.metaType);
 
     if (lookup->getter == QV4::QQmlTypeWrapper::lookupEnumValue)
@@ -2625,7 +2625,7 @@ bool AOTCompiledContext::getValueLookup(uint index, void *value, void *target) c
     Q_ASSERT(value);
 
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
-    if (lookup->getter != QV4::QQmlValueTypeWrapper::lookupGetter)
+    if (lookup->getter != QV4::Lookup::getterValueType)
         return false;
 
     const QMetaObject *metaObject
@@ -2644,7 +2644,7 @@ bool AOTCompiledContext::writeBackValueLookup(uint index, void *value, void *sou
     Q_ASSERT(value);
 
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
-    if (lookup->getter != QV4::QQmlValueTypeWrapper::lookupGetter)
+    if (lookup->getter != QV4::Lookup::getterValueType)
         return false;
 
     const QMetaObject *metaObject
@@ -2664,7 +2664,7 @@ void AOTCompiledContext::initGetValueLookup(
     Q_ASSERT(!engine->hasError());
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     if (initValueLookup(lookup, compilationUnit, metaObject, type))
-        lookup->getter = QV4::QQmlValueTypeWrapper::lookupGetter;
+        lookup->getter = QV4::Lookup::getterValueType;
     else
         engine->handle()->throwTypeError();
 }

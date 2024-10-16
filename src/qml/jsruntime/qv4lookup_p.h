@@ -189,6 +189,8 @@ struct Q_QML_EXPORT Lookup {
     static ReturnedValue getterFallbackMethod(Lookup *lookup, ExecutionEngine *engine, const Value &object);
     static ReturnedValue getterFallbackMethodAsVariant(Lookup *lookup, ExecutionEngine *engine, const Value &object);
 
+    static ReturnedValue getterValueType(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+
     static ReturnedValue primitiveGetterProto(Lookup *lookup, ExecutionEngine *engine, const Value &object);
     static ReturnedValue primitiveGetterAccessor(Lookup *lookup, ExecutionEngine *engine, const Value &object);
     static ReturnedValue stringLengthGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object);

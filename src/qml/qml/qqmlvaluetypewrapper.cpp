@@ -289,9 +289,9 @@ static void doStaticReadCall(
                     valueTypeWrapper->gadgetPtr()), QMetaObject::ReadProperty, index, args);
 }
 
-static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
-                                       Heap::QQmlValueTypeWrapper *valueTypeWrapper,
-                                       QMetaType metaType, quint16 coreIndex, bool isFunction, bool isEnum)
+ReturnedValue QQmlValueTypeWrapper::getGadgetProperty(
+        ExecutionEngine *engine, Heap::QQmlValueTypeWrapper *valueTypeWrapper, QMetaType metaType,
+        quint16 coreIndex, bool isFunction, bool isEnum)
 {
     if (isFunction) {
         // calling a Q_INVOKABLE function of a value type
@@ -464,7 +464,9 @@ PropertyKey QQmlValueTypeWrapperOwnPropertyKeyIterator::next(const Object *o, Pr
         if (pd) {
             QQmlPropertyData data;
             data.load(p);
-            pd->value = getGadgetProperty(that->engine(), that->d(), data.propType(), data.coreIndex(), data.isFunction(), data.isEnum());
+            pd->value = QQmlValueTypeWrapper::getGadgetProperty(
+                    that->engine(), that->d(), data.propType(), data.coreIndex(), data.isFunction(),
+                    data.isEnum());
         }
         return propName->toPropertyKey();
     }
@@ -642,36 +644,8 @@ ReturnedValue QQmlValueTypeWrapper::virtualResolveLookupGetter(const Object *obj
     lookup->qgadgetLookup.coreIndex = result.coreIndex();
     lookup->qgadgetLookup.isFunction = result.isFunction();
     lookup->qgadgetLookup.isEnum = result.isEnum();
-    lookup->getter = QQmlValueTypeWrapper::lookupGetter;
+    lookup->getter = Lookup::getterValueType;
     return lookup->getter(lookup, engine, *object);
-}
-
-ReturnedValue QQmlValueTypeWrapper::lookupGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object)
-{
-    const auto revertLookup = [lookup, engine, &object]() {
-        lookup->qgadgetLookup.metaObject = quintptr(0);
-        lookup->getter = Lookup::getterGeneric;
-        return Lookup::getterGeneric(lookup, engine, object);
-    };
-
-    // we can safely cast to a QV4::Object here. If object is something else,
-    // the internal class won't match
-    Heap::Object *o = static_cast<Heap::Object *>(object.heapObject());
-    if (!o || o->internalClass != lookup->qgadgetLookup.ic)
-        return revertLookup();
-
-    Heap::QQmlValueTypeWrapper *valueTypeWrapper =
-            const_cast<Heap::QQmlValueTypeWrapper*>(static_cast<const Heap::QQmlValueTypeWrapper *>(o));
-    if (valueTypeWrapper->metaObject() != reinterpret_cast<const QMetaObject *>(lookup->qgadgetLookup.metaObject - 1))
-        return revertLookup();
-
-    if (valueTypeWrapper->isReference() && !valueTypeWrapper->readReference())
-        return Encode::undefined();
-
-    return getGadgetProperty(
-                engine, valueTypeWrapper, QMetaType(lookup->qgadgetLookup.metaType),
-                lookup->qgadgetLookup.coreIndex, lookup->qgadgetLookup.isFunction,
-                lookup->qgadgetLookup.isEnum);
 }
 
 bool QQmlValueTypeWrapper::lookupSetter(
