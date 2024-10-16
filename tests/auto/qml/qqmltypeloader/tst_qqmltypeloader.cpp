@@ -34,6 +34,7 @@ private slots:
     void trimCache3();
     void keepSingleton();
     void keepRegistrations();
+    void importAndDestroy();
     void intercept();
     void redirect();
     void qmlSingletonWithinModule();
@@ -418,6 +419,49 @@ public:
         return result;
     }
 };
+
+void tst_QQMLTypeLoader::importAndDestroy()
+{
+#if defined Q_OS_ANDROID || defined Q_OS_IOS
+    QSKIP("Data directory is not in the host file system on Android and iOS");
+#endif
+    qmlClearTypeRegistrations();
+
+    QQmlEngine engine;
+    NetworkAccessManagerFactory factory;
+    engine.setNetworkAccessManagerFactory(&factory);
+    QQmlComponent component(&engine);
+
+    // We redirect the import through the network access manager to make it asynchronous.
+    // Otherwise the type loader will just directly call back into the main thread and we
+    // won't get a chance to do mischief before initializeEngine gets called for the "Slow"
+    // module. Note that the "Slow" module needs to be loaded from a "local" URL since plugins
+    // can only be loaded locally.
+
+    // Detour through testFileUrl to get the path right on windows ('C:' and things like that)
+    QUrl url = testFileUrl("SlowImporter");
+    url.setScheme(url.scheme() + QLatin1String("+debug"));
+
+    component.setData(QString::fromLatin1(R"(
+        import '%1'
+        A {}
+    )").arg(url.toString()).toUtf8(), QUrl());
+
+    while (!QQmlMetaType::qmlType(
+                    QStringLiteral("SlowStuff"), QStringLiteral("Slow"), QTypeRevision())
+                    .isValid()) {
+        // busy wait for type to be registered
+        QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+    }
+
+    // Now the type loader thread is likely waiting for the main thread to process the
+    // initializeEngine callback. We destroy the engine here to trigger the situation where the main
+    // thread needs to wake the type loader thread one more time to process the isShutdown flag.
+    // If it fails to do so, the type loader thread waits indefinitely for the main thread and the
+    // engine dtor in turn waits indefinitely for the type loader thread to terminate.
+
+    // The point of this test is that it _should not_ deadlock here.
+}
 
 void tst_QQMLTypeLoader::intercept()
 {

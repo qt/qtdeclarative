@@ -1,0 +1,2 @@
+import Slow
+SlowStuff {}
