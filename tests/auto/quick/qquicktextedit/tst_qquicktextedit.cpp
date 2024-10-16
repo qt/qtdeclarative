@@ -2181,6 +2181,9 @@ void tst_qquicktextedit::mouseSelection()
     // press-and-drag-and-release from x1 to x2
     QPoint p1 = textEditObject->positionToRectangle(from).center().toPoint();
     QPoint p2 = textEditObject->positionToRectangle(to).center().toPoint();
+    QCursor::setPos(p2);
+    if (QCursor::pos() != p2)
+        QSKIP("Can't move mouse");
     if (clicks == 2)
         QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, p1, moreThanDoubleClickInterval);
     else if (clicks == 3)
