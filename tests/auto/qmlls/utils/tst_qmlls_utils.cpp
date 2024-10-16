@@ -4345,6 +4345,10 @@ void tst_qmlls_utils::completions_data()
             << testFile("AdminDialogFromSource.qml") << 4 << 33
             << ExpectedCompletions{ { u"LabelTitle"_s, CompletionItemKind::Constructor } }
             << QStringList{};
+
+    QTest::newRow("Qt.Point") << testFile("completions/QtPoint.qml") << 5 << 34
+                              << ExpectedCompletions{ { u"y"_s, CompletionItemKind::Property } }
+                              << QStringList{ u"f"_s, forStatementCompletion };
 }
 
 void tst_qmlls_utils::completions()

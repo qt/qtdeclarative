@@ -42,6 +42,9 @@ struct TextPosition
 };
 
 enum IdentifierType : quint8 {
+    NotAnIdentifier, // when resolving expressions like `Qt.point().x` for example, where
+                     // `Qt.point()` is not an identifier
+
     JavaScriptIdentifier,
     PropertyIdentifier,
     PropertyChangedSignalIdentifier,
@@ -70,7 +73,7 @@ struct ExpressionType
 {
     std::optional<QString> name;
     QQmlJSScope::ConstPtr semanticScope;
-    IdentifierType type = JavaScriptIdentifier;
+    IdentifierType type = NotAnIdentifier;
 };
 
 class Location
