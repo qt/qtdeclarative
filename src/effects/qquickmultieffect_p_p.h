@@ -144,7 +144,7 @@ public:
 private:
     bool m_initialized = false;
     QQuickItem *m_sourceItem = nullptr;
-    QGfxSourceProxy *m_shaderSource = nullptr;
+    QGfxSourceProxyME *m_shaderSource = nullptr;
     QQuickShaderEffect *m_shaderEffect = nullptr;
     QQuickShaderEffectSource *m_dummyShaderSource = nullptr;
     QVector<QQuickShaderEffect *> m_blurEffects;
