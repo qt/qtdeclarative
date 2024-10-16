@@ -679,10 +679,19 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
     const QPointF lastPos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
     const auto modifiers = QGuiApplication::keyboardModifiers();
 
-    for (const auto &[item, id] : hoverItems) {
-        if (item) {
+    // while we don't modify hoveritems directly in the loop, the delivery of the event
+    // is expected to reset the stored ID for each cleared item, and items might also
+    // be removed from the map in response to event delivery.
+    // So we don't want to iterate over a const version of hoverItems here (it would be
+    // misleading), but still use const_iterators to avoid  premature detach and constant
+    // ref-count-checks.
+    for (auto it = hoverItems.cbegin(); it != hoverItems.cend(); ++it) {
+        if (const auto &item = it.key()) {
             deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, HoverChange::Clear);
-            Q_ASSERT(id == 0);
+            Q_ASSERT(([this, item]{
+                const auto &it2 = std::as_const(hoverItems).find(item);
+                return it2 == hoverItems.cend() || it2.value() == 0;
+            }()));
         }
     }
 
