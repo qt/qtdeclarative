@@ -10,17 +10,17 @@
 
 QT_BEGIN_NAMESPACE
 
-QGfxSourceProxy::QGfxSourceProxy(QQuickItem *parentItem)
+QGfxSourceProxyME::QGfxSourceProxyME(QQuickItem *parentItem)
     : QQuickItem(parentItem)
 {
 }
 
-QGfxSourceProxy::~QGfxSourceProxy()
+QGfxSourceProxyME::~QGfxSourceProxyME()
 {
     delete m_proxy;
 }
 
-void QGfxSourceProxy::setInput(QQuickItem *input)
+void QGfxSourceProxyME::setInput(QQuickItem *input)
 {
     if (m_input == input)
         return;
@@ -31,15 +31,15 @@ void QGfxSourceProxy::setInput(QQuickItem *input)
     polish();
     if (m_input) {
         if (QQuickImage *image = qobject_cast<QQuickImage *>(m_input)) {
-            connect(image, &QQuickImage::sourceSizeChanged, this, &QGfxSourceProxy::repolish);
-            connect(image, &QQuickImage::fillModeChanged, this, &QGfxSourceProxy::repolish);
+            connect(image, &QQuickImage::sourceSizeChanged, this, &QGfxSourceProxyME::repolish);
+            connect(image, &QQuickImage::fillModeChanged, this, &QGfxSourceProxyME::repolish);
         }
-        connect(m_input, &QQuickItem::childrenChanged, this, &QGfxSourceProxy::repolish);
+        connect(m_input, &QQuickItem::childrenChanged, this, &QGfxSourceProxyME::repolish);
     }
     Q_EMIT inputChanged();
 }
 
-void QGfxSourceProxy::setOutput(QQuickItem *output)
+void QGfxSourceProxyME::setOutput(QQuickItem *output)
 {
     if (m_output == output)
         return;
@@ -48,7 +48,7 @@ void QGfxSourceProxy::setOutput(QQuickItem *output)
     Q_EMIT outputChanged();
 }
 
-void QGfxSourceProxy::setSourceRect(const QRectF &sourceRect)
+void QGfxSourceProxyME::setSourceRect(const QRectF &sourceRect)
 {
     if (m_sourceRect == sourceRect)
         return;
@@ -57,7 +57,7 @@ void QGfxSourceProxy::setSourceRect(const QRectF &sourceRect)
     Q_EMIT sourceRectChanged();
 }
 
-void QGfxSourceProxy::setInterpolation(Interpolation i)
+void QGfxSourceProxyME::setInterpolation(Interpolation i)
 {
     if (m_interpolation == i)
         return;
@@ -66,7 +66,7 @@ void QGfxSourceProxy::setInterpolation(Interpolation i)
     Q_EMIT interpolationChanged();
 }
 
-void QGfxSourceProxy::useProxy()
+void QGfxSourceProxyME::useProxy()
 {
     if (!m_proxy)
         m_proxy = new QQuickShaderEffectSource(this);
@@ -76,12 +76,12 @@ void QGfxSourceProxy::useProxy()
     setOutput(m_proxy);
 }
 
-void QGfxSourceProxy::repolish()
+void QGfxSourceProxyME::repolish()
 {
     polish();
 }
 
-QObject *QGfxSourceProxy::findLayer(QQuickItem *item)
+QObject *QGfxSourceProxyME::findLayer(QQuickItem *item)
 {
     if (!item)
         return nullptr;
@@ -94,7 +94,7 @@ QObject *QGfxSourceProxy::findLayer(QQuickItem *item)
     return nullptr;
 }
 
-void QGfxSourceProxy::updatePolish()
+void QGfxSourceProxyME::updatePolish()
 {
     if (!m_input) {
         setOutput(nullptr);

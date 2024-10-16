@@ -1464,9 +1464,9 @@ void QQuickMultiEffectPrivate::initialize()
         return;
 
     m_shaderEffect = new QQuickShaderEffect(q);
-    m_shaderSource = new QGfxSourceProxy(q);
-    QObject::connect(m_shaderSource, &QGfxSourceProxy::outputChanged, q, [this] { proxyOutputChanged(); });
-    QObject::connect(m_shaderSource, &QGfxSourceProxy::activeChanged, q, &QQuickMultiEffect::hasProxySourceChanged);
+    m_shaderSource = new QGfxSourceProxyME(q);
+    QObject::connect(m_shaderSource, &QGfxSourceProxyME::outputChanged, q, [this] { proxyOutputChanged(); });
+    QObject::connect(m_shaderSource, &QGfxSourceProxyME::activeChanged, q, &QQuickMultiEffect::hasProxySourceChanged);
 
     m_shaderEffect->setParentItem(q);
     m_shaderEffect->setSize(q->size());
