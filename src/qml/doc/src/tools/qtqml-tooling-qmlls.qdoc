@@ -23,8 +23,8 @@ Currently, it enables your editor to:
     \li Get help from Qt Documentation
 \endlist
 
-\note qmlls is currently in development, see \l{Known Limitations} for
-more details.
+\note qmlls is currently in development, see
+\l{#Known Limitations}{Known Limitations} for more details.
 
 \section1 Supported Features
 
