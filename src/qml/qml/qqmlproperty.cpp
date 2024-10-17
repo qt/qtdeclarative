@@ -848,16 +848,16 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
         oldBinding = oldBinding->nextBinding();
     }
 
-    if (valueTypeIndex != -1
-            && oldBinding
-            && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy) {
-        oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
-    }
-
     if (!oldBinding) {
         // Clear the binding bit so that the binding doesn't appear later for any reason
         data->clearBindingBit(coreIndex);
         return;
+    }
+
+    if (valueTypeIndex != -1 && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy) {
+        oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
+        if (!oldBinding)
+           return;
     }
 
     if (!(flags & QQmlPropertyPrivate::DontEnable))

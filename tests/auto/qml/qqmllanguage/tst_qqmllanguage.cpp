@@ -8991,6 +8991,14 @@ void tst_qqmllanguage::overrideInnerBinding()
 
     QCOMPARE(o->property("width").toReal(), 20.0);
     QCOMPARE(o->property("innerWidth").toReal(), 20.0);
+
+    QQmlComponent c2(&e, testFileUrl("Wrap.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    o.reset(c2.create());
+    QVERIFY(!o.isNull());
+
+    QFont font = qvariant_cast<QFont>(o->property("font"));
+    QCOMPARE(font.family(), "Ariallll");
 }
 
 void tst_qqmllanguage::innerFunctionWithTypeAnnotation()
