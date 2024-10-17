@@ -137,8 +137,8 @@ endif()
 if(TARGET Qt::Quick)
     if(NOT CMAKE_CROSSCOMPILING)
         _qt_internal_test_expect_pass(shared_qml_module
-            BINARY "ctest"
-            BINARY_ARGS "-V shared_qml_module"
+            BINARY "${CMAKE_CTEST_COMMAND}"
+            BINARY_ARGS "-V"
         )
         _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
