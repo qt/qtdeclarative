@@ -1297,7 +1297,7 @@ struct Unit
         QString qstr(str->size, Qt::Uninitialized);
         QChar *ch = qstr.data();
         for (int i = 0; i < str->size; ++i)
-             ch[i] = QChar(characters[i]);
+             ch[i] = QChar(quint16(characters[i]));
          return qstr;
 #endif
     }
