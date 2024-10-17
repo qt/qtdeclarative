@@ -174,6 +174,7 @@ public:
     void load(QQmlDataBlob *, Mode = PreferSynchronous);
     void loadWithStaticData(QQmlDataBlob *, const QByteArray &, Mode = PreferSynchronous);
     void loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode = PreferSynchronous);
+    void drop(const QQmlDataBlob::Ptr &blob);
 
     QQmlEngine *engine() const;
     void initializeEngine(QQmlEngineExtensionInterface *, const char *);

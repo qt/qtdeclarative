@@ -92,6 +92,11 @@ void QQmlTypeLoaderThread::initializeEngine(QQmlEngineExtensionInterface *iface,
     callMethodInMain(&This::initializeEngineExtensionMain, iface, uri);
 }
 
+void QQmlTypeLoaderThread::drop(const QQmlDataBlob::Ptr &b)
+{
+    postMethodToThread(&This::dropThread, b);
+}
+
 void QQmlTypeLoaderThread::loadThread(const QQmlDataBlob::Ptr &b)
 {
     m_loader->loadThread(b);
@@ -136,6 +141,12 @@ void QQmlTypeLoaderThread::initializeEngineExtensionMain(QQmlEngineExtensionInte
 {
     Q_ASSERT(m_loader->engine()->thread() == QThread::currentThread());
     iface->initializeEngine(m_loader->engine(), uri);
+}
+
+void QQmlTypeLoaderThread::dropThread(const QQmlDataBlob::Ptr &b)
+{
+    // Simply drop the reference to b
+    Q_UNUSED(b);
 }
 
 QT_END_NAMESPACE
