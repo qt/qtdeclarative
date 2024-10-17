@@ -213,6 +213,13 @@ void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::C
     doLoad(CachedLoader(unit), blob, mode);
 }
 
+void QQmlTypeLoader::drop(const QQmlDataBlob::Ptr &blob)
+{
+    // We must not destroy a QQmlDataBlob from the main thread
+    // since it will shuffle its dependencies around.
+    m_thread->drop(blob);
+}
+
 void QQmlTypeLoader::loadWithStaticDataThread(const QQmlDataBlob::Ptr &blob, const QByteArray &data)
 {
     ASSERT_LOADTHREAD();

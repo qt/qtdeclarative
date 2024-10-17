@@ -49,6 +49,7 @@ private slots:
     void declarativeCppAndQmlDir();
     void signalHandlersAreCompatible();
     void loadTypeOnShutdown();
+    void floodTypeLoaderEventQueue();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -778,6 +779,22 @@ void tst_QQMLTypeLoader::loadTypeOnShutdown()
 
     QVERIFY(dead1);
     QVERIFY(dead2);
+}
+
+void tst_QQMLTypeLoader::floodTypeLoaderEventQueue()
+{
+    QQmlEngine engine;
+
+    // Flood the typeloader with useless messages.
+    for (int i = 0; i < 1000; ++i) {
+        QQmlComponent c(&engine);
+        c.setData(QString::fromLatin1(R"(
+                import "barf:/not/actually/there%1"
+                SomeElement {}
+            )").arg(i).toUtf8(), QUrl::fromLocalFile(QString::fromLatin1("foo%1.qml").arg(i)));
+        QVERIFY(!c.isReady());
+        // Should not crash when destrying the QQmlComponent.
+    }
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
