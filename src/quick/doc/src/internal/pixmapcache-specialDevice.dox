@@ -54,7 +54,7 @@
     ① QQuickPdfPageImage::load() calls ② carrierFile() to get a
     ③ QPdfFile instance (a subclass of QIODevice), and calls
     ④ QQuickPixmap::loadImageFromDevice() which ⑤ saves the device to
-    c, a QPointer. Then it calls
+    QQuickPixmapData::specialDevice, a QPointer. Then it calls
     ⑥ QQuickPixmapReader::startJob() which ⑦ posts a ProcessJobs event.
     The worker thread ⑪ handles it in QQuickPixmapReader::processJob()
     and calls ⑫ readImage(), passing a simple QIODevice pointer extracted from
