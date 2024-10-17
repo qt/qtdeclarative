@@ -455,6 +455,10 @@ QQmlComponent::~QQmlComponent()
 
     if (d->typeData) {
         d->typeData->unregisterCallback(d);
+        if (d->engine) {
+            QQmlEnginePrivate::get(d->engine)->typeLoader.drop(
+                    QQmlDataBlob::Ptr(d->typeData.data()));
+        }
         d->typeData.reset();
     }
 }

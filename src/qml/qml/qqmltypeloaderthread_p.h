@@ -56,6 +56,7 @@ public:
     void callDownloadProgressChanged(const QQmlDataBlob::Ptr &b, qreal p);
     void initializeEngine(QQmlExtensionInterface *, const char *);
     void initializeEngine(QQmlEngineExtensionInterface *, const char *);
+    void drop(const QQmlDataBlob::Ptr &b);
 
 private:
     void loadThread(const QQmlDataBlob::Ptr &b);
@@ -65,6 +66,7 @@ private:
     void callDownloadProgressChangedMain(const QQmlDataBlob::Ptr &b, qreal p);
     void initializeExtensionMain(QQmlExtensionInterface *iface, const char *uri);
     void initializeEngineExtensionMain(QQmlEngineExtensionInterface *iface, const char *uri);
+    void dropThread(const QQmlDataBlob::Ptr &b);
 
     QQmlTypeLoader *m_loader;
 #if QT_CONFIG(qml_network)
