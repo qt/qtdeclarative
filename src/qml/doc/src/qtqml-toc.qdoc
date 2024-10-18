@@ -74,7 +74,7 @@
             \li \l{qmllint Reference}{qmllint}
             \li \l{qmlformat}
             \li \l{\QMLLS Reference}{qmlls}
-\omit reason: empty topic           \li \l{qmlprofiler} \endomit
+            \li \l{qmlprofiler}
             \li \l{qml}
             \li \l{qmlpreview}
             \li \l{Qt Quick Compiler}
