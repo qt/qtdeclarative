@@ -40,6 +40,7 @@ private slots:
     void implicitWithDependencies();
     void qualifiedScriptImport();
     void invalidImportUrl();
+    void sanitizeUNCPath();
 };
 
 void tst_QQmlImport::cleanup()
@@ -148,6 +149,15 @@ void tst_QQmlImport::invalidImportUrl()
             component.errorString(),
             url.toString() + QLatin1String(
                     ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
+}
+
+void tst_QQmlImport::sanitizeUNCPath()
+{
+    QString wildUNCPath = QStringLiteral("//Server2/Sh%re/foO/qmldir");
+    QQmlImportDatabase::sanitizeUNCPath(&wildUNCPath);
+
+    // It lowercases the "server" component of the path. The rest is left as-is
+    QCOMPARE(wildUNCPath, QStringLiteral("//server2/Sh%re/foO/qmldir"));
 }
 
 void tst_QQmlImport::testDesignerSupported()
