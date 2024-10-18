@@ -296,6 +296,18 @@ public:
 
     void addPluginPath(const QString& path);
 
+    static void sanitizeUNCPath(QString *path)
+    {
+        // This handles the UNC path case as when the path is retrieved from the QUrl it
+        // will convert the host name from upper case to lower case. So the absoluteFilePath
+        // is changed at this point to make sure it will match later on in that case.
+        if (path->startsWith(QStringLiteral("//"))) {
+            // toLocalFile() since that faithfully restores all the things you can do to a
+            // path but not a URL, in particular weird characters like '%'.
+            *path = QUrl::fromLocalFile(*path).toLocalFile();
+        }
+    }
+
     template<typename Callback>
     LocalQmldirResult locateLocalQmldir(
             const QString &uri, QTypeRevision version, LocalQmldirSearchLocation location,
@@ -396,13 +408,7 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
                 url = QStringLiteral("qrc") + absolutePath;
             } else {
                 url = QUrl::fromLocalFile(absolutePath).toString();
-                // This handles the UNC path case as when the path is retrieved from the QUrl it
-                // will convert the host name from upper case to lower case. So the absoluteFilePath
-                // is changed at this point to make sure it will match later on in that case.
-                if (qmldirAbsoluteFilePath.startsWith(QStringLiteral("//"))) {
-                    qmldirAbsoluteFilePath = QUrl::fromLocalFile(qmldirAbsoluteFilePath)
-                            .toString(QUrl::RemoveScheme);
-                }
+                sanitizeUNCPath(&qmldirAbsoluteFilePath);
             }
 
             QmldirCache *cache = new QmldirCache;

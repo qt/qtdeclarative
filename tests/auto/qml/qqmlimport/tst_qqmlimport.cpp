@@ -71,6 +71,7 @@ private slots:
     void registerTypesFromImplicitImport_data();
     void registerTypesFromImplicitImport();
     void containsAllQtConfEntries();
+    void sanitizeUNCPath();
 
 private:
     QQmlModuleRegistration noimportRegistration;
@@ -228,6 +229,15 @@ void tst_QQmlImport::containsAllQtConfEntries()
     QVERIFY(importPaths.contains(u"qrc:/a/path"));
     QVERIFY(importPaths.contains(u"qrc:/another/path"));
     QVERIFY(importPaths.contains(u"qrc:/even/more/path"));
+}
+
+void tst_QQmlImport::sanitizeUNCPath()
+{
+    QString wildUNCPath = QStringLiteral("//Server2/Sh%re/foO/qmldir");
+    QQmlImportDatabase::sanitizeUNCPath(&wildUNCPath);
+
+    // It lowercases the "server" component of the path. The rest is left as-is
+    QCOMPARE(wildUNCPath, QStringLiteral("//server2/Sh%re/foO/qmldir"));
 }
 
 void tst_QQmlImport::testDesignerSupported()
