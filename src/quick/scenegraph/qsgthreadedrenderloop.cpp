@@ -1684,25 +1684,47 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     // isVSyncDependent() == true, if not then we always use the driver and
     // just advance here)
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
-        qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
-        m_animation_driver->advance();
-        qCDebug(QSG_LOG_RENDERLOOP, "- animations done..");
+        auto advanceAnimations = [this, window=QPointer(window)] {
+            qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
+            m_animation_driver->advance();
+            qCDebug(QSG_LOG_RENDERLOOP, "- animations done..");
 
-        // We need to trigger another update round to keep all animations
-        // running correctly. For animations that lead to a visual change (a
-        // property change in some item leading to dirtying the item and so
-        // ending up in maybeUpdate()) this would not be needed, but other
-        // animations would then stop functioning since there is nothing
-        // advancing the animation system if we do not call postUpdateRequest()
-        // here and nothing else leads to it either. This has an unfortunate
-        // side effect in multi window cases: one can end up in a situation
-        // where a non-animating window gets updates continuously because there
-        // is an animation running in some other window that is non-exposed or
-        // even closed already (if it was exposed we would not hit this branch,
-        // however). Sadly, there is nothing that can be done about it.
-        postUpdateRequest(w);
+            // We need to trigger another update round to keep all animations
+            // running correctly. For animations that lead to a visual change (a
+            // property change in some item leading to dirtying the item and so
+            // ending up in maybeUpdate()) this would not be needed, but other
+            // animations would then stop functioning since there is nothing
+            // advancing the animation system if we do not call postUpdateRequest()
+            // here and nothing else leads to it either. This has an unfortunate
+            // side effect in multi window cases: one can end up in a situation
+            // where a non-animating window gets updates continuously because there
+            // is an animation running in some other window that is non-exposed or
+            // even closed already (if it was exposed we would not hit this branch,
+            // however). Sadly, there is nothing that can be done about it.
+            if (window)
+                window->requestUpdate();
 
-        emit timeToIncubate();
+            emit timeToIncubate();
+        };
+
+#if defined(Q_OS_APPLE)
+        if (inExpose) {
+            // If we are handling an expose event the system is expecting us to
+            // produce a frame that it can present on screen to the user. Advancing
+            // animations at this point might result in changing properties of the
+            // window in a way that invalidates the current frame, resulting in the
+            // discarding of the current frame before the user ever sees it. To give
+            // the system a chance to present the current frame we defer the advance
+            // of the animations until the start of the next event loop pass, which
+            // should still give plenty of time to compute the new render state before
+            // the next expose event or update request.
+            QMetaObject::invokeMethod(this, advanceAnimations, Qt::QueuedConnection);
+        } else
+#endif // Q_OS_APPLE
+        {
+            // For regular update requests we assume we can advance here synchronously
+            advanceAnimations();
+        }
     } else if (w->updateDuringSync) {
         postUpdateRequest(w);
     }
