@@ -8,6 +8,7 @@
 #include "private/foreign_p.h"
 #include "inaccessible/base.h"
 #include "inaccessible/property.h"
+#include "inaccessible/invisible.h"
 
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 
@@ -882,6 +883,19 @@ class EnumsExplicitlyScoped : public QObject
     Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
 };
 
+class DerivedFromInvisible : public InvisibleBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int b READ b CONSTANT)
+
+public:
+    int b() const { return m_b; }
+
+private:
+    int m_b = 7;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -970,6 +984,7 @@ private slots:
     void inaccessibleBase();
     void enumsExplicitlyScoped();
     void namespacedExtracted();
+    void derivedFromInvisible();
 
 private:
     QByteArray qmltypesData;

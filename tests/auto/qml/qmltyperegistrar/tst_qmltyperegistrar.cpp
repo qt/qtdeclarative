@@ -1234,4 +1234,17 @@ void tst_qmltyperegistrar::namespacedExtracted()
     QVERIFY(!o.isNull());
 }
 
+void tst_qmltyperegistrar::derivedFromInvisible()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        name: "DerivedFromInvisible"
+        accessSemantics: "reference"
+        prototype: "InvisibleBase"
+        exports: ["QmlTypeRegistrarTest/DerivedFromInvisible 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "b"; type: "int"; read: "b"; index: 0; isReadonly: true; isPropertyConstant: true }
+    })"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

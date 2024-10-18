@@ -133,6 +133,7 @@ void QmlTypesClassDescription::collectSuperClasses(
         const QVector<MetaType> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
     const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
+    QAnyStringView superClassCandidate;
     for (const BaseType &superObject : std::as_const(classDef.superClasses())) {
         if (superObject.access == Access::Public) {
             const QAnyStringView superName = superObject.name;
@@ -143,11 +144,17 @@ void QmlTypesClassDescription::collectSuperClasses(
                 collect(other, types, foreign, superMode, defaultRevision);
                 if (mode == TopLevel && superClass.isEmpty())
                     superClass = other.qualifiedClassName();
+            } else {
+                // If we cannot resolve anything but find a correctly formed superObject,
+                // we can at least populate the name. Further tooling might locate the type
+                // in a different module.
+                superClassCandidate = superName;
             }
-
-            // If we cannot locate a type for it, there is no point in recording the superClass
         }
     }
+
+    if (mode == TopLevel && superClass.isEmpty())
+        superClass = superClassCandidate;
 }
 
 void QmlTypesClassDescription::collectInterfaces(const MetaType &classDef)
