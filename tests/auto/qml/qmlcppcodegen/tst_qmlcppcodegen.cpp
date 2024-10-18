@@ -84,6 +84,7 @@ private slots:
     void dateConstruction();
     void dateConversions();
     void deadShoeSize();
+    void detachOnAssignment();
     void dialogButtonBox();
     void enumConversion();
     void enumFromBadSingleton();
@@ -1534,6 +1535,30 @@ void tst_QmlCppCodegen::deadShoeSize()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->property("shoeSize").toInt(), 0);
+}
+
+void tst_QmlCppCodegen::detachOnAssignment()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/detachOnAssignment.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    BirthdayPartyAttached *b = static_cast<BirthdayPartyAttached *>(
+            qmlAttachedPropertiesObject<BirthdayParty>(o.data()));
+    QVERIFY(b);
+    QCOMPARE(o->property("d").value<QDateTime>().date().year(), 1997);
+    QCOMPARE(b->rsvp().date().year(), 2001);
+
+    Person *p = qvariant_cast<Person *>(o->property("person"));
+    QVERIFY(p);
+
+    QCOMPARE(o->property("r").value<QRectF>(), QRectF(2, 3, 4, 5));
+    QCOMPARE(p->area(), QRectF(22, 3, 4, 5));
+
+    QCOMPARE(o->property("v").value<QVariantList>()[0], QStringLiteral("a"));
+    QCOMPARE(p->things()[0], QStringLiteral("c"));
 }
 
 void tst_QmlCppCodegen::dialogButtonBox()

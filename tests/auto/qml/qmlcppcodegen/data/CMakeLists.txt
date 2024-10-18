@@ -127,6 +127,7 @@ set(qml_files
     dateConversions.qml
     deadShoeSize.qml
     deadStoreLoop.qml
+    detachOnAssignment.qml
     dialog.qml
     dialogButtonBox.qml
     dynamicscene.qml

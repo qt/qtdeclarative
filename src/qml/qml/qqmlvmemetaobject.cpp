@@ -1266,24 +1266,14 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
         }
         md->set(engine, id, value);
     } else if (const QV4::Sequence *sequence = value.as<QV4::Sequence>()) {
-        QV4::Heap::Sequence *p = sequence->d();
-        if (p->enforcesLocation()) {
-            // If the sequence enforces its location, we don't want it to be updated anymore after
-            // being written to a property.
-            md->set(engine, id, QV4::ReferenceObject::detached(p));
-        } else {
-            // Otherwise, make sure the reference carries some value so that we can still call
-            // toVariant() on it (see note in QV4::SequencePrototype::toVariant).
-            if (!p->hasData())
-                QV4::ReferenceObject::readReference(p);
-            md->set(engine, id, p);
-        }
+        md->set(engine, id, QV4::ReferenceObject::detached(sequence->d()));
     } else if (const QV4::QQmlValueTypeWrapper *wrapper = value.as<QV4::QQmlValueTypeWrapper>()) {
-        // If the value type enforces its location, we don't want it to be updated anymore after
-        // being written to a property.
-        QV4::Heap::QQmlValueTypeWrapper *p = wrapper->d();
-        md->set(engine, id, p->enforcesLocation() ? QV4::ReferenceObject::detached(p) : p);
+        md->set(engine, id, QV4::ReferenceObject::detached(wrapper->d()));
+    } else if (const QV4::DateObject *date = value.as<QV4::DateObject>()) {
+        md->set(engine, id, QV4::ReferenceObject::detached(date->d()));
     } else {
+        // TODO: We should have a virtualDetach if that list gets longer.
+        Q_ASSERT(!value.as<QV4::ReferenceObject>());
         md->set(engine, id, value);
     }
 

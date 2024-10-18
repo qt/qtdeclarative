@@ -31,6 +31,7 @@ struct Date
     static constexpr quint64 MaxDateVal = 8.64e15;
 
     void init() { storage = InvalidDateVal; }
+    void init(Date date) { storage = date.storage; }
     void init(double value);
     void init(const QDateTime &dateTime);
     void init(QDate date);
@@ -60,7 +61,7 @@ struct Date
     QVariant toVariant() const;
 
     template<typename Function>
-    bool withStoragePointer(Function function)
+    bool withReadonlyStoragePointer(Function function)
     {
         switch (storage & (HasQDate | HasQTime)) {
         case HasQDate: {
@@ -75,8 +76,49 @@ struct Date
             QDateTime dateTime = toQDateTime();
             return function(&dateTime);
         }
-        default:
+        default: {
+            double d = operator double();
+            return function(&d);
+        }
+        }
+    }
+
+    template<typename Function>
+    bool withWriteonlyStoragePointer(Function function, ExecutionEngine *engine)
+    {
+        switch (storage & (HasQDate | HasQTime)) {
+        case HasQDate: {
+            QDate date;
+            if (function(&date)) {
+                init(date);
+                return true;
+            }
             return false;
+        }
+        case HasQTime: {
+            QTime time;
+            if (function(&time)) {
+                init(time, engine);
+                return true;
+            }
+            return false;
+        }
+        case (HasQTime | HasQDate): {
+            QDateTime dateTime;
+            if (function(&dateTime)) {
+                init(dateTime);
+                return true;
+            }
+            return false;
+        }
+        default: {
+            double d;
+            if (function(&d)) {
+                init(d);
+                return true;
+            }
+            return false;
+        }
         }
     }
 
@@ -113,6 +155,12 @@ DECLARE_HEAP_OBJECT(DateObject, ReferenceObject) {
         m_date.init();
     }
 
+    void init(Date date)
+    {
+        ReferenceObject::init(nullptr, -1, {});
+        m_date.init(date);
+    }
+
     void init(double dateTime)
     {
         ReferenceObject::init(nullptr, -1, {});
@@ -146,6 +194,9 @@ DECLARE_HEAP_OBJECT(DateObject, ReferenceObject) {
         m_date.init(time, internalClass->engine);
     };
 
+    DateObject *detached() const;
+    bool setVariant(const QVariant &variant);
+
     void setDate(double newDate)
     {
         m_date = newDate;
@@ -161,8 +212,28 @@ DECLARE_HEAP_OBJECT(DateObject, ReferenceObject) {
     QVariant toVariant() const { return m_date.toVariant(); }
     QDateTime toQDateTime() const { return m_date.toQDateTime(); }
 
-private:
-    bool writeBack()
+    bool readReference()
+    {
+        if (!object())
+            return false;
+
+        QV4::Scope scope(internalClass->engine);
+        QV4::ScopedObject o(scope, object());
+
+        if (isVariant()) {
+            QVariant variant;
+            void *a[] = { &variant };
+            return o->metacall(QMetaObject::ReadProperty, property(), a)
+                    && setVariant(variant);
+        }
+
+        return m_date.withWriteonlyStoragePointer([&](void *storagePointer) {
+            void *a[] = { storagePointer };
+            return o->metacall(QMetaObject::ReadProperty, property(), a);
+        }, scope.engine);
+    }
+
+    bool writeBack(int internalIndex = QV4::ReferenceObject::AllProperties)
     {
         if (!object() || !canWriteBack())
             return false;
@@ -174,16 +245,17 @@ private:
         int status = -1;
         if (isVariant()) {
             QVariant variant = toVariant();
-            void *a[] = { &variant, nullptr, &status, &flags };
+            void *a[] = { &variant, nullptr, &status, &flags, &internalIndex };
             return o->metacall(QMetaObject::WriteProperty, property(), a);
         }
 
-        return m_date.withStoragePointer([&](void *storagePointer) {
-            void *a[] = { storagePointer, nullptr, &status, &flags };
+        return m_date.withReadonlyStoragePointer([&](void *storagePointer) {
+            void *a[] = { storagePointer, nullptr, &status, &flags, &internalIndex };
             return o->metacall(QMetaObject::WriteProperty, property(), a);
         });
     }
 
+private:
     Date m_date;
 };
 
@@ -290,6 +362,18 @@ struct DatePrototype: Object
 
     static void timezoneUpdated(ExecutionEngine *e);
 };
+
+template<>
+inline bool ReferenceObject::readReference<Heap::DateObject>(Heap::DateObject *ref)
+{
+    return ref->readReference();
+}
+
+template<>
+inline bool ReferenceObject::writeBack<Heap::DateObject>(Heap::DateObject *ref, int internalIndex)
+{
+    return ref->writeBack(internalIndex);
+}
 
 }
 

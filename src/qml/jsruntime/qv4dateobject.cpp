@@ -766,6 +766,34 @@ QDate DateObject::dateTimeToDate(const QDateTime &dateTime)
 
 DEFINE_OBJECT_VTABLE(DateCtor);
 
+Heap::DateObject *Heap::DateObject::detached() const
+{
+    return internalClass->engine->memoryManager->allocate<QV4::DateObject>(m_date);
+}
+
+bool Heap::DateObject::setVariant(const QVariant &variant)
+{
+    const QMetaType variantReferenceType = variant.metaType();
+    switch (variantReferenceType.id()) {
+    case QMetaType::Double:
+        m_date.init(*static_cast<const double *>(variant.constData()));
+        break;
+    case QMetaType::QDate:
+        m_date.init(*static_cast<const QDate *>(variant.constData()));
+        break;
+    case QMetaType::QTime:
+        m_date.init(*static_cast<const QTime *>(variant.constData()), internalClass->engine);
+        break;
+    case QMetaType::QDateTime:
+        m_date.init(*static_cast<const QDateTime *>(variant.constData()));
+        break;
+    default:
+        return false;
+    }
+
+    return true;
+}
+
 void Heap::DateCtor::init(QV4::ExecutionEngine *engine)
 {
     Heap::FunctionObject::init(engine, QStringLiteral("Date"));
