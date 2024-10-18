@@ -4,7 +4,17 @@
 /*!
 \page qtqml-tooling-qmlprofiler.html
 \title qmlprofiler
-\brief Overview of the qml profiler tool.
+\brief Overview of the qmlprofiler tool.
 \ingroup qtqml-tooling
+
+\section1 qmlprofiler
+
+The \c qmlprofiler retrieves QML tracing data from an application. The collected
+data can then be visualized in \QC.
+
+To profile an application, enable QML debugging.
+
+See the \l{\QC: Profiling QML Applications}{QML Profiler} to learn
+more.
 
 */
