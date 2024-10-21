@@ -29,12 +29,12 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
     \image qtquickdialogs-filedialog-gtk.png
 
-    To show a file dialog, construct an instance of FileDialog, set the
-    desired properties, and call \l {Dialog::}{open()}. The \l currentFile
-    or \l currentFiles properties can be used to determine the currently
-    selected file(s) in the dialog. The \l selectedFile and \l selectedFiles
-    properties are updated only after the final selection has been made by
-    accepting the dialog.
+    To show a file dialog, construct an instance of FileDialog, set the desired
+    properties, and call \l {Dialog::}{open()}. The \l currentFolder property
+    can be used to determine the folder in which the dialog opens. The
+    \l selectedFile and \l selectedFiles properties can be used to determine
+    which file(s) are selected when the dialog opens, and are also updated
+    when the user selects a file in the dialog and when the dialog is accepted.
 
     \snippet qtquickdialogs-filedialog.qml file
 
