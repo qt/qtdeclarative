@@ -2273,7 +2273,7 @@ void QQmlJSTypePropagator::generate_CreateRestParameter(int argIndex)
 
 void QQmlJSTypePropagator::generate_ConvertThisToObject()
 {
-    setRegister(This, m_typeResolver->conversionType(m_typeResolver->qObjectType()));
+    setRegister(This, m_function->qmlScope);
 }
 
 void QQmlJSTypePropagator::generate_LoadSuperConstructor()

@@ -1473,6 +1473,7 @@ void TestQmllint::cleanQmlCode_data()
 #ifdef HAS_QC_BASIC
     QTest::newRow("overlay") << QStringLiteral("overlayFromControls.qml");
 #endif
+    QTest::newRow("thisObject") << QStringLiteral("thisObject.qml");
 }
 
 void TestQmllint::cleanQmlCode()
