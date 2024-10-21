@@ -615,7 +615,7 @@ QT_WARNING_POP
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
     static void resolveList(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
-    static void resolveGeneralizedGroup(
+    static void resolveGroup(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &baseType,
             const QQmlJSScope::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);

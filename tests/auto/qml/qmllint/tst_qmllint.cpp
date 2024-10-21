@@ -1291,6 +1291,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
 
     QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s;
+    QTest::newRow("aliasGroup") << QStringLiteral("aliasGroup.qml");
 }
 
 void TestQmllint::cleanQmlCode()

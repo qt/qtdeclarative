@@ -324,7 +324,8 @@ private:
             const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
             const QString &handlerName, const QStringList &handlerParameters);
     void importBaseModules();
-    void resolveAliasesAndIds();
+    void resolveAliases();
+    void resolveGroupProperties();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
 
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);

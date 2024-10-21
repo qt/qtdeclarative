@@ -674,7 +674,7 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
     self->m_listType = listType;
 }
 
-void QQmlJSScope::resolveGeneralizedGroup(
+void QQmlJSScope::resolveGroup(
         const Ptr &self, const ConstPtr &baseType,
         const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes)
 {
