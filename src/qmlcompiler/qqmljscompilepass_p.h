@@ -300,6 +300,30 @@ protected:
         return m_function->argumentTypes[registerIndex - FirstArgument];
     }
 
+    /*!
+     * \internal
+     * Determines whether this is the _QML_ scope object
+     * (in contrast to the JavaScript global or some other scope).
+     *
+     * We omit any module prefixes seen on top of the object.
+     * The module prefixes don't actually add anything unless they
+     * are the prefix to an attachment.
+     */
+    bool isQmlScopeObject(const QQmlJSRegisterContent &content)
+    {
+        switch (content.variant()) {
+        case QQmlJSRegisterContent::ScopeObject:
+            return m_typeResolver->equals(
+                    content.containedType(), m_function->qmlScope.containedType());
+        case QQmlJSRegisterContent::ModulePrefix:
+            return m_typeResolver->equals(
+                    content.scopeType().containedType(), m_function->qmlScope.containedType());
+        default:
+            break;
+        }
+
+        return false;
+    }
 
     State initialState(const Function *function)
     {

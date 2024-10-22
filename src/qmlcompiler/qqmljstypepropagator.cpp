@@ -886,7 +886,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, 
 
     if (m_state.accumulatorOut().variant() == QQmlJSRegisterContent::Singleton
         && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ModulePrefix
-        && !m_state.accumulatorIn().scopeType().isScopeObject()) {
+        && !isQmlScopeObject(m_state.accumulatorIn().scopeType())) {
         m_logger->log(
                 u"Cannot access singleton as a property of an object. Did you want to access an attached object?"_s,
                 qmlAccessSingleton, getCurrentSourceLocation());

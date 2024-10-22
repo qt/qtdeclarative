@@ -136,27 +136,6 @@ bool QQmlJSRegisterContent::isWritable() const
 
 /*!
  * \internal
- * Determines whether this is the scope object.
- * We omit any module prefixes seen on top of the object.
- * The module prefixes don't actually add anything unless they
- * are the prefix to an attachment.
- */
-bool QQmlJSRegisterContent::isScopeObject() const
-{
-    switch (m_variant) {
-    case ScopeObject:
-        return true;
-    case ModulePrefix:
-        return m_scope->isScopeObject();
-    default:
-        break;
-    }
-
-    return false;
-}
-
-/*!
- * \internal
  * Precondition: This is an attachment.
  * Return the type that does the attaching.
  */

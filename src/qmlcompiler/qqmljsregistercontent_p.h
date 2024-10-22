@@ -88,7 +88,6 @@ public:
     bool isList() const;
 
     bool isWritable() const;
-    bool isScopeObject() const;
 
     bool isJavaScriptReturnValue() const
     {

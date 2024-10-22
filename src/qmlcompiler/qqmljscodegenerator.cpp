@@ -1160,8 +1160,7 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
         const QString writeBackIndexString = QString::number(lookupIndex);
 
         const QQmlJSRegisterContent::ContentVariant variant = writeBack.variant();
-        if (variant == QQmlJSRegisterContent::Property
-                && writeBack.scopeType().isScopeObject()) {
+        if (variant == QQmlJSRegisterContent::Property && isQmlScopeObject(writeBack.scopeType())) {
             const QString lookup = u"aotContext->writeBackScopeObjectPropertyLookup("_s
                     + writeBackIndexString
                     + u", "_s + contentPointer(writeBack, writeBackRegister) + u')';
@@ -1403,7 +1402,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::Attachment: {
-        if (m_state.accumulatorOut().attachee().isScopeObject()) {
+        if (isQmlScopeObject(m_state.accumulatorOut().attachee())) {
             generateTypeLookup(index);
             return;
         }
