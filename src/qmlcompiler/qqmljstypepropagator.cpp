@@ -223,8 +223,18 @@ void QQmlJSTypePropagator::generate_LoadImport(int index)
 
 void QQmlJSTypePropagator::generate_LoadLocal(int index)
 {
-    Q_UNUSED(index);
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    // TODO: In order to accurately track locals we'd need to track JavaScript contexts first.
+    //       This could be done by populating the initial JS context and implementing the various
+    //       Push and Pop operations. For now, this is pretty barren.
+
+    QQmlJSMetaProperty local;
+    local.setType(m_typeResolver->jsValueType());
+    local.setIndex(index);
+
+    setAccumulator(QQmlJSRegisterContent::create(
+            local, QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::Property, QQmlJSRegisterContent()));
 }
 
 void QQmlJSTypePropagator::generate_StoreLocal(int index)
