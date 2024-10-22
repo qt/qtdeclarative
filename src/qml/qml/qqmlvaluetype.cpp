@@ -348,6 +348,96 @@ int QQmlRectValueType::bottom() const
     return v.bottom();
 }
 
+QString QQmlMarginsFValueType::toString() const
+{
+    return QString::asprintf("QMarginsF(%g, %g, %g, %g)", m.left(), m.top(), m.right(), m.bottom());
+}
+
+qreal QQmlMarginsFValueType::left() const
+{
+    return m.left();
+}
+
+qreal QQmlMarginsFValueType::top() const
+{
+    return m.top();
+}
+
+qreal QQmlMarginsFValueType::right() const
+{
+    return m.right();
+}
+
+qreal QQmlMarginsFValueType::bottom() const
+{
+    return m.bottom();
+}
+
+void QQmlMarginsFValueType::setLeft(qreal left)
+{
+    m.setLeft(left);
+}
+
+void QQmlMarginsFValueType::setTop(qreal top)
+{
+    m.setTop(top);
+}
+
+void QQmlMarginsFValueType::setRight(qreal right)
+{
+    m.setRight(right);
+}
+
+void QQmlMarginsFValueType::setBottom(qreal bottom)
+{
+    m.setBottom(bottom);
+}
+
+QString QQmlMarginsValueType::toString() const
+{
+    return QString::asprintf("QMargins(%d, %d, %d, %d)", m.left(), m.top(), m.right(), m.bottom());
+}
+
+int QQmlMarginsValueType::left() const
+{
+    return m.left();
+}
+
+int QQmlMarginsValueType::top() const
+{
+    return m.top();
+}
+
+int QQmlMarginsValueType::right() const
+{
+    return m.right();
+}
+
+int QQmlMarginsValueType::bottom() const
+{
+    return m.bottom();
+}
+
+void QQmlMarginsValueType::setLeft(int left)
+{
+    m.setLeft(left);
+}
+
+void QQmlMarginsValueType::setTop(int top)
+{
+    m.setTop(top);
+}
+
+void QQmlMarginsValueType::setRight(int right)
+{
+    m.setRight(right);
+}
+
+void QQmlMarginsValueType::setBottom(int bottom)
+{
+    m.setBottom(bottom);
+}
+
 #if QT_CONFIG(easingcurve)
 QQmlEasingEnums::Type QQmlEasingValueType::type() const
 {
