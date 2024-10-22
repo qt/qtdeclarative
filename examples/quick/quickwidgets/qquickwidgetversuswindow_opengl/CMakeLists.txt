@@ -30,6 +30,7 @@ qt_add_qml_module(qquickwidgetversuswindow_opengl
     QML_FILES test.qml
     RESOURCE_PREFIX /qquickwidgetversuswindow_opengl
     NO_RESOURCE_TARGET_PATH
+    DEPENDENCIES QtQuick
 )
 
 qt6_add_shaders(qquickwidgetversuswindow_opengl "shaders"
