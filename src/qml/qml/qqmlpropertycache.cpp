@@ -481,7 +481,9 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             if (StringCache::mapped_type *it = stringCache.value(methodName)) {
                 if (handleOverride(methodName, data, (old = it->second)) == InvalidOverride) {
                     *data = *old;
-                    if (data->isSignal()) {
+                    if (sigdata) {
+                        // Keep the signal counts in sync,
+                        // even if the "old" data has no real signal.
                         *sigdata = *old;
                         sigdata->m_flags.setIsSignalHandler(true);
                         ++signalHandlerIndex;
