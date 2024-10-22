@@ -104,15 +104,15 @@ void QQmlTypeLoader::setProfiler(QQmlProfiler *profiler)
 #endif
 
 struct PlainLoader {
-    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadThread(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->loadThread(blob);
     }
-    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void load(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->load(blob);
     }
-    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadAsync(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->loadAsync(blob);
     }
@@ -122,15 +122,15 @@ struct StaticLoader {
     const QByteArray &data;
     StaticLoader(const QByteArray &data) : data(data) {}
 
-    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadThread(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->loadWithStaticDataThread(blob, data);
     }
-    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void load(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->loadWithStaticData(blob, data);
     }
-    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadAsync(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->loadWithStaticDataAsync(blob, data);
     }
@@ -140,22 +140,22 @@ struct CachedLoader {
     const QQmlPrivate::CachedQmlUnit *unit;
     CachedLoader(const QQmlPrivate::CachedQmlUnit *unit) :  unit(unit) {}
 
-    void loadThread(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadThread(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->loadWithCachedUnitThread(blob, unit);
     }
-    void load(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void load(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->loadWithCachedUnit(blob, unit);
     }
-    void loadAsync(QQmlTypeLoader *loader, QQmlDataBlob *blob) const
+    void loadAsync(QQmlTypeLoader *loader, const QQmlDataBlob::Ptr &blob) const
     {
         loader->m_thread->loadWithCachedUnitAsync(blob, unit);
     }
 };
 
 template<typename Loader>
-void QQmlTypeLoader::doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode)
+void QQmlTypeLoader::doLoad(const Loader &loader, const QQmlDataBlob::Ptr &blob, Mode mode)
 {
 #ifdef DATABLOB_DEBUG
     qWarning("QQmlTypeLoader::doLoad(%s): %s thread", qPrintable(blob->urlString()),
@@ -193,7 +193,7 @@ Load the provided \a blob from the network or filesystem.
 
 The loader must be locked.
 */
-void QQmlTypeLoader::load(QQmlDataBlob *blob, Mode mode)
+void QQmlTypeLoader::load(const QQmlDataBlob::Ptr &blob, Mode mode)
 {
     doLoad(PlainLoader(), blob, mode);
 }
@@ -203,12 +203,14 @@ Load the provided \a blob with \a data.  The blob's URL is not used by the data 
 
 The loader must be locked.
 */
-void QQmlTypeLoader::loadWithStaticData(QQmlDataBlob *blob, const QByteArray &data, Mode mode)
+void QQmlTypeLoader::loadWithStaticData(
+        const QQmlDataBlob::Ptr &blob, const QByteArray &data, Mode mode)
 {
     doLoad(StaticLoader(data), blob, mode);
 }
 
-void QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob *blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode)
+void QQmlTypeLoader::loadWithCachedUnit(
+        const QQmlDataBlob::Ptr &blob, const QQmlPrivate::CachedQmlUnit *unit, Mode mode)
 {
     doLoad(CachedLoader(unit), blob, mode);
 }
@@ -449,7 +451,7 @@ void QQmlTypeLoader::shutdownThread()
 }
 
 QQmlTypeLoader::Blob::PendingImport::PendingImport(
-        QQmlTypeLoader::Blob *blob, const QV4::CompiledData::Import *import,
+        const QQmlRefPointer<Blob> &blob, const QV4::CompiledData::Import *import,
         QQmlImports::ImportFlags flags)
     : uri(blob->stringAt(import->uriIndex))
     , qualifier(blob->stringAt(import->qualifierIndex))
@@ -776,10 +778,10 @@ bool QQmlTypeLoader::Blob::addImport(
     Q_UNREACHABLE_RETURN(false);
 }
 
-void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
+void QQmlTypeLoader::Blob::dependencyComplete(const QQmlDataBlob::Ptr &blob)
 {
     if (blob->type() == QQmlDataBlob::QmldirFile) {
-        QQmlQmldirData *data = static_cast<QQmlQmldirData *>(blob);
+        QQmlQmldirData *data = static_cast<QQmlQmldirData *>(blob.data());
         QList<QQmlError> errors;
         if (!qmldirDataAvailable(data, &errors)) {
             Q_ASSERT(errors.size());
@@ -959,14 +961,14 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
 
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlTypeData *typeData = m_typeCache.value(url);
+    QQmlRefPointer<QQmlTypeData> typeData = m_typeCache.value(url);
 
     if (!typeData) {
         // Trim before adding the new type, so that we don't immediately trim it away
         if (m_typeCache.size() >= m_typeCacheTrimThreshold)
             trimCache();
 
-        typeData = new QQmlTypeData(url, this);
+        typeData = QQml::makeRefPointer<QQmlTypeData>(url, this);
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
@@ -975,10 +977,11 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
         if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (cacheMode != QQmlMetaType::RejectAll)
                 ? QQmlMetaType::findCachedCompilationUnit(typeData->url(), cacheMode, &error)
                 : nullptr) {
-            QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
+            QQmlTypeLoader::loadWithCachedUnit(
+                    QQmlDataBlob::Ptr(typeData.data()), cachedUnit, mode);
         } else {
             typeData->setCachedUnitStatus(error);
-            QQmlTypeLoader::load(typeData, mode);
+            QQmlTypeLoader::load(QQmlDataBlob::Ptr(typeData.data()), mode);
         }
     } else if ((mode == PreferSynchronous || mode == Synchronous) && QQmlFile::isSynchronous(url)) {
         // this was started Asynchronous, but we need to force Synchronous
@@ -1007,17 +1010,17 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlTypeData *typeData = new QQmlTypeData(url, this);
-    QQmlTypeLoader::loadWithStaticData(typeData, data, mode);
+    QQmlRefPointer<QQmlTypeData> typeData = QQml::makeRefPointer<QQmlTypeData>(url, this);
+    QQmlTypeLoader::loadWithStaticData(QQmlDataBlob::Ptr(typeData.data()), data, mode);
 
-    return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
+    return typeData;
 }
 
 void QQmlTypeLoader::injectScript(const QUrl &relativeUrl)
 {
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this);
+    QQmlRefPointer<QQmlScriptBlob> blob = QQml::makeRefPointer<QQmlScriptBlob>(relativeUrl, this);
     blob->initializeFromNative();
     blob->m_isDone = true;
     blob->m_data.setStatus(QQmlDataBlob::Complete);
@@ -1046,10 +1049,10 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
 
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlScriptBlob *scriptBlob = m_scriptCache.value(url);
+    QQmlRefPointer<QQmlScriptBlob> scriptBlob = m_scriptCache.value(url);
 
     if (!scriptBlob) {
-        scriptBlob = new QQmlScriptBlob(url, this);
+        scriptBlob = QQml::makeRefPointer<QQmlScriptBlob>(url, this);
         m_scriptCache.insert(url, scriptBlob);
 
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
@@ -1057,10 +1060,10 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
         if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (cacheMode != QQmlMetaType::RejectAll)
                 ? QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), cacheMode, &error)
                 : nullptr) {
-            QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
+            QQmlTypeLoader::loadWithCachedUnit(QQmlDataBlob::Ptr(scriptBlob.data()), cachedUnit);
         } else {
             scriptBlob->setCachedUnitStatus(error);
-            QQmlTypeLoader::load(scriptBlob);
+            QQmlTypeLoader::load(QQmlDataBlob::Ptr(scriptBlob.data()));
         }
     }
 
@@ -1077,12 +1080,12 @@ QQmlRefPointer<QQmlQmldirData> QQmlTypeLoader::getQmldir(const QUrl &url)
              !QDir::isRelativePath(QQmlFile::urlToLocalFileOrQrc(url))));
     LockHolder<QQmlTypeLoader> holder(this);
 
-    QQmlQmldirData *qmldirData = m_qmldirCache.value(url);
+    QQmlRefPointer<QQmlQmldirData> qmldirData = m_qmldirCache.value(url);
 
     if (!qmldirData) {
-        qmldirData = new QQmlQmldirData(url, this);
+        qmldirData = QQml::makeRefPointer<QQmlQmldirData>(url, this);
         m_qmldirCache.insert(url, qmldirData);
-        QQmlTypeLoader::load(qmldirData);
+        QQmlTypeLoader::load(QQmlDataBlob::Ptr(qmldirData.data()));
     }
 
     return qmldirData;
@@ -1340,13 +1343,6 @@ void QQmlTypeLoader::clearCache()
     if (m_thread)
         m_thread->discardMessages();
 
-    for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)
-        (*iter)->release();
-    for (ScriptCache::Iterator iter = m_scriptCache.begin(), end = m_scriptCache.end(); iter != end; ++iter)
-        (*iter)->release();
-    for (QmldirCache::Iterator iter = m_qmldirCache.begin(), end = m_qmldirCache.end(); iter != end; ++iter)
-        (*iter)->release();
-
     qDeleteAll(m_importQmlDirCache);
 
     m_typeCache.clear();
@@ -1372,7 +1368,7 @@ void QQmlTypeLoader::trimCache()
     while (true) {
         bool deletedOneType = false;
         for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end;)  {
-            QQmlTypeData *typeData = iter.value();
+            const QQmlRefPointer<QQmlTypeData> &typeData = iter.value();
 
             // typeData->m_compiledData may be set early on in the proccess of loading a file, so
             // it's important to check the general loading status of the typeData before making any
@@ -1397,7 +1393,6 @@ void QQmlTypeLoader::trimCache()
             }
 
             // There are no live objects of this type
-            iter.value()->release();
             iter = m_typeCache.erase(iter);
             deletedOneType = true;
         }

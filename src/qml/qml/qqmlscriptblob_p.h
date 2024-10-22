@@ -26,9 +26,8 @@ class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlTypeLoader::Blob
 private:
     friend class QQmlTypeLoader;
 
-    QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
-
 public:
+    QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
     ~QQmlScriptBlob() override;
 
     struct ScriptReference

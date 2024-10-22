@@ -299,7 +299,7 @@ complete or in error, or this blob is already complete, this has no effect.
 
 The setError() method may only be called from within a QQmlDataBlob callback.
 */
-void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
+void QQmlDataBlob::addDependency(const QQmlDataBlob::Ptr &blob)
 {
     ASSERT_CALLBACK();
 
@@ -320,7 +320,7 @@ void QQmlDataBlob::addDependency(QQmlDataBlob *blob)
     blob->m_waitingOnMe.append(this);
 
     // Check circular dependency
-    if (m_waitingOnMe.indexOf(blob) >= 0) {
+    if (m_waitingOnMe.indexOf(blob.data()) >= 0) {
         qCWarning(lcCycle) << "Cyclic dependency detected between" << this->url().toString()
                            << "and" << blob->url().toString();
         m_data.setStatus(Error);
@@ -411,7 +411,7 @@ Called if \a blob, which was previously waited for, has an error.
 
 The default implementation does nothing.
 */
-void QQmlDataBlob::dependencyError(QQmlDataBlob *blob)
+void QQmlDataBlob::dependencyError(const QQmlDataBlob::Ptr &blob)
 {
     Q_UNUSED(blob);
 }
@@ -421,7 +421,7 @@ Called if \a blob, which was previously waited for, has completed.
 
 The default implementation does nothing.
 */
-void QQmlDataBlob::dependencyComplete(QQmlDataBlob *blob)
+void QQmlDataBlob::dependencyComplete(const QQmlDataBlob::Ptr &blob)
 {
     Q_UNUSED(blob);
 }
@@ -513,7 +513,7 @@ void QQmlDataBlob::cancelAllWaitingFor()
 void QQmlDataBlob::notifyAllWaitingOnMe()
 {
     while (m_waitingOnMe.size()) {
-        QQmlDataBlob *blob = m_waitingOnMe.takeLast();
+        QQmlDataBlob::Ptr blob = m_waitingOnMe.takeLast();
 
         Q_ASSERT(std::any_of(blob->m_waitingFor.constBegin(), blob->m_waitingFor.constEnd(),
                              [this](const QQmlRefPointer<QQmlDataBlob> &waiting) { return waiting.data() == this; }));
@@ -522,11 +522,11 @@ void QQmlDataBlob::notifyAllWaitingOnMe()
     }
 }
 
-void QQmlDataBlob::notifyComplete(QQmlDataBlob *blob)
+void QQmlDataBlob::notifyComplete(const QQmlDataBlob::Ptr &blob)
 {
     Q_ASSERT(blob->status() == Error || blob->status() == Complete);
     Q_TRACE_SCOPE(QQmlCompiling, blob->url());
-    QQmlCompilingProfiler prof(typeLoader()->profiler(), blob);
+    QQmlCompilingProfiler prof(typeLoader()->profiler(), blob.data());
 
     m_inCallback = true;
 

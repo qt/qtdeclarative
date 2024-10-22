@@ -24,9 +24,9 @@ class Q_AUTOTEST_EXPORT QQmlQmldirData : public QQmlTypeLoader::Blob
 private:
     friend class QQmlTypeLoader;
 
+public:
     QQmlQmldirData(const QUrl &, QQmlTypeLoader *);
 
-public:
     const QString &content() const;
     QV4::CompiledData::Location importLocation(Blob *blob) const;
 
