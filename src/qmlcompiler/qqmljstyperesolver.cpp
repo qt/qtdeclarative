@@ -1653,7 +1653,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
 
             return QQmlJSRegisterContent::create(
                     prop, baseLookupIndex, resultLookupIndex,
-                    QQmlJSRegisterContent::JavaScriptObject, javaScriptParentScope(scope, type));
+                    QQmlJSRegisterContent::Property,
+                    parentScope(scope, type));
         }
     }
 
@@ -1852,13 +1853,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::baseType(
  * That means, if you pass the contained type of \a child as \a parent, then \a child
  * itself is returned.
  */
-QQmlJSRegisterContent QQmlJSTypeResolver::javaScriptParentScope(
+QQmlJSRegisterContent QQmlJSTypeResolver::parentScope(
         const QQmlJSScope::ConstPtr &parent, const QQmlJSRegisterContent &child) const
 {
     if (child.containedType() == parent)
         return child;
     return QQmlJSRegisterContent::create(
-            parent, child.resultLookupIndex(), QQmlJSRegisterContent::JavaScriptParentScope, child);
+            parent, child.resultLookupIndex(), QQmlJSRegisterContent::ParentScope, child);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(

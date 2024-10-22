@@ -173,7 +173,7 @@ public:
     QQmlJSRegisterContent baseType(
             const QQmlJSScope::ConstPtr &base, const QQmlJSRegisterContent &derived) const;
 
-    QQmlJSRegisterContent javaScriptParentScope(
+    QQmlJSRegisterContent parentScope(
             const QQmlJSScope::ConstPtr &parent, const QQmlJSRegisterContent &child) const;
 
     QQmlJSRegisterContent iteratorPointer(

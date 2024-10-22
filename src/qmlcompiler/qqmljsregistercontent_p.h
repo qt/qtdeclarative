@@ -33,10 +33,9 @@ public:
         MetaType,
         Extension,
         ScopeObject,
+        ParentScope,
 
         JavaScriptGlobal,
-        JavaScriptObject,
-        JavaScriptParentScope,
 
         Property,
         Method,
