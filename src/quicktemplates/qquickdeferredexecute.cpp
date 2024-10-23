@@ -13,6 +13,31 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \internal
+
+    For the history behind why these functions were introduced, see
+    the comments of QTBUG-50992, specifically
+    \l {https://bugreports.qt.io/browse/QTBUG-50992?focusedId=325677&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-325677}{this}.
+
+    The first commit to the QML engine to support deferred properties seems to
+    be 59b8d719d6122d86a4cc650911788cc4d778ce29.
+
+    The first commit to add support for it in Controls was
+    458eb65f730178bc93ba7b18f0e4dd2a13efad2e.
+
+    In short, deferred execution solved two issues:
+
+    \list 1
+    \li Incubation issues when using asynchronous loaders, AKA QTBUG-50992.
+    \li Performance issues from creating two items unnecessarily when a
+        styled control was customized, which is explained in more detail
+        in the commit message of 458eb65f730178bc93ba7b18f0e4dd2a13efad2e.
+    \endlist
+
+    \sa qmlExecuteDeferred
+*/
+
 namespace QtQuickPrivate {
 
 static void cancelDeferred(QQmlData *ddata, int propertyIndex)
