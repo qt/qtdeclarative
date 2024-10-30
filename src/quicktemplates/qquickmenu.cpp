@@ -471,6 +471,14 @@ bool QQuickMenuPrivate::blockInput(QQuickItem *item, const QPointF &point) const
     return (cascade && parentMenu && contains(point)) || QQuickPopupPrivate::blockInput(item, point);
 }
 
+bool QQuickMenuPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
+{
+    // Don't propagate mouse event as it can cause underlying item to receive
+    // events
+    return QQuickPopupPrivate::handlePress(item, point, timestamp)
+            || (popupItem == item);
+}
+
 void QQuickMenuPrivate::onItemHovered()
 {
     Q_Q(QQuickMenu);
