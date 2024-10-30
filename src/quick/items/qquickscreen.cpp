@@ -197,8 +197,8 @@ QT_BEGIN_NAMESPACE
 
 QQuickScreenInfo::QQuickScreenInfo(QObject *parent, QScreen *wrappedScreen)
     : QObject(parent)
-    , m_screen(wrappedScreen)
 {
+    setWrappedScreen(wrappedScreen);
 }
 
 QString QQuickScreenInfo::name() const
