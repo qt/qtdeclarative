@@ -143,6 +143,7 @@ private slots:
     void mask();
     void nestedEventDelivery();
     void settingHiddenInPressUngrabs();
+    void pressAfterHiding();
     void negativeZStackingOrder();
     void containsMouseAndVisibility();
     void containsMouseAndVisibilityMasked();
@@ -2458,7 +2459,7 @@ void tst_QQuickMouseArea::nestedEventDelivery() // QTBUG-70898
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50,150));
 }
 
-void tst_QQuickMouseArea::settingHiddenInPressUngrabs()
+void tst_QQuickMouseArea::settingHiddenInPressUngrabs() // QTBUG-74987
 {
     // When an item sets itself hidden, while handling pressed, it doesn't receive the grab.
     // But that in turn means it doesn't see any release events, so we need to make sure it
@@ -2493,6 +2494,22 @@ void tst_QQuickMouseArea::settingHiddenInPressUngrabs()
     QTRY_VERIFY(!mouseArea->isEnabled());
     // The mouse area is not stuck in pressed state.
     QVERIFY(!mouseArea->pressed());
+}
+
+void tst_QQuickMouseArea::pressAfterHiding() // QTBUG-128577
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("simple.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+
+    mouseArea->setVisible(false);
+    const QPointF p(100, 100);
+    QMouseEvent me(QEvent::MouseButtonPress, p, window.mapToGlobal(p), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QGuiApplication::sendEvent(mouseArea, &me);
+    QCOMPARE(mouseArea->pressed(), false);
 }
 
 void tst_QQuickMouseArea::negativeZStackingOrder() // QTBUG-83114
