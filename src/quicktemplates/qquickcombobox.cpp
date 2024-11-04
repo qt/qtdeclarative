@@ -1874,7 +1874,7 @@ QString QQuickComboBox::textAt(int index) const
     \value Qt.MatchWildcard          The search term matches using wildcards.
     \value Qt.MatchFixedString       The search term matches as a fixed string.
     \value Qt.MatchStartsWith        The search term matches the start of the item.
-    \value Qt.MatchEndsWidth         The search term matches the end of the item.
+    \value Qt.MatchEndsWith          The search term matches the end of the item.
     \value Qt.MatchContains          The search term is contained in the item.
     \value Qt.MatchCaseSensitive     The search is case sensitive.
 
