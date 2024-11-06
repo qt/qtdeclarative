@@ -15,10 +15,29 @@ class LifeCycleWatcher : public QObject, public QQmlParserStatus, public QQmlFin
     QML_ELEMENT
     Q_INTERFACES(QQmlParserStatus)
     Q_INTERFACES(QQmlFinalizerHook)
+    Q_PROPERTY(QString text MEMBER text)
 public:
-    void classBegin() override {states.push_back(1); }
-    void componentComplete() override {states.push_back(2);};
-    void componentFinalized() override { states.push_back(3); }
+    void classBegin() override
+    {
+        states.push_back(1);
+        observedTexts.push_back(text);
+    }
+
+    void componentComplete() override
+    {
+        states.push_back(2);
+        observedTexts.push_back(text);
+    }
+
+    void componentFinalized() override
+    {
+        states.push_back(3);
+        observedTexts.push_back(text);
+    }
+
+    QString text;
     QList<int> states;
+    QStringList observedTexts;
 };
+
 #endif

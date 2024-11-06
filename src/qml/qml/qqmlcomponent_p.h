@@ -111,7 +111,7 @@ public:
 
         QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlComponentPrivate::ConstructionState);
 
-        inline void ensureRequiredPropertyStorage();
+        inline void ensureRequiredPropertyStorage(QObject *target);
         inline RequiredProperties *requiredProperties();
         inline void addPendingRequiredProperty(
                 const QObject *object, const QQmlPropertyData *propData,
@@ -126,16 +126,31 @@ public:
         inline const QQmlObjectCreator *creator() const;
         inline void clear();
         inline bool hasCreator() const;
-        inline QQmlObjectCreator *initCreator(QQmlRefPointer<QQmlContextData> parentContext,
-                         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                         const QQmlRefPointer<QQmlContextData> &creationContext);
+        inline QQmlObjectCreator *initCreator(
+                const QQmlRefPointer<QQmlContextData> &parentContext,
+                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+                const QQmlRefPointer<QQmlContextData> &creationContext);
 
         QList<AnnotatedQmlError> errors;
         inline bool isCompletePending() const;
         inline void setCompletePending(bool isPending);
 
-        private:
-        QBiPointer<QQmlObjectCreator, RequiredProperties> m_creatorOrRequiredProperties;
+        QObject *target() const
+        {
+            if (m_creatorOrRequiredProperties.isNull())
+                return nullptr;
+
+            if (m_creatorOrRequiredProperties.isT1()) {
+                const auto &objects = m_creatorOrRequiredProperties.asT1()->allCreatedObjects();
+                return objects.isEmpty() ? nullptr : objects.at(0);
+            }
+
+            Q_ASSERT(m_creatorOrRequiredProperties.isT2());
+            return m_creatorOrRequiredProperties.asT2()->target;
+        }
+
+    private:
+        QBiPointer<QQmlObjectCreator, RequiredPropertiesAndTarget> m_creatorOrRequiredProperties;
     };
     ConstructionState state;
 
@@ -267,15 +282,17 @@ inline void QQmlComponentPrivate::ConstructionState::clear()
     }
 }
 
-inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::initCreator(QQmlRefPointer<QQmlContextData> parentContext, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QQmlRefPointer<QQmlContextData> &creationContext)
+inline QQmlObjectCreator *QQmlComponentPrivate::ConstructionState::initCreator(
+        const QQmlRefPointer<QQmlContextData> &parentContext,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QQmlRefPointer<QQmlContextData> &creationContext)
 {
     if (m_creatorOrRequiredProperties.isT1())
         delete m_creatorOrRequiredProperties.asT1();
     else
         delete m_creatorOrRequiredProperties.asT2();
     m_creatorOrRequiredProperties = new QQmlObjectCreator(
-                        std::move(parentContext), compilationUnit,
-                        creationContext);
+            parentContext, compilationUnit, creationContext);
     return m_creatorOrRequiredProperties.asT1();
 }
 
@@ -293,13 +310,15 @@ inline void QQmlComponentPrivate::ConstructionState::setCompletePending(bool isP
     \internal
     This is meant to be used in the context of QQmlComponent::loadFromModule,
     when dealing with a C++ type. In that case, we do not have a creator,
-    and need a separate storage for required properties.
+    and need a separate storage for required properties and the target object.
  */
-inline void QQmlComponentPrivate::ConstructionState::ensureRequiredPropertyStorage()
+inline void QQmlComponentPrivate::ConstructionState::ensureRequiredPropertyStorage(QObject *target)
 {
     Q_ASSERT(m_creatorOrRequiredProperties.isT2() || m_creatorOrRequiredProperties.isNull());
     if (m_creatorOrRequiredProperties.isNull())
-        m_creatorOrRequiredProperties = new RequiredProperties;
+        m_creatorOrRequiredProperties = new RequiredPropertiesAndTarget(target);
+    else
+        m_creatorOrRequiredProperties.asT2()->target = target;
 }
 
 QT_END_NAMESPACE
