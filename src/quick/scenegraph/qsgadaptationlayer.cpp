@@ -101,12 +101,16 @@ void QSGDistanceFieldGlyphCache::populate(const QList<glyph_t> &glyphs)
     int count = glyphs.size();
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
-        if ((int) glyphIndex >= glyphCount() && glyphCount() > 0) {
-            qWarning("Warning: distance-field glyph is not available with index %d", glyphIndex);
-            continue;
+        const bool isValid = int(glyphIndex) < glyphCount() || glyphCount() <= 0;
+
+        if (!isValid) {
+            qWarning("Warning: distance-field glyph is not available with index %d (glyph count: %d, font: %s)",
+                     glyphIndex,
+                     glyphCount(),
+                     qPrintable(m_referenceFont.familyName()));
         }
 
-        GlyphData &gd = glyphData(glyphIndex);
+        GlyphData &gd = isValid ? glyphData(glyphIndex) : emptyData(glyphIndex);
         ++gd.ref;
         referencedGlyphs.insert(glyphIndex);
 
