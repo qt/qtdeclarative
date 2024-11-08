@@ -1,16 +1,15 @@
-import QtQuick 2.0
+import QtQuick
 
 Rectangle {
-    width: 400; height: 400;
-
-    property real mouseX: mousetracker.mouseX
-    property real mouseY: mousetracker.mouseY
+    width: 400; height: 400
 
     Rectangle {
-        width: 100; height: 100;
+        width: 100; height: 100
+        color: mousetracker.containsMouse ? "lightsteelblue" : "beige"
+
         MouseArea {
-            id: mousetracker;
-            anchors.fill: parent;
+            id: mousetracker
+            anchors.fill: parent
             hoverEnabled: true
         }
     }

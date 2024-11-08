@@ -1339,16 +1339,25 @@ void tst_QQuickMouseArea::hoverPosition()
 {
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverPosition.qml")));
-    QQuickItem *root = window.rootObject();
-    QVERIFY(root);
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea*>();
+    QVERIFY(mouseArea);
 
-    QCOMPARE(root->property("mouseX").toReal(), qreal(0));
-    QCOMPARE(root->property("mouseY").toReal(), qreal(0));
+    QSignalSpy xChangedSpy(mouseArea, &QQuickMouseArea::mouseXChanged);
+    QSignalSpy yChangedSpy(mouseArea, &QQuickMouseArea::mouseYChanged);
+    QSignalSpy positionChangedSpy(mouseArea, &QQuickMouseArea::positionChanged);
 
-    QTest::mouseMove(&window,QPoint(10,32));
+    // showView() moves the mouse outside; so position is not yet known, and defaults to 0,0
+    QCOMPARE(mouseArea->mouseX(), qreal(0));
+    QCOMPARE(mouseArea->mouseY(), qreal(0));
 
-    QCOMPARE(root->property("mouseX").toReal(), qreal(10));
-    QCOMPARE(root->property("mouseY").toReal(), qreal(32));
+    // simulate movement of the mouse inside
+    QTest::mouseMove(&window, QPoint(10,32));
+
+    QCOMPARE(xChangedSpy.size(), 1);
+    QCOMPARE(yChangedSpy.size(), 1);
+    QCOMPARE(positionChangedSpy.size(), 1); // QTBUG-127122
+    QCOMPARE(mouseArea->mouseX(), qreal(10));
+    QCOMPARE(mouseArea->mouseY(), qreal(32));
 }
 
 void tst_QQuickMouseArea::hoverPropagation()
