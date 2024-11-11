@@ -117,9 +117,9 @@ MessageDialogImpl {
             Layout.bottomMargin: 12
 
             background: Rectangle {
-                color: Qt.rgba(1,1,1,1)
+                color: detailedTextArea.palette.base
                 radius: 3
-                border.color: Qt.darker(control.palette.light)
+                border.color: detailedTextArea.activeFocus ? Fusion.highlightedOutline(detailedTextArea.palette) : Fusion.outline(detailedTextArea.palette)
                 border.width: 1
             }
         }
