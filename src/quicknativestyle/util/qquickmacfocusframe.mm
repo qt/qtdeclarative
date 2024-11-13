@@ -56,6 +56,7 @@ void QQuickMacFocusFrame::moveToItem(QQuickItem *item)
             return;
         createFocusFrame(context);
     }
+    QQuickItemPrivate::get(m_focusFrame.get())->setTransparentForPositioner(true);
 
     const QQuickFocusFrameDescription &config = getDescriptionForItem(item);
     QMetaObject::invokeMethod(m_focusFrame.data(), "moveToItem",

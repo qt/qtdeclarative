@@ -8,10 +8,6 @@ import QtQuick.Layouts
 Item {
     id: root
 
-    // It's important that this item has a zero size. Otherwise, if the parent of the
-    // targetItem is e.g a layout, we will change the layout if we parent this item inside it.
-    width: 0
-    height: 0
     // Stack on top of all siblings of the targetItem
     z: 100
 
