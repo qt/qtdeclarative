@@ -4,6 +4,10 @@
 
 #include <private/qv4qmlcontext_p.h>
 
+#include <QtQml/qqmlextensionplugin.h>
+
+Q_IMPORT_QML_PLUGIN(testhelperPlugin)
+
 static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(engine);
