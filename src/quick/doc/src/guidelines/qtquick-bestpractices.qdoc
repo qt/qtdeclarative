@@ -181,6 +181,12 @@ to a \e {.qml} file.
     \li \l{Qt Design Studio: UI Files}
 \endlist
 
+\section1 Using Qt Quick Views
+
+\section2 Store State in Models
+
+See \l {Avoid Storing State in Delegates}.
+
 \section1 Using Qt Quick Layouts
 
 Qt offers Qt Quick Layouts to arrange Qt Quick items visually in a layout.
