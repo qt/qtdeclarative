@@ -2266,6 +2266,28 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     To avoid this, state should be stored in the model:
 
     \snippet qml/listview/stateInModel.qml ListView
+
+    \section1 Hiding Delegates
+
+    Setting a delegate's \l {Item::}{visible} property to \c false will hide
+    that item, but the space it occupied in the view will remain. It is
+    possible to set the item's \l {Item::}{height} to \c 0 (for a \l
+    {ListView::orientation}{vertical} ListView):
+
+    \snippet qml/listview/hideDelegate.qml ListView
+
+    Note that the hidden state is stored in the model, following the advice of
+    the \l {Avoid Storing State in Delegates} section.
+
+    However, if \l spacing is non-zero, there will be uneven gaps between
+    delegates.
+
+    A better option is to filter your model so that items that should not be
+    visible are not loaded by the view at all. This can be achieved with
+    \l QSortFilterProxyModel.
+
+    Another option is to \l {Item::enabled}{disable} the delegate instead of
+    hiding it.
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)
