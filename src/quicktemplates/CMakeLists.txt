@@ -104,6 +104,8 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickswitchdelegate.cpp qquickswitchdelegate_p.h
         qquicktabbar.cpp qquicktabbar_p.h
         qquicktabbutton.cpp qquicktabbutton_p.h
+        qquicktemplatesutils.cpp
+        qquicktemplatesutils_p.h
         qquicktextarea.cpp qquicktextarea_p.h
         qquicktextarea_p_p.h
         qquicktextfield.cpp qquicktextfield_p.h

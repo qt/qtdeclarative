@@ -7,6 +7,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 #include <QtQuick/private/qquicktext_p_p.h>
 
@@ -24,6 +26,7 @@ private slots:
     void flickable();
     void fractionalFontSize();
     void resizeBackgroundKeepsBindings();
+    void hoverInMouseArea();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -104,6 +107,34 @@ void tst_QQuickControl::resizeBackgroundKeepsBindings()
     QVERIFY(background);
     QCOMPARE(background->height(), 4);
     QVERIFY(background->bindableHeight().hasBinding());
+}
+
+void tst_QQuickControl::hoverInMouseArea()
+{
+    SKIP_IF_NO_MOUSE_HOVER;
+
+    QQuickApplicationHelper helper(this, QStringLiteral("hoverInMouseArea.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    const auto *control = window->property("control").value<QQuickControl *>();
+    QVERIFY(control);
+    PointLerper pointLerper(window);
+    pointLerper.move(mapCenterToWindow(control));
+    // It's necessary to use PointLerper here,
+    // otherwise the isHovered checks are flaky on most platforms.
+    QVERIFY(control->isHovered());
+
+    const auto *textArea = window->property("textArea").value<QQuickTextArea *>();
+    QVERIFY(textArea);
+    pointLerper.move(mapCenterToWindow(textArea));
+    QVERIFY(textArea->isHovered());
+
+    const auto *textField = window->property("textField").value<QQuickTextField *>();
+    QVERIFY(textField);
+    pointLerper.move(mapCenterToWindow(textField));
+    QVERIFY(textField->isHovered());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickControl)
