@@ -108,14 +108,22 @@ MainWindow::MainWindow()
     setCentralWidget(centralWidget);
 
     QMenu *fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(tr("Grab framebuffer"), this, &MainWindow::grabFramebuffer);
-    fileMenu->addAction(tr("Render to pixmap"), this, &MainWindow::renderToPixmap);
-    fileMenu->addAction(tr("Grab via grabToImage"), this, &MainWindow::grabToImage);
+    auto grabAction = fileMenu->addAction(tr("Grab framebuffer"), this, &MainWindow::grabFramebuffer);
+    auto renderAction = fileMenu->addAction(tr("Render to pixmap"), this, &MainWindow::renderToPixmap);
+    auto grabToImageAction = fileMenu->addAction(tr("Grab via grabToImage"), this, &MainWindow::grabToImage);
     fileMenu->addAction(tr("Quit"), qApp, &QCoreApplication::quit);
 
     QMenu *windowMenu = menuBar()->addMenu(tr("&Window"));
     windowMenu->addAction(tr("Add tab widget"), this,
                           [this, centralWidget] { createQuickWidgetsInTabs(centralWidget); });
+
+    connect(m_quickWidget, &QObject::destroyed, this,
+            [this, grabAction, renderAction, grabToImageAction] {
+                m_quickWidget = nullptr;
+                grabAction->setEnabled(false);
+                renderAction->setEnabled(false);
+                grabToImageAction->setEnabled(false);
+            });
 }
 
 void MainWindow::createQuickWidgetsInTabs(QMdiArea *mdiArea)
@@ -146,6 +154,7 @@ void MainWindow::quickWidgetStatusChanged(QQuickWidget::Status status)
 {
     if (status == QQuickWidget::Error) {
         QStringList errors;
+        Q_ASSERT(m_quickWidget);
         const auto widgetErrors = m_quickWidget->errors();
         for (const QQmlError &error : widgetErrors)
             errors.append(error.toString());
@@ -170,12 +179,14 @@ template<class T> void saveToFile(QWidget *parent, T *saveable)
 
 void MainWindow::grabFramebuffer()
 {
+    Q_ASSERT(m_quickWidget);
     QImage image = m_quickWidget->grabFramebuffer();
     saveToFile(this, &image);
 }
 
 void MainWindow::renderToPixmap()
 {
+    Q_ASSERT(m_quickWidget);
     QPixmap pixmap(m_quickWidget->size());
     m_quickWidget->render(&pixmap);
     saveToFile(this, &pixmap);
@@ -188,6 +199,7 @@ void MainWindow::grabToImage()
     fd.setDefaultSuffix("png");
     fd.selectFile("test_grabToImage.png");
     if (fd.exec() == QDialog::Accepted) {
+        Q_ASSERT(m_quickWidget);
         QMetaObject::invokeMethod(m_quickWidget->rootObject(), "performLayerBasedGrab",
                                   Q_ARG(QVariant, fd.selectedFiles().first()));
     }

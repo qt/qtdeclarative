@@ -695,21 +695,15 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
+        const auto invalidate = [](QQmlContextData *c) {c->invalidate();};
         if (d->ownContext) {
-            for (QQmlContextData *lc = d->ownContext->linkedContext; lc; lc = lc->linkedContext) {
-                lc->invalidate();
-                if (lc->contextObject == o)
-                    lc->contextObject = nullptr;
-            }
-            d->ownContext->invalidate();
-            if (d->ownContext->contextObject == o)
-                d->ownContext->contextObject = nullptr;
+            d->ownContext->deepClearContextObject(o, invalidate, invalidate);
             d->ownContext = nullptr;
             d->context = nullptr;
+            Q_ASSERT(!d->outerContext || d->outerContext->contextObject != o);
+        } else if (d->outerContext && d->outerContext->contextObject == o) {
+            d->outerContext->deepClearContextObject(o, invalidate, invalidate);
         }
-
-        if (d->outerContext && d->outerContext->contextObject == o)
-            d->outerContext->contextObject = nullptr;
 
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
@@ -884,9 +878,7 @@ void QQmlData::setQueuedForDeletion(QObject *object)
         if (QQmlData *ddata = QQmlData::get(object)) {
             if (ddata->ownContext) {
                 Q_ASSERT(ddata->ownContext == ddata->context);
-                ddata->context->emitDestruction();
-                if (ddata->ownContext->contextObject == object)
-                    ddata->ownContext->contextObject = nullptr;
+                ddata->ownContext->deepClearContextObject(object);
                 ddata->ownContext = nullptr;
                 ddata->context = nullptr;
             }

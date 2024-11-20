@@ -33,6 +33,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickflickable_p_p.h>
+#include <private/qquicklistview_p.h>
 #include <private/qquickmousearea_p.h>
 #include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
@@ -208,6 +209,8 @@ private slots:
     void visibleAreaBinding();
     void setContentPositionWhileDragging_data();
     void setContentPositionWhileDragging();
+    void acceptButtons_data();
+    void acceptButtons();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2667,6 +2670,55 @@ void tst_qquickflickable::setContentPositionWhileDragging() // QTBUG-104966
     QCOMPARE(contentPos(), expectedContentPos);
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, pos);
     QVERIFY(!flickable->isDragging());
+}
+
+void tst_qquickflickable::acceptButtons_data()
+{
+    QTest::addColumn<bool>("isMouseEvent");
+    QTest::addColumn<bool>("isTouchEvent");
+    QTest::addColumn<int>("button");
+
+    QTest::newRow("middleClick") << true << false << static_cast<int>(Qt::MiddleButton);
+    QTest::newRow("rightClick") << true << false << static_cast<int>(Qt::RightButton);
+    QTest::newRow("leftClick") << true << false << static_cast<int>(Qt::LeftButton);
+    QTest::newRow("touchEvent") << false << true << static_cast<int>(Qt::NoButton);
+}
+
+void tst_qquickflickable::acceptButtons()  // QTBUG-97252
+{
+    QFETCH(bool, isMouseEvent);
+    QFETCH(bool, isTouchEvent);
+    QFETCH(int, button);
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("listviewWithTextDelegate.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    QQuickViewTestUtil::centerOnScreen(window.data());
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    QQuickListView *lv = qobject_cast<QQuickListView*>(window->rootObject());
+    QVERIFY(lv);
+    QVERIFY(lv->isVisible());
+
+    lv->setCurrentIndex(0);
+    QCOMPARE(lv->currentIndex(), 0);
+    QVERIFY(QTest::qWaitFor([lv](){ return lv->contentX() == 0; }));
+
+    const QPoint center = lv->mapToScene({lv->width() / 2, lv->height() / 2}).toPoint();
+    if (isMouseEvent) {
+        const Qt::MouseButton mouseButton = static_cast<Qt::MouseButton>(button);
+        QTest::mouseClick(window.data(), mouseButton, Qt::NoModifier, center);
+    } else if (isTouchEvent) {
+        QTest::touchEvent(window.data(), touchDevice).press(0, center).commit();
+        QTest::touchEvent(window.data(), touchDevice).release(0, center).commit();
+    }
+    lv->setCurrentIndex(1);
+    const double expectedContentX = lv->width();
+    QCOMPARE(lv->currentIndex(), 1);
+    QVERIFY(QTest::qWaitFor([lv, expectedContentX](){ return lv->contentX() == expectedContentX; }));
+    QTRY_COMPARE(lv->contentX(), expectedContentX);
 }
 
 QTEST_MAIN(tst_qquickflickable)
