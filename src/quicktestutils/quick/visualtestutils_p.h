@@ -230,6 +230,13 @@ namespace QQuickVisualTestUtils
 if (!(QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation))) \
     QSKIP("Window activation is not supported on this platform");
 
+#define SKIP_IF_NO_MOUSE_HOVER \
+do { \
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen")) \
+            || (QGuiApplication::platformName() == QLatin1String("minimal"))) \
+        QSKIP("Mouse hovering is not supported on the offscreen/minimal platforms"); \
+} while (false)
+
 QT_END_NAMESPACE
 
 #endif // QQUICKVISUALTESTUTILS_P_H
