@@ -23,6 +23,8 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QQuickSelectable
 {
 public:
+    virtual ~QQuickSelectable();
+
     virtual QQuickItem *selectionPointerHandlerTarget() const = 0;
 
     virtual bool startSelection(const QPointF &pos) = 0;
