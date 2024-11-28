@@ -517,8 +517,16 @@ QMetaProperty &QQuickWheelHandlerPrivate::targetMetaProperty() const
     return metaProperty;
 }
 
+/*! \internal
+    \qmlproperty flags QtQuick::WheelHandler::acceptedButtons
+
+    This overrides QtQuick::PointerDeviceHandler::acceptedButtons
+    and hides it from the documentation as the property is not relevant for
+    WheelHandler.
+*/
+
 /*!
-    \qmlproperty flags WheelHandler::acceptedDevices
+    \qmlproperty flags QtQuick::WheelHandler::acceptedDevices
 
     The types of pointing devices that can activate this handler.
 
@@ -534,6 +542,108 @@ QMetaProperty &QQuickWheelHandlerPrivate::targetMetaProperty() const
     Linux laptop touchpad) generates real wheel events from gestures.
     WheelHandler will respond to those events as wheel events even if
     \c acceptedDevices remains set to its default value.
+*/
+
+/*!
+    \qmlproperty flags QtQuick::WheelHandler::acceptedModifiers
+
+    If this property is set, it will require the given keyboard modifiers to
+    be pressed in order to react to wheel events, and otherwise ignore them.
+
+    If this property is set to \c Qt.KeyboardModifierMask (the default value),
+    the WheelHandler ignores the modifier keys.
+
+    For example, an \l [QML] Item could have two handlers, one of which is
+    enabled only if the required keyboard modifier is pressed, while the other
+    ignores events if any modifier is pressed:
+
+    \snippet pointerHandlers/wheelHandlerAcceptedModifiers.qml entire
+
+    The available modifiers are as follows:
+
+    \value NoModifier       No modifier key is allowed.
+    \value ShiftModifier    A Shift key on the keyboard must be pressed.
+    \value ControlModifier  A Ctrl key on the keyboard must be pressed.
+    \value AltModifier      An Alt key on the keyboard must be pressed.
+    \value MetaModifier     A Meta key on the keyboard must be pressed.
+    \value KeypadModifier   A keypad button must be pressed.
+    \value GroupSwitchModifier X11 only (unless activated on Windows by a command line argument).
+                            A Mode_switch key on the keyboard must be pressed.
+    \value KeyboardModifierMask The handler does not care which modifiers are pressed.
+
+    \sa Qt::KeyboardModifier
+*/
+
+/*! \internal
+    \qmlproperty flags QtQuick::WheelHandler::acceptedPointerTypes
+
+    This overrides QtQuick::PointerDeviceHandler::acceptedPointerTypes
+    and hides it from the documentation as the property is not relevant for
+    WheelHandler.
+*/
+
+/*!
+    \readonly
+    \qmlproperty bool QtQuick::WheelHandler::active
+
+    This holds \c true whenever the WheelHandler has recently seen a
+    QWheelEvent, is keeping its properties up-to-date, and actively manipulating
+    its \l target (if any).
+
+    \sa activeTimeout
+*/
+
+/*! \internal
+    \qmlproperty flags QtQuick::WheelHandler::cursorShape
+
+    This overrides QtQuick::PointerHandler::cursorShape
+    and hides it from the documentation as the property is not relevant for
+    WheelHandler.
+*/
+
+/*! \internal
+    \qmlproperty flags QtQuick::WheelHandler::dragThreshold
+
+    This overrides QtQuick::PointerHandler::dragThreshold
+    and hides it from the documentation as the property is not relevant for
+    WheelHandler.
+*/
+
+/*! \internal
+    \qmlproperty flags QtQuick::WheelHandler::grabPermissions
+
+    This overrides QtQuick::PointerHandler::grabPermissions
+    and hides it from the documentation as the property is not relevant for
+    WheelHandler.
+*/
+
+/*!
+    \qmlproperty real QtQuick::WheelHandler::margin
+
+    The margin beyond the bounds of the \l {PointerHandler::parent}{parent}
+    item within which the WheelHandler can react. For example if \c margin
+    is set to \c 10, you could place the cursor up to 10 pixels outside the
+    visible edge of the item, and it will still react to the wheel:
+
+    \snippet pointerHandlers/wheelHandlerMargin.qml entire
+
+    The default value is \c 0.
+*/
+
+/*! \internal
+    \qmlsignal QtQuick::WheelHandler::grabChanged(PointerDevice::GrabTransition transition, eventPoint point)
+
+    This overrides QtQuick::PointerHandler::grabChanged
+    and hides it from the documentation as the signal is not relevant for
+    WheelHandler.
+*/
+
+/*! \internal
+    \qmlsignal QtQuick::WheelHandler::canceled(eventPoint point)
+
+    This overrides QtQuick::PointerHandler::canceled
+    and hides it from the documentation as the signal is not relevant for
+    WheelHandler.
 */
 
 QT_END_NAMESPACE
