@@ -1753,8 +1753,8 @@ void tst_qquickflickable::margins()
     QTRY_COMPARE(obj->contentX(), -30.);
 
     // Reduce top margin
-    obj->setTopMargin(20);
-    QTRY_COMPARE(obj->contentY(), -20.);
+    obj->setTopMargin(10);
+    QTRY_COMPARE(obj->contentY(), -10.);
 
     // position to the far right, including margin
     obj->setContentX(1600 + 50 - obj->width());
