@@ -4784,10 +4784,14 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 void QQuickTextInputPrivate::deleteStartOfWord()
 {
     int priorState = m_undoState;
-    Command cmd(SetSelection, m_cursor, u'\0', m_selstart, m_selend);
-    separate();
-    cursorWordBackward(true);
-    addCommand(cmd);
+
+    if (!separateSelection()) {
+        Command cmd(SetSelection, m_cursor, u'\0', m_selstart, m_selend);
+        separate();
+        cursorWordBackward(true);
+        addCommand(cmd);
+    }
+
     removeSelectedText();
     finishChange(priorState);
 }

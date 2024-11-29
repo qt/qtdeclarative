@@ -194,7 +194,7 @@ private slots:
     void fixup();
     void baselineOffset_data();
     void baselineOffset();
-
+    void testCtrlBackspaceClearsSelectedText();
     void ensureVisible();
     void padding();
 
@@ -6890,6 +6890,25 @@ void tst_qquicktextinput::baselineOffset()
         if (setHeight >= 0)
             item->setHeight(setHeight);
     }
+}
+
+void tst_qquicktextinput::testCtrlBackspaceClearsSelectedText()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("openInputPanel.qml")));
+
+    QQuickTextInput *textInput = qmlobject_cast<QQuickTextInput *>(window.rootObject());
+    QVERIFY(textInput != nullptr);
+
+    textInput->forceActiveFocus();
+    QVERIFY(textInput->hasActiveFocus());
+
+    textInput->selectAll();
+    QCOMPARE(textInput->selectedText(), QString("Hello world"));
+
+    QTest::keySequence(&window, QKeySequence::DeleteStartOfWord);
+
+    QCOMPARE(textInput->text(), QString(""));
 }
 
 void tst_qquicktextinput::ensureVisible()
