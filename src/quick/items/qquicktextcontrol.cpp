@@ -913,9 +913,12 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
         cursor.removeSelectedText();
     }
     else if (e == QKeySequence::DeleteStartOfWord) {
+        const int oldCursorPos = cursor.position();
         if (!cursor.hasSelection())
             cursor.movePosition(QTextCursor::PreviousWord, QTextCursor::KeepAnchor);
         cursor.removeSelectedText();
+        if (cursor.position() != oldCursorPos)
+            emit q->cursorPositionChanged();
     }
     else if (e == QKeySequence::DeleteEndOfLine) {
         QTextBlock block = cursor.block();
