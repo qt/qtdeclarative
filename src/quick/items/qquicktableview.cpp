@@ -4552,7 +4552,7 @@ void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment,
     Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
     Q_TABLEVIEW_ASSERT(verticalAlignment, alignment);
 
-    if (syncHorizontally) {
+    if (syncVertically) {
         syncView->d_func()->positionViewAtRow(row, verticalAlignment, offset, subRect);
     } else {
         if (!scrollToRow(row, verticalAlignment, offset, subRect)) {
@@ -4572,7 +4572,7 @@ void QQuickTableViewPrivate::positionViewAtColumn(int column, Qt::Alignment alig
     Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
     Q_TABLEVIEW_ASSERT(horizontalAlignment, alignment);
 
-    if (syncVertically) {
+    if (syncHorizontally) {
         syncView->d_func()->positionViewAtColumn(column, horizontalAlignment, offset, subRect);
     } else {
         if (!scrollToColumn(column, horizontalAlignment, offset, subRect)) {
