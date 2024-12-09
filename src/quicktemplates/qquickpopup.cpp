@@ -995,10 +995,15 @@ void QQuickPopupPrivate::toggleOverlay()
 void QQuickPopupPrivate::updateContentPalettes(const QPalette& parentPalette)
 {
     // Inherit parent palette to all child objects
-    inheritPalette(parentPalette);
-
+    if (providesPalette())
+        inheritPalette(parentPalette);
     // Inherit parent palette to items within popup (such as headers and footers)
     QQuickItemPrivate::get(popupItem)->updateChildrenPalettes(parentPalette);
+}
+
+void QQuickPopupPrivate::updateChildrenPalettes(const QPalette& parentPalette)
+{
+    updateContentPalettes(parentPalette);
 }
 
 void QQuickPopupPrivate::showDimmer()
