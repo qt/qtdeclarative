@@ -777,7 +777,14 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
             nMatchOffsets += re->captureCount() * 2;
             if (!regExp->global())
                 break;
-            offset = qMax(offset, matchOffsets[oldSize + 1])  + 1;
+
+            const uint matchBegin = matchOffsets[oldSize];
+            const uint matchEnd = matchOffsets[oldSize + 1];
+
+            // If we have a zero-sized match, don't match at the same place again.
+            const uint matchOffset = (matchBegin == matchEnd) ? matchEnd + 1 : matchEnd;
+
+            offset = std::max(offset + 1, matchOffset);
         }
         if (regExp->global()) {
             regExp->setLastIndex(0);

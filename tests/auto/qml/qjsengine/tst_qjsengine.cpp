@@ -6426,6 +6426,13 @@ void tst_QJSEngine::multiMatchingRegularExpression()
 
     QVERIFY(result.isString());
     QCOMPARE(result.toString(), "33.312.345,897"_L1);
+
+    const QJSValue result2 = engine.evaluate(R"(
+        "4F159D7AD40255D94A5B7EB9AAACD7408C79245D".replace(/(....)/g, '$1 ')
+    )");
+
+    QVERIFY(result2.isString());
+    QCOMPARE(result2.toString(), "4F15 9D7A D402 55D9 4A5B 7EB9 AAAC D740 8C79 245D "_L1);
 }
 
 QTEST_MAIN(tst_QJSEngine)
