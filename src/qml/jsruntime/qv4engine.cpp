@@ -2453,9 +2453,12 @@ bool convertToIterable(QMetaType metaType, void *data, Source *sequence)
         return false;
 
     const QMetaType elementMetaType = iterable.valueMetaType();
+    QV4::Scope scope(sequence->engine());
+    QV4::ScopedValue v(scope);
     for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
         QVariant element(elementMetaType);
-        ExecutionEngine::metaTypeFromJS(sequence->get(i), elementMetaType, element.data());
+        v = sequence->get(i);
+        ExecutionEngine::metaTypeFromJS(v, elementMetaType, element.data());
         iterable.addValue(element, QSequentialIterable::AtEnd);
     }
     return true;
@@ -2515,9 +2518,12 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
             QByteArray result;
             const qint64 length = ao->getLength();
             result.reserve(length);
+            QV4::Scope scope(ao->engine());
+            QV4::ScopedValue v(scope);
             for (qint64 i = 0; i < length; ++i) {
                 char value = 0;
-                ExecutionEngine::metaTypeFromJS(ao->get(i), QMetaType::fromType<char>(), &value);
+                v = ao->get(i);
+                ExecutionEngine::metaTypeFromJS(v, QMetaType::fromType<char>(), &value);
                 result.push_back(value);
             }
             *reinterpret_cast<QByteArray*>(data) = std::move(result);
@@ -2778,7 +2784,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         *reinterpret_cast<void* *>(data) = nullptr;
         return true;
     } else if (metaType == QMetaType::fromType<QJSValue>()) {
-        QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value.asReturnedValue());
+        QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value);
         return true;
     } else if (metaType == QMetaType::fromType<QJSPrimitiveValue>()) {
         *reinterpret_cast<QJSPrimitiveValue *>(data) = createPrimitive(&value);

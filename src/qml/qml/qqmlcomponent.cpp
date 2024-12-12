@@ -382,7 +382,8 @@ bool QQmlComponentPrivate::setInitialProperty(
         }
         const QString lastProperty = properties.last();
         segment = scope.engine->newString(lastProperty);
-        object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
+        QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
+        object->put(segment, v);
         if (scope.engine->hasException) {
             qmlWarning(base, scope.engine->catchExceptionAsQmlError());
             scope.engine->hasException = false;

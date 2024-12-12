@@ -363,7 +363,7 @@ static bool byProperties(
     if (sourceMetaType == QMetaType::fromType<QJSValue>()) {
         const QJSValue *val = static_cast<const QJSValue *>(source);
         return byProperties(
-            targetMetaObject, target, QV4::Value(QJSValuePrivate::asReturnedValue(val)));
+            targetMetaObject, target, QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(val)));
     }
 
     if (sourceMetaType == QMetaType::fromType<QVariantMap>()) {
@@ -431,7 +431,8 @@ bool QQmlValueTypeProvider::createValueType(
         if (targetType.canPopulateValueType()
                     && byProperties(
                         targetMetaObject, target,
-                        QV4::Value(QJSValuePrivate::asReturnedValue(&source)))) {
+                        // fromReturnedValue is OK here because QJSValue holds a PersistentValue
+                        QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&source)))) {
                 return true;
         }
 
@@ -440,7 +441,9 @@ bool QQmlValueTypeProvider::createValueType(
                     targetMetaObject, targetMetaType, target,
                     [&](QMetaType parameterType, auto callback) {
                         QVariant variant = QV4::ExecutionEngine::toVariant(
-                            QJSValuePrivate::asReturnedValue(&source), parameterType);
+                            // fromReturnedValue is OK here because QJSValue holds a PersistentValue
+                            QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&source)),
+                            parameterType);
                         return callback(variant.metaType(), variant.data());
                     })) {
             return true;

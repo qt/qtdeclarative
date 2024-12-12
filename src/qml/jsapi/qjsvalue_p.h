@@ -189,7 +189,7 @@ public:
     static QJSValue fromReturnedValue(QV4::ReturnedValue d)
     {
         QJSValue result;
-        setValue(&result, d);
+        setValue(&result, QV4::Value::fromReturnedValue(d));
         return result;
     }
 

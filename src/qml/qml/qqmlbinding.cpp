@@ -218,7 +218,9 @@ protected:
         }
 
         // If the type didn't match, we need to do JavaScript conversion. This should be rare.
-        return write(engine()->handle()->metaTypeToJS(type, result), isUndefined, flags);
+        QV4::Scope scope(engine()->handle());
+        QV4::ScopedValue value(scope, engine()->handle()->metaTypeToJS(type, result));
+        return write(value, isUndefined, flags);
     }
 
     // Returns true if successful, false if an error description was set on expression
@@ -439,8 +441,10 @@ bool QQmlBinding::slowWrite(
     if (core.isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
         Q_ASSERT(vmemo);
+        QV4::Scope scope(qmlEngine->handle());
+        QV4::ScopedValue value(scope, qmlEngine->handle()->metaTypeToJS(resultType, result));
         vmemo->setVMEProperty(core.coreIndex(),
-                              qmlEngine->handle()->metaTypeToJS(resultType, result));
+                              value);
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { nullptr };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
@@ -697,7 +701,7 @@ void QQmlBinding::doUpdate(const DeleteWatcher &watcher, QQmlPropertyData::Write
                     error = !write(result, returnType, isUndefined, flags);
                 returnType.destruct(result);
             } else if (canWrite()) {
-                error = !write(QV4::Encode::undefined(), true, flags);
+                error = !write(QV4::Value::undefinded(), true, flags);
             }
         }
     } else {

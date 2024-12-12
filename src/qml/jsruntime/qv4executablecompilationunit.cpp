@@ -695,8 +695,10 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
                 return fragment.native;
 
             ScopedObject o(scope, dependentModule.native);
-            if (o)
-                return engine->registerNativeModule(request, o->get(importName));
+            if (o) {
+                ScopedValue nativeModule(scope, o->get(importName));
+                return engine->registerNativeModule(request, nativeModule);
+            }
 
             return nullptr;
         } else {
@@ -727,8 +729,10 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
                     resolution = fragment.native;
                 } else {
                     ScopedObject o(scope, dependentModule.native);
-                    if (o)
-                        resolution = engine->registerNativeModule(request, o->get(exportName));
+                    if (o) {
+                        ScopedValue nativeModule(scope, o->get(exportName));
+                        resolution = engine->registerNativeModule(request, nativeModule);
+                    }
                 }
             }
         }

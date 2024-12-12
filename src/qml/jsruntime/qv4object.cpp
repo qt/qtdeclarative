@@ -42,7 +42,9 @@ void Object::setInternalClass(Heap::InternalClass *ic)
         for (uint i = 0; i < ic->size; ++i) {
             // Note that some members might have been deleted. The key may be invalid.
             const PropertyKey key = ic->nameMap.at(i);
-            newMembers->set(scope.engine, i, key.isValid() ? get(key) : Encode::undefined());
+            // fromReturnedValue is safe, we directly write it through the WriteBarrier
+            newMembers->set(scope.engine, i,
+                            QV4::Value::fromReturnedValue(key.isValid() ? get(key) : Encode::undefined()));
         }
 
         p->internalClass.set(scope.engine, ic);

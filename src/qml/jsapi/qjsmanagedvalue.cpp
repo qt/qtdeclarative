@@ -787,7 +787,8 @@ void QJSManagedValue::setProperty(const QString &name, const QJSValue &value)
             return;
         }
         QV4::ScopedPropertyKey key(scope, scope.engine->identifierTable->asPropertyKey(name));
-        obj->put(key, QJSValuePrivate::convertToReturnedValue(scope.engine, value));
+        QV4::ScopedValue val(scope, QJSValuePrivate::convertToReturnedValue(scope.engine, value));
+        obj->put(key, val);
     }
 }
 
@@ -905,7 +906,10 @@ void QJSManagedValue::setProperty(quint32 arrayIndex, const QJSValue &value)
                      "Value was created in different engine.");
             return;
         }
-        obj->put(arrayIndex, QJSValuePrivate::convertToReturnedValue(v4, value));
+        v4 = obj->engine(); // in case value was primitive
+        QV4::Scope scope(v4);
+        QV4::ScopedValue v(scope, QJSValuePrivate::convertToReturnedValue(v4, value));
+        obj->put(arrayIndex, v);
     }
 }
 
@@ -1120,6 +1124,8 @@ QJSManagedValue QJSManagedValue::jsMetaInstantiate(const QJSValueList &values) c
         *result.d = c->engine()->newObject(c->d());
         QV4::Object *o = result.d->as<QV4::Object>();
 
+        QV4::Scope scope(engine);
+        QV4::ScopedValue val(scope);
         for (uint i = 0, end = qMin(qsizetype(c->d()->size), values.size()); i < end; ++i) {
             const QJSValue &arg = values[i];
             if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {
@@ -1127,7 +1133,8 @@ QJSManagedValue QJSManagedValue::jsMetaInstantiate(const QJSValueList &values) c
                          "Argument was created in different engine.");
                 return QJSManagedValue();
             }
-            o->setProperty(i, QJSValuePrivate::convertToReturnedValue(engine, arg));
+            val = QJSValuePrivate::convertToReturnedValue(engine, arg);
+            o->setProperty(i, val);
         }
 
         return result;

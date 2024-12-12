@@ -709,7 +709,8 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < quint32(length); ++i) {
             const QMetaType valueMetaType = priv->typeId;
-            QVariant variant = ExecutionEngine::toVariant(a->get(i), valueMetaType, false);
+            QV4::ScopedValue element(scope, a->get(i));
+            QVariant variant = ExecutionEngine::toVariant(element, valueMetaType, false);
             if (valueMetaType == QMetaType::fromType<QVariant>()) {
                 meta->addValueAtEnd(result.data(), &variant);
             } else {

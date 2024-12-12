@@ -1516,7 +1516,8 @@ static bool tryAssignBinding(
     if (!f || !f->isBinding())
         return false;
 
-    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, f->asReturnedValue());
+    // fromReturnedValue is safe! f is stored in the QJSValue, so htere's already a persistent reference to it
+    QV4::QObjectWrapper::setProperty(f->engine(), object, &property, QV4::Value::fromReturnedValue(f->asReturnedValue()));
     return true;
 }
 

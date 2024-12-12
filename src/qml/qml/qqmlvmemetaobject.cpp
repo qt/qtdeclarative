@@ -119,8 +119,9 @@ void ResolvedList::append(QObject *o) const
 
     QV4::ScopedObject object(scope, m_list);
     QV4::ArrayData::realloc(object, QV4::Heap::ArrayData::Simple, length + 1, false);
+    QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, o));
     arrayData->vtable()->put(
-            object, length, QV4::QObjectWrapper::wrap(scope.engine, o));
+            object, length, wrappedObject);
 }
 
 QObject *ResolvedList::at(qsizetype i) const
@@ -134,7 +135,8 @@ void ResolvedList::replace(qsizetype i, QObject *o) const
 {
     QV4::Scope scope(m_list->internalClass->engine);
     QV4::ScopedObject object(scope, m_list);
-    m_list->arrayData->vtable()->put(object, i, QV4::QObjectWrapper::wrap(scope.engine, o));
+    QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, o));
+    m_list->arrayData->vtable()->put(object, i, wrappedObject);
 }
 
 static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
