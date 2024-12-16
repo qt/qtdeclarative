@@ -200,6 +200,7 @@ private slots:
     void assignSequenceTypes();
     void sequenceSort_data();
     void sequenceSort();
+    void sequenceConversionViaSequentialIterableFallback();
     void dateParse();
     void utcDate();
     void negativeYear();
@@ -8249,6 +8250,19 @@ void tst_qqmlecmascript::sequenceSort()
     QMetaObject::invokeMethod(object.data(), function.toLatin1().constData(),
                               Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, useComparer));
     QVERIFY(q.toBool());
+}
+
+void tst_qqmlecmascript::sequenceConversionViaSequentialIterableFallback()
+{
+    QQmlEngine engine;
+    QSet<QString> mySet { {"test"}, {"test2"}, {"test3"} };
+    QJSManagedValue jsManagedVal(QVariant::fromValue(mySet), &engine);
+    QVERIFY(jsManagedVal.isArray());
+    // we can't rely on any order in the set
+    QSet<QString> result;
+    for (int i = 0, end = jsManagedVal.property("length").toInt(); i != end; ++i)
+        result.insert(jsManagedVal.property(i).toString());
+    QCOMPARE(result, mySet);
 }
 
 void tst_qqmlecmascript::dateParse()
