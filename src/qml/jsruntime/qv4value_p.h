@@ -46,6 +46,11 @@ struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
         return {staticValue._val};
     }
 
+    static constexpr Value undefinded()
+    {
+        return fromStaticValue(Encode::undefined());
+    }
+
     inline bool isString() const;
     inline bool isStringOrSymbol() const;
     inline bool isSymbol() const;
