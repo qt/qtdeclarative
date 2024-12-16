@@ -412,6 +412,9 @@ struct HeapValue : Value {
     void set(EngineBase *e, HeapBasePtr b) {
         WriteBarrier::write(e, base(), data_ptr(), b->asReturnedValue());
     }
+    void set(EngineBase *e, ReturnedValue rv) {
+        WriteBarrier::write(e, base(), data_ptr(), rv);
+    }
 };
 
 template <size_t o>
