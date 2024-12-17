@@ -341,6 +341,77 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
     }
 
+    function test_selectionModeAuto_data() {
+        return [
+            { tag: "mouse, no acceptedButtons, not interactive", acceptedButtons: Qt.NoButton, interactive: false,
+                        device: PointerDevice.Mouse, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+            { tag: "mouse, no acceptedButtons, interactive", acceptedButtons: Qt.NoButton, interactive: true,
+                        device: PointerDevice.Mouse, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+            { tag: "mouse, acceptedButtons left, not interactive", acceptedButtons: Qt.LeftButton, interactive: false,
+                        device: PointerDevice.Mouse, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+            { tag: "mouse, acceptedButtons left, interactive", acceptedButtons: Qt.LeftButton, interactive: true,
+                        device: PointerDevice.Mouse, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: false, expectSelectionAfterLongPress: true, expectFlick: true },
+            { tag: "mouse, acceptedButtons right, interactive", acceptedButtons: Qt.RightButton, interactive: true,
+                        device: PointerDevice.Mouse, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+            { tag: "touch, no acceptedButtons, not interactive", acceptedButtons: Qt.NoButton, interactive: false,
+                        device: PointerDevice.TouchScreen, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+            { tag: "touch, acceptedButtons left, not interactive", acceptedButtons: Qt.LeftButton, interactive: false,
+                        device: PointerDevice.TouchScreen, viewComp: tableviewComp,
+                        expectSelectionAfterDrag: true, expectSelectionAfterLongPress: false, expectFlick: false },
+        ]
+    }
+
+    function test_selectionModeAuto(data) {
+        let tableView = createTemporaryObject(data.viewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        tableView.acceptedButtons = data.acceptedButtons
+        tableView.interactive = data.interactive
+
+        selectionRectangle.selectionMode = SelectionRectangle.Auto
+
+        // Try to select by dragging: does it select or flick?
+        verify(!tableView.selectionModel.hasSelection)
+        switch (data.device) {
+        case PointerDevice.Mouse:
+            mouseDrag(tableView, 10, 100, 0, -100, Qt.LeftButton)
+            break
+        case PointerDevice.TouchScreen:
+            let touch = touchEvent(tableView)
+            touch.press(0, tableView, 10, 100).commit();
+            touch.move(0, tableView, 10, 50).commit();
+            touch.move(0, tableView, 10, 0).commit();
+            touch.release(0, tableView, 10, 0).commit();
+            break
+        default:
+            fail("test does not yet support other device types")
+        }
+
+        compare(tableView.selectionModel.hasSelection, data.expectSelectionAfterDrag)
+        if (data.expectFlick)
+            tryVerify(function(){ return tableView.contentY > 0 })
+        else
+            compare(tableView.contentY, 0)
+
+        // Remove selection (if any) by clicking outside of it
+        mouseClick(tableView, tableView.width - 1, tableView.height - 1, Qt.LeftButton)
+        verify(!tableView.selectionModel.hasSelection)
+
+        // Check whether a press and hold starts a selection
+        // (we test this only with mouse, because touch.move and touch.release don't have delay arguments)
+        mousePress(tableView, 1, 1, Qt.LeftButton)
+        mouseRelease(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 1000)
+        compare(tableView.selectionModel.hasSelection, data.expectSelectionAfterLongPress)
+    }
+
     function test_tableView_singleSelection_data() {
         return [
             { tag: "tableView no delegate", viewComp: noDelegateTableViewComp, hasDelegate: false },

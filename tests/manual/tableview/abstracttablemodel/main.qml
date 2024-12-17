@@ -61,11 +61,29 @@ ApplicationWindow {
                     }
 
                     CheckBox {
-                        id: flickingMode
+                        id: flickableInteractive
                         checkable: true
-                        checked: false
+                        checked: true
                         Layout.fillWidth: false
                         text: "Interactive"
+                    }
+
+                    Label {
+                        text: "Accepted buttons:"
+                    }
+                    ComboBox {
+                        id: acceptedButtonsCombo
+                        textRole: "text"
+                        valueRole: "value"
+                        implicitContentWidthPolicy: ComboBox.WidestText
+                        currentIndex: 0
+                        model: [
+                            { text: "None", value: Qt.NoButton },
+                            { text: "Left", value: Qt.LeftButton },
+                            { text: "Right", value: Qt.RightButton },
+                            { text: "Left or Right", value: Qt.LeftButton | Qt.RightButton },
+                        ]
+                        Layout.fillWidth: false
                     }
 
                     CheckBox {
@@ -611,7 +629,8 @@ ApplicationWindow {
             delegate: [defaultTableViewDelegate, customTableViewDelegate, customDelegateItem][delegateComboBox.currentIndex]
             columnSpacing: spaceSpinBox.value
             rowSpacing: spaceSpinBox.value
-            interactive: flickingMode.checked
+            interactive: flickableInteractive.checked
+            acceptedButtons: acceptedButtonsCombo.currentValue
             keyNavigationEnabled: indexNavigation.checked
             pointerNavigationEnabled: indexNavigation.checked
             resizableRows: resizableRowsEnabled.checked
@@ -650,8 +669,8 @@ ApplicationWindow {
                 return (row === window.hiddenRow) ? 0 : explicitRowHeight(row)
             }
 
-            ScrollBar.horizontal: ScrollBar { visible: !flickingMode.checked }
-            ScrollBar.vertical: ScrollBar { visible: !flickingMode.checked }
+            ScrollBar.horizontal: ScrollBar { visible: !flickableInteractive.checked }
+            ScrollBar.vertical: ScrollBar { visible: !flickableInteractive.checked }
 
             model: TestTableModel {
                 rowCount: modelSize.value

@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
-import QtQuick.Window
 import QtQuick.Controls
 import QtQml.Models
 import Qt.labs.qmlmodels
 
 Window {
     width: 480
-    height: 640
+    height: 320
     visible: true
     visibility: Window.AutomaticVisibility
 
@@ -18,25 +17,20 @@ Window {
         id: tableView
         anchors.fill: parent
         clip: true
+        acceptedButtons: Qt.NoButton // mouse-drag changes selection
 
         model: TableModel {
             TableModelColumn { display: "name" }
-            rows: [ { "name": "Harry" }, { "name": "Hedwig" } ]
+            TableModelColumn { display: "age" }
+            rows: [ { "name": "Harry", "age": "11" },
+                    { "name": "Hedwig", "age": "8" } ]
         }
 
         selectionModel: ItemSelectionModel {
             model: tableView.model
         }
 
-        delegate: Rectangle {
-            implicitWidth: 100
-            implicitHeight: 30
-            color: selected ? "blue" : "lightgray"
-
-            required property bool selected
-
-            Text { text: display }
-        }
+        delegate: TableViewDelegate { padding: 2 }
     }
 
     SelectionRectangle {
