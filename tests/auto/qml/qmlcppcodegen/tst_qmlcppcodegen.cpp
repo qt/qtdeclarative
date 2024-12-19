@@ -523,6 +523,16 @@ void tst_QmlCppCodegen::confusedModule()
     QTest::ignoreMessage(QtDebugMsg, "Hello from Test");
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+
+    QQmlComponent component2(&engine, QUrl(u"qrc:/qt/qml/Confused/Main2.qml"_s));
+    QVERIFY2(!component2.isError(), component2.errorString().toUtf8());
+    // TODO: We would like to have a better error here, but we currently cannot propagate it.
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "qrc:/qt/qml/Confused/Main2.qml:5: "
+            "TypeError: Property 'Print' of object [object Object] is not a function");
+    QScopedPointer<QObject> object2(component2.create());
+    QVERIFY(!object2.isNull());
 }
 
 void tst_QmlCppCodegen::excessiveParameters()
