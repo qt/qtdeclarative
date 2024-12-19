@@ -1,6 +1,8 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+add_subdirectory(Confused)
+
 set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
