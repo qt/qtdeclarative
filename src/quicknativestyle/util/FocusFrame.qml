@@ -5,11 +5,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-Item {
+Rectangle {
     id: root
-
-    // Stack on top of all siblings of the targetItem
-    z: 100
 
     function moveToItem(item, margins, radius) {
         if (!item) {
@@ -41,20 +38,18 @@ Item {
     // systemFrameColor is set to NSColor.keyboardFocusIndicatorColor from cpp
     property color systemFrameColor
 
-    Rectangle {
-        id: focusFrame
-        z: 10
-        x: targetItem ? targetItem.x + leftOffset - frameSize - root.x : 0
-        y: targetItem ? targetItem.y + topOffset - frameSize - root.y : 0
-        width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
-        height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
-        radius: frameRadius
-        visible: targetItem && targetItem.visible
-        color: "transparent"
+    x: targetItem ? targetItem.x + leftOffset - frameSize : 0
+    y: targetItem ? targetItem.y + topOffset - frameSize : 0
+    // Stack on top of all siblings of the targetItem
+    z: 100
+    width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
+    height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
+    radius: frameRadius
+    visible: targetItem && targetItem.visible
+    color: "transparent"
 
-        border.color: systemFrameColor
-        border.width: frameSize
-    }
+    border.color: systemFrameColor
+    border.width: frameSize
 
     ParallelAnimation {
         id: animation
@@ -67,7 +62,7 @@ Item {
             easing.type: Easing.OutCubic
         }
         NumberAnimation {
-            target: focusFrame
+            target: root
             property: "opacity"
             duration: 300
             from: 0
