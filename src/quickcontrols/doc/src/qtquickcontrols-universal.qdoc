@@ -208,6 +208,8 @@
                 \image qtquickcontrols-universal-foreground.png
     \endtable
 
+    \endstyleproperty
+
     \styleproperty {Universal.theme} {enumeration}
     \target universal-theme-attached-prop
     This attached property holds whether the theme is light or dark. The property
