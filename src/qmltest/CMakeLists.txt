@@ -58,3 +58,10 @@ qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
 qt_internal_add_docs(QuickTest
     doc/qtqmltest.qdocconf
 )
+
+qt_internal_extend_target(QuickTest CONDITION ANDROID
+    SOURCES
+        android/androidtestutils_p.h
+        android/quickforandroidtest_p.h
+        android/quickforandroidtest.cpp
+)

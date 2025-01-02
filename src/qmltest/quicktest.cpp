@@ -30,7 +30,6 @@
 #include <QtCore/qtextstream.h>
 #include <QtCore/qtimer.h>
 #include <QtGui/qtextdocument.h>
-#include <stdio.h>
 #include <QtGui/QGuiApplication>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -39,7 +38,7 @@
 #include <QtQml/QQmlFileSelector>
 
 #ifdef Q_OS_ANDROID
-#include <QtCore/QStandardPaths>
+#  include <android/androidtestutils_p.h>
 #endif
 
 #include <private/qqmlcomponent_p.h>
@@ -433,14 +432,6 @@ int quick_test_main(int argc, char **argv, const char *name, const char *sourceD
     return quick_test_main_with_setup(argc, argv, name, sourceDir, nullptr);
 }
 
-#ifdef Q_OS_ANDROID
-static QFile androidExitCodeFile()
-{
-    const QString testHome = QStandardPaths::writableLocation(QStandardPaths::HomeLocation);
-    return QFile(testHome + "/qtest_last_exit_code");
-}
-#endif
-
 int quick_test_main_with_setup(int argc, char **argv, const char *name, const char *sourceDir, QObject *setup)
 {
     QScopedPointer<QCoreApplication> app;
@@ -448,7 +439,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         app.reset(new QGuiApplication(argc, argv));
 
 #ifdef Q_OS_ANDROID
-    androidExitCodeFile().remove();
+    clearAndroidExitCode();
 #endif
 
     if (setup)
@@ -715,13 +706,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     const int exitCode = QuickTestResult::exitCode();
 
 #ifdef Q_OS_ANDROID
-    QFile exitCodeFile = androidExitCodeFile();
-    if (exitCodeFile.open(QIODevice::WriteOnly)) {
-        exitCodeFile.write(qPrintable(QString::number(exitCode)));
-    } else {
-        qWarning("Failed to open %s for writing test exit code: %s",
-                 qPrintable(exitCodeFile.fileName()), qPrintable(exitCodeFile.errorString()));
-    }
+    writeAndroidExitCode(exitCode);
 #endif
 
     // Return the number of failures as the exit code.
