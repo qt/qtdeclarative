@@ -23,3 +23,5 @@ qt_add_qml_module(confused_test_module
 target_link_libraries(confused_test_module
     PRIVATE Qt6::Qml
 )
+
+qt_autogen_tools_initial_setup(confused_test_moduleplugin)
