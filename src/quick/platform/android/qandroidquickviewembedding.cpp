@@ -59,6 +59,9 @@ namespace QtAndroidQuickViewEmbedding
                 for (const QString &path : importPaths)
                     engine->addImportPath(path);
 
+                QObject::connect(engine, &QQmlEngine::quit, QCoreApplication::instance(),
+                                 &QCoreApplication::quit);
+
                 const QtJniTypes::QtWindow window = reinterpret_cast<jobject>(view->winId());
                 qtViewObject.callMethod<void>("addQtWindow",
                                               window,
