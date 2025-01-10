@@ -142,16 +142,23 @@ additional features. See the \l {qtqml-javascript-hostenvironment.html}
 {JavaScript Host Environment} for further details.)
 
 
-\section2 QVariantList and QVariantMap to JavaScript Array and Object
+\section2 QVariantList and QVariantMap to JavaScript Array-like and Object
 
 The QML engine provides automatic type conversion between QVariantList and
-JavaScript arrays, and between QVariantMap and JavaScript objects.
+JavaScript array-likes, and between QVariantMap and JavaScript objects.
+
+An \e{array-like}, in ECMAScript terms, is an object used like an array. The
+array-likes produced by conversion from QVariantList (and other C++ sequential
+containers) are not only that but also offer the common array methods
+and automatically synchronize the \e length property. They can be used just
+like JavaScript Arrays for any practical purposes. The \e{Array.isArray()}
+method still returns false for them, though.
 
 For example, the function defined in QML below expects two arguments, an
 array and an object, and prints their contents using the standard JavaScript
 syntax for array and object item access. The C++ code below calls this
 function, passing a QVariantList and a QVariantMap, which are automatically
-converted to JavaScript array and object values, repectively:
+converted to JavaScript array-like and object values, respectively:
 
 \table
 \row
@@ -177,23 +184,24 @@ type or method parameter, the value can be created as a JavaScript array or
 object in QML, and is automatically converted to a QVariantList or QVariantMap
 when it is passed to C++.
 
-Mind that QVariantList and QVariantMap properties of C++ types are stored as
-values and cannot be changed in place by QML code. You can only replace the
-whole map or list, but not manipulate its contents. The following code does
-not work if the property \c l is a QVariantList:
+Since Qt 6.5, QVariantList properties of C++ types can be changed in place by
+QML code. Mind, however, that this does not hold for QVariantMap properties of
+C++ types. Those are stored as values and cannot be changed in place by QML
+code. You can only replace the whole map, but not manipulate its contents. The
+following code does not work if the property \c m is a QVariantMap:
 
 \code
-MyListExposingItem {
-   l: [1, 2, 3]
-   Component.onCompleted: l[0] = 10
+MyMapExposingItem {
+   m: ({ one: 1 })
+   Component.onCompleted: m.ten = 10
 }
 \endcode
 
 The following code does work:
 \code
-MyListExposingItem {
-   l: [1, 2, 3]
-   Component.onCompleted: l = [10, 2, 3]
+MyMapExposingItem {
+   m: ({ one: 1 })
+   Component.onCompleted: m = { one: 1, ten: 10 }
 }
 \endcode
 
