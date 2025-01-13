@@ -484,11 +484,19 @@ namespace QQuickTest {
     {
         if (!initView(view, url))
             return false;
+        const QPoint framePos(view.framePosition());
         view.show();
         if (!QTest::qWaitForWindowExposed(&view))
             return false;
         if (!view.rootObject())
             return false;
+        if (view.flags().testFlag(Qt::FramelessWindowHint))
+            return true;
+        const bool positionOk = QTest::qWaitFor([&]{ return framePos != view.position(); });
+        if (!positionOk) {
+            qCritical() << "Position failed to update";
+            return false;
+        }
         return true;
     }
 
