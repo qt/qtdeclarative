@@ -435,6 +435,8 @@ private slots:
 
     void overrideInnerBinding();
 
+    void jsSelfImport();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8275,6 +8277,17 @@ void tst_qqmllanguage::overrideInnerBinding()
 
     QFont font = qvariant_cast<QFont>(o->property("font"));
     QCOMPARE(font.family(), "Ariallll");
+}
+
+void tst_qqmllanguage::jsSelfImport()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent c(&engine, "JsSelfImport", "Main");
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->objectName(), "customPrint");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

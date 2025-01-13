@@ -1,0 +1,5 @@
+module JsSelfImport
+singleton CustomPrinter 254.0 CustomPrinter.qml
+JsLib 254.0 JsLib.js
+Main 254.0 Main.qml
+
