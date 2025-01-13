@@ -758,6 +758,15 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
         }
 
         args = args->next;
+        // QT_TR_NOOP can have a disambiguation string, QT_TRID_NOOP can't
+        if (args && base == QLatin1String("QT_TR_NOOP")) {
+            // we have a disambiguation string; we don't need to do anything with it
+            if (QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression))
+                args = args->next;
+            else // second argument is not a string, stop
+                return;
+        }
+
         if (args)
             return; // too many arguments, stop
 
@@ -780,6 +789,14 @@ void tryGeneratingTranslationBindingBase(QStringView base, QQmlJS::AST::Argument
         }
 
         args = args->next;
+        if (args) {
+            // we have a disambiguation string; we don't need to do anything with it
+            if (QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression))
+                args = args->next;
+            else // third argument is not a string, stop
+                return;
+        }
+
         if (args)
             return; // too many arguments, stop
 
