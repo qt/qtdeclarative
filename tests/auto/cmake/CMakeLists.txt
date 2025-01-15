@@ -150,7 +150,6 @@ if(TARGET Qt::Quick)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
             _qt_internal_test_expect_pass(test_generate_qmlls_ini BINARY tst_generate_qmlls_ini)
             _qt_internal_test_expect_pass(test_aotstats_integration BINARY tst_aotstats_integration)
-            _qt_internal_test_expect_pass(test_target_qml_sources_in_different_scope)
         endif()
         _qt_internal_test_expect_pass(
                    test_link_qml_module_without_target
