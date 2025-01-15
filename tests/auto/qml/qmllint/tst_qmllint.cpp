@@ -1289,6 +1289,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
     QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
+
+    QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s;
 }
 
 void TestQmllint::cleanQmlCode()
