@@ -532,7 +532,7 @@ public:
     std::shared_ptr<ScriptExpression> scriptExpressionValue();
     QList<QmlObject> annotations() const { return m_annotations; }
     void setAnnotations(QList<QmlObject> annotations) { m_annotations = annotations; }
-    void setValue(std::unique_ptr<BindingValue> &&value) { m_value = std::move(value); }
+    void setValue(std::unique_ptr<BindingValue> &&value);
     Path addAnnotation(Path selfPathFromOwner, const QmlObject &a, QmlObject **aPtr = nullptr);
     const RegionComments &comments() const { return m_comments; }
     RegionComments &comments() { return m_comments; }
