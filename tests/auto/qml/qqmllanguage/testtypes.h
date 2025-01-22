@@ -2640,4 +2640,44 @@ private:
     std::vector<std::vector<int>> m_list;
 };
 
+namespace YepNamespaceA {
+class YepAttached : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+public:
+    YepAttached(QObject *parent) : QObject(parent) { }
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest Attached Type"); }
+};
+class Yep : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(YepAttached)
+    QML_ELEMENT
+
+public:
+    static YepAttached *qmlAttachedProperties(QObject *object) { return new YepAttached(object); }
+};
+
+class YepSingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+
+public:
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest Singleton"); }
+};
+
+class MyObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest"); }
+};
+} // namespace YepNamespaceA
+
 #endif // TESTTYPES_H

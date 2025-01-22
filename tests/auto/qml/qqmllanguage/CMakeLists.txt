@@ -70,3 +70,7 @@ set_target_properties(tst_qqmllanguage PROPERTIES
 )
 
 _qt_internal_qml_type_registration(tst_qqmllanguage)
+
+add_subdirectory(OtherModuleTest)
+target_link_libraries(tst_qqmllanguage PUBLIC other_module)
+target_link_libraries(tst_qqmllanguage PUBLIC other_moduleplugin)

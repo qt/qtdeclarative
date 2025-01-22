@@ -4623,7 +4623,7 @@ void tst_qqmlecmascript::singletonTypeImportOrder()
     QQmlComponent component(&engine, testFileUrl("singletontype/singletonTypeImportOrder.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
-    QCOMPARE(object->property("v").toInt(), 1);
+    QCOMPARE(object->property("v").toInt(), 2);
 }
 
 void tst_qqmlecmascript::singletonTypeResolution()

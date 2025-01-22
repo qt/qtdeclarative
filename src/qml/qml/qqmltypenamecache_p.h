@@ -222,8 +222,7 @@ private:
     template<typename Key>
     Result typeSearch(const QVector<QQmlTypeModuleVersion> &modules, Key key) const
     {
-        QVector<QQmlTypeModuleVersion>::const_iterator end = modules.constEnd();
-        for (QVector<QQmlTypeModuleVersion>::const_iterator it = modules.constBegin(); it != end; ++it) {
+        for (auto it = modules.crbegin(), end = modules.crend(); it != end; ++it) {
             QQmlType type = it->type(key);
             if (type.isValid())
                 return Result(type);

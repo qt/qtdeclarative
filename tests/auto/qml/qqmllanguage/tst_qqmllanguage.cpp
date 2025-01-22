@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtCore/qiterable.h>
@@ -42,6 +43,8 @@
 #endif
 
 using namespace Qt::StringLiterals;
+
+Q_IMPORT_QML_PLUGIN(OtherModuleTestPlugin)
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
@@ -436,6 +439,11 @@ private slots:
     void overrideInnerBinding();
 
     void jsSelfImport();
+
+    void singletonResultionImportOrder();
+    void attachedTypeResultionImportOrder();
+    void asCastTypeResolutionImportOrderAB();
+    void asCastTypeResolutionImportOrderBA();
 
 private:
     QQmlEngine engine;
@@ -8288,6 +8296,47 @@ void tst_qqmllanguage::jsSelfImport()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->objectName(), "customPrint");
+}
+
+void tst_qqmllanguage::singletonResultionImportOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("singletonResolutionImportOrder.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "OtherModuleTest Singleton");
+}
+
+void tst_qqmllanguage::attachedTypeResultionImportOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("attachedTypeResolutionImportOrder.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "OtherModuleTest Attached Type");
+}
+
+void tst_qqmllanguage::asCastTypeResolutionImportOrderAB()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("asCastTypeResolutionImportOrderAB.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "StaticTest");
+}
+
+void tst_qqmllanguage::asCastTypeResolutionImportOrderBA()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("asCastTypeResolutionImportOrderBA.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(".*TypeError: Cannot call method 's' of null"));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
