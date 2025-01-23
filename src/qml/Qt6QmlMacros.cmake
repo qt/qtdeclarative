@@ -250,6 +250,8 @@ function(qt6_add_qml_module target)
     set(args_single
         PLUGIN_TARGET
         INSTALLED_PLUGIN_TARGET  # Internal option only, it may be removed
+        INSTALLED_BACKING_TARGET # Internal option only, it may be removed
+        INSTALLED_QMLDIR_PATH # Internal option only, it may be removed
         OUTPUT_TARGETS
         RESOURCE_PREFIX
         URI
@@ -477,9 +479,11 @@ function(qt6_add_qml_module target)
         endif()
     endif()
 
+    set(has_plugin TRUE)
     if(arg_NO_PLUGIN)
         # Simplifies things a bit further below
         set(arg_PLUGIN_TARGET "")
+        set(has_plugin FALSE)
     elseif(NOT DEFINED arg_PLUGIN_TARGET)
         if(arg_NO_CREATE_PLUGIN_TARGET)
             # We technically could allow this and rely on the project using the
@@ -493,7 +497,14 @@ function(qt6_add_qml_module target)
         endif()
         set(arg_PLUGIN_TARGET ${target}plugin)
     endif()
-    if(arg_NO_CREATE_PLUGIN_TARGET AND arg_PLUGIN_TARGET STREQUAL target AND NOT TARGET ${target})
+
+    if(arg_PLUGIN_TARGET STREQUAL "${target}")
+        set(is_backing_and_plugin_same TRUE)
+    else()
+        set(is_backing_and_plugin_same FALSE)
+    endif()
+
+    if(arg_NO_CREATE_PLUGIN_TARGET AND is_backing_and_plugin_same AND NOT TARGET ${target})
         message(FATAL_ERROR
             "PLUGIN_TARGET is the same as the backing target, which is allowed, "
             "but NO_CREATE_PLUGIN_TARGET was also given and the target does not "
@@ -503,6 +514,9 @@ function(qt6_add_qml_module target)
     endif()
     if(NOT arg_INSTALLED_PLUGIN_TARGET)
         set(arg_INSTALLED_PLUGIN_TARGET ${arg_PLUGIN_TARGET})
+    endif()
+    if(NOT arg_INSTALLED_BACKING_TARGET)
+        set(arg_INSTALLED_BACKING_TARGET ${target})
     endif()
 
     set(no_gen_source)
@@ -567,7 +581,7 @@ function(qt6_add_qml_module target)
     endif()
 
     if(TARGET ${target})
-        if(arg_PLUGIN_TARGET STREQUAL target)
+        if(is_backing_and_plugin_same)
             # Insert the plugin's URI into its meta data to enable usage
             # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
             set_property(TARGET ${target} APPEND PROPERTY
@@ -575,7 +589,7 @@ function(qt6_add_qml_module target)
             )
         endif()
     else()
-        if(arg_PLUGIN_TARGET STREQUAL target)
+        if(is_backing_and_plugin_same)
             set(conditional_args ${no_gen_source})
             if(arg_NAMESPACE)
                 list(APPEND conditional_args NAMESPACE ${arg_NAMESPACE})
@@ -762,6 +776,15 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         _qt_qml_module_plugin_target "${arg_PLUGIN_TARGET}"
         _qt_qml_module_installed_plugin_target "${arg_INSTALLED_PLUGIN_TARGET}"
 
+        _qt_qml_module_uri "${arg_URI}"
+        _qt_qml_module_target_path "${arg_TARGET_PATH}"
+        _qt_qml_module_version "${arg_VERSION}"
+        _qt_qml_module_class_name "${arg_CLASS_NAME}"
+        _qt_qml_module_is_backing_target "TRUE"
+        _qt_qml_module_has_plugin "${has_plugin}"
+        _qt_qml_backing_library_and_plugin_are_same_target "${is_backing_and_plugin_same}"
+        _qt_qml_module_installed_qmldir_path "${arg_INSTALLED_QMLDIR_PATH}"
+
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
         QT_QML_MODULE_IS_STATIC "${arg___QT_INTERNAL_STATIC_MODULE}"
         QT_QML_MODULE_IS_SYSTEM "${arg___QT_INTERNAL_SYSTEM_MODULE}"
@@ -786,6 +809,13 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             EXPORT_PROPERTIES _qt_qml_module_plugin_target _qt_qml_module_installed_plugin_target
         )
     endif()
+
+    _qt_internal_qml_export_common_qml_properties("${target}")
+    set_property(TARGET ${target} APPEND PROPERTY
+        EXPORT_PROPERTIES
+            _qt_qml_module_is_backing_target
+            _qt_qml_module_has_plugin
+    )
 
     if(NOT arg_NO_GENERATE_QMLTYPES)
         set(type_registration_extra_args "")
@@ -890,7 +920,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         )
     endif()
 
-    if(TARGET "${arg_PLUGIN_TARGET}" AND NOT arg_PLUGIN_TARGET STREQUAL target)
+    if(TARGET "${arg_PLUGIN_TARGET}" AND NOT is_backing_and_plugin_same)
         target_link_libraries(${arg_PLUGIN_TARGET} PRIVATE ${target})
     endif()
 
@@ -2601,6 +2631,60 @@ function(qt6_add_qml_plugin target)
         endif()
     endif()
 
+    if(arg_BACKING_TARGET)
+        set(has_backing_target TRUE)
+
+        set_target_properties(${target} PROPERTIES
+            _qt_qml_module_backing_target "${arg_BACKING_TARGET}"
+        )
+
+        get_target_property(installed_backing_target
+            "${arg_BACKING_TARGET}" QT_QML_MODULE_INSTALLED_BACKING_TARGET)
+
+        if(installed_backing_target)
+            set_target_properties(${target} PROPERTIES
+                _qt_qml_module_installed_backing_target "${installed_backing_target}"
+            )
+        endif()
+
+        get_target_property(installed_qmldir_path
+            "${arg_BACKING_TARGET}" QT_QML_MODULE_INSTALLED_QMLDIR_PATH)
+
+        if(installed_qmldir_path)
+            set_target_properties(${target} PROPERTIES
+                _qt_qml_module_installed_qmldir_path "${installed_qmldir_path}"
+            )
+        endif()
+
+        if(target STREQUAL "${arg_BACKING_TARGET}")
+            set(is_backing_and_plugin_same TRUE)
+        else()
+            set(is_backing_and_plugin_same FALSE)
+        endif()
+    else()
+        set(has_backing_target FALSE)
+        set(is_backing_and_plugin_same FALSE)
+    endif()
+
+    set_target_properties(${target} PROPERTIES
+        _qt_qml_module_uri "${arg_URI}"
+        _qt_qml_module_target_path "${arg_TARGET_PATH}"
+        _qt_qml_module_version "${arg_VERSION}"
+        _qt_qml_module_class_name "${arg_CLASS_NAME}"
+        _qt_qml_module_is_plugin_target "TRUE"
+        _qt_qml_module_plugin_has_backing_library "${has_backing_target}"
+        _qt_qml_backing_library_and_plugin_are_same_target "${is_backing_and_plugin_same}"
+    )
+
+    _qt_internal_qml_export_common_qml_properties("${target}")
+    set_property(TARGET ${target} APPEND PROPERTY
+        EXPORT_PROPERTIES
+            _qt_qml_module_is_plugin_target
+            _qt_qml_module_backing_target
+            _qt_qml_module_installed_backing_target
+            _qt_qml_module_plugin_has_backing_library
+    )
+
     if(ANDROID)
         _qt_internal_get_qml_plugin_output_name(plugin_output_name ${target}
             BACKING_TARGET "${arg_BACKING_TARGET}"
@@ -2739,6 +2823,18 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         qt6_add_qml_plugin(${ARGV})
     endfunction()
 endif()
+
+function(_qt_internal_qml_export_common_qml_properties target)
+    set_property(TARGET "${target}" APPEND PROPERTY
+        EXPORT_PROPERTIES
+            _qt_qml_module_uri
+            _qt_qml_module_target_path
+            _qt_qml_module_version
+            _qt_qml_module_class_name
+            _qt_qml_backing_library_and_plugin_are_same_target
+            _qt_qml_module_installed_qmldir_path
+    )
+endfunction()
 
 # Set up custom targets to copy qml files or resources of a target into its build directory.
 # The custom targets run a cmake script that will go through each source file and copy it only if
