@@ -394,17 +394,17 @@ types without breaking existing programs.
 
 The REVISION tag is used to mark the \c root property as added in revision 1
 of the type. Methods such as Q_INVOKABLE's, signals and slots can also be
-tagged for a revision using the \c Q_REVISION(x) macro:
+tagged for a revision using the \l Q_REVISION macro:
 
 \code
 class CppType : public BaseType
 {
     Q_OBJECT
-    Q_PROPERTY(int root READ root WRITE setRoot NOTIFY rootChanged REVISION 1)
+    Q_PROPERTY(int root READ root WRITE setRoot NOTIFY rootChanged REVISION(1, 0))
     QML_ELEMENT
 
 signals:
-    Q_REVISION(1) void rootChanged();
+    Q_REVISION(1, 0) void rootChanged();
 };
 \endcode
 
