@@ -3,10 +3,10 @@
 
 /*!
     \page qtqmlcompiler-toc.html
-    \title Qt QML Compiler module topics
+    \title Qt Qml Compiler module topics
 
     The following list has links to all the individual topics (HTML files)
-    in the Qt QML Compiler module.
+    in the Qt Qml Compiler module.
 
     \list
     \li \l {QML Static Analysis Tutorial}

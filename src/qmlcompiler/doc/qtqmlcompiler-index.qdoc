@@ -3,10 +3,10 @@
 
 /*!
     \page qtqmlcompiler-index.html
-    \title Qt QML Compiler
+    \title Qt Qml Compiler
     \brief Provides tools for static analysis of QML code.
 
-    The Qt QML Compiler module contains shared functionality needed by QML
+    The Qt Qml Compiler module contains shared functionality needed by QML
     tooling like the \l{Qt Quick Compiler} and \l{qmllint}.
     It also provides the QQmlSA framework, which can be used to extend the
     built-in analysis capabilities of the tools.
@@ -25,7 +25,7 @@
 
     \section1 Using the QQmlSA framework
 
-    The Qt QML Compiler module offers the QQmlSA framework which provides tools
+    The Qt Qml Compiler module offers the QQmlSA framework which provides tools
     for static analysis of QML code. These tools can help ensure syntactic
     validity and warn about QML anti-patterns.
 
@@ -71,7 +71,7 @@
     \section1 Reference
 
     \list
-        \li \l {Qt QML Compiler C++ Classes}
+        \li \l {Qt Qml Compiler C++ Classes}
                - the C++ API provided by the QmlCompiler module
         \li QML tooling using the static analysis capabilities
            \list

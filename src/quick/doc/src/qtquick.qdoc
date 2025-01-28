@@ -102,7 +102,7 @@ To find out more about using the QML language, see the \l{Qt Qml} module documen
             - essential information for application development with QML and Qt
             Quick
         \li \l {Qt Qml}
-            - documentation for the Qt QML module, which provides the QML engine
+            - documentation for the Qt Qml module, which provides the QML engine
             and language infrastructure
         \li \l {Qt Quick How-tos}
             - shows how to achieve specific tasks in Qt Quick

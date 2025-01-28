@@ -11,12 +11,12 @@ qhp.QtQmlWorkerScript.file                = qtqmlworkerscript.qhp
 qhp.QtQmlWorkerScript.namespace           = org.qt-project.qtqmlworkerscript.$QT_VERSION_TAG
 qhp.QtQmlWorkerScript.virtualFolder       = qtqmlworkerscript
 qhp.QtQmlWorkerScript.indexRoot           =
-qhp.QtQmlWorkerScript.indexTitle          = Qt QML WorkerScript
+qhp.QtQmlWorkerScript.indexTitle          = Qt Qml WorkerScript
 
 qhp.QtQmlWorkerScript.subprojects         = qmltypes
 
 qhp.QtQmlWorkerScript.subprojects.qmltypes.title = QML Types
-qhp.QtQmlWorkerScript.subprojects.qmltypes.indexTitle = Qt QML WorkerScript QML Types
+qhp.QtQmlWorkerScript.subprojects.qmltypes.indexTitle = Qt Qml WorkerScript QML Types
 qhp.QtQmlWorkerScript.subprojects.qmltypes.selectors = qmltype
 qhp.QtQmlWorkerScript.subprojects.qmltypes.sortPages = true
 

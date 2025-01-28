@@ -11,7 +11,7 @@ qhp.QtQmlModels.file                = qtqmlmodels.qhp
 qhp.QtQmlModels.namespace           = org.qt-project.qtqmlmodels.$QT_VERSION_TAG
 qhp.QtQmlModels.virtualFolder       = qtqmlmodels
 qhp.QtQmlModels.indexRoot           =
-qhp.QtQmlModels.indexTitle          = Qt QML Models
+qhp.QtQmlModels.indexTitle          = Qt Qml Models
 
 qhp.QtQmlModels.subprojects = manual qmltypes qmllabtypes
 

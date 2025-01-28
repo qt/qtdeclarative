@@ -3,7 +3,7 @@
 
 /*!
     \qmlmodule QtQml.WorkerScript
-    \title Qt QML WorkerScript QML Types
+    \title Qt Qml WorkerScript QML Types
     \ingroup qmlmodules
     \brief Provides QML types for worker scripts.
     \since 5.14

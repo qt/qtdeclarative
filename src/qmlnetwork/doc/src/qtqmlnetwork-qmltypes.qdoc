@@ -3,7 +3,7 @@
 
 /*!
     \qmlmodule QtNetwork
-    \title Qt QML Network QML Types
+    \title Qt Qml Network QML Types
     \since 6.7
     \ingroup qmlmodules
     \brief Provides core network functionality in QML.

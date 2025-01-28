@@ -35,18 +35,18 @@ import QtQuick
 See the \l{Qt Quick} module documentation for more information about its types.
 
 The QML types for creating lists and models, such as \l ListModel and
-\l ListElement, belong to a submodule, \l{Qt QML Models QML Types}{QtQml.Models}.
+\l ListElement, belong to a submodule, \l{Qt Qml Models QML Types}{QtQml.Models}.
 
 The \l WorkerScript QML type belongs to the submodule
-\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript}.
+\l{Qt Qml WorkerScript QML Types}{QtQml.WorkerScript}.
 
-Both, \l{Qt QML Models QML Types}{QtQml.Models} and
-\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript} are automatically imported
+Both, \l{Qt Qml Models QML Types}{QtQml.Models} and
+\l{Qt Qml WorkerScript QML Types}{QtQml.WorkerScript} are automatically imported
 whenever you import \c QtQml. All their types are then available, too.
 
 The \l{Qt Quick} module automatically imports \c QtQml and, transitively,
-\l{Qt QML Models QML Types}{QtQml.Models} and
-\l{Qt QML WorkerScript QML Types}{QtQml.WorkerScript}, making all their types
+\l{Qt Qml Models QML Types}{QtQml.Models} and
+\l{Qt Qml WorkerScript QML Types}{QtQml.WorkerScript}, making all their types
 available whenever you import \c QtQuick.
 
 \section1 Value Types
