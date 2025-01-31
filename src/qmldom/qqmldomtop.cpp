@@ -1613,24 +1613,24 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, Q
 
 
     // use the overload which does not care about changing m_moduleIndexWithUri to find a candidate
-    auto [candidate, origin] = moduleIndexWithUriHelper(self, uri, majorVersion, options);
+    auto candidate = moduleIndexWithUriHelper(self, uri, majorVersion, options);
 
     // A ModuleIndex from m_moduleIndexWithUri can always be returned
-    if (candidate && origin == ModuleLookupResult::FromGlobal)
-        return candidate;
+    if (candidate.module && candidate.fromBase == ModuleLookupResult::FromGlobal)
+        return std::move(candidate.module);
 
     // If we don't want to modify anything, return the candidate that we have found (if any)
     if (changeable == Changeable::ReadOnly)
-        return candidate;
+        return std::move(candidate.module);
 
     // Else we want to create a modifyable version
-    std::shared_ptr<ModuleIndex> newModulePtr = [&, candidate = candidate](){
+    std::shared_ptr<ModuleIndex> newModulePtr = [&] {
         // which is a completely new module in case we don't have candidate
-        if (!candidate)
+        if (!candidate.module)
             return std::make_shared<ModuleIndex>(uri, majorVersion);
         // or a copy of the candidate otherwise
-        DomItem existingModObj = self.copy(candidate);
-        return candidate->makeCopy(existingModObj);
+        DomItem existingModObj = self.copy(candidate.module);
+        return candidate.module->makeCopy(existingModObj);
     }();
 
     DomItem newModule = self.copy(newModulePtr);
