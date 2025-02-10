@@ -115,7 +115,16 @@ void QSGRhiLayer::setSize(const QSize &pixelSize)
     if (pixelSize == m_pixelSize)
         return;
 
-    m_pixelSize = pixelSize;
+    const int textureSizeMax = m_rhi->resourceLimit(QRhi::TextureSizeMax);
+    m_pixelSize = pixelSize.boundedTo(QSize(textureSizeMax, textureSizeMax));
+
+    if (Q_UNLIKELY(m_pixelSize != pixelSize)) {
+        qWarning("QSGRhiLayer: Unsupported size requested: [%d, %d]. "
+                 "Maximum texture size: %d",
+                 pixelSize.width(),
+                 pixelSize.height(),
+                 textureSizeMax);
+    }
 
     if (m_live && m_pixelSize.isNull())
         releaseResources();
