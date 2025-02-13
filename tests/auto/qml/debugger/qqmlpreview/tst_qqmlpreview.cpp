@@ -295,6 +295,12 @@ void tst_QQmlPreview::blacklist()
     QVERIFY(!blacklist3.isBlacklisted("/usr/src"));
     QVERIFY(!blacklist3.isBlacklisted("/opt/share"));
     QVERIFY(!blacklist3.isBlacklisted("/opt"));
+
+    QQmlPreviewBlacklist blacklist4;
+    blacklist4.whitelist(":/some/directory/with/file.qml");
+    blacklist4.blacklist(":/some/directory/with");
+    QVERIFY(blacklist4.isBlacklisted(":/some/directory/with"));
+    QVERIFY(!blacklist4.isBlacklisted(":/some/directory/with/file.qml"));
 }
 
 void tst_QQmlPreview::error()

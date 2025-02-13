@@ -19,7 +19,7 @@ void QQmlPreviewBlacklist::whitelist(const QString &path)
 
 bool QQmlPreviewBlacklist::isBlacklisted(const QString &path) const
 {
-    return path.isEmpty() ? true : m_root.containedPrefixLeaf(path, 0) > 0;
+    return path.isEmpty() ? true : m_root.findPrefix(path, 0) == Node::MatchedLeaf;
 }
 
 void QQmlPreviewBlacklist::clear()
@@ -138,33 +138,49 @@ void QQmlPreviewBlacklist::Node::remove(const QString &path, int offset)
     if (offset == path.size())
         return;
 
-    auto it = m_next.find(path.at(offset));
-    if (it != m_next.end())
-        (*it)->remove(path, ++offset);
+    Node *&node = m_next[path.at(offset++)];
+    if (node) {
+        node->remove(path, offset);
+    } else {
+        QString inserted;
+        inserted.resize(path.size() - offset);
+        std::copy(path.begin() + offset, path.end(), inserted.begin());
+        node = new Node(inserted, {}, false);
+    }
 }
 
-int QQmlPreviewBlacklist::Node::containedPrefixLeaf(const QString &path, int offset) const
+QQmlPreviewBlacklist::Node::PrefixResult QQmlPreviewBlacklist::Node::findPrefix(
+        const QString &path, int offset) const
 {
-    if (offset == path.size())
-        return (m_mine.isEmpty() && m_isLeaf) ? offset : -1;
+    if (offset == path.size()) {
+        if (!m_mine.isEmpty())
+            return Unmatched;
+        return m_isLeaf ? MatchedLeaf : MatchedBranch;
+    }
 
     for (auto it = m_mine.begin(), end = m_mine.end(); it != end; ++it) {
         if (path.at(offset) != *it)
-            return -1;
+            return Unmatched;
 
-        if (++offset == path.size())
-            return (++it == end && m_isLeaf) ? offset : -1;
+        if (++offset == path.size()) {
+            if (++it != end)
+                return Unmatched;
+            return m_isLeaf ? MatchedLeaf : MatchedBranch;
+        }
     }
 
     const QChar c = path.at(offset);
-    if (m_isLeaf && c == '/')
-        return offset;
+    const auto it = m_next.find(c);
+    if (it != m_next.end()) {
+        const PrefixResult result = (*it)->findPrefix(path, offset + 1);
+        if (result != Unmatched)
+            return result;
+    }
 
-    auto it = m_next.find(c);
-    if (it == m_next.end())
-        return -1;
+    if (c == '/')
+        return m_isLeaf ? MatchedLeaf : MatchedBranch;
 
-    return (*it)->containedPrefixLeaf(path, ++offset);
+    return Unmatched;
 }
 
 QQmlPreviewBlacklist::Node::Node(const QString &mine,

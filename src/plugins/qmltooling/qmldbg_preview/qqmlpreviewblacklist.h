@@ -33,6 +33,12 @@ public:
 private:
     class Node {
     public:
+        enum PrefixResult {
+            MatchedLeaf,
+            MatchedBranch,
+            Unmatched,
+        };
+
         Node();
         Node(const Node &other);
         Node(Node &&other) noexcept;
@@ -45,7 +51,7 @@ private:
         void split(QString::iterator it, QString::iterator end);
         void insert(const QString &path, int offset);
         void remove(const QString &path, int offset);
-        int containedPrefixLeaf(const QString &path, int offset) const;
+        PrefixResult findPrefix(const QString &path, int offset) const;
 
     private:
         Node(const QString &mine, const QHash<QChar, Node *> &next = QHash<QChar, Node *>(),
