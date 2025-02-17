@@ -1,0 +1,74 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\page qtqml-typesystem-enumerations.html
+\title Enumerations in QML
+\brief Description of QML Enumerations
+
+Enumerations used in QML can be defined either in QML or in C++.
+
+For information on defining enumerations in QML, see
+\l{QML Object Attributes#enumeration-attributes}{Enumeration Attributes}.
+
+When defined in C++, enumerations exposed to QML must be marked with the
+\l{Q_ENUM} or \l{Q_ENUM_NS} macros and be part of a type exposed to QML via the
+\l{QML_NAMED_ELEMENT} or \l{QML_ELEMENT} macros. For more details, see
+\l{Data Type Conversion Between QML and C++#enumeration-types}{Enumeration Types}.
+
+Only named QML types can hold enumerations usable in QML. Each enumeration must
+have a surrounding named type. \l{QML Namespaces} are also QML types and can hold
+enums.
+
+As a result, an enumeration value can be referred to as \c {<Type>.<Value>}. For
+example, the \l Text type has an \c AlignRight enumeration value:
+
+\qml
+Text { horizontalAlignment: Text.AlignRight }
+\endqml
+
+Enumeration values are properties of the type reference produced by the type
+name. You can also retrieve them using JavaScript’s square bracket syntax,
+though this is error-prone and not recommended:
+
+\qml
+// Avoid this if possible
+Text { horizontalAlignment: Text["AlignRight"] }
+\endqml
+
+\section1 Using Enumerations in QML
+
+Enumerations are not separate types in QML but are properties of their
+surrounding types. An enumeration value is represented as the underlying type of
+the enumeration. For most enumerations, it is safe to use JavaScript's
+\e Number type or QML's \e double type to store them. However, this does not
+always work for 64-bit integers, as their range exceeds the safe integer range
+of 64-bit doubles. Therefore, enumerations with values outside the safe integer
+range (-(2^53 - 1) to 2^53 - 1, inclusive) cannot be safely used in QML. For
+enumerations with values that fit into the numeric range of a 32-bit signed
+integer, you can safely use the QML \e int type as storage.
+
+For example:
+
+\qml
+import QtQuick
+
+Item {
+    // refer to Text.AlignRight using an int type
+    property int enumValue: textItem.horizontalAlignment
+
+    signal valueEmitted(int someValue)
+
+    Text {
+        id: textItem
+        horizontalAlignment: Text.AlignRight
+    }
+
+    // emit valueEmitted() signal, which expects an int, with Text.AlignRight
+    Component.onCompleted: valueEmitted(Text.AlignRight)
+}
+\endqml
+
+\sa {QML Value Types}
+\sa {QML Object Attributes#enumeration-attributes}{Enumeration Attributes}
+\sa {Data Type Conversion Between QML and C++#enumeration-types}{Enumeration Types}
+*/

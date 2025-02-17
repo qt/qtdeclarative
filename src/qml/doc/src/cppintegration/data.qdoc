@@ -91,9 +91,6 @@ when passed from C++ to QML and vice-versa:
     \row
         \li QVector2D, QVector3D, QVector4D
         \li \l vector2d, \l vector3d, \l vector4d
-    \row
-        \li Enums declared with Q_ENUM()
-        \li \l enumeration
 \endtable
 
 \note Classes provided by the \l {Qt GUI} module, such as QColor, QFont,

@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
    \li \l point \c eventPoint.scenePosition: see also \l QEventPoint::scenePosition
    \li \l ulong \c eventPoint.pressTimestamp: see also \l QEventPoint::pressTimestamp
    \li \l point \c eventPoint.scenePressPosition: see also \l QEventPoint::scenePressPosition
-   \li \l enumeration \c eventPoint.state: see also \l QEventPoint::state
+   \li \l {QML Enumerations}{enumeration} \c eventPoint.state: see also \l QEventPoint::state
    \li \l real \c eventPoint.timeHeld: see also \l QEventPoint::timeHeld
    \li \l ulong \c eventPoint.timestamp: see also \l QEventPoint::timestamp
    \li \l pointingDeviceUniqueId \c eventPoint.uniqueId: see also \l QEventPoint::uniqueId
