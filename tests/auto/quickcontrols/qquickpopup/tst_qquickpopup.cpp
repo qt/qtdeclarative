@@ -1431,6 +1431,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // The stack view should have two items, and it should pop the second when escape is pressed
@@ -1498,6 +1499,7 @@ void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->findChild<QQuickPopup *>("popup");
@@ -1626,6 +1628,7 @@ void tst_QQuickPopup::disabledPalette()
 
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
@@ -1665,6 +1668,7 @@ void tst_QQuickPopup::disabledParentPalette()
 
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
@@ -1776,6 +1780,7 @@ void tst_QQuickPopup::tabFence()
 
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->property("dialog").value<QQuickPopup*>();
@@ -1885,6 +1890,7 @@ void tst_QQuickPopup::destroyDuringExitTransition()
 
     QQuickWindow *window = helper.window;
     window->show();
+    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     {
