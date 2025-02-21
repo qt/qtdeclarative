@@ -1417,4 +1417,73 @@ TestCase {
 
         tryCompare(busyIndicator.contentItem, "visible", true)
     }
+
+    Component {
+        id: primaryColorAsBackgroundComponent
+
+        ApplicationWindow {
+            property alias container: container
+            property alias label: label
+            width: 200
+            height: 200
+            visible: true
+            Material.theme: Material.Dark
+            Material.background: Material.primary
+            Rectangle {
+                id: container
+                anchors.fill: parent
+                color: Material.background
+                Text {
+                    id: label
+                    text: "TEXT"
+                    color: Material.foreground
+                }
+            }
+        }
+    }
+
+    function test_primaryColorAsBackground_data() {
+        return [
+            { primary: Material.Red,        expectedForeground: "#ffffff" },
+            { primary: Material.Pink,       expectedForeground: "#ffffff" },
+            { primary: Material.Purple,     expectedForeground: "#ffffff" },
+            { primary: Material.DeepPurple, expectedForeground: "#ffffff" },
+            { primary: Material.Indigo,     expectedForeground: "#ffffff" },
+            { primary: Material.Blue,       expectedForeground: "#ffffff" },
+            { primary: Material.Teal,       expectedForeground: "#ffffff" },
+            { primary: Material.DeepOrange, expectedForeground: "#ffffff" },
+            { primary: Material.Brown,      expectedForeground: "#ffffff" },
+            { primary: Material.BlueGrey,   expectedForeground: "#ffffff" },
+            { primary: Material.LightBlue,  expectedForeground: "#dd000000" },
+            { primary: Material.Cyan,       expectedForeground: "#dd000000" },
+            { primary: Material.Green,      expectedForeground: "#dd000000" },
+            { primary: Material.LightGreen, expectedForeground: "#dd000000" },
+            { primary: Material.Lime,       expectedForeground: "#dd000000" },
+            { primary: Material.Yellow,     expectedForeground: "#dd000000" },
+            { primary: Material.Amber,      expectedForeground: "#dd000000" },
+            { primary: Material.Orange,     expectedForeground: "#dd000000" },
+            { primary: Material.Grey,       expectedForeground: "#dd000000" },
+        ]
+    }
+
+    function test_primaryColorAsBackground(data) {
+        let window = createTemporaryObject(primaryColorAsBackgroundComponent, testCase)
+        verify(window)
+
+        window.Material.primary = data.primary
+        let expectedBackground = window.Material.color(data.primary, Material.Shade200)
+        compare(window.Material.background.toString(), expectedBackground)
+        compare(window.Material.foreground.toString(), data.expectedForeground)
+        compare(window.container.Material.background.toString(), expectedBackground)
+        compare(window.container.Material.foreground.toString(), data.expectedForeground)
+        compare(window.label.color.toString(), data.expectedForeground)
+
+        window.Material.theme = Material.Light
+        expectedBackground = window.Material.color(data.primary, Material.Shade500)
+        compare(window.Material.background.toString(), expectedBackground)
+        compare(window.Material.foreground.toString(), data.expectedForeground)
+        compare(window.container.Material.background.toString(), expectedBackground)
+        compare(window.container.Material.foreground.toString(), data.expectedForeground)
+        compare(window.label.color.toString(), data.expectedForeground)
+    }
 }

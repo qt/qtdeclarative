@@ -21,13 +21,13 @@ T.ToolBar {
     rightPadding: SafeArea.margins.right
     bottomPadding: SafeArea.margins.bottom
 
-    Material.foreground: Material.toolTextColor
+    Material.background: Material.primary
 
     spacing: 16
 
     background: Rectangle {
         implicitHeight: 48
-        color: control.Material.toolBarColor
+        color: control.Material.background
 
         layer.enabled: control.Material.elevation > 0
         layer.effect: ElevationEffect {
