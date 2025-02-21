@@ -1125,7 +1125,7 @@ Text {
 \endqml
 
 More information on enumeration usage in QML can be found in the documentation on
-\l {Enumerations in QML}.
+\l {QML Enumerations}.
 
 The ability to declare enumerations in QML was introduced in Qt 5.10.
 

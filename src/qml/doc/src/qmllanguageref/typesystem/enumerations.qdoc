@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-typesystem-enumerations.html
-\title Enumerations in QML
+\title QML Enumerations
 \brief Description of QML Enumerations
 
 Enumerations used in QML can be defined either in QML or in C++.
