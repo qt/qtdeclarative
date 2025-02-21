@@ -404,10 +404,10 @@
 */
 
 /*!
-  \macro QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE)
+  \macro QML_EXTENDED_NAMESPACE(EXTENSION_NAMESPACE)
   \relates QQmlEngine
 
-  Declares that the enclosing type uses \a EXTENDED_NAMESPACE as an extension to
+  Declares that the enclosing \b type uses \a EXTENSION_NAMESPACE as an extension to
   provide further enumerations in QML. This takes effect if the type
   is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
   The enumerations need to be exposed to the metaobject system for this to work.
@@ -435,17 +435,71 @@
   }
   \endqml
 
-  \note EXTENDED_NAMESPACE can also be a QObject or QGadget; in that case - and in contrast to
+  \note \a EXTENSION_NAMESPACE can also be a QObject or QGadget; in that case - and in contrast to
   QML_EXTENDED, which also exposes methods and properties - only its enumerations
   are exposed.
 
-  \note \a EXTENDED_NAMESPACE must have a metaobject; i.e. it must either be a namespace which
+  \note \a EXTENSION_NAMESPACE must have a metaobject; i.e. it must either be a namespace which
   contains the Q_NAMESPACE macro or a QObject/QGadget.
 
   \include {qualified-class-name.qdocinc} {class name must be qualified}
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
+  \sa QML_NAMESPACE_EXTENDED(), QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
       {Registering Extension Objects}, Q_ENUM, Q_ENUM_NS
+*/
+
+/*!
+  \macro QML_NAMESPACE_EXTENDED(EXTENSION_NAMESPACE)
+  \relates QQmlEngine
+
+  Behaves the same way as \l QML_EXTENDED_NAMESPACE with the distinction that what is being
+  extended is a namespace and not a type.
+
+  Declares that the enclosing \b namespace uses \a EXTENSION_NAMESPACE as an extension to
+  provide further enumerations in QML. This takes effect if the extended namespace is exposed to
+  QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro. The enumerations need to be exposed
+  to the metaobject system for this to work.
+
+  For example, in the following C++ code,
+  \code
+  namespace NS2 {
+     Q_NAMESPACE
+
+     enum class E2 { D = 3, E, F };
+     Q_ENUM_NS(E2)
+  }
+
+  namespace NS1 {
+     Q_NAMESPACE
+     QML_ELEMENT
+
+     enum class E1 { A, B, C };
+     Q_ENUM_NS(E1)
+
+     // Extends NS1 with NS2
+     QML_NAMESPACE_EXTENDED(NS2)
+  }
+  \endcode
+
+  the namespace \c NS1 is extended with \c NS2 and the \c E2 enum becomes available within \c NS1
+  from QML.
+  \qml
+  Item {
+     Component.onCompleted: console.log(NS1.E1.A, NS1.E2.D)
+  }
+  \endqml
+
+  \note \a EXTENSION_NAMESPACE can also be a QObject or QGadget; in that case - and in contrast to
+  QML_EXTENDED, which also exposes methods and properties - only its enumerations
+  are exposed.
+
+  \note \a EXTENSION_NAMESPACE must have a metaobject; i.e. it must either be a namespace which
+  contains the Q_NAMESPACE macro or a QObject/QGadget.
+
+  \include {qualified-class-name.qdocinc} {class name must be qualified}
+
+  \sa QML_EXTENDED_NAMESPACE(), QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
+  {Registering Extension Objects}, Q_ENUM, Q_ENUM_NS
 */
 
 /*!
@@ -455,11 +509,11 @@
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
-  \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
-  in the enclosing C++ type do not apply to the enclosing type but instead to
-  \a FOREIGN_TYPE. The enclosing type still needs to be registered with the
-  \l {The Meta-Object System}{meta object system} using a \l Q_GADGET or
-  \l Q_OBJECT macro.
+  \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE(), or \l QML_NAMESPACE_EXTENDED()
+  macros in the enclosing C++ type do not apply to the enclosing type but
+  instead to \a FOREIGN_TYPE. The enclosing type still needs to be registered
+  with the \l {The Meta-Object System}{meta object system} using a \l Q_GADGET
+  or \l Q_OBJECT macro.
 
   This is useful for registering types that cannot be amended to add the macros,
   for example because they belong to 3rdparty libraries.
