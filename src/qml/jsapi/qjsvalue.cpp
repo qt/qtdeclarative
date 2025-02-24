@@ -1017,7 +1017,7 @@ bool QJSValue::equals(const QJSValue& other) const
     \header \li Type \li Result
     \row    \li Undefined  \li true
     \row    \li Null       \li true
-    \row    \li Boolean    \li true if both values are true, false otherwise
+    \row    \li Boolean    \li true if values are both true or both false, false otherwise
     \row    \li Number     \li false if either value is NaN (Not-a-Number); true if values are equal, false otherwise
     \row    \li String     \li true if both values are exactly the same sequence of characters, false otherwise
     \row    \li Object     \li true if both values refer to the same object, false otherwise
