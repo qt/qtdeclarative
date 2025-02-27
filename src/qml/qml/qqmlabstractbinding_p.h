@@ -68,9 +68,9 @@ public:
     inline QQmlAbstractBinding *nextBinding() const;
 
     inline bool canUseAccessor() const
-    { return m_nextBinding.tag().testFlag(CanUseAccessor); }
+    { return m_target.tag().testFlag(CanUseAccessor); }
     void setCanUseAccessor(bool canUseAccessor)
-    { m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor, canUseAccessor)); }
+    { m_target.setTag(m_target.tag().setFlag(CanUseAccessor, canUseAccessor)); }
 
     struct RefCount {
         RefCount() {}
@@ -81,19 +81,20 @@ public:
     };
     RefCount ref;
 
+    // A binding can only be enabled if it's added to an object,
+    // and it can only be updating if it's enabled.
+    enum State {
+        Disabled        = 0,
+        AddedToObject   = 1,
+        BindingEnabled  = 2,
+        UpdatingBinding = 3,
+    };
+
     enum TargetTag {
         NoTargetTag     = 0x0,
-        UpdatingBinding = 0x1,
-        BindingEnabled  = 0x2
+        CanUseAccessor  = 0x1,
     };
     Q_DECLARE_FLAGS(TargetTags, TargetTag)
-
-    enum NextBindingTag {
-        NoBindingTag   = 0x0,
-        AddedToObject  = 0x1,
-        CanUseAccessor = 0x2
-    };
-    Q_DECLARE_FLAGS(NextBindingTags, NextBindingTag)
 
 protected:
     friend class QQmlData;
@@ -120,20 +121,36 @@ protected:
     QTaggedPointer<QObject, TargetTags> m_target;
 
     // Pointer to the next binding in the linked list of bindings.
-    QTaggedPointer<QQmlAbstractBinding, NextBindingTags> m_nextBinding;
+    QTaggedPointer<QQmlAbstractBinding, State> m_nextBinding;
+
+private:
+    void setState(State state, bool enabled)
+    {
+        if (enabled) {
+            m_nextBinding.setTag(std::max(m_nextBinding.tag(), state));
+            return;
+        }
+
+        Q_ASSERT(state > 0);
+        m_nextBinding.setTag(std::min(m_nextBinding.tag(), State(state - 1)));
+    }
+
+    bool hasState(State state) const
+    {
+        return m_nextBinding.tag() >= state;
+    }
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlAbstractBinding::TargetTags)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlAbstractBinding::NextBindingTags)
 
 void QQmlAbstractBinding::setAddedToObject(bool v)
 {
-    m_nextBinding.setTag(m_nextBinding.tag().setFlag(AddedToObject, v));
+    setState(AddedToObject, v);
 }
 
 bool QQmlAbstractBinding::isAddedToObject() const
 {
-    return m_nextBinding.tag().testFlag(AddedToObject);
+    return hasState(AddedToObject);
 }
 
 QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const
@@ -152,22 +169,22 @@ void QQmlAbstractBinding::setNextBinding(QQmlAbstractBinding *b)
 
 bool QQmlAbstractBinding::updatingFlag() const
 {
-    return m_target.tag().testFlag(UpdatingBinding);
+    return hasState(UpdatingBinding);
 }
 
 void QQmlAbstractBinding::setUpdatingFlag(bool v)
 {
-    m_target.setTag(m_target.tag().setFlag(UpdatingBinding, v));
+    setState(UpdatingBinding, v);
 }
 
 bool QQmlAbstractBinding::enabledFlag() const
 {
-    return m_target.tag().testFlag(BindingEnabled);
+    return hasState(BindingEnabled);
 }
 
 void QQmlAbstractBinding::setEnabledFlag(bool v)
 {
-    m_target.setTag(m_target.tag().setFlag(BindingEnabled, v));
+    setState(BindingEnabled, v);
 }
 
 QT_END_NAMESPACE
