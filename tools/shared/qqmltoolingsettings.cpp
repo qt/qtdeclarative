@@ -105,12 +105,21 @@ bool QQmlToolingSettings::search(const QString &path)
             break;
     }
 
-    if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_s.arg(m_toolName)); !iniFile.isEmpty()) {
-        if (read(iniFile)) {
-            for (const QString &dir : std::as_const(dirs))
-                m_seenDirectories[dir] = iniFile;
-            return true;
+    // First try to locate settings file with the standard name
+    QString iniFile =
+            QStandardPaths::locate(QStandardPaths::GenericConfigLocation, settingsFileName);
+    // If not found, try alternate name format
+    if (iniFile.isEmpty()) {
+        iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation,
+                                         u"%1.ini"_s.arg(m_toolName));
+    }
+
+    // If a valid settings file was found, read it and update directory cache
+    if (!iniFile.isEmpty() && read(iniFile)) {
+        for (const QString &dir : std::as_const(dirs)) {
+            m_seenDirectories[dir] = iniFile;
         }
+        return true;
     }
 
     // No INI file found anywhere, record the failure so we won't have to traverse the entire
