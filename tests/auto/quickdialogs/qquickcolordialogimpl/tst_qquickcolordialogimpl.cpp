@@ -509,7 +509,14 @@ void tst_QQuickColorDialogImpl::dialogCanMoveBetweenWindows()
     QCOMPARE(dialogHelper.dialog->parentWindow(), qvariant_cast<QQuickWindow *>(subWindow2));
 
     QMetaObject::invokeMethod(dialogHelper.window(), "resetParentWindow");
-    QCOMPARE(dialogHelper.quickDialog->parent(), dialogHelper.window());
+    QTRY_COMPARE(dialogHelper.quickDialog->parent(), dialogHelper.window());
+
+    dialogHelper.quickDialog->contentItem()->window()->close();
+    QVERIFY(dialogHelper.openDialog());
+    dialogHelper.quickDialog->contentItem()->window()->show();
+
+    QVERIFY(QTest::qWaitForWindowActive(dialogHelper.quickDialog->contentItem()->window()));
+    QVERIFY(QQuickTest::qWaitForPolish(dialogHelper.quickDialog->contentItem()->window()));
 
     CLOSE_DIALOG("Ok");
 }
