@@ -1264,23 +1264,47 @@ function(_populate_qmlls_ini_file target qmlls_ini_file concatenated_build_dirs 
     string(REPLACE "\"" "\\\"" concatenated_build_dirs "${concatenated_build_dirs}")
     string(REPLACE "\"" "\\\"" import_paths "${import_paths}")
 
+    set(qmlls_ini_build_file "${CMAKE_CURRENT_BINARY_DIR}/.qt/qmlls.ini.build")
+
+    #note: delete this file to mark .qmlls.ini as outdated
+    set(qmlls_ini_timestamp_file
+        "${CMAKE_CURRENT_BINARY_DIR}/.qt/qmlls.ini.timestamp")
+
+    # generate the .qmlls.ini file content in the build folder
     add_custom_command(
         OUTPUT
-            ${qmlls_ini_file}
-        COMMAND ${CMAKE_COMMAND} -E echo "[General]" > ${qmlls_ini_file}
-        COMMAND ${CMAKE_COMMAND} -E echo "buildDir=\"${concatenated_build_dirs}\"" >> ${qmlls_ini_file}
-        COMMAND ${CMAKE_COMMAND} -E echo "no-cmake-calls=false" >> ${qmlls_ini_file}
-        COMMAND ${CMAKE_COMMAND} -E echo_append "docDir=" >> ${qmlls_ini_file}
+            ${qmlls_ini_build_file}
+        COMMAND ${CMAKE_COMMAND} -E echo "[General]" > ${qmlls_ini_build_file}
+        COMMAND ${CMAKE_COMMAND} -E echo "buildDir=\"${concatenated_build_dirs}\"" >> ${qmlls_ini_build_file}
+        COMMAND ${CMAKE_COMMAND} -E echo "no-cmake-calls=false" >> ${qmlls_ini_build_file}
+        COMMAND ${CMAKE_COMMAND} -E echo_append "docDir=" >> ${qmlls_ini_build_file}
         COMMAND
             ${tool_wrapper}
             ${qtpaths}
-            --query QT_INSTALL_DOCS >> ${qmlls_ini_file}
-        COMMAND ${CMAKE_COMMAND} -E echo "importPaths=\"${import_paths}\"" >> ${qmlls_ini_file}
-        COMMENT "Populating .qmlls.ini file"
+            --query QT_INSTALL_DOCS >> ${qmlls_ini_build_file}
+        COMMAND ${CMAKE_COMMAND} -E echo "importPaths=\"${import_paths}\""
+                >> ${qmlls_ini_build_file}
+        COMMENT "Populating .qmlls.ini file at ${qmlls_ini_build_file}"
+        VERBATIM
+    )
+    # delete timestamps from previous configuration, if available, then copy qmlls to source folder and create timestamp
+    add_custom_command(
+        OUTPUT
+            ${qmlls_ini_timestamp_file}
+        BYPRODUCTS
+            ${qmlls_ini_file}
+        DEPENDS
+            ${qmlls_ini_build_file}
+            COMMAND ${CMAKE_COMMAND}
+                        -DqmllsIniPath=${qmlls_ini_file}
+                        -P "${__qt_qml_macros_module_base_dir}/Qt6UpdateQmllsIni.cmake"
+        COMMAND ${CMAKE_COMMAND} -E copy ${qmlls_ini_build_file} ${qmlls_ini_file}
+        COMMAND ${CMAKE_COMMAND} -E touch ${qmlls_ini_timestamp_file}
+        COMMENT "Copying .qmlls.ini file at ${qmlls_ini_build_file} to ${qmlls_ini_file}"
         VERBATIM
     )
     add_custom_target(${target}_generate_qmlls_ini_file
-        DEPENDS ${qmlls_ini_file}
+        DEPENDS ${qmlls_ini_timestamp_file}
         VERBATIM
     )
     add_dependencies(${target} ${target}_generate_qmlls_ini_file)
