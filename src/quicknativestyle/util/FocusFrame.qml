@@ -12,10 +12,8 @@ Rectangle {
         if (!item) {
             targetItem = null;
             parent = null;
-            visible = false;
             return;
         }
-        visible = true
         parent = item.parent
         targetItem = item
         leftOffset = margins.left
