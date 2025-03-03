@@ -1,2 +1,3 @@
 add_subdirectory(basic)
 add_subdirectory(signallistener)
+add_subdirectory(statuslistener)
