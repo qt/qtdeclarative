@@ -7044,8 +7044,8 @@ void tst_qquicktextinput::checkCursorDelegateWhenPaddingChanged()
     QQuickTextInput *textInput = view.rootObject()->findChild<QQuickTextInput *>("textInput");
     QVERIFY(textInput);
 
+    QTRY_VERIFY(textInput->findChild<QQuickItem *>("cursorDelegate"));
     QQuickItem *cursorDelegate = textInput->findChild<QQuickItem *>("cursorDelegate");
-    QVERIFY(cursorDelegate);
 
     QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
     QCOMPARE(cursorDelegate->y(), textInput->topPadding());
