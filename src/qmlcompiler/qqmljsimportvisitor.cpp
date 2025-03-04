@@ -263,10 +263,15 @@ void QQmlJSImportVisitor::resolveAliases()
                 newProperty.setIsWritable(targetProperty.isWritable());
                 newProperty.setIsPointer(targetProperty.isPointer());
 
-                if (!typeScope.isNull()) {
-                    object->setPropertyLocallyRequired(
-                            newProperty.propertyName(),
-                            typeScope->isPropertyRequired(targetProperty.propertyName()));
+                const bool onlyId = !property.aliasExpression().contains(u'.');
+                if (onlyId) {
+                    newProperty.setAliasTargetScope(type);
+                    newProperty.setAliasTargetName(QStringLiteral("id-only-alias"));
+                } else {
+                    const auto &ownerScope = QQmlJSScope::ownerOfProperty(
+                                                     typeScope, targetProperty.propertyName()).scope;
+                    newProperty.setAliasTargetScope(ownerScope);
+                    newProperty.setAliasTargetName(targetProperty.propertyName());
                 }
 
                 if (const QString internalName = type->internalName(); !internalName.isEmpty())
@@ -274,6 +279,7 @@ void QQmlJSImportVisitor::resolveAliases()
 
                 Q_ASSERT(newProperty.index() >= 0); // this property is already in object
                 object->addOwnProperty(newProperty);
+                m_aliasDefinitions.append({ object, property.propertyName() });
             }
         }
 
@@ -761,9 +767,30 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
     }
 }
 
+void QQmlJSImportVisitor::populatePropertyAliases()
+{
+    for (const auto &alias : std::as_const(m_aliasDefinitions)) {
+        const auto &[aliasScope, aliasName] = alias;
+        if (aliasScope.isNull())
+            continue;
+
+        auto property = aliasScope->ownProperty(aliasName);
+        if (!property.isValid() || !property.aliasTargetScope())
+            continue;
+
+        Property target(property.aliasTargetScope(), property.aliasTargetName());
+
+        do {
+            m_propertyAliases[target].append(alias);
+            property = target.scope->property(target.name);
+            target = Property(property.aliasTargetScope(), property.aliasTargetName());
+        } while (property.isAlias());
+    }
+}
+
 void QQmlJSImportVisitor::checkRequiredProperties()
 {
-    for (const auto &required : m_requiredProperties) {
+    for (const auto &required : std::as_const(m_requiredProperties)) {
         if (!required.scope->hasProperty(required.name)) {
             m_logger->log(
                     QStringLiteral("Property \"%1\" was marked as required but does not exist.")
@@ -772,95 +799,149 @@ void QQmlJSImportVisitor::checkRequiredProperties()
         }
     }
 
-    for (const auto &defScope : m_objectDefinitionScopes) {
-        if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent() || defScope->isComponentRootElement())
+    const auto isInComponent = [this](const QQmlJSScope::ConstPtr &requiredScope) {
+        const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
+        for (auto s = requiredScope; s; s = s->parentScope()) {
+            if (s->isWrappedInImplicitComponent() || s->baseType() == compType)
+                return true;
+        }
+        return false;
+    };
+
+    const auto requiredHasBinding = [](const QList<QQmlJSScope::ConstPtr> &scopesToSearch,
+                                       const QString &propName) {
+        for (const auto &scope : scopesToSearch) {
+            const auto &[begin, end] = scope->ownPropertyBindings(propName);
+            for (auto it = begin; it != end; ++it) {
+                if (!scope->property(propName).isAlias())
+                    return true;
+            }
+        }
+
+        return false;
+    };
+
+    const auto requiredUsedInRootAlias = [&](const QQmlJSScope::ConstPtr &defScope,
+                                             const QQmlJSScope::ConstPtr &requiredScope,
+                                             const QString &propName) {
+        if (defScope->filePath() == requiredScope->filePath()) {
+            QQmlJSScope::ConstPtr fileRootScope = requiredScope;
+            while (fileRootScope->parentScope() != m_globalScope)
+                fileRootScope = fileRootScope->parentScope();
+
+            const auto &rootProperties = fileRootScope->ownProperties();
+            for (const auto &p : rootProperties) {
+                if (p.isAlias() && p.aliasTargetScope() == requiredScope
+                    && p.aliasTargetName() == propName) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    const auto requiredSetThroughAlias = [&](const QList<QQmlJSScope::ConstPtr> &scopesToSearch,
+                                             const QQmlJSScope::ConstPtr &requiredScope,
+                                             const QString &propName) {
+        const auto &propertyDefScope = QQmlJSScope::ownerOfProperty(requiredScope, propName);
+        const auto &propertyAliases = m_propertyAliases[{ propertyDefScope.scope, propName }];
+        for (const auto &alias : propertyAliases) {
+            for (const auto &s : scopesToSearch) {
+                if (s->hasOwnPropertyBindings(alias.name))
+                    return true;
+            }
+        }
+        return false;
+    };
+
+    const auto warn = [this](const QList<QQmlJSScope::ConstPtr> scopesToSearch,
+                             QQmlJSScope::ConstPtr prevRequiredScope,
+                             const QString &propName,
+                             QQmlJSScope::ConstPtr defScope,
+                             QQmlJSScope::ConstPtr requiredScope,
+                             QQmlJSScope::ConstPtr descendant) {
+        const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.size() > 1
+                ? scopesToSearch.at(scopesToSearch.size() - 2)
+                : QQmlJSScope::ConstPtr();
+
+        const QString propertyScopeName = !propertyScope.isNull()
+                ? getScopeName(propertyScope, QQmlJSScope::QMLScope)
+                : u"here"_s;
+
+        std::optional<QQmlJSFixSuggestion> suggestion;
+
+        QString message = QStringLiteral("Component is missing required property %1 from %2")
+                                  .arg(propName)
+                                  .arg(propertyScopeName);
+        if (requiredScope != descendant) {
+            const QString requiredScopeName = prevRequiredScope
+                    ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
+                    : u"here"_s;
+
+            if (!prevRequiredScope.isNull()) {
+                auto sourceScope = prevRequiredScope->baseType();
+                suggestion = QQmlJSFixSuggestion{
+                    "%1:%2:%3: Property marked as required in %4."_L1
+                            .arg(sourceScope->filePath())
+                            .arg(sourceScope->sourceLocation().startLine)
+                            .arg(sourceScope->sourceLocation().startColumn)
+                            .arg(requiredScopeName),
+                    sourceScope->sourceLocation()
+                };
+                suggestion->setFilename(sourceScope->filePath());
+            } else {
+                message += " (marked as required by %1)"_L1.arg(requiredScopeName);
+            }
+        }
+
+        m_logger->log(message, qmlRequired, defScope->sourceLocation(), true, true, suggestion);
+    };
+
+    populatePropertyAliases();
+
+    for (const auto &[_, defScope] : m_scopesByIrLocation.asKeyValueRange()) {
+        if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent()
+            || defScope->isComponentRootElement()) {
             continue;
+        }
 
         QVector<QQmlJSScope::ConstPtr> scopesToSearch;
         for (QQmlJSScope::ConstPtr scope = defScope; scope; scope = scope->baseType()) {
-            scopesToSearch << scope;
-            const auto ownProperties = scope->ownProperties();
-            for (auto propertyIt = ownProperties.constBegin();
-                 propertyIt != ownProperties.constEnd(); ++propertyIt) {
-                const QString propName = propertyIt.key();
+            const auto descendants = QList<QQmlJSScope::ConstPtr>() << scope << scope->descendantScopes();
+            for (QQmlJSScope::ConstPtr descendant : std::as_const(descendants)) {
+                if (descendant->scopeType() != QQmlJSScope::QMLScope)
+                    continue;
+                scopesToSearch << descendant;
+                const auto ownProperties = descendant->ownProperties();
+                for (auto propertyIt = ownProperties.constBegin();
+                     propertyIt != ownProperties.constEnd(); ++propertyIt) {
+                    const QString propName = propertyIt.key();
 
-                QQmlJSScope::ConstPtr prevRequiredScope;
-                for (QQmlJSScope::ConstPtr requiredScope : scopesToSearch) {
-                    if (requiredScope->isPropertyLocallyRequired(propName)) {
-                        bool found =
-                                std::find_if(scopesToSearch.constBegin(), scopesToSearch.constEnd(),
-                                             [&](QQmlJSScope::ConstPtr scope) {
-                                                 return scope->hasPropertyBindings(propName);
-                                             })
-                                != scopesToSearch.constEnd();
+                    QQmlJSScope::ConstPtr prevRequiredScope;
+                    for (QQmlJSScope::ConstPtr requiredScope : std::as_const(scopesToSearch)) {
+                        if (isInComponent(requiredScope))
+                            continue;
 
-                        if (!found) {
-                            const QString scopeId = m_scopesById.id(defScope, scope);
-                            bool propertyUsedInRootAlias = false;
-                            if (!scopeId.isEmpty()) {
-                                for (const QQmlJSMetaProperty &property :
-                                     m_exportedRootScope->ownProperties()) {
-                                    if (!property.isAlias())
-                                        continue;
-
-                                    QStringList aliasExpression =
-                                            property.aliasExpression().split(u'.');
-
-                                    if (aliasExpression.size() != 2)
-                                        continue;
-                                    if (aliasExpression[0] == scopeId
-                                        && aliasExpression[1] == propName) {
-                                        propertyUsedInRootAlias = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (propertyUsedInRootAlias)
-                                continue;
-
-                            const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.size() > 1
-                                    ? scopesToSearch.at(scopesToSearch.size() - 2)
-                                    : QQmlJSScope::ConstPtr();
-
-                            const QString propertyScopeName = !propertyScope.isNull()
-                                    ? getScopeName(propertyScope, QQmlJSScope::QMLScope)
-                                    : u"here"_s;
-
-                            const QString requiredScopeName = prevRequiredScope
-                                    ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
-                                    : u"here"_s;
-
-                            std::optional<QQmlJSFixSuggestion> suggestion;
-
-                            QString message =
-                                    QStringLiteral(
-                                            "Component is missing required property %1 from %2")
-                                            .arg(propName)
-                                            .arg(propertyScopeName);
-                            if (requiredScope != scope) {
-                                if (!prevRequiredScope.isNull()) {
-                                    auto sourceScope = prevRequiredScope->baseType();
-                                    suggestion = QQmlJSFixSuggestion {
-                                        "%1:%2:%3: Property marked as required in %4"_L1
-                                            .arg(sourceScope->filePath())
-                                            .arg(sourceScope->sourceLocation().startLine)
-                                            .arg(sourceScope->sourceLocation().startColumn)
-                                            .arg(requiredScopeName),
-                                        sourceScope->sourceLocation()
-                                    };
-                                    suggestion->setFilename(sourceScope->filePath());
-                                } else {
-                                    message += QStringLiteral(" (marked as required by %1)")
-                                                       .arg(requiredScopeName);
-                                }
-                            }
-
-                            m_logger->log(message, qmlRequired, defScope->sourceLocation(), true,
-                                          true, suggestion);
+                        if (!requiredScope->isPropertyLocallyRequired(propName)) {
+                            prevRequiredScope = requiredScope;
+                            continue;
                         }
+
+                        if (requiredHasBinding(scopesToSearch, propName))
+                            continue;
+
+                        if (requiredUsedInRootAlias(defScope, requiredScope, propName))
+                            continue;
+
+                        if (requiredSetThroughAlias(scopesToSearch, requiredScope, propName))
+                            continue;
+
+                        warn(scopesToSearch, prevRequiredScope, propName, defScope,
+                             requiredScope, descendant);
+
+                        prevRequiredScope = requiredScope;
                     }
-                    prevRequiredScope = requiredScope;
                 }
             }
         }

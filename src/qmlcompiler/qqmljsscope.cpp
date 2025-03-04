@@ -1200,6 +1200,29 @@ QQmlJSScope::InlineComponentOrDocumentRootName QQmlJSScope::enclosingInlineCompo
     return RootDocumentNameType();
 }
 
+QVector<QQmlJSScope::ConstPtr> QQmlJSScope::childScopes() const
+{
+    QVector<QQmlJSScope::ConstPtr> result;
+    result.reserve(m_childScopes.size());
+    for (const auto &child : m_childScopes)
+        result.append(child);
+    return result;
+}
+
+QVector<QQmlJSScope::ConstPtr> QQmlJSScope::descendantScopes() const
+{
+    QVector<QQmlJSScope::ConstPtr> descendants;
+    QVector<QQmlJSScope::ConstPtr> toVisit(m_childScopes.cbegin(), m_childScopes.cend());
+
+    while (!toVisit.isEmpty()) {
+        QQmlJSScope::ConstPtr scope = toVisit.takeLast();
+        descendants << scope;
+        toVisit << scope->childScopes();
+    }
+
+    return descendants;
+}
+
 /*!
     \internal
 
