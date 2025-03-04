@@ -713,12 +713,34 @@ void QAccessibleQuickItem::setCurrentValue(const QVariant &value)
 
 QVariant QAccessibleQuickItem::maximumValue() const
 {
-    return item()->property("maximumValue");
+    const auto minimumValue = item()->property("minimumValue");
+    const auto maximumValue = item()->property("maximumValue");
+    const auto from = item()->property("from");
+    const auto to   = item()->property("to");
+
+    if (minimumValue.isValid() && maximumValue.isValid())
+        return maximumValue;
+
+    if (from.isValid() && to.isValid())
+        return to;
+
+    return QVariant();
 }
 
 QVariant QAccessibleQuickItem::minimumValue() const
 {
-    return item()->property("minimumValue");
+    const auto minimumValue = item()->property("minimumValue");
+    const auto maximumValue = item()->property("maximumValue");
+    const auto from = item()->property("from");
+    const auto to   = item()->property("to");
+
+    if (minimumValue.isValid() && maximumValue.isValid())
+        return minimumValue;
+
+    if (from.isValid() && to.isValid())
+        return from;
+
+    return QVariant();
 }
 
 QVariant QAccessibleQuickItem::minimumStepSize() const
