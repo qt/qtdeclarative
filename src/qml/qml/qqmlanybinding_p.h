@@ -71,19 +71,31 @@ public:
      */
     static QQmlAnyBinding ofProperty(QObject *object, QQmlPropertyIndex index)
     {
-        QQmlAnyBinding binding;
+        const auto result = [](auto &&result) -> QQmlAnyBinding {
+            QQmlAnyBinding binding;
+            binding = std::move(result);
+            return binding;
+        };
+
         Q_ASSERT(object);
-        auto coreIndex = index.coreIndex();
+        const auto coreIndex = index.coreIndex();
+
         // we don't support bindable properties on value types so far
-        if (!index.hasValueTypeIndex()
-            && QQmlData::ensurePropertyCache(object)->property(coreIndex)->isBindable()) {
-            auto metaProp = object->metaObject()->property(coreIndex);
-            QUntypedBindable bindable = metaProp.bindable(object);
-            binding = bindable.binding();
-        } else {
-            binding = QQmlPropertyPrivate::binding(object, index);
+        if (index.hasValueTypeIndex())
+            return result(QQmlPropertyPrivate::binding(object, index));
+
+        if (QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(object)) {
+            const QQmlPropertyData *property = propertyCache->property(coreIndex);
+            return property->isBindable()
+                    ? result(property->propertyBindable(object).binding())
+                    : result(QQmlPropertyPrivate::binding(object, index));
         }
-        return binding;
+
+        const QMetaObject *metaObject = object->metaObject();
+        const QMetaProperty metaProp = metaObject->property(coreIndex);
+        return metaProp.isBindable()
+                ? result(metaProp.bindable(object).binding())
+                : result(QQmlPropertyPrivate::binding(object, index));
     }
 
     /*!
