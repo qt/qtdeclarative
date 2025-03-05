@@ -113,6 +113,8 @@ void QQuickAbstractButtonPrivate::setMovePoint(const QPointF &point)
 bool QQuickAbstractButtonPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
+    if (pressed)
+        return true;
     QQuickControlPrivate::handlePress(point, timestamp);
     setPressPoint(point);
     q->setPressed(true);
