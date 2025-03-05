@@ -15,40 +15,41 @@ T.Dial {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
+    // The handle extends outside background bounds,
+    // so we need to include that in the insets calculation
     leftInset: handle ? handle.width / 2 : 0
     rightInset: handle ? handle.width / 2 : 0
     topInset: handle ? handle.height / 2 : 0
     bottomInset: handle ? handle.height / 2 : 0
 
     background: Item {
-        implicitWidth: 104
-        implicitHeight: 104
-        x: control.leftInset + (control.availableWidth - width) / 2
-        y: control.topInset + (control.availableHeight - height) / 2
+        implicitWidth: _groove.implicitWidth
+        implicitHeight: _groove.implicitHeight
 
-        Rectangle {
+        readonly property int _strokeWidth: 4
+
+        readonly property Rectangle _groove: Rectangle {
+            parent: control.background
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
-            implicitWidth: parent.implicitWidth
-            implicitHeight: parent.implicitHeight
-            width: Math.max(50, Math.min(control.background.width, control.background.height))
+            implicitWidth: 104
+            implicitHeight: 104
+            width: Math.min(parent.width, parent.height)
             height: width
             color: "transparent"
             border.color: control.palette.mid
-            border.width: 4
+            border.width: control.background._strokeWidth
             radius: width * 0.5
             z: -1
-
-            opacity: control.enabled? 1 : 0.5
+            opacity: control.enabled ? 1 : 0.5
         }
 
-        Shape {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            implicitWidth: parent.implicitWidth
-            implicitHeight: parent.implicitHeight
-            width: Math.max(50, Math.min(control.background.width, control.background.height))
-            height: width
+        readonly property Shape _track: Shape {
+            parent: control.background
+            x: control.background._groove.x
+            y: control.background._groove.y
+            width: control.background._groove.width
+            height: control.background._groove.height
             layer.enabled: true
             layer.samples: 4
 
@@ -56,13 +57,12 @@ T.Dial {
                 fillColor: "transparent"
                 strokeColor: control.palette.button
                 strokeWidth: 4
-
                 capStyle: ShapePath.RoundCap
 
                 PathAngleArc {
-                    centerX: control.background.children[0].width / 2
-                    centerY: control.background.children[0].height / 2
-                    radiusX: control.background.children[0].width / 2 - 2
+                    centerX: control.background._track.width / 2
+                    centerY: control.background._track.height / 2
+                    radiusX: (control.background._track.width - control.background._strokeWidth) / 2
                     radiusY: radiusX
                     startAngle: -230
                     sweepAngle: 140 + control.angle
@@ -74,13 +74,16 @@ T.Dial {
     handle: Item {
         height: dialHandle.height - dialHandle.topInset - dialHandle.bottomInset
         width: dialHandle.width - dialHandle.rightInset - dialHandle.leftInset
-        x: control.background.x + control.background.width / 2 - width / 2
-        y: control.background.y + control.background.height / 2 - height / 2
+        x: control.background ? control.background.x + (control.background.width - width) / 2 : 0
+        y: control.background ? control.background.y + (control.background.height - height) / 2 : 0
 
         transform: [
             Translate {
-                x: Math.cos((angle - 90) * Math.PI / 180) * Math.min(control.background.width, control.background.height) * 0.5;
-                y: Math.sin((angle - 90) * Math.PI / 180) * Math.min(control.background.width, control.background.height) * 0.5;
+                readonly property real radius: !control.background ? 0
+                    : (Math.min(control.background.width, control.background.height)
+                        - control.background._strokeWidth) / 2
+                x: Math.cos((angle - 90) * Math.PI / 180) * radius
+                y: Math.sin((angle - 90) * Math.PI / 180) * radius
             }
         ]
 
