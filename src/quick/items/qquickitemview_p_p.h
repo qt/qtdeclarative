@@ -151,6 +151,7 @@ public:
         return releaseItem(oldCurrentItem, reusableFlag);
     }
     virtual bool releaseItem(FxViewItem *item, QQmlInstanceModel::ReusableFlag reusableFlag);
+    void itemDestroyed(QQuickItem *item) override;
 
     QQuickItem *createHighlightItem();
     QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
