@@ -293,4 +293,78 @@ TestCase {
         compare(control.implicitWidth, 100)
         compare(control.implicitHeight, 30)
     }
+
+    Transition {
+        id: yTransition
+
+        NumberAnimation {
+            properties: "y"
+            duration: 1000
+        }
+    }
+
+    Transition {
+        id: scaleTransition
+
+        NumberAnimation {
+            properties: "scale"
+            from: 1
+            to: 0
+            duration: 400
+        }
+    }
+
+    Component {
+        id: listViewContainerComponent
+
+        Container {
+            id: container
+            width: 200
+            height: 200
+
+            property alias addDisplaced: view.addDisplaced
+            property alias moveDisplaced: view.moveDisplaced
+            property alias removeDisplaced: view.removeDisplaced
+            property alias displaced: view.displaced
+            property alias remove: view.remove
+
+            contentItem: ListView {
+                id: view
+                objectName: "containerListView"
+                model: container.contentModel
+                spacing: 5
+            }
+        }
+    }
+
+    function test_listViewTransitions_data() {
+        return [
+            { tag: "addDisplaced", addDisplaced: yTransition },
+            { tag: "moveDisplaced", moveDisplaced: yTransition },
+            { tag: "removeDisplaced", removeDisplaced: yTransition },
+            { tag: "displaced", displaced: yTransition },
+            { tag: "remove", remove: scaleTransition }
+        ]
+    }
+
+    function test_listViewTransitions(data) {
+        let control = createTemporaryObject(listViewContainerComponent, testCase, {
+            addDisplaced: data.addDisplaced ?? null,
+            moveDisplaced: data.moveDisplaced ?? null,
+            removeDisplaced: data.removeDisplaced ?? null,
+            displaced: data.displaced ?? null,
+            remove: data.remove ?? null
+        })
+        verify(control)
+
+        let rect = rectangle.createObject(control,
+            { width: 200, height: 40, color: "tomato", objectName: "tomatoRect" })
+        control.addItem(rect)
+        verify(isPolishScheduled(testCase.Window.window))
+        verify(waitForPolish(testCase.Window.window))
+
+        control.removeItem(rect)
+        verify(isPolishScheduled(testCase.Window.window))
+        verify(waitForPolish(testCase.Window.window))
+    }
 }

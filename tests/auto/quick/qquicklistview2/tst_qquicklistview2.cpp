@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <QtTest/QTest>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
@@ -75,6 +76,9 @@ private slots:
     void visibleBoundToCountGreaterThanZero();
 
     void setDelegateAfterModel();
+
+    void removeAndDestroyObjectModelItem_data();
+    void removeAndDestroyObjectModelItem();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -1385,6 +1389,56 @@ void tst_QQuickListView2::setDelegateAfterModel()
                                                      "is externally overridden"));
     QMetaObject::invokeMethod(object.data(), "plantDelegate");
     QCOMPARE(object->property("count").toInt(), 4);
+}
+
+enum RemovalPolicy {
+    RemoveAndDestroy,
+    OnlyDestroy
+};
+
+void tst_QQuickListView2::removeAndDestroyObjectModelItem_data()
+{
+    QTest::addColumn<QString>("qmlFilePath");
+    QTest::addColumn<RemovalPolicy>("removalPolicy");
+
+    QTest::addRow("remove and destroy, no transitions")
+        << "removeAndDestroyObjectModelItem.qml" << RemoveAndDestroy;
+    QTest::addRow("destroy, no transitions")
+        << "removeAndDestroyObjectModelItem.qml" << OnlyDestroy;
+    QTest::addRow("remove and destroy, transitions")
+        << "removeAndDestroyObjectModelItemWithTransitions.qml" << RemoveAndDestroy;
+    QTest::addRow("destroy, transitions")
+        << "removeAndDestroyObjectModelItemWithTransitions.qml" << OnlyDestroy;
+}
+
+// QTBUG-46798, QTBUG-133256
+void tst_QQuickListView2::removeAndDestroyObjectModelItem()
+{
+    QFETCH(QString, qmlFilePath);
+    QFETCH(RemovalPolicy, removalPolicy);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFilePath)));
+
+    QQuickListView *listView = qobject_cast<QQuickListView*>(window.rootObject());
+    QVERIFY(listView);
+
+    auto *objectModel = listView->model().value<QQmlObjectModel *>();
+    QVERIFY(objectModel);
+    QPointer<QObject> firstItem = objectModel->get(0);
+    QVERIFY(firstItem);
+    // Shouldn't crash.
+    if (removalPolicy == RemoveAndDestroy)
+        objectModel->remove(0);
+    firstItem->deleteLater();
+    QTRY_VERIFY(!firstItem);
+
+    // Now try moving the view. It also shouldn't crash.
+    if (removalPolicy == RemoveAndDestroy) {
+        if (QQuickTest::qIsPolishScheduled(listView))
+            QVERIFY(QQuickTest::qWaitForPolish(listView));
+    }
+    listView->positionViewAtEnd();
 }
 
 QTEST_MAIN(tst_QQuickListView2)
