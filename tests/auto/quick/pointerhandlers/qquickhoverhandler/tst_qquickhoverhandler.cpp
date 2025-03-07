@@ -458,10 +458,13 @@ void tst_HoverHandler::window() // QTBUG-98717
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
+    const QPoint pos(30, 30);
     component.loadUrl(testFileUrl("windowCursorShape.qml"));
     QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
     QVERIFY(!window.isNull());
+    window->setFramePosition(pos);
     window->show();
+    QTRY_COMPARE(window->framePosition(), pos);
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 #if QT_CONFIG(cursor)
     if (isPlatformWayland())
