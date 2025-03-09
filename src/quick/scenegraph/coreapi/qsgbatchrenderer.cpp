@@ -21,10 +21,6 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_NO_DEBUG
-Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_material_failure();
-#endif
-
 int qt_sg_envInt(const char *name, int defaultValue);
 
 namespace QSGBatchRenderer
@@ -3173,19 +3169,6 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     if (directUpdatePtr)
         batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
-#ifndef QT_NO_DEBUG
-    if (qsg_test_and_clear_material_failure()) {
-        qDebug("QSGMaterial::updateState triggered an error (merged), batch will be skipped:");
-        Element *ee = e;
-        while (ee) {
-            qDebug() << "   -" << ee->node;
-            ee = ee->nextInBatch;
-        }
-        QSGNodeDumper::dump(rootNode());
-        qFatal("Aborting: scene graph is invalid...");
-    }
-#endif
-
     m_gstate.drawMode = QSGGeometry::DrawingMode(g->drawingMode());
     m_gstate.lineWidth = g->lineWidth();
 
@@ -3380,16 +3363,6 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
         updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, ubufSize, directUpdatePtr);
-
-#ifndef QT_NO_DEBUG
-        if (qsg_test_and_clear_material_failure()) {
-            qDebug("QSGMaterial::updateState() triggered an error (unmerged), batch will be skipped:");
-            qDebug() << "   - offending node is" << e->node;
-            QSGNodeDumper::dump(rootNode());
-            qFatal("Aborting: scene graph is invalid...");
-            return false;
-        }
-#endif
 
         ubufOffset += aligned(ubufSize, m_ubufAlignment);
 
