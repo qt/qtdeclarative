@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    WindowsImpl.UndoAction {
+        control: menu.control
+    }
+    WindowsImpl.RedoAction {
+        control: menu.control
+    }
+
+    MenuSeparator {}
+
     WindowsImpl.CutAction {
         editor: menu.editor
     }

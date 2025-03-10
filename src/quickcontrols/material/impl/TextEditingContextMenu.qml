@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    UndoAction {
+        editor: menu.editor
+    }
+    RedoAction {
+        editor: menu.editor
+    }
+
+    MenuSeparator {}
+
     CutAction {
         editor: menu.editor
     }

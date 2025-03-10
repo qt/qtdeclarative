@@ -7,9 +7,11 @@ set(qml_files
     "CutAction.qml"
     "DeleteAction.qml"
     "PasteAction.qml"
+    "RedoAction.qml"
     "SelectAllAction.qml"
     "SwitchIndicator.qml"
     "TextEditingContextMenu.qml"
+    "UndoAction.qml"
 )
 
 qt_internal_add_qml_module(QuickControls2WindowsStyleImpl

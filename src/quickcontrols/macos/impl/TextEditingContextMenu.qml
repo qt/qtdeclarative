@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    MacOSImpl.UndoAction {
+        editor: menu.editor
+    }
+    MacOSImpl.RedoAction {
+        editor: menu.editor
+    }
+
+    MenuSeparator {}
+
     MacOSImpl.CutAction {
         editor: menu.editor
     }

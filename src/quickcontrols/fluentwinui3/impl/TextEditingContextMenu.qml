@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    FluentWinUI3Impl.UndoAction {
+        editor: menu.editor
+    }
+    FluentWinUI3Impl.RedoAction {
+        editor: menu.editor
+    }
+
+    MenuSeparator {}
+
     FluentWinUI3Impl.CutAction {
         editor: menu.editor
     }

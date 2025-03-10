@@ -36,7 +36,9 @@ qt_internal_add_qml_module(QuickControls2Impl
         CutAction.qml
         DeleteAction.qml
         PasteAction.qml
+        RedoAction.qml
         SelectAllAction.qml
+        UndoAction.qml
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    FusionImpl.UndoAction {
+        editor: menu.editor
+    }
+    FusionImpl.RedoAction {
+        editor: menu.editor
+    }
+
+    MenuSeparator {}
+
     FusionImpl.CutAction {
         editor: menu.editor
     }

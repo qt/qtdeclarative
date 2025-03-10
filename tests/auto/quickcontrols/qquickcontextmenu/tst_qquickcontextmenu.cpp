@@ -48,6 +48,8 @@ private slots:
     void menuItemShouldntTriggerOnRelease();
     void textControlsMenuKey();
     void mouseAreaUnderTextArea();
+    void textEditingContextMenuUndoRedo_data();
+    void textEditingContextMenuUndoRedo();
     void textEditingContextMenuCut_data();
     void textEditingContextMenuCut();
     void textEditingContextMenuCopy_data();
@@ -62,6 +64,20 @@ private slots:
 private:
     void textEditingContextMenuData();
 
+    enum class TextEditingContextMenuItemType {
+        Undo = 0,
+        Redo = 1,
+        // (separator)
+        Cut = 3,
+        Copy = 4,
+        Paste = 5,
+        Delete = 6,
+        // (separator)
+        SelectAll = 8
+    };
+
+    int textEditingContextMenuItemIndex(TextEditingContextMenuItemType type);
+
     bool contextMenuTriggeredOnRelease = false;
 
     bool hasClipboardSupport =
@@ -70,6 +86,8 @@ private:
 #else
         false;
 #endif
+
+    bool hasUndoRedo = false;
 };
 
 tst_QQuickContextMenu::tst_QQuickContextMenu()
@@ -86,6 +104,8 @@ void tst_QQuickContextMenu::initTestCase()
 
     contextMenuTriggeredOnRelease = QGuiApplicationPrivate::platformTheme()->themeHint(
         QPlatformTheme::ContextMenuOnMouseRelease).toBool();
+
+    hasUndoRedo = QQuickStyle::name() != "iOS";
 }
 
 void tst_QQuickContextMenu::customContextMenu_data()
@@ -493,18 +513,104 @@ void tst_QQuickContextMenu::textEditingContextMenuData()
     QTest::addRow("TextField") << "textFieldInPane.qml";
 }
 
-enum class TextEditingContextMenuItemType {
-    Cut = 0,
-    Copy = 1,
-    Paste = 2,
-    Delete = 3,
-    // (separator)
-    SelectAll = 5
-};
+int tst_QQuickContextMenu::textEditingContextMenuItemIndex(TextEditingContextMenuItemType type)
+{
+    const int index = static_cast<int>(type);
+    if (hasUndoRedo)
+        return index;
+
+    if (type == TextEditingContextMenuItemType::Undo
+            || type == TextEditingContextMenuItemType::Redo) {
+        qWarning() << "This platform/style doesn't support undo/redo";
+        return -1;
+    }
+
+    // 3 items don't exist, so indices are lowered.
+    return index - 3;
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuUndoRedo_data()
+{
+    textEditingContextMenuData();
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
+{
+    QFETCH(QString, qmlFileName);
+
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+            || (QGuiApplication::platformName() == QLatin1String("minimal"))) {
+        QSKIP("offscreen platform plugin can't return focus to the main window after "
+            "the menu's window closes, even with requestActivate(). With minimal,"
+            "showView fails (\"Position failed to update\").");
+    }
+
+    if (!hasUndoRedo)
+        QSKIP("iOS doesn't have undo/redo context menu items");
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+    // Don't use clear(), as that affects the undo stack.
+    QVERIFY(editor->setProperty("text", ""));
+
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *undoMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Undo)));
+    QCOMPARE(undoMenuItem->text(), "Undo");
+    QVERIFY(!undoMenuItem->isEnabled());
+    auto *redoMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Redo)));
+    QCOMPARE(redoMenuItem->text(), "Redo");
+    QVERIFY(!redoMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Enter some text. Undo should then be enabled, but not redo.
+    QTest::keyClick(&window, Qt::Key_A);
+    QCOMPARE(editor->property("text").toString(), QLatin1String("a"));
+    QVERIFY(undoMenuItem->isEnabled());
+    QVERIFY(!redoMenuItem->isEnabled());
+
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+
+    // Click on the Undo menu item. Redo should then be enabled.
+    QVERIFY(clickButton(undoMenuItem));
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+    QCOMPARE(editor->property("text").toString(), QString());
+    QVERIFY(!undoMenuItem->isEnabled());
+    QVERIFY(redoMenuItem->isEnabled());
+
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+
+    // Click on the Redo menu item. Undo should then be enabled.
+    QVERIFY(clickButton(redoMenuItem));
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+    QCOMPARE(editor->property("text").toString(), QLatin1String("a"));
+    QVERIFY(undoMenuItem->isEnabled());
+    QVERIFY(!redoMenuItem->isEnabled());
+}
 
 void tst_QQuickContextMenu::textEditingContextMenuCut_data()
 {
-    return textEditingContextMenuData();
+    textEditingContextMenuData();
 }
 
 static const auto mementoStr = QLatin1String("Memento");
@@ -531,7 +637,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
     QVERIFY(contextMenu);
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     auto *cutMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
-        static_cast<int>(TextEditingContextMenuItemType::Cut)));
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Cut)));
     QVERIFY(cutMenuItem);
     QCOMPARE(cutMenuItem->text(), "Cut");
     QVERIFY(!cutMenuItem->isEnabled());
@@ -583,7 +689,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 
 void tst_QQuickContextMenu::textEditingContextMenuCopy_data()
 {
-    return textEditingContextMenuData();
+    textEditingContextMenuData();
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuCopy()
@@ -606,7 +712,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
     QVERIFY(contextMenu);
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     auto *copyMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
-        static_cast<int>(TextEditingContextMenuItemType::Copy)));
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Copy)));
     QVERIFY(copyMenuItem);
     QCOMPARE(copyMenuItem->text(), "Copy");
     QVERIFY(!copyMenuItem->isEnabled());
@@ -655,7 +761,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
 
 void tst_QQuickContextMenu::textEditingContextMenuPaste_data()
 {
-    return textEditingContextMenuData();
+    textEditingContextMenuData();
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuPaste()
@@ -686,7 +792,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
 
     auto *pasteMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
-        static_cast<int>(TextEditingContextMenuItemType::Paste)));
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Paste)));
     QVERIFY(pasteMenuItem);
     QCOMPARE(pasteMenuItem->text(), "Paste");
     QCOMPARE(pasteMenuItem->isEnabled(), hasClipboardSupport);
@@ -719,7 +825,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
 
 void tst_QQuickContextMenu::textEditingContextMenuDelete_data()
 {
-    return textEditingContextMenuData();
+    textEditingContextMenuData();
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuDelete()
@@ -742,7 +848,7 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
     QVERIFY(contextMenu);
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     auto *deleteMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
-        static_cast<int>(TextEditingContextMenuItemType::Delete)));
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::Delete)));
     QCOMPARE(deleteMenuItem->text(), "Delete");
     QVERIFY(!deleteMenuItem->isEnabled());
 
@@ -783,7 +889,7 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
 
 void tst_QQuickContextMenu::textEditingContextMenuSelectAll_data()
 {
-    return textEditingContextMenuData();
+    textEditingContextMenuData();
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
@@ -805,7 +911,7 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
     QVERIFY(contextMenu);
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     auto *selectAllMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
-        static_cast<int>(TextEditingContextMenuItemType::SelectAll)));
+        textEditingContextMenuItemIndex(TextEditingContextMenuItemType::SelectAll)));
     QVERIFY(selectAllMenuItem);
     QCOMPARE(selectAllMenuItem->text(), "Select All");
 

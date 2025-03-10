@@ -11,6 +11,15 @@ Menu {
 
     required property var editor
 
+    UniversalImpl.UndoAction {
+        editor: menu.editor
+    }
+    UniversalImpl.RedoAction {
+        editor: menu.editor
+    }
+
+    MenuSeparator {}
+
     UniversalImpl.CutAction {
         editor: menu.editor
     }
