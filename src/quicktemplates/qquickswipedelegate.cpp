@@ -16,6 +16,8 @@
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -589,7 +591,7 @@ qreal QQuickSwipe::position() const
 void QQuickSwipe::setPosition(qreal position)
 {
     Q_D(QQuickSwipe);
-    const qreal adjustedPosition = qBound<qreal>(-1.0, position, 1.0);
+    const qreal adjustedPosition = std::clamp(position, qreal(-1.0), qreal(1.0));
     if (adjustedPosition == d->position)
         return;
 

@@ -14,6 +14,8 @@
 #include <QtQuick/private/qquicktransition_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -674,7 +676,7 @@ qreal QQuickDrawer::position() const
 void QQuickDrawer::setPosition(qreal position)
 {
     Q_D(QQuickDrawer);
-    position = qBound<qreal>(0.0, position, 1.0);
+    position = std::clamp(position, qreal(0.0), qreal(1.0));
     if (qFuzzyCompare(d->position, position))
         return;
 

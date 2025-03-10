@@ -6316,7 +6316,7 @@ qreal QQuickItem::opacity() const
 void QQuickItem::setOpacity(qreal newOpacity)
 {
     Q_D(QQuickItem);
-    qreal o = qBound<qreal>(0, newOpacity, 1);
+    qreal o = std::clamp(newOpacity, qreal(0.0), qreal(1.0));
     if (d->opacity() == o)
         return;
 

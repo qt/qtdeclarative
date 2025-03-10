@@ -9,6 +9,8 @@
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -122,7 +124,7 @@ qreal QQuickSwitch::position() const
 void QQuickSwitch::setPosition(qreal position)
 {
     Q_D(QQuickSwitch);
-    position = qBound<qreal>(0.0, position, 1.0);
+    position = std::clamp(position, qreal(0.0), qreal(1.0));
     if (qFuzzyCompare(d->position, position))
         return;
 

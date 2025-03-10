@@ -10,6 +10,8 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 static const QRgb colors[][14] = {
@@ -1184,14 +1186,16 @@ QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMateri
 static QColor lighterShade(const QColor &color, qreal amount)
 {
     QColor hsl = color.toHsl();
-    hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() + amount, 1.0), color.alphaF());
+    hsl.setHslF(hsl.hueF(), hsl.saturationF(),
+                std::clamp(hsl.lightnessF() + amount, qreal(0.0), qreal(1.0)), color.alphaF());
     return hsl.convertTo(color.spec());
 }
 
 static QColor darkerShade(const QColor &color, qreal amount)
 {
     QColor hsl = color.toHsl();
-    hsl.setHslF(hsl.hueF(), hsl.saturationF(), qBound<qreal>(0.0, hsl.lightnessF() - amount, 1.0), color.alphaF());
+    hsl.setHslF(hsl.hueF(), hsl.saturationF(),
+                std::clamp(hsl.lightnessF() - amount, qreal(0.0), qreal(1.0)), color.alphaF());
     return hsl.convertTo(color.spec());
 }
 
