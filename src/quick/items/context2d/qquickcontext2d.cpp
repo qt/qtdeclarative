@@ -3927,7 +3927,7 @@ void QQuickContext2D::addArcTo(const QPointF& p1, const QPointF& p2, qreal radiu
     // The points p0, p1, and p2 are on the same straight line (HTML5, 4.8.11.1.8)
     // We could have used areCollinear() here, but since we're reusing
     // the variables computed above later on we keep this logic.
-    if (qFuzzyCompare(std::abs(cos_phi), 1.0)) {
+    if (qFuzzyCompare(std::abs(cos_phi), qreal(1.0))) {
         m_path.lineTo(p1);
         return;
     }
