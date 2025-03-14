@@ -86,7 +86,7 @@ public:
 
         if (QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(object)) {
             const QQmlPropertyData *property = propertyCache->property(coreIndex);
-            return property->isBindable()
+            return (property->acceptsQBinding())
                     ? result(property->propertyBindable(object).binding())
                     : result(QQmlPropertyPrivate::binding(object, index));
         }

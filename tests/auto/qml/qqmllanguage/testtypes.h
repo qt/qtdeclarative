@@ -2680,4 +2680,18 @@ public:
 };
 } // namespace YepNamespaceA
 
+class BindablePoint : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QPointF point BINDABLE bindablePoint READ default WRITE default)
+public:
+    BindablePoint(QObject *parent = nullptr) : QObject(parent), m_point(QPointF(101, 102)) {}
+
+    QBindable<QPointF> bindablePoint() { return QBindable<QPointF>(&m_point); }
+
+private:
+    QProperty<QPointF> m_point;
+};
+
 #endif // TESTTYPES_H

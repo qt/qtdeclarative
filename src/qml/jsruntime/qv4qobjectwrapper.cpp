@@ -277,9 +277,13 @@ ReturnedValue QObjectWrapper::getProperty(
 
     QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
 
-    if (ep && ep->propertyCapture && !property->isConstant())
-        if (!property->isBindable() || ep->propertyCapture->expression->mustCaptureBindableProperty())
-            ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
+    if (ep && ep->propertyCapture && !property->isConstant()) {
+        if (!property->notifiesViaBindable()
+                || ep->propertyCapture->expression->mustCaptureBindableProperty()) {
+            ep->propertyCapture->captureProperty(
+                    object, property->coreIndex(), property->notifyIndex());
+        }
+    }
 
     if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
@@ -516,7 +520,7 @@ void QObjectWrapper::setProperty(
             ScopedContext ctx(scope, f->scope());
 
             // binding assignment.
-            if (property->isBindable()) {
+            if (property->acceptsQBinding()) {
                 const QQmlPropertyIndex idx(property->coreIndex(), /*not a value type*/-1);
                 auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, idx);
                 QUntypedPropertyBinding binding;
@@ -527,6 +531,7 @@ void QObjectWrapper::setProperty(
                 } else {
                     binding = QQmlPropertyBinding::create(property, f->function(), object, callingQmlContext,
                                                            ctx, targetObject, targetIndex);
+
                 }
                 QUntypedBindable bindable;
                 void *argv = {&bindable};
