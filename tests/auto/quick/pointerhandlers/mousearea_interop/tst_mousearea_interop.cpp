@@ -45,6 +45,7 @@ void tst_MouseAreaInterop::createView(QScopedPointer<QQuickView> &window, const 
     window.reset(new QQuickView);
     window->setSource(testFileUrl(fileName));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window.data()->setFlag(Qt::FramelessWindowHint);
     QQuickViewTestUtils::centerOnScreen(window.data());
     QQuickViewTestUtils::moveMouseAway(window.data());
 
