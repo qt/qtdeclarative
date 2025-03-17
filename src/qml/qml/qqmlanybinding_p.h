@@ -73,7 +73,7 @@ public:
     {
         const auto result = [](auto &&result) -> QQmlAnyBinding {
             QQmlAnyBinding binding;
-            binding = std::move(result);
+            binding = std::forward<decltype(result)>(result);
             return binding;
         };
 
