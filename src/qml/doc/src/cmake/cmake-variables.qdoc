@@ -118,7 +118,7 @@ qt_add_qml_module(MyModule
 \brief Controls whether QML Compiler statistics collection is enabled.
 \cmakevariablesince 6.8.3
 
-When a QML project is configured using \l{qt_add_qml_modules}, by default,
+When a QML project is configured using \l{qt_add_qml_module}, by default,
 \l{QML script compiler#Obtaining statistics about the compilation of functions and bindings}{statistics}
 from the compilation of QML code will be collected. You can explicitly opt in
 or out of this by setting the \c{QT_QML_GENERATE_AOTSTATS} variable. It can be

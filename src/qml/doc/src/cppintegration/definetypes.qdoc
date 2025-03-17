@@ -62,7 +62,7 @@ make the macros available:
 #include <QtQmlIntegration/qqmlintegration.h>
 \endcode
 
-If you are already linking to the QtQml module, you can instead use the \l
+If you are already linking to the QtQml module, you can instead use the \c
 qqmlregistration.h header file, which will include \l qqmlintegration.h, as
 follows:
 

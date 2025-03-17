@@ -259,7 +259,7 @@ QT_BEGIN_NAMESPACE
 
     This function forwards its arguments to the virtual function doAddTextLayout().
 
-    \sa clear(), doAddTextLayout()
+    \sa clear()
 */
 
 /*!
@@ -272,7 +272,7 @@ QT_BEGIN_NAMESPACE
 
     This function forwards its arguments to the virtual function doAddTextDocument().
 
-    \sa clear(), doAddTextDocument()
+    \sa clear()
 */
 
 /*!

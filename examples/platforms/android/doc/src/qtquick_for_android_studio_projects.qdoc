@@ -55,10 +55,9 @@
     \endif
 
     Inside the \c onCreate() method, previously declared variables
-    are initialized with new \l {Qt Quick View Android Class}{QtQuickViews}.
-    These new instances of \l {Qt Quick View Android Class}{QtQuickView}
-    are created by giving them the Context of the Java/Kotlin Activity as
-    arguments.
+    are initialized with new \l {Qt Quick View Android Class}{QtQuickView}
+    instances. These instances take the \c Context of the Java/Kotlin
+    Activity as arguments.
 
     \if defined(onlinedocs)
         \tab {m_qtQuickView}{tab-java}{Java}{checked}
@@ -83,7 +82,7 @@
         \endtabcontent
     \endif
 
-    The \l QtQuickViews are added to the Android layout with appropriate layout
+    The \c QtQuickView instances are added to the Android layout with appropriate layout
     parameters.
 
 
@@ -163,12 +162,12 @@
         \endtabcontent
     \endif
 
-    \section1 Interacting with the QML components
+    \section1 Interacting with QML components
 
     To interact with the embedded QML components we implement the
-    \c QtQmlStatusChangeListener interface and override the onStatusChanged
+    \c QtQmlStatusChangeListener interface and override the \c onStatusChanged
     method to get the loading status of the QtQuickViewContent currently being
-    loaded into the \l QtQuickViews.
+    loaded into the \l {Qt Quick View Android Class}{QtQuickView}.
 
     \if defined(onlinedocs)
         \tab {listener}{tab-java}{Java}{checked}

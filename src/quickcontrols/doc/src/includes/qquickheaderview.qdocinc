@@ -72,6 +72,11 @@ This property holds the model role used to display text in each header cell.
 When the model has multiple roles, textRole can be set to determine which
 role should be displayed.
 
+It is the delegate's responsibility to respect the assigned \a textRole
+when presenting data from the model. While \l HorizontalHeaderViewDelegate and
+\l VerticalHeaderViewDelegate handle this automatically, custom delegates must
+implement this behavior explicitly.
+
 If model is a QAbstractItemModel then it will default to "display"; otherwise
 it is empty.
 
