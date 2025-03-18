@@ -139,6 +139,15 @@ void QQmlJSImportVisitor::registerTargetIntoImporter(const QQmlJSScope::Ptr &tar
     }
 }
 
+static void prepareTargetForVisit(const QQmlJSScope::Ptr &target)
+{
+    // rootScopeIsValid() assumes target to be a scope that only contains an internal name and a
+    // moduleName
+    const QString moduleName = target->moduleName();
+    *target = QQmlJSScope{ target->internalName() };
+    target->setOwnModuleName(moduleName);
+}
+
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
         const QString &implicitImportDirectory, const QStringList &qmldirFiles)
@@ -154,6 +163,7 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
                       importer->builtinInternalNames().contextualTypes().arrayType()),
               {})
 {
+    prepareTargetForVisit(target);
     registerTargetIntoImporter(target);
 
     m_currentScope->setScopeType(QQmlSA::ScopeType::JSFunctionScope);
