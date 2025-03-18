@@ -186,9 +186,9 @@ protected:
         ScopeAndNameT() = default;
         ScopeAndNameT(const Scope &scope, const QString &name) : scope(scope), name(name) { }
         ScopeAndNameT(const ScopeAndNameT &) = default;
-        ScopeAndNameT(ScopeAndNameT &&) noexcept = default;
+        ScopeAndNameT(ScopeAndNameT &&) = default;
         ScopeAndNameT &operator=(const ScopeAndNameT &) = default;
-        ScopeAndNameT &operator=(ScopeAndNameT &&) noexcept = default;
+        ScopeAndNameT &operator=(ScopeAndNameT &&) = default;
         ~ScopeAndNameT() = default;
 
                // Create const from non-const
