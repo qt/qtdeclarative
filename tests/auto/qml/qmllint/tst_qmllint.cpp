@@ -1249,7 +1249,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
     QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
     QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
-    QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
+    QTest::newRow("required_property_in_Component") << QStringLiteral("requiredPropertyInComponent.qml");
+    QTest::newRow("requiredPropertyInGroupedPropertyScope") << QStringLiteral("requiredPropertyInGroupedPropertyScope.qml");
     QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
