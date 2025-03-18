@@ -46,6 +46,7 @@ private slots:
     void function_documentations_data();
     void function_documentations();
     void buildDir();
+    void inMemoryEnumCompletion();
     void goToTypeDefinition_data();
     void goToTypeDefinition();
     void goToDefinition_data();

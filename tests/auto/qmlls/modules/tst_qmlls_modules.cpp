@@ -394,6 +394,31 @@ void tst_qmlls_modules::buildDir()
                                    QStringList({ u"QtQuick"_s, u"vector4d"_s })));
 }
 
+void tst_qmlls_modules::inMemoryEnumCompletion()
+{
+    ignoreDiagnostics();
+    const QString filePath = u"completions/SimpleItem.qml"_s;
+    const auto uri = openFile(filePath);
+    QVERIFY(uri);
+
+    // add in memory enum that does not exist on disk
+    TextDocumentContentChangeEvent change;
+    change.range = Range{ Position{ 3, 0 }, Position{ 3, 0 } };
+    change.text = "enum HelloEnum { Hello, World, Kitty, Qt }\nproperty var myP: SimpleItem.H";
+
+    DidChangeTextDocumentParams didChange;
+    didChange.textDocument.uri = *uri;
+    didChange.textDocument.version = 2;
+    didChange.contentChanges.append(change);
+    m_protocol->notifyDidChangeTextDocument(didChange);
+
+    QTEST_CHECKED(checkCompletions(*uri, 4, 29,
+                                   ExpectedCompletions({
+                                           { u"Hello"_s, CompletionItemKind::EnumMember },
+                                   }),
+                                   QStringList({ u"QtQuick"_s, u"vector4d"_s })));
+}
+
 void tst_qmlls_modules::automaticSemicolonInsertionForCompletions_data()
 {
     QTest::addColumn<QString>("filePath");
