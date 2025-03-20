@@ -1100,10 +1100,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << Result{ {
                          Message {
                                   QStringLiteral("Member \"Mode\" not found on type \"Item\""), 12,
-                                  29, QtWarningMsg },
+                                  29},
                           Message{
                                   QStringLiteral("\"Hour\" is not an entry of enum \"Mode\"."), 13,
-                                  62, QtInfoMsg }
+                                  62}
                        },
                        {},
                        { Message{ QStringLiteral("Hours") } }
