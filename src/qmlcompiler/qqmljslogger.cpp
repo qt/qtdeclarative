@@ -186,7 +186,10 @@ const QList<QQmlJS::LoggerCategory> &QQmlJSLogger::defaultCategories()
                 QStringLiteral("Warn if a top level Component is encountered"), QtWarningMsg },
         QQmlJS::LoggerCategory{
                 qmlUncreatableType.name().toString(), QStringLiteral("UncreatableType"),
-                QStringLiteral("Warn if uncreatable types are created"), QtWarningMsg }
+                QStringLiteral("Warn if uncreatable types are created"), QtWarningMsg },
+        QQmlJS::LoggerCategory{
+                qmlMissingEnumEntry.name().toString(), QStringLiteral("MissingEnumEntry"),
+                QStringLiteral("Warn about using missing enum values"), QtWarningMsg },
     };
 
     return cats;
