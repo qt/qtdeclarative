@@ -32,6 +32,7 @@ private slots:
     void siblings();
     void initial();
     void noApplicationIdentifiersSet();
+    void coexistence();
 };
 
 // ### Replace keyValueMap("foo", "bar") with QVariantMap({{"foo", "bar"}})
@@ -490,6 +491,18 @@ void tst_QQmlSettings::noApplicationIdentifiersSet()
     QSettings settings;
     // ... but the settings' value should be false because it was never loaded.
     QVERIFY(!settings.value("success").toBool());
+}
+
+
+void tst_QQmlSettings::coexistence()
+{
+    QQmlEngine engine;
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+        ".*QML Settings: The Settings type from Qt.labs.settings is deprecated and will be removed in a future release. Please use the one from QtCore instead."
+    ));
+    QQmlComponent component(&engine, testFileUrl("coexistence/Labs.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root.data());
 }
 
 QTEST_MAIN(tst_QQmlSettings)

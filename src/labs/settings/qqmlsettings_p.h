@@ -24,9 +24,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlSettingsPrivate;
+class QQmlSettingsLabsPrivate;
 
-class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
+class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettingsLabs : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -36,8 +36,8 @@ class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlPa
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    explicit QQmlSettings(QObject *parent = nullptr);
-    ~QQmlSettings();
+    explicit QQmlSettingsLabs(QObject *parent = nullptr);
+    ~QQmlSettingsLabs();
 
     QString category() const;
     void setCategory(const QString &category);
@@ -56,14 +56,14 @@ protected:
     void componentComplete() override;
 
 private:
-    Q_DISABLE_COPY(QQmlSettings)
-    Q_DECLARE_PRIVATE(QQmlSettings)
-    QScopedPointer<QQmlSettingsPrivate> d_ptr;
+    Q_DISABLE_COPY(QQmlSettingsLabs)
+    Q_DECLARE_PRIVATE(QQmlSettingsLabs)
+    QScopedPointer<QQmlSettingsLabsPrivate> d_ptr;
     Q_PRIVATE_SLOT(d_func(), void _q_propertyChanged())
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQmlSettings)
+QML_DECLARE_TYPE(QQmlSettingsLabs)
 
 #endif // QQMLSETTINGS_P_H
