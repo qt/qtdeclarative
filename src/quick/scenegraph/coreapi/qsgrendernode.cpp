@@ -445,6 +445,17 @@ QSGRenderNode::RenderState::~RenderState()
 }
 
 /*!
+    \class QSGRenderNode::RenderState
+    \brief Provides information about the projection matrix and clipping.
+    \inmodule QtQuick
+
+    The render state contains information for the renderer when invoking
+    commands to the scenegraph backends.
+
+    \sa QSGRenderNode::render()
+ */
+
+/*!
     \fn const QMatrix4x4 *QSGRenderNode::RenderState::projectionMatrix() const
 
     \return pointer to the current projection matrix.
