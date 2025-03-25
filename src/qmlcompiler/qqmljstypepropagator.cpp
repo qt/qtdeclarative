@@ -2403,6 +2403,11 @@ QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
     if (regIt == m_state.registers.end()) {
         if (isArgument(reg))
             return argumentType(reg);
+        if (reg == This)
+            return m_typeResolver->globalType(m_function->qmlScope);
+        // over-approximation: needed in qmllint to not crash on `eval()`-calls
+        if (reg == NewTarget)
+            return m_typeResolver->globalType(m_typeResolver->varType());
 
         setError(u"Type error: could not infer the type of an expression"_s);
         return {};
