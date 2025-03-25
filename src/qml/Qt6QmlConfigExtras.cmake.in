@@ -1,4 +1,4 @@
-if(NOT QT_NO_CREATE_TARGETS)
+if(__qt_Qml_targets_file_included)
     set(__qt_qml_target @QT_CMAKE_EXPORT_NAMESPACE@::Qml)
     get_property(__qt_qml_aliased_target TARGET ${__qt_qml_target} PROPERTY ALIASED_TARGET)
     if(__qt_qml_aliased_target)
