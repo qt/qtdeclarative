@@ -4,6 +4,8 @@
 
 #include <QSignalSpy>
 
+#include <QtCore/QElapsedTimer>
+
 #include <QtQml/QQmlContext>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
