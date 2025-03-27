@@ -419,12 +419,6 @@ class tst_qquickwindow : public QQmlDataTest
 public:
     tst_qquickwindow()
       : QQmlDataTest(QT_QMLTEST_DATADIR)
-      , touchDevice(QTest::createTouchDevice())
-      , touchDeviceWithVelocity(QTest::createTouchDevice(QInputDevice::DeviceType::TouchScreen,
-            QInputDevice::Capability::Position | QPointingDevice::Capability::Velocity))
-      , tabletStylusDevice(QPointingDevicePrivate::tabletDevice(QInputDevice::DeviceType::Stylus,
-                                                                QPointingDevice::PointerType::Pen,
-                                                                QPointingDeviceUniqueId::fromNumericId(1234567890)))
     {
         QQuickWindow::setDefaultAlphaBuffer(true);
     }
@@ -562,9 +556,17 @@ private slots:
     void dataIsNotAList();
 
 private:
-    QPointingDevice *touchDevice; // TODO make const after fixing QTBUG-107864
-    const QPointingDevice *touchDeviceWithVelocity;
-    const QPointingDevice *tabletStylusDevice;
+    // TODO make const after fixing QTBUG-107864
+    std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
+    std::unique_ptr<QPointingDevice> touchscreenWithVelocity{
+            QTest::createTouchDevice(QInputDevice::DeviceType::TouchScreen,
+                                     QInputDevice::Capability::Position | QPointingDevice::Capability::Velocity)};
+#if QT_CONFIG(tabletevent)
+    std::unique_ptr<const QPointingDevice> tabletStylusDevice{
+            QPointingDevicePrivate::tabletDevice(QInputDevice::DeviceType::Stylus,
+                                                 QPointingDevice::PointerType::Pen,
+                                                 QPointingDeviceUniqueId::fromNumericId(1234567890))};
+#endif
 };
 
 #if QT_CONFIG(opengl)
@@ -715,7 +717,7 @@ void tst_qquickwindow::touchEvent_basic()
     topItem->setSize(QSizeF(150, 150));
 
     QPointF pos(10, 10);
-    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchDevice, false);
+    QTest::QTouchEventSequence touchSeq = QTest::touchEvent(window, touchscreen.get(), false);
 
     // press single point
     touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window).commit();
@@ -865,16 +867,16 @@ void tst_qquickwindow::touchEvent_propagation()
     topItem->setVisible(showItem);
 
     // single touch to top item, should be received by middle item
-    QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window);
+    QTest::touchEvent(window, touchscreen.get()).press(0, pointInTopItem, window);
     QTRY_COMPARE(middleItem->lastEvent.touchPoints.size(), 1);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
             makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))));
-    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window);
+    QTest::touchEvent(window, touchscreen.get()).release(0, pointInTopItem, window);
 
     // touch top and middle items, middle item should get both events
-    QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).press(0, pointInTopItem, window)
             .press(1, pointInMiddleItem, window);
     QTRY_COMPARE(middleItem->lastEvent.touchPoints.size(), 2);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -882,7 +884,7 @@ void tst_qquickwindow::touchEvent_propagation()
     COMPARE_TOUCH_DATA(middleItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
            (QList<QEventPoint>() << makeTouchPoint(middleItem, middleItem->mapFromItem(topItem, pos))
                                               << makeTouchPoint(middleItem, pos) )));
-    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).release(0, pointInTopItem, window)
             .release(1, pointInMiddleItem, window);
     middleItem->reset();
 
@@ -893,7 +895,7 @@ void tst_qquickwindow::touchEvent_propagation()
     middleItem->setVisible(showItem);
 
     // touch top and middle items, bottom item should get all events
-    QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).press(0, pointInTopItem, window)
             .press(1, pointInMiddleItem, window);
     QTRY_COMPARE(bottomItem->lastEvent.touchPoints.size(), 2);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
@@ -907,18 +909,18 @@ void tst_qquickwindow::touchEvent_propagation()
     bottomItem->acceptTouchEvents = acceptTouchEvents;
     bottomItem->setEnabled(enableItem);
     bottomItem->setVisible(showItem);
-    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).release(0, pointInTopItem, window)
             .release(1, pointInMiddleItem, window);
 
     // no events should be received
-    QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).press(0, pointInTopItem, window)
             .press(1, pointInMiddleItem, window)
             .press(2, pointInBottomItem, window);
     QTest::qWait(50);
     QVERIFY(topItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QVERIFY(bottomItem->lastEvent.touchPoints.isEmpty());
-    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window)
+    QTest::touchEvent(window, touchscreen.get()).release(0, pointInTopItem, window)
             .release(1, pointInMiddleItem, window)
             .release(2, pointInBottomItem, window);
     topItem->reset();
@@ -929,7 +931,7 @@ void tst_qquickwindow::touchEvent_propagation()
     middleItem->acceptTouchEvents = acceptTouchEvents;
     middleItem->setEnabled(enableItem);
     middleItem->setVisible(showItem);
-    QTest::touchEvent(window, touchDevice).press(0, pointInTopItem, window);
+    QTest::touchEvent(window, touchscreen.get()).press(0, pointInTopItem, window);
     QTest::qWait(50);
     if (!enableItem || !showItem) {
         // middle item is disabled or has 0 opacity, bottom item receives the event
@@ -946,7 +948,7 @@ void tst_qquickwindow::touchEvent_propagation()
         COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed,
                 makeTouchPoint(topItem, pos)));
     }
-    QTest::touchEvent(window, touchDevice).release(0, pointInTopItem, window);
+    QTest::touchEvent(window, touchscreen.get()).release(0, pointInTopItem, window);
 
     delete topItem;
     delete middleItem;
@@ -983,7 +985,7 @@ void tst_qquickwindow::touchEvent_cancel()
     item->setSize(QSizeF(150, 150));
 
     QPointF pos(50, 50);
-    QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(), window);
+    QTest::touchEvent(window, touchscreen.get()).press(0, item->mapToScene(pos).toPoint(), window);
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(item->lastEvent.touchPoints.size(), 1);
@@ -991,7 +993,7 @@ void tst_qquickwindow::touchEvent_cancel()
     COMPARE_TOUCH_DATA(item->lastEvent, d);
     item->reset();
 
-    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchscreen.get());
     QCoreApplication::processEvents();
     d = makeTouchData(QEvent::TouchCancel, window, QEventPoint::State::Pressed, makeTouchPoint(item, pos));
     COMPARE_TOUCH_DATA(item->lastEvent, d);
@@ -1019,13 +1021,13 @@ void tst_qquickwindow::touchEvent_cancelClearsMouseGrab()
     item->setAcceptTouchEvents(false);
 
     QPointF pos(50, 50);
-    QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(), window);
+    QTest::touchEvent(window, touchscreen.get()).press(0, item->mapToScene(pos).toPoint(), window);
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(item->mousePressCount, 1);
     QTRY_COMPARE(item->mouseUngrabEventCount, 0);
 
-    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchscreen.get());
     QCoreApplication::processEvents();
 
     QTRY_COMPARE(item->mouseUngrabEventCount, 1);
@@ -1053,10 +1055,10 @@ void tst_qquickwindow::touchEvent_reentrant()
     QPointF pos(60, 60);
 
     // None of these should commit from the dtor.
-    QTest::QTouchEventSequence press = QTest::touchEvent(window, touchDevice, false).press(0, pos.toPoint(), window);
+    QTest::QTouchEventSequence press = QTest::touchEvent(window, touchscreen.get(), false).press(0, pos.toPoint(), window);
     pos += QPointF(2, 2);
-    QTest::QTouchEventSequence move = QTest::touchEvent(window, touchDevice, false).move(0, pos.toPoint(), window);
-    QTest::QTouchEventSequence release = QTest::touchEvent(window, touchDevice, false).release(0, pos.toPoint(), window);
+    QTest::QTouchEventSequence move = QTest::touchEvent(window, touchscreen.get(), false).move(0, pos.toPoint(), window);
+    QTest::QTouchEventSequence release = QTest::touchEvent(window, touchscreen.get(), false).release(0, pos.toPoint(), window);
 
     // Now commit (i.e. call QWindowSystemInterface::handleTouchEvent), but do not process the events yet.
     press.commit(false);
@@ -1095,7 +1097,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QMutableEventPoint::setGlobalPosition(tp, screenPos);
     QMutableEventPoint::setEllipseDiameters(tp, QSizeF(4, 4));
     points << tp;
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1106,7 +1108,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
     QVector2D velocity(1.5, 2.5);
     QMutableEventPoint::setVelocity(points[0], velocity);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1121,7 +1123,7 @@ void tst_qquickwindow::touchEvent_velocity()
     item->setRotation(90); // clockwise
     QMutableEventPoint::setPosition(points[0], points[0].position() + QPointF(5, 5));
     QMutableEventPoint::setGlobalPosition(points[0], points[0].globalPosition() + QPointF(5, 5));
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1131,7 +1133,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QCOMPARE(itemLocalPos, itemLocalPosFromEvent);
 
     QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1235,7 +1237,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QMutableEventPoint::setGlobalPosition(tp, screenPos);
     QMutableEventPoint::setEllipseDiameters(tp, QSizeF(4, 4));
     points << tp;
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1244,12 +1246,12 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
     QVector2D velocity(1.5, 2.5);
     QMutableEventPoint::setVelocity(points[0], velocity);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
     QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1269,14 +1271,14 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QMutableEventPoint::setVelocity(points[0], velocity);
     QMutableEventPoint::setPosition(tp, localPos);
     QMutableEventPoint::setGlobalPosition(tp, screenPos);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
     QMutableEventPoint::setState(points[0], QEventPoint::State::Updated);
     QMutableEventPoint::setPosition(points[0], localPos + QPointF(5, 5));
     QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1284,7 +1286,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QCOMPARE(item->lastVelocityFromMouseMove, velocity); // Velocity is always in scene coords
 
     QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
-    QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
+    QWindowSystemInterface::handleTouchEvent(window, touchscreenWithVelocity.get(),
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QCoreApplication::processEvents();
     QQuickTouchUtils::flush(window);
@@ -1319,11 +1321,11 @@ void tst_qquickwindow::synthMouseFromTouch()
 
     QPoint p1 = QPoint(20, 20);
     QPoint p2 = QPoint(30, 30);
-    QTest::touchEvent(window.data(), touchDevice).press(0, p1, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
-    QTest::touchEvent(window.data(), touchDevice).move(0, p2, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).move(0, p2, window.data());
     QQuickTouchUtils::flush(window.data());
-    QTest::touchEvent(window.data(), touchDevice).release(0, p2, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).release(0, p2, window.data());
     QQuickTouchUtils::flush(window.data());
 
     QCOMPARE(item->m_touchEvents.size(), acceptTouch ? 3 : 0);
@@ -1364,14 +1366,14 @@ void tst_qquickwindow::synthMouseDoubleClickFromTouch()
     QTest::qWait(100);
 
     QPoint p1 = item->mapToScene(item->clipRect().center()).toPoint();
-    QTest::touchEvent(window.data(), touchDevice).press(0, p1, window.data());
-    QTest::touchEvent(window.data(), touchDevice).move(0, p1 + movement, window.data());
-    QTest::touchEvent(window.data(), touchDevice).release(0, p1 + movement, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).press(0, p1, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).move(0, p1 + movement, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).release(0, p1 + movement, window.data());
 
     QPoint p2 = p1 + distanceBetweenPresses;
-    QTest::touchEvent(window.data(), touchDevice).press(1, p2, window.data());
-    QTest::touchEvent(window.data(), touchDevice).move(1, p2 + movement, window.data());
-    QTest::touchEvent(window.data(), touchDevice).release(1, p2 + movement, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).press(1, p2, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).move(1, p2 + movement, window.data());
+    QTest::touchEvent(window.data(), touchscreen.get()).release(1, p2 + movement, window.data());
 
     const int eventCount = item->m_mouseEvents.size();
     QVERIFY(eventCount >= 2);
@@ -2398,7 +2400,7 @@ void tst_qquickwindow::qobjectEventFilter_touch()
     QPointF pos(10, 10);
 
     // press single point
-    QTest::touchEvent(&window, touchDevice).press(0, item->mapToScene(pos).toPoint(), &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, item->mapToScene(pos).toPoint(), &window);
 
     QCOMPARE(eventFilter.events.size(), 1);
     QCOMPARE(eventFilter.events.first(), (int)QEvent::TouchBegin);
@@ -3608,7 +3610,7 @@ void tst_qquickwindow::testChildMouseEventFilter()
     if (useMouseEvents)
         QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
     else
-        QTest::touchEvent(&window, touchDevice).press(0, mousePos, &window);
+        QTest::touchEvent(&window, touchscreen.get()).press(0, mousePos, &window);
 
     // Check if event got delivered to the root item. If so, append it to the list of items the event got delivered to
     if (rootFilter->events.contains(QEvent::MouseButtonPress))
@@ -3628,7 +3630,7 @@ void tst_qquickwindow::testChildMouseEventFilter()
     if (useMouseEvents)
         QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, mousePos);
     else
-        QTest::touchEvent(&window, touchDevice).release(0, mousePos, &window);
+        QTest::touchEvent(&window, touchscreen.get()).release(0, mousePos, &window);
 }
 
 void tst_qquickwindow::cleanupGrabsOnRelease()
@@ -3672,8 +3674,8 @@ void tst_qquickwindow::subclassWithPointerEventVirtualOverrides_data()
     QTest::addColumn<const QPointingDevice *>("device");
 
     QTest::newRow("mouse click") << QPointingDevice::primaryPointingDevice();
-    QTest::newRow("touch tap") << static_cast<const QPointingDevice*>(touchDevice); // TODO QTBUG-107864
-    QTest::newRow("stylus tap") << tabletStylusDevice;
+    QTest::newRow("touch tap") << static_cast<const QPointingDevice*>(touchscreen.get()); // TODO QTBUG-107864
+    QTest::newRow("stylus tap") << tabletStylusDevice.get();
 }
 
 void tst_qquickwindow::subclassWithPointerEventVirtualOverrides() // QTBUG-97859

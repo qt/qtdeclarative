@@ -245,6 +245,8 @@ private:
         w->requestActivate();
         return QTest::qWaitForWindowActive(w);
     }
+
+    std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
 };
 
 tst_qquickitem::tst_qquickitem()
@@ -1459,21 +1461,19 @@ void tst_qquickitem::touchEventAcceptIgnore()
         item->setAcceptTouchEvents(itemAcceptsTouch); // it's false by default in Qt 6
     item->acceptIncomingTouchEvents = itemAcceptsTouchEvents;
 
-    static QPointingDevice* device = QTest::createTouchDevice();
-
     // Send Begin, Update & End touch sequence
     item->touchEventReached = false;
-    QTest::touchEvent(&window, device).press(1, QPoint(50, 50), &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(1, QPoint(50, 50), &window);
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE(item->touchEventReached, itemAcceptsTouch);
 
     item->touchEventReached = false;
-    QTest::touchEvent(&window, device).move(1, QPoint(60, 60), &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(1, QPoint(60, 60), &window);
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE(item->touchEventReached, itemAcceptsTouchEvents);
 
     item->touchEventReached = false;
-    QTest::touchEvent(&window, device).release(1, QPoint(60, 60), &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(1, QPoint(60, 60), &window);
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE(item->touchEventReached, itemAcceptsTouchEvents);
 }

@@ -38,7 +38,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QPointingDevice *touchDevice = QTest::createTouchDevice();
+    std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
 };
 
 void tst_MouseAreaInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -109,7 +109,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragTakeOverFromSibling.qml");
     QQuickView * window = windowPtr.data();
-    auto devPriv = QPointingDevicePrivate::get(touchDevice);
+    auto devPriv = QPointingDevicePrivate::get(touchscreen.get());
 
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);
@@ -118,7 +118,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     ma->setPreventStealing(preventStealing);
 
     QPoint p1(150, 150);
-    QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
+    QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchscreen.get());
 
     touch.press(1, p1).commit();
     QQuickTouchUtils::flush(window);

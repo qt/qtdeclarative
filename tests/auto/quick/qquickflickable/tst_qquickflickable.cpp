@@ -240,14 +240,14 @@ private slots:
     void nestedWheelEventPropagation();
 
 private:
-    QPointingDevice *touchDevice = QTest::createTouchDevice();
-    const QPointingDevice *mouseDevice = new QPointingDevice(
+    std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
+    std::unique_ptr<QPointingDevice> mouseDevice{new QPointingDevice(
             "test mouse", 1000, QInputDevice::DeviceType::Mouse, QPointingDevice::PointerType::Generic,
             QInputDevice::Capability::Position | QInputDevice::Capability::Hover | QInputDevice::Capability::Scroll,
-            1, 5, QString(), QPointingDeviceUniqueId(), this);
-    QScopedPointer<QPointingDevice> touchpad = QScopedPointer<QPointingDevice>(
+            1, 5, QString(), QPointingDeviceUniqueId(), this)};
+    std::unique_ptr<QPointingDevice> touchpad{
             QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad,
-                                     QInputDevice::Capability::Position | QInputDevice::Capability::PixelScroll));
+                                     QInputDevice::Capability::Position | QInputDevice::Capability::PixelScroll)};
 };
 
 void tst_qquickflickable::initTestCase()
@@ -257,8 +257,7 @@ void tst_qquickflickable::initTestCase()
 #endif
     QQmlDataTest::initTestCase();
     qmlRegisterType<TouchDragArea>("Test",1,0,"TouchDragArea");
-    touchDevice->setParent(this); // avoid leak
-    QWindowSystemInterface::registerInputDevice(mouseDevice);
+    QWindowSystemInterface::registerInputDevice(mouseDevice.get());
 }
 
 void tst_qquickflickable::cleanup()
@@ -406,7 +405,7 @@ void tst_qquickflickable::boundsBehavior()
 
 void tst_qquickflickable::rebound()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("rebound.qml")));
     QVERIFY(window.rootObject() != nullptr);
@@ -542,10 +541,11 @@ void tst_qquickflickable::flickDeceleration()
 void tst_qquickflickable::pressDelay_data()
 {
     QTest::addColumn<const QPointingDevice *>("device");
-    const QPointingDevice *constTouchDevice = touchDevice;
+    const QPointingDevice *constMouse = mouseDevice.get();
+    const QPointingDevice *constTouchscreen = touchscreen.get();
 
-    QTest::newRow("mouse") << mouseDevice;
-    QTest::newRow("touch") << constTouchDevice;
+    QTest::newRow("mouse") << constMouse;
+    QTest::newRow("touch") << constTouchscreen;
 }
 
 void tst_qquickflickable::pressDelay()
@@ -637,7 +637,7 @@ void tst_qquickflickable::pressDelay()
 // QTBUG-17361
 void tst_qquickflickable::nestedPressDelay()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("nestedPressDelay.qml")));
 
@@ -712,7 +712,7 @@ void tst_qquickflickable::nestedPressDelay()
 
 void tst_qquickflickable::filterReplayedPress()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("nestedPressDelay.qml")));
 
@@ -750,7 +750,7 @@ void tst_qquickflickable::filterReplayedPress()
 // QTBUG-37316
 void tst_qquickflickable::nestedClickThenFlick()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("nestedClickThenFlick.qml")));
 
@@ -1145,7 +1145,8 @@ void tst_qquickflickable::nestedSameDirectionTrackpad() // QTBUG-124478
 
 void tst_qquickflickable::movingAndFlicking_data()
 {
-    const QPointingDevice *constTouchDevice = touchDevice;
+    const QPointingDevice *constMouse = mouseDevice.get();
+    const QPointingDevice *constTouchscreen = touchscreen.get();
 
     QTest::addColumn<bool>("verticalEnabled");
     QTest::addColumn<bool>("horizontalEnabled");
@@ -1156,37 +1157,37 @@ void tst_qquickflickable::movingAndFlicking_data()
     QTest::addColumn<QPoint>("flickToWithSnapBack");
 
     QTest::newRow("vertical")
-            << true << false << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
+            << true << false << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << constMouse
             << QPoint(50, 100)
             << QPoint(50, 300);
 
     QTest::newRow("horizontal")
-            << false << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
+            << false << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << constMouse
             << QPoint(-50, 200)
             << QPoint(150, 200);
 
     QTest::newRow("both")
-            << true << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << mouseDevice
+            << true << true << Qt::MouseButtons(Qt::LeftButton) << Qt::LeftButton << constMouse
             << QPoint(-50, 100)
             << QPoint(150, 300);
 
     QTest::newRow("mouse disabled")
-            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << mouseDevice
+            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << constMouse
             << QPoint(-50, 100)
             << QPoint(150, 300);
 
     QTest::newRow("wrong button")
-            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::LeftButton << mouseDevice
+            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::LeftButton << constMouse
             << QPoint(-50, 100)
             << QPoint(150, 300);
 
     QTest::newRow("right button")
-            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::RightButton << mouseDevice
+            << true << true << Qt::MouseButtons(Qt::RightButton) << Qt::RightButton << constMouse
             << QPoint(-50, 100)
             << QPoint(150, 300);
 
     QTest::newRow("touch")
-            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << constTouchDevice
+            << true << true << Qt::MouseButtons(Qt::NoButton) << Qt::LeftButton << constTouchscreen
             << QPoint(-50, 100)
             << QPoint(150, 300);
 }
@@ -1363,7 +1364,7 @@ void tst_qquickflickable::movingAndDragging()
     QFETCH(bool, horizontalEnabled);
     QFETCH(QPoint, moveByWithoutSnapBack);
     QFETCH(QPoint, moveByWithSnapBack);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     const QPoint moveFrom(50, 200);   // centre
 
@@ -1536,11 +1537,12 @@ void tst_qquickflickable::dragAndSwitchDirection_data()
     QTest::addColumn<const QPointingDevice *>("device");
     QTest::addColumn<bool>("dragH");
 
-    const QPointingDevice *constTouchDevice = touchDevice;
-    QTest::newRow("mouse, drag horizontally") << mouseDevice << true;
-    QTest::newRow("device, drag horizontally") << constTouchDevice << true;
-    QTest::newRow("mouse, drag vertically") << mouseDevice << false;
-    QTest::newRow("device, drag vertically") << constTouchDevice << false;
+    const QPointingDevice *constMouse = mouseDevice.get();
+    const QPointingDevice *constTouchscreen = touchscreen.get();
+    QTest::newRow("mouse, drag horizontally") << constMouse << true;
+    QTest::newRow("device, drag horizontally") << constTouchscreen << true;
+    QTest::newRow("mouse, drag vertically") << constMouse << false;
+    QTest::newRow("device, drag vertically") << constTouchscreen << false;
 }
 
 void tst_qquickflickable::dragAndSwitchDirection()
@@ -1607,7 +1609,7 @@ void tst_qquickflickable::dragAndSwitchDirection()
 
 void tst_qquickflickable::flickOnRelease()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("flickable03.qml")));
 
@@ -1636,7 +1638,7 @@ void tst_qquickflickable::flickOnRelease()
 
 void tst_qquickflickable::pressWhileFlicking()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("flickable03.qml")));
 
@@ -1690,7 +1692,7 @@ void tst_qquickflickable::pressWhileFlicking()
 
 void tst_qquickflickable::dragWhileFlicking()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("flickable03.qml")));
 
@@ -1759,7 +1761,7 @@ void tst_qquickflickable::dragWhileFlicking()
 
 void tst_qquickflickable::disabled()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("disabled.qml")));
 
@@ -1785,7 +1787,7 @@ void tst_qquickflickable::disabled()
 
 void tst_qquickflickable::flickVelocity()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("flickable03.qml")));
 
@@ -1891,7 +1893,7 @@ void tst_qquickflickable::cancelOnHide()
 
 void tst_qquickflickable::cancelOnMouseGrab()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("cancel.qml")));
 
@@ -1927,7 +1929,7 @@ void tst_qquickflickable::cancelOnMouseGrab()
 
 void tst_qquickflickable::clickAndDragWhenTransformed()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("transformedFlickable.qml")));
 
@@ -1984,7 +1986,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
 
     QCOMPARE(flickable->contentY(), 0.0f);
 
-    QQuickTest::pointerFlick(touchDevice, &window, 1, QPoint(100, 400), QPoint(100, 240), 100);
+    QQuickTest::pointerFlick(touchscreen.get(), &window, 1, QPoint(100, 400), QPoint(100, 240), 100);
 
     qreal contentYAfterFirstFlick = flickable->contentY();
     qDebug() << "contentYAfterFirstFlick " << contentYAfterFirstFlick;
@@ -1992,7 +1994,7 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     // Wait until view stops moving
     QTRY_VERIFY(!flickable->isMoving());
 
-    QQuickTest::pointerFlick(touchDevice, &window, 1, QPoint(100, 400), QPoint(100, 240), 100);
+    QQuickTest::pointerFlick(touchscreen.get(), &window, 1, QPoint(100, 400), QPoint(100, 240), 100);
 
     // In the original bug, that second flick would cause Flickable to halt immediately
     qreal contentYAfterSecondFlick = flickable->contentY();
@@ -2037,7 +2039,7 @@ void tst_qquickflickable::nestedStopAtBounds()
     QFETCH(bool, innerFiltering);
     QFETCH(int, pressDelay);
     QFETCH(bool, waitForPressDelay);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("nestedStopAtBounds.qml")));
@@ -2167,10 +2169,11 @@ void tst_qquickflickable::nestedStopAtBounds()
 void tst_qquickflickable::nestedDraggingFlickingMoving_data()
 {
     QTest::addColumn<const QPointingDevice *>("device");
+    const QPointingDevice *constMouse = mouseDevice.get();
+    const QPointingDevice *constTouchscreen = touchscreen.get();
 
-    const QPointingDevice *constTouchDevice = touchDevice;
-    QTest::newRow("mouse") << mouseDevice;
-    QTest::newRow("touch") << constTouchDevice;
+    QTest::newRow("mouse") << constMouse;
+    QTest::newRow("touch") << constTouchscreen;
 }
 
 void tst_qquickflickable::nestedDraggingFlickingMoving()
@@ -2256,7 +2259,7 @@ void tst_qquickflickable::stopAtBounds()
     QFETCH(bool, transpose);
     QFETCH(bool, invert);
     QFETCH(bool, pixelAligned);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("stopAtBounds.qml")));
@@ -2363,7 +2366,7 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QVERIFY(flickable != nullptr);
 
     QCOMPARE(flickable->contentY(), 50.0f);
-    QQuickTest::pointerFlick(touchDevice, &window, 1, QPoint(100, 300), QPoint(100, 200), 100);
+    QQuickTest::pointerFlick(touchscreen.get(), &window, 1, QPoint(100, 300), QPoint(100, 200), 100);
 
     // flickable should not have moved
     QCOMPARE(flickable->contentY(), 50.0);
@@ -2382,7 +2385,7 @@ void tst_qquickflickable::nestedMouseAreaPropagateComposedEvents()
     QVERIFY(flickable != nullptr);
 
     QCOMPARE(flickable->contentY(), 50.0f);
-    QQuickTest::pointerFlick(touchDevice, &window, 1, QPoint(100, 300), QPoint(100, 200), 100);
+    QQuickTest::pointerFlick(touchscreen.get(), &window, 1, QPoint(100, 300), QPoint(100, 200), 100);
 
     // flickable should have moved
     QVERIFY(!qFuzzyCompare(flickable->contentY(), 50.0));
@@ -2424,15 +2427,15 @@ void tst_qquickflickable::nestedSliderUsingTouch()
     tda->setKeepMouseGrab(keepMouseGrab);
     tda->setKeepTouchGrab(keepTouchGrab);
     QPoint p0 = tda->mapToScene(QPoint(20, 20)).toPoint();
-    QTest::touchEvent(&window, touchDevice).press(0, p0, &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p0, &window);
     QQuickTouchUtils::flush(&window);
     for (int i = 0; i < 8; ++i) {
         p0 += QPoint(dragThreshold / 6, dragThreshold / 4);
-        QTest::touchEvent(&window, touchDevice).move(0, p0, &window);
+        QTest::touchEvent(&window, touchscreen.get()).move(0, p0, &window);
         QQuickTouchUtils::flush(&window);
     }
     QCOMPARE(tda->active(), keepMouseGrab || keepTouchGrab);
-    QTest::touchEvent(&window, touchDevice).release(0, p0, &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p0, &window);
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE(tda->touchPointStates.first(), QEventPoint::State::Pressed);
     QTRY_VERIFY(tda->touchUpdates >= minUpdates);
@@ -2443,7 +2446,7 @@ void tst_qquickflickable::nestedSliderUsingTouch()
 // QTBUG-31328
 void tst_qquickflickable::pressDelayWithLoader()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("pressDelayWithLoader.qml")));
 
@@ -2521,7 +2524,7 @@ void tst_qquickflickable::ratios_smallContent()
 // QTBUG-48018
 void tst_qquickflickable::contentXYNotTruncatedToInt()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("contentXY.qml")));
 
@@ -2537,7 +2540,7 @@ void tst_qquickflickable::contentXYNotTruncatedToInt()
 
 void tst_qquickflickable::keepGrab()
 {
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("keepGrab.qml")));
 
@@ -2584,7 +2587,7 @@ void tst_qquickflickable::overshoot()
     QFETCH(QQuickFlickable::BoundsBehavior, boundsBehavior);
     QFETCH(int, boundsMovement);
     QFETCH(bool, pixelAligned);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("overshoot.qml")));
@@ -2847,7 +2850,7 @@ void tst_qquickflickable::synchronousDrag_data()
 void tst_qquickflickable::synchronousDrag()
 {
     QFETCH(bool, synchronousDrag);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("longList.qml")));
@@ -2879,20 +2882,20 @@ void tst_qquickflickable::synchronousDrag()
     flickable->setContentY(0);
 
     // Drag via touch
-    QTest::touchEvent(&window, touchDevice).press(0, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p1, &window);
     QQuickTouchUtils::flush(&window);
-    QTest::touchEvent(&window, touchDevice).move(0, p2, &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p2, &window);
     QQuickTouchUtils::flush(&window);
-    QTest::touchEvent(&window, touchDevice).move(0, p3, &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p3, &window);
     QQuickTouchUtils::flush(&window);
-    QTest::touchEvent(&window, touchDevice).move(0, p4, &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p4, &window);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(flickable->contentY(), synchronousDrag ? 50.0f : 0.0f);
-    QTest::touchEvent(&window, touchDevice).move(0, p5, &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p5, &window);
     QQuickTouchUtils::flush(&window);
     if (!synchronousDrag)
         QVERIFY(flickable->contentY() < 50.0f);
-    QTest::touchEvent(&window, touchDevice).release(0, p5, &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p5, &window);
 }
 
 // QTBUG-81098: tests that a binding to visibleArea doesn't result
@@ -2918,13 +2921,13 @@ void tst_qquickflickable::parallelTouch() // QTBUG-30840
     // Drag both in parallel via touch, opposite directions
     QPoint p0(80, 240);
     QPoint p1(240, 240);
-    QTest::touchEvent(&window, touchDevice).press(0, p0, &window).press(1, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p0, &window).press(1, p1, &window);
     int began1After = -1;
     int began2After = -1;
     for (int i = 0; i < 8; ++i) {
         p0 += QPoint(0, threshold);
         p1 -= QPoint(0, threshold);
-        QTest::touchEvent(&window, touchDevice).move(0, p0, &window).move(1, p1, &window);
+        QTest::touchEvent(&window, touchscreen.get()).move(0, p0, &window).move(1, p1, &window);
         QQuickTouchUtils::flush(&window);
         if (began1After < 0 && flickable1->isDragging())
             began1After = i;
@@ -2936,7 +2939,7 @@ void tst_qquickflickable::parallelTouch() // QTBUG-30840
     QVERIFY(flickable2->isDraggingVertically());
     QCOMPARE(began1After, 2);
     QCOMPARE(began2After, 2);
-    QTest::touchEvent(&window, touchDevice).release(0, p0, &window).release(1, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p0, &window).release(1, p1, &window);
     QTRY_VERIFY(!flickable1->isMoving());
     QTRY_VERIFY(!flickable2->isMoving());
 }
@@ -2944,7 +2947,7 @@ void tst_qquickflickable::parallelTouch() // QTBUG-30840
 void tst_qquickflickable::ignoreNonLeftMouseButtons() // QTBUG-96909
 {
     QFETCH(Qt::MouseButton, otherButton);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
     const int threshold = qApp->styleHints()->startDragDistance();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("dragon.qml")));
@@ -3045,7 +3048,7 @@ void tst_qquickflickable::flickWhenRotated() // QTBUG-99639
     QFETCH(qreal, rootRotation);
     QFETCH(qreal, flickableRotation);
     QFETCH(qreal, scale);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("rotatedFlickable.qml")));
@@ -3201,7 +3204,7 @@ void tst_qquickflickable::setContentPositionWhileDragging() // QTBUG-104966
     QFETCH(bool, isHorizontal);
     QFETCH(int, newPos);
     QFETCH(int, newExtent);
-    auto device = mouseDevice;
+    const auto device = mouseDevice.get();
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("contentPosWhileDragging.qml")));
@@ -3299,13 +3302,13 @@ void tst_qquickflickable::coalescedMove()
     QSignalSpy flickStartedSpy(flickable, SIGNAL(flickStarted()));
     QSignalSpy flickEndedSpy(flickable, SIGNAL(flickEnded()));
 
-    QTest::touchEvent(&window, touchDevice).press(0, {10, 10}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).press(0, {10, 10}).commit();
 
-    QTest::touchEvent(&window, touchDevice).move(0, {10, 40}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).move(0, {10, 40}).commit();
 
-    QTest::touchEvent(&window, touchDevice).move(0, {10, 100}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).move(0, {10, 100}).commit();
 
-    QTest::touchEvent(&window, touchDevice).release(0, {10, 150}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).release(0, {10, 150}).commit();
     QQuickTouchUtils::flush(&window);
 
     QTRY_VERIFY(!flickable->isMoving());
@@ -3329,13 +3332,13 @@ void tst_qquickflickable::onlyOneMove()
     QSignalSpy flickStartedSpy(flickable, SIGNAL(flickStarted()));
     QSignalSpy flickEndedSpy(flickable, SIGNAL(flickEnded()));
 
-    QTest::touchEvent(&window, touchDevice).press(0, {10, 10}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).press(0, {10, 10}).commit();
     QQuickTouchUtils::flush(&window);
 
-    QTest::touchEvent(&window, touchDevice).move(0, {10, 100}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).move(0, {10, 100}).commit();
     QQuickTouchUtils::flush(&window);
 
-    QTest::touchEvent(&window, touchDevice).release(0, {10, 200}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).release(0, {10, 200}).commit();
     QQuickTouchUtils::flush(&window);
 
     QTRY_VERIFY(!flickable->isMoving());
@@ -3423,17 +3426,17 @@ void tst_qquickflickable::touchCancel()
     QSignalSpy movementEndedSpy(flickable, SIGNAL(movementEnded()));
 
     int touchPosY = 10;
-    QTest::touchEvent(&window, touchDevice).press(0, {10, touchPosY}).commit();
+    QTest::touchEvent(&window, touchscreen.get()).press(0, {10, touchPosY}).commit();
     QQuickTouchUtils::flush(&window);
 
     for (int i = 0; i < 3; ++i) {
         touchPosY += qApp->styleHints()->startDragDistance();
-        QTest::touchEvent(&window, touchDevice).move(0, {10, touchPosY}).commit();
+        QTest::touchEvent(&window, touchscreen.get()).move(0, {10, touchPosY}).commit();
         QQuickTouchUtils::flush(&window);
     }
 
     QTRY_COMPARE(movementStartedSpy.size(), 1);
-    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice);
+    QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchscreen.get());
     QTRY_COMPARE(movementEndedSpy.size(), 1);
 }
 

@@ -268,7 +268,7 @@ private:
 
     QQmlEngine engine;
 
-    QPointingDevice *touchDevice = QTest::createTouchDevice();
+    std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
 };
 
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
@@ -3444,9 +3444,9 @@ void tst_qquicktextedit::inFlickableTouch()
 
     // flick with touch
     QPoint p(10, 100);
-    QTest::touchEvent(&view, touchDevice).press(1, p, &view);
+    QTest::touchEvent(&view, touchscreen.get()).press(1, p, &view);
     QQuickTouchUtils::flush(&view);
-    QObject *pressGrabber = QPointingDevicePrivate::get(touchDevice)->firstPointExclusiveGrabber();
+    QObject *pressGrabber = QPointingDevicePrivate::get(touchscreen.get())->firstPointExclusiveGrabber();
     // even if TextEdit is readonly, it still grabs on press.  But not if it's disabled.
     if (enabled)
         QCOMPARE(pressGrabber, edit);
@@ -3456,7 +3456,7 @@ void tst_qquicktextedit::inFlickableTouch()
     // after a couple of events, Flickable steals the grab and starts moving
     for (; i < 4 && !flick->isMoving(); ++i) {
         p -= QPoint(0, dragThreshold);
-        QTest::touchEvent(&view, touchDevice).move(1, p, &view);
+        QTest::touchEvent(&view, touchscreen.get()).move(1, p, &view);
         QQuickTouchUtils::flush(&view);
     }
     QCOMPARE(flick->isMoving(), bool(expectFlickingAfter));
@@ -3464,7 +3464,7 @@ void tst_qquicktextedit::inFlickableTouch()
         qCDebug(lcTests) << "flickable started moving after" << i << "moves, when we got to" << p;
         QCOMPARE(i, expectFlickingAfter);
     }
-    QTest::touchEvent(&view, touchDevice).release(1, p, &view);
+    QTest::touchEvent(&view, touchscreen.get()).release(1, p, &view);
 }
 
 void tst_qquicktextedit::simulateKey(QWindow *view, int key, Qt::KeyboardModifiers modifiers)
@@ -6749,9 +6749,9 @@ void tst_qquicktextedit::touchscreenDoesNotSelect()
     int x1 = 10;
     int x2 = 70;
     int y = QFontMetrics(textEditObject->font()).height() / 2;
-    QTest::touchEvent(&window, touchDevice).press(0, QPoint(x1,y), &window);
-    QTest::touchEvent(&window, touchDevice).move(0, QPoint(x2,y), &window);
-    QTest::touchEvent(&window, touchDevice).release(0, QPoint(x2,y), &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, QPoint(x1,y), &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, QPoint(x2,y), &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, QPoint(x2,y), &window);
     QQuickTouchUtils::flush(&window);
     // if the import version is old enough, fall back to old behavior: touch swipe _does_ select text
     QCOMPARE(textEditObject->selectedText().isEmpty(), mouseOnly);
@@ -6774,7 +6774,7 @@ void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
 
     // tap the bottom field
     QPoint p1 = bottom->mapToScene({6, 6}).toPoint();
-    QTest::touchEvent(&window, touchDevice).press(0, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p1, &window);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(qApp->focusObject(), bottom);
     // text cursor is at 0 by default, on press
@@ -6784,7 +6784,7 @@ void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
     QTest::keyClick(&window, Qt::Key_Q);
     QVERIFY(bottom->text().startsWith('q'));
     QCOMPARE(bottom->text().size(), len + 1);
-    QTest::touchEvent(&window, touchDevice).release(0, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p1, &window);
     QQuickTouchUtils::flush(&window);
     // the cursor gets moved on release, as long as TextInput's grab wasn't stolen (e.g. by Flickable)
     QVERIFY(bottom->cursorPosition() < 5);
@@ -6792,9 +6792,9 @@ void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
     // press-drag-and-release from p1 to p2 on the top field
     p1 = top->mapToScene({6, 6}).toPoint();
     QPoint p2 = top->mapToScene({76, 6}).toPoint();
-    QTest::touchEvent(&window, touchDevice).press(0, p1, &window);
-    QTest::touchEvent(&window, touchDevice).move(0, p2, &window);
-    QTest::touchEvent(&window, touchDevice).release(0, p2, &window);
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p1, &window);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p2, &window);
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p2, &window);
     QQuickTouchUtils::flush(&window);
     QCOMPARE(qApp->focusObject(), top);
     QVERIFY(top->selectedText().isEmpty());
