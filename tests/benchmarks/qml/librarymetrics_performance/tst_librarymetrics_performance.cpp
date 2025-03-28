@@ -6,6 +6,7 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QDebug>
+#include <QElapsedTimer>
 
 // This benchmark produces performance statistics
 // for the standard set of elements, properties and expressions which
