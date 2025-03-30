@@ -86,7 +86,8 @@ Q_LOGGING_CATEGORY(lcDragHandler, "qt.quick.handler.drag")
     \c target is an Item, \c centroid is the point at which the drag begins and
     to which the \c target will be moved (subject to constraints).
 
-    At this time, drag-and-drop is not yet supported.
+    DragHandler can be used together with the \l Drag attached property to
+    implement drag-and-drop.
 
     \sa Drag, MouseArea
 */
@@ -138,7 +139,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEvent
     The snap mode configures snapping of the \l target item's center to the event point.
 
     Possible values:
-    \value DragHandler.SnapNever Never snap
+    \value DragHandler.NoSnap   Never snap
     \value DragHandler.SnapAuto The \l target snaps if the event point was pressed outside of the \l target
                                 item \e and the \l target is a descendant of \l parentItem (default)
     \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the event point was pressed outside of the \l target

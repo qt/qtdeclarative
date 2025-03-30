@@ -73,6 +73,7 @@ PRIVATETESTS += \
     qqmlobjectmodel \
     qqmltablemodel \
     qv4assembler \
+    qv4estable \
     qv4mm \
     qv4identifiertable \
     qv4regexp \

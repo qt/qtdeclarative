@@ -43,6 +43,7 @@
 
 #include <private/qqmlobjectmodel_p.h>
 #include <private/qquicksmoothedanimation_p_p.h>
+#include <private/qmemory_p.h>
 
 #include <QtGui/qevent.h>
 #include <QtCore/qmath.h>
@@ -720,7 +721,7 @@ void QQuickGridViewPrivate::createHighlight(bool onDestruction)
         QQuickItem *item = createHighlightItem();
         if (item) {
             std::unique_ptr<FxGridItemSG> newHighlight
-                    = std::make_unique<FxGridItemSG>(item, q, true);
+                    = qt_make_unique<FxGridItemSG>(item, q, true);
             newHighlight->trackGeometry(true);
             if (autoHighlight)
                 resetHighlightPosition();
@@ -1376,9 +1377,53 @@ void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 
 /*!
   \qmlproperty int QtQuick::GridView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
+/*!
+    \qmlproperty bool QtQuick::GridView::reuseItems
+
+    This property enables you to reuse items that are instantiated
+    from the \l delegate. If set to \c false, any currently
+    pooled items are destroyed.
+
+    This property is \c false by default.
+
+    \since 5.15
+
+    \sa {Reusing items}, pooled(), reused()
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::GridView::pooled()
+
+    This signal is emitted after an item has been added to the reuse
+    pool. You can use it to pause ongoing timers or animations inside
+    the item, or free up resources that cannot be reused.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, reused()
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::GridView::reused()
+
+    This signal is emitted after an item has been reused. At this point, the
+    item has been taken out of the pool and placed inside the content view,
+    and the model properties such as \c index and \c row have been updated.
+
+    Other properties that are not provided by the model does not change when an
+    item is reused. You should avoid storing any state inside a delegate, but if
+    you do, manually reset that state on receiving this signal.
+
+    This signal is emitted when the item is reused, and not the first time the
+    item is created.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, pooled()
+*/
 
 /*!
   \qmlproperty Component QtQuick::GridView::highlight

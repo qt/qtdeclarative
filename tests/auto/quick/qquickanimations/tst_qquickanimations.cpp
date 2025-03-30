@@ -117,6 +117,7 @@ private slots:
     void opacityAnimationFromZero();
     void alwaysRunToEndInSequentialAnimationBug();
     void cleanupWhenRenderThreadStops();
+    void alwaysRunToEndSetFalseRestartBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2010,6 +2011,41 @@ void tst_qquickanimations::cleanupWhenRenderThreadStops()
     view.hide();
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
+}
+
+//QTBUG-125224
+void tst_qquickanimations::alwaysRunToEndSetFalseRestartBug()
+{
+    QQuickRectangle rect;
+    QQuickAnimationGroup sequential(nullptr);
+    QQuickPropertyAnimation beginAnim;
+    QQuickPropertyAnimation endAnim;
+
+    beginAnim.setTargetObject(&rect);
+    beginAnim.setProperty("x");
+    beginAnim.setTo(200);
+    beginAnim.setDuration(1000);
+
+    endAnim.setTargetObject(&rect);
+    endAnim.setProperty("x");
+    endAnim.setFrom(200);
+    endAnim.setDuration(1000);
+
+    beginAnim.setGroup(&sequential);
+    endAnim.setGroup(&sequential);
+
+    sequential.setLoops(-1);
+    sequential.setAlwaysRunToEnd(true);
+
+    QCOMPARE(sequential.loops(), -1);
+    QVERIFY(sequential.alwaysRunToEnd());
+    sequential.start();
+    sequential.stop();
+    sequential.setAlwaysRunToEnd(false);
+    sequential.start();
+    QCOMPARE(sequential.isRunning(), true);
+    sequential.stop();
+    QCOMPARE(sequential.isRunning(), false);
 }
 
 QTEST_MAIN(tst_qquickanimations)

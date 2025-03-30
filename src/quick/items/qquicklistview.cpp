@@ -50,6 +50,7 @@
 
 #include <private/qquicksmoothedanimation_p_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qmemory_p.h>
 #include "qplatformdefs.h"
 
 QT_BEGIN_NAMESPACE
@@ -996,7 +997,7 @@ void QQuickListViewPrivate::createHighlight(bool onDestruction)
         QQuickItem *item = createHighlightItem();
         if (item) {
             std::unique_ptr<FxListItemSG> newHighlight
-                    = std::make_unique<FxListItemSG>(item, q, true);
+                    = qt_make_unique<FxListItemSG>(item, q, true);
             newHighlight->trackGeometry(true);
 
             if (autoHighlight) {
@@ -1004,17 +1005,17 @@ void QQuickListViewPrivate::createHighlight(bool onDestruction)
                 newHighlight->setPosition(static_cast<FxListItemSG*>(currentItem)->itemPosition());
             }
             const QLatin1String posProp(orient == QQuickListView::Vertical ? "y" : "x");
-            highlightPosAnimator = std::make_unique<QSmoothedAnimation>();
+            highlightPosAnimator = qt_make_unique<QSmoothedAnimation>();
             highlightPosAnimator->target = QQmlProperty(item, posProp);
             highlightPosAnimator->velocity = highlightMoveVelocity;
             highlightPosAnimator->userDuration = highlightMoveDuration;
 
-            highlightWidthAnimator = std::make_unique<QSmoothedAnimation>();
+            highlightWidthAnimator = qt_make_unique<QSmoothedAnimation>();
             highlightWidthAnimator->velocity = highlightResizeVelocity;
             highlightWidthAnimator->userDuration = highlightResizeDuration;
             highlightWidthAnimator->target = QQmlProperty(item, QStringLiteral("width"));
 
-            highlightHeightAnimator = std::make_unique<QSmoothedAnimation>();
+            highlightHeightAnimator = qt_make_unique<QSmoothedAnimation>();
             highlightHeightAnimator->velocity = highlightResizeVelocity;
             highlightHeightAnimator->userDuration = highlightResizeDuration;
             highlightHeightAnimator->target = QQmlProperty(item, QStringLiteral("height"));
@@ -2359,7 +2360,7 @@ QQuickListView::~QQuickListView()
 
 /*!
   \qmlproperty int QtQuick::ListView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
 /*!

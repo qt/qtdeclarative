@@ -72,7 +72,7 @@ so on.
  \li \l{QML Profiler}
 \endlist
 
-\section2 QmlLive, GammaRay, and Squish
+\section2 QmlLive, GammaRay, Squish, and Felgo QML Hot Reload
 
 QmlLive is a 3rd party tool that offers a QML runtime capable of rendering
 changes to the code in realtime. It avoids the need to rebuild the
@@ -90,11 +90,18 @@ Squish is a well-known testing tool that automates UI testing by recording
 your actions or running scripts. Once the tests are setup, UI tests are a lot
 easier to run.
 
+Felgo QML Hot Reload is a third-party tool that updates QML and JavaScript code
+in your running application without recompiling and redeploying after each
+change. Unlike Live Reload, it preserves the application's current state after a
+reload and can run on multiple devices simultaneously to test and iterate code.
+Felgo Hot Reload supports all Qt target platforms and architectures.
+
 \section2 Related Information
 \list
  \li \l{QmlLive}
  \li \l{GammaRay}
  \li \l{Squish}
+ \li \l{Felgo QML Hot Reload Tool}{Felgo QML Hot Reload}
 \endlist
 
 \section1 Qt Creator
