@@ -3110,6 +3110,16 @@ QQmlJSRegisterContent QQmlJSTypePropagator::propagateBinaryOperation(QSOperator:
     return type;
 }
 
+static bool deepCompare(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
+{
+    if (!a.isValid() && !b.isValid())
+        return true;
+
+    return a.containedType() == b.containedType()
+            && a.variant() == b.variant()
+            && deepCompare(a.scope(), b.scope());
+}
+
 void QQmlJSTypePropagator::saveRegisterStateForJump(int offset)
 {
     auto jumpToOffset = offset + nextInstructionOffset();
@@ -3123,10 +3133,27 @@ void QQmlJSTypePropagator::saveRegisterStateForJump(int offset)
         const auto registerStates =
                 m_jumpOriginRegisterStateByTargetInstructionOffset.equal_range(jumpToOffset);
         for (auto it = registerStates.first; it != registerStates.second; ++it) {
-            if (it->registers.keys() == state.registers.keys()
-                    && it->registers.values() == state.registers.values()) {
-                return; // We've seen the same register state before. No need for merging.
+            if (it->registers.keys() != state.registers.keys())
+                continue;
+
+            const auto valuesIt = it->registers.values();
+            const auto valuesState = state.registers.values();
+
+            bool different = false;
+            for (qsizetype i = 0, end = valuesIt.size(); i != end; ++i) {
+                const auto &valueIt = valuesIt[i];
+                const auto &valueState = valuesState[i];
+                if (valueIt.affectedBySideEffects != valueState.affectedBySideEffects
+                        || valueIt.canMove != valueState.canMove
+                        || valueIt.isShadowable != valueState.isShadowable
+                        || !deepCompare(valueIt.content, valueState.content)) {
+                    different = true;
+                    break;
+                }
             }
+
+            if (!different)
+                return; // We've seen the same register state before. No need for merging.
         }
 
         // The register state at the target offset needs to be resolved in a further pass.

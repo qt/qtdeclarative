@@ -92,6 +92,7 @@ private slots:
     void dateConstruction();
     void dateConversions();
     void deadShoeSize();
+    void deduplicateConversionOrigins();
     void destroyAndToString();
     void detachOnAssignment();
     void dialogButtonBox();
@@ -1600,6 +1601,15 @@ void tst_QmlCppCodegen::deadShoeSize()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->property("shoeSize").toInt(), 0);
+}
+
+void tst_QmlCppCodegen::deduplicateConversionOrigins()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/DeduplicateConversionOrigins.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
 }
 
 void tst_QmlCppCodegen::destroyAndToString()
