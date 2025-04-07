@@ -158,6 +158,7 @@ void QSGInternalTextNode::doAddTextDocument(QPointF position, QTextDocument *tex
     engine.setSelectionColor(m_selectionColor);
     engine.setAnchorColor(m_linkColor);
     engine.setPosition(position);
+    engine.setDevicePixelRatio(m_devicePixelRatio);
 
     QList<QTextFrame *> frames;
     frames.append(textDocument->rootFrame());
@@ -206,6 +207,7 @@ void QSGInternalTextNode::doAddTextLayout(QPointF position, QTextLayout *textLay
     engine.setSelectionColor(m_selectionColor);
     engine.setAnchorColor(m_linkColor);
     engine.setPosition(position);
+    engine.setDevicePixelRatio(m_devicePixelRatio);
 
 #if QT_CONFIG(im)
     int preeditLength = textLayout->preeditAreaText().size();

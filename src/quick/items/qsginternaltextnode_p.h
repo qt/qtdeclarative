@@ -151,6 +151,11 @@ public:
         return m_viewport;
     }
 
+    void setDevicePixelRatio(qreal dpr)
+    {
+        m_devicePixelRatio = dpr;
+    }
+
     void setCursor(const QRectF &rect, const QColor &color);
     void clearCursor();
 
@@ -195,6 +200,7 @@ private:
     int m_firstLineInViewport = -1;
     int m_firstLinePastViewport = -1;
     bool m_containsUnscalableGlyphs = false;
+    qreal m_devicePixelRatio = 1.0;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;

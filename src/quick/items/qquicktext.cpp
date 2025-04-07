@@ -2815,6 +2815,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     node->setStyleColor(QColor::fromRgba(d->styleColor));
     node->setLinkColor(QColor::fromRgba(d->linkColor));
 
+    node->setDevicePixelRatio(d->devicePixelRatio());
+
     if (d->richText) {
         node->setViewport(clipRect());
         const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), d->availableWidth(), effectiveHAlign()) + leftPadding();

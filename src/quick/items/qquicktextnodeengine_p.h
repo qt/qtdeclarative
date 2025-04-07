@@ -189,7 +189,10 @@ public:
         m_position = position;
     }
 
-
+    void setDevicePixelRatio(qreal dpr)
+    {
+        m_devicePixelRatio = dpr;
+    }
 
 private:
     struct TextDecoration
@@ -230,6 +233,8 @@ private:
 
     QList<TextDecoration> m_lines;
     QVector<BinaryTreeNode> m_processedNodes;
+
+    qreal m_devicePixelRatio = 1.0;
 
     bool m_hasSelection : 1;
     bool m_hasContents : 1;

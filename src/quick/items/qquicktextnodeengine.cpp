@@ -434,11 +434,12 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
         }
 
         if (image.isNull()) {
-            image = QImage(size.toSize(), QImage::Format_ARGB32_Premultiplied);
+            image = QImage((size * m_devicePixelRatio).toSize(), QImage::Format_ARGB32_Premultiplied);
+            image.setDevicePixelRatio(m_devicePixelRatio);
             image.fill(Qt::transparent);
             {
                 QPainter painter(&image);
-                handler->drawObject(&painter, image.rect(), textDocument, pos, format);
+                handler->drawObject(&painter, QRectF({}, size), textDocument, pos, format);
             }
         }
 

@@ -25,6 +25,7 @@
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtGui/private/qhighdpiscaling_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
@@ -164,6 +165,9 @@ private slots:
     void transparentBackground();
 
     void displaySuperscriptedTag();
+
+    void textObjectRespectsDpr_data();
+    void textObjectRespectsDpr();
 
 private:
     QStringList standard;
@@ -4875,6 +4879,90 @@ void tst_qquicktext::displaySuperscriptedTag()
     QCOMPARE(color.red(), 255);
     QCOMPARE(color.blue(), 255);
     QCOMPARE(color.green(), 255);
+}
+
+void tst_qquicktext::textObjectRespectsDpr_data()
+{
+    QTest::addColumn<qreal>("devicePixelRatio");
+    QTest::newRow("1x") << 1.0;
+    QTest::newRow("2x") << 2.0;
+}
+
+class CustomTextObject : public QObject, public QTextObjectInterface
+{
+    Q_OBJECT
+    Q_INTERFACES(QTextObjectInterface)
+
+public:
+    using QObject::QObject;
+
+    QSizeF intrinsicSize(QTextDocument *, int, const QTextFormat &) override
+    {
+        return {100, 100};
+    }
+
+    void drawObject(QPainter *painter, const QRectF &rect, QTextDocument *,
+                    int, const QTextFormat &) override
+    {
+        drawnDpr = static_cast<QImage*>(painter->device())->devicePixelRatio();
+        drawnRect = rect;
+    }
+
+    qreal drawnDpr = 0.0;
+    QRectF drawnRect;
+};
+
+void tst_qquicktext::textObjectRespectsDpr()
+{
+    QFETCH(qreal, devicePixelRatio);
+
+    // Compute a global scale factor that results in the target devicePixelRatio,
+    // even in the presence of an existing system-level devicePixelRatio.
+    const auto *screen = qGuiApp->primaryScreen();
+    const auto systemDevicePixelRatio = screen->devicePixelRatio();
+    qreal globalScaleFactor = devicePixelRatio / systemDevicePixelRatio;
+    QHighDpiScaling::setGlobalFactor(globalScaleFactor);
+    QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    auto reset = qScopeGuard([]{
+        QHighDpiScaling::setGlobalFactor(1);
+        QGuiApplicationPrivate::resetCachedDevicePixelRatio();
+    });
+    QCOMPARE(screen->devicePixelRatio(), devicePixelRatio);
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("textObjectDpr.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    auto *text = window->findChild<QQuickText *>();
+    QVERIFY(text);
+    auto *textPrivate = QQuickTextPrivate::get(text);
+    QVERIFY(textPrivate != nullptr);
+    QVERIFY(textPrivate->extra.isAllocated());
+
+    auto *textDocument = textPrivate->extra->doc;
+    QVERIFY(textDocument);
+    auto *documentLayout = textDocument->documentLayout();
+    QVERIFY(documentLayout);
+
+    CustomTextObject customTextObject;
+    documentLayout->registerHandler(QTextCharFormat::UserObject, &customTextObject);
+
+    QTextCursor cursor(textDocument);
+    QTextCharFormat format;
+    format.setObjectType(QTextCharFormat::UserObject);
+    cursor.insertText(QString(QChar::ObjectReplacementCharacter), format);
+
+    // We've modified the internal state of the QQuickText, so make sure
+    // to not touch setText or any of the APIs that will update the text
+    // document, while still triggering a relayout/render of the text.
+    text->invalidate();
+
+    QTRY_VERIFY(!customTextObject.drawnRect.isNull());
+
+    QCOMPARE(customTextObject.drawnDpr, devicePixelRatio);
+    QCOMPARE(customTextObject.drawnRect.size(), customTextObject.intrinsicSize(textDocument, 0, {}));
 }
 
 QT_END_NAMESPACE

@@ -2458,12 +2458,13 @@ void QQuickTextEdit::setDocument(QTextDocument *doc)
     q_textChanged();
 }
 
-inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor)
+inline void resetEngine(QQuickTextNodeEngine *engine, const QColor& textColor, const QColor& selectedTextColor, const QColor& selectionColor, qreal dpr)
 {
     *engine = QQuickTextNodeEngine();
     engine->setTextColor(textColor);
     engine->setSelectedTextColor(selectedTextColor);
     engine->setSelectionColor(selectionColor);
+    engine->setDevicePixelRatio(dpr);
 }
 
 QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
@@ -2500,8 +2501,11 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     while (nodeIterator != d->textNodeMap.end() && !nodeIterator->dirty())
         ++nodeIterator;
 
+    const auto dpr = window()->effectiveDevicePixelRatio();
     QQuickTextNodeEngine engine;
+    engine.setDevicePixelRatio(dpr);
     QQuickTextNodeEngine frameDecorationsEngine;
+    frameDecorationsEngine.setDevicePixelRatio(dpr);
 
     if (!oldNode || nodeIterator < d->textNodeMap.end() || d->textNodeMap.isEmpty()) {
 
@@ -2537,7 +2541,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
         // FIXME: the text decorations could probably be handled separately (only updated for affected textFrames)
         rootNode->resetFrameDecorations(d->createTextNode());
-        resetEngine(&frameDecorationsEngine, d->color, d->selectedTextColor, d->selectionColor);
+        resetEngine(&frameDecorationsEngine, d->color, d->selectedTextColor, d->selectionColor, dpr);
 
         QSGInternalTextNode *node = nullptr;
 
@@ -2569,7 +2573,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                           << "to" << positionToRectangle(textFrame->lastPosition()).bottomRight();
             frames.append(textFrame->childFrames());
             frameDecorationsEngine.addFrameDecorations(d->document, textFrame);
-            resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
+            resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor, dpr);
 
             if (textFrame->firstPosition() > textFrame->lastPosition()
                     && textFrame->frameFormat().position() != QTextFrameFormat::InFlow) {
@@ -2692,7 +2696,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
                         if (!createdNodeInView)
                             node = d->createTextNode();
-                        resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
+                        resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor, dpr);
                         nodeStart = block.next().position();
                     }
                     ++it;
