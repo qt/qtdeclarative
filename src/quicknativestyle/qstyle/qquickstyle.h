@@ -793,6 +793,8 @@ public:
     // TODO: Remove the concept of proxy (but keep it for now until everything builds)
     const QStyle *proxy() const { return this; }
 
+    virtual void handleThemeChange() {}
+
 private:
     Q_DISABLE_COPY(QStyle)
 };

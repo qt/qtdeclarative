@@ -126,6 +126,15 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
     m_focusFrame.reset(new QQuickWindowsFocusFrame());
 #endif
 
+    // The native style plugin is neither the current style or fallback style
+    // during QQuickStylePlugin::registerTypes, so it's not given a chance to
+    // initialize or update the theme. But since it's used as an implementation
+    // detail of some of the other style plugins, it might need to know about
+    // theme changes.
+    Q_ASSERT(style->thread()->isMainThread());
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
+        style, [=]{ style->handleThemeChange(); });
+
     qAddPostRoutine(deleteQStyle);
     QQuickNativeStyle::setStyle(style);
 }

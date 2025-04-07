@@ -1628,23 +1628,18 @@ QMacStyle::QMacStyle()
             for (const auto &o : QMacStylePrivate::scrollBars)
                 QCoreApplication::sendEvent(o, &event);
     });
-
-#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(__MAC_10_14)
-    Q_D(QMacStyle);
-    // FIXME: Tie this logic into theme change, or even polish/unpolish
-    if (QOperatingSystemVersion::current() >= QOperatingSystemVersion::MacOSMojave) {
-        d->appearanceObserver = QMacKeyValueObserver(NSApp, @"effectiveAppearance", [this] {
-            Q_D(QMacStyle);
-            for (NSView *b : d->cocoaControls)
-                [b release];
-            d->cocoaControls.clear();
-        });
-    }
-#endif
 }
 
 QMacStyle::~QMacStyle()
 {
+}
+
+void QMacStyle::handleThemeChange()
+{
+    Q_D(QMacStyle);
+    for (NSView *b : d->cocoaControls)
+        [b release];
+    d->cocoaControls.clear();
 }
 
 int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const

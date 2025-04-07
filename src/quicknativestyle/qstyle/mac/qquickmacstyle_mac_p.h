@@ -60,6 +60,8 @@ public:
 
     QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *opt = 0) const override;
 
+    void handleThemeChange() override;
+
 private:
     Q_DISABLE_COPY_MOVE(QMacStyle)
     Q_DECLARE_PRIVATE(QMacStyle)
