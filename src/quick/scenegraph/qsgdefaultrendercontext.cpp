@@ -101,6 +101,14 @@ void QSGDefaultRenderContext::invalidate()
     qDeleteAll(m_textures);
     m_textures.clear();
 
+    for (auto it = m_depthStencilBuffers.cbegin(), end = m_depthStencilBuffers.cend(); it != end; ++it) {
+        QSharedPointer<QSGDepthStencilBuffer> buf = it.value().toStrongRef();
+        delete buf->ds;
+        buf->ds = nullptr;
+        buf->rc = nullptr;
+    }
+    m_depthStencilBuffers.clear();
+
     /* The cleanup of the atlas textures is a bit intriguing.
        As part of the cleanup in the threaded render loop, we
        do:
@@ -294,6 +302,44 @@ void QSGDefaultRenderContext::resetGlyphCacheResources()
         t->deleteLater(); // the QRhiTexture object stays valid for the current frame
 
     m_pendingGlyphCacheTextures.clear();
+}
+
+QSGDepthStencilBuffer::~QSGDepthStencilBuffer()
+{
+    if (rc && ds) {
+        const auto key = std::pair(ds->pixelSize(), ds->sampleCount());
+        rc->m_depthStencilBuffers.remove(key);
+    }
+    delete ds;
+}
+
+QSharedPointer<QSGDepthStencilBuffer> QSGDefaultRenderContext::getDepthStencilBuffer(const QSize &size, int sampleCount)
+{
+    const auto key = std::pair(size, sampleCount);
+    auto it = m_depthStencilBuffers.constFind(key);
+    if (it != m_depthStencilBuffers.cend()) {
+        if (it.value())
+            return it.value().toStrongRef();
+    }
+
+    QRhiRenderBuffer *ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, sampleCount);
+    if (!ds->create()) {
+        qWarning("Failed to build depth-stencil buffer for layer");
+        delete ds;
+        return {};
+    }
+    QSharedPointer<QSGDepthStencilBuffer> buf(new QSGDepthStencilBuffer(ds));
+    addDepthStencilBuffer(buf);
+    return buf;
+}
+
+void QSGDefaultRenderContext::addDepthStencilBuffer(const QSharedPointer<QSGDepthStencilBuffer> &ds)
+{
+    if (ds) {
+        const auto key = std::pair(ds->ds->pixelSize(), ds->ds->sampleCount());
+        ds->rc = this;
+        m_depthStencilBuffers.insert(key, ds.toWeakRef());
+    }
 }
 
 QT_END_NAMESPACE

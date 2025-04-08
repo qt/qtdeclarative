@@ -5,7 +5,6 @@
 
 #include <private/qqmlglobal_p.h>
 #include <private/qsgrenderer_p.h>
-#include <private/qsgdefaultrendercontext_p.h>
 
 QSGRhiLayer::QSGRhiLayer(QSGRenderContext *context)
     : QSGLayer(*(new QSGTexturePrivate(this)))
@@ -210,8 +209,7 @@ void QSGRhiLayer::releaseResources()
     delete m_rtRp;
     m_rtRp = nullptr;
 
-    delete m_ds;
-    m_ds = nullptr;
+    m_ds.clear();
 
     delete m_msaaColorBuffer;
     m_msaaColorBuffer = nullptr;
@@ -278,9 +276,8 @@ void QSGRhiLayer::grab()
                 return;
             }
             if (depthBufferEnabled) {
-                m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_pixelSize, effectiveSamples);
-                if (!m_ds->create()) {
-                    qWarning("Failed to build depth-stencil buffer for layer");
+                m_ds = m_context->getDepthStencilBuffer(m_pixelSize, effectiveSamples);
+                if (!m_ds) {
                     releaseResources();
                     return;
                 }
@@ -290,7 +287,7 @@ void QSGRhiLayer::grab()
             color0.setResolveTexture(m_texture);
             desc.setColorAttachments({ color0 });
             if (depthBufferEnabled)
-                desc.setDepthStencilBuffer(m_ds);
+                desc.setDepthStencilBuffer(m_ds->ds);
             m_rt = m_rhi->newTextureRenderTarget(desc);
             m_rtRp = m_rt->newCompatibleRenderPassDescriptor();
             if (!m_rtRp) {
@@ -313,9 +310,8 @@ void QSGRhiLayer::grab()
                 return;
             }
             if (depthBufferEnabled) {
-                m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_pixelSize);
-                if (!m_ds->create()) {
-                    qWarning("Failed to build depth-stencil buffer for layer");
+                m_ds = m_context->getDepthStencilBuffer(m_pixelSize, 1);
+                if (!m_ds) {
                     releaseResources();
                     return;
                 }
@@ -332,10 +328,10 @@ void QSGRhiLayer::grab()
                 }
                 color0.setTexture(m_secondaryTexture);
             }
+            QRhiTextureRenderTargetDescription desc({ color0 });
             if (depthBufferEnabled)
-                m_rt = m_rhi->newTextureRenderTarget({ color0, m_ds });
-            else
-                m_rt = m_rhi->newTextureRenderTarget({ color0 });
+                desc.setDepthStencilBuffer(m_ds->ds);
+            m_rt = m_rhi->newTextureRenderTarget(desc);
             m_rtRp = m_rt->newCompatibleRenderPassDescriptor();
             if (!m_rtRp) {
                 qWarning("Failed to build render pass descriptor for layer");
