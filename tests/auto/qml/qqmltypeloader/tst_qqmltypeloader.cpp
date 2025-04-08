@@ -6,6 +6,7 @@
 #include <QtCore/QRandomGenerator>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -55,6 +56,7 @@ private slots:
     void loadTypeOnShutdown();
     void floodTypeLoaderEventQueue();
     void retainQmlTypeAcrossEngines();
+    void loadLocalTypesAfterRemoteFails();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -924,6 +926,65 @@ void tst_QQMLTypeLoader::retainQmlTypeAcrossEngines()
 
     // The base classes are all the same.
     QCOMPARE(mo1->superClass(), mo3->superClass());
+}
+
+class SingletonTypeExample : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
+
+public:
+    explicit SingletonTypeExample(QObject* parent = nullptr) : QObject(parent) {}
+
+    Q_INVOKABLE int doSomething()
+    {
+        setSomeProperty(5);
+        return m_someProperty;
+    }
+
+    int someProperty() const { return m_someProperty; }
+    void setSomeProperty(int val) {
+        if (m_someProperty != val) {
+            m_someProperty = val;
+            emit somePropertyChanged(val);
+        }
+    }
+
+signals:
+    void somePropertyChanged(int newValue);
+
+private:
+    int m_someProperty = 0;
+};
+
+class HttpUrlInterceptor : public QQmlAbstractUrlInterceptor
+{
+public:
+    QUrl intercept(const QUrl &path, DataType type) override
+    {
+        QUrl result = path;
+        if (path.scheme() == "http" && type == QmldirFile)
+            result.setFragment("qmldir");
+        return result;
+    }
+};
+
+void tst_QQMLTypeLoader::loadLocalTypesAfterRemoteFails()
+{
+    std::unique_ptr<SingletonTypeExample> example = std::make_unique<SingletonTypeExample>();
+    qmlRegisterSingletonInstance("Qt.example.qobjectSingleton", 1, 0, "MyApi", example.get());
+
+    HttpUrlInterceptor interceptor;
+    QQmlEngine engine;
+    engine.addUrlInterceptor(&interceptor);
+    engine.addImportPath(QString("http:/127.0.0.1/"));
+
+    QQmlComponent component(&engine, testFileUrl("qobjectSingletonUser.qml"));
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> object(component.create());
+    QCOMPARE(object->property("someValue").toInt(), 5);
+    QCOMPARE(object->property("doneSomething").toInt(), 5);
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

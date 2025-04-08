@@ -494,18 +494,22 @@ void tst_qqmlmoduleplugin::importsNested_data()
 {
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("errorFile");
+    QTest::addColumn<bool>("expectGreeting");
 
-    // Note: no other test case should import the plugin used for this test, or the
-    // wrong order test will pass spuriously
-    QTest::newRow("wrongOrder") << "importsNested.1.qml" << "importsNested.1.errors.txt";
-    QTest::newRow("missingImport") << "importsNested.3.qml" << "importsNested.3.errors.txt";
-    QTest::newRow("invalidVersion") << "importsNested.4.qml" << "importsNested.4.errors.txt";
-    QTest::newRow("correctOrder") << "importsNested.2.qml" << QString();
+    // NB: The order is wrong in the sense that it tries to load the "Nested" URI first, which
+    //     is not visible in the file system. However, in the process of loading the non-nested
+    //     URI it can discover the types for the nested one and insert them in the right place.
+    //     This used to be an error but doesn't have to be.
+    QTest::newRow("wrongOrder") << "importsNested.1.qml" << QString() << true;
+    QTest::newRow("missingImport") << "importsNested.3.qml" << "importsNested.3.errors.txt" << false;
+    QTest::newRow("invalidVersion") << "importsNested.4.qml" << "importsNested.4.errors.txt" << false;
+    QTest::newRow("correctOrder") << "importsNested.2.qml" << QString() << false;
 }
 void tst_qqmlmoduleplugin::importsNested()
 {
     QFETCH(QString, file);
     QFETCH(QString, errorFile);
+    QFETCH(bool, expectGreeting);
 
     // Note: because imports are cached between test case data rows (and the plugins remain loaded),
     // these tests should really be run in new instances of the app...
@@ -522,6 +526,10 @@ void tst_qqmlmoduleplugin::importsNested()
         QTest::ignoreMessage(QtWarningMsg, "Module 'org.qtproject.AutoTestQmlNestedPluginType' does not contain a module identifier directive - it cannot be protected from external registrations.");
 
     QQmlComponent component(&engine, testFile(file));
+
+    if (expectGreeting)
+        QTest::ignoreMessage(QtDebugMsg, "Hello");
+
     std::unique_ptr<QObject> obj { component.create() };
 
     if (errorFile.isEmpty()) {

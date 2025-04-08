@@ -724,7 +724,71 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
 
     // If there is a qmldir we cannot see, yet, then we have to wait.
     // The qmldir might contain import directives.
-    if (qmldirResult != QQmlImportDatabase::QmldirInterceptedToRemote && (
+    // TODO: This should trigger on any potentially remote URLs, not only intercepted ones.
+    //       However, fixing this would open the door for follow-up problems while providing
+    //       rather limited benefits.
+    if (qmldirResult != QQmlImportDatabase::QmldirInterceptedToRemote
+            && registerPendingTypes(import)) {
+        if (m_importCache->addLibraryImport(
+                typeLoader(), import->uri, import->qualifier, import->version, QString(),
+                QString(), import->flags, import->precedence, errors).isValid()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // We haven't yet resolved this import
+    m_unresolvedImports << import;
+
+    // Add this library and request the possible locations for it
+    const QTypeRevision version = m_importCache->addLibraryImport(
+            typeLoader(), import->uri, import->qualifier, import->version, QString(),
+            QString(), import->flags | QQmlImports::ImportIncomplete, import->precedence,
+            errors);
+
+    if (!version.isValid())
+        return false;
+
+    // Use more specific version for finding the qmldir if possible
+    if (version.hasMajorVersion())
+        import->version = version;
+
+    const QQmlEngine *engine = typeLoader()->engine();
+    const bool hasInterceptors = !(QQmlEnginePrivate::get(engine)->urlInterceptors.isEmpty());
+
+    // Query any network import paths for this library.
+    // Interceptor might redirect local paths.
+    QStringList remotePathList = importDatabase->importPathList(
+            hasInterceptors ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Remote);
+    if (!remotePathList.isEmpty()) {
+        // Probe for all possible locations
+        int priority = 0;
+        const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
+                    import->uri, remotePathList, import->version);
+        for (const QString &qmldirPath : qmlDirPaths) {
+            if (hasInterceptors) {
+                QUrl url = engine->interceptUrl(
+                            QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                            QQmlAbstractUrlInterceptor::QmldirFile);
+                if (!QQmlFile::isLocalFile(url)
+                        && !fetchQmldir(url, import, ++priority, errors)) {
+                    return false;
+                }
+            } else if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors)) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool QQmlTypeLoader::Blob::registerPendingTypes(const PendingImportPtr &import)
+{
+    Q_ASSERT(isTypeLoaderThread());
+
+    return
             // Major version of module already registered:
             // We believe that the registration is complete.
             QQmlMetaType::typeModule(import->uri, import->version)
@@ -734,62 +798,7 @@ bool QQmlTypeLoader::Blob::addLibraryImport(const QQmlTypeLoader::Blob::PendingI
 
             // Otherwise, there is no way to register any further types.
             // Try with any module of that name.
-            || QQmlMetaType::latestModuleVersion(import->uri).isValid())) {
-
-        if (!m_importCache->addLibraryImport(
-                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
-                    QString(), import->flags, import->precedence, errors).isValid()) {
-            return false;
-        }
-    } else {
-        // We haven't yet resolved this import
-        m_unresolvedImports << import;
-
-        const QQmlEngine *engine = typeLoader()->engine();
-        const bool hasInterceptors
-                = !(QQmlEnginePrivate::get(engine)->urlInterceptors.isEmpty());
-
-        // Query any network import paths for this library.
-        // Interceptor might redirect local paths.
-        QStringList remotePathList = importDatabase->importPathList(
-                    hasInterceptors ? QQmlImportDatabase::LocalOrRemote
-                                    : QQmlImportDatabase::Remote);
-        if (!remotePathList.isEmpty()) {
-            // Add this library and request the possible locations for it
-            const QTypeRevision version = m_importCache->addLibraryImport(
-                    typeLoader(), import->uri, import->qualifier, import->version, QString(),
-                    QString(), import->flags | QQmlImports::ImportIncomplete, import->precedence,
-                    errors);
-
-            if (!version.isValid())
-                return false;
-
-            // Use more specific version for finding the qmldir if possible
-            if (version.hasMajorVersion())
-                import->version = version;
-
-            // Probe for all possible locations
-            int priority = 0;
-            const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-                        import->uri, remotePathList, import->version);
-            for (const QString &qmldirPath : qmlDirPaths) {
-                if (hasInterceptors) {
-                    QUrl url = engine->interceptUrl(
-                                QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
-                                QQmlAbstractUrlInterceptor::QmldirFile);
-                    if (!QQmlFile::isLocalFile(url)
-                            && !fetchQmldir(url, import, ++priority, errors)) {
-                        return false;
-                    }
-                } else if (!fetchQmldir(QUrl(qmldirPath), import, ++priority, errors)) {
-                    return false;
-                }
-
-            }
-        }
-    }
-
-    return true;
+            || QQmlMetaType::latestModuleVersion(import->uri).isValid();
 }
 
 bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import,

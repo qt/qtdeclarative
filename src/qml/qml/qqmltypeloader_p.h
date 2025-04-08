@@ -111,6 +111,9 @@ public:
                 QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
 
     protected:
+
+        bool registerPendingTypes(const PendingImportPtr &import);
+
         bool loadDependentImports(
                 const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
                 QTypeRevision version, quint16 precedence, QQmlImports::ImportFlags flags,

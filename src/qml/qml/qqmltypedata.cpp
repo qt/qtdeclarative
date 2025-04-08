@@ -822,22 +822,25 @@ void QQmlTypeData::allDependenciesDone()
         QList<QQmlError> errors;
         auto it = m_unresolvedImports.constBegin(), end = m_unresolvedImports.constEnd();
         for ( ; it != end; ++it) {
-            if ((*it)->priority == 0) {
-                // This import was not resolved
-                for (auto keyIt = m_unresolvedImports.constBegin(),
-                          keyEnd = m_unresolvedImports.constEnd();
-                     keyIt != keyEnd; ++keyIt) {
-                    const PendingImportPtr &import = *keyIt;
-                    QQmlError error;
-                    error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(import->uri));
-                    error.setUrl(m_importCache->baseUrl());
-                    error.setLine(qmlConvertSourceCoordinate<quint32, int>(
-                            import->location.line()));
-                    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(
-                            import->location.column()));
-                    errors.prepend(error);
-                }
-            }
+            const PendingImportPtr &import = *it;
+            if (import->priority != 0)
+                continue;
+
+            // If the import was potentially remote and all the network requests have failed,
+            // we now know that there is no qmldir. We can register its types.
+            if (registerPendingTypes(import))
+                continue;
+
+            // This import was not resolved
+            QQmlError error;
+            error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed")
+                                         .arg(import->uri));
+            error.setUrl(m_importCache->baseUrl());
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(
+                    import->location.line()));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(
+                    import->location.column()));
+            errors.prepend(error);
         }
         if (errors.size()) {
             setError(errors);
