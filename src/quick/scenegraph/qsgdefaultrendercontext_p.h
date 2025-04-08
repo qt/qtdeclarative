@@ -25,12 +25,24 @@ class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
 class QRhiResourceUpdateBatch;
 class QRhiTexture;
+class QRhiRenderBuffer;
 class QSGMaterialShader;
 class QSurface;
+class QSGDefaultRenderContext;
 
 namespace QSGRhiAtlasTexture {
     class Manager;
 }
+
+class QSGDepthStencilBuffer
+{
+public:
+    QSGDepthStencilBuffer() { }
+    QSGDepthStencilBuffer(QRhiRenderBuffer *ds) : ds(ds) { }
+    ~QSGDepthStencilBuffer();
+    QRhiRenderBuffer *ds = nullptr;
+    QSGDefaultRenderContext *rc = nullptr;
+};
 
 class Q_QUICK_EXPORT QSGDefaultRenderContext : public QSGRenderContext
 {
@@ -107,6 +119,9 @@ public:
     void deferredReleaseGlyphCacheTexture(QRhiTexture *texture);
     void resetGlyphCacheResources();
 
+    QSharedPointer<QSGDepthStencilBuffer> getDepthStencilBuffer(const QSize &size, int sampleCount);
+    void addDepthStencilBuffer(const QSharedPointer<QSGDepthStencilBuffer> &ds);
+
 protected:
     InitParams m_initParams;
     QRhi *m_rhi;
@@ -119,6 +134,9 @@ protected:
     QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
     QSet<QRhiTexture *> m_pendingGlyphCacheTextures;
     QHash<FontKey, QSGCurveGlyphAtlas *> m_curveGlyphAtlases;
+    QHash<std::pair<QSize, int>, QWeakPointer<QSGDepthStencilBuffer>> m_depthStencilBuffers;
+
+    friend class QSGDepthStencilBuffer;
 };
 
 QT_END_NAMESPACE
