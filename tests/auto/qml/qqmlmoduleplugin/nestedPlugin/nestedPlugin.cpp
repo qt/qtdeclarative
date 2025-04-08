@@ -33,11 +33,13 @@ public:
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlNestedPluginType");
         qmlRegisterType<MyPluginTypeNested>(uri, 1, 0, "MyPluginType");
+        qmlRegisterType<MyPluginTypeNested>(uri, 1, 0, "Conflict");
 
         QString nestedUri(uri);
         nestedUri += QLatin1String(".Nested");
 
         qmlRegisterType<MyNestedPluginType>(nestedUri.toLatin1().constData(), 1, 0, "MyNestedPluginType");
+        qmlRegisterType<MyNestedPluginType>(nestedUri.toLatin1().constData(), 1, 0, "Conflict");
     }
 };
 
