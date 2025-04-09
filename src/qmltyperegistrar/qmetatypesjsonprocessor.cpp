@@ -318,9 +318,18 @@ void MetaTypesJsonProcessor::sortTypes(QVector<QJsonObject> &types)
 
 QString MetaTypesJsonProcessor::resolvedInclude(const QString &include)
 {
-    return (m_privateIncludes && include.endsWith(QLatin1String("_p.h")))
-            ? QLatin1String("private/") + include
-            : include;
+    if (!m_privateIncludes)
+        return include;
+
+    if (include.endsWith(QLatin1String("_p.h")))
+        return QLatin1String("private/") + include;
+
+    if (include.startsWith(QLatin1String("qplatform"))
+            || include.startsWith(QLatin1String("qwindowsystem"))) {
+        return QLatin1String("qpa/") + include;
+    }
+
+    return include;
 }
 
 void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
