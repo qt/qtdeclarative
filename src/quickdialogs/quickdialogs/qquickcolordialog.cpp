@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
     The ColorDialog type provides a QML API for color dialogs.
 
-    \image qtquickdialogs-colordialog-gtk.png
+    \image qtquickdialogs-colordialog-gtk.png {The color dialog can be customised using the options property}
 
     To show a color dialog, construct an instance of ColorDialog, set the
     desired properties, and call \l {Dialog::}{open()}. The \l selectedColor

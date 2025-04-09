@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
 
     The MessageDialog type provides a QML API for message dialogs.
 
-    \image qtquickdialogs-messagedialog-android.png
+    \image qtquickdialogs-messagedialog-android.png {The message dialog informs the user of some information, and will close when the user acknowledges the dialog}
 
     A message dialog is used to inform the user, or ask the user a question.
     A message dialog displays a primary \l text to alert the user to a situation,
@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \image qtquickdialogs-messagedialog-informative-android.png
+    \image qtquickdialogs-messagedialog-informative-android.png {The message dialog allows the user to make a choice based on the message, and will perform the associated action based on the buttons property}
 
 
     \section2 Availability
