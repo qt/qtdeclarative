@@ -300,7 +300,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 for (auto idContext = context; idContext; idContext = idContext->parent()) {
                     const int objectId = idContext->propertyIndex(pathName.toString());
                     if (objectId != -1 && objectId < idContext->numIdValues()) {
-                        currentObject = context->idValue(objectId);
+                        currentObject = idContext->idValue(objectId);
                         break;
                     }
                 }
