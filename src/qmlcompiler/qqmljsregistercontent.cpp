@@ -221,9 +221,17 @@ QString QQmlJSRegisterContent::descriptiveName() const
     case Kind::Property: {
         const QQmlJSMetaProperty prop = property();
         result += scope() + prop.propertyName() + u" with type "_s + prop.typeName();
+
+        QStringList details;
+        if (original().isValid() && !prop.type()->internalName().isEmpty())
+            details.append(u"adjusted to " + prop.type()->internalName());
         const QQmlJSScope::ConstPtr stored = d->m_storage.containedType();
         if (stored && stored->internalName() != prop.typeName())
-            result += u" (stored as "_s + stored->internalName() + u")";
+            details.append(u"stored as "_s + stored->internalName());
+
+        if (!details.isEmpty())
+            result += u" (%1)"_s.arg(details.join(u", "));
+
         return result;
     }
     case Kind::Method: {
