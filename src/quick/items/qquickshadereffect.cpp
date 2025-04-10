@@ -1181,7 +1181,9 @@ QSGGuiThreadShaderEffectManager *QQuickShaderEffectPrivate::shaderEffectManager(
             return m_mgr;
         QQuickWindow *w = q->window();
         if (w) { // note: just the window, don't care about isSceneGraphInitialized() here
-            m_mgr = QQuickWindowPrivate::get(w)->context->sceneGraphContext()->createGuiThreadShaderEffectManager();
+            QSGRenderContext *renderContext = QQuickWindowPrivate::get(w)->context;
+            if (QSGContext *sgContext = renderContext->sceneGraphContext())
+                m_mgr = sgContext->createGuiThreadShaderEffectManager();
             if (m_mgr) {
                 QObject::connect(m_mgr, &QSGGuiThreadShaderEffectManager::logAndStatusChanged, q, &QQuickShaderEffect::logChanged);
                 QObject::connect(m_mgr, &QSGGuiThreadShaderEffectManager::logAndStatusChanged, q, &QQuickShaderEffect::statusChanged);
