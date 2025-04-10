@@ -1363,7 +1363,10 @@ QQuickItem *QQuickMenu::itemAt(int index) const
 /*!
     \qmlmethod void QtQuick.Controls::Menu::addItem(Item item)
 
-    Adds \a item to the end of the list of items.
+    Adds \a item to the end of the list of items. The menu does not take
+    ownership of the newly added \a item.
+
+    \sa {Dynamically Generating Menu Items}
 */
 void QQuickMenu::addItem(QQuickItem *item)
 {
@@ -1374,7 +1377,10 @@ void QQuickMenu::addItem(QQuickItem *item)
 /*!
     \qmlmethod void QtQuick.Controls::Menu::insertItem(int index, Item item)
 
-    Inserts \a item at \a index.
+    Inserts \a item at \a index. The menu does not take ownership of the newly
+    inserted \a item.
+
+    \sa {Dynamically Generating Menu Items}
 */
 void QQuickMenu::insertItem(int index, QQuickItem *item)
 {
@@ -1476,7 +1482,8 @@ QQuickMenu *QQuickMenu::menuAt(int index) const
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::addMenu(Menu menu)
 
-    Adds \a menu as a sub-menu to the end of this menu.
+    Adds \a menu as a sub-menu to the end of this menu. The menu does not take
+    ownership of the newly added \a menu.
 */
 void QQuickMenu::addMenu(QQuickMenu *menu)
 {
@@ -1488,7 +1495,8 @@ void QQuickMenu::addMenu(QQuickMenu *menu)
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::insertMenu(int index, Menu menu)
 
-    Inserts \a menu as a sub-menu at \a index. The index is within all items in the menu.
+    Inserts \a menu as a sub-menu at \a index. The index is within all items in
+    the menu. The menu does not take ownership of the newly inserted \a menu.
 */
 void QQuickMenu::insertMenu(int index, QQuickMenu *menu)
 {
@@ -1528,7 +1536,8 @@ void QQuickMenu::removeMenu(QQuickMenu *menu)
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod Menu QtQuick.Controls::Menu::takeMenu(int index)
 
-    Removes and returns the menu at \a index. The index is within all items in the menu.
+    Removes and returns the menu at \a index. The index is within all items in
+    the menu.
 
     \note The ownership of the menu is transferred to the caller.
 */
@@ -1577,7 +1586,8 @@ QQuickAction *QQuickMenu::actionAt(int index) const
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Menu::addAction(Action action)
 
-    Adds \a action to the end of this menu.
+    Adds \a action to the end of this menu. The menu does not take ownership of
+    the newly added \a action.
 */
 void QQuickMenu::addAction(QQuickAction *action)
 {
@@ -1590,6 +1600,7 @@ void QQuickMenu::addAction(QQuickAction *action)
     \qmlmethod void QtQuick.Controls::Menu::insertAction(int index, Action action)
 
     Inserts \a action at \a index. The index is within all items in the menu.
+    The menu does not take ownership of the newly inserted \a action.
 */
 void QQuickMenu::insertAction(int index, QQuickAction *action)
 {
@@ -1629,7 +1640,8 @@ void QQuickMenu::removeAction(QQuickAction *action)
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod Action QtQuick.Controls::Menu::takeAction(int index)
 
-    Removes and returns the action at \a index. The index is within all items in the menu.
+    Removes and returns the action at \a index. The index is within all items in
+    the menu.
 
     \note The ownership of the action is transferred to the caller.
 */
