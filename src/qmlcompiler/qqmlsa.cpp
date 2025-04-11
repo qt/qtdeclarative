@@ -71,7 +71,7 @@ static_assert(QQmlJSScope::sizeofQQmlSAElement() == sizeof(Element));
     \value TranslationById  The binding is a \l{Text ID based translations}{translation} by id
     \value Script           The binding is a regular script
     \value Object           The binging is an \l{QML Object Types}{Object}
-    \value Interceptor      The binding is an interceptor that can intercept writes to properties such as \l{Behavior QML Type}{Behavior}
+    \value Interceptor      The binding is an interceptor that can intercept writes to properties such as \l[Quick]{Behavior}
     \value ValueSource      The binging is a \l{Defining QML Types from C++#Property Value Sources}{property value source}
     \value AttachedProperty The binding is an \l{QML Object Attributes#Attached Properties and Attached Signal Handlers}{attached object}
     \value GroupProperty    The binding is a \l{QML Object Attributes#Grouped Properties}{grouped property}

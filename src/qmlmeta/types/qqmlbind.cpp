@@ -332,7 +332,6 @@ void QQmlBindPrivate::validate(QQmlBind *q) const
 
 /*!
     \qmltype Binding
-    \nativetype QQmlBind
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
     \brief Enables the arbitrary creation of property bindings.

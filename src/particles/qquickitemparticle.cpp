@@ -13,7 +13,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ItemParticle
-    \nativetype QQuickItemParticle
     \inqmlmodule QtQuick.Particles
     \inherits ParticlePainter
     \brief For specifying a delegate to paint particles.
