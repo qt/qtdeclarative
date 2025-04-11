@@ -110,6 +110,7 @@ Creator.
         \li \l{Qt Quick Examples - Positioners}{Positioners}
         \li \l{Qt Quick Examples - Views}{Views}
         \li \l{Qt Quick Examples - Window and Screen}{Windows and Screen}
+        \li \l{Models and Views: List Model using a worker thread for data fetching}{Threaded List Model Example}
         \endlist
     \enddiv
     \div {class="doc-column"}

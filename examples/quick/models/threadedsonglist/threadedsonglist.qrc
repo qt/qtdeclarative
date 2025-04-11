@@ -1,0 +1,32 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource prefix="/">
+    <file>SongListDelegate.qml</file>
+    <file>ThreadedSongList.qml</file>
+    <file>images/album_covers/classical1.jpeg</file>
+    <file>images/album_covers/classical2.jpeg</file>
+    <file>images/album_covers/classical3.jpeg</file>
+    <file>images/album_covers/classical4.jpeg</file>
+    <file>images/album_covers/classical5.jpeg</file>
+    <file>images/album_covers/classical6.jpeg</file>
+    <file>images/album_covers/metal1.jpeg</file>
+    <file>images/album_covers/metal2.jpeg</file>
+    <file>images/album_covers/metal3.jpeg</file>
+    <file>images/album_covers/metal4.jpeg</file>
+    <file>images/album_covers/metal5.jpeg</file>
+    <file>images/album_covers/metal6.jpeg</file>
+    <file>images/album_covers/pop1.jpeg</file>
+    <file>images/album_covers/pop2.jpeg</file>
+    <file>images/album_covers/pop3.jpeg</file>
+    <file>images/album_covers/pop4.jpeg</file>
+    <file>images/album_covers/pop5.jpeg</file>
+    <file>images/album_covers/pop6.jpeg</file>
+    <file>images/album_covers/rock1.jpeg</file>
+    <file>images/album_covers/rock2.jpeg</file>
+    <file>images/album_covers/rock3.jpeg</file>
+    <file>images/album_covers/rock4.jpeg</file>
+    <file>images/album_covers/rock5.jpeg</file>
+    <file>images/album_covers/rock6.jpeg</file>
+    <file>images/device/remote.jpeg</file>
+</qresource>
+</RCC>
+

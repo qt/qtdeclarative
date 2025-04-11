@@ -1,0 +1,96 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example models/threadedsonglist
+    \title Models and Views: List Model using a worker thread for data fetching
+    \brief Demonstrates how to implement a list model with a responsive UI
+    using a worker thread to fetch data.
+    \examplecategory {User Interface Components}
+    \examplecategory {Data Processing & I/O}
+    \meta {tag} {quick,threads}
+    \image qml-threadedsonglist-example.webp {Screenshot of the application
+    where a songlist with album arts, song names, artist names and album names
+    are visible}
+
+    This example introduces a custom item model, inheriting QAbstractListModel.
+    The model gets its data from a worker object that is in separate QThread,
+    fetching data from a slow data source.
+
+    \section1 Overview of the Threaded Song List example
+
+    The data source simulates a slow data source by adding a delay of 100
+    milliseconds per song fetched from it. This means that loading of the
+    entire list of 3600 songs would take 6 minutes, making the opening of the
+    application impractical. This delay is mitigated by fetching the data only
+    for the visible area of the view, using a QObject placed into a worker
+    thread.
+
+    The worker object has a limit for the number of fetch requests it holds in
+    queue. This ensures that only the elements of the currently visible part of
+    the song list are fetched, removing the need to wait for the non-visible
+    part of the list to load, when user has already scrolled past some part of
+    the list.
+
+    Focus of this example is in the source model of the view. The view itself
+    is an unmodified QML ListView with a simple delegate. The use of thread is
+    hidden behind the implementation of model data handling and the ListView
+    does not need to have any customization to be able to adapt to the
+    thread-based model.
+
+    Also since the focus is in the model, the Qt Quick Controls is set to use
+    Universal style on all platforms to ensure identical UI behavior.
+
+    \snippet models/threadedsonglist/ThreadedSongList.qml Fixed Controls style
+
+    \section1 How it works
+
+    The business logic of providing the song list data is separated into
+    \c DataStorage class that provides a simple ID-based interface for the model.
+
+    \snippet models/threadedsonglist/datastorage.h Interface towards the model
+
+    When model requests data from the DataStorage, the storage will first check
+    if it has the data already available. If it does, data is returned
+    instantly, as would be the case in a non-threaded model. In case the data
+    is not found, DataStorage will emit a \c dataFetchNeeded() signal to the
+    worker object and add an empty item to the list of already existing data.
+    Adding the empty item ensures that no further signals are sent to the
+    worker for the same list item.
+
+    \snippet models/threadedsonglist/datastorage.cpp Send signal if no data
+
+    \c QueueWorker - the worker thread object - processes the dataFetchNeeded()
+    signals it has received by sending a signal to itself, which makes it
+    possible to receive all signals already in QEventQueue before starting the
+    slow data read operation.
+
+    \section1 Applying the approach to dynamic models
+
+    If one wishes to expand the solution towards a case where items may be
+    added, moved or removed from the data source (in this case RemoteMedia),
+    DataStorage needs to be updated with signals to match
+    QAbstractItemModel::rowsMoved(), QAbstractItemModel::rowsInserted() and
+    two signals to trigger the QAbstractItemModel::beginRemoveRows() and
+    QAbstractItemModel::endRemoveRows() inside ThreadedListModel.
+
+    For the insertion and move the ThreadedListModel can just call
+    QAbstractItemModel::beginInsertRows(), then add new IDs to its ID list and
+    call QAbstractItemModel::endInsertRows(). As ThreadedListModel holds a copy
+    of the ID list and accesses storage by ID, there is no need to signal the
+    begin and end from storage. Equally ThreadedListModel can call
+    QAbstractItemModel::beginMoveRows(), move IDs in its ID list and then call
+    QAbstractItemModel::endMoveRows().
+
+    Removal is a slightly more complex case. The view needs to have a
+    possibility to request the data that is going to be removed before it is
+    actually removed. So DataStorage needs to signal a warning of the removal,
+    causing the Model to call QAbstractItemModel::beginRemoveRows(). At this
+    stage ThreadedListModel may get one or more \c data() calls. Once the call
+    to direct connected signal returns at DataStorage, it is OK for DataStorage
+    to remove the item and then signal the model again with another signal that
+    triggers the model to call QAbstractItemModel::endRemoveRows().
+
+    \include examples-run.qdocinc
+
+*/

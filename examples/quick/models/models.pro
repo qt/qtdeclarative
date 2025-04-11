@@ -3,4 +3,5 @@ SUBDIRS = \
     abstractitemmodel \
     objectlistmodel \
     stringlistmodel \
-    threadedfetchmore
+    threadedfetchmore \
+    threadedsonglist
