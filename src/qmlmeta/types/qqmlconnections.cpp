@@ -142,7 +142,6 @@ public:
 
 /*!
     \qmltype Connections
-    \nativetype QQmlConnections
     \inqmlmodule QtQml
     \ingroup qtquick-interceptors
     \brief Describes generalized connections to signals.

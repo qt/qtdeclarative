@@ -27,7 +27,6 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
 
 /*!
     \qmltype MultiEffect
-    \nativetype QQuickMultiEffect
     \inqmlmodule QtQuick.Effects
     \inherits Item
     \ingroup qtquick-effects

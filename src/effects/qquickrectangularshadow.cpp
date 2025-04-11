@@ -12,7 +12,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype RectangularShadow
-    \nativetype QQuickRectangularShadow
     \inqmlmodule QtQuick.Effects
     \inherits Item
     \ingroup qtquick-effects
