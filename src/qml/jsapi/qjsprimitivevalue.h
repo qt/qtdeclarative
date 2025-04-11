@@ -777,10 +777,14 @@ private:
         }
 
         union {
-            bool m_bool = false;
+            bool m_bool;
             int m_int;
             double m_double;
             QString m_string;
+
+            // Dummy value to trigger initialization of the whole storage.
+            // We don't want to see maybe-uninitialized warnings every time we access m_string.
+            std::byte m_zeroInitialize[sizeof(QString)] = {};
         };
 
         Type m_type = Undefined;
