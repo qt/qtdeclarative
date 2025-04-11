@@ -80,6 +80,17 @@ std::optional<AotStats> AotStats::aggregateAotstatsList(const QString &aotstatsL
     return aggregated;
 }
 
+static constexpr QLatin1StringView S_CODEGEN_SUCCESSFUL{ "codegenSuccessful" };
+static constexpr QLatin1StringView S_COLUMN{ "column" };
+static constexpr QLatin1StringView S_DURATION_MICROSECONDS{ "durationMicroseconds" };
+static constexpr QLatin1StringView S_ENTRIES{ "entries" };
+static constexpr QLatin1StringView S_ERROR_MESSAGE{ "errorMessage" };
+static constexpr QLatin1StringView S_FILE_PATH{ "filePath" };
+static constexpr QLatin1StringView S_FUNCTION_NAME{ "functionName" };
+static constexpr QLatin1StringView S_LINE{ "line" };
+static constexpr QLatin1StringView S_MODULE_FILES{ "moduleFiles" };
+static constexpr QLatin1StringView S_MODULE_ID{ "moduleId" };
+
 AotStats AotStats::fromJsonDocument(const QJsonDocument &document)
 {
     QJsonArray modulesArray = document.array();
@@ -87,26 +98,26 @@ AotStats AotStats::fromJsonDocument(const QJsonDocument &document)
     QQmlJS::AotStats result;
     for (const auto &modulesArrayEntry : modulesArray) {
         const auto &moduleObject = modulesArrayEntry.toObject();
-        QString moduleId = moduleObject[u"moduleId"_s].toString();
-        const QJsonArray &filesArray = moduleObject[u"moduleFiles"_s].toArray();
+        QString moduleId = moduleObject[S_MODULE_ID].toString();
+        const QJsonArray &filesArray = moduleObject[S_MODULE_FILES].toArray();
 
         QHash<QString, QList<AotStatsEntry>> files;
         for (const auto &filesArrayEntry : filesArray) {
             const QJsonObject &fileObject = filesArrayEntry.toObject();
-            QString filepath = fileObject[u"filepath"_s].toString();
-            const QJsonArray &statsArray = fileObject[u"entries"_s].toArray();
+            QString filepath = fileObject[S_FILE_PATH].toString();
+            const QJsonArray &statsArray = fileObject[S_ENTRIES].toArray();
 
             QList<AotStatsEntry> stats;
             for (const auto &statsArrayEntry : statsArray) {
                 const auto &statsObject = statsArrayEntry.toObject();
                 QQmlJS::AotStatsEntry stat;
-                auto micros = statsObject[u"durationMicroseconds"_s].toInteger();
+                auto micros = statsObject[S_DURATION_MICROSECONDS].toInteger();
                 stat.codegenDuration = std::chrono::microseconds(micros);
-                stat.functionName = statsObject[u"functionName"_s].toString();
-                stat.errorMessage = statsObject[u"errorMessage"_s].toString();
-                stat.line = statsObject[u"line"_s].toInt();
-                stat.column = statsObject[u"column"_s].toInt();
-                stat.codegenSuccessful = statsObject[u"codegenSuccessfull"_s].toBool();
+                stat.functionName = statsObject[S_FUNCTION_NAME].toString();
+                stat.errorMessage = statsObject[S_ERROR_MESSAGE].toString();
+                stat.line = statsObject[S_LINE].toInt();
+                stat.column = statsObject[S_COLUMN].toInt();
+                stat.codegenSuccessful = statsObject[S_CODEGEN_SUCCESSFUL].toBool();
                 stats.append(std::move(stat));
             }
 
@@ -136,24 +147,24 @@ QJsonDocument AotStats::toJsonDocument() const
             for (const auto &stat : stats) {
                 QJsonObject statObject;
                 auto micros = static_cast<qint64>(stat.codegenDuration.count());
-                statObject.insert(u"durationMicroseconds", micros);
-                statObject.insert(u"functionName", stat.functionName);
-                statObject.insert(u"errorMessage", stat.errorMessage);
-                statObject.insert(u"line", stat.line);
-                statObject.insert(u"column", stat.column);
-                statObject.insert(u"codegenSuccessfull", stat.codegenSuccessful);
+                statObject.insert(S_DURATION_MICROSECONDS, micros);
+                statObject.insert(S_FUNCTION_NAME, stat.functionName);
+                statObject.insert(S_ERROR_MESSAGE, stat.errorMessage);
+                statObject.insert(S_LINE, stat.line);
+                statObject.insert(S_COLUMN, stat.column);
+                statObject.insert(S_CODEGEN_SUCCESSFUL, stat.codegenSuccessful);
                 statsArray.append(statObject);
             }
 
             QJsonObject o;
-            o.insert(u"filepath"_s, filename);
-            o.insert(u"entries"_s, statsArray);
+            o.insert(S_FILE_PATH, filename);
+            o.insert(S_ENTRIES, statsArray);
             filesArray.append(o);
         }
 
         QJsonObject o;
-        o.insert(u"moduleId"_s, moduleId);
-        o.insert(u"moduleFiles"_s, filesArray);
+        o.insert(S_MODULE_ID, moduleId);
+        o.insert(S_MODULE_FILES, filesArray);
         modulesArray.append(o);
     }
 
