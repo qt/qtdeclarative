@@ -43,7 +43,7 @@ class Q_LABSQMLMODELS_EXPORT QQmlTableModel : public QAbstractTableModel, public
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    QQmlTableModel(QObject *parent = nullptr);
+    explicit QQmlTableModel(QObject *parent = nullptr);
     ~QQmlTableModel() override;
 
     QVariant rows() const;
