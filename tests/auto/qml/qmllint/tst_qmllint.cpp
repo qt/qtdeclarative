@@ -1109,6 +1109,9 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("missingRequiredOnObjectDefinitionBinding")
             << QStringLiteral("missingRequiredPropertyOnObjectDefinitionBinding.qml")
             << Result{ { { uR"(Component is missing required property i from here)"_s, 4, 26 } } };
+    QTest::newRow("locationUnqualifiedLookupAssign")
+            << QStringLiteral("locationUnqualifiedLookupAssign.qml")
+            << Result{ { Message{ QStringLiteral("Unqualified access"), 5, 21 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
