@@ -4,6 +4,7 @@
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,8 +35,10 @@ QString QtQuickControls2MacOSStylePlugin::name() const
     return QStringLiteral("macOS");
 }
 
-void QtQuickControls2MacOSStylePlugin::initializeTheme(QQuickTheme */*theme*/)
+void QtQuickControls2MacOSStylePlugin::initializeTheme(QQuickTheme *theme)
 {
+    Q_ASSERT(theme);
+    theme->setUsePlatformPalette(true);
 }
 
 QT_END_NAMESPACE
