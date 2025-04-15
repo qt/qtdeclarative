@@ -57,8 +57,12 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
                     // so that actions within it can grab shortcuts.
                     if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
                         auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
-                        while (!obj && parentMenu)
+                        while (parentMenu) {
                             obj = parentMenu->window();
+                            if (obj)
+                                break;
+                            parentMenu = QQuickMenuPrivate::get(parentMenu)->parentMenu;
+                        }
                     }
                 }
                 break;
