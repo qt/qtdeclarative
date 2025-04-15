@@ -66,17 +66,22 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
                 item = popup->popupItem();
 
 #if QT_CONFIG(qml_object_model)
-                if (!obj) {
-                    // The popup has no associated window (yet). However, sub-menus,
-                    // unlike top-level menus, will not have an associated window
-                    // until their parent menu is opened. So, check if this is a sub-menu
-                    // so that actions within it can grab shortcuts.
-                    if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
-                        auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
-                        while (!obj && parentMenu)
-                            obj = parentMenu->window();
+            if (!obj) {
+                // The popup has no associated window (yet). However, sub-menus,
+                // unlike top-level menus, will not have an associated window
+                // until their parent menu is opened. So, check if this is a sub-menu
+                // so that actions within it can grab shortcuts.
+                if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
+                    auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
+                    while (parentMenu) {
+                        obj = parentMenu->window();
+                        if (obj)
+                            break;
+
+                        parentMenu = QQuickMenuPrivate::get(parentMenu)->parentMenu;
                     }
                 }
+            }
 #endif
                 break;
             }

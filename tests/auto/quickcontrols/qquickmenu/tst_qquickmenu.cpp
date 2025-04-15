@@ -123,6 +123,7 @@ private slots:
     void resetCurrentIndexUponPopup_data();
     void resetCurrentIndexUponPopup();
     void mousePropagationWithinPopup();
+    void shortcutInNestedSubMenuAction();
 
 private:
     bool nativeMenuSupported = false;
@@ -3460,6 +3461,20 @@ void tst_QQuickMenu::mousePropagationWithinPopup()
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, gapPoint);
         QCOMPARE(clickedSpy.size(), 0);
     }
+}
+
+void tst_QQuickMenu::shortcutInNestedSubMenuAction()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("shortcutInNestedSubMenuAction.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    // Shouldn't result in an infinite loop.
+    QTest::keyClick(window, Qt::Key_C, Qt::ControlModifier);
+    QCOMPARE(window->property("triggeredCount").value<int>(), 1);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
