@@ -1046,6 +1046,10 @@ void QQmlJSImportVisitor::checkRequiredProperties()
             for (QQmlJSScope::ConstPtr descendant : std::as_const(descendants)) {
                 if (descendant->scopeType() != QQmlSA::ScopeType::QMLScope)
                     continue;
+                // Ignore inline components of children. Base types need to be always checked for
+                // required properties, even if they are defined in an inline component.
+                if (descendant != scope && descendant->isInlineComponent())
+                    continue;
                 scopesToSearch << descendant;
                 const auto ownProperties = descendant->ownProperties();
                 for (auto propertyIt = ownProperties.constBegin();

@@ -1254,6 +1254,9 @@ void TestQmllint::dirtyQmlSnippet_data()
 
     QTest::newRow("testSnippet") << u"property int qwer: \"Hello\""_s
                                  << Result{ { { "Cannot assign literal of type string to int"_L1 } } };
+    QTest::newRow("requiredInInlineComponent")
+            << u"Item { component Foo: Item { required property var bla; } } Foo {}"_s
+            << Result{ { { "Component is missing required property bla from Foo"_L1, 1, 61 } } };
 }
 
 void TestQmllint::dirtyQmlSnippet()
@@ -1276,6 +1279,10 @@ void TestQmllint::cleanQmlSnippet_data()
     QTest::addColumn<QString>("code");
 
     QTest::newRow("testSnippet") << u"property int qwer: 123"_s;
+    QTest::newRow("requiredInComponent")
+            << u"Item { Component { id: comp; required property var bla; } }"_s;
+    QTest::newRow("requiredInInlineComponent")
+            << u"Item { component Foo: Item { required property var bla; } }"_s;
 }
 
 void TestQmllint::cleanQmlSnippet()
