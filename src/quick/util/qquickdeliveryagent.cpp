@@ -1055,6 +1055,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
 
     if (subtreeHoverEnabled) {
         hoveredLeafItemFound = false;
+        QQuickPointerHandlerPrivate::deviceDeliveryTargets(QPointingDevice::primaryPointingDevice()).clear();
         deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
     }
 
