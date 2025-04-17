@@ -8,11 +8,11 @@ ApplicationWindow {
     width: 400
     height: 400
 
-    property alias control: control
+    Button {
+        text: "Button"
+    }
 
-    Control {
-        id: control
-        width: 100
-        height: 100
+    background: MouseArea {
+        hoverEnabled: true
     }
 }

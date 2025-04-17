@@ -27,7 +27,6 @@ private slots:
     void fractionalFontSize();
     void resizeBackgroundKeepsBindings();
     void hoverInMouseArea();
-    void hoverEnabledDefault();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -136,18 +135,6 @@ void tst_QQuickControl::hoverInMouseArea()
     QVERIFY(textField);
     pointLerper.move(mapCenterToWindow(textField));
     QVERIFY(textField->isHovered());
-}
-
-void tst_QQuickControl::hoverEnabledDefault()
-{
-    QQuickApplicationHelper helper(this, QStringLiteral("controlInApplicationWindow.qml"));
-    QQuickWindow *window = helper.window;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
-
-    const auto *control = window->property("control").value<QQuickControl *>();
-    QVERIFY(control);
-    QCOMPARE(control->isHoverEnabled(), QGuiApplication::styleHints()->useHoverEffects());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickControl)

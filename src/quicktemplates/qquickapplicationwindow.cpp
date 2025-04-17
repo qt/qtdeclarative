@@ -2,13 +2,11 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qquickapplicationwindow_p.h"
+#include "qquickapplicationwindow_p_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquicktemplatesutils_p.h"
-#include "qquicktextarea_p.h"
-#include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
-#include "qquicktooltip_p.h"
 #include <private/qtquicktemplates2-config_p.h>
 #if QT_CONFIG(quicktemplates2_container)
 #include "qquicktabbar_p.h"
@@ -114,75 +112,6 @@ using namespace Qt::StringLiterals;
 
 static const QQuickItemPrivate::ChangeTypes ItemChanges = QQuickItemPrivate::Visibility
         | QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
-
-class Q_QUICKTEMPLATES2_EXPORT QQuickApplicationWindowPrivate
-    : public QQuickWindowQmlImplPrivate
-    , public QSafeQuickItemChangeListener<QQuickApplicationWindowPrivate>
-{
-    Q_DECLARE_PUBLIC(QQuickApplicationWindow)
-
-public:
-    static QQuickApplicationWindowPrivate *get(QQuickApplicationWindow *window)
-    {
-        return window->d_func();
-    }
-
-    QQmlListProperty<QObject> contentData();
-
-    void updateHasBackgroundFlags();
-    void relayout();
-
-    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
-    void itemVisibilityChanged(QQuickItem *item) override;
-    void itemImplicitWidthChanged(QQuickItem *item) override;
-    void itemImplicitHeightChanged(QQuickItem *item) override;
-    QPalette windowPalette() const override { return defaultPalette(); }
-
-    void updateFont(const QFont &f);
-    inline void setFont_helper(const QFont &f) {
-        if (font.resolveMask() == f.resolveMask() && font == f)
-            return;
-        updateFont(f);
-    }
-    void resolveFont();
-
-    void _q_updateActiveFocus();
-    void setActiveFocusControl(QQuickItem *item);
-
-    static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
-
-    void cancelBackground();
-    void executeBackground(bool complete = false);
-
-    QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::System); }
-    void updateChildrenPalettes(const QPalette &parentPalette) override
-    {
-        // Update regular children
-        QQuickWindowPrivate::updateChildrenPalettes(parentPalette);
-
-        // And cover special cases
-        for (auto &&child : q_func()->findChildren<QObject *>()) {
-            if (auto *popup = qobject_cast<QQuickPopup *>(child))
-                QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
-            else if (auto *toolTipAttached = qobject_cast<QQuickToolTipAttached *>(child)) {
-                if (auto *toolTip = toolTipAttached->toolTip())
-                    QQuickPopupPrivate::get(toolTip)->updateContentPalettes(parentPalette);
-            }
-        }
-    }
-
-    QQuickDeferredPointer<QQuickItem> background;
-    QQuickControl *control = nullptr;
-    QQuickItem *menuBar = nullptr;
-    QQuickItem *header = nullptr;
-    QQuickItem *footer = nullptr;
-    QFont font;
-    QLocale locale;
-    QQuickItem *activeFocusControl = nullptr;
-    bool insideRelayout = false;
-    bool hasBackgroundWidth = false;
-    bool hasBackgroundHeight = false;
-};
 
 static void layoutItem(QQuickItem *item, qreal y, qreal width)
 {
@@ -834,15 +763,6 @@ void QQuickApplicationWindow::classBegin()
      */
     d->control = new QQuickControl(QQuickWindow::contentItem());
     d->control->setObjectName("ApplicationWindowContentControl");
-#if QT_CONFIG(quicktemplates2_hover)
-    // Now that QQuickContentItem's parent is the content control rather
-    // than QQuickRootItem, we need to ensure that the control has the
-    // correct hoverEnabled value. If we don't do this (get the value
-    // from the style hints), it will use QQuickItem's default value of false
-    // and some controls won't be hoverable when they should be.
-    QQuickControlPrivate::get(d->control)->updateHoverEnabled(
-        QQuickControlPrivate::calcHoverEnabled(nullptr), false);
-#endif
     auto *contentItem = new QQuickContentItem(this, d->control);
     // The content item can't be its own focus scope here, as that
     // will detach focus of items inside the content item from focus

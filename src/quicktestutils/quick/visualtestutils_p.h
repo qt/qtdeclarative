@@ -61,6 +61,7 @@ namespace QQuickVisualTestUtils
     {
     public:
         PointLerper(QQuickWindow *window,
+            const QPoint &startingPosition = QPoint(0, 0),
             const QPointingDevice *pointingDevice = QPointingDevice::primaryPointingDevice());
 
         void move(const QPoint &pos, int steps = 10, int delayInMilliseconds = 1);

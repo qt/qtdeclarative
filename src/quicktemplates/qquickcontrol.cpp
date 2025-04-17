@@ -16,6 +16,7 @@
 #include "qquickpopup_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
+#include "qquickapplicationwindow_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
 #include "qquickcontentitem_p.h"
 
@@ -693,6 +694,17 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
         // environment variable or style hint.
         if (qobject_cast<const QQuickPopupItem *>(p))
             break;
+
+        auto *applicationWindow = qobject_cast<QQuickApplicationWindow *>(p->window());
+        if (applicationWindow) {
+            const auto *applicationWindowPrivate = QQuickApplicationWindowPrivate::get(applicationWindow);
+            if (p == applicationWindowPrivate->control) {
+                // Don't let the next check get hit, because it will return
+                // false since it's a plain QQuickControl. Instead, skip to the
+                // global flags.
+                break;
+            }
+        }
 
         if (QQuickTemplatesUtils::isInteractiveControlType(p)) {
             const QVariant hoverEnabledProperty = p->property("hoverEnabled");

@@ -85,9 +85,11 @@ QPoint QQuickVisualTestUtils::lerpPoints(const QPoint &point1, const QPoint &poi
     QVERIFY(childButton->isHovered());
     \endcode
 */
-QQuickVisualTestUtils::PointLerper::PointLerper(QQuickWindow *window, const QPointingDevice *pointingDevice)
+QQuickVisualTestUtils::PointLerper::PointLerper(QQuickWindow *window, const QPoint &startingPosition,
+        const QPointingDevice *pointingDevice)
     : mWindow(window)
     , mPointingDevice(pointingDevice)
+    , mFrom(startingPosition)
 {
 }
 

@@ -9,6 +9,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -16,6 +17,7 @@
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
@@ -56,6 +58,7 @@ private slots:
     void backgroundSize();
     void explicitBackgroundSizeBinding();
     void safeArea();
+    void hoverInBackground();
 };
 
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
@@ -1085,6 +1088,27 @@ void tst_QQuickApplicationWindow::safeArea()
     QCOMPARE(window->contentItem()->position(), QPoint());
     QCOMPARE(window->contentItem()->size(), window->size());
 
+}
+
+void tst_QQuickApplicationWindow::hoverInBackground()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("hoverInBackground.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *mouseArea = window->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+    const QPoint windowCenter = mapCenterToWindow(window->contentItem());
+    PointLerper pointLerper(window, windowCenter - QPoint(100, 100));
+    pointLerper.move(windowCenter, 2);
+    QVERIFY(mouseArea->hovered());
+
+    auto *button = window->findChild<QQuickAbstractButton *>();
+    QVERIFY(button);
+    pointLerper.move(mapCenterToWindow(button), 2);
+    QCOMPARE(button->isHovered(), QQuickControlPrivate::calcHoverEnabled(window->contentItem()));
 }
 
 QTEST_MAIN(tst_QQuickApplicationWindow)

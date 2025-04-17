@@ -8208,7 +8208,16 @@ bool QQuickItem::acceptHoverEvents() const
 void QQuickItem::setAcceptHoverEvents(bool enabled)
 {
     Q_D(QQuickItem);
+    // hoverEnabled causes hoveredLeafItemFound to be set to true when a hover
+    // event is being delivered to this item, which effectively ends hover
+    // event delivery, as it will then start sending hover events backwards
+    // from the child to the root, in a straight line.
     d->hoverEnabled = enabled;
+    // Recursively set subtreeHoverEnabled for all of our parents. Note that
+    // even though this and hoverEnabled are set to the same values in this
+    // function, only subtreeHoverEnabled is set for the entire parent chain.
+    // subtreeHoverEnabled says that a certain tree _may_ want hover events,
+    // but unlike hoverEnabled, won't prevent delivery to siblings.
     d->setHasHoverInChild(enabled);
     // The DA needs to resolve which items and handlers should now be hovered or unhovered.
     // Marking this item dirty ensures that flushFrameSynchronousEvents() will be called from the render loop,

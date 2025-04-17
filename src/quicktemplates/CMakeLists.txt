@@ -19,7 +19,9 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickabstractbutton_p_p.h
         qquickaction.cpp qquickaction_p.h
         qquickactiongroup.cpp qquickactiongroup_p.h
-        qquickapplicationwindow.cpp qquickapplicationwindow_p.h
+        qquickapplicationwindow.cpp
+        qquickapplicationwindow_p.h
+        qquickapplicationwindow_p_p.h
         qquickbusyindicator.cpp qquickbusyindicator_p.h
         qquickbutton.cpp qquickbutton_p.h
         qquickbutton_p_p.h
