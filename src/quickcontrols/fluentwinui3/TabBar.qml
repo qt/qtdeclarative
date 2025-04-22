@@ -13,28 +13,28 @@ T.TabBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
     readonly property string __currentState: position === TabBar.Header
         ? (enabled ? "normal" : "disabled")
         : (enabled ? "normal_footer" : "disabled_footer")
-    readonly property var config: Config.controls.tabbar[__currentState] || {}
+    readonly property var __config: Config.controls.tabbar[__currentState] || {}
 
     contentItem: ListView {
         model: control.contentModel
         currentIndex: control.currentIndex
 
-        spacing: control.config.spacing
+        spacing: control.__config.spacing
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
         flickableDirection: Flickable.AutoFlickIfNeeded
@@ -47,6 +47,6 @@ T.TabBar {
     }
 
     background: StyleImage {
-        imageConfig: control.config.background
+        imageConfig: control.__config.background
     }
 }

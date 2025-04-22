@@ -17,10 +17,10 @@ T.SwitchDelegate {
 
     spacing: 10
 
-    topPadding: config.topPadding || 0 + verticalOffset
-    leftPadding: config.leftPadding || 0 + __horizontalOffset
-    rightPadding: config.rightPadding || 0 + __horizontalOffset
-    bottomPadding: config.bottomPadding || 0 + __verticalOffset
+    topPadding: __config.topPadding || 0 + verticalOffset
+    leftPadding: __config.leftPadding || 0 + __horizontalOffset
+    rightPadding: __config.rightPadding || 0 + __horizontalOffset
+    bottomPadding: __config.bottomPadding || 0 + __verticalOffset
 
     icon.width: 16
     icon.height: 16
@@ -39,7 +39,7 @@ T.SwitchDelegate {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.itemdelegate[__currentState] || {}
+    readonly property var __config: Config.controls.itemdelegate[__currentState] || {}
 
     readonly property Item __focusFrameTarget: control
 
@@ -79,7 +79,7 @@ T.SwitchDelegate {
 
         property Item backgroundImage: StyleImage {
             parent: control.background
-            imageConfig: control.config.background
+            imageConfig: control.__config.background
             implicitWidth: parent.width - control.__horizontalOffset * 2
             implicitHeight: parent.height - control.__verticalOffset * 2
             x: control.__horizontalOffset

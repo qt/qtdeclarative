@@ -14,51 +14,51 @@ T.GroupBox {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                             contentHeight + topPadding + bottomPadding)
 
-    readonly property real __deltaY: (config.background.y - config.label.y) || 0
-    readonly property real __deltaX: (config.background.x - config.label.x) || 0
-    spacing: (__deltaY - config.label.height) || 0
+    readonly property real __deltaY: (__config.background.y - __config.label.y) || 0
+    readonly property real __deltaX: (__config.background.x - __config.label.x) || 0
+    spacing: (__deltaY - __config.label.height) || 0
 
-    topPadding: (config.topPadding || 0) + (spacing >= 0 ? (label.height + spacing) : __deltaY)
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: (config.leftPadding || 0) + (__deltaX >= 0 ? __deltaX : 0)
-    rightPadding: config.rightPadding || 0
+    topPadding: (__config.topPadding || 0) + (spacing >= 0 ? (label.height + spacing) : __deltaY)
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: (__config.leftPadding || 0) + (__deltaX >= 0 ? __deltaX : 0)
+    rightPadding: __config.rightPadding || 0
 
     topInset: __deltaY > 0 ? __deltaY : 0
-    bottomInset: -config.bottomInset || 0
+    bottomInset: -__config.bottomInset || 0
     leftInset: __deltaX > 0 ? __deltaX : 0
-    rightInset: -config.rightInset || 0
+    rightInset: -__config.rightInset || 0
 
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.enabled && control.hovered && "hovered",
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.groupbox[__currentState] || {}
+    readonly property var __config: Config.controls.groupbox[__currentState] || {}
 
     label: T.Label {
         x: control.__deltaX > 0 ? 0 : -__deltaX
         y: control.__deltaY > 0 ? 0 : -__deltaY
 
-        topPadding: control.config.label_contentItem.topPadding || 0
-        leftPadding: control.config.label_contentItem.leftPadding || 0
-        rightPadding: control.config.label_contentItem.rightPadding || 0
-        bottomPadding: control.config.label_contentItem.bottomPadding || 0
+        topPadding: control.__config.label_contentItem.topPadding || 0
+        leftPadding: control.__config.label_contentItem.leftPadding || 0
+        rightPadding: control.__config.label_contentItem.rightPadding || 0
+        bottomPadding: control.__config.label_contentItem.bottomPadding || 0
 
-        height: Math.max(implicitHeight, config.label.height)
+        height: Math.max(implicitHeight, __config.label.height)
 
         text: control.title
         font: control.font
         color: control.palette.windowText
         elide: Text.ElideRight
-        horizontalAlignment: control.config.label_text.textHAlignment
-        verticalAlignment: control.config.label_text.textVAlignment
+        horizontalAlignment: control.__config.label_text.textHAlignment
+        verticalAlignment: control.__config.label_text.textVAlignment
 
         background: StyleImage {
-            imageConfig: control.config.label_background
+            imageConfig: control.__config.label_background
         }
     }
 
     background: StyleImage {
-        imageConfig: control.config.background.filePath ? control.config.background : Config.controls.frame["normal"].background // fallback to regular frame background
+        imageConfig: control.__config.background.filePath ? control.__config.background : Config.controls.frame["normal"].background // fallback to regular frame background
         height: parent.height - control.topPadding + control.bottomPadding
     }
 }

@@ -14,12 +14,12 @@ T.SwipeDelegate {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
-    bottomPadding: config.bottomPadding || 0
+    topPadding: __config.topPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
+    bottomPadding: __config.bottomPadding || 0
 
     icon.width: 16
     icon.height: 16
@@ -34,7 +34,7 @@ T.SwipeDelegate {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.itemdelegate[__currentState] || {}
+    readonly property var __config: Config.controls.itemdelegate[__currentState] || {}
 
     readonly property Item __focusFrameTarget: control
 
@@ -53,8 +53,8 @@ T.SwipeDelegate {
     }
 
     background: Rectangle {
-        implicitWidth: control.config.background.width
-        implicitHeight: control.config.background.height
+        implicitWidth: control.__config.background.width
+        implicitHeight: control.__config.background.height
         readonly property bool lightScheme: Application.styleHints.colorScheme === Qt.Light
         readonly property color bakcgroundColorTint: control.down
                 ? lightScheme ? Color.transparent("black", 0.02) : Color.transparent("white", 0.04)

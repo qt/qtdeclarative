@@ -17,17 +17,17 @@ T.ComboBox {
                              implicitContentHeight + topPadding + bottomPadding,
                             implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: config.contentItem.spacing || 0
+    spacing: __config.contentItem.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: (config.leftPadding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)) || 0
-    rightPadding: (config.rightPadding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)) || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: (__config.leftPadding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)) || 0
+    rightPadding: (__config.rightPadding + (control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)) || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
     readonly property string __currentState: [
         !control.enabled && "disabled",
@@ -35,7 +35,7 @@ T.ComboBox {
         control.down && control.popup.visible && "open",
         control.pressed && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: (control.editable && control.down && control.popup.visible // editable combobox differs from normal one only in opened state
+    readonly property var __config: (control.editable && control.down && control.popup.visible // editable combobox differs from normal one only in opened state
                                     ? Config.controls.editablecombobox[__currentState]
                                     : Config.controls.combobox[__currentState]) || {}
 
@@ -53,9 +53,9 @@ T.ComboBox {
     }
 
     indicator: Image {
-        x: control.mirrored ? control.config.leftPadding : control.width - width - control.config.rightPadding
+        x: control.mirrored ? control.__config.leftPadding : control.width - width - control.__config.rightPadding
         y: (control.topPadding + (control.availableHeight - height) / 2) + (control.pressed ? 1 : 0)
-        source: Qt.resolvedUrl(control.config.indicator.filePath)
+        source: Qt.resolvedUrl(control.__config.indicator.filePath)
 
         Behavior on y {
             NumberAnimation{ easing.type: Easing.OutCubic; duration: 167 }
@@ -65,10 +65,10 @@ T.ComboBox {
     contentItem: T.TextField {
         text: control.editable ? control.editText : control.displayText
 
-        topPadding: control.config.label_contentItem.topPadding || 0
-        leftPadding: control.config.label_contentItem.leftPadding || 0
-        rightPadding: control.config.label_contentItem.rightPadding || 0
-        bottomPadding: control.config.label_contentItem.bottomPadding || 0
+        topPadding: control.__config.label_contentItem.topPadding || 0
+        leftPadding: control.__config.label_contentItem.leftPadding || 0
+        rightPadding: control.__config.label_contentItem.rightPadding || 0
+        bottomPadding: control.__config.label_contentItem.bottomPadding || 0
 
         implicitWidth: (implicitBackgroundWidth + leftInset + rightInset)
                         || contentWidth + leftPadding + rightPadding
@@ -89,14 +89,14 @@ T.ComboBox {
         color: control.down ? __pressedText : control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
-        horizontalAlignment: control.config.label_text.textHAlignment
-        verticalAlignment: control.config.label_text.textVAlignment
+        horizontalAlignment: control.__config.label_text.textHAlignment
+        verticalAlignment: control.__config.label_text.textVAlignment
 
         readonly property Item __focusFrameControl: control
     }
 
     background: StyleImage {
-        imageConfig: control.config.background
+        imageConfig: control.__config.background
         Item {
             visible: control.editable && ((control.down && control.popup.visible) || control.activeFocus)
             width: parent.width
@@ -105,17 +105,17 @@ T.ComboBox {
             FocusStroke {
                 width: parent.width
                 height: parent.height
-                radius: control.down && control.popup.visible ? 0 : control.config.background.bottomOffset
+                radius: control.down && control.popup.visible ? 0 : control.__config.background.bottomOffset
                 color: control.palette.accent
             }
         }
     }
 
     popup: T.Popup {
-        topPadding: control.config.popup_contentItem.topPadding || 0
-        leftPadding: control.config.popup_contentItem.leftPadding || 0
-        rightPadding: control.config.popup_contentItem.rightPadding || 0
-        bottomPadding: control.config.popup_contentItem.bottomPadding || 0
+        topPadding: control.__config.popup_contentItem.topPadding || 0
+        leftPadding: control.__config.popup_contentItem.leftPadding || 0
+        rightPadding: control.__config.popup_contentItem.rightPadding || 0
+        bottomPadding: control.__config.popup_contentItem.bottomPadding || 0
 
         contentItem: ListView {
             clip: true
@@ -140,7 +140,7 @@ T.ComboBox {
         }
 
         background: StyleImage {
-            imageConfig: control.config.popup_background.filePath ? control.config.popup_background : Config.controls.popup["normal"].background // fallback to regular popup
+            imageConfig: control.__config.popup_background.filePath ? control.__config.popup_background : Config.controls.popup["normal"].background // fallback to regular popup
         }
     }
 }

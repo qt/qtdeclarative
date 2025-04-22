@@ -13,16 +13,16 @@ T.ToolSeparator {
                              implicitContentHeight + topPadding + bottomPadding)
 
     padding: 2
-    topPadding: vertical ? config.topPadding : padding
-    bottomPadding: vertical ? config.bottomPadding : padding
-    leftPadding: vertical ? padding : config.topPadding
-    rightPadding: vertical ? padding : config.bottomPadding
+    topPadding: vertical ? __config.topPadding : padding
+    bottomPadding: vertical ? __config.bottomPadding : padding
+    leftPadding: vertical ? padding : __config.topPadding
+    rightPadding: vertical ? padding : __config.bottomPadding
 
-    readonly property var config: Config.controls.toolbutton["normal"] || {}
+    readonly property var __config: Config.controls.toolbutton["normal"] || {}
 
     contentItem: Rectangle {
-        implicitWidth: control.vertical ? 1 : control.config.background.height
-        implicitHeight: control.vertical ? control.config.background.height : 1
+        implicitWidth: control.vertical ? 1 : control.__config.background.height
+        implicitHeight: control.vertical ? control.__config.background.height : 1
         color: Application.styleHints.colorScheme === Qt.Light ? "#0F000000" : "#15FFFFFF"
     }
 }

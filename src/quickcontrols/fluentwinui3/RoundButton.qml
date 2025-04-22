@@ -14,15 +14,15 @@ T.RoundButton {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    icon.width: config.icon.width
-    icon.height: config.icon.height
+    icon.width: __config.icon.width
+    icon.height: __config.icon.height
     icon.color: __buttonText
 
     readonly property color __buttonText: {
@@ -48,7 +48,7 @@ T.RoundButton {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: (control.flat && Config.controls.flatbutton
+    readonly property var __config: (control.flat && Config.controls.flatbutton
         ? Config.controls.flatbutton[__currentState]
         : Config.controls.button[__currentState]) || {}
 
@@ -67,7 +67,7 @@ T.RoundButton {
 
     background: ButtonBackground {
         control: control
-        implicitHeight: control.config.background.height
+        implicitHeight: control.__config.background.height
         implicitWidth: implicitWidth
         radius: control.radius
     }

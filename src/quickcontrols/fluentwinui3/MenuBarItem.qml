@@ -15,20 +15,20 @@ T.MenuBarItem {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
-    icon.width: config.icon.width
-    icon.height: config.icon.height
+    icon.width: __config.icon.width
+    icon.height: __config.icon.height
     icon.color: !control.down ? control.palette.buttonText : Application.styleHints.colorScheme === Qt.Light
                     ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.62)
                     : Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.7725)
@@ -38,7 +38,7 @@ T.MenuBarItem {
         control.enabled && !control.down && (control.hovered || control.highlighted) && "hovered",
         down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.toolbutton[__currentState] || {}
+    readonly property var __config: Config.controls.toolbutton[__currentState] || {}
 
     readonly property Item __focusFrameTarget: control
 
@@ -58,7 +58,7 @@ T.MenuBarItem {
         control: control
         implicitHeight: 30
         implicitWidth: 30
-        radius: control.config.background.topOffset
+        radius: control.__config.background.topOffset
         subtle: !control.checked || control.flat
         accented: control.checked
     }

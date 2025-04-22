@@ -15,17 +15,17 @@ T.RadioButton {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
     readonly property string __currentState: [
         control.checked && "checked",
@@ -33,16 +33,16 @@ T.RadioButton {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.radiobutton[__currentState] || {}
-    readonly property bool mirroredIndicator: control.mirrored !== (config.mirrored || false)
+    readonly property var __config: Config.controls.radiobutton[__currentState] || {}
+    readonly property bool __mirroredIndicator: control.mirrored !== (__config.mirrored || false)
 
     readonly property Item __focusFrameTarget: control
 
     indicator: RadioIndicator {
-        x: control.text ? (control.mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
+        x: control.text ? (control.__mirroredIndicator ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
-        filePath: Qt.resolvedUrl(control.config.indicator.filePath)
+        filePath: Qt.resolvedUrl(control.__config.indicator.filePath)
     }
 
     contentItem: Text {
@@ -58,6 +58,6 @@ T.RadioButton {
     }
 
     background: StyleImage {
-        imageConfig: control.config.background
+        imageConfig: control.__config.background
     }
 }

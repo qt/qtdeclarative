@@ -15,15 +15,15 @@ T.TextArea {
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
     color: control.palette.text
     selectionColor: control.palette.highlight
@@ -36,7 +36,7 @@ T.TextArea {
         activeFocus && "focused",
         enabled && !activeFocus && hovered && "hovered",
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.textarea[__currentState] || {}
+    readonly property var __config: Config.controls.textarea[__currentState] || {}
 
     PlaceholderText {
         id: placeholder
@@ -56,7 +56,7 @@ T.TextArea {
     }
 
     background: StyleImage {
-        imageConfig: control.config.background
+        imageConfig: control.__config.background
         Item{
             visible: control.activeFocus
             width: parent.width
@@ -65,7 +65,7 @@ T.TextArea {
             FocusStroke {
                 width: parent.width
                 height: parent.height
-                radius: control.config.background.bottomOffset
+                radius: control.__config.background.bottomOffset
                 color: control.palette.accent
             }
         }

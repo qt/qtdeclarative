@@ -14,20 +14,20 @@ T.Button {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
-    icon.width: config.icon.width
-    icon.height: config.icon.height
+    icon.width: __config.icon.width
+    icon.height: __config.icon.height
     icon.color: __buttonText
 
     readonly property color __buttonText: {
@@ -53,7 +53,7 @@ T.Button {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: (control.flat && Config.controls.flatbutton
+    readonly property var __config: (control.flat && Config.controls.flatbutton
         ? Config.controls.flatbutton[__currentState]
         : Config.controls.button[__currentState]) || {}
 
@@ -63,7 +63,7 @@ T.Button {
         spacing: control.spacing
         mirrored: control.mirrored
         display: control.display
-        alignment: control.config.label.textVAlignment | control.config.label.textHAlignment
+        alignment: control.__config.label.textVAlignment | control.__config.label.textHAlignment
         icon: control.icon
         text: control.text
         font: control.font
@@ -72,9 +72,9 @@ T.Button {
 
     background: ButtonBackground {
         control: control
-        implicitHeight: control.config.background.height
-        implicitWidth: control.config.background.width
-        radius: control.config.background.topOffset
+        implicitHeight: control.__config.background.height
+        implicitWidth: control.__config.background.width
+        radius: control.__config.background.topOffset
         subtle: control.flat
     }
 }

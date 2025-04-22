@@ -14,15 +14,15 @@ T.DelayButton {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    spacing: config.spacing || 0
+    spacing: __config.spacing || 0
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    icon.width: config.icon.width
-    icon.height: config.icon.height
+    icon.width: __config.icon.width
+    icon.height: __config.icon.height
     icon.color: __buttonText
 
     readonly property color __buttonText: {
@@ -48,7 +48,7 @@ T.DelayButton {
         control.enabled && !control.down && control.hovered && "hovered",
         control.down && "pressed"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.button[__currentState] || {}
+    readonly property var __config: Config.controls.button[__currentState] || {}
 
     readonly property Item __focusFrameTarget: control
 
@@ -90,9 +90,9 @@ T.DelayButton {
 
     background: ButtonBackground {
         control: control
-        implicitHeight: control.config.background.height
-        implicitWidth: control.config.background.width
-        radius: control.config.background.topOffset
+        implicitHeight: control.__config.background.height
+        implicitWidth: control.__config.background.width
+        radius: control.__config.background.topOffset
         subtle: false
 
         Rectangle {

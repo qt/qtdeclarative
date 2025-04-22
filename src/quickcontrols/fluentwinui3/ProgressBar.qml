@@ -14,25 +14,25 @@ T.ProgressBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    topPadding: config.topPadding || 0
-    bottomPadding: config.bottomPadding || 0
-    leftPadding: config.leftPadding || 0
-    rightPadding: config.rightPadding || 0
+    topPadding: __config.topPadding || 0
+    bottomPadding: __config.bottomPadding || 0
+    leftPadding: __config.leftPadding || 0
+    rightPadding: __config.rightPadding || 0
 
-    topInset: -config.topInset || 0
-    bottomInset: -config.bottomInset || 0
-    leftInset: -config.leftInset || 0
-    rightInset: -config.rightInset || 0
+    topInset: -__config.topInset || 0
+    bottomInset: -__config.bottomInset || 0
+    leftInset: -__config.leftInset || 0
+    rightInset: -__config.rightInset || 0
 
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.indeterminate && "indeterminate"
     ].filter(Boolean).join("_") || "normal"
-    readonly property var config: Config.controls.progressbar[__currentState] || {}
+    readonly property var __config: Config.controls.progressbar[__currentState] || {}
 
     contentItem: Item {
         implicitWidth: control.indeterminate ? parent.availableWidth : progress.implicitWidth
-        implicitHeight: control.indeterminate ? control.config.track.height : progress.implicitHeight
+        implicitHeight: control.indeterminate ? control.__config.track.height : progress.implicitHeight
         scale: control.mirrored ? -1 : 1
         clip: control.indeterminate
 
@@ -41,26 +41,26 @@ T.ProgressBar {
             y: control.background.groove?.y - 1
             parent: control.contentItem
             visible: !control.indeterminate && control.value
-            implicitWidth: control.config.track.width
-            implicitHeight: control.config.track.height
+            implicitWidth: control.__config.track.width
+            implicitHeight: control.__config.track.height
             width: control.position * parent.width
-            height: control.config.track.height
-            radius: control.config.track.height * 0.5
+            height: control.__config.track.height
+            radius: control.__config.track.height * 0.5
             color: control.palette.accent
         }
 
         readonly property Rectangle animatedProgress: Rectangle {
             parent: control.contentItem
             implicitWidth: parent.width
-            implicitHeight: control.config.track.height
-            radius: control.config.track.height * 0.5
+            implicitHeight: control.__config.track.height
+            radius: control.__config.track.height * 0.5
             clip: true
             visible: false
             color: "transparent"
             Rectangle {
                 width: 0.5 * parent.width
-                height: control.config.track.height
-                radius: control.config.track.height * 0.5
+                height: control.__config.track.height
+                radius: control.__config.track.height * 0.5
                 color: control.palette.accent
                 SequentialAnimation on x {
                     loops: Animation.Infinite
@@ -105,7 +105,7 @@ T.ProgressBar {
     background: Item {
         implicitWidth: groove.width
         property Item groove: StyleImage {
-            imageConfig: control.config.groove
+            imageConfig: control.__config.groove
             visible: !control.indeterminate
             parent: control.background
             height: implicitHeight
