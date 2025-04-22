@@ -17,10 +17,10 @@ T.ComboBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    readonly property bool popupButtonStyle: control.flat && !control.editable
+    readonly property bool __popupButtonStyle: control.flat && !control.editable
 
-    spacing: popupButtonStyle ? 6 : 12
-    padding: popupButtonStyle ? 0 : 12
+    spacing: __popupButtonStyle ? 6 : 12
+    padding: __popupButtonStyle ? 0 : 12
     topPadding: 0
     bottomPadding: 0
     leftPadding: padding + (!control.mirrored || !indicator || !indicator.visible ? 0 : indicator.width + spacing)
@@ -66,11 +66,11 @@ T.ComboBox {
     indicator: ColorImage {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
-        rotation: control.popupButtonStyle ? 0 : 90
-        opacity: (control.enabled || control.popupButtonStyle) ? 1 : 0.5
+        rotation: control.__popupButtonStyle ? 0 : 90
+        opacity: (control.enabled || control.__popupButtonStyle) ? 1 : 0.5
 
-        source: IOS.url + (control.popupButtonStyle ? "arrow-updown-indicator" : "arrow-indicator")
-        color: control.popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
+        source: IOS.url + (control.__popupButtonStyle ? "arrow-updown-indicator" : "arrow-indicator")
+        color: control.__popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
                                         : defaultColor
         ImageSelector on source {
             states: [
@@ -82,11 +82,11 @@ T.ComboBox {
     }
 
     contentItem: T.TextField {
-        implicitWidth: control.popupButtonStyle ? Math.max(implicitBackgroundWidth + leftInset + rightInset,
+        implicitWidth: control.__popupButtonStyle ? Math.max(implicitBackgroundWidth + leftInset + rightInset,
                                 contentWidth + leftPadding + rightPadding) : 0
-        implicitHeight: control.popupButtonStyle ? Math.max(implicitBackgroundHeight + topInset + bottomInset,
+        implicitHeight: control.__popupButtonStyle ? Math.max(implicitBackgroundHeight + topInset + bottomInset,
                                  contentHeight + topPadding + bottomPadding) : 0
-        padding: control.popupButtonStyle ? 0 : 6
+        padding: control.__popupButtonStyle ? 0 : 6
         text: control.editable ? control.editText : control.displayText
         enabled: control.editable
         autoScroll: control.editable
@@ -95,7 +95,7 @@ T.ComboBox {
         validator: control.validator
         selectByMouse: control.selectTextByMouse
 
-        color: control.popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
+        color: control.__popupButtonStyle ? (control.down ? control.palette.highlight : control.palette.button)
                                         : control.palette.text
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
@@ -105,11 +105,11 @@ T.ComboBox {
     }
 
     background: Rectangle {
-        implicitWidth: control.popupButtonStyle ? implicitContentWidth : 250
+        implicitWidth: control.__popupButtonStyle ? implicitContentWidth : 250
         implicitHeight: 34
         radius: 4
         color: control.palette.base
-        visible: !control.popupButtonStyle
+        visible: !control.__popupButtonStyle
     }
 
     popup: T.Popup {
@@ -117,7 +117,7 @@ T.ComboBox {
         y: control.height + 6
 
         height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
-        width: control.popupButtonStyle ? 250 : control.width
+        width: control.__popupButtonStyle ? 250 : control.width
 
         topMargin: 6
         bottomMargin: 6

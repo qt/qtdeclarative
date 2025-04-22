@@ -25,13 +25,13 @@ T.MenuItem {
     icon.height: 19
     icon.color: control.palette.text
 
-    readonly property bool isSingleItem: control.menu && control.menu.count === 1
-    readonly property bool isFirstItem: !isSingleItem && control.menu && control.menu.itemAt(0) === control ? true : false
-    readonly property bool isLastItem: !isSingleItem && control.menu && control.menu.itemAt(control.menu.count - 1) === control ? true : false
-    readonly property real indicatorWidth: 12
+    readonly property bool __isSingleItem: control.menu && control.menu.count === 1
+    readonly property bool __isFirstItem: !__isSingleItem && control.menu && control.menu.itemAt(0) === control ? true : false
+    readonly property bool __isLastItem: !__isSingleItem && control.menu && control.menu.itemAt(control.menu.count - 1) === control ? true : false
+    readonly property real __indicatorWidth: 12
 
     contentItem: IconLabel {
-        readonly property real padding: control.indicatorWidth + control.spacing
+        readonly property real padding: control.__indicatorWidth + control.spacing
         leftPadding: !control.mirrored ? padding : 0
         rightPadding: control.mirrored ? padding : 0
 
@@ -76,16 +76,16 @@ T.MenuItem {
         implicitHeight: 44
         implicitWidth: 250
         NinePatchImage {
-            y: control.isLastItem ? -1 : 0
+            y: control.__isLastItem ? -1 : 0
             width: parent.width
-            height: control.isLastItem ? parent.height + 1 : parent.height
-            rotation: control.isLastItem ? 180 : 0
-            visible: !(isSingleItem && !control.down)
+            height: control.__isLastItem ? parent.height + 1 : parent.height
+            rotation: control.__isLastItem ? 180 : 0
+            visible: !(control.__isSingleItem && !control.down)
             source: IOS.url + "menuitem-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"edge": control.isFirstItem || control.isLastItem},
-                    {"single": control.isSingleItem},
+                    {"edge": control.__isFirstItem || control.__isLastItem},
+                    {"single": control.__isSingleItem},
                     {"light": Application.styleHints.colorScheme === Qt.Light},
                     {"dark": Application.styleHints.colorScheme === Qt.Dark},
                     {"pressed": control.down}
