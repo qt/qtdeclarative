@@ -14,7 +14,7 @@
 
 /*!
   \macro QML_ELEMENT
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares the enclosing type or namespace to be available in QML, using its
   class or namespace name as the QML element name.
@@ -108,7 +108,7 @@
 
 /*!
   \macro QML_NAMED_ELEMENT(name)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares the enclosing type or namespace to be available in QML, using \a name
   as the element name. Otherwise behaves the same as QML_ELEMENT.
@@ -128,7 +128,7 @@
 
 /*!
   \macro QML_ANONYMOUS
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares the enclosing type to be available, but anonymous in QML. The type
   cannot be created or used to declare properties in QML, but when passed from
@@ -140,7 +140,7 @@
 
 /*!
   \macro QML_INTERFACE
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   This macro registers the enclosing C++ type in the QML system as an interface.
 
@@ -177,7 +177,7 @@
 
 /*!
   \macro QML_IMPLEMENTS_INTERFACES(interfaces)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   This macro tells Qt which QML \a interfaces the class implements.
   This macro should only be used for interfacing with classes using \l QML_INTERFACE, use \l Q_INTERFACES otherwise.
@@ -189,7 +189,7 @@
 
 /*!
   \macro QML_UNCREATABLE(reason)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing type shall not be creatable from QML. This takes
   effect if the type is available in QML, by having a \l QML_ELEMENT or
@@ -208,7 +208,7 @@
 
 /*!
   \macro QML_SINGLETON
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares the enclosing type to be a singleton in QML. This only takes effect
   if the type is a \l Q_OBJECT and is available in QML (by having a
@@ -352,7 +352,7 @@
 
 /*!
   \macro QML_ADDED_IN_VERSION(MAJOR, MINOR)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing type or namespace was added in the specified
   \a{MAJOR}.\a{MINOR} version. The version is assumed to be in line with any
@@ -371,7 +371,7 @@
 
 /*!
   \macro QML_ADDED_IN_MINOR_VERSION(VERSION)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
   \deprecated [6.7] Use QML_ADDED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was added in the specified minor
@@ -392,7 +392,7 @@
 
 /*!
   \macro QML_REMOVED_IN_VERSION(MAJOR, MINOR)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing type or namespace was removed in the specified
   \a{MAJOR}.\a{MINOR} version. This is primarily useful when replacing the
@@ -411,7 +411,7 @@
 
 /*!
   \macro QML_REMOVED_IN_MINOR_VERSION(VERSION)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
   \deprecated [6.7] Use QML_REMOVED_IN_VERSION and specify the full version
 
   Declares that the enclosing type or namespace was removed in the specified
@@ -431,7 +431,7 @@
 
 /*!
   \macro QML_EXTRA_VERSION(MAJOR, MINOR)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declare that the type should also be available in version \a{MAJOR}.\a{MINOR}.
   This can be helpful if a type should be available in multiple major versions.
@@ -456,7 +456,7 @@
 
 /*!
   \macro QML_ATTACHED(ATTACHED_TYPE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing type attaches \a ATTACHED_TYPE as an
   \l {Attached Properties and Attached Signal Handlers}
@@ -471,7 +471,7 @@
 
 /*!
   \macro QML_EXTENDED(EXTENDED_TYPE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing type uses \a EXTENDED_TYPE as an extension to
   provide further properties, methods, and enumerations in QML. This takes
@@ -488,7 +488,7 @@
 
 /*!
   \macro QML_EXTENDED_NAMESPACE(EXTENSION_NAMESPACE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that the enclosing \b type uses \a EXTENSION_NAMESPACE as an extension to
   provide further enumerations in QML. This takes effect if the type
@@ -587,7 +587,7 @@
 
 /*!
   \macro QML_FOREIGN(FOREIGN_TYPE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
@@ -618,7 +618,7 @@
 
 /*!
   \macro QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
@@ -637,7 +637,7 @@
 
 /*!
   \macro QML_UNAVAILABLE
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   This macro declares the enclosing type to be unavailable in QML. It registers
   an internal dummy type called \c QQmlTypeNotAvailable as \l QML_FOREIGN()
@@ -689,7 +689,7 @@
 
 /*!
   \macro QML_SEQUENTIAL_CONTAINER(VALUE_TYPE)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   This macro declares the enclosing or referenced type as a sequential container
   managing a sequence of \a VALUE_TYPE elements. \a VALUE_TYPE can be an actual
@@ -751,7 +751,7 @@
 
 /*!
   \macro QML_VALUE_TYPE(name)
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Declares the enclosing type or namespace to be available in QML, using \a name
   as the name. The type has to be a value type and the name has to be lower case.
@@ -772,7 +772,7 @@
 /*!
   \macro QML_CONSTRUCTIBLE_VALUE
   \since 6.5
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Marks the surrounding value type as constructible. That is, any \l Q_INVOKABLE
   constructors of the type that take exactly one argument can be used when
@@ -831,7 +831,7 @@
 /*!
   \macro QML_STRUCTURED_VALUE
   \since 6.5
-  \relates qqmlintegration.h
+  \relates <qqmlintegration.h>
 
   Marks the surrounding value type as structured. Structured value types can
   and will preferably be constructed property-by-property from a JavaScript
