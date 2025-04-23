@@ -240,7 +240,7 @@ void QQuickTextDocument::setSource(const QUrl &url)
 
     if (isModified()) {
         qmlWarning(this) << "Existing document modified: you should save(),"
-                            "or call TextEdit.clear() before setting a different source";
+                            " or set modified=false before setting a different source";
         return;
     }
 
