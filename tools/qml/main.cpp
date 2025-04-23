@@ -316,6 +316,9 @@ static void getAppFlags(int argc, char **argv)
 {
 #ifdef QT_GUI_LIB
     for (int i=0; i<argc; i++) {
+        if (strcmp(argv[i], "--"))
+            return; // After "--", arguments are interpreted as positional and not as options.
+
         if (!strcmp(argv[i], "--apptype") || !strcmp(argv[i], "-a") || !strcmp(argv[i], "-apptype")) {
             applicationType = QmlApplicationTypeUnknown;
             if (i+1 < argc) {
