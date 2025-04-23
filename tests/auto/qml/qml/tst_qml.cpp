@@ -9,6 +9,8 @@
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+#include <QTemporaryFile>
+
 Q_LOGGING_CATEGORY(lcQml, "qt.qml.tests");
 
 class tst_qml : public QQmlDataTest
@@ -22,6 +24,7 @@ private slots:
     void nonWindow();
     void itemAndWindowGeometry_data();
     void itemAndWindowGeometry();
+    void extraPositionalArguments();
 
 private:
     QString qmlPath;
@@ -165,6 +168,38 @@ void tst_qml::itemAndWindowGeometry()
         QCOMPARE(windowSize, expectedWindowSize);
     if (expectedContentSize.isValid())
         QCOMPARE(contentSize, expectedContentSize);
+}
+
+void tst_qml::extraPositionalArguments()
+{
+    QProcess qml;
+    QStringList args;
+
+    QTemporaryFile f;
+    QVERIFY(f.open());
+    QVERIFY(f.write(R"(import QtQml
+
+QtObject {
+    Component.onCompleted: {
+        let s = ""
+        for (let i = 2; i < Qt.application.arguments.length; ++i)
+            s += Qt.application.arguments[i].substring(1)
+        console.log(s)
+        Qt.quit()
+    }
+}
+)"));
+    f.flush();
+
+    args << f.fileName();
+    args << "--";
+    for (char c = 'a'; c <= 'z'; ++c)
+        args << u'-' + QString(c);
+
+    qml.start(qmlPath, args);
+    QVERIFY(qml.waitForFinished());
+    QVERIFY(qml.exitStatus() == QProcess::NormalExit && qml.exitCode() == 0);
+    QVERIFY(qml.readAllStandardError().contains("abcdefghijklmnopqrstuvwxyz"));
 }
 
 QTEST_MAIN(tst_qml)
