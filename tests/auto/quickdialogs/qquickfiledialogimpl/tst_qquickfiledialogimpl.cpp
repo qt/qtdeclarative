@@ -155,6 +155,10 @@ void tst_QQuickFileDialogImpl::initTestCase()
 
     qputenv("QT_QUICK_DIALOGS_PRESELECT_FIRST_FILE", "1");
 
+    // Ensure that each test starts off in the temporary directory.
+    oldCurrentDir = QDir::current();
+    QDir::setCurrent(tempDir.path());
+
     QVERIFY2(tempDir.isValid(), qPrintable(tempDir.errorString()));
     // QTEST_QUICKCONTROLS_MAIN constructs the test case object once,
     // and then calls qRun() for each style, and qRun() calls initTestCase().
@@ -218,10 +222,6 @@ void tst_QQuickFileDialogImpl::initTestCase()
     const QDir largeTempSubDirectory = QDir(largeTempDirLargeSubDir.path());
     for (int i = 0; i < largeFileCount; ++i)
         QVERIFY(largeTempSubDirectory.mkdir(QString::fromLatin1("sub-dir%1").arg(i, 3, 10, QLatin1Char('0'))));
-
-    // Ensure that each test starts off in the temporary directory.
-    oldCurrentDir = QDir::current();
-    QDir::setCurrent(tempDir.path());
 }
 
 void tst_QQuickFileDialogImpl::init()
