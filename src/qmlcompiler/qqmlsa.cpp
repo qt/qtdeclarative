@@ -360,6 +360,13 @@ void DebugPropertyPass::onWrite(const QQmlSA::Element &element, const QString &p
                         + QString::number(location.startColumn),
                 qmlPlugin, location);
 }
+
+bool isRegularBindingType(QQmlJSMetaPropertyBinding::BindingType type)
+{
+    return type >= QQmlJSMetaPropertyBinding::BindingType::BoolLiteral
+            && type <= QQmlJSMetaPropertyBinding::BindingType::Object;
+}
+
 }
 
 QT_END_NAMESPACE

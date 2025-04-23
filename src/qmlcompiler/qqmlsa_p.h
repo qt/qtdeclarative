@@ -183,6 +183,9 @@ public:
                  const QQmlSA::Element &value, const QQmlSA::Element &writeScope,
                  QQmlJS::SourceLocation location) override;
 };
+
+bool isRegularBindingType(QQmlJSMetaPropertyBinding::BindingType type);
+
 }
 
 #define QmlLintPluginInterface_iid "org.qt-project.Qt.Qml.SA.LintPlugin/1.0"

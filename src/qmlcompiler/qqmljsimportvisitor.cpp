@@ -18,6 +18,7 @@
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include "qqmljsscope_p.h"
 #include "qqmljsutils_p.h"
+#include "qqmlsa_p.h"
 
 #include <algorithm>
 #include <variant>
@@ -811,9 +812,11 @@ void QQmlJSImportVisitor::checkRequiredProperties()
     const auto requiredHasBinding = [](const QList<QQmlJSScope::ConstPtr> &scopesToSearch,
                                        const QString &propName) {
         for (const auto &scope : scopesToSearch) {
+            if (scope->property(propName).isAlias())
+                continue;
             const auto &[begin, end] = scope->ownPropertyBindings(propName);
             for (auto it = begin; it != end; ++it) {
-                if (!scope->property(propName).isAlias())
+                if (QQmlSA::isRegularBindingType(it->bindingType()))
                     return true;
             }
         }
