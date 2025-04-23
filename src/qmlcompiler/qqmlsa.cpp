@@ -2112,6 +2112,11 @@ bool FixSuggestion::operatorEqualsImpl(const FixSuggestion &lhs, const FixSugges
     return lhs.d_func()->m_fixSuggestion == rhs.d_func()->m_fixSuggestion;
 }
 
+bool isRegularBindingType(BindingType type)
+{
+    return type >= BindingType::BoolLiteral && type <= BindingType::Object;
+}
+
 } // namespace QQmlSA
 
 QT_END_NAMESPACE

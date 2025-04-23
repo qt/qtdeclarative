@@ -109,6 +109,8 @@ private:
     Binding *q_ptr;
 };
 
+bool isRegularBindingType(BindingType type);
+
 class MethodPrivate
 {
     friend class QT_PREPEND_NAMESPACE(QQmlJSMetaMethod);
