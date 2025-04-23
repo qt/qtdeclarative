@@ -938,8 +938,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
         }
     }
 
-    const auto isInComponent = [this](const QQmlJSScope::ConstPtr &requiredScope) {
-        const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
+    const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
+    const auto isInComponent = [&](const QQmlJSScope::ConstPtr &requiredScope) {
         for (auto s = requiredScope; s; s = s->parentScope()) {
             if (s->isWrappedInImplicitComponent() || s->baseType() == compType)
                 return true;
@@ -1059,6 +1059,8 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                 for (auto propertyIt = ownProperties.constBegin();
                      propertyIt != ownProperties.constEnd(); ++propertyIt) {
                     const QString propName = propertyIt.key();
+                    if (descendant->hasOwnPropertyBindings(propName))
+                        continue;
 
                     QQmlJSScope::ConstPtr prevRequiredScope;
                     for (QQmlJSScope::ConstPtr requiredScope : std::as_const(scopesToSearch)) {
