@@ -901,6 +901,26 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
     }
 }
 
+static QList<QQmlJSScope::ConstPtr> qmlScopeDescendants(const QQmlJSScope::ConstPtr &scope)
+{
+    QList<QQmlJSScope::ConstPtr> descendants;
+    std::vector<QQmlJSScope::ConstPtr> toVisit;
+
+    toVisit.push_back(scope);
+    while (!toVisit.empty()) {
+        const QQmlJSScope::ConstPtr s = toVisit.back();
+        toVisit.pop_back();
+        if (s->scopeType() == QQmlSA::ScopeType::QMLScope) {
+            if (s != scope)
+                descendants << s;
+
+            toVisit.insert(toVisit.end(), s->childScopesBegin(), s->childScopesEnd());
+        }
+    }
+
+    return descendants;
+}
+
 void QQmlJSImportVisitor::populatePropertyAliases()
 {
     for (const auto &alias : std::as_const(m_aliasDefinitions)) {
@@ -1045,10 +1065,9 @@ void QQmlJSImportVisitor::checkRequiredProperties()
 
         QVector<QQmlJSScope::ConstPtr> scopesToSearch;
         for (QQmlJSScope::ConstPtr scope = defScope; scope; scope = scope->baseType()) {
-            const auto descendants = QList<QQmlJSScope::ConstPtr>() << scope << scope->descendantScopes();
+            const auto descendants = QList<QQmlJSScope::ConstPtr>()
+                    << scope << qmlScopeDescendants(scope);
             for (QQmlJSScope::ConstPtr descendant : std::as_const(descendants)) {
-                if (descendant->scopeType() != QQmlSA::ScopeType::QMLScope)
-                    continue;
                 // Ignore inline components of children. Base types need to be always checked for
                 // required properties, even if they are defined in an inline component.
                 if (descendant != scope && descendant->isInlineComponent())
