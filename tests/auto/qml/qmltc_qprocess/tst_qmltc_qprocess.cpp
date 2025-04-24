@@ -360,7 +360,7 @@ void tst_qmltc_qprocess::innerLevelRequiredProperty()
     {
         const auto errors = runQmltc(u"innerLevelRequiredProperty.qml"_s, false);
         QVERIFY(errors.contains(
-                u"innerLevelRequiredProperty.qml:7:5: Component is missing required property foo from here [required]"
+                u"innerLevelRequiredProperty.qml:7:5: Component is missing required property foo from Item [required]"
         ));
     }
 }

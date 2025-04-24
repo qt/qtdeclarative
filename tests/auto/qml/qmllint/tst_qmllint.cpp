@@ -1206,7 +1206,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                        };
     QTest::newRow("missingRequiredOnObjectDefinitionBinding")
             << QStringLiteral("missingRequiredPropertyOnObjectDefinitionBinding.qml")
-            << Result{ { { uR"(Component is missing required property i from here)"_s, 4, 26 } } };
+            << Result{ { { uR"(Component is missing required property i from QtObject)"_s, 4, 26 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -2002,7 +2002,7 @@ void TestQmllint::requiredProperty()
             Result { { Message { QStringLiteral("Component is missing required property "
                                                 "required_now_string from Base") },
                        Message { QStringLiteral("Component is missing required property "
-                                                "required_defined_here_string from here") } } });
+                                                "required_defined_here_string from Derived") } } });
     runTest("requiredPropertyBindingsLater.qml",
             Result { { Message { QStringLiteral("Component is missing required property "
                                                 "required_later_string from "
