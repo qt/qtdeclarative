@@ -107,6 +107,12 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
         || type == QQmlSA::ScopeType::AttachedPropertyScope)
         return scope->internalName();
 
+    if (!scope->isComposite())
+        return scope->internalName();
+
+    if (scope->isInlineComponent() && scope->inlineComponentName().has_value())
+        return scope->inlineComponentName().value();
+
     return scope->baseTypeName();
 }
 
@@ -1011,16 +1017,12 @@ void QQmlJSImportVisitor::checkRequiredProperties()
         return false;
     };
 
-    const auto warn = [this](const QList<QQmlJSScope::ConstPtr> scopesToSearch,
-                             QQmlJSScope::ConstPtr prevRequiredScope,
+    const auto warn = [this](QQmlJSScope::ConstPtr prevRequiredScope,
                              const QString &propName,
                              QQmlJSScope::ConstPtr defScope,
                              QQmlJSScope::ConstPtr requiredScope,
                              QQmlJSScope::ConstPtr descendant) {
-        const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.size() > 1
-                ? scopesToSearch.at(scopesToSearch.size() - 2)
-                : QQmlJSScope::ConstPtr();
-
+        const auto &propertyScope = QQmlJSScope::ownerOfProperty(requiredScope, propName).scope;
         const QString propertyScopeName = !propertyScope.isNull()
                 ? getScopeName(propertyScope, QQmlSA::ScopeType::QMLScope)
                 : u"here"_s;
@@ -1099,9 +1101,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                         if (requiredSetThroughAlias(scopesToSearch, requiredScope, propName))
                             continue;
 
-                        warn(scopesToSearch, prevRequiredScope, propName, defScope,
-                             requiredScope, descendant);
-
+                        warn(prevRequiredScope, propName, defScope, requiredScope, descendant);
                         prevRequiredScope = requiredScope;
                     }
                 }
