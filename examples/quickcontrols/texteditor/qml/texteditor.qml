@@ -193,6 +193,12 @@ ApplicationWindow {
             MenuItem {
                 action: strikeoutAction
             }
+            MenuItem {
+                action: fontDialogAction
+            }
+            MenuItem {
+                action: colorDialogAction
+            }
 
             MenuSeparator {}
 
