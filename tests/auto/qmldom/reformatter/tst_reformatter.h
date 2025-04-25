@@ -792,6 +792,11 @@ private slots:
         QTest::newRow("StatementWithMultipleEmptyLinesAndPreCommentOnNextStatement")
                 << QStringLiteral(u"a=1;\n\n\n\n\n\n\n\n//\nb=1;")
                 << QStringLiteral(u"a = 1;\n\n//\nb = 1;");
+        QTest::newRow("ForLoopWithMultipleVarDeclarations")
+                << QStringLiteral("function bla() {"
+                                  "for (let i = 0, j = 1; i < j; ++i) {}}")
+                << QStringLiteral("function bla() {\n"
+                                  "for (let i = 0, j = 1; i < j; ++i) {}\n}");
     }
 
     void statementList()

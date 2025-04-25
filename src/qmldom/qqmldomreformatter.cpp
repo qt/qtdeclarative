@@ -574,7 +574,12 @@ bool ScriptFormatter::visit(ForStatement *ast)
             out(pe->declarationKindToken);
             lw.lineWriter.ensureSpace();
         }
+        bool first = true;
         for (VariableDeclarationList *it = ast->declarations; it; it = it->next) {
+            if (!std::exchange(first, false)) {
+                out(",");
+                lw.lineWriter.ensureSpace();
+            }
             accept(it->declaration);
         }
     }
