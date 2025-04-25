@@ -58,7 +58,9 @@ private slots:
     void backgroundSize();
     void explicitBackgroundSizeBinding();
     void safeArea();
+#if QT_CONFIG(quicktemplates2_hover)
     void hoverInBackground();
+#endif
 };
 
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
@@ -1090,6 +1092,7 @@ void tst_QQuickApplicationWindow::safeArea()
 
 }
 
+#if QT_CONFIG(quicktemplates2_hover)
 void tst_QQuickApplicationWindow::hoverInBackground()
 {
     QQuickControlsApplicationHelper helper(this, QLatin1String("hoverInBackground.qml"));
@@ -1110,6 +1113,7 @@ void tst_QQuickApplicationWindow::hoverInBackground()
     pointLerper.move(mapCenterToWindow(button), 2);
     QCOMPARE(button->isHovered(), QQuickControlPrivate::calcHoverEnabled(window->contentItem()));
 }
+#endif // QT_CONFIG(quicktemplates2_hover)
 
 QTEST_MAIN(tst_QQuickApplicationWindow)
 
