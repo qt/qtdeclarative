@@ -81,7 +81,7 @@ ApplicationWindow {
         shortcut: StandardKey.Bold
         checkable: true
         checked: textArea.cursorSelection.font.bold
-        onTriggered: textArea.cursorSelection.font = Qt.font({ bold: checked })
+        onTriggered: textArea.cursorSelection.font.bold = checked
     }
 
     Action {
@@ -90,7 +90,7 @@ ApplicationWindow {
         shortcut: StandardKey.Italic
         checkable: true
         checked: textArea.cursorSelection.font.italic
-        onTriggered: textArea.cursorSelection.font = Qt.font({ italic: checked })
+        onTriggered: textArea.cursorSelection.font.italic = checked
     }
 
     Action {
@@ -99,7 +99,7 @@ ApplicationWindow {
         shortcut: StandardKey.Underline
         checkable: true
         checked: textArea.cursorSelection.font.underline
-        onTriggered: textArea.cursorSelection.font = Qt.font({ underline: checked })
+        onTriggered: textArea.cursorSelection.font.underline = checked
     }
 
     Action {
@@ -107,7 +107,7 @@ ApplicationWindow {
         text: qsTr("&Strikeout")
         checkable: true
         checked: textArea.cursorSelection.font.strikeout
-        onTriggered: textArea.cursorSelection.font = Qt.font({ strikeout: checked })
+        onTriggered: textArea.cursorSelection.font.strikeout = checked
     }
 
     Action {
