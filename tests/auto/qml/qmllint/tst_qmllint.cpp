@@ -2655,6 +2655,7 @@ void TestQmllint::quickPlugin()
             } });
     runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
 }
+#endif // QT_CONFIG(library)
 
 void TestQmllint::environment_data()
 {
@@ -2715,8 +2716,6 @@ void TestQmllint::maxWarnings()
     // only 2 warning => should exit normally
     runQmllint(testFile("badScript.qml"), true, {"--max-warnings", "2"});
 }
-
-#endif
 
 void TestQmllint::ignoreSettingsNotCommandLineOptions()
 {
