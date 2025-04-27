@@ -202,7 +202,11 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
             setPassiveGrab(event, *point);
             // Calculate drag delta, taking into account the axis enabled constraint
             // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
-            QVector2D accumulatedDragDelta = QVector2D(point->scenePosition() - point->scenePressPosition());
+            auto const mapFromScene = [this](auto const &scenePos) {
+                return target() ? target()->mapFromScene(scenePos) : scenePos;
+            };
+            QVector2D accumulatedDragDelta = QVector2D(mapFromScene(point->scenePosition())
+                                                       - mapFromScene(point->scenePressPosition()));
             if (!m_xAxis.enabled()) {
                 // If horizontal dragging is disallowed, but the user is dragging
                 // mostly horizontally, then don't activate.

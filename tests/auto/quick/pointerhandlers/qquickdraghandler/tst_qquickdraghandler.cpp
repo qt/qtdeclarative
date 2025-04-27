@@ -53,6 +53,8 @@ private slots:
     void underModalLayer();
     void interruptedByIrrelevantButton();
     void touchDragExclusiveGrabber();
+    void touchDragSceneRotated_data();
+    void touchDragSceneRotated();
 
 private:
     void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta, QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted);
@@ -1187,6 +1189,55 @@ void tst_DragHandler::touchDragExclusiveGrabber()
     QVERIFY(!dragHandler->active());
     QCOMPARE(centroidChangedSpy.size(), 1);
     QCOMPARE(grabChangedSpy.size(), 1);
+}
+
+void tst_DragHandler::touchDragSceneRotated_data()
+{
+    QTest::addColumn<QString>("objectName");
+    QTest::addColumn<QPoint>("movePoint");
+    QTest::addColumn<bool>("moveExpected");
+
+    QTest::newRow("Drag X on rotated scene when Axis Y is disabled")
+            << "ballX" << QPoint{ 50, 0 } << false;
+    QTest::newRow("Drag Y on rotated scene when Axis Y is disabled")
+            << "ballX" << QPoint{ 0, 50 } << true;
+    QTest::newRow("Drag X on rotated scene when Axis X is disabled")
+            << "ballY" << QPoint{ 50, 0 } << true;
+    QTest::newRow("Drag Y on rotated scene when Axis X is disabled")
+            << "ballY" << QPoint{ 0, 50 } << false;
+}
+
+void tst_DragHandler::touchDragSceneRotated()
+{
+    QFETCH(QString, objectName);
+    QFETCH(QPoint, movePoint);
+    QFETCH(bool, moveExpected);
+
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "dragSceneRotated.qml");
+    QQuickView *window = windowPtr.data();
+
+    QQuickItem *ball = window->rootObject()->findChild<QQuickItem *>(objectName);
+    QVERIFY(ball);
+    QQuickDragHandler *dragHandler = ball->findChild<QQuickDragHandler *>();
+    QVERIFY(dragHandler);
+
+    QPointF ballCenter = ball->clipRect().center();
+    QPointF scenePressPos = ball->mapToScene(ballCenter);
+    QPoint p1 = scenePressPos.toPoint();
+    QTest::touchEvent(window, touchscreen.get()).press(1, p1, window);
+    QQuickTouchUtils::flush(window);
+
+    p1 += movePoint;
+    QTest::touchEvent(window, touchscreen.get()).move(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    QCOMPARE(dragHandler->active(), moveExpected);
+
+    QTest::touchEvent(window, touchscreen.get()).release(1, p1, window);
+    QQuickTouchUtils::flush(window);
+
+    QCOMPARE_EQ(ball->mapToScene(ballCenter).toPoint(),
+                moveExpected ? p1 : scenePressPos.toPoint());
 }
 
 QTEST_MAIN(tst_DragHandler)
