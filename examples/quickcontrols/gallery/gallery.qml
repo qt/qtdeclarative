@@ -63,11 +63,6 @@ ApplicationWindow {
         }
     }
 
-    Shortcut {
-        sequence: "Menu"
-        onActivated: optionsMenuAction.trigger()
-    }
-
     Action {
         id: optionsMenuAction
         icon.name: "menu"
