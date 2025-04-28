@@ -150,6 +150,9 @@ public:
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextInput::HAlignment, bool forceAlign = false);
     void mirrorChange() override;
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    bool handleContextMenuEvent(QContextMenuEvent *event) override;
+#endif
     bool sendMouseEventToInputContext(QMouseEvent *event);
 #if QT_CONFIG(im)
     Qt::InputMethodHints effectiveInputMethodHints() const;
