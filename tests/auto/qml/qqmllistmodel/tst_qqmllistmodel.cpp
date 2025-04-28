@@ -123,6 +123,7 @@ private slots:
     void protectQObjectFromGC();
     void nestedLists();
     void deadModelData();
+    void valuesOfInnerList();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2126,6 +2127,24 @@ void tst_qqmllistmodel::deadModelData()
         QCOMPARE(i2->property("ident").value<double>(), double());
         QCOMPARE(i2->property("buttonText").value<QString>(), QString());
     }
+}
+
+void tst_qqmllistmodel::valuesOfInnerList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("valuesOfInnerList.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "[1,2,3]");
+    QTest::ignoreMessage(QtDebugMsg, "[1,2,3]");
+    QTest::ignoreMessage(QtDebugMsg, QRegularExpression("QQmlListModel\\(0x[0-9a-f]*\\)"));
+
+    // Array with values of all the properties of QQmlListModel, one of which is "agent"
+    QTest::ignoreMessage(
+            QtDebugMsg, QRegularExpression("\\[.*QQmlListModelWorkerAgent\\(0x[0-9a-f]*\\).*\\]"));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
