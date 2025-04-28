@@ -290,47 +290,10 @@ void QmlTypesCreator::writeEnums(const Enum::Container &enums)
     }
 }
 
-template<typename Member>
-bool isAllowedInMajorVersion(const Member &memberObject, QTypeRevision maxMajorVersion)
-{
-    const QTypeRevision memberRevision = memberObject.revision;
-    return !memberRevision.hasMajorVersion()
-            || memberRevision.majorVersion() <= maxMajorVersion.majorVersion();
-}
-
-template<typename Members, typename Postprocess>
-Members members(const Members &candidates, QTypeRevision maxMajorVersion, Postprocess &&process)
-{
-    Members classDefMembers;
-
-    for (const auto &member : candidates) {
-        if (isAllowedInMajorVersion(member, maxMajorVersion))
-            classDefMembers.push_back(process(member));
-    }
-
-    return classDefMembers;
-}
-
-template<typename Members>
-Members members(const Members &candidates, QTypeRevision maxMajorVersion)
-{
-    return members(candidates, maxMajorVersion, [](const auto &member) { return member; });
-}
-
-template<typename Members>
-Members constructors(const Members &candidates, QTypeRevision maxMajorVersion)
-{
-    return members(candidates, maxMajorVersion, [](const auto &member) {
-        auto ctor = member;
-        ctor.isConstructor = true;
-        return ctor;
-    });
-}
-
 void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
 {
     // Hide destroyed() signals
-    Method::Container componentSignals = members(classDef.sigs(), m_version);
+    Method::Container componentSignals = classDef.sigs();
     for (auto it = componentSignals.begin(); it != componentSignals.end();) {
         if (it->name == "destroyed"_L1)
             it = componentSignals.erase(it);
@@ -340,7 +303,7 @@ void QmlTypesCreator::writeRootMethods(const MetaType &classDef)
     writeMethods(componentSignals, S_SIGNAL);
 
     // Hide deleteLater() methods
-    Method::Container componentMethods = members(classDef.methods(), m_version);
+    Method::Container componentMethods = classDef.methods();
     for (auto it = componentMethods.begin(); it != componentMethods.end();) {
         if (it->name == "deleteLater"_L1)
             it = componentMethods.erase(it);
@@ -387,16 +350,16 @@ void QmlTypesCreator::writeComponent(const QmlTypesClassDescription &collector)
 
     if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
         writeEnums(classDef.enums());
-        writeProperties(members(classDef.properties(), m_version));
+        writeProperties(classDef.properties());
 
         if (collector.isRootClass) {
             writeRootMethods(classDef);
         } else {
-            writeMethods(members(classDef.sigs(), m_version), S_SIGNAL);
-            writeMethods(members(classDef.methods(), m_version), S_METHOD);
+            writeMethods(classDef.sigs(), S_SIGNAL);
+            writeMethods(classDef.methods(), S_METHOD);
         }
 
-        writeMethods(constructors(classDef.constructors(), m_version), S_METHOD);
+        writeMethods(classDef.constructors(), S_METHOD);
     }
     m_qml.writeEndObject();
 }

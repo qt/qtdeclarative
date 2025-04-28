@@ -120,11 +120,11 @@ void tst_qmltyperegistrar::isBindable()
     QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; type: "int"; bindable: "bindableSomeProperty"; index: 0 })"));
 }
 
-void tst_qmltyperegistrar::restrictToImportVersion()
+void tst_qmltyperegistrar::doNotRestrictToImportVersion()
 {
     QVERIFY(qmltypesData.contains("ExcessiveVersion"));
-    QVERIFY(!qmltypesData.contains("1536"));           // Q_REVISION(6, 0)
-    QVERIFY(!qmltypesData.contains("paletteChanged")); // Added in version 6.0
+    QVERIFY(qmltypesData.contains("1536"));           // Q_REVISION(6, 0)
+    QVERIFY(qmltypesData.contains("paletteChanged")); // Added in version 6.0
 }
 
 void tst_qmltyperegistrar::pastMajorVersions()

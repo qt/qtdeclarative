@@ -932,7 +932,7 @@ private slots:
     void superAndForeignTypes();
     void accessSemantics();
     void isBindable();
-    void restrictToImportVersion();
+    void doNotRestrictToImportVersion();
     void pastMajorVersions();
     void implementsInterfaces();
     void namespacedElement();

@@ -206,8 +206,11 @@ void tst_qmltc_qprocess::warningsAsErrors()
 
 void tst_qmltc_qprocess::invalidAliasRevision()
 {
+    // This isn't actually invalid. Revisions are only relevant for unqualified lookup
+    // but alias expressions are always qualified.
     const auto errors = runQmltc(u"invalidAliasRevision.qml"_s, false);
-    QVERIFY(errors.contains(u"Cannot resolve alias \"unexistingProperty\" [unresolved-alias]"_s));
+    QVERIFY2(!errors.contains(u"Cannot resolve alias \"unexistingProperty\" [unresolved-alias]"_s),
+             qPrintable(errors));
 }
 
 void tst_qmltc_qprocess::topLevelComponent()
