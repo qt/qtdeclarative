@@ -429,6 +429,7 @@ void QQmlTableModel::doInsert(int rowIndex, const QVariant &row)
 
     endInsertRows();
     emit rowCountChanged();
+    emit rowsChanged();
 }
 
 void QQmlTableModel::classBegin()
@@ -523,6 +524,7 @@ void QQmlTableModel::moveRow(int fromRowIndex, int toRowIndex, int rows)
     qCDebug(lcTableModel).nospace() << "after moving, rows are:\n" << mRows;
 
     endMoveRows();
+    emit rowsChanged();
 }
 
 /*!
@@ -559,6 +561,7 @@ void QQmlTableModel::removeRow(int rowIndex, int rows)
 
     endRemoveRows();
     emit rowCountChanged();
+    emit rowsChanged();
 
     qCDebug(lcTableModel).nospace() << "removed " << rows
         << " items from the model, starting at index " << rowIndex;
@@ -599,6 +602,7 @@ void QQmlTableModel::setRow(int rowIndex, const QVariant &row)
         const QModelIndex topLeftModelIndex(createIndex(rowIndex, 0));
         const QModelIndex bottomRightModelIndex(createIndex(rowIndex, mColumnCount - 1));
         emit dataChanged(topLeftModelIndex, bottomRightModelIndex);
+        emit rowsChanged();
     } else {
         // Appending a row.
         doInsert(rowIndex, row);
@@ -901,6 +905,7 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
     QVector<int> rolesChanged;
     rolesChanged.append(role);
     emit dataChanged(index, index, rolesChanged);
+    emit rowsChanged();
 
     return true;
 }
