@@ -1294,13 +1294,25 @@ void TestQmllint::dirtyQmlCode()
             });
 }
 
+static void addLocationOffsetTo(TestQmllint::Result *result, qsizetype lineOffset,
+                                qsizetype columnOffset = 0)
+{
+    for (auto *messages :
+         { &result->expectedMessages, &result->badMessages, &result->expectedReplacements }) {
+        for (auto &message : *messages) {
+            message.line += lineOffset;
+            message.column += columnOffset;
+        }
+    }
+}
+
 void TestQmllint::dirtyQmlSnippet_data()
 {
     QTest::addColumn<QString>("code");
     QTest::addColumn<Result>("result");
 
     QTest::newRow("testSnippet") << u"property int qwer: \"Hello\""_s
-                                 << Result{ { { "Cannot assign literal of type string to int"_L1 } } };
+                                 << Result{ { { "Cannot assign literal of type string to int"_L1, 1, 20 } } };
     QTest::newRow("requiredInInlineComponent")
             << u"Item { component Foo: Item { required property var bla; } } Foo {}"_s
             << Result{ { { "Component is missing required property bla from Foo"_L1, 1, 61 } } };
@@ -1311,7 +1323,9 @@ void TestQmllint::dirtyQmlSnippet()
     QFETCH(QString, code);
     QFETCH(Result, result);
 
-    QString qmlCode = "import QtQuick\nItem {%1}"_L1.arg(code);
+    QString qmlCode = "import QtQuick\nItem {\n%1}"_L1.arg(code);
+
+    addLocationOffsetTo(&result, 2);
 
     QJsonArray warnings;
     callQmllint(QString(), result.flags.testFlag(Result::ExitsNormally), &warnings, {}, {}, {},
@@ -1364,18 +1378,6 @@ void TestQmllint::dirtyJsSnippet_data()
     QTest::newRow("assignmentWarningLocation")
             << u"console.log(a = 1)"_s
             << Result{ { { "Unqualified access"_L1, 1, 13 } } };
-}
-
-static void addLocationOffsetTo(TestQmllint::Result *result, qsizetype lineOffset,
-                                qsizetype columnOffset = 0)
-{
-    for (auto *messages :
-         { &result->expectedMessages, &result->badMessages, &result->expectedReplacements }) {
-        for (auto &message : *messages) {
-            message.line += lineOffset;
-            message.column += columnOffset;
-        }
-    }
 }
 
 void TestQmllint::dirtyJsSnippet()
