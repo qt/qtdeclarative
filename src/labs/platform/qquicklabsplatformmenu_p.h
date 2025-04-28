@@ -136,7 +136,7 @@ Q_SIGNALS:
     void minimumWidthChanged();
     void fontChanged();
     void typeChanged();
-    Q_REVISION(2, 1) void iconChanged();
+    Q_REVISION(1, 1) void iconChanged();
 
 protected:
     void classBegin() override;
