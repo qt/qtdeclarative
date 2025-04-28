@@ -2068,7 +2068,11 @@ QQmlListModel::QQmlListModel(QQmlListModel *orig, QQmlListModelWorkerAgent *agen
     m_agent = agent;
     m_dynamicRoles = orig->m_dynamicRoles;
 
-    m_layout = new ListLayout(orig->m_layout);
+    if (ListLayout *layout = orig->m_layout)
+        m_layout = new ListLayout(layout);
+    else
+        m_layout = new ListLayout;
+
     m_listModel = new ListModel(m_layout, this);
 
     if (m_dynamicRoles)
@@ -2088,11 +2092,12 @@ QQmlListModel::~QQmlListModel()
         m_listModel->destroy();
         delete m_listModel;
 
-        if (m_mainThread && m_agent) {
+        if (m_mainThread && m_agent)
             m_agent->modelDestroyed();
-            m_agent->release();
-        }
     }
+
+    if (m_mainThread && m_agent)
+        m_agent->release();
 
     m_listModel = nullptr;
 
@@ -2363,7 +2368,7 @@ void QQmlListModel::setDynamicRoles(bool enableDynamicRoles)
 {
     if (m_mainThread && m_agent == nullptr) {
         if (enableDynamicRoles) {
-            if (m_layout->roleCount())
+            if (m_layout && m_layout->roleCount())
                 qmlWarning(this) << tr("unable to enable dynamic roles as this model is not empty");
             else
                 m_dynamicRoles = true;
