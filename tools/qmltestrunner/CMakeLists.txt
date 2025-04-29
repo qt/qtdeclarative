@@ -7,10 +7,9 @@
 ## qmltestrunner Tool:
 #####################################################################
 
-qt_get_tool_target_name(target_name qmltestrunner)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qmltestrunner
     TARGET_DESCRIPTION "QML Test Runner"
-    TOOLS_TARGET Qml # special case
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         main.cpp
     LIBRARIES
@@ -18,19 +17,19 @@ qt_internal_add_tool(${target_name}
         Qt::Qml
         Qt::QuickTest
 )
-qt_internal_return_unless_building_tools()
+
+set_target_properties(qmltestrunner PROPERTIES WIN32_EXECUTABLE FALSE)
 
 if(MACOS AND NOT CMAKE_GENERATOR STREQUAL "Xcode")
     # Add com.apple.security.get-task-allow entitlement to runner,
     # so we can hook into the Swift crash handling.
     set(entitlements_file
         "${__qt_internal_cmake_apple_support_files_path}/test.entitlements.plist")
-    add_custom_command(TARGET "${target_name}"
+    add_custom_command(TARGET qmltestrunner
         POST_BUILD COMMAND codesign --sign - -f
             --entitlements "${entitlements_file}"
-            "$<TARGET_FILE:${target_name}>"
+            "$<TARGET_FILE:qmltestrunner>"
+
         )
 endif()
 
-#### Keys ignored in scope 1:.:.:qmltestrunner.pro:<TRUE>:
-# QMAKE_TARGET_DESCRIPTION = "QML" "Test" "Runner"
