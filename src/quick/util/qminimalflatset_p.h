@@ -1,8 +1,12 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QMINIMALFLATSET_P_H
-#define QMINIMALFLATSET_P_H
+#ifndef QTDECLARATIVE_QMINIMALFLATSET_P_H
+#define QTDECLARATIVE_QMINIMALFLATSET_P_H
+
+#if __has_include(<QtCore/private/qminimalflatset_p.h>)
+# include <QtCore/private/qminimalflatset_p.h>
+#else
 
 //
 //  W A R N I N G
@@ -140,4 +144,6 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QMINIMALFLATSET_P_H
+#endif // !__has_include(<QtCore/private/qminimalflatset_p.h>)
+
+#endif // QTDECLARATIVE_QMINIMALFLATSET_P_H

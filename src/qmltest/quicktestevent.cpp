@@ -318,14 +318,14 @@ bool QuickTestEvent::mouseDoubleClickSequence
 }
 
 bool QuickTestEvent::mouseMove
-    (QObject *item, qreal x, qreal y, int delay, int buttons)
+    (QObject *item, qreal x, qreal y, int delay, int buttons, int modifiers)
 {
     QWindow *view = eventWindow(item);
     if (!view)
         return false;
     const Qt::MouseButtons effectiveButtons = buttons ? Qt::MouseButtons(buttons) : m_pressedButtons;
     QtQuickTest::mouseEvent(QtQuickTest::MouseMove, view, item,
-                            Qt::MouseButton(int(effectiveButtons)), Qt::NoModifier,
+                            Qt::MouseButton(int(effectiveButtons)), Qt::KeyboardModifiers(modifiers),
                             QPointF(x, y), delay);
     return true;
 }

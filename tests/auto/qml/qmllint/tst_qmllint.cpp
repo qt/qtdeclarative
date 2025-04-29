@@ -96,6 +96,7 @@ private Q_SLOTS:
 
     void testLineEndings();
 
+    void ignoreSettingsNotCommandLineOptions();
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
@@ -404,6 +405,21 @@ void TestQmllint::autoqmltypes()
     QVERIFY(process.readAllStandardError()
                 .contains("is not a qmldir file. Assuming qmltypes"));
     QVERIFY(process.readAllStandardOutput().isEmpty());
+
+    {
+        QProcess bare;
+        bare.setWorkingDirectory(testFile("autoqmltypes"));
+        bare.start(m_qmllintPath, { QStringLiteral("--bare"), QStringLiteral("test.qml") });
+        bare.waitForFinished();
+
+        const QByteArray errors = bare.readAllStandardError();
+        QVERIFY(!errors.contains("is not a qmldir file. Assuming qmltypes"));
+        QVERIFY(errors.contains("Failed to import TestTest."));
+        QVERIFY(bare.readAllStandardOutput().isEmpty());
+
+        QCOMPARE(bare.exitStatus(), QProcess::NormalExit);
+        QVERIFY(bare.exitCode() != 0);
+    }
 }
 
 void TestQmllint::resources()
@@ -797,6 +813,14 @@ singleTicks: ' \\' \\\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                   16, 27 } },
                         { Result::ExitsNormally, Result::AutoFixable } };
+    QTest::addRow("multifix")
+            << QStringLiteral("multifix.qml")
+            << Result { {
+                    Message { QStringLiteral("Unqualified access"), 7,  19, QtWarningMsg},
+                    Message { QStringLiteral("Unqualified access"), 11, 19, QtWarningMsg},
+                }, {}, {
+                    Message { QStringLiteral("pragma ComponentBehavior: Bound\n"), 1, 1 }
+                }, { Result::AutoFixable }};
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
@@ -1037,8 +1061,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("NotScopedEnumCpp")
             << QStringLiteral("NotScopedEnumCpp.qml")
             << Result{ { Message{
-                       QStringLiteral("You cannot access unscoped enum \"V1\" from here."), 5,
-                       57 } } };
+                       QStringLiteral("You cannot access unscoped enum \"TheEnum\" from here."), 5,
+                       49 } } };
 
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
@@ -1254,6 +1278,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
     QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
     QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
+    QTest::newRow("listConversion") << QStringLiteral("listConversion.qml");
+    QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
+    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -2037,6 +2064,17 @@ void TestQmllint::quickPlugin()
     runTest("pluginQuick_propertyChangesInvalidTarget.qml", Result {}); // we don't care about the specific warnings
 }
 #endif
+
+void TestQmllint::ignoreSettingsNotCommandLineOptions()
+{
+    const QString importPath = testFile(u"ImportPath"_s);
+    // makes sure that ignore settings only ignores settings and not command line options like
+    // "-I".
+    const QString output = runQmllint(testFile(u"NeedImportPath.qml"_s), true,
+                                      QStringList{ u"-I"_s, importPath }, true);
+    // should not complain about not finding the module that is in importPath
+    QCOMPARE(output, QString());
+}
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

@@ -1080,8 +1080,15 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
             state.appendCreatorErrors();
         enginePriv->dereferenceScarceResources();
     } else {
+        // TODO: extract into function
         rv = loadedType.createWithQQmlData();
         QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
+        QQmlParserStatus *parserStatus = nullptr;
+        const int parserStatusCast = loadedType.parserStatusCast();
+        if (parserStatusCast != -1) {
+            parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(rv) + parserStatusCast);
+            parserStatus->classBegin();
+        }
         for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
             if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
                 state.ensureRequiredPropertyStorage();
@@ -1089,6 +1096,12 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
                 info.propertyName = propertyData->name(rv);
                 state.addPendingRequiredProperty(rv, propertyData, info);
             }
+        }
+        if (parserStatus)
+            parserStatus->componentComplete();
+        if (const int finalizerCast = loadedType.finalizerCast(); finalizerCast != -1) {
+            auto* hook = reinterpret_cast<QQmlFinalizerHook *>(reinterpret_cast<char *>(rv) + finalizerCast);
+            hook->componentFinalized();
         }
     }
 
@@ -1310,35 +1323,48 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
                                    QQmlComponent::CompilationMode mode)
 {
     Q_D(QQmlComponent);
+    auto [status, type] = d->prepareLoadFromModule(uri, typeName);
+    d->completeLoadFromModule(uri, typeName, type, status, mode);
+}
 
-    auto enginePriv = QQmlEnginePrivate::get(d->engine);
+LoadHelper::ResolveTypeResult QQmlComponentPrivate::prepareLoadFromModule(QAnyStringView uri,
+                                                                          QAnyStringView typeName)
+{
+    auto enginePriv = QQmlEnginePrivate::get(engine);
     // LoadHelper must be on the Heap as it derives from QQmlRefCount
     auto loadHelper = QQml::makeRefPointer<LoadHelper>(&enginePriv->typeLoader, uri);
 
-    auto [moduleStatus, type] = loadHelper->resolveType(typeName);
+    return loadHelper->resolveType(typeName);
+}
+
+void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyStringView typeName, QQmlType type,
+                                                  LoadHelper::ResolveTypeResult::Status moduleStatus,
+                                                  QQmlComponent::CompilationMode mode)
+{
+    Q_Q(QQmlComponent);
+
     auto reportError = [&](QString msg) {
         QQmlError error;
         error.setDescription(msg);
-        d->state.errors.push_back(std::move(error));
-        emit statusChanged(Error);
+        state.errors.push_back(std::move(error));
+        emit q->statusChanged(q->Error);
     };
     if (moduleStatus == LoadHelper::ResolveTypeResult::NoSuchModule) {
-        reportError(QLatin1String(R"(No module named "%1" found)")
-                    .arg(uri.toString()));
+        reportError(QLatin1String(R"(No module named "%1" found)").arg(uri.toString()));
     } else if (!type.isValid()) {
         reportError(QLatin1String(R"(Module "%1" contains no type named "%2")")
                     .arg(uri.toString(), typeName.toString()));
     } else if (type.isCreatable()) {
-        d->clear();
+        clear();
         // mimic the progressChanged behavior from loadUrl
-        if (d->progress != 0) {
-            d->progress = 0;
-            emit progressChanged(0);
+        if (progress != 0) {
+            progress = 0;
+            emit q->progressChanged(0);
         }
-        d->loadedType = type;
-        d->progress = 1;
-        emit progressChanged(1);
-        emit statusChanged(status());
+        loadedType = type;
+        progress = 1;
+        emit q->progressChanged(1);
+        emit q->statusChanged(q->status());
 
     } else if (type.isComposite()) {
         loadUrl(type.sourceUrl(), mode);
@@ -1349,17 +1375,15 @@ void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
         // in order to get the correct object id
         mode = type.inlineComponentObjectId() > 0 ? mode : QQmlComponent::CompilationMode::PreferSynchronous;
         loadUrl(baseUrl, mode);
-        if (!isError()) {
-            d->isInlineComponent = true;
-            d->start = type.inlineComponentObjectId();
-            Q_ASSERT(d->start >= 0);
+        if (!q->isError()) {
+            isInlineComponent = true;
+            start = type.inlineComponentObjectId();
+            Q_ASSERT(start >= 0);
         }
     } else if (type.isSingleton() || type.isCompositeSingleton()) {
-        reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)")
-                    .arg(typeName.toString()));
+        reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)").arg(typeName.toString()));
     } else {
-        reportError(QLatin1String("Could not load %1, as the type is uncreatable")
-                                 .arg(typeName.toString()));
+        reportError(QLatin1String("Could not load %1, as the type is uncreatable").arg(typeName.toString()));
     }
 }
 
@@ -1484,7 +1508,7 @@ namespace QV4 {
 namespace Heap {
 
 #define QmlIncubatorObjectMembers(class, Member) \
-    Member(class, HeapValue, HeapValue, valuemap) \
+    Member(class, HeapValue, HeapValue, valuemapOrObject) \
     Member(class, HeapValue, HeapValue, statusChanged) \
     Member(class, Pointer, QmlContext *, qmlContext) \
     Member(class, NoMark, QQmlComponentIncubator *, incubator) \
@@ -1897,7 +1921,7 @@ void QQmlComponent::incubateObject(QQmlV4Function *args)
     r->setPrototypeOf(p);
 
     if (!valuemap->isUndefined())
-        r->d()->valuemap.set(scope.engine, valuemap);
+        r->d()->valuemapOrObject.set(scope.engine, valuemap);
     r->d()->qmlContext.set(scope.engine, v4->qmlContext());
     r->d()->parent = parent;
 
@@ -2000,7 +2024,7 @@ QQmlComponentExtension::~QQmlComponentExtension()
 void QV4::Heap::QmlIncubatorObject::init(QQmlIncubator::IncubationMode m)
 {
     Object::init();
-    valuemap.set(internalClass->engine, QV4::Value::undefinedValue());
+    valuemapOrObject.set(internalClass->engine, QV4::Value::undefinedValue());
     statusChanged.set(internalClass->engine, QV4::Value::undefinedValue());
     parent.init();
     qmlContext.set(internalClass->engine, nullptr);
@@ -2017,13 +2041,13 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties *re
 {
     QQmlComponent_setQmlParent(o, d()->parent);
 
-    if (!d()->valuemap.isUndefined()) {
+    if (!d()->valuemapOrObject.isUndefined()) {
         QV4::ExecutionEngine *v4 = engine();
         QV4::Scope scope(v4);
         QV4::ScopedObject obj(scope, QV4::QObjectWrapper::wrap(v4, o));
         QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, d()->qmlContext);
         QQmlComponentPrivate::setInitialProperties(
-            v4, qmlCtxt, obj, d()->valuemap, requiredProperties, o,
+            v4, qmlCtxt, obj, d()->valuemapOrObject, requiredProperties, o,
             QQmlIncubatorPrivate::get(d()->incubator)->creator.data());
     }
 }
@@ -2031,13 +2055,18 @@ void QV4::QmlIncubatorObject::setInitialState(QObject *o, RequiredProperties *re
 void QV4::QmlIncubatorObject::statusChanged(QQmlIncubator::Status s)
 {
     QV4::Scope scope(engine());
-    // hold the incubated object in a scoped value to prevent it's destruction before this method returns
-    QV4::ScopedObject incubatedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, d()->incubator->object()));
+
+    QObject *object = d()->incubator->object();
 
     if (s == QQmlIncubator::Ready) {
-        Q_ASSERT(QQmlData::get(d()->incubator->object()));
-        QQmlData::get(d()->incubator->object())->explicitIndestructibleSet = false;
-        QQmlData::get(d()->incubator->object())->indestructible = false;
+        // We don't need the arguments anymore, but we still want to hold on to the object so
+        // that it doesn't get gc'd
+        d()->valuemapOrObject.set(scope.engine, QV4::QObjectWrapper::wrap(scope.engine, object));
+
+        QQmlData *ddata = QQmlData::get(object);
+        Q_ASSERT(ddata);
+        ddata->explicitIndestructibleSet = false;
+        ddata->indestructible = false;
     }
 
     QV4::ScopedFunctionObject f(scope, d()->statusChanged);

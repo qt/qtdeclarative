@@ -771,6 +771,13 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     if (!swipePrivate->left && !swipePrivate->right && !swipePrivate->behind)
         return false;
 
+    if (item != q && swipePrivate->complete) {
+        // If the delegate is swiped open, send the event to the exposed item,
+        // in case it's an interactive child (like a Button).
+        const auto posInItem = item->mapToItem(q, event->position().toPoint());
+        forwardMouseEvent(event, item, posInItem);
+    }
+
     // Don't handle move events for the control if it wasn't pressed.
     if (item == q && !pressed)
         return false;

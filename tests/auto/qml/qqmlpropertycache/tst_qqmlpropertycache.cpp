@@ -34,6 +34,7 @@ private slots:
     void derivedGadgetMethod();
     void restrictRegistrationVersion();
     void rejectOverriddenFinal();
+    void duplicateIdsAndGeneralizedGroupProperties();
 
 private:
     QQmlEngine engine;
@@ -705,6 +706,20 @@ void tst_qqmlpropertycache::rejectOverriddenFinal()
 
     // Cannot call the method overridding a final property
     QCOMPARE(o->property("c").toInt(), 0);
+}
+
+void tst_qqmlpropertycache::duplicateIdsAndGeneralizedGroupProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("duplicateIdsAndGeneralizedGroupProperties.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "1 true true true");
+    QTest::ignoreMessage(QtDebugMsg, "2 false true true");
+    QTest::ignoreMessage(QtDebugMsg, "3 false false true");
+    QTest::ignoreMessage(QtDebugMsg, "4 false false false");
+
+    QScopedPointer<QObject> o(c.create());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)

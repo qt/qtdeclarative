@@ -199,6 +199,20 @@ void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::setObjectId(
 }
 
 template<>
+void QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveGeneralizedGroupProperty(
+        const CompiledObject &component, CompiledBinding *binding)
+{
+    // We cannot make it fail here. It might be a custom-parsed property
+    for (int i = 0, count = component.namedObjectsInComponentCount(); i < count; ++i) {
+        const int candidateIndex = component.namedObjectsInComponentTable()[i];
+        if (m_compiler->objectAt(candidateIndex)->idNameIndex == binding->propertyNameIndex) {
+            m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(candidateIndex));
+            return;
+        }
+    }
+}
+
+template<>
 typename QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QV4::ExecutableCompilationUnit>::resolveAliasesInObject(
         const CompiledObject &component, int objectIndex, QQmlError *error)
@@ -375,7 +389,9 @@ void QQmlTypeData::done()
          ++it) {
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData || type.typeData->isCompleteOrError() || type.type.isInlineComponentType());
-        if (type.type.isInlineComponentType() && !type.type.pendingResolutionName().isEmpty()) {
+        if (type.errorWhenNotFound
+                && type.type.isInlineComponentType()
+                && !type.type.pendingResolutionName().isEmpty()) {
             auto containingType = type.type.containingType();
             auto objectId = containingType.lookupInlineComponentIdByName(type.type.pendingResolutionName());
             if (objectId < 0) { // can be any negative number if we tentatively resolved it in QQmlImport but it actually was not an inline component
@@ -395,7 +411,7 @@ void QQmlTypeData::done()
                 type.type.setInlineComponentObjectId(objectId);
             }
         }
-        if (type.typeData && type.typeData->isError()) {
+        if (type.errorWhenNotFound && type.typeData && type.typeData->isError()) {
             const QString typeName = stringAt(it.key());
 
             QList<QQmlError> errors = type.typeData->errors();
@@ -959,6 +975,7 @@ void QQmlTypeData::resolveTypes()
         ref.version = version;
         ref.location = unresolvedRef->location;
         ref.needsCreation = unresolvedRef->needsCreation;
+        ref.errorWhenNotFound = unresolvedRef->errorWhenNotFound;
         m_resolvedTypes.insert(unresolvedRef.key(), ref);
     }
 
@@ -999,8 +1016,12 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 } else  {
                     objectId = resolvedType->type.inlineComponentId();
                 }
-                Q_ASSERT(objectId != -1);
-                ref->setTypePropertyCache(resolvedType->typeData->compilationUnit()->propertyCaches.at(objectId));
+
+                if (objectId >= 0) {
+                    ref->setTypePropertyCache(
+                            resolvedType->typeData->compilationUnit()->propertyCaches.at(objectId));
+                }
+
                 ref->setType(qmlType);
                 Q_ASSERT(ref->type().isInlineComponentType());
             }

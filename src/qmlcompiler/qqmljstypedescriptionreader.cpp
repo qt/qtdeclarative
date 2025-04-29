@@ -293,24 +293,33 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
             } else if (name == QLatin1String("revision")) {
                 metaMethod.setRevision(readIntBinding(script));
             } else if (name == QLatin1String("isCloned")) {
-                metaMethod.setIsCloned(true);
+                metaMethod.setIsCloned(readBoolBinding(script));
             } else if (name == QLatin1String("isConstructor")) {
-                metaMethod.setIsConstructor(true);
+                metaMethod.setIsConstructor(readBoolBinding(script));
             } else if (name == QLatin1String("isJavaScriptFunction")) {
-                metaMethod.setIsJavaScriptFunction(true);
+                metaMethod.setIsJavaScriptFunction(readBoolBinding(script));
             } else if (name == QLatin1String("isList")) {
                 auto metaReturnType = metaMethod.returnValue();
-                metaReturnType.setIsList(true);
+                metaReturnType.setIsList(readBoolBinding(script));
                 metaMethod.setReturnValue(metaReturnType);
             } else if (name == QLatin1String("isPointer")) {
                 // TODO: We don't need this information. We can probably drop all isPointer members
                 //       once we make sure that the type information is always complete. The
                 //       description of the type being referenced has access semantics after all.
+                auto metaReturnType = metaMethod.returnValue();
+                metaReturnType.setIsPointer(readBoolBinding(script));
+                metaMethod.setReturnValue(metaReturnType);
+            } else if (name == QLatin1String("isConstant")) {
+                auto metaReturnType = metaMethod.returnValue();
+                metaReturnType.setTypeQualifier(readBoolBinding(script)
+                                                        ? QQmlJSMetaParameter::Const
+                                                        : QQmlJSMetaParameter::NonConst);
+                metaMethod.setReturnValue(metaReturnType);
             } else {
                 addWarning(script->firstSourceLocation(),
-                           tr("Expected only name, type, revision, isPointer, isList, "
-                              "isCloned, isConstructor, and "
-                              "isJavaScriptFunction in script bindings."));
+                           tr("Expected only name, type, revision, isPointer, isConstant, "
+                              "isList, isCloned, isConstructor, and isJavaScriptFunction "
+                              "in script bindings."));
             }
         } else {
             addWarning(member->firstSourceLocation(),
@@ -414,11 +423,11 @@ void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJS
             metaEnum.setIsFlag(readBoolBinding(script));
         } else if (name == QLatin1String("values")) {
             readEnumValues(script, &metaEnum);
-        } else if (name == QLatin1String("scoped")) {
-            metaEnum.setScoped(readBoolBinding(script));
+        } else if (name == QLatin1String("isScoped")) {
+            metaEnum.setIsScoped(readBoolBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only name and values script bindings."));
+                       tr("Expected only name, alias, isFlag, values, or isScoped."));
         }
     }
 

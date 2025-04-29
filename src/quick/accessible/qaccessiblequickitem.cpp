@@ -622,6 +622,8 @@ QString QAccessibleQuickItem::text(QAccessible::Text textType) const
     // the following block handles item-specific behavior
     if (role() == QAccessible::EditableText) {
         if (textType == QAccessible::Value) {
+            if (auto textInput = qobject_cast<QQuickTextInput *>(item()))
+                return textInput->displayText();
             if (QTextDocument *doc = textDocument()) {
                 return doc->toPlainText();
             }

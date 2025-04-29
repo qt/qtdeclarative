@@ -1421,6 +1421,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             const QString &name = std::get<InlineComponentNameType>(m_currentRootName);
             m_currentScope->setIsInlineComponent(true);
             m_currentScope->setInlineComponentName(name);
+            m_currentScope->setModuleName(m_exportedRootScope->moduleName());
             m_rootScopeImports.setType(name, { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
@@ -2163,6 +2164,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
                       uied->firstSourceLocation());
     }
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
+    qmlEnum.setIsQml(true);
     for (const auto *member = uied->members; member; member = member->next) {
         qmlEnum.addKey(member->member.toString());
         qmlEnum.addValue(int(member->value));

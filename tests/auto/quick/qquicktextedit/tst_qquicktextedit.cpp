@@ -2245,29 +2245,25 @@ void tst_qquicktextedit::dragMouseSelection()
 
 void tst_qquicktextedit::mouseSelectionMode_data()
 {
-    QTest::addColumn<QString>("qmlfile");
+    QTest::addColumn<QUrl>("qmlfile");
     QTest::addColumn<bool>("selectWords");
 
     // import installed
-    QTest::newRow("SelectWords") << testFile("mouseselectionmode_words.qml") << true;
-    QTest::newRow("SelectCharacters") << testFile("mouseselectionmode_characters.qml") << false;
-    QTest::newRow("default") << testFile("mouseselectionmode_default.qml") << false;
+    QTest::newRow("SelectWords") << testFileUrl("mouseselectionmode_words.qml") << true;
+    QTest::newRow("SelectCharacters") << testFileUrl("mouseselectionmode_characters.qml") << false;
+    QTest::newRow("default") << testFileUrl("mouseselectionmode_default.qml") << false;
 }
 
 void tst_qquicktextedit::mouseSelectionMode()
 {
-    QFETCH(QString, qmlfile);
+    QFETCH(QUrl, qmlfile);
     QFETCH(bool, selectWords);
 
-    QString text = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const QString text = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    QQuickView window(QUrl::fromLocalFile(qmlfile));
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, qmlfile));
 
-    window.show();
-    window.requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(&window));
-
-    QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
     QVERIFY(textEditObject != nullptr);
     textEditObject->setSelectByMouse(true);

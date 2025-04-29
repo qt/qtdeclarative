@@ -110,7 +110,7 @@ Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
     \qml
     Item {
        TapHandler {
-           acceptedDevices: PointerDevice.Mouse | PointerDevice.Stylus
+           acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad | PointerDevice.Stylus
            onTapped: console.log("clicked")
        }
        TapHandler {
@@ -119,6 +119,9 @@ Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
        }
     }
     \endqml
+
+    \note Not all platforms are yet able to distinguish mouse and touchpad; and
+    on those that do, you often want to make mouse and touchpad behavior the same.
 */
 void QQuickPointerDeviceHandler::setAcceptedDevices(QPointingDevice::DeviceTypes acceptedDevices)
 {

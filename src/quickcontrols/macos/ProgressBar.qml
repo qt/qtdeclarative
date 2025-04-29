@@ -6,5 +6,4 @@ import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultProgressBar {
     id: control
-    font.pixelSize: background.styleFont(control).pixelSize
 }

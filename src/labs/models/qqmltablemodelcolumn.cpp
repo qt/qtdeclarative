@@ -18,6 +18,29 @@ QT_BEGIN_NAMESPACE
 
     TableModelColumn supports all of \l {Qt::ItemDataRole}{Qt's roles},
     with the exception of \c Qt::InitialSortOrderRole.
+    Roles can be accessed by as listed below, e.g.
+    \code
+    text: display
+
+    required property string display
+    \endcode
+
+    \table
+    \row \li Qt::DisplayRole \li display
+    \row \li Qt::DecorationRole \li decoration
+    \row \li Qt::EditRole \li edit
+    \row \li Qt::ToolTipRole \li toolTip
+    \row \li Qt::StatusTipRole \li statusTip
+    \row \li Qt::WhatsThisRole \li whatsThis
+    \row \li Qt::FontRole \li font
+    \row \li Qt::TextAlignmentRole \li textAlignment
+    \row \li Qt::BackgroundRole \li background
+    \row \li Qt::ForegroundRole \li foreground
+    \row \li Qt::CheckStateRole \li checkState
+    \row \li Qt::AccessibleTextRole \li accessibleText
+    \row \li Qt::AccessibleDescriptionRole \li accessibleDescription
+    \row \li Qt::SizeHintRole \li sizeHintRoleNam
+    \endtable
 
     \sa TableModel, TableView
 */

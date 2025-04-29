@@ -12,6 +12,7 @@ Module {
         exports: ["Things/SomethingEntirelyStrange 1.0"]
         Enum {
             name: "AnEnum"
+            isScoped: true
             values: {
                 "AAA": 0,
                 "BBB": 1,
@@ -20,7 +21,7 @@ Module {
         }
         Enum {
             name: "TheEnum"
-            scoped: false
+            isScoped: false
             values: {
                 "V1": 0,
                 "V2": 1
@@ -103,5 +104,14 @@ Module {
         exports: ["Mediaplayer/MediaPlayerStateMachine 1.0"]
         isCreatable: false
         exportMetaObjectRevisions: [256]
+    }
+    Component {
+        file: "constinvokable.h"
+        name: "ConstInvokable"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["Things/ConstInvokable 1.0"]
+        exportMetaObjectRevisions: [256]
+        Method { name: "getObject"; type: "QObject"; isPointer: true; isConstant: true }
     }
 }

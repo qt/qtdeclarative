@@ -112,10 +112,12 @@ void MainWindow::createQuickWidgetsInTabs(QMdiArea *mdiArea)
             if (widget->parent()) {
                 widget->setAttribute(Qt::WA_DeleteOnClose, true);
                 widget->setParent(nullptr);
+                connect(this, &QObject::destroyed, widget, &QWidget::close);
                 widget->show();
                 btn->setText(msgFromTopLevel);
             } else {
                 widget->setAttribute(Qt::WA_DeleteOnClose, false);
+                disconnect(this, &QObject::destroyed, widget, &QWidget::close);
                 tabWidget->addTab(widget, widget->windowTitle());
                 btn->setText(msgToTopLevel);
             }
@@ -201,8 +203,9 @@ int main(int argc, char **argv)
 
     optMultipleSample = parser.isSet(multipleSampleOption);
 
-    MainWindow mainWindow;
-    mainWindow.show();
+    MainWindow *mainWindow = new MainWindow;
+    mainWindow->setAttribute(Qt::WA_DeleteOnClose, true);
+    mainWindow->show();
 
     return app.exec();
 }

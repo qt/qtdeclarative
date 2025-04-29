@@ -1046,6 +1046,38 @@ TestCase {
         }
     }
 
+    function test_outlinedPlaceholderTextPosWithPadding_data() {
+        return [
+            { tag: "TextField, leftPadding=0", component: textFieldComponent, leftPadding: 0 },
+            { tag: "TextField, rightPadding=0", component: textFieldComponent, rightPadding: 0 },
+            { tag: "TextField, leftPadding=20", component: textFieldComponent, leftPadding: 20 },
+            { tag: "TextField, rightPadding=20", component: textFieldComponent, rightPadding: 20 },
+            { tag: "TextArea, leftPadding=0", component: textAreaComponent, leftPadding: 0 },
+            { tag: "TextArea, rightPadding=0", component: textAreaComponent, rightPadding: 0 },
+            { tag: "TextArea, leftPadding=20", component: textAreaComponent, leftPadding: 20 },
+            { tag: "TextArea, rightPadding=20", component: textAreaComponent, rightPadding: 20 },
+        ]
+    }
+
+    function test_outlinedPlaceholderTextPosWithPadding(data) {
+        let control = createTemporaryObject(data.component, testCase, {
+            text: "Text",
+            placeholderText: "Enter text..."
+        })
+        verify(control)
+
+        // Work around QTBUG-99231.
+        if (data.leftPadding !== undefined)
+            control.leftPadding = data.leftPadding
+        if (data.rightPadding !== undefined)
+            control.rightPadding = data.rightPadding
+
+        let placeholderTextItem = control.children[0]
+        verify(placeholderTextItem as MaterialImpl.FloatingPlaceholderText)
+        // This is the default value returned by textFieldHorizontalPadding when using a non-dense variant.
+        compare(placeholderTextItem.x, 16)
+    }
+
     Component {
         id: flickableTextAreaComponent
 
@@ -1214,5 +1246,72 @@ TestCase {
         // Note that we can't use the properties argument of createTemporaryObject due to QTBUG-117201.
         textArea.background = null
         verify(!placeholderTextItem.visible)
+    }
+
+    Component {
+        id: childWindowComponent
+
+        ApplicationWindow {
+            objectName: "parentWindow"
+            property alias childWindow: childWindow
+
+            Material.theme: Material.Dark
+            Material.primary: Material.Brown
+            Material.accent: Material.Green
+            Material.background: Material.Yellow
+            Material.foreground: Material.Grey
+
+            ApplicationWindow {
+                id: childWindow
+                objectName: "childWindow"
+            }
+        }
+    }
+
+    function test_windowBackgroundColorPropagation() {
+        let parentWindow = createTemporaryObject(childWindowComponent, testCase)
+        verify(parentWindow)
+
+        let childWindow = parentWindow.childWindow
+        compare(childWindow.Material.theme, Material.Dark)
+    }
+
+    Component {
+        id: themePropagationWithBehaviorComponent
+
+        ApplicationWindow {
+            width: 200
+            height: 200
+            visible: true
+
+            Material.theme: Material.Dark
+
+            property alias listView: listView
+
+            ListView {
+                id: listView
+                anchors.fill: parent
+                header: Text {
+                    text: `Material.theme for header is ${Material.theme} - should be 1`
+
+                    Rectangle {
+                        anchors.fill: parent
+                        z: -1
+                    }
+
+                    Material.elevation: 6
+                    // Having this would break the theme (QTBUG-122783)
+                    Behavior on Material.elevation {}
+                }
+            }
+        }
+    }
+
+    function test_themePropagationWithBehavior() {
+        let window = createTemporaryObject(themePropagationWithBehaviorComponent, testCase)
+        verify(window)
+
+        let headerItem = window.listView.headerItem
+        compare(headerItem.Material.theme, Material.Dark)
     }
 }

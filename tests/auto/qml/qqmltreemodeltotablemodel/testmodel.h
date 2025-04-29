@@ -38,6 +38,7 @@ public:
     QModelIndex parent(const QModelIndex &index) const override;
 
     bool insertRows(int position, int rows, const QModelIndex &parent) override;
+    bool insertColumns(int position, int rows, const QModelIndex &parent) override;
 
 private:
     QScopedPointer<TreeItem> m_rootItem;

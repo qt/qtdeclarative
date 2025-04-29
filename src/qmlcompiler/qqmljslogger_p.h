@@ -94,6 +94,9 @@ public:
     void setAutoApplicable(bool autoApply = true) { m_autoApplicable = autoApply; }
     bool isAutoApplicable() const { return m_autoApplicable; }
 
+    bool operator==(const QQmlJSFixSuggestion &) const;
+    bool operator!=(const QQmlJSFixSuggestion &) const;
+
 private:
     QQmlJS::SourceLocation m_location;
     QString m_fixDescription;

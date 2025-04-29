@@ -557,6 +557,14 @@ struct NotNamespaceForeign {
     QML_ELEMENT
 };
 
+class ConstInvokable : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE const QObject *getObject() { return nullptr; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -610,6 +618,8 @@ private slots:
     void omitInvisible();
     void listSignal();
     void foreignNamespaceFromGadget();
+
+    void constReturnType();
 
 private:
     QByteArray qmltypesData;

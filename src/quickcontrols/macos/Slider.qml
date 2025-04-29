@@ -8,7 +8,6 @@ NativeStyle.DefaultSlider {
     id: control
     readonly property Item __focusFrameTarget: handle
     readonly property Item __focusFrameStyleItem: handle
-    font.pixelSize: background.styleFont(control).pixelSize
 
     background: NativeStyle.Slider {
         control: control

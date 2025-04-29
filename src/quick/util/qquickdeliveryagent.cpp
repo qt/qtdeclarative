@@ -305,6 +305,16 @@ static inline bool windowHasFocus(QQuickWindow *win)
     return win == focusWindow || QQuickRenderControlPrivate::isRenderWindowFor(win, focusWindow) || !focusWindow;
 }
 
+static QQuickItem *findFurthestFocusScopeAncestor(QQuickItem *item)
+{
+    QQuickItem *parentItem = item->parentItem();
+
+    if (parentItem && parentItem->flags() & QQuickItem::ItemIsFocusScope)
+        return findFurthestFocusScopeAncestor(parentItem);
+
+    return item;
+}
+
 #ifdef Q_OS_WEBOS
 // Temporary fix for webOS until multi-seat is implemented see QTBUG-85272
 static inline bool singleWindowOnScreen(QQuickWindow *win)
@@ -447,6 +457,16 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
+
+        // When setting subFocusItem, hierarchy is important. Each focus ancestor's
+        // subFocusItem must be its nearest descendant with focus. Changing the rootItem's
+        // subFocusItem to 'item' here would make 'item' the subFocusItem of all ancestor
+        // focus scopes up until root item.
+        // That is why we should avoid altering subFocusItem until having traversed
+        // all the focus hierarchy.
+        QQuickItem *ancestorFS = findFurthestFocusScopeAncestor(item);
+        if (ancestorFS != item)
+            options |= QQuickDeliveryAgentPrivate::DontChangeSubFocusItem;
         QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->setFocusInScope(da->rootItem(), item, reason, options);
     }
     if (oldActiveFocusItem == activeFocusItem)
@@ -1017,7 +1037,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     }
 
     // Prune the list for items that are no longer hovered
-    for (auto it = hoverItems.begin(); it != hoverItems.end();) {
+    auto hoverItemsCopy = hoverItems;
+    for (auto it = hoverItemsCopy.begin(); it != hoverItemsCopy.end();) {
         auto item = (*it).first.data();
         auto hoverId = (*it).second;
         if (hoverId == currentHoverId) {
@@ -1031,9 +1052,12 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
                 const bool clearHover = true;
                 deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, clearHover);
             }
-            it = hoverItems.erase(it);
+            it = hoverItemsCopy.erase(it);
         }
     }
+    // delivery of the events might have cleared hoverItems, so don't overwrite if empty
+    if (!hoverItems.isEmpty())
+        hoverItems = hoverItemsCopy;
 
     const bool itemsAreHovered = !hoverItems.isEmpty();
     return itemsWasHovered || itemsAreHovered;
@@ -1112,9 +1136,6 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
     // All decendants have been visited.
     // Now deliver the event to the item
     return deliverHoverEventToItem(item, scenePos, lastScenePos, modifiers, timestamp, false);
-
-    // Continue propagation / recursion
-    return false;
 }
 
 /*! \internal
@@ -1133,7 +1154,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     const QPointF localPos = item->mapFromScene(scenePos);
     const QPointF globalPos = item->mapToGlobal(localPos);
     const bool isHovering = item->contains(localPos);
-    const bool wasHovering = hoverItems.contains(item);
+    const auto hoverItemIterator = hoverItems.find(item);
+    const bool wasHovering = hoverItemIterator != hoverItems.end() && hoverItemIterator.value() != 0;
 
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
@@ -1149,14 +1171,18 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
         // Also set hoveredLeafItemFound, so that only propagate in a straight
         // line towards the root from now on.
         hoveredLeafItemFound = true;
-        hoverItems[item] = currentHoverId;
+        if (hoverItemIterator != hoverItems.end())
+            hoverItemIterator.value() = currentHoverId;
+        else
+            hoverItems[item] = currentHoverId;
+
         if (wasHovering)
             accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
         else
             accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, timestamp);
     } else if (wasHovering) {
         // A leave should never stop propagation
-        hoverItems[item] = 0;
+        hoverItemIterator.value() = 0;
         sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, timestamp);
     }
 
@@ -1197,7 +1223,10 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
                     // Mark the whole item as updated, even if only the handler is
                     // actually in a hovered state (because of HoverHandler.margins)
                     hoveredLeafItemFound = true;
-                    hoverItems[item] = currentHoverId;
+                    if (hoverItemIterator != hoverItems.end())
+                        hoverItemIterator.value() = currentHoverId;
+                    else
+                        hoverItems[item] = currentHoverId;
                     if (hh->isBlocking()) {
                         qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
                         accepted = true;
@@ -2103,7 +2132,11 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
         }
     }
 
-    for (QQuickItem *item : targetItems) {
+    QVector<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
+
+    for (auto &item : safeTargetItems) {
+        if (item.isNull())
+            continue;
         // failsafe: when items get into a subscene somehow, ensure that QQuickItemPrivate::deliveryAgent() can find it
         if (isSubsceneAgent)
             QQuickItemPrivate::get(item)->maybeHasSubsceneDeliveryAgent = true;

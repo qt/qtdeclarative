@@ -64,6 +64,7 @@ public:
     void postMethodToMain(Method &&method, Args &&...args);
 
     void waitForNextMessage();
+    void discardMessages();
 
 private:
     friend class QQmlThreadPrivate;

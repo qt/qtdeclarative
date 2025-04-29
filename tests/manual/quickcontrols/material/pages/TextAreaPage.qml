@@ -91,6 +91,38 @@ Page {
             Material.containerStyle: layout.containerStyle
         }
 
+        TextArea {
+            text: "0 leftPadding"
+            placeholderText: "placeholderText"
+            leftPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextArea {
+            text: "0 rightPadding"
+            placeholderText: "placeholderText"
+            rightPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextArea {
+            text: "0 topPadding"
+            placeholderText: "placeholderText"
+            topPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
+        TextArea {
+            text: "0 bottomPadding"
+            placeholderText: "placeholderText"
+            bottomPadding: 0
+
+            Material.containerStyle: layout.containerStyle
+        }
+
         Flickable {
             width: 200
             height: 100
