@@ -18,5 +18,7 @@ endif()
 
 foreach(path "${buildPaths}")
     file(GLOB_RECURSE qmllsIniFiles "${path}/*qmlls.ini.timestamp")
-    file(REMOVE "${qmllsIniFiles}")
+    if (qmllsIniFiles)
+        file(REMOVE "${qmllsIniFiles}")
+    endif()
 endforeach()
