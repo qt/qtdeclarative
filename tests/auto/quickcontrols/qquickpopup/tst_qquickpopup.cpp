@@ -72,6 +72,7 @@ private slots:
     void activeFocusOnClose3();
     void activeFocusOnClosingSeveralPopups();
     void activeFocusAfterExit();
+    void activeFocusAfterExitWithForceActiveFocus();
     void activeFocusOnDelayedEnter();
     void activeFocusDespiteLowerStackingOrder();
     void activeFocusItemAfterWindowInactive();
@@ -985,6 +986,42 @@ void tst_QQuickPopup::activeFocusAfterExit()
     QVERIFY(!popup2->isVisible());
     QTRY_VERIFY(!popup2->hasActiveFocus());
     QTRY_VERIFY(popup1->hasActiveFocus());
+}
+
+void tst_QQuickPopup::activeFocusAfterExitWithForceActiveFocus()
+{
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusAfterExitWithForceActiveFocus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickItem *rootItem = window->property("rootItem").value<QQuickItem*>();
+    QVERIFY(rootItem);
+    QTRY_VERIFY(rootItem->hasActiveFocus());
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    QQuickButton *button = window->property("button").value<QQuickButton*>();
+    QVERIFY(button);
+
+    QSignalSpy closedSpy(popup, SIGNAL(closed()));
+    QVERIFY(closedSpy.isValid());
+
+    popup->open();
+    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(button->hasActiveFocus());
+
+    popup->close();
+    closedSpy.wait();
+
+    QVERIFY(!popup->isVisible());
+    QTRY_VERIFY(!popup->hasActiveFocus());
+    QTRY_VERIFY(rootItem->hasActiveFocus());
 }
 
 void tst_QQuickPopup::activeFocusOnDelayedEnter()
