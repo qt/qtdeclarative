@@ -778,6 +778,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
                 auto *overlayPrivate = QQuickOverlayPrivate::get(overlay);
                 if (overlayPrivate->lastActiveFocusItem.isNull() && !popupItem->isAncestorOf(lastActiveFocusItem)) {
                     overlayPrivate->lastActiveFocusItem = lastActiveFocusItem;
+                    savedLastActiveFocusItem = true;
                 }
             }
         }
@@ -844,8 +845,9 @@ void QQuickPopupPrivate::finalizeExitTransition()
         if (QQuickOverlay *overlay = QQuickOverlay::overlay(window)) {
             const auto stackingOrderPopups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
             for (auto popup : stackingOrderPopups) {
+                // only pick a popup that is focused but has not already been activated
                 if (QQuickPopupPrivate::get(popup)->transitionState != ExitTransition
-                        && popup->hasFocus()) {
+                        && popup->hasFocus() && !popup->hasActiveFocus()) {
                     nextFocusPopup = popup;
                     break;
                 }
@@ -866,13 +868,23 @@ void QQuickPopupPrivate::finalizeExitTransition()
             } else {
                 contentItem->setFocus(true, Qt::PopupFocusReason);
             }
-            overlayPrivate->lastActiveFocusItem = nullptr;
         }
     }
+
+    if (window) {
+        auto *overlay = QQuickOverlay::overlay(window);
+        auto *overlayPrivate = overlay ? QQuickOverlayPrivate::get(overlay) : nullptr;
+
+        // Clear the overlay's saved focus if this popup was the one that set it
+        if (savedLastActiveFocusItem && overlayPrivate)
+            overlayPrivate->lastActiveFocusItem = nullptr;
+    }
+
     visible = false;
     adjustPopupItemParentAndWindow();
     transitionState = NoTransition;
     hadActiveFocusBeforeExitTransition = false;
+    savedLastActiveFocusItem = false;
     emit q->visibleChanged();
     emit q->closed();
 #if QT_CONFIG(accessibility)

@@ -73,6 +73,7 @@ private slots:
     void activeFocusOnClosingSeveralPopups();
     void activeFocusAfterExit();
     void activeFocusAfterExitWithForceActiveFocus();
+    void activeFocusAfterExitNonModal();
     void activeFocusOnDelayedEnter();
     void activeFocusDespiteLowerStackingOrder();
     void activeFocusItemAfterWindowInactive();
@@ -1022,6 +1023,50 @@ void tst_QQuickPopup::activeFocusAfterExitWithForceActiveFocus()
     QVERIFY(!popup->isVisible());
     QTRY_VERIFY(!popup->hasActiveFocus());
     QTRY_VERIFY(rootItem->hasActiveFocus());
+}
+
+void tst_QQuickPopup::activeFocusAfterExitNonModal()
+{
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusAfterExitNonModal.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    auto *win = helper.appWindow;
+    win->show();
+    win->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(win));
+
+    auto *root = win->property("rootItem").value<QQuickItem*>();
+    auto *inner = win->property("focusItem").value<QQuickItem*>();
+    auto *popup = win->property("popup").value<QQuickPopup*>();
+    QVERIFY(root);
+    QVERIFY(inner);
+    QVERIFY(popup);
+
+    // 1) at startup, the inner item has active focus
+    QTRY_VERIFY(inner->hasActiveFocus());
+
+    // 2) open popup, move focus to inner, close -> inner should maintain focus
+    QSignalSpy closedSpy(popup, &QQuickPopup::closed);
+    popup->open();
+    QTRY_VERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->hasActiveFocus());
+    inner->forceActiveFocus();
+    popup->close();
+    closedSpy.wait();
+    QTRY_VERIFY(!popup->hasActiveFocus());
+    QTRY_VERIFY(inner->hasActiveFocus());
+
+    // 3) shift focus to root, open+close -> root should regain focus
+    root->forceActiveFocus();
+    QTRY_VERIFY(root->hasActiveFocus());
+    closedSpy.clear();
+    popup->open();
+    QTRY_VERIFY(popup->isVisible());
+    popup->close();
+    closedSpy.wait();
+    QTRY_VERIFY(!popup->hasActiveFocus());
+    QTRY_VERIFY(root->hasActiveFocus());
 }
 
 void tst_QQuickPopup::activeFocusOnDelayedEnter()

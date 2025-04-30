@@ -173,6 +173,7 @@ public:
     bool inDestructor = false;
     bool relaxEdgeConstraint = false;
     bool popupWindowDirty = false;
+    bool savedLastActiveFocusItem = false;
     int touchId = -1;
     qreal x = 0;
     qreal y = 0;
