@@ -3164,4 +3164,30 @@ private:
     QProperty<QPointF> m_point;
 };
 
+class LargeRevisionBase : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int c MEMBER m_c CONSTANT)
+    Q_PROPERTY(int d MEMBER m_d CONSTANT)
+public:
+    int m_c = 11;
+    int m_d = 12;
+};
+
+class LargeRevision : public LargeRevisionBase
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int a MEMBER m_a CONSTANT REVISION(1, 12))
+    Q_PROPERTY(int b MEMBER m_b CONSTANT REVISION(12, 12))
+    Q_PROPERTY(int c MEMBER m_c CONSTANT REVISION(1, 12))
+    Q_PROPERTY(int d MEMBER m_d CONSTANT REVISION(12, 12))
+public:
+    int m_a = 13;
+    int m_b = 14;
+    int m_c = 15;
+    int m_d = 16;
+};
+
 #endif // TESTTYPES_H

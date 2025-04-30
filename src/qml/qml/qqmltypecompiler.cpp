@@ -893,7 +893,8 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
 
             QQmlPropertyResolver resolver(targetCache);
 
-            const QQmlPropertyData *targetProperty = resolver.property(property.toString());
+            const QQmlPropertyData *targetProperty = resolver.property(
+                    property.toString(), nullptr, QQmlPropertyResolver::IgnoreRevision);
 
             // If it's an alias that we haven't resolved yet, try again later.
             if (!targetProperty) {
