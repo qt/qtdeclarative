@@ -96,10 +96,10 @@ void QQmlJSFunctionInitializer::populateSignature(
             } else {
                 if (!alreadyWarnedAboutMissingAnnotations) {
                     alreadyWarnedAboutMissingAnnotations = true;
-                    function->argumentTypes.append(
-                            m_typeResolver->namedType(m_typeResolver->varType()));
                     signatureError(u"Functions without type annotations won't be compiled"_s);
                 }
+                function->argumentTypes.append(
+                        m_typeResolver->namedType(m_typeResolver->varType()));
             }
         }
     } else {
