@@ -855,10 +855,9 @@ void QQuickPopupPrivate::finalizeExitTransition()
         }
         if (nextFocusPopup) {
             nextFocusPopup->forceActiveFocus(Qt::PopupFocusReason);
-        } else {
+        } else if (auto *overlay = QQuickOverlay::overlay(window)) {
             auto *appWindow = qobject_cast<QQuickApplicationWindow*>(window);
             auto *contentItem = appWindow ? appWindow->contentItem() : window->contentItem();
-            auto *overlay = QQuickOverlay::overlay(window);
             auto *overlayPrivate = QQuickOverlayPrivate::get(overlay);
             if (!contentItem->scopedFocusItem()
                 && !overlayPrivate->lastActiveFocusItem.isNull()) {
