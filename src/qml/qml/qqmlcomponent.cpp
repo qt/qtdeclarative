@@ -1137,13 +1137,19 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
             state.ensureRequiredPropertyStorage(rv);
         }
 
-        for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
-            if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
-                state.ensureRequiredPropertyStorage(rv);
-                RequiredPropertyInfo info;
-                info.propertyName = propertyData->name(rv);
-                state.addPendingRequiredProperty(rv, propertyData, info);
+        if (propertyCache) {
+            for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
+                if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
+                    state.ensureRequiredPropertyStorage(rv);
+                    RequiredPropertyInfo info;
+                    info.propertyName = propertyData->name(rv);
+                    state.addPendingRequiredProperty(rv, propertyData, info);
+                }
             }
+        } else {
+            // we couldn't get a propertyCache from ensurePropertyCache
+            // it is unclear what we can do in that case
+            // ### TOOD: QTBUG-136560
         }
     }
 
