@@ -840,5 +840,39 @@ void tst_qmlls_highlighting::computeDiff()
     }
 }
 
+void tst_qmlls_highlighting::enumCrash()
+{
+    using namespace QQmlJS::Dom;
+    const auto fileObject = [](const QString &filePath) {
+        QFile f(filePath);
+        DomItem file;
+        if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
+            return file;
+        QString code = f.readAll();
+
+        QStringList dirs = { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
+        auto envPtr = DomEnvironment::create(
+                dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended);
+        envPtr->loadBuiltins();
+        envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
+                         [&file](Path, const DomItem &, const DomItem &newIt) {
+                             file = newIt.fileObject();
+                         });
+        envPtr->loadPendingDependencies();
+        return file;
+    };
+
+    const auto filePath = m_highlightingDataDir + "/enums_qtbug.qml";
+    const auto fileItem = fileObject(filePath);
+
+    Highlights h;
+    HighlightingVisitor hv(h, std::nullopt);
+
+    fileItem.visitTree(QQmlJS::Dom::Path(), hv, VisitOption::Default, emptyChildrenVisitor,
+                       emptyChildrenVisitor);
+
+    const auto highlights = h.highlights();
+    QVERIFY(!highlights.isEmpty());
+}
 
 QTEST_MAIN(tst_qmlls_highlighting)
