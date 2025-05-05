@@ -14,7 +14,3 @@ android
 # QTBUG-118063
 [nativeGesturePinchOnFlickableWithParentTapHandler]
 opensuse-leap
-# QTBUG-95887
-[pinchHandlerOnFlickable]
-opensuse-leap
-
