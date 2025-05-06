@@ -1795,7 +1795,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             auto tryParseAlias = [&]() {
             typeName.clear(); // type name is useless for alias here, so keep it empty
             if (!publicMember->statement) {
-                m_logger->log(QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                m_logger->log(QStringLiteral("Invalid alias expression - an initalizer is needed."),
                               qmlSyntax, publicMember->memberType->firstSourceLocation()); // TODO: extend warning to cover until endSourceLocation
                 return;
             }
