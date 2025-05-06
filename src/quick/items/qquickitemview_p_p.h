@@ -43,7 +43,7 @@ public:
 };
 
 
-class Q_AUTOTEST_EXPORT QQuickItemViewChangeSet
+class Q_QUICK_EXPORT QQuickItemViewChangeSet
 {
 public:
     QQuickItemViewChangeSet();
