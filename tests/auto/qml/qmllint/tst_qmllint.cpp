@@ -504,7 +504,7 @@ void TestQmllint::dirtyQmlCode_data()
                                             5, 5 } } };
     QTest::newRow("invalidAliasTarget1") << QStringLiteral("invalidAliasTarget.qml")
                                          << Result { { Message {
-                                            QStringLiteral("Invalid alias expression – an initalizer is needed."),
+                                            QStringLiteral("Invalid alias expression - an initalizer is needed."),
                                             6, 18 } } };
     QTest::newRow("invalidAliasTarget2") << QStringLiteral("invalidAliasTarget.qml")
                                          << Result { { Message {
