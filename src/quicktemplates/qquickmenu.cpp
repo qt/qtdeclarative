@@ -36,6 +36,7 @@
 #include <private/qqmlobjectmodel_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickrendercontrol_p.h>
@@ -978,6 +979,22 @@ bool QQuickMenuPrivate::prepareEnterTransition()
     // If a cascading sub-menu doesn't have enough space to open on
     // the right, it flips on the other side of the parent menu.
     allowHorizontalFlip = cascade && parentMenu;
+
+    // Enter transitions may want to animate the Menu's height based on its implicitHeight.
+    // The Menu's implicitHeight is typically based on the ListView's contentHeight,
+    // among other things. The docs for ListView's forceLayout function say:
+    // "Responding to changes in the model is usually batched to happen only once per frame."
+    // As e.g. NumberAnimation's from and to values are set before any polishes happen,
+    // any re-evaluation of their bindings happen too late, and the starting height can be
+    // out-dated when menu items are added after component completion
+    // (QQuickItemView::componentComplete does a layout, so items declared as children aren't
+    // affected by this). To account for this, we force a layout before the transition starts.
+    // We try to avoid unnecessary re-layouting if we can avoid it.
+    auto *contentItemAsListView = qobject_cast<QQuickListView *>(contentItem);
+    if (contentItemAsListView) {
+        if (QQuickItemViewPrivate::get(contentItemAsListView)->currentChanges.hasPendingChanges())
+            contentItemAsListView->forceLayout();
+    }
 
     if (!QQuickPopupPrivate::prepareEnterTransition())
         return false;

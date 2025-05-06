@@ -16,6 +16,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuickTest/quicktest.h>
@@ -124,6 +125,7 @@ private slots:
     void resetCurrentIndexUponPopup();
     void mousePropagationWithinPopup();
     void shortcutInNestedSubMenuAction();
+    void animationOnHeight();
 
 private:
     bool nativeMenuSupported = false;
@@ -3475,6 +3477,27 @@ void tst_QQuickMenu::shortcutInNestedSubMenuAction()
     // Shouldn't result in an infinite loop.
     QTest::keyClick(window, Qt::Key_C, Qt::ControlModifier);
     QCOMPARE(window->property("triggeredCount").value<int>(), 1);
+}
+
+void tst_QQuickMenu::animationOnHeight()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("animationOnHeight.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *menu = window->findChild<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->popup(100, 100);
+    QTRY_VERIFY(menu->isOpened());
+
+    // After adding the Action, the contentHeight of the Menu's ListView should
+    // be not be greater than its height; it shouldn't be possible to scroll.
+    auto *listView = qobject_cast<QQuickListView *>(menu->contentItem());
+    const qreal itemHeight = menu->itemAt(0)->height();
+    QCOMPARE(listView->contentHeight(), itemHeight * 2 + listView->spacing());
+    QCOMPARE_GE(listView->height(), listView->contentHeight());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
