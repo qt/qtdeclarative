@@ -18,7 +18,7 @@ code, within limitations set by the nature of JavaScript. It generates C++ code
 for functions that can be exhaustively analyzed. The following flow chart
 explains the compilation workflow.
 
-\image qmlsc-compilation-scheme.png
+\image qmlsc-compilation-scheme.png {Flow chart shows the compilation schemes}
 
 QML script compiler is available in two versions. One is \e qmlcachegen, which
 is a part of the \l{Qt Quick Compiler}. Another one is \e qmlsc, which is a part

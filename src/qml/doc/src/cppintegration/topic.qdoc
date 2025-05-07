@@ -69,7 +69,8 @@ information.
 To quickly determine which integration method is appropriate for your situation, the following
 flowchart can be used:
 
-\image cpp-qml-integration-flowchart.png
+\image cpp-qml-integration-flowchart.png {Flow chart helps user to select the
+ correct integration}
 
 For a description of the macros in the flowchart, see the
 \l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++} documentation.

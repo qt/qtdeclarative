@@ -86,7 +86,8 @@ Rectangle {
 
 When placed into a \c .qml file and loaded by the QML engine, the above code creates a \l Rectangle object using the \l Rectangle type supplied by the \c QtQuick module:
 
-\image qtqml-syntax-basics-object-declaration.png
+\image qtqml-syntax-basics-object-declaration.png {Application creates a red
+ square with a width and height of 100}
 
 \note If an object definition only has a small number of properties, it can be written on a single line like this, with the properties separated by semi-colons:
 

@@ -154,7 +154,8 @@ Using CMake:
 
 Now we can build and run the application:
 
-\image extending-tutorial-chapter1.png
+\image extending-tutorial-chapter1.png {Application creates the pie chart with
+       properties defined by the pie chart type}
 
 \note You may see a warning \e {Expression ... depends on non-bindable properties:
       PieChart::name}. This happens because we add a binding to the writable \c name
@@ -171,7 +172,9 @@ to call \c clearChart() and receive \c chartCleared() signals like this:
 
 \snippet tutorials/extending-qml/chapter2-methods/App.qml 0
 
-\image extending-tutorial-chapter2.png
+\image extending-tutorial-chapter2.png {User can click anywhere on the
+       application window to clear the chart. This invokes the Clear Chart
+       method}
 
 To do this, we add a \c clearChart() method and a \c chartCleared() signal
 to our C++ class:
@@ -217,7 +220,8 @@ if we have code like this:
 
 \snippet tutorials/extending-qml/chapter3-bindings/App.qml 0
 
-\image extending-tutorial-chapter3.png
+\image extending-tutorial-chapter3.png {Pie chart B's color property is bound
+                                        to pie chart A's color property.}
 
 The "color: chartA.color" statement binds the \c color value of
 \c chartB to the \c color of \c chartA.
@@ -353,7 +357,8 @@ have a \c slices property that accepts a list of \c PieSlice items:
 
 \snippet tutorials/extending-qml/chapter5-listproperties/App.qml 0
 
-\image extending-tutorial-chapter5.png
+\image extending-tutorial-chapter5.png {The slices property accepts a list of
+ pie slice items. The pieslice item sets the angle and color of each pie slice}
 
 To do this, we replace the \c pieSlice property in \c PieChart with a \c slices property,
 declared as a \l QQmlListProperty type. The \l QQmlListProperty class enables the

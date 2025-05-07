@@ -80,7 +80,9 @@ The \c Button type can then be used in an application:
 \table
 \row
 \li \snippet ../quick/doc/snippets/qml/qml-extending-types/components/application.qml 0
-\li \image button-types.png
+\li \image button-types.png {Application.qml creates a column that contains
+     three instances of the button type; each with their own size and color
+     values}
 \endtable
 
 Please see the documentation about \l{qtqml-documents-definetypes.html}

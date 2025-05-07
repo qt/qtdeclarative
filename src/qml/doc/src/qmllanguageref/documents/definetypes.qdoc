@@ -69,7 +69,8 @@ import QtQuick 2.0
 SquareButton {}
 \endqml
 
-\image documents-definetypes-simple.png
+\image documents-definetypes-simple.png {The square button type in
+ myapplication.qml inherits properties defined in SquareButton.qml.}
 
 This creates a 100 x 100 red \l Rectangle with an inner \l MouseArea, as
 defined in \c SquareButton.qml. When this \c myapplication.qml document is
@@ -157,7 +158,8 @@ Column {
 }
 \endqml
 
-\image documents-definetypes-attributes.png
+\image documents-definetypes-attributes.png {Column containing three square
+ buttons with different color and size properties}
 
 The attributes that are accessible to objects of the custom QML type include
 any \l{Defining Property Attributes}{custom properties}, \l{Defining Method

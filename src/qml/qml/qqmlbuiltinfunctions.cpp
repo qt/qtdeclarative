@@ -714,7 +714,8 @@ QVariant QtObject::alpha(const QJSValue &baseColor, double value) const
         }
     }
     \endqml
-    \image declarative-rect_tint.png
+    \image declarative-rect_tint.png {Side-by-side representation of a light
+     steel blue square and a light steel blue square with a tint applied}
 
     Tint is most useful when a subtle change is intended to be conveyed due to some event;
     you can then use tinting to more effectively tune the visible color.

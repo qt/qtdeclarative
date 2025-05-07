@@ -62,7 +62,8 @@ From the build system perspective, adding qmltc compilation is not much
 different from adding qml cache generation. Naively, the build process could be
 described as:
 
-\image qmltc-compilation-scheme.png
+\image qmltc-compilation-scheme.png {The flow chart shows how to compile qml
+ and C++ files with qml type compiler}
 
 While the real compilation process is much trickier, this diagram captures the
 core components that qmltc uses: the QML files themselves and qmldir with
