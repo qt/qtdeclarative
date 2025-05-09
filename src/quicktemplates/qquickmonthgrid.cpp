@@ -21,14 +21,14 @@ QT_BEGIN_NAMESPACE
     calculated for a given \l month and \l year, using the specified
     \l {Control::locale}{locale}.
 
-    \image qtquickcontrols-monthgrid.png
+    \image qtquickcontrols-monthgrid.webp
     \snippet qtquickcontrols-monthgrid.qml 1
 
     MonthGrid can be used as a standalone control, but it is most often
     used in conjunction with DayOfWeekRow and WeekNumberColumn. Regardless
     of the use case, positioning of the grid is left to the user.
 
-    \image qtquickcontrols-monthgrid-layout.png
+    \image qtquickcontrols-monthgrid-layout.webp
     \snippet qtquickcontrols-monthgrid-layout.qml 1
 
     The visual appearance of MonthGrid can be changed by

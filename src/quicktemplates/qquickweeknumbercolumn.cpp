@@ -20,14 +20,14 @@ QT_BEGIN_NAMESPACE
     are calculated for a given \l month and \l year, using the specified
     \l {Control::locale}{locale}.
 
-    \image qtquickcontrols-weeknumbercolumn.png
+    \image qtquickcontrols-weeknumbercolumn.webp
     \snippet qtquickcontrols-weeknumbercolumn.qml 1
 
     WeekNumberColumn can be used as a standalone control, but it is most
     often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the column is left to the user.
 
-    \image qtquickcontrols-weeknumbercolumn-layout.png
+    \image qtquickcontrols-weeknumbercolumn-layout.webp
     \snippet qtquickcontrols-weeknumbercolumn-layout.qml 1
 
     The visual appearance of WeekNumberColumn can be changed by

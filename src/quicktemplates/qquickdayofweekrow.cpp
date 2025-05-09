@@ -18,14 +18,14 @@ QT_BEGIN_NAMESPACE
     DayOfWeekRow presents day of week names in a row. The names of the days
     are ordered and formatted using the specified \l {Control::locale}{locale}.
 
-    \image qtquickcontrols-dayofweekrow.png
+    \image qtquickcontrols-dayofweekrow.webp
     \snippet qtquickcontrols-dayofweekrow.qml 1
 
     DayOfWeekRow can be used as a standalone control, but it is most
     often used in conjunction with MonthGrid. Regardless of the use case,
     positioning of the row is left to the user.
 
-    \image qtquickcontrols-dayofweekrow-layout.png
+    \image qtquickcontrols-dayofweekrow-layout.webp
     \snippet qtquickcontrols-dayofweekrow-layout.qml 1
 
     The visual appearance of DayOfWeekRow can be changed by
