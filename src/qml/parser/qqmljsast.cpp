@@ -129,7 +129,7 @@ FormalParameterList *ExpressionNode::reparseAsFormalParameterList(MemoryPool *po
 {
     AST::ExpressionNode *expr = this;
     AST::FormalParameterList *f = nullptr;
-    if (AST::Expression *commaExpr = AST::cast<AST::Expression *>(expr)) {
+    if (AST::CommaExpression *commaExpr = AST::cast<AST::CommaExpression *>(expr)) {
         f = commaExpr->left->reparseAsFormalParameterList(pool);
         if (!f)
             return nullptr;
@@ -713,7 +713,7 @@ void ConditionalExpression::accept0(BaseVisitor *visitor)
     visitor->endVisit(this);
 }
 
-void Expression::accept0(BaseVisitor *visitor)
+void CommaExpression::accept0(BaseVisitor *visitor)
 {
     if (visitor->visit(this)) {
         accept(left, visitor);

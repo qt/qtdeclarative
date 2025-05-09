@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
     X(NotExpression)                    \
     X(BinaryExpression)                 \
     X(ConditionalExpression)            \
-    X(Expression)                       \
+    X(CommaExpression)                  \
     X(Block)                            \
     X(StatementList)                    \
     X(VariableStatement)                \

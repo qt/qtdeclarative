@@ -638,12 +638,12 @@ public:
     }
     void endVisit(AST::ConditionalExpression *) override { stop(u"ConditionalExpression"); }
 
-    bool visit(AST::Expression *el) override {
+    bool visit(AST::CommaExpression *el) override {
         start(QLatin1String("Expression commaToken=%1")
               .arg(loc(el->commaToken)));
         return true;
     }
-    void endVisit(AST::Expression *) override { stop(u"Expression"); }
+    void endVisit(AST::CommaExpression *) override { stop(u"Expression"); }
 
     bool visit(AST::Block *el) override {
         start(QLatin1String("Block lbraceToken=%1 rbraceToken=%2")

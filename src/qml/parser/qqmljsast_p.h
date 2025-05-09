@@ -1657,12 +1657,12 @@ public:
     SourceLocation colonToken;
 };
 
-class QML_PARSER_EXPORT Expression: public ExpressionNode // ### rename
+class QML_PARSER_EXPORT CommaExpression: public ExpressionNode
 {
 public:
     QQMLJS_DECLARE_AST_NODE(Expression)
 
-    Expression(ExpressionNode *l, ExpressionNode *r):
+    CommaExpression(ExpressionNode *l, ExpressionNode *r):
         left (l), right (r) { kind = K; }
 
     void accept0(BaseVisitor *visitor) override;
@@ -1678,6 +1678,8 @@ public:
     ExpressionNode *right;
     SourceLocation commaToken;
 };
+// Don't break other users of the parser
+using Expression = CommaExpression;
 
 class QML_PARSER_EXPORT Block: public Statement
 {
