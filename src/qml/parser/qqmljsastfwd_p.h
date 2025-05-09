@@ -72,7 +72,7 @@ class TildeExpression;
 class NotExpression;
 class BinaryExpression;
 class ConditionalExpression;
-class Expression; // ### rename
+class CommaExpression;
 class YieldExpression;
 class Block;
 class LeftHandSideExpression;

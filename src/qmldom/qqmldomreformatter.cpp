@@ -939,7 +939,7 @@ bool ScriptFormatter::visit(ComputedPropertyName *)
     out("[");
     return true;
 }
-bool ScriptFormatter::visit(Expression *el)
+bool ScriptFormatter::visit(CommaExpression *el)
 {
     accept(el->left);
     out(",");

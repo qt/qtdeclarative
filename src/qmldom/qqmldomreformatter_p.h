@@ -187,7 +187,7 @@ protected:
 
     bool visit(AST::SuperLiteral *) override;
     bool visit(AST::ComputedPropertyName *) override;
-    bool visit(AST::Expression *el) override;
+    bool visit(AST::CommaExpression *el) override;
     bool visit(AST::ExpressionStatement *el) override;
 
     bool visit(AST::ClassDeclaration *ast) override;

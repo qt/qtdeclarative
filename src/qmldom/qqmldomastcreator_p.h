@@ -461,8 +461,8 @@ public:
     bool visit(AST::BreakStatement *) override;
     void endVisit(AST::BreakStatement *) override;
 
-    bool visit(AST::Expression *) override;
-    void endVisit(AST::Expression *) override;
+    bool visit(AST::CommaExpression *) override;
+    void endVisit(AST::CommaExpression *) override;
 
     bool visit(AST::ConditionalExpression *) override;
     void endVisit(AST::ConditionalExpression *) override;

@@ -613,12 +613,12 @@ protected:
     bool visit(QQmlJS::AST::TypeAnnotation *ast) override;
 
     // expressions
-    bool visit(QQmlJS::AST::Expression *ast) override;
     bool visit(QQmlJS::AST::ArrayPattern *ast) override;
     bool visit(QQmlJS::AST::ArrayMemberExpression *ast) override;
     bool visit(QQmlJS::AST::BinaryExpression *ast) override;
     bool visit(QQmlJS::AST::CallExpression *ast) override;
     void endVisit(QQmlJS::AST::CallExpression *ast) override;
+    bool visit(QQmlJS::AST::CommaExpression *ast) override;
     bool visit(QQmlJS::AST::ConditionalExpression *ast) override;
     bool visit(QQmlJS::AST::DeleteExpression *ast) override;
     void endVisit(QQmlJS::AST::DeleteExpression *ast) override;

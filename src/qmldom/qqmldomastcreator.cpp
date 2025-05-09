@@ -2807,14 +2807,12 @@ void QQmlDomAstCreator::endVisit(AST::BreakStatement *statement)
     pushScriptElement(current);
 }
 
-// note: thats for comma expressions
-bool QQmlDomAstCreator::visit(AST::Expression *)
+bool QQmlDomAstCreator::visit(AST::CommaExpression *)
 {
     return m_enableScriptExpressions;
 }
 
-// note: thats for comma expressions
-void QQmlDomAstCreator::endVisit(AST::Expression *commaExpression)
+void QQmlDomAstCreator::endVisit(AST::CommaExpression *commaExpression)
 {
     if (!m_enableScriptExpressions)
         return;

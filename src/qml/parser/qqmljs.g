@@ -3083,7 +3083,8 @@ Expression: Expression T_COMMA AssignmentExpression;
 Expression_In: Expression_In T_COMMA AssignmentExpression_In;
 /.
     case $rule_number: {
-          AST::Expression *node = new (pool) AST::Expression(sym(1).Expression, sym(3).Expression);
+          AST::CommaExpression *node
+                = new (pool) AST::CommaExpression(sym(1).Expression, sym(3).Expression);
           node->commaToken = loc(2);
           sym(1).Node = node;
     } break;
