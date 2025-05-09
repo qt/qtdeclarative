@@ -1,8 +1,8 @@
-The Qt Quick Calendar module uses 0-based month numbers to be consistent
-with the JavaScript Date type, that is used by the QML language. This
-means that \c Date::getMonth() can be passed to the methods as is. When
-dealing with month numbers directly, it is highly recommended to use the
-following enumeration values to avoid confusion.
+Calendar-related types in \l{Qt Quick Controls} use 0-based month numbers,
+like the JavaScript Date objects. However, this differs from
+\l QDate, where the months are numbered starting from 1.
+
+To avoid confusion, you can use the following enumeration values:
 
 \value Calendar.January January (0)
 \value Calendar.February February (1)
