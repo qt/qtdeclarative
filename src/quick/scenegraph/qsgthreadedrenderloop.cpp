@@ -338,6 +338,17 @@ bool QSGRenderThread::event(QEvent *e)
 
         return true; }
 
+
+    case WM_Exposed: {
+        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "WM_Exposed");
+
+        mutex.lock();
+        window = static_cast<WMWindowEvent *>(e)->window;
+        waitCondition.wakeOne();
+        mutex.unlock();
+
+        return true; }
+
     case WM_RequestSync: {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "WM_RequestSync");
         WMSyncEvent *se = static_cast<WMSyncEvent *>(e);
@@ -1292,10 +1303,6 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         }
     }
 
-    // set this early as we'll be rendering shortly anyway and this avoids
-    // specialcasing exposure in polishAndSync.
-    w->thread->window = window;
-
 #ifndef QT_NO_DEBUG
     if (w->window->width() <= 0 || w->window->height() <= 0
         || (w->window->isTopLevel() && !w->window->geometry().intersects(w->window->screen()->availableGeometry()))) {
@@ -1313,6 +1320,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     // Start render thread if it is not running
     if (!w->thread->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- starting render thread");
+
+        // set this early as we'll be rendering shortly anyway and this avoids
+        // specialcasing exposure in polishAndSync.
+        w->thread->window = window;
 
         if (!w->thread->rhi) {
             QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
@@ -1338,6 +1349,12 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
 
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, "- render thread already running");
+
+        // set w->thread->window here too, but using an event so it's thread-safe
+        w->thread->mutex.lock();
+        w->thread->postEvent(new WMWindowEvent(w->window, QEvent::Type(WM_Exposed)));
+        w->thread->waitCondition.wait(&w->thread->mutex);
+        w->thread->mutex.unlock();
     }
 
     polishAndSync(w, true);
