@@ -68,11 +68,6 @@ QQmlTypePrivate::~QQmlTypePrivate()
     delete enums.fetchAndStoreAcquire(nullptr);
     delete proxyMetaObjects.fetchAndStoreAcquire(nullptr);
 
-    if (const QtPrivate::QMetaTypeInterface *iface = typeId.iface()) {
-        if (iface->metaObjectFn == &dynamicQmlMetaObject)
-            QQmlMetaType::unregisterInternalCompositeType(typeId, listId);
-    }
-
     switch (regType) {
     case QQmlType::CppType:
         delete extraData.cppTypeData->customParser;

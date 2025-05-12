@@ -100,6 +100,13 @@ struct QQmlMetaTypeData
 
     QHash<const QMetaObject *, QQmlPropertyCache::ConstPtr> propertyCaches;
 
+    struct CompositeMetaTypes
+    {
+        QQmlMetaTypeInterface *type = nullptr;
+        QQmlListMetaTypeInterface *listType = nullptr;
+    };
+    QHash<QUrl, CompositeMetaTypes> compositeMetaTypes;
+
     QQmlPropertyCache::ConstPtr propertyCacheForVersion(int index, QTypeRevision version) const;
     void setPropertyCacheForVersion(
             int index, QTypeRevision version, const QQmlPropertyCache::ConstPtr &cache);
@@ -121,6 +128,8 @@ struct QQmlMetaTypeData
         else
             qWarning("%s", message.toUtf8().constData());
     }
+
+    void clearCompositeMetaTypes();
 
 private:
     QStringList *m_typeRegistrationFailures = nullptr;
