@@ -1145,10 +1145,22 @@ QVariant QQmlPropertyPrivate::readValueProperty()
         }
         return QVariant();
     } else if (core.isQList()) {
+        auto coreMetaType = core.propType();
 
-        QQmlListProperty<QObject> prop;
-        core.readProperty(object, &prop);
-        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType()));
+        // IsQmlList is set for QQmlListPropery and list<ObjectType>
+        if (coreMetaType.flags() & QMetaType::IsQmlList) {
+            QQmlListProperty<QObject> prop;
+            core.readProperty(object, &prop);
+            return QVariant::fromValue(QQmlListReferencePrivate::init(prop, coreMetaType));
+        } else {
+            // but not for lists of value types
+            QVariant result(coreMetaType);
+            // TODO: ideally, we would not default construct and copy assign,
+            // but do a single copy-construct; we don't have API for that, though
+            coreMetaType.construct(result.data());
+            core.readProperty(object, result.data());
+            return result;
+        }
 
     } else if (core.isQObject()) {
 

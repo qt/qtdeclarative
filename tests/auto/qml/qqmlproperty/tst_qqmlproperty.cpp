@@ -1356,6 +1356,18 @@ void tst_qqmlproperty::read()
         QCOMPARE(QQmlProperty::read(object.data(), "Foo.MyContainer.foo",
                                     qmlContext(object.data())), QVariant(10));
     }
+
+    // value type list
+    {
+        QQmlComponent component(&engine);
+        component.setData("import QtQml\nQtObject { property list<string> strings: [`a`, `b`]  }", QUrl());
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
+
+        QQmlProperty p(object.data(), "strings", qmlContext(object.data()));
+        QStringList expected {"a", "b"};
+        QCOMPARE(p.read(), expected);
+    }
 }
 
 void tst_qqmlproperty::write()
