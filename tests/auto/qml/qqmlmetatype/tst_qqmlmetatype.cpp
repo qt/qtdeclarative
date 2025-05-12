@@ -54,6 +54,8 @@ private slots:
 
     void clearPropertyCaches();
     void builtins();
+
+    void renameMetaType();
 };
 
 class TestType : public QObject
@@ -838,6 +840,51 @@ void tst_qqmlmetatype::builtins()
 
     checkObjectBuiltin<QObject>("QtObject");
     checkObjectBuiltin<QQmlComponent>("Component");
+}
+
+void tst_qqmlmetatype::renameMetaType()
+{
+    QByteArray metaTypeName;
+    QMetaType metaType;
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("testRenameMetaType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.data());
+        QVariant stringVal = obj->property("text");
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
+        QCOMPARE(stringVal.toString(), QStringLiteral("yes"));
+        const QQmlData *ddata = QQmlData::get(obj.data());
+        QVERIFY(ddata->compilationUnit);
+
+        metaType =  ddata->compilationUnit->baseCompilationUnit()->qmlType.typeId();
+        QVERIFY(metaType.isValid());
+        metaTypeName = metaType.name();
+        QVERIFY(!metaTypeName.isEmpty());
+    }
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine, testFileUrl("testRenameMetaType.qml"));
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(obj.data());
+        QVariant stringVal = obj->property("text");
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
+        QCOMPARE(stringVal.toString(), QStringLiteral("yes"));
+        const QQmlData *ddata = QQmlData::get(obj.data());
+        QVERIFY(ddata->compilationUnit);
+
+        const QMetaType newType = ddata->compilationUnit->baseCompilationUnit()->qmlType.typeId();
+        QVERIFY(newType.isValid());
+        const QByteArray newTypeName = newType.name();
+        QVERIFY(!newTypeName.isEmpty());
+
+        // The type is still the same
+        QCOMPARE(newType, metaType);
+
+        // But the name is different
+        QCOMPARE_NE(newTypeName, metaTypeName);
+    }
 }
 
 QTEST_MAIN(tst_qqmlmetatype)

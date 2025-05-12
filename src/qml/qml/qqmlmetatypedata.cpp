@@ -27,6 +27,7 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
     types.clear();
     undeletableTypes.clear();
     qDeleteAll(metaTypeToValueType);
+    clearCompositeMetaTypes();
 }
 
 // This expects a "fresh" QQmlTypePrivate and adopts its reference.
@@ -257,6 +258,20 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::findPropertyCacheInCompositeTypes(
     return (iter == compositeTypes.constEnd())
             ? QQmlPropertyCache::ConstPtr()
             : propertyCacheForPotentialInlineComponentType(t, iter);
+}
+
+void QQmlMetaTypeData::clearCompositeMetaTypes()
+{
+    for (const auto &compositeMetaType : std::as_const(compositeMetaTypes)) {
+        Q_ASSERT(compositeMetaType.type);
+        QMetaType::unregisterMetaType(QMetaType(compositeMetaType.type));
+        delete compositeMetaType.type;
+
+        Q_ASSERT(compositeMetaType.listType);
+        QMetaType::unregisterMetaType(QMetaType(compositeMetaType.listType));
+        delete compositeMetaType.listType;
+    }
+    compositeMetaTypes.clear();
 }
 
 QT_END_NAMESPACE

@@ -149,14 +149,30 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     return d;
 }
 
-static void addQQmlMetaTypeInterfaces(QQmlTypePrivate *priv, const QByteArray &className)
+static void addQQmlMetaTypeInterfaces(
+        QQmlMetaTypeData *data, const QUrl &url, QQmlTypePrivate *priv, const QByteArray &className)
 {
     Q_ASSERT(!className.isEmpty());
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
-    QMetaType ptr_type(new QQmlMetaTypeInterface(ptr));
-    QMetaType lst_type(new QQmlListMetaTypeInterface(lst, ptr_type.iface()));
+    QQmlMetaTypeData::CompositeMetaTypes &types = data->compositeMetaTypes[url];
+    if (types.type) {
+        Q_ASSERT(types.listType);
+        types.type->name = std::move(ptr);
+        types.type->QMetaTypeInterface::name = types.type->name.constData();
+        types.listType->name = std::move(lst);
+        types.listType->QMetaTypeInterface::name = types.listType->name.constData();
+        priv->typeId = QMetaType(types.type);
+        priv->listId = QMetaType(types.listType);
+        return;
+    }
+
+    types.type = new QQmlMetaTypeInterface(std::move(ptr));
+    types.listType = new QQmlListMetaTypeInterface(std::move(lst), types.type);
+
+    QMetaType ptr_type(types.type);
+    QMetaType lst_type(types.listType);
 
     // Retrieve the IDs once, so that the types are added to QMetaType's custom type registry.
     ptr_type.id();
@@ -177,7 +193,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     const QUrl normalized = QQmlTypeLoader::normalize(type.url);
     d->extraData.compositeTypeData = normalized;
     addQQmlMetaTypeInterfaces(
-        d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
+            data, normalized, d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(normalized));
     return d;
 }
 
@@ -193,8 +209,9 @@ static QQmlTypePrivate *createQQmlType(
     d->version = type.version;
 
     d->extraData.singletonTypeData->singletonInstanceInfo = siinfo;
+    const QUrl &url = siinfo->url;
     addQQmlMetaTypeInterfaces(
-            d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(siinfo->url));
+            data, url, d, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(url));
     return d;
 }
 
@@ -316,6 +333,11 @@ void QQmlMetaType::clearTypeRegistrations()
     // Avoid deletion recursion (via QQmlTypePrivate dtor) by moving them out of the way first.
     QQmlMetaTypeData::CompositeTypes emptyComposites;
     emptyComposites.swap(data->compositeTypes);
+
+    qDeleteAll(data->metaTypeToValueType);
+    data->metaTypeToValueType.clear();
+
+    data->clearCompositeMetaTypes();
 }
 
 void QQmlMetaType::registerTypeAlias(int typeIndex, const QString &name)
@@ -636,7 +658,8 @@ static QQmlType createTypeForUrl(
         //       and shared across threads.
 
         auto *priv = new QQmlTypePrivate(registrationType);
-        addQQmlMetaTypeInterfaces(priv, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(url));
+        addQQmlMetaTypeInterfaces(
+                data, url, priv, QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(url));
 
         priv->setName(QString(), typeName);
         priv->version = version;
@@ -718,10 +741,8 @@ static QQmlType doRegisterInlineComponentType(QQmlMetaTypeData *data, const QUrl
 
     priv->extraData.inlineComponentTypeData = url;
 
-    const QByteArray className
-            = QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(url, url.fragment());
-
-    addQQmlMetaTypeInterfaces(priv, className);
+    addQQmlMetaTypeInterfaces(
+            data, url, priv, QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(url));
     const QQmlType result(priv);
     priv->release();
 
@@ -745,27 +766,6 @@ QQmlType QQmlMetaType::findInlineComponentType(
     }
 
     return doRegisterInlineComponentType(data, url);
-}
-
-void QQmlMetaType::unregisterInternalCompositeType(QMetaType metaType, QMetaType listMetaType)
-{
-    // This may be called from delayed dtors on shutdown when the data is already gone.
-    QQmlMetaTypeDataPtr data;
-    if (data.isValid()) {
-        if (QQmlValueType *vt = data->metaTypeToValueType.take(metaType.id()))
-            delete vt;
-        if (QQmlValueType *vt = data->metaTypeToValueType.take(listMetaType.id()))
-            delete vt;
-
-        auto it = data->compositeTypes.constFind(metaType.iface());
-        if (it != data->compositeTypes.constEnd())
-            data->compositeTypes.erase(it);
-    }
-
-    QMetaType::unregisterMetaType(metaType);
-    QMetaType::unregisterMetaType(listMetaType);
-    delete static_cast<const QQmlMetaTypeInterface *>(metaType.iface());
-    delete static_cast<const QQmlListMetaTypeInterface *>(listMetaType.iface());
 }
 
 int QQmlMetaType::registerUnitCacheHook(

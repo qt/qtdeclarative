@@ -168,8 +168,7 @@ public:
 
     static bool canCreateClassNameTypeByUrl(const QUrl &url);
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
-
-    static QByteArray createClassNameForInlineComponent(const QUrl &baseUrl, const QString &name);
+    static QByteArray createClassNameForInlineComponent(const QUrl &url);
 
     struct IncrementalResult {
         // valid if and only if an error occurred

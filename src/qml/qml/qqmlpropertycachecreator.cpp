@@ -49,15 +49,14 @@ QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &ur
     }) + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
 }
 
-QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(
-    const QUrl &baseUrl, const QString &name)
+QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(const QUrl &url)
 {
-    QByteArray baseName = processUrlForClassName(baseUrl, [](QStringView nameBase) {
+    QByteArray baseName = processUrlForClassName(url, [](QStringView nameBase) {
         return QByteArray(nameBase.toUtf8() + "_QMLTYPE_");
     }, []() {
         return QByteArray("ANON_QML_IC_");
     });
-    return baseName + name.toUtf8() + '_'
+    return baseName + url.fragment().toUtf8() + '_'
             + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
 }
 
