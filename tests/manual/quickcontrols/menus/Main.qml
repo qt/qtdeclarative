@@ -225,6 +225,17 @@ ApplicationWindow {
 
             Layout.fillWidth: true
             Layout.minimumHeight: 100
+
+            TapHandler {
+                objectName: "textAreaMouseTapHandler"
+                acceptedButtons: Qt.RightButton
+                onPressedChanged: if (pressed) editContextMenu.popup()
+            }
+            TapHandler {
+                objectName: "textAreaTouchTapHandler"
+                acceptedDevices: PointerDevice.TouchScreen
+                onLongPressed: editContextMenu.popup()
+            }
         }
 
         Component {
@@ -439,6 +450,24 @@ ApplicationWindow {
                 ContextAction { text: qsTr("SubSub action 1") }
                 ContextAction { text: qsTr("SubSub action 2") }
             }
+        }
+    }
+
+    Menu {
+        id: editContextMenu
+        objectName: "editContextMenu"
+
+        ContextAction {
+            text: qsTr("Cut")
+            enabled: textArea.selectedText.length > 0
+        }
+        ContextAction {
+            text: qsTr("Copy")
+            enabled: textArea.selectedText.length > 0
+        }
+        ContextAction {
+            text: qsTr("Paste")
+            enabled: textArea.activeFocus
         }
     }
 }

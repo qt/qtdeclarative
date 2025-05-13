@@ -3,7 +3,6 @@
 
 import QtQuick
 import QtQuick.Controls.impl
-import QtQuick.Controls.Basic.impl
 import QtQuick.Templates as T
 
 T.TextArea {
@@ -23,10 +22,6 @@ T.TextArea {
     placeholderTextColor: control.palette.placeholderText
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
-
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
 
     PlaceholderText {
         id: placeholder

@@ -38,10 +38,6 @@ T.TextField {
     placeholderTextColor: control.palette.placeholderText
     verticalAlignment: Text.AlignVCenter
 
-    ContextMenu.menu: Impl.TextEditingContextMenu {
-        control: control
-    }
-
     PlaceholderText {
         id: placeholder
         x: control.leftPadding

@@ -31,12 +31,6 @@ qt_internal_add_qml_module(QuickControls2Impl
         qquickplaceholdertext.cpp qquickplaceholdertext_p.h
         qquickplatformtheme.cpp qquickplatformtheme_p.h
         qtquickcontrols2implglobal_p.h
-    QML_FILES
-        CopyAction.qml
-        CutAction.qml
-        DeleteAction.qml
-        PasteAction.qml
-        SelectAllAction.qml
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

@@ -3,12 +3,6 @@
 
 import QtQuick
 import QtQuick.NativeStyle as NativeStyle
-import QtQuick.Controls.macOS.impl
 
 NativeStyle.DefaultTextArea {
-    id: control
-
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
 }

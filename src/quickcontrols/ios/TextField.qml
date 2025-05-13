@@ -27,10 +27,6 @@ T.TextField {
     verticalAlignment: Qt.AlignVCenter
     cursorDelegate: CursorDelegate {}
 
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
-
     PlaceholderText {
         id: placeholder
         x: control.leftPadding
