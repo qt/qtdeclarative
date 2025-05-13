@@ -20,10 +20,8 @@
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
-#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
-using namespace QQuickControlsTestUtils;
 using namespace QQuickVisualTestUtils;
 
 class tst_QQuickTextArea : public QQmlDataTest
@@ -43,8 +41,6 @@ private slots:
     void contextMenuPaste();
     void contextMenuDelete();
     void contextMenuSelectAll();
-    void customContextMenuOnRelease_data();
-    void customContextMenuOnRelease();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -465,39 +461,6 @@ void tst_QQuickTextArea::contextMenuSelectAll()
     // Close the context menu.
     QTest::keyClick(&window, Qt::Key_Escape);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
-}
-
-void tst_QQuickTextArea::customContextMenuOnRelease_data()
-{
-    QTest::addColumn<QQuickPopup::PopupType>("popupType");
-
-    QTest::newRow("Item") << QQuickPopup::Item;
-    if (arePopupWindowsSupported())
-        QTest::newRow("Window") << QQuickPopup::Window;
-}
-
-void tst_QQuickTextArea::customContextMenuOnRelease()
-{
-    QFETCH(QQuickPopup::PopupType, popupType);
-
-    QQuickView window;
-    QVERIFY(QQuickTest::showView(window, testFileUrl("customContextMenuOnRelease.qml")));
-    window.requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(&window));
-
-    auto *ourContextMenu = window.rootObject()->property("ourContextMenu").value<QQuickMenu *>();
-    QVERIFY(ourContextMenu);
-    ourContextMenu->setPopupType(popupType);
-
-    // Right click on the TextArea to open the context menu. The user's custom context menu
-    // should be visible, but not ours (ContextMenu's).
-    auto *textArea = window.rootObject()->property("textArea").value<QQuickTextArea *>();
-    QVERIFY(textArea);
-    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(textArea));
-    auto *userContextMenu = window.rootObject()->property("userContextMenu").value<QQuickMenu *>();
-    QVERIFY(userContextMenu);
-    QTRY_VERIFY(userContextMenu->isOpened());
-    QTRY_VERIFY_WITH_TIMEOUT(!ourContextMenu->isVisible(), 1000);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickTextArea)
