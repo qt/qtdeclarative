@@ -71,6 +71,8 @@ QSurfaceFormat QSGSoftwareContext::defaultSurfaceFormat() const
     format.setRenderableType(QSurfaceFormat::DefaultRenderableType);
     format.setMajorVersion(0);
     format.setMinorVersion(0);
+    if (QQuickWindow::hasDefaultAlphaBuffer())
+        format.setAlphaBufferSize(8);
     return format;
 }
 
