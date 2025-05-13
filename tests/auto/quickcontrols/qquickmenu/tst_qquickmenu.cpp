@@ -400,6 +400,16 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
+    // Make sure the internal list view won't handle key events directly
+    menu->setHeight(menu->contentHeight() + menu->topPadding() + menu->bottomPadding() + 20);
+    QQuickListView *listView = qobject_cast<QQuickListView *>(menu->contentItem());
+    if (listView) {
+        listView->setInteractive(false);
+        listView->setKeyNavigationEnabled(false);
+        QVERIFY(!listView->isInteractive());
+        QVERIFY(!listView->isKeyNavigationEnabled());
+    }
+
     menu->setPopupType(popupType);
 
     QQuickMenuItem *firstItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
