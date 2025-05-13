@@ -641,8 +641,14 @@ void QSGRenderThread::syncAndRender()
         // An update request could still be delivered right before we get an
         // unexpose. With Vulkan on Windows for example attempting to render
         // leads to failures at this stage since the surface size is already 0.
-        if (effectiveOutputSize.isEmpty())
+        if (effectiveOutputSize.isEmpty()) {
+            if (syncRequested) {
+                mutex.lock();
+                waitCondition.wakeOne();
+                mutex.unlock();
+            }
             return;
+        }
 
         const QSize previousOutputSize = cd->swapchain->currentPixelSize();
         if (previousOutputSize != effectiveOutputSize || cd->swapchainJustBecameRenderable) {
