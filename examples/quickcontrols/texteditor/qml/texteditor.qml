@@ -166,12 +166,6 @@ ApplicationWindow {
         }
     }
 
-    Component {
-        id: menuSeparatorComponent
-
-        MenuSeparator {}
-    }
-
     menuBar: MenuBar {
         Menu {
             title: qsTr("&File")
@@ -488,6 +482,11 @@ ApplicationWindow {
             bottomPadding: 0
             background: null
 
+            TapHandler {
+                acceptedButtons: Qt.RightButton
+                onTapped: contextMenu.popup()
+            }
+
             onLinkActivated: function (link) {
                 Qt.openUrlExternally(link)
             }
@@ -497,10 +496,6 @@ ApplicationWindow {
                     textDocument.source = "file:" + Qt.application.arguments[1]
                 else
                     textDocument.source = "qrc:/texteditor.html"
-                const menu = textArea.ContextMenu.menu
-                menu.addItem(menuSeparatorComponent.createObject(menu.contentItem))
-                menu.addAction(fontDialogAction)
-                menu.addAction(colorDialogAction)
             }
 
             textDocument.onStatusChanged: {
@@ -517,7 +512,41 @@ ApplicationWindow {
                     errorDialog.open()
                 }
             }
+        }
+    }
 
+    Menu {
+        id: contextMenu
+
+        MenuItem {
+            text: qsTr("Copy")
+            action: copyAction
+        }
+        MenuItem {
+            text: qsTr("Cut")
+            action: cutAction
+        }
+        MenuItem {
+            text: qsTr("Paste")
+            action: pasteAction
+        }
+
+        MenuSeparator {}
+
+        MenuItem {
+            text: qsTr("Font...")
+            onTriggered: function () {
+                fontDialog.selectedFont = textArea.cursorSelection.font
+                fontDialog.open()
+            }
+        }
+
+        MenuItem {
+            text: qsTr("Color...")
+            onTriggered: function () {
+                colorDialog.selectedColor = textArea.cursorSelection.color
+                colorDialog.open()
+            }
         }
     }
 

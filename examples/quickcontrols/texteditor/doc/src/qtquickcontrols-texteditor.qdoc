@@ -106,12 +106,23 @@
     arrow keys, or by typing a lot of text), \l TextArea scrolls the
     \l Flickable to keep the cursor visible.
 
-    We take the same actions that we declared in the \l MenuBar and \l ToolBar
-    and append them to the existing items in the standard
-    \l {ContextMenu}{context menu} provided by \c TextArea:
+    There is a context menu; we use a TapHandler to detect a right-click and
+    open it:
 
-    \skipto ContextMenu
-    \printto }
+    \skipto TapHandler
+    \printuntil }
+
+    The context \l Menu contains \l {MenuItem}{MenuItems} that reuse the same
+    \l Action objects as the main \l MenuBar and \l ToolBar are using.
+    As before, it's enough to bind \l {AbstractButton::}{action} to the
+    reusable Action that represents the operation to be performed. However,
+    we override each menu item's \l {MenuItem::}{text} to omit the
+    underlined mnemonics on the context menu.
+
+    \skipto Menu
+    \printuntil MenuItem
+    \printuntil }
+    \dots 8
 
     We consistently use the \l [QML] {Qt::}{qsTr()} function to enable
     translation of UI text, so that the application will make sense regardless
