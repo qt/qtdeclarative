@@ -5,7 +5,6 @@ import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
 import QtQuick.Controls.Universal
-import QtQuick.Controls.Universal.impl
 
 T.TextArea {
     id: control
@@ -31,10 +30,6 @@ T.TextArea {
     placeholderTextColor: !enabled ? Universal.chromeDisabledLowColor :
                                      activeFocus ? Universal.chromeBlackMediumLowColor :
                                                    Universal.baseMediumColor
-
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
 
     PlaceholderText {
         id: placeholder

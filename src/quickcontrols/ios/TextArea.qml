@@ -25,10 +25,6 @@ T.TextArea {
     placeholderTextColor: control.palette.placeholderText
     cursorDelegate: CursorDelegate {}
 
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
-
     PlaceholderText {
         id: placeholder
         x: control.leftPadding

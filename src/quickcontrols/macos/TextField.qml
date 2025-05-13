@@ -3,13 +3,8 @@
 
 import QtQuick
 import QtQuick.NativeStyle as NativeStyle
-import QtQuick.Controls.macOS.impl
 
 NativeStyle.DefaultTextField {
     id: control
     readonly property Item __focusFrameTarget: control
-
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
 }

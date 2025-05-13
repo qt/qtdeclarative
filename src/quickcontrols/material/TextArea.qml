@@ -38,10 +38,6 @@ T.TextArea {
 
     Material.containerStyle: Material.Outlined
 
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
-
     cursorDelegate: CursorDelegate { }
 
     FloatingPlaceholderText {

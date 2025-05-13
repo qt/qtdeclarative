@@ -11,9 +11,6 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
-#include <QtQuickTemplates2/private/qquickmenu_p_p.h>
-#include <QtQuickTemplates2/private/qquicktextarea_p.h>
-#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -234,14 +231,6 @@ bool QQuickContextMenu::event(QEvent *event)
             // No menu set and requested isn't connected; let the event propagate
             // onwards and do nothing.
             return QObject::event(event);
-        }
-
-        // On platforms like iOS, we want to use the native edit menu.
-        // TODO: test this on Android and desktop platforms (with popupType: Popup.Native)
-        if (menu && QQuickMenuPrivate::get(menu)->resolvedPopupType() == QQuickPopup::Native
-            && (qobject_cast<const QQuickTextField *>(attacheeItem)
-                || qobject_cast<const QQuickTextArea *>(attacheeItem))) {
-            QQuickMenuPrivate::get(menu)->makeEditMenu();
         }
 
         menu->setParentItem(attacheeItem);

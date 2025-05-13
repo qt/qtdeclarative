@@ -24,10 +24,6 @@ T.TextField {
     placeholderTextColor: control.palette.placeholderText
     verticalAlignment: TextInput.AlignVCenter
 
-    ContextMenu.menu: TextEditingContextMenu {
-        control: control
-    }
-
     PlaceholderText {
         id: placeholder
         x: control.leftPadding
