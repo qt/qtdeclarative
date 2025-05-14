@@ -129,7 +129,6 @@ bool TestModel::insertRows(int position, int rows, const QModelIndex &parent)
     return true;
 }
 
-
 void insertColumnsRecursive(TreeItem *item, int row, int pos, int cols)
 {
     for (int col = 0; col < cols; col++)
@@ -156,4 +155,12 @@ bool TestModel::insertColumns(int position, int cols, const QModelIndex &parent)
 
     endInsertColumns();
     return true;
+}
+
+Qt::ItemFlags TestModel::flags(const QModelIndex &index) const
+{
+    Q_UNUSED(index);
+    if (m_editableIndices.contains(index))
+        return Qt::ItemIsSelectable|Qt::ItemIsEnabled|Qt::ItemIsEditable;
+    return Qt::ItemIsSelectable|Qt::ItemIsEnabled;
 }
