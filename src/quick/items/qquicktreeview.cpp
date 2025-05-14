@@ -650,8 +650,10 @@ void QQuickTreeView::keyPressEvent(QKeyEvent *event)
         break;
     }
 
-    if (!event->isAccepted())
+    if (!event->isAccepted()) {
+        event->accept();
         QQuickTableView::keyPressEvent(event);
+    }
 }
 
 QT_END_NAMESPACE
