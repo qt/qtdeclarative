@@ -549,7 +549,7 @@ QObject *QQuickWindowQmlImpl::screen() const
 void QQuickWindowQmlImpl::setScreen(QObject *screen)
 {
     QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
-    QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : nullptr);
+    QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : qobject_cast<QScreen *>(screen));
 }
 
 QQuickWindowAttached *QQuickWindowQmlImpl::qmlAttachedProperties(QObject *object)
