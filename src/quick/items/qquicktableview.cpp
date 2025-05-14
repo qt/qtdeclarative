@@ -5191,8 +5191,8 @@ bool QQuickTableViewPrivate::canEdit(const QModelIndex tappedIndex, bool warn)
         return false;
     }
 
-    if (auto const qaim = model->abstractItemModel()) {
-        if (!(qaim->flags(tappedIndex) & Qt::ItemIsEditable)) {
+    if (auto const sourceModel = qaim(modelImpl())) {
+        if (!(sourceModel->flags(tappedIndex) & Qt::ItemIsEditable)) {
             if (warn)
                 qmlWarning(q) << "cannot edit: QAbstractItemModel::flags(index) doesn't contain Qt::ItemIsEditable";
             return false;

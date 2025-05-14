@@ -10,6 +10,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquicktreeview_p.h>
 #include <QtQuick/private/qquicktreeview_p_p.h>
+#include <QtQuick/private/qquicktextinput_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -93,6 +94,10 @@ private slots:
     void sortTreeModelDynamic();
     void setRootIndex();
     void setRootIndexToLeaf();
+    void editUsingEditTriggers_data();
+    void editUsingEditTriggers();
+    void editOnNonEditableCell_data();
+    void editOnNonEditableCell();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -1306,6 +1311,335 @@ void tst_qquicktreeview::setRootIndexToLeaf()
         const auto context = qmlContext(childItem.data());
         const auto itemDisplay = context->contextProperty("display").toString();
         QCOMPARE(itemDisplay, modelDisplay);
+    }
+}
+
+void tst_qquicktreeview::editUsingEditTriggers_data()
+{
+    QTest::addColumn<QQuickTreeView::EditTriggers>("editTriggers");
+    QTest::addColumn<bool>("interactive");
+
+    QTest::newRow("NoEditTriggers") << QQuickTreeView::EditTriggers(QQuickTreeView::NoEditTriggers);
+    QTest::newRow("SingleTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::SingleTapped);
+    QTest::newRow("DoubleTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::DoubleTapped);
+    QTest::newRow("SelectedTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::SelectedTapped);
+    QTest::newRow("EditKeyPressed") << QQuickTreeView::EditTriggers(QQuickTreeView::EditKeyPressed);
+    QTest::newRow("AnyKeyPressed") << QQuickTreeView::EditTriggers(QQuickTreeView::AnyKeyPressed);
+    QTest::newRow("DoubleTapped | EditKeyPressed")
+        << QQuickTreeView::EditTriggers(QQuickTreeView::DoubleTapped | QQuickTreeView::EditKeyPressed);
+    QTest::newRow("SingleTapped | AnyKeyPressed")
+        << QQuickTreeView::EditTriggers(QQuickTreeView::SingleTapped | QQuickTreeView::AnyKeyPressed);
+}
+
+void tst_qquicktreeview::editUsingEditTriggers()
+{
+    // Check that you can start to edit in treeView
+    // using the available edit triggers.
+    QFETCH(QQuickTreeView::EditTriggers, editTriggers);
+    LOAD_TREEVIEW("editdelegate.qml");
+
+    TestModel testModel;
+    treeView->setModel(QVariant::fromValue(&testModel));
+    treeView->forceActiveFocus();
+    treeView->expand(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->editTriggers(), QQuickTreeView::EditKeyPressed);
+    treeView->setEditTriggers(editTriggers);
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+    QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+
+    const QPoint cell1(0, 0);
+    const QPoint cell2(1, 1);
+    const QModelIndex index1 = treeView->modelIndex(cell1);
+    const QModelIndex index2 = treeView->modelIndex(cell2);
+    const auto item1 = treeView->itemAtCell(cell1);
+    const auto item2 = treeView->itemAtCell(cell2);
+    QVERIFY(item1);
+    QVERIFY(item2);
+
+    testModel.m_editableIndices = { index1, index2 };
+
+    QQuickWindow *window = treeView->window();
+
+    const QPoint localPos = QPoint(item1->width() - 1, item1->height() - 1);
+    const QPoint localPosOutside = QPoint(treeView->contentWidth() + 10, treeView->contentHeight() + 10);
+    const QPoint tapPos1 = window->contentItem()->mapFromItem(item1, localPos).toPoint();
+    const QPoint tapPos2 = window->contentItem()->mapFromItem(item2, localPos).toPoint();
+    const QPoint tapOutsideContentItem = window->contentItem()->mapFromItem(item2, localPosOutside).toPoint();
+
+    if (editTriggers & QQuickTreeView::SingleTapped) {
+        // edit cell 1
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // edit cell 2 (without closing the previous edit session first)
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index2);
+        const auto editItem2 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index2);
+
+        // single tap outside content item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index2);
+    }
+
+    if (editTriggers & QQuickTreeView::DoubleTapped) {
+        // edit cell 1
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // edit cell 2 (without closing the previous edit session first)
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index2);
+        const auto editItem2 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index2);
+
+        // single tap outside the edit item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+
+        if (!(editTriggers & QQuickTreeView::SingleTapped)) {
+            // single tap on a cell should not open the editor
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+            QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+            QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        }
+
+        // single tap outside content item should make sure editing ends
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::SelectedTapped) {
+        // select cell first, then tap on it
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::Select);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+        const auto editItem1 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // tap on a non-selected cell. This should close the editor, and move
+        // the current index, but not begin to edit the cell.
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index2);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+
+        // tap on a non-selected cell while no editor is active
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index2);
+
+        // tap on the current cell. This alone should not start an edit (unless it's also selected)
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::EditKeyPressed) {
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Return);
+        const auto editItem1 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem1);
+        QVERIFY(editItem1->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // Pressing escape should close the editor
+        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+
+        // Pressing Enter to open the editor again
+        QTest::keyClick(window, Qt::Key_Enter);
+        const auto editItem2 = treeView->property(kEditItem).value<QQuickItem *>();
+        QVERIFY(editItem2);
+        QVERIFY(editItem2->hasActiveFocus());
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+
+        // single tap outside the edit item should close the editor
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::AnyKeyPressed) {
+        // Pressing key x should start to edit. And in case of AnyKeyPressed, we
+        // also replay the key event to the focus object.
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_X);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+        auto textInput1 = treeView->property(kEditItem).value<QQuickTextInput *>();
+        QVERIFY(textInput1);
+        QVERIFY(textInput1->hasActiveFocus());
+        QCOMPARE(textInput1->text(), "x");
+
+        // Pressing escape should close the editor
+        QTest::keyClick(window, Qt::Key_Escape);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+
+        // Pressing a modifier key alone should not open the editor
+        QTest::keyClick(window, Qt::Key_Shift);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Control);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Alt);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QTest::keyClick(window, Qt::Key_Meta);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+
+        // Pressing enter should also start to edit. But this is a
+        // special case, we don't replay enter into the focus object.
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Enter);
+        QCOMPARE(treeView->selectionModel()->currentIndex(), index1);
+        QCOMPARE(treeView->property(kEditIndex).value<QModelIndex>(), index1);
+        auto textInput2 = treeView->property(kEditItem).value<QQuickTextInput *>();
+        QVERIFY(textInput2);
+        QVERIFY(textInput2->hasActiveFocus());
+
+        if (!(editTriggers & QQuickTreeView::SingleTapped)) {
+            // single tap outside the edit item should close the editor
+            QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos2);
+            QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+            QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        }
+
+        // single tap outside content item should make sure editing ends
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapOutsideContentItem);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers == QQuickTreeView::NoEditTriggers) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos1);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+}
+
+void tst_qquicktreeview::editOnNonEditableCell_data()
+{
+    QTest::addColumn<QQuickTreeView::EditTriggers>("editTriggers");
+
+    QTest::newRow("SingleTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::SingleTapped);
+    QTest::newRow("DoubleTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::DoubleTapped);
+    QTest::newRow("SelectedTapped") << QQuickTreeView::EditTriggers(QQuickTreeView::SelectedTapped);
+    QTest::newRow("EditKeyPressed") << QQuickTreeView::EditTriggers(QQuickTreeView::EditKeyPressed);
+    QTest::newRow("AnyKeyPressed") << QQuickTreeView::EditTriggers(QQuickTreeView::EditKeyPressed);
+}
+
+void tst_qquicktreeview::editOnNonEditableCell()
+{
+    // Check that the user cannot edit a non-editable cell from the edit triggers.
+    // Note: we don't want TreeView to print out warnings in this case, since
+    // the user is not doing anything wrong. We only want to print out warnings if
+    // the application is calling edit() explicitly on a cell that cannot be edited
+    // (separate test below).
+    QFETCH(QQuickTreeView::EditTriggers, editTriggers);
+    LOAD_TREEVIEW("editdelegate.qml");
+
+    TestModel testModel;
+    treeView->setModel(QVariant::fromValue(&testModel));
+    treeView->forceActiveFocus();
+    treeView->expand(0);
+
+    WAIT_UNTIL_POLISHED;
+
+    const char kEditItem[] = "editItem";
+    const char kEditIndex[] = "editIndex";
+
+    const QPoint cell(1, 1);
+    const QModelIndex index1 = treeView->modelIndex(cell);
+    const auto item = treeView->itemAtCell(cell);
+    QVERIFY(item);
+
+    QQuickWindow *window = treeView->window();
+
+    const QPoint localPos = QPoint(item->width() - 1, item->height() - 1);
+    const QPoint tapPos = window->contentItem()->mapFromItem(item, localPos).toPoint();
+
+    if (editTriggers & QQuickTreeView::SingleTapped) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::DoubleTapped) {
+        QTest::mouseDClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::SelectedTapped) {
+        // select cell first, then tap on it
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, tapPos);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::EditKeyPressed) {
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Return);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+    }
+
+    if (editTriggers & QQuickTreeView::AnyKeyPressed) {
+        treeView->selectionModel()->setCurrentIndex(index1, QItemSelectionModel::NoUpdate);
+        QTest::keyClick(window, Qt::Key_X);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
+        QTest::keyClick(window, Qt::Key_Enter);
+        QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
+        QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
     }
 }
 
