@@ -312,7 +312,11 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
 
 bool QSGSoftwareInternalRectangleNode::isOpaque() const
 {
-    if (m_radius > 0.0f)
+    if (m_radius > 0.0f
+        || m_topLeftRadius > 0.0f
+        || m_topRightRadius > 0.0f
+        || m_bottomRightRadius > 0.0f
+        || m_bottomLeftRadius > 0.0f)
         return false;
     if (m_color.alpha() < 255)
         return false;
