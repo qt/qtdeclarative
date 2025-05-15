@@ -2665,6 +2665,14 @@ void tst_QQuickPopup::pointerEventsNotBlockedForNonPopupChildrenOfOverlayWithHig
     QCOMPARE(lowerMouseAreaSpy.count(), 0);
     QCOMPARE(upperMouseAreaSpy.count(), 1);
 
+    // Verify that the upper mouse area is hovered, even when a mouse press happens on top of a modal dialog
+    upperMouseArea->setHoverEnabled(true);
+    QTest::mouseMove(window, button->mapToScene(button->boundingRect().center() - QPoint(1,1)).toPoint());
+    QVERIFY(!upperMouseArea->hovered());
+    upperMouseArea->setEnabled(true);
+    QTest::mouseMove(window, button->mapToScene(button->boundingRect().center() + QPoint(1,1)).toPoint());
+    QVERIFY(upperMouseArea->hovered());
+
     popup->close();
 }
 
