@@ -282,6 +282,7 @@ public:
     int currentIndex = -1;
     QQuickComboBox::ImplicitContentWidthPolicy implicitContentWidthPolicy = QQuickComboBox::ContentItemImplicitWidth;
     QVariant model;
+    std::optional<QPointer<QObject>> qobjectModelGuard;
     QString textRole;
     QString currentText;
     QString displayText;
@@ -1006,29 +1007,47 @@ int QQuickComboBox::count() const
 QVariant QQuickComboBox::model() const
 {
     Q_D(const QQuickComboBox);
-    return d->model;
+    if (!d->qobjectModelGuard.has_value()) {
+        // It's not a QObject-derived model; return it as-is.
+        return d->model;
+    }
+
+    // It is a QObject-derived model; only return it if it's still alive.
+    return !d->qobjectModelGuard->isNull() ? d->model : QVariant();
 }
 
 void QQuickComboBox::setModel(const QVariant& m)
 {
     Q_D(QQuickComboBox);
-    QVariant model = m;
-    if (model.userType() == qMetaTypeId<QJSValue>())
-        model = model.value<QJSValue>().toVariant();
+    QVariant newModel = m;
+    if (newModel.userType() == qMetaTypeId<QJSValue>())
+        newModel = newModel.value<QJSValue>().toVariant();
 
-    if (d->model == model)
+    if (d->model == newModel)
         return;
 
-    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model)) {
-        QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged,
-            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
+    if (d->qobjectModelGuard.has_value() && !d->qobjectModelGuard->isNull()) {
+        if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model)) {
+            QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged,
+                d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
+        }
     }
-    if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(model)) {
-        QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged,
-            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
+    if (QObject* newModelAsQObject = qvariant_cast<QObject *>(newModel)) {
+        // Ensure that if the model is destroyed, we don't try to access it.
+        // We store it in std::optional because model() needs to return the model
+        // as-is if a non-QObject model is contained within it.
+        d->qobjectModelGuard = QPointer<QObject>(newModelAsQObject);
+
+        if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(newModel)) {
+            QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged,
+                d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
+        }
+    } else {
+        // It's not a QObject, so we don't need to worry about tracking its lifetime.
+        d->qobjectModelGuard.reset();
     }
 
-    d->model = model;
+    d->model = newModel;
     d->createDelegateModel();
     emit countChanged();
     if (isComponentComplete()) {
