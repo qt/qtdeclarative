@@ -3145,6 +3145,20 @@ void QQuickPopup::mouseUngrabEvent()
     d->handleUngrab();
 }
 
+
+static QQuickItem *findRootOfOverlaySubtree(QQuickItem *source, const QQuickOverlay *overlay)
+{
+    QQuickItem *sourceAncestor = source;
+    while (sourceAncestor) {
+        QQuickItem *parentItem = sourceAncestor->parentItem();
+        if (parentItem == overlay)
+            return sourceAncestor;
+        sourceAncestor = parentItem;
+    }
+    // Not an ancestor of the overlay.
+    return nullptr;
+}
+
 /*!
     \internal
 
@@ -3160,6 +3174,17 @@ void QQuickPopup::mouseUngrabEvent()
 bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickPopup);
+
+    // The overlay will normally call this function for each active popup, assuming there is no active mouse grabber.
+    // If \a item doesn't belong to any of these popups, but exists in an overlay subtree, we shouldn't filter the event,
+    // since the item is supposed to be independent of any active popups.
+    auto *overlay = QQuickOverlay::overlay(d->window);
+    const QList<QQuickItem *> paintOrderChildItems = QQuickOverlayPrivate::get(overlay)->paintOrderChildItems();
+    const qsizetype targetItemPaintOrderIndex = paintOrderChildItems.indexOf(findRootOfOverlaySubtree(item, overlay));
+    const qsizetype popupItemPaintOrderIndex = paintOrderChildItems.indexOf(d->popupItem);
+    if (targetItemPaintOrderIndex > popupItemPaintOrderIndex)
+        return false;
+
     switch (event->type()) {
     case QEvent::KeyPress:
     case QEvent::KeyRelease:
