@@ -595,16 +595,11 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Number);
             roleIndex = e->setDoubleProperty(r, propertyValue->asDouble());
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
-            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
-            ListModel *subModel = new ListModel(r.subLayout, nullptr);
-
-            int arrayLength = a->getLength();
-            for (int j=0 ; j < arrayLength ; ++j) {
-                o = a->get(j);
-                subModel->append(o);
-            }
-
-            roleIndex = e->setListProperty(r, subModel);
+            roleIndex = setArrayLike(&o, propertyName, e, a);
+        } else if (QV4::Sequence *s = propertyValue->as<QV4::Sequence>()) {
+            roleIndex = setArrayLike(&o, propertyName, e, s);
+        } else if (QV4::QmlListWrapper *l = propertyValue->as<QV4::QmlListWrapper>()) {
+            roleIndex = setArrayLike(&o, propertyName, e, l);
         } else if (propertyValue->isBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             roleIndex = e->setBoolProperty(r, propertyValue->booleanValue());
@@ -686,11 +681,11 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 e->setDoublePropertyFast(r, propertyValue->asDouble());
             }
         } else if (QV4::ArrayObject *a = propertyValue->as<QV4::ArrayObject>()) {
-            setArrayLike(&o, propertyName, e, a);
+            setArrayLikeFast(&o, propertyName, e, a);
         } else if (QV4::Sequence *s = propertyValue->as<QV4::Sequence>()) {
-            setArrayLike(&o, propertyName, e, s);
+            setArrayLikeFast(&o, propertyName, e, s);
         } else if (QV4::QmlListWrapper *l = propertyValue->as<QV4::QmlListWrapper>()) {
-            setArrayLike(&o, propertyName, e, l);
+            setArrayLikeFast(&o, propertyName, e, l);
         } else if (propertyValue->isBoolean()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Bool);
             if (r.type == ListLayout::Role::Bool) {
