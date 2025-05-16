@@ -127,6 +127,53 @@ settings file can be obtained by passing the \c{--write-defaults} flag. This gen
 
 \warning \c{--write-defaults} will overwrite any existing settings and comments!
 
+\target qmlformat-settings
+The following settings are available in the \c{.qmlformat.ini} file:
+\table
+\header
+    \li Setting
+    \li Default Value
+    \li Description
+
+\row
+    \li UseTabs
+    \li false
+    \li Uses tabs instead of spaces.
+
+\row
+    \li IndentWidth
+    \li 4
+    \li How many spaces are used when indenting.
+
+\row
+    \li NewlineType
+    \li native
+    \li Overrides the new line format to use (\c {native}, \c {macos}, \c {unix}, \c {windows}).
+
+\row
+    \li NormalizeOrder
+    \li false
+    \li Reorders the attributes of the objects according to the QML coding guidelines.
+
+\row
+    \li FunctionsSpacing
+    \li false
+    \li Ensures spaces between functions (only works with normalize option).
+
+\row
+    \li ObjectsSpacing
+    \li false
+    \li Ensures spaces between objects (only works with normalize option).
+
+\row
+    \li MaxColumnWidth
+    \li -1
+    \li Breaks the line into multiple lines if it exceeds
+        the specified width. Use -1 to disable line
+        wrapping (default).
+
+\endtable
+
 \section3 Formatting a List of Files
 While you can pass a list of files to be formatted as arguments, qmlformat provides
 \c {-F} option to format a set of files stored in a file. In this case, formatting will happen
