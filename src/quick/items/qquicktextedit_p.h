@@ -406,9 +406,6 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
-#if QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
-    bool contextMenuEvent(QContextMenuEvent *event) override;
-#endif
 #if QT_CONFIG(im)
     void inputMethodEvent(QInputMethodEvent *e) override;
 #endif

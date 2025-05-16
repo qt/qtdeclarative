@@ -129,9 +129,6 @@ public:
 #endif
 
     void setNativeCursorEnabled(bool) {}
-#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
-    bool handleContextMenuEvent(QContextMenuEvent *event) override;
-#endif
     void handleFocusEvent(QFocusEvent *event);
     void addCurrentTextNodeToRoot(QQuickTextNodeEngine *, QSGTransformNode *, QSGInternalTextNode *, TextNodeIterator&, int startPos);
     QSGInternalTextNode* createTextNode();
