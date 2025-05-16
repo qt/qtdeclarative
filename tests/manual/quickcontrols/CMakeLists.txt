@@ -5,7 +5,7 @@
 
 add_subdirectory(buttons)
 add_subdirectory(fonts)
-if(LINUX)
+if(LINUX AND QT_FEATURE_process)
     add_subdirectory(gifs)
 endif()
 add_subdirectory(headerview)
