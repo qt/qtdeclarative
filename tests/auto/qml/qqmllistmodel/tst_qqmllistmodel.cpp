@@ -124,6 +124,7 @@ private slots:
     void nestedLists();
     void deadModelData();
     void valuesOfInnerList();
+    void arrayLikes();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2145,6 +2146,56 @@ void tst_qqmllistmodel::valuesOfInnerList()
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
+}
+
+class VariantListProvider : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE QVariantMap getSomeData(int count)
+    {
+        QVariantList list;
+
+        while (count--) {
+            QVariantMap item;
+            item[QLatin1String("r")] = i++;
+            item[QLatin1String("s")] = QString::number(i) + u"s";
+            list.append(item);
+        }
+
+        QVariantMap data;
+        data[QLatin1String("a")] = 2;
+        data[QLatin1String("b")] = list;
+        return data;
+    }
+private:
+    int i = 0;
+};
+
+void tst_qqmllistmodel::arrayLikes()
+{
+    qmlRegisterTypesAndRevisions<VariantListProvider>("Test", 1);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("arrayLikes.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("count").toInt(), 0);
+    QMetaObject::invokeMethod(o.data(), "setVariantList");
+
+    QCOMPARE(o->property("count").toInt(), 1);
+    QCOMPARE(o->property("a").toInt(), 2);
+    QCOMPARE(o->property("r").toInt(), 11);
+    QCOMPARE(o->property("s").toString(), "13s");
+
+    QMetaObject::invokeMethod(o.data(), "setJavaScriptArray");
+
+    QCOMPARE(o->property("count").toInt(), 1);
+    QCOMPARE(o->property("a").toInt(), 3);
+    QCOMPARE(o->property("r").toInt(), 1);
+    QCOMPARE(o->property("s").toString(), "2t");
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

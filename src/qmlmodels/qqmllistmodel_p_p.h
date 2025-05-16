@@ -404,20 +404,33 @@ private:
     void updateCacheIndices(int start = 0, int end = -1);
 
     template<typename ArrayLike>
-    void setArrayLike(QV4::ScopedObject *o, QV4::String *propertyName, ListElement *e, ArrayLike *a)
+    ListModel *resolveSubModel(QV4::ScopedObject *o, const ListLayout::Role &r, ArrayLike *a)
+    {
+        ListModel *subModel = new ListModel(r.subLayout, nullptr);
+
+        for (qint64 j = 0, arrayLength = a->getLength(); j < arrayLength; ++j) {
+            *o = a->get(j);
+            subModel->append(*o);
+        }
+
+        return subModel;
+    }
+
+    template<typename ArrayLike>
+    void setArrayLikeFast(
+            QV4::ScopedObject *o, QV4::String *propertyName, ListElement *e, ArrayLike *a)
     {
         const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
-        if (r.type == ListLayout::Role::List) {
-            ListModel *subModel = new ListModel(r.subLayout, nullptr);
+        if (r.type == ListLayout::Role::List)
+            e->setListPropertyFast(r, resolveSubModel(o, r, a));
+    }
 
-            int arrayLength = a->getLength();
-            for (int j=0 ; j < arrayLength ; ++j) {
-                *o = a->get(j);
-                subModel->append(*o);
-            }
-
-            e->setListPropertyFast(r, subModel);
-        }
+    template<typename ArrayLike>
+    int setArrayLike(
+            QV4::ScopedObject *o, QV4::String *propertyName, ListElement *e, ArrayLike *a)
+    {
+        const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::List);
+        return e->setListProperty(r, resolveSubModel(o, r, a));
     }
 
     friend class ListElement;
