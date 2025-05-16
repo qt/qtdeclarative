@@ -451,7 +451,8 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     if (d->m_recurRearrangeCounter++ == 2) {
         // allow a recursive depth of two in order to respond to height-for-width
         // (e.g QQuickText changes implicitHeight when its width gets changed)
-        qWarning() << "Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations.";
+        qmlWarning(this)
+                << "Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations.";
         return;
     }
 
