@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #ifndef QTEST_QUICKCONTROLS_P_H
 #define QTEST_QUICKCONTROLS_P_H

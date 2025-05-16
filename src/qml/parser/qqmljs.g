@@ -1,5 +1,5 @@
 -- Copyright (C) 2016 The Qt Company Ltd.
--- SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+-- SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 %parser         QQmlJSGrammar
 %decl           qqmljsparser_p.h
@@ -108,7 +108,7 @@
 
 /.// Copyright (C) 2016 The Qt Company Ltd.
 // Contact: https://www.qt.io/licensing/
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljslexer_p.h>
@@ -124,7 +124,7 @@
 
 /:// Copyright (C) 2016 The Qt Company Ltd.
 // Contact: https://www.qt.io/licensing/
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 
 //

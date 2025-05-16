@@ -1,5 +1,5 @@
 // Copyright (C) 2017 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include <QtLabsSharedImage/private/qtlabssharedimageglobal_p.h>
 #include <QtLabsSharedImage/private/qsharedimageprovider_p.h>
