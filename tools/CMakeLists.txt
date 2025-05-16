@@ -26,31 +26,29 @@ if(QT_FEATURE_xmlstreamwriter)
 endif()
 
 if(NOT (ANDROID OR WASM OR IOS OR VISIONOS OR rtems))
-    if(QT_FEATURE_thread)
-        add_subdirectory(qml)
-        if(QT_FEATURE_qml_profiler)
-            add_subdirectory(qmlprofiler)
-        endif()
-        if(QT_FEATURE_qml_preview)
-            add_subdirectory(qmlpreview)
-        endif()
-        if(QT_BUILD_SHARED_LIBS AND TARGET Qt::Quick)
-            add_subdirectory(qmlscene)
-            add_subdirectory(qmltime)
-        endif()
-        if(QT_BUILD_SHARED_LIBS
-            AND QT_FEATURE_process
-            AND QT_FEATURE_regularexpression
-            AND TARGET Qt::Quick)
-            add_subdirectory(qmlplugindump)
-        endif()
-        if(TARGET Qt::QuickTest)
-            add_subdirectory(qmltestrunner)
-        endif()
-        if(QT_FEATURE_private_tests)
-            add_subdirectory(qmljs)
-        endif()
-    endif() # QT_FEATURE_thread
+    add_subdirectory(qml)
+    if(QT_FEATURE_qml_profiler)
+        add_subdirectory(qmlprofiler)
+    endif()
+    if(QT_FEATURE_qml_preview)
+        add_subdirectory(qmlpreview)
+    endif()
+    if(QT_BUILD_SHARED_LIBS AND TARGET Qt::Quick)
+        add_subdirectory(qmlscene)
+        add_subdirectory(qmltime)
+    endif()
+    if(QT_BUILD_SHARED_LIBS
+        AND QT_FEATURE_process
+        AND QT_FEATURE_regularexpression
+        AND TARGET Qt::Quick)
+        add_subdirectory(qmlplugindump)
+    endif()
+    if(TARGET Qt::QuickTest)
+        add_subdirectory(qmltestrunner)
+    endif()
+    if(QT_FEATURE_private_tests)
+        add_subdirectory(qmljs)
+    endif()
 
     if(TARGET Qt::Quick
             AND TARGET Qt::Widgets
