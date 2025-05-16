@@ -97,12 +97,12 @@
     \section2 Compile-Time Style Selection
 
     Compile-time style selection is a way of specifying a style to use by
-    importing it in QML. For example, to import the Material style:
+    explicitly importing it in QML. For example, to import the Material style:
 
     \qml
-
-    // The style must be imported before any other QtQuick.Controls imports.
-
+    // The style must be imported before any other QtQuick.Controls imports
+    // in order for run-time style selection API like QQuickStyle::name() to
+    // work.
     import QtQuick.Controls.Material
 
     ApplicationWindow {
@@ -132,6 +132,9 @@
 
     A disadvantage of compile-time style selection is that one executable
     cannot support multiple styles, as each style requires its own.
+
+    See \l {Mixing Style Selection} for information about mixing
+    compile-time and run-time style selection.
 
     \section2 Run-Time Style Selection
 
@@ -179,6 +182,45 @@
     cannot generate C++ code for bindings on properties of Qt Quick Controls
     types. This does not affect the QML compiler's abilities to generate C++
     for bindings on types from other modules.
+
+    See \l {Mixing Style Selection} for information about mixing
+    run-time and compile-time style selection.
+
+    \section2 Mixing Style Selection
+
+    It is recommended to only use either compile-time or run-time style
+    selection in your application. However, if your application loads third
+    party QML code, for example, it may not be possible to control which
+    imports are used. If you do mix the two approaches, be aware of the
+    following limitations:
+
+    \list
+    \li Compile-time style selection overrides run-time style selection.
+    \li The style that you want to use should always be explicitly imported
+        before any other Controls import. If you don't do this, theming (such
+        as fonts and palettes) will not behave as expected. The first
+        explicitly imported style is also what QQuickStyle::name() will report.
+        \omit
+        (Also, \e only the first imported style's QQuick*Theme::initialize()
+        will be called (assuming it's one of the built-in styles). This is not
+        unique to compile-time selection, as only one theme's initialize
+        function is ever called, but it is worth pointing out that the order
+        matters)
+        \endomit
+    \li The last explicitly imported style is what will actually be used. For
+        example, if you import \c QtQuick.Controls first and then
+        \c QtQuick.Controls.Material, the Material style's Button.qml will be
+        used when a Button is created.
+        Due to the previous point about theming, it is for this reason that you
+        should never explicitly import two different styles in the same
+        application.
+    \li If you intend to use compile-time style selection but load code that
+        imports \c QtQuick.Controls, be aware that calling QQuickStyle::name()
+        before a style has been explicitly imported will cause the platform
+        default to be reported. If you can't avoid this, set the style to match
+        the compile-time one beforehand via \l QQuickStyle::setStyle() or one
+        of the other ways listed in \l {Run-Time Style Selection}.
+    \endlist
 
     \section3 Using QQuickStyle in C++
 
