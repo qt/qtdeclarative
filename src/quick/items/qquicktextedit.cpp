@@ -3316,18 +3316,6 @@ void QQuickTextEdit::focusOutEvent(QFocusEvent *event)
     QQuickImplicitSizeItem::focusOutEvent(event);
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
-bool QQuickTextEditPrivate::handleContextMenuEvent(QContextMenuEvent *event)
-#else
-bool QQuickTextEdit::contextMenuEvent(QContextMenuEvent *event)
-#endif
-{
-    Q_Q(QQuickTextEdit);
-    QContextMenuEvent mapped(event->reason(), q->cursorRectangle().center().toPoint(),
-                             event->globalPos(), event->modifiers());
-    return QQuickItemPrivate::handleContextMenuEvent(&mapped);
-}
-
 void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
 {
     Q_Q(QQuickTextEdit);

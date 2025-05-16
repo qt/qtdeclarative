@@ -1718,18 +1718,6 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         QQuickImplicitSizeItem::mouseReleaseEvent(event);
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
-bool QQuickTextInputPrivate::handleContextMenuEvent(QContextMenuEvent *event)
-#else
-bool QQuickTextInput::contextMenuEvent(QContextMenuEvent *event)
-#endif
-{
-    Q_Q(QQuickTextInput);
-    QContextMenuEvent mapped(event->reason(), q->cursorRectangle().center().toPoint(),
-                             event->globalPos(), event->modifiers());
-    return QQuickItemPrivate::handleContextMenuEvent(&mapped);
-}
-
 bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if QT_CONFIG(im)

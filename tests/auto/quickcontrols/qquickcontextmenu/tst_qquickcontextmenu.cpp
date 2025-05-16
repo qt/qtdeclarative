@@ -37,7 +37,6 @@ private slots:
     void drawerShouldntPreventOpening();
     void explicitMenuPreventsBuiltInMenu();
     void menuItemShouldntTriggerOnRelease();
-    void textControlsMenuKey();
 
 private:
     bool contextMenuTriggeredOnRelease = false;
@@ -349,53 +348,6 @@ void tst_QQuickContextMenu::menuItemShouldntTriggerOnRelease() // QTBUG-133302
     // menu item still not highlighted
     QCOMPARE(firstMenuItem->isHighlighted(), false);
     QCOMPARE(triggeredSpy.size(), 0);
-}
-
-void tst_QQuickContextMenu::textControlsMenuKey()
-{
-    QQuickApplicationHelper helper(this, "textControlsAndParentMenus.qml");
-    QVERIFY2(helper.ready, helper.failureMessage());
-    QQuickWindow *window = helper.window;
-    window->show();
-    QVERIFY(QTest::qWaitForWindowExposed(window));
-
-    auto *textArea = window->findChild<QQuickItem *>("textArea");
-    QVERIFY(textArea);
-    auto *textField = window->findChild<QQuickItem *>("textField");
-    QVERIFY(textField);
-    auto *windowMenu = window->findChild<QQuickMenu *>("windowMenu");
-    QVERIFY(windowMenu);
-    const QPoint &windowCenter = mapCenterToWindow(window->contentItem());
-
-    // give position in the middle of the window: expect the window menu
-    {
-        QContextMenuEvent cme(QContextMenuEvent::Keyboard, windowCenter, window->mapToGlobal(windowCenter));
-        QGuiApplication::sendEvent(window, &cme);
-        auto *openMenu = window->findChild<QQuickMenu *>();
-        QVERIFY(openMenu);
-        QCOMPARE(openMenu->objectName(), "windowMenu");
-        openMenu->close();
-    }
-
-    // focus the TextArea and give position 0, 0: expect the TextArea's menu
-    {
-        textArea->forceActiveFocus();
-        QContextMenuEvent cme(QContextMenuEvent::Keyboard, {}, window->mapToGlobal(QPoint()));
-        QGuiApplication::sendEvent(window, &cme);
-        auto *openMenu = textArea->findChild<QQuickMenu *>();
-        QVERIFY(openMenu);
-        openMenu->close();
-    }
-
-    // focus the TextField and give position 0, 0: expect the TextField's menu
-    {
-        textField->forceActiveFocus();
-        QContextMenuEvent cme(QContextMenuEvent::Keyboard, {}, window->mapToGlobal(QPoint()));
-        QGuiApplication::sendEvent(window, &cme);
-        auto *openMenu = textField->findChild<QQuickMenu *>();
-        QVERIFY(openMenu);
-        openMenu->close();
-    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickContextMenu)
