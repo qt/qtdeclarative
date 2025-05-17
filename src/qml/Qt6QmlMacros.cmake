@@ -2695,6 +2695,11 @@ function(qt6_add_qml_plugin target)
             set_source_files_properties("${generated_cpp_file}" ${scope_args}
                 PROPERTIES GENERATED TRUE
             )
+            if(WIN32)
+                set_source_files_properties("${generated_cpp_file}" ${scope_args}
+                    PROPERTIES SKIP_UNITY_BUILD_INCLUSION TRUE
+                )
+            endif()
 
             # Because the add_qml_plugin function might be called multiple times on the same target,
             # Only generate and add the cpp file once.
