@@ -269,18 +269,23 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
     To ensure that the popup is positioned within the bounds of the enclosing
     window, the \l margins property can be set to a non-negative value.
 
-    \section1 Showing Non-Child Items in Front of Popup
+    \section1 Using the overlay
 
     In cases where \l {Showing a popup as an item}{popup windows} are not being used,
     Popup sets its contentItem's \l{qtquick-visualcanvas-visualparent.html}{visual parent}
-    to be the window's \l{Overlay::overlay}{overlay}, in order to ensure that
-    the popup appears in front of everything else in the scene.
+    to be the window's \l {Overlay::overlay}{overlay}, in order to ensure that
+    the popup appears in front of everything else in the scene. Its main task is to
+    intercept events to prevent delivery to items under a \l modal popup, and to close
+    the popup according to its \l closePolicy.
+
     In some cases, it might be useful to put an item in front of a popup,
     such as a \l [QML QtVirtualKeyboard] {InputPanel} {virtual keyboard}.
-    This can be done by setting the item's parent to the overlay,
-    and giving the item a positive z value. The same result can also be
-    achieved by waiting until the popup is opened, before re-parenting the item
-    to the overlay.
+    This can currently only be done by setting the item's parent to the overlay,
+    and ensuring that the item is stacked before any popup item, which a positive
+    \l z value ensures.
+
+    It's generally not recommended to use the overlay in this way, since the overlay wasn't
+    designed for this purpose, and the behavior won't be consistent when changing the \l popupType.
 
     \omit
         This shouldn't be a snippet, since we don't want VKB to be a dependency to controls.
