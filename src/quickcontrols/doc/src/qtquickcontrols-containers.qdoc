@@ -38,7 +38,7 @@
 
     \section1 Page Control
 
-    \image qtquickcontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.webp
 
     \l Page provides page-specific header and footer items.
     It is perfectly possible to use ApplicationWindow for setting the header
@@ -56,13 +56,13 @@
 
     \section1 ScrollView Control
 
-    \image qtquickcontrols-scrollview-wireframe.png
+    \image qtquickcontrols-scrollview-wireframe.webp
 
     \l ScrollView provides scrolling for user-defined content.
 
     \section1 StackView Control
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.webp
 
     \l StackView organizes content pages into a stack using a last-in-first-out
     principle: the last item to be "pushed" onto the stack is the first one to
@@ -70,13 +70,13 @@
 
     \section1 SwipeView Control
 
-    \image qtquickcontrols-swipeview-wireframe.png
+    \image qtquickcontrols-swipeview-wireframe.webp
 
     \l SwipeView organizes content pages into a swipable strip.
 
     \section1 TabBar Control
 
-    \image qtquickcontrols-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.webp
 
     \l TabBar organizes content pages into tabs.
 

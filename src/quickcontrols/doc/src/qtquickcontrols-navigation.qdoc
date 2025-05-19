@@ -16,7 +16,7 @@
 
     \section1 StackView Control
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.webp
 
     \l StackView provides a stack-based navigation model which can be used
     with a set of interlinked pages. StackView works according to a last-in
@@ -25,7 +25,7 @@
 
     \section1 SwipeView Control
 
-    \image qtquickcontrols-swipeview-wireframe.png
+    \image qtquickcontrols-swipeview-wireframe.webp
 
     \l SwipeView provides a navigation model that simplifies horizontal paged
     scrolling. The page indicator on the bottom shows which is the presently
@@ -33,7 +33,7 @@
 
     \section1 TabBar Control
 
-    \image qtquickcontrols-tabbar-wireframe.png
+    \image qtquickcontrols-tabbar-wireframe.webp
 
     \l TabBar is a bar with icons or text that allows the user to switch
     between different subtasks, views, or modes.

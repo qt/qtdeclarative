@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
     with the user. Similarly to \l ApplicationWindow and \l Page, Dialog is organized
     into three sections: \l header, \l {Popup::}{contentItem}, and \l footer.
 
-    \image qtquickcontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.webp
 
     The \l {Popup::}{padding} properties only affect the contentItem. Use the
     \l {Popup::}{spacing} property to affect the space between header,

@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
     Page is a container control which makes it convenient to add
     a \l header and \l footer item to a page.
 
-    \image qtquickcontrols-page-wireframe.png
+    \image qtquickcontrols-page-wireframe.webp
 
     Items declared as children of a Page are:
     \list

@@ -15,7 +15,7 @@
 
     \section1 Drawer Control
 
-    \image qtquickcontrols-drawer-expanded-wireframe.png
+    \image qtquickcontrols-drawer-expanded-wireframe.webp
 
     \l Drawer provides a swipe-based side panel, similar to those often used
     in touch interfaces to provide a central location for navigation.

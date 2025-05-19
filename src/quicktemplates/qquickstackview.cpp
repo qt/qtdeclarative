@@ -63,7 +63,7 @@ QDebug operator<<(QDebug debug, const QQuickStackViewArg &arg)
     \ingroup qtquickcontrols-focusscopes
     \brief Provides a stack-based navigation model.
 
-    \image qtquickcontrols-stackview-wireframe.png
+    \image qtquickcontrols-stackview-wireframe.webp
 
     StackView can be used with a set of inter-linked information pages. For
     example, an email application with separate views to list the latest emails,
