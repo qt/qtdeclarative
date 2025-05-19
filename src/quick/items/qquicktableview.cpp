@@ -4455,6 +4455,9 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     item->setParentItem(q->contentItem());
     item->setZ(1);
 
+    if (auto attached = getAttachedObject(item))
+        attached->setView(q);
+
     const QPoint cell = cellAtModelIndex(modelIndex);
     const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
     const bool current = currentInSelectionModel(visualCell);

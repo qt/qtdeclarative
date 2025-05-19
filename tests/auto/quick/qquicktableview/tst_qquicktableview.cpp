@@ -142,6 +142,8 @@ private slots:
     void checkInitialAttachedProperties_data();
     void checkInitialAttachedProperties();
     void checkNoAttachedObjectByDefault();
+    void checkAttachedView_data();
+    void checkAttachedView();
     void checkSpacingValues();
     void checkDelegateParent();
     void flick_data();
@@ -1744,6 +1746,31 @@ void tst_QQuickTableView::checkInitialAttachedProperties()
         QCOMPARE(contextCell.x(), cell.x());
         QCOMPARE(contextIndex, index);
         QCOMPARE(contextModelData, QStringLiteral("%1").arg(cell.y()));
+        QCOMPARE(getAttachedObject(item)->view(), tableView);
+    }
+}
+
+void tst_QQuickTableView::checkAttachedView_data()
+{
+    QTest::addColumn<QString>("table");
+    QTest::newRow("plain") << "plaintableview.qml";
+    QTest::newRow("setting editDelegate") << "editdelegate.qml";
+    QTest::newRow("using attached signals") << "countingtableview.qml";
+}
+
+void tst_QQuickTableView::checkAttachedView()
+{
+    // Check that attached view still works when modifying an attached property
+    // or conncecting to a signal
+    QFETCH(QString, table);
+    LOAD_TABLEVIEW(table);
+
+    tableView->setModel(3);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const auto item = fxItem->item;
         QCOMPARE(getAttachedObject(item)->view(), tableView);
     }
 }
