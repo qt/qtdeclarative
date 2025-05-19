@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant reason:forward-declarations-only
 
 #ifndef QQMLJSAST_FWD_P_H
 #define QQMLJSAST_FWD_P_H
