@@ -1385,6 +1385,10 @@ void TestQmllint::dirtyJsSnippet_data()
     QTest::newRow("assignmentWarningLocation")
             << u"console.log(a = 1)"_s
             << Result{ { { "Unqualified access"_L1, 1, 13 } } };
+    QTest::newRow("math_typo")
+            << u"Math.minj(1,2)"_s
+            << Result{ { {"Member \"minj\" not found on Math object", 1, 6},
+                         {"Did you mean \"min\"?", 1, 6} }};
 }
 
 void TestQmllint::dirtyJsSnippet()
