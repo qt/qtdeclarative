@@ -571,7 +571,7 @@ void QQuickGridViewPrivate::removeItem(FxViewItem *item)
     } else
 #endif
     {
-        releaseItem(item, QQmlDelegateModel::NotReusable);
+        releaseItem(item, reusableFlag);
     }
 }
 
