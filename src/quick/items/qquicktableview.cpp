@@ -442,7 +442,7 @@
     You can check for this by calling \l {isRowLoaded()}{isRowLoaded(row)},
     and simply return -1 if that is not yet the case.
 
-    \sa rowHeightProvider, isRowLoaded(), {Row heights and column widths}
+    \sa columnWidthProvider, isRowLoaded(), {Row heights and column widths}
 */
 
 /*!
