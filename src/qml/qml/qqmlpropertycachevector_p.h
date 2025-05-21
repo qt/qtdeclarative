@@ -40,6 +40,9 @@ public:
         // the property cache vector will never contain more thant INT_MAX many elements
         return int(data.size());
     }
+
+    bool isEmpty() const { return data.isEmpty(); }
+
     void clear()
     {
         for (int i = 0; i < data.size(); ++i)

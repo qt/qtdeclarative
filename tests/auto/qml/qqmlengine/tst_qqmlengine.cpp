@@ -87,6 +87,7 @@ private slots:
     void attachedObjectOfUnregistered();
     void dropCUOnEngineShutdown();
     void multiLoadedJavaScriptModule();
+    void metaObjectOfScriptCU();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1858,6 +1859,27 @@ void tst_qqmlengine::multiLoadedJavaScriptModule()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmlengine::metaObjectOfScriptCU()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import JS
+        import QtQml
+        QtObject {
+            objectName: ColorUtils.withOpacity('blue', 0.5)
+        })", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), "blue/0.5");
+
+    // Don't crash when retrieving the (possibly non-existent) metaobject for the script.
+    for (int i = QMetaType::User + 1; QMetaType::isRegistered(i); ++i)
+        QMetaType(i).metaObject();
 }
 
 QTEST_MAIN(tst_qqmlengine)
