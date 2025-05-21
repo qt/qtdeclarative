@@ -4,6 +4,7 @@
 \page qtqml-syntax-imports.html
 \title Import Statements
 \brief Description of import statements in QML
+\keyword QML.import
 
 \section1 Syntax of an Import Statement
 

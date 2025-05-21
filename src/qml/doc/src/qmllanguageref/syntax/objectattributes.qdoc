@@ -31,8 +31,8 @@ The set of QML object-type attribute types is as follows:
 
 These attributes are discussed in detail below.
 
-\section2 The \e id Attribute
 \keyword QML.id
+\section2 The \e id Attribute
 
 A QML element can have at most one \e id attribute. This attribute is
 provided by the language itself, and cannot be redefined or overridden by any

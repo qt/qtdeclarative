@@ -20,6 +20,7 @@ QML documents are always encoded in UTF-8 format.
 
 
 
+\keyword QML.pragma
 \section1 Pragmas
 
 Pragmas are instructions to the QML engine itself that can be used to specify
@@ -36,6 +37,7 @@ engine interprets code. The following pragmas are exaplained in details below.
 \li \c Translator
 \endlist
 
+\keyword QML.Singleton
 \section2 Singleton
 
 \c{pragma Singleton} declares the component defined in the QML document as
@@ -43,6 +45,9 @@ singleton. Singletons are created only once per QML engine. In order to use
 a QML-declared singleton you also have to register it with its module. See
 \l{qt_target_qml_sources} for how to do this with CMake.
 
+\keyword QML.ListPropertyAssignBehavior
+\keyword QML.Append
+\keyword QML.ReplaceIfNotDefault
 \section2 ListPropertyAssignBehavior
 
 With this pragma you can define how assignments to list properties shall be
@@ -62,6 +67,9 @@ the \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND},
 \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT} macros to the
 class declaration.
 
+\keyword QML.ComponentBehavior
+\keyword QML.Bound
+\keyword QML.Unbound
 \section2 ComponentBehavior
 
 You may have multiple components defined in the same QML file. The root
@@ -160,6 +168,9 @@ ListView {
 You can nest components in a QML file. The pragma holds for all components in
 the file, no matter how deeply nested.
 
+\keyword QML.FunctionSignatureBehavior
+\keyword QML.Ignored
+\keyword QML.Enforced
 \section2 FunctionSignatureBehavior
 
 With this pragma you can change the way type annotations on functions
@@ -181,6 +192,9 @@ annotations are always enforced.
 
 \sa {Type annotations and assertions}
 
+\keyword QML.NativeMethodBehavior
+\keyword QML.AcceptThisObject
+\keyword QML.RejectThisObject
 \section2 NativeMethodBehavior
 
 Calling C++ methods with \c this objects different from the one they were
@@ -191,6 +205,12 @@ setting \c {pragma NativeMethodBehavior: AcceptThisObject}. Specifying
 
 An example of this can be found under \l {C++ methods and the 'this' object}.
 
+\keyword QML.ValueTypeBehavior
+\keyword QML.Addressable
+\keyword QML.Inaddressable
+\keyword QML.Assertable
+\keyword QML.Copy
+\keyword QML.Reference
 \section2 ValueTypeBehavior
 
 With this pragma you can change the way value types and sequences are handled.
@@ -307,6 +327,7 @@ way to express the same operations.
 
 \sa {Type annotations and assertions}
 
+\keyword QML.Translator
 \section2 Translator
 
 With this pragma you can set the context for the translations in the file.
