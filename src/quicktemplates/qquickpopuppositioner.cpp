@@ -320,7 +320,10 @@ void QQuickPopupPositioner::repositionPopupWindow()
     const QPointF globalCoords = centerInOverlay ? centerInOverlay->mapToGlobal(windowPos.x(), windowPos.y())
                                                  : p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
     QRectF rect = { globalCoords.x(), globalCoords.y(), popupItem->width(), popupItem->height() };
-    if (!skipFittingStep) {
+
+    // QTBUG-99618: On wayland, we can't use QWindow::mapToGlobal(), and should use a xdg_positioner instead.
+    static bool isWayland = QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
+    if (!skipFittingStep && !isWayland) {
         const QScreen *screenAtPopupPosition = QGuiApplication::screenAt(globalCoords.toPoint());
         const QScreen *screen = screenAtPopupPosition ? screenAtPopupPosition : QGuiApplication::primaryScreen();
         const QRectF bounds = screen->availableGeometry().toRectF();
