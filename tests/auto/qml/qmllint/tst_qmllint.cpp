@@ -1112,6 +1112,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("locationUnqualifiedLookupAssign")
             << QStringLiteral("locationUnqualifiedLookupAssign.qml")
             << Result{ { Message{ QStringLiteral("Unqualified access"), 5, 21 } } };
+    QTest::newRow("inlineComponentSearchInfiniteLoop")
+            << QStringLiteral("InlineComponentSearchInfiniteLoop_Main.qml")
+            << Result{ { { "InlineComponentSearchInfiniteLoop_Other.a was not found. "
+                           "Did you add all import paths?"_L1, 5, 5 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
