@@ -1648,7 +1648,9 @@ public:
 
     QQmlPropertyCache::ConstPtr rootPropertyCache() const
     {
-        return propertyCaches.at(/*root object*/0);
+        return propertyCaches.isEmpty()
+                ? QQmlPropertyCache::ConstPtr()
+                : propertyCaches.at(/*root object*/0);
     }
 
     int objectCount() const { return qmlData->nObjects; }

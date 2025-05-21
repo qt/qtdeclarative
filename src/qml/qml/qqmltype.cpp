@@ -148,8 +148,9 @@ QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) co
     if (td.isNull() || !td->isComplete())
         return QQmlType();
     QV4::CompiledData::CompilationUnit *compilationUnit = td->compilationUnit();
-    const QMetaObject *mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
-    return QQmlMetaType::qmlType(mo);
+    if (const auto cache = compilationUnit->rootPropertyCache())
+        return QQmlMetaType::qmlType(cache->firstCppMetaObject());
+    return QQmlType();
 }
 
 QQmlPropertyCache::ConstPtr QQmlTypePrivate::compositePropertyCache(
