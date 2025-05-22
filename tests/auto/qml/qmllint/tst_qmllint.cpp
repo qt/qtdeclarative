@@ -1472,6 +1472,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
     QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");
     QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
+    QTest::newRow("retrieveFunction") << QStringLiteral("retrieveFunction.qml");
     QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
     QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
     QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");

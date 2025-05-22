@@ -31,9 +31,15 @@ class QQmlJSCompilePass : public QV4::Moth::ByteCodeHandler
 public:
     enum RegisterShortcuts {
         InvalidRegister = -1,
+
+        // TODO: Should be called "Function", requires refactoring
+        CurrentFunction = QV4::CallData::Function,
+
+        Context = QV4::CallData::Context,
         Accumulator = QV4::CallData::Accumulator,
         This = QV4::CallData::This,
         NewTarget = QV4::CallData::NewTarget,
+        Argc = QV4::CallData::Argc,
         FirstArgument = QV4::CallData::OffsetCount
     };
 
