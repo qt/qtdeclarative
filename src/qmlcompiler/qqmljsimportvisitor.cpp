@@ -84,6 +84,36 @@ static bool causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
 
 /*!
   \internal
+  A guarded version of insertJSIdentifier. If the scope is a QML scope,
+  it will log a syntax error instead.
+  Returns true if insertion was successful, otherwise false
+ */
+bool QQmlJSImportVisitor::safeInsertJSIdentifier(QQmlJSScope::Ptr &scope, const QString &name,
+                                   const QQmlJSScope::JavaScriptIdentifier &identifier)
+{
+  /* The grammar currently allows putting a variable declaration into a UiObjectMember
+     and we only complain about it in the IRBbuilder. It is unclear whether we should change
+     the grammar, as the linter would need to handle invalid programs anyway, so we'd need
+     to add some recovery rule to the grammar in any case.
+     We use this method instead to avoid an assertion in insertJSIdentifier
+  */
+    if (scope->scopeType() != QQmlSA::ScopeType::QMLScope) {
+        scope->insertJSIdentifier(name, identifier);
+        return true;
+    } else {
+        const QQmlJSScope *scopePtr = scope.get();
+        std::pair<const QQmlJSScope*, QString> misplaced { scopePtr, name };
+        if (misplacedJSIdentifiers.contains(misplaced))
+            return false; // we only want to warn once
+        misplacedJSIdentifiers.insert(misplaced);
+        m_logger->log(u"JavaScript declarations are not allowed in QML elements"_s, qmlSyntax,
+                      identifier.location);
+        return false;
+    }
+}
+
+/*!
+  \internal
   Sets the name of \a scope to \a name based on \a type.
 */
 inline void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, const QString &name)
@@ -1488,9 +1518,9 @@ void QQmlJSImportVisitor::flushPendingSignalParameters()
 {
     const QQmlJSMetaSignalHandler handler = m_signalHandlers[m_pendingSignalHandler];
     for (const QString &parameter : handler.signalParameters) {
-        m_currentScope->insertJSIdentifier(parameter,
-                                           { QQmlJSScope::JavaScriptIdentifier::Injected,
-                                             m_pendingSignalHandler, std::nullopt, false });
+        safeInsertJSIdentifier(m_currentScope, parameter,
+                               { QQmlJSScope::JavaScriptIdentifier::Injected,
+                                 m_pendingSignalHandler, std::nullopt, false });
     }
     m_pendingSignalHandler = QQmlJS::SourceLocation();
 }
@@ -2006,10 +2036,10 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         m_currentScope->addOwnMethod(method);
 
         if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope) {
-            m_currentScope->insertJSIdentifier(name,
-                                               { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                                                 fexpr->firstSourceLocation(),
-                                                 method.returnTypeName(), false });
+            safeInsertJSIdentifier(m_currentScope, name,
+                                   { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
+                                     fexpr->firstSourceLocation(),
+                                             method.returnTypeName(), false });
         }
         enterEnvironment(QQmlSA::ScopeType::JSFunctionScope, name, fexpr->firstSourceLocation());
     } else {
@@ -2794,7 +2824,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(QQmlSA::ScopeType::JSLexicalScope, QStringLiteral("catch"),
                      catchStatement->firstSourceLocation());
-    m_currentScope->insertJSIdentifier(
+    safeInsertJSIdentifier(m_currentScope,
             catchStatement->patternElement->bindingIdentifier.toString(),
             { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
               catchStatement->patternElement->firstSourceLocation(), std::nullopt,
@@ -2849,7 +2879,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
         }
 
         const bool isConst = vdl->declaration->scope == QQmlJS::AST::VariableScope::Const;
-        m_currentScope->insertJSIdentifier(name, { kind, location, typeName, isConst });
+        // Break if insertion failed to avoid multiple warnings at the same location
+        if (!safeInsertJSIdentifier(m_currentScope, name,  { kind, location, typeName, isConst }))
+            break;
         vdl = vdl->next;
     }
     return true;
@@ -2863,7 +2895,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
         if (TypeAnnotation *annotation = boundName.typeAnnotation.data())
             if (Type *type = annotation->type)
                 typeName = type->toString();
-        m_currentScope->insertJSIdentifier(boundName.id,
+        safeInsertJSIdentifier(m_currentScope, boundName.id,
                                            { QQmlJSScope::JavaScriptIdentifier::Parameter,
                                              boundName.location, typeName, false });
     }
@@ -3106,13 +3138,15 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)
             if (TypeAnnotation *annotation = name.typeAnnotation.data())
                 if (Type *type = annotation->type)
                     typeName = type->toString();
-            m_currentScope->insertJSIdentifier(
+            const bool couldInsert = safeInsertJSIdentifier(m_currentScope,
                     name.id,
                     { (element->scope == QQmlJS::AST::VariableScope::Var)
                               ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
                               : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
                       name.location, typeName,
                       element->scope == QQmlJS::AST::VariableScope::Const });
+            if (!couldInsert)
+                break;
         }
     }
 

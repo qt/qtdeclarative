@@ -1264,6 +1264,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                            "(int or double) instead."_L1, 5, 17 },
                          { "QML enumerations are not types. Use underlying type "
                            "(int or double) instead."_L1, 6, 9 } } };
+
+    QTest::newRow("jsdeclInQmlScope")
+            << QStringLiteral("jsdeclInQmlScope.qml")
+            << Result{ { { "JavaScript declarations are not allowed in QML elements"_L1 , 4, 13 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
