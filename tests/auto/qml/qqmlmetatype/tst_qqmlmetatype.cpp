@@ -884,6 +884,10 @@ void tst_qqmlmetatype::renameMetaType()
 
         // But the name is different
         QCOMPARE_NE(newTypeName, metaTypeName);
+
+        // The QMetaType registry has been updated
+        QCOMPARE(QMetaType::fromName(newTypeName), metaType);
+        QVERIFY(!QMetaType::fromName(metaTypeName).isValid());
     }
 }
 

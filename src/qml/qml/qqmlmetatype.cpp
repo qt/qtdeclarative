@@ -159,17 +159,18 @@ static void addQQmlMetaTypeInterfaces(
     QQmlMetaTypeData::CompositeMetaTypes &types = data->compositeMetaTypes[url];
     if (types.type) {
         Q_ASSERT(types.listType);
+
+        QMetaType::unregisterMetaType(QMetaType(types.type));
+        QMetaType::unregisterMetaType(QMetaType(types.listType));
+
         types.type->name = std::move(ptr);
         types.type->QMetaTypeInterface::name = types.type->name.constData();
         types.listType->name = std::move(lst);
         types.listType->QMetaTypeInterface::name = types.listType->name.constData();
-        priv->typeId = QMetaType(types.type);
-        priv->listId = QMetaType(types.listType);
-        return;
+    } else {
+        types.type = new QQmlMetaTypeInterface(std::move(ptr));
+        types.listType = new QQmlListMetaTypeInterface(std::move(lst), types.type);
     }
-
-    types.type = new QQmlMetaTypeInterface(std::move(ptr));
-    types.listType = new QQmlListMetaTypeInterface(std::move(lst), types.type);
 
     QMetaType ptr_type(types.type);
     QMetaType lst_type(types.listType);
