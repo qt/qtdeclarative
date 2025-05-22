@@ -44,6 +44,7 @@ ColumnLayout {
     }
 
     ListView {
+        id: listView
         spacing: 1
         clip: true
 
@@ -53,7 +54,7 @@ ColumnLayout {
 
         delegate: ItemDelegate {
             id: itemDelegate
-            width: parent.width
+            width: listView.width
             text: name
             font.pixelSize: Qt.application.font.pixelSize * 0.8
             leftPadding: 4
