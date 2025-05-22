@@ -136,8 +136,8 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(
 
         if (!pendingBinding.resolveInstantiatingProperty())
             continue;
-        auto cache = pendingBinding.instantiatingPropertyCache();
-        propertyCaches->set(groupPropertyObjectIndex, cache);
+        if (auto cache = pendingBinding.instantiatingPropertyCache())
+            propertyCaches->set(groupPropertyObjectIndex, cache);
     }
 }
 
