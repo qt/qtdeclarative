@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "eventmodel.h"
-
 #include "sqleventdatabase.h"
+
+#include <QtCore/QScopeGuard>
 
 EventModel::EventModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -76,6 +77,7 @@ bool EventModel::isValid() const
 void EventModel::repopulate()
 {
     beginResetModel();
+    auto endReset = qScopeGuard([this]{ endResetModel(); });
 
     if (!m_eventDatabase || m_date.isNull()) {
         m_events.clear();
@@ -83,6 +85,4 @@ void EventModel::repopulate()
     }
 
     m_events = m_eventDatabase->eventsForDate(m_date);
-
-    endResetModel();
 }
