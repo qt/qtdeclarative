@@ -10,6 +10,8 @@ Item {
 
     property alias tableView: tableView
     property Component delegate: tableViewDelegate
+    property bool returnUndefinedColumnWidth: false
+    property bool returnUndefinedRowHeight: false
     property bool returnNegativeColumnWidth: false
     property bool returnNegativeRowHeight: false
 
@@ -25,12 +27,14 @@ Item {
         columnWidthProvider: function(column) {
             if (returnNegativeColumnWidth)
                 return -1
-            return column + 10
+            if (!returnUndefinedColumnWidth)
+                return column + 10
         }
         rowHeightProvider: function(row) {
             if (returnNegativeRowHeight)
                 return -1
-            return row + 10
+            if (!returnUndefinedRowHeight)
+                return row + 10
         }
     }
 

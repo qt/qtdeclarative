@@ -106,11 +106,13 @@ private slots:
     void checkColumnWidthProviderInvalidReturnValues();
     void checkColumnWidthProviderNegativeReturnValue();
     void checkColumnWidthProviderNotCallable();
+    void checkColumnWidthProviderUndefinedReturnValue();
     void checkColumnWidthBoundToViewWidth();
     void checkRowHeightWithoutProvider();
     void checkRowHeightProvider();
     void checkRowHeightProviderInvalidReturnValues();
     void checkRowHeightProviderNegativeReturnValue();
+    void checkRowHeightProviderUndefinedReturnValue();
     void checkRowHeightProviderNotCallable();
     void isColumnLoadedAndIsRowLoaded();
     void checkForceLayoutFunction();
@@ -641,6 +643,23 @@ void tst_QQuickTableView::checkColumnWidthProviderNegativeReturnValue()
         QCOMPARE(fxItem->item->width(), 20);
 }
 
+void tst_QQuickTableView::checkColumnWidthProviderUndefinedReturnValue()
+{
+    // Check that we fall back to use the implicit width of the delegate
+    // items if the columnWidthProvider returns an undefined.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    view->rootObject()->setProperty("returnUndefinedColumnWidth", true);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->width(), 20);
+}
+
 void tst_QQuickTableView::checkColumnWidthProviderNotCallable()
 {
     // Check that we fall back to use default columns widths, if you
@@ -750,6 +769,23 @@ void tst_QQuickTableView::checkRowHeightProviderNegativeReturnValue()
 
     auto model = TestModelAsVariant(10, 10);
     view->rootObject()->setProperty("returnNegativeRowHeight", true);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->height(), 20);
+}
+
+void tst_QQuickTableView::checkRowHeightProviderUndefinedReturnValue()
+{
+    // Check that we fall back to use the implicit height of the delegate
+    // items if the rowHeightProvider return a negative number.
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    view->rootObject()->setProperty("returnUndefinedRowHeight", true);
 
     tableView->setModel(model);
 

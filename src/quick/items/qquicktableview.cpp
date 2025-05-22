@@ -180,8 +180,8 @@
     Since Qt 5.13, if you want to hide a specific column, you can return \c 0
     from the \l columnWidthProvider for that column. Likewise, you can return 0
     from the \l rowHeightProvider to hide a row. If you return a negative
-    number, TableView will fall back to calculate the size based on the delegate
-    items.
+    number or \c undefined, TableView will fall back to calculate the size based
+    on the delegate items.
 
     \note The size of a row or column should be a whole number to avoid
     sub-pixel alignment of items.
@@ -454,8 +454,8 @@
     for which the TableView needs to know the width.
 
     Since Qt 5.13, if you want to hide a specific column, you can return \c 0
-    width for that column. If you return a negative number, TableView
-    calculates the width based on the delegate items.
+    width for that column. If you return a negative number or \c undefined,
+    TableView calculates the width based on the delegate items.
 
     \note The columnWidthProvider will usually be called two times when
     a column is about to load (or when doing layout). First, to know if
