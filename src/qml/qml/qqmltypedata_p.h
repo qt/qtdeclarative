@@ -15,6 +15,7 @@
 // We mean it.
 //
 
+#include <private/qqmlsourcecoordinate_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
@@ -91,7 +92,7 @@ private:
     bool loadFromSource();
     void restoreIR(const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
     void continueLoadFromIR();
-    void resolveTypes();
+    bool resolveTypes();
     QQmlError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
             QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypeCache
@@ -141,6 +142,27 @@ private:
 
     bool m_implicitImportLoaded;
     bool loadImplicitImport();
+    bool checkScripts();
+    bool checkDependencies();
+
+    template<typename Reference>
+    void createError(const Reference &ref, const QString &message, QList<QQmlError> errors)
+    {
+        QQmlError error;
+        error.setUrl(url());
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(ref.location.line()));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(ref.location.column()));
+        error.setDescription(message);
+        errors.prepend(std::move(error));
+        setError(errors);
+    }
+
+    void createError(const TypeReference &type, const QString &message);
+    void createError(const ScriptReference &script, const QString &message);
+
+    bool checkCompositeSingletons();
+    void createQQmlType();
+    bool rebuildFromSource();
 };
 
 QT_END_NAMESPACE

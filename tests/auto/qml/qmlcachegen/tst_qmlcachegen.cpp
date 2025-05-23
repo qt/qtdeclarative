@@ -278,7 +278,8 @@ void tst_qmlcachegen::translationExpressionSupport()
                                                            "}");
 
 
-    QVERIFY(generateCache(testFilePath));
+    QByteArray errors;
+    QVERIFY2(generateCache(testFilePath, &errors), errors.constData());
 
     const QString cacheFilePath = testFilePath + QLatin1Char('c');
     QVERIFY(QFile::exists(cacheFilePath));

@@ -1350,7 +1350,7 @@ void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation()
     testCompiler.reset();
     QVERIFY(testCompiler.writeTestFile(code));
 
-    QVERIFY(testCompiler.loadTestFile());
+    QVERIFY2(testCompiler.loadTestFile(), qPrintable(testCompiler.lastErrorString));
 
     const quintptr data1 = testCompiler.unitData();
     QVERIFY(data1 != 0);
