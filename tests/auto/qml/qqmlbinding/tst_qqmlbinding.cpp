@@ -41,6 +41,7 @@ private slots:
     void whenEvaluatedEarlyEnough();
     void propertiesAttachedToBindingItself();
     void toggleEnableProperlyRemembersValues();
+    void deleteStashedObject();
 
 private:
     QQmlEngine engine;
@@ -652,6 +653,24 @@ void tst_qqmlbinding::toggleEnableProperlyRemembersValues()
         }
         root->setProperty("enabled", false);
     }
+}
+
+void tst_qqmlbinding::deleteStashedObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deleteStashedObject.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "alive");
+    QTest::ignoreMessage(QtDebugMsg, "destroy");
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    QVERIFY(object->property("page").value<QObject *>() != nullptr);
+
+    QTest::ignoreMessage(QtDebugMsg, "dead");
+    QTest::ignoreMessage(QtDebugMsg, "before");
+    QTest::ignoreMessage(QtDebugMsg, "after");
+    QTRY_VERIFY(object->property("page").value<QObject *>() == nullptr);
 }
 
 QTEST_MAIN(tst_qqmlbinding)

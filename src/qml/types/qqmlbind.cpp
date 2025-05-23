@@ -57,10 +57,8 @@ public:
         silentDestroy(oldKind);
         switch (newKind) {
         case QQmlBindEntryKind::V4Value:
-            new (&v4Value) QV4::PersistentValue(std::move(other.v4Value));
-            break;
         case QQmlBindEntryKind::Variant:
-            new (&variant) QVariant(std::move(other.variant));
+            new (&v4Value) QV4::PersistentValue(std::move(other.v4Value));
             break;
         case QQmlBindEntryKind::Binding:
             new (&binding) QQmlAnyBinding(std::move(other.binding));
@@ -77,10 +75,8 @@ public:
         silentDestroy(oldKind);
         switch (newKind) {
         case QQmlBindEntryKind::V4Value:
-            new (&v4Value) QV4::PersistentValue(other.v4Value);
-            break;
         case QQmlBindEntryKind::Variant:
-            new (&variant) QVariant(other.variant);
+            new (&v4Value) QV4::PersistentValue(other.v4Value);
             break;
         case QQmlBindEntryKind::Binding:
             new (&binding) QQmlAnyBinding(other.binding);
@@ -95,10 +91,8 @@ public:
     {
         switch (kind) {
         case QQmlBindEntryKind::V4Value:
-            v4Value.~PersistentValue();
-            break;
         case QQmlBindEntryKind::Variant:
-            variant.~QVariant();
+            v4Value.~PersistentValue();
             break;
         case QQmlBindEntryKind::Binding:
             binding.~QQmlAnyBinding();
@@ -109,10 +103,11 @@ public:
         return QQmlBindEntryKind::None;
     }
 
-    [[nodiscard]] QQmlBindEntryKind set(QVariant v, QQmlBindEntryKind oldKind)
+    [[nodiscard]] QQmlBindEntryKind set(
+            QV4::ExecutionEngine *engine, const QVariant &v, QQmlBindEntryKind oldKind)
     {
         silentDestroy(oldKind);
-        new (&variant) QVariant(std::move(v));
+        new (&v4Value) QV4::PersistentValue(engine, engine->fromVariant(v));
         return QQmlBindEntryKind::Variant;
     }
 
@@ -123,6 +118,13 @@ public:
         return QQmlBindEntryKind::V4Value;
     }
 
+    [[nodiscard]] QQmlBindEntryKind setVariant(QV4::PersistentValue v, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        new (&v4Value) QV4::PersistentValue(std::move(v));
+        return QQmlBindEntryKind::Variant;
+    }
+
     [[nodiscard]] QQmlBindEntryKind set(QQmlAnyBinding v, QQmlBindEntryKind oldKind)
     {
         silentDestroy(oldKind);
@@ -131,7 +133,6 @@ public:
     }
 
     QV4::PersistentValue v4Value;
-    QVariant variant;
     QQmlAnyBinding binding;
 
 private:
@@ -558,14 +559,22 @@ QVariant QQmlBind::value() const
     if (!d->lastIsTarget)
         return QVariant();
     Q_ASSERT(d->entries.last().currentKind == QQmlBindEntryKind::Variant);
-    return d->entries.last().current.variant;
+    const auto &v4Value = d->entries.last().current.v4Value;
+    QV4::ExecutionEngine *engine = v4Value.engine();
+    return engine->toVariant(*v4Value.valueRef(), QMetaType());
 }
 
 void QQmlBind::setValue(const QVariant &v)
 {
     Q_D(QQmlBind);
     QQmlBindEntry *targetEntry = d->targetEntry();
-    targetEntry->currentKind = targetEntry->current.set(v, targetEntry->currentKind);
+    QQmlEngine *engine = qmlEngine(this);
+    if (!engine) {
+        qWarning() << "QQmlBind must be created in a QML context";
+        return;
+    }
+    targetEntry->currentKind
+            = targetEntry->current.set(engine->handle(), v, targetEntry->currentKind);
     prepareEval();
 }
 
@@ -843,8 +852,8 @@ void QQmlBindPrivate::decodeBinding(
         return;
     }
 
-    const auto setVariant = [&entry](QVariant var) {
-        entry.currentKind = entry.current.set(std::move(var), entry.currentKind);
+    const auto setVariant = [&entry](QV4::PersistentValue value) {
+        entry.currentKind = entry.current.setVariant(value, entry.currentKind);
     };
 
     const auto setBinding = [&entry](QQmlAnyBinding binding) {
@@ -874,16 +883,20 @@ void QQmlBindPrivate::decodeBinding(
         }
         break;
     case QV4::CompiledData::Binding::Type_String:
-        setVariant(compilationUnit->bindingValueAsString(binding));
+        setVariant(QV4::PersistentValue(
+                compilationUnit->engine,
+                compilationUnit->runtimeStrings[binding->stringIndex]->asReturnedValue()));
         break;
     case QV4::CompiledData::Binding::Type_Number:
-        setVariant(compilationUnit->bindingValueAsNumber(binding));
+        setVariant(QV4::PersistentValue(
+                compilationUnit->engine,
+                compilationUnit->constants[binding->value.constantValueIndex].asReturnedValue()));
         break;
     case QV4::CompiledData::Binding::Type_Boolean:
-        setVariant(binding->valueAsBoolean());
+        setVariant(QV4::PersistentValue(compilationUnit->engine, QV4::Encode(binding->value.b)));
         break;
     case QV4::CompiledData::Binding::Type_Null:
-        setVariant(QVariant::fromValue(nullptr));
+        setVariant(QV4::PersistentValue(compilationUnit->engine, QV4::Encode::null()));
         break;
     case QV4::CompiledData::Binding::Type_Object:
     case QV4::CompiledData::Binding::Type_Invalid:
@@ -1038,7 +1051,9 @@ void QQmlBind::eval()
             case QQmlBindEntryKind::Variant:
                 if (d->restoreValue) {
                     QQmlAnyBinding::takeFrom(entry.prop); // we don't want to have a binding active
-                    entry.prop.write(entry.previous.variant);
+                    const QV4::PersistentValue &v4Value = entry.previous.v4Value;
+                    entry.prop.write(v4Value.engine()->toVariant(
+                            *v4Value.valueRef(), entry.prop.propertyMetaType()));
                     entry.clearPrev();
                 }
                 break;
@@ -1066,7 +1081,8 @@ void QQmlBind::eval()
                                 QV4::PersistentValue(vmemo->engine, retVal), entry.previousKind);
                 } else {
                     // nope, use the meta object to get a QVariant
-                    entry.previousKind = entry.previous.set(entry.prop.read(), entry.previousKind);
+                    entry.previousKind = entry.previous.set(
+                            propPriv->engine->handle(), entry.prop.read(), entry.previousKind);
                 }
             }
         }
@@ -1085,9 +1101,12 @@ void QQmlBind::eval()
         if (!entry.prop.isValid())
             continue;
         switch (entry.currentKind) {
-        case QQmlBindEntryKind::Variant:
-            entry.prop.write(entry.current.variant);
+        case QQmlBindEntryKind::Variant: {
+            const QV4::PersistentValue &v4Value = entry.current.v4Value;
+            entry.prop.write(
+                    v4Value.engine()->toVariant(*v4Value.valueRef(), entry.prop.propertyMetaType()));
             break;
+        }
         case QQmlBindEntryKind::Binding:
             Q_ASSERT(!d->delayed);
             entry.current.binding.installOn(entry.prop);
