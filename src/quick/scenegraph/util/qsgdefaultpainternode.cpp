@@ -110,6 +110,8 @@ void QSGDefaultPainterNode::paint()
         Q_ASSERT(m_actualRenderTarget == QQuickPaintedItem::Image);
         if (m_image.isNull())
             return;
+        // We are not reusing the reference to the image the m_texture, so unset it to avoid detach.
+        m_texture->setImage(QImage());
         painter.begin(&m_image);
     }
 
