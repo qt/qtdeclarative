@@ -1678,8 +1678,6 @@ public:
     ExpressionNode *right;
     SourceLocation commaToken;
 };
-// Don't break other users of the parser
-using Expression = CommaExpression;
 
 class QML_PARSER_EXPORT Block: public Statement
 {
