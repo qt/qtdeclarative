@@ -972,7 +972,7 @@ void QQmlTypeData::resolveTypes()
             auto containingType = ref.type.containingType();
             if (containingType.isValid()) {
                 auto const url = containingType.sourceUrl();
-                if (url.isValid()) {
+                if (!url.isEmpty() && url != finalUrl()) {
                     auto typeData = typeLoader()->getType(url);
                     ref.typeData = typeData;
                     addDependency(typeData.data());
