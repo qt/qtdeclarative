@@ -501,6 +501,8 @@ private slots:
 
     void aliasToLargeRevision();
 
+    void urlWithFragment();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -9512,6 +9514,17 @@ void tst_qqmllanguage::aliasToLargeRevision()
     QCOMPARE(o->property("bb"), 14);
     QCOMPARE(o->property("cc"), 15);
     QCOMPARE(o->property("dd"), 16);
+}
+
+void tst_qqmllanguage::urlWithFragment()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("urlWithFragment.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->objectName(), "outer");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
