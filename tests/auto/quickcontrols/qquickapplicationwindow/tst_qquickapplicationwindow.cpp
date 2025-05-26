@@ -891,7 +891,7 @@ void tst_QQuickApplicationWindow::layoutLayout()
     QCOMPARE(headerChild->width(), qreal(window->width()));
     QVERIFY(header->height() > 0);
 
-    QQuickItem *footerChild = header->findChild<QQuickItem*>();
+    QQuickItem *footerChild = footer->findChild<QQuickItem*>();
     QVERIFY(footerChild);
     QCOMPARE(footer->x(), 0.0);
     QCOMPARE(footer->y(), content->height());
