@@ -1,0 +1,102 @@
+// Copyright (C) 2016 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qml-codingconventions.html
+\title QML Coding Conventions
+\brief code style convention
+
+This document contains the QML coding conventions that we follow in our
+documentation and examples and recommend that others follow.
+
+\section1 QML object declarations
+
+Throughout our documentation and examples,
+\l{QML Object Attributes}{QML object attributes} are always structured in the
+following order:
+
+\list
+\li id
+\li property declarations
+\li signal declarations
+\li JavaScript functions
+\li object properties
+\li child objects
+\endlist
+
+For better readability, we separate these different parts with an empty line.
+
+
+For example, a hypothetical \e photo QML object would look like this:
+
+\snippet qmlapp/codingconventions/photo.qml 0
+
+
+\section1 Grouped properties
+
+If using multiple properties from a group of properties,
+consider using \e {group notation} instead of \e {dot notation} if it
+improves readability.
+
+For example, this:
+
+\snippet qmlapp/codingconventions/dotproperties.qml 0
+
+could be written like this:
+
+\snippet qmlapp/codingconventions/dotproperties.qml 1
+
+\section1 Unqualified access
+
+In order to improve readability and performance always reference properties of
+parent components by their id explicitly:
+
+\snippet qmlapp/codingconventions/qualifiedaccess.qml 0
+
+\section1 Required properties
+
+When requiring data defined outside the component, make this explicit by using
+\l{Required Properties}. Required properties must be set or else the creation
+of the component will fail. These are preferable to unqualified lookups because
+they are more performant and allow for both users and tooling to reason about
+an external property's type. Additionally they remove assumptions that a
+component otherwise has to make about the environment in which it is created.
+
+\section1 Signal handlers
+
+When handling parameters in signal handlers use functions which name them
+explicitly:
+
+\snippet qmlapp/codingconventions/signalhandler.qml 0
+
+\section1 JavaScript code
+
+For better readability and maintainability, we generally declare each property
+on a separate line, even for simple expressions.
+
+\snippet qmlapp/codingconventions/javascript.qml 0
+
+For script expressions spanning multiple lines, we use a block format:
+
+\snippet qmlapp/codingconventions/javascript.qml 1
+
+If the script is more than a couple of lines long or can be used by different
+objects, we recommend creating a function and calling it like this:
+
+\snippet qmlapp/codingconventions/javascript.qml 2
+
+Also note that is recommended to add type annotations to your function in order
+to more easily reason about and refactor your application since both parameter
+and return types are immediately visible from the function signature.
+
+For long scripts, we will put the functions in their own JavaScript file and
+import it like this:
+
+\snippet qmlapp/codingconventions/javascript-imports.qml 0
+
+If the code is longer than one line and hence within a block,
+we use semicolons to indicate the end of each statement:
+
+\snippet qmlapp/codingconventions/javascript-semicolons.qml 0
+
+*/

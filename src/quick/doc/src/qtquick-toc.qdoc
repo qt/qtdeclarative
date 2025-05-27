@@ -9,6 +9,17 @@
     in the Qt Quick module.
 
     \list
+    \li \l {Getting started with Qt Quick applications}{Getting Started}
+        \list
+            \li \l {First Steps with QML}
+            \li \l {Glossary Of QML Terms}
+            \li \l {Visual types}
+            \li \l {Positioners and layouts}
+            \li \l {Handling user input}
+            \li \l {Displaying text}
+            \li \l {Animations}
+            \li \l {Integrating JavaScript in QML}
+        \endlist
     \li \l {Important Concepts In Qt Quick - The Visual Canvas}{Visual Canvas}
         \list
             \li \l {Concepts - Visual Coordinates in Qt Quick}{Visual Coordinates}
@@ -77,9 +88,14 @@
             \li \l {Using QtAbstractItemModel in Android Studio Projects}
             \li \l {Exposing QtAbstractListModel to QML}
         \endlist
-    \li \l {Changes to Qt Quick}{Upgrading from Qt 5}
     \li \l {Best Practices for QML and Qt Quick}
+        \list
+            \li \l {QML Coding Conventions}
+            \li \l {Scalability}
+        \endlist
+    \li \l {Performance considerations and suggestions}{Performance}
     \li \l {Qt Quick Tools and Utilities}
+    \li \l {Changes to Qt Quick}{Upgrading from Qt 5}
     \li \l {Qt Quick Examples and Tutorials}{Tutorials}
         \list
             \li \l {QML Dynamic View Ordering Tutorial}

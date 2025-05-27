@@ -1,0 +1,60 @@
+// Copyright (C) 2016 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+/*!
+\page qtquick-usecase-animations.html
+\title Animations
+\keyword Use case - Animations In QML
+\brief Example of how to include animations in QML applications
+
+\l {Qt Quick} provides the ability to animate properties. Animating properties
+allows property values to move through intermediate values instead of
+immediately changing to the target value. To animate the position of an item,
+you can animate the properties that control the item's position, x and y for
+example, so that the item's position changes each frame on the way to the
+target position.
+
+\section1 Fluid UIs
+
+QML was designed to facilitate the creation of fluid UIs. These are user
+interfaces where the UI components animate instead of appearing, disappearing,
+or jumping abruptly. Qt Quick provides two simple ways to have UI components
+move with animation instead of instantly appearing at their new location.
+
+\section2 States and transitions
+
+Qt Quick allows you to declare various UI states in \l State objects. These
+states are comprised of property changes from a base state, and can be a useful
+way of organizing your UI logic. Transitions are objects you can associate with
+an item to define how its properties will animate when they change due to a
+state change.
+
+States and transitions for an item can be declared with the \l Item::states and
+\l Item::transitions properties. States are declared inside the states list
+property of an item, usually the root item of the component. Transitions
+defined on the same item are used to animate the changes in the state. Here is
+an example.
+
+\snippet qmlapp/usecases/animations.qml states
+
+\section2 Animating property changes.
+
+Behaviors can be used to specify an animation for a property to use when it
+changes. This is then applied to all changes, regardless of their source. The
+following example animates a button moving around the screen using behaviors.
+
+\snippet qmlapp/usecases/animations.qml behave
+
+\section1 Other animations
+
+Not all animations have to be tied to a specific property or state. You can
+also create animations more generally, and specify target items and properties
+inside the animation. Here are some examples of different ways to do this:
+
+\snippet qmlapp/usecases/animations.qml constant
+\snippet qmlapp/usecases/animations.qml scripted
+\image qmlapp/qml-uses-animation.png
+
+More information about animations can be found on the
+\l{Important Concepts in Qt Quick - States, Transitions and Animations} page.
+
+*/

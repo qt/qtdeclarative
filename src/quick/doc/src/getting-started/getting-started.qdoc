@@ -1,0 +1,130 @@
+// Copyright (C) 2021 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmlapplications.html
+\title Getting started with Qt Quick applications
+\keyword QML Applications
+\brief Essential documentation for Qt Quick application developers
+\ingroup explanations-programminglanguages
+
+QML is a declarative language that allows user interfaces to be described in
+terms of their visual components and how they interact and relate with one
+another.  It is a highly readable language that was designed to enable
+components to be interconnected in a dynamic manner, and it allows components to
+be easily reused and customized within a user interface. Using the \c QtQuick
+module, designers and developers can easily build fluid animated user interfaces
+in QML, and have the option of connecting these user interfaces to any back-end
+C++ libraries.
+
+
+\section1 What is QML?
+
+QML is a user interface specification and programming language.
+It allows developers and designers alike to create highly performant, fluidly
+animated and visually appealing applications. QML offers a highly readable,
+declarative, JSON-like syntax with support for imperative JavaScript
+expressions combined with dynamic property bindings.
+
+\snippet qmlapp/qml_overview.qml file
+
+The QML language and engine infrastructure is provided by the \l {Qt Qml}
+module. For in-depth information about the QML language, see the
+\l{Qt Qml} module documentation.
+
+The following pages contain more information about QML:
+
+\list
+\li \l{\QC: Create Qt Quick Applications}
+\li \l{First Steps with QML} - begin using QML with these examples
+\li \l{Glossary of QML Terms}
+\li \l{The QML Reference} - reference about the QML constructs and features
+\li \l{qml-codingconventions.html}{QML Coding Conventions}
+\li \l{All QML APIs by Module}
+\endlist
+
+\section1 What is Qt Quick?
+
+Qt Quick is the standard library of QML types and functionality for QML. It
+includes visual types, interactive types, animations, models and views,
+particle effects and shader effects. A QML application developer can get
+access to all of that functionality with a single import statement.
+
+The \c QtQuick QML library is provided by the \l{Qt Quick} module.
+For in-depth information about the various QML types and other functionality
+provided by Qt Quick, please see the \l{Qt Quick} module documentation.
+Qt Quick adds visual types, animation types, and other QML types in addition to
+the standard QML types from Qt Qml.
+
+\list
+\li \l{Visual types}
+\li \l{Positioners and layouts}
+\li \l{Handling user input}
+\li \l{Displaying text}
+\li \l{Animations}
+\li \l{Integrating JavaScript in QML}
+\endlist
+
+\section2 Buttons, Menus, and other Controls
+
+For a set of UI controls, the \l{Qt Quick Controls} module implements several
+controls such as buttons, menus, and views. These controls come with
+several built-in styles that can be used, and also support the creation
+of custom styles.
+
+\section1 Qt Quick Application Development
+
+\l{\QC Documentation}{\QC} has built-in support for creating Qt Quick
+applications. \l{Qt VS Tools} and \l {Qt Extension for VS Code}
+also allow you to create Qt Quick applications with Visual Studio and Visual
+Studio Code. The \QMLLS can be used from any IDE supporting the language server
+protocol.
+
+For a design centric workflow, use \QDS.
+
+For more information about creating Qt Quick applications, visit the following
+pages:
+
+\list
+\li \l{\QC: Create Qt Quick Applications}
+\li \l{\QDS: Getting Started}
+\endlist
+
+\section1 Code Samples and Demos
+
+To learn more about uses of QML code, there are several code samples which show
+how QML types are used. In addition, there are several demos which show how
+QML code is used in applications.
+
+\list
+\li \l{Getting Started Programming with Qt Quick} - a tutorial showing the
+    creation of a simple alarm application.
+\li \l{Qt Quick Examples and Tutorials}
+\endlist
+
+\section1 Advanced Application Development Topics
+
+\list
+\li \l{Overview - QML and C++ Integration}
+\li \l{Deploying Qt Quick applications}
+\li \l{Qt Quick Compiler}
+\li \l{Best Practices for QML and Qt Quick}
+\li \l{Performance considerations and suggestions}
+\li \l{Internationalization with Qt}{Internationalization and Localization}
+\li Testing and Debugging
+    \list
+    \li \l{qml_runtime_tool}{Prototyping with the QML Runtime Tool}
+    \li \l{Debugging Qt Quick applications}
+    \li \l{Qt Quick Test}{Qt Quick Test: QML Unit Testing Framework}
+    \endlist
+\endlist
+
+\section1 Related Topics
+
+\list
+\li \l{All QML Types}
+\li \l{All QML APIs by Module}
+\li \l{Obsolete QML Types}
+\endlist
+
+*/

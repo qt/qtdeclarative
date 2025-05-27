@@ -1,0 +1,148 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtquick-qml-runtime.html
+    \title Prototyping with the QML Runtime Tool
+    \target qml_runtime_tool
+    \ingroup qtqml-tools
+    \ingroup qttools
+
+    \brief Utility to test and load QML files
+    Qt includes the \c qml executable, a utility that loads and displays QML
+    documents.
+
+    The \c qml utility is meant mainly for testing your QML applications and
+    components. To launch a QML application in a production environment, often
+    you need to develop a custom C++ application, or bundle the QML file in a
+    module. See \l {Deploying QML applications} for more information.
+
+    \c qml can instantiate any QML type you provide, as is, even if there is
+    nothing to display. To display QML content with the root object other than
+    \l Window, \c qml wraps this content in a \l Window.
+
+    Therefore, when moving from a prototype developed with \c qml to
+    a C++ application, you need to either make sure the root element is a
+    \l Window, or create a \l QQuickView in C++ to hold the root \l Item.
+    But in the meantime, you can load and test parts of your prototype
+    separately with the \c qml tool.
+
+    To load a .qml file, provide the file path on the command prompt:
+
+    \code
+    $ qml myqmlfile.qml
+    \endcode
+
+    To see the configuration options, run \c qml with the \c --help argument.
+
+    When the root object in the QML file that you are loading is an Item
+    rather than a Window, it needs to be wrapped in a \l Window to be shown.
+    While this work is pending, the top-level object that is already loaded
+    is represented by a \c PartialScene object.  The \c qml tool then loads
+    additional QML files to decide what to do next: one is a configuration
+    file that specifies in what sort of container to wrap the \c PartialScene.
+    The \c PartialScene.container property gives a URL pointing to QML source
+    code for the container component, which normally should declare a \l Window
+    in which to wrap the \l Item that was loaded first. Thus, the process of
+    wrapping an Item into a Window is programmable; and by default, these
+    two additional QML files are loaded from resources inside the qml
+    executable.  You can list the available configurations with the
+    \c --list-conf command:
+
+    \code
+    $ qml --list-conf
+    Built-in configurations:
+      default
+      resizeToItem
+    \endcode
+
+    The \c default configuration provides default behavior: the root Item will
+    be resized to fill the wrapper Window at startup, and also when the user
+    resizes the window. The alternative \c resizeToItem configuration works the
+    other way around: the Item can programmatically set its own size (for
+    example by creating bindings to its own \c width and \c height properties),
+    and the wrapper Window will be resized to fit (subject to any limits
+    that may be imposed by the window system).  You can choose either of
+    these using the \c -c or \c --config option:
+
+    \code
+    $ qml -c resizeToItem selfResizingItem.qml
+    \endcode
+
+    Additional configurations can be added by creating configuration
+    directories in \l QStandardPaths::AppConfigLocation, each with two QML
+    files inside: a configuration file named \c configuration.qml, and a QML
+    file that declares the Item wrapper, which can have any name. If this has
+    been done, the \c {qml --list-conf} command will also list those extra
+    configurations, while the \c --verbose option will expand those to give the
+    complete paths to those configurations, and the additional locations that
+    were searched:
+
+    \code
+    $ qml --list-conf --verbose
+    Built-in configurations:
+      default
+      resizeToItem
+    Other configurations:
+      /home/myuser/.config/QtProject/Qml Runtime/simplest
+    Checked in:
+      /home/myuser/.config/QtProject/Qml Runtime
+      /etc/xdg/QtProject/Qml Runtime
+    \endcode
+
+    Here is an example \c configuration.qml file:
+
+    \qml
+    import QmlRuntime.Config
+
+    Configuration {
+        PartialScene {
+            itemType: "QQuickItem"
+            container: Qt.resolvedUrl("ItemWrapper.qml")
+        }
+    }
+    \endqml
+
+    And here is the simplest-possible \c ItemWrapper.qml that the \c container
+    property could point to:
+
+    \qml
+    import QtQuick
+
+    Window {
+        required property Item containedObject: null
+        onContainedObjectChanged: {
+            if (containedObject == undefined || containedObject == null) {
+                visible = false;
+            } else {
+                containedObject.parent = contentItem;
+                visible = true;
+            }
+        }
+    }
+    \endqml
+
+    When these files have been created, you can use the \c {qml -c} option
+    giving the name of the directory containing the \c configuration.qml file,
+    which specifies the path to the container object:
+
+    \code
+    $ qml -c simplest mycomponent.qml
+    \endcode
+
+    The \c qml runtime will directly set the \c containedObject property, which
+    is required to have that name; and when it is set, the \l Item will be
+    reparented to the \l Window and shown. Since this Window is declared in
+    QML, when you write your own wrapper window, you are free to add whatever
+    additional features you would like: to handle resizing in a customized
+    way, or to add capabilities that you may find useful during prototyping.
+
+    Regardless of what was found in \c AppConfigLocation, you can alternatively
+    use the \c {qml -c} option giving the complete path to the
+    \c configuration.qml file, and it can in turn specify the complete path to
+    the container object; so these files can be located anywhere.
+
+    In addition to the features that can be declared in the configuration files,
+    the \c qml tool also provides a few more features via command-line options.
+    Use the \c --help option to get an up-to-date list.
+*/

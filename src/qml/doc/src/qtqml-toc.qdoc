@@ -70,6 +70,9 @@
             \li \l{List of JavaScript Objects and Functions}
         \endlist
     \li \l{Writing QML Modules}
+    \li \l{Prototyping with the QML Runtime Tool}
+    \li \l{Debugging QML Applications}
+    \li \l{Deploying QML applications}
     \li \l{Qt Qml Tooling}
         \list
             \li \l{qmllint}

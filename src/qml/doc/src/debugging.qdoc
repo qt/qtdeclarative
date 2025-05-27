@@ -1,0 +1,232 @@
+// Copyright (C) 2022 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick-debugging.html
+\ingroup qtquick-tools
+\title Debugging QML Applications
+\brief Provides information on how to use QML's debugging tools.
+
+When you develop an application with QML, there are many ways to debug possible
+issues that you may face. The sections below describe the debugging tools
+available and how to use them.
+
+\section1 Console API
+
+\table
+    \header
+        \li Feature
+        \li Description
+    \row
+        \keyword console log
+        \li Log
+        \li Use \c{console.log}, \c{console.debug}, \c{console.info},
+            \c{console.warn}, or \c{console.error} to print debugging
+            information to the console.
+
+            For example:
+
+            \code
+            function f(a, b) {
+              console.log("a is ", a, "b is ", b);
+            }
+            \endcode
+
+            The output is generated using the qCDebug, qCWarning, or qCCritical
+            methods in C++, with a category of \c qml or \c js, depending on the
+            type of file doing the logging.
+
+            See also \l {Debugging Techniques}.
+    \row
+        \keyword console assert
+        \li Assert
+        \li \c console.assert tests that an expression is true. If not, it
+            writes an optional message to the console and prints the stack trace.
+
+            For example:
+
+            \code
+            function f() {
+              var x = 12
+              console.assert(x == 12, "This will pass");
+              console.assert(x > 12, "This will fail");
+            }
+            \endcode
+    \row
+        \keyword console time
+        \keyword console timeEnd
+        \li Timer
+        \li \c{console.time} and \c{console.timeEnd} log the time (in
+            milliseconds) that was spent between the calls. Both take a string
+            argument that identifies the measurement.
+
+            For example:
+
+            \code
+            function f() {
+                console.time("wholeFunction");
+                console.time("firstPart");
+                // first part
+                console.timeEnd("firstPart");
+                // second part
+                console.timeEnd("wholeFunction");
+            }
+            \endcode
+    \row
+        \keyword console trace
+        \li Trace
+        \li \c console.trace prints the stack trace of the JavaScript execution
+            at the point where it was called. This stack trace information
+            contains the function name, file name, line number, and column
+            number. The stack trace is limited to last 10 stack frames.
+    \row
+        \keyword console count
+        \li Count
+        \li \c console.count prints the current number of times a particular
+            piece of code has run, along with a message.
+
+            For example:
+
+            \code
+            function f() {
+              console.count("f called");
+            }
+            \endcode
+
+            The code sample above prints \c{f called: 1}, \c{f called: 2} ...
+            whenever \c{f()} is run.
+    \row
+        \keyword console profile
+        \li Profile
+        \li \c console.profile turns on the QML and JavaScript profilers. Nested
+            calls are not supported and prints a warning to the console.
+    \row
+        \keyword console profileEnd
+        \li ProfileEnd
+        \li \c console.profileEnd turns off the QML and JavaScript profilers.
+            Calling this function without a previous call to \c console.profile
+            prints a warning to the console. A profiling client needs to be
+            attached before this call to receive and store the profiling data.
+
+            For example:
+
+            \code
+            function f() {
+                console.profile();
+                //Call some function that needs to be profiled.
+                //Ensure that a client is attached before ending
+                //the profiling session.
+                console.profileEnd();
+            }
+            \endcode
+
+    \row
+        \keyword console exception
+        \li Exception
+        \li \c console.exception prints an error message together with the stack
+            trace of JavaScript execution at the point where it is called.
+\endtable
+
+Alternatively, a \l {QLoggingCategory}{logging category} can be passed as the
+first argument to any of these \c {console} functions. See
+\l [QML] LoggingCategory for more details.
+
+\section1 Debugging module imports
+
+Set the \c QML_IMPORT_TRACE environment variable to enable debug output from
+QML's import loading mechanisms.
+
+For example, for a simple QML file like this:
+
+\qml
+import QtQuick
+
+Rectangle { width: 100; height: 100 }
+\endqml
+
+If you set \c {QML_IMPORT_TRACE=1} before running the
+\l{qml_runtime_tool}{QML Runtime Tool} or your QML C++ application, you will see
+output similar to:
+
+\code
+QQmlImportDatabase::addImportPath "/qt-sdk/imports"
+QQmlImportDatabase::addImportPath "/qt-sdk/bin/QMLViewer.app/Contents/MacOS"
+QQmlImportDatabase::addToImport 0x106237370 "." -1.-1 File as ""
+QQmlImportDatabase::addToImport 0x106237370 "Qt" 4.7 Library as ""
+QQmlImportDatabase::resolveType "Rectangle" = "QDeclarativeRectangle"
+\endcode
+
+\section1 QML debugging infrastructure
+\keyword declarative_debug
+\keyword qml debug
+
+The \l{Qt Qml} module provides services for debugging, inspecting, and
+profiling applications via a TCP port or a local socket.
+
+\note The \c qmltooling plugins that are required for debugging and profiling
+QML applications on devices are automatically installed during Qt installation.
+They must be deployed to the devices for debugging and profiling to work.
+
+\section2 Enabling the infrastructure
+
+When you compile your application, you must explicitly enable the debugging
+infrastructure. If you use qmake, you can add the \c {CONFIG+=qml_debug}
+configuration parameters to the project \c{.pro} file.
+
+If you use another build system, you can pass the \c {QT_QML_DEBUG} define
+to the compiler:
+
+\note Enabling the debugging infrastructure may compromise the integrity of
+your application and system, and therefore, you should only enable it in a
+controlled environment. When the infrastructure is enabled, the application
+displays the following warning: \br \c {QML debugging is enabled. Only use this in a safe environment.}
+
+\section2 Starting applications
+
+To enable debugging -- from the start or to attach a debugger later on -- start
+the application with the following arguments:
+
+\c {-qmljsdebugger=port:<port_from>[,port_to][,host:<ip address>][,block][,file:<local socket>][,services:<comma-separated list of services to enable>]}
+
+Where:
+\list
+    \li the mandatory \c {port_from} specifies either the debugging port or the
+        start port of a range of ports when \c {port_to} is specified
+    \li the optional \c {ip address} specifies the IP address of the host where
+        the application is running
+    \li the optional \c block prevents the application from running until the
+        debug client connects to the server
+    \li the optional \c {file} specifies the local socket.
+    \li the optional \c {services} specifies the services to enable; the default
+        is all that are found. Note that the \c{v4 debug} service disables the
+        JIT.
+\endlist
+
+After the application has successfully started, it displays the following
+message:
+
+\c {QML Debugger: Waiting for connection on port <port_number>}
+
+or
+
+\c {QML Debugger: Connecting to socket at <file>}
+
+\section2 Connecting to applications
+
+When the application is running, an IDE or a tool that implements the binary
+protocol can connect to the open port.
+
+Qt provides a \c qmlprofiler command line tool to capture profiling data in a
+file. To run this tool, enter the following command:
+
+\c {qmlprofiler -p <port> -attach <ip address>}
+
+\section1 Debugging with \QC
+
+\QC uses the debugging infrastructure to debug, inspect, and profile QML
+applications on the desktop as well as on remote devices. \QC provides
+integrated clients for debugging JavaScript, inspecting the object tree, and
+profiling the activities of a QML engine. For more information, see
+\l{\QC: Debugging Qt Quick Projects}.
+
+*/
