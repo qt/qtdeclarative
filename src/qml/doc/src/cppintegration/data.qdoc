@@ -398,7 +398,7 @@ Q_ENUM(Status)
 \endcode
 
 Enum classes are registered in QML as scoped and unscoped properties.
-The \c Ready value will be registered at \c Message.Status.Ready and \c Message.Ready .
+The \c Ready value will be registered as \c Message.Status.Ready and \c Message.Ready .
 
 When using enum classes, there can be multiple enums using the same identifiers.
 The unscoped registration will be overwriten by the last registered enum. For classes
