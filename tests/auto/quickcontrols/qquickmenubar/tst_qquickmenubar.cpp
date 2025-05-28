@@ -1510,6 +1510,10 @@ void tst_qquickmenubar::applicationWindow()
     QQuickItem *contents = window->property("contents").value<QQuickItem *>();
     QVERIFY(contents);
 
+    // The window may report safe area margins when invisible, but they will not
+    // propagate to the Quick SafeArea until shown.
+    auto safeAreaTopMargin = initiallyVisible ? window->safeAreaMargins().top() : 0;
+
     for (const bool visible : {initiallyVisible, !initiallyVisible, initiallyVisible}) {
         menuBar->setVisible(visible);
 
@@ -1519,10 +1523,10 @@ void tst_qquickmenubar::applicationWindow()
         if (!visible) {
             QVERIFY(!menuBar->isVisible());
             QVERIFY(!nativeMenuBarVisible);
-            QCOMPARE(contents->height(), window->height());
+            QCOMPARE(contents->height(), window->height() - safeAreaTopMargin);
         } else if (nativeMenuBarVisible) {
             QVERIFY(menuBar->isVisible());
-            QCOMPARE(contents->height(), window->height());
+            QCOMPARE(contents->height(), window->height() - safeAreaTopMargin);
         } else {
             QVERIFY(menuBar->isVisible());
             QVERIFY(menuBar->height() > 0);
@@ -1562,7 +1566,7 @@ void tst_qquickmenubar::menubarAsHeader()
 
     if (menuBarPrivate->nativeHandle()) {
         // Using native menubar
-        QCOMPARE(contents->height(), window->height());
+        QCOMPARE(contents->height(), window->height() - window->safeAreaMargins().top());
     } else {
         // Not using native menubar
         QCOMPARE(contents->height(), window->height() - menuBar->height());

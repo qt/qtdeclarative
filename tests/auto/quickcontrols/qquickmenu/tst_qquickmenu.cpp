@@ -317,9 +317,9 @@ void tst_QQuickMenu::mouse()
         QVERIFY(QMetaObject::invokeMethod(listView, "itemAt", Q_RETURN_ARG(QQuickItem *, hoverItem), Q_ARG(qreal, 0), Q_ARG(qreal, listView->property("contentY").toReal() + y)));
         if (!hoverItem || !hoverItem->isVisible() || hoverItem == prevHoverItem)
             continue;
-        QTest::mouseMove(window, QPoint(
-            menu->x() + menu->leftPadding() + hoverItem->x() + hoverItem->width() / 2,
-            menu->y() + menu->topPadding() + hoverItem->y() + hoverItem->height() / 2));
+
+        QPoint p = hoverItem->mapToScene(QPointF(hoverItem->width() / 2, hoverItem->height() / 2)).toPoint();
+        QTest::mouseMove(hoverItem->window(), p);
         QTRY_VERIFY(hoverItem->property("highlighted").toBool());
         if (prevHoverItem)
             QVERIFY(!prevHoverItem->property("highlighted").toBool());
@@ -356,13 +356,15 @@ void tst_QQuickMenu::pressAndHold()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
 
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QPoint windowCenter = QRect(QPoint(0, 0), window->size()).center();
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
     QTRY_VERIFY(menu->isVisible());
 
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
     QVERIFY(menu->isVisible());
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
     QTRY_VERIFY(!menu->isVisible());
 }
 
@@ -1174,7 +1176,10 @@ void tst_QQuickMenu::popup()
     QVERIFY(button);
 
     QPoint oldCursorPos = QCursor::pos();
-    QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
+
+    const auto safeAreaMargins = window->safeAreaMargins();
+    const auto topLeftSafePoint = QPointF(11, 22) + QPointF(safeAreaMargins.left(), safeAreaMargins.top());
+    QPoint cursorPos = window->mapToGlobal(topLeftSafePoint.toPoint());
     QCursor::setPos(cursorPos);
     QTRY_COMPARE(QCursor::pos(), cursorPos);
 
@@ -1182,13 +1187,16 @@ void tst_QQuickMenu::popup()
     QCOMPARE(menu->parentItem(), window->contentItem());
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex").toInt(), -1);
-    const qreal elevenOrLeftMargin = qMax(qreal(11), menu->leftMargin());
-    const qreal twentyTwoOrTopMargin = qMax(qreal(22), menu->topMargin());
+
+    const auto menuPos = window->contentItem()->mapToScene(QPointF(menu->x(), menu->y()));
+
+    const qreal elevenOrLeftMargin = qMax(topLeftSafePoint.x(), menu->leftMargin());
+    const qreal twentyTwoOrTopMargin = qMax(topLeftSafePoint.y(), menu->topMargin());
     // If the Menu has large margins, it may be moved to stay within them.
     static QString errorStringXPos("The menu's x position was %1 and differed too much from %2");
     static QString errorStringYPos("The menu's y position was %1 and differed too much from %2");
-    QTRY_VERIFY2(qAbs(menu->x() - elevenOrLeftMargin) <= 0.5, qPrintable(errorStringXPos.arg(menu->x()).arg(elevenOrLeftMargin)));
-    QTRY_VERIFY2(qAbs(menu->y() - twentyTwoOrTopMargin) <= 0.5, qPrintable(errorStringYPos.arg(menu->y()).arg(twentyTwoOrTopMargin)));
+    QTRY_VERIFY2(qAbs(menuPos.x() - elevenOrLeftMargin) <= 0.5, qPrintable(errorStringXPos.arg(menu->x()).arg(elevenOrLeftMargin)));
+    QTRY_VERIFY2(qAbs(menuPos.y() - twentyTwoOrTopMargin) <= 0.5, qPrintable(errorStringYPos.arg(menu->y()).arg(twentyTwoOrTopMargin)));
     menu->close();
 
     QVERIFY(QMetaObject::invokeMethod(window, "popupAtPos", Q_ARG(QVariant, QPointF(33, 44))));

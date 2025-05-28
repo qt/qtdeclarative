@@ -626,9 +626,14 @@ void tst_QQuickPopup::closePolicy()
     // wait for dimmer
     QTest::qWait(50);
 
+    const auto safeAreaMargins = window->safeAreaMargins();
+    const auto topLeftSafePoint = QPoint(1, 1) + QPoint(safeAreaMargins.left(), safeAreaMargins.top());
+
+    QPoint buttonPoint = button->mapToScene(QPointF(1, 1)).toPoint();
+
     for (int i = 0; i < 2; ++i) {
         // press outside popup and its parent
-        QQuickTest::pointerPress(device, window, 0, {1, 1});
+        QQuickTest::pointerPress(device, window, 0, topLeftSafePoint);
         if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) || closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
             QTRY_VERIFY(!popup->isVisible());
         else
@@ -639,7 +644,7 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(popup->isOpened());
 
         // release outside popup and its parent
-        QQuickTest::pointerRelease(device, window, 0, {1, 1});
+        QQuickTest::pointerRelease(device, window, 0, topLeftSafePoint);
         if (closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutside) || closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutsideParent))
             QTRY_VERIFY(!popup->isVisible());
         else
@@ -650,7 +655,7 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(popup->isOpened());
 
         // press outside popup but inside its parent
-        QQuickTest::pointerPress(device, window, 0, QPoint(button->x() + 1, button->y() + 1));
+        QQuickTest::pointerPress(device, window, 0, buttonPoint);
         if (closePolicy.testFlag(QQuickPopup::CloseOnPressOutside) && !closePolicy.testFlag(QQuickPopup::CloseOnPressOutsideParent))
             QTRY_VERIFY(!popup->isVisible());
         else
@@ -661,7 +666,7 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(popup->isOpened());
 
         // release outside popup but inside its parent
-        QQuickTest::pointerRelease(device, window, 0, QPoint(button->x() + 1, button->y() + 1));
+        QQuickTest::pointerRelease(device, window, 0, buttonPoint);
         if (closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutside) && !closePolicy.testFlag(QQuickPopup::CloseOnReleaseOutsideParent))
             QTRY_VERIFY(!popup->isVisible());
         else
@@ -672,10 +677,9 @@ void tst_QQuickPopup::closePolicy()
         QTRY_VERIFY(popup->isOpened());
 
         // press inside and release outside
-        QQuickTest::pointerPress(device, window, 0, QPoint(button->x() + popup->x() + 1,
-                                                           button->y() + popup->y() + 1));
+        QQuickTest::pointerPress(device, window, 0, buttonPoint + QPoint(popup->x(), popup->y()));
         QVERIFY(popup->isOpened());
-        QQuickTest::pointerRelease(device, window, 0, {1, 1});
+        QQuickTest::pointerRelease(device, window, 0, topLeftSafePoint);
         QVERIFY(popup->isOpened());
     }
 
@@ -1226,13 +1230,15 @@ void tst_QQuickPopup::hover()
     QTRY_VERIFY(popup->width() > 10); // somehow this can take a short time with macOS style
 
     // Hover the parent button outside the popup. It has 10 pixel anchor margins around the window.
+    QPoint buttonPoint = parentButton->mapToScene(QPointF()).toPoint();
     PointLerper pointLerper(window);
-    pointLerper.move(15, 15);
+    pointLerper.move(buttonPoint);
+
     QCOMPARE(parentButton->isHovered(), !modal);
     QVERIFY(!childButton->isHovered());
 
     // Hover the popup background. Its top-left is 10 pixels in from its parent.
-    pointLerper.move(25, 25);
+    pointLerper.move(buttonPoint + QPoint(10, 10));
     QVERIFY(!parentButton->isHovered());
     QVERIFY(!childButton->isHovered());
 
@@ -1353,7 +1359,8 @@ void tst_QQuickPopup::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldPopupValue = popupSlider->value();
 
-        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPointF(0, 0), 15));
+        auto *overlay = QQuickOverlay::overlay(window);
+        QVERIFY(sendWheelEvent(overlay, QPoint(0, overlay->height() / 2), 15));
 
         if (modal) {
             // the content below a modal overlay must not move
@@ -1538,8 +1545,10 @@ void tst_QQuickPopup::grabber()
     QCOMPARE(popup->isVisible(), false);
     QCOMPARE(combo->isVisible(), false);
 
+    QPoint menuCenter = menu->contentItem()->mapToScene(QPointF(menu->width() / 2, menu->height() / 2)).toPoint();
+
     // click a menu item to open the popup
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(menu->x() + menu->width() / 2, menu->y() + menu->height() / 2));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, menuCenter);
     QTRY_COMPARE(menu->isVisible(), false);
     QTRY_COMPARE(popup->isOpened(), true);
     QCOMPARE(combo->isVisible(), false);
@@ -2170,8 +2179,9 @@ public:
     {
         called = true;
         // let clicks at {1, 1} through the dimmer
-        return point != QPoint(1, 1);
+        return point != clickThoughPoint;
     }
+    QPoint clickThoughPoint;
 };
 
 /*
@@ -2182,7 +2192,6 @@ public:
 */
 void tst_QQuickPopup::dimmerContainmentMask()
 {
-    ContainmentMask containmentMask;
     int expectedClickCount = 0;
 
     QQuickApplicationHelper helper(this, "dimmerContainmentMask.qml");
@@ -2197,13 +2206,16 @@ void tst_QQuickPopup::dimmerContainmentMask()
     QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
     QVERIFY(modalPopup);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    const auto safeAreaMargins = window->safeAreaMargins();
+    const auto topLeftSafePoint = QPoint(1, 1) + QPoint(safeAreaMargins.left(), safeAreaMargins.top());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint);
     QCOMPARE(window->property("clickCount"), ++expectedClickCount);
 
     modalPopup->open();
     QTRY_VERIFY(modalPopup->isOpened());
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint);
     QCOMPARE(window->property("clickCount"), expectedClickCount); // blocked by modal
     QTRY_VERIFY(!modalPopup->isOpened()); // auto-close
 
@@ -2212,21 +2224,23 @@ void tst_QQuickPopup::dimmerContainmentMask()
 
     QPointer<QQuickItem> dimmer = overlay->property("_q_dimmerItem").value<QQuickItem *>();
     QVERIFY(dimmer);
+    ContainmentMask containmentMask;
+    containmentMask.clickThoughPoint = topLeftSafePoint;
     dimmer->setContainmentMask(&containmentMask);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint);
     QVERIFY(containmentMask.called);
     QCOMPARE(window->property("clickCount"), ++expectedClickCount); // let through by containment mask
     QVERIFY(modalPopup->isOpened()); // no auto-close
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint + QPoint(1, 1));
     QCOMPARE(window->property("clickCount"), expectedClickCount); // blocked by modal
     QTRY_VERIFY(!modalPopup->isOpened()); // auto-close
     QTRY_VERIFY(!dimmer);
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint);
     QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, topLeftSafePoint + QPoint(1, 1));
     QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
 }
 

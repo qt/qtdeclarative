@@ -575,7 +575,8 @@ void tst_QQuickDrawer::header()
     // must be possible to interact with the header when the drawer is below the header
     QSignalSpy clickSpy(button, SIGNAL(clicked()));
     QVERIFY(clickSpy.isValid());
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + button->width() / 2, button->y() + button->height() / 2));
+    QPoint p = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, p);
     QCOMPARE(clickSpy.size(), 1);
 }
 
@@ -742,7 +743,8 @@ void tst_QQuickDrawer::wheel()
         qreal oldContentValue = contentSlider->value();
         qreal oldDrawerValue = drawerSlider->value();
 
-        QVERIFY(sendWheelEvent(QQuickOverlay::overlay(window), QPoint(0, 0), 15));
+        auto *overlay = QQuickOverlay::overlay(window);
+        QVERIFY(sendWheelEvent(overlay, QPoint(0, overlay->height() / 2), 15));
 
         if (modal) {
             // the content below a modal overlay must not move

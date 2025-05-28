@@ -1343,8 +1343,9 @@ TestCase {
         let expectedX = (overlay.width - (control.width * control.scale)) / 2
         let expectedY = (overlay.height - (control.height * control.scale)) / 2
         // translate to the parent's (anotherItem's) co-ordinate system
-        expectedX -= anotherItem.x
-        expectedY -= anotherItem.y
+        let anotherItemScenePos = anotherItem.mapToItem(null, 0, 0);
+        expectedX -= anotherItemScenePos.x
+        expectedY -= anotherItemScenePos.y
         compare(currentPos.x, expectedX)
         compare(currentPos.y, expectedY)
     }
