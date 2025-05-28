@@ -349,38 +349,39 @@ QVariant QQuickFolderListModel::data(const QModelIndex &index, int role) const
     Q_D(const QQuickFolderListModel);
     QVariant rv;
 
-    if (index.row() >= d->data.size())
+    const int row = index.row();
+    if (row < 0 || row >= d->data.size())
         return rv;
 
     switch (role)
     {
         case FileNameRole:
-            rv = d->data.at(index.row()).fileName();
+            rv = d->data.at(row).fileName();
             break;
         case FilePathRole:
-            rv = d->data.at(index.row()).filePath();
+            rv = d->data.at(row).filePath();
             break;
         case FileBaseNameRole:
-            rv = d->data.at(index.row()).baseName();
+            rv = d->data.at(row).baseName();
             break;
         case FileSuffixRole:
-            rv = d->data.at(index.row()).suffix();
+            rv = d->data.at(row).suffix();
             break;
         case FileSizeRole:
-            rv = d->data.at(index.row()).size();
+            rv = d->data.at(row).size();
             break;
         case FileLastModifiedRole:
-            rv = d->data.at(index.row()).lastModified();
+            rv = d->data.at(row).lastModified();
             break;
         case FileLastReadRole:
-            rv = d->data.at(index.row()).lastRead();
+            rv = d->data.at(row).lastRead();
             break;
         case FileIsDirRole:
-            rv = d->data.at(index.row()).isDir();
+            rv = d->data.at(row).isDir();
             break;
         case FileUrlRole:
         case FileURLRole:
-            rv = QUrl::fromLocalFile(d->data.at(index.row()).filePath());
+            rv = QUrl::fromLocalFile(d->data.at(row).filePath());
             break;
         default:
             break;
