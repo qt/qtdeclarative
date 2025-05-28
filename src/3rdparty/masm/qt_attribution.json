@@ -5,6 +5,7 @@
     "QtUsage": "Used in Qt QML.",
 
     "Homepage": "https://trac.webkit.org/wiki/JavaScriptCore",
+    "Comment": "no relevant PURL or CPE set, because the dependency is huge, and would show a lot of false positives, at this point it should be considered as part of Qt",
     "License": "BSD 2-clause \"Simplified\" License",
     "LicenseId": "BSD-2-Clause",
     "LicenseFile": "LICENSE",
