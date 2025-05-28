@@ -6,6 +6,7 @@
     "Files": "impl/ElevationEffect.qml",
     "Description": "Shadow values for the elevation effect.",
     "Homepage": "https://angularjs.org/",
+    "Comment": "no relevant PURL or CPE set, because the dependency is a single file",
     "License": "MIT License",
     "LicenseId": "MIT",
     "LicenseFile": "LICENSE.ANGULARJS.txt",
