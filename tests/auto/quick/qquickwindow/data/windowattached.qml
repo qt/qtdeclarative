@@ -19,6 +19,7 @@ Rectangle {
         objectName: "extraWindow"
         title: "extra window"
         transientParent: null
+        property var wontWork: Window.window // Window itself is not an item, this should warn
         Text {
             objectName: "extraWindowText"
             anchors.centerIn: parent

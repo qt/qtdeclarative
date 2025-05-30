@@ -14,10 +14,14 @@ QQuickWindowAttached::QQuickWindowAttached(QObject* attachee)
     , m_window(nullptr)
 {
     m_attachee = qobject_cast<QQuickItem*>(attachee);
-    if (m_attachee && m_attachee->window()) // It might not be in a window yet
+    if (!m_attachee) {
+        qmlWarning(attachee)
+                << "Window.window does only support types deriving from Item";
+        return;
+    }
+    if (m_attachee->window()) // It might not be in a window yet
         windowChange(m_attachee->window());
-    if (m_attachee)
-        connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChange);
+    connect(m_attachee, &QQuickItem::windowChanged, this, &QQuickWindowAttached::windowChange);
 }
 
 QWindow::Visibility QQuickWindowAttached::visibility() const
