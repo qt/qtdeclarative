@@ -118,7 +118,7 @@ class QQmlLocaleValueType
 
     Q_PROPERTY(QLocale::NumberOptions numberOptions READ numberOptions WRITE setNumberOptions)
 
-    Q_GADGET
+    Q_GADGET_EXPORT(Q_QML_EXPORT)
     QML_ANONYMOUS
     QML_FOREIGN(QLocale)
     QML_EXTENDED(QQmlLocaleValueType)
