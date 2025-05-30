@@ -9174,7 +9174,7 @@ QDebug operator<<(QDebug debug,
 
     // Deferred properties will cause recursion when calling nameForObject
     // before the component is completed, so guard against this situation.
-    if (item->isComponentComplete()) {
+    if (item->isComponentComplete() && !QQmlData::wasDeleted(item)) {
         if (QQmlContext *context = qmlContext(item)) {
             const auto objectId = context->nameForObject(item);
             if (!objectId.isEmpty())
