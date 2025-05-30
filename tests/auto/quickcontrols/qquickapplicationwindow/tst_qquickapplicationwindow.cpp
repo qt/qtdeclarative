@@ -240,19 +240,6 @@ void tst_QQuickApplicationWindow::defaultFocus()
     QVERIFY(item->hasActiveFocus());
 }
 
-static QSizeF getExpectedElementSize()
-{
-#ifndef Q_OS_ANDROID
-    // These values are taken from the QML file.
-    return QSizeF(400.0, 400.0);
-#else
-    // On Android we have to query screen parameters at runtime, because on
-    // Android the Quick element will take the whole screen size.
-    const QSize size = QGuiApplication::primaryScreen()->availableSize();
-    return QSizeF(size);
-#endif
-}
-
 void tst_QQuickApplicationWindow::implicitFill()
 {
     QQmlEngine engine;
@@ -262,7 +249,7 @@ void tst_QQuickApplicationWindow::implicitFill()
     QScopedPointer<QObject> cleanup(created);
     QVERIFY(created);
 
-    QQuickWindow* window = qobject_cast<QQuickWindow*>(created);
+    QQuickApplicationWindow* window = qobject_cast<QQuickApplicationWindow*>(created);
     QVERIFY(window);
     QVERIFY(!window->isVisible());
     QCOMPARE(window->width(), 400);
@@ -272,7 +259,7 @@ void tst_QQuickApplicationWindow::implicitFill()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    const QSizeF expectedSize = getExpectedElementSize();
+    const QSizeF expectedSize = window->contentItem()->size();
 
     QQuickItem *stackView = window->property("stackView").value<QQuickItem*>();
     QVERIFY(stackView);
@@ -520,7 +507,7 @@ void tst_QQuickApplicationWindow::font()
 
     QFont font = window->font();
 
-    const QSizeF expectedSize = getExpectedElementSize();
+    const QSizeF expectedSize = window->contentItem()->size();
 
     QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
     QVERIFY(mainItem);
@@ -602,7 +589,7 @@ void tst_QQuickApplicationWindow::locale()
 
     QLocale l = window->locale();
 
-    const QSizeF expectedSize = getExpectedElementSize();
+    const QSizeF expectedSize = window->contentItem()->size();
 
     QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
     QVERIFY(mainItem);
