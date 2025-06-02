@@ -1215,7 +1215,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     if (q->yflick()) {
         qreal dy = deltas.y();
         if (overThreshold || elapsedSincePress > 200) {
-            if (!vMoved)
+            if (!vMoved && !vData.dragging)
                 vData.dragStartOffset = dy;
             qreal newY = dy + vData.pressPos - (syncDrag ? 0 : vData.dragStartOffset);
             // Recalculate bounds in case margins have changed, but use the content
@@ -1291,7 +1291,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     if (q->xflick()) {
         qreal dx = deltas.x();
         if (overThreshold || elapsedSincePress > 200) {
-            if (!hMoved)
+            if (!hMoved && !hData.dragging)
                 hData.dragStartOffset = dx;
             qreal newX = dx + hData.pressPos - (syncDrag ? 0 : hData.dragStartOffset);
             const qreal minX = hData.dragMinBound + hData.startMargin;

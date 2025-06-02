@@ -238,6 +238,7 @@ private slots:
     void pixelAlignedEndPoints();
     void nestedWheelEventPropagation_data();
     void nestedWheelEventPropagation();
+    void scrollToEndAngleDeltaOnly();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -3526,6 +3527,98 @@ void tst_qquickflickable::nestedWheelEventPropagation()
     // Assert
     QCOMPARE(inner->isMoving(), offsetStart);
     QCOMPARE(propagateSpy.count(), 1);
+}
+
+void tst_qquickflickable::scrollToEndAngleDeltaOnly()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("scrollToEndAngleDeltaOnly.qml")));
+    auto root = window.rootObject();
+    QVERIFY(root);
+    auto flickable = root->findChild<QQuickFlickable *>("flickable");
+    QVERIFY(flickable);
+
+    QVERIFY(flickable->isAtYBeginning());
+    const QPoint nullDelta(0, 0);
+    const QPointF pos(50, 50);
+    const int interval = 20;
+    quint64 timestamp = 1000;
+
+    auto sendTrackpadScroll = [pos, &timestamp, &window, this](Qt::ScrollPhase phase, QPoint pixelDelta, QPoint angleDelta) {
+        QWheelEvent ev(pos, window.mapToGlobal(pos), pixelDelta, angleDelta, Qt::NoButton, Qt::NoModifier,
+                       phase, false, Qt::MouseEventSynthesizedBySystem, touchpad.get());
+        ev.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(&window, &ev);
+        timestamp += interval;
+    };
+
+    // top -> bottom
+    bool hitYEnd = false;
+    QPoint angleDelta(0, -10);
+    QPoint pixelDelta(0, -1);
+    sendTrackpadScroll(Qt::ScrollBegin, pixelDelta, angleDelta);
+    for (int i = 0; i < 500; i++) {
+        sendTrackpadScroll(Qt::ScrollUpdate, (i % 10) ? pixelDelta : nullDelta, angleDelta);
+        if (hitYEnd) {
+            QCOMPARE(flickable->isAtYEnd(), true);
+        } else {
+            if (flickable->isAtYEnd())
+                hitYEnd = true;
+        }
+    }
+    QCOMPARE(flickable->isAtYEnd(), true);
+    sendTrackpadScroll(Qt::ScrollEnd, nullDelta, nullDelta);
+
+    // bottom -> top
+    bool hitYBegin = false;
+    pixelDelta = QPoint(0, 1);
+    angleDelta = QPoint(0, 10);
+    sendTrackpadScroll(Qt::ScrollBegin, pixelDelta, angleDelta);
+    for (int i = 0; i < 500; i++) {
+        sendTrackpadScroll(Qt::ScrollUpdate, (i % 10) ? pixelDelta : nullDelta, angleDelta);
+        if (hitYBegin) {
+            QCOMPARE(flickable->isAtYBeginning(), true);
+        } else {
+            if (flickable->isAtYBeginning())
+                hitYBegin = true;
+        }
+    }
+    QCOMPARE(flickable->isAtYBeginning(), true);
+    sendTrackpadScroll(Qt::ScrollEnd, nullDelta, nullDelta);
+
+    // left -> right
+    bool hitXEnd = false;
+    pixelDelta = QPoint(-1, 0);
+    angleDelta = QPoint(-10, 0);
+    sendTrackpadScroll(Qt::ScrollBegin, pixelDelta, angleDelta);
+    for (int i = 0; i < 500; i++) {
+        sendTrackpadScroll(Qt::ScrollUpdate, (i % 10) ? pixelDelta : nullDelta, angleDelta);
+        if (hitXEnd) {
+            QCOMPARE(flickable->isAtXEnd(), true);
+        } else {
+            if (flickable->isAtXEnd())
+                hitXEnd = true;
+        }
+    }
+    QCOMPARE(flickable->isAtXEnd(), true);
+    sendTrackpadScroll(Qt::ScrollEnd, nullDelta, nullDelta);
+
+    // right -> left
+    bool hitXBegin = false;
+    pixelDelta = QPoint(1, 0);
+    angleDelta = QPoint(10, 0);
+    sendTrackpadScroll(Qt::ScrollBegin, pixelDelta, angleDelta);
+    for (int i = 0; i < 500; i++) {
+        sendTrackpadScroll(Qt::ScrollUpdate, (i % 10) ? pixelDelta : nullDelta, angleDelta);
+        if (hitXBegin) {
+            QCOMPARE(flickable->isAtXBeginning(), true);
+        } else {
+            if (flickable->isAtXBeginning())
+                hitXBegin = true;
+        }
+    }
+    QCOMPARE(flickable->isAtXBeginning(), true);
+    sendTrackpadScroll(Qt::ScrollEnd, nullDelta, nullDelta);
 }
 
 QTEST_MAIN(tst_qquickflickable)
