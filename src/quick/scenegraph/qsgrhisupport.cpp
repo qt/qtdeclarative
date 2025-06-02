@@ -1391,7 +1391,11 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
 
     // There was no rendercontrol which means a custom render target
     // should not be set either. Set our own, temporarily.
-    window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));
+    auto renderTarget = QQuickRenderTarget::fromRhiRenderTarget(rt.data());
+    // Pass on the scale factor. No need to use effectiveDevicePixelRatio(),
+    // because there is no rendercontrol anyway.
+    renderTarget.setDevicePixelRatio(window->devicePixelRatio());
+    window->setRenderTarget(renderTarget);
 
     QRhiCommandBuffer *cb = nullptr;
     if (rhi->beginOffscreenFrame(&cb) != QRhi::FrameOpSuccess) {
