@@ -115,8 +115,10 @@ class tst_qquickwidget : public QQmlDataTest
 public:
     tst_qquickwidget();
 
+#if QT_CONFIG(accessibility)
 private:
     bool initAccessibility();
+#endif
 
 private slots:
     void showHide();
@@ -155,8 +157,10 @@ private slots:
     void focusOnClickInProxyWidget();
 #endif
     void focusPreserved();
+#if QT_CONFIG(accessibility)
     void accessibilityHandlesViewChange();
     void accessibleParentOfQuickItems();
+#endif
     void cleanupRhi();
     void dontRecreateRootElementOnWindowChange();
     void setInitialProperties();
@@ -174,6 +178,7 @@ tst_qquickwidget::tst_qquickwidget()
 {
 }
 
+#if QT_CONFIG(accessibility)
 bool tst_qquickwidget::initAccessibility()
 {
     // Copied from tst_QQuickAccessible::initTestCase()
@@ -184,6 +189,7 @@ bool tst_qquickwidget::initAccessibility()
     pfIntegration->accessibility()->setActive(true);
     return true;
 }
+#endif
 
 void tst_qquickwidget::showHide()
 {
@@ -1229,6 +1235,7 @@ void tst_qquickwidget::focusPreserved()
     QTRY_VERIFY(content2->hasActiveFocus());
 }
 
+#if QT_CONFIG(accessibility)
 /*
     Reparenting the QQuickWidget recreates the offscreen QQuickWindow.
     Since the accessible interface that is cached for the QQuickWidget dispatches
@@ -1311,6 +1318,7 @@ void tst_qquickwidget::accessibleParentOfQuickItems()
     QVERIFY(iface_popup->parent());
     QCOMPARE(iface_popup->parent(), iface_quickWidget);
 }
+#endif
 
 class CreateDestroyWidget : public QWidget
 {
