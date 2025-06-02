@@ -1405,6 +1405,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("importWithPrefix")          << QStringLiteral("ImportWithPrefix.qml");
     QTest::newRow("catchIdentifier")           << QStringLiteral("catchIdentifierNoWarning.qml");
     QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
+    QTest::newRow("enumList")                  << QStringLiteral("enumListTest.qml");
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
     QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");

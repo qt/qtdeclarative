@@ -670,6 +670,7 @@ void QQmlJSScope::resolveEnums(
 
         enumScope->m_semantics = AccessSemantics::Value;
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
+        resolveList(enumScope, contextualTypes.arrayType());
         if (QString alias = it->alias(); !alias.isEmpty()
             && self->m_enumerations.constFind(alias) == self->m_enumerations.constEnd()) {
             auto aliasScope = QQmlJSScope::clone(enumScope);
