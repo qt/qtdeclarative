@@ -194,7 +194,9 @@ private slots:
 
     void keyNavigationEnabled();
     void releaseItems();
+#if QT_CONFIG(accessibility)
     void removeAccessibleChildrenEvenIfReusingItems();
+#endif
 
 private:
     QList<int> toIntList(const QVariantList &list);
@@ -6879,6 +6881,7 @@ void tst_QQuickGridView::releaseItems()
     gridview->setModel(123);
 }
 
+#if QT_CONFIG(accessibility)
 void tst_QQuickGridView::removeAccessibleChildrenEvenIfReusingItems()
 {
     auto window = std::make_unique<QQuickView>();
@@ -6907,7 +6910,7 @@ void tst_QQuickGridView::removeAccessibleChildrenEvenIfReusingItems()
     QTRY_COMPARE(gridView->child(2)->text(QAccessible::Text::Name), "item23");
     QTRY_COMPARE(gridView->child(3)->text(QAccessible::Text::Name), "item24");
 }
-
+#endif
 
 QTEST_MAIN(tst_QQuickGridView)
 
