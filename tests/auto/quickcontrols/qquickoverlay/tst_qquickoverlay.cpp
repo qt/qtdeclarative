@@ -247,7 +247,7 @@ void tst_QQuickOverlay::pressedAndReleased()
 
     auto *tapHandler = window->findChild<QQuickTapHandler *>();
     QVERIFY(tapHandler);
-    const QSignalSpy tappedSpy(tapHandler, SIGNAL(tapped(QEventPoint, Qt::MouseButton)));
+    const QSignalSpy tappedSpy(tapHandler, SIGNAL(tapped(QEventPoint,Qt::MouseButton)));
     QVERIFY(tappedSpy.isValid());
 
     // Left click should cause pressed to be emitted.

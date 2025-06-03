@@ -485,7 +485,7 @@ void tst_QQuickHeaderView::dragInvalidItemDuringReorder()
     const auto item = hhv->itemAtIndex(hhv->index(0, 0));
     QQuickWindow *itemWindow = item->window();
 
-    QSignalSpy columnMovedSpy(hhv, SIGNAL(columnMoved(int, int, int)));
+    QSignalSpy columnMovedSpy(hhv, SIGNAL(columnMoved(int,int,int)));
     QVERIFY(columnMovedSpy.isValid());
 
     const QPoint localPos = QPoint(item->width() - 5, item->height() - 5);
@@ -552,7 +552,7 @@ void tst_QQuickHeaderView::reorderEmptyModel()
     auto hhv = window->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
     QVERIFY(hhv);
 
-    QSignalSpy columnMovedSpy(hhv, SIGNAL(columnMoved(int, int, int)));
+    QSignalSpy columnMovedSpy(hhv, SIGNAL(columnMoved(int,int,int)));
     QVERIFY(columnMovedSpy.isValid());
     hhv->moveColumn(0, 1);
     QVERIFY(!columnMovedSpy.isEmpty());
