@@ -53,7 +53,7 @@ Item {
             Connections {
                 target: root
                 enabled: column === 1
-                // Invalid: should be string.
+                // Invalid: should be an int.
                 function onShouldModifyInvalidType() { model.display = "Whoops" }
             }
         }
