@@ -284,7 +284,17 @@ void QSGRhiLayer::grab()
             }
             QRhiTextureRenderTargetDescription desc;
             QRhiColorAttachment color0(m_msaaColorBuffer);
-            color0.setResolveTexture(m_texture);
+            if (m_recursive) {
+                m_secondaryTexture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
+                if (!m_secondaryTexture->create()) {
+                    qWarning("Failed to build secondary texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
+                    releaseResources();
+                    return;
+                }
+                color0.setResolveTexture(m_secondaryTexture);
+            } else {
+                color0.setResolveTexture(m_texture);
+            }
             desc.setColorAttachments({ color0 });
             if (depthBufferEnabled)
                 desc.setDepthStencilBuffer(m_ds->ds);
@@ -394,17 +404,13 @@ void QSGRhiLayer::grab()
     QRhiResourceUpdateBatch *resourceUpdates = nullptr;
 
     // render with our own "sub-renderer" (this will just add a render pass to the command buffer)
-    if (m_multisampling) {
+    if (m_recursive) {
         m_context->renderNextFrame(m_renderer);
+        if (!resourceUpdates)
+            resourceUpdates = m_rhi->nextResourceUpdateBatch();
+        resourceUpdates->copyTexture(m_texture, m_secondaryTexture);
     } else {
-        if (m_recursive) {
-            m_context->renderNextFrame(m_renderer);
-            if (!resourceUpdates)
-                resourceUpdates = m_rhi->nextResourceUpdateBatch();
-            resourceUpdates->copyTexture(m_texture, m_secondaryTexture);
-        } else {
-            m_context->renderNextFrame(m_renderer);
-        }
+        m_context->renderNextFrame(m_renderer);
     }
 
     if (m_mipmap) {
