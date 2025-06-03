@@ -204,8 +204,7 @@ void QQuickParticleDataHeap::insertTimed(QQuickParticleData* data, int time)
 
 int QQuickParticleDataHeap::top()
 {
-    if (m_end == 0)
-        return 1 << 30;
+    Q_ASSERT(!isEmpty());
     return m_data[0].time;
 }
 
@@ -355,7 +354,7 @@ bool QQuickParticleGroupData::recycle()
 {
     m_latestAliveParticles.clear();
 
-    while (dataHeap.top() <= m_system->timeInt) {
+    while (!dataHeap.isEmpty() && dataHeap.top() <= m_system->timeInt) {
         for (QQuickParticleData *datum : dataHeap.pop()) {
             if (!datum->stillAlive(m_system)) {
                 freeList.free(datum->index);

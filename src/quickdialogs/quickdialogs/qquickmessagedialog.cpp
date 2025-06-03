@@ -219,6 +219,8 @@ void QQuickMessageDialog::handleClick(QPlatformDialogHelper::StandardButton butt
                                       QPlatformDialogHelper::ButtonRole role)
 {
     emit buttonClicked(button, role);
+    if (role == QPlatformDialogHelper::YesRole || role == QPlatformDialogHelper::AcceptRole)
+        setResult(Accepted);
     close();
 }
 

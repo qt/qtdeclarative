@@ -22,8 +22,10 @@
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
 using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_QQuickApplicationWindow : public QQmlDataTest
 {
@@ -50,6 +52,7 @@ private slots:
     void layoutLayout();
     void componentComplete();
     void opacity();
+    void backgroundSize();
 };
 
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
@@ -928,6 +931,51 @@ void tst_QQuickApplicationWindow::opacity()
 
     QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(object.data());
     QVERIFY(window);
+}
+
+void tst_QQuickApplicationWindow::backgroundSize()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("backgroundSize.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    QCOMPARE(window->width(), 600);
+    QCOMPARE(window->height(), 400);
+
+    auto *background = window->background();
+    QCOMPARE(background->implicitWidth(), 123);
+    QCOMPARE(background->implicitHeight(), 456);
+    QCOMPARE(background->width(), window->width());
+    QCOMPARE(background->height(), window->height());
+
+    // Changing the implicit size of the background shouldn't have any effect
+    // on its size if it was never explicitly set.
+    background->setImplicitWidth(234);
+    QCOMPARE(background->implicitWidth(), 234);
+    QCOMPARE(window->width(), 600);
+    QCOMPARE(background->width(), window->width());
+
+    background->setImplicitHeight(567);
+    QCOMPARE(background->implicitHeight(), 567);
+    QCOMPARE(window->height(), 400);
+    QCOMPARE(background->height(), window->height());
+
+    // Explicitly setting the size of the background should ensure
+    // that it's respected from that point onwards.
+    background->setWidth(345);
+    QCOMPARE(background->implicitWidth(), 234);
+    QCOMPARE(window->width(), 600);
+    QCOMPARE(background->width(), 345);
+
+    window->setWidth(610);
+    QCOMPARE(background->width(), 345);
+
+    background->setHeight(678);
+    QCOMPARE(background->implicitHeight(), 567);
+    QCOMPARE(window->height(), 400);
+    QCOMPARE(background->height(), 678);
+
+    window->setHeight(410);
+    QCOMPARE(background->height(), 678);
 }
 
 QTEST_MAIN(tst_QQuickApplicationWindow)

@@ -1,5 +1,5 @@
 // Copyright (C) 2020 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qmetatypesjsonprocessor_p.h"
 
@@ -116,6 +116,7 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
     QString registrationHelper;
     for (const auto &obj: m_types) {
         const QString className = obj[u"className"].toString();
+        const QString qualifiedClassName = obj[u"qualifiedClassName"].toString();
         const QString foreignClassName = className+ u"Foreign";
         const auto classInfos = obj[u"classInfos"].toArray();
         QString qmlElement;
@@ -123,6 +124,7 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         QString qmlAttached;
         bool isSingleton = false;
         bool isExplicitlyUncreatable = false;
+        bool isNamespace = obj[u"namespace"].toBool();
         for (QJsonValue entry: classInfos) {
             const auto name = entry[u"name"].toString();
             const auto value = entry[u"value"].toString();
@@ -147,8 +149,13 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         if (qmlElement.isEmpty())
             continue; // no relevant entries found
         const QString spaces = u"    "_s;
-        registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
-        registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
+        if (isNamespace) {
+            registrationHelper += u"\nnamespace "_s + foreignClassName + u"{\n    Q_NAMESPACE\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN_NAMESPACE(" + qualifiedClassName + u")\n"_s;
+        } else {
+            registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
+            registrationHelper += spaces + u"QML_FOREIGN(" + qualifiedClassName + u")\n"_s;
+        }
         registrationHelper += spaces + qmlElement + u"\n"_s;
         if (isSingleton)
             registrationHelper += spaces + u"QML_SINGLETON\n"_s;
@@ -160,7 +167,10 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
         }
         if (!qmlAttached.isEmpty())
             registrationHelper += spaces + qmlAttached + u"\n";
-        registrationHelper += u"};\n";
+        registrationHelper += u"}";
+        if (!isNamespace)
+            registrationHelper += u";";
+        registrationHelper += u"\n";
     }
     return registrationHelper;
 }

@@ -110,8 +110,8 @@ struct Q_QML_EXPORT SparseArray
 {
     SparseArray();
     ~SparseArray() {
-        if (root())
-            freeTree(header.left, alignof(SparseArrayNode));
+        if (SparseArrayNode *n = root())
+            freeTree(n, alignof(SparseArrayNode));
     }
 
     SparseArray(const SparseArray &other);
@@ -287,37 +287,45 @@ inline QList<int> SparseArray::keys() const
 
 inline const SparseArrayNode *SparseArray::lowerBound(uint akey) const
 {
-    const SparseArrayNode *lb = root()->lowerBound(akey);
-    if (!lb)
-        lb = end();
-    return lb;
+    if (SparseArrayNode *n = root()) {
+        if (const SparseArrayNode *lb = n->lowerBound(akey))
+            return lb;
+    }
+
+    return end();
 }
 
 
 inline SparseArrayNode *SparseArray::lowerBound(uint akey)
 {
-    SparseArrayNode *lb = root()->lowerBound(akey);
-    if (!lb)
-        lb = end();
-    return lb;
+    if (SparseArrayNode *n = root()) {
+        if (SparseArrayNode *lb = n->lowerBound(akey))
+            return lb;
+    }
+
+    return end();
 }
 
 
 inline const SparseArrayNode *SparseArray::upperBound(uint akey) const
 {
-    const SparseArrayNode *ub = root()->upperBound(akey);
-    if (!ub)
-        ub = end();
-    return ub;
+    if (SparseArrayNode *n = root()) {
+        if (const SparseArrayNode *ub = n->upperBound(akey))
+            return ub;
+    }
+
+    return end();
 }
 
 
 inline SparseArrayNode *SparseArray::upperBound(uint akey)
 {
-    SparseArrayNode *ub = root()->upperBound(akey);
-    if (!ub)
-        ub = end();
-    return ub;
+    if (SparseArrayNode *n = root()) {
+        if (SparseArrayNode *ub = n->upperBound(akey))
+            return ub;
+    }
+
+    return end();
 }
 
 }

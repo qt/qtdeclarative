@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #ifndef QMLTYPESCLASSDESCRIPTION_P_H
 #define QMLTYPESCLASSDESCRIPTION_P_H
@@ -44,6 +44,7 @@ struct QmlTypesClassDescription
     bool hasCustomParser = false;
     bool omitFromQmlTypes = false;
     bool extensionIsNamespace = false;
+    bool registerEnumClassesScoped = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
     QStringList immediateNames;

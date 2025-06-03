@@ -48,6 +48,7 @@ private slots:
     void wrap();
     void elide();
     void elideParentChanged();
+    void elideRelayoutAfterZeroWidth_data();
     void elideRelayoutAfterZeroWidth();
     void multilineElide_data();
     void multilineElide();
@@ -105,6 +106,7 @@ private slots:
     void largeTextInDelayedLoader();
     void lineLaidOut();
     void lineLaidOutRelayout();
+    void lineLaidOutFontUpdate();
     void lineLaidOutHAlign();
     void lineLaidOutImplicitWidth();
 
@@ -595,10 +597,19 @@ void tst_qquicktext::elideParentChanged()
     QCOMPARE(actualItemImageGrab, expectedItemImageGrab);
 }
 
+void tst_qquicktext::elideRelayoutAfterZeroWidth_data()
+{
+    QTest::addColumn<QByteArray>("fileName");
+
+    QTest::newRow("no_margins") << QByteArray("elideZeroWidth.qml");
+    QTest::newRow("with_margins") << QByteArray("elideZeroWidthWithMargins.qml");
+}
+
 void tst_qquicktext::elideRelayoutAfterZeroWidth()
 {
+    QFETCH(const QByteArray, fileName);
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("elideZeroWidth.qml"));
+    QQmlComponent component(&engine, testFileUrl(fileName.constData()));
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
@@ -3138,6 +3149,29 @@ void tst_qquicktext::lineLaidOutRelayout()
         }
         y += line.height();
     }
+}
+
+void tst_qquicktext::lineLaidOutFontUpdate()
+{
+    QScopedPointer<QQuickView> window(createView(testFile("lineLayoutFontUpdate.qml")));
+
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+
+    auto *myText = window->rootObject()->findChild<QQuickText*>("exampleText");
+    QVERIFY(myText != nullptr);
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText);
+    QVERIFY(textPrivate != nullptr);
+
+    QCOMPARE(textPrivate->layout.lineCount(), 2);
+
+    QTextLine firstLine = textPrivate->layout.lineAt(0);
+    QTextLine secondLine = textPrivate->layout.lineAt(1);
+
+    QCOMPARE(firstLine.rect().x(), secondLine.rect().x() + 40);
+    QCOMPARE(firstLine.rect().width(), secondLine.rect().width() - 40);
 }
 
 void tst_qquicktext::lineLaidOutHAlign()

@@ -316,7 +316,17 @@ protected:
     void processMessage(const QQuickProfilerData &message)
     {
         QMutexLocker lock(&m_dataMutex);
-        m_data.append(message);
+        if (Q_LIKELY(m_data.isEmpty() || m_data.last().time <= message.time)) {
+            m_data.append(message);
+            return;
+        }
+
+        // Since the scenegraph data is recorded from different threads, contention for the lock
+        // can cause it to be processed out of order here. Insert the message at the right place.
+        const auto it = std::find_if(
+                m_data.rbegin(), m_data.rend(),
+                [t = message.time](const QQuickProfilerData &i) { return i.time <= t; });
+        m_data.insert(it.base(), message);
     }
 
     void startProfilingImpl(quint64 features);

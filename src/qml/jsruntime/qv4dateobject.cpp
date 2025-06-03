@@ -315,14 +315,14 @@ static inline double ParseString(const QString &s, double localTZA)
       First, try the format defined in ECMA 262's "Date Time String Format";
       only if that fails, fall back to QDateTime for parsing
 
-      The defined string format is YYYY-MM-DDTHH:mm:ss.sssZ; the time (T and all
-      after it) may be omitted; in each part, the second and later components
-      are optional; and there's an extended syntax for negative and large
-      positive years: +/-YYYYYY; the leading sign, even when +, isn't optional.
-      If month or day is omitted, it is 01; if minute or second is omitted, it's
-      00; if milliseconds are omitted, they're 000.
+      The defined string format is yyyy-MM-ddTHH:mm:ss.zzzt; the time (T and all
+      after it) may be omitted. In each part, the second and later components
+      are optional. There's an extended syntax for negative and large positive
+      years: ±yyyyyy; the leading sign, even when +, isn't optional.  If month
+      (MM) or day (dd) is omitted, it is 01; if minute (mm) or second (ss) is
+      omitted, it's 00; if milliseconds (zzz) are omitted, they're 000.
 
-      When the time zone offset is absent, date-only forms are interpreted as
+      When the time zone offset (t) is absent, date-only forms are interpreted as
       indicating a UTC time and date-time forms are interpreted in local time.
     */
 

@@ -1,5 +1,5 @@
 // Copyright (C) 2019 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #ifndef QMLTYPESCREATOR_P_H
 #define QMLTYPESCREATOR_P_H
@@ -41,7 +41,10 @@ private:
     void writeType(const QJsonObject &property, const QString &key);
     void writeProperties(const QJsonArray &properties);
     void writeMethods(const QJsonArray &methods, const QString &type);
-    void writeEnums(const QJsonArray &enums);
+
+    enum class EnumClassesMode { Scoped, Unscoped };
+    void writeEnums(const QJsonArray &enums, EnumClassesMode enumClassesMode);
+
     void writeComponents();
 
     QByteArray m_output;

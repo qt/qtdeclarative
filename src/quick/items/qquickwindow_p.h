@@ -101,6 +101,8 @@ public:
     QQuickWindowPrivate();
     ~QQuickWindowPrivate() override;
 
+    void setPalette(QQuickPalette *p) override;
+    void updateWindowPalette();
     void updateChildrenPalettes(const QPalette &parentPalette) override;
 
     void init(QQuickWindow *, QQuickRenderControl *control = nullptr);
@@ -260,6 +262,7 @@ public:
     uint updatesEnabled : 1;
     bool pendingFontUpdate = false;
     bool windowEventDispatch = false;
+    QPointer<QQuickPalette> windowPaletteRef;
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);

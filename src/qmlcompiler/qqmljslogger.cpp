@@ -1,5 +1,5 @@
 // Copyright (C) 2022 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include <qglobal.h>
 
@@ -183,6 +183,18 @@ const QList<QQmlJSLogger::Category> &QQmlJSLogger::defaultCategories()
     };
 
     return cats;
+}
+
+bool QQmlJSFixSuggestion::operator==(const QQmlJSFixSuggestion &other) const
+{
+    return m_location == other.m_location && m_fixDescription == other.m_fixDescription
+            && m_replacement == other.m_replacement && m_filename == other.m_filename
+            && m_hint == other.m_hint && m_autoApplicable == other.m_autoApplicable;
+}
+
+bool QQmlJSFixSuggestion::operator!=(const QQmlJSFixSuggestion &other) const
+{
+    return !(*this == other);
 }
 
 const QList<QQmlJSLogger::Category> QQmlJSLogger::categories() const

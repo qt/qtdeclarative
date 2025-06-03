@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #ifndef QQMLJSLOGGER_P_H
 #define QQMLJSLOGGER_P_H
@@ -93,6 +93,9 @@ public:
 
     void setAutoApplicable(bool autoApply = true) { m_autoApplicable = autoApply; }
     bool isAutoApplicable() const { return m_autoApplicable; }
+
+    bool operator==(const QQmlJSFixSuggestion &) const;
+    bool operator!=(const QQmlJSFixSuggestion &) const;
 
 private:
     QQmlJS::SourceLocation m_location;

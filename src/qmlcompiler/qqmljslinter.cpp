@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljslinter_p.h"
 
@@ -833,6 +833,9 @@ QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent
               [](const QQmlJSFixSuggestion &a, const QQmlJSFixSuggestion &b) {
                   return a.location().offset < b.location().offset;
               });
+
+    const auto dupes = std::unique(fixesToApply.begin(), fixesToApply.end());
+    fixesToApply.erase(dupes, fixesToApply.end());
 
     for (auto it = fixesToApply.begin(); it + 1 != fixesToApply.end(); it++) {
         const QQmlJS::SourceLocation srcLocA = it->location();

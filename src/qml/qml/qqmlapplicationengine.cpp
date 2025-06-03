@@ -7,9 +7,9 @@
 #include <QQmlComponent>
 #include "qqmlapplicationengine.h"
 #include "qqmlapplicationengine_p.h"
+#include <QtQml/private/qqmlcomponent_p.h>
+#include <QtQml/private/qqmldirdata_p.h>
 #include <QtQml/private/qqmlfileselector_p.h>
-
-#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -109,15 +109,36 @@ void QQmlApplicationEnginePrivate::startLoad(const QUrl &url, const QByteArray &
     ensureLoadingFinishes(c);
 }
 
-void QQmlApplicationEnginePrivate::startLoad(QAnyStringView uri, QAnyStringView type)
+void QQmlApplicationEnginePrivate::startLoad(QAnyStringView uri, QAnyStringView typeName)
 {
     Q_Q(QQmlApplicationEngine);
 
-    _q_loadTranslations(); //Translations must be loaded before the QML file is
     QQmlComponent *c = new QQmlComponent(q, q);
 
     ensureInitialized();
-    c->loadFromModule(uri, type);
+
+    auto *componentPriv = QQmlComponentPrivate::get(c);
+    const auto [status, type] = componentPriv->prepareLoadFromModule(uri, typeName);
+
+    if (type.sourceUrl().isValid()) {
+        const auto qmlDirData = typeLoader.getQmldir(type.sourceUrl());
+        const QUrl url = qmlDirData->finalUrl();
+        if (url.scheme() == QLatin1String("file") || url.scheme() == QLatin1String("qrc")) {
+            QFileInfo fi(QQmlFile::urlToLocalFileOrQrc(url));
+            translationsDirectory = fi.path() + QLatin1String("/i18n");
+        } else {
+            translationsDirectory.clear();
+        }
+    }
+
+    /* Translations must be loaded before the QML file. They require translationDirectory to
+     * already be resolved. But, in order to resolve the translationDirectory, the type of the
+     * module to load needs to be known. Therefore, loadFromModule is split into resolution and
+     * loading because the translation directory needs to be set in between.
+     */
+    _q_loadTranslations();
+    componentPriv->completeLoadFromModule(uri, typeName, type, status);
+
     ensureLoadingFinishes(c);
 }
 
@@ -236,10 +257,9 @@ void QQmlApplicationEnginePrivate::ensureLoadingFinishes(QQmlComponent *c)
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
 
-    // quit on error
-    QObject::connect(&engine, QQmlApplicationEngine::objectCreationFailed,
-                     QCoreApplication::instance(), QCoreApplication::quit,
-                     Qt::QueuedConnection);
+    // exit on error
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+        &app, []() { QCoreApplication::exit(-1); }, Qt::QueuedConnection);
     engine.load(QUrl());
     return app.exec();
   \endcode

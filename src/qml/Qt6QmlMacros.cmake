@@ -655,6 +655,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             QML_FILES ${arg_QML_FILES}
             IMPORT_PATHS ${arg_IMPORT_PATH}
             NAMESPACE ${arg_TYPE_COMPILER_NAMESPACE}
+            MODULE ${arg_URI}
         )
     endif()
 
@@ -1071,14 +1072,13 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
         ${tool_wrapper}
         ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
-        ${qrc_resource_args}
         -o "${qmlcache_loader_cpp}"
         "@${qmlcache_loader_list}"
     )
 
     file(GENERATE
         OUTPUT ${qmlcache_loader_list}
-        CONTENT "$<JOIN:${qmlcache_resource_paths},\n>\n"
+        CONTENT "$<JOIN:${qrc_resource_args},\n>\n$<JOIN:${qmlcache_resource_paths},\n>\n"
     )
 
     add_custom_command(
@@ -1330,7 +1330,7 @@ endfunction()
 # Compile Qml files (.qml) to C++ source files with QML type compiler (qmltc).
 function(_qt_internal_target_enable_qmltc target)
     set(args_option "")
-    set(args_single NAMESPACE)
+    set(args_single NAMESPACE MODULE)
     set(args_multi QML_FILES IMPORT_PATHS)
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
@@ -1362,6 +1362,9 @@ function(_qt_internal_target_enable_qmltc target)
     set(common_args "")
     if(arg_NAMESPACE)
         list(APPEND common_args --namespace "${arg_NAMESPACE}")
+    endif()
+    if(arg_MODULE)
+        list(APPEND common_args --module "${arg_MODULE}")
     endif()
 
     get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)

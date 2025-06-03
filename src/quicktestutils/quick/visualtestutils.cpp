@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "visualtestutils_p.h"
 
@@ -111,7 +111,13 @@ void QQuickVisualTestUtils::PointLerper::move(int x, int y, int steps, int delay
     move(QPoint(x, y), steps, delayInMilliseconds);
 };
 
-bool QQuickVisualTestUtils::delegateVisible(QQuickItem *item)
+/*!
+    \internal
+
+    Returns \c true if \c {item->isVisible()} returns \c true, and
+    the item is not culled.
+*/
+bool QQuickVisualTestUtils::isDelegateVisible(QQuickItem *item)
 {
     return item->isVisible() && !QQuickItemPrivate::get(item)->culled;
 }

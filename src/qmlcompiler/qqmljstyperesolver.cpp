@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljstyperesolver_p.h"
 
@@ -907,7 +907,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
 
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {
-        if (enumeration.name() == name) {
+        if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
             *result = QQmlJSRegisterContent::create(
                     storedType(intType()), enumeration, QString(),
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
@@ -916,7 +916,7 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
             return true;
         }
 
-        if (enumeration.hasKey(name)) {
+        if (!enumeration.isScoped() && enumeration.hasKey(name)) {
             *result = QQmlJSRegisterContent::create(
                     storedType(intType()), enumeration, name,
                     inExtension ? QQmlJSRegisterContent::ExtensionObjectEnum
@@ -1016,6 +1016,12 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     // We can convert anything that fits into QJSPrimitiveValue
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
         return true;
+
+    if (from->isListProperty()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
+            && canConvertFromTo(from->valueType(), to->valueType())) {
+        return true;
+    }
 
     return false;
 }

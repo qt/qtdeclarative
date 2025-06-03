@@ -71,6 +71,10 @@ protected:
     void initialize(int gIdx, int pIdx) override;
     void prepareNextFrame();
 private:
+    bool clockShouldUpdate() const;
+    void updateClock();
+    void reconnectSystem(QQuickParticleSystem *system);
+    void reconnectParent(QQuickItem *parent);
     void processDeletables();
     void tick(int time = 0);
     QSet<QQuickItem* > m_deletables;
@@ -85,6 +89,10 @@ private:
 
     typedef QTickAnimationProxy<QQuickItemParticle, &QQuickItemParticle::tick> Clock;
     Clock *clock;
+    QMetaObject::Connection m_systemRunStateConnection;
+    QMetaObject::Connection m_systemPauseStateConnection;
+    QMetaObject::Connection m_systemEnabledStateConnection;
+    QMetaObject::Connection m_parentEnabledStateConnection;
 };
 
 class QQuickItemParticleAttached : public QObject

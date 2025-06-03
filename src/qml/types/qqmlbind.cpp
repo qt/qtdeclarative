@@ -1026,6 +1026,7 @@ void QQmlBind::eval()
                 break;
             case QQmlBindEntryKind::V4Value:
                 if (d->restoreValue) {
+                    QQmlAnyBinding::takeFrom(entry.prop); // we don't want to have a binding active
                     auto propPriv = QQmlPropertyPrivate::get(entry.prop);
                     QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
                     Q_ASSERT(vmemo);
@@ -1036,6 +1037,7 @@ void QQmlBind::eval()
                 break;
             case QQmlBindEntryKind::Variant:
                 if (d->restoreValue) {
+                    QQmlAnyBinding::takeFrom(entry.prop); // we don't want to have a binding active
                     entry.prop.write(entry.previous.variant);
                     entry.clearPrev();
                 }

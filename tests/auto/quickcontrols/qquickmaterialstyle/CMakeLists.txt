@@ -41,7 +41,8 @@ qt_internal_add_resource(tst_qquickmaterialstyle "qmake_immediate"
         ${qmake_immediate_resource_files}
 )
 
-
-#### Keys ignored in scope 1:.:.:qquickmaterialstyle.pro:<TRUE>:
-# OTHER_FILES = "$$PWD/data/*.qml"
-# TEMPLATE = "app"
+# Make the QML files available to Creator's locator.
+target_sources(tst_qquickmaterialstyle
+    PRIVATE
+        ${test_data}
+)

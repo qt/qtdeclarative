@@ -612,7 +612,24 @@ QQuickWidget::QQuickWidget(QWidget *parent)
 {
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
+#ifndef Q_OS_MACOS
+    /*
+        Usually, a QTouchEvent comes from a touchscreen, and we want those
+        touch events in Qt Quick. But on macOS, there are no touchscreens, and
+        WA_AcceptTouchEvents has a different meaning: QApplication::notify()
+        calls the native-integration function registertouchwindow() to change
+        NSView::allowedTouchTypes to include NSTouchTypeMaskIndirect when the
+        trackpad cursor enters the window, and removes that mask when the
+        cursor exits. In other words, WA_AcceptTouchEvents enables getting
+        discrete touchpoints from the trackpad. We rather prefer to get mouse,
+        wheel and native gesture events from the trackpad (because those
+        provide more of a "native feel"). The only exception is for
+        MultiPointTouchArea, and it takes care of that for itself. So don't
+        automatically set WA_AcceptTouchEvents on macOS. The user can still do
+        it, but we don't recommend it.
+    */
     setAttribute(Qt::WA_AcceptTouchEvents);
+#endif
     d_func()->init();
 }
 
@@ -1004,13 +1021,10 @@ void QQuickWidgetPrivate::initializeWithRhi()
 {
     Q_Q(QQuickWidget);
 
-    QWidgetPrivate *tlwd = QWidgetPrivate::get(q->window());
     // when reparenting, the rhi may suddenly be different
     if (rhi) {
-        QRhi *tlwRhi = nullptr;
-        if (QWidgetRepaintManager *repaintManager = tlwd->maybeRepaintManager())
-            tlwRhi = repaintManager->rhi();
-        if (tlwRhi && rhi != tlwRhi)
+        QRhi *backingStoreRhi = QWidgetPrivate::rhi();
+        if (backingStoreRhi && rhi != backingStoreRhi)
             rhi = nullptr;
     }
 
@@ -1022,18 +1036,16 @@ void QQuickWidgetPrivate::initializeWithRhi()
         if (rhi)
             return;
 
-        if (QWidgetRepaintManager *repaintManager = tlwd->maybeRepaintManager()) {
-            rhi = repaintManager->rhi();
-            if (rhi) {
-                // We don't own the RHI, so make sure we clean up if it goes away
-                rhi->addCleanupCallback(q, [this](QRhi *rhi) {
-                    if (this->rhi == rhi) {
-                        invalidateRenderControl();
-                        deviceLost = true;
-                        this->rhi = nullptr;
-                    }
-                });
-            }
+        if (QRhi *backingStoreRhi = QWidgetPrivate::rhi()) {
+            rhi = backingStoreRhi;
+            // We don't own the RHI, so make sure we clean up if it goes away
+            rhi->addCleanupCallback(q, [this](QRhi *rhi) {
+                if (this->rhi == rhi) {
+                    invalidateRenderControl();
+                    deviceLost = true;
+                    this->rhi = nullptr;
+                }
+            });
         }
 
         if (!rhi) {

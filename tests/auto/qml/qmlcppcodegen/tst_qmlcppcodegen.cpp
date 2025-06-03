@@ -41,6 +41,7 @@ private slots:
     void intOverflow();
     void stringLength();
     void scopeVsObject();
+    void scopedEnum();
     void sequenceToIterable();
     void compositeTypeMethod();
     void excessiveParameters();
@@ -127,6 +128,7 @@ private slots:
     void functionLookup();
     void objectInVar();
     void functionTakingVar();
+    void getLookupOfScript();
     void testIsnan();
     void fallbackLookups();
     void typedArray();
@@ -306,6 +308,18 @@ void tst_QmlCppCodegen::idAccess()
     QObject *ttt = qmlContext(object.data())->objectForName(u"ttt"_s);
     QFont f = qvariant_cast<QFont>(ttt->property("font"));
     QCOMPARE(f.pointSize(), 22);
+
+    QObject::connect(object.data(), &QObject::objectNameChanged, ttt, [&](){
+        ttt->setParent(nullptr);
+        QJSEngine::setObjectOwnership(ttt, QJSEngine::CppOwnership);
+        object.reset(ttt);
+    });
+
+    QVERIFY(object->objectName().isEmpty());
+    QVERIFY(ttt->objectName().isEmpty());
+    ttt->setProperty("text", u"kill"_s);
+    QCOMPARE(object.data(), ttt);
+    QCOMPARE(ttt->objectName(), u"context"_s);
 }
 
 static QByteArray arg1()
@@ -447,6 +461,35 @@ void tst_QmlCppCodegen::scopeVsObject()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("objectName").toString(), u"foobar"_s);
+}
+
+void tst_QmlCppCodegen::scopedEnum()
+{
+    QQmlEngine engine;
+    const QString url = u"qrc:/qt/qml/TestTypes/scopedEnum.qml"_s;
+    QQmlComponent component(&engine, QUrl(url));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":6:5: Unable to assign [undefined] to int"_s));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":8: TypeError: Cannot read property 'C' of undefined"_s));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            qPrintable(url + u":14: TypeError: Cannot read property 'C' of undefined"_s));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QCOMPARE(object->property("good").toInt(), 27);
+    QCOMPARE(object->property("bad").toInt(), 0);
+    QCOMPARE(object->property("wrong").toInt(), 0);
+    QCOMPARE(object->property("right").toInt(), 7);
+    QCOMPARE(object->property("notgood").toInt(), 26);
+    QCOMPARE(object->property("notbad").toInt(), 26);
+    QCOMPARE(object->property("notwrong").toInt(), 0);
+    QCOMPARE(object->property("notright").toInt(), 6);
+    QCOMPARE(object->property("passable").toInt(), 2);
+    QCOMPARE(object->property("wild").toInt(), 1);
 }
 
 void tst_QmlCppCodegen::sequenceToIterable()
@@ -1361,6 +1404,14 @@ void tst_QmlCppCodegen::overriddenProperty()
     QCOMPARE(child->objectName(), u"double"_s);
     QMetaObject::invokeMethod(child, "doArray");
     QCOMPARE(child->objectName(), u"javaScript"_s);
+
+    QMetaObject::invokeMethod(child, "doString2");
+    QCOMPARE(child->objectName(), u"string"_s);
+    QMetaObject::invokeMethod(child, "doNumber2");
+    QCOMPARE(child->objectName(), u"double"_s);
+    QMetaObject::invokeMethod(child, "doArray2");
+    QCOMPARE(child->objectName(), u"javaScript"_s);
+
     QMetaObject::invokeMethod(child, "doFoo");
     QCOMPARE(child->objectName(), u"ObjectWithMethod"_s);
 
@@ -2146,6 +2197,16 @@ void tst_QmlCppCodegen::functionTakingVar()
     e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
 
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::getLookupOfScript()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/NotificationItem.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), u"heading"_s);
 }
 
 void tst_QmlCppCodegen::testIsnan()

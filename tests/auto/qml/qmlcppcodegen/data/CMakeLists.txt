@@ -45,6 +45,8 @@ set(qml_files
     Enums.qml
     Foozle.qml
     Loopy.qml
+    NotificationItem.qml
+    NotificationsUtils.js
     OkType.qml
     Panel.qml
     ProgressBar/Keyframe.qml
@@ -189,6 +191,7 @@ set(qml_files
     revisions.qml
     scopeIdLookup.qml
     scopeVsObject.qml
+    scopedEnum.qml
     script.js
     script.mjs
     sequenceToIterable.qml

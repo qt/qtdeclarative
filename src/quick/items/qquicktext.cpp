@@ -2208,7 +2208,6 @@ void QQuickText::resetMaximumLineCount()
     \list
     \li code blocks use the \l {QFontDatabase::FixedFont}{default monospace font} but without a surrounding highlight box
     \li block quotes are indented, but there is no vertical line alongside the quote
-    \li horizontal rules are not rendered
     \endlist
 */
 QQuickText::TextFormat QQuickText::textFormat() const
@@ -2462,8 +2461,10 @@ void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
             }
         }
     } else if (!heightChanged && widthMaximum) {
-        if (!qFuzzyIsNull(oldGeometry.width())) {
+        if (oldGeometry.width() > 0) {
             // no change to height, width is adequate and wasn't 0 before
+            // (old width could also be negative if it was 0 and the margins
+            // were set)
             goto geomChangeDone;
         }
     }
@@ -3007,7 +3008,7 @@ void QQuickText::invalidate()
 {
     Q_D(QQuickText);
     d->textHasChanged = true;
-    d->updateLayout();
+    QMetaObject::invokeMethod(this,[&]{q_updateLayout();});
 }
 
 bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)

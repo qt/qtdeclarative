@@ -1,5 +1,5 @@
 // Copyright (C) 2021 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
 #include "qqmljsscope_p.h"
 #include "qqmljstypepropagator_p.h"
@@ -656,24 +656,32 @@ void QQmlJSTypePropagator::generate_StoreNameStrict(int name)
 }
 
 bool QQmlJSTypePropagator::checkForEnumProblems(
-        const QQmlJSRegisterContent &base, const QString &propertyName) const
+        const QQmlJSRegisterContent &base, const QString &propertyName)
 {
     if (base.isEnumeration()) {
         const auto metaEn = base.enumeration();
-        if (!metaEn.isScoped()) {
-            m_logger->log(u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName),
-                          qmlRestrictedType, getCurrentSourceLocation());
-            return true;
-        } else if (!metaEn.hasKey(propertyName)) {
+        if (!metaEn.hasKey(propertyName)) {
             auto fixSuggestion = QQmlJSUtils::didYouMean(propertyName, metaEn.keys(),
                                                          getCurrentSourceLocation());
-            m_logger->log(u"\"%1\" is not an entry of enum \"%2\"."_s.arg(propertyName)
-                                  .arg(metaEn.name()),
-                          qmlMissingEnumEntry, getCurrentSourceLocation(), true, true,
-                          fixSuggestion);
+            const QString error = u"\"%1\" is not an entry of enum \"%2\"."_s
+                                          .arg(propertyName, metaEn.name());
+            setError(error);
+            m_logger->log(
+                    error, qmlMissingEnumEntry, getCurrentSourceLocation(), true, true,
+                    fixSuggestion);
+            return true;
+        }
+    } else if (base.variant() == QQmlJSRegisterContent::MetaType) {
+        const QQmlJSMetaEnum metaEn = base.scopeType()->enumeration(propertyName);
+        if (metaEn.isValid() && !metaEn.isScoped() && !metaEn.isQml()) {
+            const QString error
+                    = u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName);
+            setError(error);
+            m_logger->log(error, qmlRestrictedType, getCurrentSourceLocation());
             return true;
         }
     }
+
     return false;
 }
 
@@ -783,10 +791,10 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         }
     }
 
-    if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
-        return;
-
     if (!m_state.accumulatorOut().isValid()) {
+        if (checkForEnumProblems(m_state.accumulatorIn(), propertyName))
+            return;
+
         setError(u"Cannot load property %1 from %2."_s
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
 
