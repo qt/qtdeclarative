@@ -128,6 +128,10 @@ void QQuickFolderListModelPrivate::_q_directoryChanged(const QString &directory,
     qCDebug(lcFolderListModel) << "_q_directoryChanged called with directory" << directory;
     Q_Q(QQuickFolderListModel);
     Q_UNUSED(directory);
+    if (!resettingModel) {
+        resettingModel = true;
+        q->beginResetModel();
+    }
 
     data = list;
     q->endResetModel();

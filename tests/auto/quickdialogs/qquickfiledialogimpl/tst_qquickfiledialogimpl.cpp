@@ -95,6 +95,7 @@ private slots:
     void setSchemeForSelectedFile();
     void reopenAfterHideEvent();
     void sidebarStandardPaths();
+    void reentrantFolder();
 
 private:
     enum DelegateOrderPolicy
@@ -1802,6 +1803,56 @@ void tst_QQuickFileDialogImpl::sidebarStandardPaths()
         QCOMPARE(dialogHelper.dialog->currentFolder().toLocalFile(), QStandardPaths::writableLocation(paths[i]));
         QCOMPARE(dialogHelper.quickDialog->currentFolder().toLocalFile(), QStandardPaths::writableLocation(paths[i]));
     }
+}
+
+// We check that if the folder is reset from the qml
+// the view is correctly updated. We only check the
+// count to be correct.
+void tst_QQuickFileDialogImpl::reentrantFolder()
+{
+    QTemporaryDir tmpDir;
+    const QString baseDir = QFileInfo(tmpDir.path()).canonicalFilePath();
+
+    // These directories are not reachable in the sense that
+    // reentrantfolder.qml will reset to (baseDir) if we try
+    // to change the directory.
+
+    // The test is that we try to change directory to
+    // (baseDir)/NotReachable1, which has a content count of
+    // 3 (a, b, c).
+
+    // reentrantfolder.qml will then change the folder back
+    // to (basedir), which has a content count of 2
+    // (NotReachable1, NotReachable2)
+
+    // So we test if the number of items is 2, to see that
+    // the reset back to (basedir) worked as expected.
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable1")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable1/a")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable1/b")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable1/c")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable2")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable2/a")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable2/b")));
+    QVERIFY(QDir().mkdir(baseDir + QLatin1String("/NotReachable2/c")));
+
+    // Open the dialog.
+    FileDialogTestHelper dialogHelper(this, "reentrantfolder.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+    QVERIFY(QQmlProperty::write(dialogHelper.dialog, QString::fromUtf8("forceFolder"), QUrl::fromLocalFile(baseDir)));
+
+    // Check setCurrentFolder
+    dialogHelper.quickDialog->setCurrentFolder(QUrl::fromLocalFile(baseDir + "/NotReachable1"));
+    QTRY_COMPARE(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(baseDir));
+    QTRY_COMPARE(dialogHelper.fileDialogListView->count(), 2); // { NotReachable1, NotReachable2 }
+
+    // Check double click
+    QQuickFileDialogDelegate *delegate = nullptr;
+    QTRY_VERIFY(findViewDelegateItem(dialogHelper.fileDialogListView, 0, delegate));
+    QVERIFY(doubleClickButton(delegate));
+    QTRY_COMPARE(dialogHelper.quickDialog->currentFolder(), QUrl::fromLocalFile(baseDir));
+    QTRY_COMPARE(dialogHelper.fileDialogListView->count(), 2); // { NotReachable1, NotReachable2 }
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)
