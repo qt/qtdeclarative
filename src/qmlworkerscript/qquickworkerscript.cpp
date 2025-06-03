@@ -194,6 +194,8 @@ bool QQuickWorkerScriptEnginePrivate::event(QEvent *event)
 
 QV4::ExecutionEngine *QQuickWorkerScriptEnginePrivate::workerEngine(int id)
 {
+    QMutexLocker locker(&m_lock);
+
     const auto it = workers.find(id);
     if (it == workers.end())
         return nullptr;
@@ -344,19 +346,16 @@ QQmlError WorkerErrorEvent::error() const
 QQuickWorkerScriptEngine::QQuickWorkerScriptEngine(QQmlEngine *parent)
 : QThread(parent), d(new QQuickWorkerScriptEnginePrivate(parent))
 {
-    d->m_lock.lock();
     connect(d, SIGNAL(stopThread()), this, SLOT(quit()), Qt::DirectConnection);
+    QMutexLocker locker(&d->m_lock);
     start(QThread::LowestPriority);
     d->m_wait.wait(&d->m_lock);
     d->moveToThread(this);
-    d->m_lock.unlock();
 }
 
 QQuickWorkerScriptEngine::~QQuickWorkerScriptEngine()
 {
-    d->m_lock.lock();
     QCoreApplication::postEvent(d, new QEvent((QEvent::Type)QQuickWorkerScriptEnginePrivate::WorkerDestroyEvent));
-    d->m_lock.unlock();
 
     //We have to force to cleanup the main thread's event queue here
     //to make sure the main GUI release all pending locks/wait conditions which
@@ -405,23 +404,24 @@ int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)
 {
     const int id = d->m_nextId++;
 
-    d->m_lock.lock();
+    QMutexLocker locker(&d->m_lock);
     d->workers.insert(id, owner);
-    d->m_lock.unlock();
 
     return id;
 }
 
 void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
-    const auto it = d->workers.constFind(id);
-    if (it == d->workers.cend())
-        return;
+    {
+        QMutexLocker locker(&d->m_lock);
+        const auto it = d->workers.constFind(id);
+        if (it == d->workers.cend())
+            return;
 
-    if (it->isT1()) {
-        QV4::ExecutionEngine *engine = it->asT1();
-        workerScriptExtension(engine)->owner = nullptr;
+        if (it->isT1())
+            workerScriptExtension(it->asT1())->owner = nullptr;
     }
+
     QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
 }
 
@@ -437,12 +437,14 @@ void QQuickWorkerScriptEngine::sendMessage(int id, const QByteArray &data)
 
 void QQuickWorkerScriptEngine::run()
 {
-    d->m_lock.lock();
-    d->m_wait.wakeAll();
-    d->m_lock.unlock();
+    {
+        QMutexLocker locker(&d->m_lock);
+        d->m_wait.wakeAll();
+    }
 
     exec();
 
+    QMutexLocker locker(&d->m_lock);
     for (auto it = d->workers.begin(), end = d->workers.end(); it != end; ++it) {
         if (it->isT1())
             delete it->asT1();
