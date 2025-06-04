@@ -182,18 +182,18 @@ private:
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                     bool storeSourceLocation, QV4::Compiler::CodegenWarningInterface *interface,
+                     bool storeSourceLocation, QV4::Compiler::CodegenWarningInterface *wInterface,
                      const QString *fileContents)
 {
     QmlIR::Document irDocument(QString(), QString(), /*debugMode*/false);
     return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error,
-                           storeSourceLocation, interface, fileContents);
+                           storeSourceLocation, wInterface, fileContents);
 }
 
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
                      QQmlJSCompileError *error, bool storeSourceLocation,
-                     QV4::Compiler::CodegenWarningInterface *interface, const QString *fileContents)
+                     QV4::Compiler::CodegenWarningInterface *wInterface, const QString *fileContents)
 {
     QString sourceCode;
 
@@ -224,7 +224,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
     QQmlJSAotFunctionMap aotFunctionsByIndex;
 
     {
-        QmlIR::JSCodeGen v4CodeGen(&irDocument, *illegalNames(), interface, storeSourceLocation);
+        QmlIR::JSCodeGen v4CodeGen(&irDocument, *illegalNames(), wInterface, storeSourceLocation);
 
         if (aotCompiler)
             aotCompiler->setDocument(&v4CodeGen, &irDocument);
