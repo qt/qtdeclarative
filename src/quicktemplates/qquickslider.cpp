@@ -348,6 +348,9 @@ void QQuickSlider::setValue(qreal value)
     if (isComponentComplete())
         value = d->from > d->to ? qBound(d->to, value, d->from) : qBound(d->from, value, d->to);
 
+    if (qFuzzyIsNull(value))
+        value = 0.0;
+
     if (qFuzzyCompare(d->value, value))
         return;
 

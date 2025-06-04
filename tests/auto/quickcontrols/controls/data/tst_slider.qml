@@ -155,6 +155,48 @@ TestCase {
         compare(control.visualPosition, 0.75)
     }
 
+    function test_floatingPointPrecision() {
+        let control = createTemporaryObject(slider, testCase, {
+            from: 0, to: 1, stepSize: 0.1, value: 0.0
+        })
+        verify(control)
+
+        compare(control.value, 0.0)
+        compare(control.position, 0.0)
+
+        // programmatically increase and decrease the value
+        for (let i = 1; i < 4; i++) {
+            control.increase()
+            compare(control.value, i * 0.1)
+            compare(control.position, i * 0.1)
+        }
+        let value = control.value
+        for (let i = 1; i < 4; i++) {
+            control.decrease()
+            compare(control.value, value - i * 0.1)
+            compare(control.position, value - i * 0.1)
+        }
+        // Compare as strings to avoid a fuzzy compare; we want an exact match.
+        compare("" + control.value, "" + 0)
+        compare("" + control.position, "" + 0)
+
+        // small delta should not change the value
+        let smallDelta = 1e-13
+        control.value = 0.5 + smallDelta
+        compare(control.value, 0.5)
+        compare(control.position, 0.5)
+
+        // set a value very close to 0
+        control.value = 1e-12
+        compare("" + control.value, "" + 0)
+        compare("" + control.position, "" + 0)
+
+        // set value to 0
+        control.value = 0
+        compare("" + control.value, "" + 0)
+        compare("" + control.position, "" + 0)
+    }
+
     function test_orientation() {
         let control = createTemporaryObject(slider, testCase)
         verify(control)
