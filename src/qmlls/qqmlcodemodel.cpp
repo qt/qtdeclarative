@@ -63,21 +63,20 @@ synchronization here.
 \section2 Parallelism/Theading
 Most operations are not parallel and usually take place in the main thread (but are still thread
 safe).
-There are two main task that are executed in parallel: Indexing, and OpenDocumentUpdate.
-Indexing is meant to keep the global view up to date.
+There is one task that is executed in parallel: OpenDocumentUpdate.
 OpenDocumentUpdate keeps the snapshots of the open documents up to date.
 
 There is always a tension between being responsive, using all threads available, and avoid to hog
 too many resources. One can choose different parallelization strategies, we went with a flexiable
 approach.
-We have (private) functions that execute part of the work: indexSome() and openUpdateSome(). These
+We have (private) functions that execute part of the work: openUpdateSome(). These
 do all locking needed, get some work, do it without locks, and at the end update the state of the
 code model. If there is more work, then they return true. Thus while (xxxSome()); works until there
 is no work left.
 
-addDirectoriesToIndex(), the internal addDirectory() and addOpenToUpdate() add more work to do.
+The internal addOpenToUpdate() add more work to do.
 
-indexNeedsUpdate() and openNeedUpdate(), check if there is work to do, and if yes ensure that a
+openNeedUpdate() checks if there is work to do, and if yes ensure that a
 worker thread (or more) that work on it exist.
 */
 
@@ -113,7 +112,7 @@ QQmlCodeModel::~QQmlCodeModel()
             QMutexLocker l(&m_mutex);
             m_state = State::Stopping;
             m_openDocumentsToUpdate.clear();
-            shouldWait = m_nIndexInProgress != 0 || m_nUpdateInProgress != 0;
+            shouldWait = m_nUpdateInProgress != 0;
         }
         if (!shouldWait)
             break;
@@ -126,143 +125,8 @@ OpenDocumentSnapshot QQmlCodeModel::snapshotByUrl(const QByteArray &url)
     return openDocumentByUrl(url).snapshot;
 }
 
-int QQmlCodeModel::indexEvalProgress() const
-{
-    Q_ASSERT(!m_mutex.tryLock()); // should be called while locked
-    const int dirCost = 10;
-    int costToDo = 1;
-    for (const ToIndex &el : std::as_const(m_toIndex))
-        costToDo += dirCost * el.leftDepth;
-    costToDo += m_indexInProgressCost;
-    return m_indexDoneCost * 100 / (costToDo + m_indexDoneCost);
-}
-
-void QQmlCodeModel::indexStart()
-{
-    Q_ASSERT(!m_mutex.tryLock()); // should be called while locked
-    qCDebug(codeModelLog) << "indexStart";
-}
-
-void QQmlCodeModel::indexEnd()
-{
-    Q_ASSERT(!m_mutex.tryLock()); // should be called while locked
-    qCDebug(codeModelLog) << "indexEnd";
-    m_lastIndexProgress = 0;
-    m_nIndexInProgress = 0;
-    m_toIndex.clear();
-    m_indexInProgressCost = 0;
-    m_indexDoneCost = 0;
-}
-
-void QQmlCodeModel::indexSendProgress(int progress)
-{
-    if (progress <= m_lastIndexProgress)
-        return;
-    m_lastIndexProgress = progress;
-    // ### actually send progress
-}
-
-bool QQmlCodeModel::indexCancelled()
-{
-    QMutexLocker l(&m_mutex);
-    if (m_state == State::Stopping)
-        return true;
-    return false;
-}
-
-void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
-{
-    if (indexCancelled())
-        return;
-    QDir dir(path);
-    if (depthLeft > 1) {
-        const QStringList dirs =
-                dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot | QDir::NoSymLinks);
-        for (const QString &child : dirs)
-            addDirectory(dir.filePath(child), --depthLeft);
-    }
-    const QStringList qmljs =
-            dir.entryList(QStringList({ u"*.qml"_s, u"*.js"_s, u"*.mjs"_s }), QDir::Files);
-    int progress = 0;
-    {
-        QMutexLocker l(&m_mutex);
-        m_indexInProgressCost += qmljs.size();
-        progress = indexEvalProgress();
-    }
-    indexSendProgress(progress);
-    if (qmljs.isEmpty())
-        return;
-    DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
-    for (const QString &file : qmljs) {
-        if (indexCancelled())
-            return;
-        QString fPath = dir.filePath(file);
-        auto newCurrentPtr = newCurrent.ownerAs<DomEnvironment>();
-        FileToLoad fileToLoad = FileToLoad::fromFileSystem(newCurrentPtr, fPath);
-        if (!fileToLoad.canonicalPath().isEmpty()) {
-            newCurrentPtr->loadBuiltins();
-            newCurrentPtr->loadFile(fileToLoad, [](Path, const DomItem &, const DomItem &) {});
-            newCurrentPtr->loadPendingDependencies();
-            newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
-        }
-        {
-            QMutexLocker l(&m_mutex);
-            ++m_indexDoneCost;
-            --m_indexInProgressCost;
-            progress = indexEvalProgress();
-        }
-        indexSendProgress(progress);
-    }
-}
-
-void QQmlCodeModel::addDirectoriesToIndex(const QStringList &paths, QLanguageServer *server)
-{
-    Q_UNUSED(server);
-    // ### create progress, &scan in a separate instance
-    const int maxDepth = 5;
-    for (const auto &path : paths)
-        addDirectory(path, maxDepth);
-    indexNeedsUpdate();
-}
-
-void QQmlCodeModel::addDirectory(const QString &path, int depthLeft)
-{
-    if (depthLeft < 1)
-        return;
-    {
-        QMutexLocker l(&m_mutex);
-        for (auto it = m_toIndex.begin(); it != m_toIndex.end();) {
-            if (it->path.startsWith(path)) {
-                if (it->path.size() == path.size())
-                    return;
-                if (it->path.at(path.size()) == u'/') {
-                    it = m_toIndex.erase(it);
-                    continue;
-                }
-            } else if (path.startsWith(it->path) && path.at(it->path.size()) == u'/')
-                return;
-            ++it;
-        }
-        m_toIndex.append({ path, depthLeft });
-    }
-}
-
 void QQmlCodeModel::removeDirectory(const QString &path)
 {
-    {
-        QMutexLocker l(&m_mutex);
-        auto toRemove = [path](const QString &p) {
-            return p.startsWith(path) && (p.size() == path.size() || p.at(path.size()) == u'/');
-        };
-        auto it = m_toIndex.begin();
-        auto end = m_toIndex.end();
-        while (it != end) {
-            if (toRemove(it->path))
-                it = m_toIndex.erase(it);
-            else
-                ++it;
-        }
-    }
     if (auto validEnvPtr = m_validEnv.ownerAs<DomEnvironment>())
         validEnvPtr->removePath(path);
     if (auto currentEnvPtr = m_currentEnv.ownerAs<DomEnvironment>())
@@ -326,59 +190,13 @@ const RegisteredSemanticTokens &QQmlCodeModel::registeredTokens() const
     return m_tokens;
 }
 
-void QQmlCodeModel::indexNeedsUpdate()
-{
-    const int maxIndexThreads = 1;
-    {
-        QMutexLocker l(&m_mutex);
-        if (m_toIndex.isEmpty() || m_nIndexInProgress >= maxIndexThreads)
-            return;
-        if (++m_nIndexInProgress == 1)
-            indexStart();
-    }
-    QThreadPool::globalInstance()->start([this]() {
-        while (indexSome()) { }
-    });
-}
-
-bool QQmlCodeModel::indexSome()
-{
-    qCDebug(codeModelLog) << "indexSome";
-    ToIndex toIndex;
-    {
-        QMutexLocker l(&m_mutex);
-        if (m_toIndex.isEmpty()) {
-            if (--m_nIndexInProgress == 0)
-                indexEnd();
-            return false;
-        }
-        toIndex = m_toIndex.last();
-        m_toIndex.removeLast();
-    }
-    bool hasMore = false;
-    {
-        auto guard = qScopeGuard([this, &hasMore]() {
-            QMutexLocker l(&m_mutex);
-            if (m_toIndex.isEmpty()) {
-                if (--m_nIndexInProgress == 0)
-                    indexEnd();
-                hasMore = false;
-            } else {
-                hasMore = true;
-            }
-        });
-        indexDirectory(toIndex.path, toIndex.leftDepth);
-    }
-    return hasMore;
-}
-
 void QQmlCodeModel::openNeedUpdate()
 {
     qCDebug(codeModelLog) << "openNeedUpdate";
-    const int maxIndexThreads = 1;
+    const int maxThreads = 1;
     {
         QMutexLocker l(&m_mutex);
-        if (m_openDocumentsToUpdate.isEmpty() || m_nUpdateInProgress >= maxIndexThreads)
+        if (m_openDocumentsToUpdate.isEmpty() || m_nUpdateInProgress >= maxThreads)
             return;
         if (++m_nUpdateInProgress == 1)
             openUpdateStart();
