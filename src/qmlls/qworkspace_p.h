@@ -24,7 +24,6 @@ class WorkspaceHandlers : public QLanguageServerModule
 {
     Q_OBJECT
 public:
-    enum class Status { NoIndex, Indexing };
     WorkspaceHandlers(QmlLsp::QQmlCodeModel *codeModel) : m_codeModel(codeModel) { }
     QString name() const override;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
@@ -35,7 +34,6 @@ public Q_SLOTS:
 
 private:
     QmlLsp::QQmlCodeModel *m_codeModel = nullptr;
-    Status m_status = Status::NoIndex;
 };
 
 QT_END_NAMESPACE

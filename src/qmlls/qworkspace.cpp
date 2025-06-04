@@ -19,7 +19,7 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
 {
     QObject::connect(server->notifySignals(),
                      &QLspNotifySignals::receivedDidChangeWorkspaceFoldersNotification, this,
-                     [server, this](const DidChangeWorkspaceFoldersParams &params) {
+                     [this](const DidChangeWorkspaceFoldersParams &params) {
                          const WorkspaceFoldersChangeEvent &event = params.event;
 
                          const QList<WorkspaceFolder> &removed = event.removed;
@@ -32,14 +32,10 @@ void WorkspaceHandlers::registerHandlers(QLanguageServer *server, QLanguageServe
                          m_codeModel->removeRootUrls(toRemove);
                          const QList<WorkspaceFolder> &added = event.added;
                          QList<QByteArray> toAdd;
-                         QStringList pathsToAdd;
                          for (const WorkspaceFolder &folder : added) {
                              toAdd.append(QQmlLSUtils::lspUriToQmlUrl(folder.uri));
-                             pathsToAdd.append(m_codeModel->url2Path(
-                                     QQmlLSUtils::lspUriToQmlUrl(folder.uri)));
                          }
                          m_codeModel->addRootUrls(toAdd);
-                         m_codeModel->addDirectoriesToIndex(pathsToAdd, server);
                      });
 
     QObject::connect(server->notifySignals(),
@@ -165,8 +161,6 @@ void WorkspaceHandlers::clientInitialized(QLanguageServer *server)
             rootPaths.insert(workspaceUrl.toLocalFile());
         }
     }
-    if (m_status == Status::Indexing)
-        m_codeModel->addDirectoriesToIndex(QStringList(rootPaths.begin(), rootPaths.end()), server);
 }
 
 QT_END_NAMESPACE
