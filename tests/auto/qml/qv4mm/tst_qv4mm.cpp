@@ -46,6 +46,7 @@ private slots:
     void jittedStoreLocalMarksValue();
     void forInOnProxyMarksTarget();
     void allocWithMemberDataMidwayDrain();
+    void constObjectWrapperOnlyConstInSingleEngine();
     void markObjectWrappersAfterMarkWeakValues();
 };
 
@@ -798,6 +799,32 @@ void tst_qv4mm::allocWithMemberDataMidwayDrain()
     // engine shutdown
     o->internalClass.set(&v4, QV4::Object::defaultInternalClass(&v4));
     QVERIFY(o); // dummy check
+}
+
+void tst_qv4mm::constObjectWrapperOnlyConstInSingleEngine()
+{
+    auto myObject = new QObject(this);
+    QV4::ExecutionEngine e1 {};
+    // prevent the gc from running too early
+    e1.memoryManager->gcBlocked = QV4::MemoryManager::NormalBlocked;
+    // create a non-const wrapper in the first engine
+    QV4::QObjectWrapper::ensureWrapper(&e1, myObject);
+    {
+        QV4::ExecutionEngine e2 {};
+        QV4::Scope scope(&e2);
+        // create a const wrapper in the second engine
+        QV4::ScopedValue val(scope, QV4::QObjectWrapper::wrapConst(&e2, myObject));
+    }
+    QVERIFY(!e1.m_multiplyWrappedQObjects);
+    auto ddata = QQmlData::get(myObject, false);
+    QVERIFY(ddata);
+    QVERIFY(ddata->hasConstWrapper);
+    e1.memoryManager->gcBlocked = QV4::MemoryManager::Unblocked;
+    gc(e1); // should not trigger an assert
+    // hasConstWrapper only tells us that at some point, some engine created one;
+    // the const wrappers are not actually shared, but we can't know when the last
+    // one is gone
+    QVERIFY(ddata->hasConstWrapper);
 }
 
 void tst_qv4mm::markObjectWrappersAfterMarkWeakValues()

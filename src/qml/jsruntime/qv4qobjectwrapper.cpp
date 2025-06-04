@@ -890,10 +890,8 @@ void QObjectWrapper::markWrapper(QObject *object, MarkStack *markStack)
         ddata->jsWrapper.markOnce(markStack);
     else if (engine->m_multiplyWrappedQObjects && ddata->hasTaintedV4Object)
         engine->m_multiplyWrappedQObjects->mark(object, markStack);
-    if (ddata->hasConstWrapper) {
-        Q_ASSERT(engine->m_multiplyWrappedQObjects);
+    if (ddata->hasConstWrapper && engine->m_multiplyWrappedQObjects)
         engine->m_multiplyWrappedQObjects->mark(static_cast<const QObject *>(object), markStack);
-    }
 }
 
 void QObjectWrapper::setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value)
@@ -1507,26 +1505,26 @@ void Heap::QObjectWrapper::markObjects(Heap::Base *that, MarkStack *markStack)
                 }
             }
 
-            if (ddata->hasConstWrapper) {
+            // mark the const wrapper if our engine has interacted with it at some point
+            if (ddata->hasConstWrapper && that->internalClass->engine->m_multiplyWrappedQObjects) {
                 Scope scope(that->internalClass->engine);
-                Q_ASSERT(scope.engine->m_multiplyWrappedQObjects);
 
                 Scoped<QV4::QObjectWrapper> constWrapper(
                         scope,
                         scope.engine->m_multiplyWrappedQObjects->value(
                                 static_cast<const QObject *>(o)));
 
-                Q_ASSERT(constWrapper);
-
-                if (This == constWrapper->d()) {
-                    // We've got the const wrapper. Also mark the non-const one
-                    if (ddata->jsEngineId == scope.engine->m_engineId)
-                        ddata->jsWrapper.markOnce(markStack);
-                    else
-                        scope.engine->m_multiplyWrappedQObjects->mark(o, markStack);
-                } else {
-                    // We've got the non-const wrapper. Also mark the const one.
-                    constWrapper->mark(markStack);
+                if (constWrapper) {
+                    if (This == constWrapper->d()) {
+                        // We've got the const wrapper. Also mark the non-const one
+                        if (ddata->jsEngineId == scope.engine->m_engineId)
+                            ddata->jsWrapper.markOnce(markStack);
+                        else
+                            scope.engine->m_multiplyWrappedQObjects->mark(o, markStack);
+                    } else {
+                        // We've got the non-const wrapper. Also mark the const one.
+                        constWrapper->mark(markStack);
+                    }
                 }
             }
         }

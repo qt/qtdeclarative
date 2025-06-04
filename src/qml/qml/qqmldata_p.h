@@ -105,7 +105,11 @@ public:
     // set when at least one of the object's properties is intercepted
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
-    // If we have another wrapper for a const QObject * in the multiply wrapped QObjects.
+    /* If we have another wrapper for a const QObject * in the multiply wrapped QObjects,
+     * in one of the engines. If multiple engines are used, we might not actually have
+     * a const wrapper. However, if the flag is not set, we can avoid some additional
+     * lookups in the map.
+     */
     quint32 hasConstWrapper: 1;
     quint32 dummy:7;
 
