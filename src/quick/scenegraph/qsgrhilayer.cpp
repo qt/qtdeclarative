@@ -31,6 +31,9 @@ void QSGRhiLayer::invalidated()
 {
     releaseResources();
 
+    delete m_prevTexture;
+    m_prevTexture = nullptr;
+
     delete m_renderer;
     m_renderer = nullptr;
 }
@@ -52,7 +55,7 @@ bool QSGRhiLayer::hasMipmaps() const
 
 QRhiTexture *QSGRhiLayer::rhiTexture() const
 {
-    return m_texture;
+    return m_prevTexture ? m_prevTexture : m_texture;
 }
 
 void QSGRhiLayer::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
@@ -214,11 +217,26 @@ void QSGRhiLayer::releaseResources()
     delete m_msaaColorBuffer;
     m_msaaColorBuffer = nullptr;
 
-    delete m_texture;
+    if (m_prevTexture != m_texture)
+        delete m_texture;
+
     m_texture = nullptr;
 
     delete m_secondaryTexture;
     m_secondaryTexture = nullptr;
+}
+
+void QSGRhiLayer::clearMainTexture()
+{
+    std::unique_ptr<QRhiTextureRenderTarget> tempRt(m_rhi->newTextureRenderTarget({ m_texture }));
+    std::unique_ptr<QRhiRenderPassDescriptor> tempRp(tempRt->newCompatibleRenderPassDescriptor());
+    tempRt->setRenderPassDescriptor(tempRp.get());
+    if (tempRt->create()) {
+        m_context->currentFrameCommandBuffer()->beginPass(tempRt.get(), Qt::transparent, { 1.0f, 0 });
+        m_context->currentFrameCommandBuffer()->endPass();
+    } else {
+        qWarning("Failed to clear layer main texture in recursive mode");
+    }
 }
 
 void QSGRhiLayer::grab()
@@ -260,8 +278,15 @@ void QSGRhiLayer::grab()
         // that will likely break 3D for instance but that's fine)
         static bool depthBufferEnabled = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
 
+        if (m_recursive && m_texture) {
+            if (m_prevTexture != m_texture)
+                delete m_prevTexture;
+            m_prevTexture = m_texture;
+        }
+
+        releaseResources();
+
         if (m_multisampling) {
-            releaseResources();
             m_msaaColorBuffer = m_rhi->newRenderBuffer(QRhiRenderBuffer::Color, m_pixelSize, effectiveSamples);
             if (!m_msaaColorBuffer->create()) {
                 qWarning("Failed to build multisample color buffer for layer of size %dx%d, sample count %d",
@@ -292,6 +317,8 @@ void QSGRhiLayer::grab()
                     return;
                 }
                 color0.setResolveTexture(m_secondaryTexture);
+                if (!m_prevTexture)
+                    clearMainTexture();
             } else {
                 color0.setResolveTexture(m_texture);
             }
@@ -312,7 +339,6 @@ void QSGRhiLayer::grab()
                 return;
             }
         } else {
-            releaseResources();
             m_texture = m_rhi->newTexture(m_format, m_pixelSize, 1, textureFlags);
             if (!m_texture->create()) {
                 qWarning("Failed to build texture for layer of size %dx%d", m_pixelSize.width(), m_pixelSize.height());
@@ -337,6 +363,8 @@ void QSGRhiLayer::grab()
                     return;
                 }
                 color0.setTexture(m_secondaryTexture);
+                if (!m_prevTexture)
+                    clearMainTexture();
             }
             QRhiTextureRenderTargetDescription desc({ color0 });
             if (depthBufferEnabled)
@@ -409,6 +437,10 @@ void QSGRhiLayer::grab()
         if (!resourceUpdates)
             resourceUpdates = m_rhi->nextResourceUpdateBatch();
         resourceUpdates->copyTexture(m_texture, m_secondaryTexture);
+        if (m_prevTexture) {
+            delete m_prevTexture;
+            m_prevTexture = nullptr;
+        }
     } else {
         m_context->renderNextFrame(m_renderer);
     }

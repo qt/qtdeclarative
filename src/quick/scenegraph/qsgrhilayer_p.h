@@ -65,6 +65,7 @@ public Q_SLOTS:
 private:
     void grab();
     void releaseResources();
+    void clearMainTexture();
 
     QSGNode *m_item = nullptr;
     QRectF m_logicalRect;
@@ -74,6 +75,7 @@ private:
 
     QSGRenderer *m_renderer = nullptr;
     QRhiTexture *m_texture = nullptr;
+    QRhiTexture *m_prevTexture = nullptr;
     QSharedPointer<QSGDepthStencilBuffer> m_ds;
     QRhiRenderBuffer *m_msaaColorBuffer = nullptr;
     QRhiTexture *m_secondaryTexture = nullptr;
