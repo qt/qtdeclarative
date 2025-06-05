@@ -73,6 +73,9 @@ private slots:
     void aotstatsSerialization();
     void aotstatsGeneration_data();
     void aotstatsGeneration();
+
+    void crash_data();
+    void crash();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -115,6 +118,36 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
 
     if (capturedStderr)
         *capturedStderr = proc.readAllStandardError();
+
+    if (proc.exitStatus() != QProcess::NormalExit)
+        return false;
+    return proc.exitCode() == 0;
+}
+
+static bool generateCpp(const QString &qmlFileName, QByteArray *capturedStderr = nullptr)
+{
+#if defined(QTEST_CROSS_COMPILED)
+    QTest::qFail("You cannot call qmlcachegen on the target.", __FILE__, __LINE__);
+    return false;
+#endif
+    QProcess proc;
+    if (capturedStderr == nullptr)
+        proc.setProcessChannelMode(QProcess::ForwardedChannels);
+    proc.setProgram(QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath)
+                    + QLatin1String("/qmlcachegen"));
+    QTemporaryDir outputDir;
+    const QString outputFile = outputDir.filePath("output.cpp"_L1);
+    proc.setArguments(QStringList{ "--resource-path"_L1, "qrc:/qt/qml/Crashes/testFile.qml"_L1,
+                                   "-o"_L1, outputFile, qmlFileName });
+    proc.start();
+    if (!proc.waitForFinished())
+        return false;
+
+    if (capturedStderr)
+        *capturedStderr = proc.readAllStandardError();
+
+    if (!QFile::exists(outputFile))
+        return false;
 
     if (proc.exitStatus() != QProcess::NormalExit)
         return false;
@@ -1022,6 +1055,27 @@ void tst_qmlcachegen::aotstatsGeneration()
         QVERIFY(it->codegenSuccessful == entry.codegenSuccessful);
         QVERIFY(it->errorMessage == entry.errorMessage);
     }
+}
+
+void tst_qmlcachegen::crash_data()
+{
+    QTest::addColumn<QString>("fileName");
+
+    QTest::addRow("buggyFixSuggestion") << u"buggyFixSuggestion.qml"_s;
+}
+
+void tst_qmlcachegen::crash()
+{
+#if defined(QTEST_CROSS_COMPILED)
+    QSKIP("Cannot call qmlcachegen on cross-compiled target.");
+#endif
+
+    QFETCH(QString, fileName);
+    const QString filePath = testFile("crashes/" + fileName);
+
+    QFile file(filePath);
+    QVERIFY(file.exists());
+    QVERIFY(generateCpp(filePath));
 }
 
 const QQmlScriptString &ScriptStringProps::undef() const
