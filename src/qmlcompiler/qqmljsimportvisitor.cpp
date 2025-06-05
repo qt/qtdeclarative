@@ -743,10 +743,40 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
 void QQmlJSImportVisitor::processMethodTypes()
 {
-    for (const auto &method : m_pendingMethodTypeAnnotations) {
+    const auto isEnumUsedAsType = [&](QStringView typeName, const QQmlJS::SourceLocation &loc) {
+        if (typeName == "enum"_L1) {
+            m_logger->log("QML does not have an `enum` type. Use the enum's underlying type "
+                          "(int or double)."_L1,
+                          qmlEnumsAreNotTypes, loc);
+            return true;
+        }
+
+        const auto split = typeName.tokenize(u'.').toContainer<QVarLengthArray<QStringView, 4>>();
+        if (split.size() != 2)
+            return false;
+
+        const QStringView scopeName = split[0];
+        const QStringView enumName = split[1];
+
+        if (auto scope = QQmlJSScope::findType(scopeName.toString(),
+                                               m_rootScopeImports.contextualTypes()).scope) {
+            if (scope->enumeration(enumName.toString()).isValid()) {
+                m_logger->log("QML enumerations are not types. Use underlying type "
+                              "(int or double) instead."_L1,
+                              qmlEnumsAreNotTypes, loc);
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (const auto &method : std::as_const(m_pendingMethodTypeAnnotations)) {
         for (auto [it, end] = method.scope->mutableOwnMethodsRange(method.methodName); it != end; ++it) {
             const auto [parameterBegin, parameterEnd] = it->mutableParametersRange();
             for (auto parameter = parameterBegin; parameter != parameterEnd; ++parameter) {
+                const int parameterIndex = parameter - parameterBegin;
+                if (isEnumUsedAsType(parameter->typeName(), method.locations[parameterIndex]))
+                    continue;
                 if (const auto parameterType = QQmlJSScope::findType(
                             parameter->typeName(), m_rootScopeImports.contextualTypes()).scope) {
                     parameter->setType({ parameterType });
@@ -758,6 +788,8 @@ void QQmlJSImportVisitor::processMethodTypes()
                 }
             }
 
+            if (isEnumUsedAsType(it->returnTypeName(), method.locations.last()))
+                continue;
             if (const auto returnType = QQmlJSScope::findType(
                         it->returnTypeName(), m_rootScopeImports.contextualTypes()).scope) {
                 it->setReturnType({ returnType });
