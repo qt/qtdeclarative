@@ -49,11 +49,18 @@ public:
 
     struct Enums
     {
-        ~Enums() { qDeleteAll(scopedEnums); }
+        enum Scoping { Scoped, Unscoped };
+        ~Enums()
+        {
+            qDeleteAll(scopedEnums);
+            qDeleteAll(unscopedEnums);
+        }
 
         QStringHash<int> enums;
         QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
+        QStringHash<int> unscopedEnumIndex; // maps from enum name to index in unscopedEnums
         QList<QStringHash<int> *> scopedEnums;
+        QList<QStringHash<int> *> unscopedEnums;
     };
 
     QQmlTypePrivate(QQmlType::RegistrationType type);
@@ -168,13 +175,16 @@ public:
         }, ok);
     }
 
-    template<typename String>
-    static int scopedEnumIndex(
+    template<Enums::Scoping scoping, typename String>
+    static int enumIndex(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader,
             const String &name, bool *ok)
     {
         return doGetEnumValue(d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
-            return enums->scopedEnumIndex.value(name);
+            if constexpr (scoping == Enums::Scoped)
+                return enums->scopedEnumIndex.value(name);
+            else
+                return enums->unscopedEnumIndex.value(name);
         }, ok);
     }
 

@@ -3190,4 +3190,38 @@ public:
     int m_d = 16;
 };
 
+class CppEnum : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum class Scoped { S1, S2, S3 = 5, S4 = 5 };
+    Q_ENUM(Scoped)
+    enum Unscoped { U1, U2, U3 = 5, U4 = 5 };
+    Q_ENUM(Unscoped)
+};
+
+namespace EnumNamespace {
+Q_NAMESPACE
+QML_ELEMENT
+
+enum Unscoped { U1, U2, U3 = 5, U4 = 5 };
+Q_ENUM_NS(Unscoped)
+enum class Scoped { S1, S2, S3 = 5, S4 = 5 };
+Q_ENUM_NS(Scoped)
+} // namespace EnumNamespace
+
+class ConflictingEnums : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum class E1 { A = 1 };
+    Q_ENUM(E1);
+    enum E2 { A = 2 };
+    Q_ENUM(E2);
+};
+
 #endif // TESTTYPES_H

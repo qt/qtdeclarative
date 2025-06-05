@@ -52,6 +52,9 @@ The exception to this rule are functions assigned to signal handlers: There, typ
 forbidden to avoid a potential mismatch with the types of the signal. This does not cause issues for
 tooling, as the signal already provides the necessary information.
 
+\note In QML, enumerations are not types and can therefore not be used as type annotations. Their
+underlying numeric type, int or double, should be used instead.
+
 Type assertions (sometimes called \e as-casts) can also be used in order to cast an object to a
 different object type. If the object is actually of the given type, then the type assertion returns
 the same object. If not, it returns \c null. In the following snippet we assert that the \c parent

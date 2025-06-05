@@ -503,6 +503,8 @@ private slots:
 
     void urlWithFragment();
 
+    void enumTypeAnnotations();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -9525,6 +9527,49 @@ void tst_qqmllanguage::urlWithFragment()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->objectName(), "outer");
+}
+
+void tst_qqmllanguage::enumTypeAnnotations()
+{
+    QQmlEngine engine;
+    QUrl url(testFileUrl("EnumTypeAnnotations.qml"));
+    QQmlComponent c(&engine, url);
+
+    const auto msg = [&](int line, int function, int param) {
+        auto where = param == -1 ? QStringLiteral("return type")
+                                 : QStringLiteral("parameter ") + QString::number(param);
+        auto msg = QStringLiteral(" Type annotation for %1 of function %2: Enumerations are not "
+                                  "types. Use underlying type (int or double) instead.")
+                           .arg(where, "f"_L1 + QString::number(function));
+
+        return url.toString() + u':' + QString::number(line) + ":5:"_L1 + msg;
+    };
+
+    int ret = -1;
+
+    QTest::ignoreMessage(QtWarningMsg, msg(7, 1, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(8, 2, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(9, 3, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(9, 3, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(10, 4, 1).toStdString().c_str());
+
+    QTest::ignoreMessage(QtWarningMsg, msg(12, 5, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(13, 6, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(14, 7, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(14, 7, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(15, 8, 1).toStdString().c_str());
+
+    QTest::ignoreMessage(QtWarningMsg, msg(17, 9, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(18, 10, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(19, 11, ret).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(19, 11, 0).toStdString().c_str());
+    QTest::ignoreMessage(QtWarningMsg, msg(20, 12, 1).toStdString().c_str());
+
+    QTest::ignoreMessage(QtWarningMsg, msg(22, 13, 0).toStdString().c_str());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
