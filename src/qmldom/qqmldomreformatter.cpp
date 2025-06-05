@@ -877,9 +877,9 @@ bool ScriptFormatter::visit(StatementList *ast)
             // handling the spacing between the statements so we
             // don't need to push any newline.
             auto *commentForCurrentStatement =
-                    comments->ensureCommentForNode(it->statement, CommentAnchor{});
+                    comments->commentForNode(it->statement, CommentAnchor{});
             auto *commentForNextStatement =
-                    comments->ensureCommentForNode(it->next->statement, CommentAnchor{});
+                    comments->commentForNode(it->next->statement, CommentAnchor{});
 
             if (
                 (commentForCurrentStatement && !commentForCurrentStatement->postComments().empty())

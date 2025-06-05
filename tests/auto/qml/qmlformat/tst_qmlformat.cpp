@@ -524,6 +524,8 @@ void TestQmlformat::plainJS_data()
                                       << "fromAsIdentifier.formatted.js";
     QTest::newRow("caseWithComment") << "caseWithComment.js"
                                      << "caseWithComment.formatted.js";
+    QTest::newRow("longStatementList") << "longStatementList.js"
+                                       << "longStatementList.formatted.js";
 }
 
 void TestQmlformat::plainJS()
