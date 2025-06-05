@@ -148,6 +148,10 @@ public:
 
     int scopedEnumIndex(QQmlTypeLoader *typeLoader, const QV4::String *, bool *ok) const;
     int scopedEnumIndex(QQmlTypeLoader *typeLoader, const QString &, bool *ok) const;
+
+    int unscopedEnumIndex(QQmlTypeLoader *typeLoader, const QV4::String *, bool *ok) const;
+    int unscopedEnumIndex(QQmlTypeLoader *typeLoader, const QString &, bool *ok) const;
+
     int scopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QV4::String *, bool *ok) const;
     int scopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlTypeLoader *typeLoader, const QHashedStringRef &, const QHashedStringRef &, bool *ok) const;
