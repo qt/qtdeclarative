@@ -3992,6 +3992,7 @@ void tst_qquicktextedit::largeTextObservesViewport()
     QVERIFY2(QQuickTest::initView(window, testFileUrl("viewport.qml"), true, &errorMessage), errorMessage.constData());
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QQuickTextEdit *textItem = window.rootObject()->findChild<QQuickTextEdit*>();
     QVERIFY(textItem);
     QQuickItem *viewportItem = textItem->parentItem();
