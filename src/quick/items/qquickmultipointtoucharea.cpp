@@ -660,8 +660,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints 
             for (const QEventPoint &p : std::as_const(touchPoints)) {
                 if (p.state() == QEventPoint::State::Released)
                     continue;
-                const QPointF &currentPos = p.scenePosition();
-                const QPointF &startPos = p.scenePressPosition();
+                const QPointF currentPos = mapFromScene(p.scenePosition());
+                const QPointF startPos = mapFromScene(p.scenePressPosition());
                 if (qAbs(currentPos.x() - startPos.x()) > dragThreshold)
                     offerGrab = true;
                 else if (qAbs(currentPos.y() - startPos.y()) > dragThreshold)

@@ -40,6 +40,7 @@ private slots:
     void inFlickable();
     void inFlickable2();
     void inFlickableWithPressDelay();
+    void inFlickableWithScale();
     void inMouseArea();
     void mouseAsTouchpoint();
     void invisible();
@@ -857,6 +858,35 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     QQuickTouchUtils::flush(&window);
 
     QTRY_VERIFY(!flickable->isMoving());
+}
+
+// QTBUG-131886
+void tst_QQuickMultiPointTouchArea::inFlickableWithScale()
+{
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("inFlickableWithScale.qml")));
+
+    QQuickFlickable *flickable = window.rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable != nullptr);
+    QQuickMultiPointTouchArea *mpta = window.rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta != nullptr);
+
+    QSignalSpy gestureStartedSpy(mpta, &QQuickMultiPointTouchArea::gestureStarted);
+
+    // press and drag over dragThreshold emits gestureStarted even when scaled
+    QPoint p1(120, 160); // size is 240 x 320, press in the center
+    QTest::touchEvent(&window, touchscreen.get()).press(0, p1);
+    QQuickTouchUtils::flush(&window);
+
+    p1 += QPoint(0, dragThreshold);
+    QTest::touchEvent(&window, touchscreen.get()).move(0, p1);
+    QQuickTouchUtils::flush(&window);
+
+    QCOMPARE(gestureStartedSpy.size(), 1);
+
+    QTest::touchEvent(&window, touchscreen.get()).release(0, p1);
+    QQuickTouchUtils::flush(&window);
 }
 
 // QTBUG-31047
