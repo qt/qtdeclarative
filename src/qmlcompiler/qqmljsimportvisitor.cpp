@@ -883,16 +883,17 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                     : u"here"_s;
 
             if (!prevRequiredScope.isNull()) {
-                auto sourceScope = prevRequiredScope->baseType();
-                suggestion = QQmlJSFixSuggestion{
-                    "%1:%2:%3: Property marked as required in %4."_L1
-                            .arg(sourceScope->filePath())
-                            .arg(sourceScope->sourceLocation().startLine)
-                            .arg(sourceScope->sourceLocation().startColumn)
-                            .arg(requiredScopeName),
-                    sourceScope->sourceLocation()
-                };
-                suggestion->setFilename(sourceScope->filePath());
+                if (auto sourceScope = prevRequiredScope->baseType()) {
+                    suggestion = QQmlJSFixSuggestion{
+                        "%1:%2:%3: Property marked as required in %4."_L1
+                                .arg(sourceScope->filePath())
+                                .arg(sourceScope->sourceLocation().startLine)
+                                .arg(sourceScope->sourceLocation().startColumn)
+                                .arg(requiredScopeName),
+                        sourceScope->sourceLocation()
+                    };
+                    suggestion->setFilename(sourceScope->filePath());
+                }
             } else {
                 message += " (marked as required by %1)"_L1.arg(requiredScopeName);
             }
