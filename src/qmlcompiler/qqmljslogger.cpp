@@ -60,6 +60,7 @@ const QQmlSA::LoggerWarningId qmlAccessSingleton{ "access-singleton-via-object" 
 const QQmlSA::LoggerWarningId qmlTopLevelComponent{ "top-level-component" };
 const QQmlSA::LoggerWarningId qmlUncreatableType{ "uncreatable-type" };
 const QQmlSA::LoggerWarningId qmlMissingEnumEntry{ "missing-enum-entry" };
+const QQmlSA::LoggerWarningId qmlEnumsAreNotTypes{ "enums-are-not-types" };
 
 QQmlJSLogger::QQmlJSLogger()
 {
@@ -190,6 +191,9 @@ const QList<QQmlJS::LoggerCategory> &QQmlJSLogger::defaultCategories()
         QQmlJS::LoggerCategory{
                 qmlMissingEnumEntry.name().toString(), QStringLiteral("MissingEnumEntry"),
                 QStringLiteral("Warn about using missing enum values"), QtWarningMsg },
+        QQmlJS::LoggerCategory{
+                qmlEnumsAreNotTypes.name().toString(), QStringLiteral("EnumsAreNotTypes"),
+                QStringLiteral("Warn about the use of enumerations as types."), QtWarningMsg },
     };
 
     return cats;
