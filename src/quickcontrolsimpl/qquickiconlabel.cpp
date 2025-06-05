@@ -600,6 +600,21 @@ void QQuickIconLabel::componentComplete()
         completeComponent(d->label);
     QQuickItem::componentComplete();
     d->layout();
+
+    // Any items declared as children of us will be parented before the label and icon image,
+    // so they will be drawn below us. This is not intuitive, so move us to the bottom of the pile.
+    const auto paintOrderChildItems = QQuickItemPrivate::get(this)->paintOrderChildItems();
+    const auto bottomMostFosterChildIt = std::find_if(paintOrderChildItems.constBegin(),
+            paintOrderChildItems.constEnd(), [d](QQuickItem *item) {
+        return item != d->label && item != d->image;
+    });
+    if (bottomMostFosterChildIt != paintOrderChildItems.constEnd()) {
+        const QQuickItem *bottomMostFosterChild = *bottomMostFosterChildIt;
+        if (d->label)
+            d->label->stackBefore(bottomMostFosterChild);
+        if (d->image)
+            d->image->stackBefore(bottomMostFosterChild);
+    }
 }
 
 void QQuickIconLabel::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
