@@ -145,6 +145,9 @@ if(TARGET Qt::Quick)
             BINARY "${CMAKE_CTEST_COMMAND}"
             BINARY_ARGS "-V"
         )
+         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
+            _qt_internal_test_expect_pass(quick_dependency_automatically_added)
+        endif()
         _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
             _qt_internal_test_expect_pass(test_common_import_path

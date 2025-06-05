@@ -1816,21 +1816,6 @@ function(_qt_internal_target_generate_qmldir target)
     _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
     _qt_internal_qmldir_item_list("default import" QT_QML_MODULE_DEFAULT_IMPORTS)
 
-    # User convenience: Add QtQuick to dependencies if it hasn't been added so far
-    # and the target links against  Qt::Quick
-    if(NOT "QtQuick" IN_LIST QT_QML_MODULE_DEPENDENCIES)
-        get_target_property(linked_libraries ${target} LINK_LIBRARIES)
-        if((TARGET Qt6::Quick AND Qt6::Quick IN_LIST linked_libraries) OR
-            (TARGET Qt::Quick AND Qt::Quick IN_LIST linked_libraries))
-            set_property(
-                TARGET ${target}
-                APPEND
-                PROPERTY QT_QML_MODULE_DEPENDENCIES
-                "QtQuick"
-            )
-        endif()
-    endif()
-
     _qt_internal_qmldir_item_list(depends QT_QML_MODULE_DEPENDENCIES)
 
     get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)
@@ -1856,6 +1841,18 @@ endfunction()
 
 function(_qt_internal_write_deferred_qmldir_file target)
     get_target_property(__qt_qmldir_content ${target} _qt_internal_qmldir_content)
+    # User convenience: Add QtQuick to dependencies if it hasn't been added so far
+    # and the target links against  Qt::Quick
+    # Must happen here, because _qt_internal_target_generate_qmldir runs at
+    # qt_add_qml_module time, likely before target_link_libraries has been
+    # called
+    if(NOT "QtQuick" IN_LIST QT_QML_MODULE_DEPENDENCIES)
+        get_target_property(linked_libraries ${target} LINK_LIBRARIES)
+        if((TARGET Qt6::Quick AND Qt6::Quick IN_LIST linked_libraries) OR
+            (TARGET Qt::Quick AND Qt::Quick IN_LIST linked_libraries))
+            string(APPEND __qt_qmldir_content "depends QtQuick\n")
+        endif()
+    endif()
     get_target_property(out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     set(qmldir_file "${out_dir}/qmldir")
     configure_file(${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in ${qmldir_file} @ONLY)
