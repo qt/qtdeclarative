@@ -12,13 +12,16 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickControls2Impl/private/qquickiconimage_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p_p.h>
+#include <QtQuickControls2Impl/private/qquickmnemoniclabel_p.h>
 
+using namespace QQuickViewTestUtils;
 using namespace QQuickVisualTestUtils;
 
 class tst_qquickiconlabel : public QQmlDataTest
@@ -35,6 +38,7 @@ private slots:
     void emptyIconSource();
     void colorChanges();
     void iconSourceContext();
+    void childPaintOrder();
 };
 
 tst_qquickiconlabel::tst_qquickiconlabel()
@@ -339,6 +343,22 @@ void tst_qquickiconlabel::iconSourceContext()
         QCOMPARE(imagePrivate->pix1.url(), testFileUrl("a.png"));
     }
 #endif
+}
+
+// QTBUG-133924: check that items declared as children of us are rendered on top of the label and icon image.
+void tst_qquickiconlabel::childPaintOrder()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("childPaintOrder.qml")));
+
+    auto *iconLabel = window.findChild<QQuickItem *>("iconLabel");
+    QVERIFY(iconLabel);
+    auto *iconLabelPrivate = static_cast<QQuickIconLabelPrivate *>(QQuickItemPrivate::get(iconLabel));
+
+    auto *childText = window.findChild<QQuickItem *>("childText");
+    QVERIFY(childText);
+    const QList<QQuickItem *> expectedPaintOrder = { iconLabelPrivate->label, iconLabelPrivate->image, childText };
+    QCOMPARE(iconLabelPrivate->paintOrderChildItems(), expectedPaintOrder);
 }
 
 QTEST_MAIN(tst_qquickiconlabel)
