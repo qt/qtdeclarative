@@ -159,7 +159,7 @@ void QQmlScriptBlob::done()
         for (int scriptIndex = 0; scriptIndex < m_scripts.size(); ++scriptIndex) {
             const ScriptReference &script = m_scripts.at(scriptIndex);
 
-            m_scriptData->scripts.append(script.script);
+            m_scriptData->scripts.append(script.script->scriptData());
 
             if (!script.nameSpace.isNull()) {
                 if (!ns.contains(script.nameSpace)) {

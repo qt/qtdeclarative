@@ -40,7 +40,7 @@ public:
     QUrl url;
     QString urlString;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
-    QVector<QQmlRefPointer<QQmlScriptBlob>> scripts;
+    QVector<QQmlRefPointer<QQmlScriptData>> scripts;
 
     QV4::ReturnedValue scriptValueForContext(const QQmlRefPointer<QQmlContextData> &parentCtxt);
 
