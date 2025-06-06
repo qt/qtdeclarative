@@ -24,7 +24,7 @@
 // We need these for Windows, because FolderListModel returns a lowercase drive letter; e.g.:
 // "file:///c:/blah.txt", whereas other API returns "file:///C:/blah.txt".
 #define COMPARE_URL(url1, url2) \
-    QCOMPARE(QFileInfo(url1.toLocalFile()).absoluteFilePath(), QFileInfo(url2.toLocalFile()).absoluteFilePath());
+    QCOMPARE(QFileInfo(url1.toLocalFile()).canonicalFilePath(), QFileInfo(url2.toLocalFile()).canonicalFilePath());
 
 // Store a copy of the arguments in case { ... } list initializer syntax is used as an argument,
 // which could result in two different lists being created and passed to std::transform()
@@ -34,11 +34,11 @@
     const QList<QUrl> actualUrlsCopy = actualUrls; \
     QList<QString> actualPaths; \
     std::transform(actualUrlsCopy.begin(), actualUrlsCopy.end(), std::back_insert_iterator(actualPaths), \
-        [](const QUrl &url) { return QFileInfo(url.toLocalFile()).absoluteFilePath(); }); \
+        [](const QUrl &url) { return QFileInfo(url.toLocalFile()).canonicalFilePath(); }); \
     const QList<QUrl> expectedUrlsCopy = expectedUrls; \
     QList<QString> expectedPaths; \
     std::transform(expectedUrlsCopy.begin(), expectedUrlsCopy.end(), std::back_insert_iterator(expectedPaths), \
-        [](const QUrl &url) { return QFileInfo(url.toLocalFile()).absoluteFilePath(); }); \
+        [](const QUrl &url) { return QFileInfo(url.toLocalFile()).canonicalFilePath(); }); \
     QCOMPARE(actualPaths, expectedPaths); \
 }
 
