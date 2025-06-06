@@ -11,7 +11,7 @@
 
 
 qt_find_package(LTTngUST PROVIDED_TARGETS LTTng::UST MODULE_NAME qml QMAKE_LIB lttng-ust)
-qt_find_package(Python REQUIRED)
+qt_find_package(Python MODULE REQUIRED)
 if(Python_Interpreter_FOUND)
     # Need to make it globally available to the project
     set(QT_INTERNAL_DECLARATIVE_PYTHON "${Python_EXECUTABLE}" CACHE STRING "" FORCE)
