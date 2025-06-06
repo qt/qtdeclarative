@@ -18,7 +18,7 @@ DialogsQuickImpl.FolderBreadcrumbBar {
     padding: 1
 
     background: Rectangle {
-        border.color: control.palette.button
+        color: control.palette.button
     }
     contentItem: ListView {
         currentIndex: control.currentIndex
@@ -50,7 +50,7 @@ DialogsQuickImpl.FolderBreadcrumbBar {
         sourceSize: Qt.size(8, 8)
         width: 8
         height: control.contentItem.height
-        color: control.palette.button
+        color: control.palette.buttonText
         y: (control.height - height) / 2
     }
     upButton: ToolButton {
