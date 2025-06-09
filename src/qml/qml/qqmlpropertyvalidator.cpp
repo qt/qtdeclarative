@@ -732,7 +732,10 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
         if (!QQmlMetaType::isInterface(listType)) {
             QQmlPropertyCache::ConstPtr source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
-                return qQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
+                const QString expectedTypeName = QString::fromUtf8(listType.name()).remove(QLatin1Char('*'));
+                return qQmlCompileError(binding->valueLocation,
+                    tr("Cannot assign object of type \"%1\" to list property \"%2\"; expected \"%3\"")
+                        .arg(source->className(), propertyName, expectedTypeName));
             }
         }
         return noError;

@@ -505,6 +505,8 @@ private slots:
 
     void enumTypeAnnotations();
 
+    void assignWrongTypeToObjectList();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -8929,8 +8931,8 @@ void tst_qqmllanguage::overrideDefaultProperty()
 
     QQmlComponent c(&e, url);
     QVERIFY(c.isError());
-    QCOMPARE(c.errorString(),
-             url.toString() + QLatin1String(":5 Cannot assign object to list property \"data\"\n"));
+    QCOMPARE(c.errorString(), url.toString() + QLatin1String(
+        ":5 Cannot assign object of type \"QQuickItem\" to list property \"data\"; expected \"QVariant\"\n"));
 }
 
 void tst_qqmllanguage::enumScopes()
@@ -9570,6 +9572,15 @@ void tst_qqmllanguage::enumTypeAnnotations()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::assignWrongTypeToObjectList()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("assignWrongTypeToObjectList.qml"));
+    QVERIFY(!component.isReady());
+    QVERIFY(QRegularExpression(".*Cannot assign object of type \"QQuickFrameAnimation\""_L1
+        + " to list property \"animations\"; expected \"QQuickAbstractAnimation\""_L1).match(component.errorString()).hasMatch());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
