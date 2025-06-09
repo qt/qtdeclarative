@@ -1,1 +1,1 @@
-4:24:Cannot assign object to list property "containerChildren"
+4:24:Cannot assign object of type "QObject" to list property "containerChildren"; expected "MyContainer"

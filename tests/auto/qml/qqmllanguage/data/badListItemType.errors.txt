@@ -1,1 +1,1 @@
-4:15:Cannot assign object to list property "children"
+4:15:Cannot assign object of type "QQmlComponent" to list property "children"; expected "QQuickItem"
