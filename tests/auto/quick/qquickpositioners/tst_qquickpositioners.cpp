@@ -78,6 +78,8 @@ private slots:
     void test_attachedproperties();
     void test_attachedproperties_data();
     void test_attachedproperties_dynamic();
+    void test_hiddenItems_data();
+    void test_hiddenItems();
 
     void populateTransitions_row();
     void populateTransitions_row_data();
@@ -3988,6 +3990,69 @@ void tst_qquickpositioners::test_attachedproperties_dynamic()
     QTRY_VERIFY(!rect1->property("firstItem").toBool());
     QTRY_VERIFY(rect1->property("lastItem").toBool());
 
+}
+
+void tst_qquickpositioners::test_hiddenItems_data()
+{
+    QTest::addColumn<QString>("positionerObjectName");
+
+    QTest::newRow("row") << "row";
+    QTest::newRow("column") << "column";
+    QTest::newRow("grid") << "grid";
+    QTest::newRow("flow") << "flow";
+}
+
+void tst_qquickpositioners::test_hiddenItems()
+{
+    QFETCH(QString, positionerObjectName);
+
+    QScopedPointer<QQuickView> window(createView(testFile("hiddenItems.qml")));
+    QVERIFY(window->rootObject());
+
+    const auto *positioner = window->findChild<QQuickBasePositioner *>(positionerObjectName);
+    QVERIFY(positioner);
+
+    auto *zeroWidthItem = positioner->childItems().at(0);
+    QVERIFY(zeroWidthItem);
+    const auto *zeroWidthItemPrivate = QQuickItemPrivate::get(zeroWidthItem);
+    // Items should always be visible; it's only their culled state that should change;
+    // see comment in QQuickBasePositioner::prePositioning.
+    QVERIFY(zeroWidthItem->isVisible());
+    QVERIFY(zeroWidthItemPrivate->culled);
+
+    auto *zeroHeightItem = positioner->childItems().at(1);
+    QVERIFY(zeroHeightItem);
+    const auto *zeroHeightItemPrivate = QQuickItemPrivate::get(zeroHeightItem);
+    QVERIFY(zeroHeightItem->isVisible());
+    QVERIFY(zeroHeightItemPrivate->culled);
+
+    // Give the zero-width item a non-zero implicitWidth; it should become visible.
+    zeroWidthItem->setImplicitWidth(20);
+    QVERIFY(QQuickTest::qIsPolishScheduled(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
+    QVERIFY(zeroWidthItem->isVisible());
+    QVERIFY(!zeroWidthItemPrivate->culled);
+
+    // Give it a zero implicitWidth again; it should be hidden.
+    zeroWidthItem->setImplicitWidth(0);
+    QVERIFY(QQuickTest::qIsPolishScheduled(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
+    QVERIFY(zeroWidthItem->isVisible());
+    QVERIFY(zeroWidthItemPrivate->culled);
+
+    // Give the zero-height item a non-zero implicitHeight; it should become visible.
+    zeroHeightItem->setImplicitHeight(20);
+    QVERIFY(QQuickTest::qIsPolishScheduled(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
+    QVERIFY(zeroHeightItem->isVisible());
+    QVERIFY(!zeroHeightItemPrivate->culled);
+
+    // Give it a zero implicitHeight again; it should be hidden.
+    zeroHeightItem->setImplicitHeight(0);
+    QVERIFY(QQuickTest::qIsPolishScheduled(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
+    QVERIFY(zeroHeightItem->isVisible());
+    QVERIFY(zeroHeightItemPrivate->culled);
 }
 
 QQuickView *tst_qquickpositioners::createView(const QString &filename, bool wait)
