@@ -313,11 +313,18 @@ void QQuickBasePositioner::prePositioning()
         PositionedItem posItem(child);
         int wIdx = oldItems.find(posItem);
         if (wIdx < 0) {
+            // This is a newly added item.
             d->watchChanges(child);
             posItem.isNew = true;
             if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 posItem.isVisible = false;
                 posItem.index = -1;
+                // If we hide a zero-width or height item by setting visible to false,
+                // the !childPrivate->explicitVisible will then always trigger. We can't
+                // overwrite what the user has set, and we don't want to introduce a separate
+                // flag to track whether the visible property was actually explicitly set so
+                // that we can implicitly set it, so instead we use culled for this.
+                childPrivate->setCulled(true);
                 unpositionedItems.append(posItem);
             } else {
                 posItem.index = positionedItems.count();
@@ -336,18 +343,21 @@ void QQuickBasePositioner::prePositioning()
 #endif
             }
         } else {
+            // This item already existed within us.
             PositionedItem *item = &oldItems[wIdx];
             // Items are only omitted from positioning if they are explicitly hidden
             // i.e. their positioning is not affected if an ancestor is hidden.
             if (!childPrivate->explicitVisible || !child->width() || !child->height()) {
                 item->isVisible = false;
                 item->index = -1;
+                childPrivate->setCulled(true);
                 unpositionedItems.append(*item);
             } else if (!item->isVisible) {
                 // item changed from non-visible to visible, treat it as a "new" item
                 item->isVisible = true;
                 item->isNew = true;
                 item->index = positionedItems.count();
+                childPrivate->setCulled(false);
                 positionedItems.append(*item);
 
 #if QT_CONFIG(quick_viewtransitions)
