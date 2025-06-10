@@ -16,6 +16,8 @@
 #include <private/qopenglcontext_p.h>
 #endif
 
+#include <QtGui/qrawfont.h>
+
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
@@ -97,6 +99,7 @@ private slots:
     void withAdoptedRhi();
     void resizeTextureFromImage();
     void textureNativeInterface();
+    void distanceFieldCacheInvalidation();
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -856,6 +859,34 @@ bool tst_SceneGraph::isRunningOnRhi()
         dummy.hide();
     }
     return retval;
+}
+
+void tst_SceneGraph::distanceFieldCacheInvalidation()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping complex rendering tests due to not running with QRhi");
+
+    QFont font(QStringLiteral("Arial"));
+    QRawFont rawFont = QRawFont::fromFont(font);
+
+    QQuickView view;
+    view.setSource(testFileUrl(QLatin1String("distanceFieldCacheInvalidation.qml")));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    {
+        QSGRenderContext *rc = QQuickItemPrivate::get(view.rootObject())->sceneGraphRenderContext();
+
+        QSGDistanceFieldGlyphCache *cache = rc->distanceFieldGlyphCache(rawFont, 1);
+        QVERIFY(cache != nullptr);
+
+        auto glyphIndexes = rawFont.glyphIndexesForString(QStringLiteral("a b"));
+        cache->populate(glyphIndexes);
+        QVERIFY(cache->isActive());
+
+        cache->release(glyphIndexes);
+        QVERIFY(!cache->isActive());
+    }
 }
 
 #include "tst_scenegraph.moc"

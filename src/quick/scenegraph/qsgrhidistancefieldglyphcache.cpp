@@ -62,13 +62,15 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
                 glyph_t unusedGlyph = *m_unusedGlyphs.constBegin();
 
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
-                QRectF unusedGlyphBoundingRect = glyphData(unusedGlyph).boundingRect;
-                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width() + distanceFieldRadius() * 2);
-                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height() + distanceFieldRadius() * 2);
-                m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
-                                                  unusedCoord.y - padding,
-                                                  padding * 2 + unusedGlyphWidth,
-                                                  padding * 2 + unusedGlyphHeight));
+                if (!unusedCoord.isNull()) {
+                    QRectF unusedGlyphBoundingRect = glyphData(unusedGlyph).boundingRect;
+                    int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width() + distanceFieldRadius() * 2);
+                    int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height() + distanceFieldRadius() * 2);
+                    m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
+                                                      unusedCoord.y - padding,
+                                                      padding * 2 + unusedGlyphWidth,
+                                                      padding * 2 + unusedGlyphHeight));
+                }
 
                 m_unusedGlyphs.remove(unusedGlyph);
                 m_glyphsTexture.remove(unusedGlyph);

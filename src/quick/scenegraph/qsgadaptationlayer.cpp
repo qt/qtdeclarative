@@ -135,7 +135,7 @@ void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
     for (int i = 0; i < count; ++i) {
         glyph_t glyphIndex = glyphs.at(i);
         GlyphData &gd = glyphData(glyphIndex);
-        if (--gd.ref == 0 && !gd.texCoord.isNull())
+        if (--gd.ref == 0)
             unusedGlyphs.insert(glyphIndex);
     }
     releaseGlyphs(unusedGlyphs);
