@@ -233,18 +233,31 @@ void QQuickSideBarPrivate::repopulate()
 
     QBoolBlocker repopulateGuard(repopulating);
 
-    auto createButtonDelegate = [this, q](int index, const QString &folderPath, const QQuickIcon& icon) {
+    auto updateIconSourceAndSize = [this](QQuickAbstractButton *button, const QUrl &iconUrl) {
+        // we need to preserve the default binding on icon.color, so
+        // we just take the default-created icon, and update its source
+        // and size
+        QQuickIcon icon = button->icon();
+        icon.setSource(iconUrl);
+        const QSize iconSize = dialogIconSize();
+        icon.setWidth(iconSize.width());
+        icon.setHeight(iconSize.height());
+        button->setIcon(icon);
+    };
+
+    auto createButtonDelegate = [this, q, &updateIconSourceAndSize](int index, const QString &folderPath, const QUrl &iconUrl) {
         const QString displayName = displayNameFromFolderPath(folderPath);
         QVariantMap initialProperties = {
                                           { "index"_L1, QVariant::fromValue(index) },
                                           { "folderName"_L1, QVariant::fromValue(displayName) },
-                                          { "icon"_L1, QVariant::fromValue(icon) },
                                         };
 
         if (QQuickItem *buttonItem = createDelegateItem(buttonDelegate, initialProperties)) {
-            if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(buttonItem))
+            if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(buttonItem)) {
                 QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, this,
                                         &QQuickSideBarPrivate::buttonClicked);
+                updateIconSourceAndSize(button, iconUrl);
+            }
             insertItem(q->count(), buttonItem);
         }
     };
@@ -260,7 +273,7 @@ void QQuickSideBarPrivate::repopulate()
     int insertIndex = 0;
 
     for (auto &folder : folders)
-        createButtonDelegate(insertIndex++, QStandardPaths::displayName(folder), folderIcon(folder));
+        createButtonDelegate(insertIndex++, QStandardPaths::displayName(folder), folderIconSource(folder));
 
     if (showSeparator)
         if (QQuickItem *separatorItem = createDelegateItem(separatorDelegate, {}))
@@ -270,17 +283,19 @@ void QQuickSideBarPrivate::repopulate()
         // the variant needs to be QString, not a QLatin1StringView
         const QString labelText = QCoreApplication::translate("FileDialog", "Add Favorite");
         QVariantMap initialProperties = {
-                                          { "icon"_L1, QVariant::fromValue(addFavoriteIcon()) },
                                           { "labelText"_L1, QVariant::fromValue(labelText) },
                                           { "dragHovering"_L1, QVariant::fromValue(addFavoriteDelegateHovered()) },
                                         };
-        if (auto *addFavoriteDelegateItem = createDelegateItem(addFavoriteDelegate, initialProperties))
+        if (auto *addFavoriteDelegateItem = createDelegateItem(addFavoriteDelegate, initialProperties)) {
+            if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(addFavoriteDelegateItem))
+                updateIconSourceAndSize(button, addFavoriteIconUrl());
             insertItem(insertIndex++, addFavoriteDelegateItem);
+        }
     }
 
     // calculate the starting index for the favorites
     for (auto &favorite : favorites)
-        createButtonDelegate(insertIndex++, favorite.toLocalFile(), folderIcon());
+        createButtonDelegate(insertIndex++, favorite.toLocalFile(), folderIconSource());
 
     q->setCurrentIndex(-1);
 }
@@ -340,47 +355,36 @@ void QQuickSideBar::componentComplete()
     d->initContextMenu();
 }
 
-QQuickIcon QQuickSideBarPrivate::folderIcon() const
+QUrl QQuickSideBarPrivate::folderIconSource() const
 {
-    QQuickIcon icon;
-    icon.setSource(QUrl("../images/sidebar-folder.png"_L1));
-    icon.setWidth(16);
-    icon.setHeight(16);
-    return icon;
+    return QUrl("../images/sidebar-folder.png"_L1);
 }
 
-QQuickIcon QQuickSideBarPrivate::folderIcon(QStandardPaths::StandardLocation stdLocation) const
+QUrl QQuickSideBarPrivate::folderIconSource(QStandardPaths::StandardLocation stdLocation) const
 {
-    QQuickIcon icon;
     switch (stdLocation) {
     case QStandardPaths::DesktopLocation:
-        icon.setSource(QUrl("../images/sidebar-desktop.png"_L1));
-        break;
+        return QUrl("../images/sidebar-desktop.png"_L1);
     case QStandardPaths::DocumentsLocation:
-        icon.setSource(QUrl("../images/sidebar-documents.png"_L1));
-        break;
+        return QUrl("../images/sidebar-documents.png"_L1);
     case QStandardPaths::MusicLocation:
-        icon.setSource(QUrl("../images/sidebar-music.png"_L1));
-        break;
+        return QUrl("../images/sidebar-music.png"_L1);
     case QStandardPaths::MoviesLocation:
-        icon.setSource(QUrl("../images/sidebar-video.png"_L1));
-        break;
+        return QUrl("../images/sidebar-video.png"_L1);
     case QStandardPaths::PicturesLocation:
-        icon.setSource(QUrl("../images/sidebar-photo.png"_L1));
-        break;
+        return QUrl("../images/sidebar-photo.png"_L1);
     case QStandardPaths::HomeLocation:
-        icon.setSource(QUrl("../images/sidebar-home.png"_L1));
-        break;
+        return QUrl("../images/sidebar-home.png"_L1);
     case QStandardPaths::DownloadLocation:
-        icon.setSource(QUrl("../images/sidebar-downloads.png"_L1));
-        break;
+        return QUrl("../images/sidebar-downloads.png"_L1);
     default:
-        icon.setSource(QUrl("../images/sidebar-folder.png"_L1));
-        break;
+        return QUrl("../images/sidebar-folder.png"_L1);
     }
-    icon.setWidth(16);
-    icon.setHeight(16);
-    return icon;
+}
+
+QSize QQuickSideBarPrivate::dialogIconSize() const
+{
+    return QSize(16, 16);
 }
 
 #if QT_CONFIG(settings)
@@ -473,13 +477,9 @@ void QQuickSideBarPrivate::setAddFavoriteDelegateHovered(bool hovered)
     repopulate();
 }
 
-QQuickIcon QQuickSideBarPrivate::addFavoriteIcon() const
+QUrl QQuickSideBarPrivate::addFavoriteIconUrl() const
 {
-    QQuickIcon icon;
-    icon.setSource(QUrl("../images/sidebar-plus.png"_L1));
-    icon.setWidth(16);
-    icon.setHeight(16);
-    return icon;
+    return QUrl("../images/sidebar-plus.png"_L1);
 }
 
 void QQuickSideBarPrivate::initContextMenu()

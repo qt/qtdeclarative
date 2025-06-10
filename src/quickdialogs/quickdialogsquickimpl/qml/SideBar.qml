@@ -15,7 +15,7 @@ DialogsQuickImpl.SideBar {
                              implicitContentHeight + topPadding + bottomPadding)
 
     background: Rectangle {
-        border.color: control.palette.button
+        color: control.palette.window
     }
 
     contentItem: ListView {
@@ -39,12 +39,13 @@ DialogsQuickImpl.SideBar {
             icon: buttonDelegateRoot.icon
             text: buttonDelegateRoot.folderName
             font: buttonDelegateRoot.font
+            // same as the icon color
+            color: buttonDelegateRoot.icon.color
             alignment: Qt.AlignLeft
         }
 
         required property int index
         required property string folderName
-        required icon
     }
 
     separatorDelegate: Item {
@@ -52,7 +53,7 @@ DialogsQuickImpl.SideBar {
         height: 9
         Rectangle {
             id: separatorDelegate
-            color: Qt.lighter(Basic.darkShade, 1.06)
+            color: Qt.lighter(control.palette.dark, 1.06)
             anchors.centerIn: parent
             radius: 1
             height: 1
@@ -72,12 +73,13 @@ DialogsQuickImpl.SideBar {
             icon: addFavoriteDelegateRoot.icon
             text: addFavoriteDelegateRoot.labelText
             font: addFavoriteDelegateRoot.font
+            // same as the icon color
+            color: addFavoriteDelegateRoot.icon.color
             alignment: Qt.AlignLeft
             opacity: addFavoriteDelegateRoot.dragHovering ? 0.2 : 1.0
         }
 
         required property string labelText
         required property bool dragHovering
-        required icon
     }
 }

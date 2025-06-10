@@ -204,7 +204,34 @@ void QQuickFileDialogTapHandler::grabFolder()
     if (m_drag.isNull())
         return;
 
-    QPixmap pixmap(":/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-folder.png"_L1);
+    QQuickPalette *palette = [this]() -> QQuickPalette* {
+        auto *delegate = qobject_cast<QQuickFileDialogDelegate*>(parent());
+        if (delegate) {
+            QQuickDialog *dlg = delegate->dialog();
+            if (dlg) {
+                QQuickDialogPrivate *priv = QQuickDialogPrivate::get(dlg);
+                if (priv)
+                    return priv->palette();
+            }
+        }
+        return nullptr;
+    }();
+
+    // TODO: use proper @Nx scaling
+    const auto src = ":/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-folder.png"_L1;
+    QImage img = QImage(src).convertToFormat(QImage::Format_ARGB32);
+
+    if (!img.isNull() && palette) {
+        const QColor iconColor = palette->buttonText();
+        if (iconColor.alpha() > 0) {
+            // similar to what QQuickIconImage does
+            QPainter painter(&img);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            painter.fillRect(img.rect(), iconColor);
+        }
+    }
+
+    QPixmap pixmap = QPixmap::fromImage(std::move(img));
     auto *mimeData = new QMimeData();
     mimeData->setImageData(pixmap);
     m_drag->setMimeData(mimeData);

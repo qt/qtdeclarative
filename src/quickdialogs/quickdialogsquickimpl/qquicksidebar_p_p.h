@@ -40,8 +40,9 @@ public:
     QUrl dialogFolder() const;
     void setDialogFolder(const QUrl &folder);
     QString displayNameFromFolderPath(const QString &filePath);
-    QQuickIcon folderIcon() const;
-    QQuickIcon folderIcon(QStandardPaths::StandardLocation stdLocation) const;
+    QUrl folderIconSource() const;
+    QUrl folderIconSource(QStandardPaths::StandardLocation stdLocation) const;
+    QSize dialogIconSize() const;
     void folderChanged();
 
     void readSettings();
@@ -53,7 +54,7 @@ public:
     void setShowAddFavoriteDelegate(bool show);
     bool addFavoriteDelegateHovered() const;
     void setAddFavoriteDelegateHovered(bool hovered);
-    QQuickIcon addFavoriteIcon() const;
+    QUrl addFavoriteIconUrl() const;
 
     void initContextMenu();
     void handleContextMenuRequested(QPointF pos);
