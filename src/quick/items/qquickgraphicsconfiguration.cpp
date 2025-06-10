@@ -728,7 +728,7 @@ bool QQuickGraphicsConfiguration::isAutomaticPipelineCacheEnabled() const
 
     \since 6.5
 
-    \sa pipelineCacheLoadFile(), setPipelineCacheSaveFile()
+    \sa pipelineCacheLoadFile(), pipelineCacheSaveFile()
  */
 void QQuickGraphicsConfiguration::setPipelineCacheSaveFile(const QString &filename)
 {

@@ -602,7 +602,7 @@ void QQuickDial::setStartAngle(qreal startAngle)
     The \l endAngle has to be bigger than the \l startAngle, smaller than 720
     and smaller or equal than the \l startAngle + 360 degrees.
 
-    \sa endAngle, angle
+    \sa startAngle, angle
 */
 qreal QQuickDial::endAngle() const
 {
