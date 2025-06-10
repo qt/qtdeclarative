@@ -65,12 +65,6 @@ public:
     std::shared_ptr<Utils::TextDocument> textDocument;
 };
 
-struct ToIndex
-{
-    QString path;
-    int leftDepth;
-};
-
 struct RegisteredSemanticTokens
 {
     QByteArray resultId = "0";
