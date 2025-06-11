@@ -25,7 +25,8 @@ class Q_AUTOTEST_EXPORT QQmlScriptBlob : public QQmlTypeLoader::Blob
 private:
     friend class QQmlTypeLoader;
 
-    QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
+    enum class IsESModule { No, Yes };
+    QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *typeLoader, IsESModule isESModule);
 
 public:
     ~QQmlScriptBlob() override;
@@ -53,7 +54,7 @@ private:
 
     QList<ScriptReference> m_scripts;
     QQmlRefPointer<QQmlScriptData> m_scriptData;
-    const bool m_isModule;
+    const bool m_isModule = false;
 };
 
 QT_END_NAMESPACE

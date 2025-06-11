@@ -1027,10 +1027,15 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QByteArray &data, con
     return QQmlRefPointer<QQmlTypeData>(typeData, QQmlRefPointer<QQmlTypeData>::Adopt);
 }
 
-QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeLoader::injectScript(
+static bool isModuleUrl(const QUrl &url)
+{
+    return url.path().endsWith(QLatin1String(".mjs"));
+}
+
+QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlTypeLoader::injectModule(
         const QUrl &relativeUrl, const QV4::CompiledData::Unit *unit)
 {
-    QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this);
+    QQmlScriptBlob *blob = new QQmlScriptBlob(relativeUrl, this, QQmlScriptBlob::IsESModule::Yes);
 
     LockHolder<QQmlTypeLoader> holder(this);
     QQmlPrivate::CachedQmlUnit cached { unit, nullptr, nullptr};
@@ -1062,7 +1067,9 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(
         scriptBlob = m_scriptCache.value(relativeUrl);
 
     if (!scriptBlob) {
-        scriptBlob = new QQmlScriptBlob(url, this);
+        scriptBlob = new QQmlScriptBlob(url, this, isModuleUrl(url)
+                ? QQmlScriptBlob::IsESModule::Yes
+                : QQmlScriptBlob::IsESModule::No);
         m_scriptCache.insert(url, scriptBlob);
 
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
