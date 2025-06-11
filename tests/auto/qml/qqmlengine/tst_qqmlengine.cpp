@@ -88,6 +88,7 @@ private slots:
     void dropCUOnEngineShutdown();
     void multiLoadedJavaScriptModule();
     void metaObjectOfScriptCU();
+    void registerModule();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1880,6 +1881,13 @@ void tst_qqmlengine::metaObjectOfScriptCU()
     // Don't crash when retrieving the (possibly non-existent) metaobject for the script.
     for (int i = QMetaType::User + 1; QMetaType::isRegistered(i); ++i)
         QMetaType(i).metaObject();
+}
+
+void tst_qqmlengine::registerModule()
+{
+    // Make sure that registerModule() doesn't crash when invoked via QQmlEngine
+    QQmlEngine engine;
+    QVERIFY(engine.registerModule("magic", QJSValue(63)));
 }
 
 QTEST_MAIN(tst_qqmlengine)

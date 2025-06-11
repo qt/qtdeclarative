@@ -2198,8 +2198,9 @@ ExecutionEngine::Module ExecutionEngine::registerNativeModule(
 
     QQmlRefPointer<CompiledData::CompilationUnit> cu;
     if (m_qmlEngine) {
-        // Make sure the type loader doesn't try to resolve the script anymore.
-        cu = QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectScript(url, unit);
+        // Make sure the type loader doesn't try to resolve the module anymore.
+        // If some other code requests that same module, we need to produce the same CU.
+        cu = QQmlEnginePrivate::get(m_qmlEngine)->typeLoader.injectModule(url, unit);
     } else {
         cu = QQml::makeRefPointer<CompiledData::CompilationUnit>(unit);
     }

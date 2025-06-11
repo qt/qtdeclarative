@@ -27,7 +27,8 @@ private:
     friend class QQmlTypeLoader;
 
 public:
-    QQmlScriptBlob(const QUrl &, QQmlTypeLoader *);
+    enum class IsESModule { No, Yes };
+    QQmlScriptBlob(const QUrl &url, QQmlTypeLoader *typeLoader, IsESModule isESModule);
     ~QQmlScriptBlob() override;
 
     struct ScriptReference
@@ -53,7 +54,7 @@ private:
 
     QList<ScriptReference> m_scripts;
     QQmlRefPointer<QQmlScriptData> m_scriptData;
-    const bool m_isModule;
+    const bool m_isModule = false;
 };
 
 QT_END_NAMESPACE
