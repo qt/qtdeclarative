@@ -3354,10 +3354,52 @@ void tst_qquicktextedit::readOnly()
     QString initial = edit->text();
     for (int k=Qt::Key_0; k<=Qt::Key_Z; k++)
         simulateKey(&window, k);
+
     simulateKey(&window, Qt::Key_Return);
     simulateKey(&window, Qt::Key_Space);
     simulateKey(&window, Qt::Key_Escape);
     QCOMPARE(edit->text(), initial);
+
+    // Read-only shall support Selection and Copy by default
+    QCOMPARE(window.rootObject()->property("acceptShortcutOverride").toBool(), true);
+    simulateKeys(&window, QKeySequence(QKeySequence::SelectAll));
+    QCOMPARE(window.rootObject()->property("activateSelectAllShortcut").toBool(), false);
+    QCOMPARE(edit->cursorPosition(), edit->text().size());
+    QCOMPARE(edit->selectedText(), edit->text());
+#ifndef QT_NO_CLIPBOARD
+    // Copy the selected text into the clipboard
+    if (PlatformQuirks::isClipboardAvailable()) {
+        if (auto *clipBoard = QGuiApplication::clipboard()) {
+            simulateKeys(&window, QKeySequence(QKeySequence::Copy));
+            QCOMPARE(window.rootObject()->property("activateCopyShortcut").toBool(), false);
+            QCOMPARE(clipBoard->text(), edit->text());
+            clipBoard->clear();
+        }
+    }
+#endif
+    edit->setCursorPosition(0);
+
+    window.rootObject()->setProperty("acceptShortcutOverride", false);
+    QCOMPARE(window.rootObject()->property("acceptShortcutOverride").toBool(), false);
+    simulateKeys(&window, QKeySequence(QKeySequence::SelectAll));
+    QCOMPARE(window.rootObject()->property("activateSelectAllShortcut").toBool(), true);
+    QCOMPARE(edit->cursorPosition(), 0);
+    QCOMPARE(edit->selectedText(), "");
+#ifndef QT_NO_CLIPBOARD
+    // Copy the selected text into the clipboard
+    if (PlatformQuirks::isClipboardAvailable()) {
+        if (auto *clipBoard = QGuiApplication::clipboard()) {
+            simulateKeys(&window, QKeySequence(QKeySequence::Copy));
+            QCOMPARE(window.rootObject()->property("activateCopyShortcut").toBool(), true);
+            QCOMPARE(clipBoard->text(), "");
+        }
+    }
+#endif
+    simulateKeys(&window, QKeySequence(QKeySequence::MoveToPreviousPage));
+    QCOMPARE(window.rootObject()->property("activatePageupShortcut").toBool(), true);
+
+    window.rootObject()->setProperty("acceptShortcutOverride", true);
+    QCOMPARE(window.rootObject()->property("acceptShortcutOverride").toBool(), true);
 
     edit->setCursorPosition(3);
     edit->setReadOnly(false);

@@ -1975,12 +1975,15 @@ QRectF QQuickTextEdit::cursorRectangle() const
 bool QQuickTextEdit::event(QEvent *event)
 {
     Q_D(QQuickTextEdit);
-    if (event->type() == QEvent::ShortcutOverride) {
-        d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
-        if (event->isAccepted())
-            return true;
+    bool state = QQuickImplicitSizeItem::event(event);
+    if (event->type() == QEvent::ShortcutOverride && !event->isAccepted()) {
+        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(this);
+        if (!itemPriv->extra.isAllocated() || !itemPriv->extra->keyHandler) {
+            d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
+        }
+        state = true;
     }
-    return QQuickImplicitSizeItem::event(event);
+    return state;
 }
 
 /*!
