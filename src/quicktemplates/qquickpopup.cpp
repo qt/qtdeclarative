@@ -1124,7 +1124,7 @@ void QQuickPopupPrivate::adjustPopupItemParentAndWindow()
                 const qreal initialWidth = popupItem->width() + windowInsets().left() + windowInsets().right();
                 const qreal initialHeight = popupItem->height() + windowInsets().top() + windowInsets().bottom();
                 popupItem->setParentItem(popupWindow->contentItem());
-                popupWindow->resize(initialWidth, initialHeight);
+                popupWindow->resize(qCeil(initialWidth), qCeil(initialHeight));
                 popupWindow->setModality(modal ? Qt::ApplicationModal : Qt::NonModal);
                 popupItem->resetTitle();
                 popupWindow->setTitle(title);
