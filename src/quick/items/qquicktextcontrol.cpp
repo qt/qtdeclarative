@@ -756,7 +756,7 @@ void QQuickTextControl::processEvent(QEvent *e, const QTransform &transform)
 
         case QEvent::ShortcutOverride:
             if (d->interactionFlags & Qt::TextEditable) {
-                QKeyEvent* ke = static_cast<QKeyEvent *>(e);
+                QKeyEvent *ke = static_cast<QKeyEvent *>(e);
                 ke->setAccepted(isCommonTextEditShortcut(ke));
             }
             break;
