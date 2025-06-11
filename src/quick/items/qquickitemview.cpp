@@ -1654,6 +1654,7 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     , isClearing(false)
     , explicitDelegate(false)
     , explicitDelegateModelAccess(false)
+    , inRefill(false)
 {
     bufferPause.addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
     bufferPause.setLoopCount(1);
@@ -1907,6 +1908,10 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
         return;
     }
 
+    if (inRefill)
+        return;
+    inRefill = true;
+
     do {
         bufferPause.stop();
         if (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges() || currentChanges.active) {
@@ -1953,6 +1958,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
             emitCountChanged();
     } while (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges());
     storeFirstVisibleItemPosition();
+    inRefill = false;
 }
 
 void QQuickItemViewPrivate::regenerate(bool orientationChanged)

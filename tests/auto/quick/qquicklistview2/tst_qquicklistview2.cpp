@@ -84,6 +84,8 @@ private slots:
     void removeAndDestroyObjectModelItem_data();
     void removeAndDestroyObjectModelItem();
 
+    void fastMouseWheel();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -1548,6 +1550,36 @@ void tst_QQuickListView2::removeAndDestroyObjectModelItem()
             QVERIFY(QQuickTest::qWaitForPolish(listView));
     }
     listView->positionViewAtEnd();
+}
+
+void tst_QQuickListView2::fastMouseWheel()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("qtbug134502.qml"));
+    window->resize(640, 480);
+    window->show();
+    QQuickViewTestUtils::moveMouseAway(window.data());
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    auto sendWheelEvent = [](QQuickView *window, const QPoint &angleDelta, quint64 timestamp) {
+        QPoint pos(100, 100);
+        QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), angleDelta, Qt::NoButton,
+                          Qt::NoModifier, Qt::NoScrollPhase, false);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp);
+        QGuiApplication::sendEvent(window, &event);
+    };
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "objects");
+    QTRY_VERIFY(listview != nullptr);
+
+    QGuiApplication::styleHints()->setWheelScrollLines(60);
+    sendWheelEvent(window.data(), QPoint(0, -120), 100);
+    QTRY_VERIFY(listview->isMoving() == false);
+    sendWheelEvent(window.data(), QPoint(0, -120), 132);
+    QTRY_VERIFY(listview->isMoving() == false);
+    sendWheelEvent(window.data(), QPoint(0, -240), 194);
+    QTRY_VERIFY(listview->isMoving() == false);
 }
 
 QTEST_MAIN(tst_QQuickListView2)

@@ -320,6 +320,7 @@ public:
     bool isClearing : 1;
     bool explicitDelegate: 1;
     bool explicitDelegateModelAccess: 1;
+    bool inRefill : 1;
 
 protected:
     virtual Qt::Orientation layoutOrientation() const = 0;
