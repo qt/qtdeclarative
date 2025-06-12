@@ -423,6 +423,8 @@ void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 
         if (it->isT1())
             workerScriptExtension(it->asT1())->owner = nullptr;
+        else
+            *it = static_cast<QQuickWorkerScript *>(nullptr);
     }
 
     QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
