@@ -414,12 +414,14 @@ void QQuickWorkerScriptEngine::removeWorkerScript(int id)
 {
     {
         QMutexLocker locker(&d->m_lock);
-        const auto it = d->workers.constFind(id);
-        if (it == d->workers.cend())
+        const auto it = d->workers.find(id);
+        if (it == d->workers.end())
             return;
 
         if (it->isT1())
             workerScriptExtension(it->asT1())->owner = nullptr;
+        else
+            *it = static_cast<QQuickWorkerScript *>(nullptr);
     }
 
     QCoreApplication::postEvent(d, new WorkerRemoveEvent(id));
