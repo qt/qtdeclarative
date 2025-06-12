@@ -274,7 +274,9 @@ void QQmlCodeModel::initializeCMakeStatus(const QString &pathForSettings)
     process.setArguments({ u"--version"_s });
     process.start();
     process.waitForFinished();
-    m_cmakeStatus = process.exitCode() == 0 ? HasCMake : DoesNotHaveCMake;
+    m_cmakeStatus = process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0
+            ? HasCMake
+            : DoesNotHaveCMake;
 
     if (m_cmakeStatus == DoesNotHaveCMake) {
         qWarning() << "Disabling CMake calls because CMake was not found.";
