@@ -52,7 +52,7 @@ public:
 private slots:
     void initTestCase()
     {
-        baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
+        baseDir = QDir::cleanPath(QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem"));
         qmltypeDirs = QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::QmlImportsPath) });
         universePtr =
                 std::shared_ptr<DomUniverse>(new DomUniverse(QStringLiteral(u"dummyUniverse")));
@@ -3197,11 +3197,14 @@ private slots:
         std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
                 qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended);
 
-        const QString fileName{ QDir::cleanPath(baseDir + u"/propertyBindings.qml"_s) };
+        const QString fileName{ baseDir + u"/NeedsImportPath.qml"_s };
 
         {
             DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
             auto envPtrChild = envChild.ownerAs<DomEnvironment>();
+            const QStringList newImportPath =
+                    QStringList{ baseDir + u"/ImportPath"_s } + envPtr->loadPaths();
+            envPtrChild->setLoadPaths(newImportPath);
             envPtrChild->loadFile(
                     FileToLoad::fromFileSystem(envPtrChild, fileName),
                     [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
@@ -3231,6 +3234,13 @@ private slots:
                                               .field(Fields::components)
                                               .key(QString());
         QVERIFY(mainComponent);
+
+        // make sure that the QmlFile was loaded with the import path of the child environment!
+        const QString loadedQmldir = mainComponent[0][Fields::objects][0][Fields::prototypes][0]
+                                                  [Fields::get][Fields::uri]
+                                                          .value()
+                                                          .toString();
+        QCOMPARE(loadedQmldir, "\"%1/ImportPath/MyModule/qmldir\""_L1.arg(baseDir));
     }
 
     void populateLazyFileAfterCommitToBase()
@@ -3240,16 +3250,18 @@ private slots:
         std::shared_ptr<DomEnvironment> envPtr = DomEnvironment::create(
                 qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended);
 
-        const QString fileName{ QDir::cleanPath(baseDir + u"/propertyBindings.qml"_s) };
+        const QString fileName{ baseDir + u"/NeedsImportPath.qml"_s };
 
         {
             DomItem envChild = DomItem(envPtr).makeCopy(DomItem::CopyOption::EnvConnected).item();
             auto envPtrChild = envChild.ownerAs<DomEnvironment>();
-            envPtrChild->loadFile(
-                    FileToLoad::fromFileSystem(envPtrChild, fileName),
-                    [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
-                        qmlObject = newIt.fileObject();
-                    });
+            const QStringList newImportPath =
+                    QStringList{ baseDir + u"/ImportPath"_s } + envPtr->loadPaths();
+            envPtrChild->setLoadPaths(newImportPath);
+            envPtrChild->loadFile(FileToLoad::fromFileSystem(envPtrChild, fileName),
+                                  [&qmlObject](Path, const DomItem &, const DomItem &newIt) {
+                                      qmlObject = newIt.fileObject();
+                                  });
             envPtrChild->loadPendingDependencies();
             envPtrChild->commitToBase(DomItem(envPtrChild));
         } // destroy the temporary environment that the file was loaded into
@@ -3262,6 +3274,13 @@ private slots:
                                               .field(Fields::components)
                                               .key(QString());
         QVERIFY(mainComponent);
+
+        // make sure that the QmlFile was loaded with the import path of the child environment!
+        const QString loadedQmldir = mainComponent[0][Fields::objects][0][Fields::prototypes][0]
+                                                  [Fields::get][Fields::uri]
+                                                          .value()
+                                                          .toString();
+        QCOMPARE(loadedQmldir, "\"%1/ImportPath/MyModule/qmldir\""_L1.arg(baseDir));
     }
 
     void qtbug_124799()
