@@ -786,7 +786,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     line using a QSGGeometryNode:
     \code
         QSGGeometry *geometry = new QSGGeometry(QSGGeometry::defaultAttributes_Point2D(), 2);
-        geometry->setDrawingMode(GL_LINES);
+        geometry->setDrawingMode(QSGGeometry::DrawLines);
         geometry->setLineWidth(3);
         geometry->vertexDataAsPoint2D()[0].set(0, 0);
         geometry->vertexDataAsPoint2D()[1].set(width(), height());
