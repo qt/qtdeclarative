@@ -724,12 +724,19 @@ protected:
 private:
     struct TypeReader
     {
+        TypeReader(const std::weak_ptr<DomEnvironment> &env, const QStringList &importPaths)
+            : m_env(env), m_importPaths(importPaths)
+        {
+        }
+
         std::weak_ptr<DomEnvironment> m_env;
+        QStringList m_importPaths;
 
         QList<QQmlJS::DiagnosticMessage>
         operator()(QQmlJSImporter *importer, const QString &filePath,
                    const QSharedPointer<QQmlJSScope> &scopeToPopulate);
     };
+
 public:
     enum class Option {
         Default = 0x0,
