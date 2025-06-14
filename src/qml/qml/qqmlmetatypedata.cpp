@@ -254,6 +254,7 @@ static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
 
 QQmlPropertyCache::ConstPtr QQmlMetaTypeData::findPropertyCacheInCompositeTypes(QMetaType t) const
 {
+    // Last inserted
     auto iter = compositeTypes.constFind(t.iface());
     return (iter == compositeTypes.constEnd())
             ? QQmlPropertyCache::ConstPtr()

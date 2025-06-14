@@ -711,9 +711,14 @@ QQmlType QQmlMetaType::findCompositeType(
     if (urlExists) {
         if (compilationUnit.isNull())
             return QQmlType(*found);
-        const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
-        if (composite == data->compositeTypes.constEnd() || composite.value() == compilationUnit)
+        const auto [begin, end]
+                = std::as_const(data->compositeTypes).equal_range(found.value()->typeId.iface());
+        if (begin == end)
             return QQmlType(*found);
+        for (auto it = begin; it != end; ++it) {
+            if (it.value() == compilationUnit)
+                return QQmlType(*found);
+        }
     }
 
     const QQmlType type = createTypeForUrl(
@@ -752,9 +757,14 @@ QQmlType QQmlMetaType::findInlineComponentType(
     // we have to create a new one.
     const auto it = data->urlToType.constFind(url);
     if (it != data->urlToType.constEnd()) {
-        const auto jt = data->compositeTypes.constFind((*it)->typeId.iface());
-        if (jt == data->compositeTypes.constEnd() || *jt == compilationUnit)
+        const auto [begin, end]
+                = std::as_const(data->compositeTypes).equal_range((*it)->typeId.iface());
+        if (begin == end)
             return QQmlType(*it);
+        for (auto jt = begin; jt != end; ++jt) {
+            if (*jt == compilationUnit)
+                return QQmlType(*it);
+        }
     }
 
     return doRegisterInlineComponentType(data, url);
@@ -1556,9 +1566,11 @@ static int doCountInternalCompositeTypeSelfReferences(
         if (!iface)
             return;
 
-        const auto it = data->compositeTypes.constFind(iface);
-        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
-            ++result;
+        const auto [begin, end] = std::as_const(data->compositeTypes).equal_range(iface);
+        for (auto it = begin; it != end; ++it) {
+            if (*it == compilationUnit)
+                ++result;
+        }
     };
 
     doCheck(compilationUnit->metaType().iface());
@@ -1953,7 +1965,19 @@ void QQmlMetaType::registerInternalCompositeType(
         // We can't assert on anything else here. We may get a completely new type as exposed
         // by the qmldiskcache test that changes a QML file in place during the execution
         // of the test.
-        data->compositeTypes.insert(iface, compilationUnit);
+        auto it = data->compositeTypes.insert(iface, compilationUnit);
+
+        // Erase any existing entry of the same iface/CU
+        // TODO: In theory we should be able to avoid this case, but the current architecture
+        //       unifies the code paths for "compilation unit detected in cache" and "new
+        //       compilation unit compiled from source", and in both cases we end up here.
+        const auto end = data->compositeTypes.end();
+        while (++it != end && it.key() == iface) {
+            if (*it == compilationUnit) {
+                data->compositeTypes.erase(it);
+                break;
+            }
+        }
     };
 
     doInsert(compilationUnit->metaType().iface());
@@ -1970,9 +1994,13 @@ void QQmlMetaType::unregisterInternalCompositeType(
         if (!iface)
             return;
 
-        const auto it = data->compositeTypes.constFind(iface);
-        if (it != data->compositeTypes.constEnd() && *it == compilationUnit)
-            data->compositeTypes.erase(it);
+        const auto [begin, end] = std::as_const(data->compositeTypes).equal_range(iface);
+        for (auto it = begin; it != end; ++it) {
+            if (*it == compilationUnit) {
+                data->compositeTypes.erase(it);
+                break;
+            }
+        }
     };
 
     doRemove(compilationUnit->metaType().iface());
@@ -1991,6 +2019,8 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlMetaType::obtainCompilati
     QMetaType type)
 {
     const QQmlMetaTypeDataPtr data;
+
+    // Obtains the last inserted one
     return data->compositeTypes.value(type.iface());
 }
 
@@ -2004,6 +2034,7 @@ QQmlRefPointer<QV4::CompiledData::CompilationUnit> QQmlMetaType::obtainCompilati
     if (found == data->urlToType.constEnd())
         return QQmlRefPointer<QV4::CompiledData::CompilationUnit>();
 
+    // Retrieves last inserted one
     const auto composite = data->compositeTypes.constFind(found.value()->typeId.iface());
     return composite == data->compositeTypes.constEnd()
             ? QQmlRefPointer<QV4::CompiledData::CompilationUnit>()
