@@ -15,6 +15,9 @@
 #if QT_CONFIG(shortcut)
 #  include <QtGui/private/qshortcutmap_p.h>
 #endif
+#if QT_CONFIG(accessibility)
+#include <QtGui/private/qaccessiblehelper_p.h>
+#endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
@@ -1286,7 +1289,9 @@ void QQuickAbstractButton::buttonChange(ButtonChange change)
         break;
     case ButtonTextChange: {
         const QString txt = text();
-        maybeSetAccessibleName(txt);
+#if QT_CONFIG(accessibility)
+        maybeSetAccessibleName(qt_accStripAmp(txt));
+#endif
 #if QT_CONFIG(shortcut)
         setShortcut(QKeySequence::mnemonic(txt));
 #endif
@@ -1325,7 +1330,7 @@ void QQuickAbstractButton::accessibilityActiveChanged(bool active)
 
     Q_D(QQuickAbstractButton);
     if (active) {
-        maybeSetAccessibleName(text());
+        maybeSetAccessibleName(qt_accStripAmp(text()));
         setAccessibleProperty("pressed", d->pressed);
         setAccessibleProperty("checked", d->checked);
         setAccessibleProperty("checkable", d->checkable);
