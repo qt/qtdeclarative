@@ -787,11 +787,14 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
                 m_typeResolver->convert(m_typeResolver->valueType(baseRegister), jsValue)));
     };
 
-    if (!baseRegister.isList() && !baseRegister.contains(m_typeResolver->stringType())) {
+    if (baseRegister.isList()) {
+        addReadRegister(base, m_typeResolver->arrayPrototype());
+    } else if (baseRegister.contains(m_typeResolver->stringType())) {
+        addReadRegister(base, m_typeResolver->stringType());
+    } else {
         fallback();
         return;
     }
-    addReadRegister(base);
 
     if (m_typeResolver->isNumeric(in)) {
         const auto contained = in.containedType();
@@ -840,7 +843,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
     else
         addReadRegister(index, m_typeResolver->realType());
 
-    addReadRegister(base);
+    addReadRegister(base, m_typeResolver->arrayPrototype());
     addReadAccumulator(m_typeResolver->valueType(baseRegister));
 
     // If we're writing a QQmlListProperty backed by a container somewhere else,

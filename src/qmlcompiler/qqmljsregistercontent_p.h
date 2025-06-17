@@ -64,7 +64,7 @@ public:
         // Either a synthetic type or a merger of multiple different variants.
         // In the latter case, look at conversion origins to find out more.
         // Synthetic types should be short lived.
-        Unknown,the
+        Unknown,
     };
 
     enum { InvalidLookupIndex = -1 };

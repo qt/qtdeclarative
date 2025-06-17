@@ -286,6 +286,7 @@ private slots:
     void voidFunction();
     void writeBack();
     void writeVariantMap();
+    void writeAndReturnTempArray();
 };
 
 static QByteArray arg1()
@@ -5780,6 +5781,20 @@ void tst_QmlCppCodegen::writeVariantMap()
     QCOMPARE(textPlain.metaType(), QMetaType::fromType<QString>());
     QCOMPARE(textPlain.toString(), u"%Drag Me%"_s);
 
+}
+
+void tst_QmlCppCodegen::writeAndReturnTempArray()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/Categorizer.qml"_s));
+
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    const QVariant nnn = object->property("nnn");
+    QCOMPARE(nnn.metaType(), QMetaType::fromType<QList<double>>());
+    QCOMPARE(nnn.value<QList<double>>(), QList<double>{10});
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

@@ -49,6 +49,7 @@ set(qml_files
     BaseConstraint.qml
     BaseMember.qml
     BindingExpression.qml
+    Categorizer.qml
     CxxTypeFromDir.qml
     CxxTypeFromImplicit.qml
     Cycle1.qml

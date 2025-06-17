@@ -496,16 +496,28 @@ bool QQmlJSTypeResolver::adjustTrackedType(
         return true;
 
     QQmlJSScope::ConstPtr contained = tracked.containedType();
+    QQmlJSScope::ConstPtr result = conversion;
+
+    // Do not adjust to the JavaScript extension of the original type. Rather keep the original
+    // type in that case.
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            contained, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+        if (kind != QQmlJSScope::ExtensionJavaScript || scope != result)
+            return false;
+        result = contained;
+        return true;
+    });
+
 
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(contained, conversion)
-        && !canPopulate(conversion, contained, nullptr)
-        && !selectConstructor(conversion, contained, nullptr).isValid()) {
+    if (!canPrimitivelyConvertFromTo(contained, result)
+        && !canPopulate(result, contained, nullptr)
+        && !selectConstructor(result, contained, nullptr).isValid()) {
         return false;
     }
 
-    m_pool->adjustType(tracked, conversion);
+    m_pool->adjustType(tracked, result);
     return true;
 }
 
@@ -525,18 +537,7 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     for (QQmlJSRegisterContent type : conversions)
         result = merge(type.containedType(), result);
 
-    QQmlJSScope::ConstPtr contained = tracked.containedType();
-
-    // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
-    // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(contained, result)
-            && !canPopulate(result, contained, nullptr)
-            && !selectConstructor(result, contained, nullptr).isValid()) {
-        return false;
-    }
-
-    m_pool->adjustType(tracked, result);
-    return true;
+    return adjustTrackedType(tracked, result);
 }
 
 void QQmlJSTypeResolver::adjustOriginalType(
@@ -654,18 +655,36 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (b.isNull())
         return a;
 
-    const auto commonBaseType = [](
-            const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) {
-        for (QQmlJSScope::ConstPtr aBase = a; aBase; aBase = aBase->baseType()) {
-            for (QQmlJSScope::ConstPtr bBase = b; bBase; bBase = bBase->baseType()) {
-                if (aBase == bBase)
-                    return aBase;
+    const auto baseOrExtension
+            = [](const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) {
+        QQmlJSScope::ConstPtr found;
+        QQmlJSUtils::searchBaseAndExtensionTypes(
+                a, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+            switch (kind) {
+            case QQmlJSScope::NotExtension:
+                // If b inherits scope, then scope is a common base type of a and b
+                if (b->inherits(scope)) {
+                    found = scope;
+                    return true;
+                }
+                break;
+            case QQmlJSScope::ExtensionJavaScript:
+                // Merging a type with its JavaScript extension produces the type.
+                // Giving the JavaScript extension as type to be read means we expect any type
+                // that fulfills the given JavaScript interface
+                if (scope == b) {
+                    found = a;
+                    return true;
+                }
+                break;
+            case QQmlJSScope::ExtensionType:
+            case QQmlJSScope::ExtensionNamespace:
+                break;
             }
-        }
-
-        return QQmlJSScope::ConstPtr();
+            return false;
+        });
+        return found;
     };
-
 
     if (a == b)
         return a;
@@ -699,8 +718,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();
 
-    if (auto commonBase = commonBaseType(a, b))
-        return commonBase;
+    if (const auto base = baseOrExtension(a, b))
+        return base;
+
+    if (const auto base = baseOrExtension(b, a))
+        return base;
 
     if ((a == nullType() || a == boolType()) && b->isReferenceType())
         return b;
@@ -1422,17 +1444,30 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (to == m_jsPrimitiveType)
         return isPrimitive(from);
 
-    if (from == m_variantListType)
-        return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
-
     const bool matchByName = !to->isComposite();
     Q_ASSERT(!matchByName || !to->internalName().isEmpty());
-    for (auto baseType = from; baseType; baseType = baseType->baseType()) {
-        if (baseType == to)
-            return true;
-        if (matchByName && baseType->internalName() == to->internalName())
-            return true;
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(
+            from, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+        switch (kind) {
+        case QQmlJSScope::NotExtension:
+        case QQmlJSScope::ExtensionJavaScript:
+            // Converting to a base type is trivially supported.
+            // Converting to the JavaScript extension of a type just produces the type itself.
+            // Giving the JavaScript extension as type to be converted to means we expect any
+            // result that fulfills the given JavaScript interface.
+            return scope == to
+                    || (matchByName && scope->internalName() == to->internalName());
+        case QQmlJSScope::ExtensionType:
+        case QQmlJSScope::ExtensionNamespace:
+            break;
+        }
+        return false;
+    })) {
+        return true;
     }
+
+    if (from == m_variantListType)
+        return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
     // We can convert anything that fits into QJSPrimitiveValue
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
