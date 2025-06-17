@@ -146,6 +146,7 @@ private slots:
     void bindingEvaluationOrder();
     void compilationUnitsWithSameUrl();
     void bindingInRequired();
+    void repeatedSetDataWithInlineComponent();
 
 private:
     QQmlEngine engine;
@@ -1710,6 +1711,33 @@ void tst_qqmlcomponent::bindingInRequired()
 
     QCOMPARE(inner, outer->property("obj").value<QObject *>());
     QVERIFY(!inner->property("obj").value<QObject *>());
+}
+
+void tst_qqmlcomponent::repeatedSetDataWithInlineComponent()
+{
+    QQmlEngine engine;
+    int counter = 0;
+
+    const QByteArray code = R"(
+        import QtQml
+        QtObject {
+            component Info : QtObject {}
+            property Info info : Info {}
+        })";
+
+    for (int i = 0; i < 5; ++i) {
+        QQmlComponent firstComp(&engine);
+        firstComp.setData(code, QUrl{});
+        QVERIFY2(firstComp.isReady(), qPrintable(firstComp.errorString()));
+        QScopedPointer<QObject> firstObject(firstComp.create());
+        QVERIFY2(!firstObject.isNull(), qPrintable(firstComp.errorString()));
+
+        QQmlComponent secondComp(&engine);
+        secondComp.setData(code, QUrl( QString("qrc:/test") + QString::number(counter++)));
+        QVERIFY2(secondComp.isReady(), qPrintable(secondComp.errorString()));
+        QScopedPointer<QObject> secondObject(secondComp.create());
+        QVERIFY2(!secondObject.isNull(), qPrintable(secondComp.errorString()));
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

@@ -751,24 +751,25 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *p
     } else if (propType == QMetaType::fromType<QQmlScriptString>()) {
         return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else if (!QQmlMetaType::isValueType(property->propType())) {
-        // We want to use the raw metaObject here as the raw metaobject is the
-        // actual property type before we applied any extensions that might
-        // effect the properties on the type, but don't effect assignability
-        // Not passing a version ensures that we get the raw metaObject.
-        QQmlPropertyCache::ConstPtr propertyMetaObject
-                = QQmlMetaType::rawPropertyCacheForType(propType);
-        if (!propertyMetaObject) {
-            // if we have an inline component from the current file,
-            // it is not properly registered at this point, as registration
-            // only occurs after the whole file has been validated
-            // Therefore we need to check the ICs here
-            for (const auto& icDatum: compilationUnit->inlineComponentData) {
-                if (icDatum.qmlType.typeId() == property->propType()) {
-                    propertyMetaObject
-                            = compilationUnit->propertyCaches.at(icDatum.objectIndex);
-                    break;
-                }
+        QQmlPropertyCache::ConstPtr propertyMetaObject;
+
+        // if we have an inline component from the current file,
+        // it is not properly registered at this point, as registration
+        // only occurs after the whole file has been validated
+        // Therefore we need to check the ICs here
+        for (const auto &icDatum: std::as_const(compilationUnit->inlineComponentData)) {
+            if (icDatum.qmlType.typeId() == property->propType()) {
+                propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                break;
             }
+        }
+
+        if (!propertyMetaObject) {
+            // We want to use the raw metaObject here as the raw metaobject is the
+            // actual property type before we applied any extensions that might
+            // effect the properties on the type, but don't effect assignability
+            // Not passing a version ensures that we get the raw metaObject.
+            propertyMetaObject = QQmlMetaType::rawPropertyCacheForType(propType);
         }
 
         if (propertyMetaObject) {
