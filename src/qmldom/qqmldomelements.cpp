@@ -728,7 +728,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
         ow.ensureSpace().writeRegion(OnTokenRegion).ensureSpace().writeRegion(OnTargetRegion,
                                                                               onTarget);
     }
-    ow.writeRegion(LeftBraceRegion, u" {");
+    ow.ensureSpace();
+    ow.writeRegion(LeftBraceRegion);
     int baseIndent = ow.increaseIndent();
     int spacerId = 0;
     if (!idStr().isEmpty()) { // *always* put id first
