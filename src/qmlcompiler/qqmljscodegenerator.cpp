@@ -1173,6 +1173,11 @@ void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
         if (writeBack.isConversion())
             reject(u"write-back of converted value"_s);
 
+        // If the value was produced as an array literal,
+        // we don't have to write back.
+        if (writeBack.variant() == QQmlJSRegisterContent::ArrayLiteral)
+            return;
+
         const int lookupIndex = writeBack.resultLookupIndex();
         if (lookupIndex == -1) {
             // This is essential for the soundness of the type system.

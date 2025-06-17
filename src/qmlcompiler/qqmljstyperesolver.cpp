@@ -590,16 +590,28 @@ bool QQmlJSTypeResolver::adjustTrackedType(
     const auto it = m_trackedTypes->find(tracked);
     Q_ASSERT(it != m_trackedTypes->end());
 
+    QQmlJSScope::ConstPtr result = conversion;
+
+    // Do not adjust to the JavaScript extension of the original type. Rather keep the original
+    // type in that case.
+    QQmlJSUtils::searchBaseAndExtensionTypes(
+            tracked, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+        if (kind != QQmlJSScope::ExtensionJavaScript || !equals(scope, result))
+            return false;
+        result = tracked;
+        return true;
+    });
+
     // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
     // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, conversion)
-           && !canPopulate(conversion, tracked, nullptr)
-           && !selectConstructor(conversion, tracked, nullptr).isValid()) {
+    if (!canPrimitivelyConvertFromTo(tracked, result)
+           && !canPopulate(result, tracked, nullptr)
+           && !selectConstructor(result, tracked, nullptr).isValid()) {
         return false;
     }
 
-    it->replacement = comparableType(conversion);
-    *it->clone = std::move(*QQmlJSScope::clone(conversion));
+    it->replacement = comparableType(result);
+    *it->clone = std::move(*QQmlJSScope::clone(result));
     return true;
 }
 
@@ -611,22 +623,11 @@ bool QQmlJSTypeResolver::adjustTrackedType(
 
     const auto it = m_trackedTypes->find(tracked);
     Q_ASSERT(it != m_trackedTypes->end());
-    QQmlJSScope::Ptr mutableTracked = it->clone;
     QQmlJSScope::ConstPtr result;
     for (const QQmlJSScope::ConstPtr &type : conversions)
         result = merge(type, result);
 
-    // If we cannot convert to the new type without the help of e.g. lookupResultMetaType(),
-    // we better not change the type.
-    if (!canPrimitivelyConvertFromTo(tracked, result)
-            && !canPopulate(result, tracked, nullptr)
-            && !selectConstructor(result, tracked, nullptr).isValid()) {
-        return false;
-    }
-
-    it->replacement = comparableType(result);
-    *mutableTracked = std::move(*QQmlJSScope::clone(result));
-    return true;
+    return adjustTrackedType(tracked, result);
 }
 
 void QQmlJSTypeResolver::adjustOriginalType(
@@ -768,18 +769,36 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (b.isNull())
         return a;
 
-    const auto commonBaseType = [this](
-            const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) {
-        for (QQmlJSScope::ConstPtr aBase = a; aBase; aBase = aBase->baseType()) {
-            for (QQmlJSScope::ConstPtr bBase = b; bBase; bBase = bBase->baseType()) {
-                if (equals(aBase, bBase))
-                    return aBase;
+    const auto baseOrExtension
+            = [this](const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) {
+        QQmlJSScope::ConstPtr found;
+        QQmlJSUtils::searchBaseAndExtensionTypes(
+                a, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+            switch (kind) {
+            case QQmlJSScope::NotExtension:
+                // If b inherits scope, then scope is a common base type of a and b
+                if (inherits(b, scope)) {
+                    found = scope;
+                    return true;
+                }
+                break;
+            case QQmlJSScope::ExtensionJavaScript:
+                // Merging a type with its JavaScript extension produces the type.
+                // Giving the JavaScript extension as type to be read means we expect any type
+                // that fulfills the given JavaScript interface
+                if (equals(scope, b)) {
+                    found = a;
+                    return true;
+                }
+                break;
+            case QQmlJSScope::ExtensionType:
+            case QQmlJSScope::ExtensionNamespace:
+                break;
             }
-        }
-
-        return QQmlJSScope::ConstPtr();
+            return false;
+        });
+        return found;
     };
-
 
     if (equals(a, b))
         return a;
@@ -813,8 +832,11 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     if (isPrimitive(a) && isPrimitive(b))
         return jsPrimitiveType();
 
-    if (auto commonBase = commonBaseType(a, b))
-        return commonBase;
+    if (const auto base = baseOrExtension(a, b))
+        return base;
+
+    if (const auto base = baseOrExtension(b, a))
+        return base;
 
     if ((equals(a, nullType()) || equals(a, boolType())) && b->isReferenceType())
         return b;
@@ -1391,17 +1413,30 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(to, m_jsPrimitiveType))
         return isPrimitive(from);
 
-    if (equals(from, m_variantListType))
-        return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
-
     const bool matchByName = !to->isComposite();
     Q_ASSERT(!matchByName || !to->internalName().isEmpty());
-    for (auto baseType = from; baseType; baseType = baseType->baseType()) {
-        if (equals(baseType, to))
-            return true;
-        if (matchByName && baseType->internalName() == to->internalName())
-            return true;
+    if (QQmlJSUtils::searchBaseAndExtensionTypes(
+            from, [&](const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ExtensionKind kind) {
+        switch (kind) {
+        case QQmlJSScope::NotExtension:
+        case QQmlJSScope::ExtensionJavaScript:
+            // Converting to a base type is trivially supported.
+            // Converting to the JavaScript extension of a type just produces the type itself.
+            // Giving the JavaScript extension as type to be converted to means we expect any
+            // result that fulfills the given JavaScript interface.
+            return equals(scope, to)
+                    || (matchByName && scope->internalName() == to->internalName());
+        case QQmlJSScope::ExtensionType:
+        case QQmlJSScope::ExtensionNamespace:
+            break;
+        }
+        return false;
+    })) {
+        return true;
     }
+
+    if (equals(from, m_variantListType))
+        return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
     // We can convert anything that fits into QJSPrimitiveValue
     if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
@@ -1690,6 +1725,13 @@ QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
              || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
     return QQmlJSRegisterContent::create(
             storedType(type), type, QQmlJSRegisterContent::InvalidLookupIndex, variant, scope);
+}
+
+QQmlJSRegisterContent QQmlJSTypeResolver::arrayType(const QQmlJSScope::ConstPtr &type) const
+{
+    return QQmlJSRegisterContent::create(
+            storedType(type), type, QQmlJSRegisterContent::InvalidLookupIndex,
+            QQmlJSRegisterContent::ArrayLiteral);
 }
 
 QQmlJSRegisterContent QQmlJSTypeResolver::iteratorPointer(

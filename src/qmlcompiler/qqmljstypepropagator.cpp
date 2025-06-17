@@ -731,12 +731,14 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
     };
 
     const QQmlJSRegisterContent baseRegister = m_state.registers[base].content;
-    if (!baseRegister.isList()
-        && !m_typeResolver->registerContains(baseRegister, m_typeResolver->stringType())) {
+    if (baseRegister.isList()) {
+        addReadRegister(base, m_typeResolver->globalType(m_typeResolver->arrayPrototype()));
+    } else if (m_typeResolver->registerContains(baseRegister, m_typeResolver->stringType())) {
+        addReadRegister(base, baseRegister);
+    } else {
         fallback();
         return;
     }
-    addReadRegister(base, baseRegister);
 
     if (m_typeResolver->isNumeric(m_state.accumulatorIn())) {
         const auto contained = m_typeResolver->containedType(m_state.accumulatorIn());
@@ -786,7 +788,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
     else
         addReadRegister(index, m_typeResolver->globalType(m_typeResolver->realType()));
 
-    addReadRegister(base, baseRegister);
+    addReadRegister(base, m_typeResolver->globalType(m_typeResolver->arrayPrototype()));
     addReadAccumulator(m_typeResolver->valueType(baseRegister));
 
     // If we're writing a QQmlListProperty backed by a container somewhere else,
@@ -2129,7 +2131,7 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    setAccumulator(m_typeResolver->globalType(m_typeResolver->variantListType()));
+    setAccumulator(m_typeResolver->arrayType(m_typeResolver->variantListType()));
 
     // Track all arguments as the same type.
     const QQmlJSRegisterContent elementType

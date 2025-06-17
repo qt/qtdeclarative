@@ -55,6 +55,7 @@ public:
         MethodReturnValue,
         JavaScriptReturnValue,
 
+        ArrayLiteral,
         ListValue,
         ListIterator,
         Builtin,
