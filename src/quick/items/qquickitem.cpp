@@ -348,7 +348,7 @@ void QQuickItemKeyFilter::componentComplete()
     \brief Supports key navigation by arrow keys.
 
     Key-based user interfaces commonly allow the use of arrow keys to navigate between
-    focusable items.  The KeyNavigation attached property enables this behavior by providing a
+    focusable items.  The KeyNavigation attaching type enables this behavior by providing a
     convenient way to specify the item that should gain focus when an arrow or tab key is pressed.
 
     The following example provides key navigation for a 2x2 grid of items:
@@ -360,12 +360,12 @@ void QQuickItemKeyFilter::componentComplete()
     appropriate item, as defined by the value that has been set for
     the KeyNavigation \l left, \l right, \l up or \l down properties.
 
-    Note that if a KeyNavigation attached property receives the key press and release
+    Note that if a KeyNavigation attaching type receives the key press and release
     events for a requested arrow or tab key, the event is accepted and does not
     propagate any further.
 
     By default, KeyNavigation receives key events after the item to which it is attached.
-    If the item accepts the key event, the KeyNavigation attached property will not
+    If the item accepts the key event, the KeyNavigation attaching type will not
     receive an event for that key.  Setting the \l priority property to
     \c KeyNavigation.BeforeItem allows the event to be used for key navigation
     before the item, rather than after.
@@ -805,7 +805,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     \brief Provides key handling to Items.
 
     All visual primitives support key handling via the Keys
-    attached property.  Keys can be handled via the onPressed
+    attaching type.  Keys can be handled via the onPressed
     and onReleased signal properties.
 
     The signal properties have a \l KeyEvent parameter, named
@@ -831,7 +831,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     \section1 Key Handling Priorities
 
-    The Keys attached property can be configured to handle key events
+    The Keys attaching type can be configured to handle key events
     before or after the item it is attached to. This makes it possible
     to intercept events in order to override an item's default behavior,
     or act as a fallback for keys not handled by the item.
@@ -1412,7 +1412,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
     \ingroup qml-utility-elements
     \brief Property used to mirror layout behavior.
 
-    The LayoutMirroring attached property is used to horizontally mirror \l {anchor-layout}{Item anchors},
+    The LayoutMirroring attaching type is used to horizontally mirror \l {anchor-layout}{Item anchors},
     \l{Item Positioners}{positioner} types (such as \l Row and \l Grid)
     and views (such as \l GridView and horizontal \l ListView). Mirroring is a visual change: left
     anchors become right anchors, and positioner types like \l Grid and \l Row reverse the
@@ -1420,7 +1420,7 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
     Mirroring is enabled for an item by setting the \l enabled property to true. By default, this
     only affects the item itself; setting the \l childrenInherit property to true propagates the mirroring
-    behavior to all child items as well. If the \c LayoutMirroring attached property has not been defined
+    behavior to all child items as well. If the \c LayoutMirroring attaching type has not been defined
     for an item, mirroring is not enabled.
 
     \note Since Qt 5.8, \c LayoutMirroring can be attached to a \l Window. In practice, it is the same as
