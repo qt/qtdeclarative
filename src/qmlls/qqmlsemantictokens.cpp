@@ -215,13 +215,17 @@ static FieldFilter highlightingFilter()
     return FieldFilter{ fieldFilterAdd, fieldFilterRemove };
 }
 
-HighlightingVisitor::HighlightingVisitor(Highlights &highlights,
-                                         const std::optional<HighlightsRange> &range)
-    : m_highlights(highlights), m_range(range)
+HighlightingVisitor::HighlightingVisitor(const QQmlJS::Dom::DomItem &item,
+                                         const std::optional<HighlightsRange> &range,
+                                         HighlightingMode mode)
+    : m_highlights(mode), m_range(range)
 {
+    item.visitTree(Path(),
+                   [this](Path path, const DomItem &item, bool b) { return this->visitor(path, item, b); },
+                   VisitOption::Default, emptyChildrenVisitor, emptyChildrenVisitor, highlightingFilter());
 }
 
-bool HighlightingVisitor::operator()(Path, const DomItem &item, bool)
+bool HighlightingVisitor::visitor(Path, const DomItem &item, bool)
 {
     if (m_range.has_value()) {
         const auto fLocs = FileLocations::treeOf(item);
@@ -519,7 +523,7 @@ void HighlightingVisitor::highlightIdentifier(const DomItem &item)
     // Many of the scriptIdentifiers expressions are already handled by
     // other cases. In those cases, if the location offset is already in the list
     // we don't need to perform expensive resolveExpressionType operation.
-    if (m_highlights.highlights().contains(loc.offset))
+    if (m_highlights.tokens().contains(loc.offset))
         return;
 
     highlightBySemanticAnalysis(item, loc);
@@ -717,7 +721,7 @@ void HighlightingVisitor::highlightScriptExpressions(const DomItem &item)
         return;
     case DomType::ScriptTemplateExpressionPart:
         m_highlights.addHighlight(regions[DollarLeftBraceTokenRegion], QmlHighlightKind::Operator);
-        operator()(Path(), item.field(Fields::expression), false);
+        visitor(Path(), item.field(Fields::expression), false);
         m_highlights.addHighlight(regions[RightBraceRegion], QmlHighlightKind::Operator);
         return;
     case DomType::ScriptTemplateLiteral:
@@ -800,7 +804,7 @@ HighlightingUtils::sourceLocationsFromMultiLineToken(QStringView stringLiteral,
 QList<int> HighlightingUtils::encodeSemanticTokens(Highlights &highlights)
 {
     QList<int> result;
-    const auto highlightingTokens = highlights.highlights();
+    const auto highlightingTokens = highlights.tokens();
     constexpr auto tokenEncodingLength = 5;
     result.reserve(tokenEncodingLength * highlightingTokens.size());
 
@@ -931,19 +935,20 @@ void Highlights::addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenTy
         m_highlights.insert(loc.offset, QT_PREPEND_NAMESPACE(Token)(loc, tokenType, tokenModifier));
 }
 
-QList<int> HighlightingUtils::collectTokens(const QQmlJS::Dom::DomItem &item,
+Highlights HighlightingUtils::visitTokens(const QQmlJS::Dom::DomItem &item,
                                      const std::optional<HighlightsRange> &range,
                                      HighlightingMode mode)
 {
     using namespace QQmlJS::Dom;
-    Highlights highlights(mode);
-    HighlightingVisitor highlightDomElements(highlights, range);
-    // In QmlFile level, visitTree visits even FileLocations tree which takes quite a time to
-    // finish. HighlightingFilter is added to prevent unnecessary visits.
-    item.visitTree(Path(), highlightDomElements, VisitOption::Default, emptyChildrenVisitor,
-                   emptyChildrenVisitor, highlightingFilter());
-
-    return HighlightingUtils::encodeSemanticTokens(highlights);
+    HighlightingVisitor highlightDomElements(item, range, mode);
+    return highlightDomElements.highlights();
 }
 
+QList<int> HighlightingUtils::collectTokens(const QQmlJS::Dom::DomItem &item,
+                                     const std::optional<HighlightsRange> &range,
+                                     HighlightingMode mode)
+{
+    Highlights highlights = visitTokens(item, range, mode);
+    return HighlightingUtils::encodeSemanticTokens(highlights);
+}
 QT_END_NAMESPACE

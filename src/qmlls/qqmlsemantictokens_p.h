@@ -169,8 +169,8 @@ public:
     void addHighlight(const QQmlJS::SourceLocation &loc, HighlightingUtils::QmlHighlightKind,
                       HighlightingUtils::QmlHighlightModifiers =
                               HighlightingUtils::QmlHighlightModifier::None);
-    HighlightsContainer &highlights() { return m_highlights; }
-    const HighlightsContainer &highlights() const { return m_highlights; }
+    HighlightsContainer &tokens() { return m_highlights; }
+    const HighlightsContainer &tokens() const { return m_highlights; }
 
 private:
     void addHighlightImpl(const QQmlJS::SourceLocation &loc, int tokenType, int tokenModifier = 0);
@@ -191,15 +191,23 @@ namespace HighlightingUtils
     QList<int> collectTokens(const QQmlJS::Dom::DomItem &item,
                              const std::optional<HighlightsRange> &range,
                              HighlightingMode mode = HighlightingMode::Default);
+    Highlights visitTokens(const QQmlJS::Dom::DomItem &item,
+                                 const std::optional<HighlightsRange> &range,
+                                 HighlightingMode mode = HighlightingMode::Default);
 } // namespace HighlightingUtils
 
 class HighlightingVisitor
 {
 public:
-    HighlightingVisitor(Highlights &highlights, const std::optional<HighlightsRange> &range);
-    bool operator()(QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &item, bool);
+    HighlightingVisitor(const QQmlJS::Dom::DomItem &item,
+                        const std::optional<HighlightsRange> &range,
+                        HighlightingUtils::HighlightingMode mode =
+                                HighlightingUtils::HighlightingMode::Default);
+    const Highlights &hightights() const { return m_highlights; }
+    Highlights &highlights() { return m_highlights; }
 
 private:
+    bool visitor(QQmlJS::Dom::Path, const QQmlJS::Dom::DomItem &item, bool);
     void highlightComment(const QQmlJS::Dom::DomItem &item);
     void highlightImport(const QQmlJS::Dom::DomItem &item);
     void highlightBinding(const QQmlJS::Dom::DomItem &item);
@@ -216,7 +224,7 @@ private:
     void highlightScriptExpressions(const QQmlJS::Dom::DomItem &item);
 
 private:
-    Highlights &m_highlights;
+    Highlights m_highlights;
     std::optional<HighlightsRange> m_range;
 };
 
