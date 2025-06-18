@@ -43,6 +43,8 @@ private slots:
     void dragFromMargin();
     void snapMode_data();
     void snapMode();
+    void twoFingerDrag_data();
+    void twoFingerDrag();
     void touchDragMulti();
     void touchDragMultiSliders_data();
     void touchDragMultiSliders();
@@ -588,6 +590,55 @@ void tst_DragHandler::snapMode()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler1->active());
     QCOMPARE(dragHandler1->centroid().pressedButtons(), Qt::NoButton);
+}
+
+void tst_DragHandler::twoFingerDrag_data()
+{
+    QTest::addColumn<QPoint>("p1");
+    QTest::addColumn<QPoint>("p2");
+    QTest::addColumn<bool>("shouldDrag");
+
+    QTest::newRow("both start outside")
+            << QPoint(80, 45) << QPoint(120, 45) << false;
+    QTest::newRow("one starts outside")
+            << QPoint(80, 45) << QPoint(120, 55) << false;
+    QTest::newRow("both start inside")
+            << QPoint(80, 55) << QPoint(120, 55) << true;
+}
+
+void tst_DragHandler::twoFingerDrag()
+{
+    QFETCH(QPoint, p1);
+    QFETCH(QPoint, p2);
+    QFETCH(bool, shouldDrag);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("multiFingerDrag.qml")));
+    QQuickDragHandler *dragHandler = window.rootObject()->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler);
+    QSignalSpy activeSpy(dragHandler, &QQuickDragHandler::activeChanged);
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+    // press two points, inside or outside the Rectangle
+    QTest::QTouchEventSequence seq = QTest::touchEvent(&window, touchscreen.get());
+    seq.press(1, p1, &window).press(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+
+    // drag downwards and check whether DragHandler activates
+    for (int i = 1; i <= 4; ++i) {
+        p1 += QPoint(0, dragThreshold);
+        p2 += QPoint(0, dragThreshold);
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        seq.move(1, p1, &window).move(2, p2, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        qCDebug(lcPointerTests) << i << "active" << dragHandler->active() << "pts" << p1 << p2;
+        if (!shouldDrag)
+            QCOMPARE(dragHandler->active(), false);
+    }
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    seq.release(1, p1, &window).release(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(activeSpy.size(), shouldDrag ? 2 : 0);
 }
 
 void tst_DragHandler::touchDragMulti()

@@ -45,6 +45,8 @@ private slots:
     void transformedpinchHandler();
     void dragVsPinch_data();
     void dragVsPinch();
+    void pinchStartPos_data();
+    void pinchStartPos();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -1207,6 +1209,58 @@ void tst_QQuickPinchHandler::dragVsPinch()
     // whether PinchHandler is activated depends on pinchHandler.grabPermissions
     // and whether DragHandlers handle either or both points
     QCOMPARE(pinchActiveSpy.size(), expectedPinchActivations);
+}
+
+void tst_QQuickPinchHandler::pinchStartPos_data()
+{
+    QTest::addColumn<QPoint>("p1");
+    QTest::addColumn<QPoint>("p2");
+    QTest::addColumn<bool>("shouldPinch");
+
+    QTest::newRow("both start outside")
+            << QPoint(45, 45) << QPoint(155, 155) << false;
+    QTest::newRow("one starts outside")
+            << QPoint(55, 55) << QPoint(155, 155) << false;
+    QTest::newRow("both start inside")
+            << QPoint(55, 55) << QPoint(145, 145) << true;
+}
+
+void tst_QQuickPinchHandler::pinchStartPos()
+{
+    QFETCH(QPoint, p1);
+    QFETCH(QPoint, p2);
+    QFETCH(bool, shouldPinch);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchproperties.qml")));
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+    QQuickPinchHandler *pinchHandler = root->findChild<QQuickPinchHandler*>();
+    QVERIFY(pinchHandler);
+    QSignalSpy activeSpy(pinchHandler, &QQuickPinchHandler::activeChanged);
+    const QList<QPoint> pointPos = {{40, 40}, {160, 160}};
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+    // press two points, inside or outside the black Rectangle
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&window, touchscreen.get());
+    pinchSequence.press(1, p1, &window).press(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+
+    // drag inwards and check whether PinchHandler activates
+    for (int i = 1; i <= 4; ++i) {
+        p1 += QPoint(dragThreshold, dragThreshold);
+        p2 -= QPoint(dragThreshold, dragThreshold);
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        pinchSequence.move(1, p1, &window).move(2, p2, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        qCDebug(lcPointerTests) << i << "active" << pinchHandler->active() << "pts" << p1 << p2;
+        if (!shouldPinch)
+            QCOMPARE(pinchHandler->active(), false);
+    }
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    pinchSequence.release(1, p1, &window).release(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(activeSpy.size(), shouldPinch ? 2 : 0);
 }
 
 QTEST_MAIN(tst_QQuickPinchHandler)
