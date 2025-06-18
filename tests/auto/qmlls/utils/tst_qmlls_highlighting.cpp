@@ -30,41 +30,41 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
 
     {
         Highlights c;
-        c.highlights().insert(0, Token());
+        c.tokens().insert(0, Token());
         QTest::addRow("empty-token-single") << c << QList {0, 0, 0, 0, 0};
     }
     {
         Highlights c;
         QQmlJS::SourceLocation loc(0, 1, 1, 1);
-        c.highlights().insert(0, Token(loc, 0, 0));
+        c.tokens().insert(0, Token(loc, 0, 0));
         QTest::addRow("single-token") << c << QList {0, 0, 1, 0, 0};
     }
     {
         Highlights c;
         Token t1(QQmlJS::SourceLocation(0, 1, 1, 1), 0, 0);
         Token t2(QQmlJS::SourceLocation(1, 1, 3, 3), 0, 0);
-        c.highlights().insert(t1.offset, t1);
-        c.highlights().insert(t2.offset, t2);
+        c.tokens().insert(t1.offset, t1);
+        c.tokens().insert(t2.offset, t2);
         QTest::addRow("different-lines") << c << QList {0, 0, 1, 0, 0, 2, 2, 1, 0, 0};
     }
     {
         Highlights c;
         Token t1(QQmlJS::SourceLocation(0, 1, 1, 1), 0, 0);
         Token t2(QQmlJS::SourceLocation(1, 1, 1, 3), 0, 0);
-        c.highlights().insert(t1.offset, t1);
-        c.highlights().insert(t2.offset, t2);
+        c.tokens().insert(t1.offset, t1);
+        c.tokens().insert(t2.offset, t2);
         QTest::addRow("same-line-different-column") << c << QList {0, 0, 1, 0, 0, 0, 2, 1, 0, 0};
     }
     {
         Highlights c;
         Token t1(QQmlJS::SourceLocation(0, 1, 1, 1), 1, 0);
-        c.highlights().insert(t1.offset, t1);
+        c.tokens().insert(t1.offset, t1);
         QTest::addRow("token-type") << c << QList {0, 0, 1, 1, 0};
     }
     {
         Highlights c;
         Token t1(QQmlJS::SourceLocation(0, 1, 1, 1), 1, 1);
-        c.highlights().insert(t1.offset, t1);
+        c.tokens().insert(t1.offset, t1);
         QTest::addRow("token-modifier") << c << QList {0, 0, 1, 1, 1};
     }
 }
@@ -694,13 +694,7 @@ void tst_qmlls_highlighting::highlights()
     QFETCH(DomItem, fileItem);
     QFETCH(Token, expectedHighlightedToken);
 
-    Highlights h;
-    HighlightingVisitor hv(h, std::nullopt);
-
-    fileItem.visitTree(QQmlJS::Dom::Path(), hv, VisitOption::Default, emptyChildrenVisitor,
-                   emptyChildrenVisitor);
-
-    const auto highlights = h.highlights();
+    const auto highlights = HighlightingUtils::visitTokens(fileItem,std::nullopt).tokens();
     QVERIFY(highlights.contains(expectedHighlightedToken.offset));
     QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
 }
@@ -865,13 +859,8 @@ void tst_qmlls_highlighting::enumCrash()
     const auto filePath = m_highlightingDataDir + "/enums_qtbug.qml";
     const auto fileItem = fileObject(filePath);
 
-    Highlights h;
-    HighlightingVisitor hv(h, std::nullopt);
-
-    fileItem.visitTree(QQmlJS::Dom::Path(), hv, VisitOption::Default, emptyChildrenVisitor,
-                       emptyChildrenVisitor);
-
-    const auto highlights = h.highlights();
+    HighlightingVisitor hv(fileItem, std::nullopt);
+    const auto highlights = hv.highlights().tokens();
     QVERIFY(!highlights.isEmpty());
 }
 
