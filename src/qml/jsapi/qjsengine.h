@@ -145,6 +145,18 @@ public:
             }
         }
 
+        if constexpr (std::is_same_v<T, double>) {
+            if (sourceType == QMetaType::fromType<int>())
+                return double(*static_cast<const int *>(value.constData()));
+        }
+
+        if constexpr (std::is_same_v<T, int>) {
+            if (sourceType == QMetaType::fromType<double>()) {
+                return QJSNumberCoercion::toInteger(
+                        *static_cast<const double *>(value.constData()));
+            }
+        }
+
         if constexpr (std::is_same_v<QObject, std::remove_const_t<std::remove_pointer_t<T>>>) {
             if (sourceType.flags() & QMetaType::PointerToQObject) {
                 return *static_cast<QObject *const *>(value.constData());
@@ -258,6 +270,16 @@ public:
             using nonConstTo = std::remove_const_t<std::remove_pointer_t<To>> *;
             if constexpr (std::is_same_v<From, nonConstTo>)
                 return from;
+        }
+
+        if constexpr (std::is_same_v<To, double>) {
+            if constexpr (std::is_same_v<From, int>)
+                return double(from);
+        }
+
+        if constexpr (std::is_same_v<To, int>) {
+            if constexpr (std::is_same_v<From, double>)
+                return QJSNumberCoercion::toInteger(from);
         }
 
         {
