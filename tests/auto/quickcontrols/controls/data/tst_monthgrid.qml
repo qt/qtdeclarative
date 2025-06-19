@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtTest
+import Qt.test.controls
 
 TestCase {
     id: testCase
@@ -21,7 +22,14 @@ TestCase {
     Component {
         id: delegateGrid
         MonthGrid {
-            delegate: Item {
+            id: grid
+            delegate: Text {
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                opacity: month === grid.month ? 1 : 0.5
+                text: day
+                font: grid.font
+
                 readonly property date date: model.date
                 readonly property int day: model.day
                 readonly property bool today: model.today
@@ -111,28 +119,28 @@ TestCase {
         compare(control.month, 0)
 
 
-        ignoreWarning(/tst_monthgrid.qml:18:9: QML (Abstract)?MonthGrid: month -1 is out of range \[0...11\]$/)
+        ignoreWarning(/.*MonthGrid: month -1 is out of range \[0...11\]$/)
         control.month = -1
         compare(control.month, 0)
 
         control.month = 11
         compare(control.month, 11)
 
-        ignoreWarning(/tst_monthgrid.qml:18:9: QML (Abstract)?MonthGrid: month 12 is out of range \[0...11\]$/)
+        ignoreWarning(/.*MonthGrid: month 12 is out of range \[0...11\]$/)
         control.month = 12
         compare(control.month, 11)
 
         control.year = -271820
         compare(control.year, -271820)
 
-        ignoreWarning(/tst_monthgrid.qml:18:9: QML (Abstract)?MonthGrid: year -271821 is out of range \[-271820...275759\]$/)
+        ignoreWarning(/.*MonthGrid: year -271821 is out of range \[-271820...275759\]$/)
         control.year = -271821
         compare(control.year, -271820)
 
         control.year = 275759
         compare(control.year, 275759)
 
-        ignoreWarning(/tst_monthgrid.qml:18:9: QML (Abstract)?MonthGrid: year 275760 is out of range \[-271820...275759\]$/)
+        ignoreWarning(/.*MonthGrid: year 275760 is out of range \[-271820...275759\]$/)
         control.year = 275760
         compare(control.year, 275759)
 
@@ -241,6 +249,74 @@ TestCase {
             compare(pressedSpy.count, i + 1)
             compare(releasedSpy.count, i + 1)
             compare(clickedSpy.count, i + 1)
+        }
+    }
+
+    function test_timezone_data() {
+        return [
+            { tag: "UTC-12", tz: "Etc/GMT+12" },
+            { tag: "UTC", tz: "Etc/UTC" },
+            { tag: "UTC+14", tz: "Etc/GMT-14" }
+        ]
+    }
+
+    function test_timezone(data) {
+        const oldTZValue = SystemEnvironment.value("TZ")
+
+        // Ensure that even if the test fails, the old timezone is restored.
+        try {
+            SystemEnvironment.setValue("TZ", data.tz)
+
+            // Pass a locale that ensures that the week starts with Monday.
+            let control = createTemporaryObject(delegateGrid, testCase, { locale: Qt.locale("en_AU"), month: 0, year: 2022 })
+            verify(control)
+
+            //   M   T   W   T   F   S   S
+            // [27, 28, 29, 30, 31,  1,  2,
+            //   3,  4,  5,  6,  7,  8,  9,
+            //  10, 11, 12, 13, 14, 15, 16,
+            //  17, 18, 19, 20, 21, 22, 23,
+            //  24, 25, 26, 27, 28, 29, 30,
+            //  31,  1,  2,  3,  4,  5,  6]
+
+            // Get the delegate item for 1st January.
+            let expectedDate = new Date(2022, 0, 1)
+            let delegateItem = control.contentItem.children[5]
+            verify(delegateItem)
+            // Test that the date is always correct; it shouldn't be affected by the
+            // conversion to local timezone that Date performs.
+            compare(delegateItem.date, expectedDate)
+            compare(delegateItem.day, expectedDate.getDate())
+            compare(delegateItem.today, expectedDate === new Date())
+            compare(delegateItem.month, expectedDate.getMonth())
+            compare(delegateItem.year, expectedDate.getFullYear())
+
+            // Check that the signals emit the correct dates, too.
+            let pressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+            verify(pressedSpy.valid)
+            let pressAndHoldSpy = signalSpy.createObject(control, { target: control, signalName: "pressAndHold" })
+            verify(pressAndHoldSpy.valid)
+            let releasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+            verify(releasedSpy.valid)
+            let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+            verify(clickedSpy.valid)
+
+            mousePress(delegateItem)
+            compare(pressedSpy.count, 1)
+            compare(pressedSpy.signalArguments[0][0], expectedDate)
+            // Testing this once is all we need, and it slows down tests otherwise.
+            if (data.tag === "UTC-12") {
+                tryCompare(pressAndHoldSpy, "count", 1)
+                compare(pressAndHoldSpy.signalArguments[0][0], expectedDate)
+            }
+
+            mouseRelease(delegateItem)
+            compare(releasedSpy.count, 1)
+            compare(releasedSpy.signalArguments[0][0], expectedDate)
+            compare(clickedSpy.count, 1)
+            compare(clickedSpy.signalArguments[0][0], expectedDate)
+        } finally {
+            verify(SystemEnvironment.setValue("TZ", oldTZValue))
         }
     }
 }

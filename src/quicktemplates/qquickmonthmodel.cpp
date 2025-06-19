@@ -4,6 +4,8 @@
 #include "qquickmonthmodel_p.h"
 
 #include <QtCore/private/qabstractitemmodel_p.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qtimezone.h>
 
 namespace {
     static const int daysInAWeek = 7;
@@ -12,6 +14,8 @@ namespace {
 }
 
 QT_BEGIN_NAMESPACE
+
+Q_STATIC_LOGGING_CATEGORY(lcMonthModel, "qt.quick.controls.monthmodel")
 
 class QQuickMonthModelPrivate : public QAbstractItemModelPrivate
 {
@@ -31,7 +35,7 @@ public:
     int year;
     QString title;
     QLocale locale;
-    QVector<QDate> dates;
+    QVector<QDateTime> dates;
     QDate today;
 };
 
@@ -42,19 +46,36 @@ bool QQuickMonthModelPrivate::populate(int m, int y, const QLocale &l, bool forc
         return false;
 
     // The actual first (1st) day of the month.
-    QDate firstDayOfMonthDate(y, m, 1);
+    const QDate firstDayOfMonthDate = QDate(y, m, 1);
+    // QDate is converted to local time when converted to a JavaScript Date,
+    // so if we stored our dates as QDates, it's possible that the date provided
+    // to delegates will be wrong in certain timezones:
+    // e.g. 00:00 UTC converted to UTC-8 is 20:00 the day before.
+    // To account for this, we pick a time of day that can't possibly result
+    // in a different day when converted to local time.
+    QDateTime firstDayOfMonthDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::UTC));
+    const int localTimeOffsetFromUtc = QDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::LocalTime)).offsetFromUtc();
+    const int timeOffsetAdjustment = localTimeOffsetFromUtc * -1;
+    firstDayOfMonthDateTime.setSecsSinceEpoch(firstDayOfMonthDateTime.toSecsSinceEpoch() + timeOffsetAdjustment);
     int difference = ((firstDayOfMonthDate.dayOfWeek() - l.firstDayOfWeek()) + 7) % 7;
     // The first day to display should never be the 1st of the month, as we want some days from
     // the previous month to be visible.
     if (difference == 0)
         difference += 7;
-    QDate firstDateToDisplay = firstDayOfMonthDate.addDays(-difference);
+    QDateTime firstDateToDisplay = firstDayOfMonthDateTime.addDays(-difference);
 
     today = QDate::currentDate();
     for (int i = 0; i < daysOnACalendarMonth; ++i)
         dates[i] = firstDateToDisplay.addDays(i);
 
     q->setTitle(l.standaloneMonthName(m) + QStringLiteral(" ") + QString::number(y));
+
+    qCDebug(lcMonthModel) << "populated model for month" << m << "year" << y << "locale" << locale
+        << "initial firstDayOfMonthDateTime" << QDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::UTC))
+        << "localTimeOffsetFromUtc" << localTimeOffsetFromUtc / 60 / 60
+        << "timeOffsetAdjustment" << timeOffsetAdjustment / 60 / 60
+        << "firstDayOfMonthDateTime" << firstDayOfMonthDateTime
+        << "firstDayOfMonthDateTime.toLocalTime()" << firstDayOfMonthDateTime.toLocalTime();
 
     return true;
 }
@@ -132,13 +153,13 @@ void QQuickMonthModel::setTitle(const QString &title)
     }
 }
 
-QDate QQuickMonthModel::dateAt(int index) const
+QDateTime QQuickMonthModel::dateAt(int index) const
 {
     Q_D(const QQuickMonthModel);
     return d->dates.value(index);
 }
 
-int QQuickMonthModel::indexOf(QDate date) const
+int QQuickMonthModel::indexOf(QDateTime date) const
 {
     Q_D(const QQuickMonthModel);
     if (date < d->dates.first() || date > d->dates.last())
@@ -150,10 +171,15 @@ QVariant QQuickMonthModel::data(const QModelIndex &index, int role) const
 {
     Q_D(const QQuickMonthModel);
     if (index.isValid() && index.row() < daysOnACalendarMonth) {
-        const QDate date = d->dates.at(index.row());
+        const QDateTime dateTime = d->dates.at(index.row());
+        // As mentioned in populate, we store dates whose time is adjusted
+        // by the timezone offset, so we need to convert back to local time
+        // to get the correct date if the conversion to JavaScript's Date
+        // isn't being done for us.
+        const QDate date = d->dates.at(index.row()).toLocalTime().date();
         switch (role) {
         case DateRole:
-            return date;
+            return dateTime;
         case DayRole:
             return date.day();
         case TodayRole:

@@ -96,6 +96,17 @@ namespace QQuickControlsTestUtils
         Qt::ColorScheme m_colorScheme = QGuiApplication::styleHints()->colorScheme();
     };
 
+    class SystemEnvironment : public QObject
+    {
+        Q_OBJECT
+        QML_ELEMENT
+        QML_SINGLETON
+
+    public:
+        Q_INVOKABLE QString value(const QString &name);
+        Q_INVOKABLE bool setValue(const QString &name, const QString &value);
+    };
+
     [[nodiscard]] bool arePopupWindowsSupported();
 }
 

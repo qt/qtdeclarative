@@ -185,6 +185,21 @@ QString QQuickControlsTestUtils::StyleInfo::styleName() const
     return QQuickStyle::name();
 }
 
+/*!
+    It's recommended to use try-finally (see tst_monthgrid.qml for an example)
+    or init/initTestCase and cleanup/cleanupTestCase if setting environment
+    variables, in order to restore previous values.
+*/
+QString QQuickControlsTestUtils::SystemEnvironment::value(const QString &name)
+{
+    return QString::fromLocal8Bit(qgetenv(name.toLocal8Bit()));
+}
+
+bool QQuickControlsTestUtils::SystemEnvironment::setValue(const QString &name, const QString &value)
+{
+    return qputenv(name.toLocal8Bit(), value.toLocal8Bit());
+}
+
 QString QQuickControlsTestUtils::visualFocusFailureMessage(QQuickControl *control)
 {
     QString message;

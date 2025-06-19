@@ -58,10 +58,10 @@ Q_SIGNALS:
     void titleChanged();
     void delegateChanged();
 
-    void pressed(QDate date);
-    void released(QDate date);
-    void clicked(QDate date);
-    void pressAndHold(QDate date);
+    void pressed(QDateTime date);
+    void released(QDateTime date);
+    void clicked(QDateTime date);
+    void pressAndHold(QDateTime date);
 
 protected:
     void componentComplete() override;

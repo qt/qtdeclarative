@@ -83,7 +83,7 @@ public:
     void resizeItems();
 
     QQuickItem *cellAt(const QPointF &pos) const;
-    QDate dateOf(QQuickItem *cell) const;
+    QDateTime dateOf(QQuickItem *cell) const;
 
     void updatePress(const QPointF &pos);
     void clearPress(bool clicked);
@@ -95,7 +95,7 @@ public:
 
     QString title;
     QVariant source;
-    QDate pressedDate;
+    QDateTime pressedDate;
     int pressTimer;
     QQuickItem *pressedItem;
     QQuickMonthModel *model;
@@ -128,11 +128,11 @@ QQuickItem *QQuickMonthGridPrivate::cellAt(const QPointF &pos) const
     return nullptr;
 }
 
-QDate QQuickMonthGridPrivate::dateOf(QQuickItem *cell) const
+QDateTime QQuickMonthGridPrivate::dateOf(QQuickItem *cell) const
 {
     if (contentItem)
         return model->dateAt(contentItem->childItems().indexOf(cell));
-    return QDate();
+    return {};
 }
 
 void QQuickMonthGridPrivate::updatePress(const QPointF &pos)
@@ -153,7 +153,7 @@ void QQuickMonthGridPrivate::clearPress(bool clicked)
         if (clicked)
             emit q->clicked(pressedDate);
     }
-    pressedDate = QDate();
+    pressedDate = {};
     pressedItem = nullptr;
 }
 

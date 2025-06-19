@@ -49,8 +49,8 @@ public:
     QString title() const;
     void setTitle(const QString &title);
 
-    Q_INVOKABLE QDate dateAt(int index) const;
-    Q_INVOKABLE int indexOf(QDate date) const;
+    Q_INVOKABLE QDateTime dateAt(int index) const;
+    Q_INVOKABLE int indexOf(QDateTime date) const;
 
     enum {
         DateRole = Qt::UserRole + 1,
