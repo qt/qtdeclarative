@@ -136,6 +136,8 @@ public:
     QQmlJSRegisterContent original() const;
     QQmlJSRegisterContent shadowed() const;
 
+    quintptr id() const { return quintptr(d); }
+
 private:
     friend class QQmlJSRegisterContentPool;
     // TODO: Constant string/number/bool/enumval

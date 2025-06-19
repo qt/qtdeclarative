@@ -269,10 +269,10 @@ void QQmlJSOptimizations::removeReadsFromErasedInstructions(
 bool QQmlJSOptimizations::canMove(int instructionOffset,
                                   const QQmlJSOptimizations::RegisterAccess &access) const
 {
-    if (access.registerReadersAndConversions.size() != 1)
+    if (access.typeReaders.size() != 1)
         return false;
     return QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, instructionOffset)
-            == QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, access.registerReadersAndConversions.begin().key());
+            == QQmlJSBasicBlocks::basicBlockForInstruction(m_basicBlocks, access.typeReaders.begin().key());
 }
 
 QList<QQmlJSCompilePass::ObjectOrArrayDefinition>
