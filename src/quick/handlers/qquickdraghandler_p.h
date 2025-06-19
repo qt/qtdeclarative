@@ -84,6 +84,7 @@ private:
     QQuickDragAxis m_xAxis = {this, u"x"_s};
     QQuickDragAxis m_yAxis = {this, u"y"_s};
     QQuickDragHandler::SnapMode m_snapMode = SnapAuto;
+    bool m_pressedInsideParent = false;
     bool m_pressedInsideTarget = false;
 
     friend class QQuickDragAxis;

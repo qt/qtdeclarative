@@ -136,6 +136,7 @@ void QQuickDragHandler::onActiveChanged()
     } else {
         m_pressTargetPos = QPointF();
         m_pressedInsideTarget = false;
+        m_pressedInsideParent = false;
         if (auto parent = parentItem()) {
             parent->setKeepTouchGrab(false);
             parent->setKeepMouseGrab(false);
@@ -158,6 +159,22 @@ bool QQuickDragHandler::wantsPointerEvent(QPointerEvent *event)
     if (event->type() == QEvent::NativeGesture)
        return false;
 #endif
+
+    if (event->isBeginEvent()) {
+        // At least one point must be pressed in the parent item
+        if (event->isSinglePointEvent()) {
+            m_pressedInsideParent = parentContains(event->points().first());
+        } else {
+            for (int i = 0; !m_pressedInsideParent && i < event->pointCount(); ++i) {
+                auto &p = event->point(i);
+                if (p.state() == QEventPoint::Pressed && parentContains(p))
+                    m_pressedInsideParent = true;
+            }
+        }
+    }
+
+    if (!m_pressedInsideParent)
+        return false;
 
     return true;
 }
