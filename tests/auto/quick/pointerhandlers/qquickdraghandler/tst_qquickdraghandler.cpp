@@ -45,6 +45,7 @@ private slots:
     void snapMode();
     void twoFingerDrag_data();
     void twoFingerDrag();
+    void dragStartsOutside();
     void touchDragMulti();
     void touchDragMultiSliders_data();
     void touchDragMultiSliders();
@@ -639,6 +640,33 @@ void tst_DragHandler::twoFingerDrag()
     seq.release(1, p1, &window).release(2, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
     QCOMPARE(activeSpy.size(), shouldDrag ? 2 : 0);
+}
+
+void tst_DragHandler::dragStartsOutside()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("draggables.qml")));
+
+    QQuickItem *ball1 = window.rootObject()->childItems().first();
+    QVERIFY(ball1);
+    QQuickDragHandler *dragHandler1 = ball1->findChild<QQuickDragHandler*>();
+    QVERIFY(dragHandler1);
+    const QPointF oldTargetPos = ball1->position();
+
+    QPoint p1 = ball1->mapToScene(QPointF(45, -30)).toPoint();
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QVERIFY(!dragHandler1->active());
+    p1 += {0, 30};
+    QTest::mouseMove(&window, p1);
+    QCOMPARE(dragHandler1->active(), false);
+    QCOMPARE(ball1->position(), oldTargetPos);
+    p1 += {0, 20};
+    QTest::mouseMove(&window, p1);
+    QCOMPARE(dragHandler1->active(), false);
+    QVERIFY(dragHandler1->centroid().position().isNull());
+    QCOMPARE(ball1->position(), oldTargetPos);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(dragHandler1->active(), false);
 }
 
 void tst_DragHandler::touchDragMulti()
