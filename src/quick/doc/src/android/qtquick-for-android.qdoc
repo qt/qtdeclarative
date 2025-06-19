@@ -93,4 +93,10 @@
     of your build toolchain. \QtTAS uses the plugin to build your projects in
     Android Studio.
 
+    \section1 Where to go from here
+
+    The following additional topics apply to Qt Quick For Android:
+
+    \annotatedlist qq4a-extra-topics
+
 */
