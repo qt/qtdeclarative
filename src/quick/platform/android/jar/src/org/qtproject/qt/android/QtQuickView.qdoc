@@ -86,6 +86,10 @@
 
     For a more detailed example, see \l {Qt Quick for Android Studio Projects}.
 
+    \section1 QtQuickViews can be used in Android Fragments
+
+    See the \l{Android Fragments and Qt Quick for Android} tutorial for how to do this.
+
     \section1 Known issues
 
     Here are the known issues with this API. They may be resolved and removed in a patch
