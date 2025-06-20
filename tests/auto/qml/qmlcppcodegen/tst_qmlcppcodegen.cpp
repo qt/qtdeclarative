@@ -5637,6 +5637,25 @@ void tst_QmlCppCodegen::writeAndReturnTempArray()
     QCOMPARE(numbersContent.length(), 32);
     for (double number: std::as_const(numbersContent))
         QVERIFY(number >= 0 && number < double(0xf0f0f0));
+
+    QList<double> expected { 0, 0, 0, 0};
+    for (int i = 0; i < 2; ++i) {
+        for (double number : std::as_const(numbersContent)) {
+            const int num = QJSNumberCoercion::toInteger((number)) & 0xabcdef;
+            if (num < 0xf0f)
+                expected[0] += num;
+            else if (num < 0xf0f0)
+                expected[1] += num;
+            else if (num < 0xf0f0f)
+                expected[2] += num;
+            else
+                expected[3] += num;
+        }
+    }
+
+    QList<double> sum;
+    QMetaObject::invokeMethod(object.data(), "sum", Q_RETURN_ARG(QList<double>, sum));
+    QCOMPARE(sum, expected);
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)
