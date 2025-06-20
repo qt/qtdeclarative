@@ -440,9 +440,9 @@ void TestQmlformat::testFormat_data()
             << "noSuperfluousSpaceInsertions_QtObject.qml"
             << "noSuperfluousSpaceInsertions_QtObject.formatted.qml"
             << QStringList{} << RunOption::OnCopy;
-    QTest::newRow("noSuperfluousSpaceInsertions.fail_signal")
-            << "noSuperfluousSpaceInsertions.fail_signal.qml"
-            << "noSuperfluousSpaceInsertions.fail_signal.formatted.qml"
+    QTest::newRow("noSuperfluousSpaceInsertions_signal")
+            << "noSuperfluousSpaceInsertions_signal.qml"
+            << "noSuperfluousSpaceInsertions_signal.formatted.qml"
             << QStringList{} << RunOption::OnCopy;
     QTest::newRow("noSuperfluousSpaceInsertions.fail_enum")
             << "noSuperfluousSpaceInsertions.fail_enum.qml"
@@ -473,8 +473,6 @@ void TestQmlformat::testFormat()
     QEXPECT_FAIL("normalizedFunctionSpacing",
                  "Normalize && function spacing are not yet supported for JS", Abort);
     QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_id",
-                 "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
-    QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_signal",
                  "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
     QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_enum",
                  "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);

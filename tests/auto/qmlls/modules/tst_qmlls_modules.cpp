@@ -880,9 +880,6 @@ void tst_qmlls_modules::documentFormatting()
             QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_parameters.qml",
                          "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
                          Continue);
-            QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_signal.qml",
-                         "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
-                         Continue);
 
             QCOMPARE(textEdit.newText, file.readAll());
         }
