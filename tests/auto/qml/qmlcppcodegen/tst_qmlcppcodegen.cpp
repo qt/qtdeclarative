@@ -5437,8 +5437,16 @@ void tst_QmlCppCodegen::valueTypeBehavior()
 void tst_QmlCppCodegen::valueTypeLists()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/valueTypeLists.qml"_s));
+    const QUrl url(u"qrc:/qt/qml/TestTypes/valueTypeLists.qml"_s);
+    QQmlComponent c(&engine, url);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    const QString bindingLoop = url.toString()
+            + uR"(:3:1: QML QObject*: Binding loop detected for property "rectList2":
+qrc:/qt/qml/TestTypes/valueTypeLists.qml:19:5)"_s;
+    for (int i = 0; i < 2; ++i)
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(bindingLoop));
+
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(qvariant_cast<QRectF>(o->property("rectInBounds")), QRectF(1, 2, 3, 4));
@@ -5456,6 +5464,10 @@ void tst_QmlCppCodegen::valueTypeLists()
     QCOMPARE(qvariant_cast<QString>(o->property("charInBounds")), QStringLiteral("d"));
     QVERIFY(o->metaObject()->indexOfProperty("charOutOfBounds") > 0);
     QVERIFY(!o->property("charOutOfBounds").isValid());
+
+    const QList<QRectF> rectList = o->property("rectList2").value<QList<QRectF>>();
+    QCOMPARE(rectList.length(), 1);
+    QCOMPARE(rectList[0], QRectF(666, 13, 14, 15));
 }
 
 void tst_QmlCppCodegen::valueTypeProperty()
@@ -5618,6 +5630,13 @@ void tst_QmlCppCodegen::writeAndReturnTempArray()
     const QVariant nnn = object->property("nnn");
     QCOMPARE(nnn.metaType(), QMetaType::fromType<QList<double>>());
     QCOMPARE(nnn.value<QList<double>>(), QList<double>{10});
+
+    const QVariant numbers = object->property("numbers");
+    QCOMPARE(numbers.metaType(), QMetaType::fromType<QList<double>>());
+    const QList<double> numbersContent = numbers.value<QList<double>>();
+    QCOMPARE(numbersContent.length(), 32);
+    for (double number: std::as_const(numbersContent))
+        QVERIFY(number >= 0 && number < double(0xf0f0f0));
 }
 
 QTEST_MAIN(tst_QmlCppCodegen)

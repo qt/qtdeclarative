@@ -335,6 +335,8 @@ private:
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
 
+    bool isRegisterAffectedBySideEffects(int registerIndex);
+
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
 

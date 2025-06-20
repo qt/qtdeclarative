@@ -867,7 +867,7 @@ void QQmlJSCodeGenerator::generate_LoadElement(int base)
     // TODO: Once we get a char type in QML, use it here.
     if (m_typeResolver->registerIsStoredIn(baseType, m_typeResolver->stringType()))
         access = u"QString("_s + access + u")"_s;
-    else if (m_state.isRegisterAffectedBySideEffects(base))
+    else if (isRegisterAffectedBySideEffects(base))
         reject(u"LoadElement on a sequence potentially affected by side effects"_s);
     else if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence)
         reject(u"LoadElement on a sequence wrapped in a non-sequence type"_s);
@@ -922,8 +922,10 @@ void QQmlJSCodeGenerator::generate_StoreElement(int base, int index)
         return;
     }
 
-    if (m_state.isRegisterAffectedBySideEffects(base))
-        reject(u"LoadElement on a sequence potentially affected by side effects"_s);
+    if (isRegisterAffectedBySideEffects(base))
+        reject(u"StoreElement on a sequence potentially affected by side effects"_s);
+    if (isRegisterAffectedBySideEffects(Accumulator))
+        reject(u"StoreElement of a value potentially affected by side effects"_s);
 
     m_body += u"    if ("_s + indexName + u" >= " + baseName + u".size())\n"_s;
     m_body += u"        QJSList(&"_s + baseName + u", aotContext->engine).resize("_s
@@ -1163,7 +1165,7 @@ void QQmlJSCodeGenerator::generateArrayInitializer(int argc, int argv)
 void QQmlJSCodeGenerator::generateWriteBack(int registerIndex)
 {
     QString writeBackRegister = registerVariable(registerIndex);
-    bool writeBackAffectedBySideEffects = m_state.isRegisterAffectedBySideEffects(registerIndex);
+    bool writeBackAffectedBySideEffects = isRegisterAffectedBySideEffects(registerIndex);
 
     for (QQmlJSRegisterContent writeBack = registerType(registerIndex);
          !writeBack.storedType()->isReferenceType();) {
@@ -1350,6 +1352,41 @@ bool QQmlJSCodeGenerator::generateContentPointerCheck(
     generateReturnError();
     m_body += u"}\n"_s;
     return needsVarContentConversion;
+}
+
+bool QQmlJSCodeGenerator::isRegisterAffectedBySideEffects(int registerIndex)
+{
+    if (!m_state.isRegisterAffectedBySideEffects(registerIndex))
+        return false;
+
+    QQmlJSRegisterContent baseType = registerType(registerIndex);
+    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(baseType);
+    switch (contained->accessSemantics()) {
+    case QQmlSA::AccessSemantics::Reference:
+    case QQmlSA::AccessSemantics::None:
+        // References and namespaces can't be affected by side effects.
+        return false;
+    case QQmlSA::AccessSemantics::Value:
+        // Value types can have inner objects, and we may have pre-created them where the
+        // interpreter keeps them in JavaScript object form for longer.
+        // TODO: We can probably improve here.
+        return !m_typeResolver->isPrimitive(contained);
+    case QQmlSA::AccessSemantics::Sequence: {
+        // List properties are never affected by side effects
+        if (contained->isListProperty())
+            return false;
+
+        if (baseType.variant() == QQmlJSRegisterContent::ArrayLiteral) {
+            // Stack-created lists of primitives and pointers can't be affected by side effects
+            const QQmlJSScope::ConstPtr elementContained = contained->valueType();
+            return !elementContained->isReferenceType()
+                    && !m_typeResolver->isPrimitive(elementContained);
+        }
+        default:
+            return true;
+        }
+    }
+    return true;
 }
 
 QString QQmlJSCodeGenerator::resolveValueTypeContentPointer(

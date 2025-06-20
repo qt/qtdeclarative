@@ -14,4 +14,12 @@ QtObject {
     property var intOutOfBounds: intList[34]
     property var charInBounds: charList[3]
     property var charOutOfBounds: charList[35]
+
+    property rect evilRect: ({x: 12, y: 13, width: 14, height: 15})
+    property list<rect> rectList2: {
+        let a = [];
+        a[0] = evilRect
+        evilRect.x = 666
+        return a
+    }
 }
