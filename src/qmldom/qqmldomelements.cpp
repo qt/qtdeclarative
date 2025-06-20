@@ -353,7 +353,7 @@ void Import::writeOut(const DomItem &self, OutWriter &ow) const
     if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
-            ow.ensureSpace().write(vString);
+            ow.ensureSpace().writeRegion(VersionRegion, vString);
     }
     if (!importId.isEmpty()) {
         ow.ensureSpace().writeRegion(AsTokenRegion).ensureSpace().writeRegion(IdNameRegion,
@@ -859,7 +859,8 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
                 }
                 el.second.writeOut(ow);
                 if (b) {
-                    ow.write(u": ");
+                    ow.writeRegion(ColonTokenRegion);
+                    ow.ensureSpace();
                     if (const Binding *bPtr = b.as<Binding>())
                         bPtr->writeOutValue(b, ow);
                     else {
@@ -934,7 +935,7 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
             }
             pDef.writeOut(ow);
             if (b) {
-                ow.write(u":");
+                ow.writeRegion(ColonTokenRegion);
                 ow.ensureSpace();
                 if (const Binding *bPtr = b.as<Binding>())
                     bPtr->writeOutValue(b, ow);
@@ -1241,7 +1242,8 @@ void Binding::writeOutValue(const DomItem &self, OutWriter &lw) const
     switch (valueKind()) {
     case BindingValueKind::Empty:
         qCWarning(writeOutLog()) << "Writing of empty binding " << name();
-        lw.write(u"{}");
+        lw.writeRegion(LeftBraceRegion);
+        lw.writeRegion(RightBraceRegion);
         break;
     case BindingValueKind::Array:
         if (const List *vPtr = v.as<List>()) {
@@ -1906,10 +1908,12 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
         ow.writeRegion(LeftParenthesisRegion);
         int baseIndent = ow.increaseIndent();
         for (const DomItem &arg : self.field(Fields::parameters).values()) {
-            if (first)
+            if (first) {
                 first = false;
-            else
-                ow.write(u", ");
+            } else {
+                ow.writeRegion(CommaTokenRegion);
+                ow.ensureSpace();
+            }
 
             if (const MethodParameter *argPtr = arg.as<MethodParameter>()) {
                 if (argPtr->typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix)
