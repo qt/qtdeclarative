@@ -490,11 +490,14 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
         MethodInfo *mPtr;
         Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
         pushEl(p, *mPtr, el);
-        FileLocations::addRegion(nodeStack.last().fileLocations, SignalKeywordRegion,
-                                 el->propertyToken());
-        FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion,
-                                 el->identifierToken);
+        auto &elLocs = nodeStack.last().fileLocations;
+        FileLocations::addRegion(elLocs, SignalKeywordRegion, el->propertyToken());
+        FileLocations::addRegion(elLocs, IdentifierRegion, el->identifierToken);
         MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
+        if (el->leftParenToken.isValid())
+            FileLocations::addRegion(elLocs, LeftParenthesisRegion, el->leftParenToken);
+        if (el->rightParenToken.isValid())
+            FileLocations::addRegion(elLocs, RightParenthesisRegion, el->rightParenToken);
         AST::UiParameterList *args = el->parameters;
         while (args) {
             MethodParameter param;
@@ -504,13 +507,15 @@ bool QQmlDomAstCreator::visit(AST::UiPublicMember *el)
             if (!args->colonToken.isValid())
                 param.typeAnnotationStyle = MethodParameter::TypeAnnotationStyle::Prefix;
             mInfo.parameters.append(param);
-            auto argLocs = FileLocations::ensure(nodeStack.last().fileLocations,
-                                                 Path::Field(Fields::parameters).index(idx),
+            auto argLocs = FileLocations::ensure(elLocs, Path::Field(Fields::parameters).index(idx),
                                                  AttachedInfo::PathType::Relative);
             FileLocations::addRegion(argLocs, MainRegion, combineLocations(args));
             FileLocations::addRegion(argLocs, IdentifierRegion, args->identifierToken);
-            if (args->type)
+            if (args->type) {
+                if (args->colonToken.isValid())
+                    FileLocations::addRegion(argLocs, ColonTokenRegion, args->colonToken);
                 FileLocations::addRegion(argLocs, TypeIdentifierRegion, args->propertyTypeToken);
+            }
             args = args->next;
         }
         break;

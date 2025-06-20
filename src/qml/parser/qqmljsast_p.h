@@ -3550,6 +3550,8 @@ public:
     SourceLocation typeModifierToken;
     SourceLocation typeToken;
     SourceLocation identifierToken;
+    SourceLocation leftParenToken;
+    SourceLocation rightParenToken;
     SourceLocation colonToken;
     SourceLocation semicolonToken;
 private:

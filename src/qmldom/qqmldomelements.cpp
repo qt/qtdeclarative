@@ -1915,7 +1915,7 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
                 if (argPtr->typeAnnotationStyle == MethodParameter::TypeAnnotationStyle::Prefix)
                     argPtr->writeOutSignal(arg, ow);
                 else
-                    argPtr->writeOut(arg, ow);
+                    arg.writeOut(ow);
             } else
                 qCWarning(domLog) << "failed to cast to MethodParameter";
         }
