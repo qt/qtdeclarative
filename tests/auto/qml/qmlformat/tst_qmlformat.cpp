@@ -444,6 +444,10 @@ void TestQmlformat::testFormat_data()
             << "fromAsIdentifier.qml"
             << "fromAsIdentifier.formatted.qml"
             << QStringList{} << RunOption::OnCopy;
+    QTest::newRow("commentsStressTest_enum")
+            << "commentsStressTest_enum.qml"
+            << "commentsStressTest_enum.formatted.qml"
+            << QStringList{} << RunOption::OnCopy;
 }
 
 void TestQmlformat::testFormat()
@@ -457,8 +461,6 @@ void TestQmlformat::testFormat()
     QEXPECT_FAIL("normalizedFunctionSpacing",
                  "Normalize && function spacing are not yet supported for JS", Abort);
     QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_id",
-                 "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
-    QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_enum",
                  "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
     QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_parameters",
                  "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
