@@ -371,6 +371,8 @@ private:
         return m_pool->storedIn(m_typeResolver->literalType(contained), contained);
     }
 
+    bool isRegisterAffectedBySideEffects(int registerIndex);
+
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
 
