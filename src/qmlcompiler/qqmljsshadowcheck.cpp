@@ -135,7 +135,7 @@ void QQmlJSShadowCheck::generate_CallPropertyLookup(int nameIndex, int base, int
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSShadowCheck::startInstruction(QV4::Moth::Instr::Type)
 {
     m_state = nextStateFromAnnotations(m_state, m_annotations);
-    return (m_state.hasSideEffects() || m_state.changedRegisterIndex() != InvalidRegister)
+    return (m_state.hasInternalSideEffects() || m_state.changedRegisterIndex() != InvalidRegister)
             ? ProcessInstruction
             : SkipInstruction;
 }
