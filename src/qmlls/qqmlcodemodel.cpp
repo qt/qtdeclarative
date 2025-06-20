@@ -110,9 +110,8 @@ void QQmlCodeModel::disableCMakeCalls()
     QObject::disconnect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, nullptr, nullptr);
 }
 
-QQmlCodeModel::~QQmlCodeModel()
+void QQmlCodeModel::prepareForShutdown()
 {
-    QObject::disconnect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, nullptr, nullptr);
     while (true) {
         bool shouldWait;
         {
@@ -125,6 +124,12 @@ QQmlCodeModel::~QQmlCodeModel()
             break;
         QThread::yieldCurrentThread();
     }
+}
+
+QQmlCodeModel::~QQmlCodeModel()
+{
+    QObject::disconnect(&m_cppFileWatcher, &QFileSystemWatcher::fileChanged, nullptr, nullptr);
+    prepareForShutdown();
 }
 
 OpenDocumentSnapshot QQmlCodeModel::snapshotByUrl(const QByteArray &url)
@@ -203,8 +208,10 @@ void QQmlCodeModel::openNeedUpdate()
     const int maxThreads = 1;
     {
         QMutexLocker l(&m_mutex);
-        if (m_openDocumentsToUpdate.isEmpty() || m_nUpdateInProgress >= maxThreads)
+        if (m_openDocumentsToUpdate.isEmpty() || m_nUpdateInProgress >= maxThreads
+            || m_state == State::Stopping) {
             return;
+        }
         if (++m_nUpdateInProgress == 1)
             openUpdateStart();
     }

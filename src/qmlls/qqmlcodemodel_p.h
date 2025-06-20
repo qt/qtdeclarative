@@ -101,6 +101,7 @@ public:
 
     explicit QQmlCodeModel(QObject *parent = nullptr, QQmlToolingSettings *settings = nullptr);
     ~QQmlCodeModel();
+    void prepareForShutdown();
     QQmlJS::Dom::DomItem currentEnv() const { return m_currentEnv; };
     QQmlJS::Dom::DomItem validEnv() const { return m_validEnv; };
     OpenDocumentSnapshot snapshotByUrl(const QByteArray &url);

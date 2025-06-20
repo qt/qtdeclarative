@@ -59,7 +59,6 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     : m_codeModel(nullptr, settings),
       m_server(sendData),
       m_textSynchronization(&m_codeModel),
-      m_lint(&m_server, &m_codeModel),
       m_workspace(&m_codeModel),
       m_completionSupport(&m_codeModel),
       m_navigationSupport(&m_codeModel),
@@ -70,7 +69,8 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
       m_rangeFormatting(&m_codeModel),
       m_hover(&m_codeModel),
       m_highlightSupport(&m_codeModel),
-      m_documentSymbolSupport(&m_codeModel)
+      m_documentSymbolSupport(&m_codeModel),
+      m_lint(&m_server, &m_codeModel)
 {
     m_server.addServerModule(this);
     m_server.addServerModule(&m_textSynchronization);
@@ -88,6 +88,13 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     m_server.addServerModule(&m_documentSymbolSupport);
     m_server.finishSetup();
     qCWarning(lspServerLog) << "Did Setup";
+}
+
+QQmlLanguageServer::~QQmlLanguageServer()
+{
+    // note: the server modules might be in use by the QQmlCodeModel thread, so wait for the
+    // QQmlCodeModel thread to finish before destroying the server modules.
+    m_codeModel.prepareForShutdown();
 }
 
 void QQmlLanguageServer::registerHandlers(QLanguageServer *server,
