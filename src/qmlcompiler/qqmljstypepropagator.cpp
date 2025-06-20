@@ -105,7 +105,7 @@ void QQmlJSTypePropagator::generate_Ret()
             addReadAccumulator(m_returnType);
     }
 
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     m_state.skipInstructionsUntilNextJumpTarget = true;
 }
 
@@ -631,7 +631,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
                                     m_function->qmlScope, getCurrentSourceLocation());
     }
 
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
 
     if (m_typeResolver->canHoldUndefined(in) && !m_typeResolver->canHoldUndefined(type)) {
         if (type.property().reset().isEmpty())
@@ -725,7 +725,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
 
         // Writing to a JS array can have side effects all over the place since it's
         // passed by reference.
-        m_state.setHasSideEffects(true);
+        m_state.setHasExternalSideEffects();
         return;
     }
 
@@ -742,7 +742,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
     // If we're writing to a list retrieved from a property, that _should_ have side effects,
     // but currently the QML engine doesn't implement them.
     // TODO: Figure out the above and accurately set the flag.
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
 }
 
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
@@ -963,7 +963,7 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
 
     addReadAccumulator(property);
     addReadRegister(base, callBase);
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
 }
 
 void QQmlJSTypePropagator::generate_SetLookup(int index, int base)
@@ -1000,7 +1000,7 @@ void QQmlJSTypePropagator::generate_Resume(int)
 
 void QQmlJSTypePropagator::generate_CallValue(int name, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(name)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
@@ -1009,7 +1009,7 @@ void QQmlJSTypePropagator::generate_CallValue(int name, int argc, int argv)
 
 void QQmlJSTypePropagator::generate_CallWithReceiver(int name, int thisObject, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(name)
     Q_UNUSED(thisObject)
     Q_UNUSED(argc)
@@ -1075,7 +1075,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         for (int i = 1; i < argc; ++i)
             addReadRegister(argv + i, stringType);
 
-        m_state.setHasSideEffects(true);
+        m_state.setHasExternalSideEffects();
         setAccumulator(voidType);
         return;
     }
@@ -1087,7 +1087,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         for (int i = 0; i < argc; ++i)
             addReadRegister(argv + i, jsValueType);
         setAccumulator(jsValueType);
-        m_state.setHasSideEffects(true);
+        m_state.setHasExternalSideEffects();
         return;
     }
 
@@ -1328,7 +1328,7 @@ void QQmlJSTypePropagator::propagateCall(
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot store return type of method %1()."_s.arg(match.methodName()));
 
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     const auto types = match.parameters();
     for (int i = 0; i < argc; ++i) {
         if (i < types.size()) {
@@ -1490,7 +1490,7 @@ void QQmlJSTypePropagator::generate_CallName(int name, int argc, int argv)
 
 void QQmlJSTypePropagator::generate_CallPossiblyDirectEval(int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(argc)
     Q_UNUSED(argv)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
@@ -1535,7 +1535,7 @@ void QQmlJSTypePropagator::generate_CallQmlContextPropertyLookup(int index, int 
 
 void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(func)
     Q_UNUSED(thisObject)
     Q_UNUSED(argc)
@@ -1545,7 +1545,7 @@ void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int
 
 void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(func)
     Q_UNUSED(thisObject)
     Q_UNUSED(argc)
@@ -1555,7 +1555,7 @@ void QQmlJSTypePropagator::generate_TailCall(int func, int thisObject, int argc,
 
 void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(func)
     Q_UNUSED(argv)
 
@@ -1566,7 +1566,7 @@ void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 
 void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int argv)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasExternalSideEffects();
     Q_UNUSED(func)
     Q_UNUSED(argc)
     Q_UNUSED(argv)
@@ -1575,20 +1575,20 @@ void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int 
 
 void QQmlJSTypePropagator::generate_SetUnwindHandler(int offset)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     Q_UNUSED(offset)
     INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 
 void QQmlJSTypePropagator::generate_UnwindDispatch()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 
 void QQmlJSTypePropagator::generate_UnwindToLabel(int level, int offset)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     Q_UNUSED(level)
     Q_UNUSED(offset)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
@@ -1603,7 +1603,7 @@ void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 void QQmlJSTypePropagator::generate_ThrowException()
 {
     addReadAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     m_state.skipInstructionsUntilNextJumpTarget = true;
 }
 
@@ -1614,18 +1614,18 @@ void QQmlJSTypePropagator::generate_GetException()
 
 void QQmlJSTypePropagator::generate_SetException()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_CreateCallContext()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
 }
 
 void QQmlJSTypePropagator::generate_PushCatchContext(int index, int name)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     Q_UNUSED(index)
     Q_UNUSED(name)
     INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
@@ -1633,39 +1633,39 @@ void QQmlJSTypePropagator::generate_PushCatchContext(int index, int name)
 
 void QQmlJSTypePropagator::generate_PushWithContext()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_PushBlockContext(int index)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     Q_UNUSED(index)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_CloneBlockContext()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_PushScriptContext(int index)
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     Q_UNUSED(index)
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_PopScriptContext()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     INSTR_PROLOGUE_NOT_IMPLEMENTED();
 }
 
 void QQmlJSTypePropagator::generate_PopContext()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
 }
 
 void QQmlJSTypePropagator::generate_GetIterator(int iterator)
@@ -1796,7 +1796,7 @@ void QQmlJSTypePropagator::generate_Jump(int offset)
 {
     saveRegisterStateForJump(offset);
     m_state.skipInstructionsUntilNextJumpTarget = true;
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
 }
 
 void QQmlJSTypePropagator::generate_JumpTrue(int offset)
@@ -1808,7 +1808,7 @@ void QQmlJSTypePropagator::generate_JumpTrue(int offset)
         return;
     }
     saveRegisterStateForJump(offset);
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     addReadAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
@@ -1821,14 +1821,14 @@ void QQmlJSTypePropagator::generate_JumpFalse(int offset)
         return;
     }
     saveRegisterStateForJump(offset);
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     addReadAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_JumpNoException(int offset)
 {
     saveRegisterStateForJump(offset);
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
 }
 
 void QQmlJSTypePropagator::generate_JumpNotUndefined(int offset)
@@ -1839,7 +1839,7 @@ void QQmlJSTypePropagator::generate_JumpNotUndefined(int offset)
 
 void QQmlJSTypePropagator::generate_CheckException()
 {
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
 }
 
 void QQmlJSTypePropagator::recordEqualsNullType()
@@ -2211,7 +2211,7 @@ void QQmlJSTypePropagator::generate_InitializeBlockDeadTemporalZone(int firstReg
 {
     Q_UNUSED(firstReg)
     Q_UNUSED(count)
-    m_state.setHasSideEffects(true);
+    m_state.setHasInternalSideEffects();
     // Ignore. We reject uninitialized values anyway.
 }
 
@@ -2291,7 +2291,8 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     currentInstruction.changedRegister = m_state.changedRegister();
     currentInstruction.changedRegisterIndex = m_state.changedRegisterIndex();
     currentInstruction.readRegisters = m_state.takeReadRegisters();
-    currentInstruction.hasSideEffects = m_state.hasSideEffects();
+    currentInstruction.hasExternalSideEffects = m_state.hasExternalSideEffects();
+    currentInstruction.hasInternalSideEffects = m_state.hasInternalSideEffects();
     currentInstruction.isRename = m_state.isRename();
 
     switch (instr) {
@@ -2335,7 +2336,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         && instr != QV4::Moth::Instr::Type::DeadTemporalZoneCheck) {
         // An instruction needs to have side effects or write to another register otherwise it's a
         // noop. DeadTemporalZoneCheck is not needed by the compiler and is ignored.
-        Q_ASSERT(m_state.hasSideEffects() || m_state.changedRegisterIndex() != -1);
+        Q_ASSERT(m_state.hasInternalSideEffects() || m_state.changedRegisterIndex() != -1);
     }
 
     if (m_state.changedRegisterIndex() != InvalidRegister) {
@@ -2347,7 +2348,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         m_state.clearChangedRegister();
     }
 
-    m_state.setHasSideEffects(false);
+    m_state.resetSideEffects();
     m_state.setIsRename(false);
     m_state.setReadRegisters(VirtualRegisters());
 }

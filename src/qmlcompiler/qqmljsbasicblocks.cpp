@@ -216,7 +216,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
             m_readerLocations.erase(reader);
 
             // If it's not a label and has no side effects, we can drop the instruction.
-            if (!it->second.hasSideEffects) {
+            if (!it->second.hasInternalSideEffects) {
                 if (!it->second.readRegisters.isEmpty()) {
                     it->second.readRegisters.clear();
                     erasedReaders = true;

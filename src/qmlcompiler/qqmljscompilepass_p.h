@@ -64,7 +64,8 @@ public:
 
         QQmlJSRegisterContent changedRegister;
         int changedRegisterIndex = InvalidRegister;
-        bool hasSideEffects = false;
+        bool hasInternalSideEffects = false;
+        bool hasExternalSideEffects = false;
         bool isRename = false;
     };
 
@@ -158,15 +159,32 @@ public:
             return m_readRegisters.contains(registerIndex);
         }
 
-        bool hasSideEffects() const { return m_hasSideEffects; }
-        void setHasSideEffects(bool hasSideEffects) {
-            m_hasSideEffects = hasSideEffects;
-            if (!hasSideEffects)
+        bool hasInternalSideEffects() const { return m_hasInternalSideEffects; }
+        bool hasExternalSideEffects() const { return m_hasExternalSideEffects; }
+
+        void resetSideEffects()
+        {
+            m_hasInternalSideEffects = false;
+            m_hasExternalSideEffects = false;
+        }
+
+        void applyExternalSideEffects(bool hasExternalSideEffects)
+        {
+            if (!hasExternalSideEffects)
                 return;
 
             for (auto it = registers.begin(), end = registers.end(); it != end; ++it)
                 it.value().affectedBySideEffects = true;
         }
+
+        void setHasInternalSideEffects() { m_hasInternalSideEffects = true; }
+        void setHasExternalSideEffects()
+        {
+            m_hasExternalSideEffects = true;
+            m_hasInternalSideEffects = true;
+            applyExternalSideEffects(true);
+        }
+
 
         bool isRename() const { return m_isRename; }
         void setIsRename(bool isRename) { m_isRename = isRename; }
@@ -178,11 +196,36 @@ public:
             return m_readRegisters.begin().key();
         }
 
+        void applyAnnotation(const InstructionAnnotation &annotation)
+        {
+            m_readRegisters = annotation.readRegisters;
+
+            m_hasInternalSideEffects = annotation.hasInternalSideEffects;
+            m_hasExternalSideEffects = annotation.hasExternalSideEffects;
+            m_isRename = annotation.isRename;
+
+            for (auto it = annotation.typeConversions.constBegin(),
+                 end = annotation.typeConversions.constEnd(); it != end; ++it) {
+                Q_ASSERT(it.key() != InvalidRegister);
+                registers[it.key()] = it.value();
+            }
+
+            if (annotation.changedRegisterIndex != InvalidRegister)
+                setRegister(annotation.changedRegisterIndex, annotation.changedRegister);
+        }
+
     private:
         VirtualRegisters m_readRegisters;
         QQmlJSRegisterContent m_changedRegister;
         int m_changedRegisterIndex = InvalidRegister;
-        bool m_hasSideEffects = false;
+
+        // If the instruction's value is unused, we still cannot optimize it out.
+        bool m_hasInternalSideEffects = false;
+
+        // Side effect created by calls to other functions or writes to properties,
+        // affects tracked value types and lists. Implies the effects of Internal.
+        bool m_hasExternalSideEffects = false;
+
         bool m_isRename = false;
     };
 
@@ -245,23 +288,12 @@ protected:
                     = oldState.changedRegister();
         }
 
-        if (instruction == annotations.constEnd())
-            return newState;
+        // Side effects are applied at the end of an instruction: An instruction with side
+        // effects can still read its registers before the side effects happen.
+        newState.applyExternalSideEffects(oldState.hasExternalSideEffects());
 
-        newState.setHasSideEffects(instruction->second.hasSideEffects);
-        newState.setReadRegisters(instruction->second.readRegisters);
-        newState.setIsRename(instruction->second.isRename);
-
-        for (auto it = instruction->second.typeConversions.begin(),
-             end = instruction->second.typeConversions.end(); it != end; ++it) {
-            Q_ASSERT(it.key() != InvalidRegister);
-            newState.registers[it.key()] = it.value();
-        }
-
-        if (instruction->second.changedRegisterIndex != InvalidRegister) {
-            newState.setRegister(instruction->second.changedRegisterIndex,
-                                 instruction->second.changedRegister);
-        }
+        if (instruction != annotations.constEnd())
+            newState.applyAnnotation(instruction->second);
 
         return newState;
     }

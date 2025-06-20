@@ -37,6 +37,7 @@ set(qml_files
     BadType.qml
     BaseMember.qml
     BindingExpression.qml
+    Categorizer.qml
     Cycle1.qml
     Cycle2.qml
     Cycle3.qml
