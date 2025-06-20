@@ -65,9 +65,14 @@ public Q_SLOTS:
 private:
     QQmlCodeModelManager m_codeModelManager;
     QLanguageServer m_server;
+
     TextSynchronization m_textSynchronization;
-    QmlLintSuggestions m_lint;
     WorkspaceHandlers m_workspace;
+
+    // note: the order in which server modules are initialized also defines the order in which
+    // they are run! Most of them connect to m_codeModelManager::updatedSnapshot in
+    // their constructors, see https://doc.qt.io/qt-6/signalsandslots.html#signals.
+    // ==== modules that are directly triggered by the user ====
     QmlCompletionSupport m_completionSupport;
     QmlGoToTypeDefinitionSupport m_navigationSupport;
     QmlGoToDefinitionSupport m_definitionSupport;
@@ -76,8 +81,15 @@ private:
     QQmlRenameSymbolSupport m_renameSupport;
     QQmlRangeFormatting m_rangeFormatting;
     QQmlHover m_hover;
+
+    // ==== Highlighting ====
     QQmlHighlightSupport m_highlightSupport;
+
+    // ==== modules that are not triggered by the user ====
     QQmlDocumentSymbolSupport m_documentSymbolSupport;
+
+    // ==== Linting should happen at the end as it potentially can take a longer time ====
+    QmlLintSuggestions m_lint;
     int m_returnValue = 1;
 };
 
