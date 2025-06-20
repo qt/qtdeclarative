@@ -1412,10 +1412,8 @@ void EnumDecl::writeOut(const DomItem &self, OutWriter &ow) const
             .writeRegion(LeftBraceRegion);
     int iLevel = ow.increaseIndent(1);
     const auto values = self.field(Fields::values).values();
-    for (const auto &value : values) {
-        ow.ensureNewline();
+    for (const auto &value : values)
         value.writeOut(ow);
-    }
     ow.decreaseIndent(1, iLevel);
     ow.ensureNewline().writeRegion(RightBraceRegion);
 }
@@ -2086,17 +2084,17 @@ bool EnumItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor)
 
 void EnumItem::writeOut(const DomItem &self, OutWriter &ow) const
 {
+    index_type myIndex = self.pathFromOwner().last().headIndex();
+    if (myIndex != 0)
+        ow.writeRegion(CommaTokenRegion);
     ow.ensureNewline();
     ow.writeRegion(IdentifierRegion, name());
-    index_type myIndex = self.pathFromOwner().last().headIndex();
     if (m_valueKind == ValueKind::ExplicitValue) {
         QString v = QString::number(value(), 'f', 0);
         if (abs(value() - v.toDouble()) > 1.e-10)
             v = QString::number(value());
         ow.ensureSpace().writeRegion(EqualTokenRegion).ensureSpace().writeRegion(EnumValueRegion, v);
     }
-    if (myIndex >= 0 && self.container().indexes() != myIndex + 1)
-        ow.writeRegion(CommaTokenRegion);
 }
 
 QmlUri QmlUri::fromString(const QString &str)

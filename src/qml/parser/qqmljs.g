@@ -1599,6 +1599,7 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER;
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3));
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
         sym(1).Node = node;
         break;
@@ -1609,7 +1610,9 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_NUMERIC_LITERAL;
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), sym(5).dval);
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
+        node->equalToken = loc(4);
         node->valueToken = loc(5);
         sym(1).Node = node;
         break;
@@ -1621,7 +1624,9 @@ EnumMemberList: EnumMemberList T_COMMA T_IDENTIFIER T_EQ T_MINUS T_NUMERIC_LITER
 /.
     case $rule_number: {
         AST::UiEnumMemberList *node = new (pool) AST::UiEnumMemberList(sym(1).UiEnumMemberList, stringRef(3), -sym(6).dval);
+        node->commaToken = loc(2);
         node->memberToken = loc(3);
+        node->equalToken = loc(4);
         node->valueToken = combine(loc(5), loc(6));
         sym(1).Node = node;
         break;

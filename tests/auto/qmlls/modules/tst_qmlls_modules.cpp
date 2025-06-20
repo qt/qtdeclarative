@@ -871,9 +871,6 @@ void tst_qmlls_modules::documentFormatting()
             QCOMPARE(textEdit.range.end.line, lineCount(originalFile));
             QCOMPARE(textEdit.range.end.character, 0);
 
-            QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_enum.qml",
-                         "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
-                         Continue);
             QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_id.qml",
                          "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
                          Continue);

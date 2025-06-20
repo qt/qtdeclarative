@@ -1336,6 +1336,8 @@ bool QQmlDomAstCreator::visit(AST::UiEnumDeclaration *el)
     pushEl(enumPathFromOwner, *ePtr, el);
     FileLocations::addRegion(nodeStack.last().fileLocations, EnumKeywordRegion, el->enumToken);
     FileLocations::addRegion(nodeStack.last().fileLocations, IdentifierRegion, el->identifierToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, LeftBraceRegion, el->lbraceToken);
+    FileLocations::addRegion(nodeStack.last().fileLocations, RightBraceRegion, el->rbraceToken);
     loadAnnotations(el);
     return true;
 }
@@ -1358,11 +1360,16 @@ bool QQmlDomAstCreator::visit(AST::UiEnumMemberList *el)
     EnumDecl &eDecl = std::get<EnumDecl>(currentNode().value);
     Path itPathFromDecl = eDecl.addValue(it);
     const auto map = createMap(DomType::EnumItem, itPathFromDecl, nullptr);
-    FileLocations::addRegion(map, MainRegion, combine(el->memberToken, el->valueToken));
+    if (el->commaToken.isValid())
+        FileLocations::addRegion(map, CommaTokenRegion, el->commaToken);
     if (el->memberToken.isValid())
         FileLocations::addRegion(map, IdentifierRegion, el->memberToken);
+    if (el->equalToken.isValid())
+        FileLocations::addRegion(map, EqualTokenRegion, el->equalToken);
     if (el->valueToken.isValid())
         FileLocations::addRegion(map, EnumValueRegion, el->valueToken);
+    FileLocations::addRegion(
+            map, MainRegion, combine(combine(el->memberToken, el->commaToken), el->valueToken));
     return true;
 }
 

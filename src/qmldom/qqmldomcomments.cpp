@@ -495,14 +495,6 @@ const QSet<int> AstRangesVisitor::kindsToSkip()
 bool AstRangesVisitor::shouldSkipRegion(const DomItem &item, FileLocationRegion region)
 {
     switch (item.internalKind()) {
-    case DomType::EnumDecl: {
-        return (region == FileLocationRegion::IdentifierRegion)
-                || (region == FileLocationRegion::EnumKeywordRegion);
-    }
-    case DomType::EnumItem: {
-        return (region == FileLocationRegion::IdentifierRegion)
-                || (region == FileLocationRegion::EnumValueRegion);
-    }
     case DomType::QmlObject: {
         return (region == FileLocationRegion::RightBraceRegion
                 || region == FileLocationRegion::LeftBraceRegion);
