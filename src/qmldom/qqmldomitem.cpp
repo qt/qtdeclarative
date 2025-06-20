@@ -2774,7 +2774,7 @@ void List::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
                 if (first)
                     first = false;
                 else
-                    ow.write(u", ", LineWriter::TextAddType::Extra);
+                    ow.writeRegion(CommaTokenRegion).ensureSpace();
                 if (!compact)
                     ow.ensureNewline(1);
                 DomItem el = elF();
@@ -3537,7 +3537,7 @@ void ListPBase::writeOut(const DomItem &self, OutWriter &ow, bool compact) const
         if (first)
             first = false;
         else
-            ow.write(u", ", LineWriter::TextAddType::Extra);
+            ow.writeRegion(CommaTokenRegion).ensureSpace();
         if (!compact)
             ow.ensureNewline(1);
         DomItem el = index(self, i);

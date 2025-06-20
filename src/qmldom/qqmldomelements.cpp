@@ -353,7 +353,7 @@ void Import::writeOut(const DomItem &self, OutWriter &ow) const
     if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
-            ow.ensureSpace().write(vString);
+            ow.ensureSpace().writeRegion(VersionRegion, vString);
     }
     if (!importId.isEmpty()) {
         ow.ensureSpace().writeRegion(AsTokenRegion).ensureSpace().writeRegion(IdNameRegion,
@@ -842,7 +842,7 @@ void QmlObject::writeOutAttributes(const DomItem &self, OutWriter &ow, const Dom
             }
             el.second.writeOut(ow);
             if (b) {
-                ow.write(u":");
+                ow.writeRegion(ColonTokenRegion);
                 ow.ensureSpace();
                 if (const Binding *bPtr = b.as<Binding>())
                     bPtr->writeOutValue(b, ow);
@@ -915,7 +915,7 @@ void QmlObject::writeOutSortedPropertyDefinition(const DomItem &self, OutWriter 
             }
             pDef.writeOut(ow);
             if (b) {
-                ow.write(u":");
+                ow.writeRegion(ColonTokenRegion);
                 ow.ensureSpace();
                 if (const Binding *bPtr = b.as<Binding>())
                     bPtr->writeOutValue(b, ow);
@@ -1295,7 +1295,8 @@ void Binding::writeOutValue(const DomItem &self, OutWriter &lw) const
     switch (valueKind()) {
     case BindingValueKind::Empty:
         qCWarning(writeOutLog()) << "Writing of empty binding " << name();
-        lw.write(u"{}");
+        lw.writeRegion(LeftBraceRegion);
+        lw.writeRegion(RightBraceRegion);
         break;
     case BindingValueKind::Array:
         if (const List *vPtr = v.as<List>()) {
@@ -1904,7 +1905,7 @@ QString MethodInfo::preCode(const DomItem &self) const
         if (first) {
             first = false;
         } else {
-            ow.write(u",");
+            ow.writeRegion(CommaTokenRegion);
             ow.ensureSpace();
         }
         ow.write(mp.value->code());
