@@ -1663,7 +1663,10 @@ void tst_QQuickMenu::subMenuMouse()
 #else
     QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
     QVERIFY(mainMenuItem1);
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mainMenuItem1->mapToScene({1,1}).toPoint());
+    auto topSafeMargin = window->safeAreaMargins().top();
+    auto mousePoint = mainMenuItem1->mapToScene(QPointF(1, 1)).toPoint();
+    mousePoint.setY(mousePoint.y() - topSafeMargin);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mousePoint);
 #endif // !Q_OS_ANDROID
 
     QTRY_VERIFY(!subMenu1->isVisible());

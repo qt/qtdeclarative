@@ -1599,7 +1599,8 @@ void tst_QQuickPopup::cursorShape()
     QVERIFY(textField);
 
     // Move the mouse over the text field.
-    const QPoint textFieldPos(popup->x() - 1, textField->height() / 2);
+    auto topSafeMargin = window->safeAreaMargins().top();
+    const QPoint textFieldPos(popup->x() - 1, textField->height() / 2 + topSafeMargin);
     QVERIFY(textField->contains(textField->mapFromScene(textFieldPos)));
     QTest::mouseMove(window, textFieldPos);
     QTRY_COMPARE(window->cursor().shape(), textField->cursor().shape());

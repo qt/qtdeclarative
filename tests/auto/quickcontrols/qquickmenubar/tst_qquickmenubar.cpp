@@ -1303,14 +1303,15 @@ void tst_qquickmenubar::AA_DontUseNativeMenuBar()
     QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
-    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QQuickItem *contents = window->contentItem();
     QVERIFY(contents);
 
     QVERIFY(!menuBarPrivate->nativeHandle());
     QVERIFY(menuBar->isVisible());
     QVERIFY(menuBar->count() > 0);
     QVERIFY(menuBar->height() > 0);
-    QCOMPARE(contents->height(), window->height() - menuBar->height());
+    auto bottomSafeMargin = window->safeAreaMargins().bottom();
+    QCOMPARE(contents->height(), window->height() - menuBar->height() - bottomSafeMargin);
 
     // If the menu bar is not native, the menus should not be native either.
     // The main reason for this limitation is that a native menu typically
@@ -1507,12 +1508,13 @@ void tst_qquickmenubar::applicationWindow()
     QQuickMenuBar *menuBar = window->property("menuBar").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
-    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QQuickItem *contents = window->contentItem();
     QVERIFY(contents);
 
     // The window may report safe area margins when invisible, but they will not
     // propagate to the Quick SafeArea until shown.
-    auto safeAreaTopMargin = initiallyVisible ? window->safeAreaMargins().top() : 0;
+    auto topSafeMargin = initiallyVisible ? window->safeAreaMargins().top() : 0;
+    auto bottomSafeMargin = initiallyVisible ? window->safeAreaMargins().bottom() : 0;
 
     for (const bool visible : {initiallyVisible, !initiallyVisible, initiallyVisible}) {
         menuBar->setVisible(visible);
@@ -1523,14 +1525,14 @@ void tst_qquickmenubar::applicationWindow()
         if (!visible) {
             QVERIFY(!menuBar->isVisible());
             QVERIFY(!nativeMenuBarVisible);
-            QCOMPARE(contents->height(), window->height() - safeAreaTopMargin);
+            QCOMPARE(contents->height(), window->height() - topSafeMargin - bottomSafeMargin);
         } else if (nativeMenuBarVisible) {
             QVERIFY(menuBar->isVisible());
-            QCOMPARE(contents->height(), window->height() - safeAreaTopMargin);
+            QCOMPARE(contents->height(), window->height() - topSafeMargin - bottomSafeMargin);
         } else {
             QVERIFY(menuBar->isVisible());
             QVERIFY(menuBar->height() > 0);
-            QCOMPARE(contents->height(), window->height() - menuBar->height());
+            QCOMPARE(contents->height(), window->height() - menuBar->height() - bottomSafeMargin);
         }
     }
 }
@@ -1559,7 +1561,7 @@ void tst_qquickmenubar::menubarAsHeader()
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
     auto menuBarPrivate = QQuickMenuBarPrivate::get(menuBar);
-    QQuickItem *contents = window->property("contents").value<QQuickItem *>();
+    QQuickItem *contents = window->contentItem();
     QVERIFY(contents);
     QVERIFY(menuBar->count() > 0);
     QCOMPARE(menuBarPrivate->nativeHandle() != nullptr, native);
@@ -1569,7 +1571,8 @@ void tst_qquickmenubar::menubarAsHeader()
         QCOMPARE(contents->height(), window->height() - window->safeAreaMargins().top());
     } else {
         // Not using native menubar
-        QCOMPARE(contents->height(), window->height() - menuBar->height());
+        auto bottomSafeMargin = window->safeAreaMargins().bottom();
+        QCOMPARE(contents->height(), window->height() - menuBar->height() - bottomSafeMargin);
     }
 }
 

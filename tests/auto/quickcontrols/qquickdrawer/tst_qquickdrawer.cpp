@@ -639,7 +639,8 @@ void tst_QQuickDrawer::hover()
     QVERIFY(openedSpy.size() == 1 || openedSpy.wait());
 
     // hover the background button outside the drawer
-    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
+    auto topSafeMargin = window->safeAreaMargins().top();
+    QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - topSafeMargin - 1));
     QCOMPARE(backgroundButton->isHovered(), !modal);
     QVERIFY(!drawerButton->isHovered());
     QVERIFY(!drawerItem->isHovered());
