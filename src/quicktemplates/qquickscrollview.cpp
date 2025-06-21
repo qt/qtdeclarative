@@ -511,8 +511,9 @@ QQuickScrollView::~QQuickScrollView()
     \since 6.6
 
     This property holds the effective width of the vertical scrollbar.
-    When the scrollbar policy is \c QQuickScrollBar::AlwaysOff or the scrollbar
-    is not visible, this property is \c 0.
+    When the scrollbar is visible, this property is the current width of the
+    scrollbar. When the scroll bar is not visible or its policy is set to
+    \c QQuickScrollBar::AlwaysOff, this property is \c 0.
 
     \sa {ScrollBar::policy}
 */
@@ -527,8 +528,9 @@ qreal QQuickScrollView::effectiveScrollBarWidth()
     \since 6.6
 
     This property holds the effective height of the horizontal scrollbar.
-    When the scrollbar policy is \c QQuickScrollBar::AlwaysOff or the scrollbar
-    is not visible, this property is \c 0.
+    When the scrollbar is visible, this property is the current height of
+    the scrollbar. When the scroll bar is not visible or its policy is set
+    to \c QQuickScrollBar::AlwaysOff, this property is \c 0.
 
     \sa {ScrollBar::policy}
 */
