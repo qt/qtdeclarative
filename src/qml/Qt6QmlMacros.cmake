@@ -802,9 +802,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
 
     if(NOT arg_NO_GENERATE_QMLDIR)
         _qt_internal_target_generate_qmldir(${target})
-        set_source_files_properties(${arg_OUTPUT_DIRECTORY}/qmldir
-            PROPERTIES GENERATED TRUE
-        )
+        _qt_internal_set_source_file_generated(SOURCES "${arg_OUTPUT_DIRECTORY}/qmldir")
 
         if(${arg___QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE})
             # TODO: Make this the default and remove the option
@@ -1675,17 +1673,17 @@ function(_qt_internal_target_enable_qmlcachegen target qmlcachegen)
             $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
         VERBATIM
     )
-
-    # The current scope sees the file as generated automatically, but the
-    # target scope may not if it is different. Force it where we can.
+    # We can't rely on policy CMP0118 since user project controls it
+    set(scope_args)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-        set_source_files_properties(
-            ${qmlcache_loader_cpp}
-            TARGET_DIRECTORY ${target}
-            PROPERTIES GENERATED TRUE
-                       SKIP_AUTOGEN TRUE
-        )
+        set(scope_args TARGET_DIRECTORY ${target})
     endif()
+
+    _qt_internal_set_source_file_generated(
+        SOURCES ${qmlcache_loader_cpp}
+        ${scope_args}
+        SKIP_AUTOGEN
+    )
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         add_custom_target(${target}_qmlcachegen DEPENDS ${qmlcache_loader_cpp})
@@ -2100,19 +2098,17 @@ function(_qt_internal_target_enable_qmltc target)
             VERBATIM
         )
 
+        _qt_internal_set_source_file_generated(
+            SOURCES ${compiled_header} ${compiled_cpp}
+            SKIP_AUTOGEN
+        )
         set_source_files_properties(${compiled_header} ${compiled_cpp}
-            PROPERTIES SKIP_AUTOGEN ON
-                       SKIP_UNITY_BUILD_INCLUSION ON)
+            PROPERTIES
+                SKIP_UNITY_BUILD_INCLUSION ON)
         target_sources(${target} PRIVATE ${compiled_header} ${compiled_cpp})
         target_include_directories(${target} PUBLIC ${out_dir})
-        # The current scope automatically sees the file as generated, but the
-        # target scope may not if it is different. Force it where we can.
-        # We will also have to add the generated file to a target in this
-        # scope at the end to ensure correct dependencies.
         if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-                list(APPEND generated_sources_other_scope ${compiled_header} ${compiled_cpp})
-            endif()
+            list(APPEND generated_sources_other_scope ${compiled_header} ${compiled_cpp})
         endif()
 
         list(APPEND compiled_files ${compiled_header})
@@ -2134,19 +2130,24 @@ function(_qt_internal_target_enable_qmltc target)
 
     # run MOC manually for the generated files
     qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target} OPTIONS ${extra_moc_options})
-    set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON
-                                                                 SKIP_UNITY_BUILD_INCLUSION ON)
+
+    # We can't rely on policy CMP0118 since user project controls it
+    set(scope_args)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        set(scope_args TARGET_DIRECTORY ${target})
+    endif()
+    _qt_internal_set_source_file_generated(
+        SOURCES ${generated_sources_other_scope} ${compiled_moc_files}
+        ${scope_args}
+        SKIP_AUTOGEN
+    )
+    set_source_files_properties(${compiled_moc_files}
+        ${scope_args}
+        PROPERTIES
+            SKIP_UNITY_BUILD_INCLUSION ON
+    )
     target_sources(${target} PRIVATE ${compiled_moc_files})
     if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-            set_source_files_properties(${generated_sources_other_scope} ${compiled_moc_files}
-                TARGET_DIRECTORY ${target}
-                PROPERTIES
-                    SKIP_AUTOGEN TRUE
-                    GENERATED TRUE
-            )
-        endif()
-
         if(NOT TARGET ${target}_tooling)
             message(FATAL_ERROR
                     "${target}_tooling is not found, although it should be in this function.")
@@ -2692,8 +2693,9 @@ function(qt6_add_qml_plugin target)
             if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
                 set(scope_args TARGET_DIRECTORY ${target})
             endif()
-            set_source_files_properties("${generated_cpp_file}" ${scope_args}
-                PROPERTIES GENERATED TRUE
+            _qt_internal_set_source_file_generated(
+                SOURCES "${generated_cpp_file}"
+                ${scope_args}
             )
             if(WIN32)
                 set_source_files_properties("${generated_cpp_file}" ${scope_args}
@@ -3401,25 +3403,19 @@ function(qt6_target_qml_sources target)
             )
 
             target_sources(${target} PRIVATE ${compiled_file})
-            set_source_files_properties(${compiled_file} PROPERTIES
-                SKIP_AUTOGEN ON
+            # We can't rely on policy CMP0118 since user project controls it
+            set(scope_args)
+            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+                set(scope_args TARGET_DIRECTORY ${target})
+            endif()
+            _qt_internal_set_source_file_generated(
+                SOURCES ${compiled_file}
+                ${scope_args}
+                SKIP_AUTOGEN
             )
-            # The current scope automatically sees the file as generated, but the
-            # target scope may not if it is different. Force it where we can.
-            # We will also have to add the generated file to a target in this
-            # scope at the end to ensure correct dependencies.
             get_target_property(target_source_dir ${target} SOURCE_DIR)
             if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
                 list(APPEND generated_sources_other_scope ${compiled_file})
-                if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-                    set_source_files_properties(
-                        ${compiled_file}
-                        TARGET_DIRECTORY ${target}
-                        PROPERTIES
-                            SKIP_AUTOGEN TRUE
-                            GENERATED TRUE
-                    )
-                endif()
             endif()
         endif()
     endforeach()
@@ -3551,8 +3547,8 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0004.html for policy details."
                     @ONLY
                 )
 
-                set_source_files_properties("${extra_qmldir}"
-                    PROPERTIES GENERATED TRUE
+                _qt_internal_set_source_file_generated(
+                    SOURCES "${extra_qmldir}"
                 )
             endforeach()
 
@@ -3641,9 +3637,9 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
         VERBATIM
     )
 
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
-        set_source_files_properties(${additional_sources} PROPERTIES SKIP_LINTING ON)
-    endif()
+    _qt_internal_set_source_file_generated(
+        SOURCES ${additional_sources}
+    )
     target_sources(${destination_qml_target} PRIVATE ${additional_sources})
 endfunction()
 
@@ -3891,18 +3887,23 @@ function(_qt_internal_qml_type_registration target)
     elseif(MSVC)
         set(additional_source_files_properties "COMPILE_OPTIONS" "/bigobj")
     endif()
-    set_source_files_properties(${type_registration_cpp_file} PROPERTIES
-        SKIP_AUTOGEN ON
-        ${additional_source_files_properties}
-    )
+
+    # We can't rely on policy CMP0118 since user project controls it
+    set(scope_args)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        set(scope_args TARGET_DIRECTORY ${target})
+    endif()
+    _qt_internal_set_source_file_generated(
+        SOURCES ${type_registration_cpp_file}
+        ${scope_args}
+        SKIP_AUTOGEN
+    )
+    if(additional_source_files_properties)
         set_source_files_properties(
             ${type_registration_cpp_file}
-            TARGET_DIRECTORY ${effective_target}
+            ${scope_args}
             PROPERTIES
-                SKIP_AUTOGEN TRUE
-                GENERATED TRUE
-                ${additional_source_files_properties}
+            ${additional_source_files_properties}
         )
     endif()
 
