@@ -42,14 +42,6 @@ void QQuickVelocityCalculator::stopMeasuring(const QPointF &point2, qint64 times
     m_point2Timestamp = timestamp;
 }
 
-void QQuickVelocityCalculator::reset()
-{
-    m_point1 = QPointF();
-    m_point2 = QPointF();
-    m_point1Timestamp = 0;
-    m_point2Timestamp = 0;
-}
-
 QPointF QQuickVelocityCalculator::velocity() const
 {
     if (m_point2Timestamp == 0 || m_point1Timestamp == m_point2Timestamp)
