@@ -207,11 +207,6 @@ qreal QQuickLoaderPrivate::getImplicitHeight() const
     \li \snippet qml/loader/MyItem.qml 0
     \endtable
 
-    Alternatively, since \c MyItem.qml is loaded within the scope of the
-    Loader, it could also directly call any function defined in the Loader or
-    its parent \l Item.
-
-
     \section2 Focus and Key Events
 
     Loader is a focus scope. Its \l {Item::}{focus} property must be set to
