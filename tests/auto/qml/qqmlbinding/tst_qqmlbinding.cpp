@@ -54,6 +54,7 @@ private slots:
     void qQmlPropertyToPropertyBinding();
     void delayedBindingDestruction();
     void deleteStashedObject();
+    void multiValueTypeBinding();
 
 private:
     QQmlEngine engine;
@@ -873,6 +874,23 @@ void tst_qqmlbinding::deleteStashedObject()
     QTest::ignoreMessage(QtDebugMsg, "before");
     QTest::ignoreMessage(QtDebugMsg, "after");
     QTRY_VERIFY(object->property("page").value<QObject *>() == nullptr);
+}
+
+void tst_qqmlbinding::multiValueTypeBinding()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("multiValueTypeBinding.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    QObject *label = object->property("label").value<QObject *>();
+    QVERIFY(label);
+
+    QRectF rect = label->property("rect").toRectF();
+    QCOMPARE(rect.x(), 12);
+    QCOMPARE(rect.y(), 24);
+    QCOMPARE(rect.width(), 9);
 }
 
 QTEST_MAIN(tst_qqmlbinding)
