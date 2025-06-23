@@ -501,11 +501,16 @@ void QQuickFlickablePrivate::clearTimeline()
 */
 void QQuickFlickablePrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
 {
+    // If the timeline animation is running and calling resetTimeline, one must also
+    // call timeline.move so that the animation keeps running. Otherwise timelineCompleted
+    // signal won't get emitted.
     if (data.move.value() >= minExtent || maxExtent > minExtent) {
+        const bool wasActive = timeline.isActive();
         resetTimeline(data);
-        if (data.move.value() != minExtent) {
+        if (data.move.value() != minExtent)
             adjustContentPos(data, minExtent);
-        }
+        else if (wasActive)
+            timeline.move(data.move, data.move.value(), QEasingCurve(QEasingCurve::Linear), 1);
     } else if (data.move.value() <= maxExtent) {
         resetTimeline(data);
         adjustContentPos(data, maxExtent);
