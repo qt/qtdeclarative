@@ -334,11 +334,29 @@ void QQuickRepeater::setDelegate(QQmlComponent *delegate)
 /*!
     \qmlproperty int QtQuick::Repeater::count
 
-    This property holds the number of items in the model.
+    This property holds the number of items in the \l model.
 
-    \note The number of items in the model as reported by count may differ from
-    the number of created delegates if the Repeater is in the process of
-    instantiating delegates or is incorrectly set up.
+    The value of \c count does not always match the number of instantiated
+    \l {delegate}{delegates}; use \l itemAt() to check if a delegate at a given
+    index exists. It returns \c null if the delegate is not instantiated.
+
+    \list
+    \li While the Repeater is in the process of instantiating delegates (at
+        startup, or because of \c model changes), the \l itemAdded signal is
+        emitted for each delegate created, and the \c count property changes
+        afterwards.
+    \li If the Repeater is not part of a completed
+        \l {Concepts - Visual Parent in Qt Quick}{visual hierarchy},
+        \c count reflects the model size, but no delegates are created.
+    \li If the Repeater destroys delegates because of \c model changes,
+        the \l itemRemoved() signal is emitted for each, and the \c count
+        property changes afterwards.
+    \li If the Repeater is taken out of the visual hierarchy (for example by
+        setting \c {parent = null}), delegates are destroyed, the \l itemRemoved()
+        signal is emitted for each, but \c count does not change.
+    \endlist
+
+    \sa itemAt(), itemAdded(), itemRemoved()
 */
 int QQuickRepeater::count() const
 {
