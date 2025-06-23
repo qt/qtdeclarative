@@ -49,16 +49,15 @@ void QQmlAbstractBinding::addToObject()
 
         // Find the value type proxy (if there is one)
         QQmlValueTypeProxyBinding *proxy = nullptr;
-        if (data->hasBindingBit(coreIndex)) {
-            QQmlAbstractBinding *b = data->bindings;
-            while (b && (b->targetPropertyIndex().coreIndex() != coreIndex ||
-                         b->targetPropertyIndex().hasValueTypeIndex()))
-                b = b->nextBinding();
-            Q_ASSERT(b && b->kind() == QQmlAbstractBinding::ValueTypeProxy);
-            proxy = static_cast<QQmlValueTypeProxyBinding *>(b);
+        QQmlAbstractBinding *b = data->bindings;
+        while (b && (b->targetPropertyIndex().coreIndex() != coreIndex ||
+                     b->targetPropertyIndex().hasValueTypeIndex())) {
+            b = b->nextBinding();
         }
 
-        if (!proxy) {
+        if (b && b->kind() == QQmlAbstractBinding::ValueTypeProxy) {
+            proxy = static_cast<QQmlValueTypeProxyBinding *>(b);
+        } else {
             proxy = new QQmlValueTypeProxyBinding(obj, QQmlPropertyIndex(coreIndex));
 
             Q_ASSERT(proxy->targetPropertyIndex().coreIndex() == coreIndex);
