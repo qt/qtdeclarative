@@ -25,7 +25,7 @@ class QQuickVelocityCalculator
 public:
     void startMeasuring(const QPointF &point1, qint64 timestamp);
     void stopMeasuring(const QPointF &m_point2, qint64 timestamp);
-    void reset();
+    inline void reset() { *this = {}; }
     QPointF velocity() const;
 
 private:
