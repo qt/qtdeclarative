@@ -22,7 +22,7 @@ namespace QSGBatchRenderer
 QMatrix4x4 qsg_matrixForRoot(Node *node);
 QRhiVertexInputAttribute::Format qsg_vertexInputFormat(const QSGGeometry::Attribute &a);
 QRhiCommandBuffer::IndexFormat qsg_indexFormat(const QSGGeometry *geometry);
-QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode);
+QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode, QRhi *rhi);
 
 RhiVisualizer::RhiVisualizer(Renderer *renderer)
     : Visualizer(renderer)
@@ -231,9 +231,9 @@ void RhiVisualizer::Fade::render(QRhiCommandBuffer *cb)
     cb->draw(4);
 }
 
-static void fillVertexIndex(RhiVisualizer::DrawCall *dc, QSGGeometry *g, bool withData, bool forceUintIndex)
+static void fillVertexIndex(RhiVisualizer::DrawCall *dc, QSGGeometry *g, bool withData, bool forceUintIndex, QRhi *rhi)
 {
-    dc->vertex.topology = qsg_topology(g->drawingMode());
+    dc->vertex.topology = qsg_topology(g->drawingMode(), rhi);
     dc->vertex.format = qsg_vertexInputFormat(g->attributes()[0]);
     dc->vertex.count = g->vertexCount();
     dc->vertex.stride = g->sizeOfVertex();
@@ -355,7 +355,7 @@ void RhiVisualizer::ChangeVis::gather(Node *n)
             qint32 projection = 0;
             memcpy(dc.uniforms.data + 148, &projection, 4);
 
-            fillVertexIndex(&dc, g, true, false);
+            fillVertexIndex(&dc, g, true, false, visualizer->m_renderer->m_rhi);
             drawCalls.append(dc);
         }
 
@@ -476,7 +476,7 @@ void RhiVisualizer::BatchVis::gather(Batch *b)
         QSGGeometryNode *gn = b->first->node;
         QSGGeometry *g = gn->geometry();
 
-        fillVertexIndex(&dc, g, false, forceUintIndex);
+        fillVertexIndex(&dc, g, false, forceUintIndex, visualizer->m_renderer->m_rhi);
 
         for (int ds = 0; ds < b->drawSets.size(); ++ds) {
             const DrawSet &set = b->drawSets.at(ds);
@@ -499,7 +499,7 @@ void RhiVisualizer::BatchVis::gather(Batch *b)
             QMatrix4x4 m = matrix * *gn->matrix();
             memcpy(dc.uniforms.data, m.constData(), 64);
 
-            fillVertexIndex(&dc, g, false, forceUintIndex);
+            fillVertexIndex(&dc, g, false, forceUintIndex, visualizer->m_renderer->m_rhi);
 
             dc.buf.vbuf = b->vbo.buf;
             dc.buf.vbufOffset = vOffset;
@@ -591,7 +591,7 @@ void RhiVisualizer::ClipVis::gather(QSGNode *node)
             memcpy(dc.uniforms.data + 144, &pattern, 4);
             qint32 projection = 0;
             memcpy(dc.uniforms.data + 148, &projection, 4);
-            fillVertexIndex(&dc, g, true, false);
+            fillVertexIndex(&dc, g, true, false, visualizer->m_renderer->m_rhi);
             drawCalls.append(dc);
         }
     }
@@ -703,7 +703,7 @@ void RhiVisualizer::OverdrawVis::gather(Node *n)
             qint32 projection = 1;
             memcpy(dc.uniforms.data + 148, &projection, 4);
 
-            fillVertexIndex(&dc, g, true, false);
+            fillVertexIndex(&dc, g, true, false, visualizer->m_renderer->m_rhi);
             drawCalls.append(dc);
         }
     }

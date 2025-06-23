@@ -174,7 +174,7 @@ QRhiCommandBuffer::IndexFormat qsg_indexFormat(const QSGGeometry *geometry)
     }
 }
 
-QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode)
+QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode, QRhi *rhi)
 {
     QRhiGraphicsPipeline::Topology topology = QRhiGraphicsPipeline::Triangles;
     switch (geomDrawMode) {
@@ -193,6 +193,20 @@ QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode)
     case QSGGeometry::DrawTriangleStrip:
         topology = QRhiGraphicsPipeline::TriangleStrip;
         break;
+    case QSGGeometry::DrawTriangleFan:
+    {
+        static bool triangleFanSupported = false;
+        static bool triangleFanSupportChecked = false;
+        if (!triangleFanSupportChecked) {
+            triangleFanSupportChecked = true;
+            triangleFanSupported = rhi->isFeatureSupported(QRhi::TriangleFanTopology);
+        }
+        if (triangleFanSupported) {
+            topology = QRhiGraphicsPipeline::TriangleFan;
+            break;
+        }
+        Q_FALLTHROUGH();
+    }
     default:
         qWarning("Primitive topology 0x%x not supported", geomDrawMode);
         break;
@@ -2544,11 +2558,11 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
             if (firstStencilClipInBatch) {
                 m_stencilClipCommon.inputLayout.setBindings({ QRhiVertexInputBinding(g->sizeOfVertex()) });
                 m_stencilClipCommon.inputLayout.setAttributes({ QRhiVertexInputAttribute(0, 0, qsg_vertexInputFormat(*a), 0) });
-                m_stencilClipCommon.topology = qsg_topology(g->drawingMode());
+                m_stencilClipCommon.topology = qsg_topology(g->drawingMode(), m_rhi);
             }
 #ifndef QT_NO_DEBUG
             else {
-                if (qsg_topology(g->drawingMode()) != m_stencilClipCommon.topology)
+                if (qsg_topology(g->drawingMode(), m_rhi) != m_stencilClipCommon.topology)
                     qWarning("updateClipState: Clip list entries have different primitive topologies, this is not currently supported.");
                 if (qsg_vertexInputFormat(*a) != m_stencilClipCommon.inputLayout.cbeginAttributes()->format())
                     qWarning("updateClipState: Clip list entries have different vertex input layouts, this is must not happen.");
@@ -2740,7 +2754,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
         flags |= QRhiGraphicsPipeline::UsesStencilRef;
 
     ps->setFlags(flags);
-    ps->setTopology(qsg_topology(m_gstate.drawMode));
+    ps->setTopology(qsg_topology(m_gstate.drawMode, m_rhi));
     ps->setCullMode(m_gstate.cullMode);
     ps->setPolygonMode(m_gstate.polygonMode);
     ps->setMultiViewCount(m_gstate.multiViewCount);
