@@ -507,6 +507,8 @@ private slots:
 
     void assignWrongTypeToObjectList();
 
+    void variantAssociationHasOwnProperty();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -9581,6 +9583,31 @@ void tst_qqmllanguage::assignWrongTypeToObjectList()
     QVERIFY(!component.isReady());
     QVERIFY(QRegularExpression(".*Cannot assign object of type \"QQuickFrameAnimation\""_L1
         + " to list property \"animations\"; expected \"QQuickAbstractAnimation\""_L1).match(component.errorString()).hasMatch());
+}
+
+class VariantAssociationContainer : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariant variantobj MEMBER m_qvariant)
+public:
+    VariantAssociationContainer()
+        : m_qvariant(QVariantMap{{"key1", "value1"}, {"key2", "value2"}})
+    {}
+private:
+    QVariant m_qvariant;
+};
+
+void tst_qqmllanguage::variantAssociationHasOwnProperty()
+{
+    QJSEngine engine;
+    VariantAssociationContainer obj;
+    engine.globalObject().setProperty("qobject", engine.newQObject(&obj));
+    QCOMPARE(engine.evaluate("typeof qobject.variantobj").toString(), "object");
+    QCOMPARE(engine.evaluate("qobject.variantobj.key1").toString(), "value1");
+    QCOMPARE(engine.evaluate("qobject.variantobj.key2").toString(), "value2");
+    QCOMPARE(engine.evaluate("typeof qobject.variantobj.hasOwnProperty").toString(), "function");
+    QVERIFY(engine.evaluate("qobject.variantobj.hasOwnProperty('key1')").toBool());
+    QVERIFY(!engine.evaluate("qobject.variantobj.hasOwnProperty('key3')").toBool());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

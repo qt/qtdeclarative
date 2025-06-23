@@ -189,8 +189,16 @@ namespace QV4 {
     ReturnedValue VariantAssociationObject::virtualGet(const Managed *that, PropertyKey id, const Value *, bool * hasProperty)
     {
         QString key = id.toQString();
-        return static_cast<const VariantAssociationObject *>(that)->getElement(key, hasProperty);
+        const VariantAssociationObject *self = static_cast<const VariantAssociationObject *>(that);
 
+        bool found = false;
+        if (ReturnedValue result = self->getElement(key, &found); found) {
+            if (hasProperty)
+                *hasProperty = true;
+            return result;
+        }
+
+        return ReferenceObject::virtualGet(that, id, that, hasProperty);
     }
 
     bool VariantAssociationObject::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *)
