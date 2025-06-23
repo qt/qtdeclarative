@@ -149,6 +149,7 @@ public:
     static bool isMouseEvent(const QPointerEvent *ev);
     static bool isMouseOrWheelEvent(const QPointerEvent *ev);
     static bool isHoverEvent(const QPointerEvent *ev);
+    static bool isHoveringMoveEvent(const QPointerEvent *ev);
     static bool isTouchEvent(const QPointerEvent *ev);
     static bool isTabletEvent(const QPointerEvent *ev);
     static bool isEventFromMouseOrTouchpad(const QPointerEvent *ev);

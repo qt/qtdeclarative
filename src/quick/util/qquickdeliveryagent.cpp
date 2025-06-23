@@ -2037,7 +2037,26 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
         if (!deliverPressOrReleaseEvent(event))
             event->setAccepted(false);
     }
-    if (!allUpdatedPointsAccepted(event))
+
+    auto isHoveringMoveEvent = [](QPointerEvent *event) -> bool {
+        if (event->type() == QEvent::MouseMove) {
+            const auto *spe = static_cast<const QSinglePointEvent *>(event);
+            if (spe->button() == Qt::NoButton && spe->buttons() == Qt::NoButton)
+                return true;
+        }
+        return false;
+    };
+
+    /*
+        If some QEventPoints were not yet handled, deliver to existing grabbers,
+        and then non-grabbing pointer handlers.
+        But don't deliver stray mouse moves in which no buttons are pressed:
+        stray mouse moves risk deactivating handlers that don't expect them;
+        for mouse hover tracking, we rather use deliverHoverEvent().
+        But do deliver TabletMove events, in case there is a HoverHandler that
+        changes its cursorShape depending on stylus type.
+    */
+    if (!allUpdatedPointsAccepted(event) && !isHoveringMoveEvent(event))
         deliverUpdatedPoints(event);
     if (event->isEndEvent())
         deliverPressOrReleaseEvent(event, true);

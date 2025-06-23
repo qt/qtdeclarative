@@ -47,6 +47,7 @@ private slots:
     void dragVsPinch();
     void pinchStartPos_data();
     void pinchStartPos();
+    void strayMouseMoves();
 
 private:
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -1261,6 +1262,67 @@ void tst_QQuickPinchHandler::pinchStartPos()
     pinchSequence.release(1, p1, &window).release(2, p2, &window).commit();
     QQuickTouchUtils::flush(&window);
     QCOMPARE(activeSpy.size(), shouldPinch ? 2 : 0);
+}
+
+void tst_QQuickPinchHandler::strayMouseMoves() // QTBUG-123985
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pinchproperties.qml")));
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+    QQuickPinchHandler *pinchHandler = root->findChild<QQuickPinchHandler*>();
+    QVERIFY(pinchHandler);
+    QSignalSpy activeSpy(pinchHandler, &QQuickPinchHandler::activeChanged);
+    const QList<QPoint> pointPos = {{40, 40}, {160, 160}};
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+    auto sendStrayMouseMoves = [&window, pinchHandler, this](QPoint p1, QPoint p2) {
+        {
+            QPoint scenePos = pinchHandler->parentItem()->mapToScene(p1).toPoint();
+            QMouseEvent me(QEvent::MouseMove, scenePos, window.mapToGlobal(p1),
+                           Qt::NoButton, Qt::NoButton, Qt::NoModifier, touchscreen.get());
+            me.setAccepted(true);
+            QVERIFY(QCoreApplication::sendEvent(&window, &me));
+        }
+        {
+            QPoint scenePos = pinchHandler->parentItem()->mapToScene(p2).toPoint();
+            QMouseEvent me(QEvent::MouseMove, scenePos, window.mapToGlobal(p2),
+                           Qt::NoButton, Qt::NoButton, Qt::NoModifier, touchscreen.get());
+            me.setAccepted(true);
+            QVERIFY(QCoreApplication::sendEvent(&window, &me));
+        }
+    };
+
+    // press two points, with stray mouse moves at both points
+    QPoint p1(60, 100), p2(140, 100);
+    sendStrayMouseMoves(p1, p2);
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(&window, touchscreen.get());
+    pinchSequence.press(1, p1, &window).press(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+
+    // drag both, with stray mouse moves at both points;
+    // expect that PinchHandler activates, stays activated, scales and rotates its target
+    for (int i = 1; i <= 4; ++i) {
+        p1 -= QPoint(dragThreshold / 2, dragThreshold);
+        p2 += QPoint(dragThreshold / 2, dragThreshold);
+        if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+        sendStrayMouseMoves(p1, p2);
+        pinchSequence.move(1, p1, &window).move(2, p2, &window).commit();
+        QQuickTouchUtils::flush(&window);
+        qCDebug(lcPointerTests) << i << "active" << pinchHandler->active() << "activeChanged" << activeSpy.size()
+                                << "pts" << p1 << p2 << "scale" << pinchHandler->target()->scale()
+                                << "rot" << pinchHandler->target()->rotation();
+        if (i > 1) {
+            QCOMPARE(pinchHandler->active(), true);
+            QCOMPARE(activeSpy.size(), 1);
+        }
+    }
+    if (lcPointerTests().isDebugEnabled()) QTest::qWait(500);
+    pinchSequence.release(1, p1, &window).release(2, p2, &window).commit();
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(activeSpy.size(), 2);
+    QCOMPARE_GT(pinchHandler->target()->scale(), 1.2);
+    QCOMPARE_GT(pinchHandler->target()->rotation(), 10);
 }
 
 QTEST_MAIN(tst_QQuickPinchHandler)

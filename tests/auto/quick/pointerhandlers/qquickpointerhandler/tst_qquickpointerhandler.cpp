@@ -567,7 +567,7 @@ void tst_PointerHandlers::mouseEventDelivery()
         QCOMPARE_EVENT(eventItem1->eventList.size() - 1, Event::ItemMouseDestination, QEvent::UngrabMouse, QEventPoint::State::Released, QPointingDevice::UngrabExclusive);
     }
     QCOMPARE(handler->pressEventCount, 1);
-    QCOMPARE(handler->updateEventCount, 2); // mouse move before press, and intentional move after press
+    QCOMPARE(handler->updateEventCount, 1); // only the intentional move after press
     QCOMPARE(handler->releaseEventCount, 1);
     eventItem1->eventList.clear();
 
@@ -651,10 +651,9 @@ void tst_PointerHandlers::dynamicCreation()
 
     QPoint p1(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QTRY_COMPARE(eventItem1->eventList.size(), 3);
-    QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Updated, NoGrab);
-    QCOMPARE_EVENT(1, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
-    QCOMPARE_EVENT(2, Event::ItemMouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, NoGrab);
+    QTRY_COMPARE(eventItem1->eventList.size(), 2);
+    QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
+    QCOMPARE_EVENT(1, Event::ItemMouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, NoGrab);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
 }
 

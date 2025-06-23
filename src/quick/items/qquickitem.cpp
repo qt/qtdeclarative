@@ -5779,6 +5779,10 @@ bool QQuickItemPrivate::anyPointerHandlerWants(const QPointerEvent *event, const
     HoverHandlers if the event is a QMouseEvent or QWheelEvent (they are visited
     in QQuickDeliveryAgentPrivate::deliverHoverEventToItem()), and skip handlers
     that are in QQuickPointerHandlerPrivate::deviceDeliveryTargets().
+    However if the event is a QTabletEvent, we do NOT skip delivery here:
+    this is the means by which HoverHandler can change the cursor when the
+    tablet stylus hovers over its parent item.
+
     If \a avoidGrabbers is true, also skip delivery to any handler that
     is exclusively or passively grabbing any point within \a event
     (because delivery to grabbers is handled separately).
