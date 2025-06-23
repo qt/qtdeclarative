@@ -336,7 +336,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlproperty QtObject QtQuick::DragEvent::drag.source
+    \qmlproperty QtObject QtQuick::DragEvent::source
 
     This property holds the source of a drag event.
 */
