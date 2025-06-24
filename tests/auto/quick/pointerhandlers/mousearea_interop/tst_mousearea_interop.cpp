@@ -59,6 +59,10 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaMouse
     createView(windowPtr, "dragTakeOverFromSibling.qml");
     QQuickView * window = windowPtr.data();
 
+    const QPoint pos = QGuiApplication::primaryScreen()->availableGeometry().topLeft();
+    window->setFramePosition(pos);
+    QTRY_COMPARE(window->framePosition(), pos);
+
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);
     QQuickMouseArea *ma = window->rootObject()->findChild<QQuickMouseArea*>();
