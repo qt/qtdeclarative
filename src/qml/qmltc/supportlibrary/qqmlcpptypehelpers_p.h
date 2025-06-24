@@ -1,8 +1,8 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QQMLCPPTYPEHELPERS_H
-#define QQMLCPPTYPEHELPERS_H
+#ifndef QQMLCPPTYPEHELPERS_P_H
+#define QQMLCPPTYPEHELPERS_P_H
 
 //
 //  W A R N I N G
@@ -25,4 +25,4 @@ using passByConstRefOrValue =
         std::conditional_t<((sizeof(T) > 3 * sizeof(void *)) || !std::is_trivial_v<T>), const T &,
                            T>;
 
-#endif // QQMLCPPTYPEHELPERS_H
+#endif // QQMLCPPTYPEHELPERS_P_H
