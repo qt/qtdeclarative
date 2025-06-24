@@ -107,14 +107,20 @@ protected:
     static qsizetype animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);
     static QQuickAbstractAnimation* animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos);
     static void clear_animations(QQmlListProperty<QQuickAbstractAnimation> *list);
-    QList<QQuickAbstractAnimation *> animations;
+    static void removeLast_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
+    static void replace_animation(
+            QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos,
+            QQuickAbstractAnimation *a);
+
+    QList<QPointer<QQuickAbstractAnimation>> animations;
 };
 
 void QQuickTransitionPrivate::append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
     q->d_func()->animations.append(a);
-    a->setDisableUserControl();
+    if (a)
+        a->setDisableUserControl();
 }
 
 qsizetype QQuickTransitionPrivate::animation_count(QQmlListProperty<QQuickAbstractAnimation> *list)
@@ -132,10 +138,25 @@ QQuickAbstractAnimation* QQuickTransitionPrivate::animation_at(QQmlListProperty<
 void QQuickTransitionPrivate::clear_animations(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
-    while (q->d_func()->animations.size()) {
-        QQuickAbstractAnimation *firstAnim = q->d_func()->animations.at(0);
-        q->d_func()->animations.removeAll(firstAnim);
-    }
+    q->d_func()->animations.clear();
+}
+
+void QQuickTransitionPrivate::removeLast_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
+{
+    QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
+    q->d_func()->animations.removeLast();
+}
+
+void QQuickTransitionPrivate::replace_animation(
+        QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos, QQuickAbstractAnimation *a)
+{
+    QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
+    QQuickTransitionPrivate *d = q->d_func();
+    if (d->animations.length() <= pos)
+        d->animations.resize(pos + 1, nullptr);
+    d->animations[pos] = a;
+    if (a)
+        a->setDisableUserControl();
 }
 
 void QQuickTransitionInstance::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
@@ -240,15 +261,19 @@ QQuickTransitionInstance *QQuickTransition::prepare(QQuickStateOperation::Action
     int start = d->reversed ? d->animations.size() - 1 : 0;
     int end = d->reversed ? -1 : d->animations.size();
 
-    QAbstractAnimationJob *anim = nullptr;
-    for (int i = start; i != end;) {
-        anim = d->animations.at(i)->transition(actions, after, direction, defaultTarget);
-        if (anim) {
-            if (d->animations.at(i)->threadingModel() == QQuickAbstractAnimation::RenderThread)
-                anim = new QQuickAnimatorProxyJob(anim, d->animations.at(i));
-            d->reversed ? group->prependAnimation(anim) : group->appendAnimation(anim);
-        }
-        d->reversed ? --i : ++i;
+    for (int i = start; i != end; d->reversed ? --i : ++i) {
+        QQuickAbstractAnimation *anim = d->animations.at(i);
+        if (!anim)
+            continue;
+
+        QAbstractAnimationJob *job = anim->transition(actions, after, direction, defaultTarget);
+        if (!job)
+            continue;
+
+        if (anim->threadingModel() == QQuickAbstractAnimation::RenderThread)
+            job = new QQuickAnimatorProxyJob(job, anim);
+
+        d->reversed ? group->prependAnimation(job) : group->appendAnimation(job);
     }
 
     group->setDirection(d->reversed ? QAbstractAnimationJob::Backward : QAbstractAnimationJob::Forward);
@@ -434,10 +459,14 @@ bool QQuickTransition::running() const
 QQmlListProperty<QQuickAbstractAnimation> QQuickTransition::animations()
 {
     Q_D(QQuickTransition);
-    return QQmlListProperty<QQuickAbstractAnimation>(this, &d->animations, QQuickTransitionPrivate::append_animation,
-                                                                   QQuickTransitionPrivate::animation_count,
-                                                                   QQuickTransitionPrivate::animation_at,
-                                                                   QQuickTransitionPrivate::clear_animations);
+    return QQmlListProperty<QQuickAbstractAnimation>(
+            this, &d->animations,
+            QQuickTransitionPrivate::append_animation,
+            QQuickTransitionPrivate::animation_count,
+            QQuickTransitionPrivate::animation_at,
+            QQuickTransitionPrivate::clear_animations,
+            QQuickTransitionPrivate::replace_animation,
+            QQuickTransitionPrivate::removeLast_animation);
 }
 
 QT_END_NAMESPACE
