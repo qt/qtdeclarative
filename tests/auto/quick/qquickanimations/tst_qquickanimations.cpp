@@ -107,6 +107,7 @@ private slots:
     void restartNestedAnimationGroupWhenDirty();
     void targetsDeletedNotRemoved();
     void alwaysRunToEndSetFalseRestartBug();
+    void animationInstantiator();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2333,6 +2334,16 @@ void tst_qquickanimations::alwaysRunToEndSetFalseRestartBug()
     QCOMPARE(sequential.isRunning(), true);
     sequential.stop();
     QCOMPARE(sequential.isRunning(), false);
+}
+
+void tst_qquickanimations::animationInstantiator()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("animationInstantiator.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_VERIFY(o->property("v").toInt() > 10);
 }
 
 QTEST_MAIN(tst_qquickanimations)
