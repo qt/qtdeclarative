@@ -131,6 +131,9 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 
 void QQmlPropertyBindingJS::expressionChanged()
 {
+    if (!hasValidContext())
+        return;
+
     auto binding = asBinding();
     if (!binding->propertyDataPtr)
         return;
