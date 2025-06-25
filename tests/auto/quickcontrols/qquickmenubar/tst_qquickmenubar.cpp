@@ -79,6 +79,7 @@ private slots:
     void invalidDelegate();
     void panMenuBar_data();
     void panMenuBar();
+    void clearMenus();
 
 private:
     bool nativeMenuBarSupported = false;
@@ -1860,6 +1861,16 @@ void tst_qquickmenubar::panMenuBar()
     QVERIFY(menuBar_d->currentMenuOpen);
     QTRY_VERIFY(menuBarItem1->menu()->isOpened());
     QTRY_VERIFY(!menuBarItem0->menu()->isOpened());
+}
+
+void tst_qquickmenubar::clearMenus()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("clearMenus.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QTRY_COMPARE(o->property("v").toInt(), 2);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_qquickmenubar)
