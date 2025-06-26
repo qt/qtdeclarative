@@ -1499,19 +1499,25 @@ void QQmlJSTypePropagator::setRegister(int index, QQmlJSRegisterContent content)
 }
 
 void QQmlJSTypePropagator::mergeRegister(
-            int index, QQmlJSRegisterContent a, QQmlJSRegisterContent b)
+            int index, const VirtualRegister &a, const VirtualRegister &b)
 {
-    const QQmlJSRegisterContent merged = (a == b) ? a : m_typeResolver->merge(a, b);
-    Q_ASSERT(merged.isValid());
+    const VirtualRegister merged = {
+        (a.content == b.content) ? a.content : m_typeResolver->merge(a.content, b.content),
+        a.canMove && b.canMove,
+        a.affectedBySideEffects || b.affectedBySideEffects,
+        a.isShadowable || b.isShadowable,
+    };
 
-    if (!merged.isConversion()) {
+    Q_ASSERT(merged.content.isValid());
+
+    if (!merged.content.isConversion()) {
         // The registers were the same. We're already tracking them.
-        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = merged;
-        m_state.registers[index].content = merged;
+        m_state.annotations[currentInstructionOffset()].typeConversions[index] = merged;
+        m_state.registers[index] = merged;
         return;
     }
 
-    auto tryPrevStateConversion = [this](int index, QQmlJSRegisterContent merged) -> bool {
+    auto tryPrevStateConversion = [this](int index, const VirtualRegister &merged) -> bool {
         auto it = m_prevStateAnnotations.find(currentInstructionOffset());
         if (it == m_prevStateAnnotations.end())
             return false;
@@ -1526,23 +1532,35 @@ void QQmlJSTypePropagator::mergeRegister(
         if (!lastTry.content.isConversion())
             return false;
 
-        if (lastTry.content.conversionResultType() != merged.conversionResultType()
-                || lastTry.content.conversionOrigins() != merged.conversionOrigins()) {
+        if (lastTry.content.conversionResultType() != merged.content.conversionResultType()
+                || lastTry.content.conversionOrigins() != merged.content.conversionOrigins()
+                || lastTry.canMove != merged.canMove
+                || lastTry.affectedBySideEffects != merged.affectedBySideEffects
+                || lastTry.isShadowable != merged.isShadowable) {
             return false;
         }
 
         // We don't need to track it again if we've come to the same conclusion before.
         m_state.annotations[currentInstructionOffset()].typeConversions[index] = lastTry;
+
+        // Do not reset the side effects
+        Q_ASSERT(!m_state.registers[index].affectedBySideEffects || lastTry.affectedBySideEffects);
+
         m_state.registers[index] = lastTry;
         return true;
     };
 
     if (!tryPrevStateConversion(index, merged)) {
         // if a != b, we have already re-tracked it.
-        QQmlJSRegisterContent cloned = (a == b) ? m_pool->clone(merged) : merged;
-        Q_ASSERT(cloned.isValid());
-        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = cloned;
-        m_state.registers[index].content = cloned;
+        const VirtualRegister cloned = {
+            (a == b) ? m_pool->clone(merged.content) : merged.content,
+            merged.canMove,
+            merged.affectedBySideEffects,
+            merged.isShadowable,
+        };
+        Q_ASSERT(cloned.content.isValid());
+        m_state.annotations[currentInstructionOffset()].typeConversions[index] = cloned;
+        m_state.registers[index] = cloned;
     }
 }
 
@@ -2907,8 +2925,8 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
              registerIt != end; ++registerIt) {
             const int registerIndex = registerIt.key();
 
-            auto newType = registerIt.value().content;
-            if (!newType.isValid()) {
+            const VirtualRegister &newType = registerIt.value();
+            if (!newType.content.isValid()) {
                 addError(u"When reached from offset %1, %2 is undefined"_s
                                  .arg(stateToMerge.originatingOffset)
                                  .arg(registerName(registerIndex)));
@@ -2917,7 +2935,7 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 
             auto currentRegister = m_state.registers.find(registerIndex);
             if (currentRegister != m_state.registers.end())
-                mergeRegister(registerIndex, newType, currentRegister.value().content);
+                mergeRegister(registerIndex, newType, currentRegister.value());
             else
                 mergeRegister(registerIndex, newType, newType);
         }

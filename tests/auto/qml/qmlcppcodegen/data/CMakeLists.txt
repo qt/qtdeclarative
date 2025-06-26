@@ -220,6 +220,7 @@ set(qml_files
     mathMinMax.qml
     mathOperations.qml
     mathStaticProperties.qml
+    mergeSideEffects.qml
     mergedObjectRead.qml
     mergedObjectWrite.qml
     methodOnListLookup.qml

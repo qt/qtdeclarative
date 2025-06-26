@@ -236,7 +236,7 @@ private:
 
     void setAccumulator(QQmlJSRegisterContent content);
     void setRegister(int index, QQmlJSRegisterContent content);
-    void mergeRegister(int index, QQmlJSRegisterContent a, QQmlJSRegisterContent b);
+    void mergeRegister(int index, const VirtualRegister &a, const VirtualRegister &b);
 
     void addReadRegister(int index);
     void addReadRegister(int index, QQmlJSRegisterContent convertTo);
