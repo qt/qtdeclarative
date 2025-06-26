@@ -104,10 +104,6 @@ QT_BEGIN_NAMESPACE
   for example the scene's root item, once it is associated with the scene (the
   QQuickWindow).
 
-  \note In general QQuickRenderControl is supported in combination with all Qt
-  Quick backends. However, some functionality, in particular grab(), may not be
-  available in all cases.
-
   \inmodule QtQuick
 */
 
