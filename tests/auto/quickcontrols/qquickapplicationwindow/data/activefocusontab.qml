@@ -7,7 +7,7 @@ import QtQuick.Controls
 ApplicationWindow {
     title: "Test Application Window"
     width: 100
-    height: 100
+    height: 175
     Item {
         id: main
         objectName: "main"
@@ -43,5 +43,20 @@ ApplicationWindow {
                 }
             }
         }
+    }
+    footer: Item {
+        width: 100
+        height: 25
+        activeFocusOnTab: true
+    }
+    header: Item {
+        width: 100
+        height: 25
+        activeFocusOnTab: true
+    }
+    menuBar: Item {
+        width: 100
+        height: 25
+        activeFocusOnTab: true
     }
 }
