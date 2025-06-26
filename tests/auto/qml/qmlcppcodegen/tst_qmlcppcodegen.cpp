@@ -1207,13 +1207,18 @@ void tst_QmlCppCodegen::consoleObject()
     const QRegularExpression re2(u"QQmlComponentAttached\\(0x[0-9a-f]+\\)"_s);
     QTest::ignoreMessage(QtDebugMsg, re2);
 
+    QTest::ignoreMessage(QtDebugMsg, "[1,2,3,4,5] true");
+
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
     auto oldHandler = qInstallMessageHandler(
-            [](QtMsgType, const QMessageLogContext &ctxt, const QString &) {
+            [](QtMsgType, const QMessageLogContext &ctxt, const QString &msg) {
         QCOMPARE(ctxt.file, urlString.toUtf8());
-        QCOMPARE(ctxt.function, QByteArray("expression for onCompleted"));
+        if (msg == QString(u"[1,2,3,4,5] true"))
+            QCOMPARE(ctxt.function, QByteArray("xyz"));
+        else
+            QCOMPARE(ctxt.function, QByteArray("expression for onCompleted"));
         QVERIFY(ctxt.line > 0);
     });
     const auto guard = qScopeGuard([oldHandler]() { qInstallMessageHandler(oldHandler); });

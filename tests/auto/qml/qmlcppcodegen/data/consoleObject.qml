@@ -4,6 +4,16 @@ import QtQml
 LoggingCategory {
     id: self
     name: "foobar"
+
+    // tests sequence handling
+    function xyz() {
+        const d = [1, 2, 3, 4, 5];
+        const contained = d.includes(3);
+        console.log(d, contained);
+    }
+
+
+
     Component.onCompleted: {
         console.debug("b", 4.55);
         console.log("b", 4.55);
@@ -26,5 +36,7 @@ LoggingCategory {
         console.log(4)
         console.log(self);
         console.log(Component);
+
+	self.xyz()
     }
 }
