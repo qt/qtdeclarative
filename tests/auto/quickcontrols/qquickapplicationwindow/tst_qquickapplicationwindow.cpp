@@ -121,29 +121,7 @@ void tst_QQuickApplicationWindow::activeFocusOnTab1()
     QVERIFY(item);
     QVERIFY(!item->hasActiveFocus());
 
-    // Tab: contentItem->sub1
-    {
-        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
-        QGuiApplication::sendEvent(window, &key);
-        QVERIFY(key.isAccepted());
-
-        item = findItem<QQuickItem>(window->contentItem(), "sub1");
-        QVERIFY(item);
-        QVERIFY(item->hasActiveFocus());
-    }
-
-    // Tab: sub1->sub2
-    {
-        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
-        QGuiApplication::sendEvent(window, &key);
-        QVERIFY(key.isAccepted());
-
-        item = findItem<QQuickItem>(window->contentItem(), "sub2");
-        QVERIFY(item);
-        QVERIFY(item->hasActiveFocus());
-    }
-
-    // Tab: sub2->menuBar
+    // Tab: contentItem->menuBar
     {
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
         QGuiApplication::sendEvent(window, &key);
@@ -165,7 +143,29 @@ void tst_QQuickApplicationWindow::activeFocusOnTab1()
         QVERIFY(item->hasActiveFocus());
     }
 
-    // Tab: header->footer
+    // Tab: header->sub1
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+
+        item = findItem<QQuickItem>(window->contentItem(), "sub1");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
+
+    // Tab: sub1->sub2
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+
+        item = findItem<QQuickItem>(window->contentItem(), "sub2");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
+
+    // Tab: sub2->footer
     {
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
         QGuiApplication::sendEvent(window, &key);
@@ -176,13 +176,14 @@ void tst_QQuickApplicationWindow::activeFocusOnTab1()
         QVERIFY(item->hasActiveFocus());
     }
 
-    // Tab: footer->sub1
+    // Tab: footer->menuBar
     {
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier);
         QGuiApplication::sendEvent(window, &key);
         QVERIFY(key.isAccepted());
 
         item = findItem<QQuickItem>(window->contentItem(), "sub1");
+        item = qobject_cast<QQuickApplicationWindow *>(window)->menuBar();
         QVERIFY(item);
         QVERIFY(item->hasActiveFocus());
     }
@@ -223,29 +224,7 @@ void tst_QQuickApplicationWindow::activeFocusOnTab2()
         QVERIFY(item->hasActiveFocus());
     }
 
-    // BackTab: footer->header
-    {
-        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
-        QGuiApplication::sendEvent(window, &key);
-        QVERIFY(key.isAccepted());
-
-        item = qobject_cast<QQuickApplicationWindow *>(window)->header();
-        QVERIFY(item);
-        QVERIFY(item->hasActiveFocus());
-    }
-
-    // BackTab: header->menuBar
-    {
-        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
-        QGuiApplication::sendEvent(window, &key);
-        QVERIFY(key.isAccepted());
-
-        item = qobject_cast<QQuickApplicationWindow *>(window)->menuBar();
-        QVERIFY(item);
-        QVERIFY(item->hasActiveFocus());
-    }
-
-    // BackTab: menuBar->sub2
+    // BackTab: footer->sub2
     {
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
         QGuiApplication::sendEvent(window, &key);
@@ -267,7 +246,29 @@ void tst_QQuickApplicationWindow::activeFocusOnTab2()
         QVERIFY(item->hasActiveFocus());
     }
 
-    // BackTab: sub1->footer
+    // BackTab: sub1->header
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+
+        item = qobject_cast<QQuickApplicationWindow *>(window)->header();
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
+
+    // BackTab: header->menuBar
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+
+        item = qobject_cast<QQuickApplicationWindow *>(window)->menuBar();
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
+
+    // BackTab: menuBar->footer
     {
         QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
         QGuiApplication::sendEvent(window, &key);

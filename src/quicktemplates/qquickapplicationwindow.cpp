@@ -428,6 +428,8 @@ void QQuickApplicationWindow::setHeader(QQuickItem *header)
         else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header))
             buttonBox->setPosition(QQuickDialogButtonBox::Header);
 #endif
+
+        header->stackBefore(d->control);
     }
     if (isComponentComplete())
         d->relayout();
@@ -484,6 +486,8 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
             tabBar->setPosition(QQuickTabBar::Footer);
         else if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(footer))
             buttonBox->setPosition(QQuickDialogButtonBox::Footer);
+
+        footer->stackAfter(d->control);
 #endif
     }
     if (isComponentComplete())
@@ -727,6 +731,11 @@ void QQuickApplicationWindow::setMenuBar(QQuickItem *menuBar)
         p->addItemChangeListener(d, ItemChanges);
         if (qFuzzyIsNull(menuBar->z()))
             menuBar->setZ(2);
+
+        if (header())
+            menuBar->stackBefore(header());
+        else
+            menuBar->stackBefore(d->control);
     }
     if (isComponentComplete())
         d->relayout();
