@@ -31,8 +31,9 @@ static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
     case QmlHighlightKind::QmlNamespace:
         return int(SemanticTokenProtocolTypes::Namespace);
     case QmlHighlightKind::QmlLocalId:
-    case QmlHighlightKind::QmlExternalId:
         return int(SemanticTokenProtocolTypes::QmlLocalId);
+    case QmlHighlightKind::QmlExternalId:
+        return int(SemanticTokenProtocolTypes::QmlExternalId);
     case QmlHighlightKind::QmlProperty:
         return int(SemanticTokenProtocolTypes::Property);
     case QmlHighlightKind::QmlScopeObjectProperty:
@@ -74,9 +75,11 @@ static int mapToProtocolForQtCreator(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::Operator);
     case QmlHighlightKind::QmlTypeModifier:
         return int(SemanticTokenProtocolTypes::Decorator);
+    case QmlHighlightKind::Field:
+        return int(SemanticTokenProtocolTypes::Field);
     case QmlHighlightKind::Unknown:
     default:
-        return int(SemanticTokenProtocolTypes::JsScopeVar);
+        return int(SemanticTokenProtocolTypes::Unknown);
     }
 }
 
@@ -133,9 +136,11 @@ static int mapToProtocolDefault(QmlHighlightKind highlightKind)
         return int(SemanticTokenProtocolTypes::Operator);
     case QmlHighlightKind::QmlTypeModifier:
         return int(SemanticTokenProtocolTypes::Decorator);
+    case QmlHighlightKind::Field:
+        return int(SemanticTokenProtocolTypes::Property);
     case QmlHighlightKind::Unknown:
     default:
-        return int(SemanticTokenProtocolTypes::Variable);
+        return int(SemanticTokenProtocolTypes::Unknown);
     }
 }
 
@@ -279,6 +284,10 @@ bool HighlightingVisitor::visitor(Path, const DomItem &item, bool)
     }
     case DomType::ScriptLiteral: {
         highlightScriptLiteral(item);
+        return true;
+    }
+    case DomType::ScriptCallExpression: {
+        highlightCallExpression(item);
         return true;
     }
     case DomType::ScriptIdentifierExpression: {
@@ -526,7 +535,69 @@ void HighlightingVisitor::highlightIdentifier(const DomItem &item)
     if (m_highlights.tokens().contains(loc.offset))
         return;
 
-    highlightBySemanticAnalysis(item, loc);
+    // If the item is a field member base, we need to resolve the expression type
+    // If the item is a field member access, we don't need to resolve the expression type
+    // because it is already resolved in the first element.
+    if (QQmlLSUtils::isFieldMemberAccess(item))
+        highlightFieldMemberAccess(item, loc);
+    else
+        highlightBySemanticAnalysis(item, loc);
+}
+
+void HighlightingVisitor::highlightCallExpression(const DomItem &item)
+{
+    const auto highlight = [this](const DomItem &item) {
+        if (item.internalKind() == DomType::ScriptIdentifierExpression) {
+            const auto id = item.as<ScriptElements::IdentifierExpression>();
+            Q_ASSERT(id);
+            const auto loc = id->mainRegionLocation();
+            m_highlights.addHighlight(loc, QmlHighlightKind::QmlMethod);
+        }
+    };
+
+    if (item.internalKind() == DomType::ScriptCallExpression) {
+        // If the item is a call expression, we need to highlight the callee.
+        const auto callee = item.field(Fields::callee);
+        if (callee.internalKind() == DomType::ScriptIdentifierExpression) {
+            highlight(callee);
+            return;
+        } else if (callee.internalKind() == DomType::ScriptBinaryExpression) {
+            // If the callee is a binary expression, we need to highlight the right part.
+            const auto right = callee.field(Fields::right);
+            if (right.internalKind() == DomType::ScriptIdentifierExpression)
+                highlight(right);
+            return;
+        }
+    }
+}
+
+void HighlightingVisitor::highlightFieldMemberAccess(const DomItem &item,
+                                                     QQmlJS::SourceLocation loc)
+{
+    // enum fields and qualified module identifiers are not just fields. Do semantic analysis if
+    // the identifier name is an uppercase string.
+    const auto name = item.field(Fields::identifier).value().toString();
+    if (!name.isEmpty() && name.at(0).category() == QChar::Letter_Uppercase) {
+        // maybe the identifier is an attached type or enum members, use semantic analysis to figure
+        // out.
+        return highlightBySemanticAnalysis(item, loc);
+    }
+    // Check if the name is a method
+    const auto expression =
+            QQmlLSUtils::resolveExpressionType(item, QQmlLSUtils::ResolveOptions::ResolveOwnerType);
+
+    if (!expression) {
+        m_highlights.addHighlight(loc, QmlHighlightKind::Field);
+        return;
+    }
+
+    if (expression->type == QQmlLSUtils::MethodIdentifier
+        || expression->type == QQmlLSUtils::LambdaMethodIdentifier) {
+        m_highlights.addHighlight(loc, QmlHighlightKind::QmlMethod);
+        return;
+    } else {
+        return m_highlights.addHighlight(loc, QmlHighlightKind::Field);
+    }
 }
 
 void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJS::SourceLocation loc)

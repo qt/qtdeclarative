@@ -429,10 +429,9 @@ void tst_qmlls_highlighting::highlights_data()
                 << fileItem
                 << Token(QQmlJS::SourceLocation(545, 6, 21, 18),
                          int(SemanticTokenProtocolTypes::Method), 0);
-        QTest::addRow("lambda-undefined-arg")
-                << fileItem
-                << Token(QQmlJS::SourceLocation(409, 1, 17, 33),
-                         int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("lambda-undefined-arg") << fileItem
+                                              << Token(QQmlJS::SourceLocation(409, 1, 17, 33),
+                                                       int(SemanticTokenProtocolTypes::Unknown), 0);
         QTest::addRow("yield-keyword")
                 << fileItem
                 << Token(QQmlJS::SourceLocation(697, 5, 25, 50),
@@ -528,7 +527,7 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("attached-signalhandler")
                 << fileItem
                 << Token(QQmlJS::SourceLocation(517, 9, 23, 10),
-                         int(SemanticTokenProtocolTypes::Method), 0);
+                         int(SemanticTokenProtocolTypes::Property), 0);
         QTest::addRow("propchanged-handler") << fileItem
                                              << Token(QQmlJS::SourceLocation(572, 13, 27, 5),
                                                       int(SemanticTokenProtocolTypes::Property), 0);
@@ -681,10 +680,79 @@ void tst_qmlls_highlighting::highlights_data()
                                                        int(SemanticTokenProtocolTypes::Method), 0);
         QTest::addRow("globalVarCallExpr") << fileItem
                                            << Token(QQmlJS::SourceLocation(300, 9, 11, 26),
-                                                    int(SemanticTokenProtocolTypes::Variable), 0);
+                                                    int(SemanticTokenProtocolTypes::Property), 0);
         QTest::addRow("globalVarMath") << fileItem
                                        << Token(QQmlJS::SourceLocation(337, 4, 12, 20),
                                                 int(SemanticTokenProtocolTypes::Variable), 0);
+    }
+    { // property chains
+        const auto filePath = m_highlightingDataDir + "/propertyChains.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("knownMemberOfInnerScope1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(411, 3, 19, 13),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("knownMemberOfInnerScope2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(415, 3, 19, 17),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("knownMemberOfInnerScope3")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(419, 3, 19, 21),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("idInsideTheSameComponent1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(688, 4, 33, 17),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("idInsideTheSameComponent2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(693, 5, 33, 22),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("idInsideTheSameComponent3")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(699, 8, 33, 28),
+                         int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("knownMemberOfParentScope1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(993, 12, 47, 33),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("unresolvedLookup1") << fileItem
+                                           << Token(QQmlJS::SourceLocation(1177, 3, 56, 13),
+                                                    int(SemanticTokenProtocolTypes::Unknown), 0);
+        QTest::addRow("unresolvedLookup2") << fileItem
+                                           << Token(QQmlJS::SourceLocation(1181, 3, 56, 17),
+                                                    int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("outerIDLookupInNestedComponent1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1480, 5, 69, 21),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("outerIDLookupInNestedComponent2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1486, 5, 69, 27),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("outerIDLookupInNestedComponent3")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1492, 7, 69, 33),
+                         int(SemanticTokenProtocolTypes::Method), 0);
+        QTest::addRow("attachedPropertyChain1")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1799, 7, 82, 17),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+        QTest::addRow("attachedPropertyChain2")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1807, 11, 82, 25),
+                         int(SemanticTokenProtocolTypes::Property), 0);
+        QTest::addRow("attachedPropertyChain3")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(1819, 11, 82, 37),
+                         int(SemanticTokenProtocolTypes::Method), 0);
+    }
+    { // method in property chains
+        const auto filePath = m_highlightingDataDir + "/methodInPropertyChains.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("chainedMethodName") << fileItem
+                                           << Token(QQmlJS::SourceLocation(271, 11, 11, 60),
+                                                    int(SemanticTokenProtocolTypes::Method), 0);
     }
 }
 
@@ -695,8 +763,51 @@ void tst_qmlls_highlighting::highlights()
     QFETCH(Token, expectedHighlightedToken);
 
     const auto highlights = HighlightingUtils::visitTokens(fileItem,std::nullopt).tokens();
-    QVERIFY(highlights.contains(expectedHighlightedToken.offset));
-    QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
+
+    [&]() {
+        QVERIFY(highlights.contains(expectedHighlightedToken.offset));
+        QCOMPARE(highlights.value(expectedHighlightedToken.offset), expectedHighlightedToken);
+    }();
+
+    if (QTest::currentTestFailed()) {
+        const auto [a1, b1, c1, d1, e1, f1] = expectedHighlightedToken;
+
+        if (highlights.contains(expectedHighlightedToken.offset)) {
+            const auto [a2, b2, c2, d2, e2, f2] = highlights[expectedHighlightedToken.offset];
+
+            qDebug() << "Actual offset" << a2 << "Expected offset" << a1;
+            qDebug() << "Actual length" << b2 << "Expected length" << b1;
+            qDebug() << "Actual startLine" << c2 << "Expected startLine" << c1;
+            qDebug() << "Actual startColumn" << d2 << "Expected startColumn" << d1;
+            qDebug() << "Actual tokenType" << e2 << "Expected tokenType" << e1;
+            qDebug() << "Actual tokenModifier" << f2 << "Expected tokenModifier" << f1;
+        } else {
+            qDebug() << "Expected token not found in highlights";
+            const auto distance = [](Token actual, Token expected) {
+                return std::abs(actual.offset - expected.offset);
+            };
+            double minDistance = std::numeric_limits<double>::max();
+            const Token *closest = nullptr;
+
+            for (const auto &item : highlights) {
+                double dist = distance(item, expectedHighlightedToken);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closest = &item;
+                }
+            }
+
+            if (closest) {
+                const auto [a2, b2, c2, d2, e2, f2] = *closest;
+                qDebug() << "Closest token offset" << a2 << "Expected offset" << a1;
+                qDebug() << "Closest token length" << b2 << "Expected length" << b1;
+                qDebug() << "Closest token startLine" << c2 << "Expected startLine" << c1;
+                qDebug() << "Closest token startColumn" << d2 << "Expected startColumn" << d1;
+                qDebug() << "Closest token type" << e2 << "Expected type" << e1;
+                qDebug() << "Closest token modifier" << f2 << "Expected modifier" << f1;
+            }
+        }
+    }
 }
 
 void tst_qmlls_highlighting::rangeOverlapsWithSourceLocation_data()
