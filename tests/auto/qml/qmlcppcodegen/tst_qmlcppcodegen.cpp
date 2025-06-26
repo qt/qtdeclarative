@@ -177,6 +177,7 @@ private slots:
     void mathMinMax();
     void mathOperations();
     void mathStaticProperties();
+    void mergeSideEffects();
     void mergedObjectReadWrite();
     void methodOnListLookup();
     void methods();
@@ -3508,6 +3509,16 @@ void tst_QmlCppCodegen::mathStaticProperties()
     QCOMPARE(object->property("pi").toDouble(), 3.1415926535897932);
     QCOMPARE(object->property("sqrt1_2").toDouble(), 0.7071067811865476);
     QCOMPARE(object->property("sqrt2").toDouble(), 1.4142135623730951);
+}
+
+void tst_QmlCppCodegen::mergeSideEffects()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mergeSideEffects.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("c").toInt(), 3);
 }
 
 void tst_QmlCppCodegen::mergedObjectReadWrite()
