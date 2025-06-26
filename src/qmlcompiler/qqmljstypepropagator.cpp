@@ -1238,14 +1238,17 @@ void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &c
 }
 
 void QQmlJSTypePropagator::mergeRegister(
-            int index, const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
+            int index, const VirtualRegister &a, const VirtualRegister &b)
 {
-    auto merged = m_typeResolver->merge(a, b);
+    const VirtualRegister merged = {
+        m_typeResolver->merge(a.content, b.content),
+        a.affectedBySideEffects || b.affectedBySideEffects,
+    };
 
-    Q_ASSERT(merged.isValid());
-    Q_ASSERT(merged.isConversion());
+    Q_ASSERT(merged.content.isValid());
+    Q_ASSERT(merged.content.isConversion());
 
-    auto tryPrevStateConversion = [this](int index, const QQmlJSRegisterContent &merged) -> bool {
+    auto tryPrevStateConversion = [this](int index, const VirtualRegister &merged) -> bool {
         auto it = m_prevStateAnnotations.find(currentInstructionOffset());
         if (it == m_prevStateAnnotations.end())
             return false;
@@ -1259,22 +1262,31 @@ void QQmlJSTypePropagator::mergeRegister(
         Q_ASSERT(lastTry.content.isValid());
         Q_ASSERT(lastTry.content.isConversion());
 
-        if (!m_typeResolver->equals(lastTry.content.conversionResult(), merged.conversionResult())
-                || lastTry.content.conversionOrigins() != merged.conversionOrigins()) {
+        if (!m_typeResolver->equals(lastTry.content.conversionResult(),
+                                    merged.content.conversionResult())
+                || lastTry.content.conversionOrigins() != merged.content.conversionOrigins()
+                || lastTry.affectedBySideEffects != merged.affectedBySideEffects) {
             return false;
         }
 
         // We don't need to track it again if we've come to the same conclusion before.
         m_state.annotations[currentInstructionOffset()].typeConversions[index] = lastTry;
+
+        // Do not reset the side effects
+        Q_ASSERT(!m_state.registers[index].affectedBySideEffects || lastTry.affectedBySideEffects);
+
         m_state.registers[index] = lastTry;
         return true;
     };
 
     if (!tryPrevStateConversion(index, merged)) {
-        merged = m_typeResolver->tracked(merged);
-        Q_ASSERT(merged.isValid());
-        m_state.annotations[currentInstructionOffset()].typeConversions[index].content = merged;
-        m_state.registers[index].content = merged;
+        const VirtualRegister cloned = {
+            m_typeResolver->tracked(merged.content),
+            merged.affectedBySideEffects,
+        };
+        Q_ASSERT(cloned.content.isValid());
+        m_state.annotations[currentInstructionOffset()].typeConversions[index] = cloned;
+        m_state.registers[index] = cloned;
     }
 }
 
@@ -2254,8 +2266,8 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
              registerIt != end; ++registerIt) {
             const int registerIndex = registerIt.key();
 
-            auto newType = registerIt.value().content;
-            if (!newType.isValid()) {
+            const VirtualRegister &newType = registerIt.value();
+            if (!newType.content.isValid()) {
                 setError(u"When reached from offset %1, %2 is undefined"_s
                                  .arg(stateToMerge.originatingOffset)
                                  .arg(registerName(registerIndex)));
@@ -2264,7 +2276,7 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type type)
 
             auto currentRegister = m_state.registers.find(registerIndex);
             if (currentRegister != m_state.registers.end())
-                mergeRegister(registerIndex, newType, currentRegister.value().content);
+                mergeRegister(registerIndex, newType, currentRegister.value());
             else
                 mergeRegister(registerIndex, newType, newType);
         }

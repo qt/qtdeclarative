@@ -161,6 +161,7 @@ set(qml_files
     listlength.qml
     math.qml
     mathOperations.qml
+    mergeSideEffects.qml
     methods.qml
     modulePrefix.qml
     moveRegVoid.qml

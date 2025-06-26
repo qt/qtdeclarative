@@ -36,6 +36,7 @@ private slots:
     void signalHandler();
     void idAccess();
     void globals();
+    void mergeSideEffects();
     void multiLookup();
     void enums();
     void funcWithParams();
@@ -3108,6 +3109,16 @@ void tst_QmlCppCodegen::inaccessibleProperty()
     QScopedPointer<QObject> o(c.create());
 
     QCOMPARE(o->property("c").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::mergeSideEffects()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/mergeSideEffects.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("c").toInt(), 3);
 }
 
 void tst_QmlCppCodegen::typePropagationLoop()
