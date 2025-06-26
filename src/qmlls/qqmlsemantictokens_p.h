@@ -60,6 +60,7 @@ enum class QmlHighlightKind {
     String,
     Comment,
     Operator,
+    Field, // Used for the field names in the property chains,
     Unknown, // Used for the unknown tokens
 };
 
@@ -109,6 +110,8 @@ enum class SemanticTokenProtocolTypes {
     JsImportVar, // js import name that is imported in the qml file
     JsGlobalVar, // js global variables
     QmlStateName, // name of a qml state
+    Field, // used for the field names in the property chains
+    Unknown, // used for the unknown contexts
 };
 Q_ENUM_NS(SemanticTokenProtocolTypes)
 
@@ -222,6 +225,8 @@ private:
     void highlightIdentifier(const QQmlJS::Dom::DomItem &item);
     void highlightBySemanticAnalysis(const QQmlJS::Dom::DomItem &item, QQmlJS::SourceLocation loc);
     void highlightScriptExpressions(const QQmlJS::Dom::DomItem &item);
+    void highlightCallExpression(const QQmlJS::Dom::DomItem &item);
+    void highlightFieldMemberAccess(const QQmlJS::Dom::DomItem &item, QQmlJS::SourceLocation loc);
 
 private:
     Highlights m_highlights;
