@@ -754,6 +754,22 @@ void tst_qmlls_highlighting::highlights_data()
                                            << Token(QQmlJS::SourceLocation(271, 11, 11, 60),
                                                     int(SemanticTokenProtocolTypes::Method), 0);
     }
+    { // known member of parent scope
+        const auto filePath = m_highlightingDataDir + "/componentBound.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("outerIDWithComponentBound")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(296, 5, 15, 17),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+    }
+    { // known member of parent scope with no component bound
+        const auto filePath = m_highlightingDataDir + "/componentNoBound.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("outerIDWithNoComponentBound")
+                << fileItem
+                << Token(QQmlJS::SourceLocation(296, 5, 15, 17),
+                         int(SemanticTokenProtocolTypes::Variable), 0);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
