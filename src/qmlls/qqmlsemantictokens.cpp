@@ -666,9 +666,35 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
     case QQmlLSUtils::MethodIdentifier:
         m_highlights.addHighlight(loc, QmlHighlightKind::QmlMethod);
         return;
-    case QQmlLSUtils::QmlObjectIdIdentifier:
-        m_highlights.addHighlight(loc, QmlHighlightKind::QmlLocalId);
-        return;
+    case QQmlLSUtils::QmlObjectIdIdentifier: {
+        const auto qmlfile = item.fileObject().as<QmlFile>();
+        if (!qmlfile) {
+            m_highlights.addHighlight(loc, QmlHighlightKind::Unknown);
+            return;
+        }
+        const auto resolver = qmlfile->typeResolver();
+        if (!resolver) {
+            m_highlights.addHighlight(loc, QmlHighlightKind::Unknown);
+            return;
+        }
+        const auto objects = resolver->objectsById();
+        if (expression->name.has_value()) {
+            const auto &name = expression->name.value();
+            const auto boundName =
+                    objects.id(expression->semanticScope, item.qmlObject().semanticScope());
+            if (!boundName.isEmpty() && name == boundName) {
+                // If the name is the same as the bound name, then it is a local id.
+                m_highlights.addHighlight(loc, QmlHighlightKind::QmlLocalId);
+                return;
+            } else {
+                m_highlights.addHighlight(loc, QmlHighlightKind::QmlExternalId);
+                return;
+            }
+        } else {
+            m_highlights.addHighlight(loc, QmlHighlightKind::QmlExternalId);
+            return;
+        }
+    }
     case QQmlLSUtils::SingletonIdentifier:
         m_highlights.addHighlight(loc, QmlHighlightKind::QmlType);
         return;
