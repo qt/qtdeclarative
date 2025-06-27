@@ -1168,7 +1168,7 @@ namespace QQmlPrivate
             /*.alignment=*/ 0,
             /*.size=*/ 0,
             /*.flags=*/ 0,
-            /*.typeId=*/ {},
+            /*.typeId=*/ QBasicAtomicInt(),
             /*.metaObject=*/ metaObjectFunction,
             /*.name=*/ name,
             /*.defaultCtr=*/ nullptr,
