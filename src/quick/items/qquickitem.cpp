@@ -7201,7 +7201,7 @@ void QQuickItem::setSmooth(bool smooth)
     focus chain behavior; ignore the events in other key handlers
     to allow it to propagate.
 
-    \note {QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
+    \note \l{QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
     to only specific types of controls, such as only text or list controls. This is
     the case on macOS, where focus to particular controls may be restricted based on
     system settings.
@@ -7214,7 +7214,7 @@ void QQuickItem::setSmooth(bool smooth)
     This property holds whether the item wants to be in the tab focus
     chain. By default, this is set to \c false.
 
-    \note {QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
+    \note \l{QStyleHints::tabFocusBehavior}{tabFocusBehavior} can further limit focus
     to only specific types of controls, such as only text or list controls. This is
     the case on macOS, where focus to particular controls may be restricted based on
     system settings.
