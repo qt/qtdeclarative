@@ -100,7 +100,7 @@ Item {
     It contains a bitwise combination of numeric values (the same as in Qt::KeyboardModifier):
 
     \value Qt.NoModifier        No modifier key is pressed.
-    \value Qt.ShiftModifier}    A Shift key on the keyboard is pressed.
+    \value Qt.ShiftModifier     A Shift key on the keyboard is pressed.
     \value Qt.ControlModifier   A Ctrl key on the keyboard is pressed.
     \value Qt.AltModifier       An Alt key on the keyboard is pressed.
     \value Qt.MetaModifier      A Meta key on the keyboard is pressed.
