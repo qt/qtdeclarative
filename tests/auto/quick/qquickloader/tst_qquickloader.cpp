@@ -119,6 +119,8 @@ private slots:
     void stackOverflow();
     void stackOverflow2();
     void boundComponent();
+
+    void invalidateContext();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1618,6 +1620,60 @@ void tst_QQuickLoader::boundComponent()
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> o(component.create());
     QCOMPARE(o->objectName(), QStringLiteral("loaded"));
+}
+
+class CppModel : public QAbstractListModel
+{
+public:
+    virtual int rowCount(const QModelIndex &) const override {return 1;}
+    virtual QVariant data(const QModelIndex &, int) const override { return "test"; }
+
+    void reset () {beginResetModel(); endResetModel();}
+};
+
+class RootData : public QObject
+{
+    Q_OBJECT
+public:
+    RootData() : object(std::make_unique<QObject>())
+    {
+        object->setObjectName("objectName");
+    }
+
+    Q_INVOKABLE QString getValue() const {  return object->objectName(); }
+
+    void deleteObject() { object.reset(); }
+
+private:
+    std::unique_ptr<QObject> object;
+};
+
+void tst_QQuickLoader::invalidateContext()
+{
+    CppModel model;
+    RootData rootData;
+
+    QQmlEngine engine;
+    QQmlContext *rootContext = engine.rootContext();
+    rootContext->setContextProperty("cppModel", &model);
+    rootContext->setContextProperty("loaderActive", true);
+    rootContext->setContextProperty("rootData", &rootData);
+
+    QQmlComponent component(&engine, testFileUrl("invalidateContext.qml"));\
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "Repeater constructed");
+    QTest::ignoreMessage(QtDebugMsg, "updating text");
+    QScopedPointer<QObject> o(component.create());
+
+    QTest::ignoreMessage(QtDebugMsg, "Repeater destroyed");
+    rootContext->setContextProperty("loaderActive", false);
+
+    // The object should never be used anymore, as loader is inactive
+    rootData.deleteObject();
+
+    // Should not trigger any re-evaluation (which would crash in getValue())
+    model.reset();
 }
 
 QTEST_MAIN(tst_QQuickLoader)

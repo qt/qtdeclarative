@@ -100,7 +100,7 @@ void QQmlContextData::invalidate()
     }
 
     if (!m_hasWeakImportedScripts) { // invalidate might be called multiple times
-        if (!m_importedScripts.isNullOrUndefined()) {
+        if (m_engine && !m_importedScripts.isNullOrUndefined()) {
             QV4::Scope scope(m_engine->handle());
             QV4::ScopedValue val(scope, m_importedScripts.value());
             m_importedScripts.~PersistentValue();
@@ -123,6 +123,8 @@ void QQmlContextData::clearContextRecursively()
 
     for (auto ctxIt = m_childContexts; ctxIt; ctxIt = ctxIt->m_nextChild)
         ctxIt->clearContextRecursively();
+
+    m_engine = nullptr;
 }
 
 void QQmlContextData::clearContext()
@@ -154,8 +156,7 @@ QQmlContextData::~QQmlContextData()
         // just to throw it away afterwards
         m_importedScripts.clear();
     }
-    if (m_engine)
-        invalidate();
+    invalidate();
     if (m_hasWeakImportedScripts)
         m_weakImportedScripts.~WeakValue();
     else
