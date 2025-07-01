@@ -3262,7 +3262,7 @@ function(qt6_generate_deploy_qml_app_script)
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
     qt_deploy_runtime_dependencies(
-        EXECUTABLE $<TARGET_FILE_NAME:${arg_TARGET}>.app
+        EXECUTABLE \"$<TARGET_FILE_NAME:${arg_TARGET}>.app\"
         ADDITIONAL_MODULES \${plugins_found}
     ${common_deploy_args})
 endif()")
@@ -3290,7 +3290,7 @@ endif()")
             CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
-    EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
+    EXECUTABLE \"$<TARGET_FILE:${arg_TARGET}>\"
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
 ${common_deploy_args})")
@@ -3303,7 +3303,7 @@ ${common_deploy_args})")
             CONTENT "
 qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 qt_deploy_runtime_dependencies(
-    EXECUTABLE $<TARGET_FILE:${arg_TARGET}>
+    EXECUTABLE \"$<TARGET_FILE:${arg_TARGET}>\"
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
 ${common_deploy_args})")
