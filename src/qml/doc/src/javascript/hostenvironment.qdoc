@@ -21,6 +21,8 @@ The QML runtime implements the 7th edition of the standard.
 \l{Nullish Coalescing} (\c{??}) (since Qt 5.15) and \l{Optional Chaining} (\c{?.}) (since Qt 6.2)
 are also implemented in the QML runtime.
 
+Moreover, numeric literal separators (the underscores in \c 1_000_000) are supported since Qt 6.8.
+
 The standard ECMAScript built-ins are not explicitly documented in the QML documentation. For more
 information on their use, please refer to the ECMA-262 7th edition standard or one of the many online
 JavaScript reference and tutorial sites, such as the \l{W3Schools JavaScript Reference} (JavaScript Objects
