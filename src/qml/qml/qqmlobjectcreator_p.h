@@ -96,7 +96,7 @@ struct DeferredQPropertyBinding {
     QUntypedPropertyBinding binding;
 };
 
-class ObjectInCreationGCAnchorList {
+class Q_AUTOTEST_EXPORT ObjectInCreationGCAnchorList {
 public:
     // this is a non owning view, rule of zero applies
     ObjectInCreationGCAnchorList() = default;
