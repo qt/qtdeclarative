@@ -48,6 +48,7 @@ qt_add_qml_module(tst_qmlcachegen_aotstats
         AotstatsMixed.qml
     SOURCES
         scriptstringprops.h
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Aotstats"
 )
 qt_autogen_tools_initial_setup(tst_qmlcachegen_aotstatsplugin)
 add_dependencies(tst_qmlcachegen tst_qmlcachegen_aotstats)
