@@ -95,6 +95,9 @@ public:
 
     QString title;
     QVariant source;
+
+    // Only the date matters, but we have to store it as QDateTime for compatibility
+    // with Date: QTBUG-72208. See QQuickMonthModelPrivate::populate for more info.
     QDateTime pressedDate;
     int pressTimer;
     QQuickItem *pressedItem;
