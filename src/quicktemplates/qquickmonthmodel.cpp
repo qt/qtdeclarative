@@ -50,19 +50,15 @@ bool QQuickMonthModelPrivate::populate(int m, int y, const QLocale &l, bool forc
     // QDate is converted to local time when converted to a JavaScript Date,
     // so if we stored our dates as QDates, it's possible that the date provided
     // to delegates will be wrong in certain timezones:
-    // e.g. 00:00 UTC converted to UTC-8 is 20:00 the day before.
-    // To account for this, we pick a time of day that can't possibly result
-    // in a different day when converted to local time.
-    QDateTime firstDayOfMonthDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::UTC));
-    const int localTimeOffsetFromUtc = QDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::LocalTime)).offsetFromUtc();
-    const int timeOffsetAdjustment = localTimeOffsetFromUtc * -1;
-    firstDayOfMonthDateTime.setSecsSinceEpoch(firstDayOfMonthDateTime.toSecsSinceEpoch() + timeOffsetAdjustment);
+    // e.g. 00:00 UTC converted to UTC-8 is 16:00 the day before.
+    // To account for this, we store our dates as local QDateTimes.
+    const QDateTime firstDayOfMonthDateTime = firstDayOfMonthDate.startOfDay();
     int difference = ((firstDayOfMonthDate.dayOfWeek() - l.firstDayOfWeek()) + 7) % 7;
     // The first day to display should never be the 1st of the month, as we want some days from
     // the previous month to be visible.
     if (difference == 0)
         difference += 7;
-    QDateTime firstDateToDisplay = firstDayOfMonthDateTime.addDays(-difference);
+    const QDateTime firstDateToDisplay = firstDayOfMonthDateTime.addDays(-difference);
 
     today = QDate::currentDate();
     for (int i = 0; i < daysOnACalendarMonth; ++i)
@@ -71,11 +67,7 @@ bool QQuickMonthModelPrivate::populate(int m, int y, const QLocale &l, bool forc
     q->setTitle(l.standaloneMonthName(m) + QStringLiteral(" ") + QString::number(y));
 
     qCDebug(lcMonthModel) << "populated model for month" << m << "year" << y << "locale" << locale
-        << "initial firstDayOfMonthDateTime" << QDateTime(firstDayOfMonthDate, QTime(0, 0), QTimeZone(QTimeZone::UTC))
-        << "localTimeOffsetFromUtc" << localTimeOffsetFromUtc / 60 / 60
-        << "timeOffsetAdjustment" << timeOffsetAdjustment / 60 / 60
-        << "firstDayOfMonthDateTime" << firstDayOfMonthDateTime
-        << "firstDayOfMonthDateTime.toLocalTime()" << firstDayOfMonthDateTime.toLocalTime();
+        << "firstDayOfMonthDateTime" << firstDayOfMonthDateTime;
 
     return true;
 }
