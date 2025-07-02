@@ -11,6 +11,8 @@
 #include <UIKit/UIInterface.h>
 #endif
 
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 
@@ -31,20 +33,24 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     QColor lightGray;
     QColor gray;
     QColor darkGray;
+
+    bool isDarkSystemTheme = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
 #ifdef Q_OS_IOS
-    window = qt_mac_toQColor(UIColor.systemGroupedBackgroundColor.CGColor);
-    base = qt_mac_toQColor(UIColor.secondarySystemGroupedBackgroundColor.CGColor);
-    text = qt_mac_toQColor(UIColor.labelColor.CGColor);
-    disabledText = qt_mac_toQColor(UIColor.tertiaryLabelColor.CGColor);
-    placeholderText = qt_mac_toQColor(UIColor.placeholderTextColor.CGColor);
-    button = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
-    disabledButton = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
-    white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
-    lightGray = qt_mac_toQColor(UIColor.systemGray6Color.CGColor);
-    gray = qt_mac_toQColor(UIColor.opaqueSeparatorColor.CGColor);
-    darkGray = qt_mac_toQColor(UIColor.systemGrayColor.CGColor);
+    UIUserInterfaceStyle style = isDarkSystemTheme ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
+    UITraitCollection *traitCollection = [UITraitCollection traitCollectionWithUserInterfaceStyle:style];
+
+    window = qt_mac_toQColor([UIColor.systemGroupedBackgroundColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    base = qt_mac_toQColor([UIColor.secondarySystemGroupedBackgroundColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    text = qt_mac_toQColor([UIColor.labelColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    disabledText = qt_mac_toQColor([UIColor.tertiaryLabelColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    placeholderText = qt_mac_toQColor([UIColor.placeholderTextColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    button = qt_mac_toQColor([UIColor.systemBlueColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    disabledButton = qt_mac_toQColor([UIColor.tertiarySystemFillColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    white = qt_mac_toQColor([UIColor.whiteColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    lightGray = qt_mac_toQColor([UIColor.systemGray6Color resolvedColorWithTraitCollection:traitCollection].CGColor);
+    gray = qt_mac_toQColor([UIColor.opaqueSeparatorColor resolvedColorWithTraitCollection:traitCollection].CGColor);
+    darkGray = qt_mac_toQColor([UIColor.systemGrayColor resolvedColorWithTraitCollection:traitCollection].CGColor);
 #else
-    bool isDarkSystemTheme = QQuickStylePrivate::isDarkSystemTheme();
     window = isDarkSystemTheme ? QColor(qRgba(0, 0, 0, 255)) : QColor(qRgba(242, 242, 247, 255));
     base = isDarkSystemTheme ? QColor(qRgba(28, 28, 30, 255)) : QColor(Qt::white);
     text = isDarkSystemTheme ? QColor(Qt::white) : QColor(Qt::black);
