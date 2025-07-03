@@ -41,15 +41,9 @@ FileDialogImpl {
         title: qsTr("Overwrite file?")
         clip: true
 
-        contentItem: ColumnLayout {
-            width: overwriteConfirmationDialogLastTextLine.width
-            Label {
-                text: control.fileName + " already exists."
-            }
-            Label {
-                id: overwriteConfirmationDialogLastTextLine
-                text: "Do you want to replace it?"
-            }
+        contentItem: Label {
+            text: qsTr("“%1” already exists.\nDo you want to replace it?").arg(control.fileName)
+            wrapMode: Text.WordWrap
         }
 
         footer: DialogButtonBox {
