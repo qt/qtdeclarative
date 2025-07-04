@@ -4386,6 +4386,9 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("insideComment2")
             << testFile("completions/Comments.qml") << 6 << 9 << ExpectedCompletions{}
             << QStringList{ u"x"_s, u"Item"_s, forStatementCompletion };
+    QTest::newRow("attachedSignalHandler")
+            << testFile("completions/attachedSignalHandler.qml") << 5 << 9
+            << ExpectedCompletions{ { "event", CompletionItemKind::Variable } } << QStringList{};
 }
 
 void tst_qmlls_utils::completions()

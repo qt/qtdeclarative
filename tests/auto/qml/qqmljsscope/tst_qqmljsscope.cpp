@@ -105,6 +105,7 @@ private Q_SLOTS:
     void groupedPropertiesConsistency();
     void groupedPropertySyntax();
     void attachedProperties();
+    void attachedSignalHandler();
     void scriptIndices();
     void extensions();
     void emptyBlockBinding();
@@ -452,6 +453,27 @@ void tst_qqmljsscope::attachedProperties()
     getBindingsWithinAttached(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
     QCOMPARE(value(bindingsOfBaseType, u"priority"_s).bindingType(), QQmlSA::BindingType::Script);
+}
+
+void tst_qqmljsscope::attachedSignalHandler()
+{
+    QQmlJSScope::ConstPtr root = run(u"attachedSignalHandler.qml"_s);
+    QVERIFY(root);
+
+    auto binding = std::find_if(root->childScopesBegin(), root->childScopesEnd(),
+                                [](const QQmlJSScope::ConstPtr &child) {
+                                    return child->baseTypeName() == "binding"_L1;
+                                });
+    QCOMPARE_NE(binding, root->childScopesEnd());
+
+    auto block = std::find_if(
+            (**binding).childScopesBegin(), (**binding).childScopesEnd(),
+            [](const QQmlJSScope::ConstPtr &child) { return child->baseTypeName() == "block"_L1; });
+    QCOMPARE_NE(block, (**binding).childScopesEnd());
+
+    // note: the event JS identifier is inserted only if the "Keys" basetype of the attached
+    // property was resolved before the creation of the "block" scope.
+    QVERIFY((**block).jsIdentifier("event"_L1));
 }
 
 inline QString getScopeName(const QQmlJSScope::ConstPtr &scope)
