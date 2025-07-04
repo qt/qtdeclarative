@@ -94,8 +94,9 @@ void QQuickFontDialog::setCurrentFont(const QFont &font)
     fonts in the dialog, even before the final selection has been made.
 
     The \l {Dialog::}{accepted()} signal can be handled to get the final selection.
-    When the user has clicked \uicontrol Open to accept a font, a signal handler
-    for the \l {Dialog::}{accepted()} signal can query the selectedFont property to
+    When the user has clicked \uicontrol Select (or \uicontrol Open, depending on
+    platform) to accept a font, a signal handler for the
+    \l {Dialog::}{accepted()} signal can query the selectedFont property to
     get the final font that was selected by the user.
 
     \sa currentFont, {Dialog::}{accepted()}
@@ -122,7 +123,8 @@ void QQuickFontDialog::setSelectedFont(const QFont &font)
 
     This property holds the various options that affect the look and feel of the dialog.
 
-    By default, all options are disabled.
+    By default, no options are set, meaning all font types are shown and the dialog displays
+    standard \uicontrol Select and \uicontrol Cancel buttons.
 
     Options should be set before showing the dialog. Setting them while the dialog is
     visible is not guaranteed to have an immediate effect on the dialog (depending on
