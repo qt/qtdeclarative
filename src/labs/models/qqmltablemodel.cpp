@@ -53,7 +53,7 @@ Q_STATIC_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
     \section1 Supported Row Data Structures
 
     TableModel is designed to work with JavaScript/JSON data, where each row
-    is a simple key-pair object:
+    is a list of simple key-value pairs:
 
     \code
     {
