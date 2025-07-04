@@ -5014,7 +5014,7 @@ void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 }
 
 /*!
-    \qmlmethod QtQuick::Item::nextItemInFocusChain(bool forward)
+    \qmlmethod Item QtQuick::Item::nextItemInFocusChain(bool forward)
 
     \since 5.1
 
@@ -5036,7 +5036,7 @@ QQuickItem *QQuickItem::nextItemInFocusChain(bool forward)
 }
 
 /*!
-    \qmlmethod QtQuick::Item::childAt(real x, real y)
+    \qmlmethod Item QtQuick::Item::childAt(real x, real y)
 
     Returns the first visible child item found at point (\a x, \a y) within
     the coordinate system of this item.
