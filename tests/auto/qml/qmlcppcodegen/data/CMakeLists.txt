@@ -246,6 +246,7 @@ set(qml_files
     objectInVar.qml
     objectLookupOnListElement.qml
     objectWithStringListMethod.qml
+    oldEnum.qml
     optionalComparison.qml
     outOfBounds.qml
     overriddenMember.qml

@@ -209,6 +209,7 @@ private slots:
     void objectLookupOnListElement();
     void objectToString();
     void objectWithStringListMethod();
+    void oldEnum();
     void onAssignment();
     void optionalComparison();
     void outOfBoundsArray();
@@ -4230,6 +4231,16 @@ void tst_QmlCppCodegen::objectWithStringListMethod()
     QTest::ignoreMessage(QtDebugMsg, "2");
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::oldEnum()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/oldEnum.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("foos").value<OldEnum::Foos>(), OldEnum::Bar);
 }
 
 void tst_QmlCppCodegen::onAssignment()

@@ -130,5 +130,33 @@ public:
     Q_ENUM(Bla)
 };
 
+class OldEnum : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Foos foos READ foos WRITE setFoos NOTIFY foosChanged)
+
+    Q_ENUMS(Foo)
+    QML_ELEMENT
+public:
+    enum Foo { None = 0, Bar = 13 };
+
+    Q_DECLARE_FLAGS(Foos, Foo)
+    Q_FLAGS(Foos)
+
+    Foos foos() { return m_foos; }
+    void setFoos(Foos foos)
+    {
+        if (foos != m_foos) {
+            m_foos = foos;
+            emit foosChanged();
+        }
+    }
+
+Q_SIGNALS:
+    void foosChanged();
+
+private:
+    Foos m_foos = None;
+};
 
 #endif // ENUMPROBLEMS_H
