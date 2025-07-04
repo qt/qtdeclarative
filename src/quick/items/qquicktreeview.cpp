@@ -20,7 +20,7 @@
     A TreeView has a \l model that defines the data to be displayed, and a
     \l delegate that defines how the data should be displayed.
 
-    TreeView inherits \l TableView. This means that even if the model
+    TreeView inherits \l TableView. This means that, despite the model
     has a parent-child tree structure, TreeView is internally using a
     proxy model that converts that structure into a flat table
     model that can be rendered by TableView. Each node in the tree ends up
@@ -68,7 +68,7 @@
     renders a tree which follows the style of the platform where the application
     runs.
 
-    Even if \l TreeViewDelegate is customizable, there might be situations
+    Even though \l TreeViewDelegate is customizable, there might be situations
     where you want to render the tree in a different way, or ensure that
     the delegate ends up as minimal as possible, perhaps for performance reasons.
     Creating your own delegate from scratch is easy, since TreeView offers
