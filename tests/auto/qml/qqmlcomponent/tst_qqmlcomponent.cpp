@@ -22,6 +22,9 @@
 #include <qcolor.h>
 #include <qsignalspy.h>
 #include "lifecyclewatcher.h"
+
+#include <QtGui/qquaternion.h>
+
 #include <algorithm>
 
 using namespace Qt::StringLiterals;

@@ -14,6 +14,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "testtypes.h"
 
+#include <QtGui/qquaternion.h>
+
 QT_BEGIN_NAMESPACE
 extern int qt_defaultDpi(void);
 QT_END_NAMESPACE
