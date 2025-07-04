@@ -70,8 +70,6 @@ T.ComboBox {
         rightPadding: control.__config.label_contentItem.rightPadding || 0
         bottomPadding: control.__config.label_contentItem.bottomPadding || 0
 
-        implicitWidth: (implicitBackgroundWidth + leftInset + rightInset)
-                        || contentWidth + leftPadding + rightPadding
         implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                                  contentHeight + topPadding + bottomPadding)
 
