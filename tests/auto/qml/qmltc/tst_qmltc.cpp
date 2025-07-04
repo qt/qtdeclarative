@@ -115,6 +115,8 @@
 
 #include <QtTest/qsignalspy.h>
 
+#include <QtGui/qquaternion.h>
+
 #include <QtCore/private/qobject_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
 #include <QtCore/qtranslator.h>
