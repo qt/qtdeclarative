@@ -995,6 +995,22 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
                                      classInfoMetaObject, nullptr);
 }
 
+template<typename Enum>
+void qmlRegisterEnum(const char *name)
+{
+    const QMetaType metaType = QMetaType::fromType<Enum>();
+
+    // Calling id() generally makes the metatype usable with fromName().
+    metaType.id();
+
+    // If the enum was registered with the old Q_ENUMS or Q_FLAGS,
+    // we need to manually set up the typedef.
+    if constexpr (QtPrivate::IsQEnumHelper<Enum>::Value)
+        Q_UNUSED(name)
+    else
+        QMetaType::registerNormalizedTypedef(name, metaType);
+}
+
 int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
 
 QT_END_NAMESPACE
