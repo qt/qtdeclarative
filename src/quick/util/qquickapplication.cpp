@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
     \qml
     Timer {
         interval: 1000; repeat: true
-        active: Application.state === Qt.Qt.ApplicationActive
+        active: Application.state === Qt.ApplicationActive
         onTriggered: imageFetcher.fetchLatestImages()
     }
     \endqml
