@@ -9,6 +9,9 @@
 #include <private/qsgplaintexture_p.h>
 #include <QtGui/private/qshaderdescription_p.h>
 #include <QQmlFile>
+
+#include <QtGui/qquaternion.h>
+
 #include <QFile>
 #include <QFileSelector>
 #include <QMutexLocker>
