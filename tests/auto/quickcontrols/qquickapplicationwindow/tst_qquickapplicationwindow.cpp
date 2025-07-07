@@ -182,7 +182,6 @@ void tst_QQuickApplicationWindow::activeFocusOnTab1()
         QGuiApplication::sendEvent(window, &key);
         QVERIFY(key.isAccepted());
 
-        item = findItem<QQuickItem>(window->contentItem(), "sub1");
         item = qobject_cast<QQuickApplicationWindow *>(window)->menuBar();
         QVERIFY(item);
         QVERIFY(item->hasActiveFocus());
