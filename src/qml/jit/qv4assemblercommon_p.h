@@ -1,5 +1,6 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:critical reason:jit
 
 #ifndef QV4PLATFORMASSEMBLER_P_H
 #define QV4PLATFORMASSEMBLER_P_H

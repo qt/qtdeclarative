@@ -1,5 +1,6 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:critical reason:jit
 
 #include "qv4baselinejit_p.h"
 #include "qv4baselineassembler_p.h"
