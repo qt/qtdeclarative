@@ -110,7 +110,7 @@ Item {
     /*!
         \qmlmethod SignalSpy::clear()
 
-        Clears \l count to 0, resets \l valid to false and clears the \l signalArguments to empty.
+        Clears \l count to \c 0 and \l signalArguments to empty. Does not affect \l valid.
 
         \sa count, wait()
     */
