@@ -216,7 +216,7 @@ available when you import \c QtQuick.
     \li \l {QML Enumerations}{enumeration} \c font.hintingPreference
     \li \c object \l [QML] {QtQuick::Text::}{font.features}
     \li \l string \c font.styleName
-    \li \c object \c [QML] {QtQuick::Text::}{font.variableAxes}
+    \li \c object \l [QML] {QtQuick::Text::}{font.variableAxes}
     \li \l bool \c font.contextFontMerging
     \li \l bool \c font.preferTypoLineMetrics
     \endlist
