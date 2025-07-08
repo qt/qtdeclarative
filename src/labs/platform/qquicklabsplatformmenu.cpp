@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
 
     The Menu type provides a QML API for native platform menu popups.
 
-    \image qtlabsplatform-menu.png
+    \image {qtlabsplatform-menu.png} {A native popup menu}
 
     Menu can be used in a \l MenuBar, or as a stand-alone context menu.
     The following example shows how to open a context menu on right mouse

@@ -22,7 +22,7 @@ using namespace Qt::StringLiterals;
 
     The FileDialog type provides a QML API for native platform file dialogs.
 
-    \image qtlabsplatform-filedialog-gtk.png
+    \image {qtlabsplatform-filedialog-gtk.png} {A native file dialog}
 
     To show a file dialog, construct an instance of FileDialog, set the
     desired properties, and call \l {Dialog::}{open()}. The \l currentFile

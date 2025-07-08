@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
 
     The MessageDialog type provides a QML API for native platform message dialogs.
 
-    \image qtlabsplatform-messagedialog-android.png
+    \image {qtlabsplatform-messagedialog-android.png} {A native message dialog}
 
     A message dialog is used to inform the user, or ask the user a question.
     A message dialog displays a primary \l text to alert the user to a situation,
@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    \image qtlabsplatform-messagedialog-informative-android.png
+    \image {qtlabsplatform-messagedialog-informative-android.png} {A native informative message dialog}
 
     The \l clicked() signal passes the information of which button was clicked.
 

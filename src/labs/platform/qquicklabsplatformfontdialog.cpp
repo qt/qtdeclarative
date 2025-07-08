@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 
     The FontDialog type provides a QML API for native platform font dialogs.
 
-    \image qtlabsplatform-fontdialog-gtk.png
+    \image {qtlabsplatform-fontdialog-gtk.png} {A native font dialog}
 
     To show a font dialog, construct an instance of FontDialog, set the
     desired properties, and call \l {Dialog::}{open()}. The \l currentFont

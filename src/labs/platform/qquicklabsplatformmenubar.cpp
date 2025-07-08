@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
     The MenuBar type provides a QML API for native platform menubars.
 
-    \image qtlabsplatform-menubar.png
+    \image {qtlabsplatform-menubar.png} {A native menubar}
 
     A menubar consists of a list of drop-down menus.
 
