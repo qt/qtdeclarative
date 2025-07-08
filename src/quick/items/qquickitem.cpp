@@ -2875,8 +2875,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
 }
 
 /*!
-    Moves the specified \a sibling item to the index before this item
-    within the list of children. The order of children affects both the
+    Moves this item to the index before the specified
+    sibling item within the list of children.
+    The order of children affects both the
     visual stacking order and tab focus navigation order.
 
     Assuming the z values of both items are the same, this will cause \a
@@ -2920,8 +2921,9 @@ void QQuickItem::stackBefore(const QQuickItem *sibling)
 }
 
 /*!
-    Moves the specified \a sibling item to the index after this item
-    within the list of children. The order of children affects both the
+    Moves this item to the index after the specified
+    sibling item within the list of children.
+    The order of children affects both the
     visual stacking order and tab focus navigation order.
 
     Assuming the z values of both items are the same, this will cause \a
