@@ -10,6 +10,8 @@
 
 \brief Defines a plugin associated with a QML module.
 
+\include cmake-find-package-qml.qdocinc
+
 \section1 Synopsis
 
 \badcode

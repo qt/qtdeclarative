@@ -12,6 +12,8 @@
 
 \cmakecommandsince 6.2
 
+\include cmake-find-package-qml.qdocinc
+
 \section1 Synopsis
 
 \badcode
