@@ -44,6 +44,7 @@ public:
     void removeEngine(QQmlEngine *engine);
 
     void loadUrl(const QUrl &url);
+    void dropCU(const QUrl &url);
     void rerun();
     void zoom(qreal newFactor);
 

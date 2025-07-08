@@ -46,7 +46,7 @@ public:
     Q_ENUM(ConnectResult)
 protected:
     ConnectResult connectTo(const QString &executable, const QString &services,
-                          const QString &extraArgs, bool block);
+                          const QString &extraArgs, bool block, QStringList environmentVariables = QStringList());
 
     virtual QQmlDebugProcess *createProcess(const QString &executable);
     virtual QQmlDebugConnection *createConnection();
