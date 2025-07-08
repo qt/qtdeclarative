@@ -23,6 +23,7 @@ QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
     QQmlDebugService(s_key, 1.0f, parent)
 {
     connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::loadUrl);
+    connect(this, &QQmlPreviewServiceImpl::drop, &m_handler, &QQmlPreviewHandler::dropCU);
     connect(this, &QQmlPreviewServiceImpl::rerun, &m_handler, &QQmlPreviewHandler::rerun);
     connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
     connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
@@ -51,10 +52,7 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
                 ? QUrl(QLatin1String("qrc") + path)
                 : QUrl::fromLocalFile(path);
 
-        // Drop any existing compilation units for this URL from the type registry.
-        if (const auto cu = QQmlMetaType::obtainCompilationUnit(url))
-            QQmlMetaType::unregisterInternalCompositeType(cu);
-
+        emit drop(url);
         emit file(path, contents);
 
         // Replace the whole scene with the first file successfully loaded over the debug

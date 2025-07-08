@@ -102,7 +102,7 @@ void QQmlDebugTestClient::messageReceived(const QByteArray &ba)
 
 QQmlDebugTest::ConnectResult QQmlDebugTest::connectTo(
         const QString &executable, const QString &services, const QString &extraArgs,
-        bool block)
+        bool block, QStringList environmentVariables)
 {
     QStringList arguments;
     arguments << QString::fromLatin1("-qmljsdebugger=port:13773,13783%3%4")
@@ -113,6 +113,9 @@ QQmlDebugTest::ConnectResult QQmlDebugTest::connectTo(
     m_process = createProcess(executable);
     if (!m_process)
         return ProcessFailed;
+
+    for (const QString &env : environmentVariables)
+        m_process->addEnvironment(env);
 
     m_process->start(QStringList() << arguments);
     if (!m_process->waitForSessionStart())

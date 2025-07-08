@@ -13,9 +13,11 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQml/qqmlcomponent.h>
 
+#include <private/qhighdpiscaling_p.h>
+#include <private/qqmlmetatype_p.h>
 #include <private/qquickpixmap_p.h>
 #include <private/qquickview_p.h>
-#include <private/qhighdpiscaling_p.h>
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -142,6 +144,13 @@ void QQmlPreviewHandler::loadUrl(const QUrl &url)
 
     if (onStatusChanged(m_component->status()))
         connect(m_component.data(), &QQmlComponent::statusChanged, this, onStatusChanged);
+}
+
+void QQmlPreviewHandler::dropCU(const QUrl &url)
+{
+    // Drop any existing compilation units for this URL from the type registry.
+    if (const auto cu = QQmlMetaType::obtainCompilationUnit(url))
+        QQmlMetaType::unregisterInternalCompositeType(cu);
 }
 
 void QQmlPreviewHandler::rerun()

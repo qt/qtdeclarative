@@ -61,6 +61,7 @@ Q_SIGNALS:
     void file(const QString &file, const QByteArray &contents);
     void directory(const QString &file, const QStringList &entries);
     void load(const QUrl &url);
+    void drop(const QUrl &url);
     void rerun();
     void clearCache();
     void zoom(qreal factor);
