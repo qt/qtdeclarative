@@ -54,10 +54,11 @@ T.ComboBox {
         hoverEnabled: control.hoverEnabled
     }
 
-    indicator: Image {
+    indicator: ColorImage {
         x: control.mirrored ? control.__config.leftPadding : control.width - width - control.__config.rightPadding
         y: (control.topPadding + (control.availableHeight - height) / 2) + (control.pressed ? 1 : 0)
         source: Qt.resolvedUrl(control.__config.indicator.filePath)
+        color: !control.__isHighContrast ? defaultColor : control.palette.buttonText
 
         Behavior on y {
             NumberAnimation{ easing.type: Easing.OutCubic; duration: 167 }
@@ -86,7 +87,7 @@ T.ComboBox {
                                                 ? Qt.rgba(control.palette.text.r, control.palette.text.g, control.palette.text.b, 0.62)
                                                 : Qt.rgba(control.palette.text.r, control.palette.text.g, control.palette.text.b, 0.7725)
 
-        color: control.down ? __pressedText : control.palette.text
+        color: !control.__isHighContrast && control.down ? __pressedText : control.palette.buttonText
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         horizontalAlignment: control.__config.label_text.textHAlignment
@@ -121,7 +122,7 @@ T.ComboBox {
             implicitWidth: control.__config.background.width
             implicitHeight: control.__config.background.height
             color: control.palette.window
-            border.color: control.hovered ? control.palette.accent : control.palette.text
+            border.color: control.hovered ? control.palette.accent : control.palette.buttonText
             radius: 4
         }
     }
@@ -166,7 +167,7 @@ T.ComboBox {
                 implicitWidth: Config.controls.popup["normal"].background.width
                 implicitHeight: Config.controls.popup["normal"].background.height
                 color: control.palette.window
-                border.color: control.palette.text
+                border.color: control.palette.buttonText
                 radius: 4
             }
         }
