@@ -586,12 +586,12 @@ public:
         for (Jump j : catchyJumps)
             j.link(this);
 
+        loadUndefined();
         // We don't need to check for isInterrupted here because if that is set,
         // then the first checkException() in any exception handler will find another "exception"
         // and jump out of the exception handler.
         loadPtr(exceptionHandlerAddress(), ScratchRegister);
         Jump exitFunction = branchPtr(Equal, ScratchRegister, TrustedImmPtr(0));
-        loadUndefined();
         jump(ScratchRegister);
         exitFunction.link(this);
 
