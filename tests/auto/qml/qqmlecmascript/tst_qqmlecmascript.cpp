@@ -26,6 +26,7 @@
 #include <private/qv4objectiterator_p.h>
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
+#include <private/qqmltimer_p.h>
 #include <QtCore/private/qproperty_p.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -425,6 +426,8 @@ private slots:
     void resetGadet();
 
     void methodCallOnDerivedSingleton();
+
+    void jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -10516,6 +10519,24 @@ void tst_qqmlecmascript::methodCallOnDerivedSingleton()
     auto singleton = engine.singletonInstance<SingletonBase *>("Qt.test", "SingletonInheritanceTest");
     QVERIFY(singleton);
     QVERIFY(singleton->m_okay);
+}
+
+void tst_qqmlecmascript::jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown()
+{
+    QQmlEngine engine;
+
+    engine.handle()->memoryManager->aggressiveGC = true;
+
+    QQmlComponent c(&engine, testFileUrl("jittedJavaScriptExpressionDoesNotCrashOnExceptionBeingThrown.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY2(o, qPrintable(c.errorString()));
+
+    QQmlContext *context = qmlContext(o.data());
+    auto timer = qobject_cast<QQmlTimer*>(context->objectForName("timer"));
+    QVERIFY(timer);
+
+    QTRY_VERIFY(!timer->isRunning());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
