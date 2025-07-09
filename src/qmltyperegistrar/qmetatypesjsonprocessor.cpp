@@ -56,6 +56,9 @@ QList<QAnyStringView> MetaTypesJsonProcessor::namespaces(const MetaType &classDe
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
     for (const QString &source: files) {
+        if (m_seenMetaTypesFiles.hasSeen(source))
+            continue;
+
         QCborValue metaObjects;
         {
             QFile f(source);
@@ -129,6 +132,9 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
     bool success = true;
 
     for (const QString &types : foreignTypesFiles) {
+        if (m_seenMetaTypesFiles.hasSeen(types))
+            continue;
+
         if (!processForeignTypes(types))
             success = false;
     }

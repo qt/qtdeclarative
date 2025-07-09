@@ -132,6 +132,11 @@ if(TARGET Qt::Qml)
     )
 
     _qt_internal_test_expect_fail(test_invalid_qml_uri)
+
+    _qt_internal_test_expect_pass(test_deduplicate_metatypes TESTNAME cmake_test_duplicate_metatypes)
+    set_tests_properties(cmake_test_duplicate_metatypes PROPERTIES
+        FAIL_REGULAR_EXPRESSION "MyItem\\.h:10: Multiple C\\+\\+ types called MyItem found\\!"
+    )
 endif()
 
 if(TARGET Qt::Quick)
