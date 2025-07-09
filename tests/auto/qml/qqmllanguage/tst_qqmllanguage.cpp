@@ -3618,10 +3618,10 @@ void tst_qqmllanguage::importJs_data()
         << "importJs.5.errors.txt"
         << false;
 
-    QTest::newRow("repeatImportFails")
+    QTest::newRow("repeatImportSucceeds")
         << "importJs.6.qml"
         << "importJs.6.errors.txt"
-        << false;
+        << true;
 
     QTest::newRow("multipleVersionImportFails")
         << "importJs.7.qml"
