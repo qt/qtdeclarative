@@ -27,20 +27,24 @@ Rectangle {
         : accented ? Qt.tint(control.palette.accent, control.palette.light)
         : control.palette.midlight
     readonly property color secondaryStrokeColor: accented ? Qt.tint(control.palette.accent, control.palette.mid) : control.palette.dark
-    readonly property color backgroundColor: {
-        if (highContrastScheme) {
-            if (subtle)
+
+    property var highContrastBackgroundColorFunc: function() {
+        if (subtle)
+            return control.palette.highlight
+        if (accented) {
+            if (control.enabled && control.hovered && !control.down)
+                return control.palette.buttonText
+            if (control.enabled && !control.down)
                 return control.palette.highlight
-            if (accented) {
-                if (control.enabled && control.hovered && !control.down)
-                    return control.palette.buttonText
-                if (control.enabled && !control.down)
-                    return control.palette.highlight
-            } else if (control.enabled && (control.hovered || control.down)) {
-                return (control as T.MenuBarItem) ? control.palette.button : control.palette.highlightedText
-            }
-            return control.palette.button
+        } else if (control.enabled && (control.hovered || control.down)) {
+            return (control as T.MenuBarItem) ? control.palette.button : control.palette.highlightedText
         }
+        return control.palette.button
+    }
+
+    readonly property color backgroundColor: {
+        if (highContrastScheme)
+            return highContrastBackgroundColorFunc()
         if (accented) {
             if (control.enabled && control.down) {
                 if (lightScheme)

@@ -47,6 +47,16 @@ T.ToolButton {
 
         icon: control.icon
         defaultIconColor: {
+            if (Application.styleHints.accessibility.contrastPreference === Qt.HighContrast) {
+                if (!control.enabled)
+                    return control.palette.buttonText
+                else if (control.checked && (control.hovered || control.down))
+                    return control.palette.highlight
+                else if (!control.checked && !(control.down || control.hovered))
+                    return control.palette.buttonText
+                else
+                    return control.palette.button
+            }
             if (control.down) {
                 return (control.checked || control.highlighted)
                     ? Application.styleHints.colorScheme == Qt.Light
@@ -73,5 +83,15 @@ T.ToolButton {
         implicitWidth: implicitHeight
         radius: control.__config.background.topOffset
         subtle: !(control.checked || control.highlighted) || control.flat
+        highContrastBackgroundColorFunc: function() {
+            if (!control.enabled)
+                return "transparent"
+            else if (control.checked && control.hovered)
+                return control.palette.highlightedText
+            else if (control.checked || control.hovered)
+                return control.palette.highlight
+            else
+                return control.palette.button
+        }
     }
 }
