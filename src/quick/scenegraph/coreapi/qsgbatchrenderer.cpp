@@ -4064,6 +4064,14 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
     if (Q_UNLIKELY(debug_render()))
         qDebug() << " -" << batch << "rendernode";
 
+    const int viewCount = projectionMatrixCount();
+    m_current_projection_matrix.resize(viewCount);
+    for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
+        m_current_projection_matrix[viewIndex] = projectionMatrix(viewIndex);
+    m_current_projection_matrix_native_ndc.resize(projectionMatrixWithNativeNDCCount());
+    for (int viewIndex = 0; viewIndex < projectionMatrixWithNativeNDCCount(); ++viewIndex)
+        m_current_projection_matrix_native_ndc[viewIndex] = projectionMatrixWithNativeNDC(viewIndex);
+
     Q_ASSERT(batch->first->isRenderNode);
     RenderNodeElement *e = static_cast<RenderNodeElement *>(batch->first);
 
@@ -4112,7 +4120,6 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     rd->m_rt = renderTarget();
 
-    const int viewCount = projectionMatrixCount();
     rd->m_projectionMatrix.resize(viewCount);
     for (int viewIndex = 0; viewIndex < viewCount; ++viewIndex)
         rd->m_projectionMatrix[viewIndex] = projectionMatrix(viewIndex);
