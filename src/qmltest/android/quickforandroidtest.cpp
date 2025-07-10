@@ -7,6 +7,7 @@
 #include <QtQuickTest/private/quicktest_p.h>
 #include <QtQuickTest/private/quicktestresult_p.h>
 #include <QtTest/private/qtestcrashhandler_p.h>
+#include <QtCore/QTimer>
 
 QT_BEGIN_NAMESPACE
 
