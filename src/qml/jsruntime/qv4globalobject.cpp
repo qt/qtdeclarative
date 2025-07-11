@@ -304,15 +304,15 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
         return Encode::undefined();
 
     ExecutionEngine *v4 = engine();
-    bool isStrict = v4->currentStackFrame->v4Function->isStrict();
+    const Function *v4Function = v4->currentStackFrame
+            ? v4->currentStackFrame->v4Function
+            : v4->globalCode;
+    const bool isStrict = v4Function && v4Function->isStrict();
 
     Scope scope(v4);
-    ScopedContext ctx(scope, v4->currentContext());
 
-    if (!directCall) {
-        // the context for eval should be the global scope
-        ctx = v4->scriptContext();
-    }
+    // In case of !directCall, the context for eval should be the global scope
+    ScopedContext ctx(scope, directCall ? v4->currentContext() : v4->scriptContext());
 
     String *scode = argv[0].stringValue();
     if (!scode)
@@ -333,13 +333,13 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
         return Encode::undefined();
     function->kind = Function::Eval;
 
+    ScopedValue thisObject(scope, directCall
+                                   ? scope.engine->currentStackFrame->thisObject()
+                                   : scope.engine->globalObject->asReturnedValue());
     if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
-        ScopedValue thisObject(scope, directCall ? scope.engine->currentStackFrame->thisObject() : scope.engine->globalObject->asReturnedValue());
         return checkedResult(v4, e->call(thisObject, nullptr, 0));
     }
-
-    ScopedValue thisObject(scope, scope.engine->currentStackFrame->thisObject());
 
     return checkedResult(v4, function->call(thisObject, nullptr, 0, ctx));
 }
