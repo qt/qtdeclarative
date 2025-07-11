@@ -322,6 +322,8 @@ private slots:
 
     void multiMatchingRegularExpression();
 
+    void evalInGlobalContext();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6448,6 +6450,14 @@ void tst_QJSEngine::multiMatchingRegularExpression()
 
     QVERIFY(result2.isString());
     QCOMPARE(result2.toString(), "4F15 9D7A D402 55D9 4A5B 7EB9 AAAC D740 8C79 245D "_L1);
+}
+
+void tst_QJSEngine::evalInGlobalContext()
+{
+    QJSEngine myEngine;
+    const QJSValue fun = myEngine.globalObject().property(QLatin1String("eval"));
+    const QJSValue ret = fun.call({ QLatin1String("99") });
+    QCOMPARE(ret.toString(), QLatin1String("99"));
 }
 
 QTEST_MAIN(tst_QJSEngine)
