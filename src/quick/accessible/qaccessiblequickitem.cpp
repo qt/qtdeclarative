@@ -770,7 +770,11 @@ int QAccessibleQuickItem::characterCount() const
         cursor.movePosition(QTextCursor::End);
         return cursor.position();
     }
-    return text(QAccessible::Value).size();
+
+    if (role() == QAccessible::EditableText)
+        return text(QAccessible::Value).size();
+
+    return text(QAccessible::Name).size();
 }
 
 int QAccessibleQuickItem::cursorPosition() const
@@ -792,7 +796,11 @@ QString QAccessibleQuickItem::text(int startOffset, int endOffset) const
         cursor.setPosition(endOffset, QTextCursor::KeepAnchor);
         return cursor.selectedText();
     }
-    return text(QAccessible::Value).mid(startOffset, endOffset - startOffset);
+
+    if (role() == QAccessible::EditableText)
+        return text(QAccessible::Value).mid(startOffset, endOffset - startOffset);
+
+    return text(QAccessible::Name).mid(startOffset, endOffset - startOffset);
 }
 
 QString QAccessibleQuickItem::textBeforeOffset(int offset, QAccessible::TextBoundaryType boundaryType,
