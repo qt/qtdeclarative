@@ -1639,12 +1639,67 @@ bool QQmlPropertyPrivate::write(
             QVariant v = value;
             property.writeProperty(object, v.data(), flags);
         } else {
-            QVariant list(propertyMetaType);
-            const QQmlType type = QQmlMetaType::qmlType(propertyMetaType);
-            const QMetaSequence sequence = type.listMetaSequence();
-            if (sequence.canAddValue())
-                sequence.addValue(list.data(), value.data());
-            property.writeProperty(object, list.data(), flags);
+            QVariant outputList(propertyMetaType);
+            const QQmlType type = QQmlMetaType::qmlListType(propertyMetaType);
+            const QMetaSequence outputSequence = type.listMetaSequence();
+            if (!outputSequence.canAddValue())
+                return property.writeProperty(object, outputList.data(), flags);
+
+            const QMetaType outputElementMetaType = outputSequence.valueMetaType();
+            const bool outputIsQVariant = (outputElementMetaType == QMetaType::fromType<QVariant>());
+
+            QSequentialIterable inputIterable;
+            QVariant inputList = value;
+            if (QMetaType::view(
+                        inputList.metaType(), inputList.data(),
+                        QMetaType::fromType<QSequentialIterable>(), &inputIterable)) {
+
+                const QMetaSequence inputSequence = inputIterable.metaContainer();
+                const QMetaType inputElementMetaType = inputSequence.valueMetaType();
+                const bool inputIsQVariant = (inputElementMetaType == QMetaType::fromType<QVariant>());
+
+                QVariant outputElement
+                        = outputIsQVariant ? QVariant() : QVariant(outputElementMetaType);
+                QVariant inputElement
+                        = inputIsQVariant ? QVariant() : QVariant(inputElementMetaType);
+
+                void *it = inputSequence.constBegin(inputList.constData());
+                void *end = inputSequence.constEnd(inputList.constData());
+
+                for (; !inputSequence.compareConstIterator(it, end);
+                     inputSequence.advanceConstIterator(it, 1)) {
+
+                    if (inputIsQVariant)
+                        inputSequence.valueAtIterator(it, &inputElement);
+                    else
+                        inputSequence.valueAtIterator(it, inputElement.data());
+
+                    if (outputIsQVariant) {
+                        outputSequence.addValue(outputList.data(), &inputElement);
+                    } else if (inputElement.metaType() == outputElement.metaType()) {
+                        outputSequence.addValue(outputList.data(), inputElement.constData());
+                    } else {
+                        QMetaType::convert(
+                                inputElement.metaType(), inputElement.constData(),
+                                outputElementMetaType, outputElement.data());
+                        outputSequence.addValue(outputList.data(), outputElement.constData());
+                    }
+                }
+
+                inputSequence.destroyConstIterator(it);
+                inputSequence.destroyConstIterator(end);
+            } else if (outputIsQVariant) {
+                outputSequence.addValue(outputList.data(), &value);
+            } else if (outputElementMetaType == value.metaType()){
+                outputSequence.addValue(outputList.data(), value.constData());
+            } else {
+                QVariant output(outputElementMetaType);
+                QMetaType::convert(
+                        value.metaType(), value.constData(), outputElementMetaType, output.data());
+                outputSequence.addValue(outputList.data(), output.constData());
+            }
+
+            return property.writeProperty(object, outputList.data(), flags);
         }
     } else if (enginePriv && propertyMetaType == QMetaType::fromType<QJSValue>()) {
         // We can convert everything into a QJSValue if we have an engine.

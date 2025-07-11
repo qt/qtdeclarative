@@ -7457,6 +7457,39 @@ void tst_qqmllanguage::valueTypeList()
         for (const BaseValueType &b : baseList)
             QCOMPARE(b.content(), 29);
     }
+
+    const CustomIdentifier customId1 = IdProvider::id1();
+    const CustomIdentifier customId2 = IdProvider::id2();
+
+    {
+        QObject *multi = o->property("multi").value<QObject *>();
+        QVERIFY(multi);
+
+        const QList<CustomIdentifier> typeIds
+                = multi->property("typeIds").value<QList<CustomIdentifier>>();
+        QCOMPARE(typeIds.length(), 2);
+        QCOMPARE(typeIds[0], customId1);
+        QCOMPARE(typeIds[1], customId2);
+
+        const QVariantList varIds = multi->property("varIds").value<QVariantList>();
+        QCOMPARE(varIds.length(), 2);
+        QCOMPARE(varIds[0].value<CustomIdentifier>(), customId1);
+        QCOMPARE(varIds[1].value<CustomIdentifier>(), customId2);
+    }
+
+    {
+        QObject *single = o->property("single").value<QObject *>();
+        QVERIFY(single);
+
+        const QList<CustomIdentifier> typeIds
+                = single->property("typeIds").value<QList<CustomIdentifier>>();
+        QCOMPARE(typeIds.length(), 1);
+        QCOMPARE(typeIds[0], customId1);
+
+        const QVariantList varIds = single->property("varIds").value<QVariantList>();
+        QCOMPARE(varIds.length(), 1);
+        QCOMPARE(varIds[0].value<CustomIdentifier>(), customId2);
+    }
 }
 
 void tst_qqmllanguage::componentMix()

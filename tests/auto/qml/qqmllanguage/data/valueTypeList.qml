@@ -22,4 +22,20 @@ ValueTypeListBase {
         x[1].increment()
         b[1].x = 12
     }
+
+    property Component someObject: QtObject {
+        property list<customIdentifier> typeIds
+        property list<var> varIds
+    }
+
+    property list<customIdentifier> customIds: [IdProvider.getId1(), IdProvider.getId2()]
+    property QtObject multi: someObject.createObject(this, {
+        typeIds: [IdProvider.getId1(), IdProvider.getId2()],
+        varIds: customIds
+    })
+
+    property QtObject single: someObject.createObject(this, {
+        typeIds: IdProvider.getId1(),
+        varIds: IdProvider.getId2()
+    })
 }

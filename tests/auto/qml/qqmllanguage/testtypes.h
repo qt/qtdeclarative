@@ -3224,4 +3224,54 @@ public:
     Q_ENUM(E2);
 };
 
+template <class T>
+class IdType
+{
+public:
+    IdType(T id) : value(id) {}
+    T get() const { return value; }
+
+private:
+    T value;
+};
+
+using CustomId = IdType<int32_t>;
+
+class CustomIdentifier
+{
+    Q_GADGET
+    QML_VALUE_TYPE(customIdentifier)
+    QML_STRUCTURED_VALUE
+
+    Q_PROPERTY(int customId READ getCustomId CONSTANT FINAL)
+public:
+    CustomIdentifier() = default;
+    CustomIdentifier(CustomId custom_id) : id(std::move(custom_id)) {}
+
+    int getCustomId() const { return id.get(); }
+    Q_INVOKABLE int toVisualId() const { return id.get() + 1; }
+
+    friend bool operator==(const CustomIdentifier &a, const CustomIdentifier &b)
+    {
+        return a.id.get() == b.id.get();
+    }
+
+    CustomId id {-1};
+};
+
+class IdProvider : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+public:
+    IdProvider() = default;
+
+    static CustomId id1() { return CustomId(20); }
+    static CustomId id2() { return CustomId(21); }
+
+    Q_INVOKABLE CustomIdentifier getId1() const { return CustomIdentifier(id1()); }
+    Q_INVOKABLE CustomIdentifier getId2() const { return CustomIdentifier(id2()); }
+};
+
 #endif // TESTTYPES_H
