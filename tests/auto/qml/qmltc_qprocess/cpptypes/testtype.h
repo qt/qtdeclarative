@@ -84,4 +84,44 @@ Q_SIGNALS:
     void signalWithConstPrimitivePointer(const int *);
 };
 
+struct UnknownValueType
+{
+    Q_GADGET
+
+private:
+    int a = 12;
+    friend bool operator==(const UnknownValueType &a, const UnknownValueType &b)
+    {
+        return a.a == b.a;
+    }
+
+    friend bool operator!=(const UnknownValueType &a, const UnknownValueType &b)
+    {
+        return !(a == b);
+    }
+};
+
+class TypeWithUnknownPropertyType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(UnknownValueType u READ u WRITE setU NOTIFY uChanged)
+
+public:
+    UnknownValueType u() const { return m_u; }
+    void setU(const UnknownValueType &u)
+    {
+        if (u != m_u) {
+            m_u = u;
+            emit uChanged();
+        }
+    }
+
+signals:
+    void uChanged();
+
+private:
+    UnknownValueType m_u;
+};
+
 #endif // TESTTYPE_H
