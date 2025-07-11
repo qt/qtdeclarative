@@ -1,0 +1,3 @@
+import QmltcQProcessTests
+
+TypeWithUnknownPropertyType {}

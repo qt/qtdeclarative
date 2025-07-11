@@ -59,6 +59,7 @@ private slots:
     void componentDefinitionInnerRequiredPropertyFromOutside();
     void innerLevelRequiredProperty();
     void customParsed();
+    void typeWithUnknownPropertyType();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -380,6 +381,14 @@ void tst_qmltc_qprocess::customParsed()
     QVERIFY(errors.contains(
             u"customParsed.qml:: qmltc does not support custom parsers such as ListModel or old forms "
             "of Connections and PropertyChanges. [compiler]"
+    ));
+}
+
+void tst_qmltc_qprocess::typeWithUnknownPropertyType()
+{
+    const auto errors = runQmltc(u"typeWithUnknownPropertyType.qml"_s, false);
+    QVERIFY(errors.contains(
+            u"typeWithUnknownPropertyType.qml:3:1: Type of property 'u' is unknown [compiler]"
     ));
 }
 

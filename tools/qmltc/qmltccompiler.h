@@ -150,6 +150,8 @@ private:
                               const QQmlJSScope::ConstPtr &propertyType,
                               const BindingAccessorData &accessor);
 
+    void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::ConstPtr &type);
+
     /*!
         \internal
         Helper structure that acts as a key in a hash-table of

@@ -49,6 +49,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
         data/componentDefinitionInnerRequiredPropertyFromOutside.qml
         data/innerLevelRequiredProperty.qml
         data/customParsed.qml
+        data/typeWithUnknownPropertyType.qml
     NO_GENERATE_EXTRA_QMLDIRS
 )
 
