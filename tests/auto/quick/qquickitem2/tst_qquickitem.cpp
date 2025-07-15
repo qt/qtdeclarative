@@ -150,6 +150,7 @@ private slots:
     void embeddedInWidgetsFocus();
 #endif
     void gcIntegration();
+    void focusWorksAfterEnablingRootItem();
 
 private:
     QQmlEngine engine;
@@ -4707,6 +4708,39 @@ void tst_QQuickItem::gcIntegration()
     QVERIFY(!child->parent());
     gc(*v4);
     QVERIFY(!observer);
+}
+
+void tst_QQuickItem::focusWorksAfterEnablingRootItem() // QTBUG-135624
+{
+    QQmlEngine e;
+    QQmlComponent comp(&e);
+    comp.loadUrl(testFileUrl("DisabledRootItemWithTextInput.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(comp.create());
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowFocused(window));
+
+    QList<QQuickItem *> childItems = window->contentItem()->childItems();
+    QVERIFY(!childItems.isEmpty());
+    QQuickTextInput *textInput = qobject_cast<QQuickTextInput *>(childItems.first());
+    QVERIFY(textInput);
+
+    // Should be set to false in the QML file
+    QCOMPARE(window->contentItem()->isEnabled(), false);
+    QCOMPARE(textInput->hasFocus(), false);
+
+    // The click won't do anything when the item is effectively disabled
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, textInput->mapToScene(textInput->boundingRect().center()).toPoint());
+    QCOMPARE(textInput->hasFocus(), false);
+    QCOMPARE(window->activeFocusItem(), nullptr);
+
+    // Enable the root item and verify that focus works normally
+    window->contentItem()->setEnabled(true);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, textInput->mapToScene(textInput->boundingRect().center()).toPoint());
+    QTRY_COMPARE(textInput->hasFocus(), true);
+    QCOMPARE(window->activeFocusItem(), textInput);
+    textInput->clear();
+    QTest::keyClick(window, Qt::Key_A);
+    QTRY_COMPARE(textInput->text(), "a");
 }
 
 QTEST_MAIN(tst_QQuickItem)

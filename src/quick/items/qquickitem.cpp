@@ -8137,7 +8137,7 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
     while (scope && !scope->isFocusScope() && scope->parentItem())
         scope = scope->parentItem();
 
-    if (d->focus == focus && (!focus || !scope || QQuickItemPrivate::get(scope)->subFocusItem == this))
+    if (d->focus == focus && d->activeFocus == focus && (!focus || !scope || QQuickItemPrivate::get(scope)->subFocusItem == this))
         return;
 
     bool notifyListeners = false;
