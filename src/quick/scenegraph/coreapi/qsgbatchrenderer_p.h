@@ -827,6 +827,7 @@ private:
     void renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
     bool prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
     void renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
+    void setViewportAndScissors(QRhiCommandBuffer *cb, const Batch *batch);
     void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass = false);
     ClipState::ClipType updateStencilClip(const QSGClipNode *clip);
     void updateClip(const QSGClipNode *clipList, const Batch *batch);
