@@ -49,6 +49,13 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickTextInput, "qt.quick.textInput")
     and setting \l echoMode to an appropriate value enables TextInput to be used for
     a password input field.
 
+    To react to the user accepting text via the Return or Enter keys, handle
+    the \l accepted() signal. When Return or Enter are pressed and the text
+    input loses focus, \l editingFinished() will be emitted. When the text is
+    edited in any way by the user, \l textEdited() is emitted. These signals
+    \l {Property change signals}{should be preferred} over \c textChanged()
+    in most cases.
+
     On \macos, the Up/Down key bindings for Home/End are explicitly disabled.
     If you want such bindings (on any platform), you will need to construct them in QML.
 
@@ -96,7 +103,8 @@ void QQuickTextInput::componentComplete()
     the \l preeditText property. To get whole text displayed in the TextInput
     use \l displayText property.
 
-    \sa clear(), displayText, preeditText
+    \sa clear(), displayText, preeditText, accepted(), editingFinished(),
+        textEdited()
 */
 QString QQuickTextInput::text() const
 {
@@ -1220,6 +1228,8 @@ bool QQuickTextInput::hasAcceptableInput() const
     Note that if there is a \l validator or \l inputMask set on the text
     input, the signal will only be emitted if the input is in an acceptable
     state.
+
+    \sa editingFinished(), textEdited()
 */
 
 /*!
@@ -1231,6 +1241,8 @@ bool QQuickTextInput::hasAcceptableInput() const
     inputMask set on the text input and enter/return is pressed, this
     signal will only be emitted if the input follows
     the inputMask and the validator returns an acceptable state.
+
+    \sa accepted(), textEdited()
 */
 
 /*!
@@ -1240,6 +1252,8 @@ bool QQuickTextInput::hasAcceptableInput() const
     This signal is emitted whenever the text is edited. Unlike \c textChanged(),
     this signal is not emitted when the text is changed programmatically, for example,
     by changing the value of the \c text property or by calling \c clear().
+
+    \sa accepted(), editingFinished()
 */
 
 #if QT_CONFIG(im)
