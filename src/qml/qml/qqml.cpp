@@ -3428,11 +3428,11 @@ void AOTCompiledContext::initCallValueLookup(
     This returns the attached object instance that has been attached to the specified
     \a attachee by the attaching type \e T.
 
-    If \a create is true and type \e T is a valid attaching type, this creates and returns a new
-    attached object instance.
+    If \a attachee is \nullptr, returns \nullptr.
 
-    Returns \nullptr if type \e T is not a valid attaching type, or if \a create is false and no
-    attachment object instance has previously been created for \a attachee.
+    If an existing attached object instance of type \e T exists, it will return
+    it. Otherwise, it will return a newly created instance if \a create is
+    \c true and \e T is a valid attaching type, or \nullptr if it's not.
 
     \sa QML_ATTACHED(), {Providing Attached Properties}
 */
