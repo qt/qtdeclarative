@@ -26,7 +26,8 @@ QT_BEGIN_NAMESPACE
     The QSGRenderNode-based approach is similar to the former, in the sense
     that no additional render passes or render targets are involved, and allows
     injecting custom rendering commands "inline" with the Qt Quick scene's
-    own rendering.
+    own rendering. See \l{Qt Quick Scene Graph} for a further discussion of
+    the three approaches.
 
     \sa {Scene Graph - Custom QSGRenderNode}
  */
@@ -41,18 +42,12 @@ QSGRenderNode::QSGRenderNode()
     Destructs the render node. Derived classes are expected to perform cleanup
     similar to releaseResources() in here.
 
-    When a low-level graphics API is in use, the scenegraph will make sure
-    there is a CPU-side wait for the GPU to complete all work submitted to the
-    scenegraph's graphics command queue before the scenegraph's nodes are
-    deleted. Therefore there is no need to issue additional waits here, unless
-    the render() implementation is using additional command queues.
-
     With QRhi and resources such as QRhiBuffer, QRhiTexture,
-    QRhiGraphicsPipeline, etc., it is often good practice to use smart
-    pointers, such as std::unique_ptr, which can often avoid the need to
-    implement a destructor, and lead to more compact source code. Keep in mind
-    however that implementing releaseResources(), most likely issuing a number
-    of reset() calls on the unique_ptrs, is still important.
+    QRhiGraphicsPipeline, etc., it is often good practice to use smart pointers,
+    such as std::unique_ptr, which can often avoid the need to implement a
+    destructor, and lead to more compact source code. Keep in mind, however,
+    that implementing releaseResources(), likely containing a number of reset()
+    calls on the unique_ptrs, is still important.
 
     \sa releaseResources()
  */
@@ -70,55 +65,30 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
 }
 
 /*!
-    When the underlying rendering API is OpenGL, this function should return a
-    mask where each bit represents graphics states changed by the \l render()
-    function:
+    This function should return a mask where each bit represents graphics states
+    changed by the \l render() function.
 
-    \value DepthState   depth write mask, depth test enabled, depth comparison function
-    \value StencilState stencil write masks, stencil test enabled, stencil operations,
-                        stencil comparison functions
-    \value ScissorState scissor enabled, scissor test enabled
-    \value ColorState   clear color, color write mask
-    \value BlendState   blend enabled, blend function
-    \value CullState    front face, cull face enabled
-    \value ViewportState viewport
-    \value RenderTargetState render target
+    \note With Qt 6 and QRhi-based rendering the only relevant values are
+    ViewportState and ScissorState. Other values can be returned but are
+    ignored in practice.
 
-    With APIs other than OpenGL, the only relevant values are the ones that
-    correspond to dynamic state changes recorded on the command list/buffer.
-    For example, RSSetViewports, RSSetScissorRects, OMSetBlendState,
-    OMSetDepthStencilState in case of D3D11, or vkCmdSetViewport, vkCmdSetScissor,
-    vkCmdSetBlendConstants, vkCmdSetStencilRef in case of Vulkan, and only when
-    such commands were added to the scenegraph's command list queried via the
-    QSGRendererInterface::CommandList resource enum. States set in pipeline
-    state objects do not need to be reported here. Similarly, draw call related
-    settings (pipeline states, descriptor sets, vertex or index buffer
-    bindings, root signature, descriptor heaps, etc.) are always set again by
-    the scenegraph so render() can freely change them.
-
-    RenderTargetState is no longer supported with APIs like Vulkan. This
-    is by nature. render() is invoked while the Qt Quick scenegraph's main
-    command buffer is recording a renderpass, so there is no possibility of
-    changing the target and starting another renderpass (on that command buffer
-    at least). Therefore returning a value with RenderTargetState set is not
-    sensible.
+    \value ViewportState Viewport
+    \value ScissorState  Scissor test enabled state, scissor rectangle
+    \value DepthState    This value has no effect in Qt 6.
+    \value StencilState  This value has no effect in Qt 6.
+    \value ColorState    This value has no effect in Qt 6.
+    \value BlendState    This value has no effect in Qt 6.
+    \value CullState     This value has no effect in Qt 6.
+    \value RenderTargetState This value has no effect in Qt 6.
 
     \note The \c software backend exposes its QPainter and saves and restores
     before and after invoking render(). Therefore reporting any changed states
     from here is not necessary.
 
-    The function is called by the renderer so it can reset the states after
-    rendering this node. This makes the implementation of render() simpler
-    since it does not have to query and restore these states.
-
     The default implementation returns 0, meaning no relevant state was changed
     in render().
 
     \note This function may be called before render().
-
-    \note With Qt 6 and QRhi-based rendering the only relevant values are
-    ViewportState and ScissorState. Other values can be returned but are
-    ignored in practice.
   */
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
@@ -153,8 +123,8 @@ void QSGRenderNode::prepare()
     \fn void QSGRenderNode::render(const RenderState *state)
 
     This function is called by the renderer and should paint this node with
-    directly invoking commands in the graphics API (OpenGL, Direct3D, etc.)
-    currently in use.
+    directly invoking commands via QRhi or directly via the underlying graphics
+    API (OpenGL, Direct3D, etc.).
 
     The effective opacity can be retrieved with \l inheritedOpacity().
 
@@ -170,14 +140,13 @@ void QSGRenderNode::prepare()
     triangle covering half of the item can be specified as (width - 1, height - 1),
     (0, 0), (0, height - 1) using counter-clockwise direction.
 
-    \note QSGRenderNode is provided as a means to implement custom 2D or 2.5D
-    Qt Quick items. It is not intended for integrating true 3D content into the
-    Qt Quick scene. That use case is better supported by
-    QQuickFramebufferObject, QQuickWindow::beforeRendering(), or the
-    equivalents of those for APIs other than OpenGL.
+    \note QSGRenderNode is provided as a means to implement custom 2D or 2.5D Qt
+    Quick items. It is not intended for integrating true 3D content into the Qt
+    Quick scene. That use case is better supported by the other methods for
+    integrating custom rendering.
 
     \note QSGRenderNode can perform significantly better than texture-based
-    approaches (such as, QQuickFramebufferObject), especially on systems where
+    approaches (such as, QQuickRhiItem), especially on systems where
     the fragment processing power is limited. This is because it avoids
     rendering to a texture and then drawing a textured quad. Rather,
     QSGRenderNode allows recording draw calls in line with the scenegraph's
@@ -249,19 +218,18 @@ void QSGRenderNode::releaseResources()
 }
 
 /*!
-  \enum QSGRenderNode::StateFlag
+    \enum QSGRenderNode::StateFlag
 
-  This enum is a bit mask identifying several states.
+    This enum contains the possible values for use in the bitmask returned from changedStates().
 
-  \value DepthState         Depth
-  \value StencilState       Stencil
-  \value ScissorState       Scissor
-  \value ColorState         Color
-  \value BlendState         Blend
-  \value CullState          Cull
-  \value ViewportState      View poirt
-  \value RenderTargetState  Render target
-
+    \value ViewportState Viewport
+    \value ScissorState  Scissor test enabled state, scissor rectangle
+    \value DepthState    This value has no effect in Qt 6.
+    \value StencilState  This value has no effect in Qt 6.
+    \value ColorState    This value has no effect in Qt 6.
+    \value BlendState    This value has no effect in Qt 6.
+    \value CullState     This value has no effect in Qt 6.
+    \value RenderTargetState This value has no effect in Qt 6.
  */
 
 /*!
@@ -291,9 +259,9 @@ void QSGRenderNode::releaseResources()
     transparent pixels. Setting this flag can improve performance in some
     cases.
 
-    \value NoExternalRendering Indicates that the implementation of prepare()
-    and render() use the QRhi family of APIs, instead of directly calling a 3D
-    API such as OpenGL, Vulkan, or Metal.
+    \value NoExternalRendering Indicates that the implementations of prepare()
+    and render() exclusively use the QRhi family of APIs, instead of
+    directly calling a 3D API such as OpenGL, Vulkan, or Metal.
 
     \sa render(), prepare(), rect(), QRhi
  */
