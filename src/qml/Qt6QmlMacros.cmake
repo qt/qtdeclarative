@@ -96,7 +96,14 @@ function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_targe
     endif()
 endfunction()
 
-function(_qt_internal_write_qmldir_part target)
+function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
+    # _qt_internal_write_qmldir_part is deferred to be called in the root
+    # CMAKE_BINARY_DIR. If find_package(Qt6) is not called in the root of the project (like in the
+    # Qt Creator super repo), QT_CMAKE_EXPORT_NAMESPACE will not be defined.
+    # Manually define it here, based on the value passed to the function, from a scope where it
+    # is available.
+    set(QT_CMAKE_EXPORT_NAMESPACE "${qt_cmake_export_namespace}")
+
     set(effective_outdir $<TARGET_FILE_DIR:${target}>)
     set(qtconf_file "${effective_outdir}/${target}_qt.part.conf")
     get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
@@ -1085,7 +1092,8 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
             )
             cmake_language(EVAL CODE "
                     cmake_language(DEFER DIRECTORY [[${PROJECT_SOURCE_DIR}]]
-                        CALL _qt_internal_write_qmldir_part ${target})
+                        CALL _qt_internal_write_qmldir_part \"${target}\"
+                        \"${QT_CMAKE_EXPORT_NAMESPACE}\")
                 ")
         else()
             # Before CMake 3.19, we don't have DEFER, so we immediately write out the qt.conf
@@ -1129,12 +1137,20 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         if(NOT aotstats_setup_called)
             set_property(GLOBAL PROPERTY _qt_internal_deferred_aotstats_setup TRUE)
             cmake_language(EVAL CODE "cmake_language(DEFER DIRECTORY \"${CMAKE_BINARY_DIR}\" "
-                "CALL _qt_internal_deferred_aotstats_setup)")
+                "CALL _qt_internal_deferred_aotstats_setup \"${QT_CMAKE_EXPORT_NAMESPACE}\"
+            )")
         endif()
     endif()
 endfunction()
 
-function(_qt_internal_deferred_aotstats_setup)
+function(_qt_internal_deferred_aotstats_setup qt_cmake_export_namespace)
+    # _qt_internal_deferred_aotstats_setup is deferred to be called in the root
+    # CMAKE_BINARY_DIR. If find_package(Qt6) is not called in the root of the project (like in the
+    # Qt Creator super repo), QT_CMAKE_EXPORT_NAMESPACE will not be defined.
+    # Manually define it here, based on the value passed to the function, from a scope where it
+    # is available.
+    set(QT_CMAKE_EXPORT_NAMESPACE "${qt_cmake_export_namespace}")
+
     get_property(module_targets GLOBAL PROPERTY _qt_qml_aotstats_module_targets)
 
     set(onlybytecode_modules "")
@@ -1167,7 +1183,7 @@ function(_qt_internal_deferred_aotstats_setup)
             DEPENDS ${aotstats_files} ${module_aotstats_list_file}
             COMMAND
                 ${tool_wrapper}
-                $<TARGET_FILE:Qt6::qmlaotstats>
+                $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlaotstats>
                 aggregate
                 ${module_aotstats_list_file}
                 ${output}
@@ -1220,13 +1236,13 @@ function(_qt_internal_deferred_aotstats_setup)
         DEPENDS ${module_aotstats_targets} ${module_aotstats_files}
         COMMAND
             ${tool_wrapper}
-            $<TARGET_FILE:Qt6::qmlaotstats>
+            $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlaotstats>
             aggregate
             "${aotstats_list_file}"
             "${all_aotstats_file}"
         COMMAND
             ${tool_wrapper}
-            $<TARGET_FILE:Qt6::qmlaotstats>
+            $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlaotstats>
             format
             "${all_aotstats_file}"
             "${formatted_stats_file}"
