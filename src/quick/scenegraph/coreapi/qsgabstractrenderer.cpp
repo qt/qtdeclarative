@@ -48,6 +48,7 @@ QT_BEGIN_NAMESPACE
 QSGAbstractRendererPrivate::QSGAbstractRendererPrivate()
     : m_root_node(nullptr)
     , m_clear_color(Qt::transparent)
+    , m_invertFrontFace(false)
 {
     m_projection_matrix.resize(1);
     m_projection_matrix_native_ndc.resize(1);
@@ -300,6 +301,24 @@ QMatrix4x4 QSGAbstractRenderer::projectionMatrixWithNativeNDC(int index) const
 {
     Q_D(const QSGAbstractRenderer);
     return d->m_projection_matrix_native_ndc[index];
+}
+
+/*!
+    \internal
+ */
+void QSGAbstractRenderer::setInvertFrontFace(bool invert)
+{
+    Q_D(QSGAbstractRenderer);
+    d->m_invertFrontFace = invert;
+}
+
+/*!
+    \internal
+ */
+bool QSGAbstractRenderer::invertFrontFace() const
+{
+    Q_D(const QSGAbstractRenderer);
+    return d->m_invertFrontFace;
 }
 
 /*!

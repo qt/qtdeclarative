@@ -60,6 +60,8 @@ public:
     QMatrix4x4 projectionMatrixWithNativeNDC(int index) const;
     int projectionMatrixCount() const;
     int projectionMatrixWithNativeNDCCount() const;
+    void setInvertFrontFace(bool invert);
+    bool invertFrontFace() const;
 
     void setClearColor(const QColor &color);
     QColor clearColor() const;

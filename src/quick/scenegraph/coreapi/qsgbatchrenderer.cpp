@@ -2756,6 +2756,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setFlags(flags);
     ps->setTopology(qsg_topology(m_gstate.drawMode, m_rhi));
     ps->setCullMode(m_gstate.cullMode);
+    ps->setFrontFace(invertFrontFace() ? QRhiGraphicsPipeline::CW : QRhiGraphicsPipeline::CCW);
     ps->setPolygonMode(m_gstate.polygonMode);
     ps->setMultiViewCount(m_gstate.multiViewCount);
 
