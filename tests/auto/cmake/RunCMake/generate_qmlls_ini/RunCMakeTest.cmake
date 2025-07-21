@@ -1,7 +1,7 @@
 # Copyright (C) 2025 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-include(RunCMake)
+include(QtRunCMake)
 
 function(check_qmlls_ini expectedBuild)
     set(sourceQmllsIni "${RunCMake_SOURCE_DIR}/.qmlls.ini")
