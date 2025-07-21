@@ -130,10 +130,13 @@ void CustomRenderNode::prepare()
     if (!m_pipeline) {
         m_pipeline.reset(rhi->newGraphicsPipeline());
 
-        // If layer.enabled == true on our QQuickItem, the rendering face is flipped for
-        // backends with isYUpInFrameBuffer == true (OpenGL). This does not happen with
-        // RHI backends with isYUpInFrameBuffer == false. We swap the triangle winding
-        // order to work around this.
+        // If layer.enabled == true on our QQuickItem and layer.textureMirroring is the
+        // default MirrorVertically, the winding order needs to be inverted when
+        // isYUpInFrameBuffer == true (OpenGL). This does not happen with other backends,
+        // unless textureMirroring is changed so that the situation is inverted, meaning
+        // GL needs no adjustments while others need the opposite winding order. Here we
+        // choose the replicate, to a degree, what the scenegraph renderer does, but note that
+        // this is only correct as long as textureMirroring is not changed from the default.
         m_pipeline->setFrontFace(renderTarget()->resourceType() == QRhiResource::TextureRenderTarget
                                                  && rhi->isYUpInFramebuffer()
                                          ? QRhiGraphicsPipeline::CW
