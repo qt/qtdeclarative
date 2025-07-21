@@ -1,4 +1,4 @@
-include(RunCMake)
+include(QtRunCMake)
 
 include(${_Qt6CTestMacros})
 # Stub function to make `_qt_internal_get_cmake_test_configure_options` work
