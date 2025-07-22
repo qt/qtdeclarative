@@ -407,8 +407,11 @@ bool QmlTypesCreator::generate(const QString &outFileName)
     m_qml.writeEndObject();
 
     QSaveFile file(outFileName);
-    if (!file.open(QIODevice::WriteOnly))
+    if (!file.open(QIODevice::WriteOnly)) {
+        qCritical().nospace() << "Error: Failed to open " << file.fileName()
+                              << " for writing: " << file.errorString();
         return false;
+    }
 
     if (file.write(m_output) != m_output.size())
         return false;
