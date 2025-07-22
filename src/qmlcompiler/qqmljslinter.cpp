@@ -488,6 +488,11 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
     const bool isESModule = lowerSuffix == QLatin1String("mjs");
     const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
 
+    m_logger.reset(new QQmlJSLogger);
+    m_logger->setFilePath(m_useAbsolutePath ? info.absoluteFilePath() : filename);
+    m_logger->setCode(code);
+    m_logger->setSilent(silent || json);
+
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
     QQmlJS::Parser parser(&engine);
 
@@ -497,15 +502,9 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
     if (!success) {
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-            if (json) {
+            if (json)
                 addJsonWarning(warnings, m, qmlSyntax.name());
-            } else if (!silent) {
-                qWarning().noquote() << QString::fromLatin1("%1:%2:%3: %4")
-                                                .arg(filename)
-                                                .arg(m.loc.startLine)
-                                                .arg(m.loc.startColumn)
-                                                .arg(m.message);
-            }
+            m_logger->log(m.message, qmlSyntax, m.loc);
         }
         return FailedToParse;
     }
@@ -516,11 +515,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 m_importer.setImportPaths(qmlImportPaths);
 
             m_importer.setResourceFileMapper(mapper);
-
-            m_logger.reset(new QQmlJSLogger);
-            m_logger->setFilePath(m_useAbsolutePath ? info.absoluteFilePath() : filename);
-            m_logger->setCode(code);
-            m_logger->setSilent(silent || json);
             QQmlJSScope::Ptr target = QQmlJSScope::create();
             QQmlJSImportVisitor v { target, &m_importer, m_logger.get(),
                                     QQmlJSImportVisitor::implicitImportDirectory(
