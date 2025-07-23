@@ -317,7 +317,7 @@ public:
 private:
     void addElement(const QVector2D &control, const QVector2D &to, bool isLine = false);
     void addElement(const Element &e);
-    Element::CurvatureFlags coordinateOrderOfElement(const Element &element) const;
+    Element::FillSide coordinateOrderOfElement(const Element &element) const;
 
     friend Q_QUICK_EXPORT QDebug operator<<(QDebug, const QQuadPath &);
 
