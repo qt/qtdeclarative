@@ -130,7 +130,7 @@ static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *o
     */
     auto popupItem = qobject_cast<QQuickPopupItem *>(objectWeAreAttachedTo);
     if (popupItem) {
-        qCDebug(lcAttached).noquote() << "- attachee belongs to popup item" << popupItem << "- checking if it has an attached object";
+        qCDebug(lcAttached).noquote() << "- attachee is a popup item" << popupItem << "- checking if it has an attached object";
         auto popupItemPrivate = QQuickPopupItemPrivate::get(popupItem);
         QQuickAttachedPropertyPropagator *popupAttached = attachedObject(ourAttachedType, popupItemPrivate->popup);
         if (popupAttached) {
@@ -140,7 +140,7 @@ static QQuickAttachedPropertyPropagator *findAttachedParent(const QMetaObject *o
             qCDebug(lcAttached).noquote() << "- popup item does not have attached object";
         }
     } else {
-        qCDebug(lcAttached).noquote() << "- attachee does not belong to a popup";
+        qCDebug(lcAttached).noquote() << "- attachee is not a popup item";
     }
 
     QQuickItem *item = qobject_cast<QQuickItem *>(objectWeAreAttachedTo);
