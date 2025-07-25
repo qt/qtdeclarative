@@ -13,6 +13,8 @@
 
 #include <yoga/YGEnums.h>
 
+QT_YOGA_NAMESPACE_BEGIN 
+
 namespace facebook {
 namespace yoga {
 
@@ -71,3 +73,5 @@ inline void setBooleanData(uint8_t& flags, size_t index, bool value) {
 } // namespace detail
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END

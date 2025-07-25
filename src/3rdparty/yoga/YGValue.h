@@ -10,6 +10,8 @@
 #include <yoga/YGEnums.h>
 #include <yoga/YGMacros.h>
 
+QT_YOGA_NAMESPACE_BEGIN 
+
 YG_EXTERN_C_BEGIN
 
 typedef struct YGValue {
@@ -57,3 +59,5 @@ inline YGValue operator-(const YGValue& value) {
   return {-value.value, value.unit};
 }
 #endif
+
+QT_YOGA_NAMESPACE_END

@@ -18,6 +18,8 @@
 #include "Yoga-internal.h"
 #include "event/event.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 using namespace facebook::yoga;
 using detail::Log;
 
@@ -4343,3 +4345,5 @@ YOGA_EXPORT void YGConfigSetCloneNodeFunc(
     const YGCloneNodeFunc callback) {
   config->setCloneNodeCallback(callback);
 }
+
+QT_YOGA_NAMESPACE_END

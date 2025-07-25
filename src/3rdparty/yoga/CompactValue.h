@@ -30,13 +30,15 @@
 
 static_assert(
     std::numeric_limits<float>::is_iec559,
-    "facebook::yoga::detail::CompactValue only works with IEEE754 floats");
+    "QtYoga::facebook::yoga::detail::CompactValue only works with IEEE754 floats");
 
 #ifdef YOGA_COMPACT_VALUE_TEST
 #define VISIBLE_FOR_TESTING public:
 #else
 #define VISIBLE_FOR_TESTING private:
 #endif
+
+QT_YOGA_NAMESPACE_BEGIN 
 
 namespace facebook {
 namespace yoga {
@@ -212,3 +214,6 @@ constexpr bool operator!=(CompactValue a, CompactValue b) noexcept {
 } // namespace detail
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END
+

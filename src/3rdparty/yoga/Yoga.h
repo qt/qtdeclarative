@@ -22,7 +22,13 @@
 #include <yoga/YGMacros.h>
 #include <yoga/YGValue.h>
 
+QT_YOGA_NAMESPACE_BEGIN 
+
 YG_EXTERN_C_BEGIN
+
+struct YGConfig;
+struct YGNode;
+class YGStyle;
 
 typedef struct YGSize {
   float width;
@@ -379,3 +385,5 @@ WIN_EXPORT float YGRoundValueToPixelGrid(
     bool forceFloor);
 
 YG_EXTERN_C_END
+
+QT_YOGA_NAMESPACE_END

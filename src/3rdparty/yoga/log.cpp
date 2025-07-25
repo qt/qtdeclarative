@@ -9,6 +9,8 @@
 #include "YGConfig.h"
 #include "YGNode.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 namespace facebook {
 namespace yoga {
 namespace detail {
@@ -60,3 +62,5 @@ void Log::log(
 } // namespace detail
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END

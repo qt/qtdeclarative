@@ -8,12 +8,30 @@
 #pragma once
 
 #ifdef __cplusplus
+#include <QtCore/qtconfigmacros.h>
 #include <type_traits>
 #endif
 
 #ifdef __cplusplus
-#define YG_EXTERN_C_BEGIN extern "C" {
-#define YG_EXTERN_C_END }
+#ifdef QT_NAMESPACE
+#define QT_NAMESPACE_REF ::QT_NAMESPACE::QtYoga
+#else
+#define QT_NAMESPACE_REF ::QtYoga
+#endif
+
+#define USE_QT_YOGA_NAMESPACE using namespace QT_NAMESPACE_REF;
+
+#define QT_YOGA_NAMESPACE_BEGIN \
+            QT_BEGIN_NAMESPACE \
+            inline namespace QtYoga {
+#define QT_YOGA_NAMESPACE_END \
+            }                \
+            QT_END_NAMESPACE
+#endif
+
+#ifdef __cplusplus
+#define YG_EXTERN_C_BEGIN // extern "C" {
+#define YG_EXTERN_C_END // }
 #else
 #define YG_EXTERN_C_BEGIN
 #define YG_EXTERN_C_END
@@ -95,6 +113,7 @@
 #endif
 
 #ifdef __cplusplus
+QT_YOGA_NAMESPACE_BEGIN
 namespace facebook {
 namespace yoga {
 namespace enums {
@@ -112,6 +131,7 @@ constexpr int n() {
 } // namespace enums
 } // namespace yoga
 } // namespace facebook
+QT_YOGA_NAMESPACE_END
 #endif
 
 #define YG_ENUM_DECL(NAME, ...)                               \
@@ -121,6 +141,7 @@ constexpr int n() {
 #ifdef __cplusplus
 #define YG_ENUM_SEQ_DECL(NAME, ...)  \
   YG_ENUM_DECL(NAME, __VA_ARGS__)    \
+  QT_YOGA_NAMESPACE_BEGIN            \
   YG_EXTERN_C_END                    \
   namespace facebook {               \
   namespace yoga {                   \
@@ -132,7 +153,8 @@ constexpr int n() {
   }                                  \
   }                                  \
   }                                  \
-  YG_EXTERN_C_BEGIN
+  YG_EXTERN_C_BEGIN                  \
+  QT_YOGA_NAMESPACE_END
 #else
 #define YG_ENUM_SEQ_DECL YG_ENUM_DECL
 #endif

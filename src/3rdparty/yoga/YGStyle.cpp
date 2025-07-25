@@ -6,6 +6,8 @@
 #include "YGStyle.h"
 #include "Utils.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 // Yoga specific properties, not compatible with flexbox specification
 bool operator==(const YGStyle& lhs, const YGStyle& rhs) {
   bool areNonFloatValuesEqual = lhs.direction() == rhs.direction() &&
@@ -52,3 +54,5 @@ bool operator==(const YGStyle& lhs, const YGStyle& rhs) {
 
   return areNonFloatValuesEqual;
 }
+
+QT_YOGA_NAMESPACE_END

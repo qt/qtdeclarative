@@ -9,9 +9,10 @@
 
 #include <yoga/YGEnums.h>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 struct YGNode;
 struct YGConfig;
-
 namespace facebook {
 namespace yoga {
 
@@ -36,3 +37,5 @@ struct Log {
 } // namespace detail
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END

@@ -1,7 +1,7 @@
 version = 1
 
 [[annotations]]
-path = ["0001-yoga-don-t-export-symbols.patch"]
+path = ["patches/*"]
 precedence = "closest"
 SPDX-License-Identifier = "MIT"
 SPDX-FileCopyrightText = "Copyright (C) 2025 The Qt Company Ltd."

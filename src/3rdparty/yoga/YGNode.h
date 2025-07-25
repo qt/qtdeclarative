@@ -30,6 +30,8 @@ struct YGNodeFlags {
 };
 #pragma pack(pop)
 
+QT_YOGA_NAMESPACE_BEGIN
+
 struct YOGA_EXPORT YGNode {
   using MeasureWithContextFn =
       YGSize (*)(YGNode*, float, YGMeasureMode, float, YGMeasureMode, void*);
@@ -333,3 +335,5 @@ public:
   bool isNodeFlexible();
   void reset();
 };
+
+QT_YOGA_NAMESPACE_END

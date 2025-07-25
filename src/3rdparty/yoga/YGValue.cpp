@@ -5,6 +5,10 @@
 
 #include <yoga/YGValue.h>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 const YGValue YGValueZero = {0, YGUnitPoint};
 const YGValue YGValueUndefined = {YGUndefined, YGUnitUndefined};
 const YGValue YGValueAuto = {YGUndefined, YGUnitAuto};
+
+QT_YOGA_NAMESPACE_END

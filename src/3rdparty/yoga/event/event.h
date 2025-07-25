@@ -13,9 +13,10 @@
 #include <yoga/YGEnums.h>
 #include <stdint.h>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 struct YGConfig;
 struct YGNode;
-
 namespace facebook {
 namespace yoga {
 
@@ -142,3 +143,5 @@ struct Event::TypedData<Event::NodeLayout> {
 
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END

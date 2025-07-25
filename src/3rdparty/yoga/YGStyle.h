@@ -19,6 +19,8 @@
 #include "Yoga-internal.h"
 #include "BitUtils.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 class YOGA_EXPORT YGStyle {
   template <typename Enum>
   using Values =
@@ -236,3 +238,5 @@ YOGA_EXPORT bool operator==(const YGStyle& lhs, const YGStyle& rhs);
 YOGA_EXPORT inline bool operator!=(const YGStyle& lhs, const YGStyle& rhs) {
   return !(lhs == rhs);
 }
+
+QT_YOGA_NAMESPACE_END

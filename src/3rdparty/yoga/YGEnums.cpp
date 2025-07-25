@@ -5,6 +5,8 @@
 
 #include <yoga/YGEnums.h>
 
+USE_QT_YOGA_NAMESPACE
+
 const char* YGAlignToString(const YGAlign value) {
   switch (value) {
     case YGAlignAuto:

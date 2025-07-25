@@ -14,6 +14,8 @@
 #include "Yoga-internal.h"
 #include "Utils.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 namespace facebook {
 namespace yoga {
 typedef std::string string;
@@ -242,4 +244,7 @@ void YGNodeToString(
 }
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END
+
 #endif

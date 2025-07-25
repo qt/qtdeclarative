@@ -12,6 +12,8 @@
 #include "BitUtils.h"
 #include "Yoga-internal.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 namespace facebook {
 namespace yoga {
 
@@ -108,3 +110,5 @@ private:
   float pointScaleFactor_ = 1.0f;
   void* context_ = nullptr;
 };
+
+QT_YOGA_NAMESPACE_END

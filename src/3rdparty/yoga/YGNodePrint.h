@@ -13,6 +13,8 @@
 
 #include <yoga/Yoga.h>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 namespace facebook {
 namespace yoga {
 
@@ -24,5 +26,7 @@ void YGNodeToString(
 
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END
 
 #endif

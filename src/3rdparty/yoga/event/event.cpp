@@ -7,6 +7,8 @@
 #include <atomic>
 #include <memory>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 namespace facebook {
 namespace yoga {
 
@@ -82,3 +84,5 @@ void Event::publish(const YGNode& node, Type eventType, const Data& eventData) {
 
 } // namespace yoga
 } // namespace facebook
+
+QT_YOGA_NAMESPACE_END

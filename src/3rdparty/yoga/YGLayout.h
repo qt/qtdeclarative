@@ -11,6 +11,8 @@
 #include "YGFloatOptional.h"
 #include "Yoga-internal.h"
 
+QT_YOGA_NAMESPACE_BEGIN
+
 struct YGLayout {
   std::array<float, 4> position = {};
   std::array<float, 2> dimensions = {{YGUndefined, YGUndefined}};
@@ -61,3 +63,5 @@ public:
   bool operator==(YGLayout layout) const;
   bool operator!=(YGLayout layout) const { return !(*this == layout); }
 };
+
+QT_YOGA_NAMESPACE_END

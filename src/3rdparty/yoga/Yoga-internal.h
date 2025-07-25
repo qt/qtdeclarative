@@ -16,7 +16,11 @@
 
 #include "CompactValue.h"
 
+USE_QT_YOGA_NAMESPACE
+
 using YGVector = std::vector<YGNodeRef>;
+
+QT_YOGA_NAMESPACE_BEGIN 
 
 YG_EXTERN_C_BEGIN
 
@@ -158,3 +162,5 @@ static const float kDefaultFlexShrink = 0.0f;
 static const float kWebDefaultFlexShrink = 1.0f;
 
 extern bool YGFloatsEqual(const float a, const float b);
+
+QT_YOGA_NAMESPACE_END

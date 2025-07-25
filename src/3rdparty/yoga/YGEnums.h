@@ -10,7 +10,6 @@
 
 // clang-format off
 
-
 YG_EXTERN_C_BEGIN
 
 YG_ENUM_SEQ_DECL(

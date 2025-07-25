@@ -1,0 +1,632 @@
+From ea2843c79f3cfd159be14a34361d871ab295d1a4 Mon Sep 17 00:00:00 2001
+From: Santhosh Kumar <santhosh.kumar.selvaraj@qt.io>
+Date: Fri, 25 Jul 2025 12:33:11 +0200
+Subject: [PATCH] Namespace yoga APIs to avoid ODR violation
+
+Fixes: QTBUG-137829
+Change-Id: I660b08638daa8d78f03e184bc9eb0c2ab3488a44
+---
+ .../yoga/0001-yoga-don-t-export-symbols.patch | 34 -------------------
+ src/3rdparty/yoga/BitUtils.h                  |  4 +++
+ src/3rdparty/yoga/CompactValue.h              |  7 +++-
+ src/3rdparty/yoga/Utils.cpp                   |  4 +++
+ src/3rdparty/yoga/Utils.h                     |  4 +++
+ src/3rdparty/yoga/YGConfig.cpp                |  9 +++--
+ src/3rdparty/yoga/YGConfig.h                  |  4 +++
+ src/3rdparty/yoga/YGEnums.cpp                 |  2 ++
+ src/3rdparty/yoga/YGEnums.h                   |  1 -
+ src/3rdparty/yoga/YGLayout.h                  |  4 +++
+ src/3rdparty/yoga/YGMacros.h                  | 28 +++++++++++++--
+ src/3rdparty/yoga/YGNode.h                    |  4 +++
+ src/3rdparty/yoga/YGNodePrint.cpp             |  5 +++
+ src/3rdparty/yoga/YGNodePrint.h               |  4 +++
+ src/3rdparty/yoga/YGStyle.cpp                 |  4 +++
+ src/3rdparty/yoga/YGStyle.h                   |  4 +++
+ src/3rdparty/yoga/YGValue.cpp                 |  4 +++
+ src/3rdparty/yoga/YGValue.h                   |  4 +++
+ src/3rdparty/yoga/Yoga-internal.h             | 10 ++++++
+ src/3rdparty/yoga/Yoga.cpp                    |  4 +++
+ src/3rdparty/yoga/Yoga.h                      |  8 +++++
+ src/3rdparty/yoga/event/event.cpp             |  4 +++
+ src/3rdparty/yoga/event/event.h               |  5 ++-
+ src/3rdparty/yoga/log.cpp                     |  4 +++
+ src/3rdparty/yoga/log.h                       |  5 ++-
+ 25 files changed, 127 insertions(+), 43 deletions(-)
+ delete mode 100644 src/3rdparty/yoga/0001-yoga-don-t-export-symbols.patch
+
+diff --git a/src/3rdparty/yoga/0001-yoga-don-t-export-symbols.patch b/src/3rdparty/yoga/0001-yoga-don-t-export-symbols.patch
+deleted file mode 100644
+index cd11d4b486..0000000000
+--- a/src/3rdparty/yoga/0001-yoga-don-t-export-symbols.patch
++++ /dev/null
+@@ -1,34 +0,0 @@
+-From 0d39850502282d74b0c1c1014b2b0c3c768bd6c4 Mon Sep 17 00:00:00 2001
+-From: Tim Blechmann <tim.blechmann@qt.io>
+-Date: Mon, 16 Jun 2025 10:37:18 +0800
+-Subject: [PATCH] yoga: don't export symbols
+-
+----
+- src/3rdparty/yoga/YGMacros.h | 4 ++--
+- 1 file changed, 2 insertions(+), 2 deletions(-)
+-
+-diff --git a/src/3rdparty/yoga/YGMacros.h b/src/3rdparty/yoga/YGMacros.h
+-index a675c4d88e..329d2a4bb0 100644
+---- a/src/3rdparty/yoga/YGMacros.h
+-+++ b/src/3rdparty/yoga/YGMacros.h
+-@@ -28,7 +28,7 @@
+- #endif
+- 
+- #ifdef _WINDLL
+--#define WIN_EXPORT __declspec(dllexport)
+-+#define WIN_EXPORT // __declspec(dllexport)
+- #else
+- #define WIN_EXPORT
+- #endif
+-@@ -37,7 +37,7 @@
+- #ifdef _MSC_VER
+- #define YOGA_EXPORT
+- #else
+--#define YOGA_EXPORT __attribute__((visibility("default")))
+-+#define YOGA_EXPORT // __attribute__((visibility("default")))
+- #endif
+- #endif
+- 
+--- 
+-2.49.0.windows.1
+-
+diff --git a/src/3rdparty/yoga/BitUtils.h b/src/3rdparty/yoga/BitUtils.h
+index d8d38a02d8..30bcbfe0ea 100644
+--- a/src/3rdparty/yoga/BitUtils.h
++++ b/src/3rdparty/yoga/BitUtils.h
+@@ -13,6 +13,8 @@
+ 
+ #include <yoga/YGEnums.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN 
++
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -71,3 +73,5 @@ inline void setBooleanData(uint8_t& flags, size_t index, bool value) {
+ } // namespace detail
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/CompactValue.h b/src/3rdparty/yoga/CompactValue.h
+index 457a745887..bc853d0ca9 100644
+--- a/src/3rdparty/yoga/CompactValue.h
++++ b/src/3rdparty/yoga/CompactValue.h
+@@ -30,7 +30,7 @@
+ 
+ static_assert(
+     std::numeric_limits<float>::is_iec559,
+-    "facebook::yoga::detail::CompactValue only works with IEEE754 floats");
++    "QtYoga::facebook::yoga::detail::CompactValue only works with IEEE754 floats");
+ 
+ #ifdef YOGA_COMPACT_VALUE_TEST
+ #define VISIBLE_FOR_TESTING public:
+@@ -38,6 +38,8 @@ static_assert(
+ #define VISIBLE_FOR_TESTING private:
+ #endif
+ 
++QT_YOGA_NAMESPACE_BEGIN 
++
+ namespace facebook {
+ namespace yoga {
+ namespace detail {
+@@ -212,3 +214,6 @@ constexpr bool operator!=(CompactValue a, CompactValue b) noexcept {
+ } // namespace detail
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
++
+diff --git a/src/3rdparty/yoga/Utils.cpp b/src/3rdparty/yoga/Utils.cpp
+index 80b0af9927..7766c36d4d 100644
+--- a/src/3rdparty/yoga/Utils.cpp
++++ b/src/3rdparty/yoga/Utils.cpp
+@@ -6,6 +6,8 @@
+ #include "Utils.h"
+ #include <stdexcept>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ using namespace facebook;
+ 
+ YGFlexDirection YGFlexDirectionCross(
+@@ -79,3 +81,5 @@ void yoga::throwLogicalErrorWithMessage([[maybe_unused]]const char* message) {
+   std::terminate();
+ #endif // defined(__cpp_exceptions)
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/Utils.h b/src/3rdparty/yoga/Utils.h
+index b0a38566f1..de828ebdf1 100644
+--- a/src/3rdparty/yoga/Utils.h
++++ b/src/3rdparty/yoga/Utils.h
+@@ -37,6 +37,8 @@
+ // - relativeChildren: Maintain a vector of the child nodes that can shrink
+ //   and/or grow.
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ struct YGCollectFlexItemsRowValues {
+   uint32_t itemsOnLine;
+   float sizeConsumedOnCurrentLine;
+@@ -144,3 +146,5 @@ inline YGFloatOptional YGResolveValueMargin(
+     const float ownerSize) {
+   return value.isAuto() ? YGFloatOptional{0} : YGResolveValue(value, ownerSize);
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGConfig.cpp b/src/3rdparty/yoga/YGConfig.cpp
+index eee23ec66d..a93b4fa752 100644
+--- a/src/3rdparty/yoga/YGConfig.cpp
++++ b/src/3rdparty/yoga/YGConfig.cpp
+@@ -5,11 +5,12 @@
+ 
+ #include "YGConfig.h"
+ 
+-using namespace facebook::yoga;
++QT_YOGA_NAMESPACE_BEGIN
+ 
+ namespace facebook {
+ namespace yoga {
+-bool configUpdateInvalidatesLayout(YGConfigRef a, YGConfigRef b) {
++
++bool configUpdateInvalidatesLayout(QT_NAMESPACE_REF::YGConfigRef a, QT_NAMESPACE_REF::YGConfigRef b) {
+   return a->getErrata() != b->getErrata() ||
+       a->getEnabledExperiments() != b->getEnabledExperiments() ||
+       a->getPointScaleFactor() != b->getPointScaleFactor() ||
+@@ -18,6 +19,8 @@ bool configUpdateInvalidatesLayout(YGConfigRef a, YGConfigRef b) {
+ } // namespace yoga
+ } // namespace facebook
+ 
++using namespace facebook::yoga;
++
+ YGConfig::YGConfig(YGLogger logger) : cloneNodeCallback_{nullptr} {
+   setLogger(logger);
+ }
+@@ -147,3 +150,5 @@ YGNodeRef YGConfig::cloneNode(
+   }
+   return clone;
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGConfig.h b/src/3rdparty/yoga/YGConfig.h
+index a946867f77..a6176e7f5e 100644
+--- a/src/3rdparty/yoga/YGConfig.h
++++ b/src/3rdparty/yoga/YGConfig.h
+@@ -12,6 +12,8 @@
+ #include "BitUtils.h"
+ #include "Yoga-internal.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -108,3 +110,5 @@ private:
+   float pointScaleFactor_ = 1.0f;
+   void* context_ = nullptr;
+ };
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGEnums.cpp b/src/3rdparty/yoga/YGEnums.cpp
+index 1a4706a8d1..1ef5d43562 100644
+--- a/src/3rdparty/yoga/YGEnums.cpp
++++ b/src/3rdparty/yoga/YGEnums.cpp
+@@ -5,6 +5,8 @@
+ 
+ #include <yoga/YGEnums.h>
+ 
++USE_QT_YOGA_NAMESPACE
++
+ const char* YGAlignToString(const YGAlign value) {
+   switch (value) {
+     case YGAlignAuto:
+diff --git a/src/3rdparty/yoga/YGEnums.h b/src/3rdparty/yoga/YGEnums.h
+index e03ca0cd97..cdeac586ca 100644
+--- a/src/3rdparty/yoga/YGEnums.h
++++ b/src/3rdparty/yoga/YGEnums.h
+@@ -10,7 +10,6 @@
+ 
+ // clang-format off
+ 
+-
+ YG_EXTERN_C_BEGIN
+ 
+ YG_ENUM_SEQ_DECL(
+diff --git a/src/3rdparty/yoga/YGLayout.h b/src/3rdparty/yoga/YGLayout.h
+index 1864f86822..a74e65100a 100644
+--- a/src/3rdparty/yoga/YGLayout.h
++++ b/src/3rdparty/yoga/YGLayout.h
+@@ -11,6 +11,8 @@
+ #include "YGFloatOptional.h"
+ #include "Yoga-internal.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ struct YGLayout {
+   std::array<float, 4> position = {};
+   std::array<float, 2> dimensions = {{YGUndefined, YGUndefined}};
+@@ -61,3 +63,5 @@ public:
+   bool operator==(YGLayout layout) const;
+   bool operator!=(YGLayout layout) const { return !(*this == layout); }
+ };
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGMacros.h b/src/3rdparty/yoga/YGMacros.h
+index 329d2a4bb0..02a3282246 100644
+--- a/src/3rdparty/yoga/YGMacros.h
++++ b/src/3rdparty/yoga/YGMacros.h
+@@ -8,12 +8,30 @@
+ #pragma once
+ 
+ #ifdef __cplusplus
++#include <QtCore/qtconfigmacros.h>
+ #include <type_traits>
+ #endif
+ 
+ #ifdef __cplusplus
+-#define YG_EXTERN_C_BEGIN extern "C" {
+-#define YG_EXTERN_C_END }
++#ifdef QT_NAMESPACE
++#define QT_NAMESPACE_REF ::QT_NAMESPACE::QtYoga
++#else
++#define QT_NAMESPACE_REF ::QtYoga
++#endif
++
++#define USE_QT_YOGA_NAMESPACE using namespace QT_NAMESPACE_REF;
++
++#define QT_YOGA_NAMESPACE_BEGIN \
++            QT_BEGIN_NAMESPACE \
++            namespace QtYoga {
++#define QT_YOGA_NAMESPACE_END \
++            QT_END_NAMESPACE \
++            } USE_QT_YOGA_NAMESPACE
++#endif
++
++#ifdef __cplusplus
++#define YG_EXTERN_C_BEGIN // extern "C" {
++#define YG_EXTERN_C_END // }
+ #else
+ #define YG_EXTERN_C_BEGIN
+ #define YG_EXTERN_C_END
+@@ -95,6 +113,7 @@
+ #endif
+ 
+ #ifdef __cplusplus
++QT_YOGA_NAMESPACE_BEGIN
+ namespace facebook {
+ namespace yoga {
+ namespace enums {
+@@ -112,6 +131,7 @@ constexpr int n() {
+ } // namespace enums
+ } // namespace yoga
+ } // namespace facebook
++QT_YOGA_NAMESPACE_END
+ #endif
+ 
+ #define YG_ENUM_DECL(NAME, ...)                               \
+@@ -121,6 +141,7 @@ constexpr int n() {
+ #ifdef __cplusplus
+ #define YG_ENUM_SEQ_DECL(NAME, ...)  \
+   YG_ENUM_DECL(NAME, __VA_ARGS__)    \
++  QT_YOGA_NAMESPACE_BEGIN            \ 
+   YG_EXTERN_C_END                    \
+   namespace facebook {               \
+   namespace yoga {                   \
+@@ -132,7 +153,8 @@ constexpr int n() {
+   }                                  \
+   }                                  \
+   }                                  \
+-  YG_EXTERN_C_BEGIN
++  YG_EXTERN_C_BEGIN                  \
++  QT_YOGA_NAMESPACE_END
+ #else
+ #define YG_ENUM_SEQ_DECL YG_ENUM_DECL
+ #endif
+diff --git a/src/3rdparty/yoga/YGNode.h b/src/3rdparty/yoga/YGNode.h
+index c4eba5cafd..6234ee4fdd 100644
+--- a/src/3rdparty/yoga/YGNode.h
++++ b/src/3rdparty/yoga/YGNode.h
+@@ -30,6 +30,8 @@ struct YGNodeFlags {
+ };
+ #pragma pack(pop)
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ struct YOGA_EXPORT YGNode {
+   using MeasureWithContextFn =
+       YGSize (*)(YGNode*, float, YGMeasureMode, float, YGMeasureMode, void*);
+@@ -333,3 +335,5 @@ public:
+   bool isNodeFlexible();
+   void reset();
+ };
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGNodePrint.cpp b/src/3rdparty/yoga/YGNodePrint.cpp
+index cf0a2e44ed..c3d69a2822 100644
+--- a/src/3rdparty/yoga/YGNodePrint.cpp
++++ b/src/3rdparty/yoga/YGNodePrint.cpp
+@@ -14,6 +14,8 @@
+ #include "Yoga-internal.h"
+ #include "Utils.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ typedef std::string string;
+@@ -242,4 +244,7 @@ void YGNodeToString(
+ }
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
++
+ #endif
+diff --git a/src/3rdparty/yoga/YGNodePrint.h b/src/3rdparty/yoga/YGNodePrint.h
+index 04f1c0a08b..f266e8f0a4 100644
+--- a/src/3rdparty/yoga/YGNodePrint.h
++++ b/src/3rdparty/yoga/YGNodePrint.h
+@@ -13,6 +13,8 @@
+ 
+ #include <yoga/Yoga.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -25,4 +27,6 @@ void YGNodeToString(
+ } // namespace yoga
+ } // namespace facebook
+ 
++QT_YOGA_NAMESPACE_END
++
+ #endif
+diff --git a/src/3rdparty/yoga/YGStyle.cpp b/src/3rdparty/yoga/YGStyle.cpp
+index b680800d23..cd7c61bd1d 100644
+--- a/src/3rdparty/yoga/YGStyle.cpp
++++ b/src/3rdparty/yoga/YGStyle.cpp
+@@ -6,6 +6,8 @@
+ #include "YGStyle.h"
+ #include "Utils.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ // Yoga specific properties, not compatible with flexbox specification
+ bool operator==(const YGStyle& lhs, const YGStyle& rhs) {
+   bool areNonFloatValuesEqual = lhs.direction() == rhs.direction() &&
+@@ -52,3 +54,5 @@ bool operator==(const YGStyle& lhs, const YGStyle& rhs) {
+ 
+   return areNonFloatValuesEqual;
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGStyle.h b/src/3rdparty/yoga/YGStyle.h
+index f998b81cd3..ecfb58466e 100644
+--- a/src/3rdparty/yoga/YGStyle.h
++++ b/src/3rdparty/yoga/YGStyle.h
+@@ -19,6 +19,8 @@
+ #include "Yoga-internal.h"
+ #include "BitUtils.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ class YOGA_EXPORT YGStyle {
+   template <typename Enum>
+   using Values =
+@@ -236,3 +238,5 @@ YOGA_EXPORT bool operator==(const YGStyle& lhs, const YGStyle& rhs);
+ YOGA_EXPORT inline bool operator!=(const YGStyle& lhs, const YGStyle& rhs) {
+   return !(lhs == rhs);
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGValue.cpp b/src/3rdparty/yoga/YGValue.cpp
+index db34760ac6..b95b7f8cfd 100644
+--- a/src/3rdparty/yoga/YGValue.cpp
++++ b/src/3rdparty/yoga/YGValue.cpp
+@@ -5,6 +5,10 @@
+ 
+ #include <yoga/YGValue.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ const YGValue YGValueZero = {0, YGUnitPoint};
+ const YGValue YGValueUndefined = {YGUndefined, YGUnitUndefined};
+ const YGValue YGValueAuto = {YGUndefined, YGUnitAuto};
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/YGValue.h b/src/3rdparty/yoga/YGValue.h
+index a409653bb5..78e1955da2 100644
+--- a/src/3rdparty/yoga/YGValue.h
++++ b/src/3rdparty/yoga/YGValue.h
+@@ -10,6 +10,8 @@
+ #include <yoga/YGEnums.h>
+ #include <yoga/YGMacros.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN 
++
+ YG_EXTERN_C_BEGIN
+ 
+ typedef struct YGValue {
+@@ -57,3 +59,5 @@ inline YGValue operator-(const YGValue& value) {
+   return {-value.value, value.unit};
+ }
+ #endif
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/Yoga-internal.h b/src/3rdparty/yoga/Yoga-internal.h
+index 95de6fe2bb..ebd90ea092 100644
+--- a/src/3rdparty/yoga/Yoga-internal.h
++++ b/src/3rdparty/yoga/Yoga-internal.h
+@@ -16,8 +16,12 @@
+ 
+ #include "CompactValue.h"
+ 
++USE_QT_YOGA_NAMESPACE
++
+ using YGVector = std::vector<YGNodeRef>;
+ 
++QT_YOGA_NAMESPACE_BEGIN 
++
+ YG_EXTERN_C_BEGIN
+ 
+ void YGNodeCalculateLayoutWithContext(
+@@ -55,6 +59,8 @@ extern const YGValue YGValueUndefined;
+ extern const YGValue YGValueAuto;
+ extern const YGValue YGValueZero;
+ 
++QT_YOGA_NAMESPACE_END
++
+ struct YGCachedMeasurement {
+   float availableWidth;
+   float availableHeight;
+@@ -103,6 +109,8 @@ struct YGCachedMeasurement {
+ // 98% of analyzed layouts require less than 8 entries.
+ #define YG_MAX_CACHED_RESULT_COUNT 8
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ namespace detail {
+@@ -158,3 +166,5 @@ static const float kDefaultFlexShrink = 0.0f;
+ static const float kWebDefaultFlexShrink = 1.0f;
+ 
+ extern bool YGFloatsEqual(const float a, const float b);
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/Yoga.cpp b/src/3rdparty/yoga/Yoga.cpp
+index 55546dae6c..24c57c9d6f 100644
+--- a/src/3rdparty/yoga/Yoga.cpp
++++ b/src/3rdparty/yoga/Yoga.cpp
+@@ -18,6 +18,8 @@
+ #include "Yoga-internal.h"
+ #include "event/event.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ using namespace facebook::yoga;
+ using detail::Log;
+ 
+@@ -4343,3 +4345,5 @@ YOGA_EXPORT void YGConfigSetCloneNodeFunc(
+     const YGCloneNodeFunc callback) {
+   config->setCloneNodeCallback(callback);
+ }
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/Yoga.h b/src/3rdparty/yoga/Yoga.h
+index 834a6c5747..01acebcf20 100644
+--- a/src/3rdparty/yoga/Yoga.h
++++ b/src/3rdparty/yoga/Yoga.h
+@@ -22,8 +22,14 @@
+ #include <yoga/YGMacros.h>
+ #include <yoga/YGValue.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN 
++
+ YG_EXTERN_C_BEGIN
+ 
++struct YGConfig;
++struct YGNode;
++class YGStyle;
++
+ typedef struct YGSize {
+   float width;
+   float height;
+@@ -379,3 +385,5 @@ WIN_EXPORT float YGRoundValueToPixelGrid(
+     bool forceFloor);
+ 
+ YG_EXTERN_C_END
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/event/event.cpp b/src/3rdparty/yoga/event/event.cpp
+index dad7a9a082..c7b7b863d5 100644
+--- a/src/3rdparty/yoga/event/event.cpp
++++ b/src/3rdparty/yoga/event/event.cpp
+@@ -7,6 +7,8 @@
+ #include <atomic>
+ #include <memory>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -82,3 +84,5 @@ void Event::publish(const YGNode& node, Type eventType, const Data& eventData) {
+ 
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/event/event.h b/src/3rdparty/yoga/event/event.h
+index f5f2a80e38..9c5e8f4261 100644
+--- a/src/3rdparty/yoga/event/event.h
++++ b/src/3rdparty/yoga/event/event.h
+@@ -13,9 +13,10 @@
+ #include <yoga/YGEnums.h>
+ #include <stdint.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ struct YGConfig;
+ struct YGNode;
+-
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -142,3 +143,5 @@ struct Event::TypedData<Event::NodeLayout> {
+ 
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/log.cpp b/src/3rdparty/yoga/log.cpp
+index 454ac462e6..ab73d3a716 100644
+--- a/src/3rdparty/yoga/log.cpp
++++ b/src/3rdparty/yoga/log.cpp
+@@ -9,6 +9,8 @@
+ #include "YGConfig.h"
+ #include "YGNode.h"
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ namespace facebook {
+ namespace yoga {
+ namespace detail {
+@@ -60,3 +62,5 @@ void Log::log(
+ } // namespace detail
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
+diff --git a/src/3rdparty/yoga/log.h b/src/3rdparty/yoga/log.h
+index 2e6190d976..2e321c6ba7 100644
+--- a/src/3rdparty/yoga/log.h
++++ b/src/3rdparty/yoga/log.h
+@@ -9,9 +9,10 @@
+ 
+ #include <yoga/YGEnums.h>
+ 
++QT_YOGA_NAMESPACE_BEGIN
++
+ struct YGNode;
+ struct YGConfig;
+-
+ namespace facebook {
+ namespace yoga {
+ 
+@@ -36,3 +37,5 @@ struct Log {
+ } // namespace detail
+ } // namespace yoga
+ } // namespace facebook
++
++QT_YOGA_NAMESPACE_END
+-- 
+2.43.0
+

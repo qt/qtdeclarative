@@ -5,11 +5,12 @@
 
 #include "YGConfig.h"
 
-using namespace facebook::yoga;
+QT_YOGA_NAMESPACE_BEGIN
 
 namespace facebook {
 namespace yoga {
-bool configUpdateInvalidatesLayout(YGConfigRef a, YGConfigRef b) {
+
+bool configUpdateInvalidatesLayout(QT_NAMESPACE_REF::YGConfigRef a, QT_NAMESPACE_REF::YGConfigRef b) {
   return a->getErrata() != b->getErrata() ||
       a->getEnabledExperiments() != b->getEnabledExperiments() ||
       a->getPointScaleFactor() != b->getPointScaleFactor() ||
@@ -17,6 +18,8 @@ bool configUpdateInvalidatesLayout(YGConfigRef a, YGConfigRef b) {
 }
 } // namespace yoga
 } // namespace facebook
+
+using namespace facebook::yoga;
 
 YGConfig::YGConfig(YGLogger logger) : cloneNodeCallback_{nullptr} {
   setLogger(logger);
@@ -147,3 +150,5 @@ YGNodeRef YGConfig::cloneNode(
   }
   return clone;
 }
+
+QT_YOGA_NAMESPACE_END

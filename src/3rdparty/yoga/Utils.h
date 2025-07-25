@@ -37,6 +37,8 @@
 // - relativeChildren: Maintain a vector of the child nodes that can shrink
 //   and/or grow.
 
+QT_YOGA_NAMESPACE_BEGIN
+
 struct YGCollectFlexItemsRowValues {
   uint32_t itemsOnLine;
   float sizeConsumedOnCurrentLine;
@@ -144,3 +146,5 @@ inline YGFloatOptional YGResolveValueMargin(
     const float ownerSize) {
   return value.isAuto() ? YGFloatOptional{0} : YGResolveValue(value, ownerSize);
 }
+
+QT_YOGA_NAMESPACE_END

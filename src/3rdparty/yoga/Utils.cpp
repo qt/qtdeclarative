@@ -6,6 +6,8 @@
 #include "Utils.h"
 #include <stdexcept>
 
+QT_YOGA_NAMESPACE_BEGIN
+
 using namespace facebook;
 
 YGFlexDirection YGFlexDirectionCross(
@@ -79,3 +81,5 @@ void yoga::throwLogicalErrorWithMessage([[maybe_unused]]const char* message) {
   std::terminate();
 #endif // defined(__cpp_exceptions)
 }
+
+QT_YOGA_NAMESPACE_END
