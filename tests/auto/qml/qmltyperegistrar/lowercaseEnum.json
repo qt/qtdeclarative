@@ -1,0 +1,28 @@
+[
+    {
+        "classes": [
+            {
+
+                "className": "LowercaseWithEnum",
+                "qualifiedClassName": "LowercaseWithEnum",
+                "object": true,
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "lowercaseType"
+                    }
+                ],
+                "enums": [
+                    {
+                        "name": "Status",
+                        "values": [
+                            "Active",
+                            "Inactive"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "inputFile": "lowercaseEnum.h"
+    }
+]

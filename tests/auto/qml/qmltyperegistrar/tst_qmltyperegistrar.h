@@ -1008,6 +1008,7 @@ private slots:
     void typeInModuleMajorVersionZero();
     void resettableProperty();
     void duplicateExportWarnings();
+
     void clonedSignal();
     void baseVersionInQmltypes();
     void unconstructibleValueType();
@@ -1031,6 +1032,8 @@ private slots:
     void consistencyWarnings();
     void deduplicateCleanPaths();
     void enumWarnings();
+
+    void lowercaseEnumWarning();
 
     void relatedAddedInVersion();
     void longNumberTypes();
