@@ -166,6 +166,7 @@ void tst_qmltyperegistrar::doNotRestrictToImportVersion()
 
 void tst_qmltyperegistrar::pastMajorVersions()
 {
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"lowercaseType\"; type names must begin with an uppercase letter");
     QQmlEngine engine;
     QQmlComponent c(&engine);
     c.setData("import QML\nimport QmlTypeRegistrarTest 0.254\nQtObject {}", QUrl());
@@ -1673,6 +1674,32 @@ void tst_qmltyperegistrar::mergeQtConfImportPathOrder()
     QVERIFY2(foundImports, "no QmlImports entry in the generated qt.conf");
 
     QCOMPARE(imports.split(QLatin1Char(',')), QStringList({ first, second, third }));
+}
+
+void tst_qmltyperegistrar::lowercaseEnumWarning()
+{
+    QmlTypeRegistrar r;
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    MetaTypesJsonProcessor processor(true);
+    QVERIFY(processor.processTypes({ ":/lowercaseEnum.json" }));
+    processor.postProcessTypes();
+
+    QList<MetaType> types = processor.types();
+    QList<MetaType> typesforeign = processor.foreignTypes();
+    r.setTypes(types, typesforeign, { });
+
+    const auto expectWarning = [](const char *message) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(message));
+    };
+
+    expectWarning("Warning: lowercaseEnum.h:: QML type 'lowercaseType' starts with a lowercase letter and exports enums, which are not accessible from QML or JavaScript.");
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+    r.write(output, "tst_qmltyperegistrar_qmltyperegistrations.cpp");
 }
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
