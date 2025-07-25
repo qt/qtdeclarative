@@ -37,7 +37,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         typereferencinganother.h
         # noextheader special case
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
-        foo.cpp foo.h duplicatedExports.h
+        foo.cpp foo.h duplicatedExports.h lowercaseEnum.h
         inaccessible/base.h
         inaccessible/property.h
         opaquetypes.h
@@ -120,6 +120,7 @@ qt_internal_add_resource(tst_qmltyperegistrar "resources"
         duplicatedExports.json
         missingTypes.json
         processTwice.json
+        lowercaseEnum.json
 )
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

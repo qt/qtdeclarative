@@ -323,10 +323,22 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
         }
 
         for (QString qmlElementName : std::as_const(qmlElementNames)) {
+
             if (qmlElementName == S_ANONYMOUS)
                 continue;
+
             if (qmlElementName == S_AUTO)
                 qmlElementName = className;
+
+            if (!qmlElementName.isEmpty()
+                && qmlElementName.front().isLower()
+                && !classDef.enums().empty()) {
+                warning(classDef.inputFile()).nospace()
+                << "QML type '" << qmlElementName
+                << "' starts with a lowercase letter and exports enums, "
+                   "which are not accessible from QML or JavaScript.";
+            }
+
             qmlElementInfos[qmlElementName].append({
                 classDef.inputFile(),
                 className,
