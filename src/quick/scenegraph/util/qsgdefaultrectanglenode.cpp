@@ -49,6 +49,7 @@ void QSGDefaultRectangleNode::setColor(const QColor &color)
             pts[i].a = uchar(qRound(a * 255));
         }
         markDirty(QSGNode::DirtyGeometry);
+        m_color = color;
     }
 }
 
