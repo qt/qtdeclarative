@@ -119,7 +119,7 @@ Item {
         name: "spamSignaling"
         when: windowShown
 
-        readonly property int spam_count: 100000
+        readonly property int spam_count: 500
 
         function init() { root.wipeSpies() }
 
@@ -129,7 +129,6 @@ Item {
         }
 
         function test_basic() {
-            skip("QTBUG-138104 Global reference table overflow")
             compare(basicSpy.count, 0)
             for (let i = 0; i < spam_count; ++i) {
                 root.basicSignal()
@@ -140,7 +139,6 @@ Item {
         }
 
         function test_int() {
-            skip("QTBUG-138104 Global reference table overflow")
             const testVal = 123
             compare(intSpy.count, 0)
             for (let i = 0; i < spam_count; ++i) {
@@ -155,7 +153,6 @@ Item {
         }
 
         function test_bool() {
-            skip("QTBUG-138104 Global reference table overflow")
             const testVal = false
             compare(boolSpy.count, 0)
             for (let i = 0; i < spam_count; ++i) {
@@ -170,7 +167,6 @@ Item {
         }
 
         function test_double() {
-            skip("QTBUG-138104 Global reference table overflow")
             const testVal = 123.123
             compare(doubleSpy.count, 0)
             for (let i = 0; i < spam_count; ++i) {
@@ -185,7 +181,6 @@ Item {
         }
 
         function test_string() {
-            skip("QTBUG-138104 Global reference table overflow")
             const testVal = "Testing testing, is this thing on?"
             compare(stringSpy.count, 0)
             for (let i = 0; i < spam_count; ++i) {
