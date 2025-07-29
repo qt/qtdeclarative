@@ -939,7 +939,9 @@ QColor QQuickMaterialStyle::backgroundColor(Shade shade) const
 {
     if (!m_hasBackground)
         return QColor::fromRgba(m_theme == Light ? backgroundColorLight : backgroundColorDark);
-    if (m_customBackground)
+    // The application bars (such as ToolBar) set the background color from the primary color,
+    // and in that case, it's better to validate with the custom primary and use it accordingly.
+    if (m_customBackground || (m_customPrimary && m_background == m_primary))
         return shade == themeShade() ? QColor::fromRgba(m_background)
                                      : this->shade(QColor::fromRgba(m_background), shade);
     if (m_background > BlueGrey)

@@ -1463,6 +1463,12 @@ TestCase {
             { primary: Material.Amber,      expectedForeground: "#dd000000" },
             { primary: Material.Orange,     expectedForeground: "#dd000000" },
             { primary: Material.Grey,       expectedForeground: "#dd000000" },
+            // The below color (#F44346) corresponds to Material.Red but still
+            // it shall be considered as the custom primary color
+            { primary: "#F44336",           expectedForegroundLight: "#dd000000",
+                                            expectedForegroundDark: "#ffffff"},
+            { primary: "#7938b6",           expectedForegroundLight: "#dd000000",
+                                            expectedForegroundDark: "#ffffff"}
         ]
     }
 
@@ -1471,20 +1477,25 @@ TestCase {
         verify(window)
 
         window.Material.primary = data.primary
-        let expectedBackground = window.Material.color(data.primary, Material.Shade200)
+        let customPrimary = !Number.isInteger(data.primary)
+        let expectedBackground = customPrimary ?  window.Material.primary :
+                            window.Material.color(data.primary, Material.Shade200)
+        let expectedForeground = customPrimary ? data.expectedForegroundDark : data.expectedForeground
         compare(window.Material.background.toString(), expectedBackground)
-        compare(window.Material.foreground.toString(), data.expectedForeground)
+        compare(window.Material.foreground.toString(), expectedForeground)
         compare(window.container.Material.background.toString(), expectedBackground)
-        compare(window.container.Material.foreground.toString(), data.expectedForeground)
-        compare(window.label.color.toString(), data.expectedForeground)
+        compare(window.container.Material.foreground.toString(), expectedForeground)
+        compare(window.label.color.toString(), expectedForeground)
 
         window.Material.theme = Material.Light
-        expectedBackground = window.Material.color(data.primary, Material.Shade500)
+        if (!customPrimary)
+            expectedBackground = window.Material.color(data.primary, Material.Shade500)
+        expectedForeground = customPrimary ? data.expectedForegroundLight : data.expectedForeground
         compare(window.Material.background.toString(), expectedBackground)
-        compare(window.Material.foreground.toString(), data.expectedForeground)
+        compare(window.Material.foreground.toString(), expectedForeground)
         compare(window.container.Material.background.toString(), expectedBackground)
-        compare(window.container.Material.foreground.toString(), data.expectedForeground)
-        compare(window.label.color.toString(), data.expectedForeground)
+        compare(window.container.Material.foreground.toString(), expectedForeground)
+        compare(window.label.color.toString(), expectedForeground)
     }
 
     Component {
