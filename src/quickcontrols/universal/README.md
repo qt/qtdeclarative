@@ -1,6 +1,6 @@
 # Universal Style
 
-This style is based on the [Microsoft Universal Design Guidelines](https://dev.windows.com/design).
+This style is based on the Microsoft Universal Design Guidelines.
 
 The colors and metrics used all around the QML and C++ files originate from the Windows 10 SDK. The files are called **generic.xaml** and **themeresources.xml**, and they are located in the following folder:
 
