@@ -40,7 +40,7 @@ DialogsQuickImpl.FileDialogDelegate {
 
     property int fileDetailRowWidth
 
-    contentItem: FileDialogDelegateLabel {
+    contentItem: DialogsQuickImpl.FileDialogDelegateLabel {
         delegate: control
         fileDetailRowTextColor: control.icon.color
         fileDetailRowWidth: control.fileDetailRowWidth

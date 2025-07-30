@@ -40,7 +40,7 @@ DialogsQuickImpl.FileDialogDelegate {
 
     required property int fileDetailRowWidth
 
-    contentItem: FileDialogDelegateLabel {
+    contentItem: DialogsQuickImpl.FileDialogDelegateLabel {
         delegate: control
         fileDetailRowTextColor: control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
         fileDetailRowWidth: control.fileDetailRowWidth
