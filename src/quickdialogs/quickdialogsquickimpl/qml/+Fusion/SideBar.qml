@@ -47,7 +47,6 @@ DialogsQuickImpl.SideBar {
 
         required property int index
         required property string folderName
-        required icon
     }
 
     separatorDelegate: Item {
@@ -65,7 +64,7 @@ DialogsQuickImpl.SideBar {
 
     addFavoriteDelegate: Button {
         id: addFavoriteDelegateRoot
-        text: "Add Favorite"
+        text: qsTr("Add Favorite")
         flat: true
         width: control.width
         contentItem: IconLabel {

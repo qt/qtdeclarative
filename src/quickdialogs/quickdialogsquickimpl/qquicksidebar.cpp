@@ -26,7 +26,7 @@
 
 using namespace Qt::Literals::StringLiterals;
 
-static QList<QStandardPaths::StandardLocation> s_defaultPaths = {
+static std::initializer_list<QStandardPaths::StandardLocation> s_defaultPaths = {
    QStandardPaths::HomeLocation,     QStandardPaths::DesktopLocation,
    QStandardPaths::DownloadLocation, QStandardPaths::DocumentsLocation,
    QStandardPaths::MusicLocation,    QStandardPaths::PicturesLocation,
@@ -357,28 +357,28 @@ void QQuickSideBar::componentComplete()
 
 QUrl QQuickSideBarPrivate::folderIconSource() const
 {
-    return QUrl("../images/sidebar-folder.png"_L1);
+    return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-folder.png"_L1);
 }
 
 QUrl QQuickSideBarPrivate::folderIconSource(QStandardPaths::StandardLocation stdLocation) const
 {
     switch (stdLocation) {
     case QStandardPaths::DesktopLocation:
-        return QUrl("../images/sidebar-desktop.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-desktop.png"_L1);
     case QStandardPaths::DocumentsLocation:
-        return QUrl("../images/sidebar-documents.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-documents.png"_L1);
     case QStandardPaths::MusicLocation:
-        return QUrl("../images/sidebar-music.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-music.png"_L1);
     case QStandardPaths::MoviesLocation:
-        return QUrl("../images/sidebar-video.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-video.png"_L1);
     case QStandardPaths::PicturesLocation:
-        return QUrl("../images/sidebar-photo.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-photo.png"_L1);
     case QStandardPaths::HomeLocation:
-        return QUrl("../images/sidebar-home.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-home.png"_L1);
     case QStandardPaths::DownloadLocation:
-        return QUrl("../images/sidebar-downloads.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-downloads.png"_L1);
     default:
-        return QUrl("../images/sidebar-folder.png"_L1);
+        return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-folder.png"_L1);
     }
 }
 
@@ -479,7 +479,7 @@ void QQuickSideBarPrivate::setAddFavoriteDelegateHovered(bool hovered)
 
 QUrl QQuickSideBarPrivate::addFavoriteIconUrl() const
 {
-    return QUrl("../images/sidebar-plus.png"_L1);
+    return QUrl("qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/sidebar-plus.png"_L1);
 }
 
 void QQuickSideBarPrivate::initContextMenu()
