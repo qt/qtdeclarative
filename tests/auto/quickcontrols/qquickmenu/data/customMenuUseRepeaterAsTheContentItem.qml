@@ -9,7 +9,6 @@ ApplicationWindow {
 
     Menu {
         id: menu
-        visible: true
 
         contentItem: FocusScope {
             implicitHeight: flickable.height
