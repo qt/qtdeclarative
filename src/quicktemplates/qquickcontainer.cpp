@@ -300,15 +300,37 @@ void QQuickContainerPrivate::reorderItems()
     if (!contentItem)
         return;
 
-    QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
+    // The item view eventually reparents all the items of the content model
+    // from the container. At this stage (during component complete), however, due
+    // to optimisation strategies in the item views, this doesn't happen when the
+    // visible area of the item view is less than the total content width of the items
+    // within the content model. This can cause issues while reordering. Thus, it's
+    // better to skip reordering the item within the content model once it's known
+    // that it will be reparented to the item views.
+    bool allowReorder = true;
+    if (!qobject_cast<QQuickFlickable *>(contentItem)) {
+        for (int index = 0; index < contentModel->count(); index++) {
+            if (const auto *item = qobject_cast<QQuickItem *>(contentModel->get(index))) {
+                const auto *parentItem = item->parentItem();
+                if (parentItem && !qobject_cast<QQuickItemView *>(parentItem->parentItem())) {
+                    allowReorder = false;
+                    break;
+                }
+            }
+        }
+    }
 
-    int to = 0;
-    for (int i = 0; i < siblings.size(); ++i) {
-        QQuickItem* sibling = siblings.at(i);
-        if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
-            continue;
-        int index = contentModel->indexOf(sibling, nullptr);
-        q->moveItem(index, to++);
+    if (allowReorder) {
+        QList<QQuickItem *> siblings = effectiveContentItem(contentItem)->childItems();
+        int to = 0;
+        for (int i = 0; i < siblings.size(); ++i) {
+            QQuickItem* sibling = siblings.at(i);
+            if (QQuickItemPrivate::get(sibling)->isTransparentForPositioner())
+                continue;
+            const int index = contentModel->indexOf(sibling, nullptr);
+            if (index >= 0)
+                q->moveItem(index, to++);
+        }
     }
 }
 
