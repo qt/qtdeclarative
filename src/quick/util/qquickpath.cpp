@@ -248,6 +248,8 @@ bool QQuickPath::hasStartY() const
 bool QQuickPath::isClosed() const
 {
     Q_D(const QQuickPath);
+    if (d->_pathElements.isEmpty())
+        return false;
     return d->closed;
 }
 
