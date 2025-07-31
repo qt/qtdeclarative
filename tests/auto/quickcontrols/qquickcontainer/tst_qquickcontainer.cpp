@@ -8,6 +8,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
+#include <QtQuick/private/qquicklistview_p.h>
+#include <QtQmlModels/private/qqmlobjectmodel_p.h>
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
@@ -22,6 +24,7 @@ public:
 private slots:
     void zeroSize_data();
     void zeroSize();
+    void skipReorderContentModelItem();
 };
 
 tst_qquickcontainer::tst_qquickcontainer()
@@ -114,6 +117,34 @@ void tst_qquickcontainer::zeroSize()
     QCOMPARE(QQuickItemPrivate::get(text2)->culled, isView || isPositioner);
     QCOMPARE(QQuickItemPrivate::get(text3)->culled, isView || isPositioner);
     QCOMPARE(QQuickItemPrivate::get(text4)->culled, isView || isPositioner);
+}
+
+void tst_qquickcontainer::skipReorderContentModelItem()
+{
+    QQuickControlsApplicationHelper helper(this, "skipReorderContentModelItem.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    centerOnScreen(helper.window);
+    helper.window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(helper.window));
+
+    const auto *container = helper.window->property("navigationBar").value<QQuickContainer *>();
+    QVERIFY(container);
+    const auto *listView = container->property("listView").value<QQuickListView *>();
+    QVERIFY(listView);
+    const auto *contentModel = container->property("contentModel").value<QQmlObjectModel *>();
+    QVERIFY(contentModel);
+
+    QCOMPARE(listView->count(), contentModel->count());
+
+    int totalWidth = listView->spacing() * (contentModel->count() - 1);
+    for (int index = 0; index < contentModel->count(); index++)
+        totalWidth += qobject_cast<QQuickText *>(listView->itemAtIndex(index))->width();
+    QVERIFY(totalWidth > listView->width());
+
+    for (int index = 0; index < listView->count(); index++) {
+        const auto *textItem = qobject_cast<QQuickText *>(listView->itemAtIndex(index));
+        QCOMPARE(textItem->text().toInt(), index + 1);
+    }
 }
 
 QTEST_MAIN(tst_qquickcontainer)
