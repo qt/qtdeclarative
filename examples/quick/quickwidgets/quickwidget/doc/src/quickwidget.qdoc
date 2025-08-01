@@ -1,12 +1,57 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
     \title Qt Quick Widgets Example
     \example quickwidgets/quickwidget
-    \brief Demonstrates how to mix QML with a Qt Widgets application using the QQuickWidget class.
+    \brief Demonstrates how to mix Qt Quick with a Qt Widgets application using the QQuickWidget class.
     \examplecategory {User Interface Components}
 
-    \image qtquickwidgets-example.png
-*/
+    \image qtquickwidgets-example.webp {Digital clock and rotating rectangle in MDI subwindows}
 
+    The example demonstrates how you can embed Qt Quick scenes inside a Qt
+    Widgets application, and how different UI aspects integrate between Qt
+    Widgets and Qt Quick. This includes:
+
+    \list
+        \li Tab focusing between Qt Widgets and Qt Quick
+        \li Embedding a QQuickView inside a QLayout
+    \endlist
+
+    \include examples-run.qdocinc
+
+    \section1 Qt Quick view integration
+
+    To demonstrate seamless integration of Qt Quick view, the example
+    implements several approaches of taking a screenshot of the Qt Quick view.
+
+    In the main menu, select \uicontrol {File}, then select any of these
+    options to grab a screenshot of the Qt Quick view:
+
+    \list
+        \li \uicontrol {Grab framebuffer} - grabs the screenshot using the
+            \l QQuickWidget::grabFramebuffer function.
+        \li \uicontrol {Render to pixmap} - grabs the screenshot using the
+            \l QWidget::render function and a \l QPixmap instance as a
+            parameter. This approach is common for Qt Widgets.
+        \li \uicontrol {Grab via grabToImage} - calls the
+            \c performLayerBasedGrab function declared in the QML file.
+            The \c performLayerBasedGrab function calls
+            QML Item's \l Item::grabToImage function to grab the screenshot.
+            This approach demonstrates how to call nested view's QML APIs from
+            C++.
+    \endlist
+
+    \image qquickwidget_grab_screenshot.webp {File menu with three screenshot capture options}
+
+    \section1 QQuickWidget in MDI
+
+    The example also demonstrates how you can use QQuickWidget to seamlessly
+    integrate hardware accelerated Qt Quick scenes in a Qt Widget Multiple
+    Document Interface (MDI) application.
+
+    To open a new MDI subwindow, in the main menu, select
+    \uicontrol {Window} > \uicontrol {Add tab widget}.
+
+    \image qquickwidget_mdi_example.webp {MDI window with multiple tabbed subwindows}
+*/

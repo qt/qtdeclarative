@@ -1,23 +1,38 @@
-// Copyright (C) 2024 The Qt Company Ltd.
+// Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
     \title QML Previewer Example
     \example quickwidgets/qmlpreviewer
-    \brief Demonstrates how to mix QML with a Qt Widgets application using QWidget::createWindowContainer().
+    \brief Demonstrates how to mix Qt Quick with a Qt Widgets application using QWidget::createWindowContainer().
     \examplecategory {User Interface Components}
 
-    \image qmlpreviewer-example.png
+    \image qmlpreviewer-example.png {QML code editor with live preview panel}
 
-    The example demonstrates how you can embed Qt Quick inside a widgets application, and how
-    different UI aspects integrate between Qt Widgets and Qt Quick. This includes:
+    The example demonstrates how you can embed Qt Quick scenes inside a Qt
+    Widgets application, and how different UI aspects integrate between Qt
+    Widgets and Qt Quick. This includes:
 
     \list
-        \li Tab focusing between widgets and Qt Quick
-        \li Drag and drop between widgets and Qt Quick
+        \li Tab focusing between Qt Widgets and Qt Quick
+        \li Drag and drop between Qt Widgets and Qt Quick
         \li Shortcuts defined in the embedded QML file
         \li Embedding a QQuickView inside a QLayout
     \endlist
 
+    \include examples-run.qdocinc
+
+    \section1 UI walkthrough
+
+    The main window of the example contains a file browser on the left side,
+    which allows you to select QML files to preview. The right side displays the
+    QML content in a QQuickWidget. You can interact with the QML content,
+    including clicking buttons, entering text, and using shortcuts defined in
+    the QML files.
+
+    The example also demonstrates how to handle focus and input events between
+    the Qt Widgets and Qt Quick components, ensuring a smooth user experience.
+
     \sa QWidget::createWindowContainer()
+
 */
