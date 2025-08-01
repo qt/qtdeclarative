@@ -1317,6 +1317,68 @@ TestCase {
     }
 
     Component {
+        id: textFieldWithPlaceHolderComponent
+
+        Rectangle {
+            anchors.fill: parent
+            property alias textControl1: textControl1
+            property alias textControl2: textControl2
+
+            TextField{
+                id: textControl1
+                objectName: "textControl1"
+                width: 200
+                height: 50
+                placeholderText:"Placeholder"
+                onActiveFocusChanged:{
+                    if(!activeFocus)
+                        delayedTimer.start();
+                }
+            }
+
+            Timer {
+                id: delayedTimer
+                interval: 10
+                repeat: false
+                running: false
+                onTriggered: {
+                    textControl1.text = "test";
+                }
+            }
+
+            TextField{
+                id: textControl2
+                objectName: "textControl2"
+                anchors.top:textControl1.bottom
+                width: 200
+                height: 50
+            }
+
+            Component.onCompleted: {
+                textControl2.forceActiveFocus()
+            }
+        }
+    }
+
+    function test_textFieldPlaceHolderPosition() {
+        let window = createTemporaryObject(textFieldWithPlaceHolderComponent, testCase)
+        verify(window)
+
+        let textControl1 = window.textControl1
+        let textControl2 = window.textControl2
+        let placeholderTextItem = textControl1.children[0]
+        let y = placeholderTextItem.y
+
+        textControl1.forceActiveFocus()
+        verify(textControl1.activeFocus)
+        textControl2.forceActiveFocus()
+        verify(textControl2.activeFocus)
+        // y should be different because now text field has text assigned
+        // so placeholder should sit on top of the text field
+        tryVerify(() => { return placeholderTextItem.y != y; })
+    }
+
+    Component {
         id: childWindowComponent
 
         ApplicationWindow {
