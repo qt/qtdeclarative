@@ -15,7 +15,7 @@ Window {
         id: menu
         anchors.centerIn: parent
         height: 100
-        visible: true
+
         Repeater {
             model: 10
             delegate: MenuItem {
