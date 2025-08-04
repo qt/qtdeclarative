@@ -77,6 +77,5 @@ DialogsQuickImpl.SideBar {
 
         required property string labelText
         required property bool dragHovering
-        required icon
     }
 }
