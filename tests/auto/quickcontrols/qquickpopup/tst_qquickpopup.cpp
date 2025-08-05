@@ -33,6 +33,7 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 #if QT_CONFIG(quick_draganddrop)
 #include <QtQuick/private/qquickdroparea_p.h>
 #endif
@@ -144,6 +145,7 @@ private slots:
     void popupWindowWithPaddingFromSafeArea();
     void popupWindowPositionerRespectingScreenBounds_data();
     void popupWindowPositionerRespectingScreenBounds();
+    void propagateTouchEvents();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -3593,6 +3595,34 @@ void tst_QQuickPopup::popupWindowPositionerRespectingScreenBounds()
                             .arg((*abf)().bottom() - popup->height()).arg(window->contentItem()->mapToGlobal(popup->x(), popup->y()).y())));
 
     popup->close();
+}
+
+void tst_QQuickPopup::propagateTouchEvents()
+{
+    QQuickApplicationHelper helper(this, "propagateTouchEvents.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->contentItem()->findChild<QQuickPopup *>();
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    auto *tapHandler = window->property("tapHandler").value<QQuickTapHandler *>();
+    QVERIFY(tapHandler);
+    QSignalSpy tapSpy(tapHandler, &QQuickTapHandler::tapped);
+    // check for the item within the popup for touch events
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(10, 10));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(10, 10));
+    QCOMPARE(tapSpy.count(), 1);
+
+    // touch outside to close the popup window
+    QTest::touchEvent(window, touchScreen.data()).press(0, QPoint(90, 90));
+    QTest::touchEvent(window, touchScreen.data()).release(0, QPoint(90, 90));
+    QCOMPARE(tapSpy.count(), 1);
+
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
