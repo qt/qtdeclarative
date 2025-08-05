@@ -7,11 +7,11 @@ Row {
     height: 200
 
     IconImage {
-        source: "qrc:/data/icons/testtheme/appointment-new.svg"
+        source: "qrc:/icons/testtheme/appointment-new.svg"
         sourceSize: Qt.size(22, 22)
     }
     Image {
-        source: "qrc:/data/icons/testtheme/appointment-new.svg"
+        source: "qrc:/icons/testtheme/appointment-new.svg"
         sourceSize: Qt.size(22, 22)
     }
 }
