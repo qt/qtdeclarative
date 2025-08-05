@@ -356,7 +356,7 @@ void tst_qquickiconimage::svgSourceBindingSourceSize()
 #ifndef QT_SVG_LIB
     QSKIP("This test requires qtsvg");
 #else
-    QQuickView view(testFileUrl("alignment.qml"));
+    QQuickView view(testFileUrl("svgSourceBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
     view.requestActivate();
