@@ -32,7 +32,7 @@ DialogsQuickImpl.FileDialogDelegate {
     required property url fileUrl
     required property date fileModified
 
-    contentItem: FolderDialogDelegateLabel {
+    contentItem: DialogsQuickImpl.FolderDialogDelegateLabel {
         delegate: control
         fileDetailRowTextColor: control.Material.hintTextColor
     }
