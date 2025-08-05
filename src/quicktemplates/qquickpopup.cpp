@@ -2876,7 +2876,7 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
 void QQuickPopup::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickPopup);
-    d->handleTouchEvent(d->popupItem, event);
+    event->setAccepted(d->handleTouchEvent(d->popupItem, event));
 }
 
 void QQuickPopup::touchUngrabEvent()
