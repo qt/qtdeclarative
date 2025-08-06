@@ -103,6 +103,8 @@ QQmlIncubatorPrivate::~QQmlIncubatorPrivate()
 
 void QQmlIncubatorPrivate::clear()
 {
+    if (!enginePriv)
+        return;
     // reset the tagged pointer
     if (requiredPropertiesFromComponent)
         requiredPropertiesFromComponent = decltype(requiredPropertiesFromComponent){};
