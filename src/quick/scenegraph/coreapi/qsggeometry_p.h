@@ -37,7 +37,7 @@ public:
     static bool inline hasDirtyVertexData(const QSGGeometry *g) { return g->m_dirty_vertex_data; }
     static void inline clearDirtyVertexData(const QSGGeometry *g) { const_cast<QSGGeometry *>(g)->m_dirty_vertex_data = false; }
 
-    static bool inline hasDirtyIndexData(const QSGGeometry *g) { return g->m_dirty_vertex_data; }
+    static bool inline hasDirtyIndexData(const QSGGeometry *g) { return g->m_dirty_index_data; }
     static void inline clearDirtyIndexData(const QSGGeometry *g) { const_cast<QSGGeometry *>(g)->m_dirty_index_data = false; }
 
 };
