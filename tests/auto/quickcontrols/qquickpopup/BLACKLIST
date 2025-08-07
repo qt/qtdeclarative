@@ -12,13 +12,6 @@ macos
 [zOrder]
 macos # QTBUG-89938
 
-# QTBUG-94251
-[closePolicy]
-opensuse-leap
-
-[cursorShape]
-opensuse-leap
-
 [popupWindowFocus]
 offscreen # QTBUG-128321
 
