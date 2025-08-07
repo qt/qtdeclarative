@@ -88,10 +88,6 @@ void QQuickMaterialRippleWaveNode::updateCurrentTime(int time)
     Q_ASSERT(rectNode->type() == QSGNode::GeometryNodeType);
     rectNode->setRect(QRectF(0, 0, m_value, m_value));
     rectNode->setRadius(m_value / 2);
-    rectNode->setTopLeftRadius(-1);
-    rectNode->setTopRightRadius(-1);
-    rectNode->setBottomLeftRadius(-1);
-    rectNode->setBottomRightRadius(-1);
     rectNode->update();
 }
 
@@ -178,10 +174,6 @@ void QQuickMaterialRippleBackgroundNode::sync(QQuickItem *item)
         rectNode->setRect(QRectF(0, 0, w, h));
         rectNode->setRadius(ripple->clipRadius());
     }
-    rectNode->setTopLeftRadius(-1);
-    rectNode->setTopRightRadius(-1);
-    rectNode->setBottomLeftRadius(-1);
-    rectNode->setBottomRightRadius(-1);
 
     setMatrix(matrix);
     rectNode->setColor(ripple->color());
