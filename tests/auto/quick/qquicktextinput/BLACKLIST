@@ -1,7 +1,3 @@
-# QTBUG-78162
-[mouseSelectionMode]
-opensuse-leap
-
 # QTBUG-82058
 [setInputMask]
 macos ci
