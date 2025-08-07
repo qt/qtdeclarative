@@ -51,6 +51,7 @@ FolderDialogImpl {
         spacing: 12
 
         Label {
+            objectName: "dialogTitleBarLabel"
             text: control.title
             visible: parent.parent?.parent === Overlay.overlay && control.title.length > 0
             elide: Label.ElideRight

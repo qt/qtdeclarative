@@ -57,6 +57,7 @@ FolderDialogImpl {
         spacing: 12
 
         Label {
+            objectName: "dialogTitleBarLabel"
             text: control.title
             elide: Label.ElideRight
             font.bold: true
