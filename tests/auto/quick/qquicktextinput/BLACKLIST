@@ -1,7 +1,3 @@
-# QTBUG-78162
-[mouseSelectionMode]
-opensuse-leap
-
 # QTQAINFRA-4127
 [passwordCharacter]
 ci b2qt 32bit
