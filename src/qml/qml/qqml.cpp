@@ -2837,6 +2837,13 @@ void AOTCompiledContext::initSetValueLookup(
             : QV4::QQmlValueTypeWrapper::lookupSetter;
 }
 
+void AOTCompiledContext::setObjectImplicitDestructible(QObject *object) const
+{
+    Q_ASSERT(object);
+    QQmlData::get(object, true)->setImplicitDestructible();
+    QV4::QObjectWrapper::ensureWrapper(engine->handle(), object);
+}
+
 } // namespace QQmlPrivate
 
 /*!

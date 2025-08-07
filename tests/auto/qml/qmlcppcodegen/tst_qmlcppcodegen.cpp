@@ -67,6 +67,7 @@ private slots:
     void boolPointerMerge();
     void boundComponents();
     void callContextPropertyLookupResult();
+    void callFactoryFunction();
     void callWithSpread();
     void collectGarbageDuringAotCode();
     void colorAsVariant();
@@ -1019,6 +1020,19 @@ void tst_QmlCppCodegen::callContextPropertyLookupResult()
     QVERIFY(o);
 
     QVERIFY(qvariant_cast<QQmlComponent *>(o->property("c")) != nullptr);
+}
+
+void tst_QmlCppCodegen::callFactoryFunction()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/callFactory.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "Object created: 0");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QTest::ignoreMessage(QtDebugMsg, "Object destroyed: 0");
 }
 
 void tst_QmlCppCodegen::callWithSpread()
