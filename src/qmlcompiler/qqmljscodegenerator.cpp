@@ -1896,13 +1896,14 @@ QString QQmlJSCodeGenerator::initAndCall(
             + u"};\n"_s;
 }
 
-void QQmlJSCodeGenerator::generateMoveOutVar(const QString &outVar)
+void QQmlJSCodeGenerator::generateMoveOutVarAfterCall(const QString &outVar)
 {
     if (m_state.accumulatorVariableOut.isEmpty() || outVar.isEmpty())
         return;
 
-    m_body += m_state.accumulatorVariableOut + u" = "_s;
-    m_body += u"std::move(" + outVar + u");\n";
+    m_body += m_state.accumulatorVariableOut + u" = "_s + u"std::move(" + outVar + u");\n";
+    m_body += u"aotContext->setImplicitDestructible("_s
+            + m_state.accumulatorVariableOut + u");\n"_s;
 }
 
 void QQmlJSCodeGenerator::generate_CallValue(int name, int argc, int argv)
@@ -2433,7 +2434,7 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
     const QString initialization = u"doInit()"_s;
     const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
     generateLookup(lookup, initialization, preparation);
-    generateMoveOutVar(outVar);
+    generateMoveOutVarAfterCall(outVar);
 
     m_body += u"}\n"_s;
 
@@ -2496,7 +2497,7 @@ void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int a
     const QString initialization = u"doInit()"_s;
     const QString preparation = getLookupPreparation(m_state.accumulatorOut(), outVar, index);
     generateLookup(lookup, initialization, preparation);
-    generateMoveOutVar(outVar);
+    generateMoveOutVarAfterCall(outVar);
 
     m_body += u"}\n"_s;
 }

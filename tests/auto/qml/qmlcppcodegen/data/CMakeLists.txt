@@ -10,6 +10,7 @@ set(cpp_sources
     collector.h
     convertQJSPrimitiveValueToIntegral.h
     cppbaseclass.h
+    cppobj.h
     detachedreferences.h
     druggeljug.h
     dummyobjekt.h
@@ -113,6 +114,7 @@ set(qml_files
     brokenAs.qml
     boundComponents.qml
     callContextPropertyLookupResult.qml
+    callFactory.qml
     callObjectLookupOnNull.qml
     callWithSpread.qml
     childobject.qml

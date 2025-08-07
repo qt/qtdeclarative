@@ -792,6 +792,27 @@ namespace QQmlPrivate
         bool callValueLookup(uint index, void *target, void **args, int argc) const;
         void initCallValueLookup(
                 uint index, const QMetaObject *metaObject, int relativeMethodIndex) const;
+
+        void setObjectImplicitDestructible(QObject *object) const;
+        void setImplicitDestructible(QObject *object) const
+        {
+            if (object)
+                setObjectImplicitDestructible(object);
+        }
+
+        void setImplicitDestructible(const QVariant &variant) const
+        {
+            // This does not cover everything you can possibly wrap into a QVariant.
+            // However, since we only _promise_ to handle single objects, this is OK.
+            if (!variant.metaType().flags().testFlag(QMetaType::PointerToQObject))
+                return;
+
+            if (QObject *object = *static_cast<QObject *const *>(variant.constData()))
+                setObjectImplicitDestructible(object);
+        }
+
+        template<typename Value>
+        void setImplicitDestructible(const Value &value) const { Q_UNUSED(value); }
     };
 
     struct AOTCompiledFunction {
