@@ -24,6 +24,7 @@ qt_internal_add_test(tst_qquicktextedit
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::TestPrivate
     TESTDATA ${test_data}
 )
 
