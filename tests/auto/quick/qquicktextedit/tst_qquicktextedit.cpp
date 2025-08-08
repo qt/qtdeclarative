@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include <QtTest/private/qtesthelpers_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <math.h>
 #include <QFile>
@@ -3475,8 +3476,8 @@ void tst_qquicktextedit::inFlickableTouch()
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QQuickView view(testFileUrl("inFlickable.qml"));
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(QTestPrivate::ensurePositionTopLeft(&view));
     QQuickFlickable *flick = qobject_cast<QQuickFlickable *>(view.rootObject());
     QVERIFY(flick);
     QQuickTextEdit *edit = flick->findChild<QQuickTextEdit*>("text");
