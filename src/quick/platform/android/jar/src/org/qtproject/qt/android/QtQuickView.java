@@ -277,9 +277,10 @@ public class QtQuickView extends QtView {
     {
         m_statusChangeListener = listener;
 
-        if (m_hasQueuedStatus)
+        if (m_hasQueuedStatus) {
             sendStatusChanged(m_lastStatus);
             m_hasQueuedStatus = false;
+        }
     }
 
     private void handleStatusChange(int status)
