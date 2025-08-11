@@ -220,7 +220,17 @@ int main(int argc, char *argv[])
         {
             // test qml component creation
             QQmlComponent component(engine, QUrl::fromLocalFile(ifile));
+            if (component.isError()) {
+                qWarning().nospace() << "Failed to load QML at " << ifile << ": " << component.errors();
+                return 1;
+            }
+
             auto *itemObject = qobject_cast<QQuickItem*>(component.create());
+            if (component.isError()) {
+                qWarning().nospace() << "Failed to create object instance from QML at "
+                    << ifile << ": " << component.errors();
+                return 1;
+            }
 
             // TODO: Hack to import native style forcefully for windows
             QString appCompStr = "import QtQuick.Controls\n";
