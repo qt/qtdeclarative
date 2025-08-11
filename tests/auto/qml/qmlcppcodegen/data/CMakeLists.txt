@@ -7,6 +7,7 @@ add_subdirectory(WithSubDir)
 set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
+    collector.h
     convertQJSPrimitiveValueToIntegral.h
     cppbaseclass.h
     detachedreferences.h
@@ -112,6 +113,7 @@ set(qml_files
     callContextPropertyLookupResult.qml
     callWithSpread.qml
     childobject.qml
+    collector.qml
     colorAsVariant.qml
     colorString.qml
     compareOriginals.qml

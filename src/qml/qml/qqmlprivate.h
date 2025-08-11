@@ -50,6 +50,7 @@ using QQmlAttachedPropertiesFunc = A *(*)(QObject *);
 
 namespace QV4 {
 struct ExecutionEngine;
+struct MarkStack;
 class ExecutableCompilationUnit;
 namespace CompiledData {
 struct Unit;
@@ -617,6 +618,12 @@ namespace QQmlPrivate
         QVector<int> *qmlTypeIds;
     };
 
+    struct AOTTrackedLocalsStorage
+    {
+        virtual ~AOTTrackedLocalsStorage() = default;
+        virtual void markObjects(QV4::MarkStack *markStack) const = 0;
+    };
+
     struct Q_QML_EXPORT AOTCompiledContext {
         enum: uint { InvalidStringId = (std::numeric_limits<uint>::max)() };
 
@@ -633,7 +640,13 @@ namespace QQmlPrivate
 
         QJSValue jsMetaType(int index) const;
         void setInstructionPointer(int offset) const;
+        void setLocals(const AOTTrackedLocalsStorage *locals) const;
         void setReturnValueUndefined() const;
+
+        static void mark(QObject *object, QV4::MarkStack *markStack);
+        static void mark(const QVariant &variant, QV4::MarkStack *markStack);
+        template<typename T>
+        static void mark(T, QV4::MarkStack *) {}
 
         // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
         bool captureLookup(uint index, QObject *object) const;

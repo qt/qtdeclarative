@@ -56,6 +56,7 @@ struct Q_QML_EXPORT CppStackFrameBase
             ExecutionContext *context;
             QObject *thisObject;
             const QMetaType *metaTypes;
+            const QQmlPrivate::AOTTrackedLocalsStorage *locals;
             void **returnAndArgs;
             bool returnValueIsUndefined;
         };
@@ -70,12 +71,14 @@ struct Q_QML_EXPORT CppStackFrame : protected CppStackFrameBase
     // We want to have those public but we can't declare them as public without making the struct
     // non-standard layout. So we have this other struct with "using" in between.
     using CppStackFrameBase::instructionPointer;
+    using CppStackFrameBase::locals;
     using CppStackFrameBase::v4Function;
 
     void init(Function *v4Function, int argc, Kind kind) {
         this->v4Function = v4Function;
         originalArgumentsCount = argc;
         instructionPointer = 0;
+        locals = nullptr;
         this->kind = kind;
     }
 
@@ -131,9 +134,10 @@ struct Q_QML_EXPORT MetaTypesStackFrame : public CppStackFrame
               void **returnAndArgs, const QMetaType *metaTypes, int argc)
     {
         CppStackFrame::init(v4Function, argc, Kind::Meta);
-        CppStackFrameBase::thisObject = thisObject;
         CppStackFrameBase::context = context;
+        CppStackFrameBase::thisObject = thisObject;
         CppStackFrameBase::metaTypes = metaTypes;
+        CppStackFrameBase::locals = nullptr;
         CppStackFrameBase::returnAndArgs = returnAndArgs;
         CppStackFrameBase::returnValueIsUndefined = false;
     }
@@ -154,6 +158,12 @@ struct Q_QML_EXPORT MetaTypesStackFrame : public CppStackFrame
 
     ExecutionContext *context() const { return CppStackFrameBase::context; }
     void setContext(ExecutionContext *context) { CppStackFrameBase::context = context; }
+
+    const QQmlPrivate::AOTTrackedLocalsStorage *locals() const { return CppStackFrameBase::locals; }
+    void setLocals(const QQmlPrivate::AOTTrackedLocalsStorage *locals)
+    {
+        CppStackFrameBase::locals = locals;
+    }
 
     Heap::CallContext *callContext() const
     {
