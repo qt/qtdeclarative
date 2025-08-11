@@ -78,8 +78,17 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     \code
     QQmlEngine *engine = new QQmlEngine;
     QQmlComponent component(engine, QUrl::fromLocalFile("main.qml"));
+    if (component.isError()) {
+        qWarning() << "Failed to load main.qml:" << component.errors();
+        return 1;
+    }
 
     QObject *myObject = component.create();
+    if (component.isError()) {
+        qWarning() << "Failed to create instance of main.qml:" << component.errors();
+        return 1;
+    }
+
     QQuickItem *item = qobject_cast<QQuickItem*>(myObject);
     int width = item->width();  // width = 200
     \endcode
