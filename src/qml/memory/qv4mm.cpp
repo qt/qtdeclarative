@@ -1,30 +1,32 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qv4engine_p.h"
-#include "qv4object_p.h"
-#include "qv4mm_p.h"
-#include "qv4qobjectwrapper_p.h"
-#include "qv4identifiertable_p.h"
-#include <QtCore/qalgorithms.h>
-#include <QtCore/private/qnumeric_p.h>
-#include <QtCore/qloggingcategory.h>
-#include <private/qv4alloca_p.h>
-#include <qqmlengine.h>
-#include "PageReservation.h"
 #include "PageAllocation.h"
+#include "PageReservation.h"
 
-#include <QElapsedTimer>
-#include <QMap>
-#include <QScopedValueRollback>
+#include <private/qnumeric_p.h>
+#include <private/qv4alloca_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4mapobject_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4object_p.h>
+#include <private/qv4profiling_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4setobject_p.h>
+#include <private/qv4stackframe_p.h>
 
-#include <cstdlib>
+#include <QtQml/qqmlengine.h>
+
+#include <QtCore/qalgorithms.h>
+#include <QtCore/qelapsedtimer.h>
+#include <QtCore/qloggingcategory.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qscopedvaluerollback.h>
+
 #include <algorithm>
-#include "qv4profiling_p.h"
-#include "qv4mapobject_p.h"
-#include "qv4setobject_p.h"
-
 #include <chrono>
+#include <cstdlib>
 
 //#define MM_STATS
 
@@ -1472,6 +1474,19 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
             m->mark(markStack);
         }
         ++v;
+    }
+
+    for (auto *frame = engine->currentStackFrame; frame; frame = frame->parentFrame()) {
+        if (!frame->isMetaTypesFrame())
+            continue;
+
+        const QQmlPrivate::AOTTrackedLocalsStorage *locals
+                = static_cast<const MetaTypesStackFrame *>(frame)->locals();
+
+        // locals have to be initialized first thing when calling the function
+        Q_ASSERT(locals);
+
+        locals->markObjects(markStack);
     }
 }
 

@@ -70,6 +70,7 @@ private slots:
     void callContextPropertyLookupResult();
     void callObjectLookupOnNull();
     void callWithSpread();
+    void collectGarbageDuringAotCode();
     void colorAsVariant();
     void colorString();
     void compareOriginals();
@@ -1071,6 +1072,25 @@ void tst_QmlCppCodegen::callWithSpread()
     QTest::ignoreMessage(QtCriticalMsg, "That is great!");
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_QmlCppCodegen::collectGarbageDuringAotCode()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/collector.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QObject *inner = o->property("o").value<QObject *>();
+    QVERIFY(inner);
+    QCOMPARE(inner->objectName(), u"dynamic"_s);
+
+    inner = o->property("o2").value<QObject *>();
+    QVERIFY(inner);
+    QCOMPARE(inner->objectName(), u"dynamic"_s);
+
+    QCOMPARE(o->property("gcRun").toInt(), 1);
 }
 
 void tst_QmlCppCodegen::colorAsVariant()

@@ -139,10 +139,10 @@ static QString registerName(int registerIndex, int offset)
     // That's why we need both 'v' and 'c'.
 
     if (offset < 0)
-        return u"a%1"_s.arg(registerIndex - QQmlJSCompilePass::Argc);
+        return u"s.a%1"_s.arg(registerIndex - QQmlJSCompilePass::Argc);
     if (registerIndex < 0)
-        return u"c%1_%2"_s.arg(-registerIndex).arg(offset);
-    return u"v%1_%2"_s.arg(registerIndex).arg(offset);
+        return u"s.c%1_%2"_s.arg(-registerIndex).arg(offset);
+    return u"s.v%1_%2"_s.arg(registerIndex).arg(offset);
 }
 
 QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function, bool basicBlocksValidationFailed)
@@ -208,8 +208,12 @@ QT_WARNING_POP
             .arg(m_context->name).arg(m_context->line).arg(m_context->column);
 
     QStringList initializations;
+    QStringList markings;
     for (auto registerIt = m_registerVariables.cbegin(), registerEnd = m_registerVariables.cend();
          registerIt != registerEnd; ++registerIt) {
+
+        // Remove the "s.". Inside the struct we need the plain name.
+        QString declarationName = registerIt->variableName.mid(2);
 
         const int registerIndex = registerIt->initialRegisterIndex;
         const bool registerIsArgument = isArgument(registerIndex);
@@ -229,7 +233,7 @@ QT_WARNING_POP
                 && registerIndex != This
                 && !function->registerTypes[registerIndex - firstRegisterIndex()].contains(
                     m_typeResolver->voidType())) {
-            code += registerIt->variableName + u" = "_s;
+            code += declarationName + u" = "_s;
             code += convertStored(m_typeResolver->voidType(), storedType, QString());
         } else if (registerIsArgument && argumentType(registerIndex).isStoredIn(storedType)) {
             const int argumentIndex = registerIndex - FirstArgument;
@@ -248,7 +252,7 @@ QT_WARNING_POP
                 code += u'&';
             }
 
-            code += registerIt->variableName + u" = "_s;
+            code += declarationName + u" = "_s;
 
             const auto originalContained = m_typeResolver->originalContainedType(argument);
             QString originalValue;
@@ -269,18 +273,50 @@ QT_WARNING_POP
                 code += conversion(originalArgument, argument, originalValue);
             else
                 code += originalValue;
+        } else if (isPointer) {
+            code += declarationName + u" = nullptr"_s;
         } else {
-            code += registerIt->variableName;
+            code += declarationName;
         }
         code += u";\n"_s;
 
         initializations.push_back(std::move(code));
+
+        if (isPointer) {
+            markings.append(u"    aotContext->mark("_s + declarationName + u", markStack);\n");
+        } else if (storedType == m_typeResolver->varType()) {
+            markings.append(u"    aotContext->mark("_s + declarationName + u", markStack);\n");
+        } else if (storedType == m_typeResolver->listPropertyType()) {
+            // No need to mark that since it's always backed by a property
+        } else if (storedType == m_typeResolver->variantMapType()
+                   || storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+            QString marking = u"    for (const auto &v : std::as_const(" + declarationName + u"))\n"
+                    + u"        aotContext->mark(v, markStack);\n";
+            markings.append(std::move(marking));
+        }
     }
+
+    result.code += u"struct Storage : QQmlPrivate::AOTTrackedLocalsStorage {\n"_s;
+    result.code += u"Storage(const QQmlPrivate::AOTCompiledContext *ctxt, void **a)"_s;
+    result.code += u"   : aotContext(ctxt), argv(a) {}\n"_s;
+    result.code += u"void markObjects(QV4::MarkStack *markStack) const final {"_s;
+    result.code += u"    Q_UNUSED(markStack);\n"_s;
+
+    markings.sort();
+    for (const QString &marking : std::as_const(markings))
+        result.code += marking;
+
+    result.code += u"}\n"_s;
+    result.code += u"const QQmlPrivate::AOTCompiledContext *aotContext;\n"_s;
+    result.code += u"void **argv;\n"_s;
 
     // Sort them to obtain stable output.
     initializations.sort();
     for (const QString &initialization : std::as_const(initializations))
         result.code += initialization;
+
+    result.code += u"};\nStorage s(aotContext, argv);\n"_s;
+    result.code += u"aotContext->setLocals(&s);\n"_s;
 
     result.code += m_body;
 
@@ -2713,8 +2749,9 @@ void QQmlJSCodeGenerator::generate_GetIterator(int iterator)
     }
 
     const QString identifier = QString::number(iteratorType.baseLookupIndex());
-    const QString iteratorName = m_state.accumulatorVariableOut + u"Iterator" + identifier;
-    const QString listName = m_state.accumulatorVariableOut + u"List" + identifier;
+    QString baseName = m_state.accumulatorVariableOut.mid(2); // remove "s."
+    const QString iteratorName = baseName + u"Iterator" + identifier;
+    const QString listName = baseName + u"List" + identifier;
 
     m_body += u"QJSListFor"_s
             + (iterator == int(QQmlJS::AST::ForEachType::In) ? u"In"_s : u"Of"_s)
