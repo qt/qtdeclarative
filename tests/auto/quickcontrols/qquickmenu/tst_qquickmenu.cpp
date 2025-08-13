@@ -19,8 +19,10 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuick/private/qquickloader_p.h>
 #include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
@@ -126,6 +128,7 @@ private slots:
     void mousePropagationWithinPopup();
     void shortcutInNestedSubMenuAction();
     void animationOnHeight();
+    void loadMenuAsynchronously();
 
 private:
     bool nativeMenuSupported = false;
@@ -3519,6 +3522,47 @@ void tst_QQuickMenu::animationOnHeight()
     const qreal itemHeight = menu->itemAt(0)->height();
     QCOMPARE(listView->contentHeight(), itemHeight * 2 + listView->spacing());
     QCOMPARE_GE(listView->height(), listView->contentHeight());
+}
+
+void tst_QQuickMenu::loadMenuAsynchronously()
+{
+    QQuickView window(testFileUrl("loadMenuAsynchronously.qml"));
+    QCOMPARE(window.status(), QQuickView::Ready);
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *rootItem = window.rootObject();
+    QVERIFY(rootItem);
+
+    auto *loader = rootItem->property("loader").value<QQuickLoader*>();
+    QVERIFY(loader);
+    QCOMPARE(loader->active(), false);
+    QCOMPARE(loader->asynchronous(), true);
+
+    auto activateLoader = rootItem->property("activateLoader").value<bool>();
+    QCOMPARE(activateLoader, false);
+    QVERIFY(rootItem->setProperty("activateLoader", true));
+    activateLoader = rootItem->property("activateLoader").value<bool>();
+    QCOMPARE(activateLoader, true);
+
+    QTRY_COMPARE(loader->active(), false);
+
+    rootItem->setProperty("activateLoader", false);
+    activateLoader = rootItem->property("activateLoader").value<bool>();
+    QCOMPARE(activateLoader, false);
+    QVERIFY(rootItem->setProperty("activateLoader", true));
+    activateLoader = rootItem->property("activateLoader").value<bool>();
+    QCOMPARE(activateLoader, true);
+
+    QTRY_COMPARE(loader->active(), false);
+
+    // The ignored warning message described below is triggered from the loader
+    // when progress creations not been reset. This needs to be analyzed.
+    // The bug report QTBUG-139552 raised to track the investigation.
+    auto *enginePriv = QQmlEnginePrivate::get(window.engine());
+    if (enginePriv->inProgressCreations)
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("There are still \\\\\"(\\d+)\\\\\" items in the process of being created at engine destruction\\."));
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

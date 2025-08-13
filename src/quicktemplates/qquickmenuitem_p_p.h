@@ -47,7 +47,7 @@ public:
     bool highlighted = false;
     QQuickDeferredPointer<QQuickItem> arrow;
     QQuickMenu *menu = nullptr;
-    QQuickMenu *subMenu = nullptr;
+    QPointer<QQuickMenu> subMenu;
     qreal implicitTextPadding;
 };
 
