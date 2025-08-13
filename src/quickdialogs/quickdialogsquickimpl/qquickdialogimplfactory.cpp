@@ -29,25 +29,35 @@ std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDi
     std::unique_ptr<QPlatformDialogHelper> dialogHelper;
     switch (type) {
     case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
+        auto *quickPlatformDialog = new QQuickPlatformColorDialog(parent);
+        if (quickPlatformDialog->isValid())
+            dialogHelper.reset(quickPlatformDialog);
         break;
     }
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_draganddrop)
     case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
+        auto *quickPlatformDialog = new QQuickPlatformFileDialog(parent);
+        if (quickPlatformDialog->isValid())
+            dialogHelper.reset(quickPlatformDialog);
         break;
     }
     case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
+        auto *quickPlatformDialog = new QQuickPlatformFolderDialog(parent);
+        if (quickPlatformDialog->isValid())
+            dialogHelper.reset(quickPlatformDialog);
         break;
     }
     case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
+        auto *quickPlatformDialog = new QQuickPlatformFontDialog(parent);
+        if (quickPlatformDialog->isValid())
+            dialogHelper.reset(quickPlatformDialog);
         break;
     }
 #endif
     case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
+        auto *quickPlatformDialog = new QQuickPlatformMessageDialog(parent);
+        if (quickPlatformDialog->isValid())
+            dialogHelper.reset(quickPlatformDialog);
         break;
     }
     default:
