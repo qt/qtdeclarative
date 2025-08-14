@@ -124,6 +124,7 @@ private slots:
     void fromBoolValue();
     void funcWithParams();
     void functionArguments();
+    void functionCallInitCrash();
     void functionCallOnNamespaced();
     void functionLookup();
     void functionReturningVoid();
@@ -2268,6 +2269,15 @@ void tst_QmlCppCodegen::functionArguments()
                 object.data(), "concat", Q_RETURN_ARG(QString, concatenated),
                 Q_ARG(QString, astr), Q_ARG(QString, bstr));
     QCOMPARE(concatenated, u"foobar"_s);
+}
+
+void tst_QmlCppCodegen::functionCallInitCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/functionCallInitCrash.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
 }
 
 void tst_QmlCppCodegen::functionCallOnNamespaced()

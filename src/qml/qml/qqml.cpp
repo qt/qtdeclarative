@@ -2372,6 +2372,20 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
 
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
+
+    const auto throwInvalidObjectError = [&]() {
+        scope.engine->throwTypeError(
+                QStringLiteral("Property '%1' of object [object Object] is not a function")
+                        .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
+    };
+
+    const auto *ddata = QQmlData::get(object, false);
+    if (ddata && ddata->hasVMEMetaObject && ddata->jsWrapper.isNullOrUndefined()) {
+        // We cannot lookup functions on an object with VME metaobject but no QObjectWrapper
+        throwInvalidObjectError();
+        return;
+    }
+
     QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
     QV4::ScopedFunctionObject function(scope, lookup->getter(scope.engine, thisObject));
     if (auto *method = function->as<QV4::QObjectMethod>()) {
@@ -2386,9 +2400,7 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
         return;
     }
 
-    scope.engine->throwTypeError(
-            QStringLiteral("Property '%1' of object [object Object] is not a function")
-                    .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
+    throwInvalidObjectError();
 }
 
 void AOTCompiledContext::initCallObjectPropertyLookup(
@@ -2401,6 +2413,20 @@ void AOTCompiledContext::initCallObjectPropertyLookup(
 
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
+
+    const auto throwInvalidObjectError = [&]() {
+        scope.engine->throwTypeError(
+                QStringLiteral("Property '%1' of object [object Object] is not a function")
+                        .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
+    };
+
+    const auto *ddata = QQmlData::get(object, false);
+    if (ddata && ddata->hasVMEMetaObject && ddata->jsWrapper.isNullOrUndefined()) {
+        // We cannot lookup functions on an object with VME metaobject but no QObjectWrapper
+        throwInvalidObjectError();
+        return;
+    }
+
     QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
     QV4::ScopedFunctionObject function(scope, lookup->getter(scope.engine, thisObject));
     if (auto *method = function->as<QV4::QObjectMethod>()) {
@@ -2416,9 +2442,7 @@ void AOTCompiledContext::initCallObjectPropertyLookup(
         return;
     }
 
-    scope.engine->throwTypeError(
-            QStringLiteral("Property '%1' of object [object Object] is not a function")
-                    .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
+    throwInvalidObjectError();
 }
 
 bool AOTCompiledContext::loadGlobalLookup(uint index, void *target) const

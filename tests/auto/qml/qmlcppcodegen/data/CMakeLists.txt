@@ -170,6 +170,7 @@ set(qml_files
     flagEnum.qml
     fromBoolValue.qml
     funcWithParams.qml
+    functionCallInitCrash.qml
     functionLookup.qml
     functionReturningVoid.qml
     functionTakingVar.qml
