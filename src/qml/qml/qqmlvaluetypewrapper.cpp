@@ -543,6 +543,13 @@ QMetaType QQmlValueTypeWrapper::type() const
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
 {
     bool destructGadgetOnExit = false;
+    auto cleanup = qScopeGuard([&]() {
+        if (destructGadgetOnExit) {
+            d()->metaType().destruct(d()->gadgetPtr());
+            d()->setGadgetPtr(nullptr);
+        }
+    });
+
     Q_ALLOCA_DECLARE(void, gadget);
     if (d()->isReference()) {
         if (!d()->gadgetPtr()) {
@@ -559,11 +566,6 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
     int status = -1;
     void *a[] = { d()->gadgetPtr(), nullptr, &status, &flags };
     QMetaObject::metacall(target, QMetaObject::WriteProperty, propertyIndex, a);
-
-    if (destructGadgetOnExit) {
-        d()->metaType().destruct(d()->gadgetPtr());
-        d()->setGadgetPtr(nullptr);
-    }
     return true;
 }
 
