@@ -686,6 +686,7 @@ public:
             const QVariant &variant, Heap::Object *parent, int property, uint flags);
 
     static QVariantMap variantMapFromJS(const QV4::Object *o);
+    static QVariantHash variantHashFromJS(const QV4::Object *o);
 
     static bool metaTypeFromJS(const Value &value, QMetaType type, void *data);
     QV4::ReturnedValue metaTypeToJS(QMetaType type, const void *data);

@@ -1686,10 +1686,12 @@ QVariant ExecutionEngine::toVariant(
     return ::toVariant(value, typeHint, behavior, nullptr);
 }
 
-static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visitedObjects,
-                                      JSToQVariantConversionBehavior conversionBehvior)
+template<typename Association>
+Association objectToVariantAssociation(
+        const QV4::Object *o, V4ObjectSet *visitedObjects,
+        JSToQVariantConversionBehavior conversionBehvior)
 {
-    QVariantMap map;
+    Association association;
     QV4::Scope scope(o->engine());
     QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);
     QV4::ScopedValue name(scope);
@@ -1700,11 +1702,11 @@ static QVariantMap objectToVariantMap(const QV4::Object *o, V4ObjectSet *visited
             break;
 
         QString key = name->toQStringNoThrow();
-        map.insert(key, ::toVariant(
+        association.insert(key, ::toVariant(
                                 val, /*type hint*/ QMetaType {},
                                 conversionBehvior, visitedObjects));
     }
-    return map;
+    return association;
 }
 
 static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObjects,
@@ -1749,7 +1751,7 @@ static QVariant objectToVariant(const QV4::Object *o, V4ObjectSet *visitedObject
            But the Aggressive path is used only in QJSValue::toVariant
            which is documented to be lossy
         */
-        result = objectToVariantMap(o, visitedObjects, conversionBehvior);
+        result = objectToVariantAssociation<QVariantMap>(o, visitedObjects, conversionBehvior);
     } else {
         // If it's not a plain object, we can only save it as QJSValue.
         result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -1982,7 +1984,17 @@ QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
     Q_ASSERT(o);
     V4ObjectSet visitedObjects;
     visitedObjects.insert(o->d());
-    return objectToVariantMap(o, &visitedObjects, JSToQVariantConversionBehavior::Safish);
+    return objectToVariantAssociation<QVariantMap>(
+            o, &visitedObjects, JSToQVariantConversionBehavior::Safish);
+}
+
+QVariantHash ExecutionEngine::variantHashFromJS(const Object *o)
+{
+    Q_ASSERT(o);
+    V4ObjectSet visitedObjects;
+    visitedObjects.insert(o->d());
+    return objectToVariantAssociation<QVariantHash>(
+            o, &visitedObjects, JSToQVariantConversionBehavior::Safish);
 }
 
 // Converts the meta-type defined by the given type and data to JS.
