@@ -1,0 +1,54 @@
+#ifndef DETACHEDREFERENCES_H
+#define DETACHEDREFERENCES_H
+
+#include <QtQml/qqmlengine.h>
+
+#include <QtCore/qobject.h>
+
+class DetachedReferences : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(QVariantMap map READ getMap WRITE setMap NOTIFY mapChanged)
+    Q_PROPERTY(QVariantHash hash READ getHash WRITE setHash NOTIFY hashChanged)
+
+public:
+    explicit DetachedReferences(QObject *parent = nullptr) : QObject(parent) { }
+
+    Q_INVOKABLE QVariantMap getMap() const
+    {
+        return m_map;
+    }
+
+    void setMap(const QVariantMap &newMap)
+    {
+        if (m_map == newMap)
+            return;
+        m_map = newMap;
+        emit mapChanged();
+    }
+
+    Q_INVOKABLE QVariantHash getHash() const
+    {
+        return m_hash;
+    }
+
+    void setHash(const QVariantHash &newHash)
+    {
+        if (m_hash == newHash)
+            return;
+        m_hash = newHash;
+        emit hashChanged();
+    }
+
+signals:
+    void mapChanged();
+    void hashChanged();
+
+private:
+    QVariantMap m_map;
+    QVariantHash m_hash;
+};
+
+#endif // DETACHEDREFERENCES_H

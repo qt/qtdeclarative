@@ -1576,8 +1576,6 @@ static QVariant toVariant(const QV4::Value &value, QMetaType metaType, JSToQVari
             // Otherwise produce the "natural" type of the sequence.
             return QV4::SequencePrototype::toVariant(s);
         } else if (auto association = object->as<QV4::VariantAssociationObject>()) {
-            if (conversionBehavior == JSToQVariantConversionBehavior::Never)
-                return QVariant::fromValue(QJSValuePrivate::fromReturnedValue(association->asReturnedValue()));
             return association->d()->toVariant();
         }
     }

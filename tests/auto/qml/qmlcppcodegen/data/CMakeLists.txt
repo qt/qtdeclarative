@@ -9,6 +9,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     convertQJSPrimitiveValueToIntegral.h
     cppbaseclass.h
+    detachedreferences.h
     druggeljug.h
     dummyobjekt.h
     dynamicmeta.h
@@ -140,6 +141,7 @@ set(qml_files
     deadStoreLoop.qml
     destroyAndToString.qml
     detachOnAssignment.qml
+    detachedreferences.qml
     dialog.qml
     dialogButtonBox.qml
     dynamicscene.qml

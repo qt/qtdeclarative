@@ -3,6 +3,7 @@
 
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
+#include <data/detachedreferences.h>
 #include <data/druggeljug.h>
 #include <data/enumProperty.h>
 #include <data/enumproblems.h>
@@ -95,6 +96,7 @@ private slots:
     void deduplicateConversionOrigins();
     void destroyAndToString();
     void detachOnAssignment();
+    void detachedReferences();
     void dialogButtonBox();
     void enumConversion();
     void enumFromBadSingleton();
@@ -1710,6 +1712,59 @@ void tst_QmlCppCodegen::detachOnAssignment()
 
     QCOMPARE(o->property("v").value<QVariantList>()[0], QStringLiteral("a"));
     QCOMPARE(p->things()[0], QStringLiteral("c"));
+}
+
+void tst_QmlCppCodegen::detachedReferences()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/detachedreferences.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    DetachedReferences *d = qobject_cast<DetachedReferences *>(o.data());
+    QVERIFY(d);
+
+    const QVariantHash hash = d->getHash();
+    QObject *collectable1 = hash["collectable"_L1].value<QObject *>();
+    QVERIFY(collectable1);
+    QSignalSpy spy1(collectable1, &QObject::destroyed);
+
+    const QVariantMap map = d->getMap();
+    QObject *collectable2 = map["collectable"_L1].value<QObject *>();
+    QVERIFY(collectable2);
+    QSignalSpy spy2(collectable2, &QObject::destroyed);
+
+    // The detached containers retain their types.
+    QCOMPARE(d->property("markedMap").metaType(), QMetaType::fromType<QVariantMap>());
+    QCOMPARE(d->property("markedHash").metaType(), QMetaType::fromType<QVariantHash>());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(spy1.count(), 0);
+    QCOMPARE(spy2.count(), 0);
+
+    // Resetting the hash alone does not cause collectible1 to be collected
+    // because it's also in the map (recursively).
+    d->setProperty("markedHash", QVariant());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(spy1.count(), 0);
+    QCOMPARE(spy2.count(), 0);
+
+    d->setProperty("markedMap", QVariant());
+
+    engine.collectGarbage();
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    QCOMPARE(spy1.count(), 1);
+    QCOMPARE(spy2.count(), 1);
 }
 
 void tst_QmlCppCodegen::dialogButtonBox()

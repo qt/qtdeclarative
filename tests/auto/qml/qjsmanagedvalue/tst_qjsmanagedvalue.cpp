@@ -526,8 +526,8 @@ void tst_QJSManagedValue::toVariant()
         QCOMPARE(object.type(), QJSManagedValue::Object);
 
         QVariant retained = object.toVariant();
-        QCOMPARE(retained.metaType(), QMetaType::fromType<QJSValue>());
-        QVERIFY(QJSManagedValue(retained.value<QJSValue>(), &eng).strictlyEquals(object));
+        QCOMPARE(retained.metaType(), QMetaType::fromType<QVariantMap>());
+        QCOMPARE(retained, mapIn);
 
         QVariantMap mapOut = retained.toMap();
         QCOMPARE(mapOut.size(), mapIn.size());
