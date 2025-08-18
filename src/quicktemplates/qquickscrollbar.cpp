@@ -119,6 +119,8 @@ QT_BEGIN_NAMESPACE
         visible.
     \endlist
 
+    \include varying-delegate-heights-section.qdocinc {file} {1} {ScrollBar}
+
     \sa ScrollIndicator, ScrollView, {Customizing ScrollBar}, {Indicator Controls}
 */
 

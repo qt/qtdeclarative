@@ -86,6 +86,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols-scrollview-interactive.qml file
 
+    \include varying-delegate-heights-section.qdocinc {file} {2} {ScrollBar}
+
     \sa ScrollBar, ScrollIndicator, {Customizing ScrollView}, {Container Controls},
         {Focus Management in Qt Quick Controls}
 */
