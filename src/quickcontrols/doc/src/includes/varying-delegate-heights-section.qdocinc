@@ -1,0 +1,8 @@
+//! [file]
+\section\1 Varying Delegate Sizes
+
+Variable delegate sizes can lead \2 to "jump around" as new delegates are
+loaded into the view. It is recommended to have equally-sized delegates for
+this reason. See \l {Variable Delegate Size and Section Labels} for more
+information.
+//! [file]
