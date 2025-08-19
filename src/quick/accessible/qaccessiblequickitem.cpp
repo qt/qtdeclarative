@@ -693,7 +693,8 @@ void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
 
     if (t == QAccessible::TextInterface) {
         if (r == QAccessible::EditableText ||
-            r == QAccessible::StaticText)
+            r == QAccessible::StaticText ||
+            r == QAccessible::Heading)
         return static_cast<QAccessibleTextInterface*>(this);
     }
 
