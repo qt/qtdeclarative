@@ -9,6 +9,7 @@
 
 #ifdef Q_OS_IOS
 #include <UIKit/UIInterface.h>
+#include <UIKit/UITraitCollection.h>
 #endif
 
 #include <QtGui/qguiapplication.h>
