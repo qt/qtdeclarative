@@ -1283,8 +1283,10 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
             // Otherwise, make sure the reference carries some value so that we can still call
             // toVariant() on it (see note in QV4::SequencePrototype::toVariant).
             // NB: This code is gone in 6.9, but removing it is a behavior change.
-            if (!static_cast<const QV4::Heap::Sequence *>(p)->storagePointer())
+            if (p->isStoredInline()
+                    && !static_cast<const QV4::Heap::Sequence *>(p)->storagePointer()) {
                 QV4::ReferenceObject::readReference(p);
+            }
             md->set(engine, id, p);
         }
     } else if (const QV4::QQmlValueTypeWrapper *wrapper = value.as<QV4::QQmlValueTypeWrapper>()) {
