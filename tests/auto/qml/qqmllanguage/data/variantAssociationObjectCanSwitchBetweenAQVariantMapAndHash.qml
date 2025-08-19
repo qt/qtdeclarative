@@ -6,7 +6,13 @@ VariantAssociationProvider {
     property string emailAfterHashToMapSwitch: ""
 
     Component.onCompleted: {
-        const items = getListOfMap();
+        // Populate the list
+        variantList = getListOfMap();
+
+        // items has to remain attached. Otherwise this doesn't work.
+        // Arguably, this is a bit insane, but then the technique shown here
+        // intentionally abuses the reference-vs-object problem.
+        const items = variantList;
 
         // This is a reference object to items[0].
         let originallyAMap = items[0];

@@ -75,11 +75,31 @@ struct Sequence : ReferenceObject
     void init(QMetaType listType, QMetaSequence metaSequence, const void *container,
               Object *object, int propertyIndex, Heap::ReferenceObject::Flags flags);
 
-    Sequence *detached() const;
+    Sequence *detached();
     void destroy();
 
     void *storagePointer();
     const void *storagePointer() const { return m_container; }
+
+    bool isStoredInline() const
+    {
+        if (isReference())
+            return true;
+
+        const QMetaType valueType = valueMetaType();
+        switch (valueType.id()) {
+        case QMetaType::QVariant:
+        case QMetaType::QVariantHash:
+        case QMetaType::QVariantMap:
+        case QMetaType::QVariantList:
+        case QMetaType::QObjectStar:
+            return false;
+        default:
+            break;
+        }
+
+        return !valueType.flags().testFlag(QMetaType::PointerToQObject);
+    }
 
     bool isReadOnly() const { return m_object && !canWriteBack(); }
 
@@ -96,12 +116,16 @@ private:
     friend struct QV4::SequenceOwnPropertyKeyIterator;
 
     void initTypes(QMetaType listType, QMetaSequence metaSequence);
+    void createElementWrappers(const void *container);
     void createInlineStorage(const void *container);
 
     bool loadReference();
     bool storeReference();
 
-    void *m_container;
+    union {
+        void *m_container; // if stored inline
+        uint m_size;       // if stored out of line
+    };
     const QtPrivate::QMetaTypeInterface *m_listType;
     const QtMetaContainerPrivate::QMetaSequenceInterface *m_metaSequence;
 };

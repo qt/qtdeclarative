@@ -12,6 +12,7 @@ class DetachedReferences : public QObject
 
     Q_PROPERTY(QVariantMap map READ getMap WRITE setMap NOTIFY mapChanged)
     Q_PROPERTY(QVariantHash hash READ getHash WRITE setHash NOTIFY hashChanged)
+    Q_PROPERTY(QVariantList list READ getList WRITE setList NOTIFY listChanged)
 
 public:
     explicit DetachedReferences(QObject *parent = nullptr) : QObject(parent) { }
@@ -42,13 +43,28 @@ public:
         emit hashChanged();
     }
 
+    Q_INVOKABLE QVariantList getList() const
+    {
+        return m_list;
+    }
+
+    void setList(const QVariantList &newList)
+    {
+        if (m_list == newList)
+            return;
+        m_list = newList;
+        emit listChanged();
+    }
+
 signals:
     void mapChanged();
     void hashChanged();
+    void listChanged();
 
 private:
     QVariantMap m_map;
     QVariantHash m_hash;
+    QVariantList m_list;
 };
 
 #endif // DETACHEDREFERENCES_H

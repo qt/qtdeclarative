@@ -3079,11 +3079,13 @@ class VariantAssociationProvider : public QObject {
     Q_OBJECT
     Q_PROPERTY(QVariantMap variantMap READ getMap WRITE setMap)
     Q_PROPERTY(QVariantHash variantHash READ getHash WRITE setHash)
+    Q_PROPERTY(QVariantList variantList READ getList WRITE setList)
 
     QML_ELEMENT
 
     QVariantMap m_variantMap;
     QVariantHash m_variantHash;
+    QVariantList m_variantList;
 
 public:
     VariantAssociationProvider(QObject* parent = nullptr) : QObject(parent)
@@ -3094,6 +3096,9 @@ public:
 
     QVariantHash getHash() { return m_variantHash; }
     void setHash(const QVariantHash& hash) { m_variantHash = hash; }
+
+    QVariantList getList() { return m_variantList; }
+    void setList(const QVariantList &list) { m_variantList = list; }
 
     Q_INVOKABLE QVariantList getListOfMap() const {
         return QVariantList{

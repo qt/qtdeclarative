@@ -16,6 +16,42 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+ * \class QV4::Sequence
+ * \internal
+ *
+ * A Sequence stores the contents of a sequential container and makes them acccessible
+ * to the JavaScript engine. It behaves mostly like a regular JavaScript array. The
+ * entries of the container are exposed as array elements.
+ *
+ * Sequence is a ReferenceObject. Therefore it writes back its contents to the property
+ * it was retrieved from whenever it changes. It also re-reads the property whenever
+ * that one changes.
+ *
+ * As long as a Sequence is attached to a property this way, it is the responsibility of
+ * the property's surrounding (C++) object to keep the contents valid. It has to, for
+ * example, track pointers to QObjects potentially deleted in other places so that they
+ * don't become dangling.
+ *
+ * However, the Sequence can also be detached. This happens predominantly by assigning
+ * it to a QML-declared property. In that case, it becomes the Sequence's responsibility
+ * to track its contents. To do so, it does not necessarily keep an actual instance of
+ * the original container in this case, but may rather stores its contents as actual
+ * JavaScript array elements. This includes QObjectWrappers for all QObject pointers it
+ * may contain. The contents are then marked like all JavaScript array elements when the
+ * garbage collector runs, and QObjectWrapper also guards against external deletion.
+ * There is no property to read or write back in this case, and neither does the
+ * internal container need to be updated. Therefore, the objects stored as array elements
+ * are created detached and won't read or write back.
+ *
+ * For element types that don't need to be marked, Sequence will still use the original
+ * container for storage, even in the detached case. This is usually more efficient
+ * because because it saves some data conversion. The only types that need to be marked
+ * are pointers to QObject-derived types, either stored as-is or hidden inside QVariant.
+ * Whenever the container cannot possibly hold such elements (directly or indirectly),
+ * the original container is used.
+ */
+
 Q_STATIC_LOGGING_CATEGORY(lcListValueConversion, "qt.qml.listvalueconversion")
 
 namespace QV4 {
@@ -24,6 +60,7 @@ DEFINE_OBJECT_VTABLE(Sequence);
 
 static ReturnedValue doGetIndexed(Heap::Sequence *p, qsizetype index)
 {
+    Q_ASSERT(p->isStoredInline());
     QV4::Scope scope(p->internalClass->engine);
 
     const QMetaType valueMetaType = p->valueMetaType();
@@ -80,6 +117,8 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 
 static qsizetype sizeInline(const Heap::Sequence *p)
 {
+    Q_ASSERT(p->isStoredInline());
+
     if (const void *container = p->storagePointer())
         return p->metaSequence().size(container);
 
@@ -95,6 +134,7 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
     PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override
     {
         Heap::Sequence *p = static_cast<const Sequence *>(o)->d();
+        Q_ASSERT(p->isStoredInline());
 
         if (p->isReference() && !p->loadReference())
             return PropertyKey::invalid();
@@ -132,7 +172,10 @@ void Heap::Sequence::init(QMetaType listType, QMetaSequence metaSequence, const 
 {
     ReferenceObject::init(nullptr, -1, NoFlag);
     initTypes(listType,  metaSequence);
-    createInlineStorage(container);
+    if (isStoredInline())
+        createInlineStorage(container);
+    else
+        createElementWrappers(container);
 }
 
 void Heap::Sequence::init(
@@ -142,15 +185,21 @@ void Heap::Sequence::init(
     ReferenceObject::init(object, propertyIndex, flags);
     initTypes(listType, metaSequence);
 
-    if (CppStackFrame *frame = internalClass->engine->currentStackFrame)
-        setLocation(frame->v4Function, frame->statementNumber());
-    createInlineStorage(container);
-    if (!container && (flags & EnforcesLocation))
-        QV4::ReferenceObject::readReference(this);
+    if (isStoredInline()) {
+        if (CppStackFrame *frame = internalClass->engine->currentStackFrame)
+            setLocation(frame->v4Function, frame->statementNumber());
+        createInlineStorage(container);
+        if (!container && (flags & EnforcesLocation))
+            QV4::ReferenceObject::readReference(this);
+    } else {
+        createElementWrappers(container);
+    }
 }
 
 void Heap::Sequence::createInlineStorage(const void *container)
 {
+    Q_ASSERT(isStoredInline());
+
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::Sequence> o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
@@ -158,21 +207,88 @@ void Heap::Sequence::createInlineStorage(const void *container)
         m_container = listType().create(container);
 }
 
-Heap::Sequence *Heap::Sequence::detached() const
+void Heap::Sequence::createElementWrappers(const void *container)
 {
-    return internalClass->engine->memoryManager->allocate<QV4::Sequence>(
-        QMetaType(m_listType), QMetaSequence(m_metaSequence), m_container);
+    Q_ASSERT(!isStoredInline());
+
+    if (!container)
+        return;
+
+    const QMetaSequence metaSequence(m_metaSequence);
+    const QMetaType valueMetaType = metaSequence.valueMetaType();
+    const qsizetype size = metaSequence.size(container);
+
+    QV4::Scope scope(internalClass->engine);
+    if (!qIsAtMostUintLimit(size)) {
+        generateWarning(scope.engine, QLatin1String("Sequence length out of range"));
+        return;
+    }
+
+    QV4::Scoped<QV4::Sequence> self(scope, this);
+    self->arrayReserve(size);
+    QV4::ScopedValue v(scope);
+    if (valueMetaType == QMetaType::fromType<QVariant>()) {
+        QVariant var;
+        for (qsizetype i = 0; i < size; ++i) {
+            metaSequence.valueAtIndex(container, i, &var);
+            v = scope.engine->metaTypeToJS(var.metaType(), var.constData());
+            self->arraySet(i, v);
+        }
+    } else {
+        QVariant var(valueMetaType);
+        for (qsizetype i = 0; i < size; ++i) {
+            metaSequence.valueAtIndex(container, i, var.data());
+            v = scope.engine->metaTypeToJS(valueMetaType, var.constData());
+            self->arraySet(i, v);
+        }
+    }
+
+    m_size = size;
+}
+
+Heap::Sequence *Heap::Sequence::detached()
+{
+    const QMetaType listType(m_listType);
+    const QMetaSequence metaSequence(m_metaSequence);
+    if (isStoredInline()) {
+        return internalClass->engine->memoryManager->allocate<QV4::Sequence>(
+                listType, metaSequence, m_container);
+    }
+
+    QVariant list(listType);
+
+    const QMetaType valueMetaType(m_metaSequence->valueMetaType);
+    QVariant element;
+    void *elementData = createVariantData(valueMetaType, &element);
+
+    QV4::Scope scope(internalClass->engine);
+    if (qIsAtMostSizetypeLimit(m_size)) {
+        QV4::Scoped<QV4::Sequence> self(scope, this);
+        QV4::ScopedValue v(scope);
+        for (uint i = 0; i < m_size; ++i) {
+            v = self->get(PropertyKey::fromArrayIndex(i));
+            ExecutionEngine::metaTypeFromJS(v, valueMetaType, elementData);
+            metaSequence.addValue(list.data(), elementData);
+        }
+    } else {
+        generateWarning(scope.engine, QLatin1String("Index out of range during toVariant()"));
+    }
+
+    return scope.engine->memoryManager->allocate<QV4::Sequence>(
+            listType, metaSequence, list.constData());
 }
 
 void Heap::Sequence::destroy()
 {
-    if (m_container)
+    if (isStoredInline() && m_container)
         listType().destroy(m_container);
     ReferenceObject::destroy();
 }
 
 void *Heap::Sequence::storagePointer()
 {
+    if (!isStoredInline())
+        return nullptr;
     if (!m_container)
         m_container = listType().create();
     return m_container;
@@ -180,6 +296,9 @@ void *Heap::Sequence::storagePointer()
 
 bool Heap::Sequence::setVariant(const QVariant &variant)
 {
+    // Should only happen from readReference(). Therefore we are attached.
+    Q_ASSERT(isStoredInline());
+
     const QMetaType variantReferenceType = variant.metaType();
     if (variantReferenceType != listType()) {
         // This is a stale reference. That is, the property has been
@@ -208,6 +327,9 @@ bool Heap::Sequence::setVariant(const QVariant &variant)
 }
 QVariant Heap::Sequence::toVariant() const
 {
+    // Should only happen from readReference(). Therefore we are attached.
+    Q_ASSERT(isStoredInline());
+
     return QVariant(listType(), m_container);
 }
 
@@ -283,7 +405,8 @@ bool Heap::Sequence::storeReference()
 
 ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (!id.isArrayIndex())
+    Heap::Sequence *p = static_cast<const Sequence *>(that)->d();
+    if (!p->isStoredInline() || !id.isArrayIndex())
         return ReferenceObject::virtualGet(that, id, receiver, hasProperty);
 
     const uint arrayIndex = id.asArrayIndex();
@@ -291,8 +414,6 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed get"));
         return false;
     }
-
-    Heap::Sequence *p = static_cast<const Sequence *>(that)->d();
 
     if (p->isReference() && !p->loadReference())
         return Encode::undefined();
@@ -312,6 +433,8 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
 qint64 Sequence::virtualGetLength(const Managed *m)
 {
     Heap::Sequence *p = static_cast<const Sequence *>(m)->d();
+    if (!p->isStoredInline())
+        return p->m_size;
     if (p->isReference() && !p->loadReference())
         return 0;
     return sizeInline(p);
@@ -323,12 +446,21 @@ bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Val
         return ReferenceObject::virtualPut(that, id, value, receiver);
 
     const uint arrayIndex = id.asArrayIndex();
+    Sequence *s = static_cast<Sequence *>(that);
+    Heap::Sequence *p = s->d();
+
+    if (!p->isStoredInline()) {
+        s->arraySet(arrayIndex, value);
+        if (p->m_size <= arrayIndex)
+            p->m_size = arrayIndex + 1;
+        return true;
+    }
+
     if (!qIsAtMostSizetypeLimit(arrayIndex)) {
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed set"));
         return false;
     }
 
-    Heap::Sequence *p = static_cast<Sequence *>(that)->d();
     if (p->internalClass->engine->hasException)
         return false;
 
@@ -364,7 +496,8 @@ bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Val
 
 bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
 {
-    if (!id.isArrayIndex())
+    Heap::Sequence *p = static_cast<const Sequence *>(that)->d();
+    if (!p->isStoredInline() || !id.isArrayIndex())
         return ReferenceObject::virtualDeleteProperty(that, id);
 
     const uint arrayIndex = id.asArrayIndex();
@@ -372,8 +505,6 @@ bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed delete"));
         return false;
     }
-
-    Heap::Sequence *p = static_cast<Sequence *>(that)->d();
 
     if (p->isReadOnly())
         return false;
@@ -421,6 +552,10 @@ bool Sequence::virtualIsEqualTo(Managed *that, Managed *other)
 
 OwnPropertyKeyIterator *Sequence::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
+    Heap::Sequence *p = static_cast<const Sequence *>(m)->d();
+    if (!p->isStoredInline())
+        return ReferenceObject::virtualOwnPropertyKeys(m, target);
+
     *target = *m;
     return new SequenceOwnPropertyKeyIterator;
 }
@@ -429,6 +564,11 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
 {
     Heap::Sequence *p = static_cast<Sequence *>(object)->d();
     Q_ASSERT(p);
+
+    // We only create attached wrappers if this sequence is stored inline.
+    // When detaching, we re-create everything. Therefore, we can't get a metaCall if
+    // we aren't stored inline.
+    Q_ASSERT(p->isStoredInline());
 
     switch (call) {
     case QMetaObject::ReadProperty: {
@@ -471,6 +611,8 @@ QV4::ReturnedValue SequencePrototype::method_getLength(
         THROW_TYPE_ERROR();
 
     Heap::Sequence *p = This->d();
+    if (!p->isStoredInline())
+        RETURN_RESULT(p->m_size);
 
     if (p->isReference() && !p->loadReference())
         return Encode::undefined();
@@ -494,8 +636,20 @@ QV4::ReturnedValue SequencePrototype::method_setLength(
 
     bool ok = false;
     const quint32 argv0 = argc ? argv[0].asArrayLength(&ok) : 0;
-    if (!ok || !qIsAtMostSizetypeLimit(argv0)) {
+    if (!ok) {
         generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
+        RETURN_UNDEFINED();
+    }
+
+    if (!p->isStoredInline()) {
+        if (argv0 < p->m_size)
+            p->arrayData->vtable()->truncate(This, argv0);
+        p->m_size = argv0;
+        RETURN_UNDEFINED();
+    }
+
+    if (!qIsAtMostSizetypeLimit(argv0)) {
+        generateWarning(scope.engine, QLatin1String("Sequence length out of range"));
         RETURN_UNDEFINED();
     }
 
@@ -552,6 +706,9 @@ ReturnedValue SequencePrototype::method_shift(
         return ArrayPrototype::method_shift(b, thisObject, argv, argc);
 
     Heap::Sequence *p = s->d();
+
+    if (!p->isStoredInline())
+        return ArrayPrototype::method_shift(b, thisObject, argv, argc);
 
     if (p->isReference() && !p->loadReference())
         RETURN_UNDEFINED();
@@ -637,17 +794,23 @@ QVariant SequencePrototype::toVariant(const Sequence *object)
     Q_ASSERT(object->isV4SequenceType());
     Heap::Sequence *p = object->d();
 
-    // Note: For historical reasons, we ignore the result of loadReference()
-    //       here. This allows us to retain sequences whose objects have vaninshed
-    //       as "var" properties. It comes at the price of potentially returning
-    //       outdated data. This is the behavior sequences have always shown.
-    if (p->isReference())
-        p->loadReference();
+    if (p->isStoredInline()) {
+        // Note: For historical reasons, we ignore the result of loadReference()
+        //       here. This allows us to retain sequences whose objects have vaninshed
+        //       as "var" properties. It comes at the price of potentially returning
+        //       outdated data. This is the behavior sequences have always shown.
+        if (p->isReference())
+            p->loadReference();
 
-    if (const void *storage = p->m_container)
-        return QVariant(p->listType(), storage);
+        if (const void *storage = p->m_container)
+            return QVariant(p->listType(), storage);
 
-    return QVariant();
+        return QVariant();
+    }
+
+    QV4::Scope scope(p->internalClass->engine);
+    QV4::ScopedObject q(scope, p);
+    return toVariant(q, p->listType());
 }
 
 bool convertToIterable(QMetaType metaType, void *data, QV4::Object *sequence)
@@ -795,7 +958,7 @@ static Heap::Sequence *resolveHeapSequence(const Sequence *sequence, QMetaType t
 void *SequencePrototype::rawContainerPtr(const Sequence *sequence, QMetaType typeHint)
 {
     Heap::Sequence *p = resolveHeapSequence(sequence, typeHint);
-    if (!p)
+    if (!p || !p->isStoredInline())
         return nullptr;
 
     return p->storagePointer();
@@ -808,10 +971,15 @@ SequencePrototype::RawCopyResult SequencePrototype::setRawContainer(
     if (!p)
         return TypeMismatch;
 
-    if (typeHint.equals(p->m_container, container))
-        return WasEqual;
-    typeHint.destruct(p->m_container);
-    typeHint.construct(p->storagePointer(), container);
+    if (p->isStoredInline()) {
+        if (typeHint.equals(p->m_container, container))
+            return WasEqual;
+        typeHint.destruct(p->m_container);
+        typeHint.construct(p->storagePointer(), container);
+        return Copied;
+    }
+
+    p->createElementWrappers(container);
     return Copied;
 }
 
@@ -822,10 +990,40 @@ SequencePrototype::RawCopyResult SequencePrototype::getRawContainer(
     if (!p)
         return TypeMismatch;
 
-    if (typeHint.equals(p->m_container, container))
-        return WasEqual;
+    if (p->isStoredInline()) {
+        if (typeHint.equals(p->m_container, container))
+            return WasEqual;
+        typeHint.destruct(container);
+        typeHint.construct(container, p->m_container);
+        return Copied;
+    }
+
     typeHint.destruct(container);
-    typeHint.construct(container, p->m_container);
+    typeHint.construct(container);
+
+    const QMetaSequence metaSequence = p->metaSequence();
+    QV4::Scope scope(p->internalClass->engine);
+    QV4::ScopedValue val(scope);
+    const QMetaType metaType = p->valueMetaType();
+    const qsizetype size = p->m_size;
+
+    Q_ASSERT(qIsAtMostUintLimit(size));
+
+    if (metaType == QMetaType::fromType<QVariant>()) {
+        for (qsizetype i = 0; i < size; ++i) {
+            val = sequence->get(PropertyKey::fromArrayIndex(i));
+            QVariant var = ExecutionEngine::toVariant(val, QMetaType(), false);
+            metaSequence.addValueAtEnd(container, &var);
+        }
+        return Copied;
+    }
+
+    QVariant var(metaType);
+    for (qsizetype i = 0; i < size; ++i) {
+        val = sequence->get(PropertyKey::fromArrayIndex(i));
+        scope.engine->metaTypeFromJS(val, metaType, var.data());
+        metaSequence.addValueAtEnd(container, var.data());
+    }
     return Copied;
 }
 

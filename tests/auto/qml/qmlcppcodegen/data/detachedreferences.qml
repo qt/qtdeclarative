@@ -10,9 +10,11 @@ DetachedReferences {
     // This is usually a recipe for disaster.
     map: ({ hello: "world", self: self, collectable: c.createObject(), hash: hash })
     hash: ({ world: "hello", self: self, collectable: c.createObject()})
+    list: [map, hash, c.createObject()]
 
     // But then we produce detached versions of the same containers, which cause the collectables
     // to be marked, so that they are not actually collected.
     property var markedMap: map
     property var markedHash: hash
+    property var markedList: list
 }
