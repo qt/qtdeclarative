@@ -681,22 +681,28 @@ void QAccessibleQuickItem::setText(QAccessible::Text textType, const QString &te
 
 void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
 {
-    QAccessible::Role r = role();
-    if (t == QAccessible::ActionInterface)
+    const QAccessible::Role r = role();
+    switch (t) {
+    case QAccessible::ActionInterface:
         return static_cast<QAccessibleActionInterface*>(this);
-    if (t == QAccessible::ValueInterface &&
-           (r == QAccessible::Slider ||
-            r == QAccessible::SpinBox ||
-            r == QAccessible::Dial ||
-            r == QAccessible::ScrollBar ||
-            r == QAccessible::ProgressBar))
-       return static_cast<QAccessibleValueInterface*>(this);
-
-    if (t == QAccessible::TextInterface) {
-        if (r == QAccessible::EditableText ||
-            r == QAccessible::StaticText ||
-            r == QAccessible::Heading)
-        return static_cast<QAccessibleTextInterface*>(this);
+    case QAccessible::ValueInterface:
+        if (r == QAccessible::Slider
+         || r == QAccessible::SpinBox
+         || r == QAccessible::Dial
+         || r == QAccessible::ScrollBar
+         || r == QAccessible::ProgressBar) {
+            return static_cast<QAccessibleValueInterface*>(this);
+        }
+        break;
+    case QAccessible::TextInterface:
+        if (r == QAccessible::EditableText
+         || r == QAccessible::StaticText
+         || r == QAccessible::Heading) {
+            return static_cast<QAccessibleTextInterface*>(this);
+        }
+        break;
+    default:
+        break;
     }
 
     return QAccessibleObject::interface_cast(t);
