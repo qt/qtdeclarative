@@ -806,6 +806,10 @@ void QQuickListViewPrivate::removeItem(FxViewItem *item)
 #endif
     {
         qCDebug(lcItemViewDelegateLifecycle) << "\treleasing stationary item" << item->index << (QObject *)(item->item);
+        if (auto *att = static_cast<QQuickListViewAttached*>(item->attached)) {
+            releaseSectionItem(att->m_sectionItem);
+            att->m_sectionItem = nullptr;
+        }
         releaseItem(item, reusableFlag);
     }
 }

@@ -123,6 +123,7 @@ private slots:
     void sectionPropertyChange();
     void sectionDelegateChange();
     void sectionsItemInsertion();
+    void removeSectionsOnNonvisibleItems();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
     void positionViewAtIndex();
@@ -2782,6 +2783,52 @@ void tst_QQuickListView::sectionsSnap()
     QQuickTest::pointerFlick(device, window.data(), 0, point, QPoint(100, 100), duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(-50));
+}
+
+void tst_QQuickListView::removeSectionsOnNonvisibleItems()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("removeSectionsOnNonVisibleItems.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    auto verifySectionData = [](QObject *object, int sectionId) {
+        auto sectionList = object->property("sectionItems").value<QQmlListProperty<QQuickItem>>();
+        const int length = sectionList.count(&sectionList);
+        for (int index = 0; index < length; index++) {
+            QQuickItem *currentItem = sectionList.at(&sectionList, index);
+            QString sectionData = currentItem->property("sectionData").value<QString>();
+            QStringList sectionDataList = sectionData.split(":");
+            QVERIFY(sectionDataList.at(0).toInt() == sectionId);
+        }
+    };
+
+    auto *listView = qobject_cast<QQuickListView*>(window->rootObject());
+    QTRY_VERIFY(listView != nullptr);
+    QVERIFY(listView->contentItem());
+
+    auto device = QPointingDevice::primaryPointingDevice();
+    const int stopFlickCount = 15;
+    int flickIndex = 0;
+    // The issue is more apparent when the list view used in this test case
+    // been flicked to the contentY: 965.
+    const float contentYThreadhold = 965.;
+    do {
+        QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 100), QPoint(100, 50), 125);
+        QTRY_VERIFY(listView->isMovingVertically());
+        QVERIFY(listView->contentY() != qreal(0));
+        if (listView->contentY() >= contentYThreadhold) {
+            listView->cancelFlick();
+            break;
+        }
+    } while (++flickIndex <= stopFlickCount);
+
+    int verifySectionId = 0;
+    verifySectionData(listView, ++verifySectionId);
+    // Refresh the section item with the new model data
+    QMetaObject::invokeMethod(listView, "reloadModel");
+    QVERIFY(QQuickTest::qWaitForPolish(listView));
+    verifySectionData(listView, ++verifySectionId);
 }
 
 void tst_QQuickListView::currentIndex_delayedItemCreation()
