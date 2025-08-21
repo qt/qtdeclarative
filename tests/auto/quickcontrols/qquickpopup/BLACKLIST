@@ -17,3 +17,10 @@ offscreen # QTBUG-128321
 
 [focusMultiplePopup]
 linux # QTBUG-133530
+
+[orientation]
+android
+[popupWindowPositionerRespectingScreenBounds]
+android
+[shrinkPopupThatWasLargerThanWindow]
+android
