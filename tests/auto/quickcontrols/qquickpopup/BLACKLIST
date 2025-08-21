@@ -9,3 +9,10 @@ macos # QTBUG-89938
 # QTBUG-125237
 [activeFocusItemAfterWindowInactive]
 android
+
+[orientation]
+android
+[popupWindowPositionerRespectingScreenBounds]
+android
+[shrinkPopupThatWasLargerThanWindow]
+android
