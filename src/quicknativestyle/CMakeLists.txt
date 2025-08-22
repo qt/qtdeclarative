@@ -107,6 +107,7 @@ qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS
         qstyle/mac/qquickmacstyle_mac.mm qstyle/mac/qquickmacstyle_mac_p.h
         qstyle/mac/qquickmacstyle_mac_p_p.h
         util/qquickmacfocusframe.h util/qquickmacfocusframe.mm
+        util/qquickstyleconstants.h util/qquickstyleconstants.mm
     INCLUDE_DIRECTORIES
         qstyle/mac
     LIBRARIES
