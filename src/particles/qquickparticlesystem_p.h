@@ -117,6 +117,8 @@ public:
 
     int top();
 
+    bool isEmpty() const { return m_end == 0; }
+
     QSet<QQuickParticleData*> pop();
 
     void clear();

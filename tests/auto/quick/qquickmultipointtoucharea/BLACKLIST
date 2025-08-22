@@ -4,3 +4,5 @@ ubuntu-22.04
 [nested]
 ubuntu-20.04
 ubuntu-22.04
+[inFlickable]
+* # QTBUG-127628

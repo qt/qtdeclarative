@@ -9,7 +9,7 @@ layout(location = 1) out vec2 vShadeCoord;
 layout(std140, binding = 0) uniform buf {
     mat4 qt_Matrix;
     vec4 color;
-    vec2 textureSize;
+    vec2 texCoordScale;
     float qt_Opacity;
 };
 
@@ -17,6 +17,6 @@ out gl_PerVertex { vec4 gl_Position; };
 
 void main() {
     gl_Position = qt_Matrix * aVertex;
-    vTexCoord = aVertex.xy * textureSize;
+    vTexCoord = aVertex.xy * texCoordScale;
     vShadeCoord = aTexCoord;
 }

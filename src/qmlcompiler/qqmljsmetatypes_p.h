@@ -66,6 +66,8 @@ class QQmlJSMetaEnum
     QString m_alias;
     QSharedPointer<const QQmlJSScope> m_type;
     bool m_isFlag = false;
+    bool m_isScoped = false;
+    bool m_isQml = false;
 
 public:
     QQmlJSMetaEnum() = default;
@@ -81,6 +83,12 @@ public:
 
     bool isFlag() const { return m_isFlag; }
     void setIsFlag(bool isFlag) { m_isFlag = isFlag; }
+
+    bool isScoped() const { return m_isScoped; }
+    void setIsScoped(bool v) { m_isScoped = v; }
+
+    bool isQml() const { return m_isQml; }
+    void setIsQml(bool v) { m_isQml = v; }
 
     void addKey(const QString &key) { m_keys.append(key); }
     QStringList keys() const { return m_keys; }
@@ -102,7 +110,8 @@ public:
                 && a.m_name == b.m_name
                 && a.m_alias == b.m_alias
                 && a.m_isFlag == b.m_isFlag
-                && a.m_type == b.m_type;
+                && a.m_type == b.m_type
+                && a.m_isScoped == b.m_isScoped;
     }
 
     friend bool operator!=(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
@@ -112,7 +121,8 @@ public:
 
     friend size_t qHash(const QQmlJSMetaEnum &e, size_t seed = 0)
     {
-        return qHashMulti(seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag, e.m_type);
+        return qHashMulti(
+                seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag, e.m_type, e.m_isScoped);
     }
 };
 

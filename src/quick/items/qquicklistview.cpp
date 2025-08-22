@@ -1721,7 +1721,7 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             updateHighlight();
             bottomItem = currentItem;
         }
-        qreal pos;
+        qreal pos = 0;
         bool isInBounds = -position() > maxExtent && -position() <= minExtent;
 
         if (header && !topItem && isInBounds) {
@@ -1802,6 +1802,19 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
         }
+        // If we have the CurrentLabelAtStart flag set, then we need to consider
+        // the section size while calculating the position
+        if (sectionCriteria
+            && (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart)
+            && currentSectionItem) {
+            auto sectionSize = (orient == QQuickListView::Vertical) ? currentSectionItem->height()
+                                                                    : currentSectionItem->width();
+            if (isContentFlowReversed())
+                pos += sectionSize;
+            else
+                pos -= sectionSize;
+        }
+
         pos = qBound(-minExtent, pos, -maxExtent);
 
         qreal dist = qAbs(data.move + pos);
@@ -2380,7 +2393,7 @@ QQuickListView::~QQuickListView()
 
 /*!
   \qmlproperty int QtQuick::ListView::count
-  This property holds the number of items in the view.
+  This property holds the number of items in the model.
 */
 
 /*!

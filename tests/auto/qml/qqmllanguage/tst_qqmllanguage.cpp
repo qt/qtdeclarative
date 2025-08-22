@@ -394,6 +394,11 @@ private slots:
     void deepAliasOnICOrReadonly();
 
     void writeNumberToEnumAlias();
+    void badInlineComponentAnnotation();
+
+    void typedObjectList();
+
+    void overrideInnerBinding();
 
 private:
     QQmlEngine engine;
@@ -6745,6 +6750,52 @@ void tst_qqmllanguage::writeNumberToEnumAlias()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->property("strokeStyle").toInt(), 1);
+}
+
+void tst_qqmllanguage::badInlineComponentAnnotation()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("badICAnnotation.qml");
+    QQmlComponent c(&engine, testFileUrl("badICAnnotation.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("a").toInt(), 5);
+
+    QObject *ic = o->property("ic").value<QObject *>();
+    QVERIFY(ic);
+
+    QCOMPARE(o->property("b").value<QObject *>(), ic);
+    QCOMPARE(o->property("c").value<QObject *>(), ic);
+}
+
+void tst_qqmllanguage::typedObjectList()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("typedObjectList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QJSValue b = o->property("b").value<QJSValue>();
+    auto list = qjsvalue_cast<QQmlListProperty<QQmlComponent>>(b.property(QStringLiteral("b")));
+
+    QCOMPARE(list.count(&list), 1);
+    QVERIFY(list.at(&list, 0) != nullptr);
+}
+
+void tst_qqmllanguage::overrideInnerBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("BindingOverrider.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("width").toReal(), 20.0);
+    QCOMPARE(o->property("innerWidth").toReal(), 20.0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
