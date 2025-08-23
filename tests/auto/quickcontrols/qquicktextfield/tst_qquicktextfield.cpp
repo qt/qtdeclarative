@@ -44,10 +44,6 @@ tst_QQuickTextField::tst_QQuickTextField()
 
 void tst_QQuickTextField::initTestCase()
 {
-#ifdef Q_OS_ANDROID
-    if (QNativeInterface::QAndroidApplication::sdkVersion() > 23)
-        QSKIP("Crashes on Android 7+, figure out why (QTBUG-107028)");
-#endif
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
     // Showing a native menu is a blocking call, so the test will timeout.
