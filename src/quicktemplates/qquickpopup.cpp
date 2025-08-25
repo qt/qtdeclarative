@@ -1039,6 +1039,12 @@ void QQuickPopupPrivate::setWindow(QQuickWindow *newWindow)
         QQuickOverlay *overlay = QQuickOverlay::overlay(window);
         if (overlay)
             QQuickOverlayPrivate::get(overlay)->removePopup(q);
+
+        // Interacting with Popups in async Loaders (QTBUG-139306) would cause crashes
+        // because the popup's window was null. We can avoid this by unparenting the popupItem,
+        // which removes it from stackingOrderPopups and hence excludes it from receiving events.
+        if (!newWindow && popupItem)
+            popupItem->setParentItem(nullptr);
     }
 
     window = newWindow;
