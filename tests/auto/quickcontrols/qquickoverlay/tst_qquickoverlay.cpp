@@ -7,9 +7,15 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickpointerdevicehandler_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 
-class tst_QQuickOverlay : public QObject
+using namespace QQuickControlsTestUtils;
+using namespace QQuickVisualTestUtils;
+
+class tst_QQuickOverlay : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -19,6 +25,7 @@ public:
 private slots:
     void clearGrabbers();
     void retainOrientation();
+    void eventsToWindowlessPopupInAsyncLoader();
 };
 
 class TestInputHandler : public QQuickPointerDeviceHandler
@@ -143,7 +150,10 @@ public:
     QList<int> m_points;
 };
 
-tst_QQuickOverlay::tst_QQuickOverlay() = default;
+tst_QQuickOverlay::tst_QQuickOverlay()
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
+{
+}
 
 void tst_QQuickOverlay::clearGrabbers()
 {
@@ -216,6 +226,33 @@ void tst_QQuickOverlay::retainOrientation()
     QTRY_COMPARE_NE(overlay->size(), sz);
 
     QCOMPARE(overlay->rotation(), rot);
+}
+
+void tst_QQuickOverlay::eventsToWindowlessPopupInAsyncLoader()
+{
+    QQuickControlsApplicationHelper helper(this, "eventsToWindowlessPopupInAsyncLoader.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    const QPoint startPos(0, 0);
+    const QPoint targetPos(40, 40);
+    const int steps = 80;
+    const int delay = 1;
+
+    // Test various event types. None of them should cause crashes.
+    PointLerper mousePointLerper(window, startPos);
+    mousePointLerper.move(targetPos, steps, delay);
+
+    std::unique_ptr<QPointingDevice> touchscreen { QTest::createTouchDevice() };
+    PointLerper touchPointLerper(window, startPos, touchscreen.get());
+    touchPointLerper.move(targetPos, steps, delay);
+
+    forEachStep(steps, [&](qreal progress) {
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            lerpPoints(startPos, targetPos, progress), delay);
+    });
 }
 
 QTEST_MAIN(tst_QQuickOverlay)
