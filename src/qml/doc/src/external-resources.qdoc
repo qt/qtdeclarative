@@ -85,3 +85,16 @@
     \externalpage https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/
     \title Kotlin: String
 */
+/*!
+    \externalpage https://developer.android.com/reference/android/view/View#event-handling-and-threading
+    \title Android: Event Handling and Threading
+*/
+/*!
+    \externalpage https://developer.android.com/reference/android/widget/FrameLayout
+    \title Android: FrameLayout
+*/
+/*!
+    \externalpage https://developer.android.com/reference/android/widget/FrameLayout.LayoutParams
+    \title Android: FrameLayout.LayoutParams
+*/
+
