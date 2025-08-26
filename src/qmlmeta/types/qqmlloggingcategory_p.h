@@ -1,5 +1,6 @@
 // Copyright (C) 2016 Pelagicore AG
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QQMLLOGGINGCATEGORY_P_H
 #define QQMLLOGGINGCATEGORY_P_H
