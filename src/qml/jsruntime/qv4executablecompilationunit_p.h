@@ -1,5 +1,6 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QV4EXECUTABLECOMPILATIONUNIT_P_H
 #define QV4EXECUTABLECOMPILATIONUNIT_P_H

@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 #include "qv4objectiterator_p.h"
 #include "qv4object_p.h"
 #include "qv4iterator_p.h"

@@ -1,5 +1,6 @@
 // Copyright (C) 2018 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 #include <qv4iterator_p.h>
 #include <qv4symbol_p.h>
 #include <qv4engine_p.h>

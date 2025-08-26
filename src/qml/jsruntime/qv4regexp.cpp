@@ -1,5 +1,7 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
+// TODO: verifyj critical part should be in YARR
 
 #include "qv4regexp_p.h"
 #include "qv4engine_p.h"

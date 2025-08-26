@@ -1,6 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
 #include <qv4engine_p.h>
+// Qt-Security score:significant
 
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qv4codegen_p.h>
