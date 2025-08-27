@@ -42,6 +42,14 @@ static ReturnedValue doGetIndexed(const Sequence *s, qsizetype index) {
     return v->asReturnedValue();
 }
 
+static void *createVariantData(QMetaType type, QVariant *variant)
+{
+    if (type == QMetaType::fromType<QVariant>())
+        return variant;
+    *variant = QVariant(type);
+    return variant->data();
+}
+
 // helper function to generate valid warnings if errors occur during sequence operations.
 static void generateWarning(QV4::ExecutionEngine *v4, const QString& description)
 {
@@ -205,16 +213,8 @@ QVariant Sequence::shift()
     const QMetaType v = p->valueMetaType();
     const QMetaSequence m = p->metaSequence();
 
-    const auto variantData = [&](QVariant *variant) -> void *{
-        if (v == QMetaType::fromType<QVariant>())
-            return variant;
-
-        *variant = QVariant(v);
-        return variant->data();
-    };
-
     QVariant result;
-    void *resultData = variantData(&result);
+    void *resultData = createVariantData(v, &result);
     m.valueAtIndex(storage, 0, resultData);
 
     if (m.canRemoveValueAtBegin()) {
@@ -223,7 +223,7 @@ QVariant Sequence::shift()
     }
 
     QVariant t;
-    void *tData = variantData(&t);
+    void *tData = createVariantData(v, &t);
     for (qsizetype i = 1, end = m.size(storage); i < end; ++i) {
         m.valueAtIndex(storage, i, tData);
         m.setValueAtIndex(storage, i - 1, tData);
