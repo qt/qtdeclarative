@@ -20,30 +20,32 @@
 
 QT_BEGIN_NAMESPACE
 
-inline bool qIsAtMostUintLimit(qsizetype length, uint limit = std::numeric_limits<uint>::max())
+template<typename Number>
+inline bool qIsAtMostUintLimit(Number length, uint limit = std::numeric_limits<uint>::max())
 {
     // Use the type with the larger positive range to do the comparison.
 
     Q_ASSERT(length >= 0);
-    if constexpr (sizeof(qsizetype) > sizeof(uint)) {
-        return length <= qsizetype(limit);
+    if constexpr (sizeof(Number) > sizeof(uint)) {
+        return length <= Number(limit);
     } else {
         return uint(length) <= limit;
     }
 }
 
-inline bool qIsAtMostSizetypeLimit(uint length, qsizetype limit = std::numeric_limits<qsizetype>::max())
+template<typename Number>
+inline bool qIsAtMostSizetypeLimit(
+        Number length, qsizetype limit = std::numeric_limits<qsizetype>::max())
 {
     // Use the type with the larger positive range to do the comparison.
 
     Q_ASSERT(limit >= 0);
-    if constexpr (sizeof(qsizetype) > sizeof(uint)) {
+    if constexpr (sizeof(qsizetype) > sizeof(Number)) {
         return qsizetype(length) <= limit;
     } else {
-        return length <= uint(limit);
+        return length <= Number(limit);
     }
 }
-
 
 namespace QV4 {
 
