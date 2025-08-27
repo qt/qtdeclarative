@@ -286,22 +286,6 @@ static void removeLastInline(Heap::Sequence *p, qsizetype num)
     }
 }
 
-ReturnedValue Sequence::containerGetIndexed(qsizetype index, bool *hasProperty) const
-{
-    Heap::Sequence *p = d();
-    if (p->isReference() && !p->loadReference())
-        return Encode::undefined();
-
-    if (index >= 0 && index < sizeInline(p)) {
-        if (hasProperty)
-            *hasProperty = true;
-        return doGetIndexed(this, index);
-    }
-    if (hasProperty)
-        *hasProperty = false;
-    return Encode::undefined();
-}
-
 bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
 {
     Heap::Sequence *p = d();
@@ -392,16 +376,31 @@ bool Heap::Sequence::storeReference()
 
 ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
-    if (id.isArrayIndex()) {
-        const uint index = id.asArrayIndex();
-        if (qIsAtMostSizetypeLimit(index))
-            return static_cast<const Sequence *>(that)->containerGetIndexed(qsizetype(index), hasProperty);
+    if (!id.isArrayIndex())
+        return ReferenceObject::virtualGet(that, id, receiver, hasProperty);
 
+    const uint arrayIndex = id.asArrayIndex();
+    if (!qIsAtMostSizetypeLimit(arrayIndex)) {
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed get"));
         return false;
     }
 
-    return Object::virtualGet(that, id, receiver, hasProperty);
+    const Sequence *s = static_cast<const Sequence *>(that);
+    Heap::Sequence *p = s->d();
+
+    if (p->isReference() && !p->loadReference())
+        return Encode::undefined();
+
+    const qsizetype index = arrayIndex;
+    if (index < sizeInline(p)) {
+        if (hasProperty)
+            *hasProperty = true;
+        return doGetIndexed(s, index);
+    }
+
+    if (hasProperty)
+        *hasProperty = false;
+    return Encode::undefined();
 }
 
 qint64 Sequence::virtualGetLength(const Managed *m)
