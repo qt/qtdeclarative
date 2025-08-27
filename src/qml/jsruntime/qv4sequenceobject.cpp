@@ -566,7 +566,8 @@ int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index,
     return -1;
 }
 
-static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
+QV4::ReturnedValue SequencePrototype::method_getLength(
+        const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     QV4::Scope scope(b);
     QV4::Scoped<Sequence> This(scope, thisObject->as<Sequence>());
@@ -583,7 +584,8 @@ static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value
     return scope.engine->throwRangeError(QLatin1String("Sequence length out of range"));
 }
 
-static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+QV4::ReturnedValue SequencePrototype::method_setLength(
+        const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
 {
     QV4::Scope scope(f);
     QV4::Scoped<Sequence> This(scope, thisObject->as<Sequence>());
@@ -634,7 +636,7 @@ void SequencePrototype::init()
 {
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
-    defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
+    defineAccessorProperty(QStringLiteral("length"), method_getLength, method_setLength);
     defineDefaultProperty(QStringLiteral("shift"), method_shift, 0);
 }
 
