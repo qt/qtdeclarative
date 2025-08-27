@@ -25,21 +25,33 @@ namespace QV4 {
 DEFINE_OBJECT_VTABLE(Sequence);
 
 static ReturnedValue doGetIndexed(const Sequence *s, qsizetype index) {
-    QV4::Scope scope(s->engine());
+    Heap::Sequence *p = s->d();
+    QV4::Scope scope(p->internalClass->engine);
 
-    Heap::ReferenceObject::Flags flags =
-            Heap::ReferenceObject::EnforcesLocation;
-    if (s->d()->metaSequence().canSetValueAtIndex())
+    const QMetaType valueMetaType = p->valueMetaType();
+    const QMetaSequence metaSequence = p->metaSequence();
+
+    Heap::ReferenceObject::Flags flags = Heap::ReferenceObject::EnforcesLocation;
+    if (metaSequence.canSetValueAtIndex())
         flags |= Heap::ReferenceObject::CanWriteBack;
-    if (s->d()->valueMetaType() == QMetaType::fromType<QVariant>())
-        flags |= Heap::ReferenceObject::IsVariant;
 
-    QV4::ScopedValue v(scope, scope.engine->fromVariant(
-                           s->at(index), s->d(), index, flags));
+    const void *container = p->storagePointer();
+    Q_ASSERT(container); // Must readReference() before
+
+    QVariant result;
+    if (valueMetaType == QMetaType::fromType<QVariant>()) {
+        flags |= Heap::ReferenceObject::IsVariant;
+        metaSequence.valueAtIndex(container, index, &result);
+    } else {
+        result = QVariant(valueMetaType);
+        metaSequence.valueAtIndex(container, index, result.data());
+    }
+
+    QV4::ScopedValue v(scope, scope.engine->fromVariant(result, p, index, flags));
     if (QQmlValueTypeWrapper *ref = v->as<QQmlValueTypeWrapper>()) {
         if (CppStackFrame *frame = scope.engine->currentStackFrame)
             ref->d()->setLocation(frame->v4Function, frame->statementNumber());
-        // No need to read the reference. at() has done that already.
+        // No need to read the reference. We've done that above already.
     }
     return v->asReturnedValue();
 }
@@ -87,6 +99,12 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     QQmlEnginePrivate::warning(engine, retn);
 }
 
+static qsizetype sizeInline(const Heap::Sequence *p)
+{
+    Q_ASSERT(p->storagePointer()); // Must readReference() before
+    return p->metaSequence().size(p->storagePointer());
+}
+
 struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
 {
     ~SequenceOwnPropertyKeyIterator() override = default;
@@ -98,7 +116,7 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
         if (p->isReference() && !p->loadReference())
             return PropertyKey::invalid();
 
-        const qsizetype size = s->size();
+        const qsizetype size = sizeInline(p);
         if (size > 0 && qIsAtMostSizetypeLimit(arrayIndex, size - 1)) {
             const uint index = arrayIndex;
             ++arrayIndex;
@@ -239,31 +257,8 @@ QVariant Heap::Sequence::toVariant() const
     return QVariant(listType(), m_container);
 }
 
-qsizetype Sequence::size() const
+static QVariant shiftInline(Heap::Sequence *p)
 {
-    const auto *p = d();
-    Q_ASSERT(p->storagePointer()); // Must readReference() before
-    return p->metaSequence().size(p->storagePointer());
-}
-
-QVariant Sequence::at(qsizetype index) const
-{
-    const auto *p = d();
-    Q_ASSERT(p->storagePointer()); // Must readReference() before
-    const QMetaType v = p->valueMetaType();
-    QVariant result;
-    if (v == QMetaType::fromType<QVariant>()) {
-        p->metaSequence().valueAtIndex(p->storagePointer(), index, &result);
-    } else {
-        result = QVariant(v);
-        p->metaSequence().valueAtIndex(p->storagePointer(), index, result.data());
-    }
-    return result;
-}
-
-QVariant Sequence::shift()
-{
-    auto *p = d();
     void *storage = p->storagePointer();
     Q_ASSERT(storage); // Must readReference() before
     const QMetaType v = p->valueMetaType();
@@ -305,17 +300,15 @@ void convertAndDo(const QVariant &item, const QMetaType v, Action action)
     }
 }
 
-void Sequence::append(const QVariant &item)
+static void appendInline(Heap::Sequence *p, const QVariant &item)
 {
-    Heap::Sequence *p = d();
     convertAndDo(item, p->valueMetaType(), [p](const void *data) {
         p->metaSequence().addValueAtEnd(p->storagePointer(), data);
     });
 }
 
-void Sequence::append(qsizetype num, const QVariant &item)
+static void appendInline(Heap::Sequence *p, qsizetype num, const QVariant &item)
 {
-    Heap::Sequence *p = d();
     convertAndDo(item, p->valueMetaType(), [p, num](const void *data) {
         const QMetaSequence m = p->metaSequence();
         void *container = p->storagePointer();
@@ -324,17 +317,15 @@ void Sequence::append(qsizetype num, const QVariant &item)
     });
 }
 
-void Sequence::replace(qsizetype index, const QVariant &item)
+static void replaceInline(Heap::Sequence *p, qsizetype index, const QVariant &item)
 {
-    Heap::Sequence *p = d();
     convertAndDo(item, p->valueMetaType(), [p, index](const void *data) {
         p->metaSequence().setValueAtIndex(p->storagePointer(), index, data);
     });
 }
 
-void Sequence::removeLast(qsizetype num)
+static void removeLastInline(Heap::Sequence *p, qsizetype num)
 {
-    auto *p = d();
     const QMetaSequence m = p->metaSequence();
     void *container = p->storagePointer();
 
@@ -357,7 +348,7 @@ ReturnedValue Sequence::containerGetIndexed(qsizetype index, bool *hasProperty) 
     if (p->isReference() && !p->loadReference())
         return Encode::undefined();
 
-    if (index >= 0 && index < size()) {
+    if (index >= 0 && index < sizeInline(p)) {
         if (hasProperty)
             *hasProperty = true;
         return doGetIndexed(this, index);
@@ -381,7 +372,7 @@ bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
     if (p->isReference() && !p->loadReference())
         return false;
 
-    const qsizetype count = size();
+    const qsizetype count = sizeInline(p);
     const QMetaType valueType = p->valueMetaType();
     const QVariant element = ExecutionEngine::toVariant(value, valueType, false);
 
@@ -389,15 +380,16 @@ bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
         return false;
 
     if (index == count) {
-        append(element);
+        appendInline(p, element);
     } else if (index < count) {
-        replace(index, element);
+        replaceInline(p, index, element);
     } else {
         /* according to ECMA262r3 we need to insert */
         /* the value at the given index, increasing length to index+1. */
-        append(index - count,
-               valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
-        append(element);
+        appendInline(
+                p, index - count,
+                valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
+        appendInline(p, element);
     }
 
     if (p->object())
@@ -412,12 +404,12 @@ bool Sequence::containerDeleteIndexedProperty(qsizetype index)
         return false;
     if (p->isReference() && !p->loadReference())
         return false;
-    if (index < 0 || index >= size())
+    if (index < 0 || index >= sizeInline(p))
         return false;
 
     /* according to ECMA262r3 it should be Undefined, */
     /* but we cannot, so we insert a default-value instead. */
-    replace(index, QVariant());
+    replaceInline(p, index, QVariant());
 
     if (p->object())
         p->storeReference();
@@ -488,11 +480,10 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
 
 qint64 Sequence::virtualGetLength(const Managed *m)
 {
-    const Sequence *s = static_cast<const Sequence *>(m);
-    Heap::Sequence *p = s->d();
+    Heap::Sequence *p = static_cast<const Sequence *>(m)->d();
     if (p->isReference() && !p->loadReference())
         return 0;
-    return s->size();
+    return sizeInline(p);
 }
 
 bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *receiver)
@@ -582,7 +573,7 @@ QV4::ReturnedValue SequencePrototype::method_getLength(
     if (p->isReference() && !p->loadReference())
         return Encode::undefined();
 
-    const qsizetype size = This->size();
+    const qsizetype size = sizeInline(p);
     if (qIsAtMostUintLimit(size))
         RETURN_RESULT(Encode(uint(size)));
 
@@ -616,7 +607,7 @@ QV4::ReturnedValue SequencePrototype::method_setLength(
         RETURN_UNDEFINED();
 
     /* Determine whether we need to modify the sequence */
-    const qsizetype count = This->size();
+    const qsizetype count = sizeInline(p);
     if (newCount == count) {
         RETURN_UNDEFINED();
     } else if (newCount > count) {
@@ -624,12 +615,12 @@ QV4::ReturnedValue SequencePrototype::method_setLength(
         /* according to ECMA262r3 we need to insert */
         /* undefined values increasing length to newLength. */
         /* We cannot, so we insert default-values instead. */
-        This->append(newCount - count, QVariant(valueMetaType));
+        appendInline(p, newCount - count, QVariant(valueMetaType));
     } else {
         /* according to ECMA262r3 we need to remove */
         /* elements until the sequence is the required length. */
         Q_ASSERT(newCount < count);
-        This->removeLast(count - newCount);
+        removeLastInline(p, count - newCount);
     }
 
     /* write back if required. */
@@ -683,11 +674,11 @@ ReturnedValue SequencePrototype::method_shift(
     if (p->isReference() && !p->loadReference())
         RETURN_UNDEFINED();
 
-    const qsizetype len = s->size();
+    const qsizetype len = sizeInline(p);
     if (!len)
         RETURN_UNDEFINED();
 
-    ScopedValue result(scope, scope.engine->fromVariant(s->shift()));
+    ScopedValue result(scope, scope.engine->fromVariant(shiftInline(p)));
 
     if (p->object())
         p->storeReference();
