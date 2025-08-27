@@ -201,34 +201,6 @@ QVariant Heap::Sequence::toVariant() const
     return QVariant(listType(), m_container);
 }
 
-static QVariant shiftInline(Heap::Sequence *p)
-{
-    void *storage = p->storagePointer();
-    Q_ASSERT(storage); // Must readReference() before
-    const QMetaType v = p->valueMetaType();
-    const QMetaSequence m = p->metaSequence();
-
-    QVariant result;
-    void *resultData = createVariantData(v, &result);
-    m.valueAtIndex(storage, 0, resultData);
-
-    if (m.canRemoveValueAtBegin()) {
-        m.removeValueAtBegin(storage);
-        return result;
-    }
-
-    QVariant t;
-    void *tData = createVariantData(v, &t);
-    for (qsizetype i = 1, end = m.size(storage); i < end; ++i) {
-        m.valueAtIndex(storage, i, tData);
-        m.setValueAtIndex(storage, i - 1, tData);
-    }
-    m.removeValueAtEnd(storage);
-
-    return result;
-}
-
-
 template<typename Action>
 void convertAndDo(const QVariant &item, const QMetaType v, Action action)
 {
@@ -580,12 +552,31 @@ ReturnedValue SequencePrototype::method_shift(
     if (!len)
         RETURN_UNDEFINED();
 
-    ScopedValue result(scope, scope.engine->fromVariant(shiftInline(p)));
+    void *storage = p->storagePointer();
+    Q_ASSERT(storage); // Must readReference() before
+    const QMetaType v = p->valueMetaType();
+    const QMetaSequence m = p->metaSequence();
+
+    QVariant shifted;
+    void *resultData = createVariantData(v, &shifted);
+    m.valueAtIndex(storage, 0, resultData);
+
+    if (m.canRemoveValueAtBegin()) {
+        m.removeValueAtBegin(storage);
+    } else {
+        QVariant t;
+        void *tData = createVariantData(v, &t);
+        for (qsizetype i = 1, end = m.size(storage); i < end; ++i) {
+            m.valueAtIndex(storage, i, tData);
+            m.setValueAtIndex(storage, i - 1, tData);
+        }
+        m.removeValueAtEnd(storage);
+    }
 
     if (p->object())
         p->storeReference();
 
-    return result->asReturnedValue();
+    return scope.engine->fromVariant(shifted);
 }
 
 ReturnedValue SequencePrototype::newSequence(
