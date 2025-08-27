@@ -22,8 +22,8 @@ namespace QV4 {
 
 DEFINE_OBJECT_VTABLE(Sequence);
 
-static ReturnedValue doGetIndexed(const Sequence *s, qsizetype index) {
-    Heap::Sequence *p = s->d();
+static ReturnedValue doGetIndexed(Heap::Sequence *p, qsizetype index)
+{
     QV4::Scope scope(p->internalClass->engine);
 
     const QMetaType valueMetaType = p->valueMetaType();
@@ -89,8 +89,7 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
     ~SequenceOwnPropertyKeyIterator() override = default;
     PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override
     {
-        const Sequence *s = static_cast<const Sequence *>(o);
-        Heap::Sequence *p = s->d();
+        Heap::Sequence *p = static_cast<const Sequence *>(o)->d();
 
         if (p->isReference() && !p->loadReference())
             return PropertyKey::invalid();
@@ -102,7 +101,7 @@ struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
             if (attrs)
                 *attrs = QV4::Attr_Data;
             if (pd)
-                pd->value = doGetIndexed(s, index);
+                pd->value = doGetIndexed(p, index);
             return PropertyKey::fromArrayIndex(index);
         }
 
@@ -310,8 +309,7 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
         return false;
     }
 
-    const Sequence *s = static_cast<const Sequence *>(that);
-    Heap::Sequence *p = s->d();
+    Heap::Sequence *p = static_cast<const Sequence *>(that)->d();
 
     if (p->isReference() && !p->loadReference())
         return Encode::undefined();
@@ -320,7 +318,7 @@ ReturnedValue Sequence::virtualGet(const Managed *that, PropertyKey id, const Va
     if (index < sizeInline(p)) {
         if (hasProperty)
             *hasProperty = true;
-        return doGetIndexed(s, index);
+        return doGetIndexed(p, index);
     }
 
     if (hasProperty)
