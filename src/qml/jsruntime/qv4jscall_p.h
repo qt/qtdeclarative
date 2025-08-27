@@ -303,7 +303,7 @@ inline ReturnedValue coerceListType(
     ScopedValue v(scope);
     for (qsizetype i = 0; i < length; ++i) {
         v =  array->get(i);
-        sequence->containerPutIndexed(i, v);
+        sequence->put(PropertyKey::fromArrayIndex(i), v);
     }
     return sequence->asReturnedValue();
 }
