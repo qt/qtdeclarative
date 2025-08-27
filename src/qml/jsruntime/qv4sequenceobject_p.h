@@ -124,7 +124,6 @@ public:
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 
-    bool containerDeleteIndexedProperty(qsizetype index);
     bool containerIsEqualTo(Managed *other);
 };
 

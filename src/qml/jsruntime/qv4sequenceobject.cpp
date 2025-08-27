@@ -286,26 +286,6 @@ static void removeLastInline(Heap::Sequence *p, qsizetype num)
     }
 }
 
-bool Sequence::containerDeleteIndexedProperty(qsizetype index)
-{
-    Heap::Sequence *p = d();
-    if (p->isReadOnly())
-        return false;
-    if (p->isReference() && !p->loadReference())
-        return false;
-    if (index < 0 || index >= sizeInline(p))
-        return false;
-
-    /* according to ECMA262r3 it should be Undefined, */
-    /* but we cannot, so we insert a default-value instead. */
-    replaceInline(p, index, QVariant());
-
-    if (p->object())
-        p->storeReference();
-
-    return true;
-}
-
 bool Sequence::containerIsEqualTo(Managed *other)
 {
     if (!other)
@@ -421,15 +401,34 @@ bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Val
 
 bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
 {
-    if (id.isArrayIndex()) {
-        const uint index = id.asArrayIndex();
-        if (qIsAtMostSizetypeLimit(index))
-            return static_cast<Sequence *>(that)->containerDeleteIndexedProperty(qsizetype(index));
+    if (!id.isArrayIndex())
+        return ReferenceObject::virtualDeleteProperty(that, id);
 
+    const uint arrayIndex = id.asArrayIndex();
+    if (!qIsAtMostSizetypeLimit(arrayIndex)) {
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed delete"));
         return false;
     }
-    return Object::virtualDeleteProperty(that, id);
+
+    Heap::Sequence *p = static_cast<Sequence *>(that)->d();
+
+    if (p->isReadOnly())
+        return false;
+    if (p->isReference() && !p->loadReference())
+        return false;
+
+    const qsizetype index = arrayIndex;
+    if (index >= sizeInline(p))
+        return false;
+
+    /* according to ECMA262r3 it should be Undefined, */
+    /* but we cannot, so we insert a default-value instead. */
+    replaceInline(p, index, QVariant());
+
+    if (p->object())
+        p->storeReference();
+
+    return true;
 }
 
 bool Sequence::virtualIsEqualTo(Managed *that, Managed *other)
