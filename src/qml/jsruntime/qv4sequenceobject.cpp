@@ -223,14 +223,14 @@ static void appendInline(Heap::Sequence *p, const QVariant &item)
     });
 }
 
-static void appendInline(Heap::Sequence *p, qsizetype num, const QVariant &item)
+static void appendDefaultConstructedInline(Heap::Sequence *p, qsizetype num)
 {
-    convertAndDo(item, p->valueMetaType(), [p, num](const void *data) {
-        const QMetaSequence m = p->metaSequence();
-        void *container = p->storagePointer();
-        for (qsizetype i = 0; i < num; ++i)
-            m.addValueAtEnd(container, data);
-    });
+    QVariant item;
+    const void *data = createVariantData(p->valueMetaType(), &item);
+    const QMetaSequence m = p->metaSequence();
+    void *container = p->storagePointer();
+    for (qsizetype i = 0; i < num; ++i)
+        m.addValueAtEnd(container, data);
 }
 
 static void replaceInline(Heap::Sequence *p, qsizetype index, const QVariant &item)
@@ -342,9 +342,7 @@ bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Val
     } else {
         /* according to ECMA262r3 we need to insert */
         /* the value at the given index, increasing length to index+1. */
-        appendInline(
-                p, index - count,
-                valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
+        appendDefaultConstructedInline(p, index - count);
         appendInline(p, element);
     }
 
@@ -504,11 +502,10 @@ QV4::ReturnedValue SequencePrototype::method_setLength(
     if (newCount == count) {
         RETURN_UNDEFINED();
     } else if (newCount > count) {
-        const QMetaType valueMetaType = p->valueMetaType();
         /* according to ECMA262r3 we need to insert */
         /* undefined values increasing length to newLength. */
         /* We cannot, so we insert default-values instead. */
-        appendInline(p, newCount - count, QVariant(valueMetaType));
+        appendDefaultConstructedInline(p, newCount - count);
     } else {
         /* according to ECMA262r3 we need to remove */
         /* elements until the sequence is the required length. */
