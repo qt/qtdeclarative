@@ -1282,7 +1282,8 @@ void QQmlVMEMetaObject::writeVarProperty(int id, const QV4::Value &value)
         } else {
             // Otherwise, make sure the reference carries some value so that we can still call
             // toVariant() on it (see note in QV4::SequencePrototype::toVariant).
-            if (!p->hasData())
+            // NB: This code is gone in 6.9, but removing it is a behavior change.
+            if (!static_cast<const QV4::Heap::Sequence *>(p)->storagePointer())
                 QV4::ReferenceObject::readReference(p);
             md->set(engine, id, p);
         }

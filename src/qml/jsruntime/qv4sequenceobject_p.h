@@ -79,7 +79,6 @@ struct Sequence : ReferenceObject
     Sequence *detached() const;
     void destroy();
 
-    bool hasData() const { return m_container != nullptr; }
     void *storagePointer();
     const void *storagePointer() const { return m_container; }
 
