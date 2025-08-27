@@ -333,14 +333,14 @@ bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, i
 
 bool Heap::Sequence::loadReference()
 {
-    Q_ASSERT(object());
+    Q_ASSERT(isReference());
     // If locations are enforced we only read once
     return enforcesLocation() || QV4::ReferenceObject::readReference(this);
 }
 
 bool Heap::Sequence::storeReference()
 {
-    Q_ASSERT(object());
+    Q_ASSERT(isReference());
     return isAttachedToProperty() && QV4::ReferenceObject::writeBack(this);
 }
 
@@ -422,7 +422,7 @@ bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Val
         appendInline(p, element);
     }
 
-    if (p->object())
+    if (p->isReference())
         p->storeReference();
     return true;
 }
@@ -453,7 +453,7 @@ bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
     /* but we cannot, so we insert a default-value instead. */
     replaceInline(p, index, QVariant());
 
-    if (p->object())
+    if (p->isReference())
         p->storeReference();
 
     return true;
@@ -591,7 +591,7 @@ QV4::ReturnedValue SequencePrototype::method_setLength(
     }
 
     /* write back if required. */
-    if (p->object())
+    if (p->isReference())
         p->storeReference();
 
     RETURN_UNDEFINED();
@@ -666,7 +666,7 @@ ReturnedValue SequencePrototype::method_shift(
         m.removeValueAtEnd(storage);
     }
 
-    if (p->object())
+    if (p->isReference())
         p->storeReference();
 
     return scope.engine->fromVariant(shifted);
