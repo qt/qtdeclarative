@@ -3,9 +3,6 @@
 [doubleClickInMouseArea]
 macos # QTBUG-139571
 
-[zOrder]
-macos # QTBUG-89938
-
 [popupWindowFocus]
 offscreen # QTBUG-128321
 
