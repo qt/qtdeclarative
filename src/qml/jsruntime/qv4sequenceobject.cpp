@@ -286,22 +286,6 @@ static void removeLastInline(Heap::Sequence *p, qsizetype num)
     }
 }
 
-bool Sequence::containerIsEqualTo(Managed *other)
-{
-    if (!other)
-        return false;
-    Sequence *otherSequence = other->as<Sequence>();
-    if (!otherSequence)
-        return false;
-    if (d()->object() && otherSequence->d()->object()) {
-        return d()->object() == otherSequence->d()->object()
-                && d()->property() == otherSequence->d()->property();
-    } else if (!d()->object() && !otherSequence->d()->object()) {
-        return this == otherSequence;
-    }
-    return false;
-}
-
 bool Heap::Sequence::loadReference()
 {
     Q_ASSERT(object());
@@ -433,7 +417,27 @@ bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
 
 bool Sequence::virtualIsEqualTo(Managed *that, Managed *other)
 {
-    return static_cast<Sequence *>(that)->containerIsEqualTo(other);
+    if (!other)
+        return false;
+
+    const Sequence *otherS = other->as<Sequence>();
+    if (!otherS)
+        return false;
+
+    const Sequence *s = static_cast<Sequence *>(that);
+    const Heap::Sequence *p = s->d();
+    const Heap::Sequence *otherP = otherS->d();
+
+    const Heap::Object *object = p->object();
+    const Heap::Object *otherObject = otherP->object();
+
+    if (object && otherObject)
+        return object == otherObject && p->property() == otherP->property();
+
+    if (!object && !otherObject)
+        return s == otherS;
+
+    return false;
 }
 
 OwnPropertyKeyIterator *Sequence::virtualOwnPropertyKeys(const Object *m, Value *target)
