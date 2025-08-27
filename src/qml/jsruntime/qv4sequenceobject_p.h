@@ -124,14 +124,6 @@ public:
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
 
-    qsizetype size() const;
-    QVariant at(qsizetype index) const;
-    QVariant shift();
-    void append(const QVariant &item);
-    void append(qsizetype num, const QVariant &item);
-    void replace(qsizetype index, const QVariant &item);
-    void removeLast(qsizetype num);
-
     QV4::ReturnedValue containerGetIndexed(qsizetype index, bool *hasProperty) const;
     bool containerPutIndexed(qsizetype index, const QV4::Value &value);
     bool containerDeleteIndexedProperty(qsizetype index);
