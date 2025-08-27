@@ -243,17 +243,18 @@ static void replaceInline(Heap::Sequence *p, qsizetype index, const QVariant &it
 static void removeLastInline(Heap::Sequence *p, qsizetype num)
 {
     const QMetaSequence m = p->metaSequence();
+    void *container = p->storagePointer();
 
     if (m.canEraseRangeAtIterator() && m.hasRandomAccessIterator() && num > 1) {
-        void *i = m.end(p->storagePointer());
+        void *i = m.end(container);
         m.advanceIterator(i, -num);
-        void *j = m.end(p->storagePointer());
-        m.eraseRangeAtIterator(p->storagePointer(), i, j);
+        void *j = m.end(container);
+        m.eraseRangeAtIterator(container, i, j);
         m.destroyIterator(i);
         m.destroyIterator(j);
     } else {
         for (int i = 0; i < num; ++i)
-            m.removeValueAtEnd(p->storagePointer());
+            m.removeValueAtEnd(container);
     }
 }
 
