@@ -346,12 +346,6 @@ bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
     return true;
 }
 
-SequenceOwnPropertyKeyIterator *containerOwnPropertyKeys(const Object *m, Value *target)
-{
-    *target = *m;
-    return new SequenceOwnPropertyKeyIterator;
-}
-
 bool Sequence::containerDeleteIndexedProperty(qsizetype index)
 {
     if (d()->isReadOnly())
@@ -455,7 +449,8 @@ bool Sequence::virtualIsEqualTo(Managed *that, Managed *other)
 
 OwnPropertyKeyIterator *Sequence::virtualOwnPropertyKeys(const Object *m, Value *target)
 {
-    return containerOwnPropertyKeys(m, target);
+    *target = *m;
+    return new SequenceOwnPropertyKeyIterator;
 }
 
 int Sequence::virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a)
