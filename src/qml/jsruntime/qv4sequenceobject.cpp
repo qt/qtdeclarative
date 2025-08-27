@@ -286,45 +286,6 @@ static void removeLastInline(Heap::Sequence *p, qsizetype num)
     }
 }
 
-bool Sequence::containerPutIndexed(qsizetype index, const Value &value)
-{
-    Heap::Sequence *p = d();
-    if (p->internalClass->engine->hasException)
-        return false;
-
-    if (p->isReadOnly()) {
-        engine()->throwTypeError(QLatin1String("Cannot insert into a readonly container"));
-        return false;
-    }
-
-    if (p->isReference() && !p->loadReference())
-        return false;
-
-    const qsizetype count = sizeInline(p);
-    const QMetaType valueType = p->valueMetaType();
-    const QVariant element = ExecutionEngine::toVariant(value, valueType, false);
-
-    if (index < 0)
-        return false;
-
-    if (index == count) {
-        appendInline(p, element);
-    } else if (index < count) {
-        replaceInline(p, index, element);
-    } else {
-        /* according to ECMA262r3 we need to insert */
-        /* the value at the given index, increasing length to index+1. */
-        appendInline(
-                p, index - count,
-                valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
-        appendInline(p, element);
-    }
-
-    if (p->object())
-        p->storeReference();
-    return true;
-}
-
 bool Sequence::containerDeleteIndexedProperty(qsizetype index)
 {
     Heap::Sequence *p = d();
@@ -413,15 +374,49 @@ qint64 Sequence::virtualGetLength(const Managed *m)
 
 bool Sequence::virtualPut(Managed *that, PropertyKey id, const Value &value, Value *receiver)
 {
-    if (id.isArrayIndex()) {
-        const uint index = id.asArrayIndex();
-        if (qIsAtMostSizetypeLimit(index))
-            return static_cast<Sequence *>(that)->containerPutIndexed(qsizetype(index), value);
+    if (!id.isArrayIndex())
+        return ReferenceObject::virtualPut(that, id, value, receiver);
 
+    const uint arrayIndex = id.asArrayIndex();
+    if (!qIsAtMostSizetypeLimit(arrayIndex)) {
         generateWarning(that->engine(), QLatin1String("Index out of range during indexed set"));
         return false;
     }
-    return Object::virtualPut(that, id, value, receiver);
+
+    Heap::Sequence *p = static_cast<Sequence *>(that)->d();
+    if (p->internalClass->engine->hasException)
+        return false;
+
+    if (p->isReadOnly()) {
+        p->internalClass->engine->throwTypeError(
+                QLatin1String("Cannot insert into a readonly container"));
+        return false;
+    }
+
+    if (p->isReference() && !p->loadReference())
+        return false;
+
+    const qsizetype index = arrayIndex;
+    const qsizetype count = sizeInline(p);
+    const QMetaType valueType = p->valueMetaType();
+    const QVariant element = ExecutionEngine::toVariant(value, valueType, false);
+
+    if (index == count) {
+        appendInline(p, element);
+    } else if (index < count) {
+        replaceInline(p, index, element);
+    } else {
+        /* according to ECMA262r3 we need to insert */
+        /* the value at the given index, increasing length to index+1. */
+        appendInline(
+                p, index - count,
+                valueType == QMetaType::fromType<QVariant>() ? QVariant() : QVariant(valueType));
+        appendInline(p, element);
+    }
+
+    if (p->object())
+        p->storeReference();
+    return true;
 }
 
 bool Sequence::virtualDeleteProperty(Managed *that, PropertyKey id)
