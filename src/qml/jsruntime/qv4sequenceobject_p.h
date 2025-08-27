@@ -28,6 +28,8 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct Sequence;
+struct SequenceOwnPropertyKeyIterator;
+
 struct Q_QML_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
@@ -90,9 +92,14 @@ struct Sequence : ReferenceObject
     QMetaSequence metaSequence() const { return QMetaSequence(m_metaSequence); }
 
 private:
+    friend struct QV4::Sequence;
     friend struct QV4::SequencePrototype;
+    friend struct QV4::SequenceOwnPropertyKeyIterator;
 
     void initTypes(QMetaType listType, QMetaSequence metaSequence);
+
+    bool loadReference();
+    bool storeReference();
 
     void *m_container;
     const QtPrivate::QMetaTypeInterface *m_listType;
@@ -129,8 +136,6 @@ public:
     bool containerPutIndexed(qsizetype index, const QV4::Value &value);
     bool containerDeleteIndexedProperty(qsizetype index);
     bool containerIsEqualTo(Managed *other);
-    bool loadReference() const;
-    bool storeReference();
 };
 
 }
