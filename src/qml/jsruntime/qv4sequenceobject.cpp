@@ -80,8 +80,13 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 
 static qsizetype sizeInline(const Heap::Sequence *p)
 {
-    Q_ASSERT(p->storagePointer()); // Must readReference() before
-    return p->metaSequence().size(p->storagePointer());
+    if (const void *container = p->storagePointer())
+        return p->metaSequence().size(container);
+
+    // It can be stored inline, and the container can still be nullptr.
+    // This happens if we construct it from a nullptr in the first place and never update it.
+    // It means it's empty.
+    return 0;
 }
 
 struct SequenceOwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
@@ -121,16 +126,13 @@ void Heap::Sequence::initTypes(QMetaType listType, QMetaSequence metaSequence)
     Q_ASSERT(m_listType);
     m_metaSequence = metaSequence.iface();
     Q_ASSERT(m_metaSequence);
-    QV4::Scope scope(internalClass->engine);
-    QV4::Scoped<QV4::Sequence> o(scope, this);
-    o->setArrayType(Heap::ArrayData::Custom);
 }
 
 void Heap::Sequence::init(QMetaType listType, QMetaSequence metaSequence, const void *container)
 {
     ReferenceObject::init(nullptr, -1, NoFlag);
     initTypes(listType,  metaSequence);
-    m_container = listType.create(container);
+    createInlineStorage(container);
 }
 
 void Heap::Sequence::init(
@@ -142,10 +144,18 @@ void Heap::Sequence::init(
 
     if (CppStackFrame *frame = internalClass->engine->currentStackFrame)
         setLocation(frame->v4Function, frame->statementNumber());
-    if (container)
-        m_container = listType.create(container);
-    else if (flags & EnforcesLocation)
+    createInlineStorage(container);
+    if (!container && (flags & EnforcesLocation))
         QV4::ReferenceObject::readReference(this);
+}
+
+void Heap::Sequence::createInlineStorage(const void *container)
+{
+    QV4::Scope scope(internalClass->engine);
+    QV4::Scoped<QV4::Sequence> o(scope, this);
+    o->setArrayType(Heap::ArrayData::Custom);
+    if (container)
+        m_container = listType().create(container);
 }
 
 Heap::Sequence *Heap::Sequence::detached() const

@@ -96,6 +96,7 @@ private:
     friend struct QV4::SequenceOwnPropertyKeyIterator;
 
     void initTypes(QMetaType listType, QMetaSequence metaSequence);
+    void createInlineStorage(const void *container);
 
     bool loadReference();
     bool storeReference();
