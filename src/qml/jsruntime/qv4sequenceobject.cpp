@@ -387,9 +387,6 @@ bool Sequence::containerIsEqualTo(Managed *other)
     return false;
 }
 
-void *Sequence::getRawContainerPtr() const
-{ return d()->storagePointer(); }
-
 bool Sequence::loadReference() const
 {
     Q_ASSERT(d()->object());
@@ -791,11 +788,51 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType targetT
 
 }
 
-void *SequencePrototype::getRawContainerPtr(const Sequence *object, QMetaType typeHint)
+static Heap::Sequence *resolveHeapSequence(const Sequence *sequence, QMetaType typeHint)
 {
-    if (object->d()->listType() == typeHint)
-        return object->getRawContainerPtr();
-    return nullptr;
+    if (!sequence)
+        return nullptr;
+    Heap::Sequence *p = sequence->d();
+    if (p->listType() != typeHint)
+        return nullptr;
+    return p;
+}
+
+void *SequencePrototype::rawContainerPtr(const Sequence *sequence, QMetaType typeHint)
+{
+    Heap::Sequence *p = resolveHeapSequence(sequence, typeHint);
+    if (!p)
+        return nullptr;
+
+    return p->storagePointer();
+}
+
+SequencePrototype::RawCopyResult SequencePrototype::setRawContainer(
+        Sequence *sequence, const void *container, QMetaType typeHint)
+{
+    Heap::Sequence *p = resolveHeapSequence(sequence, typeHint);
+    if (!p)
+        return TypeMismatch;
+
+    if (typeHint.equals(p->m_container, container))
+        return WasEqual;
+    typeHint.destruct(p->m_container);
+    typeHint.construct(p->storagePointer(), container);
+    return Copied;
+}
+
+SequencePrototype::RawCopyResult SequencePrototype::getRawContainer(
+        const Sequence *sequence, void *container, QMetaType typeHint)
+{
+    Heap::Sequence *p = resolveHeapSequence(sequence, typeHint);
+    if (!p)
+        return TypeMismatch;
+
+    if (typeHint.equals(p->m_container, container))
+        return WasEqual;
+    typeHint.destruct(container);
+    typeHint.construct(container, p->m_container);
+    return Copied;
 }
 
 QMetaType SequencePrototype::metaTypeForSequence(const Sequence *object)

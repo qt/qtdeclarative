@@ -797,11 +797,18 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             // Value type list
                             QV4::Scope scope(engine);
                             QV4::Scoped<QV4::Sequence> sequence(scope, *(md->data() + id));
-                            const void *data = sequence
-                                    ? QV4::SequencePrototype::getRawContainerPtr(sequence, propType)
-                                    : nullptr;
-                            propType.destruct(a[0]);
-                            propType.construct(a[0], data);
+                            switch (QV4::SequencePrototype::getRawContainer(
+                                    sequence, a[0], propType)) {
+                            case QV4::SequencePrototype::Copied:
+                            case QV4::SequencePrototype::WasEqual:
+                                break;
+                            case QV4::SequencePrototype::TypeMismatch:
+                                // sequence can be undefined, in which case this is an empty list
+                                // by definition.
+                                propType.destruct(a[0]);
+                                propType.construct(a[0]);
+                                break;
+                            }
                         } else {
                             qmlWarning(object) << "Cannot find member data";
                         }
@@ -902,16 +909,14 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             // Value type list
                             QV4::Scope scope(engine);
                             QV4::Scoped<QV4::Sequence> sequence(scope, *(md->data() + id));
-                            void *data = sequence
-                                    ? QV4::SequencePrototype::getRawContainerPtr(sequence, propType)
-                                    : nullptr;
-                            if (data) {
-                                if (!propType.equals(data, a[0])) {
-                                    propType.destruct(data);
-                                    propType.construct(data, a[0]);
-                                    needActivate = true;
-                                }
-                            } else {
+                            switch (QV4::SequencePrototype::setRawContainer(
+                                    sequence, a[0], propType)) {
+                            case QV4::SequencePrototype::Copied:
+                                needActivate = true;
+                                break;
+                            case QV4::SequencePrototype::WasEqual:
+                                break;
+                            case QV4::SequencePrototype::TypeMismatch: {
                                 if (const QQmlType type = QQmlMetaType::qmlListType(propType);
                                         type.isSequentialContainer()) {
                                     sequence = QV4::SequencePrototype::fromData(
@@ -933,6 +938,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                                             << propType.name();
                                 }
                                 needActivate = true;
+                            }
+                            break;
                             }
                         } else {
                             qmlWarning(object) << "Cannot find member data";

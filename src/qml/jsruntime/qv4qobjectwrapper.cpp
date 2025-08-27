@@ -17,6 +17,7 @@
 #include <private/qqmlvmemetaobject_p.h>
 
 #include <private/qv4arraybuffer_p.h>
+#include <private/qv4arrayobject_p.h>
 #include <private/qv4compileddata_p.h>
 #include <private/qv4dateobject_p.h>
 #include <private/qv4functionobject_p.h>
@@ -2402,12 +2403,10 @@ void CallArgument::initAsType(QMetaType metaType)
 template <class T, class M>
 bool CallArgument::fromContainerValue(const Value &value, M CallArgument::*member)
 {
-    if (const Sequence *sequence = value.as<Sequence>()) {
-        if (T* ptr = static_cast<T *>(SequencePrototype::getRawContainerPtr(
-                    sequence, QMetaType(type)))) {
-            (this->*member) = ptr;
-            return true;
-        }
+    if (T* ptr = static_cast<T *>(SequencePrototype::rawContainerPtr(
+                value.as<Sequence>(), QMetaType(type)))) {
+        (this->*member) = ptr;
+        return true;
     }
     (this->*member) = nullptr;
     return false;
@@ -2523,11 +2522,19 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
             }
 
             if (const auto sequence = value.as<QV4::Sequence>()) {
-                QV4::ReferenceObject::readReference(sequence->d());
-                uint length = sequence->size();
-                if (sequence->d()->listType() == QMetaType::fromType<QList<QObject *>>()) {
-                    *qlistPtr = *static_cast<QList<QObject *> *>(sequence->getRawContainerPtr());
-                } else {
+
+                // Does readReference(). Don't move past getRawContainer()
+                const qint64 length = sequence->getLength();
+
+                switch (QV4::SequencePrototype::getRawContainer(
+                        sequence, qlistPtr, QMetaType::fromType<QList<QObject *>>())) {
+                case SequencePrototype::Copied:
+                case SequencePrototype::WasEqual:
+                    break;
+                case SequencePrototype::TypeMismatch: {
+                    if (!qIsAtMostSizetypeLimit(length) || !qIsAtMostUintLimit(length))
+                        return false;
+
                     qlistPtr->reserve(length);
                     Scoped<QObjectWrapper> qobjectWrapper(scope);
                     for (uint ii = 0; ii < length; ++ii) {
@@ -2537,6 +2544,8 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
                             o = qobjectWrapper->object();
                         qlistPtr->append(o);
                     }
+                    break;
+                }
                 }
                 return true;
             }

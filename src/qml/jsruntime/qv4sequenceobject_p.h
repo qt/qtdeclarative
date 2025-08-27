@@ -46,7 +46,19 @@ struct Q_QML_EXPORT SequencePrototype : public QV4::Object
     static QMetaType metaTypeForSequence(const Sequence *object);
     static QVariant toVariant(const Sequence *object);
     static QVariant toVariant(const Value &array, QMetaType targetType);
-    static void *getRawContainerPtr(const Sequence *object, QMetaType typeHint);
+
+    enum RawCopyResult
+    {
+        Copied,
+        WasEqual,
+        TypeMismatch
+    };
+
+    static void *rawContainerPtr(const Sequence *sequence, QMetaType typeHint);
+    static RawCopyResult setRawContainer(
+            Sequence *sequence, const void *container, QMetaType typeHint);
+    static RawCopyResult getRawContainer(
+            const Sequence *sequence, void *container, QMetaType typeHint);
 };
 
 namespace Heap {
@@ -74,6 +86,8 @@ struct Sequence : ReferenceObject
     QMetaSequence metaSequence() const { return QMetaSequence(m_metaSequence); }
 
 private:
+    friend struct QV4::SequencePrototype;
+
     void initTypes(QMetaType listType, QMetaSequence metaSequence);
 
     void *m_container;
@@ -111,7 +125,6 @@ public:
     bool containerPutIndexed(qsizetype index, const QV4::Value &value);
     bool containerDeleteIndexedProperty(qsizetype index);
     bool containerIsEqualTo(Managed *other);
-    void *getRawContainerPtr() const;
     bool loadReference() const;
     bool storeReference();
 };
