@@ -646,10 +646,11 @@ QVariant SequencePrototype::toVariant(const Sequence *object)
     //       outdated data. This is the behavior sequences have always shown.
     if (p->isReference())
         p->loadReference();
-    if (!p->hasData())
-        return QVariant();
 
-    return QVariant(p->listType(), p->storagePointer());
+    if (const void *storage = p->m_container)
+        return QVariant(p->listType(), storage);
+
+    return QVariant();
 }
 
 bool convertToIterable(QMetaType metaType, void *data, QV4::Object *sequence)
