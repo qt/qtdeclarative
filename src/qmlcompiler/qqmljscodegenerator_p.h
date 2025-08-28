@@ -335,6 +335,7 @@ private:
             const QQmlJSScope::ConstPtr &required, const QQmlJSRegisterContent &actual,
             const QString &variable, const QString &errorMessage);
 
+    QString generateVariantMapLookup(const QString &map, const int nameIndex);
     bool isRegisterAffectedBySideEffects(int registerIndex);
 
     // map from instruction offset to sequential label number
