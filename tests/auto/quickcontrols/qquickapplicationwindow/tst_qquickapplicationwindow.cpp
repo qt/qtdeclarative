@@ -921,17 +921,20 @@ void tst_QQuickApplicationWindow::layout()
     QCOMPARE(content->width(), qreal(window->width()));
     QCOMPARE(content->height(), window->height() - header->height() - footer->height());
 
+    const int topSafeMargin = window->safeAreaMargins().top();
+    const int bottomSafeMargin = window->safeAreaMargins().bottom();
+
     header->setVisible(false);
     QCOMPARE(content->x(), 0.0);
-    QCOMPARE(content->y(), 0.0);
+    QCOMPARE(content->y(), topSafeMargin);
     QCOMPARE(content->width(), qreal(window->width()));
-    QCOMPARE(content->height(), window->height() - footer->height());
+    QCOMPARE(content->height(), window->height() - footer->height() - topSafeMargin);
 
     footer->setVisible(false);
     QCOMPARE(content->x(), 0.0);
-    QCOMPARE(content->y(), 0.0);
+    QCOMPARE(content->y(), topSafeMargin);
     QCOMPARE(content->width(), qreal(window->width()));
-    QCOMPARE(content->height(), qreal(window->height()));
+    QCOMPARE(content->height(), qreal(window->height() - topSafeMargin - bottomSafeMargin));
 }
 
 void tst_QQuickApplicationWindow::layoutLayout()
@@ -1064,8 +1067,8 @@ void tst_QQuickApplicationWindow::explicitBackgroundSizeBinding()
     QCOMPARE(background->height(), window->height());
 
     window->setProperty("scaleFactor", 0.5);
-    QCOMPARE(background->width(), window->width() / 2);
-    QCOMPARE(background->height(), window->height() / 2);
+    QCOMPARE(background->width(), window->width() / 2.0);
+    QCOMPARE(background->height(), window->height() / 2.0);
 }
 
 void tst_QQuickApplicationWindow::safeArea()
@@ -1100,7 +1103,7 @@ void tst_QQuickApplicationWindow::safeArea()
     windowSafeArea->setAdditionalMargins(QMarginsF(100, 100, 100, 100));
 
     QTRY_COMPARE(window->property("margins").value<QMarginsF>(),
-        windowSafeArea->additionalMargins());
+        windowSafeArea->additionalMargins() + window->safeAreaMargins());
 
     menuBarRect = window->menuBar()->mapRectToScene(window->menuBar()->boundingRect());
     headerRect = window->header()->mapRectToScene(window->header()->boundingRect());
@@ -1124,7 +1127,8 @@ void tst_QQuickApplicationWindow::safeArea()
     QQmlProperty::write(window, "bottomPadding", 0);
 
     // Removing the automatic padding should reflect the window's safe area margins
-    QCOMPARE(contentSafeArea->margins(), windowSafeArea->additionalMargins());
+    QCOMPARE(contentSafeArea->margins(),
+        windowSafeArea->additionalMargins() + window->safeAreaMargins());
 
     // And the content item should fill the entire window
     QCOMPARE(window->contentItem()->position(), QPoint());
@@ -1134,7 +1138,7 @@ void tst_QQuickApplicationWindow::safeArea()
     // menuBar, header, and footer as safe areas
     windowSafeArea->setAdditionalMargins(QMarginsF());
     QTRY_COMPARE(window->property("margins").value<QMarginsF>(),
-        windowSafeArea->additionalMargins());
+        windowSafeArea->additionalMargins() + window->safeAreaMargins());
 
     QCOMPARE(contentSafeArea->margins(),
         QMarginsF(0, window->menuBar()->height() + window->header()->height(),
