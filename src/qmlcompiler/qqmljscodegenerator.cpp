@@ -1440,6 +1440,17 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
     generate_GetLookupHelper(index);
 }
 
+QString QQmlJSCodeGenerator::generateVariantMapLookup(
+        const QString &map, const int nameIndex)
+{
+    const QString mapLookup = map
+            + u"["_s + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(nameIndex)) + u"]"_s;
+
+    return m_state.accumulatorVariableOut + u" = "_s
+            + conversion(m_typeResolver->varType(), m_state.accumulatorOut(), mapLookup)
+            + u";\n"_s;
+}
+
 void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
 {
     if (m_state.accumulatorOut().isMethod()) {
@@ -1587,11 +1598,7 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
             reject(u"access to 'length' property of sequence wrapped in non-sequence"_s);
         }
     } else if (accumulatorIn.isStoredIn(m_typeResolver->variantMapType())) {
-        QString mapLookup = m_state.accumulatorVariableIn + u"["_s
-                + QQmlJSUtils::toLiteral(m_jsUnitGenerator->lookupName(index)) + u"]"_s;
-        m_body += m_state.accumulatorVariableOut + u" = "_s;
-        m_body += conversion(m_typeResolver->varType(), m_state.accumulatorOut(), mapLookup);
-        m_body += u";\n"_s;
+        m_body += generateVariantMapLookup(m_state.accumulatorVariableIn, index);
     } else {
         if (m_state.isRegisterAffectedBySideEffects(Accumulator))
             reject(u"reading from a value that's potentially affected by side effects"_s);
@@ -1600,6 +1607,13 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
                     scope.containedType(), accumulatorIn, m_state.accumulatorVariableIn,
                     u"Cannot read property '%1' of %2"_s.arg(
                         m_jsUnitGenerator->lookupName(index)));
+
+        if (scope.contains(m_typeResolver->variantMapType())) {
+            m_body += generateVariantMapLookup(
+                    u"(*static_cast<const QVariantMap *>("_s
+                            + inputContentPointer + u"))"_s, index);
+            return;
+        }
 
         const QString lookup = u"aotContext->getValueLookup("_s + indexString
                 + u", "_s + inputContentPointer

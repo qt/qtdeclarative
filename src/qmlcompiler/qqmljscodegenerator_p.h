@@ -359,6 +359,8 @@ private:
             const QQmlJSMetaMethod &ctor, const QList<QQmlJSRegisterContent> &argumentTypes,
             const QStringList &arguments, const QString &metaType, const QString &metaObject);
 
+    QString generateVariantMapLookup(const QString &map, const int nameIndex);
+
     QQmlJSRegisterContent originalType(QQmlJSRegisterContent tracked)
     {
         const QQmlJSRegisterContent restored = m_typeResolver->original(tracked);

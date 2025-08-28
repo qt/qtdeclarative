@@ -5761,6 +5761,7 @@ void tst_QmlCppCodegen::variantMapLookup()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("i"), 42);
+    QCOMPARE(o->property("j"), 42);
 }
 
 void tst_QmlCppCodegen::variantReturn()
