@@ -75,7 +75,7 @@ void QQuickAnimatedNode::start(int duration)
     if (duration > 0)
         m_duration = duration;
 
-    connect(m_window, &QQuickWindow::afterSynchronizing, this, &QQuickAnimatedNode::advance, Qt::DirectConnection);
+    connect(m_window, &QQuickWindow::beforeRendering, this, &QQuickAnimatedNode::advance, Qt::DirectConnection);
     connect(m_window, &QQuickWindow::frameSwapped, this, &QQuickAnimatedNode::update, Qt::DirectConnection);
 
     // If we're inside a QQuickWidget, this call is necessary to ensure the widget
@@ -97,7 +97,7 @@ void QQuickAnimatedNode::stop()
         return;
 
     m_running = false;
-    disconnect(m_window, &QQuickWindow::afterSynchronizing, this, &QQuickAnimatedNode::advance);
+    disconnect(m_window, &QQuickWindow::beforeRendering, this, &QQuickAnimatedNode::advance);
     disconnect(m_window, &QQuickWindow::frameSwapped, this, &QQuickAnimatedNode::update);
     emit stopped();
 }
