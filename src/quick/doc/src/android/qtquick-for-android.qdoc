@@ -62,15 +62,22 @@
     \target Android Classes
     These are the public Java and Kotlin APIs that you will use in an Android
     app to embed QML.
-    //! TODO: Update links to Java API docs when published
+
+    \section2 Java classes
+
     \list
         \li \l{QtQuickView}
         \li \l{QtQuickViewContent}
-        \li \l{QtAbstractItemModel Android Class}
-        \li \l{QtAbstractListModel Android Class}
-        \li \l{interface QtQmlStatusChangeListener} (which uses the QtQmlStatus enum)
-        \li \l{QtModelIndex Android Class}
+        \li \l{QtAbstractItemModel}
+        \li \l{QtAbstractListModel}
+        \li \l{QtModelIndex}
      \endlist
+
+    \section2 Interfaces
+
+    \list
+        \li \l{QtQmlStatusChangeListener} (which uses the \l QtQmlStatus enum)
+    \endlist
 
     \note See the \l{QT_ANDROID_GENERATE_JAVA_QTQUICKVIEW_CONTENTS} CMake
     variable for further information on Java code generation of QML components.

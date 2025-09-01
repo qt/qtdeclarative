@@ -20,7 +20,7 @@
     You can import the QML project into an Android project.
 
     The example shows how to handle complex data types between Java and QML.
-    It demonstrates how to use the \c QtAbstractItemModel and \c QtModelIndex
+    It demonstrates how to use the \l QtAbstractItemModel and \l QtModelIndex
     Java API classes. In QML, the data usage is demonstrated with the TableView item.
     In Java, data usage is demonstrated with a model of nested ArrayList items
     for rows and columns. For more information on how QML works, see \l {Qt Qml}.
@@ -70,7 +70,7 @@
 
     \section2 Data Model
 
-    The data model, \c MyDataModel, extends \c QtAbstractItemModel class.
+    The data model, \c MyDataModel, extends \l QtAbstractItemModel class.
     The \c QtAbstractItemModel is a wrapper for \l {QAbstractItemModel}.
 
     As the methods of \c MyDataModel class are called from both, QML and Android sides, the
@@ -83,7 +83,7 @@
 
     \snippet android/models/qtabstractitemmodel_java/app/src/main/java/com/example/qtabstractitemmodel_java/MyDataModel.java 1
 
-    The example overrides the \c QtAbstractItemModel methods for different purposes. The
+    The example overrides the \l QtAbstractItemModel methods for different purposes. The
     columnCount() and rowCount() methods return the count of each in a model. The execution of
     each rowCount() occurs in both thread contexts, Qt qtMainLoopThread and Android main thread
     contexts.
@@ -110,7 +110,7 @@
     The example implements methods on the model side for \c MainActivity UI interaction to add
     and remove rows and columns. Calls begin, end, insert, and remove rows to update model
     indexes, like beginInsertRow().
-    Because the example uses the \c QtAbstractItemModel, it must call beginInsertRows() and
+    Because the example uses the \l QtAbstractItemModel, it must call beginInsertRows() and
     endInsertRows() every time it inserts new rows into the model. The same applies to removal.
     As the methods are called from the Android side, the execution takes place in the Android
     main thread context.
@@ -126,7 +126,7 @@
 
     \section2 Main Activity
 
-    \c MainActivity implements the \c QtQmlStatusChangeListener interface to get status updates
+    \c MainActivity implements the \l QtQmlStatusChangeListener interface to get status updates
     when the QML is loaded. It is also the main Android activity.
 
     The example creates and initializes the data model. See also

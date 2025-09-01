@@ -16,9 +16,8 @@
 
     This example consists of two separate projects: A QML project and a Kotlin-based Android
     project which will host and display the QML content. It shows how to use
-    \l{QtAbstractListModel Android Class}{QtAbstractListModel}
-    to share data from the Android side to the QML view which displays the data using a
-    \l ListView.
+    \l{QtAbstractListModel} to share data from the Android side to the QML view which displays
+    the data using a \l ListView.
 
     \section1 Running the example
 
@@ -59,7 +58,7 @@
 
     \section2 Data model
 
-    The data model \c MyListModel is a child class of \l{QtAbstractListModel Android Class}{QtAbstractListModel}, with
+    The data model \c MyListModel is a child class of \l{QtAbstractListModel}, with
     \c ArrayList<String> as the internal storage system for data. In the initializer block of
     \c MyListModel, it generates some random data for the list.
 
@@ -80,7 +79,7 @@
     \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::DataRole enum
 
     When it comes to returning data from the data model, the class must override the
-    \c "QtAbstractListModel::data()" method. This method takes two parameters: \l{QtModelIndex Android Class}{QtModelIndex} and
+    \c "QtAbstractListModel::data()" method. This method takes two parameters: \l{QtModelIndex} and
     \c Int, which refer to the index and role of the data element, respectively.
 
     In \c "MyDataModel::data()", the \c UUID role returns the data from the given index in the
@@ -93,7 +92,7 @@
 
     \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MyListModel.kt MyListModel::data
 
-    To allow outside actors to manipulate the QtAbstractItemModel, the example adds two additional
+    To allow outside actors to manipulate the \l QtAbstractItemModel, the example adds two additional
     methods to \c MyDataModel. To add data to the row, it has the \c "addRow()" method; to remove
     data, there is the \c "removeRow()" method. These are used from the main activity.
 
@@ -105,7 +104,7 @@
 
     The \c MainActivity class is a simple Kotlin-based Activity but also implements the
     \l{interface QtQmlStatusChangeListener} to listen to QML loading status events. It also
-    stores the \c QtQuickViewContent object for the main view of the QML application and an instance
+    stores the \l QtQuickViewContent object for the main view of the QML application and an instance
     of the data model detailed above.
 
     \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt MainActivity definition
@@ -123,7 +122,7 @@
 
     Once the UI setup and listeners are done, the QML component can be prepared and loaded. The
     example sets the \c MainActivity as a listener for the status change signal of the QML
-    component and tells \c QtQuickView to load the QML component.
+    component and tells \l QtQuickView to load the QML component.
 
     \snippet android/models/qtabstractlistmodel_kotlin/app/src/main/java/com/example/qtabstractlistmodel_kotlin/MainActivity.kt Loading the QML component
 

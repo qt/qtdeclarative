@@ -17,7 +17,7 @@
     This example contains a QML project you can import into Android Studio
     with the \l {Qt Tools for Android Studio} plugin. There are Java and Kotlin
     projects that use the QML project as a View by utilizing the
-    \l {Qt Quick View Android Class}{QtQuickView} API.
+    \l QtQuickView API.
 
     For more information on how QML works, see \l {Qt Qml}. This
     documentation focuses on how a QML component is embedded into
@@ -116,9 +116,8 @@
     \endif
 
     Inside the \c onCreate() method, previously declared variables
-    are initialized with new \l {Qt Quick View Android Class}{QtQuickView}
-    instances. These instances take the \c Context of the Java/Kotlin
-    Activity as arguments.
+    are initialized with new \l {QtQuickView} instances. These instances
+    take the \c Context of the Java/Kotlin Activity as arguments.
 
     \if defined(onlinedocs)
         \tab {m_qtQuickView}{tab-java}{Java}{checked}
@@ -143,7 +142,7 @@
         \endtabcontent
     \endif
 
-    The \c QtQuickView instances are added to the Android layout with appropriate layout
+    The \l QtQuickView instances are added to the Android layout with appropriate layout
     parameters.
 
     \if defined(onlinedocs)
@@ -170,7 +169,7 @@
     \endif
 
     The \c Main and \c Second Java classes inherit from the
-    \c QtQuickViewContent class. These classes are generated from the QML
+    \l QtQuickViewContent class. These classes are generated from the QML
     project that we've imported.
 
     \if defined(onlinedocs)
@@ -197,7 +196,7 @@
     \endif
 
     The Qt Quick content is loaded through the \c QtQuickView.loadContent()
-    method, which takes a \c QtQuickViewContent as an argument.
+    method, which takes a \l QtQuickViewContent as an argument.
 
     \if defined(onlinedocs)
         \tab {loadContent}{tab-java}{Java}{checked}
@@ -225,9 +224,9 @@
     \section1 Interacting with QML components
 
     To interact with the embedded QML components we implement the
-    \c QtQmlStatusChangeListener interface and override the \c onStatusChanged
-    method to get the loading status of the QtQuickViewContent currently being
-    loaded into the \l {Qt Quick View Android Class}{QtQuickView}.
+    \l QtQmlStatusChangeListener interface and override the \c onStatusChanged
+    method to get the loading status of the \l QtQuickViewContent currently being
+    loaded into the \l {QtQuickView}.
 
     \if defined(onlinedocs)
         \tab {listener}{tab-java}{Java}{checked}
@@ -316,7 +315,7 @@
 
     The overridden callback function \c onStatusChanged() receives
     \c StatusChanged() signal containing the current
-    status (public Enum QtQmlStatus) of the loading of the current
+    status, a \l QtQmlStatus Enum, of the loading of the current
     \c QtQuickViewContent into the \l QtQuickView. If this \c QtQmlStatus
     is confirmed to be \c QtQmlStatus.READY, we can start interacting
     with the QML view.

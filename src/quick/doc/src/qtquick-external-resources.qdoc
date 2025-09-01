@@ -7,11 +7,21 @@
 */
 
 /*!
-    \externalpage https://code.qt.io/cgit/qt/qtdeclarative.git/tree/src/quick/platform/android/jar/src/org/qtproject/qt/android/QtQuickView.java?h=6.10
+    \externalpage https://doc.qt.io/qt-6/qtquick/android/org/qtproject/qt/android/QtQuickView.html
     \title QtQuickView
 */
 
 /*!
-    \externalpage https://code.qt.io/cgit/qt/qtdeclarative.git/tree/src/quick/platform/android/jar/src/org/qtproject/qt/android/QtQuickViewContent.java?h=6.10
+    \externalpage https://doc.qt.io/qt-6/qtquick/android/org/qtproject/qt/android/QtQuickViewContent.html
     \title QtQuickViewContent
+*/
+
+/*!
+    \externalpage https://doc.qt.io/qt-6/qtquick/android/org/qtproject/qt/android/QtQmlStatus.html
+    \title QtQmlStatus
+*/
+
+/*!
+    \externalpage https://doc.qt.io/qt-6/qtquick/android/org/qtproject/qt/android/QtQmlStatusChangeListener.html
+    \title QtQmlStatusChangeListener
 */
