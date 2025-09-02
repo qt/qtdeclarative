@@ -4091,7 +4091,6 @@ void tst_QQuickGridView::columnCount()
     QQuickView window;
     window.setSource(testFileUrl("gridview4.qml"));
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickGridView *view = qobject_cast<QQuickGridView*>(window.rootObject());
@@ -6747,7 +6746,6 @@ void tst_QQuickGridView::keyNavigationEnabled()
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickGridView *gridView = qobject_cast<QQuickGridView *>(window->rootObject());
