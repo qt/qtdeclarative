@@ -235,7 +235,6 @@ void tst_QQuickMenu::mouse()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -398,7 +397,6 @@ void tst_QQuickMenu::contextMenuKeyboard()
     moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -625,7 +623,6 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -690,7 +687,6 @@ void tst_QQuickMenu::mnemonics()
 
     QQuickWindow *window = helper.window;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     MnemonicKeySimulator keySim(window);
@@ -893,7 +889,6 @@ void tst_QQuickMenu::checkableMnemonics()
 
     QQuickWindow *window = helper.window;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     window->setProperty("checkable", checkable);
@@ -955,7 +950,6 @@ void tst_QQuickMenu::menuButton()
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(QGuiApplication::focusWindow() == window);
 
@@ -1008,7 +1002,6 @@ void tst_QQuickMenu::menuSeparator()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -1442,7 +1435,6 @@ void tst_QQuickMenu::actionShortcuts()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Try the menu's shortcut.
@@ -1778,7 +1770,6 @@ void tst_QQuickMenu::subMenuKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -1909,7 +1900,6 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -2719,7 +2709,6 @@ void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Press enter on the button to open the menu.
@@ -3296,7 +3285,6 @@ void tst_QQuickMenu::effectivePosition()
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -3421,7 +3409,6 @@ void tst_QQuickMenu::resetCurrentIndexUponPopup()
     centerOnScreen(window);
     moveMouseAway(window);
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -3504,7 +3491,6 @@ void tst_QQuickMenu::shortcutInNestedSubMenuAction()
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     // Shouldn't result in an infinite loop.
@@ -3562,7 +3548,6 @@ void tst_QQuickMenu::loadMenuAsynchronously()
     QQuickView window(testFileUrl("loadMenuAsynchronously.qml"));
     QCOMPARE(window.status(), QQuickView::Ready);
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *rootItem = window.rootObject();
