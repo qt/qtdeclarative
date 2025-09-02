@@ -188,8 +188,7 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     item->setMsaa(msaa);
 
     view.show();
-    view.requestActivate();
-    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     if (QGuiApplication::platformName() == "offscreen" &&
             view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
@@ -232,8 +231,7 @@ void tst_QQuickFramebufferObject::testInvalidate()
     item->setTextureSize(QSize(200, 200));
 
     view.show();
-    view.requestActivate();
-    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
     if (QGuiApplication::platformName() == "offscreen" &&
             view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
