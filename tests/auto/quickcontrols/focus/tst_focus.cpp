@@ -99,7 +99,6 @@ void tst_focus::navigation()
 
     view.setSource(testFileUrl(testFile));
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QVERIFY(QGuiApplication::focusWindow() == &view);
 
@@ -235,7 +234,6 @@ void tst_focus::reason()
     QQuickView view;
     view.setSource(testFileUrl("focusReason.qml"));
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickControl *control = view.findChild<QQuickControl *>("control");
@@ -457,7 +455,6 @@ void tst_focus::visualFocus()
     QQuickView view;
     view.setSource(testFileUrl("visualFocus.qml"));
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickItem *column = view.rootObject();
@@ -514,7 +511,6 @@ void tst_focus::scope()
     QVERIFY(child);
 
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
 
