@@ -9374,7 +9374,6 @@ void tst_QQuickListView::keyNavigationEnabled()
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
     QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
