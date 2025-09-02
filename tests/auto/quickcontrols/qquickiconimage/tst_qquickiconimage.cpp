@@ -96,7 +96,6 @@ void tst_qquickiconimage::nameBindingSourceSize()
     QQuickView view(testFileUrl("nameBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -172,7 +171,6 @@ void tst_qquickiconimage::sourceBindingNoSizes()
     view.show();
     INIT_DPR(view);
 
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
@@ -195,7 +193,6 @@ void tst_qquickiconimage::sourceBindingSourceSize()
     QQuickView view(testFileUrl("sourceBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -227,7 +224,6 @@ void tst_qquickiconimage::sourceBindingSourceSizeWidthHeight()
     QQuickView view(testFileUrl("sourceBindingSourceSizeWidthHeight.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -246,7 +242,6 @@ void tst_qquickiconimage::sourceBindingSourceTooLarge()
     QQuickView view(testFileUrl("sourceBindingSourceTooLarge.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -284,7 +279,6 @@ void tst_qquickiconimage::alignment()
     QQuickView view(testFileUrl("alignment.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -359,7 +353,6 @@ void tst_qquickiconimage::svgSourceBindingSourceSize()
     QQuickView view(testFileUrl("svgSourceBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
@@ -383,7 +376,6 @@ void tst_qquickiconimage::color()
     QQuickView view(testFileUrl("color.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -419,7 +411,6 @@ void tst_qquickiconimage::changeSourceSize()
     QQuickView view(testFileUrl("sourceBindingSourceSize.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->childItems().at(0));
@@ -440,7 +431,6 @@ void tst_qquickiconimage::fileSelectors()
     view.setSource(testFileUrl("fileSelectors.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     INIT_DPR(view);
 
@@ -482,7 +472,6 @@ void tst_qquickiconimage::imageProvider()
     view.setSource(testFileUrl("imageProvider.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickIconImage *iconImage = qobject_cast<QQuickIconImage*>(view.rootObject()->findChild<QQuickIconImage *>());
