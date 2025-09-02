@@ -11,6 +11,7 @@
 
 #include <QtCore/qcborarray.h>
 #include <QtCore/qcbormap.h>
+#include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qqueue.h>
@@ -56,7 +57,7 @@ QList<QAnyStringView> MetaTypesJsonProcessor::namespaces(const MetaType &classDe
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
     for (const QString &source: files) {
-        if (m_seenMetaTypesFiles.hasSeen(source))
+        if (m_seenMetaTypesFiles.hasSeen(QDir::cleanPath(source)))
             continue;
 
         QCborValue metaObjects;
@@ -132,7 +133,7 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
     bool success = true;
 
     for (const QString &types : foreignTypesFiles) {
-        if (m_seenMetaTypesFiles.hasSeen(types))
+        if (m_seenMetaTypesFiles.hasSeen(QDir::cleanPath(types)))
             continue;
 
         if (!processForeignTypes(types))
