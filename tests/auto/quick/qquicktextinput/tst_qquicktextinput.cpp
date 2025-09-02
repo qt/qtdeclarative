@@ -1781,7 +1781,6 @@ void tst_qquicktextinput::positionAt()
     QQuickView window(testFileUrl("positionAt.qml"));
     QVERIFY(window.rootObject() != nullptr);
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
@@ -1871,7 +1870,6 @@ void tst_qquicktextinput::maxLength()
     QQuickView window(testFileUrl("maxLength.qml"));
     QVERIFY(window.rootObject() != nullptr);
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextInput *textinputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
@@ -2220,7 +2218,6 @@ void tst_qquicktextinput::inputMethods()
 {
     QQuickView window(testFileUrl("inputmethods.qml"));
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     // test input method hints
@@ -2342,7 +2339,6 @@ void tst_qquicktextinput::signal_accepted()
 {
     QQuickView window(testFileUrl("signal_accepted.qml"));
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(window.rootObject() != nullptr);
@@ -2384,7 +2380,6 @@ void tst_qquicktextinput::signal_editingfinished()
 {
     QQuickView window(testFileUrl("signal_editingfinished.qml"));
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(window.rootObject() != nullptr);
@@ -2454,7 +2449,6 @@ void tst_qquicktextinput::signal_textEdited()
 {
     QQuickWindow window;
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QQuickTextInput *input = new QQuickTextInput(window.contentItem());
@@ -2705,7 +2699,6 @@ void tst_qquicktextinput::copyAndPasteKeySequence()
     QQuickWindow window;
     textInput->setParentItem(window.contentItem());
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     // copy and paste
@@ -2805,7 +2798,6 @@ void tst_qquicktextinput::middleClickPaste()
     QQuickView window(testFileUrl("mouseselectionmode_default.qml"));
 
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(window.rootObject() != nullptr);
@@ -2871,7 +2863,6 @@ void tst_qquicktextinput::cursorDelegate()
     QFETCH(QUrl, source);
     QQuickView view(source);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != nullptr);
@@ -2990,7 +2981,6 @@ void tst_qquicktextinput::remoteCursorDelegate()
     view.rootContext()->setContextProperty("contextDelegate", &component);
     view.setSource(testFileUrl("cursorTestRemote.qml"));
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QQuickTextInput *textInputObject = view.rootObject()->findChild<QQuickTextInput*>("textInputObject");
     QVERIFY(textInputObject != nullptr);
@@ -3346,7 +3336,6 @@ void tst_qquicktextinput::echoMode()
 {
     QQuickView window(testFileUrl("echoMode.qml"));
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     QVERIFY(window.rootObject() != nullptr);
