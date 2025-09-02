@@ -2489,7 +2489,7 @@ void tst_QQuickMouseArea::settingHiddenInPressUngrabs() // QTBUG-74987
     QScopedPointer<QQuickWindow> window(qmlobject_cast<QQuickWindow *>(c.create()));
     QVERIFY(window.data());
     window->show();
-    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
     QQuickMouseArea *catArea = window->findChild<QQuickMouseArea*>("cat");
