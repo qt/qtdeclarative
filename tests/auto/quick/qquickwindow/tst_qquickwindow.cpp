@@ -2587,7 +2587,6 @@ void tst_qquickwindow::attachedProperty()
     QQuickView view(testUrl);
     view.setTitle(QTest::currentTestFunction());
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QVERIFY(view.rootObject()->property("windowActive").toBool());
     QCOMPARE(view.rootObject()->property("contentItem").value<QQuickItem*>(), view.contentItem());
@@ -2598,7 +2597,6 @@ void tst_qquickwindow::attachedProperty()
     QQuickWindow *innerWindow = view.rootObject()->findChild<QQuickWindow*>("extraWindow");
     QVERIFY(innerWindow);
     innerWindow->show();
-    innerWindow->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(innerWindow));
 
     QQuickText *text = view.rootObject()->findChild<QQuickText*>("extraWindowText");
@@ -3602,7 +3600,6 @@ void tst_qquickwindow::testChildMouseEventFilter()
     }
 
     window.show();
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     DeliveryRecordVector &actualDeliveryOrder = EventItem::deliveryList();
