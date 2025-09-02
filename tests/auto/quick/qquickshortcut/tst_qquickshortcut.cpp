@@ -95,7 +95,6 @@ void tst_QQuickShortcut::standardShortcuts()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QObject *shortcut = window->property("shortcut").value<QObject *>();
@@ -228,7 +227,6 @@ void tst_QQuickShortcut::shortcuts()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     window->setProperty("shortcuts", shortcuts);
@@ -305,7 +303,6 @@ void tst_QQuickShortcut::sequence()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     window->setProperty("shortcuts", shortcuts);
@@ -402,7 +399,6 @@ void tst_QQuickShortcut::context()
     QVERIFY(activeWindow);
     activeWindow->show();
     QVERIFY(QTest::qWaitForWindowExposed(activeWindow));
-    activeWindow->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(activeWindow));
     activeWindow->setProperty("shortcuts", activeWindowShortcuts);
 
@@ -472,7 +468,6 @@ void tst_QQuickShortcut::matcher()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     window->setProperty("shortcuts", QVariantList() << shortcut);
@@ -515,7 +510,6 @@ void tst_QQuickShortcut::multiple()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QObject *shortcut = window->property("shortcut").value<QObject *>();
@@ -586,7 +580,6 @@ void tst_QQuickShortcut::contextChange()
     QVERIFY(activeWindow);
     activeWindow->show();
     QVERIFY(QTest::qWaitForWindowExposed(activeWindow));
-    activeWindow->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(activeWindow));
 
     QTest::keyPress(activeWindow, key, modifiers);
