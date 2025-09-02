@@ -528,7 +528,6 @@ void tst_customization::comboPopup()
         QQuickWindow window;
         window.resize(300, 300);
         window.show();
-        window.requestActivate();
         QVERIFY(QTest::qWaitForWindowActive(&window));
 
         QQmlComponent component(engine);
