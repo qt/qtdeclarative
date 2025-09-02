@@ -215,7 +215,6 @@ void tst_QQuickTextArea::customContextMenuOnRelease()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, qmlUrl));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *ourContextMenu = window.rootObject()->property("ourContextMenu").value<QQuickMenu *>();
