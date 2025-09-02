@@ -84,7 +84,6 @@ void tst_qquickninepatchimage::ninePatch()
     QQuickView view(testFileUrl("ninepatchimage.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
@@ -142,7 +141,6 @@ void tst_qquickninepatchimage::padding()
     QQuickView view(testFileUrl("ninepatchimage.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
@@ -184,7 +182,6 @@ void tst_qquickninepatchimage::inset()
     QQuickView view(testFileUrl("ninepatchimage.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
@@ -231,7 +228,6 @@ void tst_qquickninepatchimage::implicitSize()
     QQuickView view(testFileUrl("ninepatchimage.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
-    view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
 
     QQuickImage *ninePatchImage = qobject_cast<QQuickImage *>(view.rootObject());
