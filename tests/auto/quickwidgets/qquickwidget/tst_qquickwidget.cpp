@@ -897,7 +897,7 @@ void tst_qquickwidget::focusChain()
     layout.addWidget(&middleWidget);
     layout.addWidget(&qqw2);
     window.show();
-    window.windowHandle()->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
     QQuickItem *root1 = qqw1.rootObject();
