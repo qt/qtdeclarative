@@ -984,6 +984,7 @@ private slots:
     void javaScriptExtension();
 
     void consistencyWarnings();
+    void deduplicateCleanPaths();
     void enumWarnings();
 
     void relatedAddedInVersion();

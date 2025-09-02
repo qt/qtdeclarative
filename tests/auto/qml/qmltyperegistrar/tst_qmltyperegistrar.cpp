@@ -499,6 +499,35 @@ void tst_qmltyperegistrar::consistencyWarnings()
     r.generatePluginTypes(pluginTypes.fileName());
 }
 
+void tst_qmltyperegistrar::deduplicateCleanPaths()
+{
+    QTest::failOnWarning();
+
+    QmlTypeRegistrar r;
+    r.setModuleVersions(QTypeRevision::fromVersion(1, 1), {}, false);
+    QString moduleName = "tstmodule";
+    QString targetNamespace = "tstnamespace";
+    r.setModuleNameAndNamespace(moduleName, targetNamespace);
+
+    MetaTypesJsonProcessor processor(true);
+
+    QVERIFY(processor.processTypes({ ":/processTwice.json", ":/./processTwice.json" }));
+    processor.postProcessTypes();
+    processor.postProcessForeignTypes();
+
+    r.setTypes(processor.types(), processor.foreignTypes());
+
+    QString outputData;
+    QTextStream output(&outputData, QIODeviceBase::ReadWrite);
+
+    r.write(output, "tstmodule_qmltyperegistrations.cpp");
+
+    QTemporaryFile pluginTypes;
+    QVERIFY(pluginTypes.open());
+
+    r.generatePluginTypes(pluginTypes.fileName());
+}
+
 void tst_qmltyperegistrar::enumWarnings()
 {
     QmlTypeRegistrar r;
