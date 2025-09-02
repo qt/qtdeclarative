@@ -37,7 +37,6 @@ void tst_ActiveFocus::failureMessage()
 
     QQuickWindow *window = helper.window;
     window->show();
-    window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     auto *item = window->property("item").value<QQuickItem*>();
