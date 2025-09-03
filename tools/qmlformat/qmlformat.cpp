@@ -92,12 +92,8 @@ static bool parseFile(const QString &filename, const QQmlFormatOptions &options)
 
     const auto &code = getFileItemOwner(fileItem)->code();
     auto lwOptions = options.optionsForCode(code);
-    WriteOutChecks checks = WriteOutCheck::Default;
-    //Disable writeOutChecks for some usecases
-    if (options.sortImports() || options.forceEnabled() || options.isMaxColumnWidthSet() || code.size() > 32000
-        || fileItem.internalKind() == DomType::JsFile) {
-        checks = WriteOutCheck::None;
-    }
+    // Use checks only for test purposes
+    WriteOutChecks checks = WriteOutCheck::None;
 
     bool res = false;
     if (options.isInplace()) {
