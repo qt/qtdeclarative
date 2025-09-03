@@ -12,6 +12,7 @@
 #include <data/objectwithmethod.h>
 #include <data/qmlusing.h>
 #include <data/resettable.h>
+#include <data/sequenceToIterable.h>
 #include <data/takenumber.h>
 #include <data/weathermoduleurl.h>
 #include <data/withlength.h>
@@ -5018,6 +5019,19 @@ void tst_QmlCppCodegen::sequenceToIterable()
         const auto match = name.match(children.at(i)->objectName());
         QVERIFY(match.hasMatch());
         QCOMPARE(match.captured(1), QString::number(i));
+    }
+
+    QQmlComponent component2(&engine, QUrl(u"qrc:/qt/qml/TestTypes/sequenceToIterable2.qml"_s));
+    QVERIFY2(!component2.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object2(component2.create());
+    QVERIFY(!object2.isNull());
+
+    QQmlListReference converted(object2.data(), "converted");
+    QCOMPARE(converted.count(), 10);
+    for (int i = 0; i < 10; ++i) {
+        Entry *e = qobject_cast<Entry *>(converted.at(i));
+        QVERIFY(e);
+        QCOMPARE(e->objectName(), QStringLiteral("Item %1").arg(i));
     }
 }
 

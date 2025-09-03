@@ -2521,15 +2521,29 @@ bool convertToIterable(QMetaType metaType, void *data, Source *sequence)
     if (!QMetaType::view(metaType, data, QMetaType::fromType<QSequentialIterable>(), &iterable))
         return false;
 
-    const QMetaType elementMetaType = iterable.valueMetaType();
+    // Clear the sequence before appending. There may be stale data in there.
+    metaType.destruct(data);
+    metaType.construct(data);
+
     QV4::Scope scope(sequence->engine());
     QV4::ScopedValue v(scope);
+
+    const QMetaType elementMetaType = iterable.valueMetaType();
+    QVariant element;
+    void *elementData = nullptr;
+    if (elementMetaType == QMetaType::fromType<QVariant>()) {
+        elementData = &element;
+    } else {
+        element = QVariant(elementMetaType);
+        elementData = element.data();
+    }
+
     for (qsizetype i = 0, end = sequence->getLength(); i < end; ++i) {
-        QVariant element(elementMetaType);
         v = sequence->get(i);
-        ExecutionEngine::metaTypeFromJS(v, elementMetaType, element.data());
+        ExecutionEngine::metaTypeFromJS(v, elementMetaType, elementData);
         iterable.addValue(element, QSequentialIterable::AtEnd);
     }
+
     return true;
 }
 

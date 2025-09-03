@@ -47,7 +47,14 @@ public:
             m_entries.push_back(new Entry(QStringLiteral("Item %1").arg(i), this));
         }
     }
-    Q_INVOKABLE QList<Entry*> getEntries() const { return m_entries; }
+    Q_INVOKABLE QList<Entry *> getEntries() const { return m_entries; }
+    Q_INVOKABLE QList<Entry *> convertEntries(const QVariantList &entries) const
+    {
+        QList<Entry *> converted;
+        for (const QVariant &entry : entries)
+            converted.push_back(entry.value<Entry *>());
+        return converted;
+    }
 
 private:
     QList<Entry*> m_entries;
