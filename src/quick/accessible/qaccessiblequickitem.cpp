@@ -688,7 +688,8 @@ void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
            (r == QAccessible::Slider ||
             r == QAccessible::SpinBox ||
             r == QAccessible::Dial ||
-            r == QAccessible::ScrollBar))
+            r == QAccessible::ScrollBar ||
+            r == QAccessible::ProgressBar))
        return static_cast<QAccessibleValueInterface*>(this);
 
     if (t == QAccessible::TextInterface) {
