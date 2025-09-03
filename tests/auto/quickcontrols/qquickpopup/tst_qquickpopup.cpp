@@ -2608,7 +2608,7 @@ void tst_QQuickPopup::fadeDimmer()
     auto dimmer = QQuickPopupPrivate::get(popup)->dimmer;
     QVERIFY(dimmer);
     int opacityChangeCount = 0;
-    connect(dimmer, &QQuickItem::opacityChanged, this, [&opacityChangeCount]{
+    connect(dimmer, &QQuickItem::opacityChanged, dimmer, [&opacityChangeCount]{
         ++opacityChangeCount;
     });
     QTRY_VERIFY(popup->isOpened());
