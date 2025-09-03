@@ -323,24 +323,6 @@ static void removeLastInline(Heap::Sequence *p, qsizetype num)
     }
 }
 
-bool Sequence::sort(const FunctionObject *f, const Value *, const Value *argv, int argc)
-{
-    if (d()->isReadOnly())
-        return false;
-    if (d()->isReference() && !d()->loadReference())
-        return false;
-
-    if (argc == 1 && argv[0].as<FunctionObject>())
-        sortSequence(this, SequenceCompareFunctor(f->engine(), argv[0]));
-    else
-        sortSequence(this, SequenceDefaultCompareFunctor());
-
-    if (d()->object())
-        d()->storeReference();
-
-    return true;
-}
-
 bool Heap::Sequence::loadReference()
 {
     Q_ASSERT(isReference());
@@ -627,10 +609,23 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
     if (argc >= 2)
         return o.asReturnedValue();
 
-    if (auto *s = o->as<Sequence>()) {
-        if (!s->sort(b, thisObject, argv, argc))
-            THROW_TYPE_ERROR();
-    }
+    Sequence *s = o->as<Sequence>();
+    if (!s)
+        return o.asReturnedValue();
+
+    Heap::Sequence *p = s->d();
+    if (p->isReadOnly())
+        THROW_TYPE_ERROR();
+    if (p->isReference() && !p->loadReference())
+        THROW_TYPE_ERROR();
+
+    if (argc == 1 && argv[0].as<FunctionObject>())
+        sortSequence(s, SequenceCompareFunctor(b->engine(), argv[0]));
+    else
+        sortSequence(s, SequenceDefaultCompareFunctor());
+
+    if (p->object())
+        p->storeReference();
 
     return o.asReturnedValue();
 }

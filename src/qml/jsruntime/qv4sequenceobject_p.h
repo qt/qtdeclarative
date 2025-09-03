@@ -124,8 +124,6 @@ public:
     static bool virtualIsEqualTo(Managed *that, Managed *other);
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
     static int virtualMetacall(Object *object, QMetaObject::Call call, int index, void **a);
-
-    bool sort(const FunctionObject *f, const Value *, const Value *argv, int argc);
 };
 
 }
