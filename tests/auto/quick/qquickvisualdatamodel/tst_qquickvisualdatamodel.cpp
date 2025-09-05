@@ -3959,6 +3959,8 @@ void tst_qquickvisualdatamodel::invalidAttachment()
 
 void tst_qquickvisualdatamodel::declarativeAssignViaAttached()
 {
+    QTest::failOnWarning();
+
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("attachedDeclarativelySet.qml"));
 
