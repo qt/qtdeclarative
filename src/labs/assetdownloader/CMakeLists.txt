@@ -4,7 +4,7 @@
 find_package(Qt6 REQUIRED COMPONENTS ExamplesAssetDownloaderPrivate)
 
 qt_internal_add_qml_module(QmlAssetDownloader
-    URI "Assets.Downloader"
+    URI "Qt.labs.assetdownloader"
     VERSION "${PROJECT_VERSION}"
     STATIC
     SOURCES
