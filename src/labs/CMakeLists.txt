@@ -29,3 +29,6 @@ if(QT_FEATURE_systemsemaphore AND TARGET Qt::Quick)
     add_subdirectory(sharedimage)
 endif()
 
+if(TARGET Qt::ExamplesAssetDownloaderPrivate)
+    add_subdirectory(assetdownloader)
+endif()

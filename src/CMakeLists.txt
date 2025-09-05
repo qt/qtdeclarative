@@ -124,6 +124,4 @@ if(QT_FEATURE_qml_network)
     endif()
 endif()
 
-add_subdirectory(assets)
-
 # special case end
