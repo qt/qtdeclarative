@@ -4,7 +4,6 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
-import QtQuick.Controls.Fusion
 import QtQuick.Controls.Fusion.impl
 
 T.TextArea {
@@ -39,5 +38,9 @@ T.TextArea {
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
         elide: Text.ElideRight
         renderType: control.renderType
+    }
+
+    background: TextFieldBackground {
+        control: control
     }
 }

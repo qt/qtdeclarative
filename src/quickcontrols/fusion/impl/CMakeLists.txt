@@ -12,6 +12,7 @@ set(qml_files
     "SliderGroove.qml"
     "SliderHandle.qml"
     "SwitchIndicator.qml"
+    "TextFieldBackground.qml"
 )
 
 qt_internal_add_qml_module(QuickControls2FusionStyleImpl
