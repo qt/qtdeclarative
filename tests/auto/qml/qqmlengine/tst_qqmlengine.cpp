@@ -604,8 +604,10 @@ QT_WARNING_POP
     const JsSingleton *oldJsSingleton = engine.singletonInstance<JsSingleton *>(jsObject);
     QVERIFY(oldJsSingleton != nullptr);
     const uint oldJsSingletonId = oldJsSingleton->id;
-    const QObject *oldQmlSingleton = engine.singletonInstance<QObject *>(qmlObject);
+    QObject *oldQmlSingleton = engine.singletonInstance<QObject *>(qmlObject);
     QVERIFY(oldQmlSingleton != nullptr);
+    QCOMPARE(oldQmlSingleton->objectName(), "theSingleton");
+    oldQmlSingleton->setObjectName("marked");
 
     QQmlComponent c(&engine);
     c.setData("import ClearSingletons\n"
@@ -663,7 +665,7 @@ QT_WARNING_POP
     QVERIFY(newJsSingleton->id != oldJsSingletonId);
     const QObject *newQmlSingleton = engine.singletonInstance<QObject *>(qmlObject);
     QVERIFY(newQmlSingleton != nullptr);
-    QVERIFY(newQmlSingleton != oldQmlSingleton);
+    QCOMPARE(newQmlSingleton->objectName(), "theSingleton");
 
     // Holding on to an old singleton instance is OK. We don't delete those.
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("a")), &objectCaller1);
