@@ -361,6 +361,7 @@ src/qml/udis86_itab.h
 
 # cmake related artifacts
 /build*
+build/
 CMakeFiles
 CTestTestfile.cmake
 CMakeUserPresets.json
