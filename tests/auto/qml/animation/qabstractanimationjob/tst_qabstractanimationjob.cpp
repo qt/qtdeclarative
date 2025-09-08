@@ -1,10 +1,12 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QtQml/qqmlengine.h>
+#include <QtTest/qtest.h>
 
-#include <QtQml/private/qabstractanimationjob_p.h>
-#include <QtQml/private/qanimationgroupjob_p.h>
-#include <QTest>
+#include <private/qabstractanimationjob_p.h>
+#include <private/qanimationgroupjob_p.h>
+#include <private/qcoreapplication_p.h>
 
 class tst_QAbstractAnimationJob : public QObject
 {
@@ -23,6 +25,7 @@ private slots:
     void avoidJumpAtStart();
     void avoidJumpAtStartWithStop();
     void avoidJumpAtStartWithRunning();
+    void deleteAnimationTimer();
 };
 
 class TestableQAbstractAnimation : public QAbstractAnimationJob
@@ -182,6 +185,24 @@ void tst_QAbstractAnimationJob::avoidJumpAtStartWithRunning()
     QCoreApplication::processEvents();
     QVERIFY(anim2.currentTime() < 50);
     QVERIFY(anim3.currentTime() < 50);
+}
+
+void tst_QAbstractAnimationJob::deleteAnimationTimer()
+{
+    for (int i = 0; i < 10; ++i) {
+        {
+            TestableQAbstractAnimation mainAnimation;
+            mainAnimation.setDuration(100);
+            mainAnimation.start();
+            QTRY_VERIFY(mainAnimation.isRunning());
+            QTRY_VERIFY(mainAnimation.currentTime() > 50);
+        }
+
+        // We can tear down the thread data that holds the animation timer. This does not cause
+        // the QUnifiedTimer to hold a dangling pointer next timer around.
+        static_cast<QCoreApplicationPrivate *>(QObjectPrivate::get(QCoreApplication::instance()))
+                ->cleanupThreadData();
+    }
 }
 
 
