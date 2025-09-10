@@ -116,7 +116,8 @@ manifestmeta.thumbnail.names += "QtQuick/QML Dynamic View Ordering Tutorial*"
 # Highlight examples for the Graphics & Multimedia category
 manifestmeta.highlighted.names = \
     "QtQuick/Qt Quick Layouts - Responsive Layout Example" \
-    "QtQuick/Scene Graph - RHI Under QML"
+    "QtQuick/Scene Graph - RHI Under QML" \
+    "QtQuick/Weather Forecast Example"
 
 navigation.landingpage = "Qt Quick"
 navigation.cppclassespage = "Qt Quick C++ Classes"
