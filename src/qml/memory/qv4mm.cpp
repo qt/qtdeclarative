@@ -1480,13 +1480,13 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
         if (!frame->isMetaTypesFrame())
             continue;
 
-        const QQmlPrivate::AOTTrackedLocalsStorage *locals
-                = static_cast<const MetaTypesStackFrame *>(frame)->locals();
-
-        // locals have to be initialized first thing when calling the function
-        Q_ASSERT(locals);
-
-        locals->markObjects(markStack);
+        if (const QQmlPrivate::AOTTrackedLocalsStorage *locals
+                = static_cast<const MetaTypesStackFrame *>(frame)->locals()) {
+            // Actual AOT-compiled functions initialize the locals firsth thing when they
+            // are called. However, the ScopedStackFrame has no locals, but still uses a
+            // MetaTypesStackFrame.
+            locals->markObjects(markStack);
+        }
     }
 }
 

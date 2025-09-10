@@ -59,6 +59,8 @@ private slots:
     void scopedConvertToObjectFromReturnedValueDoesNotAccessGarbageOnTheStackOnAllocation();
     void scopedConvertToStringFromValueDoesNotAccessGarbageOnTheStackOnAllocation();
     void scopedConvertToObjectFromValueDoesNotAccessGarbageOnTheStackOnAllocation();
+
+    void dontCrashOnScopedStackFrame();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -1043,6 +1045,17 @@ void tst_qv4mm::scopedConvertToObjectFromValueDoesNotAccessGarbageOnTheStackOnAl
 
     QV4::Scope scope(engine);
     QV4::ScopedObject object(scope, QV4::StaticValue::fromBoolean(true).asValue<QV4::Value>(), QV4::ScopedObject::Convert);
+}
+
+void tst_qv4mm::dontCrashOnScopedStackFrame()
+{
+    QJSEngine jsengine;
+    QV4::ExecutionEngine *engine = jsengine.handle();
+
+    QV4::Scope scope(engine);
+    QV4::ScopedStackFrame frame(scope, engine->rootContext());
+
+    jsengine.collectGarbage();
 }
 
 QTEST_MAIN(tst_qv4mm)
