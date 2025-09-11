@@ -101,6 +101,7 @@ private slots:
     void detachOnAssignment();
     void detachedReferences();
     void dialogButtonBox();
+    void disappearingArrowFunction();
     void enumConversion();
     void enumFromBadSingleton();
     void enumLookup();
@@ -1837,6 +1838,56 @@ void tst_QmlCppCodegen::dialogButtonBox()
 
     QCOMPARE(footer->property("standardButtons").value<QPlatformDialogHelper::StandardButton>(),
              QPlatformDialogHelper::Ok | QPlatformDialogHelper::Cancel);
+}
+
+void tst_QmlCppCodegen::disappearingArrowFunction()
+{
+    QQmlEngine engine;
+    const QUrl url(u"qrc:/qt/qml/TestTypes/disappearingArrowFunction.qml"_s);
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QTest::ignoreMessage(QtDebugMsg, "5");
+    o->setObjectName("no");
+
+    QMetaObject::invokeMethod(o.data(), "swapNone");
+    QTest::ignoreMessage(QtDebugMsg, "Bart");
+    o->setObjectName("nono");
+
+    QMetaObject::invokeMethod(o.data(), "swapNone");
+    QTest::ignoreMessage(QtDebugMsg, "5");
+    o->setObjectName("nonono");
+
+    const QRegularExpression warning(
+                QRegularExpression::escape(url.toString())
+                + u"\\:15\\: TypeError\\: Property 'getName' of object "
+                  "Person_QML_[0-9]+\\(0x[0-9a-f]+\\) is not a function"_s);
+
+    QMetaObject::invokeMethod(o.data(), "swapEvil");
+    QTest::ignoreMessage(QtWarningMsg, warning);
+    o->setObjectName("nononono");
+
+    QMetaObject::invokeMethod(o.data(), "swapEvil");
+    QTest::ignoreMessage(QtDebugMsg, "5");
+    o->setObjectName("nonononono");
+
+    QMetaObject::invokeMethod(o.data(), "swapNone");
+    QTest::ignoreMessage(QtDebugMsg, "Bart");
+    o->setObjectName("nononononono");
+
+    QMetaObject::invokeMethod(o.data(), "swapEvil");
+    QTest::ignoreMessage(QtWarningMsg, warning);
+    o->setObjectName("nonononononono");
+
+    QMetaObject::invokeMethod(o.data(), "swapEvil");
+    QTest::ignoreMessage(QtDebugMsg, "Bart");
+    o->setObjectName("nononononononono");
+
+    QMetaObject::invokeMethod(o.data(), "swapNone");
+    QTest::ignoreMessage(QtDebugMsg, "5");
+    o->setObjectName("nonononononononono");
 }
 
 void tst_QmlCppCodegen::enumConversion()

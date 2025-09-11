@@ -2138,8 +2138,13 @@ static bool callQObjectMethodAsVariant(
     QV4::Scope scope(engine);
     QV4::ScopedValue wrappedObject(scope, QV4::QObjectWrapper::wrap(scope.engine, thisObject));
     QV4::ScopedFunctionObject function(scope, lookup->getter(scope.engine, wrappedObject));
-    Q_ASSERT(function);
-    Q_ASSERT(lookup->asVariant); // The getter mustn't reset the isVariant flag
+
+    // The getter mustn't reset the isVariant flag
+    Q_ASSERT(lookup->asVariant);
+
+    // Since we have an asVariant lookup, the function may have been overridden in the mean time.
+    if (!function)
+        return false;
 
     Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
     std::fill(types, types + argc + 1, QMetaType::fromType<QVariant>());
@@ -2222,31 +2227,6 @@ static bool callArrowFunction(
         Q_ASSERT(argc == 0);
         QMetaType variantType = QMetaType::fromType<QVariant>();
         function->call(thisObject, args, &variantType, 0);
-        return !engine->hasException;
-    }
-    case QV4::Function::Eval:
-        break;
-    }
-
-    Q_UNREACHABLE_RETURN(false);
-}
-
-static bool callArrowFunctionAsVariant(
-        QV4::ExecutionEngine *engine, QV4::ArrowFunction *function,
-        QObject *thisObject, void **args, int argc)
-{
-    QV4::Function *v4Function = function->function();
-    Q_ASSERT(v4Function);
-
-    switch (v4Function->kind) {
-    case QV4::Function::JsUntyped:
-        // We cannot assert anything here because the method can be shadowed.
-        // That's why we wrap everything in QVariant.
-    case QV4::Function::AotCompiled:
-    case QV4::Function::JsTyped: {
-        Q_ALLOCA_VAR(QMetaType, types, (argc + 1) * sizeof(QMetaType));
-        std::fill(types, types + argc + 1, QMetaType::fromType<QVariant>());
-        function->call(thisObject, args, types, argc);
         return !engine->hasException;
     }
     case QV4::Function::Eval:
@@ -2435,16 +2415,25 @@ bool AOTCompiledContext::callObjectPropertyLookup(
                 : callQObjectMethod(engine->handle(), lookup, object, args, argc);
     case QV4::Lookup::Call::GetterQObjectProperty:
     case QV4::Lookup::Call::GetterQObjectPropertyFallback: {
-        const bool asVariant = lookup->asVariant;
-        // Here we always retrieve a fresh method via the getter. No need to re-init.
+        if (lookup->asVariant) {
+            // If the method can be shadowed, the overridden method can be taken away, too.
+            // In that case we might end up with a QObjectMethod or random other values instead.
+            // callQObjectMethodAsVariant is flexible enough to handle that.
+            return callQObjectMethodAsVariant(engine->handle(), lookup, object, args, argc);
+        }
+
+        // Here we always retrieve a fresh ArrowFunction via the getter.
         QV4::Scope scope(engine->handle());
         QV4::ScopedValue thisObject(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
         QV4::Scoped<QV4::ArrowFunction> function(scope, lookup->getter(scope.engine, thisObject));
+
+        // The getter mustn't touch the asVariant bit
+        Q_ASSERT(!lookup->asVariant);
+
+        // If the method can't be shadowed, it has to stay the same.
         Q_ASSERT(function);
-        Q_ASSERT(lookup->asVariant == asVariant); // The getter mustn't touch the asVariant bit
-        return asVariant
-                ? callArrowFunctionAsVariant(scope.engine, function, qmlScopeObject, args, argc)
-                : callArrowFunction(scope.engine, function, qmlScopeObject, args, argc);
+
+        return callArrowFunction(scope.engine, function, qmlScopeObject, args, argc);
     }
     default:
         break;
@@ -2463,16 +2452,16 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
 
-    const auto throwInvalidObjectError = [&]() {
+    const auto throwInvalidObjectError = [&](const QString &object) {
         scope.engine->throwTypeError(
-                QStringLiteral("Property '%1' of object [object Object] is not a function")
-                        .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
+                QStringLiteral("Property '%1' of object %2 is not a function").arg(
+                        compilationUnit->runtimeStrings[lookup->nameIndex]->toQString(), object));
     };
 
     const auto *ddata = QQmlData::get(object, false);
     if (ddata && ddata->hasVMEMetaObject && ddata->jsWrapper.isNullOrUndefined()) {
         // We cannot lookup functions on an object with VME metaobject but no QObjectWrapper
-        throwInvalidObjectError();
+        throwInvalidObjectError(QStringLiteral("[object Object]"));
         return;
     }
 
@@ -2490,7 +2479,7 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
         return;
     }
 
-    throwInvalidObjectError();
+    throwInvalidObjectError(thisObject->toQStringNoThrow());
 }
 
 void AOTCompiledContext::initCallObjectPropertyLookup(
