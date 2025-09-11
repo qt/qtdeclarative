@@ -128,7 +128,7 @@ QVariant QQmlAbstractColumnModel::data(const QModelIndex &index, int role) const
     return getter.call(args).toVariant();
 }
 
-bool QQmlAbstractColumnModel::setData(const QModelIndex &index, const QString &role, const QVariant &value)
+bool QQmlAbstractColumnModel::setData(const QModelIndex &index, const QVariant &value, const QString &role)
 {
     const int intRole = mRoleNames.key(role.toUtf8(), -1);
     if (intRole >= 0)

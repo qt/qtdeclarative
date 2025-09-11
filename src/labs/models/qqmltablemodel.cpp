@@ -620,7 +620,7 @@ int QQmlTableModel::columnCount(const QModelIndex &parent) const
 */
 
 /*!
-    \qmlmethod bool TableModel::setData(QModelIndex index, string role, variant value)
+    \qmlmethod bool TableModel::setData(QModelIndex index, variant value, string role)
 
     Inserts or updates the data field named by \a role in the table cell at the
     given \a index with \a value. Returns true if sucessful, false if not.

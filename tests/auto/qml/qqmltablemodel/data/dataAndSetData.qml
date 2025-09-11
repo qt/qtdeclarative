@@ -17,7 +17,7 @@ TableView {
                 if (testModel.data(testModel.index(r, 0), "display") === dude)
                     row = r;
             var index = testModel.index(row, 1)
-            testModel.setData(index, "display", testModel.data(index, "display") + 1)
+            testModel.setData(index, testModel.data(index, "display") + 1, "display")
         }
     }
     delegate: Text {

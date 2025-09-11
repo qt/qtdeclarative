@@ -47,9 +47,9 @@ public:
     static void columns_removeLast(QQmlListProperty<QQmlTableModelColumn> *property);
 
     Q_INVOKABLE QVariant data(const QModelIndex &index, const QString &role) const;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-    Q_INVOKABLE bool setData(const QModelIndex &index, const QString &role, const QVariant &value);
-    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::DisplayRole) override;
+    Q_INVOKABLE QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    Q_INVOKABLE bool setData(const QModelIndex &index, const QVariant &value, const QString &role);
+    Q_INVOKABLE bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::DisplayRole) override;
 
     QHash<int, QByteArray> roleNames() const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
