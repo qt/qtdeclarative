@@ -385,13 +385,15 @@ void tst_qquickwidget::layoutSizeChange()
     QCOMPARE(item->height(), 200.0);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window, 5000));
+
+    const QMargins safeMargins = window.windowHandle()->safeAreaMargins();
     QTRY_COMPARE(view->height(), 200);
-    QTRY_COMPARE(label->y(), 200);
+    QTRY_COMPARE(label->y() - safeMargins.top(), 200);
 
     item->setSize(QSizeF(100,100));
     QCOMPARE(item->height(), 100.0);
     QTRY_COMPARE(view->height(), 100);
-    QTRY_COMPARE(label->y(), 100);
+    QTRY_COMPARE(label->y() - safeMargins.top(), 100);
 }
 
 void tst_qquickwidget::errors()
