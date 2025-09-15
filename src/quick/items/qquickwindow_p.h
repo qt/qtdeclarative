@@ -194,6 +194,7 @@ public:
 
     qreal lastReportedItemDevicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
+    std::array<QMetaObject::Connection, 7> connections;
 
     void updateDirtyNodes();
     void cleanupNodes();
