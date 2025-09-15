@@ -2256,8 +2256,15 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         // ### TODO: find an alternative to breakInhertianceCycles here
         // we shouldn't need to search for the current root component in any case here
         breakInheritanceCycles(m_currentScope);
-        if (auto otherScopeWithID = m_scopesById.scope(name, m_currentScope)) {
+        m_scopesById.possibleScopes(
+                name, m_currentScope, Default,
+                [&](const QQmlJSScope::ConstPtr &otherScopeWithID,
+                    QQmlJSScopesById::Confidence confidence) {
+            // If it's a fuzzy match, that's still warning-worthy
+            Q_UNUSED(confidence);
+
             auto otherLocation = otherScopeWithID->sourceLocation();
+
             // critical because subsequent analysis cannot cope with messed up ids
             // and the file is invalid
             m_logger->log(u"Found a duplicated id. id %1 was first declared at %2:%3"_s.arg(
@@ -2265,7 +2272,8 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
                                   QString::number(otherLocation.startColumn)),
                           qmlSyntaxDuplicateIds, // ??
                           scriptBinding->firstSourceLocation());
-        }
+            return QQmlJSScopesById::CallbackResult::ContinueSearch;
+        });
     }
     if (!name.isEmpty())
         m_scopesById.insert(name, m_currentScope);
@@ -2998,10 +3006,15 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         while (!childScopes.isEmpty()) {
             const QQmlJSScope::ConstPtr scope = childScopes.takeFirst();
-            if (!m_scopesById.id(scope, scope).isEmpty()) {
+            m_scopesById.possibleIds(
+                    scope, scope, Default,
+                    [&](const QString &id, QQmlJSScopesById::Confidence confidence) {
+                // Any ID is enough to trigger the warning, no matter how confident we are about it.
+                Q_UNUSED(id);
+                Q_UNUSED(confidence);
                 foundIds = true;
-                break;
-            }
+                return QQmlJSScopesById::CallbackResult::StopSearch;
+            });
 
             childScopes << scope->childScopes();
         }

@@ -1304,10 +1304,10 @@ Element GenericPass::resolveLiteralType(const QQmlSA::Binding &binding)
 Element GenericPass::resolveIdToElement(QAnyStringView id, const Element &context)
 {
     Q_D(const GenericPass);
-    const auto scope = PassManagerPrivate::visitor(*d->m_manager)
-                               ->addressableScopes()
-                               .scope(id.toString(), QQmlJSScope::scope(context));
-    return QQmlJSScope::createQQmlSAElement(scope);
+    QQmlJSScopesById::MostLikelyCallback<QQmlJSScope::ConstPtr> result;
+    PassManagerPrivate::visitor(*d->m_manager)->addressableScopes().possibleScopes(
+            id.toString(), QQmlJSScope::scope(context), Default, result);
+    return QQmlJSScope::createQQmlSAElement(result.result);
 }
 
 /*!
@@ -1316,9 +1316,10 @@ Element GenericPass::resolveIdToElement(QAnyStringView id, const Element &contex
 QString GenericPass::resolveElementToId(const Element &element, const Element &context)
 {
     Q_D(const GenericPass);
-    return PassManagerPrivate::visitor(*d->m_manager)
-            ->addressableScopes()
-            .id(QQmlJSScope::scope(element), QQmlJSScope::scope(context));
+    QQmlJSScopesById::MostLikelyCallback<QString> result;
+    PassManagerPrivate::visitor(*d->m_manager)->addressableScopes().possibleIds(
+            QQmlJSScope::scope(element), QQmlJSScope::scope(context), Default, result);
+    return result.result;
 }
 
 /*!

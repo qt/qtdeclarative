@@ -3282,6 +3282,12 @@ void QQmlDomAstCreatorWithQQmlJSScope::setScopeInDomAfterEndvisit()
     if (!m_domCreator.scriptNodeStack.isEmpty()) {
         auto topOfStack = m_domCreator.currentScriptNodeEl();
         switch (topOfStack.kind) {
+        case DomType::ScriptIdentifierExpression: {
+            // A ScriptIdentifierExpression in a QML scope is an actual ID.
+            if (scope->scopeType() == QQmlJSScope::ScopeType::QMLScope)
+                m_domCreator.currentScriptNodeEl().setSemanticScope(scope);
+            break;
+        }
         case DomType::ScriptBlockStatement:
         case DomType::ScriptForStatement:
         case DomType::ScriptForEachStatement:

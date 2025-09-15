@@ -68,6 +68,7 @@ set(qml_files
     GetOptionalLookupOnQJSValueNonStrict.qml
     GetOptionalLookupShadowed.qml
     Loopy.qml
+    MyObject.qml
     NotificationItem.qml
     NotificationsUtils.js
     OkType.qml
@@ -177,6 +178,7 @@ set(qml_files
     getOptionalLookup.qml
     globals.qml
     idAccess.qml
+    idVsMember.qml
     ignoredFunctionReturn.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml

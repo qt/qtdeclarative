@@ -136,6 +136,7 @@ private slots:
     void getOptionalLookupShadowed();
     void globals();
     void idAccess();
+    void idVsMember();
     void ignoredFunctionReturn();
     void importsFromImportPath();
     void inPlaceDecrement();
@@ -2462,6 +2463,19 @@ void tst_QmlCppCodegen::idAccess()
     ttt->setProperty("text", u"kill"_s);
     QCOMPARE(object.data(), ttt);
     QCOMPARE(ttt->objectName(), u"context"_s);
+}
+
+void tst_QmlCppCodegen::idVsMember()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/idVsMember.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QVERIFY(QRegularExpression(u"QQuickItem\\(0x[0-9a-f]+, \"blub\"\\)"_s)
+            .match(object->objectName()).hasMatch());
+
 }
 
 void tst_QmlCppCodegen::ignoredFunctionReturn()
