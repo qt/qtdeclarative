@@ -1,5 +1,6 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QQUICKLISTMODELWORKERAGENT_P_H
 #define QQUICKLISTMODELWORKERAGENT_P_H

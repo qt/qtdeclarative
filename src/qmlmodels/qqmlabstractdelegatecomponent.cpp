@@ -1,5 +1,6 @@
 // Copyright (C) 2019 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #include <QtQmlModels/private/qqmlabstractdelegatecomponent_p.h>
 #include <QtQmlModels/private/qqmladaptormodel_p.h>

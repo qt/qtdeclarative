@@ -1,5 +1,6 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QQMLDMABSTRACTITEMMODELDATA_P_H
 #define QQMLDMABSTRACTITEMMODELDATA_P_H
