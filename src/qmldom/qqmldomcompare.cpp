@@ -1,5 +1,7 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
+
 #include "qqmldomcompare_p.h"
 #include "QtCore/qglobal.h"
 

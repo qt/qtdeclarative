@@ -1,5 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
+
 #include "qqmldom_fwd_p.h"
 #include "qqmldomlinewriter_p.h"
 #include "qqmldomelements_p.h"

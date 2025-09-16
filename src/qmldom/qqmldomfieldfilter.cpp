@@ -1,5 +1,6 @@
 // Copyright (C) 2020 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #include "qqmldomfieldfilter_p.h"
 #include "qqmldompath_p.h"

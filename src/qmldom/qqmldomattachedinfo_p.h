@@ -1,5 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QMLDOMATTACHEDINFO_P_H
 #define QMLDOMATTACHEDINFO_P_H

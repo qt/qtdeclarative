@@ -1,5 +1,6 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant
 
 #ifndef QQMLDOMCODEFORMATTER_P_H
 #define QQMLDOMCODEFORMATTER_P_H
