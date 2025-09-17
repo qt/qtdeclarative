@@ -1,5 +1,6 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant reason:trusted-sources
 
 #include "qqmlcodemodel_p.h"
 #include "qqmllsplugin_p.h"

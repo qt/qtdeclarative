@@ -1,5 +1,6 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant reason:default
 
 #ifndef QMLFINDUSAGESUPPORT_P_H
 #define QMLFINDUSAGESUPPORT_P_H

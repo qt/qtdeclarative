@@ -1,5 +1,6 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// Qt-Security score:significant reason:trusted-sources
 
 #include <qdochtmlparser_p.h>
 #include <QtCore/qregularexpression.h>
