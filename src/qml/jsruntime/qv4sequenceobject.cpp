@@ -104,10 +104,6 @@ void sortSequence(Sequence *sequence, const Compare &compare)
         std::sort(QSequentialIterable::RandomAccessIterator(iterable.mutableBegin()),
                   QSequentialIterable::RandomAccessIterator(iterable.mutableEnd()),
                   compare);
-    } else if (iterable.canReverseIterate()) {
-        std::sort(QSequentialIterable::BidirectionalIterator(iterable.mutableBegin()),
-                  QSequentialIterable::BidirectionalIterator(iterable.mutableEnd()),
-                  compare);
     } else {
         qWarning() << "Container has no suitable iterator for sorting";
     }
