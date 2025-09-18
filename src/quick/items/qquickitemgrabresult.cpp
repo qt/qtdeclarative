@@ -219,7 +219,7 @@ bool QQuickItemGrabResult::event(QEvent *e)
         // JS callback
         if (d->qmlEngine && d->callback.isCallable()) {
             d->callback.call(QJSValueList() << d->qmlEngine->newQObject(this));
-            deleteLater();
+            QQmlEngine::setObjectOwnership(this, QQmlEngine::JavaScriptOwnership);
         } else {
             Q_EMIT ready();
         }
