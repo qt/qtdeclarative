@@ -41,6 +41,7 @@ class Setup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickMaterialStyle::Theme platformTheme READ platformTheme WRITE setPlatformTheme FINAL)
+    QML_EXTENDED_NAMESPACE(QQuickMaterialStyle)
 
 public slots:
     void applicationAvailable()
