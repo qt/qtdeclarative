@@ -11,6 +11,7 @@
 #include <QtQuickTemplates2/private/qquicklabel_p_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 
 class tst_QQuickStyle : public QQmlDataTest
 {
@@ -26,6 +27,8 @@ private slots:
     void commandLineArgument();
     void environmentVariables();
     void lookup();
+    void qGuiApplicationPaletteChangesArePropagatedToControls();
+    void defaultPaletteIsUpdatedWhenChangingColorScheme();
 
 private:
     Q_REQUIRED_RESULT bool loadControls();
@@ -143,6 +146,98 @@ void tst_QQuickStyle::environmentVariables()
         " \"EnvVarFallbackStyle\" is not one of the built-in Qt Quick Controls 2 styles");
     QCOMPARE(QQuickStyle::name(), QString("EnvVarStyle"));
     QCOMPARE(QQuickStylePrivate::fallbackStyle(), QString());
+}
+
+void tst_QQuickStyle::qGuiApplicationPaletteChangesArePropagatedToControls()
+{
+    QVERIFY(!QQuickTheme::instance());
+    QQuickStyle::setStyle("Fusion");
+    QCOMPARE(QQuickStyle::name(), QStringLiteral("Fusion"));
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick; import QtQuick.Controls; ApplicationWindow { Label { anchors.centerIn: parent; } }", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    auto *label = object->findChild<QQuickLabel *>();
+    QVERIFY(label);
+    auto *labelPrivate = QQuickLabelPrivate::get(label);
+
+    // The fusion style causes QQuickTheme::palette() to use the platform themes palette directly.
+    QVERIFY(QQuickTheme::instance()->usePlatformPalette());
+
+    QPalette qGuiAppPalette = QGuiApplication::palette();
+    const QPalette* qPlatformThemePalette = QGuiApplicationPrivate::platformTheme()->palette(QPlatformTheme::LabelPalette);
+
+    // The initial QGuiApplication::palette() is usually built from the platform theme's system palette.
+    // The platform theme can have multiple other "role" palettes, including a LabelPalette, which is what QQuickTheme will query for.
+    // Since the initial QGuiApplication::palette() typically has a resolveMask of 0, it will not be prioritized over the defaultPalette.
+    // Hence we expect the label's palette and default palette to both be equal to the platform theme's LabelPalette,
+    // which differs from the system palette on macOS. However, if the platform theme returns nullptr for LabelPalette (which happens when the platform theme is "offscreen"),
+    // we fallback to a gray palette that is in sync with QGuiApplication::palette().
+    const QColor expectedInitialWindowTextColor = qPlatformThemePalette ? qPlatformThemePalette->windowText().color() : qGuiAppPalette.windowText().color();
+    QCOMPARE(labelPrivate->palette()->windowText(), expectedInitialWindowTextColor);
+    QCOMPARE(labelPrivate->defaultPalette().windowText().color(), expectedInitialWindowTextColor);
+
+    qGuiAppPalette.setColor(QPalette::WindowText, QColorConstants::Magenta);
+    QGuiApplication::setPalette(qGuiAppPalette);
+
+    QTRY_COMPARE(labelPrivate->palette()->active()->windowText(), QColorConstants::Magenta);
+    QCOMPARE(qGuiAppPalette.windowText().color(), QColorConstants::Magenta);
+    // When the QQuickTheme uses the platform palette, QQuickTheme::palette(Scope scope) will take the palette directly from
+    // QGuiApplicationPrivate::platformTheme(), skipping any potential changes made to QGuiApplication::palette().
+    // We'll thus have a mismatch between the Label's palette (which is updated and propagated from QQuickWindow::palette)
+    // and default palette (which is taken from the platform theme's palette).
+    QCOMPARE_NE(labelPrivate->defaultPalette().windowText().color(), QColorConstants::Magenta);
+    QCOMPARE(labelPrivate->defaultPalette().windowText().color(), expectedInitialWindowTextColor);
+}
+
+void tst_QQuickStyle::defaultPaletteIsUpdatedWhenChangingColorScheme()
+{
+    QVERIFY(!bool(QQuickTheme::instance()));
+    QQuickStyle::setStyle("Basic");
+    QCOMPARE(QQuickStyle::name(), QStringLiteral("Basic"));
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick; import QtQuick.Controls; Label { }", QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *labelPrivate = QQuickLabelPrivate::get(qobject_cast<QQuickLabel *>(object.data()));
+    QColor oldLabelWindowText = labelPrivate->defaultPalette().windowText().color();
+    QColor oldLabelWindow = labelPrivate->defaultPalette().window().color();
+
+    QPalette oldSystemPalette = QQuickTheme::palette(QQuickTheme::System);
+
+    auto oldColorScheme = QGuiApplication::styleHints()->colorScheme();
+    auto guard = qScopeGuard([](){
+        QGuiApplication::styleHints()->unsetColorScheme();
+    });
+
+    if (oldColorScheme == Qt::ColorScheme::Dark)
+        QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Light);
+    else if (oldColorScheme == Qt::ColorScheme::Light)
+        QGuiApplication::styleHints()->setColorScheme(Qt::ColorScheme::Dark);
+    else
+        QSKIP(qPrintable(QLatin1String("Skipping test. "
+            "The %1 platform theme likely lacks a proper colorScheme() and requestColorScheme(Qt::ColorScheme) implementation.").arg(qGuiApp->platformName())));
+
+    // Colors should be updated
+    QTRY_COMPARE_NE(QQuickTheme::palette(QQuickTheme::System), oldSystemPalette);
+
+    QCOMPARE_NE(labelPrivate->defaultPalette().windowText().color(), oldLabelWindowText);
+    QCOMPARE_NE(labelPrivate->defaultPalette().window().color(), oldLabelWindow);
+
+    if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light) {
+        QCOMPARE_GT(labelPrivate->defaultPalette().window().color().lightnessF(), 0.5);
+        QCOMPARE_LT(labelPrivate->defaultPalette().windowText().color().lightnessF(), 0.5);
+    } else if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark) {
+        QCOMPARE_LT(labelPrivate->defaultPalette().window().color().lightnessF(), 0.5);
+        QCOMPARE_GT(labelPrivate->defaultPalette().windowText().color().lightnessF(), 0.5);
+    }
 }
 
 QTEST_MAIN(tst_QQuickStyle)

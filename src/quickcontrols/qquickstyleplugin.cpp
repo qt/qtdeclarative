@@ -19,6 +19,35 @@ QT_BEGIN_NAMESPACE
 
 Q_STATIC_LOGGING_CATEGORY(lcStylePlugin, "qt.quick.controls.styleplugin")
 
+class QQuickThemeChangeObserver : public QObject {
+    Q_OBJECT
+public:
+    explicit QQuickThemeChangeObserver()
+    {
+        QStyleHints *styleHints = QGuiApplication::styleHints();
+        moveToThread(styleHints->thread());
+        styleHints->installEventFilter(this);
+    }
+
+Q_SIGNALS:
+    void paletteOrThemeChanged();
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event) override {
+        Q_UNUSED(object);
+        if (event->type() == QEvent::ApplicationPaletteChange || event->type() == QEvent::ThemeChange)
+            emit paletteOrThemeChanged();
+        return false;
+    }
+};
+
+// The custom destructor ensures that all posted events gets processed before the event filter is deleted.
+void QQuickStylePlugin::ObserverDeleter::operator()(QQuickThemeChangeObserver *observer)
+{
+    observer->disconnect();
+    observer->deleteLater();
+}
+
 QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
     : QQmlExtensionPlugin(parent)
 {
@@ -76,8 +105,10 @@ void QQuickStylePlugin::registerTypes(const char *uri)
             << QQuickStylePrivate::fallbackStyle() << "; calling initializeTheme()";
     }
     initializeTheme(theme);
-    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
-                                     this, &QQuickStylePlugin::updateTheme);
+
+    themeChangeObserver.reset(new QQuickThemeChangeObserver);
+    connect(themeChangeObserver.get(), &QQuickThemeChangeObserver::paletteOrThemeChanged,
+            this, &QQuickStylePlugin::updateTheme);
 
     if (!isPrimaryFallback && !styleName.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << styleName);
@@ -89,8 +120,7 @@ void QQuickStylePlugin::unregisterTypes()
     if (!QQuickThemePrivate::instance)
         return;
 
-    disconnect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged,
-                                        this, &QQuickStylePlugin::updateTheme);
+    themeChangeObserver.reset();
 
     const bool isPrimaryFallback = name() == QQuickStylePrivate::fallbackStyle();
     const QString styleName = QQuickStylePrivate::style();
@@ -143,4 +173,5 @@ QQuickTheme *QQuickStylePlugin::createTheme(const QString &name)
 
 QT_END_NAMESPACE
 
+#include "qquickstyleplugin.moc"
 #include "moc_qquickstyleplugin_p.cpp"

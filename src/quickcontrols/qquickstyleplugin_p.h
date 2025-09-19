@@ -18,10 +18,12 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQuickControls2/qtquickcontrols2global.h>
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
+class QQuickThemeChangeObserver;
 
 class Q_QUICKCONTROLS2_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
@@ -40,6 +42,9 @@ public:
 
 private:
     QQuickTheme *createTheme(const QString &name);
+
+    struct ObserverDeleter { void operator()(QQuickThemeChangeObserver *observer); };
+    std::unique_ptr<QQuickThemeChangeObserver, ObserverDeleter> themeChangeObserver;
 
     Q_DISABLE_COPY(QQuickStylePlugin)
 };

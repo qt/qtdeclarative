@@ -1574,7 +1574,9 @@ TestCase {
         let window = createTemporaryObject(systemThemeComponent, testCase)
         verify(window)
 
+        // The theme might be Material.System initially, but that's fine, since we'll just set it to Dark immediately
         const toggleTheme = (theme) => (theme === Material.Dark) ? Material.Light : Material.Dark
+        verify(TestHelper.platformTheme !== undefined)
 
         TestHelper.platformTheme = toggleTheme(TestHelper.platformTheme)
         tryCompare(window.Material, "theme", TestHelper.platformTheme)
