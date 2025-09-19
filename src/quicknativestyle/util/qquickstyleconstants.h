@@ -14,6 +14,7 @@ class QQuickStyleConstants : public QObject
     Q_PROPERTY(bool runningWithLiquidGlass READ runningWithLiquidGlass CONSTANT FINAL)
     Q_PROPERTY(QColor secondarySystemFillColor READ secondarySystemFillColor CONSTANT FINAL)
     Q_PROPERTY(QColor tertiarySystemFillColor READ tertiarySystemFillColor CONSTANT FINAL)
+    Q_PROPERTY(QColor accentColor READ accentColor CONSTANT FINAL)
     QML_NAMED_ELEMENT(StyleConstants)
     QML_SINGLETON
 
@@ -21,6 +22,7 @@ public:
     QQuickStyleConstants();
 
     bool runningWithLiquidGlass() const;
+    QColor accentColor() const;
     QColor secondarySystemFillColor() const;
     QColor tertiarySystemFillColor() const;
 };

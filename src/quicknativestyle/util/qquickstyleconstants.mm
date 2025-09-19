@@ -21,6 +21,14 @@ bool QQuickStyleConstants::runningWithLiquidGlass() const
     return qt_apple_runningWithLiquidGlass();
 }
 
+QColor QQuickStyleConstants::accentColor() const
+{
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
+    if (@available(macOS 14.0, *))
+        return qt_mac_toQBrush([NSColor controlAccentColor]).color();
+#endif
+    return Qt::black;
+}
 QColor QQuickStyleConstants::secondarySystemFillColor() const
 {
 #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)

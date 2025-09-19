@@ -5,6 +5,8 @@
 ## qtquickcontrols2macosstyleplugin Plugin:
 #####################################################################
 
+add_subdirectory(impl)
+
 set(qml_files
     "Button.qml"
     "Slider.qml"
