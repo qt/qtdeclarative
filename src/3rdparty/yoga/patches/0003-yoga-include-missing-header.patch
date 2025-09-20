@@ -1,0 +1,26 @@
+From fd9d4c71371807f5ac293b6ba3343fee78bb7377 Mon Sep 17 00:00:00 2001
+From: Tim Blechmann <tim.blechmann@qt.io>
+Date: Sat, 20 Sep 2025 13:22:49 +0800
+Subject: [PATCH] yoga: include missing header
+
+when building without exceptions, yoga will std::terminate, but it fails
+to include the required header.
+---
+ src/3rdparty/yoga/Utils.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/3rdparty/yoga/Utils.cpp b/src/3rdparty/yoga/Utils.cpp
+index 7766c36d4d..4346a0e596 100644
+--- a/src/3rdparty/yoga/Utils.cpp
++++ b/src/3rdparty/yoga/Utils.cpp
+@@ -5,6 +5,7 @@
+ 
+ #include "Utils.h"
+ #include <stdexcept>
++#include <exception>
+ 
+ QT_YOGA_NAMESPACE_BEGIN
+ 
+-- 
+2.51.0
+

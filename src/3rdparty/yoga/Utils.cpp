@@ -5,6 +5,7 @@
 
 #include "Utils.h"
 #include <stdexcept>
+#include <exception>
 
 QT_YOGA_NAMESPACE_BEGIN
 
