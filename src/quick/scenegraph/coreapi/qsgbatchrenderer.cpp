@@ -2980,7 +2980,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
             if (directUpdatePtr)
                 memcpy(directUpdatePtr + ubufOffset, pd->masterUniformData.constData(), pd->masterUniformData.size());
             else
-                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, pd->masterUniformData.size(), pd->masterUniformData.constData());
+                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, pd->masterUniformData);
         }
 
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
