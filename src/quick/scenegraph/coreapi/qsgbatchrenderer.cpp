@@ -2963,7 +2963,6 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                                          const Batch *batch,
                                          Element *e,
                                          int ubufOffset,
-                                         int ubufRegionSize,
                                          char *directUpdatePtr)
 {
     m_current_resource_update_batch = m_resourceUpdates;
@@ -2979,16 +2978,16 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
 
         if (changed || !batch->ubufDataValid) {
             if (directUpdatePtr)
-                memcpy(directUpdatePtr + ubufOffset, pd->masterUniformData.constData(), ubufRegionSize);
+                memcpy(directUpdatePtr + ubufOffset, pd->masterUniformData.constData(), pd->masterUniformData.size());
             else
-                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, ubufRegionSize, pd->masterUniformData.constData());
+                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, pd->masterUniformData.size(), pd->masterUniformData.constData());
         }
 
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
                                                                  pd->ubufStages,
                                                                  batch->ubuf,
                                                                  ubufOffset,
-                                                                 ubufRegionSize));
+                                                                 pd->masterUniformData.size()));
     }
 
     for (int binding = 0; binding < QSGMaterialShaderPrivate::MAX_SHADER_RESOURCE_BINDINGS; ++binding) {
@@ -3289,7 +3288,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     if (batch->ubuf->nativeBuffer().slotCount == 0)
         directUpdatePtr = batch->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
 
-    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, ubufSize, directUpdatePtr);
+    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, directUpdatePtr);
 
     if (directUpdatePtr)
         batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
@@ -3501,7 +3500,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
-        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, ubufSize, directUpdatePtr);
+        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, directUpdatePtr);
 
         ubufOffset += aligned(ubufSize, m_ubufAlignment);
 
