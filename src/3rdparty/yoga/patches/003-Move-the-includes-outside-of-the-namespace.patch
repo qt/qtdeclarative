@@ -1,0 +1,41 @@
+From d68dbc3bbf593c4c64ca796d15f628131edf2538 Mon Sep 17 00:00:00 2001
+From: SanthoshKumar Selvaraj <santhosh.kumar.selvaraj@qt.io>
+Date: Mon, 22 Sep 2025 15:14:52 +0200
+Subject: [PATCH] Move the includes outside of the namespace for the 3rdparty
+ yoga source
+
+The includes within the qt namespace causes build issues in some
+compilers such as msvc. It would be good to place the includes outside
+the namespace, and thus the problem can be avoided.
+
+Amends patch 918315eac4189ab955f922ffe242351cb0f28b42.
+
+Pick-to: 6.10 6.10.0
+Change-Id: I0902d4a4ca5a80d9ccb102e16d72faa0d79b7604
+---
+ src/3rdparty/yoga/YGValue.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/3rdparty/yoga/YGValue.h b/src/3rdparty/yoga/YGValue.h
+index 78e1955da2..4f76e7acf4 100644
+--- a/src/3rdparty/yoga/YGValue.h
++++ b/src/3rdparty/yoga/YGValue.h
+@@ -25,11 +25,15 @@ YOGA_EXPORT extern const YGValue YGValueZero;
+ 
+ YG_EXTERN_C_END
+ 
++QT_YOGA_NAMESPACE_END
++
+ #ifdef __cplusplus
+ #include <limits>
++QT_YOGA_NAMESPACE_BEGIN
+ constexpr float YGUndefined = std::numeric_limits<float>::quiet_NaN();
+ #else
+ #include <math.h>
++QT_YOGA_NAMESPACE_BEGIN
+ #define YGUndefined NAN
+ #endif
+ 
+-- 
+2.43.0
+

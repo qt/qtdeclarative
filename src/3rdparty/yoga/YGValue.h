@@ -25,11 +25,15 @@ YOGA_EXPORT extern const YGValue YGValueZero;
 
 YG_EXTERN_C_END
 
+QT_YOGA_NAMESPACE_END
+
 #ifdef __cplusplus
 #include <limits>
+QT_YOGA_NAMESPACE_BEGIN
 constexpr float YGUndefined = std::numeric_limits<float>::quiet_NaN();
 #else
 #include <math.h>
+QT_YOGA_NAMESPACE_BEGIN
 #define YGUndefined NAN
 #endif
 
