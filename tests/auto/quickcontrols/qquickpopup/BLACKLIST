@@ -14,9 +14,6 @@ macos
 [overlay]
 macos # QTBUG-89938
 
-[zOrder]
-macos # QTBUG-89938
-
 [popupWindowFocus]
 offscreen # QTBUG-128321
 
