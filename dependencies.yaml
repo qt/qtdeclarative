@@ -3,7 +3,7 @@ dependencies:
     ref: 03068512b20b0e0dfcbfa7195e8199c766d260f5
     required: true
   ../qtimageformats:
-    ref: 54fd4e931ec0c45c393c3e3067a9cffc72c1166c
+    ref: b873de3e6751c183f15a74efca04abe15305a19e
     required: false
   ../qtlanguageserver:
     ref: f6ab2e409a654ea48ba651d9d09a8e9f2350fd86
