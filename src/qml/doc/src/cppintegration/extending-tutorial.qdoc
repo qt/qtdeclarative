@@ -100,12 +100,20 @@ For the registration to take effect, the \c qmltypes option is added to
 
 \snippet tutorials/extending-qml/chapter1-basics/chapter1-basics.pro 0
 
+Additionally, a \l{Module Definition qmldir Files}{qmldir} file needs to be added manually to
+create a \l{Writing QML Modules}{QML module}.
+
+\quotefile tutorials/extending-qml/chapter1-basics/qmldir
+
 \section2 CMake Setup
 
-Similarly, for the registration to take effect when using CMake, use the
+For the registration to take effect when using CMake, use the
 \l{qt6_add_qml_module} {qt_add_qml_module} command:
 
 \snippet tutorials/extending-qml/chapter1-basics/CMakeLists.txt 0
+
+The \l{qt6_add_qml_module}{qt_add_qml_module} API automatically generates a
+\c qmldir file for the QML module.
 
 \section2 Class Implementation
 
