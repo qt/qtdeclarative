@@ -145,9 +145,14 @@ public:
     void mirrorChange() override;
 
     FxViewItem *createItem(int modelIndex,QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
+    bool releaseCurrentItem(QQmlInstanceModel::ReusableFlag reusableFlag)
+    {
+        auto oldCurrentItem = std::exchange(currentItem, nullptr);
+        return releaseItem(oldCurrentItem, reusableFlag);
+    }
     virtual bool releaseItem(FxViewItem *item, QQmlInstanceModel::ReusableFlag reusableFlag);
 
-    QQuickItem *createHighlightItem() const;
+    QQuickItem *createHighlightItem();
     QQuickItem *createComponentItem(QQmlComponent *component, qreal zValue, bool createDefault = false) const;
     virtual void initializeComponentItem(QQuickItem *) const;
 
@@ -223,6 +228,8 @@ public:
         for (FxViewItem *item : oldVisible)
             releaseItem(item, reusableFlag);
     }
+
+    void emitCountChanged();
 
     virtual QQuickItemViewAttached *getAttachedObject(const QObject *) const { return nullptr; }
 

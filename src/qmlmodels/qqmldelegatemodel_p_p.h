@@ -332,6 +332,7 @@ public:
     QQmlReusableDelegateModelItemsPool m_reusableItemsPool;
     QList<QQDMIncubationTask *> m_finishedIncubating;
     QList<QByteArray> m_watchedRoles;
+    QHash<int, QByteArray> m_roleNamesBeforeReset;
 
     QString m_filterGroup;
 
@@ -345,6 +346,7 @@ public:
     bool m_transaction : 1;
     bool m_incubatorCleanupScheduled : 1;
     bool m_waitingToFetchMore : 1;
+    bool m_maybeResetRoleNames : 1;
 
     union {
         struct {

@@ -122,7 +122,6 @@ QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode
 {
     Q_ASSERT(m_delegate);
     Q_ASSERT(index >= 0 && index < m_adaptorModel.count());
-    Q_ASSERT(m_qmlContext && m_qmlContext->isValid());
 
     QQmlDelegateModelItem *modelItem = resolveModelItem(index);
     if (!modelItem)
@@ -290,7 +289,7 @@ void QQmlTableInstanceModel::incubateModelItem(QQmlDelegateModelItem *modelItem,
         const bool sync = (incubationMode == QQmlIncubator::Synchronous || incubationMode == QQmlIncubator::AsynchronousIfNested);
         if (sync && modelItem->incubationTask->incubationMode() == QQmlIncubator::Asynchronous)
             modelItem->incubationTask->forceCompletion();
-    } else {
+    } else if (m_qmlContext && m_qmlContext->isValid()) {
         modelItem->incubationTask = new QQmlTableInstanceModelIncubationTask(this, modelItem, incubationMode);
 
         QQmlContext *creationContext = modelItem->delegate->creationContext();

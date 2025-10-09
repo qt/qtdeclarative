@@ -98,6 +98,13 @@ In the previous example,
 \li \c bottomRect.color depends on \c myTextInput.text.length
 \endlist
 
+In addition, any properties referenced within a JavaScript function that is
+itself used as a binding will be re-evaluated. For example, in the snippet
+below, whenever the \c enabled property of the \c Rectangle changes, the
+bindings for the \c x and \c y properties will be re-evaluated:
+
+\snippet qml/function-call-binding.qml rectangle
+
 Syntactically, bindings are allowed to be of arbitrary complexity. However, if
 a binding is overly complex - such as involving multiple lines, or imperative
 loops - it could indicate that the binding is being used for more than describing

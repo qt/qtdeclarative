@@ -304,6 +304,7 @@ bool FileDialogTestHelper::openDialog()
 
 void tst_QQuickFileDialogImpl::defaults()
 {
+    QTest::failOnWarning(QRegularExpression(".*"));
     FileDialogTestHelper dialogHelper(this, "fileDialog.qml");
     QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
     QVERIFY(dialogHelper.waitForWindowActive());

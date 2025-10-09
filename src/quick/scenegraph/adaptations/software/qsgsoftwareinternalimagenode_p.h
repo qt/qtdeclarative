@@ -92,7 +92,7 @@ public:
 
     const QPixmap &pixmap() const;
 private:
-
+    void updateCachedMirroredPixmap();
     QRectF m_targetRect;
     QRectF m_innerTargetRect;
     QRectF m_innerSourceRect;

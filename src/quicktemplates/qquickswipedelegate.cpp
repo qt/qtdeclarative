@@ -782,7 +782,9 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     if (item == q && !pressed)
         return false;
 
-    const qreal distance = (event->globalPosition() - event->points().first().globalPressPosition()).x();
+    const qreal distance = (event->globalPosition().x() != qInf() && event->globalPosition().y() != qInf()) ?
+                              (item->mapFromGlobal(event->globalPosition()) -
+                               item->mapFromGlobal(event->points().first().globalPressPosition())).x() : 0;
     if (!q->keepMouseGrab()) {
         // We used to use the custom threshold that QQuickDrawerPrivate::grabMouse used,
         // but since it's larger than what Flickable uses, it results in Flickable

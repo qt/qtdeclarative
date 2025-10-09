@@ -304,15 +304,17 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         }
     }
 
-    d->pix.load(qmlEngine(this),
-                loadUrl,
-                d->sourceClipRect.toRect(),
-                (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
-                options,
-                (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
-                d->currentFrame, d->frameCount,
-                d->devicePixelRatio);
-
+    auto engine = qmlEngine(this);
+    if (engine) {
+        d->pix.load(qmlEngine(this),
+                    loadUrl,
+                    d->sourceClipRect.toRect(),
+                    (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
+                    options,
+                    (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
+                    d->currentFrame, d->frameCount,
+                    d->devicePixelRatio);
+    }
     if (d->pix.isLoading()) {
         if (d->progress != 0.0) {
             d->progress = 0.0;

@@ -63,7 +63,7 @@ public:
     void addToObject();
     void removeFromObject();
 
-    static void printBindingLoopError(const QQmlProperty &prop);
+    virtual void printBindingLoopError(const QQmlProperty &prop);
 
     inline QQmlAbstractBinding *nextBinding() const;
 

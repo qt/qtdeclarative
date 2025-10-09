@@ -922,7 +922,14 @@ Renderer::~Renderer()
             Element *e = n->element();
             if (!e->removed)
                 m_elementsToDelete.add(e);
+        } else if (n->type() == QSGNode::ClipNodeType) {
+            delete n->clipInfo();
+        } else if (n->type() == QSGNode::RenderNodeType) {
+            RenderNodeElement *e = n->renderNodeElement();
+            if (!e->removed)
+                m_elementsToDelete.add(e);
         }
+
         m_nodeAllocator.release(n);
     }
 
@@ -1681,13 +1688,19 @@ void Renderer::prepareOpaqueBatches()
 
             QSGGeometryNode *gnj = ej->node;
 
+            const QSGGeometry *gniGeometry = gni->geometry();
+            const QSGMaterial *gniMaterial = gni->activeMaterial();
+            const QSGGeometry *gnjGeometry = gnj->geometry();
+            const QSGMaterial *gnjMaterial = gnj->activeMaterial();
             if (gni->clipList() == gnj->clipList()
-                    && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
-                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines || gni->geometry()->lineWidth() == gnj->geometry()->lineWidth())
-                    && gni->geometry()->attributes() == gnj->geometry()->attributes()
+                    && gniGeometry->drawingMode() == gnjGeometry->drawingMode()
+                    && (gniGeometry->drawingMode() != QSGGeometry::DrawLines || gniGeometry->lineWidth() == gnjGeometry->lineWidth())
+                    && gniGeometry->attributes() == gnjGeometry->attributes()
+                    && gniGeometry->indexType() == gnjGeometry->indexType()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
-                    && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
-                    && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
+                    && gniMaterial->type() == gnjMaterial->type()
+                    && gniMaterial->compare(gnjMaterial) == 0)
+            {
                 ej->batch = batch;
                 next->nextInBatch = ej;
                 next = ej;
@@ -1788,17 +1801,23 @@ void Renderer::prepareAlphaBatches()
             if (gnj->geometry()->vertexCount() == 0)
                 continue;
 
+            const QSGGeometry *gniGeometry = gni->geometry();
+            const QSGMaterial *gniMaterial = gni->activeMaterial();
+            const QSGGeometry *gnjGeometry = gnj->geometry();
+            const QSGMaterial *gnjMaterial = gnj->activeMaterial();
             if (gni->clipList() == gnj->clipList()
-                    && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
-                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines
-                        || (gni->geometry()->lineWidth() == gnj->geometry()->lineWidth()
+                    && gniGeometry->drawingMode() == gnjGeometry->drawingMode()
+                    && (gniGeometry->drawingMode() != QSGGeometry::DrawLines
+                        || (gniGeometry->lineWidth() == gnjGeometry->lineWidth()
                             // Must not do overlap checks when the line width is not 1,
                             // we have no knowledge how such lines are rasterized.
-                            && gni->geometry()->lineWidth() == 1.0f))
-                    && gni->geometry()->attributes() == gnj->geometry()->attributes()
+                            && gniGeometry->lineWidth() == 1.0f))
+                    && gniGeometry->attributes() == gnjGeometry->attributes()
+                    && gniGeometry->indexType() == gnjGeometry->indexType()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
-                    && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
-                    && gni->activeMaterial()->compare(gnj->activeMaterial()) == 0) {
+                    && gniMaterial->type() == gnjMaterial->type()
+                    && gniMaterial->compare(gnjMaterial) == 0)
+            {
                 if (!overlapBounds.intersects(ej->bounds) || !checkOverlap(i+1, j - 1, ej->bounds)) {
                     ej->batch = batch;
                     next->nextInBatch = ej;
@@ -2001,7 +2020,7 @@ void Renderer::uploadBatch(Batch *b)
     bool canMerge = (g->drawingMode() == QSGGeometry::DrawTriangles || g->drawingMode() == QSGGeometry::DrawTriangleStrip ||
                      g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawPoints)
             && b->positionAttribute >= 0
-            && (g->indexType() == QSGGeometry::UnsignedShortType && g->indexCount() > 0)
+            && g->indexType() == QSGGeometry::UnsignedShortType
             && (flags & (QSGMaterial::NoBatching | QSGMaterial_FullMatrix)) == 0
             && ((flags & QSGMaterial::RequiresFullMatrixExceptTranslate) == 0 || b->isTranslateOnlyToRoot())
             && b->isSafeToBatch();
@@ -2014,6 +2033,8 @@ void Renderer::uploadBatch(Batch *b)
     int unmergedIndexSize = 0;
     Element *e = b->first;
 
+    // Merged batches always do indexed draw calls. Non-indexed geometry gets
+    // indices generated automatically, when merged.
     while (e) {
         QSGGeometry *eg = e->node->geometry();
         b->vertexCount += eg->vertexCount();
@@ -2829,7 +2850,8 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                                          const Batch *batch,
                                          Element *e,
                                          int ubufOffset,
-                                         int ubufRegionSize)
+                                         int ubufRegionSize,
+                                         char *directUpdatePtr)
 {
     m_current_resource_update_batch = m_resourceUpdates;
 
@@ -2842,8 +2864,12 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         const bool changed = shader->updateUniformData(renderState, material, m_currentMaterial);
         m_current_uniform_data = nullptr;
 
-        if (changed || !batch->ubufDataValid)
-            m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, ubufRegionSize, pd->masterUniformData.constData());
+        if (changed || !batch->ubufDataValid) {
+            if (directUpdatePtr)
+                memcpy(directUpdatePtr + ubufOffset, pd->masterUniformData.constData(), ubufRegionSize);
+            else
+                m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, ubufRegionSize, pd->masterUniformData.constData());
+        }
 
         bindings.append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
                                                                  pd->ubufStages,
@@ -2857,7 +2883,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         if (!stages)
             continue;
 
-        QVarLengthArray<QSGTexture *, 4> prevTex = pd->textureBindingTable[binding];
+        const QVarLengthArray<QSGTexture *, 4> &prevTex(pd->textureBindingTable[binding]);
         QVarLengthArray<QSGTexture *, 4> nextTex = prevTex;
 
         const int count = pd->combinedImageSamplerCount[binding];
@@ -3138,7 +3164,14 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     bool pendingGStatePop = false;
     updateMaterialStaticData(sms, renderState, material, batch, &pendingGStatePop);
 
-    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, ubufSize);
+    char *directUpdatePtr = nullptr;
+    if (batch->ubuf->nativeBuffer().slotCount == 0)
+        directUpdatePtr = batch->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+
+    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, ubufSize, directUpdatePtr);
+
+    if (directUpdatePtr)
+        batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
@@ -3327,6 +3360,11 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     QRhiGraphicsPipeline *ps = nullptr;
     QRhiGraphicsPipeline *depthPostPassPs = nullptr;
     e = batch->first;
+
+    char *directUpdatePtr = nullptr;
+    if (batch->ubuf->nativeBuffer().slotCount == 0)
+        directUpdatePtr = batch->ubuf->beginFullDynamicBufferUpdateForCurrentFrame();
+
     while (e) {
         gn = e->node;
 
@@ -3341,7 +3379,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
-        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, ubufSize);
+        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, ubufSize, directUpdatePtr);
 
 #ifndef QT_NO_DEBUG
         if (qsg_test_and_clear_material_failure()) {
@@ -3392,6 +3430,9 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
         e = e->nextInBatch;
     }
+
+    if (directUpdatePtr)
+        batch->ubuf->endFullDynamicBufferUpdateForCurrentFrame();
 
     if (pendingGStatePop)
         m_gstate = m_gstateStack.pop();
@@ -3802,7 +3843,10 @@ void Renderer::beginRenderPass(RenderPassContext *)
                      // we have no choice but to set the flag always
                      // (thus triggering using secondary command
                      // buffers with Vulkan)
-                     QRhiCommandBuffer::ExternalContent);
+                     QRhiCommandBuffer::ExternalContent
+                     // We do not use GPU compute at all at the moment, this means we can
+                     // get a small performance gain with OpenGL by declaring this.
+                     | QRhiCommandBuffer::DoNotTrackResourcesForCompute);
 
     if (m_renderPassRecordingCallbacks.start)
         m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);

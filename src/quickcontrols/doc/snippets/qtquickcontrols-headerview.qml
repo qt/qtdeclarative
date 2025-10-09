@@ -16,7 +16,7 @@ ApplicationWindow {
         anchors.fill: parent
         // The background color will show through the cell
         // spacing, and therefore become the grid line color.
-        color: Qt.styleHints.appearance === Qt.Light ? palette.mid : palette.midlight
+        color: Application.styleHints.appearance === Qt.Light ? palette.mid : palette.midlight
 
         HorizontalHeaderView {
             id: horizontalHeader
@@ -75,5 +75,5 @@ ApplicationWindow {
             }
         }
     }
-//![0]
 }
+//![0]

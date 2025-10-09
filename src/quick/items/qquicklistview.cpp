@@ -1797,6 +1797,19 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
             QQuickItemViewPrivate::fixup(data, minExtent, maxExtent);
             return;
         }
+        // If we have the CurrentLabelAtStart flag set, then we need to consider
+        // the section size while calculating the position
+        if (sectionCriteria
+            && (sectionCriteria->labelPositioning() & QQuickViewSection::CurrentLabelAtStart)
+            && currentSectionItem) {
+            auto sectionSize = (orient == QQuickListView::Vertical) ? currentSectionItem->height()
+                                                                    : currentSectionItem->width();
+            if (isContentFlowReversed())
+                pos += sectionSize;
+            else
+                pos -= sectionSize;
+        }
+
         pos = qBound(-minExtent, pos, -maxExtent);
 
         qreal dist = qAbs(data.move + pos);
@@ -3645,7 +3658,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     int modelIndex = change.index;
     int count = change.count;
 
-    if (q->size().isEmpty() && visibleItems.isEmpty())
+    if (q->size().isNull() && visibleItems.isEmpty())
         return false;
 
     qreal tempPos = isContentFlowReversed() ? -position()-size() : position();
@@ -3773,7 +3786,10 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 continue;
             }
 
-            visibleItems.insert(index, item);
+            if (index < visibleItems.size())
+                visibleItems.insert(index, item);
+            else // special case of appending an item to the model - as above
+                visibleItems.append(item);
             if (index == 0)
                 insertResult->changedFirstItem = true;
             if (change.isMove()) {

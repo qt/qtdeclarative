@@ -32,7 +32,7 @@ T.TabBar {
 
     background: Rectangle {
         implicitHeight: 49
-        color: Qt.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
+        color: Application.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
         Rectangle {
             height: 1
             width: parent.width

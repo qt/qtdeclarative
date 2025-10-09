@@ -12,3 +12,8 @@ opensuse-leap
 
 [cursorShape]
 opensuse-leap
+
+# QTBUG-125237
+[activeFocusItemAfterWindowInactive]
+android
+

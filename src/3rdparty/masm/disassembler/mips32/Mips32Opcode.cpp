@@ -228,7 +228,7 @@ void Mips32Opcode::formatJumpEncodingOpcode(uint32_t iOp, uint32_t index, uint32
 void Mips32Opcode::formatREGIMMEncodingOpcode(uint8_t rs, uint8_t rt, int16_t imm, uint32_t* opcodePtr)
 {
     const char *opcodes[] = { "bltz", "bgez", "bltzl", "bgezl" };
-    if (rt < sizeof(opcodes))
+    if (rt < sizeof(opcodes) /sizeof(decltype(opcodes[0])))
         FORMAT_INSTR(OPCODE_FMT "%s, 0x%x", opcodes[rt], registerName(rs), reinterpret_cast<unsigned>(opcodePtr+1) + (imm << 2));
     else
         FORMAT_INSTR("unknown REGIMM encoding opcode 0x%x", rt);

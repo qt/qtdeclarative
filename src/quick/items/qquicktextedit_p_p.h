@@ -96,6 +96,7 @@ public:
         , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
         , hadSelection(false), markdownText(false)
+        , containsUnscalableGlyphs(false)
     {
     }
 
@@ -164,6 +165,7 @@ public:
     int lineCount;
     int firstBlockInViewport = -1;   // only for the autotest; can be wrong after scrolling sometimes
     int firstBlockPastViewport = -1; // only for the autotest
+    int renderedBlockCount = -1;     // only for the autotest
     QRectF renderedRegion;
 
     enum UpdateType {
@@ -202,6 +204,7 @@ public:
     bool selectByKeyboardSet:1;
     bool hadSelection : 1;
     bool markdownText : 1;
+    bool containsUnscalableGlyphs : 1;
 
     static const int largeTextSizeThreshold;
 };

@@ -31,6 +31,8 @@
 #include <QtGui/qtextdocument.h>
 #include <stdio.h>
 #include <QtGui/QGuiApplication>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QtCore/QTranslator>
 #include <QtTest/QSignalSpy>
 #include <QtQml/QQmlFileSelector>
@@ -340,7 +342,7 @@ private:
 
     TestCaseEnumerationResult enumerateTestCases(
             const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-            const Object *object = nullptr)
+            const QV4::CompiledData::Object *object = nullptr)
     {
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
@@ -362,7 +364,7 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
-        if (object->hasFlag(Object::IsInlineComponentRoot))
+        if (object->hasFlag(QV4::CompiledData::Object::IsInlineComponentRoot))
             return result;
 
         if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
@@ -409,7 +411,7 @@ private:
 
         for (auto binding = object->bindingsBegin(); binding != object->bindingsEnd(); ++binding) {
             if (binding->type() == QV4::CompiledData::Binding::Type_Object) {
-                const Object *child = compilationUnit->objectAt(binding->value.objectIndex);
+                const QV4::CompiledData::Object *child = compilationUnit->objectAt(binding->value.objectIndex);
                 result << enumerateTestCases(compilationUnit, child);
             }
         }
@@ -649,10 +651,12 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
             qWarning().nospace()
                 << "Test '" << QDir::toNativeSeparators(path) << "' window not exposed after show().";
         }
-        view.requestActivate();
-        if (!QTest::qWaitForWindowActive(&view)) {
-            qWarning().nospace()
-                << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+        if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation)) {
+            view.requestActivate();
+            if (!QTest::qWaitForWindowActive(&view)) {
+                qWarning().nospace()
+                    << "Test '" << QDir::toNativeSeparators(path) << "' window not active after requestActivate().";
+            }
         }
         if (view.isExposed()) {
             // Defer property update until event loop has started

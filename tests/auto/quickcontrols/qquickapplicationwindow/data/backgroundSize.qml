@@ -9,6 +9,7 @@ ApplicationWindow {
     height: 400
 
     background: Item {
+        objectName: "background"
         implicitWidth: 123
         implicitHeight: 456
     }

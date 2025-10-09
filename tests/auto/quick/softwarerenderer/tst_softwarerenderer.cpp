@@ -56,10 +56,8 @@ void tst_SoftwareRenderer::renderTarget()
 
     rc.polishItems();
 
-    rc.beginFrame();
     rc.sync();
     rc.render();
-    rc.endFrame();
 
     QImage content = window->grabWindow();
     QString errorMessage;
@@ -74,10 +72,8 @@ void tst_SoftwareRenderer::renderTarget()
 
     rc.polishItems();
 
-    rc.beginFrame();
     rc.sync();
     rc.render();
-    rc.endFrame();
 
     content = window->grabWindow();
     QVERIFY2(QQuickVisualTestUtils::compareImages(content, renderTarget2, &errorMessage),

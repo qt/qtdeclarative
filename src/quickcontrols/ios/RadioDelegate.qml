@@ -32,8 +32,8 @@ T.RadioDelegate {
         source: IOS.url + "radiodelegate-indicator"
         ImageSelector on source {
             states: [
-                {"light": Qt.styleHints.colorScheme === Qt.Light},
-                {"dark": Qt.styleHints.colorScheme === Qt.Dark}
+                {"light": Application.styleHints.colorScheme === Qt.Light},
+                {"dark": Application.styleHints.colorScheme === Qt.Dark}
             ]
         }
     }
@@ -55,7 +55,7 @@ T.RadioDelegate {
 
     background: Rectangle {
         implicitHeight: 44
-        color: Qt.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
+        color: Application.styleHints.colorScheme === Qt.Dark ? control.palette.light : control.palette.base
         NinePatchImage {
             property real offset: control.icon.source.toString() !== "" ? control.icon.width + control.spacing : 0
             x: control.down ? 0 : control.leftPadding + offset
@@ -65,8 +65,8 @@ T.RadioDelegate {
             source: IOS.url + "itemdelegate-background"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": Qt.styleHints.colorScheme === Qt.Light},
-                    {"dark": Qt.styleHints.colorScheme === Qt.Dark},
+                    {"light": Application.styleHints.colorScheme === Qt.Light},
+                    {"dark": Application.styleHints.colorScheme === Qt.Dark},
                     {"pressed": control.down}
                 ]
             }

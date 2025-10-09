@@ -10,13 +10,15 @@ Rectangle {
     id: indicator
 
     property Item control
+    property real baseLightness: 1.6
+
     readonly property color pressedColor: Fusion.mergedColors(control.palette.base, control.palette.windowText, 85)
     readonly property color checkMarkColor: Qt.darker(control.palette.text, 1.2)
 
     implicitWidth: 14
     implicitHeight: 14
 
-    color: control.down ? indicator.pressedColor : control.palette.base
+    color: control.down ? indicator.pressedColor : Qt.lighter(control.palette.base, baseLightness)
     border.color: control.visualFocus ? Fusion.highlightedOutline(control.palette)
                                       : Qt.lighter(Fusion.outline(control.palette), 1.1)
 

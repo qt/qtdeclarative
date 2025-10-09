@@ -249,8 +249,6 @@ built-ins/String/prototype/toLocaleLowerCase/special_casing_conditional.js fails
 built-ins/String/prototype/toLowerCase/Final_Sigma_U180E.js fails
 built-ins/String/prototype/toLowerCase/special_casing_conditional.js fails
 built-ins/TypedArray/prototype/constructor.js fails
-built-ins/TypedArray/prototype/fill/fill-values-conversion-operations-consistent-nan.js fails
-built-ins/TypedArray/prototype/slice/bit-precision.js fails
 built-ins/TypedArray/prototype/sort/arraylength-internal.js fails
 built-ins/TypedArray/prototype/sort/comparefn-call-throws.js fails
 built-ins/TypedArray/prototype/sort/comparefn-calls.js fails

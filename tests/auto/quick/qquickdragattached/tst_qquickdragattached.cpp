@@ -44,6 +44,9 @@ void tst_QQuickDragAttached::setMimeData_data()
     QTest::addRow("text/uri-list, string")
         << makeMap("text/uri-list", QString("https://qt-project.org"))
         << QStringList{"text/uri-list"};
+    QTest::addRow("text/uri-list, RFC2483 string")
+        << makeMap("text/uri-list", QString("https://qt-project.org\r\nhttps://www.test.com"))
+        << QStringList{"text/uri-list"};
     QTest::addRow("text/uri-list, strings")
         << makeMap("text/uri-list", QStringList{"file://foo", "https://www.test.com"})
         << QStringList{"text/uri-list"};

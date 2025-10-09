@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Controls.Basic
 
 ApplicationWindow {
     id: window

@@ -895,7 +895,9 @@ public:
 
     bool visit(AST::UiEnumMemberList *el) override
     {
-        EnumItem it(el->member.toString(), el->value);
+        EnumItem it(el->member.toString(), el->value,
+                    el->valueToken.isValid() ? EnumItem::ValueKind::ExplicitValue
+                                            : EnumItem::ValueKind::ImplicitValue);
         EnumDecl &eDecl = std::get<EnumDecl>(currentNode().value);
         Path itPathFromDecl = eDecl.addValue(it);
         FileLocations::addRegion(createMap(DomType::EnumItem, itPathFromDecl, nullptr), QString(),

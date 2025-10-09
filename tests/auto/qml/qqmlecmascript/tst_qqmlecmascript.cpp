@@ -400,6 +400,7 @@ private slots:
     void sequenceConversionMethod();
     void proxyIteration();
     void proxyHandlerTraps();
+    void lookupsDoNotBypassProxy();
     void gcCrashRegressionTest();
     void cmpInThrows();
     void frozenQObject();
@@ -921,7 +922,9 @@ void tst_qqmlecmascript::bindingLoop()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("bindingLoop.qml"));
-    QString warning = component.url().toString() + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\"";
+    const auto urlString = component.url().toString();
+    const QString warning = urlString + ":9:9: QML MyQmlObject: Binding loop detected for property \"stringProperty\":\n"
+        + urlString + ":11:13";
     QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(object, qPrintable(component.errorString()));
@@ -10054,6 +10057,17 @@ void tst_qqmlecmascript::proxyHandlerTraps()
     QJSEngine engine;
     QJSValue value = engine.evaluate(expression);
     QVERIFY(value.isString() && value.toString() == QStringLiteral("SUCCESS"));
+}
+
+void tst_qqmlecmascript::lookupsDoNotBypassProxy()
+{
+    QQmlEngine engine;
+    // we need a component to have a proper compilation to byte code;
+    // otherwise, we don't actually end up with lookups
+    QQmlComponent comp(&engine, testFileUrl("lookupsDoNotBypassProxy.qml"));
+    QVERIFY(comp.isReady());
+    std::unique_ptr<QObject> obj { comp.create() };
+    QCOMPARE(obj->property("result").toInt(), 3);
 }
 
 void tst_qqmlecmascript::cmpInThrows()

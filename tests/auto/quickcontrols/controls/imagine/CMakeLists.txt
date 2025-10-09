@@ -43,6 +43,9 @@ set_source_files_properties(${test_data}
         HEADER_FILE_ONLY ON
 )
 
+set(test_target tst_imagine)
+include(../shared.cmake)
+
 #### Keys ignored in scope 1:.:.:imagine.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/../data/*.qml"
 # TEMPLATE = "app"

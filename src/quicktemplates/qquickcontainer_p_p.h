@@ -39,6 +39,8 @@ public:
     void moveItem(int from, int to, QQuickItem *item);
     void removeItem(int index, QQuickItem *item);
     void reorderItems();
+    void maybeCullItem(QQuickItem *item);
+    void maybeCullItems();
 
     void _q_currentIndexChanged();
 
