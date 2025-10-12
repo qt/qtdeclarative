@@ -31,7 +31,7 @@ QtObject {
         clip: true
         model: 20
         delegate: SwitchDelegate {
-            width: parent.width
+            width: ListView.view.width
             text: "SwitchDelegate"
             focusPolicy: Qt.StrongFocus
         }

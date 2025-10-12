@@ -248,6 +248,8 @@ private slots:
     void compositeSingletonSelectors();
     void compositeSingletonRegistered();
     void compositeSingletonCircular();
+    void compositeSingletonRequiredProperties();
+    void compositeSingletonRequiredProperties_data();
 
     void singletonsHaveContextAndEngine();
 
@@ -428,6 +430,10 @@ private slots:
     void badInlineComponentAnnotation();
 
     void typedObjectList();
+
+    void nestedVectors();
+
+    void overrideInnerBinding();
 
 private:
     QQmlEngine engine;
@@ -1920,9 +1926,9 @@ void tst_qqmllanguage::valueTypes()
     QQmlComponent component(&engine, testFileUrl("valueTypes.qml"));
     VERIFY_ERRORS(0);
 
-    QString message = component.url().toString() + ":2:1: QML MyTypeObject: Binding loop detected for property \"rectProperty.width\"";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(message));
+    const auto bindingLoopRegex = QRegularExpression(".*QML MyTypeObject: Binding loop detected for property \"rectProperty.width\".*");
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopRegex);
+    QTest::ignoreMessage(QtWarningMsg, bindingLoopRegex);
 
     QScopedPointer<MyTypeObject> object(qobject_cast<MyTypeObject*>(component.create()));
     QVERIFY(object != nullptr);
@@ -4867,6 +4873,36 @@ void tst_qqmllanguage::compositeSingletonCircular()
     QCOMPARE(o->property("value").toInt(), 2);
 }
 
+void tst_qqmllanguage::compositeSingletonRequiredProperties()
+{
+    QFETCH(QString, warning);
+    QFETCH(QString, singletonName);
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    {
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(warning));
+        std::unique_ptr<QObject> singleton {engine.singletonInstance<QObject *>(
+                        "SingletonWithRequiredProperties",
+                        singletonName
+        )};
+        QVERIFY(!singleton);
+    }
+}
+
+void tst_qqmllanguage::compositeSingletonRequiredProperties_data()
+{
+    QTest::addColumn<QString>("warning");
+    QTest::addColumn<QString>("singletonName");
+
+    QString warning1 = testFileUrl("SingletonWithRequiredProperties/SingletonWithRequired1.qml").toString()
+            + ":5:5: Required property i was not initialized";
+    QString warning2 = testFileUrl("SingletonWithRequiredProperties/SingletonWithRequired2.qml").toString()
+            + ":6:9: Required property i was not initialized";
+
+    QTest::addRow("toplevelRequired") << warning1 << "SingletonWithRequired1";
+    QTest::addRow("subObjectRequired") << warning2 << "SingletonWithRequired2";
+}
+
 void tst_qqmllanguage::singletonsHaveContextAndEngine()
 {
     QObject *qmlSingleton = nullptr;
@@ -5677,6 +5713,9 @@ void tst_qqmllanguage::retrieveQmlTypeId()
     QVERIFY(qmlTypeId("Test", 1, 0, "MyExtendedUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyUncreateableBaseClass") >= 0);
     QVERIFY(qmlTypeId("Test", 1, 0, "MyTypeObjectSingleton") >= 0);
+
+    // Must also work for declaratively registered types whose module wasn't imported  so far
+    QVERIFY(qmlTypeId("testhelper", 1, 0, "PurelyDeclarativeSingleton") >= 0);
 }
 
 void tst_qqmllanguage::polymorphicFunctionLookup()
@@ -8192,6 +8231,37 @@ void tst_qqmllanguage::typedObjectList()
 
     QCOMPARE(list.count(&list), 1);
     QVERIFY(list.at(&list, 0) != nullptr);
+}
+
+void tst_qqmllanguage::nestedVectors()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("nestedVectors.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    NestedVectors *n = qobject_cast<NestedVectors *>(o.data());
+    QVERIFY(n);
+
+    const std::vector<std::vector<int>> expected1 { { 1, 2, 3 }, { 4, 5 } };
+    const QVariant list1 = n->property("list1");
+    QCOMPARE(e.fromVariant<std::vector<std::vector<int>>>(list1), expected1);
+
+    const std::vector<std::vector<int>> expected2 { { 2, 3, 4 }, { 5, 6 } };
+    QCOMPARE(n->getList(), expected2);
+}
+
+void tst_qqmllanguage::overrideInnerBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("BindingOverrider.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("width").toReal(), 20.0);
+    QCOMPARE(o->property("innerWidth").toReal(), 20.0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -6,6 +6,7 @@ import QtQuick.Controls
 
 //! [1]
 ListView {
+    id: listView
     width: 160
     height: 240
 
@@ -13,7 +14,7 @@ ListView {
 
     delegate: ItemDelegate {
         text: modelData
-        width: parent.width
+        width: listView.width
         onClicked: console.log("clicked:", modelData)
 
         required property string modelData

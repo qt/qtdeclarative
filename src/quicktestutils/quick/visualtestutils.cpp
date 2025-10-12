@@ -159,8 +159,8 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
             // No tolerance for error in the alpha.
             if ((a & 0xff000000) != (b & 0xff000000)
                 || qAbs(qRed(a) - qRed(b)) > tolerance
-                || qAbs(qRed(a) - qRed(b)) > tolerance
-                || qAbs(qRed(a) - qRed(b)) > tolerance) {
+                || qAbs(qGreen(a) - qGreen(b)) > tolerance
+                || qAbs(qBlue(a) - qBlue(b)) > tolerance) {
                 QDebug(errorMessage) << "Mismatch at:" << x << y << ':'
                     << Qt::hex << Qt::showbase << a << b;
                 return false;

@@ -130,7 +130,8 @@ void QQuickAbstractAnimationPrivate::commence()
     QQmlProperties properties;
 
     auto *newInstance = q->transition(actions, properties, QQuickAbstractAnimation::Forward);
-    Q_ASSERT(newInstance != animationInstance);
+    // transition can return a nullptr; that's the only allowed case were old and new have the same value
+    Q_ASSERT(newInstance != animationInstance || !newInstance);
     delete animationInstance;
     animationInstance = newInstance;
 
@@ -290,6 +291,11 @@ void QQuickAbstractAnimation::setRunning(bool r)
         // Therefore, the state of d->running will in that case be different than r if we are back in
         // the root stack frame of the recursive calls to setRunning()
         emit runningChanged(d->running);
+    } else if (d->animationInstance) {
+        // If there was a recursive call, make sure the d->running is set correctly
+        d->running = d->animationInstance->isRunning();
+    } else {
+        d->running = r;
     }
 }
 

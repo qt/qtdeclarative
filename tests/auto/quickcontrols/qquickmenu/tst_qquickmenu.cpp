@@ -47,6 +47,10 @@ private slots:
     void contextMenuKeyboard();
     void disabledMenuItemKeyNavigation();
     void mnemonics();
+#if QT_CONFIG(shortcut)
+    void checkableMnemonics_data();
+    void checkableMnemonics();
+#endif
     void menuButton();
     void addItem();
     void menuSeparator();
@@ -87,19 +91,11 @@ private slots:
     void customMenuCullItems();
     void customMenuUseRepeaterAsTheContentItem();
     void invalidUrlInImgTag();
-
-private:
-    static bool hasWindowActivation();
 };
 
 tst_QQuickMenu::tst_QQuickMenu()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-}
-
-bool tst_QQuickMenu::hasWindowActivation()
-{
-    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_QQuickMenu::defaults()
@@ -146,8 +142,7 @@ void tst_QQuickMenu::count()
 
 void tst_QQuickMenu::mouse()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
@@ -278,8 +273,7 @@ void tst_QQuickMenu::pressAndHold()
 
 void tst_QQuickMenu::contextMenuKeyboard()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -468,8 +462,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
 // QTBUG-70181
 void tst_QQuickMenu::disabledMenuItemKeyNavigation()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -535,8 +528,7 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
 
 void tst_QQuickMenu::mnemonics()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
 #ifdef Q_OS_MACOS
     QSKIP("Mnemonics are not used on macOS");
@@ -591,10 +583,207 @@ void tst_QQuickMenu::mnemonics()
     QCOMPARE(subMenuItemSpy.size(), 1);
 }
 
+#if QT_CONFIG(shortcut)
+namespace CheckableMnemonics {
+using MnemonicKey = std::pair<Qt::Key, QString>;
+
+enum class MenuItemType {
+    Action,
+    MenuItem
+};
+
+enum class SignalName {
+    CheckedChanged = 0x01,
+    Triggered = 0x02,
+};
+Q_DECLARE_FLAGS(SignalNames, SignalName);
+
+class ItemSignalSpy
+{
+public:
+    ItemSignalSpy(MenuItemType type, QObject *item) : item(item)
+    {
+        switch (type) {
+        case MenuItemType::Action:
+            initSignals<QQuickAction>(qobject_cast<QQuickAction *>(item));
+            break;
+        case MenuItemType::MenuItem:
+            initSignals<QQuickMenuItem>(qobject_cast<QQuickMenuItem *>(item));
+            break;
+        }
+    }
+
+    [[nodiscard]] bool isValid() const
+    {
+        return ((checkedChangedSpy && checkedChangedSpy->isValid()) &&
+                (triggeredSpy && triggeredSpy->isValid()));
+    }
+
+    [[nodiscard]] int signalSize(SignalName signal) const
+    {
+        constexpr int INVALID_SIZE = -1; // makes the test fail even when the signal is not expected
+        switch (signal) {
+        case SignalName::CheckedChanged:
+            return checkedChangedSpy ? checkedChangedSpy->size() : INVALID_SIZE;
+        case SignalName::Triggered:
+            return triggeredSpy ? triggeredSpy->size() : INVALID_SIZE;
+        }
+        Q_UNREACHABLE_RETURN(INVALID_SIZE);
+    }
+
+private:
+    template<typename Item>
+    void initSignals(Item *item)
+    {
+        checkedChangedSpy = std::make_unique<QSignalSpy>(item, &Item::checkedChanged);
+        triggeredSpy = std::make_unique<QSignalSpy>(item, &Item::triggered);
+    }
+
+private:
+    QPointer<QObject> item;
+    std::unique_ptr<QSignalSpy> checkedChangedSpy = nullptr;
+    std::unique_ptr<QSignalSpy> triggeredSpy = nullptr;
+};
+
+}
+
+void tst_QQuickMenu::checkableMnemonics_data()
+{
+    if (QKeySequence::mnemonic("&A").isEmpty())
+        QSKIP("Mnemonics are not enabled");
+
+    using namespace CheckableMnemonics;
+
+    QTest::addColumn<bool>("checkable");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<bool>("isSubMenu");
+    QTest::addColumn<MenuItemType>("itemType");
+    QTest::addColumn<MnemonicKey>("mnemonicKey");
+    QTest::addColumn<SignalNames>("expectedSignals");
+
+    QTest::addRow("checkable_enabled_action")
+            << true << true << false << MenuItemType::Action << MnemonicKey{Qt::Key_A, "A"}
+            << SignalNames{SignalName::Triggered, SignalName::CheckedChanged};
+    QTest::addRow("checkable_disabled_action")
+            << true << false << false << MenuItemType::Action << MnemonicKey{Qt::Key_A, "A"}
+            << SignalNames{};
+    QTest::addRow("uncheckable_enabled_action")
+            << false << true << false << MenuItemType::Action << MnemonicKey{Qt::Key_A, "A"}
+            << SignalNames{SignalName::Triggered};
+    QTest::addRow("uncheckable_disabled_action")
+            << false << false << false << MenuItemType::Action << MnemonicKey{Qt::Key_A, "A"}
+            << SignalNames{};
+
+    QTest::addRow("checkable_enabled_menuItem")
+            << true << true << false << MenuItemType::MenuItem << MnemonicKey{Qt::Key_I, "I"}
+            << SignalNames{SignalName::Triggered, SignalName::CheckedChanged};
+    QTest::addRow("checkable_disabled_menuItem")
+            << true << false << false << MenuItemType::MenuItem << MnemonicKey{Qt::Key_I, "I"}
+            << SignalNames{};
+    QTest::addRow("uncheckable_enabled_menuItem")
+            << false << true << false << MenuItemType::MenuItem << MnemonicKey{Qt::Key_I, "I"}
+            << SignalNames{SignalName::Triggered};
+    QTest::addRow("uncheckable_disabled_menuItem")
+            << false << false << false << MenuItemType::MenuItem << MnemonicKey{Qt::Key_I, "I"}
+            << SignalNames{};
+
+    QTest::addRow("checkable_enabled_subMenuItem")
+            << true << true << true << MenuItemType::MenuItem << MnemonicKey{Qt::Key_S, "S"}
+            << SignalNames{SignalName::Triggered, SignalName::CheckedChanged};
+    QTest::addRow("checkable_disabled_subMenuItem")
+            << true << false << true << MenuItemType::MenuItem << MnemonicKey{Qt::Key_S, "S"}
+            << SignalNames{};
+    QTest::addRow("uncheckable_enabled_subMenuItem")
+            << false << true << true << MenuItemType::MenuItem << MnemonicKey{Qt::Key_S, "S"}
+            << SignalNames{SignalName::Triggered};
+    QTest::addRow("uncheckable_disabled_subMenuItem")
+            << false << false << true << MenuItemType::MenuItem << MnemonicKey{Qt::Key_S, "S"}
+            << SignalNames{};
+
+    QTest::addRow("checkable_enabled_subMenuAction")
+            << true << true << true << MenuItemType::Action << MnemonicKey{Qt::Key_U, "U"}
+            << SignalNames{SignalName::Triggered, SignalName::CheckedChanged};
+    QTest::addRow("checkable_disabled_subMenuAction")
+            << true << false << true << MenuItemType::Action << MnemonicKey{Qt::Key_U, "U"}
+            << SignalNames{};
+    QTest::addRow("uncheckable_enabled_subMenuAction")
+            << false << true << true << MenuItemType::Action << MnemonicKey{Qt::Key_U, "U"}
+            << SignalNames{SignalName::Triggered};
+    QTest::addRow("uncheckable_disabled_subMenuAction")
+            << false << false << true << MenuItemType::Action << MnemonicKey{Qt::Key_U, "U"}
+            << SignalNames{};
+}
+
+// QTBUG-96630
+void tst_QQuickMenu::checkableMnemonics()
+{
+    using namespace CheckableMnemonics;
+
+    QFETCH(bool, checkable);
+    QFETCH(bool, enabled);
+    QFETCH(bool, isSubMenu);
+    QFETCH(MenuItemType, itemType);
+    QFETCH(MnemonicKey, mnemonicKey);
+    QFETCH(SignalNames, expectedSignals);
+
+    QQuickControlsApplicationHelper helper(this, QLatin1String("mnemonics.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    window->setProperty("checkable", checkable);
+    window->setProperty("enabled", enabled);
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    auto clickKey = [window](const MnemonicKey &mnemonic) mutable {
+        QTest::simulateEvent(window, true, mnemonic.first, Qt::NoModifier, mnemonic.second, false);
+        QTest::simulateEvent(window, false, mnemonic.first, Qt::NoModifier, mnemonic.second, false);
+    };
+
+    constexpr auto EMPTY_ITEM_NAME = "";
+    const char *itemName = EMPTY_ITEM_NAME;
+    switch (itemType) {
+    case MenuItemType::Action:
+        itemName = isSubMenu ? "subMenuAction" : "action";
+        break;
+    case MenuItemType::MenuItem:
+        itemName = isSubMenu ? "subMenuItem" : "menuItem";
+        break;
+    }
+    QCOMPARE_NE(itemName, EMPTY_ITEM_NAME);
+
+    QObject *menuItem = window->property(itemName).value<QObject*>();
+    QVERIFY(menuItem);
+
+    menu->open();
+    QTRY_VERIFY(menu->isOpened());
+
+    if (isSubMenu) {
+        QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
+        QVERIFY(subMenu);
+        clickKey(MnemonicKey{Qt::Key_M, "M"}); // "Sub &Menu"
+        QTRY_VERIFY(subMenu->isOpened());
+    }
+
+    const ItemSignalSpy itemSignalSpy(itemType, menuItem);
+    QVERIFY(itemSignalSpy.isValid());
+
+    clickKey(mnemonicKey);
+    QCOMPARE(itemSignalSpy.signalSize(SignalName::CheckedChanged),
+             expectedSignals & SignalName::CheckedChanged ? 1 : 0);
+    QCOMPARE(itemSignalSpy.signalSize(SignalName::Triggered),
+             expectedSignals & SignalName::Triggered ? 1 : 0);
+}
+#endif
+
 void tst_QQuickMenu::menuButton()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
@@ -648,8 +837,7 @@ void tst_QQuickMenu::addItem()
 
 void tst_QQuickMenu::menuSeparator()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1037,8 +1225,7 @@ void tst_QQuickMenu::actions()
 #if QT_CONFIG(shortcut)
 void tst_QQuickMenu::actionShortcuts()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("actionShortcuts.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
@@ -1332,8 +1519,7 @@ void tst_QQuickMenu::subMenuKeyboard_data()
 
 void tst_QQuickMenu::subMenuKeyboard()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QFETCH(bool, cascade);
     QFETCH(bool, mirrored);
@@ -1461,8 +1647,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard_data()
 // QTBUG-69540
 void tst_QQuickMenu::subMenuDisabledKeyboard()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QFETCH(bool, cascade);
     QFETCH(bool, mirrored);
@@ -2050,8 +2235,7 @@ void tst_QQuickMenu::menuItemWidthAfterRetranslate()
 
 void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
 {
-    if (!hasWindowActivation())
-        QSKIP("Window activation is not supported");
+    SKIP_IF_NO_WINDOW_ACTIVATION
 
     QQuickControlsApplicationHelper helper(this, QLatin1String("giveMenuItemFocusOnButtonPress.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());

@@ -1568,6 +1568,8 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     if (d->sendMouseEventToInputContext(event))
         return;
 
+    d->hadSelectionOnMousePress = d->hasSelectedText();
+
     const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event);
     if (d->selectByMouse &&
             (isMouse
@@ -1663,8 +1665,13 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
     // On a touchscreen or with a stylus, set cursor position and focus on release, not on press;
     // if Flickable steals the grab in the meantime, the cursor won't move.
     // Check d->hasSelectedText() to keep touch-and-hold word selection working.
-    if (!isMouse && !d->hasSelectedText())
+    // But if text was selected already on press, deselect it on release.
+    if (!isMouse && (!d->hasSelectedText() || d->hadSelectionOnMousePress))
         d->moveCursor(d->positionAt(event->position()), false);
+    // On Android, after doing a long-press to start selection, we see a release event,
+    // even though there was no press event. So reset hadSelectionOnMousePress to avoid
+    // it getting stuck in true state.
+    d->hadSelectionOnMousePress = false;
 
     if (d->focusOnPress && qGuiApp->styleHints()->setFocusOnTouchRelease())
         ensureActiveFocus(Qt::MouseFocusReason);
@@ -1778,7 +1785,7 @@ void QQuickTextInput::itemChange(ItemChange change, const ItemChangeData &value)
     Q_UNUSED(value);
     switch (change) {
     case ItemDevicePixelRatioHasChanged:
-        if (d->renderType == NativeRendering) {
+        if (d->containsUnscalableGlyphs) {
             // Native rendering optimizes for a given pixel grid, so its results must not be scaled.
             // Text layout code respects the current device pixel ratio automatically, we only need
             // to rerun layout after the ratio changed.
@@ -1996,6 +2003,8 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
         d->textLayoutDirty = false;
     }
+
+    d->containsUnscalableGlyphs = node->containsUnscalableGlyphs();
 
     invalidateFontCaches();
 

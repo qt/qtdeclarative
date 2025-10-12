@@ -15,13 +15,12 @@ public:
     bool wasBindingLoopDetected() const { return mBindingLoopDetected; }
 
 public slots:
-    void reset() { mBindingLoopDetected = false; }
+    void resetBindingLoopDetectedFlag() { mBindingLoopDetected = false; }
 
     void qmlEngineAvailable(QQmlEngine *engine)
     {
         connect(engine, &QQmlEngine::warnings, this, &Setup::qmlWarnings);
-
-        qmlRegisterSingletonInstance("org.qtproject.Test", 1, 0, "BindingLoopDetector", this);
+        qmlRegisterSingletonInstance("org.qtproject.Test", 1, 0, "LayoutSetup", this);
     }
 
     void qmlWarnings(const QList<QQmlError> &warnings)

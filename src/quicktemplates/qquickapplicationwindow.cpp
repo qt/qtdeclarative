@@ -8,6 +8,7 @@
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
+#include "qquicktooltip_p.h"
 #include "qquicktabbar_p.h"
 #include "qquickdialogbuttonbox_p.h"
 #include "qquickdeferredexecute_p_p.h"
@@ -106,6 +107,7 @@ public:
 
     QQmlListProperty<QObject> contentData();
 
+    void updateHasBackgroundFlags();
     void relayout();
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
@@ -136,9 +138,15 @@ public:
         // Update regular children
         QQuickWindowPrivate::updateChildrenPalettes(parentPalette);
 
-        // And cover one special case
-        for (auto &&popup : q_func()->findChildren<QQuickPopup *>())
-            QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
+        // And cover special cases
+        for (auto &&child : q_func()->findChildren<QObject *>()) {
+            if (auto *popup = qobject_cast<QQuickPopup *>(child))
+                QQuickPopupPrivate::get(popup)->updateContentPalettes(parentPalette);
+            else if (auto *toolTipAttached = qobject_cast<QQuickToolTipAttached *>(child)) {
+                if (auto *toolTip = toolTipAttached->toolTip())
+                    QQuickPopupPrivate::get(toolTip)->updateContentPalettes(parentPalette);
+            }
+        }
     }
 
     QQuickDeferredPointer<QQuickItem> background;
@@ -165,6 +173,16 @@ static void layoutItem(QQuickItem *item, qreal y, qreal width)
         item->setWidth(width);
         p->widthValidFlag = false;
     }
+}
+
+void QQuickApplicationWindowPrivate::updateHasBackgroundFlags()
+{
+    if (!background)
+        return;
+
+    QQuickItemPrivate *backgroundPrivate = QQuickItemPrivate::get(background);
+    hasBackgroundWidth = backgroundPrivate->widthValid();
+    hasBackgroundHeight = backgroundPrivate->heightValid();
 }
 
 void QQuickApplicationWindowPrivate::relayout()
@@ -202,9 +220,7 @@ void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, QQuic
     if (!insideRelayout && item == background && change.sizeChange()) {
         // Any time the background is resized (excluding our own resizing),
         // we should respect it if it's explicit by storing the values of the flags.
-        QQuickItemPrivate *backgroundPrivate = QQuickItemPrivate::get(background);
-        hasBackgroundWidth = backgroundPrivate->widthValid();
-        hasBackgroundHeight = backgroundPrivate->heightValid();
+        updateHasBackgroundFlags();
     }
 
     relayout();
@@ -299,8 +315,12 @@ void QQuickApplicationWindowPrivate::executeBackground(bool complete)
 
     if (!background || complete)
         quickBeginDeferred(q, backgroundName(), background);
-    if (complete)
+    if (complete) {
         quickCompleteDeferred(q, backgroundName(), background);
+        // See comment in setBackground for why we do this here.
+        updateHasBackgroundFlags();
+        relayout();
+    }
 }
 
 QQuickApplicationWindow::QQuickApplicationWindow(QWindow *parent)
@@ -376,12 +396,15 @@ void QQuickApplicationWindow::setBackground(QQuickItem *background)
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
 
-        QQuickItemPrivate *backgroundPrivate = QQuickItemPrivate::get(background);
-        d->hasBackgroundWidth = backgroundPrivate->widthValid();
-        d->hasBackgroundHeight = backgroundPrivate->heightValid();
+        // If the background hasn't finished executing then we don't know if its width and height
+        // are valid or not, and so relayout would see that they haven't been set yet and override
+        // any bindings the user might have.
+        if (!d->background.isExecuting()) {
+            d->updateHasBackgroundFlags();
 
-        if (isComponentComplete())
-            d->relayout();
+            if (isComponentComplete())
+                d->relayout();
+        }
     }
     if (!d->background.isExecuting())
         emit backgroundChanged();

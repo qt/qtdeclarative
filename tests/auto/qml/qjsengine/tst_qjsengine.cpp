@@ -314,6 +314,11 @@ private slots:
     void deleteDefineCycle();
     void deleteFromSparseArray();
 
+    void generatorFunctionInTailCallPosition();
+    void generatorMethodInTailCallPosition();
+
+    void consoleLogSequence();
+
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
     Q_INVOKABLE void throwingCppMethod2();
@@ -6343,6 +6348,71 @@ void tst_QJSEngine::deleteFromSparseArray()
     QCOMPARE(result.property("length").toNumber(), 20001);
     QVERIFY(result.property(10000).isUndefined());
     QVERIFY(result.property(20000).isUndefined());
+}
+
+void tst_QJSEngine::generatorFunctionInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    function* gen() {
+        yield 0;
+    }
+    function caller() { return gen(); }
+    caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
+}
+
+void tst_QJSEngine::generatorMethodInTailCallPosition() {
+  QJSEngine engine;
+  QJSValue result = engine.evaluate(R"(
+    "use strict";
+    class Class {
+        *gen() {
+            yield 0;
+        }
+
+        caller() { return this.gen(); }
+    }
+    var c = new Class();
+    c.caller();
+  )");
+
+  QVERIFY(!result.isError());
+  QVERIFY(!result.isUndefined());
+}
+
+static unsigned stringListFetchCount = 0;
+class StringListProvider : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QStringList strings READ strings CONSTANT)
+
+public:
+    QStringList strings() const
+    {
+        ++stringListFetchCount;
+        QStringList ret;
+        for (int i = 0; i < 10; ++i)
+            ret.append(QString::number(i));
+        return ret;
+    }
+};
+
+void tst_QJSEngine::consoleLogSequence()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+
+    engine.globalObject().setProperty(
+                QStringLiteral("object"), engine.newQObject(new StringListProvider));
+
+    QTest::ignoreMessage(QtDebugMsg, "[0,1,2,3,4,5,6,7,8,9]");
+
+    engine.evaluate(QStringLiteral("console.log(object.strings)"));
+    QCOMPARE(stringListFetchCount, 1);
 }
 
 QTEST_MAIN(tst_QJSEngine)

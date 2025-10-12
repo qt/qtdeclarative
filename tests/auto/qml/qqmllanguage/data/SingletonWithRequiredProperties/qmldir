@@ -1,0 +1,4 @@
+module SingletonWithRequiredProperties
+
+singleton SingletonWithRequired1 1.0 SingletonWithRequired1.qml 
+singleton SingletonWithRequired2 1.0 SingletonWithRequired2.qml 

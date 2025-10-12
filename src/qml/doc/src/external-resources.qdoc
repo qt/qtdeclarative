@@ -29,6 +29,10 @@
     \title QmlLive Manual
 */
 /*!
+    \externalpage https://felgo.com/qml-hot-reload
+    \title Felgo QML Hot Reload Tool
+*/
+/*!
     \externalpage https://doc.qt.io/qtcreator/creator-debugging-qml.html
     \title Qt Creator: QML Debugger
 */

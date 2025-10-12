@@ -828,7 +828,7 @@ function(_qt_internal_target_enable_qmllint target)
     )
 
     set(cmd
-        ${tool_wrapper}
+       "${tool_wrapper}"
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
         @${qmllint_rsp_path}
     )
@@ -860,7 +860,7 @@ function(_qt_internal_target_enable_qmllint target)
     )
 
     set(cmd
-        ${tool_wrapper}
+        "${tool_wrapper}"
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
         @${qmllint_rsp_path}
     )
@@ -898,7 +898,7 @@ function(_qt_internal_target_enable_qmllint target)
    )
 
    set(cmd
-       ${tool_wrapper}
+       "${tool_wrapper}"
        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmllint>
        @${qmllint_rsp_path}
    )
@@ -1069,7 +1069,7 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
 
     _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
     set(cmd
-        ${tool_wrapper}
+        "${tool_wrapper}"
         ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
         -o "${qmlcache_loader_cpp}"
@@ -2486,6 +2486,9 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
         VERBATIM
     )
 
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.27")
+        set_source_files_properties(${additional_sources} PROPERTIES SKIP_LINTING ON)
+    endif()
     target_sources(${destination_qml_target} PRIVATE ${additional_sources})
 endfunction()
 

@@ -97,10 +97,17 @@ private Q_SLOTS:
     void testLineEndings();
 
     void ignoreSettingsNotCommandLineOptions();
+    void backslashedQmldirPath();
+
 #if QT_CONFIG(library)
     void testPlugin();
     void quickPlugin();
 #endif
+
+#if QT_CONFIG(process)
+    void importRelScript();
+#endif
+
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -2075,6 +2082,26 @@ void TestQmllint::ignoreSettingsNotCommandLineOptions()
     // should not complain about not finding the module that is in importPath
     QCOMPARE(output, QString());
 }
+
+void TestQmllint::backslashedQmldirPath()
+{
+    const QString qmldirPath
+            = testFile(u"ImportPath/ModuleInImportPath/qmldir"_s).replace('/', QDir::separator());
+    const QString output = runQmllint(
+            testFile(u"something.qml"_s), true, QStringList{ u"-i"_s, qmldirPath });
+    QVERIFY(output.isEmpty());
+}
+
+#if QT_CONFIG(process)
+void TestQmllint::importRelScript()
+{
+    QProcess proc;
+    proc.start(m_qmllintPath, { QStringLiteral(TST_QMLLINT_IMPORT_REL_SCRIPT_ARGS) });
+    QVERIFY(proc.waitForFinished());
+    QVERIFY(proc.readAllStandardOutput().isEmpty());
+    QVERIFY(proc.readAllStandardError().isEmpty());
+}
+#endif
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

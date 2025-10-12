@@ -47,7 +47,7 @@ ApplicationWindow {
                 showDirs: false
             }
             delegate: ItemDelegate {
-                width: parent.width
+                width: snippetsListView.width
                 text: fileName
                 focusPolicy: Qt.NoFocus
 
