@@ -46,17 +46,17 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
         id: sfpm
         model: processModel
         sorters: [
-            RoleSorter: {
+            RoleSorter {
                 roleName: "user"
                 priority: 0
             },
-            RoleSorter: {
+            RoleSorter {
                 roleName: "pid"
                 priority: 1
             }
         ]
         filters: [
-            FunctionFilter: {
+            FunctionFilter {
                 component RoleData: QtObject { property qreal cpuUsage }
                 function filter(data: RoleData) : bool {
                     return (data.cpuUsage > 90)
