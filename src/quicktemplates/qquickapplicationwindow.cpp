@@ -49,7 +49,7 @@ using namespace Qt::StringLiterals;
            {Window layout showing menu bar, header, content area, and footer}
 
     \qml
-    import QtQuick.Controls 2.12
+    import QtQuick.Controls
 
     ApplicationWindow {
         visible: true

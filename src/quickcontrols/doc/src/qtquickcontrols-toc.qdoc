@@ -46,6 +46,7 @@
             \li \l {Qt Quick Templates 2 QML Types}
         \endlist
     \li \l {Deploying Qt Quick Controls Applications}{Deployment}
+    \li \l {Versioning scheme}
     \endlist
 
 */

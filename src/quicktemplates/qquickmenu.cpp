@@ -90,8 +90,7 @@ static const int SUBMENU_DELAY = 225;
 
     \snippet qtquickcontrols-menu-closepolicy.qml closePolicy
 
-    Since \l{QtQuick.Controls} 2.3 (Qt 5.10), it is also possible to create sub-menus
-    and declare Action objects inside Menu:
+    You can create sub-menus and declare Action objects inside Menu:
 
     \snippet qtquickcontrols-menu-submenus-and-actions.qml root
 

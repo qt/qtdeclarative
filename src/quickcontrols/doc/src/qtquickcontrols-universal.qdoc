@@ -8,7 +8,7 @@
     The Universal Style is based on the Microsoft Universal Design Guidelines.
     \l {detailed-desc-universal}{More...}
 
-    \styleimport {QtQuick.Controls.Universal 2.12} {Qt 5.7}
+    \styleimport {QtQuick.Controls.Universal} {Qt 5.7}
 
     \section1 Attached Properties
 
@@ -63,9 +63,9 @@
         \row
             \li
                 \qml
-                import QtQuick 2.12
-                import QtQuick.Controls 2.12
-                import QtQuick.Controls.Universal 2.12
+                import QtQuick
+                import QtQuick.Controls
+                import QtQuick.Controls.Universal
 
                 ApplicationWindow {
                     visible: true

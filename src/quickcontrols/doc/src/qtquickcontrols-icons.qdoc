@@ -6,9 +6,8 @@
     \keyword Icons in Qt Quick Controls 2
     \title Icons in Qt Quick Controls
 
-    Qt Quick Controls comes with support for icons since Qt 5.10. This means,
-    Buttons, item delegates, and menu items are now capable of presenting an
-    icon in addition to a text label.
+    In Qt Quick Controls, buttons, item delegates, and menu items are capable
+    of presenting an icon in addition to a text label.
 
     \section1 Using Icons
 

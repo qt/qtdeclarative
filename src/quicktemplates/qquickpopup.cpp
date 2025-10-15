@@ -319,8 +319,8 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickPopup, "qt.quick.controls.popup")
 
     \section1 Popup Transitions
 
-    Since Qt 5.15.3 the following properties are restored to their original values from before
-    the enter transition after the exit transition is completed.
+    After the exit transition is finished, these properties will be reset to
+    their values before the enter transition is started.
 
     \list
     \li \l opacity
