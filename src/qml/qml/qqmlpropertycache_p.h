@@ -26,6 +26,7 @@
 #include <QtCore/qvector.h>
 #include <QtCore/qversionnumber.h>
 #include <QtCore/qxpfunctional.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <limits>
 
@@ -132,6 +133,8 @@ enum class Status : uint8_t {
     OverridingNonVirtualError, // Derived { override property var a;} Base {property var a;}
     MissingOverrideOrFinalSpecifier, // Derived { (virtual) property var a;} Base { virtual property var a;}
 
+    InvokabilityMismatch, // property overrides method(function, slot, invokable) or vice-versa
+
     Unknown
 };
 
@@ -139,10 +142,11 @@ inline bool isValidOverride(Status res)
 {
     return res == Status::NoOverride
             || res == Status::Valid
-            // MissingOverrideOrFinalSpecifier and OverridingNonVirtual is currently considered
-            // valid to preserve backwards compitability. It will become invalid in Qt7
-            || res == Status::MissingOverrideOrFinalSpecifier
-            || res == Status::OverridingNonVirtual;
+            // MissingOverrideOrFinalSpecifier, OverridingNonVirtual and InvokabilityMismatch
+            // are currently considered valid to preserve backwards compatibility.
+            // It will become invalid in Qt7
+            || res == Status::MissingOverrideOrFinalSpecifier || res == Status::OverridingNonVirtual
+            || res == Status::InvokabilityMismatch;
 }
 
 enum class CheckMode : uint8_t {
@@ -158,6 +162,8 @@ using HandlerRef =
         qxp::function_ref<Status(QQmlPropertyData &, QQmlPropertyData *, CheckMode) const>;
 
 } // namespace OverrideSemantics
+
+Q_DECLARE_LOGGING_CATEGORY(qqmlPropertyCacheAppend)
 
 /*
  * QQmlPropertyCache has the following structure:
@@ -355,27 +361,49 @@ private:
         stringCache.insert(key, std::make_pair(index, data));
     }
 
+    // Conditionally logs diagnostics for override semantics.
+    //
+    // Important: "Valid" override semantics do not imply "no warning".
+    // Some override situations are allowed by the language rules but are still
+    // diagnosed to help users avoid surprising or unintended behavior.
+    //
+    // Does not construct diagnostic messages when no logging is required
+    // to compute qPrintable(name) and className() only when needed.
     template <typename String>
     void maybeLog(OverrideSemantics::Status status, const String &name) const
     {
         switch (status) {
-        case OverrideSemantics::Status::OverridingFinal:
-            return qWarning(
-                    "Final member %s is overridden in class %s. The override won't be used.",
-                    qPrintable(name), className());
-        case OverrideSemantics::Status::MissingBase:
-            return qWarning("Member %s of the object %s does not override anything."
-                            " Consider removing \"override\". ",
-                            qPrintable(name), className());
+        case OverrideSemantics::Status::OverridingFinal: {
+            qCWarning(qqmlPropertyCacheAppend).noquote()
+                    << QStringLiteral("Final member %1 is overridden in class %2. The "
+                                      "override won't be used.")
+                               .arg(qPrintable(name), className());
+            return;
+        }
+        case OverrideSemantics::Status::MissingBase: {
+            qCWarning(qqmlPropertyCacheAppend).noquote()
+                    << QStringLiteral("Member %1 of the object %2 does not override anything."
+                                      " Consider removing \"override\". ")
+                               .arg(qPrintable(name), className());
+            return;
+        }
         case OverrideSemantics::Status::OverridingNonVirtual:
-        case OverrideSemantics::Status::OverridingNonVirtualError:
-            return qWarning("Member %s of the object %s overrides a non-virtual member. "
-                            "Consider renaming it or mark it virtual in the base object",
-                            qPrintable(name), className());
-        case OverrideSemantics::Status::MissingOverrideOrFinalSpecifier:
-            return qWarning("Member %s of the object %s overrides a member of the base object. "
-                            "Consider renaming it or adding final or override specifier",
-                            qPrintable(name), className());
+        case OverrideSemantics::Status::OverridingNonVirtualError: {
+            qCWarning(qqmlPropertyCacheAppend).noquote()
+                    << QStringLiteral("Member %1 of the object %2 overrides a non-virtual member. "
+                                      "Consider renaming it or mark it virtual in the base object")
+                               .arg(qPrintable(name), className());
+            return;
+        }
+        case OverrideSemantics::Status::MissingOverrideOrFinalSpecifier: {
+            qCWarning(qqmlPropertyCacheAppend).noquote()
+                    << QStringLiteral(
+                               "Member %s of the object %s overrides a member of the base object. "
+                               "Consider renaming it or adding final or override specifier")
+                               .arg(qPrintable(name), className());
+            return;
+        }
+        // TODO QTBUG-98320, when override is cleaned up for methods, we need a warning for InvokabilityMismatch
         default:
             return;
         }

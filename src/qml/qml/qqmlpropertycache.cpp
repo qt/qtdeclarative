@@ -81,6 +81,9 @@ static inline Status checkMinimal(const QQmlPropertyData *const existingProperty
  *  - If the base property is final, overriding is not allowed
  *    (Status::OverridingFinal).
  *
+ *  - If the base property is invokable and overriding is not (and vice-versa),
+ *    override is invalid (Status::InvokabilityMismatch).
+ *
  *  - If the base property is not virtual, but 'override' is present
  *    overriding is not allowed (Status::OverridingNonVirtualError),
  *    otherwise it returns Status::OverridingNonVirtual
@@ -101,6 +104,12 @@ static inline Status checkFull(const QQmlPropertyData &overridingProperty,
     const auto minimalCheckRes = checkMinimal(existingProperty);
     if (minimalCheckRes != Status::Valid) {
         return minimalCheckRes;
+    }
+
+    // if the property doesn't exist we should have returned MissingBase or NoOverride already
+    Q_ASSERT(existingProperty);
+    if (overridingProperty.isFunction() != existingProperty->isFunction()) {
+        return Status::InvokabilityMismatch;
     }
 
     if (!existingProperty->isVirtual()) {
@@ -162,6 +171,8 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
     flags.setIsWritable(p.isWritable());
     flags.setIsResettable(p.isResettable());
     flags.setIsFinal(p.isFinal());
+    flags.setIsVirtual(p.isVirtual());
+    flags.setDoesOverride(p.isOverride());
     flags.setIsRequired(p.isRequired());
     flags.setIsBindable(p.isBindable());
 
@@ -236,6 +247,8 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     Q_ASSERT(m.revision() <= std::numeric_limits<quint16>::max());
     setRevision(QTypeRevision::fromEncodedVersion(m.revision()));
 }
+
+Q_LOGGING_CATEGORY(qqmlPropertyCacheAppend, "qt.qml.propertyCache.append")
 
 /*!
     \internal
@@ -656,6 +669,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         if (!p.isScriptable())
             continue;
 
+        // TODO QTBUG-141728
         QQmlPropertyData *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 
         data->setFlags(propertyFlags);
@@ -666,24 +680,18 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         data->setMetaObjectOffset(allowedRevisionCache.size() - 1);
 
         const auto doSetNamedProperty = [this](const auto &propName, int index, auto *propData) {
-            QQmlPropertyData *existingPropData = nullptr;
-            if (StringCache::mapped_type *it = stringCache.value(propName)) {
-                const auto overrideStatus =
-                        _handleOverride(*propData, (existingPropData = it->second),
-                                        OverrideSemantics::CheckMode::Minimal);
-                maybeLog(overrideStatus, propName);
-                // remove assert when checkMode is expanded and adjust handling correspondingly. For
-                // now it verifies that some code-path work in the same way as before introduction
-                // of virtual and override keywords
-                Q_ASSERT(overrideStatus == OverrideSemantics::Status::NoOverride
-                         || overrideStatus == OverrideSemantics::Status::Valid
-                         || overrideStatus == OverrideSemantics::Status::OverridingFinal);
-                if (overrideStatus == OverrideSemantics::Status::OverridingFinal) {
+            QQmlPropertyData *existingPropData = findNamedProperty(propName);
+            const auto overrideStatus = _handleOverride(*propData, existingPropData,
+                                                        OverrideSemantics::CheckMode::Full);
+            maybeLog(overrideStatus, propName);
+            if (!OverrideSemantics::isValidOverride(overrideStatus)) {
+                if (existingPropData) {
                     // TODO QTBUG-141728
                     *propData = *existingPropData;
-                    return;
                 }
+                return;
             }
+
             setNamedProperty(propName, index, propData);
         };
 

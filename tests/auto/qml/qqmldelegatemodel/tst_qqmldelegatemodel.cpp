@@ -658,6 +658,16 @@ void tst_QQmlDelegateModel::overriddenModelData()
 {
     QTest::failOnWarning(QRegularExpression(
             "Final member [^ ]+ is overridden in class [^\\.]+. The override won't be used."));
+    const auto overridenProperies = { "index", "column", "row", "hasModelChildren", "model" };
+    for (const auto &property : overridenProperies) {
+        QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QLatin1String("Member ") + QLatin1String(property)
+                           + QLatin1String(" of the object QQmlDMAbstractItemModelData overrides a "
+                                           "non-virtual member. Consider renaming it or mark it "
+                                           "virtual in the "
+                                           "base object")));
+    }
 
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("overriddenModelData.qml"));
@@ -835,7 +845,7 @@ class ProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(QAbstractItemModel *sourceModel READ sourceModel WRITE setSourceModel)
+    Q_PROPERTY(QAbstractItemModel *sourceModelTest READ sourceModel WRITE setSourceModel)
 
 public:
     explicit ProxyModel(QObject *parent = nullptr)

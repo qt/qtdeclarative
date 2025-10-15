@@ -234,8 +234,8 @@ class Q_QUICK_EXPORT QQuickPropertyAnimation : public QQuickAbstractAnimation
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)
-    Q_PROPERTY(QVariant from READ from WRITE setFrom NOTIFY fromChanged)
-    Q_PROPERTY(QVariant to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(QVariant from READ from WRITE setFrom NOTIFY fromChanged VIRTUAL)
+    Q_PROPERTY(QVariant to READ to WRITE setTo NOTIFY toChanged VIRTUAL)
     Q_PROPERTY(QEasingCurve easing READ easing WRITE setEasing NOTIFY easingChanged)
     Q_PROPERTY(QObject *target READ target WRITE setTargetObject NOTIFY targetChanged)
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
@@ -297,8 +297,8 @@ class Q_QUICK_EXPORT QQuickColorAnimation : public QQuickPropertyAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
-    Q_PROPERTY(QColor from READ from WRITE setFrom)
-    Q_PROPERTY(QColor to READ to WRITE setTo)
+    Q_PROPERTY(QColor from READ from WRITE setFrom OVERRIDE)
+    Q_PROPERTY(QColor to READ to WRITE setTo OVERRIDE)
     QML_NAMED_ELEMENT(ColorAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -318,8 +318,8 @@ class Q_QUICK_EXPORT QQuickNumberAnimation : public QQuickPropertyAnimation
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged OVERRIDE)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged OVERRIDE)
     QML_NAMED_ELEMENT(NumberAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -345,8 +345,8 @@ class Q_QUICK_EXPORT QQuickVector3dAnimation : public QQuickPropertyAnimation
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
 
-    Q_PROPERTY(QVector3D from READ from WRITE setFrom NOTIFY fromChanged)
-    Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(QVector3D from READ from WRITE setFrom NOTIFY fromChanged OVERRIDE)
+    Q_PROPERTY(QVector3D to READ to WRITE setTo NOTIFY toChanged OVERRIDE)
     QML_NAMED_ELEMENT(Vector3dAnimation)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -367,8 +367,8 @@ class Q_QUICK_EXPORT QQuickRotationAnimation : public QQuickPropertyAnimation
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickRotationAnimation)
 
-    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged)
-    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged)
+    Q_PROPERTY(qreal from READ from WRITE setFrom NOTIFY fromChanged OVERRIDE)
+    Q_PROPERTY(qreal to READ to WRITE setTo NOTIFY toChanged OVERRIDE)
     Q_PROPERTY(RotationDirection direction READ direction WRITE setDirection NOTIFY directionChanged)
     QML_NAMED_ELEMENT(RotationAnimation)
     QML_ADDED_IN_VERSION(2, 0)

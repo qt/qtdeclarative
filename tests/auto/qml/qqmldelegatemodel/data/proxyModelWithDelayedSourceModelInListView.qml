@@ -22,7 +22,7 @@ Window {
         }
 
         model: ProxyModel {
-            sourceModel: root.connectionModel
+            sourceModelTest: root.connectionModel
         }
     }
 

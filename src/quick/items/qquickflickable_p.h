@@ -28,8 +28,8 @@ class Q_QUICK_EXPORT QQuickFlickable : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged VIRTUAL)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged VIRTUAL)
     Q_PROPERTY(qreal contentX READ contentX WRITE setContentX NOTIFY contentXChanged)
     Q_PROPERTY(qreal contentY READ contentY WRITE setContentY NOTIFY contentYChanged)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem CONSTANT)

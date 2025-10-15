@@ -227,7 +227,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(qreal dashOffset READ dashOffset WRITE setDashOffset NOTIFY dashOffsetChanged)
     Q_PROPERTY(QList<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient)
-    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(1, 14))
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged OVERRIDE REVISION(1, 14))
     Q_PROPERTY(PathHints pathHints READ pathHints WRITE setPathHints NOTIFY pathHintsChanged REVISION(6, 7) FINAL)
     Q_PROPERTY(QMatrix4x4 fillTransform READ fillTransform WRITE setFillTransform NOTIFY fillTransformChanged REVISION(6, 8) FINAL)
     Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged REVISION(6, 8) FINAL)
@@ -369,7 +369,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShape : public QQuickItem
     Q_PROPERTY(HAlignment horizontalAlignment READ horizontalAlignment WRITE setHorizontalAlignment NOTIFY horizontalAlignmentChanged REVISION(6, 7) FINAL)
     Q_PROPERTY(VAlignment verticalAlignment READ verticalAlignment WRITE setVerticalAlignment NOTIFY verticalAlignmentChanged REVISION(6, 7) FINAL)
 
-    Q_PROPERTY(QQmlListProperty<QObject> data READ data)
+    Q_PROPERTY(QQmlListProperty<QObject> data READ data OVERRIDE)
     Q_CLASSINFO("DefaultProperty", "data")
     QML_NAMED_ELEMENT(Shape)
     QML_ADDED_IN_VERSION(1, 0)

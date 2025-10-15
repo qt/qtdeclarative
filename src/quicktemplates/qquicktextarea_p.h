@@ -30,7 +30,7 @@ class QQuickTextAreaAttached;
 class Q_QUICKTEMPLATES2_EXPORT QQuickTextArea : public QQuickTextEdit
 {
     Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged OVERRIDE) // override
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged3 FINAL)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged3 FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)

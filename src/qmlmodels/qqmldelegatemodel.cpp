@@ -2279,6 +2279,7 @@ void QQmlDelegateModelItemMetaType::initializeAttachedMetaObject()
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
                 propertyName.toUtf8(), "bool", notifierId);
         propertyBuilder.setWritable(true);
+        propertyBuilder.setFinal(true);
     }
     for (qsizetype i = 0, end = groupCount(); i < end; ++i, ++notifierId) {
         const QString propertyName = groupNames.at(i) + QLatin1String("Index");
@@ -2286,6 +2287,7 @@ void QQmlDelegateModelItemMetaType::initializeAttachedMetaObject()
         QMetaPropertyBuilder propertyBuilder = builder.addProperty(
                 propertyName.toUtf8(), "int", notifierId);
         propertyBuilder.setWritable(true);
+        propertyBuilder.setFinal(true);
     }
 
     attachedMetaObject = QQml::makeRefPointer<QQmlDelegateModelAttachedMetaObject>(

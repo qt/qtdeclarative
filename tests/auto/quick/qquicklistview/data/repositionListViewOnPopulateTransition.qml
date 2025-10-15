@@ -12,7 +12,7 @@ ListView {
     reuseItems: false
 
     model: ListModel {
-        ListElement {index: 0; text: "Item0"}
+        ListElement {text: "Item0"}
     }
 
     delegate: Button {

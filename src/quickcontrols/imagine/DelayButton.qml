@@ -53,7 +53,7 @@ T.DelayButton {
             ]
         }
 
-        readonly property NinePatchImage progress: NinePatchImage {
+        readonly override property NinePatchImage progress: NinePatchImage {
             parent: control.background
             width: control.progress * parent.width
             height: parent.height

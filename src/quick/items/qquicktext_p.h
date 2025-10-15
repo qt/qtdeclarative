@@ -30,8 +30,8 @@ class Q_QUICK_EXPORT QQuickText : public QQuickImplicitSizeItem, public QQuickTe
     Q_OBJECT
     Q_INTERFACES(QQuickTextInterface)
 
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged VIRTUAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged VIRTUAL)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QColor linkColor READ linkColor WRITE setLinkColor NOTIFY linkColorChanged)
     Q_PROPERTY(TextStyle style READ style WRITE setStyle NOTIFY styleChanged)
@@ -62,7 +62,7 @@ class Q_QUICK_EXPORT QQuickText : public QQuickImplicitSizeItem, public QQuickTe
 
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged VIRTUAL REVISION(2, 6))
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
 

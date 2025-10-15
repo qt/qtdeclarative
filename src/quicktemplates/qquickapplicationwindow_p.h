@@ -44,7 +44,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickApplicationWindow : public QQuickWindowQmlI
     // 2.3 (Qt 5.10)
     Q_PROPERTY(QQuickItem *menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL REVISION(2, 3))
     // 2.14 (Qt 6)
-    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION(2, 3))
+    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged OVERRIDE REVISION(2, 3))
 
     Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func()->control,
         qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged FINAL REVISION(6, 9))

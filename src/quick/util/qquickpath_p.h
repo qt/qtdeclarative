@@ -618,7 +618,7 @@ class Q_QUICK_EXPORT QQuickPath : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal startY READ startY WRITE setStartY NOTIFY startYChanged)
     Q_PROPERTY(bool closed READ isClosed NOTIFY changed)
     Q_PROPERTY(bool simplify READ simplify WRITE setSimplify NOTIFY simplifyChanged REVISION(6, 6) FINAL)
-    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged REVISION(2, 14))
+    Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged VIRTUAL REVISION(2, 14))
     Q_PROPERTY(bool asynchronous READ isAsynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 9))
     Q_CLASSINFO("DefaultProperty", "pathElements")
     QML_NAMED_ELEMENT(Path)

@@ -39,9 +39,8 @@ class Q_QUICK_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParse
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
 
-    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged)
-    Q_PROPERTY(QWindow::Visibility visibility READ visibility WRITE setVisibility NOTIFY
-                       visibilityChanged)
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged OVERRIDE)
+    Q_PROPERTY(QWindow::Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged OVERRIDE)
     Q_PROPERTY(QQuickScreenInfo *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION(2, 3))
     QML_ATTACHED(QQuickWindowAttached)
     QML_NAMED_ELEMENT(Window)
