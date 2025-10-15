@@ -988,6 +988,9 @@ void tst_qquickwidget::focusOnClick()
 #if QT_CONFIG(graphicsview)
 void tst_qquickwidget::focusOnClickInProxyWidget()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Crashes on Android, see QTBUG-139400");
+#endif
     QGraphicsScene scene(0,0,400,400);
 
     QGraphicsView view1(&scene);
