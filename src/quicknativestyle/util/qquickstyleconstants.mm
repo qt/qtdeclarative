@@ -5,6 +5,8 @@
 
 #include <QtCore/private/qcore_mac_p.h>
 #include <QtGui/private/qcoregraphics_p.h>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 #include <AppKit/AppKit.h>
 
@@ -14,6 +16,10 @@ using namespace Qt::StringLiterals;
 
 QQuickStyleConstants::QQuickStyleConstants()
 {
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, [=]{
+        emit secondarySystemFillColorChanged();
+        emit tertiarySystemFillColorChanged();
+    });
 }
 
 bool QQuickStyleConstants::runningWithLiquidGlass() const
@@ -21,17 +27,30 @@ bool QQuickStyleConstants::runningWithLiquidGlass() const
     return qt_apple_runningWithLiquidGlass();
 }
 
+static QColor systemColor(std::function<NSColor *()> block)
+{
+    __block QColor color;
+    [NSApp.effectiveAppearance performAsCurrentDrawingAppearance:^{
+        color = qt_mac_toQBrush(block()).color();
+    }];
+    return color;
+}
+
 QColor QQuickStyleConstants::secondarySystemFillColor() const
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
     if (@available(macOS 14.0, *))
-        return qt_mac_toQBrush([NSColor secondarySystemFillColor]).color();
+        return systemColor([]{ return NSColor.secondarySystemFillColor; });
+#endif
     return Qt::black;
 }
 
 QColor QQuickStyleConstants::tertiarySystemFillColor() const
 {
+#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(140000)
     if (@available(macOS 14.0, *))
-        return qt_mac_toQBrush([NSColor tertiarySystemFillColor]).color();
+        return systemColor([]{ return NSColor.tertiarySystemFillColor; });
+#endif
     return Qt::black;
 }
 

@@ -12,8 +12,8 @@ class QQuickStyleConstants : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool runningWithLiquidGlass READ runningWithLiquidGlass CONSTANT FINAL)
-    Q_PROPERTY(QColor secondarySystemFillColor READ secondarySystemFillColor CONSTANT FINAL)
-    Q_PROPERTY(QColor tertiarySystemFillColor READ tertiarySystemFillColor CONSTANT FINAL)
+    Q_PROPERTY(QColor secondarySystemFillColor READ secondarySystemFillColor NOTIFY secondarySystemFillColorChanged FINAL)
+    Q_PROPERTY(QColor tertiarySystemFillColor READ tertiarySystemFillColor NOTIFY tertiarySystemFillColorChanged FINAL)
     QML_NAMED_ELEMENT(StyleConstants)
     QML_SINGLETON
 
@@ -23,6 +23,10 @@ public:
     bool runningWithLiquidGlass() const;
     QColor secondarySystemFillColor() const;
     QColor tertiarySystemFillColor() const;
+
+Q_SIGNALS:
+    void secondarySystemFillColorChanged();
+    void tertiarySystemFillColorChanged();
 };
 
 QT_END_NAMESPACE
