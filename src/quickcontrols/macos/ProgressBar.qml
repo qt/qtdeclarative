@@ -18,13 +18,13 @@ T.ProgressBar {
 
     background: Item {
         implicitWidth: 100
-        implicitHeight: childrenRect.height
+        implicitHeight: NativeStyle.StyleConstants.runningWithLiquidGlass ? 8 : 12
         readonly property bool __ignoreNotCustomizable: true
 
         Loader {
             active: NativeStyle.StyleConstants.runningWithLiquidGlass
             width: parent.width
-            height: 8
+            height: root.background.implicitHeight
             sourceComponent: Rectangle {
                 y: (parent.height - height) / 2
                 radius: height / 2
@@ -36,6 +36,8 @@ T.ProgressBar {
 
         Loader {
             active: !NativeStyle.StyleConstants.runningWithLiquidGlass
+            width: parent.width
+            height: root.background.implicitHeight
             sourceComponent: NativeStyle.ProgressBar {
                 control: root
                 useNinePatchImage: false
