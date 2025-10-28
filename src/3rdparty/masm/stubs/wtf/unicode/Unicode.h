@@ -51,7 +51,7 @@ namespace Unicode {
     inline UChar32 u_tolower(UChar32 ch) {
         if (ch > QChar::LastValidCodePoint)
             return ch;
-        const auto fold = QUnicodeTables::properties(char32_t(ch))->cases[QUnicodeTables::LowerCase];
+        const auto fold = QUnicodeTables::caseConversion(char32_t(ch))[QUnicodeTables::LowerCase];
         return fold.special ? ch : (ch + fold.diff);
     }
 
@@ -59,7 +59,7 @@ namespace Unicode {
     inline UChar32 u_toupper(UChar32 ch) {
         if (ch > QChar::LastValidCodePoint)
             return ch;
-        const auto fold = QUnicodeTables::properties(char32_t(ch))->cases[QUnicodeTables::UpperCase];
+        const auto fold = QUnicodeTables::caseConversion(char32_t(ch))[QUnicodeTables::UpperCase];
         return fold.special ? ch : (ch + fold.diff);
     }
 }
