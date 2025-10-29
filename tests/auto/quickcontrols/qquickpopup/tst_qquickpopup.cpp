@@ -119,6 +119,7 @@ private slots:
     void mirroredCombobox();
     void rotatedCombobox();
     void focusMultiplePopup();
+    void resetFocusToLastActiveFocusItem();
     void contentChildrenChange();
     void doubleClickInMouseArea();
     void fadeDimmer_data();
@@ -2546,6 +2547,71 @@ void tst_QQuickPopup::focusMultiplePopup()
     QTRY_VERIFY(!buttonPopup->isVisible());
 
     QVERIFY(rootItem->hasFocus());
+}
+
+void tst_QQuickPopup::resetFocusToLastActiveFocusItem()
+{
+    QQuickApplicationHelper helper(this, "resetFocusToLastActiveFocusItem.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *rootItem = window->findChild<QQuickItem *>("rootItem");
+    QTRY_COMPARE(window->activeFocusItem(), rootItem);
+    QTRY_VERIFY(rootItem->hasFocus());
+    auto *button1 = window->findChild<QQuickButton *>("button1");
+    QVERIFY(button1);
+    button1->setFocus(true);
+    auto *button2 = window->findChild<QQuickButton *>("button2");
+    QVERIFY(button2);
+    QTRY_VERIFY(!button2->hasFocus());
+    auto *buttonPopup = window->findChild<QQuickPopup *>("popup1");
+    QVERIFY(buttonPopup);
+    auto *textEditPopup = window->findChild<QQuickPopup *>("popup2");
+    QVERIFY(textEditPopup);
+
+    // Set focus to the button in the window and restore focus back
+    // once its closed
+    buttonPopup->open();
+    QTRY_VERIFY(buttonPopup->isVisible());
+    QVERIFY(buttonPopup->hasFocus());
+    QVERIFY(!button1->hasFocus());
+    buttonPopup->close();
+    QTRY_VERIFY(!buttonPopup->isVisible());
+    QTRY_VERIFY(button1->hasFocus());
+
+    // Open popup1 & popup2 and close the popup in sequence
+    // to see whether the focus shifts back to the button1
+    buttonPopup->open();
+    QTRY_VERIFY(buttonPopup->isVisible());
+    QVERIFY(buttonPopup->hasFocus());
+    QVERIFY(!button1->hasFocus());
+    textEditPopup->open();
+    QTRY_VERIFY(textEditPopup->isVisible());
+    QVERIFY(textEditPopup->hasFocus());
+    buttonPopup->close();
+    QTRY_VERIFY(!buttonPopup->isVisible());
+    textEditPopup->close();
+    QTRY_VERIFY(!textEditPopup->isVisible());
+    QTRY_VERIFY(button1->hasFocus());
+
+    buttonPopup->open();
+    QTRY_VERIFY(buttonPopup->isVisible());
+    QVERIFY(buttonPopup->hasFocus());
+    QVERIFY(!button1->hasFocus());
+    button2->setFocus(true);
+    QTRY_VERIFY(button2->hasFocus());
+    QVERIFY(!button1->hasFocus());
+    textEditPopup->open();
+    QTRY_VERIFY(textEditPopup->isVisible());
+    QVERIFY(textEditPopup->hasFocus());
+    buttonPopup->close();
+    QTRY_VERIFY(!buttonPopup->isVisible());
+    textEditPopup->close();
+    QTRY_VERIFY(!textEditPopup->isVisible());
+    QTRY_VERIFY(button2->hasFocus());
 }
 
 void tst_QQuickPopup::contentChildrenChange()
