@@ -11,6 +11,11 @@
 #include "qquickstyledtext_p.h"
 #include <QQmlContext>
 #include <QtGui/private/qtexthtmlparser_p.h>
+#include <QtGui/private/qoutlinemapper_p.h>
+
+#ifndef QQUICKSTYLEDPARSER_COORD_LIMIT
+#  define QQUICKSTYLEDPARSER_COORD_LIMIT QT_RASTER_COORD_LIMIT
+#endif
 
 Q_STATIC_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
 
@@ -660,9 +665,19 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
             if (is_equal_ignoring_case(attr.first, QLatin1String("src"))) {
                 image->url = QUrl(attr.second.toString());
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("width"))) {
-                image->size.setWidth(attr.second.toString().toInt());
+                bool ok;
+                int v = attr.second.toString().toInt(&ok);
+                if (ok && v <= QQUICKSTYLEDPARSER_COORD_LIMIT)
+                    image->size.setWidth(v);
+                else
+                    qCWarning(lcStyledText) << "Invalid width provided for <img>";
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("height"))) {
-                image->size.setHeight(attr.second.toString().toInt());
+                bool ok;
+                int v = attr.second.toString().toInt(&ok);
+                if (ok && v <= QQUICKSTYLEDPARSER_COORD_LIMIT)
+                    image->size.setHeight(v);
+                else
+                    qCWarning(lcStyledText) << "Invalid height provided for <img>";
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("align"))) {
                 if (is_equal_ignoring_case(attr.second, QLatin1String("top"))) {
                     image->align = QQuickStyledTextImgTag::Top;

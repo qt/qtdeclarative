@@ -3484,6 +3484,22 @@ void tst_qquicktext::imgSize_data()
                                         << qint64(0x10000)
                                         << qint64(0x10000)
                                         << QQuickText::RichText;
+    QTest::newRow("out-of-bounds (styled text)") << QStringLiteral("images/starfish_2.png")
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << QQuickText::StyledText;
+    QTest::newRow("out-of-bounds (rich text)") << QStringLiteral("images/starfish_2.png")
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << QQuickText::RichText;
+    QTest::newRow("negative out-of-bounds (styled text)") << QStringLiteral("images/starfish_2.png")
+                                                 << (qint64(INT_MIN) - 1)
+                                                 << (qint64(INT_MIN) - 1)
+                                                 << QQuickText::StyledText;
+    QTest::newRow("negative out-of-bounds (rich text)") << QStringLiteral("images/starfish_2.png")
+                                                 << (qint64(INT_MIN) - 1)
+                                                 << (qint64(INT_MIN) - 1)
+                                                 << QQuickText::RichText;
     QTest::newRow("large non-existent (styled text)") << QStringLiteral("a")
                                                  << qint64(0x7FFFFF)
                                                  << qint64(0x7FFFFF)

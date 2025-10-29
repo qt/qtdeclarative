@@ -590,9 +590,9 @@ QSizeF QQuickTextImageHandler::intrinsicSize(
 {
     if (format.isImageFormat()) {
         QTextImageFormat imageFormat = format.toImageFormat();
-        int width = qRound(imageFormat.width());
+        int width = qRound(qBound(qreal(INT_MIN), imageFormat.width(), qreal(INT_MAX)));
         const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth) && width > 0;
-        const int height = qRound(imageFormat.height());
+        const int height = qRound(qBound(qreal(INT_MIN), imageFormat.height(), qreal(INT_MAX)));
         const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight) && height > 0;
         const auto maxWidth = imageFormat.maximumWidth();
         const bool hasMaxWidth = imageFormat.hasProperty(QTextFormat::ImageMaxWidth) && maxWidth.type() != QTextLength::VariableLength;
