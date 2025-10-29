@@ -104,10 +104,9 @@ QSizeF QQuickTextDocumentWithImageResources::intrinsicSize(
 {
     if (format.isImageFormat()) {
         QTextImageFormat imageFormat = format.toImageFormat();
-
-        const int width = qRound(imageFormat.width());
+        int width = qRound(qBound(qreal(INT_MIN), imageFormat.width(), qreal(INT_MAX)));
         const bool hasWidth = imageFormat.hasProperty(QTextFormat::ImageWidth) && width > 0;
-        const int height = qRound(imageFormat.height());
+        const int height = qRound(qBound(qreal(INT_MIN), imageFormat.height(), qreal(INT_MAX)));
         const bool hasHeight = imageFormat.hasProperty(QTextFormat::ImageHeight) && height > 0;
 
         QSizeF size(width, height);
