@@ -11,7 +11,11 @@ if(QT_FEATURE_commandlineparser)
     add_subdirectory(qmljsrootgen)
     add_subdirectory(qmlformat)
     if(QT_FEATURE_qmlcontextpropertydump)
-        add_subdirectory(qmlcontextpropertydump)
+        if (NOT CMAKE_CROSSCOMPILING
+                        OR (TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcontextpropertydump
+                            AND QT_FORCE_BUILD_TOOLS))
+            add_subdirectory(qmlcontextpropertydump)
+        endif()
     endif()
 endif()
 add_subdirectory(qmlimportscanner)
