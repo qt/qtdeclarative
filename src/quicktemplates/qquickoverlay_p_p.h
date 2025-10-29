@@ -69,6 +69,7 @@ public:
     QList<QQuickPopup *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
     QPointer<QQuickItem> lastActiveFocusItem;
+    QPointer<QQuickPopup> lastActiveFocusItemPopup;
 };
 
 QT_END_NAMESPACE
