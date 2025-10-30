@@ -933,7 +933,7 @@ void QQmlEngine::captureProperty(QObject *object, const QMetaProperty &property)
   \since 5.15
 
   The uiLanguage holds the name of the language to be used for user interface
-  string translations. It is exposed in C++ as QQmlEngine::uiLanguage property.
+  string translations. It is exposed in C++ as \l QJSEngine::uiLanguage property.
 
   You can set the value freely and use it in bindings. It is recommended to set it
   after installing translators in your application. By convention, an empty string
