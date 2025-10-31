@@ -44,7 +44,7 @@ class GrabbingView : public QQuickView
 
 public:
     GrabbingView(const QString &outputFile, const bool useAppWindow)
-        : ofile(outputFile), grabNo(0), isGrabbing(false), justShow(outputFile.isEmpty()), preferAppWindow(useAppWindow)
+        : ofile(outputFile), justShow(outputFile.isEmpty()), preferAppWindow(useAppWindow)
     {
         if (justShow)
             return;
@@ -57,7 +57,7 @@ public:
         if (!preferAppWindow)
             QObject::connect(this, &QQuickWindow::afterRendering, this, &GrabbingView::startGrabbing, Qt::SingleShotConnection);
 
-        int sceneTimeout = qEnvironmentVariableIntegerValue("LANCELOT_SCENE_TIMEOUT").value_or(SCENE_TIMEOUT);
+        sceneTimeout = qEnvironmentVariableIntegerValue("LANCELOT_SCENE_TIMEOUT").value_or(SCENE_TIMEOUT);
         QTimer::singleShot(sceneTimeout, this, &GrabbingView::timedOut);
 
         runtime.start();
@@ -76,7 +76,7 @@ public:
 private slots:
     void startGrabbing()
     {
-        GRABBERDEBUG << "Starting grabbing";
+        GRABBERDEBUG << "afterRendering received";
         grab();
     }
 
@@ -88,9 +88,13 @@ private slots:
         }
         QScopedValueRollback grabGuard(isGrabbing, true);
 
-        if (grabNo > 0 && grabTimer->remainingTime() > grabTimer->interval() / 10) {
-            GRABBERDEBUG << "Skipping grab, too soon since last";
-            return;
+        if (QQuickItem *rootObject = this->rootObject()) {
+            QVariant v = rootObject->property("suspendGrabbing");
+            if (v.isValid() && v.canConvert<bool>() && v.toBool()) {
+                GRABBERDEBUG << "Skipping grab, item has suspended grabbing";
+                grabTimer->start();
+                return;
+            }
         }
 
         grabNo++;
@@ -148,9 +152,10 @@ private:
     QTimer *grabTimer = nullptr;
     QElapsedTimer runtime;
     QString ofile;
-    int grabNo;
-    bool isGrabbing;
-    bool justShow;
+    int sceneTimeout = 0;
+    int grabNo = 0;
+    bool isGrabbing = false;
+    bool justShow = false;
     QQuickApplicationWindow *appwindow = nullptr;
     bool preferAppWindow = false;
 };

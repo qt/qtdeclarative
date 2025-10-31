@@ -6,6 +6,7 @@ Item {
     width: 480
     height: 320
     property color outlineColor: "blue"
+    property bool suspendGrabbing: true
 
     ListModel {
         id: renderers
@@ -27,19 +28,15 @@ Item {
 
                 property int offset: 30
                 property string label: ""
-                Timer {
-                    interval: 17
-                    running: true
-                    repeat: true
-                    onTriggered: {
-                        const str = 'Qt Rocks! ABCDEFGHIJKLMNOPQRSTUVWXYZ0123'
-                        if (offset > 0) {
-                            offset = offset - 1;
-                            label = str.substring(offset);
-                        } else {
-                            stop();
-                        }
-                    }
+                NumberAnimation on offset {
+                    to: 0
+                    duration: 1000
+                }
+                onOffsetChanged: {
+                    const str = 'Qt Rocks! ABCDEFGHIJKLMNOPQRSTUVWXYZ0123'
+                    shape.label = str.substring(offset);
+                    if (offset === 0)
+                        topItem.suspendGrabbing = false;
                 }
 
                 ShapePath {

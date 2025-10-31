@@ -2,13 +2,22 @@ import QtQuick
 import QtQuick.Shapes
 
 Rectangle {
+    id: topLevel
     width: 320
     height: 480
+    property bool suspendGrabbing: anim.running
 
     ListModel {
         id: renderers
         ListElement { renderer: Shape.GeometryRenderer }
         ListElement { renderer: Shape.CurveRenderer }
+    }
+
+    property int step: 0
+    NumberAnimation on step {
+        id: anim
+        to: 3
+        duration: 500
     }
 
     Row {
@@ -21,11 +30,7 @@ Rectangle {
                 height: 400
                 color: "lightgray"
 
-                property int step: 0
-                NumberAnimation on step {
-                    to: 3
-                    duration: 300
-                }
+                property int step: topLevel.step
 
                 onStepChanged: {
                     var d;

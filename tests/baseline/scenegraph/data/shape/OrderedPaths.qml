@@ -4,9 +4,11 @@ import QtQuick.Shapes
 Item {
     id: root
     property bool async: false
+    property alias isAnimating: anim.running
 
     property int counter: 0
     NumberAnimation {
+        id: anim
         target: root
         property: "counter"
         duration: 2000
