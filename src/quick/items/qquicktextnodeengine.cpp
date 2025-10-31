@@ -11,6 +11,7 @@
 #include <QtGui/qtextobject.h>
 #include <QtGui/qtexttable.h>
 #include <QtGui/qtextlist.h>
+#include <QtGui/qimageiohandler.h>
 
 #include <private/qquicktext_p.h>
 #include <private/qtextdocumentlayout_p.h>
@@ -434,12 +435,15 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
         }
 
         if (image.isNull()) {
-            image = QImage((size * m_devicePixelRatio).toSize(), QImage::Format_ARGB32_Premultiplied);
-            image.setDevicePixelRatio(m_devicePixelRatio);
-            image.fill(Qt::transparent);
-            {
-                QPainter painter(&image);
-                handler->drawObject(&painter, QRectF({}, size), textDocument, pos, format);
+            if (QImageIOHandler::allocateImage((size * m_devicePixelRatio).toSize(),
+                                               QImage::Format_ARGB32_Premultiplied,
+                                               &image)) {
+                image.setDevicePixelRatio(m_devicePixelRatio);
+                image.fill(Qt::transparent);
+                {
+                    QPainter painter(&image);
+                    handler->drawObject(&painter, QRectF({}, size), textDocument, pos, format);
+                }
             }
         }
 

@@ -125,6 +125,8 @@ private slots:
     void imgTagsElide();
     void imgTagsUpdates();
     void imgTagsError();
+    void imgSize_data();
+    void imgSize();
     void fontSizeMode_data();
     void fontSizeMode();
     void fontSizeModeMultiline_data();
@@ -3449,6 +3451,85 @@ void tst_qquicktext::imgTagsError()
     QQuickText *textObject = qobject_cast<QQuickText*>(object.data());
 
     QVERIFY(textObject != nullptr);
+}
+
+void tst_qquicktext::imgSize_data()
+{
+    QTest::addColumn<QString>("url");
+    QTest::addColumn<qint64>("width");
+    QTest::addColumn<qint64>("height");
+    QTest::addColumn<QQuickText::TextFormat>("format");
+
+    QTest::newRow("negative (styled text)") << QStringLiteral("images/starfish_2.png")
+                                         << qint64(-0x7FFFFF)
+                                         << qint64(-0x7FFFFF)
+                                         << QQuickText::StyledText;
+    QTest::newRow("negative (rich text)") << QStringLiteral("images/starfish_2.png")
+                                         << qint64(-0x7FFFFF)
+                                         << qint64(-0x7FFFFF)
+                                         << QQuickText::RichText;
+    QTest::newRow("large (styled text)") << QStringLiteral("images/starfish_2.png")
+                                         << qint64(0x7FFFFF)
+                                         << qint64(0x7FFFFF)
+                                         << QQuickText::StyledText;
+    QTest::newRow("large (right text)") << QStringLiteral("images/starfish_2.png")
+                                        << qint64(0x7FFFFF)
+                                        << qint64(0x7FFFFF)
+                                        << QQuickText::RichText;
+    QTest::newRow("medium (styled text)") << QStringLiteral("images/starfish_2.png")
+                                         << qint64(0x10000)
+                                         << qint64(0x10000)
+                                         << QQuickText::StyledText;
+    QTest::newRow("medium (right text)") << QStringLiteral("images/starfish_2.png")
+                                        << qint64(0x10000)
+                                        << qint64(0x10000)
+                                        << QQuickText::RichText;
+    QTest::newRow("large non-existent (styled text)") << QStringLiteral("a")
+                                                 << qint64(0x7FFFFF)
+                                                 << qint64(0x7FFFFF)
+                                                 << QQuickText::StyledText;
+    QTest::newRow("medium non-existent (styled text)") << QStringLiteral("a")
+                                                 << qint64(0x10000)
+                                                 << qint64(0x10000)
+                                                 << QQuickText::StyledText;
+    QTest::newRow("out-of-bounds non-existent (styled text)") << QStringLiteral("a")
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << (qint64(INT_MAX) + 1)
+                                                 << QQuickText::StyledText;
+    QTest::newRow("large non-existent (rich text)") << QStringLiteral("a")
+                                                 << qint64(0x7FFFFF)
+                                                 << qint64(0x7FFFFF)
+                                                 << QQuickText::RichText;
+    QTest::newRow("medium non-existent (rich text)") << QStringLiteral("a")
+                                                 << qint64(0x10000)
+                                                 << qint64(0x10000)
+                                                 << QQuickText::RichText;
+}
+
+void tst_qquicktext::imgSize()
+{
+    QFETCH(QString, url);
+    QFETCH(qint64, width);
+    QFETCH(qint64, height);
+    QFETCH(QQuickText::TextFormat, format);
+
+    // Reusing imgTagsUpdates.qml here, since it is just an empty Text component
+    QScopedPointer<QQuickView> window(createView(testFile("imgTagsUpdates.qml")));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QScopedPointer<QQuickText> myText(window->rootObject()->findChild<QQuickText*>("myText"));
+    QVERIFY(myText);
+
+    myText->setTextFormat(format);
+
+    QString imgStr = QStringLiteral("<img src=\"%1\" width=\"%2\" height=\"%3\" />")
+            .arg(url)
+            .arg(width)
+            .arg(height);
+    myText->setText(imgStr);
+
+    QVERIFY(QQuickTest::qWaitForPolish(myText.data()));
 }
 
 void tst_qquicktext::fontSizeMode_data()
