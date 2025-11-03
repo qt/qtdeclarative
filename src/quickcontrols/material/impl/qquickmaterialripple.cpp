@@ -41,8 +41,11 @@ private:
     QPointF m_anchor;
     QRectF m_bounds;
 
-    qreal m_opacity = -1.0;
+    qreal m_opacity = 1.0;
     qreal m_newOpacity = 1.0;
+
+    QQuickWindow *m_window = nullptr;
+    QMetaObject::Connection m_animationConnection;
 };
 
 QQuickMaterialRippleWaveNode::QQuickMaterialRippleWaveNode(QQuickMaterialRipple *ripple)
@@ -58,8 +61,19 @@ QQuickMaterialRippleWaveNode::QQuickMaterialRippleWaveNode(QQuickMaterialRipple 
     rectNode->setAntialiasing(true);
     opacityNode->appendChildNode(rectNode);
 
-    auto window = ripple->window();
-    connect(window, &QQuickWindow::beforeFrameBegin, this, &QQuickMaterialRippleWaveNode::updateWaveNode, Qt::DirectConnection);
+    m_window = ripple->window();
+
+    connect(this, &QQuickAnimatedNode::started, this, [this]() {
+        this->m_animationConnection = connect(
+            this->m_window,
+            &QQuickWindow::beforeFrameBegin,
+            this,
+            &QQuickMaterialRippleWaveNode::updateWaveNode,
+            Qt::DirectConnection);
+    });
+    connect(this, &QQuickAnimatedNode::stopped, this, [this]() {
+        disconnect(this->m_animationConnection);
+    });
 }
 
 void QQuickMaterialRippleWaveNode::exit()
@@ -144,8 +158,11 @@ private:
 
     bool m_active = false;
 
-    qreal m_opacity = -1.0;
+    qreal m_opacity = 0.0;
     qreal m_newOpacity = 0.0;
+
+    QQuickWindow *m_window = nullptr;
+    QMetaObject::Connection m_animationConnection;
 };
 
 QQuickMaterialRippleBackgroundNode::QQuickMaterialRippleBackgroundNode(QQuickMaterialRipple *ripple)
@@ -154,6 +171,7 @@ QQuickMaterialRippleBackgroundNode::QQuickMaterialRippleBackgroundNode(QQuickMat
     setDuration(OPACITY_ENTER_DURATION_FAST);
 
     QSGOpacityNode *opacityNode = new QSGOpacityNode;
+    opacityNode->setOpacity(0.0);
     appendChildNode(opacityNode);
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(ripple);
@@ -161,8 +179,17 @@ QQuickMaterialRippleBackgroundNode::QQuickMaterialRippleBackgroundNode(QQuickMat
     rectNode->setAntialiasing(true);
     opacityNode->appendChildNode(rectNode);
 
-    auto window = ripple->window();
-    connect(window, &QQuickWindow::beforeFrameBegin, this, &QQuickMaterialRippleBackgroundNode::updateBackgroundNode, Qt::DirectConnection);
+    m_window = ripple->window();
+    connect(this, &QQuickAnimatedNode::started, this, [this]() {
+        this->m_animationConnection = connect(
+            this->m_window,
+            &QQuickWindow::beforeFrameBegin,
+            this,
+            &QQuickMaterialRippleBackgroundNode::updateBackgroundNode,
+            Qt::DirectConnection);
+    });
+    connect(this, &QQuickAnimatedNode::stopped,
+            this, [this]() { disconnect(this->m_animationConnection); });
 }
 
 void QQuickMaterialRippleBackgroundNode::updateCurrentTime(int time)
