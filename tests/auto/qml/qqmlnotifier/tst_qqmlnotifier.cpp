@@ -335,7 +335,7 @@ void tst_qqmlnotifier::deleteFromHandler()
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
     QPointer<QObject> mess = component.create();
-    QObject::connect(mess.data(), &QObject::objectNameChanged, [&]() { delete mess; });
+    QObject::connect(mess.data(), &QObject::objectNameChanged, this, [&mess] { delete mess; });
     switch (setjmp(jumpBuffer)) {
     case CorrectErrorMessage:
         return; // success

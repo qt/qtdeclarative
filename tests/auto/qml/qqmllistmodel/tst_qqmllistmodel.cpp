@@ -1748,7 +1748,7 @@ void tst_qqmllistmodel::objectDestroyed()
             QUrl());
 
     std::unique_ptr<QObject> obj = std::make_unique<QObject>();
-    connect(obj.get(), &QObject::destroyed, [&]() { obj.release(); });
+    connect(obj.get(), &QObject::destroyed, obj.get(), [&obj] { obj.release(); });
 
     engine.rootContext()->setContextProperty(u"contextObject"_s, obj.get());
     engine.setObjectOwnership(obj.get(), QJSEngine::JavaScriptOwnership);

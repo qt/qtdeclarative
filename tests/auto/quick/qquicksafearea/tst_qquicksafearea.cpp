@@ -234,7 +234,8 @@ void tst_QQuickSafeArea::bindingLoop()
     helper.engine.setOutputWarningsToStandardError(false);
 
     QList<QQmlError> warnings;
-    QObject::connect(&helper.engine, &QQmlEngine::warnings, [&](auto w) { warnings = w; });
+    QObject::connect(&helper.engine, &QQmlEngine::warnings, this,
+                     [&warnings](auto w) { warnings = w; });
     auto *windowSafeArea = qobject_cast<QQuickSafeArea*>(qmlAttachedPropertiesObject<QQuickSafeArea>(window));
     QVERIFY(windowSafeArea);
     windowSafeArea->setAdditionalMargins(QMarginsF(50, 0, 0, 0));
@@ -253,7 +254,8 @@ void tst_QQuickSafeArea::bindingLoopApplicationWindow()
     helper.engine.setOutputWarningsToStandardError(false);
 
     QList<QQmlError> warnings;
-    QObject::connect(&helper.engine, &QQmlEngine::warnings, [&](auto w) { warnings = w; });
+    QObject::connect(&helper.engine, &QQmlEngine::warnings, this,
+                     [&warnings](auto w) { warnings = w; });
     auto *windowSafeArea = qobject_cast<QQuickSafeArea*>(qmlAttachedPropertiesObject<QQuickSafeArea>(window));
     QVERIFY(windowSafeArea);
 

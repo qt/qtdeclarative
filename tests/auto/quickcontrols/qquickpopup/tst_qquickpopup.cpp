@@ -3425,7 +3425,8 @@ void tst_QQuickPopup::popupWindowDestructedBeforeQQuickPopup()
 
     bool lambdaExecuted = false;
 
-    connect(popupPrivate->popupWindow, &QObject::destroyed, [&popupDestroyedSpy, &lambdaExecuted]() {
+    connect(popupPrivate->popupWindow, &QObject::destroyed, this,
+            [&popupDestroyedSpy, &lambdaExecuted]() {
         // Check that the popup window has been destroyed before the popup has been destroyed.
         // The events come in the same frame, so we can't just use QTRY_COMPARE.
         QCOMPARE(popupDestroyedSpy.size(), 0);

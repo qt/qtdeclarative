@@ -1121,7 +1121,7 @@ void tst_QQmlDebugJS::checkVersionParameters()
 int tst_QQmlDebugJS::setBreakPoint(const QString &file, int sourceLine, bool enabled)
 {
     int id = -1;
-    auto connection = QObject::connect(m_client.data(), &QV4DebugClient::result, [&]() {
+    auto connection = QObject::connect(m_client.data(), &QV4DebugClient::result, this, [&]() {
         id = m_client->response().body.toObject().value("breakpoint").toInt();
     });
 
@@ -1136,7 +1136,7 @@ int tst_QQmlDebugJS::setBreakPoint(const QString &file, int sourceLine, bool ena
 void tst_QQmlDebugJS::clearBreakPoint(int id)
 {
     bool ok = false;
-    auto connection = QObject::connect(m_client.data(), &QV4DebugClient::result, [&]() {
+    auto connection = QObject::connect(m_client.data(), &QV4DebugClient::result, this, [&]() {
         ok = true;
     });
 

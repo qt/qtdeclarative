@@ -1249,9 +1249,9 @@ void tst_QQuickLoader::transientWindow() // QTBUG-52944
     QElapsedTimer timer;
     qint64 viewVisibleTime = -1;
     qint64 loadedWindowVisibleTime = -1;
-    connect(&view, &QWindow::visibleChanged,
+    connect(&view, &QWindow::visibleChanged, this,
             [&viewVisibleTime, &timer]() { viewVisibleTime = timer.elapsed(); } );
-    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged,
+    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged, this,
             [&loadedWindowVisibleTime, &timer]() { loadedWindowVisibleTime = timer.elapsed(); } );
     timer.start();
     view.show();
@@ -1290,9 +1290,9 @@ void tst_QQuickLoader::nestedTransientWindow() // QTBUG-52944
     QElapsedTimer timer;
     qint64 viewVisibleTime = -1;
     qint64 loadedWindowVisibleTime = -1;
-    connect(&view, &QWindow::visibleChanged,
+    connect(&view, &QWindow::visibleChanged, this,
             [&viewVisibleTime, &timer]() { viewVisibleTime = timer.elapsed(); } );
-    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged,
+    connect(loadedWindow, &QQuickWindowQmlImpl::visibilityChanged, this,
             [&loadedWindowVisibleTime, &timer]() { loadedWindowVisibleTime = timer.elapsed(); } );
     timer.start();
     view.show();

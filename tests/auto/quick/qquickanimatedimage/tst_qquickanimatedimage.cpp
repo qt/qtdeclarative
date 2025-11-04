@@ -606,6 +606,7 @@ void tst_qquickanimatedimage::sourceChangesOnFrameChanged()
         // QTBUG-67427: this should not produce a segfault
         QObject::connect(anim,
                          &QQuickAnimatedImage::frameChanged,
+                         anim,
                          [this, anim]() { anim->setSource(testFileUrl("hearts.gif")); });
 
         QVERIFY(anim);

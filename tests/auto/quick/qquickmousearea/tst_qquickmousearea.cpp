@@ -2329,6 +2329,7 @@ void tst_QQuickMouseArea::notPressedAfterStolenGrab() // QTBUG-55325
     ma->setSize(window.size());
     QObject::connect(ma,
                      static_cast<void (QQuickMouseArea::*)(QQuickMouseEvent*)>(&QQuickMouseArea::pressed),
+                     this,
                      [&]() { qCDebug(lcTests) << "stealing grab now"; window.contentItem()->grabMouse(); });
 
     QTest::mouseClick(&window, Qt::LeftButton);

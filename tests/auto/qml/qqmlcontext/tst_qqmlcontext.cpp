@@ -859,7 +859,7 @@ static bool buildObjectList(QQmlContext *ctxt)
         // not, then the connect() below is likely to fail.
         if (deletedObjects.contains(object) && deletedObjects[object] == object->objectName())
             return false;
-        QObject::connect(object, &QObject::destroyed, [object]() {
+        QObject::connect(object, &QObject::destroyed, object, [object]() {
             object->setObjectName(QString::number(deletedObjects.size()));
             deletedObjects.insert(object, object->objectName());
         });
@@ -918,7 +918,7 @@ void tst_qqmlcontext::contextObjectHierarchy()
     for (const QObject *child : root->children())
         QVERIFY(QQmlData::get(child)->outerContext != nullptr);
 
-    connect(root.data(), &QObject::destroyed, [&root]() {
+    connect(root.get(), &QObject::destroyed, this, [&root]() {
         for (const QObject *child : root->children())
             QCOMPARE(QQmlData::get(child)->outerContext, nullptr);
     });

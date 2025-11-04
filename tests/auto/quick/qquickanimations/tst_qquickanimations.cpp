@@ -1358,7 +1358,7 @@ void tst_qquickanimations::signalOrder()
 
     for (int i = 0; i < signalsToConnect.size(); ++i) {
         const char *str = expectedSignalOrder.at(i);
-        connect(animation, signalsToConnect.at(i) , [str, &actualSignalOrder] () {
+        connect(animation, signalsToConnect.at(i), this, [str, &actualSignalOrder] () {
             actualSignalOrder.append(str);
         });
     }

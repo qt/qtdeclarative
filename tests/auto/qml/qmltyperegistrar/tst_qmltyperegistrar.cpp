@@ -1475,7 +1475,8 @@ void tst_qmltyperegistrar::verifyJsRoot()
     QTemporaryDir dir;
 
     QProcess jsrootProcess;
-    connect(&jsrootProcess, &QProcess::errorOccurred, [&](QProcess::ProcessError error) {
+    connect(&jsrootProcess, &QProcess::errorOccurred,
+            this, [&jsrootProcess](QProcess::ProcessError error) {
         qWarning() << error << jsrootProcess.errorString();
     });
     jsrootProcess.setWorkingDirectory(dir.path());

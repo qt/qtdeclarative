@@ -915,7 +915,7 @@ void tst_QQuickTableView::checkForceLayoutInbetweenAddingRowsToModel()
     TestModel model(initialRowCount, 10);
     tableView->setModel(QVariant::fromValue(&model));
 
-    connect(&model, &QAbstractItemModel::rowsInserted, [=](){
+    connect(&model, &QAbstractItemModel::rowsInserted, this, [tableView]() {
         QCOMPARE(tableView->rows(), initialRowCount);
         tableView->forceLayout();
         QCOMPARE(tableView->rows(), initialRowCount + 1);
@@ -3641,14 +3641,16 @@ void tst_QQuickTableView::checkSyncView_dontRelayoutWhileFlicking()
     // signal. If this signal is emitted as a part of a relayout, rebuildOptions
     // would still be different from RebuildOption::None at that point.
     bool columnFlickedIn = false;
-    connect(tableViewHV, &QQuickTableView::rightColumnChanged, [&] {
+    connect(tableViewHV, &QQuickTableView::rightColumnChanged,
+            this, [&columnFlickedIn, tableViewHVPrivate] {
         columnFlickedIn = true;
         QCOMPARE(tableViewHVPrivate->rebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
     });
 
     // We do the same for vertical flicking
     bool rowFlickedIn = false;
-    connect(tableViewHV, &QQuickTableView::bottomRowChanged, [&] {
+    connect(tableViewHV, &QQuickTableView::bottomRowChanged,
+            this, [&rowFlickedIn, tableViewHVPrivate] {
         rowFlickedIn = true;
         QCOMPARE(tableViewHVPrivate->rebuildOptions, QQuickTableViewPrivate::RebuildOption::None);
     });
@@ -4759,16 +4761,16 @@ void tst_QQuickTableView::leftRightTopBottomUpdatedBeforeSignalEmission()
 
     WAIT_UNTIL_POLISHED;
 
-    connect(tableView, &QQuickTableView::leftColumnChanged, [=]{
+    connect(tableView, &QQuickTableView::leftColumnChanged, this, [tableView] {
         QCOMPARE(tableView->leftColumn(), 1);
     });
-    connect(tableView, &QQuickTableView::rightColumnChanged, [=]{
+    connect(tableView, &QQuickTableView::rightColumnChanged, this, [tableView] {
         QCOMPARE(tableView->rightColumn(), 6);
     });
-    connect(tableView, &QQuickTableView::topRowChanged, [=]{
+    connect(tableView, &QQuickTableView::topRowChanged, this, [tableView] {
         QCOMPARE(tableView->topRow(), 1);
     });
-    connect(tableView, &QQuickTableView::bottomRowChanged, [=]{
+    connect(tableView, &QQuickTableView::bottomRowChanged, this, [tableView] {
         QCOMPARE(tableView->bottomRow(), 8);
     });
 
@@ -8043,7 +8045,7 @@ void tst_QQuickTableView::invalidateTableInstanceModelContextObject()
     QTRY_COMPARE(tableView->rows(), modelData);
 
     bool tableViewDestroyed = false;
-    connect(tableView, &QObject::destroyed, [&] {
+    connect(tableView, &QObject::destroyed, this, [&tableViewDestroyed] {
         tableViewDestroyed = true;
     });
 

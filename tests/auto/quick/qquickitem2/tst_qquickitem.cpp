@@ -4235,7 +4235,7 @@ void tst_QQuickItem::viewport()
 void tst_QQuickItem::qobject_castOnDestruction()
 {
     QQuickItem item;
-    QObject::connect(&item, &QObject::destroyed, [](QObject *object)
+    QObject::connect(&item, &QObject::destroyed, this, [](QObject *object)
     {
         QVERIFY(!qobject_cast<QQuickItem *>(object));
         QVERIFY(!dynamic_cast<QQuickItem *>(object));

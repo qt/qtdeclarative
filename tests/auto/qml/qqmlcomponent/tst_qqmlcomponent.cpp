@@ -369,7 +369,7 @@ void tst_qqmlcomponent::qmlCreateObjectClean()
 {
     QQmlEngine engine;
     QVERIFY(engine.outputWarningsToStandardError());
-    QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &) {
+    QObject::connect(&engine, &QQmlEngine::warnings, this, [](const QList<QQmlError> &) {
         QFAIL("Calls with suitable parameters should not generate any warnings.");
     });
     QQmlComponent component(&engine, testFileUrl("createObjectClean.qml"));
@@ -387,7 +387,7 @@ void tst_qqmlcomponent::qmlCreateObjectDirty()
 {
     QQmlEngine engine;
     engine.setOutputWarningsToStandardError(false);
-    QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &warnings) {
+    QObject::connect(&engine, &QQmlEngine::warnings, this, [](const QList<QQmlError> &warnings) {
         QCOMPARE(warnings.size(), 1);
         QCOMPARE(warnings[0].description(),
                 "QML Component: Unsuitable arguments passed to createObject(). The first argument "

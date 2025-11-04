@@ -1435,9 +1435,7 @@ void tst_qqmlengine::uiLanguage()
     {
         QQmlEngine engine;
 
-        QObject::connect(&engine, &QJSEngine::uiLanguageChanged, [&engine]() {
-            engine.retranslate();
-        });
+        QObject::connect(&engine, &QJSEngine::uiLanguageChanged, &engine, &QQmlEngine::retranslate);
 
         QSignalSpy uiLanguageChangeSpy(&engine, SIGNAL(uiLanguageChanged()));
 

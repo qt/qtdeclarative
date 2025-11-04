@@ -400,7 +400,8 @@ public:
     QNetworkAccessManager *create(QObject *parent) override
     {
         NetworkAccessManager *manager = new NetworkAccessManager(parent);
-        QObject::connect(manager, &NetworkAccessManager::loaded, [this](const QString &filename) {
+        QObject::connect(manager, &NetworkAccessManager::loaded,
+                         manager, [this](const QString &filename) {
             loadedFiles.append(filename);
         });
         return manager;
