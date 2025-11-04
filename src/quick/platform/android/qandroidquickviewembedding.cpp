@@ -63,7 +63,7 @@ namespace QtAndroidQuickViewEmbedding
                 QWindow *parentWindow = reinterpret_cast<QWindow *>(parentWindowReference);
                 view = new QAndroidQuickView(parentWindow);
                 QObject::connect(
-                        view, &QAndroidQuickView::statusChanged,
+                        view, &QAndroidQuickView::statusChanged, view,
                         std::bind(&onQQuickViewStatusChanged, qtViewObject, std::placeholders::_1));
                 view->setResizeMode(QAndroidQuickView::SizeRootObjectToView);
                 view->setColor(QColor(Qt::transparent));
