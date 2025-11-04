@@ -2757,7 +2757,7 @@ void tst_QmlCppCodegen::globals()
 {
     QQmlEngine engine;
     int exitCode = -1;
-    QObject::connect(&engine, &QQmlEngine::exit, [&](int code) { exitCode = code; });
+    QObject::connect(&engine, &QQmlEngine::exit, this, [&exitCode](int code) { exitCode = code; });
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/globals.qml"_s));
     QVERIFY2(!component.isError(), component.errorString().toUtf8());
 

@@ -2636,7 +2636,8 @@ void tst_qqmlproperty::invalidateQPropertyChangeTriggers()
     QVERIFY(!root.isNull());
 
     QStringList names;
-    QObject::connect(root.data(), &QObject::objectNameChanged, [&](const QString &name) {
+    QObject::connect(root.get(), &QObject::objectNameChanged,
+                     this, [&root, &names](const QString &name) {
         if (names.length() == 10)
             root->setProperty("running", false);
         else

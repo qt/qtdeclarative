@@ -315,9 +315,7 @@ const QMetaObject *QtPrivate::MetaObjectForType<FakeDynamicObject *, void>::meta
         QMetaObjectBuilder builder(&FakeDynamicObject::staticMetaObject);
         builder.setFlags(DynamicMetaObject);
         auto mo = builder.toMetaObject();
-        QObject::connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, [mo]() {
-            delete mo;
-        });
+        QObject::connect(qApp, &QCoreApplication::aboutToQuit, qApp, [mo] { delete mo; });
         return mo;
     }();
     return ptr;

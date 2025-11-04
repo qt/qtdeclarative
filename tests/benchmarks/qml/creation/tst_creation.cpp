@@ -309,7 +309,7 @@ void tst_creation::bindings_cpp()
     QQuickItem item;
     QMetaProperty widthProp = item.metaObject()->property(item.metaObject()->indexOfProperty("width"));
     QMetaProperty heightProp = item.metaObject()->property(item.metaObject()->indexOfProperty("height"));
-    connect(&item, &QQuickItem::heightChanged, [&item, &widthProp, &heightProp](){
+    connect(&item, &QQuickItem::heightChanged, &item, [&item, &widthProp, &heightProp]() {
         QVariant height = heightProp.read(&item);
         widthProp.write(&item, height);
     });
@@ -325,7 +325,7 @@ void tst_creation::bindings_cpp2()
     QQuickItem item;
     int widthProp = item.metaObject()->indexOfProperty("width");
     int heightProp = item.metaObject()->indexOfProperty("height");
-    connect(&item, &QQuickItem::heightChanged, [&item, widthProp, heightProp](){
+    connect(&item, &QQuickItem::heightChanged, &item, [&item, widthProp, heightProp]() {
 
         qreal height = -1;
         void *args[] = { &height, 0 };

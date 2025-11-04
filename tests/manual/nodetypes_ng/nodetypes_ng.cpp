@@ -43,7 +43,7 @@ public:
             image.save("grab_item_result.png");
         };
         if (result->image().isNull()) {
-            connect(result.data(), &QQuickItemGrabResult::ready, [f, result] {
+            connect(result.get(), &QQuickItemGrabResult::ready, result.get(), [f, result] {
                 f(result->image());
             });
         } else {

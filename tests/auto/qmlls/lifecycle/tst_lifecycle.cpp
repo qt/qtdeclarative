@@ -28,9 +28,10 @@ public:
         : m_device(device), m_server(server)
     {
         server->finishSetup();
-        QObject::connect(device, &QIODevice::readyRead,
+        QObject::connect(device, &QIODevice::readyRead, m_server,
                          [this]() { m_server->protocol()->receiveData(m_device->readAll()); });
-        QObject::connect(m_server, &QLanguageServer::exit, [this]() { m_hasExited = true; });
+        QObject::connect(m_server, &QLanguageServer::exit, m_server,
+                         [this] { m_hasExited = true; });
     }
 
     bool hasExited() const { return m_hasExited; }
@@ -100,7 +101,7 @@ State::State()
     pipe.open(QIODevice::ReadWrite);
     QCOMPARE(server.runStatus(), QLanguageServer::RunStatus::DidSetup);
 
-    QObject::connect(pipe.end1(), &QIODevice::readyRead,
+    QObject::connect(pipe.end1(), &QIODevice::readyRead, &pipe,
                      [this]() { protocol.receiveData(pipe.end2()->readAll()); });
     QCOMPARE(server.runStatus(), QLanguageServer::RunStatus::DidSetup);
 

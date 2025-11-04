@@ -973,12 +973,12 @@ void tst_qquickitem::activeFocusChangedOrder()
         QTRY_VERIFY(scope1.hasActiveFocus());
 
         int counter = 0;
-        connect(&scope1, &QQuickItem::activeFocusChanged, [&counter, &scope1](bool focus) {
+        connect(&scope1, &QQuickItem::activeFocusChanged, this, [&counter, &scope1](bool focus) {
             QCOMPARE(scope1.childItems().front()->hasActiveFocus(), focus);
             QCOMPARE(counter, 0);
             counter++;
         });
-        connect(&scope2, &QQuickItem::activeFocusChanged, [&counter, &scope2](bool focus) {
+        connect(&scope2, &QQuickItem::activeFocusChanged, this, [&counter, &scope2](bool focus) {
             QCOMPARE(scope2.childItems().front()->hasActiveFocus(), focus);
             QCOMPARE(counter, 1);
             counter++;
@@ -1012,12 +1012,12 @@ void tst_qquickitem::activeFocusChangedOrder()
         QTRY_VERIFY(item1.hasActiveFocus());
 
         int counter = 0;
-        connect(&item1, &QQuickItem::activeFocusChanged, [&counter](bool focus) {
+        connect(&item1, &QQuickItem::activeFocusChanged, this, [&counter](bool focus) {
             QVERIFY(!focus);
             QCOMPARE(counter, 0);
             counter++;
         });
-        connect(&item2, &QQuickItem::activeFocusChanged, [&counter](bool focus) {
+        connect(&item2, &QQuickItem::activeFocusChanged, this, [&counter](bool focus) {
             QVERIFY(focus);
             QCOMPARE(counter, 1);
             counter++;
@@ -2449,7 +2449,7 @@ void tst_qquickitem::objectCastInDestructor()
     QQuickItem *item = view.findChild<QQuickItem *>("testRectangle");
     QVERIFY(item);
     bool destroyed = false;
-    connect(item, &QObject::destroyed, [&]{
+    connect(item, &QObject::destroyed, this, [&destroyed, item] {
         destroyed = true;
         QCOMPARE(qobject_cast<QQuickItem *>(item), nullptr);
         QCOMPARE(qobject_cast<QQuickRectangle *>(item), nullptr);

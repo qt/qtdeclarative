@@ -1370,10 +1370,11 @@ void tst_TouchMouse::touchPointDeliveryOrder()
     left->setAcceptTouchEvents(true);
     middle->setAcceptTouchEvents(true);
     right->setAcceptTouchEvents(true);
-    connect(background, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
-    connect(left, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
-    connect(middle, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
-    connect(right, &EventItem::onTouchEvent, [&events](QQuickItem* receiver){ events.append(receiver); });
+    auto appendReceiver = [&events](QQuickItem* receiver) { events.append(receiver); };
+    connect(background, &EventItem::onTouchEvent, this, appendReceiver);
+    connect(left, &EventItem::onTouchEvent, this, appendReceiver);
+    connect(middle, &EventItem::onTouchEvent, this, appendReceiver);
+    connect(right, &EventItem::onTouchEvent, this, appendReceiver);
 
     touchSeq.press(0, pLeft, &window).commit();
     QQuickTouchUtils::flush(&window);
