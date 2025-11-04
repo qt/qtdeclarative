@@ -30,6 +30,8 @@ T.ComboBox {
     leftInset: -__config.leftInset || 0
     rightInset: -__config.rightInset || 0
 
+    highlightOnHover: false
+
     readonly property string __currentState: [
         !control.enabled && "disabled",
         control.enabled && !control.pressed && control.hovered && "hovered",

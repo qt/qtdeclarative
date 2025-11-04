@@ -1553,6 +1553,9 @@ TestCase {
         let control = createTemporaryObject(comboBox, testCase, {model: 20})
         verify(control)
 
+        if (!control.highlightOnHover)
+            skip("highlightOnHover is not active for this component")
+
         compare(control.highlightedIndex, -1)
 
         let openedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "opened"})

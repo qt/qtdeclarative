@@ -71,6 +71,8 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickComboBox : public QQuickControl
     // 6.0 (Qt 6.0)
     Q_PROPERTY(ImplicitContentWidthPolicy implicitContentWidthPolicy READ implicitContentWidthPolicy
         WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION(6, 0))
+    // 6.12 (Qt 6.12)
+    Q_PROPERTY(bool highlightOnHover READ highlightOnHover WRITE setHighlightOnHover NOTIFY highlightOnHoverChanged FINAL REVISION(6, 12))
     QML_NAMED_ELEMENT(ComboBox)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -168,6 +170,10 @@ public:
     ImplicitContentWidthPolicy implicitContentWidthPolicy() const;
     void setImplicitContentWidthPolicy(ImplicitContentWidthPolicy policy);
 
+    // 6.12
+    bool highlightOnHover() const;
+    void setHighlightOnHover(bool value);
+
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
@@ -211,6 +217,8 @@ Q_SIGNALS:
     Q_REVISION(2, 15) void selectTextByMouseChanged();
     // 6.0 (Qt 6.0)
     Q_REVISION(6, 0) void implicitContentWidthPolicyChanged();
+    // 6.12 (Qt 6.12)
+    Q_REVISION(6, 12) void highlightOnHoverChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
