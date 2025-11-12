@@ -76,6 +76,7 @@ ApplicationWindow {
             anchors.leftMargin: !window.portraitMode ? drawer.width : undefined
 
             ToolButton {
+                Accessible.name: qsTr("Toggle drawer")
                 action: navigateBackAction
                 visible: window.portraitMode
             }
@@ -92,6 +93,7 @@ ApplicationWindow {
 
             ToolButton {
                 action: optionsMenuAction
+                Accessible.name: qsTr("Open options menu")
 
                 Menu {
                     id: optionsMenu

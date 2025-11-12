@@ -22,6 +22,7 @@ ScrollablePage {
             enabled: !GalleryConfig.disabled
             placeholderText: qsTr("TextField")
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("demo textfield")
         }
     }
 }

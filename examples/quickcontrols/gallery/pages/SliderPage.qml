@@ -22,6 +22,7 @@ ScrollablePage {
             enabled: !GalleryConfig.disabled
             value: 0.5
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("demo slider")
         }
 
         Slider {
@@ -29,6 +30,7 @@ ScrollablePage {
             orientation: Qt.Vertical
             value: 0.5
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("vertical demo slider")
         }
     }
 }

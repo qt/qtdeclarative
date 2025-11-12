@@ -23,11 +23,13 @@ ScrollablePage {
             id: bar
             value: 0.5
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("demo progressbar")
         }
 
         ProgressBar {
             indeterminate: true
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("indeterminate progressbar")
         }
     }
 }
