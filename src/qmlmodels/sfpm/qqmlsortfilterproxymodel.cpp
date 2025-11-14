@@ -99,6 +99,10 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
 
     \snippet qml/sortfilterproxymodel/qml-sortfilterproxymodel.qml sfpm-usage
 
+    The AgeFilter in the above code snippet can be declared as follows
+
+    \snippet qml/sortfilterproxymodel/AgeFilter.qml age-filter
+
     \note This API is considered tech preview and may change or be removed in
     future versions of Qt.
 */
