@@ -4,6 +4,7 @@
 //![0]
 import QtQuick
 import QtQuick.Controls
+import QtQml.Models
 
 ApplicationWindow {
     width: 640
@@ -25,12 +26,7 @@ ApplicationWindow {
         id: ageFilterModel
         model: listModel
         filters: [
-            FunctionFilter {
-                component RoleData: QtObject { property int age }
-                function filter(data: RoleData) : bool {
-                    return data.age > 30
-                }
-            }
+            AgeFilter { }
         ]
         sorters: [
             RoleSorter { roleName: "department" }
