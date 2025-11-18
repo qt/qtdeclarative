@@ -6,18 +6,16 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 bool QQmlJSAnnotation::isDeprecation() const { return name == QStringLiteral("Deprecated"); }
 
 QQQmlJSDeprecation QQmlJSAnnotation::deprecation() const {
     Q_ASSERT(isDeprecation());
     QQQmlJSDeprecation deprecation;
-    if (bindings.contains(QStringLiteral("reason"))) {
-
-        auto reason = bindings[QStringLiteral("reason")];
-
-        if (std::holds_alternative<QString>(reason)) {
-            deprecation.reason = std::get<QString>(reason);
-        }
+    if (const auto it = bindings.find(u"reason"_s); it != bindings.end()) {
+        if (auto v = get_if<QString>(&it.value()))
+            deprecation.reason = *v;
     }
 
     return deprecation;
