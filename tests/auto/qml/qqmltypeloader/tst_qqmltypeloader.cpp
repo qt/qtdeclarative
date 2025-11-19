@@ -533,7 +533,7 @@ void tst_QQMLTypeLoader::redirect()
     QQmlEngine engine;
     engine.setNetworkAccessManagerFactory(&factory);
     QQmlComponent component(&engine);
-    component.loadUrl(server.urlString("/Load.qml"), QQmlComponent::Asynchronous);
+    component.loadUrl(server.url("/Load.qml"), QQmlComponent::Asynchronous);
     QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QScopedPointer<QObject> object {component.create()};
@@ -701,7 +701,7 @@ void tst_QQMLTypeLoader::compositeSingletonCycle()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     engine.addImportPath(server.baseUrl().toString());
-    component.loadUrl(server.urlString("Com/Orga/Handlers/Handler.qml"), QQmlComponent::Asynchronous);
+    component.loadUrl(server.url("Com/Orga/Handlers/Handler.qml"), QQmlComponent::Asynchronous);
     QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QScopedPointer<QObject> object {component.create()};
