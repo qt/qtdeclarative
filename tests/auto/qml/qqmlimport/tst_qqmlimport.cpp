@@ -23,6 +23,8 @@
 
 #include "MyStaticModule/mystaticmoduleplugin.h"
 
+using namespace Qt::StringLiterals;
+
 class TheThing : public QObject
 {
     Q_OBJECT
@@ -429,7 +431,7 @@ public:
     {
         if (type != UrlString && !url.isEmpty() && url.isValid()) {
             QString str = url.toString(QUrl::None);
-            return str.replace(QStringLiteral("$(INTERCEPT)"), QStringLiteral("intercepted"));
+            return QUrl{str.replace("$(INTERCEPT)"_L1, "intercepted"_L1)};
         }
         return url;
     }

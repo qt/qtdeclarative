@@ -194,7 +194,8 @@ void tst_qquicktextdocument::customDocument()
         if (!imageName.isEmpty()) {
             QCOMPARE(imageName, imageUrl);
             foundImage = true;
-            QCOMPARE(fdoc.resource(QTextDocument::ImageResource, imageUrl).toString(), fakeImageData);
+            QCOMPARE(fdoc.resource(QTextDocument::ImageResource, QUrl{imageUrl}).toString(),
+                     fakeImageData);
         }
     }
     QVERIFY(foundImage);

@@ -20,6 +20,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qqmlxmlhttprequest : public QQmlDataTest
 {
     Q_OBJECT
@@ -342,7 +344,7 @@ void tst_qqmlxmlhttprequest::open_sync()
     QQmlComponent component(engine.get(), testFileUrl("open_sync.qml"));
     QScopedPointer<QObject> object(component.beginCreate(engine.get()->rootContext()));
     QVERIFY(!object.isNull());
-    object->setProperty("url", server.serverBaseUrl.resolved(QStringLiteral("/testdocument.html")).toString());
+    object->setProperty("url", server.serverBaseUrl.resolved(QUrl{u"/testdocument.html"_s}).toString());
     component.completeCreate();
 
     QCOMPARE(object->property("responseText").toString(), QStringLiteral("QML Rocks!\n"));
@@ -1505,7 +1507,7 @@ void tst_qqmlxmlhttprequest::noQmlContext()
     QVERIFY(server.wait(testFileUrl("open_network.expect"),
                         testFileUrl("open_network.reply"),
                         testFileUrl("testdocument.html")));
-    QUrl url = server.urlString(QStringLiteral("/testdocument.html"));
+    auto url = server.url(u"/testdocument.html"_s);
 
     QQmlEngine engine;
 

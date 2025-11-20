@@ -2260,7 +2260,7 @@ void tst_qquicktext::embeddedImages()
         });
         QCOMPARE_NE(it, formats.end());
         const QTextImageFormat format = (*it).toImageFormat();
-        QImage image = doc->resource(QTextDocument::ImageResource, format.name()).value<QImage>();
+        QImage image = doc->resource(QTextDocument::ImageResource, QUrl{format.name()}).value<QImage>();
         qCDebug(lcTests) << "found image?" << format.name() << image;
         QCOMPARE(image.size(), expectedImageSize);
     } else {

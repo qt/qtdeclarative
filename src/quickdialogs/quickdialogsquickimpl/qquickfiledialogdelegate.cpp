@@ -241,7 +241,8 @@ void QQuickFileDialogTapHandler::grabFolder()
 
 QUrl QQuickFileDialogTapHandler::getFolderUrlAtPress() const
 {
-    return qobject_cast<QQuickFileDialogDelegate*>(parent())->file().toLocalFile();
+    auto *delegate = qobject_cast<QQuickFileDialogDelegate *>(parent());
+    return QUrl{delegate->file().toLocalFile()};
 }
 
 void QQuickFileDialogTapHandler::handleDrag(QQuickDragEvent *event)

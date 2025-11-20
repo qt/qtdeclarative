@@ -92,7 +92,7 @@ quint16 TestHTTPServer::port() const
 
 QUrl TestHTTPServer::url(const QString &documentPath) const
 {
-    return baseUrl().resolved(documentPath);
+    return baseUrl().resolved(QUrl{documentPath});
 }
 
 QString TestHTTPServer::urlString(const QString &documentPath) const
@@ -431,7 +431,7 @@ QUrl ThreadedTestHTTPServer::baseUrl() const
 
 QUrl ThreadedTestHTTPServer::url(const QString &documentPath) const
 {
-    return baseUrl().resolved(documentPath);
+    return baseUrl().resolved(QUrl{documentPath});
 }
 
 QString ThreadedTestHTTPServer::urlString(const QString &documentPath) const

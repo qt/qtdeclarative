@@ -15,7 +15,7 @@ QQuickIOSStyle::QQuickIOSStyle(QObject *parent)
 
 QUrl QQuickIOSStyle::url()
 {
-    return *GlobalPath();
+    return QUrl{*GlobalPath()};
 }
 
 QT_END_NAMESPACE

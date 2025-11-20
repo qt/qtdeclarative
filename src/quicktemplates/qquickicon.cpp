@@ -97,7 +97,7 @@ void QQuickIcon::setSource(const QUrl &source)
 void QQuickIcon::resetSource()
 {
     d.detach();
-    d->source = QString();
+    d->source = {};
     d->resolvedSource.clear();
     d->resolveMask &= ~QQuickIconPrivate::SourceResolved;
 }

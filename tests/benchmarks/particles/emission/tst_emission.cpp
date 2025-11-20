@@ -6,6 +6,8 @@
 #include "../../../auto/particles/shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_emission : public QObject
 {
     Q_OBJECT
@@ -35,7 +37,8 @@ void tst_emission::test_basic_data()
 void tst_emission::test_basic()
 {
     QFETCH(int, dt);
-    QQuickView* view = createView(QCoreApplication::applicationDirPath() + "/data/basic.qml");
+    QQuickView* view = createView(QUrl{QCoreApplication::applicationDirPath()
+                                       + "/data/basic.qml"_L1});
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
     //Pretend we're running, but we manually advance the simulation
     system->m_running = true;

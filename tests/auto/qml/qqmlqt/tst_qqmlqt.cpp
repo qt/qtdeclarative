@@ -30,6 +30,8 @@
 #include <private/qtenvironmentvariables_p.h> // for qTzSet()
 #include <private/qqmlengine_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qqmlqt : public QQmlDataTest
 {
     Q_OBJECT
@@ -1310,9 +1312,9 @@ void tst_qqmlqt::resolvedUrl()
     QCOMPARE(object->property("isObject").toBool(), true);
 
     QCOMPARE(qvariant_cast<QUrl>(object->property("resolvedHere")),
-             dataDirectoryUrl().resolved(QStringLiteral("somewhere.qml")));
+             dataDirectoryUrl().resolved(QUrl{u"somewhere.qml"_s}));
     QCOMPARE(qvariant_cast<QUrl>(object->property("resolvedThere")),
-             dataDirectoryUrl().resolved(QStringLiteral("Other/somewhere.qml")));
+             dataDirectoryUrl().resolved(QUrl{u"Other/somewhere.qml"_s}));
 
     QVariant unresolved = object->property("unresolvedUrl");
     QCOMPARE(unresolved.metaType(), QMetaType::fromType<QUrl>());

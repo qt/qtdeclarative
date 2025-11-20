@@ -440,7 +440,7 @@ void tst_qquickborderimage::statusChanges()
     qRegisterMetaType<QQuickImageBase::Status>();
     QSignalSpy spy(obj, SIGNAL(statusChanged(QQuickImageBase::Status)));
     QVERIFY(obj != nullptr);
-    obj->setSource(source);
+    obj->setSource(QUrl{source});
     if (remote)
         server.sendDelayedItem();
     QTRY_COMPARE(obj->status(), finalStatus);
