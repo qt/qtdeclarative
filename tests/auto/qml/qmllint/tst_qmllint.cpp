@@ -1181,7 +1181,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1, 16, 27 } },
             << Result{ { { "TypeDoesNotExist was not found."_L1 } } };
     QTest::newRow("unresolvedArrayBinding")
             << QStringLiteral("unresolvedArrayBinding.qml")
-            << Result{ { { "Declaring an object which is not an Qml object as a list member."_L1 } } };
+            << Result{ { { "Declaring an object which is not a Qml object as a list member."_L1 } } };
     QTest::newRow("unresolvedAttachedType")
             << QStringLiteral("unresolvedAttachedType.qml")
             << Result{ { { "unknown attached property scope UnresolvedAttachedType."_L1 } },

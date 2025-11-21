@@ -2698,7 +2698,7 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
     for (auto element = arrayBinding->members; element; element = element->next, ++i) {
         const auto &type = children[i];
         if ((type->scopeType() != QQmlSA::ScopeType::QMLScope)) {
-            m_logger->log(u"Declaring an object which is not an Qml object"
+            m_logger->log(u"Declaring an object which is not a Qml object"
                           " as a list member."_s, qmlSyntax, element->firstSourceLocation());
             return;
         }
