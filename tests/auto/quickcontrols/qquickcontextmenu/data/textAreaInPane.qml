@@ -4,7 +4,7 @@ Pane {
     width: 400
     height: 400
 
-    property alias textArea: textArea
+    property alias editor: textArea
 
     TextArea {
         id: textArea

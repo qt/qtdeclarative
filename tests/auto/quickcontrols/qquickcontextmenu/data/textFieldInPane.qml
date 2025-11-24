@@ -4,7 +4,7 @@ Pane {
     width: 400
     height: 400
 
-    property alias textField: textField
+    property alias editor: textField
 
     TextField {
         id: textField

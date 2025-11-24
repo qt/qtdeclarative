@@ -1,6 +1,7 @@
 // Copyright (C) 2024 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QtGui/qclipboard.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtTest/qsignalspy.h>
@@ -12,6 +13,7 @@
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
+#include <QtQuickTemplates2/private/qquickcontextmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p_p.h>
@@ -46,9 +48,28 @@ private slots:
     void menuItemShouldntTriggerOnRelease();
     void textControlsMenuKey();
     void mouseAreaUnderTextArea();
+    void textEditingContextMenuCut_data();
+    void textEditingContextMenuCut();
+    void textEditingContextMenuCopy_data();
+    void textEditingContextMenuCopy();
+    void textEditingContextMenuPaste_data();
+    void textEditingContextMenuPaste();
+    void textEditingContextMenuDelete_data();
+    void textEditingContextMenuDelete();
+    void textEditingContextMenuSelectAll_data();
+    void textEditingContextMenuSelectAll();
 
 private:
+    void textEditingContextMenuData();
+
     bool contextMenuTriggeredOnRelease = false;
+
+    bool hasClipboardSupport =
+#if QT_CONFIG(clipboard)
+        true;
+#else
+        false;
+#endif
 };
 
 tst_QQuickContextMenu::tst_QQuickContextMenu()
@@ -462,6 +483,352 @@ void tst_QQuickContextMenu::mouseAreaUnderTextArea()
     QTRY_COMPARE(menuItemTriggeredSpy.size(), 1);
     QCOMPARE(mouseAreaPressedSpy.size(), 0);
     QTRY_COMPARE(menuPrivate->popupWindow->isVisible(), false);
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuData()
+{
+    QTest::addColumn<QString>("qmlFileName");
+
+    QTest::addRow("TextArea") << "textAreaInPane.qml";
+    QTest::addRow("TextField") << "textFieldInPane.qml";
+}
+
+enum class TextEditingContextMenuItemType {
+    Cut = 0,
+    Copy = 1,
+    Paste = 2,
+    Delete = 3,
+    // (separator)
+    SelectAll = 5
+};
+
+void tst_QQuickContextMenu::textEditingContextMenuCut_data()
+{
+    return textEditingContextMenuData();
+}
+
+static const auto mementoStr = QLatin1String("Memento");
+static const auto moriStr = QLatin1String("mori");
+static const auto mementoMoriStr = QLatin1String("Memento mori");
+
+void tst_QQuickContextMenu::textEditingContextMenuCut()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+
+    // Right click on the editor to open the context menu.
+    // Right-clicking without a selection should result in the Cut menu item being disabled.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *cutMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        static_cast<int>(TextEditingContextMenuItemType::Cut)));
+    QVERIFY(cutMenuItem);
+    QCOMPARE(cutMenuItem->text(), "Cut");
+    QVERIFY(!cutMenuItem->isEnabled());
+    QVERIFY(editor->property("selectedText").toString().isEmpty());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Right-clicking with a selection should result in the Cut menu item being enabled
+    // if Qt was built with clipboard support.
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, mementoStr.length()),
+        Q_ARG(int, editor->property("length").toInt())));
+    const QString cutText = QLatin1Char(' ') + moriStr;
+    QCOMPARE(editor->property("selectedText").toString(), cutText);
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(cutMenuItem->isEnabled(), hasClipboardSupport);
+    // QTBUG-133302: the first menu item shouldn't be immediately triggered.
+    QCOMPARE(QQuickMenuItemPrivate::get(cutMenuItem)->animateTimer, 0);
+
+    // Click on the Cut menu item (if enabled) and close the menu.
+#if QT_CONFIG(clipboard)
+    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
+    QQuickWindow *contextMenuPopupWindow = &window;
+    if (contextMenuPrivate->usePopupWindow())
+        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
+    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(cutMenuItem));
+    QCOMPARE(editor->property("text").toString(), mementoStr);
+    QCOMPARE(qGuiApp->clipboard()->text(), cutText);
+#else
+    QTest::keyClick(&window, Qt::Key_Escape);
+#endif
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Make the editor read-only. Cut should no longer be enabled.
+    editor->setProperty("readOnly", true);
+    QVERIFY(QMetaObject::invokeMethod(editor, "selectAll"));
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(cutMenuItem->text(), "Cut");
+    QVERIFY(!cutMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuCopy_data()
+{
+    return textEditingContextMenuData();
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuCopy()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+
+    // Right click on the editor to open the context menu.
+    // Right-clicking without a selection should result in the Copy menu item being disabled.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *copyMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        static_cast<int>(TextEditingContextMenuItemType::Copy)));
+    QVERIFY(copyMenuItem);
+    QCOMPARE(copyMenuItem->text(), "Copy");
+    QVERIFY(!copyMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Right-clicking with a selection should result in the Copy menu item being enabled
+    // if Qt was built with clipboard support.
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, mementoStr.length())));
+    QCOMPARE(editor->property("selectedText").toString(), mementoStr);
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(copyMenuItem->isEnabled(), hasClipboardSupport);
+
+    // Click on the Copy menu item (if enabled) and close the menu.
+#if QT_CONFIG(clipboard)
+    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
+    QQuickWindow *contextMenuPopupWindow = &window;
+    if (contextMenuPrivate->usePopupWindow())
+        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
+    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(copyMenuItem));
+    QCOMPARE(editor->property("text").toString(), mementoMoriStr);
+    const auto *clipboard = QGuiApplication::clipboard();
+    QCOMPARE(clipboard->text(), mementoStr);
+#else
+    QTest::keyClick(&window, Qt::Key_Escape);
+#endif
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Make the editor read-only. Copy should still be enabled if Qt was built with clipboard support.
+    editor->setProperty("readOnly", true);
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(copyMenuItem->text(), "Copy");
+    // Select some text.
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, mementoStr.length())));
+    QCOMPARE(copyMenuItem->isEnabled(), hasClipboardSupport);
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuPaste_data()
+{
+    return textEditingContextMenuData();
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuPaste()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+
+#if QT_CONFIG(clipboard)
+    auto *clipboard = QGuiApplication::clipboard();
+    clipboard->setText(" 🫠");
+#endif
+
+    // For some reason the cursor is at the beginning of the text, even when
+    // right-clicking to the right of it, so first left-click.
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(editor));
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *pasteMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        static_cast<int>(TextEditingContextMenuItemType::Paste)));
+    QVERIFY(pasteMenuItem);
+    QCOMPARE(pasteMenuItem->text(), "Paste");
+    QCOMPARE(pasteMenuItem->isEnabled(), hasClipboardSupport);
+
+    // Click on the Paste menu item (if enabled) and close the menu.
+#if QT_CONFIG(clipboard)
+    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
+    QQuickWindow *contextMenuPopupWindow = &window;
+    if (contextMenuPrivate->usePopupWindow())
+        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
+    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(pasteMenuItem));
+    QCOMPARE(editor->property("text").toString(), mementoMoriStr + clipboard->text());
+#else
+    QTest::keyClick(&window, Qt::Key_Escape);
+#endif
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Make the editor read-only. Paste should no longer be enabled.
+    editor->setProperty("readOnly", true);
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(pasteMenuItem->text(), "Paste");
+    QVERIFY(!pasteMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuDelete_data()
+{
+    return textEditingContextMenuData();
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuDelete()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+
+    // Right click on the editor to open the context menu.
+    // Right-clicking without a selection should result in the Delete menu item being disabled.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *deleteMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        static_cast<int>(TextEditingContextMenuItemType::Delete)));
+    QCOMPARE(deleteMenuItem->text(), "Delete");
+    QVERIFY(!deleteMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Right-clicking with a selection should result in the Delete menu item being enabled.
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, mementoStr.length()),
+        Q_ARG(int, editor->property("length").toInt())));
+    QCOMPARE(editor->property("selectedText").toString(), QLatin1Char(' ') + moriStr);
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QVERIFY(deleteMenuItem->isEnabled());
+
+    // Click on the Delete menu item and close the menu.
+    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
+    QQuickWindow *contextMenuPopupWindow = &window;
+    if (contextMenuPrivate->usePopupWindow())
+        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
+    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(deleteMenuItem));
+    QCOMPARE(editor->property("text").toString(), mementoStr);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Make the editor read-only. Delete should no longer be enabled.
+    editor->setProperty("readOnly", true);
+    QVERIFY(QMetaObject::invokeMethod(editor, "selectAll"));
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(deleteMenuItem->text(), "Delete");
+    QVERIFY(!deleteMenuItem->isEnabled());
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuSelectAll_data()
+{
+    return textEditingContextMenuData();
+}
+
+void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
+{
+    QFETCH(QString, qmlFileName);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
+    QVERIFY(editor);
+    editor->forceActiveFocus();
+
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    auto *contextMenu = editor->findChild<QQuickContextMenu *>();
+    QVERIFY(contextMenu);
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    auto *selectAllMenuItem = qobject_cast<QQuickMenuItem *>(contextMenu->menu()->itemAt(
+        static_cast<int>(TextEditingContextMenuItemType::SelectAll)));
+    QVERIFY(selectAllMenuItem);
+    QCOMPARE(selectAllMenuItem->text(), "Select All");
+
+    // Click on the Select All menu item and close the menu.
+    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
+    QQuickWindow *contextMenuPopupWindow = &window;
+    if (contextMenuPrivate->usePopupWindow())
+        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
+    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(selectAllMenuItem));
+    QCOMPARE(editor->property("selectedText").toString(), mementoMoriStr);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Make the editor read-only. Select All should still be enabled.
+    editor->setProperty("readOnly", true);
+    // Right click on the editor to open the context menu.
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTRY_VERIFY(contextMenu->menu()->isOpened());
+    QCOMPARE(selectAllMenuItem->text(), "Select All");
+    QVERIFY(selectAllMenuItem->isEnabled());
+    editor->setProperty("readOnly", false);
+
+    // Close the context menu.
+    QTest::keyClick(&window, Qt::Key_Escape);
+    QTRY_VERIFY(!contextMenu->menu()->isVisible());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickContextMenu)
