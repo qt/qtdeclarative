@@ -8,7 +8,7 @@ Pane {
 
     TextField {
         id: textField
-        text: "Memento mori"
+        text: "123,456"
         width: parent.width
     }
 }

@@ -45,6 +45,10 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: control.inputMethodHints
         clip: width < implicitWidth
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     up.indicator: Item {

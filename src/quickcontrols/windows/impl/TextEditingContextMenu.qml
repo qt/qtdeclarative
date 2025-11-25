@@ -12,10 +12,10 @@ Menu {
     required property var editor
 
     WindowsImpl.UndoAction {
-        control: menu.control
+        editor: menu.editor
     }
     WindowsImpl.RedoAction {
-        control: menu.control
+        editor: menu.editor
     }
 
     MenuSeparator {}

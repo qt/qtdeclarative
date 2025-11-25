@@ -8,7 +8,7 @@ Pane {
 
     TextArea {
         id: textArea
-        text: "Memento mori"
+        text: "123,456"
         width: parent.width
     }
 }

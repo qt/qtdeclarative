@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
 import QtQuick.Controls.Universal
+import QtQuick.Controls.Universal.impl
 
 T.SpinBox {
     id: control
@@ -48,6 +49,10 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: control.inputMethodHints
         clip: width < implicitWidth
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     up.indicator: Item {

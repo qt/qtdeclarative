@@ -88,6 +88,11 @@ private:
 #endif
 
     bool hasUndoRedo = false;
+
+    QString textFirstHalf;
+    QString textSecondHalf;
+    QString textComplete;
+    QString textCompleteLocaleSpecific;
 };
 
 tst_QQuickContextMenu::tst_QQuickContextMenu()
@@ -106,6 +111,11 @@ void tst_QQuickContextMenu::initTestCase()
         QPlatformTheme::ContextMenuOnMouseRelease).toBool();
 
     hasUndoRedo = QQuickStyle::name() != "iOS";
+
+    textFirstHalf = QLatin1String("123");
+    textSecondHalf = QLatin1String("456");
+    textComplete = QLatin1String("123,456");
+    textCompleteLocaleSpecific = QLocale().toString(123456);
 }
 
 void tst_QQuickContextMenu::customContextMenu_data()
@@ -508,9 +518,11 @@ void tst_QQuickContextMenu::mouseAreaUnderTextArea()
 void tst_QQuickContextMenu::textEditingContextMenuData()
 {
     QTest::addColumn<QString>("qmlFileName");
+    QTest::addColumn<QString>("expectedTextComplete");
 
-    QTest::addRow("TextArea") << "textAreaInPane.qml";
-    QTest::addRow("TextField") << "textFieldInPane.qml";
+    QTest::addRow("TextArea") << "textAreaInPane.qml" << textComplete;
+    QTest::addRow("TextField") << "textFieldInPane.qml" << textComplete;
+    QTest::addRow("SpinBox") << "spinBoxInPane.qml" << textCompleteLocaleSpecific;
 }
 
 int tst_QQuickContextMenu::textEditingContextMenuItemIndex(TextEditingContextMenuItemType type)
@@ -537,6 +549,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo_data()
 void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     SKIP_IF_NO_WINDOW_ACTIVATION;
 
@@ -580,8 +593,8 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
     // Enter some text. Undo should then be enabled, but not redo.
-    QTest::keyClick(&window, Qt::Key_A);
-    QCOMPARE(editor->property("text").toString(), QLatin1String("a"));
+    QTest::keyClick(&window, Qt::Key_1);
+    QCOMPARE(editor->property("text").toString(), QLatin1String("1"));
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 
@@ -603,7 +616,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Click on the Redo menu item. Undo should then be enabled.
     QVERIFY(clickButton(redoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
-    QCOMPARE(editor->property("text").toString(), QLatin1String("a"));
+    QCOMPARE(editor->property("text").toString(), QLatin1String("1"));
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 }
@@ -613,13 +626,10 @@ void tst_QQuickContextMenu::textEditingContextMenuCut_data()
     textEditingContextMenuData();
 }
 
-static const auto mementoStr = QLatin1String("Memento");
-static const auto moriStr = QLatin1String("mori");
-static const auto mementoMoriStr = QLatin1String("Memento mori");
-
 void tst_QQuickContextMenu::textEditingContextMenuCut()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
@@ -629,6 +639,8 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    // Ensure that our expected text accounts for locale-specific formatting.
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     // Right-clicking without a selection should result in the Cut menu item being disabled.
@@ -649,9 +661,11 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 
     // Right-clicking with a selection should result in the Cut menu item being enabled
     // if Qt was built with clipboard support.
-    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, mementoStr.length()),
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, textFirstHalf.length()),
         Q_ARG(int, editor->property("length").toInt())));
-    const QString cutText = QLatin1Char(' ') + moriStr;
+    const QString editorPreCutSelectedText = editor->property("selectedText").toString();
+    // Don't hard-code the expected text here, because locales can affect the numeric separators.
+    const auto cutText = editorPreCutSelectedText.mid(editorPreCutSelectedText.indexOf('3'));
     QCOMPARE(editor->property("selectedText").toString(), cutText);
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
@@ -662,7 +676,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
     // Click on the Cut menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
     QVERIFY(clickButton(cutMenuItem));
-    QCOMPARE(editor->property("text").toString(), mementoStr);
+    QCOMPARE(editor->property("text").toString(), textFirstHalf);
     QCOMPARE(qGuiApp->clipboard()->text(), cutText);
 #else
     QTest::keyClick(&window, Qt::Key_Escape);
@@ -691,6 +705,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy_data()
 void tst_QQuickContextMenu::textEditingContextMenuCopy()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
@@ -719,8 +734,8 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
 
     // Right-clicking with a selection should result in the Copy menu item being enabled
     // if Qt was built with clipboard support.
-    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, mementoStr.length())));
-    QCOMPARE(editor->property("selectedText").toString(), mementoStr);
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, textFirstHalf.length())));
+    QCOMPARE(editor->property("selectedText").toString(), textFirstHalf);
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     QCOMPARE(copyMenuItem->isEnabled(), hasClipboardSupport);
@@ -728,9 +743,9 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
     // Click on the Copy menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
     QVERIFY(clickButton(copyMenuItem));
-    QCOMPARE(editor->property("text").toString(), mementoMoriStr);
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
     const auto *clipboard = QGuiApplication::clipboard();
-    QCOMPARE(clipboard->text(), mementoStr);
+    QCOMPARE(clipboard->text(), textFirstHalf);
 #else
     QTest::keyClick(&window, Qt::Key_Escape);
 #endif
@@ -743,7 +758,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     QCOMPARE(copyMenuItem->text(), "Copy");
     // Select some text.
-    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, mementoStr.length())));
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, 0), Q_ARG(int, textFirstHalf.length())));
     QCOMPARE(copyMenuItem->isEnabled(), hasClipboardSupport);
 
     // Close the context menu.
@@ -759,6 +774,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste_data()
 void tst_QQuickContextMenu::textEditingContextMenuPaste()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
@@ -771,14 +787,16 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
 
 #if QT_CONFIG(clipboard)
     auto *clipboard = QGuiApplication::clipboard();
-    clipboard->setText(" 🫠");
+    clipboard->setText("789");
 #endif
 
+    // Right click on the editor to open the context menu.
     // For some reason the cursor is at the beginning of the text, even when
     // right-clicking to the right of it, so first left-click.
-    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(editor));
-    // Right click on the editor to open the context menu.
-    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier,
+        mapToWindow(editor, editor->width() - 50, editor->height() / 2));
+    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier,
+        mapToWindow(editor, editor->width() - 50, editor->height() / 2));
     auto *contextMenu = editor->findChild<QQuickContextMenu *>();
     QVERIFY(contextMenu);
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
@@ -792,7 +810,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
     // Click on the Paste menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
     QVERIFY(clickButton(pasteMenuItem));
-    QCOMPARE(editor->property("text").toString(), mementoMoriStr + clipboard->text());
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete + clipboard->text());
 #else
     QTest::keyClick(&window, Qt::Key_Escape);
 #endif
@@ -819,6 +837,7 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete_data()
 void tst_QQuickContextMenu::textEditingContextMenuDelete()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
@@ -845,16 +864,19 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
     // Right-clicking with a selection should result in the Delete menu item being enabled.
-    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, mementoStr.length()),
+    QVERIFY(QMetaObject::invokeMethod(editor, "select", Q_ARG(int, textFirstHalf.length()),
         Q_ARG(int, editor->property("length").toInt())));
-    QCOMPARE(editor->property("selectedText").toString(), QLatin1Char(' ') + moriStr);
+    const QString editorPreDeleteSelectedText = editor->property("selectedText").toString();
+    // Don't hard-code the expected text here, because locales can affect the numeric separators.
+    const auto deleteText = editorPreDeleteSelectedText.mid(editorPreDeleteSelectedText.indexOf('3') + 1);
+    QCOMPARE(editor->property("selectedText").toString(), deleteText);
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
     TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
     QVERIFY(deleteMenuItem->isEnabled());
 
     // Click on the Delete menu item and close the menu.
     QVERIFY(clickButton(deleteMenuItem));
-    QCOMPARE(editor->property("text").toString(), mementoStr);
+    QCOMPARE(editor->property("text").toString(), textFirstHalf);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
     // Make the editor read-only. Delete should no longer be enabled.
@@ -879,6 +901,7 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll_data()
 void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
 {
     QFETCH(QString, qmlFileName);
+    QFETCH(QString, expectedTextComplete);
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
@@ -901,7 +924,7 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
 
     // Click on the Select All menu item and close the menu.
     QVERIFY(clickButton(selectAllMenuItem));
-    QCOMPARE(editor->property("selectedText").toString(), mementoMoriStr);
+    QCOMPARE(editor->property("selectedText").toString(), expectedTextComplete);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
     // Make the editor read-only. Select All should still be enabled.
