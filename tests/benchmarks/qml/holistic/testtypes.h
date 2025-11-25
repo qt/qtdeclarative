@@ -44,8 +44,6 @@ private:
 class MyQmlObject : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(MyEnum)
-    Q_ENUMS(MyEnum2)
     Q_PROPERTY(int deleteOnSet READ deleteOnSet WRITE setDeleteOnSet)
     Q_PROPERTY(bool trueProperty READ trueProperty CONSTANT)
     Q_PROPERTY(bool falseProperty READ falseProperty CONSTANT)
@@ -62,7 +60,10 @@ public:
     MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
+    Q_ENUM(MyEnum)
+
     enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3 };
+    Q_ENUM(MyEnum2)
 
     bool trueProperty() const { return true; }
     bool falseProperty() const { return false; }

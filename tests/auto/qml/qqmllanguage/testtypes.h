@@ -282,19 +282,15 @@ private:
 class MyEnumContainer : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(RelatedEnum)
 
 public:
     enum RelatedEnum { RelatedInvalid = -1, RelatedValue = 42 };
+    Q_ENUM(RelatedEnum)
 };
 
 class MyTypeObject : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(MyEnum)
-    Q_ENUMS(MyMirroredEnum)
-    Q_ENUMS(MyEnumContainer::RelatedEnum)
-    Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectPropertyChanged)
@@ -370,6 +366,7 @@ public:
 
     enum MyFlag { FlagVal1 = 0x01, FlagVal2 = 0x02, FlagVal3 = 0x04 };
     Q_DECLARE_FLAGS(MyFlags, MyFlag)
+    Q_FLAG(MyFlags)
     MyFlags flagPropertyValue;
     MyFlags flagProperty() const {
         return flagPropertyValue;
@@ -380,6 +377,8 @@ public:
     }
 
     enum MyEnum { EnumVal1, EnumVal2, lowercaseEnumVal };
+    Q_ENUM(MyEnum)
+
     MyEnum enumPropertyValue;
     MyEnum enumProperty() const {
         return enumPropertyValue;
@@ -406,6 +405,8 @@ public:
         MirroredEnumVal1 = Qt::AlignLeft,
         MirroredEnumVal2 = Qt::AlignRight,
         MirroredEnumVal3 = Qt::AlignHCenter };
+    Q_ENUM(MyMirroredEnum)
+
     MyMirroredEnum mirroredEnumPropertyValue;
     MyMirroredEnum mirroredEnumProperty() const {
         return mirroredEnumPropertyValue;
@@ -1241,7 +1242,6 @@ class MyVersion2Class : public QObject
 class MyEnum1Class : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(EnumA)
 
 public:
     MyEnum1Class() : value(A_Invalid) {}
@@ -1253,6 +1253,7 @@ public:
         A_11 = 11,
         A_13 = 13
     };
+    Q_ENUM(EnumA)
 
     Q_INVOKABLE void setValue(EnumA v) { value = v; }
 
@@ -1265,8 +1266,6 @@ private:
 class MyEnum2Class : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(EnumB)
-    Q_ENUMS(EnumE)
 
 public:
     MyEnum2Class() : valueA(MyEnum1Class::A_Invalid), valueB(B_Invalid), valueC(Qt::PlainText),
@@ -1280,6 +1279,7 @@ public:
         B_31 = 31,
         B_37 = 37
     };
+    Q_ENUM(EnumB)
 
     enum EnumE
     {
@@ -1288,6 +1288,7 @@ public:
         E_14 = 14,
         E_76 = 76
     };
+    Q_ENUM(EnumE)
 
     MyEnum1Class::EnumA getValueA() { return valueA; }
     EnumB getValueB() { return valueB; }
@@ -1328,12 +1329,14 @@ class MyEnumDerivedClass : public MyEnum2Class
 class MyCompositeBaseType : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(CompositeEnum)
-    Q_ENUMS(ScopedCompositeEnum)
 
 public:
     enum CompositeEnum { EnumValue0, EnumValue42 = 42 };
+    Q_ENUM(CompositeEnum)
+
     enum class ScopedCompositeEnum : int { EnumValue15 = 15 };
+    Q_ENUM(ScopedCompositeEnum)
+
     static QObject *qmlAttachedProperties(QObject *parent) { return new QObject(parent); }
 };
 
@@ -1588,13 +1591,14 @@ Q_ENUM_NS(OtherScopedEnum)
 class ScopedEnumsWithResolvedNameClash
 {
     Q_GADGET
-    Q_ENUMS(ScopedEnum)
-    Q_ENUMS(OtherScopedEnum)
     Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
 
 public:
     enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
+    Q_ENUM(ScopedEnum)
+
     enum class OtherScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3 };
+    Q_ENUM(OtherScopedEnum)
 };
 
 class AttachedType : public QObject

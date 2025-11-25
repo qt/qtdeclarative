@@ -1076,12 +1076,13 @@ public:
         One,
         Two
     };
+    Q_ENUM(Enum1)
     enum Enum2 {
         A = 0,
         B,
         C
     };
-    Q_ENUMS(Enum1 Enum2)
+    Q_ENUM(Enum2)
 
     Q_INVOKABLE TestQMetaObject() {}
     Q_INVOKABLE TestQMetaObject(int)

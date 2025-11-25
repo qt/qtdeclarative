@@ -15,11 +15,11 @@ class GameOfLifeModel : public QAbstractTableModel
     Q_OBJECT
     QML_ELEMENT
 
-    Q_ENUMS(Roles)
 public:
     enum Roles {
         CellRole
     };
+    Q_ENUM(Roles)
 
     QHash<int, QByteArray> roleNames() const override {
         return {

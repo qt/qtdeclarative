@@ -72,19 +72,15 @@ private:
 class MyEnumContainer : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(RelatedEnum)
 
 public:
     enum RelatedEnum { RelatedInvalid = -1, RelatedValue = 42, MultiplyDefined = 666 };
+    Q_ENUM(RelatedEnum)
 };
 
 class MyQmlObject : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(MyEnum)
-    Q_ENUMS(MyEnum2)
-    Q_ENUMS(MyEnum3)
-    Q_ENUMS(MyEnumContainer::RelatedEnum)
     Q_PROPERTY(int deleteOnSet READ deleteOnSet WRITE setDeleteOnSet)
     Q_PROPERTY(bool trueProperty READ trueProperty CONSTANT)
     Q_PROPERTY(bool falseProperty READ falseProperty CONSTANT)
@@ -110,8 +106,13 @@ public:
     MyQmlObject(): myinvokableObject(0), m_methodCalled(false), m_methodIntCalled(false), m_object(0), m_value(0), m_resetProperty(13), m_intProperty(0), m_buttons(0) {}
 
     enum MyEnum { EnumValue1 = 0, EnumValue2 = 1 };
+    Q_ENUM(MyEnum)
+
     enum MyEnum2 { EnumValue3 = 2, EnumValue4 = 3, EnumValue5 = -1 };
+    Q_ENUM(MyEnum2)
+
     enum MyEnum3 { MultiplyDefined = 333 };
+    Q_ENUM(MyEnum3)
 
     bool trueProperty() const { return true; }
     bool falseProperty() const { return false; }
@@ -571,9 +572,6 @@ private:
 class MyTypeObject : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(MyEnum)
-    Q_ENUMS(MyEnumContainer::RelatedEnum)
-    Q_FLAGS(MyFlags)
 
     Q_PROPERTY(QString id READ id WRITE setId)
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty)
@@ -636,6 +634,7 @@ public:
 
     enum MyFlag { FlagVal1 = 0x01, FlagVal2 = 0x02, FlagVal3 = 0x04 };
     Q_DECLARE_FLAGS(MyFlags, MyFlag)
+    Q_FLAG(MyFlags)
     MyFlags flagPropertyValue;
     MyFlags flagProperty() const {
         return flagPropertyValue;
@@ -645,6 +644,7 @@ public:
     }
 
     enum MyEnum { EnumVal1, EnumVal2 };
+    Q_ENUM(MyEnum)
     MyEnum enumPropertyValue;
     MyEnum enumProperty() const {
         return enumPropertyValue;
@@ -882,20 +882,20 @@ struct CompletelyUnknown;
 class SingletonWithEnum : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(TestEnum)
 public:
     enum TestEnum {
         TestValue = 42,
         TestValue_MinusOne = -1
     };
+    Q_ENUM(TestEnum)
 };
 
 class MyInvokableObject : public MyInvokableBaseObject
 {
     Q_OBJECT
-    Q_ENUMS(TestEnum)
 public:
     enum TestEnum { EnumValue1, EnumValue2 };
+    Q_ENUM(TestEnum)
     MyInvokableObject() { reset(); }
 
     int invoked() const { return m_invoked; }
@@ -1353,7 +1353,6 @@ QML_DECLARE_TYPE(ScarceResourceObject)
 class testQObjectApi : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(MyEnum)
     Q_PROPERTY (int qobjectTestProperty READ qobjectTestProperty NOTIFY qobjectTestPropertyChanged FINAL)
     Q_PROPERTY (int qobjectTestWritableProperty READ qobjectTestWritableProperty WRITE setQObjectTestWritableProperty NOTIFY qobjectTestWritablePropertyChanged)
     Q_PROPERTY (int qobjectTestWritableFinalProperty READ qobjectTestWritableFinalProperty WRITE setQObjectTestWritableFinalProperty NOTIFY qobjectTestWritableFinalPropertyChanged FINAL)
@@ -1367,6 +1366,8 @@ public:
     ~testQObjectApi() {}
 
     enum MyEnum { EnumValue1 = 25, EnumValue2 = 42 };
+    Q_ENUM(MyEnum)
+
     Q_INVOKABLE int qobjectEnumTestMethod(MyEnum val) { return (static_cast<int>(val) + 5); }
     Q_INVOKABLE int qobjectTestMethod(int increment = 1) { m_methodCallCount += increment; return m_methodCallCount; }
 
