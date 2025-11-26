@@ -12,17 +12,13 @@ QAccessibleQuickControl::QAccessibleQuickControl(QQuickControl *control)
 {
 }
 
-void *QAccessibleQuickControl::interface_cast(QAccessible::InterfaceType t)
-{
-    if (t == QAccessible::AttributesInterface)
-        return static_cast<QAccessibleAttributesInterface *>(this);
-
-    return QAccessibleQuickItem::interface_cast(t);
-}
-
 QList<QAccessible::Attribute> QAccessibleQuickControl::attributeKeys() const
 {
-    return { QAccessible::Attribute::Locale };
+    auto keys = QAccessibleQuickItem::attributeKeys();
+    if (!keys.contains(QAccessible::Attribute::Locale))
+        keys << QAccessible::Attribute::Locale;
+
+    return keys;
 }
 
 QVariant QAccessibleQuickControl::attributeValue(QAccessible::Attribute key) const
@@ -30,7 +26,7 @@ QVariant QAccessibleQuickControl::attributeValue(QAccessible::Attribute key) con
     if (key == QAccessible::Attribute::Locale)
         return QVariant::fromValue(control()->locale());
 
-    return QVariant();
+    return QAccessibleQuickItem::attributeValue(key);
 }
 
 QQuickControl *QAccessibleQuickControl::control() const

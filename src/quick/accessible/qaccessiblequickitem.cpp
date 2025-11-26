@@ -724,6 +724,8 @@ void *QAccessibleQuickItem::interface_cast(QAccessible::InterfaceType t)
     switch (t) {
     case QAccessible::ActionInterface:
         return static_cast<QAccessibleActionInterface*>(this);
+    case QAccessible::AttributesInterface:
+        return static_cast<QAccessibleAttributesInterface *>(this);
     case QAccessible::ValueInterface:
         if (r == QAccessible::Slider
          || r == QAccessible::SpinBox
@@ -942,6 +944,26 @@ void QAccessibleQuickItem::setSelection(int /* selectionIndex */, int /* startOf
 
 }
 
+QList<QAccessible::Attribute> QAccessibleQuickItem::attributeKeys() const
+{
+    if (attributeValue(QAccessible::Attribute::Locale).isValid())
+        return { QAccessible::Attribute::Locale };
+
+    return {};
+}
+
+QVariant QAccessibleQuickItem::attributeValue(QAccessible::Attribute key) const
+{
+    if (key == QAccessible::Attribute::Locale) {
+        QAccessibleInterface *windowIface = QAccessible::queryAccessibleInterface(window());
+        if (!windowIface || !windowIface->attributesInterface())
+            return QVariant();
+
+        return windowIface->attributesInterface()->attributeValue(QAccessible::Attribute::Locale);
+    }
+
+    return QVariant();
+}
 
 #endif // accessibility
 

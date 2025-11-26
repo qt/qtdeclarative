@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickControl;
 
-class QAccessibleQuickControl : public QAccessibleQuickItem, public QAccessibleAttributesInterface
+class QAccessibleQuickControl : public QAccessibleQuickItem
 {
 #ifdef Q_OS_INTEGRITY
     // force instantiation to avoid error #2045
@@ -31,12 +31,9 @@ class QAccessibleQuickControl : public QAccessibleQuickItem, public QAccessibleA
 public:
     QAccessibleQuickControl(QQuickControl *control);
 
-    // QAccessibleInterface
-    void *interface_cast(QAccessible::InterfaceType t) override;
-
     // QAccessibleAttributesInterface
-    virtual QList<QAccessible::Attribute> attributeKeys() const override;
-    virtual QVariant attributeValue(QAccessible::Attribute key) const override;
+    QList<QAccessible::Attribute> attributeKeys() const override;
+    QVariant attributeValue(QAccessible::Attribute key) const override;
 
 private:
     QQuickControl *control() const;

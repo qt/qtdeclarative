@@ -27,8 +27,16 @@ QT_BEGIN_NAMESPACE
 
 class QTextDocument;
 
-class Q_QUICK_EXPORT QAccessibleQuickItem : public QAccessibleObject, public QAccessibleActionInterface, public QAccessibleValueInterface, public QAccessibleTextInterface
+class Q_QUICK_EXPORT QAccessibleQuickItem : public QAccessibleObject,
+                                            public QAccessibleActionInterface,
+                                            public QAccessibleValueInterface,
+                                            public QAccessibleTextInterface,
+                                            public QAccessibleAttributesInterface
 {
+#ifdef Q_OS_INTEGRITY
+    // force instantiation to avoid error #2045
+    struct error2045 : QList<QAccessible::Attribute> {};
+#endif
 public:
     QAccessibleQuickItem(QQuickItem *item);
 
@@ -100,6 +108,10 @@ public:
     { *startOffset = 0; *endOffset = 0; return QString(); }
 
     QTextDocument *textDocument() const;
+
+    // QAccessibleAttributesInterface
+    QList<QAccessible::Attribute> attributeKeys() const override;
+    QVariant attributeValue(QAccessible::Attribute key) const override;
 
 protected:
     QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
