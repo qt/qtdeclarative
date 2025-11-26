@@ -10,6 +10,7 @@
 #include "qquickpage_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickscrollbar_p.h"
+#include "accessible/qaccessiblequickapplicationwindow_p.h"
 #include "accessible/qaccessiblequickcontrol_p.h"
 #include "accessible/qaccessiblequickpage_p.h"
 #include "accessible/qaccessiblequickpopupitem_p.h"
@@ -29,6 +30,8 @@ static QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, Q
         return new QAccessibleQuickControl(qobject_cast<QQuickControl *>(object));
     if (classname == u"QQuickPopupItem")
         return new QAccessibleQuickPopupItem(qobject_cast<QQuickPopupItem *>(object));
+    if (classname == u"QQuickApplicationWindow")
+        return new QAccessibleQuickApplicationWindow(qobject_cast<QQuickApplicationWindow *>(object));
 
     return nullptr;
 }

@@ -147,6 +147,7 @@ qt_internal_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
 
 qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_accessibility
     SOURCES
+        accessible/qaccessiblequickapplicationwindow.cpp accessible/qaccessiblequickapplicationwindow_p.h
         accessible/qaccessiblequickcontrol.cpp accessible/qaccessiblequickcontrol_p.h
         accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
         accessible/qaccessiblequickpopupitem.cpp accessible/qaccessiblequickpopupitem_p.h
