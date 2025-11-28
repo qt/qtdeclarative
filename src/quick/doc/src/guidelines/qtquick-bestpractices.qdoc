@@ -13,7 +13,7 @@ challenging in certain situations. The following sections elaborate on some of
 the best practices that will help you get better results when developing
 applications.
 
-\section1 Custom UI Controls
+\section1 Use Built-in Controls over Custom UI Controls
 
 A fluid and modern UI is key for any application's success in today's world, and
 that's where QML makes so much sense for a designer or developer. Qt offers the
@@ -57,16 +57,16 @@ See \l{QML Coding Conventions}.
 
 \section1 Bundle Application Resources
 
-Most applications depend on resources such as images and icons to provide a
+Most applications depend on resources, such as images and icons, to provide a
 rich user experience. It can often be a challenge to make these resources
 available to the application regardless of the target OS. Most popular OS-es
-employ stricter security policies that restrict access to the file system,
+employ security policies that restrict access to the file system,
 making it harder to load these resources. As an alternative, Qt offers its own
 \l {The Qt Resource System}{resource system} that is built into the
 application binary, enabling access to the application's resources regardless
 of the target OS.
 
-For example, consider the following project directory structure:
+For example, for a C++ project, consider the following directory structure:
 
 \badcode
 MyModule
@@ -94,8 +94,8 @@ qt_add_qml_module(my_module
 
 All QML files listed under \c {QML_FILES} will automatically get compiled \l {Ahead-of-Time Compilation}{ahead of time}.
 
-You should keep the QML files in the same directory as the CMakeLists.txt with
-the qt_add_qml_module. Otherwise their \l{The Implicit Import}{implicit imports}
+You should keep the QML files in the \e same directory as the CMakeLists.txt with
+the \l {qt_add_qml_module}. Otherwise, their \l{The Implicit Import}{implicit imports}
 will be different from the \l{QML Modules} they belong to. This is a frequent
 source of mistakes.
 
@@ -108,8 +108,8 @@ source of mistakes.
 
 One of the key goals that most application developers want to achieve is to
 create a maintainable application. One of the ways to achieve this goal is
-to separate the user interface from the business logic. The following are a few
-reasons why an application's UI should be written in QML:
+to separate the user interface, the frontend, from the business logic, the backend.
+The following are a few reasons why an application's UI should be written in QML:
 
 \list
  \li Declarative languages are strongly suited for defining UIs.
@@ -120,13 +120,13 @@ reasons why an application's UI should be written in QML:
  \li JavaScript can easily be used in QML to respond to events.
 \endlist
 
-Being a strongly typed language, C++ is best suited for an application's
-business logic. Typically, such code performs tasks such as complex calculations
-or data processing, which are faster in C++ than QML.
+Strongly typed languages, such as C++, are best suited for an application's
+business logic, the backend. Typically, such code performs tasks such as complex calculations
+or data processing, which are faster in strongly typed languages than in QML.
 
-Qt offers various approaches to integrate QML and C++ code in an application.
+Qt offers various approaches to integrate QML with a strongly typed language in an application.
 A typical use case is displaying a list of data in a user interface.
-If the data set is static, simple, and/or small, a model written in QML can be
+If the data set is static, simple, and small, a model written in QML can be
 sufficient.
 
 The following snippet demonstrates examples of models written in QML:
@@ -137,8 +137,8 @@ The following snippet demonstrates examples of models written in QML:
     model: 10
 \endqml
 
-Use \l {QAbstractItemModel Subclass}{C++} for dynamic data sets that are large
-or frequently modified.
+For larger and more dynamic data sets, use a strongly typed language, such as
+\l {QAbstractItemModel Subclass}{C++}, to handle the business logic.
 
 \section2 Exposing Data from C++ to QML
 
