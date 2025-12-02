@@ -6892,9 +6892,11 @@ bool QQuickItemPrivate::effectivelyClipsEventHandlingChildren() const
         eventHandlingChildrenWithinBounds = true;
         for (const auto *child : childItems) {
             const auto *childPriv = QQuickItemPrivate::get(child);
-            // If the child doesn't handle pointer events, it doesn't matter whether it goes outside its parent
+            // If the child doesn't handle pointer events and has no children,
+            // it doesn't matter whether it goes outside its parent
             // (shadows and other control-external decorations should be in this category, for example).
-            if (!(childPriv->hoverEnabled || childPriv->subtreeHoverEnabled || childPriv->touchEnabled ||
+            if (childPriv->childItems.isEmpty() &&
+                !(childPriv->hoverEnabled || childPriv->subtreeHoverEnabled || childPriv->touchEnabled ||
                   childPriv->hasCursor || childPriv->hasCursorHandler || child->acceptedMouseButtons() ||
                   childPriv->hasPointerHandlers())) {
                 qCDebug(lcEffClip) << child << "doesn't handle pointer events";
@@ -6904,6 +6906,10 @@ bool QQuickItemPrivate::effectivelyClipsEventHandlingChildren() const
                 eventHandlingChildrenWithinBounds = false;
                 qCDebug(lcEffClip) << "child goes outside: giving up" << child;
                 break; // out of for loop
+            }
+            if (!childPriv->eventHandlingChildrenWithinBoundsSet) {
+                eventHandlingChildrenWithinBounds = childPriv->effectivelyClipsEventHandlingChildren();
+                qCDebug(lcEffClip) << "child has children that go outside: giving up" << child;
             }
         }
 #ifdef QT_BUILD_INTERNAL

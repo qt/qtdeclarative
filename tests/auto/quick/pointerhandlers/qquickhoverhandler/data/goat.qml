@@ -7,6 +7,7 @@ Item {
     height: 304
     Rectangle {
         id: shadow
+        objectName: "shadow"
         anchors {
             fill: parent
             margins: 10
@@ -25,6 +26,7 @@ Item {
 
     Rectangle {
         id: frame
+        objectName: "frame"
         anchors.fill: parent
         anchors.margins: 20
         border.color: "darkgreen"
@@ -37,6 +39,7 @@ Item {
         // just barely fits in its frame
         Shape {
             id: goat
+            objectName: "goat"
             preferredRendererType: Shape.CurveRenderer
             containsMode: Shape.FillContains
             HoverHandler {
@@ -103,6 +106,7 @@ Item {
             }
 
             Rectangle {
+                objectName: "pupil"
                 x: 64
                 y: 128
                 width: 16

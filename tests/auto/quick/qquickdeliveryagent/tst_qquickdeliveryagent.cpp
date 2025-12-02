@@ -27,6 +27,8 @@
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
+using namespace Qt::StringLiterals;
+
 // On one hand, uncommenting this will make troubleshooting easier (avoid the 60FPS hover events).
 // On the other hand, if anything actually breaks when hover events are enabled, that's also a bug.
 //#define DISABLE_HOVER_IN_IRRELEVANT_TESTS
@@ -769,10 +771,12 @@ void tst_qquickdeliveryagent::mouseMoveHoverEfficiency() // QTBUG-140340
         hi->setAcceptHoverEvents(true);
         hi->setSize({38, 18});
         hi->setPosition({col * 40.0, row * 20.0});
+        hi->setObjectName("outer  %1, %2"_L1.arg(QString::number(col)).arg(row));
         HoverItem *ni = new HoverItem(hi);
         ni->setAcceptHoverEvents(true);
         ni->setPosition({2, 2});
         ni->setSize({34, 14});
+        ni->setObjectName("nested %1, %2"_L1.arg(QString::number(col)).arg(row));
         nestedItems[i] = ni;
     }
 

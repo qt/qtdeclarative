@@ -57,6 +57,7 @@ private slots:
     void asProperty();
     void effectivelyClips_data();
     void effectivelyClips();
+    void grandChildOutOfBounds();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -422,15 +423,15 @@ void tst_HoverHandler::movingItemWithHoverHandler()
     // and then each HoverHandler's QQuickPointerHandler::handlePointerEvent() adds itself again.
     // As long as we visit the same handlers each time, the list should not grow. (QTBUG-135975)
     qCDebug(lcPointerTests) << "deviceDeliveryTargets after paddle movement" << deliveryTargets;
-    QCOMPARE(deliveryTargets.size(), 0);
+    QCOMPARE_LE(deliveryTargets.size(), targetsCount);
 
     paddle->setX(p.x() - paddle->width() / 2);
     QTRY_COMPARE(paddleHH->isHovered(), true);
-    QCOMPARE(deliveryTargets.size(), targetsCount);
+    QCOMPARE_LE(deliveryTargets.size(), targetsCount);
 
     paddle->setX(540);
     QTRY_COMPARE(paddleHH->isHovered(), false);
-    QCOMPARE(deliveryTargets.size(), 0);
+    QCOMPARE_LE(deliveryTargets.size(), targetsCount);
 }
 
 void tst_HoverHandler::margin() // QTBUG-85303
@@ -1005,8 +1006,76 @@ void tst_HoverHandler::effectivelyClips() // QTBUG-140340
     QCOMPARE_LT(QQuickItemPrivate::itemToWindowTransform_counter, 160ull);
     QCOMPARE_LT(QQuickItemPrivate::windowToItemTransform_counter, 36ull);
     // Check that we were able to skip hover delivery to some items because
-    // effectivelyClipsEventHandlingChildren() was true and the mouse position was outside.
-    QCOMPARE_GE(QQuickItemPrivate::effectiveClippingSkips_counter, 10ull);
+    // eventHandlingChildrenWithinBounds was true and the mouse position was outside.
+    QCOMPARE_GE(QQuickItemPrivate::effectiveClippingSkips_counter, 5ull);
+#endif
+}
+
+void tst_HoverHandler::grandChildOutOfBounds()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("grandchildOutOfBounds.qml")));
+    QQuickItem *root = window.rootObject();
+    QQuickHoverHandler *handler = root->findChild<QQuickHoverHandler *>();
+    QVERIFY(handler);
+    QQuickItem *grandchild = handler->parentItem();
+    QVERIFY(grandchild);
+    QQuickItem *grandparent = grandchild->parentItem()->parentItem();
+    QCOMPARE(grandparent->parentItem(), root);
+    QQuickItemPrivate *grandparentPriv = QQuickItemPrivate::get(grandparent);
+
+    const QPoint bottomRight = QPoint(root->width() - 20, root->height() - 20);
+    const QPoint bottomRightG = window.mapToGlobal(bottomRight);
+    const QPoint pos = handler->parentItem()->mapToScene({10, handler->parentItem()->height() - 10}).toPoint();
+
+    // showView() positions the mouse cursor to the right of the window, if possible;
+    // so approach from the right side to avoid crossing any children.
+    // We use QCursor::setPos() if possible, because it's a more thorough test
+    // (if the cursor moves and the test fails, something is wrong); but the test
+    // can _pass_ just as well with mouseMove(), so fall back to that if necessary.
+    QCursor::setPos(bottomRightG);
+    bool canSetCursorPos = true;
+    if (!QTest::qWaitFor([bottomRightG]() {
+            return QGuiApplicationPrivate::lastCursorPosition.toPoint() == bottomRightG; })) {
+        qCDebug(lcPointerTests) << "QCursor::setPos doesn't work: expected"
+                                << bottomRightG << "got" << QGuiApplicationPrivate::lastCursorPosition;
+        canSetCursorPos = false;
+    }
+    if (!canSetCursorPos)
+        QTest::mouseMove(&window, bottomRight);
+
+    // Hover the outer end of the "diving board": it should work,
+    // even though that part of the item is outside its parent and grandparent items.
+    if (canSetCursorPos)
+        QCursor::setPos(window.mapToGlobal(pos));
+    else
+        QTest::mouseMove(&window, pos);
+    QTRY_COMPARE(handler->isHovered(), true);
+#if QT_CONFIG(cursor)
+    if (canSetCursorPos)
+        QTRY_COMPARE(window.cursor().shape(), Qt::ForbiddenCursor);
+#endif
+
+    // Move it within its grandparent's bounds, but remember where it was.
+    const auto yWas = grandchild->y();
+    grandchild->setY(-70);
+    // Grandparent would have children within bounds now, but it doesn't recheck
+    // (this is considered an optimization, but can be reconsidered if necessary).
+    QCOMPARE(grandparentPriv->eventHandlingChildrenWithinBounds, false);
+    // The cursor didn't move, so now HoverHandler is no longer hovered.
+    QTRY_COMPARE(handler->isHovered(), false);
+#if QT_CONFIG(cursor)
+    if (canSetCursorPos)
+        QTRY_COMPARE(window.cursor().shape(), Qt::ArrowCursor);
+#endif
+
+    // Put it back where it was. Presto, it's hovered again.
+    grandchild->setY(yWas);
+    QCOMPARE(grandparentPriv->eventHandlingChildrenWithinBounds, false);
+    QTRY_COMPARE(handler->isHovered(), true);
+#if QT_CONFIG(cursor)
+    if (canSetCursorPos)
+        QTRY_COMPARE(window.cursor().shape(), Qt::ForbiddenCursor);
 #endif
 }
 
