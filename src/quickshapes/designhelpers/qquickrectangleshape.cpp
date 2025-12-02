@@ -1158,8 +1158,9 @@ void QQuickRectangleShape::updatePolish()
     if (d->topRightPathArc) {
         d->topRightPathArc->setX(rectWidth - d->borderOffset);
         d->topRightPathArc->setY(d->effectiveTopRightRadius + d->borderOffset + d->borderRadiusAdjustment);
-        d->topRightPathArc->setRadiusX(d->topRightBevel ? 50000 : d->effectiveTopRightRadius + d->borderRadiusAdjustment);
-        d->topRightPathArc->setRadiusY(d->topRightBevel ? 50000 : d->effectiveTopRightRadius + d->borderRadiusAdjustment);
+        const bool topRightBevel = hasTopRightBevel();
+        d->topRightPathArc->setRadiusX(topRightBevel ? 50000 : d->effectiveTopRightRadius + d->borderRadiusAdjustment);
+        d->topRightPathArc->setRadiusY(topRightBevel ? 50000 : d->effectiveTopRightRadius + d->borderRadiusAdjustment);
     }
 
     if (d->rightPathLine) {
@@ -1173,8 +1174,9 @@ void QQuickRectangleShape::updatePolish()
     if (d->bottomRightPathArc) {
         d->bottomRightPathArc->setX(rectWidth - d->effectiveBottomRightRadius - d->borderOffset - d->borderRadiusAdjustment);
         d->bottomRightPathArc->setY(rectHeight - d->borderOffset);
-        d->bottomRightPathArc->setRadiusX(d->bottomRightBevel ? 50000 : d->effectiveBottomRightRadius + d->borderRadiusAdjustment);
-        d->bottomRightPathArc->setRadiusY(d->bottomRightBevel ? 50000 : d->effectiveBottomRightRadius + d->borderRadiusAdjustment);
+        const bool bottomRightBevel = hasBottomRightBevel();
+        d->bottomRightPathArc->setRadiusX(bottomRightBevel ? 50000 : d->effectiveBottomRightRadius + d->borderRadiusAdjustment);
+        d->bottomRightPathArc->setRadiusY(bottomRightBevel ? 50000 : d->effectiveBottomRightRadius + d->borderRadiusAdjustment);
     }
 
     if (d->bottomPathLine) {
@@ -1188,8 +1190,9 @@ void QQuickRectangleShape::updatePolish()
     if (d->bottomLeftPathArc) {
         d->bottomLeftPathArc->setX(d->borderOffset);
         d->bottomLeftPathArc->setY(rectHeight - d->effectiveBottomLeftRadius - d->borderOffset - d->borderRadiusAdjustment);
-        d->bottomLeftPathArc->setRadiusX(d->bottomLeftBevel ? 50000 : d->effectiveBottomLeftRadius + d->borderRadiusAdjustment);
-        d->bottomLeftPathArc->setRadiusY(d->bottomLeftBevel ? 50000 : d->effectiveBottomLeftRadius + d->borderRadiusAdjustment);
+        const bool bottomLeftBevel = hasBottomLeftBevel();
+        d->bottomLeftPathArc->setRadiusX(bottomLeftBevel ? 50000 : d->effectiveBottomLeftRadius + d->borderRadiusAdjustment);
+        d->bottomLeftPathArc->setRadiusY(bottomLeftBevel ? 50000 : d->effectiveBottomLeftRadius + d->borderRadiusAdjustment);
     }
 
     if (d->leftPathLine) {
@@ -1200,8 +1203,9 @@ void QQuickRectangleShape::updatePolish()
     if (d->topLeftPathArc) {
         d->topLeftPathArc->setX(d->effectiveTopLeftRadius + d->borderOffset + d->borderRadiusAdjustment);
         d->topLeftPathArc->setY(d->borderOffset);
-        d->topLeftPathArc->setRadiusX(d->topLeftBevel ? 50000 : d->effectiveTopLeftRadius + d->borderRadiusAdjustment);
-        d->topLeftPathArc->setRadiusY(d->topLeftBevel ? 50000 : d->effectiveTopLeftRadius + d->borderRadiusAdjustment);
+        const bool topLeftBevel = hasTopLeftBevel();
+        d->topLeftPathArc->setRadiusX(topLeftBevel ? 50000 : d->effectiveTopLeftRadius + d->borderRadiusAdjustment);
+        d->topLeftPathArc->setRadiusY(topLeftBevel ? 50000 : d->effectiveTopLeftRadius + d->borderRadiusAdjustment);
     }
 
     // This does stuff with each path, so we want to call it after we've made our own changes.
