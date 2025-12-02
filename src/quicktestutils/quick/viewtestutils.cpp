@@ -506,7 +506,7 @@ namespace QQuickTest {
         if (view.flags().testFlag(Qt::FramelessWindowHint))
             return true;
         if (!QGuiApplication::platformName().compare(QLatin1String("wayland"), Qt::CaseInsensitive)) {
-            qWarning() << "Setting position is not supported on Wayland";
+            qDebug() << "Setting position is not supported on Wayland";
             return true;
         }
         const bool positionOk = QTest::qWaitFor([&]{ return framePos != view.position(); });
