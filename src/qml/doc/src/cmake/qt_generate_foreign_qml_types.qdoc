@@ -14,12 +14,11 @@
 
 \section1 Synopsis
 
-\badcode
+\code [cmake]
 qt_generate_foreign_qml_types(
     source_target
     destination_qml_target
 )
-
 \endcode
 
 \versionlessCMakeCommandsNote qt6_generate_foreign_qml_types()
@@ -33,7 +32,7 @@ types in the QML module \c destination_qml_target.
 This can be useful when one wants to create a library with optional QML integration, without
 depending directly on QML.
 
-\badcode
+\code
 // myclass.h
 #include <QtQmlIntegration/qqmlintegration.h>
 
@@ -46,7 +45,7 @@ class MyClass : public QObject
 };
 \endcode
 
-\badcode
+\code [cmake]
 # CMakeLists.txt
 qt_add_library(mylib myclass.h ...)
 target_link_libraries(mylib PRIVATE Qt::Core Qt::QmlIntegration)

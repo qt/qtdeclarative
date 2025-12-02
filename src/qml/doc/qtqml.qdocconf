@@ -58,6 +58,9 @@ exampledirs += ../../../examples/qml \
 
 imagedirs   += images
 
+# Allow these languages to be used in code blocks without warnings:
+codelanguages += cmake
+
 # Exclude documentation for the compiler category: these are not mature enough to be documented
 excludefiles += src/qmllint/compiler.qdoc \
                 src/qmllint/deferred-property-id.qdoc \

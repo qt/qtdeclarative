@@ -31,13 +31,13 @@ When using CMake, the qmldir is automatically created by \l{qt_add_qml_module}.
 To indicate that the QML file should be turned into a singleton, you need to set
 the \c{QT_QML_SINGLETON_TYPE}
 file property on it:
-\code
+\code [cmake]
 set_source_files_properties(MySingleton.qml
     PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
 \endcode
 
 You can pass multiple files at once to \c{set_source_files_properties}:
-\code
+\code [cmake]
 set(plain_qml_files
     MyItem1.qml
     MyItem2.qml
@@ -61,7 +61,7 @@ qt_add_qml_module(myapp
 If you aren't using \c{qt_add_qml_module}, you'll need to manually create a
 \l{Module Definition qmldir Files}{qmldir file}.
 There, you'll need to mark your singletons accordingly:
-\code
+\code [text]
 module MyModule
 singleton MySingleton 1.0 MySingleton.qml
 singleton MyOtherSingleton 1.0 MyOtherSingleton.qml
@@ -305,7 +305,9 @@ class RemoteBookModel : public QAbstractItemModel
     Q_PROPERTY(QUrl url READ url WRITE setUrl NOTIFY urlChanged)
     // ...
 };
+\endcode
 
+\qml
 // bookbrowser.qml
 Row {
     ListView {
@@ -316,7 +318,7 @@ Row {
     }
 }
 
-\endcode
+\endqml
 
 \section2 Passing initial state
 

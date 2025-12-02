@@ -115,7 +115,7 @@ One option is to register the interface as a singleton by adding the \l
 QML_SINGLETON macro to the interface, exposing it to all components. Following
 that, the interface becomes available via a simple import statement:
 
-\code
+\qml
 import my.company.module
 
 Item {
@@ -123,7 +123,7 @@ Item {
         CppInterface.foo();
     }
 }
-\endcode
+\endqml
 
 Use this approach if you need your interface in more places than the root component, as
 simply passing down an object would require explicitly passing it on to other

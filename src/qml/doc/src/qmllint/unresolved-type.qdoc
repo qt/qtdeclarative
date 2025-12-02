@@ -39,7 +39,7 @@ The type can't be found by QML tooling, and most likely not by the QML engine.
 \qml
 import QtQuick
 
-Itme { ... }
+Item { ... }
 \endqml
 To fix this warning, correct the typo:
 \qml
@@ -116,7 +116,7 @@ in \c SomeModule, then you need to state these C++ dependencies in the QML modul
 
 To achieve that, \l{qt-add-qml-module.html#declaring-module-dependencies}{add the dependencies}
 to the QML module definition. This can be done with \c DEPENDENCIES, for example:
-\code
+\code [cmake]
 qt_add_qml_module(
     ...
     DEPENDENCIES

@@ -495,13 +495,13 @@ signals and it can have signal handlers.
 A QML file must only contain \b {a single root object definition}. The following
 is invalid and will generate an error:
 
-\badcode
+\qml
 // MyQmlFile.qml
 import QtQuick 2.0
 
 Rectangle { width: 200; height: 200; color: "red" }
 Rectangle { width: 200; height: 200; color: "blue" }    // invalid!
-\endcode
+\endqml
 
 This is because a .qml file automatically defines a QML type, which encapsulates a \e single QML object definition. This is discussed further in \l{qtqml-documents-definetypes.html}{Documents as QML object type definitions}.
 

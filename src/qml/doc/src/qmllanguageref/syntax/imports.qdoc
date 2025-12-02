@@ -67,7 +67,7 @@ An example of an unqualified import with version would be
 \qml
 import QtQuick 2.10
 \endqml
-In that case, any types defined in QtQuick 2.11 and higher or in any higher major
+In that case, any types defined in Qt Quick 2.11 and higher or in any higher major
 version, like 6.0, would not be available to the file.
 
 An example of a qualified module import is as follows:
