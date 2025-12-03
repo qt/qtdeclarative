@@ -269,20 +269,17 @@ The \c easingCurve type is a value with attributes that define an
 It is useful when doing custom animations with \l FrameAnimation, for example,
 or in any use case that requires easing a value along a given curve.
 
-To create an \c easingCurve value, import \c QtQml (or \c QtQuick) into a namespace:
+To create an \c easingCurve value, assign an easing type:
 
-\snippet qml/easingCurve.qml import QtQml
-
-Then, create an instance of it with \c new:
-
-\snippet qml/easingCurve.qml easingCurve new declaration
+\snippet qml/easingCurve.qml easingCurve declaration
 
 The following example is similar to the one described by the
 documentation of \l Easing:
 
 \snippet qml/easingCurve.qml children
 
-It's also possible to create \c easingCurve via structured value type syntax:
+As \c easingCurve is a \l {QML_STRUCTURED_VALUE}{structured value} type, it can
+be constructed with a JavaScript object:
 
 \snippet qml/easingCurve.qml easingCurve structed value type declaration
 

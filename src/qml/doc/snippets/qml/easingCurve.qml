@@ -1,9 +1,6 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-//! [import QtQml]
-import QtQml as QtQml
-//! [import QtQml]
 import QtQuick
 
 Item {
@@ -23,9 +20,9 @@ Item {
 
         property real elapsed // In seconds.
         readonly property real duration: 2 // Two seconds.
-//! [easingCurve new declaration]
-        readonly property easingCurve easingCurve: Easing.InQuart
-//! [easingCurve new declaration]
+//! [easingCurve declaration]
+        readonly property easingCurve inQuartCurve: Easing.InQuart
+//! [easingCurve declaration]
 
         onTriggered: {
             elapsed += frameTime
