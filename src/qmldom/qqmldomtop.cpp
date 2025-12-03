@@ -1857,6 +1857,12 @@ only works after the constructor call finished.
 */
 DomEnvironment::SemanticAnalysis DomEnvironment::semanticAnalysis()
 {
+    QMutexLocker l(mutex());
+    return semanticAnalysisUnlocked();
+}
+
+DomEnvironment::SemanticAnalysis DomEnvironment::semanticAnalysisUnlocked()
+{
     // QTBUG-124799: do not create a SemanticAnalysis in a temporary DomEnvironment, and use the one
     // from the base environment instead.
     if (m_base) {
@@ -2025,7 +2031,7 @@ bool DomEnvironment::commitToBase(
         my_jsFileWithPath = m_jsFileWithPath;
         my_qmltypesFileWithPath = m_qmltypesFileWithPath;
         my_loadInfos = m_loadInfos;
-        my_semanticAnalysis = semanticAnalysis();
+        my_semanticAnalysis = semanticAnalysisUnlocked();
     }
     {
         QMutexLocker lBase(base()->mutex()); // be more careful about makeCopy calls with lock?
