@@ -329,7 +329,7 @@ void tst_QQmlPreview::error()
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl("broken.qml"));
     QTRY_COMPARE_WITH_TIMEOUT(m_serviceErrors.size(), 1, 10000);
-    QVERIFY(m_serviceErrors.first().contains("broken.qml:7 Expected token `}'"));
+    QVERIFY(m_serviceErrors.first().contains("broken.qml:7:1: Expected token `}'"));
 }
 
 static float parseZoomFactor(const QString &output)

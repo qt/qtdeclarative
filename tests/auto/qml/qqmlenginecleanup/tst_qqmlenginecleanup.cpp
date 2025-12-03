@@ -95,7 +95,7 @@ void tst_qqmlenginecleanup::test_qmlClearTypeRegistrations()
     component = std::make_unique<CleanlyLoadingComponent>(engine.get(), testFile);
     QVERIFY(component->isError());
     QCOMPARE(component->errorString(),
-            testFile.toString() +":8 module \"Test\" is not installed\n");
+             testFile.toString() + ":8:1: module \"Test\" is not installed\n");
 }
 
 static void cleanState(QQmlEngine **e)

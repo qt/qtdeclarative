@@ -1423,7 +1423,7 @@ void tst_qqmlcomponent::boundComponent()
         QVERIFY(!component.isBound());
 
         component.setData("pragma ComponentBehavior: Bound\nsyntax error", QUrl());
-        QCOMPARE(component.errorString(), ":2 Syntax error\n"_L1);
+        QCOMPARE(component.errorString(), "<Unknown File>:2:8: Syntax error\n"_L1);
         QVERIFY(!component.isBound());
     }
 }
@@ -1687,7 +1687,7 @@ void tst_qqmlcomponent::loadFromModuleRequired()
         QScopedPointer<QObject> root(component.create());
         QVERIFY(!root);
         QVERIFY(component.isError());
-        QCOMPARE(component.errorString(), qPrintable(":-1 " + error  + "\n"));
+        QCOMPARE(component.errorString(), qPrintable("<Unknown File>: " + error + "\n"));
     }
     {
         QQmlComponent component(&engine, "qqmlcomponenttest", "SingleRequiredProperty");
@@ -1701,7 +1701,7 @@ void tst_qqmlcomponent::loadFromModuleRequired()
 
         // ... produces an error.
         QVERIFY(component.isError());
-        QCOMPARE(component.errorString(), qPrintable(":-1 " + error  + "\n"));
+        QCOMPARE(component.errorString(), qPrintable("<Unknown File>: " + error + "\n"));
     }
     {
         QQmlComponent component(&engine, "qqmlcomponenttest", "SingleRequiredPropertyDynamic");
@@ -1725,7 +1725,7 @@ void tst_qqmlcomponent::loadUrlRequired()
         QScopedPointer<QObject> root(component.create());
         QVERIFY(!root);
         QVERIFY(component.isError());
-        QCOMPARE(component.errorString(), qPrintable(url.toString() + ":2 " + error  + "\n"));
+        QCOMPARE(component.errorString(), qPrintable(url.toString() + ":2:1: " + error + "\n"));
     }
     {
         QQmlComponent component(&engine);
@@ -1740,7 +1740,7 @@ void tst_qqmlcomponent::loadUrlRequired()
 
         // ... produces an error.
         QVERIFY(component.isError());
-        QCOMPARE(component.errorString(), qPrintable(url.toString() + ":2 " + error  + "\n"));
+        QCOMPARE(component.errorString(), qPrintable(url.toString() + ":2:1: " + error + "\n"));
     }
 }
 

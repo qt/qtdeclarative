@@ -1999,9 +1999,9 @@ void tst_qqmllanguage::requiredPropertyFromCpp_data()
     QTest::addColumn<QString>("errorMessage");
     QTest::addColumn<int>("expectedValue");
 
-    QTest::addRow("direct") << testFileUrl("cppRequiredProperty.qml") << testFileUrl("cppRequiredPropertyNotSet.qml") << QString(":4 Required property test was not initialized\n") << 42;
-    QTest::addRow("in parent") << testFileUrl("cppRequiredPropertyInParent.qml") << testFileUrl("cppRequiredPropertyInParentNotSet.qml") << QString(":4 Required property test was not initialized\n") << 42;
-    QTest::addRow("in child and parent") << testFileUrl("cppRequiredPropertyInChildAndParent.qml") << testFileUrl("cppRequiredPropertyInChildAndParentNotSet.qml") << QString(":4 Required property test2 was not initialized\n") << 18;
+    QTest::addRow("direct") << testFileUrl("cppRequiredProperty.qml") << testFileUrl("cppRequiredPropertyNotSet.qml") << QString(":4:1: Required property test was not initialized\n") << 42;
+    QTest::addRow("in parent") << testFileUrl("cppRequiredPropertyInParent.qml") << testFileUrl("cppRequiredPropertyInParentNotSet.qml") << QString(":4:1: Required property test was not initialized\n") << 42;
+    QTest::addRow("in child and parent") << testFileUrl("cppRequiredPropertyInChildAndParent.qml") << testFileUrl("cppRequiredPropertyInChildAndParentNotSet.qml") << QString(":4:1: Required property test2 was not initialized\n") << 18;
 }
 
 void tst_qqmllanguage::requiredPropertyFromCpp()
@@ -3031,7 +3031,7 @@ void tst_qqmllanguage::reservedWords()
     QFETCH(QByteArray, word);
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0\nQtObject { property string " + word + " }", QUrl());
-    QCOMPARE(component.errorString(), QLatin1String(":2 Expected token `identifier'\n"));
+    QCOMPARE(component.errorString(), QLatin1String("<Unknown File>:2:28: Expected token `identifier'\n"));
 }
 
 // Check that first child of qml is of given type. Empty type insists on error.
@@ -6284,7 +6284,7 @@ void tst_qqmllanguage::inlineComponentReferenceCycle()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o.isNull());
     QVERIFY(component.isError());
-    QCOMPARE(component.errorString(), componentUrl.toString() + QLatin1String(":-1 Inline components form a cycle!\n"));
+    QCOMPARE(component.errorString(), componentUrl.toString() + QLatin1String(": Inline components form a cycle!\n"));
 }
 
 void tst_qqmllanguage::nestedInlineComponentNotAllowed()
@@ -6295,7 +6295,7 @@ void tst_qqmllanguage::nestedInlineComponentNotAllowed()
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component is not ready");
     QScopedPointer<QObject> o(component.create());
     QVERIFY(component.isError());
-    QCOMPARE(component.errorString(), QLatin1String("%1:%2").arg(url.toString(), QLatin1String("5 Nested inline components are not supported\n")));
+    QCOMPARE(component.errorString(), QLatin1String("%1:%2").arg(url.toString(), QLatin1String("5:9: Nested inline components are not supported\n")));
 }
 
 void tst_qqmllanguage::inlineComponentStaticTypeResolution()
@@ -6371,7 +6371,7 @@ void tst_qqmllanguage::inlineComponentDuplicateNameError()
     QUrl url = testFileUrl("inlineComponentDuplicateName.qml");
     QQmlComponent component(&engine, url);
 
-    QString message = QLatin1String("%1:5 Inline component names must be unique per file\n").arg(url.toString());
+    QString message = QLatin1String("%1:5:5: Inline component names must be unique per file\n").arg(url.toString());
     QScopedPointer<QObject> root {component.create()};
     QVERIFY(root.isNull());
     QVERIFY(component.isError());
@@ -6710,7 +6710,7 @@ void tst_qqmllanguage::qtbug_85932()
 
     const QString error = c.errorString();
     QVERIFY(error.contains(QLatin1String("Type SingletonTest unavailable")));
-    QVERIFY(error.contains(QLatin1String("%1:10 id is not unique")
+    QVERIFY(error.contains(QLatin1String("%1:10:9: id is not unique")
                                    .arg(testFileUrl("badSingleton/SingletonTest.qml").toString())));
 }
 
@@ -8076,7 +8076,7 @@ void tst_qqmllanguage::badGroupedProperty()
     QQmlComponent c(&engine, url);
     QVERIFY(c.isError());
     QCOMPARE(c.errorString(),
-             QStringLiteral("%1:6 Cannot assign to non-existent property \"onComplete\"\n")
+             QStringLiteral("%1:6:5: Cannot assign to non-existent property \"onComplete\"\n")
              .arg(url.toString()));
 }
 
@@ -8087,7 +8087,7 @@ void tst_qqmllanguage::functionInGroupedProperty()
     QQmlComponent c(&engine, url);
     QVERIFY(c.isError());
     QCOMPARE(c.errorString(),
-             QStringLiteral("%1:6 Function declaration inside grouped property\n")
+             QStringLiteral("%1:6:9: Function declaration inside grouped property\n")
                      .arg(url.toString()));
 }
 
@@ -8185,7 +8185,7 @@ void tst_qqmllanguage::multiRequired()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o.isNull());
     QCOMPARE(c.errorString(),
-             qPrintable(url.toString() + ":5 Required property description was not initialized\n"));
+             qPrintable(url.toString() + ":5:9: Required property description was not initialized\n"));
 }
 
 // QTBUG-111088
@@ -9047,7 +9047,7 @@ void tst_qqmllanguage::overrideDefaultProperty()
     QQmlComponent c(&e, url);
     QVERIFY(c.isError());
     QCOMPARE(c.errorString(), url.toString() + QLatin1String(
-        ":5 Cannot assign object of type \"QQuickItem\" to list property \"data\"; expected \"QVariant\"\n"));
+        ":5:5: Cannot assign object of type \"QQuickItem\" to list property \"data\"; expected \"QVariant\"\n"));
 }
 
 void tst_qqmllanguage::enumScopes()
@@ -9734,7 +9734,7 @@ void tst_qqmllanguage::finalProperty()
         const QUrl url = testFileUrl("FinalOverridden.qml");
         QQmlComponent c(&engine, url);
         QVERIFY(!c.isReady());
-        QCOMPARE(c.errorString(), url.toString() + ":4 Cannot override FINAL property\n"_L1);
+        QCOMPARE(c.errorString(), url.toString() + ":4:5: Cannot override FINAL property\n"_L1);
     }
 
     // In JavaScript, you can still call all kinds of things "final"

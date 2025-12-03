@@ -196,10 +196,10 @@ void tst_QQmlImport::invalidImportUrl()
     const QUrl url = testFileUrl("fileDotSlashImport.qml");
     QQmlComponent component(&engine, url);
     QVERIFY(component.isError());
-    QCOMPARE(
-            component.errorString(),
-            url.toString() + QLatin1String(
-                    ":2 Cannot resolve URL for import \"file://./MyModuleName\"\n"));
+    QCOMPARE(component.errorString(),
+             url.toString()
+                     + QLatin1String(
+                             ":2:1: Cannot resolve URL for import \"file://./MyModuleName\"\n"));
 }
 
 void tst_QQmlImport::registerTypesFromImplicitImport_data()

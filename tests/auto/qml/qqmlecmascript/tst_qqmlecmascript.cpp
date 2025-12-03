@@ -870,14 +870,14 @@ void tst_qqmlecmascript::signalAssignment()
     {
         QQmlComponent component(&engine, testFileUrl("signalAssignment.3.qml"));
         QVERIFY(component.isError());
-        QString expectedErrorString = component.url().toString() + QLatin1String(":4 Signal uses unnamed parameter followed by named parameter.\n");
+        QString expectedErrorString = component.url().toString() + QLatin1String(":4:5: Signal uses unnamed parameter followed by named parameter.\n");
         QCOMPARE(component.errorString(), expectedErrorString);
     }
 
     {
         QQmlComponent component(&engine, testFileUrl("signalAssignment.4.qml"));
         QVERIFY(component.isError());
-        QString expectedErrorString = component.url().toString() + QLatin1String(":5 Signal parameter \"parseInt\" hides global variable.\n");
+        QString expectedErrorString = component.url().toString() + QLatin1String(":5:5: Signal parameter \"parseInt\" hides global variable.\n");
         QCOMPARE(component.errorString(), expectedErrorString);
     }
 }
@@ -2879,7 +2879,7 @@ void tst_qqmlecmascript::regExpBug()
 
     //QTBUG-23068
     {
-        const QString err = QString::fromLatin1("%1:6 Invalid property assignment: "
+        const QString err = QString::fromLatin1("%1:6:24: Invalid property assignment: "
                                                 "regular expression expected; "
                                                 "use /pattern/ syntax\n")
                                     .arg(testFileUrl("regularExpression.2.qml").toString());

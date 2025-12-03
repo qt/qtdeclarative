@@ -1223,11 +1223,11 @@ TestCase {
         verify(control)
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(/QML StackView: push: .*non-existent.qml:-1 No such file or directory/)
+        ignoreWarning(/QML StackView: push: .*non-existent.qml: No such file or directory/)
         control.push(Qt.resolvedUrl("non-existent.qml"))
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(/QML StackView: replace: .*non-existent.qml:-1 No such file or directory/)
+        ignoreWarning(/QML StackView: replace: .*non-existent.qml: No such file or directory/)
         control.replace(Qt.resolvedUrl("non-existent.qml"))
 
         ignoreWarning(/QML StackView: push: invalid url: x:\/\/\[v\]/)

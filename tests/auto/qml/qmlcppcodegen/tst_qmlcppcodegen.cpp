@@ -2910,7 +2910,7 @@ void tst_QmlCppCodegen::importsFromImportPath()
     // If the compiler accepts the file, it's probably fine.
     QVERIFY(component.isError());
     QCOMPARE(component.errorString(),
-             u"qrc:/qt/qml/TestTypes/importsFromImportPath.qml:1 module \"Module\" is not installed\n"_s);
+             u"qrc:/qt/qml/TestTypes/importsFromImportPath.qml:1:1: module \"Module\" is not installed\n"_s);
 }
 
 void tst_QmlCppCodegen::inPlaceDecrement()

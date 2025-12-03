@@ -888,10 +888,7 @@ QString QQmlComponent::errorString() const
     if(!isError())
         return ret;
     for (const QQmlComponentPrivate::AnnotatedQmlError &annotated : d->m_state.errors) {
-        const QQmlError &e = annotated.error;
-        ret += e.url().toString() + QLatin1Char(':') +
-               QString::number(e.line()) + QLatin1Char(' ') +
-               e.description() + QLatin1Char('\n');
+        ret += annotated.error.toString() + QLatin1Char('\n');
     }
     return ret;
 }

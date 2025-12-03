@@ -712,7 +712,10 @@ void tst_qqmlmoduleplugin::importVersionedModule()
     QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
     QScopedPointer<QObject> object12(component.create());
     QVERIFY(object12.isNull());
-    QCOMPARE(component.errorString(), QString("%1:1 module \"org.qtproject.VersionedModule\" version 1.2 is not installed\n").arg(url.toString()));
+    QCOMPARE(component.errorString(),
+             QString("%1:1:1: module \"org.qtproject.VersionedModule\" version 1.2 is not "
+                     "installed\n")
+                     .arg(url.toString()));
 }
 
 void tst_qqmlmoduleplugin::parallelPluginImport()

@@ -935,12 +935,14 @@ void tst_qqmlengine::qtqmlModule_data()
 
     QTest::newRow("import QtQml of incorrect version (3.0)")
             << testFileUrl("qtqmlModule.2.qml")
-            << QString(testFileUrl("qtqmlModule.2.qml").toString() + QLatin1String(":1 module \"QtQml\" version 3.0 is not installed\n"))
+            << QString(testFileUrl("qtqmlModule.2.qml").toString()
+                       + QLatin1String(":1:1: module \"QtQml\" version 3.0 is not installed\n"))
             << QStringList();
 
     QTest::newRow("import QtQml of incorrect version (1.0)")
             << testFileUrl("qtqmlModule.3.qml")
-            << QString(testFileUrl("qtqmlModule.3.qml").toString() + QLatin1String(":1 module \"QtQml\" version 1.0 is not installed\n"))
+            << QString(testFileUrl("qtqmlModule.3.qml").toString()
+                       + QLatin1String(":1:1: module \"QtQml\" version 1.0 is not installed\n"))
             << QStringList();
 
     QTest::newRow("import QtQml of old version (2.50)")
@@ -965,17 +967,20 @@ void tst_qqmlengine::qtqmlModule_data()
 
     QTest::newRow("no import results in no QtObject availability")
             << testFileUrl("qtqmlModule.8.qml")
-            << QString(testFileUrl("qtqmlModule.8.qml").toString() + QLatin1String(":4 QtObject is not a type\n"))
+            << QString(testFileUrl("qtqmlModule.8.qml").toString()
+                       + QLatin1String(":4:1: QtObject is not a type\n"))
             << QStringList();
 
     QTest::newRow("importing QtQml only results in no Item availability")
             << testFileUrl("qtqmlModule.9.qml")
-            << QString(testFileUrl("qtqmlModule.9.qml").toString() + QLatin1String(":4 Item is not a type\n"))
+            << QString(testFileUrl("qtqmlModule.9.qml").toString()
+                       + QLatin1String(":4:1: Item is not a type\n"))
             << QStringList();
 
     QTest::newRow("import QtQml of incorrect version (6.50)")
             << testFileUrl("qtqmlModule.10.qml")
-            << QString(testFileUrl("qtqmlModule.10.qml").toString() + QLatin1String(":1 module \"QtQml\" version 6.50 is not installed\n"))
+            << QString(testFileUrl("qtqmlModule.10.qml").toString()
+                       + QLatin1String(":1:1: module \"QtQml\" version 6.50 is not installed\n"))
             << QStringList();
 }
 
