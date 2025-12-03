@@ -264,7 +264,9 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
             // Note that A QQuickPopupWindow can be bigger than the
             // menu itself, to make room for a drop-shadow. But if the press was on top
             // of the shadow, targetMenu will still be nullptr.
-            closePopupAndParentMenus();
+            // On WASM in particular, it's possible for dialogs to receive the event, when clicking in the non-client area. Don't close in those cases.
+            if (event->type() != QEvent::NonClientAreaMouseButtonPress && event->type() != QEvent::NonClientAreaMouseButtonDblClick)
+                closePopupAndParentMenus();
             return false;
         }
     } else if (pe->isUpdateEvent()){
@@ -300,7 +302,9 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
     } else if (pe->isEndEvent()) {
         if (!targetPopup && !targetMenuBar && closePolicy.testAnyFlags(QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent)) {
             // Released outside either a popup window, or a menu or menubar that owns a menu using popup windows.
-            closePopupAndParentMenus();
+            // This should normally close the current popup window, unless it's inside the non-client area, which can happen in WASM dialogs.
+            if (event->type() != QEvent::NonClientAreaMouseButtonRelease)
+                closePopupAndParentMenus();
             return false;
         }
 
