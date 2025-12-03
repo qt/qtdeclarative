@@ -2077,7 +2077,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     The list view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
-    As such, state should \e never be stored in a delegate.
+    As such, \l {Avoid Storing State in Delegates}{state should \e never be stored in a delegate}.
     Delegates are usually parented to ListView's \l {Flickable::contentItem}{contentItem}, but
     typically depending on whether it's visible in the view or not, the \e parent
     can change, and sometimes be \c null. Because of that, binding to
@@ -2215,8 +2215,9 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     item is reused. This includes \c index and \c row, but also
     any model roles.
 
-    \note Avoid storing any state inside a delegate. If you do, reset it
-    manually on receiving the \l ListView::reused signal.
+    \note \l {Avoid Storing State in Delegates}{Avoid storing any state inside
+    a delegate}. If you do, reset it manually on receiving the
+    \l ListView::reused signal.
 
     If an item has timers or animations, consider pausing them on receiving
     the \l ListView::pooled signal. That way you avoid using the CPU resources
@@ -2248,6 +2249,45 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     items, at the expense of additional memory usage. \l{ListView::section}{Sections}
     have the same effect because they attach and elongate the section label to the
     first item within the section.
+
+    \section1 Avoid Storing State in Delegates
+
+    ListView's delegates are instantiated as needed and may be destroyed when
+    out of view. For an illustration of this, run the following example:
+
+    \snippet qml/listview/stateInDelegate.qml ListView
+
+    When an item is clicked, \c channelActivated is set to \c true. However,
+    because delegates can be \l {Reusing Items}{reused} and destroyed, all
+    state is lost when the view is moved far enough. When the delegate becomes
+    visible again, it will have its default, unmodified state (or, in the case
+    of an item that was reused, old state from a previous item).
+
+    To avoid this, state should be stored in the model:
+
+    \snippet qml/listview/stateInModel.qml ListView
+
+    \section1 Hiding Delegates
+
+    Setting a delegate's \l {Item::}{visible} property to \c false will hide
+    that item, but the space it occupied in the view will remain. It is
+    possible to set the item's \l {Item::}{height} to \c 0 (for a \l
+    {ListView::orientation}{vertical} ListView):
+
+    \snippet qml/listview/hideDelegate.qml ListView
+
+    Note that the hidden state is stored in the model, following the advice of
+    the \l {Avoid Storing State in Delegates} section.
+
+    However, if \l spacing is non-zero, there will be uneven gaps between
+    delegates.
+
+    A better option is to filter your model so that items that should not be
+    visible are not loaded by the view at all. This can be achieved with
+    \l QSortFilterProxyModel.
+
+    Another option is to \l {Item::enabled}{disable} the delegate instead of
+    hiding it.
 */
 QQuickListView::QQuickListView(QQuickItem *parent)
     : QQuickItemView(*(new QQuickListViewPrivate), parent)

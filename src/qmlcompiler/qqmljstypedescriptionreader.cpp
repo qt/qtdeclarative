@@ -216,6 +216,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setIsComposite(readBoolBinding(script));
             } else if (name == QLatin1String("hasCustomParser")) {
                 scope->setHasCustomParser(readBoolBinding(script));
+            } else if (name == QLatin1String("enforcesScopedEnums")) {
+                scope->setEnforcesScopedEnumsFlag(readBoolBinding(script));
             } else if (name == QLatin1String("accessSemantics")) {
                 const QString semantics = readStringBinding(script);
                 if (semantics == QLatin1String("reference")) {
@@ -242,8 +244,9 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
-                              "isComposite, hasCustomParser, exportMetaObjectRevisions, "
-                              "deferredNames, and immediateNames in script bindings, not \"%1\".")
+                              "isComposite, hasCustomParser, enforcesScopedEnums, "
+                              "exportMetaObjectRevisions, deferredNames, and immediateNames in "
+                              "script bindings, not \"%1\".")
                            .arg(name));
             }
         } else {

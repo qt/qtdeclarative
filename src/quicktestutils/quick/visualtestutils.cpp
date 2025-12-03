@@ -145,6 +145,10 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
         QDebug(errorMessage) << "Images are of different formats:" << ia.format() << ib.format();
         return false;
     }
+    if (ia.depth() != 32) {
+        QDebug(errorMessage) << "This function only supports bit depths of 32 - depth of images is:" << ia.depth();
+        return false;
+    }
 
     int w = ia.width();
     int h = ia.height();

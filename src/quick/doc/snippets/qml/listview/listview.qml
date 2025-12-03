@@ -13,6 +13,8 @@ ListView {
 
     model: ContactModel {}
     delegate: Text {
+        required property string name
+        required property string number
         text: name + ": " + number
     }
 }
@@ -25,10 +27,13 @@ Rectangle {
     Component {
         id: contactDelegate
         Item {
+            id: myItem
+            required property string name
+            required property string number
             width: 180; height: 40
             Column {
-                Text { text: '<b>Name:</b> ' + name }
-                Text { text: '<b>Number:</b> ' + number }
+                Text { text: '<b>Name:</b> ' + myItem.name }
+                Text { text: '<b>Number:</b> ' + myItem.number }
             }
         }
     }

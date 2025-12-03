@@ -6222,7 +6222,7 @@ class EnumTester : public QObject
 public:
     enum Types
     {
-        FIRST = 0,
+        FIRST = 42,
         SECOND,
         THIRD
     };
@@ -6236,13 +6236,18 @@ void tst_qqmllanguage::qualifiedScopeInCustomParser()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.setData("import QtQml.Models 2.12\n"
+                      "import QtQml\n"
                       "import scoped.custom.test 1.0 as BACKEND\n"
                       "ListModel {\n"
+                      "    id: root\n"
+                      "    property int num: -1\n"
                       "    ListElement { text: \"a\"; type: BACKEND.EnumTester.FIRST }\n"
+                      "    Component.onCompleted: {  root.num = root.get(0).type }\n"
                       "}\n", QUrl());
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("num").toInt(), 42);
 }
 
 void tst_qqmllanguage::checkUncreatableNoReason()
@@ -8262,6 +8267,14 @@ void tst_qqmllanguage::overrideInnerBinding()
 
     QCOMPARE(o->property("width").toReal(), 20.0);
     QCOMPARE(o->property("innerWidth").toReal(), 20.0);
+
+    QQmlComponent c2(&e, testFileUrl("Wrap.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    o.reset(c2.create());
+    QVERIFY(!o.isNull());
+
+    QFont font = qvariant_cast<QFont>(o->property("font"));
+    QCOMPARE(font.family(), "Ariallll");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

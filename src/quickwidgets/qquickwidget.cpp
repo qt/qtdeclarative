@@ -913,6 +913,7 @@ void QQuickWidgetPrivate::updateSize()
             } else if (offscreenWindow->size().isEmpty()) {
                 // QQuickDeliveryAgentPrivate::deliverHoverEvent() ignores events that
                 // occur outside of QQuickRootItem's geometry, so we need it to match root's size.
+                offscreenWindow->resize(newSize);
                 offscreenWindow->contentItem()->setSize(newSize);
             }
         }

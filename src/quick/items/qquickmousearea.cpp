@@ -825,6 +825,7 @@ void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
         me.setPosition(d->lastPos);
         emit mouseYChanged(&me);
         me.setPosition(d->lastPos);
+        emit positionChanged(&me);
     }
 
     // A MouseArea should not block hover events
@@ -1224,6 +1225,10 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
 {
     Q_D(QQuickMouseArea);
 
+    // Don't allow entering pressed state while invisible
+    if (p && !d->effectiveVisible)
+        return false;
+
 #if QT_CONFIG(quick_draganddrop)
     bool dragged = d->drag && d->drag->active();
 #else
@@ -1320,6 +1325,10 @@ bool QQuickMouseArea::setPressed(Qt::MouseButton button, bool p, Qt::MouseEventS
     \endcode
 
     The default value is \c Qt.ArrowCursor.
+
+    \note If the \c cursorShape property is set to \c undefined, the \c MouseArea will
+    not change the existing shape when entering it.
+
     \sa Qt::CursorShape
 */
 

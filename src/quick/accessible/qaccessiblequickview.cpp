@@ -87,10 +87,11 @@ QString QAccessibleQuickWindow::text(QAccessible::Text text) const
     if (text == QAccessible::DebugDescription) {
         return QString::fromLatin1(object()->metaObject()->className()) ;
     }
-#else
-    Q_UNUSED(text);
 #endif
-    return window()->title();
+    if (text == QAccessible::Name)
+        return window()->title();
+    else
+        return {};
 }
 
 QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const

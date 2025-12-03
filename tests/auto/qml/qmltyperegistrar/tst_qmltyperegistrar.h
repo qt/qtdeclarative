@@ -565,6 +565,13 @@ public:
     Q_INVOKABLE const QObject *getObject() { return nullptr; }
 };
 
+class EnumsExplicitlyScoped : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -619,7 +626,10 @@ private slots:
     void listSignal();
     void foreignNamespaceFromGadget();
 
+    void enumWarnings();
     void constReturnType();
+
+    void enumsExplicitlyScoped();
 
 private:
     QByteArray qmltypesData;

@@ -697,9 +697,17 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
         m_xAxis.updateValue(activeTranslation.x(), m_xAxis.persistentValue() + delta.x(), delta.x());
         m_yAxis.updateValue(activeTranslation.y(), m_yAxis.persistentValue() + delta.y(), delta.y());
         emit translationChanged(delta);
+        // xAxis or yAxis may be disabled; nevertheless, we use setPosition() to compensate for
+        // other aspects of the transform. So it should not be skipped. Above, we've already
+        // subtracted activeTranslation if necessary.
         t->setPosition(pos);
-        t->setRotation(m_rotationAxis.persistentValue());
-        t->setScale(m_scaleAxis.persistentValue());
+        // Set rotation and scale properties only if the respective axes are enabled.
+        // We've already checked above, so we don't expect activeScale or activeRotation to change
+        // if the axis is disabled; but then don't call the setter at all, to avoid breaking bindings.
+        if (m_rotationAxis.enabled())
+            t->setRotation(m_rotationAxis.persistentValue());
+        if (m_scaleAxis.enabled())
+            t->setScale(m_scaleAxis.persistentValue());
     } else {
         auto activeTranslation = centroid().scenePosition() - centroid().scenePressPosition();
         auto accumulated = QPointF(m_xAxis.m_startValue, m_yAxis.m_startValue) + activeTranslation;

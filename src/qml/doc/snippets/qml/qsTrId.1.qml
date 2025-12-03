@@ -3,9 +3,18 @@
 
 import QtQuick
 
+Item {
 //![0]
-Text {
-    //% "hello"
-    text: qsTrId("hello_id")
+    Text {
+        //% "hello"
+        text: qsTrId("hello_id")
+    }
+//![0]
+
+//![1]
+    Text {
+        /*% "hello" */
+        text: qsTrId("hello_id")
+    }
+//![1]
 }
-//![0]

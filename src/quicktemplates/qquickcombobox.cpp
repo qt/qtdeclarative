@@ -1037,10 +1037,15 @@ void QQuickComboBox::setModel(const QVariant& m)
 }
 
 /*!
-    \internal
+    \readonly
     \qmlproperty model QtQuick.Controls::ComboBox::delegateModel
 
-    This property holds the model providing delegate instances for the combo box.
+    This property holds the model that provides delegate instances for the combo box.
+
+    It is typically assigned to a \l ListView in the \l {Popup::}{contentItem}
+    of the \l popup.
+
+    \sa {Customizing ComboBox}
 */
 QQmlInstanceModel *QQuickComboBox::delegateModel() const
 {
@@ -1869,7 +1874,7 @@ QString QQuickComboBox::textAt(int index) const
     \value Qt.MatchWildcard          The search term matches using wildcards.
     \value Qt.MatchFixedString       The search term matches as a fixed string.
     \value Qt.MatchStartsWith        The search term matches the start of the item.
-    \value Qt.MatchEndsWidth         The search term matches the end of the item.
+    \value Qt.MatchEndsWith          The search term matches the end of the item.
     \value Qt.MatchContains          The search term is contained in the item.
     \value Qt.MatchCaseSensitive     The search is case sensitive.
 

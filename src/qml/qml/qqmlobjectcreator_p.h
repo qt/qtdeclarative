@@ -78,6 +78,17 @@ private:
 
 class RequiredProperties : public QHash<RequiredPropertyKey, RequiredPropertyInfo> {};
 
+class RequiredPropertiesAndTarget : public RequiredProperties
+{
+public:
+    RequiredPropertiesAndTarget(QObject *target) : target(target) {}
+    RequiredPropertiesAndTarget(const RequiredPropertiesAndTarget &) = default;
+    RequiredPropertiesAndTarget(RequiredPropertiesAndTarget &&) = default;
+    RequiredPropertiesAndTarget &operator=(const RequiredPropertiesAndTarget &) = default;
+    RequiredPropertiesAndTarget &operator=(RequiredPropertiesAndTarget &&) = default;
+    QObject *target = nullptr;
+};
+
 struct DeferredQPropertyBinding {
     QObject *target = nullptr;
     int properyIndex = -1;
@@ -105,10 +116,11 @@ class Q_QML_PRIVATE_EXPORT QQmlObjectCreator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlObjectCreator)
 public:
-    QQmlObjectCreator(QQmlRefPointer<QQmlContextData> parentContext,
-                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                      const QQmlRefPointer<QQmlContextData> &creationContext,
-                      QQmlIncubatorPrivate  *incubator = nullptr);
+    QQmlObjectCreator(
+            const QQmlRefPointer<QQmlContextData> &parentContext,
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            const QQmlRefPointer<QQmlContextData> &creationContext,
+            QQmlIncubatorPrivate  *incubator = nullptr);
     ~QQmlObjectCreator();
 
     enum CreationFlags { NormalObject = 1, InlineComponent = 2 };
@@ -159,12 +171,12 @@ public:
     }
 
 private:
-    QQmlObjectCreator(QQmlRefPointer<QQmlContextData> contextData,
-                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
-                      QQmlObjectCreatorSharedState *inheritedSharedState,
-                      bool isContextObject);
+    QQmlObjectCreator(
+            const QQmlRefPointer<QQmlContextData> &contextData,
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+            QQmlObjectCreatorSharedState *inheritedSharedState, bool isContextObject);
 
-    void init(QQmlRefPointer<QQmlContextData> parentContext);
+    void init(const QQmlRefPointer<QQmlContextData> &parentContext);
 
     QObject *createInstance(int index, QObject *parent = nullptr, bool isContextObject = false);
 

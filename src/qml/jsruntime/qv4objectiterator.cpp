@@ -94,6 +94,8 @@ void Heap::ForInIteratorObject::markObjects(Heap::Base *that, MarkStack *markSta
         o->object->mark(markStack);
     if (o->current)
         o->current->mark(markStack);
+    if (o->target)
+        o->target->mark(markStack);
     o->workArea[0].mark(markStack);
     o->workArea[1].mark(markStack);
     Object::markObjects(that, markStack);
