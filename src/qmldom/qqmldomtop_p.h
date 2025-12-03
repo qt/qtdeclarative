@@ -1132,6 +1132,9 @@ private:
     std::optional<SemanticAnalysis> m_semanticAnalysis;
 public:
     SemanticAnalysis semanticAnalysis();
+
+private:
+    SemanticAnalysis semanticAnalysisUnlocked();
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(DomEnvironment::Options)
 
