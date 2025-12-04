@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="350">
+  <style>
+  @keyframes translate {
+    0% {transform: translate(0, 0);}
+    50% {transform: translate(250px, 0);}
+    100% {transform: translate(0, 0);}
+  }
+  #ease {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease;
+  }
+  #linear {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+  }
+  #easeIn {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in;
+  }
+  #easeOut {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-out;
+  }
+  #easeInOut {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+  }
+  #stepsEnd {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: step-end;
+  }
+  #stepsStart {
+  animation-duration: 250ms;
+  animation-name: translate;
+  animation-iteration-count: infinite;
+  animation-timing-function: step-start;
+  }
+  </style>
+   <circle id="ease" cx="50" cy="20" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="linear" cx="50" cy="70" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="easeIn" cx="50" cy="120" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="easeOut" cx="50" cy="170" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="easeInOut" cx="50" cy="220" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="stepsEnd" cx="50" cy="270" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+   <circle id="stepsStart" cx="50" cy="320" r="15" fill="orange" stroke="grey" stroke-width="3"/>
+</svg>

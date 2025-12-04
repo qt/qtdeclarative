@@ -76,7 +76,7 @@ private:
     void applyAnimationsToProperty(const QList<AnimationPair> &animations,
                                    QQuickAnimatedProperty *property,
                                    std::function<QVariant(const QSvgAbstractAnimatedProperty *, int index, int subtype)> calculateValue);
-
+    QBezier easingForAnimation(const QSvgAbstractAnimation *animation);
     void fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, const QString &idSuffix = QString{});
     void fillPathAnimationInfo(const QSvgNode *node, PathNodeInfo &info);
     void fillAnimationInfo(const QSvgNode *node, NodeInfo &info);

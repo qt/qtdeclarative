@@ -1606,6 +1606,7 @@ void QSvgVisitorImpl::applyAnimationsToProperty(const QList<AnimationPair> &anim
                                          << ", freeze:" << freeze
                                          << ", replace:" << replace;
 
+        QBezier easing = easingForAnimation(animation);
         QList<qreal> propertyKeyFrames = property->keyFrames();
         QList<QQuickAnimatedProperty::PropertyAnimation> outAnimations;
 
@@ -1674,12 +1675,53 @@ void QSvgVisitorImpl::applyAnimationsToProperty(const QList<AnimationPair> &anim
 
                 const QVariant value = calculateValue(property, j, i);
                 outAnimation.frames[time] = value;
+                outAnimation.easingPerFrame[time] = easing;
                 qCDebug(lcVectorImageAnimations) << "        -> Frame " << time << " is " << value;
             }
 
             outProperty->addAnimation(outAnimation);
         }
     }
+}
+
+QBezier QSvgVisitorImpl::easingForAnimation(const QSvgAbstractAnimation *animation)
+{
+    constexpr QPointF startControlPoint(0, 0);
+    constexpr QPointF endControlPoint(1, 1);
+    constexpr QPointF easeC1(0.25, 0.1);
+    constexpr QPointF easeC2(0.25, 1);
+
+    QBezier easing = QBezier::fromPoints(startControlPoint, startControlPoint, endControlPoint, endControlPoint);
+
+#if QT_CONFIG(cssparser)
+    if (animation->animationType() == QSvgAbstractAnimation::CSS) {
+        QSvgEasingInterface *easingInterface = animation->easing();
+        QSvgCssEasing *cssEasing = static_cast<QSvgCssEasing *>(easingInterface);
+        switch (cssEasing->easingFunction()) {
+        case QSvgCssValues::EasingFunction::Ease:
+        case QSvgCssValues::EasingFunction::EaseIn:
+        case QSvgCssValues::EasingFunction::EaseOut:
+        case QSvgCssValues::EasingFunction::EaseInOut:
+        case QSvgCssValues::EasingFunction::CubicBezier:
+        case QSvgCssValues::EasingFunction::Linear:
+        {
+            const QSvgCssCubicBezierEasing *cssCubicEasing = static_cast<const QSvgCssCubicBezierEasing *>(cssEasing);
+            QPointF c1 = cssCubicEasing->c1();
+            QPointF c2 = cssCubicEasing->c2();
+            easing = QBezier::fromPoints(startControlPoint, c1, c2, endControlPoint);
+            break;
+        }
+        case QSvgCssValues::EasingFunction::Steps:
+        {
+            qCDebug(lcVectorImageAnimations) << "Step easing is not supported reverting to default.";
+            easing = QBezier::fromPoints(startControlPoint, easeC1, easeC2, endControlPoint);
+            break;
+        }
+        }
+    }
+#endif
+
+    return easing;
 }
 
 void QSvgVisitorImpl::fillColorAnimationInfo(const QSvgNode *node, PathNodeInfo &info)
