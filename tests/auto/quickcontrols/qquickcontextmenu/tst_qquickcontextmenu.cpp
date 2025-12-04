@@ -20,6 +20,7 @@
 #include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
 #include <QtQuickTemplates2/private/qquicksearchfield_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickTest/quicktest.h>
 
 using namespace QQuickControlsTestUtils;
@@ -432,9 +433,9 @@ void tst_QQuickContextMenu::textControlsMenuKey()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
-    auto *textArea = window->findChild<QQuickItem *>("textArea");
+    auto *textArea = window->findChild<QQuickTextArea *>("textArea");
     QVERIFY(textArea);
-    auto *textField = window->findChild<QQuickItem *>("textField");
+    auto *textField = window->findChild<QQuickTextField *>("textField");
     QVERIFY(textField);
     auto *windowMenu = window->findChild<QQuickMenu *>("windowMenu");
     QVERIFY(windowMenu);
@@ -446,6 +447,7 @@ void tst_QQuickContextMenu::textControlsMenuKey()
         QGuiApplication::sendEvent(window, &cme);
         auto *openMenu = window->findChild<QQuickMenu *>();
         QVERIFY(openMenu);
+        TRY_VERIFY_POPUP_OPENED(openMenu);
         QCOMPARE(openMenu->objectName(), "windowMenu");
         openMenu->close();
     }
@@ -457,6 +459,9 @@ void tst_QQuickContextMenu::textControlsMenuKey()
         QGuiApplication::sendEvent(window, &cme);
         auto *openMenu = textArea->findChild<QQuickMenu *>();
         QVERIFY(openMenu);
+        TRY_VERIFY_POPUP_OPENED(openMenu);
+        QCOMPARE(textArea->mapToScene(openMenu->position()), textArea->mapToScene(
+            textArea->cursorRectangle().center().toPoint()));
         openMenu->close();
     }
 
@@ -467,6 +472,9 @@ void tst_QQuickContextMenu::textControlsMenuKey()
         QGuiApplication::sendEvent(window, &cme);
         auto *openMenu = textField->findChild<QQuickMenu *>();
         QVERIFY(openMenu);
+        TRY_VERIFY_POPUP_OPENED(openMenu);
+        QCOMPARE(textField->mapToScene(openMenu->position()), textField->mapToScene(
+            textField->cursorRectangle().center().toPoint()));
         openMenu->close();
     }
 }
