@@ -31,8 +31,8 @@ NativeStyle.DefaultSearchField {
         id: search
         control: control
         subControl: NativeStyle.SearchField.Search
-        x: searchIndicator.indicator.x
-        y: searchIndicator.indicator.y
+        x: searchIndicator.indicator ? searchIndicator.indicator.x : 0
+        y: searchIndicator.indicator ? searchIndicator.indicator.y : 0
         useNinePatchImage: false
     }
 
@@ -49,8 +49,8 @@ NativeStyle.DefaultSearchField {
         visible: control.text.length > 0
         control: control
         subControl: NativeStyle.SearchField.Clear
-        x: clearIndicator.indicator.x
-        y: clearIndicator.indicator.y
+        x: clearIndicator.indicator ? clearIndicator.indicator.x : 0
+        y: clearIndicator.indicator ? clearIndicator.indicator.y : 0
         useNinePatchImage: false
     }
 
