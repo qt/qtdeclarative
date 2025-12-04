@@ -19,6 +19,7 @@ QT_BEGIN_NAMESPACE
 //! \nativetype QQuickLabsPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
+    \deprecated [6.11] Use \l {QtQuick.Dialogs::Dialog} instead.
     \brief The base class of native dialogs.
 
     The Dialog type provides common QML API for native platform dialogs.
