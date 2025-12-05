@@ -23,6 +23,32 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSaturationLightnessPickerPrivate;
 
+class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickSaturationLightnessPickerCanvas : public QQuickItem
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(SaturationLightnessPickerCanvas)
+    Q_PROPERTY(qreal hue READ hue WRITE setHue NOTIFY hueChanged FINAL)
+
+public:
+    QQuickSaturationLightnessPickerCanvas(QQuickItem *parent = nullptr);
+
+    qreal hue() const { return m_hue; }
+    void setHue(qreal h);
+
+signals:
+    void hueChanged();
+
+protected:
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
+
+private:
+    qreal m_hue;
+    QImage m_image;
+    QSizeF m_lastSize;
+
+    QImage generateImage(int width, int height, double hue01) const;
+};
+
 class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickSaturationLightnessPicker
     : public QQuickAbstractColorPicker
 {

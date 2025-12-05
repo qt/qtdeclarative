@@ -279,9 +279,13 @@ qt_internal_add_resource(QuickDialogs2QuickImpl "QuickDialogs2QuickImpl"
 )
 
 qt_internal_add_shaders(QuickDialogs2QuickImpl "QuickDialogs2QuickImplShaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
     PREFIX
         "/qt-project.org/imports/QtQuick/Dialogs/quickimpl"
     FILES
+        "shaders/SaturationLightness.vert"
         "shaders/SaturationLightness.frag"
     SILENT
 )

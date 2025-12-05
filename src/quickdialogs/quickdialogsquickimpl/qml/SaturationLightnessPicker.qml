@@ -18,15 +18,9 @@ SaturationLightnessPickerImpl {
         border.color: "#353637"
     }
 
-    contentItem: ShaderEffect {
-        scale: contentItem.width / width
-        layer.enabled: true
-        layer.smooth: true
+    contentItem: SaturationLightnessPickerCanvas {
         anchors.fill: parent
-
-        property alias hue: control.hue
-
-        fragmentShader: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/shaders/SaturationLightness.frag.qsb"
+        hue: control.hue
     }
 
     handle: PickerHandle {
