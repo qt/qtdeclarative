@@ -1609,9 +1609,13 @@ void TestQmllint::dirtyQmlSnippet()
     QFETCH(Result, result);
     QFETCH(CallQmllintOptions, options);
 
-    QString qmlCode = "import QtQuick\nItem {\n%1}"_L1.arg(code);
-
-    addLocationOffsetTo(&result, 2);
+    QString qmlCode;
+    if (code.startsWith("import"_L1) || code.startsWith("pragma"_L1)) {
+        qmlCode = code;
+    } else {
+        qmlCode = "import QtQuick\nItem {\n%1}"_L1.arg(code);
+        addLocationOffsetTo(&result, 2);
+    }
 
     const QJsonArray warnings =
             callQmllintOnSnippet(qmlCode, options, fromResultFlags(result.flags));
