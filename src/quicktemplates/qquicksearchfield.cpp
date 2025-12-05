@@ -33,6 +33,10 @@ QT_BEGIN_NAMESPACE
     The control includes a text field, search and clear icons, and a popup that
     displays suggestions or search results.
 
+    \note The iOS style does not provide a built-in popup for SearchField in
+        order to preserve the native look and feel. If a popup is still wanted,
+        it has to be defined by the user.
+
     \image qtquickcontrols-searchfield.gif
            {Search field with search icon and clear button}
 
@@ -765,7 +769,16 @@ int QQuickSearchField::suggestionCount() const
 
     This property holds the index of the currently selected suggestion in the popup list.
 
-    The default value is \c -1 when count is \c 0, and \c 0 otherwise.
+    Its value is \c -1 when no suggestion is selected.
+
+    currentIndex is not modified automatically when the model changes or when the user types
+    or edits text. It is updated only when the user explicitly selects a suggestion, either
+    by clicking an item in the popup, or by pressing Enter on a highlighted item.
+
+    currentIndex can be set; for example, to display the first item in the model at startup.
+    Before doing so, ensure that the model is not empty:
+
+    \snippet qtquickcontrols-searchfield-currentIndex.qml currentIndex
 
     \sa activated(), text, highlightedIndex
  */
