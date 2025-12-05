@@ -122,7 +122,7 @@ using namespace Qt::StringLiterals;
     X(qmlRestrictedType, "restricted-type", "RestrictedType", "Warn about restricted types",       \
       QtWarningMsg, false, false)                                                                  \
     X(qmlShadow, "shadow", "Shadow", "Warn about shadowing attributes from a base class",          \
-    QtWarningMsg, false, false)                                                                  \
+      QtWarningMsg, true, false)                                                                   \
     X(qmlSignalParameters, "signal-handler-parameters", "BadSignalHandlerParameters",              \
       "Warn about bad signal handler parameters", QtWarningMsg, false, false)                      \
     X(qmlStalePropertyRead, "stale-property-read", "StalePropertyRead",                            \
