@@ -6,6 +6,4 @@ if(QT_BUILD_MINIMAL_STATIC_TESTS)
     return()
 endif()
 
-if(QT_FEATURE_private_tests)
-    add_subdirectory(qquickvectorimage)
-endif()
+add_subdirectory(qquickvectorimage)
