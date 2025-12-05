@@ -162,8 +162,6 @@ void QQmlPreviewPosition::readLastPositionFromByteArray(const QByteArray &array)
 
     QPoint nativePosition;
     stream >> nativePosition;
-    if (nativePosition.isNull())
-        return;
 
     QSize size;
     stream >> size;
@@ -174,8 +172,6 @@ void QQmlPreviewPosition::readLastPositionFromByteArray(const QByteArray &array)
 void QQmlPreviewPosition::setPosition(const QQmlPreviewPosition::Position &position,
                                       QWindow *window)
 {
-    if (position.nativePosition.isNull())
-        return;
     if (QScreen *screen = findScreen(position.screenName)) {
         window->setScreen(screen);
         const auto point = QHighDpiScaling::mapPositionFromNative(position.nativePosition,
