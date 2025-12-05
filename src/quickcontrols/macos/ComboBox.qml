@@ -5,6 +5,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
+import QtQuick.Controls.macOS.impl
 
 NativeStyle.DefaultComboBox {
     id: control
@@ -38,5 +39,9 @@ NativeStyle.DefaultComboBox {
 
         readonly property Item __focusFrameControl: control
         readonly property bool __ignoreNotCustomizable: true
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 }

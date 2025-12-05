@@ -523,6 +523,7 @@ void tst_QQuickContextMenu::textEditingContextMenuData()
     QTest::addRow("TextArea") << "textAreaInPane.qml" << textComplete;
     QTest::addRow("TextField") << "textFieldInPane.qml" << textComplete;
     QTest::addRow("SpinBox") << "spinBoxInPane.qml" << textCompleteLocaleSpecific;
+    QTest::addRow("ComboBox") << "editableComboBoxInPane.qml" << textComplete;
 }
 
 int tst_QQuickContextMenu::textEditingContextMenuItemIndex(TextEditingContextMenuItemType type)
@@ -571,8 +572,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
-    // Don't use clear(), as that affects the undo stack.
-    QVERIFY(editor->setProperty("text", ""));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
@@ -592,9 +592,10 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QTest::keyClick(&window, Qt::Key_Escape);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
-    // Enter some text. Undo should then be enabled, but not redo.
-    QTest::keyClick(&window, Qt::Key_1);
-    QCOMPARE(editor->property("text").toString(), QLatin1String("1"));
+    // Erase the text. Undo should then be enabled, but not redo.
+    QTest::keySequence(&window, QKeySequence::SelectAll);
+    QTest::keyClick(&window, Qt::Key_Backspace);
+    QCOMPARE(editor->property("text").toString(), QString());
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 
@@ -605,7 +606,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Click on the Undo menu item. Redo should then be enabled.
     QVERIFY(clickButton(undoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
-    QCOMPARE(editor->property("text").toString(), QString());
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
     QVERIFY(!undoMenuItem->isEnabled());
     QVERIFY(redoMenuItem->isEnabled());
 
@@ -616,7 +617,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Click on the Redo menu item. Undo should then be enabled.
     QVERIFY(clickButton(redoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
-    QCOMPARE(editor->property("text").toString(), QLatin1String("1"));
+    QCOMPARE(editor->property("text").toString(), QString());
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 }

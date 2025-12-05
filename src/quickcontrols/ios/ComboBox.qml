@@ -103,6 +103,10 @@ T.ComboBox {
         verticalAlignment: Text.AlignVCenter
 
         cursorDelegate: CursorDelegate {}
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     background: Rectangle {

@@ -9,6 +9,7 @@ import QtQuick.Window
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import QtQuick.Controls.Universal
+import QtQuick.Controls.Universal.impl
 
 T.ComboBox {
     id: control
@@ -73,6 +74,10 @@ T.ComboBox {
         selectionColor: control.Universal.accent
         selectedTextColor: control.Universal.chromeWhiteColor
         verticalAlignment: Text.AlignVCenter
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     background: Rectangle {

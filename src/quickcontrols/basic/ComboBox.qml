@@ -6,6 +6,7 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Controls.impl
+import QtQuick.Controls.Basic.impl
 import QtQuick.Templates as T
 
 T.ComboBox {
@@ -61,6 +62,10 @@ T.ComboBox {
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         verticalAlignment: Text.AlignVCenter
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
 
         background: Rectangle {
             visible: control.enabled && control.editable && !control.flat
