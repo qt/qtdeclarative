@@ -1658,7 +1658,7 @@ void TestQmllint::dirtyQmlSnippet()
     QFETCH(CallQmllintOptions, options);
 
     QString qmlCode;
-    if (code.startsWith("import"_L1)) {
+    if (code.startsWith("import"_L1) || code.startsWith("pragma"_L1)) {
         qmlCode = code;
     } else {
         qmlCode = "import QtQuick\nItem {\n%1}"_L1.arg(code);
