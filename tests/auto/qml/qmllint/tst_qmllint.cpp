@@ -1528,6 +1528,10 @@ void TestQmllint::dirtyQmlSnippet_data()
             << Result{ { { "Enum entry should be named differently than the enum itself to avoid "
                            "confusion."_L1, 1, 10 } } }
             << defaultOptions;
+    QTest::newRow("functionDefinitionInGroupedProperty")
+            // should not crash for now, see QTBUG-142091 to get the actual warning
+            << u"Item { foo { bar: Array.from((i) => (1)) } }"_s << Result{} << defaultOptions;
+
     QTest::newRow("nonRootEnum1")
             << u"Item { enum E { A, B, C } }"_s
             << Result{ { { "Enum declared outside the root element. It won't be accessible."_L1,

@@ -43,7 +43,8 @@ void QQmlJSAOTIRBuilder::registerFunctionExpr(QQmlJS::AST::FunctionExpression *f
         }
     }
 
-    IRBuilder::registerFunctionExpr(fexp, isQmlFunction);
+    if (!_object->declarationsOverride)
+        IRBuilder::registerFunctionExpr(fexp, isQmlFunction);
 }
 
 void QQmlJSAOTIRBuilder::setBindingValue(QV4::CompiledData::Binding *binding,
