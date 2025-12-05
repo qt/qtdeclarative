@@ -18,6 +18,7 @@
 #include <QtQuickTemplates2/private/qquickmenu_p_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopupwindow_p_p.h>
+#include <QtQuickTemplates2/private/qquicksearchfield_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickTest/quicktest.h>
 
@@ -77,6 +78,7 @@ private:
     };
 
     int textEditingContextMenuItemIndex(TextEditingContextMenuItemType type);
+    [[nodiscard]] bool selectFirstItemIfSearchField(QQuickSearchField *searchField);
 
     bool contextMenuTriggeredOnRelease = false;
 
@@ -88,6 +90,7 @@ private:
 #endif
 
     bool hasUndoRedo = false;
+    bool searchFieldHasPopup = false;
 
     QString textFirstHalf;
     QString textSecondHalf;
@@ -110,7 +113,9 @@ void tst_QQuickContextMenu::initTestCase()
     contextMenuTriggeredOnRelease = QGuiApplicationPrivate::platformTheme()->themeHint(
         QPlatformTheme::ContextMenuOnMouseRelease).toBool();
 
-    hasUndoRedo = QQuickStyle::name() != "iOS";
+    const bool isiOS = QQuickStyle::name() == "iOS";
+    hasUndoRedo = !isiOS;
+    searchFieldHasPopup = !isiOS;
 
     textFirstHalf = QLatin1String("123");
     textSecondHalf = QLatin1String("456");
@@ -524,6 +529,7 @@ void tst_QQuickContextMenu::textEditingContextMenuData()
     QTest::addRow("TextField") << "textFieldInPane.qml" << textComplete;
     QTest::addRow("SpinBox") << "spinBoxInPane.qml" << textCompleteLocaleSpecific;
     QTest::addRow("ComboBox") << "editableComboBoxInPane.qml" << textComplete;
+    QTest::addRow("SearchField") << "searchFieldInPane.qml" << textComplete;
 }
 
 int tst_QQuickContextMenu::textEditingContextMenuItemIndex(TextEditingContextMenuItemType type)
@@ -540,6 +546,33 @@ int tst_QQuickContextMenu::textEditingContextMenuItemIndex(TextEditingContextMen
 
     // 3 items don't exist, so indices are lowered.
     return index - 3;
+}
+
+bool isSearchField()
+{
+    return QString::fromLatin1(QTest::currentDataTag()) == "SearchField";
+}
+
+bool isTextFieldOrArea()
+{
+    const auto currentDataTag = QString::fromLatin1(QTest::currentDataTag());
+    return currentDataTag == "TextField" || currentDataTag == "TextArea";
+}
+
+bool tst_QQuickContextMenu::selectFirstItemIfSearchField(QQuickSearchField *searchField)
+{
+    if (!searchField)
+        return true;
+
+    if (searchFieldHasPopup) {
+        auto *window = searchField->window();
+        QTest::keyClick(window, Qt::Key_1);
+        QTest::keyClick(window, Qt::Key_Return);
+    } else {
+        searchField->setText(textComplete);
+        searchField->setCurrentIndex(0);
+    }
+    return searchField->currentIndex() == 0;
 }
 
 void tst_QQuickContextMenu::textEditingContextMenuUndoRedo_data()
@@ -572,7 +605,11 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
-    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
+    // SearchField doesn't start with text selected, we can't affect it by setting currentIndex,
+    // and if we simulate events at this stage, we'll interfere with the next undo/redo enabled
+    // checks.
+    if (!isSearchField())
+        QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
@@ -591,6 +628,10 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Close the context menu.
     QTest::keyClick(&window, Qt::Key_Escape);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
+
+    // Ensure that the control has text if it's a SearchField.
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Erase the text. Undo should then be enabled, but not redo.
     QTest::keySequence(&window, QKeySequence::SelectAll);
@@ -640,6 +681,8 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    // Ensure that the control has text if it's a SearchField.
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
     // Ensure that our expected text accounts for locale-specific formatting.
     QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
@@ -684,14 +727,16 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 #endif
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
-    // Make the editor read-only. Cut should no longer be enabled.
-    editor->setProperty("readOnly", true);
-    QVERIFY(QMetaObject::invokeMethod(editor, "selectAll"));
-    // Right click on the editor to open the context menu.
-    QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
-    TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
-    QCOMPARE(cutMenuItem->text(), "Cut");
-    QVERIFY(!cutMenuItem->isEnabled());
+    if (isTextFieldOrArea()) {
+        // Make the editor read-only. Cut should no longer be enabled.
+        editor->setProperty("readOnly", true);
+        QVERIFY(QMetaObject::invokeMethod(editor, "selectAll"));
+        // Right click on the editor to open the context menu.
+        QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
+        TRY_VERIFY_POPUP_OPENED(contextMenu->menu());
+        QCOMPARE(cutMenuItem->text(), "Cut");
+        QVERIFY(!cutMenuItem->isEnabled());
+    }
 
     // Close the context menu.
     QTest::keyClick(&window, Qt::Key_Escape);
@@ -716,6 +761,9 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    // Ensure that the control has text if it's a SearchField.
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     // Right-clicking without a selection should result in the Copy menu item being disabled.
@@ -785,6 +833,8 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
 #if QT_CONFIG(clipboard)
     auto *clipboard = QGuiApplication::clipboard();
@@ -848,6 +898,8 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     // Right-clicking without a selection should result in the Delete menu item being disabled.
@@ -912,6 +964,8 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
     QVERIFY(editor);
     editor->forceActiveFocus();
+    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Right click on the editor to open the context menu.
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));

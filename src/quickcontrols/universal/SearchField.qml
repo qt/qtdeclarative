@@ -107,6 +107,10 @@ T.SearchField {
         selectionColor: control.Universal.accent
         selectedTextColor: control.Universal.chromeWhiteColor
         verticalAlignment: TextInput.AlignVCenter
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     background: Rectangle {

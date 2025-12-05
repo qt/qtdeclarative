@@ -138,6 +138,10 @@ T.SearchField {
         verticalAlignment: control.__config.label_text.textVAlignment
 
         readonly property Item __focusFrameControl: control
+
+        ContextMenu.menu: Impl.TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     background: ItemGroup {

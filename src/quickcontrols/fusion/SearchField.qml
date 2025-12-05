@@ -87,6 +87,10 @@ T.SearchField {
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         verticalAlignment: TextInput.AlignVCenter
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     background: Rectangle {

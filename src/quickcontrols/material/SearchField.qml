@@ -81,6 +81,10 @@ T.SearchField {
         selectedTextColor: control.Material.primaryHighlightedTextColor
         verticalAlignment: Text.AlignVCenter
 
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
+
         cursorDelegate: CursorDelegate { }
     }
 

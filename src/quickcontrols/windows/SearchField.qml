@@ -8,6 +8,7 @@ import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
+import QtQuick.Controls.Windows.impl
 
 NativeStyle.DefaultSearchField {
     id: control
@@ -32,6 +33,10 @@ NativeStyle.DefaultSearchField {
         verticalAlignment: Text.AlignVCenter
 
         readonly property bool __ignoreNotCustomizable: true
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     NativeStyle.SearchField {
