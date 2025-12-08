@@ -1,0 +1,29 @@
+# Building qmlformat from source
+
+## Build qmlformat from source using QT 6.10.1 installation
+```bash
+cd ~/git
+git clone https://github.com/qt/qtdeclarative.git -b v6.10.1
+cd qtdeclarative
+cmake -GNinja \
+  -DCMAKE_PREFIX_PATH=~/Qt/6.10.1/gcc_64/lib/cmake \
+  -DBUILD_TESTING=OFF -S. -Bbuild
+cmake --build build --target qmlformat -j
+strip build/bin/qmlformat
+```
+
+
+## to build qt statically:
+```bash
+cd ~/git
+git clone https://code.qt.io/qt/qt5.git -b v6.10.1
+cd qt5
+perl ./init-repository --module-subset=qtbase,qtdeclarative,qtshadertools
+mkdir build
+cd build
+../configure -static -release -prefix ~/git/qt5/build/install -nomake tests -nomake examples -no-opengl -no-gui -no-widgets -no-dbus -skip qt3d -skip qtimageformats -skip qtshadertools -skip qtwebengine -skip qtwebview -skip qtmultimedia -skip qtserialport -skip qtlocation -skip qtwayland -skip qttools -skip qttranslations -skip qtquickcontrols2
+cmake --build . -j
+cmake --install .
+```
+
+This leaves static libraries in ~/git/qt5/build/install/lib

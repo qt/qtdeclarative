@@ -1,0 +1,1 @@
+build/bin/qmlformat -n --objects-spacing --functions-spacing ./test1.qml

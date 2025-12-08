@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("qmlformat");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR "-preserveProps");
 
     QQmlFormatSettings settings(QLatin1String("qmlformat"));
     const auto &options = QQmlFormatOptions::buildCommandLineOptions(app.arguments());

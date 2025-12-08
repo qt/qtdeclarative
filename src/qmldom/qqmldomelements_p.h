@@ -971,7 +971,7 @@ public:
     void writeOutSortedAttributes(const DomItem &self, OutWriter &ow,
                                   const DomItem &component) const;
     void writeOutSortedPropertyDefinition(const DomItem &self, OutWriter &ow,
-                                          QSet<QString> &mergedDefBinding) const;
+                                          QSet<QString> &mergedDefBinding, const QHash<QString, int> &pathRank) const;
 
     void writeOutId(const DomItem &self, OutWriter &ow) const;
     void writeOut(const DomItem &self, OutWriter &ow, const QString &onTarget) const;
