@@ -193,16 +193,6 @@ Style {
     // Define the style itself, and tell it to use the custom delegates to render
     // the controls (instead of the otherwise default StyleKitDelegate):
 
-    control {
-        background.radius: 10
-        background.color: "lightgray"
-        hovered.background.color: "gray"
-        background.shadow.color: "gray"
-        background.shadow.verticalOffset: 4
-        background.shadow.horizontalOffset: 4
-        pressed.background.scale: 0.95
-    }
-
     checkBox.checked.indicator.delegate: OverlayDelegate {}
     radioButton.checked.indicator.foreground.delegate: OverlayDelegate {}
     switchControl.handle.delegate: WavingQt {}

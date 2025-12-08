@@ -113,6 +113,10 @@ Style {
         GradientStop { position: 1.0; color: Qt.alpha("black", 0.4)}
     }
 
+    applicationWindow {
+        background.color: myTheme.windowColor
+    }
+
     control {
         leftPadding: 10
         topPadding: 5
@@ -213,11 +217,11 @@ Style {
 
     scrollIndicator {
         padding: 2
-        background.implicitHeight: 20
-        indicator.implicitHeight: 20
+        background.implicitHeight: 6
+        indicator.implicitHeight: 6
         vertical {
-            background.implicitWidth: 20
-            indicator.implicitWidth: 20
+            background.implicitWidth: 6
+            indicator.implicitWidth: 6
         }
     }
 

@@ -82,41 +82,12 @@ Style {
         }
     }
 
-    pane {
-        // 'pane' is the fallback for all pane based controls, such as 'frame' and 'groupBox'.
-        //  Any properties not set here will fall back to those defined in 'control'.
-        background {
-            border.width: 0
-            implicitWidth: 200
-            implicitHeight: 200
-            shadow.visible: false
-        }
-    }
-
-    textInput {
-        // 'textInput' is the fallback for all text based controls, such as 'textField', 'textArea',
-        // and 'searchField'. Any properties not set here will fall back to those defined in 'control'.
-        background {
-            implicitWidth: 200
-        }
-    }
-
     button {
         // Here you can override the style for a Button. The properties you set here apply only
         // to a Button, not to for example a CheckBox. Any properties not set here will fall back
         // to those defined in 'abstractButton'.
         pressed {
             background.scale: 0.95
-        }
-    }
-
-    radioButton {
-        indicator {
-            foreground {
-                margins: 4
-                radius: 25 / 2
-                border.width: 0
-            }
         }
     }
 
@@ -138,22 +109,48 @@ Style {
         }
     }
 
-    spinBox {
-        padding: 4
-        background {
-            implicitWidth: 100
-            scale: 1
-        }
-        // Some indicators have subtypes, such as 'up' and 'down'. Styling them is optional,
-        // and any properties left unspecified will fall back to those in 'indicator'.
-        indicator.up.color: palette.accent
-        indicator.down.color: palette.accent
-    }
-
     comboBox {
         background.implicitWidth: 200
-        indicator.foreground.scale: 0.5
         pressed.background.scale: 1.0
+    }
+
+    groupBox {
+        background.topMargin: 30
+        background.implicitHeight: 30
+        text.bold: true
+        spacing: 5
+        padding: 10
+    }
+
+    pane {
+        // 'pane' is the fallback for all pane based controls, such as 'frame' and 'groupBox'.
+        //  Any properties not set here will fall back to those defined in 'control'.
+        background {
+            border.width: 0
+            implicitWidth: 200
+            implicitHeight: 200
+            shadow.visible: false
+        }
+    }
+
+    radioButton {
+        indicator {
+            foreground {
+                margins: 4
+                radius: 25 / 2
+                border.width: 0
+            }
+        }
+    }
+
+    scrollBar {
+        padding: 2
+        background.visible: false
+    }
+
+    scrollIndicator {
+        padding: 0
+        indicator.foreground.margins: 0
     }
 
     slider {
@@ -165,6 +162,15 @@ Style {
                 radius: 8
             }
         }
+    }
+
+    spinBox {
+        padding: 4
+        background {
+            implicitWidth: 100
+            scale: 1
+        }
+        indicator.implicitHeight: 24
     }
 
     switchControl {
@@ -180,17 +186,12 @@ Style {
         }
     }
 
-    groupBox {
-        background.topMargin: 30
-        background.implicitHeight: 30
-        text.bold: true
-        spacing: 5
-        padding: 10
-    }
-
-    scrollBar {
-        padding: 2
-        background.visible: false
+    textInput {
+        // 'textInput' is the fallback for all text based controls, such as 'textField', 'textArea',
+        // and 'searchField'. Any properties not set here will fall back to those defined in 'control'.
+        background {
+            implicitWidth: 200
+        }
     }
 
     // You can define one or more Instance Variations that can be enabled from the
@@ -302,6 +303,10 @@ Style {
     // not set in the theme will fall back to those defined in the style.
 
     light: Theme {
+        applicationWindow {
+            background.color: "gainsboro"
+        }
+
         control {
             background {
                 color: "lightgray"
@@ -339,7 +344,7 @@ Style {
                 handle {
                     shadow.color: "white"
                     shadow.scale: 1.6
-                    border.color: palette.accent.darker(1.4)
+                    border.color: "lightgray"
                 }
             }
 
@@ -363,11 +368,7 @@ Style {
         }
 
         pane {
-            /* The controls change background color on states like hover, but panes
-             * should not. Override the property here to disable that behavior for panes. */
             background.color: Qt.darker("gainsboro", 1.05)
-            background.border.color: "#3d373b"
-            background.shadow.visible: false
         }
 
         switchControl {
@@ -401,17 +402,18 @@ Style {
             }
         }
 
-        // In a theme, you should also configure the theme palettes. These palettes serve as
-        // the base palettes for the entire application. However, note that the application
-        // can override these palettes, and you can even set different palettes per control
-        // instance. As a result, there is no single palette for the application; each control
-        // can theoretically use its own specific version.
+        // In a theme, you can also configure the theme palettes. These palettes act as
+        // the base palettes for the entire application. The theme palettes in Qt Quick
+        // are a combination of colors fetched from the operating system (including the
+        // currently active OS theme) and any colors you override in the 'palettes'
+        // section below.
         //
-        // For example, when we set "abstractButton.hovered.background.color: palette.accent"
-        // above, 'palette' then refers to the palette set on the Qt Quick Button in the application.
-        // And this palette can be different from the palettes defined underneath.
-        // Note also that we haven't actually specified an accent color in the palettes below,
-        // because we want the default color to be picked up from the operating system.
+        // Because of this, StyleKit styles do not bind colors to the palette by default
+        // (except for the accent color). Otherwise, the style’s appearance would vary
+        // across platforms, since each platform defines its own palette—unless you
+        // explicitly override all palette colors here. If you do want palette-based
+        // behavior, you can bind properties to palette colors, e.g.:
+        // 'button.text.color: palette.textColor'.
 
         palettes {
             system.window: "gainsboro"
@@ -430,6 +432,10 @@ Style {
     }
 
     dark: Theme {
+        applicationWindow {
+            background.color: "#544e52"
+        }
+
         control {
             background {
                 border.color: "#3d373b"
@@ -438,24 +444,13 @@ Style {
             }
 
             handle {
-                border.color: "black"
+                color: "#8e848a"
+                border.color: Qt.darker("#544e52", 1.5)
                 shadow.color: "#808080"
-            }
-
-            focused {
-                background {
-                    border.color: "white"
-                    shadow.color: "white"
-                    color: "#bbbbbb"
-                }
             }
 
             indicator {
                 color: Qt.darker("#8e848a", 1.6)
-            }
-
-            handle {
-                color: "#8e848a"
             }
 
             hovered {
@@ -471,7 +466,9 @@ Style {
                     shadow.color: "white"
                 }
             }
+        }
 
+        abstractButton {
             checked {
                 background.color: palette.accent
             }
@@ -482,6 +479,14 @@ Style {
                     shadow.color: "transparent"
                 }
                 checked.background.color: "green"
+            }
+
+            focused {
+                background {
+                    border.color: "white"
+                    shadow.color: "white"
+                    color: "#bbbbbb"
+                }
             }
         }
 
@@ -509,6 +514,7 @@ Style {
             background.color: Qt.lighter("#544e52", 1.3)
             background.border.color: "#3d373b"
             background.shadow.visible: false
+            background.shadow.color: "transparent"
         }
 
         CustomControl {
@@ -570,6 +576,8 @@ Style {
                     gradient: null
                 }
 
+                text.bold: true
+
                 hovered {
                     background.border.width: 4
                     indicator.border.width: 4
@@ -615,7 +623,7 @@ Style {
                 }
 
                 indicator {
-                    radius: 0
+                    radius: 16
                     margins: 0
                     border.width: 2
                     implicitWidth: 60
@@ -625,15 +633,27 @@ Style {
 
                 handle {
                     implicitWidth: 20
-                    implicitHeight: 20
+                    implicitHeight: 30
                     border.width: 2
                     color: "white"
                     margins: 6
                     radius: 0
+                    topLeftRadius: 18
+                    bottomLeftRadius: 18
                 }
 
-                hovered.indicator.border.width: 4
-                checked.handle.color: "black"
+                hovered {
+                    indicator.border.width: 4
+                }
+
+                checked {
+                    handle {
+                        color: "black"
+                        radius: 0
+                        topRightRadius: 18
+                        bottomRightRadius: 18
+                    }
+                }
             }
 
             spinBox {
@@ -677,42 +697,51 @@ Style {
     CustomTheme {
         name: "Green"
         theme: Theme {
+            applicationWindow {
+                background.color: "#8da28d"
+            }
+
             control {
                 background {
-                    border.color: "lightgray"
+                    border.color: "#547454"
                     shadow.color: "darkseagreen"
                     color: "#a0c0a0"
                 }
 
                 handle {
-                    border.color: "lightgray"
+                    border.color: "#547454"
                     shadow.color: "darkseagreen"
                     color: "#a0c0a0"
                 }
-                indicator.color: "darkseagreen"
-                indicator.foreground.color: "lightgreen"
+
+                indicator {
+                    color: "white"
+                    border.color: "#547454"
+                    foreground.color: "white"
+                }
+
+                text {
+                    color: "#1c261c"
+                    bold: true
+                }
 
                 hovered {
                     background {
-                        border.color: "lightgreen"
-                        shadow.color: "lightgreen"
-                        color: "lightgreen"
+                        color: "#ecefec"
+                        border.color: "#ecefec"
+                        shadow.color: "white"
                     }
                     handle {
-                        border.color: "lightgreen"
-                        shadow.color: "lightgreen"
-                        color: "lightgreen"
+                        color: "#ecefec"
+                        border.color: "#ecefec"
+                        shadow.color: "white"
                     }
                 }
 
                 checked {
-                    background {
-                        shadow.color: "lightgreen"
-                        color: "lightgreen"
-                    }
                     indicator {
-                        foreground.color: "darkgreen"
-                        foreground.image.color: "darkgreen"
+                        foreground.color: "#678367"
+                        foreground.image.color: "#678367"
                     }
                 }
 
@@ -724,23 +753,40 @@ Style {
                 }
             }
 
-            pane {
-                background.color: Qt.lighter("#547454", 1.1)
-                background.border.color: "#3d373b"
-                background.shadow.visible: false
-            }
-
-            switchControl {
-                indicator.foreground.color: "darkgreen"
-                checked.indicator.foreground.color: "lightgreen"
-            }
-
             checkBox {
                 indicator.foreground.color: "transparent"
             }
 
             comboBox {
+                indicator.color: "transparent"
                 indicator.foreground.color: "transparent"
+                indicator.foreground.image.color: "white"
+            }
+
+            pane {
+                background.color: "#a0b1a0"
+                background.border.color: "#415a41"
+                background.shadow.visible: false
+                background.shadow.color: "transparent"
+            }
+
+            scrollIndicator {
+                indicator.foreground.color: "white"
+            }
+
+            spinBox {
+                indicator.color: "transparent"
+                indicator.foreground.color: "transparent"
+                indicator.foreground.image.color: "white"
+            }
+
+            switchControl {
+                indicator.foreground.color: "white"
+                checked.indicator.foreground.color: "#678367"
+            }
+
+            textInput {
+                background.color: "white"
             }
 
             Variation {
@@ -755,6 +801,7 @@ Style {
             palettes {
                 system.window: "#547454"
                 textField.text: "green"
+                textField.placeholderText: "#678367"
                 checkBox.buttonText: "white"
                 button {
                     buttonText: "black"
@@ -767,7 +814,7 @@ Style {
     }
 
     CustomTheme {
-        name: "Empty"
+        name: "Empty Theme"
         theme: Theme {}
     }
 }

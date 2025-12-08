@@ -15,27 +15,13 @@ ApplicationWindow {
     // Set which style to start the application with:
     StyleKit.style: hazeStyle
 
-    Haze {
-        id: hazeStyle
-        // Set the initial theme to "Dark". If left unspecified, the theme defaults to
-        // "System", which selects either "light" or "dark" based on the system settings.
-        themeName: "Dark"
-    }
-
     // An application can provide multiple styles for the user to choose from,
     // and each style includes its own set of themes.
 
-    Vitrum {
-        id: vitrumStyle
-    }
-
-    CustomDelegates {
-        id: delegateStyle
-    }
-
-    Plain {
-        id: plainStyle
-    }
+    Haze { id: hazeStyle }
+    Vitrum { id: vitrumStyle }
+    CustomDelegates { id: delegateStyle }
+    Plain { id: plainStyle }
 
     property real spacing: 10
     StyleKit.transitionsEnabled: transitionsEnabled.checked
