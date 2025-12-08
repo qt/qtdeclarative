@@ -11,14 +11,14 @@ ApplicationWindow {
         objectName: "textArea"
         text: qsTr("Some, well, text here (surprise!)")
         width: parent.width
-        height: parent.height / 3
+        height: Math.round(parent.height / 3)
     }
 
     TextField {
         objectName: "textField"
         text: qsTr("A not-so-vast partially-open field")
         width: parent.width
-        y: parent.height * 2 / 3
+        y: Math.round(parent.height * 2 / 3)
     }
 
     contentItem.ContextMenu.menu: Menu {
