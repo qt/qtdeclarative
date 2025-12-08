@@ -51,7 +51,8 @@ QByteArray tst_qmltyperegistrar::emptyMetaObjectHashes(const QByteArray &qmltype
 {
     QString copy = QString::fromUtf8(qmltypes);
     const QString base64Symbols = QRegularExpression::escape(QStringLiteral("+/=")) + "a-zA-Z0-9";
-    const QRegularExpression re(QStringLiteral(R"(metaObjectHash: "[%1]+")").arg(base64Symbols));
+    const QRegularExpression re(
+            QStringLiteral(R"(metaObjectHash: "[0-9]+\$[%1]+")").arg(base64Symbols));
     copy.replace(re, QStringLiteral(R"(metaObjectHash: "")"));
     return copy.toUtf8();
 }
