@@ -102,6 +102,7 @@ public:
     Q_ENUM(RenderableType)
 
     QQuickGraphicsInfo(QQuickItem *item = nullptr);
+    QQuickGraphicsInfo(QQuickWindow *window);
 
     static QQuickGraphicsInfo *qmlAttachedProperties(QObject *object);
 
@@ -132,14 +133,14 @@ private Q_SLOTS:
 
 private:
     QPointer<QQuickWindow> m_window;
-    GraphicsApi m_api;
-    ShaderType m_shaderType;
-    ShaderCompilationType m_shaderCompilationType;
-    ShaderSourceType m_shaderSourceType;
-    int m_majorVersion;
-    int m_minorVersion;
-    OpenGLContextProfile m_profile;
-    RenderableType m_renderableType;
+    GraphicsApi m_api = Unknown;
+    ShaderType m_shaderType = UnknownShadingLanguage;
+    ShaderCompilationType m_shaderCompilationType = ShaderCompilationType(0);
+    ShaderSourceType m_shaderSourceType = ShaderSourceType(0);
+    int m_majorVersion = 2;
+    int m_minorVersion = 0;
+    OpenGLContextProfile m_profile = OpenGLNoProfile;
+    RenderableType m_renderableType = SurfaceFormatUnspecified;
 };
 
 QT_END_NAMESPACE
