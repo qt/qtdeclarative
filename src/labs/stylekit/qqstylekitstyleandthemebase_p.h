@@ -19,6 +19,7 @@
 #include <QtQml/QtQml>
 #include "qqstylekitcontrols_p.h"
 #include "qqstylekitfont_p.h"
+#include "qqstylekitpalette_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -26,7 +27,7 @@ class QQStyleKitStyleAndThemeBase : public QQStyleKitControls
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitFont *fonts READ fonts NOTIFY fontsChanged FINAL)
-    //TODO: Move palettes property here as well
+    Q_PROPERTY(QQStyleKitPalette *palettes READ palettes NOTIFY palettesChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
     QML_NAMED_ELEMENT(ThemeProperties)
 
@@ -34,14 +35,18 @@ public:
     QQStyleKitStyleAndThemeBase(QObject *parent = nullptr);
 
     QQStyleKitFont *fonts();
+    QQStyleKitPalette *palettes();
 
 signals:
     void fontsChanged();
+    void palettesChanged();
 
 private:
-    Q_DISABLE_COPY(QQStyleKitStyleAndThemeBase)
 
     QQStyleKitFont m_fonts;
+    QQStyleKitPalette m_palettes;
+
+    Q_DISABLE_COPY(QQStyleKitStyleAndThemeBase)
 };
 
 QT_END_NAMESPACE

@@ -500,21 +500,33 @@ void QQStyleKitReader::setHighlighted(bool highlighted)
 
 QQuickPalette *QQStyleKitReader::palette() const
 {
-    return &const_cast<QQStyleKitReader *>(this)->m_palette;
+    return m_palette.data();
 }
 
 void QQStyleKitReader::setPalette(QQuickPalette *palette)
 {
-    if (palette && m_palette.toQPalette() == palette->toQPalette())
+    if (m_palette == palette)
         return;
 
-    m_palette.reset();
-    if (palette)
-        m_palette.inheritPalette(palette->toQPalette());
+    if (m_palette)
+        QObject::disconnect(m_palette, nullptr, this, nullptr);
+
+    m_palette = palette;
     emit paletteChanged();
 
-    const auto *stylePtr = style();
-    if (!stylePtr || !stylePtr->loaded())
+    if (m_palette) {
+        // changed signal will be triggered when any role changes
+        QObject::connect(m_palette, &QQuickPalette::changed,
+                         this, &QQStyleKitReader::onPaletteChanged);
+    }
+
+    onPaletteChanged();
+}
+
+void QQStyleKitReader::onPaletteChanged()
+{
+    const QQStyleKitStyle *style = QQStyleKitStyle::current();
+    if (!style || !style->loaded())
         return;
 
     clearLocalStorage();

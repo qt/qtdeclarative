@@ -29,21 +29,15 @@ class QQStyleKitPropertyResolver;
 class QQStyleKitTheme : public QQStyleKitStyleAndThemeBase
 {
     Q_OBJECT
-
-    // TODO: Move to QQStyleKitStyleAndThemeBase
-    Q_PROPERTY(QQStyleKitPalette *palettes READ palettes NOTIFY palettesChanged FINAL)
-
     QML_NAMED_ELEMENT(Theme)
 
 public:
     QQStyleKitTheme(QObject *parent = nullptr);
 
     QQStyleKitStyle *style() const;
-    QQStyleKitPalette *palettes();
 
 signals:
     void targetChanged();
-    void palettesChanged();
 
 protected:
     void componentComplete() override;
@@ -52,7 +46,6 @@ private:
     Q_DISABLE_COPY(QQStyleKitTheme)
 
     bool m_completed = false;
-    QQStyleKitPalette m_palettes;
 
     void updateThemePalette();
     void updateQuickTheme();

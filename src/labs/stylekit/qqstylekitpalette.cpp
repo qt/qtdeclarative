@@ -10,32 +10,54 @@ QQStyleKitPalette::QQStyleKitPalette(QObject *parent)
 {
 }
 
-#define UNIFIED_PALETTE_GETTER(PROP) \
-QQuickPalette *QQStyleKitPalette::PROP() const { \
-    if (!m_ ## PROP) \
-        m_ ## PROP.reset(new QQuickPalette()); \
-    return m_ ## PROP.get(); \
+#define STYLEKIT_PALETTE_GETTER(PROP, SCOPE)                                   \
+QQuickPalette *QQStyleKitPalette::PROP() const {                              \
+    if (!m_##PROP) {                                                          \
+        m_##PROP.reset(new QQuickPalette());                                  \
+        QObject::connect(m_##PROP.get(), &QQuickPalette::changed,             \
+                         const_cast<QQStyleKitPalette*>(this),                \
+                         [this]() {                                           \
+                             auto *self = const_cast<QQStyleKitPalette*>(this);\
+                             self->markSet(SCOPE);                            \
+                             emit self->PROP##Changed();                      \
+                         });                                                  \
+    }                                                                         \
+    return m_##PROP.get();                                                    \
 }
 
-UNIFIED_PALETTE_GETTER(system)
-UNIFIED_PALETTE_GETTER(checkBox)
-UNIFIED_PALETTE_GETTER(button)
-UNIFIED_PALETTE_GETTER(comboBox)
-UNIFIED_PALETTE_GETTER(groupBox)
-UNIFIED_PALETTE_GETTER(itemView)
-UNIFIED_PALETTE_GETTER(label)
-UNIFIED_PALETTE_GETTER(listView)
-UNIFIED_PALETTE_GETTER(menu)
-UNIFIED_PALETTE_GETTER(menuBar)
-UNIFIED_PALETTE_GETTER(radioButton)
-UNIFIED_PALETTE_GETTER(spinBox)
-UNIFIED_PALETTE_GETTER(switchControl)
-UNIFIED_PALETTE_GETTER(tabBar)
-UNIFIED_PALETTE_GETTER(textArea)
-UNIFIED_PALETTE_GETTER(textField)
-UNIFIED_PALETTE_GETTER(toolBar)
-UNIFIED_PALETTE_GETTER(toolTip)
-UNIFIED_PALETTE_GETTER(tumbler)
+STYLEKIT_PALETTE_GETTER(system, QQuickTheme::System)
+STYLEKIT_PALETTE_GETTER(checkBox, QQuickTheme::CheckBox)
+STYLEKIT_PALETTE_GETTER(button, QQuickTheme::Button)
+STYLEKIT_PALETTE_GETTER(comboBox, QQuickTheme::ComboBox)
+STYLEKIT_PALETTE_GETTER(groupBox, QQuickTheme::GroupBox)
+STYLEKIT_PALETTE_GETTER(itemView, QQuickTheme::ItemView)
+STYLEKIT_PALETTE_GETTER(label, QQuickTheme::Label)
+STYLEKIT_PALETTE_GETTER(listView, QQuickTheme::ListView)
+STYLEKIT_PALETTE_GETTER(menu, QQuickTheme::Menu)
+STYLEKIT_PALETTE_GETTER(menuBar, QQuickTheme::MenuBar)
+STYLEKIT_PALETTE_GETTER(radioButton, QQuickTheme::RadioButton)
+STYLEKIT_PALETTE_GETTER(spinBox, QQuickTheme::SpinBox)
+STYLEKIT_PALETTE_GETTER(switchControl, QQuickTheme::Switch)
+STYLEKIT_PALETTE_GETTER(tabBar, QQuickTheme::TabBar)
+STYLEKIT_PALETTE_GETTER(textArea, QQuickTheme::TextArea)
+STYLEKIT_PALETTE_GETTER(textField, QQuickTheme::TextField)
+STYLEKIT_PALETTE_GETTER(toolBar, QQuickTheme::ToolBar)
+STYLEKIT_PALETTE_GETTER(toolTip, QQuickTheme::ToolTip)
+STYLEKIT_PALETTE_GETTER(tumbler, QQuickTheme::Tumbler)
+
+QQStyleKitPalette *QQStyleKitPalette::fallbackPalette() const
+{
+    return m_fallbackPalette;
+}
+
+void QQStyleKitPalette::setFallbackPalette(QQStyleKitPalette *palette)
+{
+    if (m_fallbackPalette == palette)
+        return;
+
+    m_fallbackPalette = palette;
+    emit fallbackPaletteChanged();
+}
 
 QT_END_NAMESPACE
 

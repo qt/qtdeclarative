@@ -25,37 +25,6 @@ QQStyleKitStyle *QQStyleKitTheme::style() const
     return static_cast<QQStyleKitStyle *>(parentObj);
 }
 
-QQStyleKitPalette *QQStyleKitTheme::palettes()
-{
-    return &m_palettes;
-}
-
-// Copied from QQuickTheme
-static QPlatformTheme::Palette toPlatformThemePalette(QQuickTheme::Scope scope)
-{
-    switch (scope) {
-    case QQuickTheme::Button: return QPlatformTheme::ButtonPalette;
-    case QQuickTheme::CheckBox: return QPlatformTheme::CheckBoxPalette;
-    case QQuickTheme::ComboBox: return QPlatformTheme::ComboBoxPalette;
-    case QQuickTheme::GroupBox: return QPlatformTheme::GroupBoxPalette;
-    case QQuickTheme::ItemView: return QPlatformTheme::ItemViewPalette;
-    case QQuickTheme::Label: return QPlatformTheme::LabelPalette;
-    case QQuickTheme::ListView: return QPlatformTheme::ItemViewPalette;
-    case QQuickTheme::Menu: return QPlatformTheme::MenuPalette;
-    case QQuickTheme::MenuBar: return QPlatformTheme::MenuBarPalette;
-    case QQuickTheme::RadioButton: return QPlatformTheme::RadioButtonPalette;
-    case QQuickTheme::SpinBox: return QPlatformTheme::TextLineEditPalette;
-    case QQuickTheme::Switch: return QPlatformTheme::CheckBoxPalette;
-    case QQuickTheme::TabBar: return QPlatformTheme::TabBarPalette;
-    case QQuickTheme::TextArea: return QPlatformTheme::TextEditPalette;
-    case QQuickTheme::TextField: return QPlatformTheme::TextLineEditPalette;
-    case QQuickTheme::ToolBar: return QPlatformTheme::ToolButtonPalette;
-    case QQuickTheme::ToolTip: return QPlatformTheme::ToolTipPalette;
-    case QQuickTheme::Tumbler: return QPlatformTheme::ItemViewPalette;
-    default: return QPlatformTheme::SystemPalette;
-    }
-}
-
 void QQStyleKitTheme::updateThemePalette()
 {
     auto *theme = QQuickTheme::instance();
@@ -67,41 +36,61 @@ void QQStyleKitTheme::updateThemePalette()
     // control type. Hence, for now, we don't use QQuickTheme::usePlatformPalette, but roll
     // our own version instead.
     theme->setUsePlatformPalette(false);
+    auto resolveFromPaletteChain = [&](QQuickTheme::Scope scope,
+        QQuickPalette* (QQStyleKitPalette::*getter)() const) -> QPalette
+    {
+        QPalette result;
+        if (!palettes())
+            return result;
 
-    const auto *platformTheme = QGuiApplicationPrivate::platformTheme();
+        // Find the nearest fallback that explicitly set this scope
+        const QQStyleKitPalette *nearestFallback = nullptr;
+        for (auto *fb = palettes()->fallbackPalette(); fb; fb = fb->fallbackPalette()) {
+            if (fb->isSet(scope)) {
+                nearestFallback = fb;
+                break;
+            }
+        }
 
-#define SET_PALETTE(CONTROL, SCOPE) { \
-    const QQuickPalette *controlPalette = m_palettes.CONTROL(); \
-        const QPalette *platformPalette = platformTheme->palette(toPlatformThemePalette(SCOPE)); \
-        if (controlPalette && platformPalette) { \
-            QPalette resolved = controlPalette->toQPalette().resolve(*platformPalette); \
-            theme->setPalette(SCOPE, resolved); \
-    } else if (platformPalette) { \
-            theme->setPalette(SCOPE, *platformPalette); \
-    } else if (controlPalette) { \
-            theme->setPalette(SCOPE, controlPalette->toQPalette()); \
-    } \
-}
+        if (nearestFallback) {
+            if (auto *p = (nearestFallback->*getter)())
+                result = result.resolve(p->toQPalette());
+        }
 
-    SET_PALETTE(system, QQuickTheme::System);
-    SET_PALETTE(button, QQuickTheme::Button);
-    SET_PALETTE(checkBox, QQuickTheme::CheckBox);
-    SET_PALETTE(comboBox, QQuickTheme::ComboBox);
-    SET_PALETTE(groupBox, QQuickTheme::GroupBox);
-    SET_PALETTE(itemView, QQuickTheme::ItemView);
-    SET_PALETTE(label, QQuickTheme::Label);
-    SET_PALETTE(listView, QQuickTheme::ListView);
-    SET_PALETTE(menu, QQuickTheme::Menu);
-    SET_PALETTE(menuBar, QQuickTheme::MenuBar);
-    SET_PALETTE(radioButton, QQuickTheme::RadioButton);
-    SET_PALETTE(spinBox, QQuickTheme::SpinBox);
-    SET_PALETTE(switchControl, QQuickTheme::Switch);
-    SET_PALETTE(tabBar, QQuickTheme::TabBar);
-    SET_PALETTE(textArea, QQuickTheme::TextArea);
-    SET_PALETTE(textField, QQuickTheme::TextField);
-    SET_PALETTE(toolBar, QQuickTheme::ToolBar);
-    SET_PALETTE(toolTip, QQuickTheme::ToolTip);
-    SET_PALETTE(tumbler, QQuickTheme::Tumbler);
+        if (palettes()->isSet(scope)) {
+            if (auto *p = (palettes()->*getter)())
+                result = result.resolve(p->toQPalette());
+        }
+
+        return result;
+    };
+
+    auto setResolved = [&](QQuickPalette* (QQStyleKitPalette::*getter)() const,
+        QQuickTheme::Scope scope)
+    {
+        const QPalette resolved = resolveFromPaletteChain(scope, getter);
+        theme->setPalette(scope, resolved);
+    };
+
+    setResolved(&QQStyleKitPalette::system, QQuickTheme::System);
+    setResolved(&QQStyleKitPalette::button, QQuickTheme::Button);
+    setResolved(&QQStyleKitPalette::checkBox, QQuickTheme::CheckBox);
+    setResolved(&QQStyleKitPalette::comboBox, QQuickTheme::ComboBox);
+    setResolved(&QQStyleKitPalette::groupBox, QQuickTheme::GroupBox);
+    setResolved(&QQStyleKitPalette::itemView, QQuickTheme::ItemView);
+    setResolved(&QQStyleKitPalette::label, QQuickTheme::Label);
+    setResolved(&QQStyleKitPalette::listView, QQuickTheme::ListView);
+    setResolved(&QQStyleKitPalette::menu, QQuickTheme::Menu);
+    setResolved(&QQStyleKitPalette::menuBar, QQuickTheme::MenuBar);
+    setResolved(&QQStyleKitPalette::radioButton, QQuickTheme::RadioButton);
+    setResolved(&QQStyleKitPalette::spinBox, QQuickTheme::SpinBox);
+    setResolved(&QQStyleKitPalette::switchControl, QQuickTheme::Switch);
+    setResolved(&QQStyleKitPalette::tabBar, QQuickTheme::TabBar);
+    setResolved(&QQStyleKitPalette::textArea, QQuickTheme::TextArea);
+    setResolved(&QQStyleKitPalette::textField, QQuickTheme::TextField);
+    setResolved(&QQStyleKitPalette::toolBar, QQuickTheme::ToolBar);
+    setResolved(&QQStyleKitPalette::toolTip, QQuickTheme::ToolTip);
+    setResolved(&QQStyleKitPalette::tumbler, QQuickTheme::Tumbler);
 
     QEvent event(QEvent::ApplicationPaletteChange);
     QGuiApplication::sendEvent(qGuiApp, &event);

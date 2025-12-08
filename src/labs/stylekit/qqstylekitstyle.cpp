@@ -60,11 +60,12 @@ void QQStyleKitStyle::setFallbackStyle(QQStyleKitStyle *fallbackStyle)
     m_fallbackStyle = fallbackStyle;
     emit fallbackStyleChanged();
 
+    if (palettes())
+        palettes()->setFallbackPalette(m_fallbackStyle ? m_fallbackStyle->palettes() : nullptr);
+
     if (fonts())
         fonts()->setFallbackFont(m_fallbackStyle ? m_fallbackStyle->fonts() : nullptr);
 
-    if (m_theme && m_theme->fonts())
-        m_theme->fonts()->setFallbackFont(fonts());
 }
 
 void QQStyleKitStyle::setLight(QQmlComponent *lightTheme)
@@ -237,14 +238,12 @@ void QQStyleKitStyle::recreateTheme()
         m_theme->setParent(this);
     }
 
-    if (m_theme && m_theme->fonts())
+    if (m_theme->fonts())
         m_theme->fonts()->setFallbackFont(fonts());
+    if (m_theme->palettes())
+        m_theme->palettes()->setFallbackPalette(palettes());
     if (this == current()) {
         m_theme->updateQuickTheme();
-        if (m_theme->fonts())
-            m_theme->fonts()->setFallbackFont(fonts());
-        if (fonts())
-            fonts()->setFallbackFont(m_fallbackStyle ? m_fallbackStyle->fonts() : nullptr);
         QQStyleKitReader::resetAll();
     }
 

@@ -17,6 +17,7 @@
 //
 
 #include <QtQml/QtQml>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtQuick/private/qquickpalette_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -69,6 +70,9 @@ public:
     QQuickPalette *toolTip() const;
     QQuickPalette *tumbler() const;
 
+    QQStyleKitPalette *fallbackPalette() const;
+    void setFallbackPalette(QQStyleKitPalette *fallback);
+
 signals:
     void systemChanged();
     void checkBoxChanged();
@@ -89,6 +93,7 @@ signals:
     void toolBarChanged();
     void toolTipChanged();
     void tumblerChanged();
+    void fallbackPaletteChanged();
 
 private:
     Q_DISABLE_COPY(QQStyleKitPalette)
@@ -117,6 +122,14 @@ private:
     mutable std::unique_ptr<QQuickPalette> m_toolBar;
     mutable std::unique_ptr<QQuickPalette> m_toolTip;
     mutable std::unique_ptr<QQuickPalette> m_tumbler;
+
+    QQStyleKitPalette *m_fallbackPalette = nullptr;
+
+    quint32 m_setMask = 0;
+    bool isSet(QQuickTheme::Scope scope) const { return (m_setMask & (1u << int(scope))) != 0; }
+    void markSet(QQuickTheme::Scope scope) { m_setMask |= (1u << int(scope)); }
+
+    friend class QQStyleKitTheme;
 };
 
 QT_END_NAMESPACE

@@ -15,6 +15,11 @@ QQStyleKitFont *QQStyleKitStyleAndThemeBase::fonts()
     return &m_fonts;
 }
 
+QQStyleKitPalette *QQStyleKitStyleAndThemeBase::palettes()
+{
+    return &m_palettes;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqstylekitstyleandthemebase_p.cpp"

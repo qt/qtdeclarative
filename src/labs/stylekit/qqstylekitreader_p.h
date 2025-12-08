@@ -157,6 +157,9 @@ signals:
     void highlightedChanged();
     void fontChanged();
 
+private slots:
+    void onPaletteChanged();
+
 private:
     void updateControl();
     void populateLocalStorage();
@@ -181,7 +184,7 @@ private:
     bool m_dontEmitChangedSignals: 1;
     bool m_effectiveVariationsDirty: 1;
 
-    QQuickPalette m_palette;
+    QPointer<QQuickPalette> m_palette;
     QFont m_font;
     mutable QQStyleKitPropertyStorage m_storage;
     AlternateState m_alternateState = AlternateState::Alternate1;
