@@ -811,17 +811,16 @@
   }
   \endqml
 
-  If you make value types \l{ValueTypeBehavior}{addressable}, you can
-  use such a type in a \l{Type annotations and assertions}{type assertion}
-  to explicitly construct it:
+  Since Qt 6.8, if you import the QML module the value type belongs to into a
+  namespace, you can use JavaScript's \c new operator to instantiate it.
 
   \qml
-  pragma ValueTypeBehavior: Addressable
+  import MyModule as MM
 
   QtObject {
       function process(d: real) {
-          let v = d as myValueType;
-          // v is a myValueType now, not a number
+          let v = new MM.myValueType(d);
+          // v is a myValueType now
       }
   }
   \endqml
@@ -874,21 +873,6 @@
           {d: 4.4, e: "a string"},
           {d: 7.1, e: "another string"}
       ]
-  }
-  \endqml
-
-  If you make value types \l{ValueTypeBehavior}{addressable}, you can
-  use such a type in a \l{Type annotations and assertions}{type assertion}
-  to explicitly construct it:
-
-  \qml
-  pragma ValueTypeBehavior: Addressable
-
-  QtObject {
-      function process(d: real) {
-          let v = {d: d, e: objectName} as myValueType;
-          // v is a myValueType now
-      }
   }
   \endqml
 
