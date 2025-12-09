@@ -25,7 +25,7 @@
 QT_BEGIN_NAMESPACE
 
 class QTextStream;
-class QSvgTinyDocument;
+class QSvgDocument;
 class QSvgFeFilterPrimitive;
 class QString;
 class QQuickItem;
@@ -55,8 +55,8 @@ protected:
     bool visitMaskNodeStart(const QSvgMask *node) override;
     void visitMaskNodeEnd(const QSvgMask *node) override;
 
-    bool visitDocumentNodeStart(const QSvgTinyDocument *node) override;
-    void visitDocumentNodeEnd(const QSvgTinyDocument *node) override;
+    bool visitDocumentNodeStart(const QSvgDocument *node) override;
+    void visitDocumentNodeEnd(const QSvgDocument *node) override;
 
     bool visitSwitchNodeStart(const QSvgSwitch *node) override;
     void visitSwitchNodeEnd(const QSvgSwitch *node) override;

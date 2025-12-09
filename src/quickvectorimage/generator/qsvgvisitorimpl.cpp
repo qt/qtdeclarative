@@ -296,7 +296,7 @@ bool QSvgVisitorImpl::traverse()
     if (m_assumeTrustedSource)
         options.setFlag(QtSvg::AssumeTrustedSource);
 
-    auto *doc = QSvgTinyDocument::load(m_svgFileName, options);
+    auto *doc = QSvgDocument::load(m_svgFileName, options);
     if (!doc) {
         qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
         return false;
@@ -1457,7 +1457,7 @@ QString QSvgVisitorImpl::nextNodeId() const
     return QStringLiteral("_qt_node%1").arg(m_nodeIdCounter++);
 }
 
-bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
+bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgDocument *node)
 {
     Q_ASSERT(m_defsLevel == 0);
     handleBaseNodeSetup(node);
@@ -1466,7 +1466,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     fillCommonNodeInfo(node, info);
     fillAnimationInfo(node, info);
 
-    const QSvgTinyDocument *doc = static_cast<const QSvgTinyDocument *>(node);
+    const QSvgDocument *doc = static_cast<const QSvgDocument *>(node);
     info.size = doc->size();
     info.viewBox = doc->viewBox();
     info.isPathContainer = isPathContainer(node);
@@ -1476,7 +1476,7 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgTinyDocument *node)
     return m_generator->generateRootNode(info);
 }
 
-void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
+void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgDocument *node)
 {
     handleBaseNodeEnd(node);
     qCDebug(lcQuickVectorImage) << "REVERT" << node->nodeId() << node->type() << (styleResolver->painter().pen().style() != Qt::NoPen)
