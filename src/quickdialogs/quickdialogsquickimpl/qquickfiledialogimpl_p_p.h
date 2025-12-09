@@ -84,6 +84,7 @@ public:
 
     QPointer<QQuickDialogButtonBox> buttonBox;
     QPointer<QQuickComboBox> nameFiltersComboBox;
+    QPointer<QQuickLabel> filterLabel;
     QPointer<QQuickListView> fileDialogListView;
     QPointer<QQuickFolderBreadcrumbBar> breadcrumbBar;
     QPointer<QQuickLabel> fileNameLabel;

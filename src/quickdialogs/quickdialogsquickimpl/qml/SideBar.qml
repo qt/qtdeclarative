@@ -55,12 +55,9 @@ DialogsQuickImpl.SideBar {
             defaultIconColor: buttonDelegateRoot.icon.color
             color: defaultIconColor
         }
-
         background: DelegateBackground {
             control: buttonDelegateRoot
         }
-
-        Accessible.name: folderName
     }
 
     separatorDelegate: Item {

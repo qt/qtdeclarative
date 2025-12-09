@@ -62,6 +62,7 @@ FileDialogImpl {
     }
 
     FileDialogImpl.buttonBox: buttonBox
+    FileDialogImpl.filterLabel: filterLabel
     FileDialogImpl.nameFiltersComboBox: nameFiltersComboBox
     FileDialogImpl.fileDialogListView: fileDialogListView
     FileDialogImpl.breadcrumbBar: breadcrumbBar
@@ -182,13 +183,13 @@ FileDialogImpl {
         }
 
         Label {
+            id: filterLabel
             text: qsTr("Filter")
 
             Layout.column: 0
             Layout.row: 1
             Layout.leftMargin: 16
             Layout.bottomMargin: 16
-            Accessible.labelFor: nameFiltersComboBox
         }
 
         ComboBox {

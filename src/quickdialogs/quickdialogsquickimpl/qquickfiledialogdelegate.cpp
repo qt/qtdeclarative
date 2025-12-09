@@ -10,6 +10,9 @@
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/QQmlFile>
 #include <QtQml/qqmlexpression.h>
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquickitemview_p_p.h>
 #include "qquicksidebar_p.h"
@@ -137,6 +140,10 @@ void QQuickFileDialogDelegate::setFile(const QUrl &file)
 
     d->file = adjustedFile;
     emit fileChanged();
+#if QT_CONFIG(accessibility)
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
+        accessibleAttached->setName(file.fileName());
+#endif
 }
 
 void QQuickFileDialogDelegate::keyReleaseEvent(QKeyEvent *event)

@@ -108,9 +108,10 @@ class Q_QUICKDIALOGS2QUICKIMPL_EXPORT QQuickFileDialogImplAttached : public QObj
 {
     Q_OBJECT
     Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY buttonBoxChanged FINAL)
-    Q_PROPERTY(QQuickComboBox *nameFiltersComboBox READ nameFiltersComboBox WRITE setNameFiltersComboBox NOTIFY nameFiltersComboBoxChanged)
-    Q_PROPERTY(QQuickListView *fileDialogListView READ fileDialogListView WRITE setFileDialogListView NOTIFY fileDialogListViewChanged)
-    Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged)
+    Q_PROPERTY(QQuickComboBox *nameFiltersComboBox READ nameFiltersComboBox WRITE setNameFiltersComboBox NOTIFY nameFiltersComboBoxChanged FINAL)
+    Q_PROPERTY(QQuickLabel *filterLabel READ filterLabel WRITE setFilterLabel NOTIFY filterLabelChanged FINAL)
+    Q_PROPERTY(QQuickListView *fileDialogListView READ fileDialogListView WRITE setFileDialogListView NOTIFY fileDialogListViewChanged FINAL)
+    Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged FINAL)
     Q_PROPERTY(QQuickLabel *fileNameLabel READ fileNameLabel WRITE setFileNameLabel NOTIFY fileNameLabelChanged FINAL)
     Q_PROPERTY(QQuickTextField *fileNameTextField READ fileNameTextField WRITE setFileNameTextField NOTIFY fileNameTextFieldChanged FINAL)
     Q_PROPERTY(QQuickDialog *overwriteConfirmationDialog READ overwriteConfirmationDialog WRITE setOverwriteConfirmationDialog NOTIFY overwriteConfirmationDialogChanged FINAL)
@@ -128,6 +129,9 @@ public:
 
     QQuickComboBox *nameFiltersComboBox() const;
     void setNameFiltersComboBox(QQuickComboBox *nameFiltersComboBox);
+
+    QQuickLabel *filterLabel() const;
+    void setFilterLabel(QQuickLabel *label);
 
     QString selectedNameFilter() const;
     void selectNameFilter(const QString &filter);
@@ -153,6 +157,7 @@ public:
 Q_SIGNALS:
     void buttonBoxChanged();
     void nameFiltersComboBoxChanged();
+    void filterLabelChanged();
     void fileDialogListViewChanged();
     void breadcrumbBarChanged();
     void fileNameLabelChanged();
