@@ -43,6 +43,7 @@ public:
     QQuickVectorImage::RendererType preferredRendererType = QQuickVectorImage::GeometryRenderer;
     QQuickVectorImageAnimations *animations = nullptr;
     bool assumeTrustedSource = false;
+    std::unique_ptr<QQmlContext> m_qmlContext;
 };
 
 QT_END_NAMESPACE

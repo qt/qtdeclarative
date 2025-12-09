@@ -83,7 +83,10 @@ void QQuickVectorImagePrivate::loadFile()
     if (assumeTrustedSource)
         flags.setFlag(QQuickVectorImageGenerator::AssumeTrustedSource);
 
-    QQuickItemGenerator generator(localFile, flags, rootItem, qmlContext(q));
+    if (!m_qmlContext || m_qmlContext->engine() != qmlContext(q)->engine())
+        m_qmlContext.reset(new QQmlContext(qmlContext(q)->engine()));
+
+    QQuickItemGenerator generator(localFile, flags, rootItem, m_qmlContext.get());
 
     // If we assume trusted source, we try plugins first
     bool generatedWithPlugin = false;
