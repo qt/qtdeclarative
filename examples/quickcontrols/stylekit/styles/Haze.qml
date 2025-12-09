@@ -514,7 +514,6 @@ Style {
             background.color: Qt.lighter("#544e52", 1.3)
             background.border.color: "#3d373b"
             background.shadow.visible: false
-            background.shadow.color: "transparent"
         }
 
         CustomControl {
@@ -767,7 +766,6 @@ Style {
                 background.color: "#a0b1a0"
                 background.border.color: "#415a41"
                 background.shadow.visible: false
-                background.shadow.color: "transparent"
             }
 
             scrollIndicator {

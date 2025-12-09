@@ -147,13 +147,16 @@ Item {
             return
 
         const shadowProps = root.delegateProperties.shadow
+        const shadowVisible = shadowProps.visible && shadowProps.color.a !== 0 && shadowProps.opacity !== 0
+        if (shadowInstance)
+            shadowInstance.visible = shadowVisible
+
+        if (!shadowVisible)
+            return
+
         const delegate = shadowProps.delegate
                        ? shadowProps.delegate : DelegateSingleton.defaultShadowDelegate
         if (delegate === effectiveShadowDelegate)
-            return
-
-        // Delay instantiating delegate until needed
-        if (!shadowProps.visible || shadowProps.color.a === 0 || shadowProps.opacity === 0)
             return
 
         let prevDelegateInstance = shadowInstance
