@@ -65,6 +65,7 @@ private slots:
     void createComponent();
     void createComponent_pragmaLibrary();
     void createQmlObject();
+    void createQmlObjectNoCULeak();
     void dateTimeConversion();
     void dateTimeFormatting();
     void dateTimeFormatting_data();
@@ -715,6 +716,23 @@ void tst_qqmlqt::createComponent()
         QVERIFY(object != nullptr);
         QTRY_VERIFY(object->property("success").toBool());
     }
+}
+
+void tst_qqmlqt::createQmlObjectNoCULeak()
+{
+    QQmlComponent component(&engine, testFileUrl("createQmlObjectNoCULeak.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+    object->setProperty("createCount", -1);
+    auto oldCompilationUnitCount = engine.handle()->compilationUnits().size();
+    for (int i = 0; i < 10; ++i) {
+        object->setProperty("createCount", i);
+        // spin the event loop, so that the object is destroyed in time
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+    }
+    // only the last compilation unit is still referenced
+    QCOMPARE_EQ(engine.handle()->compilationUnits().size(), oldCompilationUnitCount);
 }
 
 void tst_qqmlqt::createComponent_pragmaLibrary()

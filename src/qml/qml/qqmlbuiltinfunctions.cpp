@@ -1561,6 +1561,7 @@ QObject *QtObject::createQmlObject(const QString &qml, QObject *parent, const QU
     }
     component.completeCreate();
 
+    v4Engine()->trimCompilationUnitsForUrl(resolvedUrl);
     if (component.isError()) {
         ScopedValue v(scope, Error::create(scope.engine, component.errors()));
         scope.engine->throwError(v);
