@@ -19,6 +19,13 @@
 
 QT_BEGIN_NAMESPACE
 
+static QString sanitizeString(const QString &input)
+{
+    QString s = input;
+    s.replace(QLatin1Char('"'), QLatin1String("\\\""));
+    return s;
+}
+
 QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
     , outputFileName(outFileName)
@@ -964,10 +971,8 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     stream() << "color: \"" << info.fillColor.defaultValue().value<QColor>().name(QColor::HexArgb) << "\"";
     stream() << "textFormat:" << (info.needsRichText ? "Text.RichText" : "Text.StyledText");
 
-    QString s = info.text;
-    s.replace(QLatin1Char('"'), QLatin1String("\\\""));
-    stream() << "text: \"" << s << "\"";
-    stream() << "font.family: \"" << info.font.family() << "\"";
+    stream() << "text: \"" << sanitizeString(info.text) << "\"";
+    stream() << "font.family: \"" << sanitizeString(info.font.family()) << "\"";
     if (info.font.pixelSize() > 0)
         stream() << "font.pixelSize:" << info.font.pixelSize();
     else if (info.font.pointSize() > 0)

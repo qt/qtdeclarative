@@ -799,7 +799,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
         needsRichText = needsRichText || !styleTagContent.isEmpty();
         if (!styleTagContent.isEmpty())
-            text += QStringLiteral("<span style=\"%1\">").arg(styleTagContent);
+            text += QStringLiteral("<span style=\"%1\">").arg(styleTagContent.toHtmlEscaped());
 
         if (font.resolveMask() & QFont::WeightResolved && font.bold())
             text += QStringLiteral("<b>");
