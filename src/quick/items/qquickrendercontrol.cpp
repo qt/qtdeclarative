@@ -775,7 +775,16 @@ bool QQuickRenderControlPrivate::initRhi()
 #endif
 
     // for OpenGL
-    if (!offscreenSurface)
+    bool wantOffscreenSurface = true;
+
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
+    if (customDevD->type == QQuickGraphicsDevicePrivate::Type::Rhi) {
+        if (customDevD->u.rhi)
+            wantOffscreenSurface = false;
+    }
+
+    if (wantOffscreenSurface && !offscreenSurface)
         offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
     QSGRhiSupport::RhiCreateResult result = rhiSupport->createRhi(window, offscreenSurface);
