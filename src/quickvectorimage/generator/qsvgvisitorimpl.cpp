@@ -1490,11 +1490,30 @@ void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgTinyDocument *node)
     m_generator->generateRootNode(info);
 }
 
+static QString scrub(const QString &raw)
+{
+    QString res(raw.left(80));
+
+    if (!res.isEmpty()) {
+        constexpr QLatin1StringView legalSymbols("_-.:"); // Only valid SVG id characters
+        qsizetype i = 0;
+        do {
+            if (res.at(i).isLetterOrNumber() || legalSymbols.contains(res.at(i)))
+                i++;
+            else
+                res.remove(i, 1);
+        } while (i < res.size());
+    }
+
+    return res;
+}
+
 void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, const QString &idSuffix)
 {
-    const QString key = node->nodeId().isEmpty()
+    const QString nodeId = scrub(node->nodeId());
+    const QString key = nodeId.isEmpty()
                             ? QString::number(quintptr(node), 16)
-                            : node->nodeId();
+                            : nodeId;
     info.id = m_idForNodeId.value(key);
     if (info.id.isEmpty()) {
         info.id = nextNodeId();
@@ -1507,7 +1526,7 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, c
     if (!m_linkSuffix.isEmpty())
         info.id += m_linkSuffix;
 
-    info.nodeId = node->nodeId();
+    info.nodeId = nodeId;
     info.typeName = node->typeName();
     info.isDefaultTransform = node->style().transform.isDefault();
 
