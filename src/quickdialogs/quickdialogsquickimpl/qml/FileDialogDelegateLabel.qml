@@ -37,12 +37,10 @@ Item {
                 color: root.delegate.icon.color
                 y: (parent.height - height) / 2
             }
-            Label {
+            Text {
                 text: root.delegate.fileName
                 color: root.delegate.icon.color
                 y: (parent.height - height) / 2
-
-                Accessible.ignored: true
             }
         }
 
@@ -52,7 +50,7 @@ Item {
             width: fileDetailRowWidth - x - root.delegate.leftPadding
             implicitHeight: childrenRect.height
 
-            Label {
+            Text {
                 text: {
                     const fileSize = root.delegate.fileSize;
                     return fileSize > Number.MAX_SAFE_INTEGER
@@ -61,16 +59,12 @@ Item {
                 }
                 font.pixelSize: root.delegate.font.pixelSize * 0.75
                 color: root.fileDetailRowTextColor
-
-                Accessible.ignored: true
             }
-            Label {
+            Text {
                 text: Qt.formatDateTime(root.delegate.fileModified)
                 font.pixelSize: root.delegate.font.pixelSize * 0.75
                 color: root.fileDetailRowTextColor
                 x: parent.width - width
-
-                Accessible.ignored: true
             }
         }
     }

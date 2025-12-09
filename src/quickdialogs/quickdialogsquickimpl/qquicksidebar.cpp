@@ -4,12 +4,13 @@
 
 #include "qquicksidebar_p.h"
 #include "qquicksidebar_p_p.h"
-#include "qquickfiledialogimpl_p_p.h"
 #include <QtQml/qqmllist.h>
 #if QT_CONFIG(settings)
 #include <QtCore/qsettings.h>
 #endif
-
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
 #include <QtQuickTemplates2/private/qquickaction_p.h>
 #include <QtQuickTemplates2/private/qquickcontextmenu_p.h>
 
@@ -258,6 +259,10 @@ void QQuickSideBarPrivate::repopulate()
                 QObjectPrivate::connect(button, &QQuickAbstractButton::clicked, this,
                                         &QQuickSideBarPrivate::buttonClicked);
                 updateIconSourceAndSize(button, iconUrl);
+#if QT_CONFIG(accessibility)
+                if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(button))
+                    accessibleAttached->setName(displayName);
+#endif
             }
             insertItem(q->count(), buttonItem);
         }

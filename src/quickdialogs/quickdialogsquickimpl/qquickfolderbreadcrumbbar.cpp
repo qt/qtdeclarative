@@ -12,8 +12,12 @@
 #endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/QQmlFile>
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
 
@@ -606,6 +610,11 @@ void QQuickFolderBreadcrumbBar::setUpButton(QQuickAbstractButton *upButton)
 
         QObjectPrivate::connect(d->upButton.data(), &QQuickAbstractButton::clicked,
             d, &QQuickFolderBreadcrumbBarPrivate::goUp);
+#if QT_CONFIG(accessibility)
+        QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached*>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(upButton, true));
+        if (Q_LIKELY(accessibleAttached))
+            accessibleAttached->setName(QCoreApplication::translate("FileDialog", "Up"));
+#endif
     }
     if (!d->upButton.isExecuting())
         emit upButtonChanged();

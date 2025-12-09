@@ -48,8 +48,6 @@ DialogsQuickImpl.SideBar {
 
         required property int index
         required property string folderName
-
-        Accessible.name: folderName
     }
 
     separatorDelegate: Item {
