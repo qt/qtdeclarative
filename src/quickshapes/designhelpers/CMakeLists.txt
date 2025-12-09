@@ -23,6 +23,8 @@ qt_internal_add_qml_module(QuickShapesDesignHelpersPrivate
         qquickstarshape.cpp
         qquickstarshape_p.h
         qquickstarshape_p_p.h
+    NO_UNITY_BUILD_SOURCES
+        qquickstarshape.cpp
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::GuiPrivate
