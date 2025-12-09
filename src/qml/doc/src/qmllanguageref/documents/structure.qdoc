@@ -55,17 +55,69 @@ handled in components defined in the QML document. By default, assigning to a
 list property appends to the list. You can explicitly request this behavior
 using the value \c{Append}. Alternatively, you can request the contents of list
 properties to always be replaced using \c{Replace}, or replaced if the property
-is not the default property using \c{ReplaceIfNotDefault}. For example:
+is not the default property using \c{ReplaceIfNotDefault}.
 
+Consider a base type in a document Base.qml:
 \qml
 pragma ListPropertyAssignBehavior: ReplaceIfNotDefault
+import QtQuick
+
+Item {
+    objectName: "outer"
+
+    default property list<Item> d: [
+        Item { objectName: "inner" }
+    ]
+
+    property list<Item> notDefault: [
+        Item { objectName: "one" }
+    ]
+}
 \endqml
+
+Then, if you derive from Base and modify its list properties, the
+ListPropertyAssignBehavior takes effect. In this case:
+
+\qml
+Base {
+    // The new item is appended to the list even though you're assigning.
+    // The (default) property "d" now contains "inner" and "inner2".
+    d: [
+        Item { objectName: "inner2" }
+    ]
+
+    // The list is replaced by the list given here.
+    // The (non-default) property "notDefault" now contains only "two".
+    notDefault: [
+        Item { objectName: "two" }
+    ]
+}
+\endqml
+
+If no \c{ListPropertyAssignBehavior} is given or if \c{Append} is given, the
+"two" object will be appended to the \c{notDefault} property instead, resulting
+in a list that contains both, "one" and "two".
+
+If \c{Replace} is given, the contents of the default property "d" will also be
+replaced, resulting in a list that contains only "inner2".
 
 \note The same declaration can also be given for C++-defined types, by adding
 the \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND},
 \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE}, and
 \l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT} macros to the
-class declaration.
+class declaration. For example:
+
+\code
+class MyType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+
+    Q_PROPERTY(QQmlListProperty<QObject> a READ a)
+    [...]
+};
+\endcode
 
 \keyword QML.ComponentBehavior
 \keyword QML.Bound
