@@ -123,8 +123,10 @@ available and how to use them.
     \row
         \keyword console exception
         \li Exception
-        \li \c console.exception prints an error message together with the stack
-            trace of JavaScript execution at the point where it is called.
+        \li \c console.exception prints an error message. It works like
+            \c console.error but requires at least one argument and
+            additionally prints a stack trace of the JavaScript execution at
+            the point where it is called.
 \endtable
 
 Alternatively, a \l {QLoggingCategory}{logging category} can be passed as the
