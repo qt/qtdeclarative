@@ -107,7 +107,7 @@ public:
 
 #undef IMPLEMENT_ACCESSORS
 
-    Q_INVOKABLE QQStyleKitControl *getControl(int controlType) const;
+    Q_INVOKABLE QQStyleKitControl *getControl(QQStyleKitExtendableControlType controlType) const;
 
     QList<QQStyleKitVariation *> variations() const;
 
@@ -155,7 +155,9 @@ private:
     Q_DISABLE_COPY(QQStyleKitControls)
 
     QList<QObject *> m_data;
-    QMap<int, QQStyleKitControl *> m_controls;
+    QMap<QQStyleKitExtendableControlType, QQStyleKitControl *> m_controls;
+
+    friend class QQStyleKitControl;
 };
 
 QT_END_NAMESPACE

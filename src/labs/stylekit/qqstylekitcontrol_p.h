@@ -44,6 +44,9 @@ private:
     QVariant readStyleProperty(PropertyStorageId key) const;
     void writeStyleProperty(PropertyStorageId key, const QVariant &value);
 
+    QQStyleKitControls *controls() const;
+    QQStyleKitExtendableControlType controlType() const;
+
 private:
     Q_DISABLE_COPY(QQStyleKitControl)
 
@@ -52,6 +55,7 @@ private:
     QQSK::State m_writtenStates = QQSK::StateFlag::Unspecified;
 
     friend class QQStyleKitPropertyResolver;
+    friend class QQStyleKitPropertyGroup;
     friend class QQStyleKitControls;
 };
 
@@ -59,7 +63,7 @@ class QQStyleKitControlAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QStringList variations READ variations WRITE setVariations NOTIFY variationsChanged FINAL)
-    Q_PROPERTY(QQStyleKitExtendedControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)
+    Q_PROPERTY(QQStyleKitExtendableControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)
 
 public:
     QQStyleKitControlAttached(QObject *parent);
@@ -67,8 +71,8 @@ public:
     QStringList variations() const;
     void setVariations(const QStringList &variations);
 
-    QQStyleKitExtendedControlType controlType();
-    void setControlType(QQStyleKitExtendedControlType type);
+    QQStyleKitExtendableControlType controlType();
+    void setControlType(QQStyleKitExtendableControlType type);
 
 signals:
     void variationsChanged();
@@ -78,7 +82,7 @@ private:
     // m_variations is used for resolving in-app QQStyleKitVariations
     QStringList m_variations;
     // m_controlType is used for resolving in-style QQStyleKitVariations
-    QQStyleKitExtendedControlType m_controlType = QQStyleKitReader::ControlType::Unspecified;
+    QQStyleKitExtendableControlType m_controlType = QQStyleKitReader::ControlType::Unspecified;
 
     static int s_variationCount;
 

@@ -118,7 +118,7 @@ public:
     QQStyleKitImageProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     QUrl source() const;
     void setSource(const QUrl &source);
@@ -149,7 +149,7 @@ public:
     QQStyleKitBorderProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     qreal width() const;
     void setWidth(qreal width);
@@ -182,7 +182,7 @@ public:
     QQStyleKitShadowProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     QColor color() const;
     void setColor(QColor color);
@@ -257,7 +257,7 @@ public:
     QQStyleKitDelegateProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     qreal radius() const;
     void setRadius(qreal radius);
@@ -408,7 +408,7 @@ public:
     QQStyleKitIndicatorProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     QQStyleKitDelegateProperties *foreground() const;
 
@@ -437,7 +437,7 @@ public:
     QQStyleKitIndicatorWithSubTypes(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     QQStyleKitDelegateProperties *foreground() const;
     QQStyleKitIndicatorProperties *up() const;
@@ -480,7 +480,7 @@ public:
     QQStyleKitTextProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
 
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
 
     QColor color() const;
     void setColor(const QColor &color);
@@ -557,7 +557,7 @@ public:
 
     void emitChangedForAllStyleProperties();
     template <typename... CHANGED_SIGNALS>
-    void emitGlobally(CHANGED_SIGNALS... changedSignals) const;
+    void emitGlobally(QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const;
     void forEachUsedDelegate(
         std::function<void (QQStyleKitDelegateProperties *, QQSK::Delegate, const QString &)> f);
 
@@ -565,7 +565,6 @@ public:
     QQSK::Subclass subclass() const;
     QQStyleKitReader *asQQStyleKitReader() const;
     QQStyleKitControlState *asQQStyleKitState() const;
-    QQStyleKitControl *asQQStyleKitControl() const;
 
     qreal spacing() const;
     void setSpacing(qreal spacing);

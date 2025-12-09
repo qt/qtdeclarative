@@ -32,7 +32,7 @@ class QQStyleKitPropertyResolver;
 class QQStyleKitReader : public QQStyleKitControlProperties
 {
     Q_OBJECT
-    Q_PROPERTY(QQStyleKitExtendedControlType type READ type WRITE setType NOTIFY typeChanged FINAL)
+    Q_PROPERTY(QQStyleKitExtendableControlType type READ type WRITE setType NOTIFY typeChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool focused READ focused WRITE setFocused NOTIFY focusedChanged FINAL)
     Q_PROPERTY(bool checked READ checked WRITE setChecked NOTIFY checkedChanged FINAL)
@@ -94,8 +94,8 @@ public:
     QQStyleKitReader(QObject *parent = nullptr);
     ~QQStyleKitReader();
 
-    QQStyleKitExtendedControlType type() const;
-    void setType(QQStyleKitExtendedControlType type);
+    QQStyleKitExtendableControlType type() const;
+    void setType(QQStyleKitExtendableControlType type);
 #ifdef QT_DEBUG
     ControlType typeAsControlType() const;
 #endif
@@ -171,12 +171,12 @@ private:
 private:
     Q_DISABLE_COPY(QQStyleKitReader)
 
-    /* The reason we have a QQStyleKitExtendedControlType in addition to
+    /* The reason we have a QQStyleKitExtendableControlType in addition to
      * QQStyleKitReader::ControlType, is that we allow the style to define controls types
      * in the style beyond the types we offer in Qt Quick Controls. The predefined controls
      * (QQStyleKitReader::ControlType) have types that starts at 100000 (ControlType::Unspecified),
      * and any number before that is available for use for defining custom controls. */
-    QQStyleKitExtendedControlType m_type = ControlType::Unspecified;
+    QQStyleKitExtendableControlType m_type = ControlType::Unspecified;
 
     bool m_dontEmitChangedSignals: 1;
     bool m_effectiveVariationsDirty: 1;

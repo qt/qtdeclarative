@@ -354,9 +354,8 @@ ApplicationWindow {
                         let styleValue = StyleKit.style.control.background.radius
                         if (styleValue === value || styleValue < from || styleValue > to)
                             return
-                        StyleKit.style.control.background.radius = value
                         StyleKit.style.abstractButton.background.radius = value
-                        StyleKit.style.pane.background.radius = value
+                        StyleKit.style.groupBox.background.radius = value
                     }
                 }
 

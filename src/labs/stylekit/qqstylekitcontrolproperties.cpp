@@ -92,11 +92,14 @@ T *QQStyleKitPropertyGroup::lazyCreateGroup(T * const &ptr, QQSK::PropertyGroup 
  * signal for them. */
 #define CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(CONTROL_PROPERTIES, GROUP_PATH) \
 if (this == CONTROL_PROPERTIES -> GROUP_PATH ) { \
-        for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders) { \
-            reader->clearLocalStorage(); \
-            ((reader-> GROUP_PATH ->*changedSignals)(), ...); \
+    for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders) { \
+        const auto baseTypes = QQStyleKitPropertyResolver::baseTypesForType(reader->type()); \
+        if (reader->type() != controlType && !baseTypes.contains(controlType)) \
+            continue; \
+        reader->clearLocalStorage(); \
+        ((reader-> GROUP_PATH ->*changedSignals)(), ...); \
     } \
-        return; \
+    return; \
 }
 
 template<typename SUBCLASS>
@@ -123,8 +126,12 @@ void QQStyleKitPropertyGroup::handleStylePropertiesChanged(CHANGED_SIGNALS... ch
 
     if (objectWrittenTo == QQSK::Subclass::QQStyleKitState) {
         ((group->*changedSignals)(), ...);
-        if (shouldEmitGlobally())
-            group->emitGlobally(changedSignals...);
+
+        if (shouldEmitGlobally()) {
+            const QQStyleKitControl *control = controlProperties()->asQQStyleKitState()->control();
+            const QQStyleKitExtendableControlType type = control->controlType();
+            group->emitGlobally(type, changedSignals...);
+        }
         return;
     }
 
@@ -206,7 +213,8 @@ QQStyleKitImageProperties::QQStyleKitImageProperties(QQSK::PropertyGroup group, 
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitImageProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitImageProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitImageProperties
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -257,7 +265,8 @@ QQStyleKitBorderProperties::QQStyleKitBorderProperties(QQSK::PropertyGroup group
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitBorderProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitBorderProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitBorderProperties
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -297,7 +306,8 @@ QQStyleKitShadowProperties::QQStyleKitShadowProperties(QQSK::PropertyGroup group
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitShadowProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitShadowProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitShadowProperties
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -403,7 +413,8 @@ QQStyleKitDelegateProperties::QQStyleKitDelegateProperties(QQSK::PropertyGroup g
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitDelegateProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitDelegateProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitDelegateProperties
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -717,7 +728,8 @@ QQStyleKitIndicatorProperties::QQStyleKitIndicatorProperties(
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitIndicatorProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitIndicatorProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitIndicatorProperties
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -739,7 +751,8 @@ QQStyleKitIndicatorWithSubTypes::QQStyleKitIndicatorWithSubTypes(
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitIndicatorWithSubTypes::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitIndicatorWithSubTypes::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     // Go through all instances of QQStyleKitIndicatorWithSubTypes
     const QQStyleKitControlProperties *cp = controlProperties();
@@ -768,7 +781,8 @@ QQStyleKitTextProperties::QQStyleKitTextProperties(QQSK::PropertyGroup group, QQ
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitTextProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitTextProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     const QQStyleKitControlProperties *cp = controlProperties();
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text());
@@ -966,13 +980,6 @@ QQStyleKitControlState *QQStyleKitControlProperties::asQQStyleKitState() const
     return static_cast<QQStyleKitControlState *>(const_cast<QQStyleKitControlProperties *>(this));
 }
 
-QQStyleKitControl *QQStyleKitControlProperties::asQQStyleKitControl() const
-{
-    Q_ASSERT(subclass() == QQSK::Subclass::QQStyleKitState);
-    Q_ASSERT(metaObject()->inherits(&QQStyleKitControl::staticMetaObject));
-    return static_cast<QQStyleKitControl *>(const_cast<QQStyleKitControlProperties *>(this));
-}
-
 void QQStyleKitControlProperties::forEachUsedDelegate(
     std::function<void (QQStyleKitDelegateProperties *, QQSK::Delegate, const QString &)> f)
 {
@@ -1024,10 +1031,14 @@ void QQStyleKitControlProperties::emitChangedForAllStyleProperties()
 }
 
 template <typename... CHANGED_SIGNALS>
-void QQStyleKitControlProperties::emitGlobally(CHANGED_SIGNALS... changedSignals) const
+void QQStyleKitControlProperties::emitGlobally(
+    QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
-    for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders)
+    for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders) {
+        if (reader->type() != controlType)
+            continue;
         ((reader->*changedSignals)(), ...);
+    }
 }
 
 qreal QQStyleKitControlProperties::spacing() const

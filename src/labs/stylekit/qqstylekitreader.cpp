@@ -360,12 +360,12 @@ bool QQStyleKitReader::dontEmitChangedSignals() const
     return m_dontEmitChangedSignals;
 }
 
-QQStyleKitExtendedControlType QQStyleKitReader::type() const
+QQStyleKitExtendableControlType QQStyleKitReader::type() const
 {
     return m_type;
 }
 
-void QQStyleKitReader::setType(QQStyleKitExtendedControlType type)
+void QQStyleKitReader::setType(QQStyleKitExtendableControlType type)
 {
     if (m_type == type)
         return;

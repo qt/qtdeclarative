@@ -19,8 +19,8 @@ bool QQStyleKitPropertyResolver::s_isReadingProperty = false;
 QQSK::State QQStyleKitPropertyResolver::s_cachedState = QQSK::StateFlag::Unspecified;
 QVarLengthArray<QQSK::StateFlag, 10> QQStyleKitPropertyResolver::s_cachedStateList;
 
-const QList<QQStyleKitExtendedControlType> QQStyleKitPropertyResolver::baseTypesForType(
-    QQStyleKitExtendedControlType exactType)
+const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTypesForType(
+    QQStyleKitExtendableControlType exactType)
 {
     /* By default, the base types should mirror the class hierarchy in Qt Quick Controls.
      * However, to make it possible to style a base type without having to "undo" it again
@@ -38,7 +38,7 @@ const QList<QQStyleKitExtendedControlType> QQStyleKitPropertyResolver::baseTypes
      */
     switch (exactType) {
     case QQStyleKitReader::ApplicationWindow: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::ApplicationWindow };
         return t; }
     case QQStyleKitReader::Button:
@@ -47,33 +47,33 @@ const QList<QQStyleKitExtendedControlType> QQStyleKitPropertyResolver::baseTypes
     case QQStyleKitReader::RadioButton:
     case QQStyleKitReader::CheckBox:
     case QQStyleKitReader::SwitchControl: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::AbstractButton, QQStyleKitReader::Control };
         return t; }
     case QQStyleKitReader::Menu:
     case QQStyleKitReader::Dialog: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Popup, QQStyleKitReader::Control };
         return t; }
     case QQStyleKitReader::Page:
     case QQStyleKitReader::Frame:
     case QQStyleKitReader::TabBar:
     case QQStyleKitReader::ToolBar: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Pane, QQStyleKitReader::Control };
         return t; }
     case QQStyleKitReader::GroupBox: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Frame, QQStyleKitReader::Pane, QQStyleKitReader::Control };
         return t;
     }
     case QQStyleKitReader::TextField:
     case QQStyleKitReader::TextArea: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::TextInput, QQStyleKitReader::Control };
         return t; }
     default: {
-        static QList<QQStyleKitExtendedControlType> t =
+        static QList<QQStyleKitExtendableControlType> t =
             { QQStyleKitReader::Control };
         return t; }
     }
@@ -114,7 +114,7 @@ void QQStyleKitPropertyResolver::cacheReaderState(QQSK::State state)
 
 void QQStyleKitPropertyResolver::addTypeVariationsToReader(
     QQStyleKitReader *styleReader,
-    const QQStyleKitExtendedControlType parentType,
+    const QQStyleKitExtendableControlType parentType,
     const QQStyleKitStyle *style)
 {
     static PropertyPathIds ids;
@@ -136,7 +136,7 @@ void QQStyleKitPropertyResolver::addTypeVariationsToReader(
     /* Inside each Type Variation, check if the control type that styleReader represents has
      * been defined. If so, it means that the variation might affect it, and should therefore be
      * added to the style readers list of effective variations. */
-    const QQStyleKitExtendedControlType styleReaderType = styleReader->type();
+    const QQStyleKitExtendableControlType styleReaderType = styleReader->type();
     const auto styleReaderBaseType = baseTypesForType(styleReaderType);
 
     const auto inStyleVariations = *qvariant_cast<QList<QQStyleKitVariation *> *>(inStyleVariationsVar);
@@ -177,7 +177,7 @@ void QQStyleKitPropertyResolver::addInstanceVariationsToReader(
      * variations that has the potential to affect the control type, or its base types,
      * that the styleReader represents. The variations that are closest to styleReader
      * in the hierarchy will be added first and take precendence over the ones added last. */
-    const QQStyleKitExtendedControlType styleReaderType = styleReader->type();
+    const QQStyleKitExtendableControlType styleReaderType = styleReader->type();
     const auto styleReaderBaseTypes = baseTypesForType(styleReaderType);
 
     for (const QString &attachedVariationName : inAppVariationNames) {
@@ -389,8 +389,8 @@ QVariant QQStyleKitPropertyResolver::readPropertyInControl(
 
 QVariant QQStyleKitPropertyResolver::readPropertyInRelevantControls(
     const QQStyleKitControls *controls, const PropertyPathIds &ids,
-    const QQStyleKitExtendedControlType exactType,
-    const QList<QQStyleKitExtendedControlType> baseTypes)
+    const QQStyleKitExtendableControlType exactType,
+    const QList<QQStyleKitExtendableControlType> baseTypes)
 {
     if (!controls)
         return {};
@@ -414,8 +414,8 @@ QVariant QQStyleKitPropertyResolver::readPropertyInRelevantControls(
 
 QVariant QQStyleKitPropertyResolver::readPropertyInStyle(
     const PropertyPathIds &ids,
-    const QQStyleKitExtendedControlType exactType,
-    const QList<QQStyleKitExtendedControlType> baseTypes,
+    const QQStyleKitExtendableControlType exactType,
+    const QList<QQStyleKitExtendableControlType> baseTypes,
     const QQStyleKitStyle *style)
 {
     QVariant value;
@@ -459,8 +459,8 @@ QVariant QQStyleKitPropertyResolver::readProperty(
      * result in calls to writeStyleProperty(). */
     style->setPalette(styleReader->palette());
 
-    const QQStyleKitExtendedControlType exactType = styleReader->type();
-    const QList<QQStyleKitExtendedControlType> baseTypes = baseTypesForType(exactType);
+    const QQStyleKitExtendableControlType exactType = styleReader->type();
+    const QList<QQStyleKitExtendableControlType> baseTypes = baseTypesForType(exactType);
 
     QVariant value;
 

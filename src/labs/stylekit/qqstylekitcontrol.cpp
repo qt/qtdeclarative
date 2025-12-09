@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qqstylekitcontrol_p.h"
+#include "qqstylekitcontrols_p.h"
 #include "qqstylekitpropertyresolver_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -61,6 +62,19 @@ void QQStyleKitControl::writeStyleProperty(PropertyStorageId key, const QVariant
     m_storage.insert(key, value);
 }
 
+QQStyleKitControls *QQStyleKitControl::controls() const
+{
+    Q_ASSERT(qobject_cast<QQStyleKitControls *>(parent()));
+    return static_cast<QQStyleKitControls *>(parent());
+}
+
+QQStyleKitExtendableControlType QQStyleKitControl::controlType() const
+{
+    const auto &controlsMap = controls()->m_controls;
+    Q_ASSERT(std::find(controlsMap.begin(), controlsMap.end(), this) != controlsMap.end());
+    return controlsMap.key(const_cast<QQStyleKitControl *>(this));
+}
+
 QQStyleKitControlAttached::QQStyleKitControlAttached(QObject *parent)
     : QObject(parent)
 {
@@ -85,12 +99,12 @@ void QQStyleKitControlAttached::setVariations(const QStringList &variations)
     emit variationsChanged();
 }
 
-QQStyleKitExtendedControlType QQStyleKitControlAttached::controlType()
+QQStyleKitExtendableControlType QQStyleKitControlAttached::controlType()
 {
     return m_controlType;
 }
 
-void QQStyleKitControlAttached::setControlType(QQStyleKitExtendedControlType type)
+void QQStyleKitControlAttached::setControlType(QQStyleKitExtendableControlType type)
 {
     if (m_controlType == type)
         return;

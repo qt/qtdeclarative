@@ -31,7 +31,7 @@ const QList<QObject *> QQStyleKitControls::children() const
  * anyway not contain any property overrides. The properties have setters too, to
  * allow the style/application to share custom StyleKitControls the classical
  * way, e.g button: StyleKitControl { id: button }. */
-QQStyleKitControl* QQStyleKitControls::getControl(int controlType) const
+QQStyleKitControl* QQStyleKitControls::getControl(QQStyleKitExtendableControlType controlType) const
 {
     if (!m_controls.contains(controlType))
         return nullptr;
@@ -102,8 +102,9 @@ void QQStyleKitControls::componentComplete()
 {
     for (auto *obj : children()) {
         if (auto *customControl = qobject_cast<QQStyleKitCustomControl *>(obj)) {
-            const int type = customControl->controlType();
-            const int reserved = int(QQStyleKitReader::ControlType::Unspecified);
+            const QQStyleKitExtendableControlType type = customControl->controlType();
+            const QQStyleKitExtendableControlType reserved
+                = QQStyleKitExtendableControlType(QQStyleKitReader::ControlType::Unspecified);
             if (type >= reserved)
                 qmlWarning(this) << "CustomControls must use a controlType less than " << reserved;
             if (m_controls.contains(type))
