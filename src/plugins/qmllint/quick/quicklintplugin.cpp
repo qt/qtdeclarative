@@ -910,8 +910,10 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         addVarBindingWarning("QtQuick", "TableView",
                              { { "columnWidthProvider", { "", "function" } },
                                { "rowHeightProvider", { "", "function" } } });
-        addAttachedWarning({ "QtQuick", "Accessible" }, { { "QtQuick", "Item" } },
-                           "Accessible attached property must be attached to an object deriving from Item or Action");
+        addAttachedWarning({ "QtQuick", "Accessible" },
+                           { { "QtQuick", "Item" }, { "QtQuick.Templates", "Action" } },
+                           "Accessible attached property must be attached to an object deriving "
+                           "from Item or Action");
         addAttachedWarning({ "QtQuick", "LayoutMirroring" },
                            { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
                            "LayoutMirroring attached property must be attached to an object deriving from Item or Window");

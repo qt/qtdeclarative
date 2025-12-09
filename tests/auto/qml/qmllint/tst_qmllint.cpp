@@ -3617,6 +3617,8 @@ void TestQmllint::quickPlugin()
     runTest("pluginQuick_stateWithIllegalChildren.qml",
             Result{ { { "A State cannot have a child item of type Rectangle"_L1, 5, 9 },
                       { "A State cannot have a child item of type Item"_L1, 6, 9 } } });
+    runTest("pluginQuick_AccessibleOnAction.qml", Result::clean());
+    runTest("pluginQuick_AccessibleOnAction2.qml", Result::clean());
 }
 
 void TestQmllint::hasQdsPlugin()
