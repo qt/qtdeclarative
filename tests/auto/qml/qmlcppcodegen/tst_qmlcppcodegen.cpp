@@ -5734,6 +5734,7 @@ void tst_QmlCppCodegen::stringLength()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("stringLength").toInt(), 8);
+    QCOMPARE(object->property("a"), u"astringb"_s);
 }
 
 void tst_QmlCppCodegen::stringToByteArray()

@@ -1575,7 +1575,9 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
             : u"QQmlPrivate::AOTCompiledContext::InvalidStringId"_s;
     const auto accumulatorIn = m_state.accumulatorIn();
     const QQmlJSRegisterContent scope = m_state.accumulatorOut().scope();
-    const bool isReferenceType = scope.containedType()->isReferenceType();
+    const QQmlJSRegisterContent originalScope
+            = scope.original().isValid() ? scope.original() : scope;
+    const bool isReferenceType = originalScope.containedType()->isReferenceType();
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::Attachment: {
@@ -1637,8 +1639,9 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
-    } else if ((scope.containedType()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence
-                    || scope.contains(m_typeResolver->stringType()))
+    } else if ((originalScope.containedType()->accessSemantics()
+                        == QQmlJSScope::AccessSemantics::Sequence
+                    || originalScope.contains(m_typeResolver->stringType()))
                && m_jsUnitGenerator->lookupName(index) == u"length"_s) {
         const QQmlJSScope::ConstPtr stored = accumulatorIn.storedType();
         if (stored->isListProperty()) {
@@ -1655,6 +1658,14 @@ void QQmlJSCodeGenerator::generate_GetLookupHelper(int index)
                     + conversion(originalType(m_state.accumulatorOut()),
                                  m_state.accumulatorOut(),
                                  m_state.accumulatorVariableIn + u".length()"_s)
+                    + u";\n"_s;
+        } else if (originalScope.contains(m_typeResolver->stringType())) {
+            m_body += m_state.accumulatorVariableOut + u" = "_s
+                    + conversion(
+                              m_typeResolver->sizeType(), m_state.accumulatorOut(),
+                              conversion(m_state.accumulatorIn(), m_typeResolver->stringType(),
+                                         m_state.accumulatorVariableIn)
+                                      + u".length()"_s)
                     + u";\n"_s;
         } else {
             REJECT(u"access to 'length' property of sequence wrapped in non-sequence"_s);
