@@ -363,4 +363,28 @@ QString QQmlJSUtils::qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *
             + pathInSourceFolder.sliced(pathInSourceFolder.lastIndexOf(u'/'));
 }
 
+/*!
+  \internal
+  Returns the name of \a scope based on \a type.
+*/
+QString QQmlJSUtils::getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type)
+{
+    Q_ASSERT(scope);
+    if (type == QQmlSA::ScopeType::GroupedPropertyScope
+        || type == QQmlSA::ScopeType::AttachedPropertyScope)
+        return scope->internalName();
+
+    if (!scope->isComposite())
+        return scope->internalName();
+
+    if (scope->isInlineComponent() && scope->inlineComponentName().has_value())
+        return scope->inlineComponentName().value();
+
+    if (scope->isFileRootComponent())
+        return QFileInfo(scope->filePath()).baseName();
+
+    return scope->baseTypeName();
+}
+
+
 QT_END_NAMESPACE

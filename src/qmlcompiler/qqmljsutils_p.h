@@ -401,6 +401,8 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
                                               const QString &pathInBuildFolder);
     static QString qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
                                               const QString &pathInBuildFolder);
+
+    static QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type);
 };
 
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(
