@@ -2733,12 +2733,8 @@ void tst_QQuickPopup::popupWindowPositioning()
     QSignalSpy ySpy(popup, SIGNAL(yChanged()));
 
     popup->open();
-    QTRY_VERIFY(popup->isOpened());
-
-    QTRY_VERIFY(popupPrivate->popupWindow);
+    TRY_VERIFY_POPUP_OPENED(popup);
     auto *popupWindow = popupPrivate->popupWindow;
-    QVERIFY(QTest::qWaitForWindowExposed(popupPrivate->popupWindow));
-    QQuickTest::qWaitForPolish(popupPrivate->popupWindow);
 
     QTRY_COMPARE(xSpy.count(), 1);
     QTRY_COMPARE(ySpy.count(), 1);
