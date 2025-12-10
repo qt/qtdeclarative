@@ -169,7 +169,7 @@ Rectangle {
         TestEllipseShape {
             startAngle: 0
             sweepAngle: 360
-            borderMode: EllipseShape.Outisde
+            borderMode: EllipseShape.Outside
         }
         TestEllipseShape {
             startAngle: 0
