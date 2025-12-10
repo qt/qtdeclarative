@@ -801,6 +801,14 @@ void tst_qmlls_highlighting::highlights_data()
                 << HighlightToken(QQmlJS::SourceLocation(296, 5, 15, 17),
                          QmlHighlightKind::QmlExternalId, QmlHighlightModifier::None);
     }
+    { // custom parsed property that looks like id
+        const auto filePath = m_highlightingDataDir + "/idCrash.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("outerIDWithNoComponentBound")
+                << fileItem
+                << HighlightToken(QQmlJS::SourceLocation(121, 7, 9, 17), QmlHighlightKind::Unknown,
+                                  QmlHighlightModifier::None);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
@@ -991,29 +999,38 @@ void tst_qmlls_highlighting::computeDiff()
     }
 }
 
-void tst_qmlls_highlighting::enumCrash()
+static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
 {
     using namespace QQmlJS::Dom;
-    const auto fileObject = [](const QString &filePath) {
-        QFile f(filePath);
-        DomItem file;
-        if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
-            return file;
-        QString code = f.readAll();
-
-        QStringList dirs = { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
-        auto envPtr = DomEnvironment::create(
-                dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, Extended);
-        envPtr->loadBuiltins();
-        envPtr->loadFile(FileToLoad::fromMemory(envPtr, filePath, code),
-                         [&file](Path, const DomItem &, const DomItem &newIt) {
-                             file = newIt.fileObject();
-                         });
-        envPtr->loadPendingDependencies();
+    QFile f(filePath);
+    DomItem file;
+    if (!f.open(QIODevice::ReadOnly | QIODevice::Text))
         return file;
-    };
+    QString code = f.readAll();
 
-    const auto filePath = m_highlightingDataDir + "/enums_qtbug.qml";
+    QStringList dirs = { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
+    auto envPtr = DomEnvironment::create(dirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded,
+                                         Extended);
+    envPtr->loadBuiltins();
+    envPtr->loadFile(
+            FileToLoad::fromMemory(envPtr, filePath, code),
+            [&file](Path, const DomItem &, const DomItem &newIt) { file = newIt.fileObject(); });
+    envPtr->loadPendingDependencies();
+    return file;
+};
+
+void tst_qmlls_highlighting::crashes_data()
+{
+    QTest::addColumn<QString>("fileName");
+
+    QTest::addRow("enums") << u"enums_qtbug.qml"_s;
+    QTest::addRow("id") << u"idCrash.qml"_s;
+}
+
+void tst_qmlls_highlighting::crashes()
+{
+    QFETCH(QString, fileName);
+    const auto filePath = m_highlightingDataDir + "/"_L1 + fileName;
     const auto fileItem = fileObject(filePath);
 
     HighlightingVisitor hv(fileItem, std::nullopt);

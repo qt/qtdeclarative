@@ -31,7 +31,8 @@ private slots:
     void computeDiff_data();
     void computeDiff();
 
-    void enumCrash();
+    void crashes_data();
+    void crashes();
 
 private:
     QString m_highlightingDataDir;
