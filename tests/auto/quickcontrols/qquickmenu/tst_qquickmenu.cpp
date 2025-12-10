@@ -502,12 +502,8 @@ void tst_QQuickMenu::contextMenuKeyboard()
     // Enter/return should also work.
     // Open the menu.
     menu->open();
-    QTRY_VERIFY(menu->isOpened());
+    TRY_VERIFY_POPUP_OPENED(menu);
     QCOMPARE(visibleSpy.size(), 3);
-    if (auto *popupWindow = menuPrivate->popupWindow) {
-        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
-        QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
-    }
     // Give the first item focus.
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY_ACTIVE_FOCUS(firstItem);
@@ -533,11 +529,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
-    if (auto *popupWindow = menuPrivate->popupWindow) {
-        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
-        QVERIFY(QQuickTest::qWaitForPolish(popupWindow));
-    }
-    QTRY_VERIFY(menu->isOpened());
+    TRY_VERIFY_POPUP_OPENED(menu);
     QCOMPARE(visibleSpy.size(), 5);
     QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));
     QVERIFY(!firstItem->hasActiveFocus());

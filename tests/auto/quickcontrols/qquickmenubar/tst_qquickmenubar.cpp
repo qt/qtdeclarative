@@ -1615,7 +1615,6 @@ void tst_qquickmenubar::menuPosition()
     QVERIFY(menuBar);
     QQuickMenu *editMenu = menuBar->menuAt(1);
     QVERIFY(editMenu);
-    QQuickMenuPrivate *editMenuPrivate = QQuickMenuPrivate::get(editMenu);
 
     const QPoint requestedPos {50, 50};
     const QPointF insetAdjustments {-editMenu->leftInset(), -editMenu->topInset()};
@@ -1624,11 +1623,7 @@ void tst_qquickmenubar::menuPosition()
     editMenu->setX(requestedPos.x());
     editMenu->setY(requestedPos.y());
     editMenu->setVisible(true);
-    QTRY_VERIFY(editMenu->isOpened());
-    if (editMenuPrivate->usePopupWindow()) {
-        QTRY_VERIFY(editMenuPrivate->popupWindow);
-        QVERIFY(QTest::qWaitForWindowExposed(editMenuPrivate->popupWindow));
-    }
+    TRY_VERIFY_POPUP_OPENED(editMenu);
 
     static const QString errorString1("Expected %1, was %2");
     QVERIFY2(pixelsCloseEnough(editMenu->x(), requestedPos.x()), qPrintable(errorString1.arg(requestedPos.x()).arg(editMenu->x())));
