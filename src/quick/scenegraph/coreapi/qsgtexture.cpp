@@ -16,7 +16,7 @@
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
-#if defined(Q_OS_APPLE)
+#if defined(Q_OS_APPLE) || defined(Q_OS_OHOS)
 #define CAN_BACKTRACE_EXECINFO
 #endif
 
