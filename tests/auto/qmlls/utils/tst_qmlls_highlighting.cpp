@@ -823,6 +823,14 @@ void tst_qmlls_highlighting::highlights_data()
                 << HighlightToken(QQmlJS::SourceLocation(296, 5, 15, 17),
                          QmlHighlightKind::QmlExternalId, QmlHighlightModifier::None);
     }
+    { // custom parsed property that looks like id
+        const auto filePath = m_highlightingDataDir + "/idCrash.qml";
+        const auto fileItem = fileObject(filePath);
+        QTest::addRow("outerIDWithNoComponentBound")
+                << fileItem
+                << HighlightToken(QQmlJS::SourceLocation(121, 7, 9, 17), QmlHighlightKind::Unknown,
+                                  QmlHighlightModifier::None);
+    }
 }
 
 void tst_qmlls_highlighting::highlights()
@@ -1033,9 +1041,18 @@ static QQmlJS::Dom::DomItem fileObject(const QString &filePath)
     return file;
 };
 
-void tst_qmlls_highlighting::enumCrash()
+void tst_qmlls_highlighting::crashes_data()
 {
-    const auto filePath = m_highlightingDataDir + "/enums_qtbug.qml";
+    QTest::addColumn<QString>("fileName");
+
+    QTest::addRow("enums") << u"enums_qtbug.qml"_s;
+    QTest::addRow("id") << u"idCrash.qml"_s;
+}
+
+void tst_qmlls_highlighting::crashes()
+{
+    QFETCH(QString, fileName);
+    const auto filePath = m_highlightingDataDir + "/"_L1 + fileName;
     const auto fileItem = fileObject(filePath);
 
     HighlightingVisitor hv(fileItem, std::nullopt);

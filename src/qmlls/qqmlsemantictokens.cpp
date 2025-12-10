@@ -701,6 +701,12 @@ void HighlightingVisitor::highlightBySemanticAnalysis(const DomItem &item, QQmlJ
         addHighlight(loc, QmlHighlightKind::QmlMethod);
         return;
     case QQmlLSUtils::QmlObjectIdIdentifier: {
+        if (!expression->semanticScope) {
+            // In PropertyChanges and friends, this id looks like a generalized grouped property but
+            // is actually custom parsed, so don't highlight it.
+            addHighlight(loc, QmlHighlightKind::Unknown);
+            return;
+        }
         const auto qmlfile = item.fileObject().as<QmlFile>();
         if (!qmlfile) {
             addHighlight(loc, QmlHighlightKind::Unknown);
