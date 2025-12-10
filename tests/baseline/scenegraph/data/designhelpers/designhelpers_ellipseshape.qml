@@ -176,15 +176,14 @@ Rectangle {
             sweepAngle: 270
             cornerRadius: 0
             strokeWidth: 2
-            hideLine: true
-            fillColor: "transparent"
+            innerArcRatio: 1
         }
         TestEllipseShape {
             startAngle: 0
             sweepAngle: 270
             cornerRadius: 0
             strokeWidth: 2
-            hideLine: false
+            innerArcRatio: 0
             fillColor: "transparent"
         }
         TestEllipseShape {

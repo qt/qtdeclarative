@@ -430,6 +430,15 @@ void QQuickEllipseShapePrivate::drawOuterArc(QVector2D center, QVector2D ellipse
                   : (sweepAngle > 0.0f ? QQuickPathArc::Clockwise
                                        : QQuickPathArc::Counterclockwise),
            isFull ? true : alpha > 180.0f);
+
+    // add reverse arc to hide fill color
+    if (qFuzzyCompare(innerArcRatio, 1)) {
+        addArc(beginPoint, ellipseRadius,
+               isFull ? QQuickPathArc::Counterclockwise
+                      : (sweepAngle > 0.0f ? QQuickPathArc::Counterclockwise
+                                           : QQuickPathArc::Clockwise),
+               isFull ? true : alpha > 180.0f);
+    }
 }
 
 void QQuickEllipseShapePrivate::drawFullInnerArc(QVector2D center, QVector2D ellipseRadius)
@@ -492,7 +501,7 @@ void QQuickEllipseShapePrivate::updatePath()
         return;
 
     // just an arc
-    if (qFuzzyCompare(innerArcRatio, 1) || (hideLine && qFuzzyCompare(innerArcRatio, 0))) {
+    if (qFuzzyCompare(innerArcRatio, 1)) {
         drawOuterArc(center, ellipseRadius);
         return;
     }
@@ -593,22 +602,6 @@ QQuickEllipseShape::QQuickEllipseShape(QQuickItem *parent)
 }
 
 QQuickEllipseShape::~QQuickEllipseShape() = default;
-
-bool QQuickEllipseShape::hideLine() const
-{
-    Q_D(const QQuickEllipseShape);
-    return d->hideLine;
-}
-
-void QQuickEllipseShape::setHideLine(bool hideLine)
-{
-    Q_D(QQuickEllipseShape);
-    if (d->hideLine == hideLine)
-        return;
-    d->hideLine = hideLine;
-    d->updatePath();
-    emit hideLineChanged();
-}
 
 /*!
     \qmlproperty real QtQuick.Shapes.DesignHelpers::EllipseShape::sweepAngle

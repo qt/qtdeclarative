@@ -135,8 +135,6 @@ public:
 
     QQuickShapePath *path = nullptr;
 
-    bool hideLine = false;
-
     qreal startAngle = 0;
     qreal sweepAngle = 360;
     qreal innerArcRatio = 0;

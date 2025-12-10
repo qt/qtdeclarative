@@ -35,7 +35,6 @@ public:
                        FINAL)
     Q_PROPERTY(
             qreal strokeWidth READ strokeWidth WRITE setStrokeWidth NOTIFY strokeWidthChanged FINAL)
-    Q_PROPERTY(bool hideLine READ hideLine WRITE setHideLine NOTIFY hideLineChanged FINAL)
     Q_PROPERTY(QColor fillColor READ fillColor WRITE setFillColor NOTIFY fillColorChanged FINAL)
     Q_PROPERTY(QColor strokeColor READ strokeColor WRITE setStrokeColor NOTIFY strokeColorChanged
                        FINAL)
@@ -79,9 +78,6 @@ public:
     qreal strokeWidth() const;
     void setStrokeWidth(qreal width);
 
-    bool hideLine() const;
-    void setHideLine(bool hideLine);
-
     QColor fillColor() const;
     void setFillColor(const QColor &color);
 
@@ -116,7 +112,6 @@ public:
 Q_SIGNALS:
     void innerArcRatioChanged();
     void cornerRadiusChanged();
-    void hideLineChanged();
     void startAngleChanged();
     void sweepAngleChanged();
     void strokeColorChanged();

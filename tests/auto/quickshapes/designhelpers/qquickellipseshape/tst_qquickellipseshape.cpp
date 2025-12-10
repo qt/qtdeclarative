@@ -45,7 +45,6 @@ void tst_QQuickEllipseShape::basicShape()
     QCOMPARE(ellipseShape->height(), 200);
     QCOMPARE(ellipseShape->cornerRadius(), 10);
     QCOMPARE(ellipseShape->innerArcRatio(), 0);
-    QCOMPARE(ellipseShape->hideLine(), false);
     QCOMPARE(ellipseShape->strokeWidth(), 1);
     QCOMPARE(ellipseShape->dashOffset(), 0);
     QCOMPARE(ellipseShape->capStyle(), QQuickShapePath::SquareCap);
@@ -70,8 +69,6 @@ void tst_QQuickEllipseShape::changeSignals_data()
     QTest::newRow("innerArcRatio")
             << QVariant::fromValue(0.5f)
             << QMetaMethod::fromSignal(&QQuickEllipseShape::innerArcRatioChanged);
-    QTest::newRow("hideLine") << QVariant::fromValue(true)
-                              << QMetaMethod::fromSignal(&QQuickEllipseShape::hideLineChanged);
     QTest::newRow("strokeColor") << QVariant::fromValue(
             QColor(Qt::blue)) << QMetaMethod::fromSignal(&QQuickEllipseShape::strokeColorChanged);
     QTest::newRow("strokeWidth") << QVariant::fromValue(
