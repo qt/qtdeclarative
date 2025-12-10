@@ -62,13 +62,13 @@ T.SearchField {
 
     searchIndicator.indicator: Impl.StyleImage {
         // use SpinBox indicator assets as they share the same style
-        property string state: [
+        readonly property string __state: [
             (control.searchIndicator.hovered || control.searchIndicator.pressed) && "up",
             (control.searchIndicator.indicator.enabled && control.searchIndicator.hovered && !control.searchIndicator.pressed) && "hovered",
             (control.searchIndicator.indicator.enabled && control.searchIndicator.pressed) && "pressed",
             (!control.searchIndicator.indicator.enabled) && "disabled"
         ].filter(Boolean).join("_") || "normal"
-        readonly property var indicatorConfig: Config.controls.spinbox[state] || {}
+        readonly property var indicatorConfig: Config.controls.spinbox[__state] || {}
         imageConfig: indicatorConfig.indicator_up_background
 
         x: !control.mirrored ? control.width - width - control.spacing : control.spacing
@@ -91,13 +91,13 @@ T.SearchField {
 
     clearIndicator.indicator: Impl.StyleImage {
         // use SpinBox indicator assets as they share the same style
-        property string state: [
+        readonly property string __state: [
             (control.clearIndicator.hovered || control.clearIndicator.pressed) && "down",
             (control.clearIndicator.indicator.enabled && control.clearIndicator.hovered && !control.clearIndicator.pressed) && "hovered",
             (control.clearIndicator.indicator.enabled && control.clearIndicator.pressed) && "pressed",
             (!control.clearIndicator.indicator.enabled) && "disabled"
         ].filter(Boolean).join("_") || "normal"
-        readonly property var indicatorConfig: Config.controls.spinbox[state] || {}
+        readonly property var indicatorConfig: Config.controls.spinbox[__state] || {}
         imageConfig: indicatorConfig.indicator_down_background
 
         x: (!searchIndicator.indicator || !searchIndicator.indicator.visible)

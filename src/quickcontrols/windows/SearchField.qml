@@ -15,8 +15,6 @@ NativeStyle.DefaultSearchField {
     readonly property bool __nativeSearchIndicator: searchIndicator.indicator.hasOwnProperty("_qt_default")
     readonly property bool __nativeClearIndicator: clearIndicator.indicator.hasOwnProperty("_qt_default")
 
-    readonly property bool __notCustomizable: true
-
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding,
                             90 /* minimum */ )
