@@ -35,7 +35,8 @@ T.Switch {
             states: [
                 {"light": Application.styleHints.colorScheme === Qt.Light},
                 {"dark": Application.styleHints.colorScheme === Qt.Dark},
-                {"checked": control.checked}
+                {"checked": control.checked},
+                {"highcontrast": Application.styleHints.accessibility.contrastPreference === Qt.HighContrast}
             ]
         }
 
