@@ -480,7 +480,10 @@ function(qt6_add_qml_module target)
 
         get_target_property(backing_target_type ${target} TYPE)
         get_target_property(android_type "${target}" _qt_android_target_type)
-        if (backing_target_type STREQUAL "EXECUTABLE" OR android_type STREQUAL "APPLICATION")
+        get_target_property(harmonyos_type ${target} _qt_harmonyos_target_type)
+        if (backing_target_type STREQUAL "EXECUTABLE" OR
+             android_type STREQUAL "APPLICATION" OR
+             harmonyos_type STREQUAL "APPLICATION")
             if(DEFINED arg_PLUGIN_TARGET)
                 message(FATAL_ERROR
                     "A QML module with an executable as its backing target "
@@ -2960,7 +2963,7 @@ function(qt6_add_qml_plugin target)
             _qt_qml_module_plugin_has_backing_library
     )
 
-    if(ANDROID)
+    if(ANDROID OR OHOS)
         _qt_internal_get_qml_plugin_output_name(plugin_output_name ${target}
             BACKING_TARGET "${arg_BACKING_TARGET}"
             TARGET_PATH "${arg_TARGET_PATH}"
@@ -2970,9 +2973,11 @@ function(qt6_add_qml_plugin target)
             PROPERTIES
             LIBRARY_OUTPUT_NAME "${plugin_output_name}"
         )
-        set_property(TARGET "${target}"
-                     PROPERTY _qt_android_apply_arch_suffix_called_from_qt_impl TRUE)
-        qt6_android_apply_arch_suffix(${target})
+        if(ANDROID)
+            set_property(TARGET "${target}"
+                        PROPERTY _qt_android_apply_arch_suffix_called_from_qt_impl TRUE)
+            qt6_android_apply_arch_suffix(${target})
+        endif()
     endif()
 
     if(NOT arg_OUTPUT_DIRECTORY AND arg_BACKING_TARGET AND TARGET ${arg_BACKING_TARGET})
@@ -3535,7 +3540,10 @@ function(qt6_target_qml_sources target)
         )
         get_target_property(target_type ${target} TYPE)
         get_target_property(android_type ${target} _qt_android_target_type)
-        if(target_type STREQUAL "EXECUTABLE" OR android_type STREQUAL "APPLICATION")
+        get_target_property(harmonyos_type ${target} _qt_harmonyos_target_type)
+        if(target_type STREQUAL "EXECUTABLE" OR
+            android_type STREQUAL "APPLICATION" OR
+            harmonyos_type STREQUAL "APPLICATION")
             # The application binary directory is part of the default import path.
             list(APPEND import_paths -I "$<TARGET_PROPERTY:${target},BINARY_DIR>")
         else()
@@ -4470,7 +4478,10 @@ function(_qt_internal_collect_target_qml_import_paths out_var target)
     # a different QML module/target.
     get_target_property(target_type ${target} TYPE)
     get_target_property(android_type ${target} _qt_android_target_type)
-    if(target_type STREQUAL "EXECUTABLE" OR android_type STREQUAL "APPLICATION")
+    get_target_property(harmonyos_type ${target} _qt_harmonyos_target_type)
+    if(target_type STREQUAL "EXECUTABLE" OR
+        android_type STREQUAL "APPLICATION" OR
+        harmonyos_type STREQUAL "APPLICATION")
         # The executable's own QML module's qmldir file will usually be under a
         # subdirectory (matching the module's target path) below the target's
         # build directory.
@@ -5215,7 +5226,7 @@ qt6_deploy_runtime_dependencies(
     ADDITIONAL_MODULES \${plugins_found}
     GENERATE_QT_CONF
 ${common_deploy_args})")
-    elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT CMAKE_CROSSCOMPILING
+    elseif(UNIX AND NOT APPLE AND NOT ANDROID AND NOT OHOS AND NOT CMAKE_CROSSCOMPILING
             AND QT6_IS_SHARED_LIBS_BUILD)
         qt6_generate_deploy_script(
             TARGET ${arg_TARGET}
