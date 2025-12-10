@@ -113,7 +113,7 @@
     }
     \endqml
 
-    Notice that QtQuick.Controls (which is responsible for run-time style
+    Notice that \c {QtQuick.Controls} (which is responsible for run-time style
     selection) is not imported. The fallback style is specified by the qmldir
     of the style:
 
@@ -127,7 +127,7 @@
     \l {The QML script compiler}{QML compiler} knows which specific style
     is in use and can generate C++ code for bindings.
 
-    Another benefit is that the QtQuick.Controls plugin is not used and
+    Another benefit is that the \c {QtQuick.Controls} plugin is not used and
     therefore does not need to be deployed with the application.
 
     Explicit imports are also necessary if your application is built
@@ -148,7 +148,7 @@
     import QtQuick.Controls
     \endqml
 
-    The QtQuick.Controls plugin will import the style that was set at runtime
+    The \c{QtQuick.Controls} plugin will import the style that was set at runtime
     via one of the following approaches:
 
     \list

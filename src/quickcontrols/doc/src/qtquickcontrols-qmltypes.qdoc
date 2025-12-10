@@ -34,7 +34,7 @@
     type in Qt Quick Templates. Each \l {Definition of a Style}{style} that
     wants to provide a Menu must have a Menu.qml available, and the root
     item in that file must be the Menu from Qt Quick Templates. When you
-    import QtQuick.Controls and create a Menu in QML, the type you get is
+    import \c {QtQuick.Controls} and create a Menu in QML, the type you get is
     actually the QML Menu defined by the style's Menu.qml.
 
     In order to use a control as the type in a property declaration, you should

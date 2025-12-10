@@ -704,7 +704,7 @@ that this information is propagated to its children, allowing them to switch
 their text color to something lighter. The simplest way of doing so is to
 import the Material style directly and use the Material attached property:
 
-\code
+\qml
     import QtQuick.Controls.Material 2.12
 
     // ...
@@ -714,7 +714,7 @@ import the Material style directly and use the Material attached property:
 
         // ...
     }
-\endcode
+\endqml
 
 However, this brings with it a hard dependency to the Material style; the
 Material style plugin \e must be deployed with the application, even if the

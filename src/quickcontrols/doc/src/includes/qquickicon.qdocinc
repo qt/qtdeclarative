@@ -47,6 +47,6 @@
 
         For more information, see \l {Image::}{cache}.
 
-        This property was introduced in QtQuick.Controls 2.13.
+        This property was introduced in \l[QML]{QtQuick.Controls} 2.13.
 \endtable
 //! [grouped-properties]

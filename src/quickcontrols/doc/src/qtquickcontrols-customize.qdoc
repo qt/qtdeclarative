@@ -556,7 +556,7 @@
         ApplicationWindow consists of one visual item:
         \l {ApplicationWindow::background}{background}.
 
-        \code
+        \qml
         import QtQuick
         import QtQuick.Controls.Basic
 
@@ -570,7 +570,7 @@
                 }
             }
         }
-        \endcode
+        \endqml
 
 
     \section2 Customizing BusyIndicator

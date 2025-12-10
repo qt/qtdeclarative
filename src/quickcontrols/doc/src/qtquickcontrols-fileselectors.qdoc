@@ -34,7 +34,7 @@
     \c Material selector will be present and the \c +Material/CustomButton.qml
     version will be used instead.
 
-    \code
+    \qml
     // main.qml
     import QtQuick
     import QtQuick.Controls
@@ -48,12 +48,12 @@
             anchors.centerIn: parent
         }
     }
-    \endcode
+    \endqml
 
     The base implementation of the custom button is a simple rounded
     flat button.
 
-    \code
+    \qml
     // CustomButton.qml
     import QtQuick
     import QtQuick.Controls
@@ -68,13 +68,13 @@
             color: control.pressed ? "#ccc" : "#eee"
         }
     }
-    \endcode
+    \endqml
 
     The Material style's implementation of the custom button imports the
     Material style, requests a dark theme to get light text, and creates
     a drop shadow for the background.
 
-    \code
+    \qml
     // +Material/CustomButton.qml
     import QtQuick
     import QtQuick.Effects
@@ -102,7 +102,7 @@
             }
         }
     }
-    \endcode
+    \endqml
 
     \note It is recommended to use \l QQmlApplicationEngine, which internally
     creates a \l QQmlFileSelector instance. This is all that is needed to take
