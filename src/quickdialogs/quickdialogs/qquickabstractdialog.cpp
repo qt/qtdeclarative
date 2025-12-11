@@ -298,7 +298,8 @@ void QQuickAbstractDialog::setResult(int result)
     \qmlproperty enumeration QtQuick.Dialogs::Dialog::popupType
     \since 6.10
 
-    This property can be used to change the \l {QQuickPopup::}{popupType} of the non-native quick dialog.
+    This property can be used to change the \l {QtQuick.Controls::Popup::}{popupType}
+    of the non-native quick dialog.
 
     The available values are:
     \value Popup.Item The dialog will appear as an item in the window of the nearest parent item.

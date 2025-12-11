@@ -2709,7 +2709,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     \qmlmethod int QtQuick::GridView::indexAt(real x, real y)
 
     Returns the index of the visible item containing the point \a x, \a y in
-    \l {QQuickFlickable::contentItem}{content item} coordinates.  If there is
+    \l {QtQuick::Flickable::contentItem}{content item} coordinates.  If there is
     no item at the point specified, or the item is not visible -1 is returned.
 
     If the item is outside the visible area, -1 is returned, regardless of
@@ -2743,7 +2743,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
     \qmlmethod Item QtQuick::GridView::itemAt(real x, real y)
 
     Returns the visible item containing the point \a x, \a y in
-    \l {QQuickFlickable::contentItem}{content item} coordinates. If there
+    \l {QtQuick::Flickable::contentItem}{content item} coordinates. If there
     is no item at the point specified, or the item is not visible null is returned.
 
     If the item is outside the visible area, null is returned, regardless of

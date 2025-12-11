@@ -205,7 +205,7 @@ QT_BEGIN_NAMESPACE
     If no indicator is visible, the space will be between the left
     edge of the view and the left edge of the contentItem.
 
-    \sa rightMargin, indentation, {QQuickControl::}{spacing}
+    \sa rightMargin, indentation, {QtQuick.Controls::Control::}{spacing}
 */
 
 /*!
@@ -214,7 +214,7 @@ QT_BEGIN_NAMESPACE
     This property holds the space between the right edge of the view
     and the right edge of the contentItem.
 
-    \sa leftMargin, indentation, {QQuickControl::}{spacing}
+    \sa leftMargin, indentation, {QtQuick.Controls::Control::}{spacing}
 */
 
 using namespace Qt::Literals::StringLiterals;

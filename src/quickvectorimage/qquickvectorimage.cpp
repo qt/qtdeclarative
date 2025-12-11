@@ -37,9 +37,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, vectorImagePluginLoader,
     Qt Quick Vector Image provides support for displaying vector image files in a Qt Quick
     scene.
 
-    It currently supports the \c SVG file format. In addition, Lottie support can be enabled by
-    setting the \l{assumeTrustedSource} property to true and including the plugin from the
-    \l{Qt Lottie Animation} module.
+    It currently supports the \c SVG file format. In addition, Lottie support
+    can be enabled by setting the
+    \l{QtQuick.VectorImage::VectorImage::}{assumeTrustedSource} property to true
+    and including the plugin from the \l{Qt Lottie Animation} module.
 
     Qt supports multiple options for displaying SVG files. For an overview and comparison of
     the different ones, see the documentation of the \l{svgtoqml} tool.
