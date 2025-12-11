@@ -197,8 +197,6 @@ public:
         const PropertyPathId_t groupStart = PropertyPathId_t(0),
         QQSK::PropertyGroup subtype = QQSK::PropertyGroup::DelegateSubtype0);
 
-    PropertyPathId subTypePrepended(QQSK::PropertyGroup subtype) const;
-
     QQSK::Property property() const { return m_property; }
     PropertyStorageId storageId(QQSK::State state) const;
 
