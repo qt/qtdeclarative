@@ -55,20 +55,6 @@ PropertyPathId::PropertyPathId(
     m_groupStart = subtypeStart + groupStart;
 }
 
-PropertyStorageId PropertyPathId::storageId(QQSK::State state) const
-{
-    /* To compute the fully qualified property ID used as a key in a storage map
-     * (QMap) that holds its value, we need to prefix the property’s state, since
-     * the same property can have different values in different states.
-     * Because StateFlag::Normal == 1, we subtract 1 so that the address space for
-     * properties in the Normal state starts at 0. */
-    Q_ASSERT(state != QQSK::StateFlag::Unspecified);
-    const PropertyPathId_t stateIndex = PropertyPathId_t(state) - 1;
-    const PropertyPathId_t propertyIndex = PropertyPathId_t(m_property);
-    const PropertyPathId_t stateStart = stateIndex * stateStorageSpaceSize;
-    return stateStart + m_groupStart + propertyIndex;
-}
-
 QT_END_NAMESPACE
 
 #include "moc_qqstylekitglobal_p.cpp"

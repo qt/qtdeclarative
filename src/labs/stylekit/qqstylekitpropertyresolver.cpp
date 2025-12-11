@@ -318,10 +318,23 @@ QVariant QQStyleKitPropertyResolver::readPropertyInControlForStates(
         stateListIndices[recursionLevel] = i;
         const QQSK::StateFlag stateFlag = s_cachedStateList[i];
 
-        if (!control->m_writtenStates.testFlag(stateFlag)) {
-            /* optimization: the control doesn't have any properties for the state
-             * we're processing. So continue to the next state in the list. */
+        /* Optimization: check if the control stores values for any properties for
+         * the state we're processing. Otherwise, skip the state. */
+        if (!control->m_writtenStates.testFlag(stateFlag))
             continue;
+
+        /* Optimization: check if the style/theme/variation stores a value for the
+         * property in the state we're processing. Otherwise, skip the state. */
+        const QQStyleKitControls *controls = control->controls();
+        const QQSK::State statesAffectingProperty = controls->m_writtenPropertyPaths[main.pathId()];
+        if (!statesAffectingProperty.testFlag(stateFlag)) {
+            if (alternative.property() == QQSK::Property::NoProperty) {
+                continue;
+            } else {
+                const QQSK::State statesAffectingAlternative = controls->m_writtenPropertyPaths[alternative.pathId()];
+                if (!statesAffectingAlternative.testFlag(stateFlag))
+                    continue;
+            }
         }
 
         if (recursionLevel < s_cachedStateList.length() - 1) {
@@ -394,6 +407,24 @@ QVariant QQStyleKitPropertyResolver::readPropertyInRelevantControls(
 {
     if (!controls)
         return {};
+
+    /* Optimization: check if the style/theme/variation stores a value for
+     * the property, regardless of state. Otherwise we can just return. */
+    while (true) {
+        const auto writtenProperties = controls->m_writtenPropertyPaths;
+        if (writtenProperties.contains(ids.property.pathId()))
+            break;
+        const bool hasAlternative = ids.alternative.property() != QQSK::Property::NoProperty;
+        if (hasAlternative && writtenProperties.contains(ids.alternative.pathId()))
+            break;
+        if (ids.subTypeProperty.property() == QQSK::Property::NoProperty)
+            return {};
+        if (writtenProperties.contains(ids.subTypeProperty.pathId()))
+            break;
+        if (hasAlternative && writtenProperties.contains(ids.subTypeAlternative.pathId()))
+            break;
+        return {};
+    }
 
     if (const QQStyleKitControl *control = controls->getControl(exactType)) {
         const QVariant value = readPropertyInControl(ids, control);
@@ -634,7 +665,18 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
         const QVariant currentValue = control->readStyleProperty(key);
         const bool valueChanged = currentValue != value;
         if (valueChanged) {
+            /* Optimization: Allow a control to track which states it stores property values for.
+             * When later reading a property via propagation, we can skip that control entirely
+             * if it has no stored values corresponding to the state requested by the StyleKitReader. */
             control->m_writtenStates |= nestedState;
+            /* Optimization: Track which properties a control’s subclass (style, theme, or
+             * variation) defines values for, and for which states. When reading a property
+             * later, we can skip the style/theme/variation entirely if it has no stored
+             * values for it, or if none match the state requested by the StyleKitReader. */
+            QQStyleKitControls *controls = control->controls();
+            const QQSK::State alreadyWrittenStates = controls->m_writtenPropertyPaths[propertyPathId.pathId()];
+            controls->m_writtenPropertyPaths[propertyPathId.pathId()] = alreadyWrittenStates | nestedState;
+
             control->writeStyleProperty(key, value);
             QQStyleKitDebug::notifyPropertyWrite(group, property, control, nestedState, key, value);
         }

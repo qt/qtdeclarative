@@ -197,8 +197,27 @@ public:
         const PropertyPathId_t groupStart = PropertyPathId_t(0),
         QQSK::PropertyGroup subtype = QQSK::PropertyGroup::DelegateSubtype0);
 
-    QQSK::Property property() const { return m_property; }
-    PropertyStorageId storageId(QQSK::State state) const;
+    inline QQSK::Property property() const { return m_property; }
+    inline PropertyPathId_t pathId() const
+    {
+        /* The path ID is the property's identifier when its group path is taken
+         * into account. Each property inside QQStyleKitControlProperties has a unique
+         * path ID. For example, both 'background.color' and 'indicator.color' use the
+         * same QQSK::Property (Color), but they still have different path IDs. */
+        return m_groupStart + PropertyPathId_t(m_property);
+    }
+    inline PropertyStorageId storageId(QQSK::State state) const
+    {
+        /* To compute the fully qualified property ID used as a key in a storage map
+         * (QMap) that holds its value, we need to prefix the path ID with the state ID,
+         * since the same path can have different values in different states.
+         * Because StateFlag::Normal == 1, we subtract 1 so that the address space for
+         * properties in the Normal state starts at 0. */
+        Q_ASSERT(state != QQSK::StateFlag::Unspecified);
+        const PropertyPathId_t stateIndex = PropertyPathId_t(state) - 1;
+        const PropertyPathId_t stateStart = stateIndex * stateStorageSpaceSize;
+        return stateStart + pathId();
+    }
 
 private:
     QQSK::Property m_property;
