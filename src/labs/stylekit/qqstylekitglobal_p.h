@@ -168,7 +168,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQSK::PropertyPathFlags)
 using PropertyPathId_t = quint32;
 using PropertyStorageId = quint32;
 using QQStyleKitExtendableControlType = quint32;
-using QQStyleKitPropertyStorage = QMap<PropertyStorageId, QVariant>;
+using QQStyleKitPropertyStorage = QHash<PropertyStorageId, QVariant>;
 
 constexpr PropertyPathId_t maxPropertyStorageSpaceSize = std::numeric_limits<PropertyPathId_t>::max();
 constexpr PropertyPathId_t maxStateCombinationCount = PropertyPathId_t(QQSK::StateFlag::MAX_STATE);

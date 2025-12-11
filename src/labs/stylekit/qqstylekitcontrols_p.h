@@ -155,7 +155,7 @@ private:
     Q_DISABLE_COPY(QQStyleKitControls)
 
     QList<QObject *> m_data;
-    QMap<QQStyleKitExtendableControlType, QQStyleKitControl *> m_controls;
+    QHash<QQStyleKitExtendableControlType, QQStyleKitControl *> m_controls;
 
     friend class QQStyleKitControl;
 };
