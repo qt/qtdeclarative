@@ -633,7 +633,7 @@ private slots:
             qDebug() << "testDeepCopy.diffs:" << diffs;
         QVERIFY(diffs.isEmpty());
         DomItem env(envPtr);
-        DomItem univFile = env.universe().path(f.canonicalPath());
+        DomItem univFile = env.path(f.canonicalPath());
         MutableDomItem univFileCopy = univFile.makeCopy();
         QStringList univFileDiffs =
                 domCompareStrList(univFile, univFileCopy, FieldFilter::compareFilter());
@@ -4739,6 +4739,12 @@ private slots:
             QCOMPARE(preCommentFLocPtr->info().fullRegion.startLine, 7);
             QCOMPARE(preCommentFLocPtr->info().fullRegion.startColumn, 5);
         }
+    }
+
+    void invalidFile()
+    {
+        auto dom = parse(baseDir + u"/broken.qml"_s, qmltypeDirs);
+        QCOMPARE(dom.field(Fields::isValid).value().toBool(true), false);
     }
 
 private:

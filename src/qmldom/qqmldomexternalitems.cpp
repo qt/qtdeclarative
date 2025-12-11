@@ -497,6 +497,7 @@ DomItem QmlFile::field(const DomItem &self, QStringView name) const
 
 void QmlFile::addError(const DomItem &self, ErrorMessage &&msg)
 {
+    m_isValid = false;
     self.containingObject().addError(std::move(msg));
 }
 

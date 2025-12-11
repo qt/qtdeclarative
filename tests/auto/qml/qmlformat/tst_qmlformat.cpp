@@ -56,6 +56,9 @@ private Q_SLOTS:
     void normalizedId_data();
     void normalizedId();
 
+    void reject_data();
+    void reject();
+
 private:
     QString formatInMemory(const QString &fileToFormat, bool *didSucceed = nullptr,
                            LineWriterOptions options = LineWriterOptions(),
@@ -622,6 +625,39 @@ void TestQmlformat::normalizedId()
     QVERIFY(wasSuccessful && !output.isEmpty());
     auto exp = readTestFile(fileNameBase + ".formatted.qml");
     QCOMPARE(output, exp);
+}
+
+void TestQmlformat::reject_data()
+{
+    QTest::addColumn<QString>("snippet");
+
+    QTest::addRow("var-in-object") << "var x = 3;";
+}
+
+void TestQmlformat::reject()
+{
+    QFETCH(QString, snippet);
+
+    const QString code = snippet.startsWith("import"_L1) || snippet.startsWith("pragam"_L1)
+            ? snippet
+            : R"(import QtQuick
+Item {
+%1
+})"_L1.arg(snippet);
+
+    bool wasSuccessful = true;
+
+    auto env = DomEnvironment::create(
+            QStringList(), // as we load no dependencies we do not need any paths
+            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                    | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+    const QString formatted = formatInMemoryImpl(
+            &wasSuccessful, LineWriterOptions{}, WriteOutCheck::None, WriteOutCheck::None,
+            std::move(env), FileToLoad::fromMemory(env, testFile("file.qml"), code));
+
+    QVERIFY(!wasSuccessful);
+    QCOMPARE(formatted, ""_L1);
 }
 
 QTEST_MAIN(TestQmlformat)
