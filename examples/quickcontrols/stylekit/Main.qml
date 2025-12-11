@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Qt.labs.StyleKit
+import "styles"
 
 ApplicationWindow {
     id: app
