@@ -864,9 +864,10 @@ bool QQmlDomAstCreatorBase::visit(AST::FunctionDeclaration *fDef)
 
 bool QQmlDomAstCreatorBase::visit(AST::UiSourceElement *el)
 {
-    if (!cast<FunctionDeclaration *>(el->sourceElement)) {
-        qCWarning(creatorLog) << "unhandled source el:" << static_cast<AST::Node *>(el);
-        Q_UNREACHABLE();
+    if (AST::cast<VariableStatement *>(el->sourceElement)) {
+        qmlFile.addError(astParseErrors().warning(
+                "JavaScript declarations are not allowed in QML elements"_L1));
+        return false;
     }
     return true;
 }
@@ -938,6 +939,8 @@ void QQmlDomAstCreatorBase::endVisit(AST::FunctionDeclaration *fDef)
 
 void QQmlDomAstCreatorBase::endVisit(AST::UiSourceElement *el)
 {
+    if (AST::cast<VariableStatement *>(el->sourceElement))
+        return;
     MethodInfo &m = std::get<MethodInfo>(currentNode().value);
     loadAnnotations(el);
     QmlObject &obj = current<QmlObject>();
