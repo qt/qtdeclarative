@@ -3,17 +3,18 @@ import QtQuick.Controls
 
 ApplicationWindow {
     id: window
-    width: 400
+    width: 600
     height: 400
 
     MouseArea {
-        anchors.fill: parent
+        width: 50
+        height: 50
         acceptedButtons: Qt.LeftButton
 
         onPressed: (mouse) => window.color = "red"
 
         TextArea {
-            anchors.centerIn: parent
+            anchors.fill: parent
             text: "Hello, World!"
             color: "black"
         }
