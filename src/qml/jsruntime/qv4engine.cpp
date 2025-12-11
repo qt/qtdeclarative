@@ -14,6 +14,7 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypewrapper_p.h>
@@ -2165,37 +2166,8 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
             return *existingModule;
     }
 
-    // Compilation Unit present in QQmlMetaTypeData
-    if (auto cu = QQmlMetaType::obtainCompilationUnit(resolved))
-        return executableCompilationUnit(std::move(cu));
-
-    // Compilation Unit readily loadable from .qmlc file or binary
-    QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
-    const DiskCacheOptions options = diskCacheOptions();
-    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = (options & DiskCache::Aot)
-                ? QQmlMetaType::findCachedCompilationUnit(
-                          resolved,
-                          (options & DiskCache::AotByteCode)
-                                  ? QQmlMetaType::AcceptUntyped
-                                  : QQmlMetaType::RequireFullyTyped,
-                          &cacheError)
-                : nullptr) {
-        const auto cu = executableCompilationUnit(
-                QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
-                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
-                        resolved.fileName(), resolved.toString()));
-        const auto data = cu->unitData();
-        for (uint i = 0, end = data->moduleRequestTableSize; i < end; ++i) {
-            const auto dependency = moduleForUrl(cu->urlAt(data->moduleRequestTable()[i]), cu.data());
-            QQmlRefPointer<QQmlScriptData> scriptData(
-                    new QQmlScriptData, QQmlRefPointer<QQmlScriptData>::Adopt);
-            scriptData->url = dependency->finalUrl();
-            scriptData->urlString = dependency->finalUrlString();
-            scriptData->m_precompiledScript = dependency->baseCompilationUnit();
-            cu->baseCompilationUnit()->dependentScripts.append(std::move(scriptData));
-        }
-        return cu;
-    }
+    if (const auto blob = m_typeLoader->getScript(resolved, QQmlTypeLoader::Synchronous))
+        return executableCompilationUnit(blob->scriptData()->compilationUnit());
 
     // Unavailable
     return Module();

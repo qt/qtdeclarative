@@ -152,7 +152,8 @@ void QQmlPreviewHandler::loadUrl(const QUrl &url)
 void QQmlPreviewHandler::dropCU(const QUrl &url)
 {
     // Drop any existing compilation units for this URL from the type registry.
-    if (const auto cu = QQmlMetaType::obtainCompilationUnit(url))
+    // There can be multiple, one for each engine.
+    while (const auto cu = QQmlMetaType::obtainCompilationUnit(url))
         QQmlMetaType::unregisterInternalCompositeType(cu);
 }
 

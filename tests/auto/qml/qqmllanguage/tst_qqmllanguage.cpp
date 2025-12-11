@@ -541,6 +541,8 @@ private slots:
 
     void listIsNotAType();
 
+    void multiTypeResolution();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -10206,6 +10208,26 @@ void tst_qqmllanguage::listIsNotAType()
     QVERIFY(!component.isReady());
     QVERIFY(component.errorString().contains(
             "list is not a type. It requires an element type argument (eg. list<int>)"_L1));
+}
+
+void tst_qqmllanguage::multiTypeResolution()
+{
+    QQmlEngine engine1, engine2;
+
+    QScopedPointer<QQmlFileSelector> fs(new QQmlFileSelector(&engine1));
+    fs->setExtraSelectors({"FOO"});
+
+    QQmlComponent c1(&engine1, testFileUrl("FileSelectorBase.qml"));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> o1(c1.create());
+    QVERIFY(o1);
+    QCOMPARE(o1->objectName(), "green");
+
+    QQmlComponent c2(&engine2, testFileUrl("FileSelectorBase.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QScopedPointer<QObject> o2(c2.create());
+    QVERIFY(o2);
+    QCOMPARE(o2->objectName(), "blue");
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -30,11 +30,6 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
     assertTypeLoaderThread();
 
     if (data.isCacheable()) {
-        if (auto unit = QQmlMetaType::obtainCompilationUnit(url())) {
-            initializeFromCompilationUnit(std::move(unit));
-            return;
-        }
-
         if (m_typeLoader->readCacheFile()) {
             auto unit = QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>();
             QString error;
