@@ -14,6 +14,8 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmllist_p.h>
 #include <private/qqmllistwrapper_p.h>
+#include <private/qqmlscriptblob_p.h>
+#include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypewrapper_p.h>
 #include <private/qqmlvaluetype_p.h>
@@ -2202,9 +2204,11 @@ ExecutionEngine::Module ExecutionEngine::moduleForUrl(
 ExecutionEngine::Module ExecutionEngine::loadModule(
         const QUrl &url, const ExecutableCompilationUnit *referrer)
 {
-    return doFindModule(m_compilationUnits, url, referrer, [this](const QUrl &resolved) {
-        if (auto cu = QQmlMetaType::obtainCompilationUnit(resolved))
-            return executableCompilationUnit(std::move(cu));
+    return doFindModule(m_compilationUnits, url, referrer, [&](const QUrl &resolved) {
+        if (QQmlTypeLoader *loader = typeLoader()) {
+            if (const auto blob = loader->getScript(resolved, url))
+                return executableCompilationUnit(blob->scriptData()->compilationUnit());
+        }
         return compileModule(resolved);
     });
 }

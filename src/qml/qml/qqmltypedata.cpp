@@ -84,9 +84,6 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     if (!m_backupSourceCode.isCacheable())
         return false;
 
-    if (auto unit = QQmlMetaType::obtainCompilationUnit(url()))
-        return loadFromDiskCache(unit);
-
     if (!m_typeLoader->readCacheFile())
         return false;
 
@@ -800,11 +797,6 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
 {
     assertTypeLoaderThread();
 
-    if (auto cu = QQmlMetaType::obtainCompilationUnit(finalUrl())) {
-        if (loadFromDiskCache(cu))
-            return;
-    }
-
     if (unit->qmlData->qmlUnit()->nObjects == 0) {
         setError(QQmlTypeLoader::tr("Cached QML Unit has no objects"));
         return;
@@ -1181,6 +1173,10 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 // this is required for inline components in singletons
                 const QMetaType type = qmlType.typeId();
                 if (auto unit = QQmlMetaType::obtainCompilationUnit(type)) {
+                    // TODO: Obtaining a compilation unit from the type registry is OK-ish
+                    //       here because the type is unique to the engine. What we actually
+                    //       want is to have a nullptr CU if the respective inline component
+                    //       doesn't exist. There should be a simpler way to do this.
                     ref->setCompilationUnit(std::move(unit));
                     ref->setTypePropertyCache(QQmlMetaType::propertyCacheForType(type));
                 }

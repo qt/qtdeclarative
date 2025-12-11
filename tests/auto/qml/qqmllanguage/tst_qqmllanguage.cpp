@@ -535,6 +535,8 @@ private slots:
 
     void colorWithoutQuick();
 
+    void multiTypeResolution();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -10089,6 +10091,26 @@ void tst_qqmllanguage::colorWithoutQuick()
     const QColor expected = QColor::fromString("grey");
     QVERIFY(expected.isValid());
     QCOMPARE(t->colorProperty(), expected);
+}
+
+void tst_qqmllanguage::multiTypeResolution()
+{
+    QQmlEngine engine1, engine2;
+
+    QScopedPointer<QQmlFileSelector> fs(new QQmlFileSelector(&engine1));
+    fs->setExtraSelectors({"FOO"});
+
+    QQmlComponent c1(&engine1, testFileUrl("FileSelectorBase.qml"));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> o1(c1.create());
+    QVERIFY(o1);
+    QCOMPARE(o1->objectName(), "green");
+
+    QQmlComponent c2(&engine2, testFileUrl("FileSelectorBase.qml"));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QScopedPointer<QObject> o2(c2.create());
+    QVERIFY(o2);
+    QCOMPARE(o2->objectName(), "blue");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
