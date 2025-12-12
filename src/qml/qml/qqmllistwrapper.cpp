@@ -247,8 +247,21 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
 
         const uint index = id.asArrayIndex();
         const int count = prop->count(prop);
-        if (count < 0 || index >= uint(count))
+
+        if (count < 0)
             return false;
+
+        // https://262.ecma-international.org/6.0/#sec-array-exotic-objects
+        // [...] whenever an own property is added whose name is an array index, the
+        // value of the length property is changed, if necessary, to be one more
+        // than the numeric value of that array index [...]
+        if (index >= uint(count)) {
+            if (!prop->append)
+                return false;
+
+            for (uint times = uint(count); times < index; ++times)
+                prop->append(prop, nullptr);
+        }
 
         if (value.isNull()) {
             prop->replace(prop, index, nullptr);

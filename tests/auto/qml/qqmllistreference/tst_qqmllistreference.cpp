@@ -64,6 +64,7 @@ private slots:
     void consoleLogSyntheticList();
 
     void listWrapperCreateOwnedIsIndependent();
+    void listWrapperIncreaseLengthWhenWritingOutOfBoundsArrayIndex();
 };
 
 class TestType : public QObject
@@ -1139,6 +1140,20 @@ void tst_qqmllistreference::listWrapperCreateOwnedIsIndependent()
     QCOMPARE(scopedListWrapper->arrayData()->length(), 0); // 0 because we cleared the list
     // sanity check that the original property has changed
     QCOMPARE(root->property("length").toInt(&ok), 1);
+}
+
+void tst_qqmllistreference::listWrapperIncreaseLengthWhenWritingOutOfBoundsArrayIndex()
+{
+    QQmlEngine engine;
+
+    QQmlComponent component(
+            &engine, testFileUrl("listWrapperIncreaseLengthWhenWritingOutOfBoundsArrayIndex.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QCOMPARE(root->property("actualLength").toInt(), root->property("expectedLength").toInt());
 }
 
 QTEST_MAIN(tst_qqmllistreference)
