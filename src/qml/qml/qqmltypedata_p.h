@@ -31,23 +31,22 @@ public:
 
     struct TypeReference
     {
-        TypeReference() : version(QTypeRevision::zero()), needsCreation(true) {}
-
-        QV4::CompiledData::Location location;
-        QQmlType type;
-        QTypeRevision version;
-        QQmlRefPointer<QQmlTypeData> typeData;
-        bool selfReference = false;
         QString prefix; // used by CompositeSingleton types
+        QQmlType type;
+        QQmlRefPointer<QQmlTypeData> typeData;
+        QV4::CompiledData::Location location;
+        QTypeRevision version = QTypeRevision::zero();
+        bool selfReference = false;
+        bool needsCreation = true;
+
         QString qualifiedName() const;
-        bool needsCreation;
     };
 
     struct ScriptReference
     {
-        QV4::CompiledData::Location location;
         QString qualifier;
         QQmlRefPointer<QQmlScriptBlob> script;
+        QV4::CompiledData::Location location;
     };
 
 private:
