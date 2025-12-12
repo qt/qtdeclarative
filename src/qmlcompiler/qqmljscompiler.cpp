@@ -23,6 +23,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qelapsedtimer.h>
 
 #include <QtQml/private/qqmlsignalnames_p.h>
 
@@ -797,15 +798,16 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompileAndRecordAotStats(
         const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
         const QString &name, QQmlJS::SourceLocation location)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
+    QElapsedTimer timer {};
+    timer.start();
     QQmlJSAotFunction result;
     if (!m_logger->currentFunctionHasCompileError())
         result = doCompile(context, function);
-    auto t2 = std::chrono::high_resolution_clock::now();
+    auto elapsed = std::chrono::milliseconds { timer.elapsed() };
 
     if (QQmlJS::QQmlJSAotCompilerStats::recordAotStats()) {
         QQmlJS::AotStatsEntry entry;
-        entry.codegenDuration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+        entry.codegenDuration = elapsed;
         entry.functionName = name;
         entry.message = m_logger->currentFunctionWasSkipped()
                 ? m_logger->currentFunctionCompileSkipMessage()
