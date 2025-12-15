@@ -10,6 +10,5 @@ Pane {
         id: textField
         text: "Memento mori"
         width: parent.width
-        anchors.centerIn: parent
     }
 }

@@ -10,6 +10,5 @@ Pane {
         id: textArea
         text: "Memento mori"
         width: parent.width
-        anchors.centerIn: parent
     }
 }
