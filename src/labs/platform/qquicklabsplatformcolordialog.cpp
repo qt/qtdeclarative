@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 //! \nativetype QQuickLabsPlatformColorDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
-    \deprecated [6.9] Use \l{QtQuick.Dialogs::ColorDialog} instead.
+    \deprecated [6.9] Use \l [QtQuickDialogs] {ColorDialog}{QtQuick.Dialogs ColorDialog} instead.
     \brief A native color dialog.
 
     The ColorDialog type provides a QML API for native platform color dialogs.

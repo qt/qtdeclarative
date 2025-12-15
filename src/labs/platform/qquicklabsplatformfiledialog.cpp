@@ -18,7 +18,7 @@ using namespace Qt::StringLiterals;
 //!     \nativetype QQuickLabsPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
-    \deprecated [6.9] Use \l{QtQuick.Dialogs::FileDialog} instead.
+    \deprecated [6.9] Use \l [QtQuickDialogs] {FileDialog}{QtQuick.Dialogs FileDialog} instead.
     \brief A native file dialog.
 
     The FileDialog type provides a QML API for native platform file dialogs.

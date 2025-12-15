@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 //!     \nativetype QQuickLabsPlatformFolderDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
-    \deprecated [6.9] Use \l{QtQuick.Dialogs::FolderDialog} instead.
+    \deprecated [6.9] Use \l [QtQuickDialogs] {FolderDialog}{QtQuick.Dialogs FolderDialog} instead.
     \brief A native folder dialog.
 
     The FolderDialog type provides a QML API for native platform folder dialogs.

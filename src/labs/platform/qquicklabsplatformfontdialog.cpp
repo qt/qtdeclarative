@@ -14,7 +14,7 @@ QT_BEGIN_NAMESPACE
 //!     \nativetype QQuickLabsPlatformFontDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
-    \deprecated [6.9] Use \l{QtQuick.Dialogs::FontDialog} instead.
+    \deprecated [6.9] Use \l [QtQuickDialogs] {FontDialog}{QtQuick.Dialogs FontDialog} instead.
     \brief A native font dialog.
 
     The FontDialog type provides a QML API for native platform font dialogs.

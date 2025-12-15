@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 //!     \nativetype QQuickLabsPlatformMessageDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
-    \deprecated [6.9] Use \l{QtQuick.Dialogs::MessageDialog} instead.
+    \deprecated [6.9] Use \l [QtQuickDialogs] {MessageDialog}{QtQuick.Dialogs MessageDialog} instead.
     \brief A native message dialog.
 
     The MessageDialog type provides a QML API for native platform message dialogs.
