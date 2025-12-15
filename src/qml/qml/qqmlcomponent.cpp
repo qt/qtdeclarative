@@ -455,6 +455,10 @@ QQmlComponent::~QQmlComponent()
 
     if (d->typeData) {
         d->typeData->unregisterCallback(d);
+        if (d->engine) {
+            QQmlEnginePrivate::get(d->engine)->typeLoader.drop(
+                    QQmlDataBlob::Ptr(d->typeData.data()));
+        }
         d->typeData.reset();
     }
 }
@@ -1013,6 +1017,14 @@ QObject *QQmlComponent::beginCreate(QQmlContext *context)
     return d->beginCreate(QQmlContextData::get(context));
 }
 
+static QQmlParserStatus *parserStatusCast(const QQmlType &type, QObject *rv)
+{
+    const int parserStatusCast = type.parserStatusCast();
+    return parserStatusCast == -1
+            ? nullptr
+            : reinterpret_cast<QQmlParserStatus *>(reinterpret_cast<char *>(rv) + parserStatusCast);
+}
+
 QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> context)
 {
     Q_Q(QQmlComponent);
@@ -1074,7 +1086,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 
     if (!loadedType.isValid()) {
         enginePriv->referenceScarceResources();
-        state.initCreator(std::move(context), compilationUnit, creationContext);
+        state.initCreator(context, compilationUnit, creationContext);
         rv = state.creator()->create(start, nullptr, nullptr, isInlineComponent ? QQmlObjectCreator::InlineComponent : QQmlObjectCreator::NormalObject);
         if (!rv)
             state.appendCreatorErrors();
@@ -1083,25 +1095,20 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         // TODO: extract into function
         rv = loadedType.createWithQQmlData();
         QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
-        QQmlParserStatus *parserStatus = nullptr;
-        const int parserStatusCast = loadedType.parserStatusCast();
-        if (parserStatusCast != -1) {
-            parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(rv) + parserStatusCast);
+        if (QQmlParserStatus *parserStatus = parserStatusCast(loadedType, rv)) {
             parserStatus->classBegin();
+            state.ensureRequiredPropertyStorage(rv);
+        } else if (loadedType.finalizerCast() != -1) {
+            state.ensureRequiredPropertyStorage(rv);
         }
+
         for (int i = 0, propertyCount = propertyCache->propertyCount(); i < propertyCount; ++i) {
             if (const QQmlPropertyData *propertyData = propertyCache->property(i); propertyData->isRequired()) {
-                state.ensureRequiredPropertyStorage();
+                state.ensureRequiredPropertyStorage(rv);
                 RequiredPropertyInfo info;
                 info.propertyName = propertyData->name(rv);
                 state.addPendingRequiredProperty(rv, propertyData, info);
             }
-        }
-        if (parserStatus)
-            parserStatus->componentComplete();
-        if (const int finalizerCast = loadedType.finalizerCast(); finalizerCast != -1) {
-            auto* hook = reinterpret_cast<QQmlFinalizerHook *>(reinterpret_cast<char *>(rv) + finalizerCast);
-            hook->componentFinalized();
         }
     }
 
@@ -1113,6 +1120,12 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         ddata->indestructible = true;
         ddata->explicitIndestructibleSet = true;
         ddata->rootObjectInCreation = false;
+
+        // Assign parent context to the object if we haven't created one.
+        if (!ddata->outerContext)
+            ddata->outerContext = context.data();
+        if (!ddata->context)
+            ddata->context = context.data();
     }
 
     return rv;
@@ -1249,7 +1262,18 @@ void QQmlComponentPrivate::completeCreate()
             state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
         }
     }
+
     if (loadedType.isValid()) {
+        QObject *rv = state.target();
+        if (QQmlParserStatus *parserStatus = parserStatusCast(loadedType, rv))
+            parserStatus->componentComplete();
+
+        if (const int finalizerCast = loadedType.finalizerCast(); finalizerCast != -1) {
+            auto *hook = reinterpret_cast<QQmlFinalizerHook *>(
+                    reinterpret_cast<char *>(rv) + finalizerCast);
+            hook->componentFinalized();
+        }
+
         /*
            We can directly set completePending to false, as finalize is only concerned
            with setting up pending bindings, but that cannot happen here, as we're

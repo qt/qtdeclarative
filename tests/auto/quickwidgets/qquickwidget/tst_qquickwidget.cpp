@@ -13,6 +13,8 @@
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/QWindow>
@@ -135,6 +137,8 @@ private slots:
     void touchMultipleWidgets();
     void tabKey();
     void resizeOverlay();
+    void overlayGeometry_data();
+    void overlayGeometry();
     void controls();
     void focusOnClick();
 #if QT_CONFIG(graphicsview)
@@ -873,6 +877,56 @@ void tst_qquickwidget::resizeOverlay()
     QCOMPARE(rootItem->height(), 300);
     QCOMPARE(overlay->width(), rootItem->width());
     QCOMPARE(overlay->height(), rootItem->height());
+}
+
+/*
+    Overlaps with resizeOverlay, but uses a proper
+    Qt Quick Controls Overlay.
+*/
+void tst_qquickwidget::overlayGeometry_data()
+{
+    QTest::addColumn<QQuickWidget::ResizeMode>("resizeMode");
+
+    QTest::addRow("SizeRootObjectToView") << QQuickWidget::SizeRootObjectToView;
+    QTest::addRow("SizeViewToRootObject") << QQuickWidget::SizeViewToRootObject;
+}
+
+void tst_qquickwidget::overlayGeometry()
+{
+    QFETCH(const QQuickWidget::ResizeMode, resizeMode);
+
+    QWidget window;
+
+    QQuickWidget widget(testFileUrl("overlayGeometry.qml"), &window);
+    widget.setResizeMode(resizeMode);
+
+    QCOMPARE(widget.status(), QQuickWidget::Ready);
+    const auto *rootItem = qobject_cast<QQuickItem*>(widget.rootObject());
+    QVERIFY(rootItem);
+    const QSizeF preferredSize = rootItem->size();
+
+    auto *popup = rootItem->findChild<QQuickPopup *>("popup");
+    QVERIFY(popup);
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    const auto *overlay = QQuickOverlay::overlay(widget.quickWindow());
+    QVERIFY(overlay);
+
+    QTestPrivate::androidCompatibleShow(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QCOMPARE(widget.size(), preferredSize.toSize());
+    QCOMPARE(overlay->position(), QPointF(0, 0));
+    QCOMPARE(overlay->size(), widget.size());
+
+    widget.resize((preferredSize * 2).toSize());
+    QCOMPARE(overlay->position(), QPointF(0, 0));
+    QEXPECT_FAIL("SizeViewToRootObject", "QTBUG-115536", Continue);
+    QCOMPARE(overlay->size(), widget.size());
+
+    // click outside the popup, make sure it closes
+    QTest::mouseClick(&widget, Qt::LeftButton, {}, QPoint(10, 10));
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 void tst_qquickwidget::controls()

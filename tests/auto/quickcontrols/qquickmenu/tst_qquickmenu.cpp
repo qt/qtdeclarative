@@ -15,6 +15,9 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
@@ -91,6 +94,7 @@ private slots:
     void customMenuCullItems();
     void customMenuUseRepeaterAsTheContentItem();
     void invalidUrlInImgTag();
+    void mousePropagationWithinPopup();
 };
 
 tst_QQuickMenu::tst_QQuickMenu()
@@ -2320,6 +2324,54 @@ void tst_QQuickMenu::invalidUrlInImgTag()
 
     QQuickMenuItem *menuItemFirst = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
     QVERIFY(menuItemFirst);
+}
+
+void tst_QQuickMenu::mousePropagationWithinPopup()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("mousePropagationWithinPopup.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickApplicationWindow *window = helper.appWindow;
+    centerOnScreen(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    QQuickMenu *nestedMenu = window->property("nestedMenu").value<QQuickMenu*>();
+    QVERIFY(nestedMenu);
+    nestedMenu->open();
+    QTRY_VERIFY(nestedMenu->isOpened());
+
+    QQuickMouseArea *mouseArea = window->property("mouseArea").value<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+
+    QSignalSpy clickedSpy(mouseArea, &QQuickMouseArea::clicked);
+    QQuickMenuItem *menuItem2 = qobject_cast<QQuickMenuItem *>(nestedMenu->itemAt(1));
+    QVERIFY(menuItem2);
+    QVERIFY(!menuItem2->isEnabled());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(menuItem2));
+    QCOMPARE(clickedSpy.size(), 0);
+
+    // Check on the gap area between menu and its item
+    // Note: Skip verifying this case for the styles (such as Imagine) that doesn't have gap
+    // between menu and its item
+    const auto menuItem1 = qobject_cast<QQuickMenuItem *>(nestedMenu->itemAt(0));
+    QVERIFY(menuItem1);
+    const QPointF point = menuItem1->mapToItem(nestedMenu->background(), QPointF(0, 0));
+    const bool xAxis = (point.x() + nestedMenu->leftInset()) > 0;
+    const bool yAxis = (point.y() + nestedMenu->topInset()) > 0;
+    if (xAxis || yAxis) {
+        const auto menuItem1Pos = mapCenterToWindow(menuItem1);
+        QPoint gapPoint(xAxis ? menuItem1Pos.x() - menuItem1->width() / 2 - 1 : menuItem1Pos.x(),
+                        yAxis ? menuItem1Pos.y() : menuItem1Pos.y() - menuItem1->height() / 2 - 1);
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, gapPoint);
+        QCOMPARE(clickedSpy.size(), 0);
+    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

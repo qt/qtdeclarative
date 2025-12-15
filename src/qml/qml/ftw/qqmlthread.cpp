@@ -195,6 +195,9 @@ void QQmlThread::shutdown()
 
     d->m_shutdown = true;
 
+    if (d->mainSync)
+        d->wakeOne();
+
     if (QCoreApplication::closingDown())
         d->quit();
     else

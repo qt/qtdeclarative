@@ -2730,6 +2730,7 @@ void tst_QQuickListView::sectionsSnap()
     QFETCH(QQuickListView::SnapMode, snapMode);
     QFETCH(QPoint, point);
     QFETCH(int, duration);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("sectionSnapping.qml"));
@@ -2745,28 +2746,28 @@ void tst_QQuickListView::sectionsSnap()
     QCOMPARE(listview->contentY(), qreal(-50));
 
     // move down
-    flick(window.data(), QPoint(100, 100), point, duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 100), point, duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(0));
 
-    flick(window.data(), QPoint(100, 100), point, duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 100), point, duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(50));
 
-    flick(window.data(), QPoint(100, 100), point, duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 100), point, duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(150));
 
     // move back up
-    flick(window.data(), point, QPoint(100, 100), duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, point, QPoint(100, 100), duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(50));
 
-    flick(window.data(), point, QPoint(100, 100), duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, point, QPoint(100, 100), duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(0));
 
-    flick(window.data(), point, QPoint(100, 100), duration);
+    QQuickTest::pointerFlick(device, window.data(), 0, point, QPoint(100, 100), duration);
     QTRY_VERIFY(!listview->isMovingVertically());
     QCOMPARE(listview->contentY(), qreal(-50));
 }
@@ -5166,6 +5167,7 @@ void tst_QQuickListView::marginsResize()
     QFETCH(QQuickItemView::VerticalLayoutDirection, verticalLayoutDirection);
     QFETCH(qreal, start);
     QFETCH(qreal, end);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QPoint flickStart(20, 20);
     QPoint flickEnd(20, 20);
@@ -5205,7 +5207,7 @@ void tst_QQuickListView::marginsResize()
         QTRY_COMPARE(listview->contentX(), end);
 
     // flick past the end and check content pos still settles on correct extents
-    flick(window, flickStart, flickEnd, flickDistance);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, flickDistance);
     QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), end);
@@ -5220,7 +5222,7 @@ void tst_QQuickListView::marginsResize()
         QTRY_COMPARE(listview->contentX(), start);
 
     // flick past the beginning and check content pos still settles on correct extents
-    flick(window, flickEnd, flickStart, flickDistance);
+    QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart, flickDistance);
     QTRY_VERIFY(!listview->isMoving());
     if (orientation == QQuickListView::Vertical)
         QTRY_COMPARE(listview->contentY(), start);
@@ -5313,6 +5315,7 @@ void tst_QQuickListView::snapToItem()
     QFETCH(qreal, snapAlignment);
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QQuickView *window = getView();
     QQuickViewTestUtils::moveMouseAway(window);
@@ -5335,7 +5338,7 @@ void tst_QQuickListView::snapToItem()
     QTRY_VERIFY(contentItem != nullptr);
 
     // confirm that a flick hits an item boundary
-    flick(window, flickStart, flickEnd, 180);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
     QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(qreal(fmod(listview->contentY(),80.0)), snapAlignment);
@@ -5344,7 +5347,7 @@ void tst_QQuickListView::snapToItem()
 
     // flick to end
     do {
-        flick(window, flickStart, flickEnd, 180);
+        QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
@@ -5357,7 +5360,7 @@ void tst_QQuickListView::snapToItem()
 
     // flick to start
     do {
-        flick(window, flickEnd, flickStart, 180);
+        QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart, 180);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()
@@ -5398,6 +5401,7 @@ void tst_QQuickListView::snapToItemWithSpacing_QTBUG_59852()
 
 void tst_QQuickListView::snapToItemWithSectionAtStart() // QTBUG-30768
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("snapToItemWithSectionAtStart.qml")));
     QQuickListView *listView = qobject_cast<QQuickListView *>(window.rootObject());
@@ -5411,7 +5415,7 @@ void tst_QQuickListView::snapToItemWithSectionAtStart() // QTBUG-30768
         const QPoint start = even ? QPoint(20, 100 + i * 5) : QPoint(20, 20 + i * 3);
         const QPoint end = even ? start - QPoint(0, 50 + i * 10) : start + QPoint(0, 50 + i * 5);
 
-        flick(&window, start, end, 180);
+        QQuickTest::pointerFlick(device, &window, 0, start, end, 180);
         QTRY_COMPARE(listView->isMoving(), false); // wait until it stops
         QCOMPARE(int(listView->contentY()) % 30, 0);
     }
@@ -6330,6 +6334,7 @@ void tst_QQuickListView::snapOneItem()
     QFETCH(qreal, endExtent);
     QFETCH(qreal, startExtent);
     QFETCH(qreal, flickSlowdown);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     qreal flickDuration = 180 * flickSlowdown;
 
@@ -6356,7 +6361,7 @@ void tst_QQuickListView::snapOneItem()
     QSignalSpy currentIndexSpy(listview, SIGNAL(currentIndexChanged()));
 
     // confirm that a flick hits the next item boundary
-    flick(window, flickStart, flickEnd, flickDuration);
+    QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, flickDuration);
     QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     if (orientation == QQuickListView::Vertical)
         QCOMPARE(listview->contentY(), snapAlignment);
@@ -6370,7 +6375,8 @@ void tst_QQuickListView::snapOneItem()
 
     // flick to end
     do {
-        flick(window, flickStart, flickEnd, flickDuration);
+        QQuickTest::pointerFlick(device, window, 0, flickStart, flickEnd, flickDuration,
+                                 Qt::LeftButton, Qt::NoModifier, 500);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYEnd() : !listview->isAtYBeginning()
@@ -6388,7 +6394,8 @@ void tst_QQuickListView::snapOneItem()
 
     // flick to start
     do {
-        flick(window, flickEnd, flickStart, flickDuration);
+        QQuickTest::pointerFlick(device, window, 0, flickEnd, flickStart, flickDuration,
+                                 Qt::LeftButton, Qt::NoModifier, 500);
         QTRY_VERIFY(listview->isMoving() == false); // wait until it stops
     } while (orientation == QQuickListView::Vertical
            ? verticalLayoutDirection == QQuickItemView::TopToBottom ? !listview->isAtYBeginning() : !listview->isAtYEnd()
@@ -7968,6 +7975,7 @@ void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QLi
 
 void tst_QQuickListView::flickBeyondBounds()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     QQuickVisualTestUtils::moveMouseAway(window.data());
 
@@ -7984,7 +7992,7 @@ void tst_QQuickListView::flickBeyondBounds()
     QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     // Flick view up beyond bounds
-    flick(window.data(), QPoint(10, 10), QPoint(10, -2000), 180);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(10, 10), QPoint(10, -2000), 180);
 #ifdef Q_OS_MAC
     QSKIP("Disabled due to flaky behavior on CI system (QTBUG-44493)");
     QTRY_COMPARE(findItems<QQuickItem>(contentItem, "wrapper").count(), 0);
@@ -8009,6 +8017,7 @@ void tst_QQuickListView::flickBothDirections()
     QFETCH(qreal, contentWidth);
     QFETCH(qreal, contentHeight);
     QFETCH(QPointF, targetPos);
+    auto device = QPointingDevice::primaryPointingDevice();
 
     QQuickView *window = getView();
     QQuickViewTestUtils::moveMouseAway(window);
@@ -8035,7 +8044,7 @@ void tst_QQuickListView::flickBothDirections()
             listview->setContentHeight(contentHeight);
     }
 
-    flick(window, QPoint(140, 140), QPoint(25, 25), 50);
+    QQuickTest::pointerFlick(device, window, 0, QPoint(140, 140), QPoint(25, 25), 50);
     QVERIFY(listview->isMoving());
     QTRY_VERIFY(!listview->isMoving());
     QCOMPARE(listview->contentX(), targetPos.x());
@@ -8850,6 +8859,7 @@ void tst_QQuickListView::roundingErrors_data()
 
 void tst_QQuickListView::QTBUG_38209()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("simplelistview.qml"));
     window->show();
@@ -8859,7 +8869,7 @@ void tst_QQuickListView::QTBUG_38209()
     QVERIFY(listview);
 
     // simulate mouse flick
-    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 200), QPoint(200, 50), 100);
     QTRY_VERIFY(!listview->isMoving());
     qreal contentY = listview->contentY();
 
@@ -9225,6 +9235,7 @@ void tst_QQuickListView::contentHeightWithDelayRemove()
 
 void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("qtbug48044.qml"));
     window->show();
@@ -9239,7 +9250,7 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
     QTRY_VERIFY(listview->property("transitionsDone").toBool());
 
     // Flick listview to the bottom
-    flick(window.data(), QPoint(window->width() / 2, 400), QPoint(window->width() / 2, 0), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(window->width() / 2, 400), QPoint(window->width() / 2, 0), 100);
     QTRY_VERIFY(!listview->isMoving());
 
     // Expand 3rd header
@@ -9260,6 +9271,7 @@ void tst_QQuickListView::QTBUG_48044_currentItemNotVisibleAfterTransition()
 
 void tst_QQuickListView::keyNavigationEnabled()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("keyNavigationEnabled.qml"));
     window->show();
@@ -9282,7 +9294,7 @@ void tst_QQuickListView::keyNavigationEnabled()
     QCOMPARE(enabledSpy.size(), 1);
     QCOMPARE(listView->isKeyNavigationEnabled(), false);
 
-    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 200), QPoint(200, 50), 100);
     QVERIFY(!listView->isMoving());
     QCOMPARE(listView->contentY(), 0.0);
     QCOMPARE(listView->currentIndex(), 0);
@@ -9303,7 +9315,7 @@ void tst_QQuickListView::keyNavigationEnabled()
     // Setting keyNavigationEnabled to true shouldn't enable mouse interaction.
     listView->setKeyNavigationEnabled(true);
     QCOMPARE(enabledSpy.size(), 4);
-    flick(window.data(), QPoint(200, 200), QPoint(200, 50), 100);
+    QQuickTest::pointerFlick(device, window.data(), 0, QPoint(200, 200), QPoint(200, 50), 100);
     QVERIFY(!listView->isMoving());
     QCOMPARE(listView->contentY(), 0.0);
     QCOMPARE(listView->currentIndex(), 0);
@@ -9369,6 +9381,7 @@ void tst_QQuickListView::QTBUG_61269_appendDuringScrollDown() // AKA QTBUG-62864
 
 void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
 {
+    auto device = QPointingDevice::primaryPointingDevice();
     StressTestModel model;
 
     QScopedPointer<QQuickView> window(createView());
@@ -9396,9 +9409,9 @@ void tst_QQuickListView::QTBUG_48870_fastModelUpdates()
                                         : QString("Found index %1, expected index is %3").arg(item->index).arg(expectedIdx)));
         if (i % 3 != 0) {
             if (i & 1)
-                flick(window.data(), QPoint(100, 200), QPoint(100, 0), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 0), 100);
             else
-                flick(window.data(), QPoint(100, 200), QPoint(100, 400), 100);
+                QQuickTest::pointerFlick(device, window.data(), 0, QPoint(100, 200), QPoint(100, 400), 100);
         }
     }
 }

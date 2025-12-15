@@ -52,7 +52,7 @@ Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_entry, const QV4::Compiled
 Q_TRACE_POINT(qtqml, QQmlObjectCreator_createInstance_exit, const QString &typeName)
 
 QQmlObjectCreator::QQmlObjectCreator(
-        QQmlRefPointer<QQmlContextData> parentContext,
+        const QQmlRefPointer<QQmlContextData> &parentContext,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
         const QQmlRefPointer<QQmlContextData> &creationContext,
         QQmlIncubatorPrivate *incubator)
@@ -64,7 +64,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     , isContextObject(true)
     , incubator(incubator)
 {
-    init(std::move(parentContext));
+    init(parentContext);
 
     sharedState->componentAttached = nullptr;
     sharedState->allCreatedBindings.allocate(compilationUnit->totalBindingsCount());
@@ -83,7 +83,8 @@ QQmlObjectCreator::QQmlObjectCreator(
     }
 }
 
-QQmlObjectCreator::QQmlObjectCreator(QQmlRefPointer<QQmlContextData> parentContext,
+QQmlObjectCreator::QQmlObjectCreator(
+        const QQmlRefPointer<QQmlContextData> &parentContext,
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
         QQmlObjectCreatorSharedState *inheritedSharedState, bool isContextObject)
     : phase(Startup)
@@ -94,12 +95,12 @@ QQmlObjectCreator::QQmlObjectCreator(QQmlRefPointer<QQmlContextData> parentConte
     , isContextObject(isContextObject)
     , incubator(nullptr)
 {
-    init(std::move(parentContext));
+    init(parentContext);
 }
 
-void QQmlObjectCreator::init(QQmlRefPointer<QQmlContextData> providedParentContext)
+void QQmlObjectCreator::init(const QQmlRefPointer<QQmlContextData> &providedParentContext)
 {
-    parentContext = std::move(providedParentContext);
+    parentContext = providedParentContext;
     engine = parentContext->engine();
     v4 = engine->handle();
 

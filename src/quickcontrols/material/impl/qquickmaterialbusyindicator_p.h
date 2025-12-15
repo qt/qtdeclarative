@@ -45,6 +45,7 @@ protected:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
 private:
+    bool m_running = false;
     int m_elapsed = 0;
     QColor m_color = Qt::black;
 };

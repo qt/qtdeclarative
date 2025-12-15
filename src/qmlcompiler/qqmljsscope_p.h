@@ -82,6 +82,7 @@ public:
         HasBaseTypeError = 0x100,
         HasExtensionNamespace = 0x200,
         IsListProperty = 0x400,
+        EnforcesScopedEnums = 0x2000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -547,6 +548,10 @@ QT_WARNING_POP
     bool isInlineComponent() const { return m_flags & InlineComponent; }
     bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     bool extensionIsNamespace() const { return m_flags & HasExtensionNamespace; }
+
+    bool enforcesScopedEnums() const;
+    void setEnforcesScopedEnumsFlag(bool v) { m_flags.setFlag(EnforcesScopedEnums, v); }
+
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setCreatableFlag(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
@@ -725,6 +730,7 @@ private:
 
     void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
                                            BindingTargetSpecifier specifier);
+    bool hasEnforcesScopedEnumsFlag() const { return m_flags & EnforcesScopedEnums; }
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 

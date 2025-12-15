@@ -520,8 +520,8 @@ class MyItem: public QQuickItem { ... };
 \endcode
 
 then one has to make sure that the module containing \c QQuickItem, called
-\c Quick, is declared as a dependency via the \c DEPENDENCIES option. Not doing
-so might result in errors during type compilation with
+\c QtQuick, is declared as a dependency via the \c DEPENDENCIES option. Not
+doing so might result in errors during type compilation with
 \l{QML type compiler}{qmltc} or during binding and function compilation to C++
 with \l{qmlcachegen-auto}{qmlcachegen}.
 

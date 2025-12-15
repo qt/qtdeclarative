@@ -127,6 +127,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (collector.hasCustomParser)
         m_qml.writeScriptBinding(QLatin1String("hasCustomParser"), QLatin1String("true"));
 
+    if (collector.enforcesScopedEnums)
+        m_qml.writeScriptBinding(QLatin1String("enforcesScopedEnums"), QLatin1String("true"));
+
     m_qml.writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjects);
 
     if (!collector.attachedType.isEmpty())
@@ -312,8 +315,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
     }
 }
 
-void QmlTypesCreator::writeEnums(
-        const QJsonArray &enums, QmlTypesCreator::EnumClassesMode enumClassesMode)
+void QmlTypesCreator::writeEnums(const QJsonArray &enums)
 {
     for (const QJsonValue item : enums) {
         const QJsonObject obj = item.toObject();
@@ -333,11 +335,9 @@ void QmlTypesCreator::writeEnums(
         if (isFlag != obj.end() && isFlag->toBool())
             m_qml.writeBooleanBinding(isFlag.key(), true);
 
-        if (enumClassesMode == EnumClassesMode::Scoped) {
-            const auto isClass = obj.find(QLatin1String("isClass"));
-            if (isClass != obj.end() && isClass->toBool())
-                m_qml.writeBooleanBinding(QLatin1String("isScoped"), true);
-        }
+        const auto isClass = obj.find(QLatin1String("isClass"));
+        if (isClass != obj.end() && isClass->toBool())
+            m_qml.writeBooleanBinding(QLatin1String("isScoped"), true);
 
         m_qml.writeArrayBinding(QLatin1String("values"), valueList);
         m_qml.writeEndObject();
@@ -395,11 +395,7 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         if (const QJsonObject *classDef = collector.resolvedClass) {
-            writeEnums(
-                    members(classDef, enumsKey, m_version),
-                    collector.registerEnumClassesScoped
-                            ? EnumClassesMode::Scoped
-                            : EnumClassesMode::Unscoped);
+            writeEnums(members(classDef, enumsKey, m_version));
 
             writeProperties(members(classDef, propertiesKey, m_version));
 
@@ -424,11 +420,7 @@ void QmlTypesCreator::writeComponents()
             collector.collectLocalAnonymous(&component, m_ownTypes, m_foreignTypes, m_version);
 
             writeClassProperties(collector);
-            writeEnums(
-                    members(&component, enumsKey, m_version),
-                    collector.registerEnumClassesScoped
-                            ? EnumClassesMode::Scoped
-                            : EnumClassesMode::Unscoped);
+            writeEnums(members(&component, enumsKey, m_version));
 
             writeProperties(members(&component, propertiesKey, m_version));
 

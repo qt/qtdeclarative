@@ -162,13 +162,16 @@ void QQuickMaterialBusyIndicator::setColor(const QColor &color)
 
 bool QQuickMaterialBusyIndicator::isRunning() const
 {
-    return isVisible();
+    return m_running;
 }
 
 void QQuickMaterialBusyIndicator::setRunning(bool running)
 {
-    if (running)
+    m_running = running;
+
+    if (m_running)
         setVisible(true);
+    // Don't set visible to false if not running, because we use an opacity animation (in QML) to hide ourselves.
 }
 
 int QQuickMaterialBusyIndicator::elapsed() const
@@ -181,7 +184,12 @@ void QQuickMaterialBusyIndicator::itemChange(QQuickItem::ItemChange change, cons
     QQuickItem::itemChange(change, data);
     switch (change) {
     case ItemOpacityHasChanged:
-        if (qFuzzyIsNull(data.realValue))
+        // If running is set to false and then true within a short period (QTBUG-85860), our
+        // OpacityAnimator cancels the 1 => 0 animation (which was for running being set to false),
+        // setting opacity to 0 and hence visible to false. This happens _after_ setRunning(true)
+        // was called, because the properties were set synchronously but the animation is
+        // asynchronous. To account for this situation, we only hide ourselves if we're not running.
+        if (qFuzzyIsNull(data.realValue) && !m_running)
             setVisible(false);
         break;
     case ItemVisibleHasChanged:

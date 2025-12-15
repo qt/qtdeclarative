@@ -2497,7 +2497,9 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
                 // One case where this can happen is moving an item out of one ObjectModel and into another.
                 QQuickItemPrivate::get(item->item)->setCulled(true);
             }
-            if (!isClearing)
+            // If deleteLater was called, the item isn't long for this world and so we shouldn't store references to it.
+            // This can happen when a Repeater is used to populate items in SwipeView's ListView contentItem.
+            if (!isClearing && !QObjectPrivate::get(item->item)->deleteLaterCalled)
                 unrequestedItems.insert(item->item, model->indexOf(item->item, q));
         } else if (flags & QQmlInstanceModel::Destroyed) {
             item->item->setParentItem(nullptr);

@@ -514,12 +514,14 @@ public:
 
     void setDebugger(Debugging::Debugger *) {}
     void setProfiler(Profiling::Profiler *) {}
+    static void setPreviewing(bool) {}
 #else
     QV4::Debugging::Debugger *debugger() const { return m_debugger.data(); }
     QV4::Profiling::Profiler *profiler() const { return m_profiler.data(); }
 
     void setDebugger(Debugging::Debugger *debugger);
     void setProfiler(Profiling::Profiler *profiler);
+    static void setPreviewing(bool enabled);
 #endif // QT_CONFIG(qml_debug)
 
     ExecutionContext *currentContext() const { return currentStackFrame->context(); }
