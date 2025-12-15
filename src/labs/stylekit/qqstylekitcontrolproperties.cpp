@@ -11,6 +11,8 @@ QT_BEGIN_NAMESPACE
 
 // ************* QQStyleKitPropertyGroup ****************
 
+QHash<PropertyPathId_t, QString> QQStyleKitPropertyGroup::s_pathStrings;
+
 QQStyleKitPropertyGroup::QQStyleKitPropertyGroup(QQSK::PropertyGroup, QObject *parent)
     : QObject(parent)
 {
@@ -25,6 +27,51 @@ PropertyPathId QQStyleKitPropertyGroup::propertyPathId(QQSK::Property property, 
             return PropertyPathId(property, m_groupSpace.start, QQSK::PropertyGroup::DelegateSubtype2);
     }
     return PropertyPathId(property, m_groupSpace.start, QQSK::PropertyGroup::DelegateSubtype0);
+}
+
+QString QQStyleKitPropertyGroup::pathToString() const
+{
+    /* Start from the root of the path and build the path down to this group. This
+     * mirrors how the groups were originally created and avoids rounding issues
+     * that can arise if attempting to reconstruct the path “backwards”.
+     * Note: For each group, m_groupSpace.start is stored relative to the root,
+     * while m_groupSpace.size is relative to the parent group. However, when
+     * calculating the group index, the group-space start must be computed
+     * relative to the parent group.
+     * We cache the requested paths, as the same paths are typically requested
+     * repeatedly. The number of possible paths (and thus leaf groups) is well below
+     * 100, and in practice the cache usually ends up with fewer than 20 entries. */
+    if (s_pathStrings.contains(m_groupSpace.start))
+        return s_pathStrings[m_groupSpace.start];
+
+    constexpr PropertyPathId_t rootGroupsSize = nestedGroupsStartSize / nestedGroupCount;
+    const auto metaEnum = QMetaEnum::fromType<QQSK::PropertyGroup>();
+
+    PropertyPathId_t nestedGroupStart = m_groupSpace.start;
+    PropertyPathId_t nestedGroupSize = rootGroupsSize;
+    PropertyPathId_t nestedGroupIndex = nestedGroupStart / nestedGroupSize;
+    auto groupType = QQSK::PropertyGroup(nestedGroupIndex);
+    if (groupType == QQSK::PropertyGroup::Control)
+        return {};
+
+    QString groupName = QString::fromLatin1(metaEnum.valueToKey(static_cast<int>(groupType)));
+    groupName[0] = groupName[0].toLower();
+    QString pathString = groupName;
+
+    while (true) {
+        nestedGroupStart -= nestedGroupIndex * nestedGroupSize;
+        nestedGroupSize /= nestedGroupCount;
+        nestedGroupIndex = nestedGroupStart / nestedGroupSize;
+        groupType = QQSK::PropertyGroup(nestedGroupIndex);
+        if (groupType == QQSK::PropertyGroup::Control)
+            break;
+
+        QString groupName = QString::fromLatin1(metaEnum.valueToKey(static_cast<int>(groupType)));
+        groupName[0] = groupName[0].toLower();
+        pathString += '.'_L1 + groupName;
+    }
+
+    return pathString;
 }
 
 QQStyleKitControlProperties *QQStyleKitPropertyGroup::controlProperties() const
@@ -63,9 +110,8 @@ T *QQStyleKitPropertyGroup::lazyCreateGroup(T * const &ptr, QQSK::PropertyGroup 
         /* Calculate the available property ID space for the nested group. This is done by
          * dividing the available space inside _this_ group on the number of potential groups
          * that _this_ group can potentially contain. */
-        constexpr PropertyPathId_t groupCount = PropertyPathId_t(QQSK::PropertyGroup::PATH_ID_GROUP_COUNT);
         const PropertyPathId_t nestedGroupIndex = PropertyPathId_t(group);
-        const PropertyPathId_t nestedGroupSize = m_groupSpace.size / groupCount;
+        const PropertyPathId_t nestedGroupSize = m_groupSpace.size / nestedGroupCount;
         nestedGroup->m_groupSpace.size = nestedGroupSize;
         nestedGroup->m_groupSpace.start = m_groupSpace.start + (nestedGroupIndex * nestedGroupSize);
         /* Ensure that we haven’t exhausted the available PropertyPathId space. There must be

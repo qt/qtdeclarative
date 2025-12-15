@@ -171,6 +171,7 @@ using QQStyleKitExtendableControlType = quint32;
 using QQStyleKitPropertyStorage = QHash<PropertyStorageId, QVariant>;
 
 constexpr PropertyPathId_t maxPropertyStorageSpaceSize = std::numeric_limits<PropertyPathId_t>::max();
+constexpr PropertyPathId_t nestedGroupCount = PropertyPathId_t(QQSK::PropertyGroup::PATH_ID_GROUP_COUNT);
 constexpr PropertyPathId_t maxStateCombinationCount = PropertyPathId_t(QQSK::StateFlag::MAX_STATE);
 constexpr PropertyPathId_t stateStorageSpaceSize = maxPropertyStorageSpaceSize / maxStateCombinationCount;
 constexpr PropertyPathId_t subtypeCount = PropertyPathId_t(QQSK::PropertyPathFlag::DelegateSubtype2) - PropertyPathId_t(QQSK::PropertyPathFlag::DelegateSubtype0) + 1;

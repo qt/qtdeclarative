@@ -45,6 +45,7 @@ public:
     QQStyleKitPropertyGroup(QQSK::PropertyGroup group, QObject *parent);
 
     PropertyPathId propertyPathId(QQSK::Property property, PropertyPathId::Flag flag) const;
+    QString pathToString() const;
 
     template<typename T>
     inline T styleProperty(
@@ -101,6 +102,8 @@ protected:
 private:
     bool shouldEmitLocally();
     bool shouldEmitGlobally();
+
+    static QHash<PropertyPathId_t, QString> s_pathStrings;
 };
 
 // ************* QQStyleKitImageProperties ****************

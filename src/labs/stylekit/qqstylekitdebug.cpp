@@ -52,37 +52,12 @@ QString QQStyleKitDebug::styleReaderToString(const QQStyleKitReader *reader)
 
 QString QQStyleKitDebug::propertyPath(const QQStyleKitPropertyGroup *group, const PropertyPathId property)
 {
-    QString path = enumToString(property.property());
-    path[0] = path[0].toLower();
-    const QQStyleKitPropertyGroup *childGroup = group;
-    const int startIndex = QQStyleKitPropertyGroup::staticMetaObject.propertyOffset();
-
-    while (childGroup) {
-        if (childGroup->isControlProperties())
-            break;
-        const QQStyleKitPropertyGroup *parentGroup =
-            qobject_cast<const QQStyleKitPropertyGroup *>(childGroup->parent());
-        if (!parentGroup)
-            break;
-
-        // Resolve group name by inspecting which property in the parent group it belongs to
-        const QMetaObject* parentMeta = parentGroup->metaObject();
-        for (int i = startIndex; i < parentMeta->propertyCount(); ++i) {
-            const QMetaProperty prop = parentMeta->property(i);
-            const QMetaObject* typeMeta = QMetaType::fromName(prop.typeName()).metaObject();
-            if (!typeMeta || !typeMeta->inherits(&QQStyleKitPropertyGroup::staticMetaObject))
-                continue;
-            QObject *propGroup = prop.read(parentGroup).value<QQStyleKitPropertyGroup *>();
-            if (propGroup == childGroup) {
-                path.prepend(QString::fromUtf8(prop.name()) + kDot);
-                break;
-            }
-        }
-
-        childGroup = parentGroup;
-    }
-
-    return path;
+    const QString path = group->pathToString();
+    QString propertyName = enumToString(property.property());
+    propertyName[0] = propertyName[0].toLower();
+    if (path.isEmpty())
+        return propertyName;
+    return path + kDot + propertyName;
 }
 
 QString QQStyleKitDebug::controlToString(const QQStyleKitControlProperties *control)
