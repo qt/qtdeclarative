@@ -100,6 +100,7 @@ private:
     void recreateTheme();
     void executeFallbackStyle(bool complete = false);
     void setPalette(QQuickPalette *palette);
+    void syncPaletteFromReader();
 
 private:
     Q_DISABLE_COPY(QQStyleKitStyle)
@@ -112,6 +113,7 @@ private:
     QPointer<QQmlComponent> m_dark;
     QPointer<QQStyleKitTheme> m_theme;
     QPointer<QQmlComponent> m_currentThemeComponent;
+    QQuickPalette *m_paletteProxy = nullptr;
     QPointer<QQuickPalette> m_palette;
     QString m_themeName;
     QString m_effectiveThemeName;

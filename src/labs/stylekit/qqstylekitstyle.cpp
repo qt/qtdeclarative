@@ -22,6 +22,7 @@ static const QString kDark = "Dark"_L1;
 
 QQStyleKitStyle::QQStyleKitStyle(QObject *parent)
     : QQStyleKitStyleAndThemeBase(parent)
+    , m_paletteProxy(new QQuickPalette)
     , m_themeName(kSystem)
 {
 }
@@ -34,11 +35,7 @@ QQStyleKitStyle::~QQStyleKitStyle()
 
 QQuickPalette *QQStyleKitStyle::palette() const
 {
-    if (!m_palette) {
-        static QQuickPalette placeholder;
-        return &placeholder;
-    }
-    return const_cast<QQStyleKitStyle *>(this)->m_palette.get();
+    return m_paletteProxy;
 }
 
 QQmlComponent *QQStyleKitStyle::light() const
@@ -330,8 +327,24 @@ void QQStyleKitStyle::setPalette(QQuickPalette *palette)
     if (m_palette && palette && m_palette->toQPalette() == palette->toQPalette())
         return;
 
+    if (m_palette)
+        QObject::disconnect(m_palette, nullptr, this, nullptr);
+
     m_palette = palette;
 
+    if (m_palette)
+        QObject::connect(m_palette, &QQuickPalette::changed,
+                         this, &QQStyleKitStyle::syncPaletteFromReader);
+
+    syncPaletteFromReader();
+}
+
+void QQStyleKitStyle::syncPaletteFromReader()
+{
+    QPalette p = m_palette ? m_palette->toQPalette() : QPalette{};
+    // Mark all roles as resolved
+    p.setResolveMask(~QPalette::ResolveMask(0));
+    m_paletteProxy->fromQPalette(p);
     QScopedValueRollback rollback(m_isUpdatingPalette, true);
     emit paletteChanged();
 }
