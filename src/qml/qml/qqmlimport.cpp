@@ -544,7 +544,10 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                                      QQmlImport::RecursionRestriction recursionRestriction,
                                      QList<QQmlError> *errors) const
 {
-    QQmlType t = QQmlMetaType::qmlType(type, uri, version);
+    // QQmlMetaType assumes that without a URI, it should look for types in any module
+    // But QQmlImportInstance without a URI represents a directory import, and _must not_ find
+    // types from completely unrelated modules
+    QQmlType t = uri.isEmpty() ? QQmlType() : QQmlMetaType::qmlType(type, uri, version);
     if (t.isValid()) {
         if (version_return)
             *version_return = version;

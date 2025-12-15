@@ -64,6 +64,7 @@ private slots:
     void partialImportVersions();
     void registerModuleImport();
     void importDependenciesPrecedence();
+    void importFromNamespacedDirctoryResolvesCorrectly();
     void cleanup();
     void envResourceImportPath();
     void preferResourcePath_data();
@@ -668,6 +669,23 @@ void tst_QQmlImport::importDependenciesPrecedence()
     QVERIFY(!instance.isNull());
     QCOMPARE(instance->property("a").toString(), QString::fromLatin1("a"));
     QCOMPARE(instance->property("b").toString(), QString::fromLatin1("b"));
+}
+
+void tst_QQmlImport::importFromNamespacedDirctoryResolvesCorrectly()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent component(&engine);
+    component.loadFromModule("QtQml", "Timer"); // ensure Timer is resolved once to QtQml already
+    QHashedString module {};
+    QHashedString typeName { QLatin1String("Timer") };
+    QVERIFY(QQmlMetaType::qmlType(typeName, module, {}).isValid());
+
+    component.loadUrl(testFileUrl("UsingCustomTimer.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QVERIFY(root->property("success").toBool());
 }
 
 
