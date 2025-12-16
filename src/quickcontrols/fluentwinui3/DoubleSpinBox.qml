@@ -60,6 +60,10 @@ T.DoubleSpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        ContextMenu.menu: Impl.TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     down.indicator: Impl.StyleImage {

@@ -51,6 +51,10 @@ T.DoubleSpinBox {
         inputMethodHints: control.inputMethodHints
         clip: width < implicitWidth
 
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
+
         NinePatchImage {
             z: -1
             width: control.width

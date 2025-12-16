@@ -5,6 +5,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
+import QtQuick.Controls.macOS.impl
 
 T.DoubleSpinBox {
     id: control
@@ -48,6 +49,10 @@ T.DoubleSpinBox {
         inputMethodHints: control.inputMethodHints
 
         readonly property bool __ignoreNotCustomizable: true
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     NativeStyle.DoubleSpinBox {

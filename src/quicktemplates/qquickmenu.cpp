@@ -111,8 +111,8 @@ static const int SUBMENU_DELAY = 225;
 
     For context menus, it is easier to use the \l ContextMenu attached type,
     which creates a menu upon a platform-specific event. In addition, text
-    editing controls such as \l TextField, \l TextArea, and \l SpinBox provide
-    their own context menus by default.
+    editing controls such as \l TextField, \l TextArea, \l SpinBox, and
+    \l DoubleSpinBox provide their own context menus by default.
 
     If not using \c ContextMenu, the recommended way of opening the menu is to
     call \l popup(). Unless a position is explicitly specified, the menu is

@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.impl
 import QtQuick.Controls.Universal
+import QtQuick.Controls.Universal.impl
 
 T.DoubleSpinBox {
     id: control
@@ -49,6 +50,10 @@ T.DoubleSpinBox {
         validator: control.validator
         inputMethodHints: control.inputMethodHints
         clip: width < implicitWidth
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
     }
 
     up.indicator: Item {

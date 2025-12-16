@@ -4,6 +4,7 @@
 
 import QtQuick
 import QtQuick.Controls.impl
+import QtQuick.Controls.Basic.impl
 import QtQuick.Templates as T
 
 T.DoubleSpinBox {
@@ -42,6 +43,10 @@ T.DoubleSpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        ContextMenu.menu: TextEditingContextMenu {
+            editor: parent
+        }
 
         Rectangle {
             width: parent.width

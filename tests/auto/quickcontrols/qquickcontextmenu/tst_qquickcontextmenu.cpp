@@ -528,6 +528,7 @@ void tst_QQuickContextMenu::textEditingContextMenuData()
     QTest::addRow("TextArea") << "textAreaInPane.qml" << textComplete;
     QTest::addRow("TextField") << "textFieldInPane.qml" << textComplete;
     QTest::addRow("SpinBox") << "spinBoxInPane.qml" << textCompleteLocaleSpecific;
+    QTest::addRow("DoubleSpinBox") << "doubleSpinBoxInPane.qml" << textCompleteLocaleSpecific;
     QTest::addRow("ComboBox") << "editableComboBoxInPane.qml" << textComplete;
     QTest::addRow("SearchField") << "searchFieldInPane.qml" << textComplete;
 }

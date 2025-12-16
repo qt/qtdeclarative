@@ -5,6 +5,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
+import QtQuick.Controls.Windows.impl as WindowsImpl
 
 T.DoubleSpinBox {
     id: control
@@ -51,6 +52,10 @@ T.DoubleSpinBox {
         clip: width < implicitWidth
 
         readonly property bool __ignoreNotCustomizable: true
+
+        ContextMenu.menu: WindowsImpl.TextEditingContextMenu {
+            editor: parent
+        }
 
         // Since the indicators are embedded inside the TextField we need to avoid that
         // the TextField consumes mouse events for that area.
