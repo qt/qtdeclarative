@@ -16,6 +16,10 @@ for ease of use. It also warns about some QML anti-patterns. If you want to
 disable a specific warning type, you can find the appropriate flag for doing so
 by passing \c{--help} on the command line.
 
+\note When using IDE, such as Qt Creator, you don't need to run \c qmllint
+manually. The IDE uses \l {QML Language Server#Linting}{QML Language Server},
+that provides real-time linting output and diagnostics as you type.
+
 By default, some issues will result in warnings that will be printed. If there
 are more warnings than a limit which can be configured with \c{--max-warnings},
 the exit code will be non-zero.
