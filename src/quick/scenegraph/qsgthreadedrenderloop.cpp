@@ -1158,7 +1158,7 @@ void QSGThreadedRenderLoop::hide(QQuickWindow *window)
 
 void QSGThreadedRenderLoop::resize(QQuickWindow *window)
 {
-    qCDebug(QSG_LOG_RENDERLOOP) << "reisze()" << window;
+    qCDebug(QSG_LOG_RENDERLOOP) << "resize()" << window;
 
     Window *w = windowFor(window);
     if (!w)
