@@ -935,4 +935,44 @@ void tst_qmlls_qqmlcodemodel::multipleQProcessScheduler()
     }
 }
 
+void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
+{
+    QmlLsp::QQmlCodeModelManager manager;
+    const QByteArray rootUrl{ testFileUrl("rootA").toEncoded() };
+
+    QTemporaryDir temporaryDir;
+    QVERIFY(temporaryDir.isValid());
+    manager.addRootUrls({ rootUrl });
+
+    manager.setBuildPathsForRootUrl(rootUrl, { temporaryDir.path() });
+    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ temporaryDir.path() });
+
+    QDir dir(temporaryDir.path());
+    dir.mkdir(".qt"_L1);
+
+    {
+        QFile file(temporaryDir.filePath(".qt/.qmlls.build.ini"_L1));
+        QVERIFY(file.open(QFile::WriteOnly | QFile::Text));
+        file.write("[General]\n[%1]\nimportPaths=\"test\"\n"_L1
+                           .arg(testFile("rootA").replace("/"_L1, "<SLASH>"_L1))
+                           .toUtf8());
+    }
+
+    manager.onBuildFinished(rootUrl);
+
+    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ testFile("test"_L1) });
+
+    {
+        QFile file(temporaryDir.filePath(".qt/.qmlls.build.ini"_L1));
+        QVERIFY(file.open(QFile::WriteOnly | QFile::Truncate | QFile::Text));
+        file.write("[General]\n[%1]\nimportPaths=\"test2\"\n"_L1
+                           .arg(testFile("rootA").replace("/"_L1, "<SLASH>"_L1))
+                           .toUtf8());
+    }
+
+    manager.onBuildFinished(rootUrl);
+
+    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ testFile("test2"_L1) });
+}
+
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)

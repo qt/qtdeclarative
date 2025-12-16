@@ -81,12 +81,14 @@ struct ModuleSetting
     QStringList resourceFiles;
 };
 
+enum UpdatePolicy { NormalUpdate, ForceUpdate };
+
 using ModuleSettings = QList<ModuleSetting>;
 class QQmllsBuildInformation
 {
 public:
     QQmllsBuildInformation();
-    void loadSettingsFrom(const QStringList &buildPaths);
+    void loadSettingsFrom(const QStringList &buildPaths, UpdatePolicy policy = NormalUpdate);
     QStringList importPathsFor(const QString &filePath);
     QStringList resourceFilesFor(const QString &filePath);
     ModuleSetting settingFor(const QString &filePath);
@@ -96,8 +98,6 @@ private:
     ModuleSettings m_moduleSettings;
     QSet<QString> m_seenSettings;
 };
-
-enum UpdatePolicy { NormalUpdate, ForceUpdate };
 
 class QQmlCodeModel : public QObject
 {

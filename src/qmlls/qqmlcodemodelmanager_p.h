@@ -86,11 +86,14 @@ public:
     {
         return fallbackCodeModel()->documentationRootPath();
     }
-private slots:
+public slots:
     void onCMakeProberFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void onBuildFinished(const QByteArray &rootUrl);
 
 private:
-    void setBuildPathsOn(const QQmlWorkspace *ws, const QStringList &buildFolder);
+    enum SetBuildPathOption { AppendPathsFromFallback, DontAppendPathsFromFallback };
+    void setBuildPathsOn(const QQmlWorkspace *ws, const QStringList &buildFolder,
+                         SetBuildPathOption option);
 
 protected:
     using Workspaces = std::vector<QQmlWorkspace>;
