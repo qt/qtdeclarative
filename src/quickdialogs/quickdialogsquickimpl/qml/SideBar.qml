@@ -33,25 +33,32 @@ DialogsQuickImpl.SideBar {
 
     buttonDelegate: Button {
         id: buttonDelegateRoot
-        flat: true
-        highlighted: control.currentIndex === index
-        width: listView.width
-
-        contentItem: IconLabel {
-            spacing: 5
-            leftPadding: 10
-            topPadding: 3
-            bottomPadding: 3
-            icon: buttonDelegateRoot.icon
-            text: buttonDelegateRoot.folderName
-            font: buttonDelegateRoot.font
-            // same as the icon color
-            color: buttonDelegateRoot.icon.color
-            alignment: Qt.AlignLeft
-        }
 
         required property int index
         required property string folderName
+
+        flat: true
+        highlighted: control.currentIndex === index
+        width: listView.width
+        text: folderName
+        spacing: 5
+        icon.color: highlighted ? palette.highlightedText : palette.text
+        contentItem: IconLabel {
+            leftPadding: 10
+            topPadding: 3
+            bottomPadding: 3
+            alignment: Qt.AlignLeft
+            spacing: buttonDelegateRoot.spacing
+            icon: buttonDelegateRoot.icon
+            text: buttonDelegateRoot.text
+            font: buttonDelegateRoot.font
+            defaultIconColor: buttonDelegateRoot.icon.color
+            color: defaultIconColor
+        }
+
+        background: DelegateBackground {
+            control: buttonDelegateRoot
+        }
 
         Accessible.name: folderName
     }
@@ -71,23 +78,30 @@ DialogsQuickImpl.SideBar {
 
     addFavoriteDelegate: Button {
         id: addFavoriteDelegateRoot
-        flat: true
-        width: control.width
-        contentItem: IconLabel {
-            spacing: 5
-            leftPadding: 10
-            topPadding: 3
-            bottomPadding: 3
-            icon: addFavoriteDelegateRoot.icon
-            text: addFavoriteDelegateRoot.labelText
-            font: addFavoriteDelegateRoot.font
-            // same as the icon color
-            color: addFavoriteDelegateRoot.icon.color
-            alignment: Qt.AlignLeft
-            opacity: addFavoriteDelegateRoot.dragHovering ? 0.2 : 1.0
-        }
 
         required property string labelText
         required property bool dragHovering
+
+        flat: true
+        width: control.width
+        spacing: 5
+        icon.color: highlighted ? palette.highlightedText : palette.text
+        contentItem: IconLabel {
+            leftPadding: 10
+            topPadding: 3
+            bottomPadding: 3
+            alignment: Qt.AlignLeft
+            spacing: addFavoriteDelegateRoot.spacing
+            icon: addFavoriteDelegateRoot.icon
+            text: addFavoriteDelegateRoot.labelText
+            font: addFavoriteDelegateRoot.font
+            defaultIconColor: addFavoriteDelegateRoot.icon.color
+            color: defaultIconColor
+            opacity: addFavoriteDelegateRoot.dragHovering ? 0.2 : 1.0
+        }
+
+        background: DelegateBackground {
+            control: addFavoriteDelegateRoot
+        }
     }
 }

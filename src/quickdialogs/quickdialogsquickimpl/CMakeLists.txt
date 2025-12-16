@@ -8,6 +8,7 @@
 set(qml_files
     "qml/ColorDialog.qml"
     "qml/ColorInputs.qml"
+    "qml/DelegateBackground.qml"
     "qml/FileDialog.qml"
     "qml/FileDialogDelegate.qml"
     "qml/FileDialogDelegateLabel.qml"

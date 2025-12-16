@@ -49,11 +49,7 @@ DialogsQuickImpl.FileDialogDelegate {
         fileDetailRowWidth: control.fileDetailRowWidth
     }
 
-    background: Rectangle {
-        implicitWidth: 100
-        implicitHeight: 40
-        visible: control.down || control.highlighted || control.visualFocus
-        color: Color.blend(control.down ? control.palette.midlight : control.palette.light,
-                                          control.palette.highlight, control.highlighted ? 0.15 : 0.0)
+    background: DelegateBackground {
+        control: control
     }
 }
