@@ -22,7 +22,7 @@ static const QString kDark = "Dark"_L1;
 
 QQStyleKitStyle::QQStyleKitStyle(QObject *parent)
     : QQStyleKitStyleAndThemeBase(parent)
-    , m_paletteProxy(new QQuickPalette)
+    , m_paletteProxy(new QQuickPalette(this))
     , m_themeName(kSystem)
 {
 }
