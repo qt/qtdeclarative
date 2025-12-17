@@ -6,4 +6,8 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultFrame {
+    leftPadding: 9 + (__nativeBackground ? background.contentPadding.left : 0)
+    rightPadding: 9 + (__nativeBackground ? background.contentPadding.right : 0)
+    topPadding: 9 + (__nativeBackground ? background.contentPadding.top : 0)
+    bottomPadding: 9 + (__nativeBackground ? background.contentPadding.bottom : 0)
 }

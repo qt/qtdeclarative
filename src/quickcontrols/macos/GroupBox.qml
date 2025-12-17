@@ -8,6 +8,11 @@ import QtQuick.NativeStyle as NativeStyle
 NativeStyle.DefaultGroupBox {
     id: control
 
+    leftPadding: 9 + (__nativeBackground ? background.contentPadding.left : 0)
+    rightPadding: 9 + (__nativeBackground ? background.contentPadding.right : 0)
+    topPadding: 9 + (__nativeBackground ? background.contentPadding.top : 0)
+    bottomPadding: 9 + (__nativeBackground ? background.contentPadding.bottom : 0)
+
     label: Item {
         readonly property point labelPos : control.__nativeBackground
                                   ? background.labelPos
