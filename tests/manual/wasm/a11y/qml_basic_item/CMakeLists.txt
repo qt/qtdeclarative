@@ -33,11 +33,11 @@ set(qmake_immediate_resource_files
 )
 
 add_custom_command(
-    TARGET qml_basic_item PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
+    TARGET qml_basic_item
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${CMAKE_CURRENT_SOURCE_DIR}/basic_items.html
             ${CMAKE_CURRENT_BINARY_DIR}/basic_items.html
-    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/basic_items.html
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g0 -O3")
