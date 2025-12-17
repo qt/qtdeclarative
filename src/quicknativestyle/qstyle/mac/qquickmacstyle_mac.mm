@@ -1986,7 +1986,10 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const
         break;
     case PM_SearchFieldFocusFrameRadius:
     case PM_ComboBoxFocusFrameRadius:
-        ret = LargeSmallMini(opt, 5, 4, 1);
+        if (qt_apple_runningWithLiquidGlass())
+            ret = LargeSmallMini(opt, 8, 4, 1);
+        else
+            ret = LargeSmallMini(opt, 5, 4, 1);
         break;
     case PM_RadioButtonFocusFrameRadius:
         ret = 7;
@@ -4156,12 +4159,19 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
         }
         break;
     case SE_SearchFieldLayoutItem:
-      if (qstyleoption_cast<const QStyleOptionSearchField *>(opt)) {
-        rect = LargeSmallMini(opt,
-                              opt->rect.adjusted(2, 3, -2, -2),
-                              opt->rect.adjusted(2, 3, -2, -2),
-                              opt->rect.adjusted(2, 3, -2, -2));
-      }
+        if (qstyleoption_cast<const QStyleOptionSearchField *>(opt)) {
+            if (qt_apple_runningWithLiquidGlass()) {
+                rect = LargeSmallMini(opt,
+                                      opt->rect.adjusted(2, 4, -2, -4),
+                                      opt->rect.adjusted(2, 3, -2, -2),
+                                      opt->rect.adjusted(2, 3, -2, -2));
+            } else {
+                rect = LargeSmallMini(opt,
+                                      opt->rect.adjusted(2, 6, -2, -6),
+                                      opt->rect.adjusted(2, 3, -2, -2),
+                                      opt->rect.adjusted(2, 3, -2, -2));
+            }
+        }
       break;
     case SE_ComboBoxLayoutItem:
         if (const auto *combo = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
