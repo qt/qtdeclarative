@@ -129,6 +129,7 @@ private slots:
     void shortcutInNestedSubMenuAction();
     void animationOnHeight();
     void loadMenuAsynchronously();
+    void visibleTrue();
 
 private:
     bool nativeMenuSupported = false;
@@ -1353,8 +1354,6 @@ void tst_QQuickMenu::openParentlessMenu()
     centerOnScreen(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
-
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("cannot show menu: parent is null"));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
@@ -3571,6 +3570,22 @@ void tst_QQuickMenu::loadMenuAsynchronously()
     auto *enginePriv = QQmlEnginePrivate::get(window.engine());
     if (enginePriv->inProgressCreations)
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression("There are still \\\\\"(\\d+)\\\\\" items in the process of being created at engine destruction\\."));
+}
+
+void tst_QQuickMenu::visibleTrue()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("visibleTrue.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+
+    QTRY_VERIFY(menu->isOpened());
+
+    menu->close();
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
