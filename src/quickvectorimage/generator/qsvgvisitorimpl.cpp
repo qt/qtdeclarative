@@ -285,7 +285,7 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName,
 {
 }
 
-bool QSvgVisitorImpl::traverse()
+bool QSvgVisitorImpl::doTraversal()
 {
     if (!m_generator) {
         qCDebug(lcQuickVectorImage) << "No valid QQuickGenerator is set. Genration will stop";

@@ -42,7 +42,7 @@ QQuickVectorImageGenerator::GeneratorFlags QQuickGenerator::generatorFlags()
 bool QQuickGenerator::generate()
 {
     QSvgVisitorImpl loader(m_fileName, this, m_flags.testFlag(QQuickVectorImageGenerator::AssumeTrustedSource));
-    return loader.traverse();
+    return loader.doTraversal();
 }
 
 void QQuickGenerator::optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect)
