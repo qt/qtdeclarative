@@ -846,14 +846,14 @@ void tst_qqmlpropertycache::appendPropertyAttr_logging_data()
             << Status::OverridingNonVirtual
             << "Member (.*) of the object (.*) overrides a non-virtual "
                "member. Consider renaming it or mark it virtual in the base object";
-    QTest::newRow("FinalOverridingNonVirtual")
-            << Status::FinalOverridingNonVirtual
+    QTest::newRow("OverridingNonVirtualError")
+            << Status::OverridingNonVirtualError
             << "Member (.*) of the object (.*) overrides a non-virtual "
                "member. Consider renaming it or mark it virtual in the base object";
     QTest::newRow("MissingOverrideSpecifier")
             << Status::MissingOverrideOrFinalSpecifier
             << "Member (.*) of the object (.*) overrides a member of the base object. "
-               "Consider renaming it or adding final or virtual specifier";
+               "Consider renaming it or adding final or override specifier";
 }
 
 void tst_qqmlpropertycache::appendPropertyAttr_logging()
@@ -878,7 +878,7 @@ void tst_qqmlpropertycache::appendPropertyAttr_InvalidOverride_data()
 
     QTest::newRow("MissingBase") << Status::MissingBase;
     QTest::newRow("OverridingFinal") << Status::OverridingFinal;
-    QTest::newRow("OverridingNonVirtual") << Status::OverridingNonVirtual;
+    QTest::newRow("OverridingNonVirtualError") << Status::OverridingNonVirtualError;
 }
 
 void tst_qqmlpropertycache::appendPropertyAttr_InvalidOverride()
@@ -912,6 +912,7 @@ void tst_qqmlpropertycache::appendPropertyAttr_ValidOverride_data()
     QTest::newRow("NoOverride") << Status::NoOverride;
     QTest::newRow("Valid") << Status::Valid;
     QTest::newRow("MissingOverrideSpecifier") << Status::MissingOverrideOrFinalSpecifier;
+    QTest::newRow("OverridingNonVirtual") << Status::OverridingNonVirtual;
 }
 
 void tst_qqmlpropertycache::appendPropertyAttr_ValidOverride()
@@ -985,7 +986,7 @@ void tst_qqmlpropertycache::handleOverride_data()
             << Status::Valid;
 
     // Full
-    QTest::newRow("Derived{property var p} Base{}")
+    QTest::newRow("Derived{property var p} Base{} full")
             << propertyWithFlags() << makeNullopt() << CheckMode::Full << Status::NoOverride;
 
     QQmlPropertyData::Flags override{};
@@ -999,23 +1000,28 @@ void tst_qqmlpropertycache::handleOverride_data()
     QTest::newRow("Derived{override property var p} Base{}")
             << propertyWithOverride << makeNullopt() << CheckMode::Full << Status::MissingBase;
 
-    QTest::newRow("Derived{property var p} Base{final property var p}")
+    QTest::newRow("Derived{property var p} Base{final property var p} full")
             << propertyWithFlags() << std::make_optional(finalProperty) << CheckMode::Full
             << Status::OverridingFinal;
     QTest::newRow("Derived{override property var p} Base{final property var p}")
             << propertyWithOverride << std::make_optional(finalProperty) << CheckMode::Full
             << Status::OverridingFinal;
 
-    QTest::newRow("Derived{override property var p} Base{property var p}")
-            << propertyWithOverride << std::make_optional(propertyWithFlags()) << CheckMode::Full
-            << Status::OverridingNonVirtual;
-    QTest::newRow("Derived{final property var p} Base{property var p}")
-            << finalProperty << std::make_optional(propertyWithFlags()) << CheckMode::Full
-            << Status::FinalOverridingNonVirtual;
-
     QTest::newRow("Derived{property var p} Base{property var p}")
             << propertyWithFlags() << std::make_optional(propertyWithFlags()) << CheckMode::Full
-            << Status::MissingOverrideOrFinalSpecifier;
+            << Status::OverridingNonVirtual;
+
+    QTest::newRow("Derived{final property var p} Base{property var p}")
+            << finalProperty << std::make_optional(propertyWithFlags()) << CheckMode::Full
+            << Status::OverridingNonVirtual;
+
+    QTest::newRow("Derived{virtual property var p} Base{property var p}")
+            << propertyWithVirtual << std::make_optional(propertyWithFlags()) << CheckMode::Full
+            << Status::OverridingNonVirtual;
+
+    QTest::newRow("Derived{override property var p} Base{property var p}")
+            << propertyWithOverride << std::make_optional(propertyWithFlags()) << CheckMode::Full
+            << Status::OverridingNonVirtualError;
 
     QTest::newRow("Derived{virtual property var p} Base{virtual property var p}")
             << propertyWithVirtual << std::make_optional(propertyWithVirtual) << CheckMode::Full

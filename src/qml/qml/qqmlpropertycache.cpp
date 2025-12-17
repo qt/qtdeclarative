@@ -81,11 +81,9 @@ static inline Status checkMinimal(const QQmlPropertyData *const existingProperty
  *  - If the base property is final, overriding is not allowed
  *    (Status::OverridingFinal).
  *
- *  - If `override` is present but the base property is not virtual,
- *    overriding is not allowed (Status::OverridingNonVirtual).
- *
- *  - If `final` is present but the base property is not virtual,
- *    overriding is not allowed (Status::FinalOverridingNonVirtual).
+ *  - If the base property is not virtual, but 'override' is present
+ *    overriding is not allowed (Status::OverridingNonVirtualError),
+ *    otherwise it returns Status::OverridingNonVirtual
  *
  *  - If no `override` or `final` keyword is specified for an existing virtual base,
  *    the override specifier is missing (Status::MissingOverrideOrFinalSpecifier).
@@ -105,11 +103,9 @@ static inline Status checkFull(const QQmlPropertyData &overridingProperty,
         return minimalCheckRes;
     }
 
-    if (overrideKeyword && !existingProperty->isVirtual()) {
-        return Status::OverridingNonVirtual;
-    }
-    if (overridingProperty.isFinal() && !existingProperty->isVirtual()) {
-        return Status::FinalOverridingNonVirtual;
+    if (!existingProperty->isVirtual()) {
+        return overrideKeyword ? Status::OverridingNonVirtualError
+                               : Status::OverridingNonVirtual;
     }
 
     const auto overrideOrFinal = overrideKeyword || overridingProperty.isFinal();

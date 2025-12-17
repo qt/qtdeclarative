@@ -187,7 +187,7 @@ public:
             return tr("Nothing to override. Remove \"override\" keyword");
         case OverrideSemantics::Status::OverridingFinal:
             return tr("Cannot override FINAL property");
-        case OverrideSemantics::Status::OverridingNonVirtual:
+        case OverrideSemantics::Status::OverridingNonVirtualError:
             return tr("Cannot override non virtual property. Add \"virtual\" to the property of "
                       "the base object");
         default:

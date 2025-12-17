@@ -128,9 +128,9 @@ enum class Status : uint8_t {
 
     MissingBase, // Derived { override property var a;} Base {}
     OverridingFinal, // Derived { * property var a;} Base {final property var a;}
-    OverridingNonVirtual, // Derived { override property var a;} Base {property var a;}
-    FinalOverridingNonVirtual, // Derived { final property var a;} Base {property var a;}
-    MissingOverrideOrFinalSpecifier, // Derived {property var a;} Base { (virtual) property var a;}
+    OverridingNonVirtual, // Derived { (virtual|final) property var a;} Base {property var a;}
+    OverridingNonVirtualError, // Derived { override property var a;} Base {property var a;}
+    MissingOverrideOrFinalSpecifier, // Derived { (virtual) property var a;} Base { virtual property var a;}
 
     Unknown
 };
@@ -139,10 +139,10 @@ inline bool isValidOverride(Status res)
 {
     return res == Status::NoOverride
             || res == Status::Valid
-            // MissingOverrideOrFinalSpecifier and FinalOverridingNonVirtual is currently considered
+            // MissingOverrideOrFinalSpecifier and OverridingNonVirtual is currently considered
             // valid to preserve backwards compitability. It will become invalid in Qt7
             || res == Status::MissingOverrideOrFinalSpecifier
-            || res == Status::FinalOverridingNonVirtual;
+            || res == Status::OverridingNonVirtual;
 }
 
 enum class CheckMode : uint8_t {
@@ -368,13 +368,13 @@ private:
                             " Consider removing \"override\". ",
                             qPrintable(name), className());
         case OverrideSemantics::Status::OverridingNonVirtual:
-        case OverrideSemantics::Status::FinalOverridingNonVirtual:
+        case OverrideSemantics::Status::OverridingNonVirtualError:
             return qWarning("Member %s of the object %s overrides a non-virtual member. "
                             "Consider renaming it or mark it virtual in the base object",
                             qPrintable(name), className());
         case OverrideSemantics::Status::MissingOverrideOrFinalSpecifier:
             return qWarning("Member %s of the object %s overrides a member of the base object. "
-                            "Consider renaming it or adding final or virtual specifier",
+                            "Consider renaming it or adding final or override specifier",
                             qPrintable(name), className());
         default:
             return;
