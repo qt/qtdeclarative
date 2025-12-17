@@ -14,7 +14,7 @@ DialogsQuickImpl.FolderBreadcrumbBar {
                             implicitContentWidth + (upButton ? upButton.implicitWidth + upButtonSpacing : 0)
                             + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding, upButton.implicitHeight)
     upButtonSpacing: 20
     padding: 1
 
