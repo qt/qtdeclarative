@@ -4222,10 +4222,17 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
             if ((buttonOpt->features & QStyleOptionButton::Flat))
                 break;
         }
-        rect = LargeSmallMini(opt,
-                                opt->rect.adjusted(7, 5, -7, -7),
-                                opt->rect.adjusted(6, 6, -6, -6),
-                                opt->rect.adjusted(6, 5, -6, -6));
+        if (qt_apple_runningWithLiquidGlass()) {
+            rect = LargeSmallMini(opt,
+                                  opt->rect.adjusted(2, 5, -2, -7),
+                                  opt->rect.adjusted(6, 6, -6, -6),
+                                  opt->rect.adjusted(6, 5, -6, -6));
+        } else {
+            rect = LargeSmallMini(opt,
+                                  opt->rect.adjusted(7, 5, -7, -7),
+                                  opt->rect.adjusted(6, 6, -6, -6),
+                                  opt->rect.adjusted(6, 5, -6, -6));
+        }
         break;
     case SE_SpinBoxLayoutItem:
         rect = LargeSmallMini(opt,
