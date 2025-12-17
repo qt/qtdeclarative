@@ -3167,6 +3167,8 @@ void QObjectMethod::callInternalWithMetaTypes(
         QV4::coerceAndCall(
                 v4, &metaMethod, argv, types, argc,
                 [v4, thisMeta, object](void **argv, int) {
+            if (!argv[0])
+                return;
             *static_cast<QString *>(argv[0])
                     = QObjectWrapper::objectToString(v4, thisMeta, object.qObject());
         });
