@@ -5955,7 +5955,7 @@ QRectF QQuickItem::boundingRect() const
 QRectF QQuickItem::clipRect() const
 {
     Q_D(const QQuickItem);
-    QRectF ret(0, 0, d->width, d->height);
+    QRectF ret(0, 0, d->width.valueBypassingBindings(), d->height.valueBypassingBindings());
     if (flags().testFlag(QQuickItem::ItemObservesViewport)) {
         if (QQuickItem *viewport = viewportItem()) {
             // if the viewport is already "this", there's nothing to intersect;
