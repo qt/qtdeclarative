@@ -1733,15 +1733,11 @@ void QQuickMenu::setVisible(bool visible)
     Q_D(QQuickMenu);
     if (visible == d->visible)
         return;
-    if (visible && !parentItem()) {
-        qmlWarning(this) << "cannot show menu: parent is null";
-        return;
-    }
-    if (visible) {
+
+    auto *window = this->window();
+    if (visible && window) {
         // If a right mouse button event opens a menu, don't synthesize QContextMenuEvent
         // (avoid opening redundant menus, e.g. in parent items).
-        auto *window = this->window();
-        Q_ASSERT(window);
         QQuickWindowPrivate::get(window)->rmbContextMenuEventEnabled = false;
         // Also, if users have their own custom non-ContextMenu-based text editing context menus,
         // we want those to take priority over our own. The check above handles that when

@@ -2497,11 +2497,17 @@ void QQuickPopup::setVisible(bool visible)
     // d->visible is true.
     if (d->visible && visible && d->transitionState != QQuickPopupPrivate::ExitTransition)
         return;
+
     if (!d->visible && !visible)
         return;
 
     if (!d->complete || (visible && !d->window)) {
         d->visible = visible;
+        return;
+    }
+
+    if (visible && !parentItem()) {
+        qmlWarning(this) << "cannot show popup: parent is null";
         return;
     }
 
