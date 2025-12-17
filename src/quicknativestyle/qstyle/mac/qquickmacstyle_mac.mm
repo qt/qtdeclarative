@@ -1144,8 +1144,12 @@ QRectF QMacStylePrivate::CocoaControl::adjustedControlFrame(const QRectF &rect) 
 QMarginsF QMacStylePrivate::CocoaControl::titleMargins() const
 {
     if (type == QMacStylePrivate::Button_PushButton) {
-        if (size == QStyleHelper::SizeLarge)
-            return QMarginsF(12, 5, 12, 9);
+        if (size == QStyleHelper::SizeLarge) {
+            if (qt_apple_runningWithLiquidGlass())
+                return QMarginsF(10, 5, 10, 5);
+            else
+                return QMarginsF(12, 5, 12, 7);
+        }
         if (size == QStyleHelper::SizeSmall)
             return QMarginsF(12, 4, 12, 9);
         if (size == QStyleHelper::SizeMini)
