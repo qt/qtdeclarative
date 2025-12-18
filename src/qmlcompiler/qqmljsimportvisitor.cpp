@@ -1975,6 +1975,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonly());
         prop.setIsFinal(publicMember->isFinal());
+        prop.setIsVirtual(publicMember->isVirtual());
+        prop.setIsOverride(publicMember->isOverride());
         prop.setAliasExpression(aliasExpr);
         prop.setSourceLocation(
                 combine(publicMember->firstSourceLocation(), publicMember->colonToken));

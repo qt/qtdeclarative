@@ -41,6 +41,8 @@ void QmltypesReader::insertProperty(
     prop.isList = property.isList();
     int revision = property.revision();
     prop.isFinal = property.isFinal();
+    prop.isVirtual = property.isVirtual();
+    prop.isOverride = property.isOverride();
     prop.bindable = property.bindable();
     prop.read = property.read();
     prop.write = property.write();

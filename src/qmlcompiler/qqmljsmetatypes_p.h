@@ -408,6 +408,8 @@ class QQmlJSMetaProperty
     bool m_isPointer = false;
     bool m_isTypeConstant = false;
     bool m_isFinal = false;
+    bool m_isVirtual = false;
+    bool m_isOverride = false;
     bool m_isPropertyConstant = false;
     int m_revision = 0;
     int m_index = -1; // relative property index within owning QQmlJSScope
@@ -480,6 +482,12 @@ public:
 
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
+
+    void setIsOverride(bool isOverride) { m_isOverride = isOverride; }
+    bool isOverride() const { return m_isOverride; }
+
+    void setIsVirtual(bool isVirtual) { m_isVirtual = isVirtual; }
+    bool isVirtual() const { return m_isVirtual; }
 
     void setIsPropertyConstant(bool isPropertyConstant) { m_isPropertyConstant = isPropertyConstant; }
     bool isPropertyConstant() const { return m_isPropertyConstant; }

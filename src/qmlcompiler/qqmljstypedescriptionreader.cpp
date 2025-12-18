@@ -411,6 +411,10 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("isFinal")) {
             property.setIsFinal(readBoolBinding(script));
+        } else if (id == QLatin1String("isVirtual")) {
+            property.setIsVirtual(readBoolBinding(script));
+        } else if (id == QLatin1String("isOverride")) {
+            property.setIsOverride(readBoolBinding(script));
         } else if (id == QLatin1String("isTypeConstant")) {
             property.setIsTypeConstant(readBoolBinding(script));
         } else if (id == QLatin1String("isPropertyConstant")) {

@@ -11,6 +11,8 @@ Tooling.Member {
     property bool isRequired: false
     property bool isList: false
     property bool isFinal: false
+    property bool isOverride: false
+    property bool isVirtual: false
     property bool isTypeConstant: false
     property bool isPropertyConstant: false
     property int revision: 0

@@ -916,6 +916,25 @@ class ForeignQOjbectQml
 };
 }
 
+class WithVirtual : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(int virtualP MEMBER virtualP VIRTUAL)
+
+    int virtualP;
+};
+
+class WithOverride : public WithVirtual
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QString virtualP MEMBER virtualP OVERRIDE)
+
+    QString virtualP;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -929,6 +948,7 @@ private slots:
     void qmltypesHasPropertyIndex();
     void qmltypesHasFileNames();
     void qmltypesHasFlags();
+    void qmltypesHasVirtualAndOverride();
     void superAndForeignTypes();
     void accessSemantics();
     void isBindable();

@@ -233,6 +233,10 @@ void QmlTypesCreator::writeProperties(const Property::Container &properties)
 
         if (obj.isFinal)
             m_qml.writeBooleanBinding(S_IS_FINAL, true);
+        if (obj.isVirtual)
+            m_qml.writeBooleanBinding(S_IS_VIRTUAL, true);
+        if (obj.isOverride)
+            m_qml.writeBooleanBinding(S_IS_OVERRIDE, true);
 
         if (obj.isConstant)
             m_qml.writeBooleanBinding(S_IS_PROPERTY_CONSTANT, true);

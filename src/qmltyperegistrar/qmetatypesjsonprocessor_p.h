@@ -89,6 +89,8 @@ struct Property
     QTypeRevision revision;
 
     bool isFinal = false;
+    bool isVirtual = false;
+    bool isOverride = false;
     bool isConstant = false;
     bool isRequired = false;
 };

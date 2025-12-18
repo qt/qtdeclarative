@@ -105,6 +105,14 @@ void tst_qmltyperegistrar::qmltypesHasFileNames()
     QVERIFY(qmltypesData.contains("file: \"tst_qmltyperegistrar.h\""));
 }
 
+void tst_qmltyperegistrar::qmltypesHasVirtualAndOverride()
+{
+    QVERIFY(qmltypesData.contains(
+            R"(Property { name: "virtualP"; type: "int"; index: 0; lineNumber: 924; isVirtual: true })"));
+    QVERIFY(qmltypesData.contains(
+            R"(Property { name: "virtualP"; type: "QString"; index: 0; lineNumber: 933; isOverride: true })"));
+}
+
 void tst_qmltyperegistrar::qmltypesHasFlags()
 {
     QVERIFY(qmltypesData.contains("name: \"Flags\""));
