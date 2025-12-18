@@ -71,6 +71,7 @@ QString QQStyleKitPropertyGroup::pathToString() const
         pathString += '.'_L1 + groupName;
     }
 
+    s_pathStrings.insert(m_groupSpace.start, pathString);
     return pathString;
 }
 
