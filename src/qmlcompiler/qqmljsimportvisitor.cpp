@@ -3027,11 +3027,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(QQmlSA::ScopeType::JSLexicalScope, QStringLiteral("catch"),
                      catchStatement->firstSourceLocation());
-    safeInsertJSIdentifier(m_currentScope,
-            catchStatement->patternElement->bindingIdentifier.toString(),
-            { QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-              catchStatement->patternElement->firstSourceLocation(), std::nullopt,
-              catchStatement->patternElement->scope == QQmlJS::AST::VariableScope::Const });
     return true;
 }
 
@@ -3056,38 +3051,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::WithStatement *ast)
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::WithStatement *)
 {
     leaveEnvironment();
-}
-
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
-{
-    while (vdl) {
-        std::optional<QString> typeName;
-        if (TypeAnnotation *annotation = vdl->declaration->typeAnnotation)
-            if (Type *type = annotation->type)
-                typeName = type->toString();
-
-        using Kind = QQmlJSScope::JavaScriptIdentifier::Kind;
-        const Kind kind = (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
-                ? Kind::FunctionScoped
-                : Kind::LexicalScoped;
-        const QString name = vdl->declaration->bindingIdentifier.toString();
-        const QQmlJS::SourceLocation location = vdl->declaration->firstSourceLocation();
-        if (kind == Kind::LexicalScoped) {
-            if (auto previousDeclaration = m_currentScope->ownJSIdentifier(name)) {
-                m_logger->log("Identifier '%1' has already been declared"_L1.arg(name), qmlSyntax,
-                              location);
-                m_logger->log("Note: previous declaration of '%1' here"_L1.arg(name), qmlSyntax,
-                              previousDeclaration->location);
-            }
-        }
-
-        const bool isConst = vdl->declaration->scope == QQmlJS::AST::VariableScope::Const;
-        // Break if insertion failed to avoid multiple warnings at the same location
-        if (!safeInsertJSIdentifier(m_currentScope, name,  { kind, location, typeName, isConst }))
-            break;
-        vdl = vdl->next;
-    }
-    return true;
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
@@ -3344,13 +3307,28 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)
             if (TypeAnnotation *annotation = name.typeAnnotation.data())
                 if (Type *type = annotation->type)
                     typeName = type->toString();
+            using Kind = QQmlJSScope::JavaScriptIdentifier::Kind;
+            const Kind kind = (element->scope == QQmlJS::AST::VariableScope::Var)
+                    ? Kind::FunctionScoped
+                    : Kind::LexicalScoped;
+            const QString variableName = name.id;
+            if (kind == Kind::LexicalScoped) {
+                const QQmlJS::SourceLocation location = element->firstSourceLocation();
+                if (auto previousDeclaration = m_currentScope->ownJSIdentifier(variableName)) {
+                    m_logger->log("Identifier '%1' has already been declared"_L1.arg(variableName), qmlSyntax,
+                                  location);
+                    m_logger->log("Note: previous declaration of '%1' here"_L1.arg(variableName), qmlSyntax,
+                                  previousDeclaration->location);
+                }
+            }
+            const bool isConstVariable = element->scope == QQmlJS::AST::VariableScope::Const;
             const bool couldInsert = safeInsertJSIdentifier(m_currentScope,
                     name.id,
                     { (element->scope == QQmlJS::AST::VariableScope::Var)
                               ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
                               : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
                       name.location, typeName,
-                      element->scope == QQmlJS::AST::VariableScope::Const });
+                      isConstVariable});
             if (!couldInsert)
                 break;
         }

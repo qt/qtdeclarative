@@ -135,7 +135,6 @@ protected:
     bool visit(QQmlJS::AST::WithStatement *withStatement) override;
     void endVisit(QQmlJS::AST::WithStatement *ast) override;
 
-    bool visit(QQmlJS::AST::VariableDeclarationList *vdl) override;
     bool visit(QQmlJS::AST::FormalParameterList *fpl) override;
 
     bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
