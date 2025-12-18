@@ -54,3 +54,11 @@ qt_internal_extend_target(qml_tool CONDITION QT_FEATURE_qml_debug
 get_target_property(the_libs qml_tool LINK_LIBRARIES)
 list(REMOVE_DUPLICATES the_libs)
 set_target_properties(qml_tool PROPERTIES LINK_LIBRARIES "${the_libs}")
+
+# Install the entitlements file next to the binary, so that the post-CI signing process uses it
+# to ensure 3rd party qml plugins can also be loaded.
+if(MACOS)
+    qt_install(FILES qml.entitlements
+        DESTINATION "${INSTALL_BINDIR}"
+    )
+endif()
