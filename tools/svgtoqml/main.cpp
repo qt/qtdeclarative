@@ -31,6 +31,10 @@ int main(int argc, char *argv[])
                                            QCoreApplication::translate("main", "Use the curve renderer in generated QML."));
     parser.addOption(curveRendererOption);
 
+    QCommandLineOption asyncOption({ "a", "asynchronous-shapes" },
+                                   QCoreApplication::translate("main", "Enable asynchronous mode in the generated Shape items."));
+    parser.addOption(asyncOption);
+
     QCommandLineOption optimizeOption({ "p", "optimize-paths" },
                                       QCoreApplication::translate("main", "Optimize paths for the curve renderer."));
     parser.addOption(optimizeOption);
@@ -117,6 +121,8 @@ int main(int argc, char *argv[])
         flags |= QQuickVectorImageGenerator::GeneratorFlag::AssumeTrustedSource;
     if (parser.isSet(curveRendererOption))
         flags |= QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer;
+    if (parser.isSet(asyncOption))
+        flags |= QQuickVectorImageGenerator::GeneratorFlag::AsyncShapes;
     if (parser.isSet(optimizeOption))
         flags |= QQuickVectorImageGenerator::GeneratorFlag::OptimizePaths;
     if (parser.isSet(outlineModeOption))

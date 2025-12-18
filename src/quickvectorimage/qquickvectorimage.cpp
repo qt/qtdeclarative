@@ -83,6 +83,8 @@ void QQuickVectorImagePrivate::loadFile()
         flags.setFlag(QQuickVectorImageGenerator::CurveRenderer);
     if (assumeTrustedSource)
         flags.setFlag(QQuickVectorImageGenerator::AssumeTrustedSource);
+    if (m_asyncShapes)
+        flags.setFlag(QQuickVectorImageGenerator::AsyncShapes);
 
     if (!m_qmlContext || m_qmlContext->engine() != qmlContext(q)->engine())
         m_qmlContext.reset(new QQmlContext(qmlContext(q)->engine()));
@@ -298,6 +300,35 @@ void QQuickVectorImage::setPreferredRendererType(RendererType newPreferredRender
     d->preferredRendererType = newPreferredRendererType;
     d->loadFile();
     emit preferredRendererTypeChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.VectorImage::VectorImage::asynchronousShapes
+    \since 6.11
+
+    This property controls the {QtQuick.Shapes::Shape::asynchronous}{asynchronous} property of the
+    \l Shape items in the Quick scene that VectorImage builds to represent the image.
+
+    Setting this property to \c true will offload the CPU part of the rendering processing of the
+    shapes to separate worker threads. This can improve CPU utilization and user interface
+    responsiveness.
+
+    By default this property is \c false.
+*/
+
+bool QQuickVectorImage::asynchronousShapes() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->m_asyncShapes;
+}
+
+void QQuickVectorImage::setAsynchronousShapes(bool asynchronous)
+{
+    Q_D(QQuickVectorImage);
+    if (d->m_asyncShapes == asynchronous)
+        return;
+    d->m_asyncShapes = asynchronous;
+    emit asynchronousShapesChanged();
 }
 
 /*!

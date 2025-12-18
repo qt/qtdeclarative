@@ -9,6 +9,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuickShapes/private/qquickshape_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -24,6 +25,8 @@ private slots:
     void parseFiles_data();
     void parseFiles();
     void parseBrokenFile();
+    void asyncShapes_data();
+    void asyncShapes();
 };
 
 tst_QQuickVectorImage::tst_QQuickVectorImage()
@@ -81,6 +84,40 @@ void tst_QQuickVectorImage::parseBrokenFile()
     QVERIFY(item != nullptr);
     QVERIFY(!item->childItems().isEmpty());
     QVERIFY(item->childItems().first()->size().isNull());
+}
+
+void tst_QQuickVectorImage::asyncShapes_data()
+{
+    QTest::addColumn<QString>("testFile");
+    QTest::addColumn<bool>("isAsync");
+
+    QTest::newRow("sync") << "vectorimage.qml" << false;
+    QTest::newRow("async") << "vectorimage-async.qml" << true;
+}
+
+void tst_QQuickVectorImage::asyncShapes()
+{
+    QFETCH(QString, testFile);
+    QFETCH(bool, isAsync);
+
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty(QStringLiteral("fileName"), QStringLiteral("qrc:/svgs/gradientxform.svg"));
+
+    QQmlComponent c(&engine, testFileUrl(testFile));
+    QQuickItem *item = qobject_cast<QQuickItem *>(c.create());
+    auto cleanup = qScopeGuard([&item] {
+        delete item;
+        item = nullptr;
+    });
+
+    QVERIFY(item != nullptr);
+    QVERIFY(!item->childItems().isEmpty());
+    QVERIFY(!item->childItems().first()->size().isNull());
+
+    const QList<const QQuickShape *> shapes = item->findChildren<const QQuickShape *>();
+    QVERIFY(!shapes.isEmpty());
+    for (const QQuickShape *shape : shapes)
+        QCOMPARE(shape->asynchronous(), isAsync);
 }
 
 QTEST_MAIN(tst_QQuickVectorImage)

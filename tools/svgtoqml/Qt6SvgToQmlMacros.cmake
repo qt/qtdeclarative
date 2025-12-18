@@ -4,6 +4,7 @@
 function(qt6_target_qml_from_svg target)
     set(opt_args
         CURVE_RENDERER
+        ASYNCHRONOUS_SHAPES
         OPTIMIZE_PATHS
         OUTLINE_STROKE_MODE)
     set(single_args
@@ -37,6 +38,10 @@ function(qt6_target_qml_from_svg target)
         set(svgtoqml_args "")
         if (arg_CURVE_RENDERER)
             list(APPEND svgtoqml_args "-c")
+        endif()
+
+        if (arg_ASYNCHRONOUS_SHAPES)
+            list(APPEND svgtoqml_args "-a")
         endif()
 
         if (arg_OPTIMIZE_PATHS)

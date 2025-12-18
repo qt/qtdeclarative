@@ -45,6 +45,10 @@ In addition, it supports the following options:
     \li Enables the curve renderer backend for \l{Qt Quick Shapes}. This enables smooth, antialiased
     shapes in the scene without multi-sampling, but at some extra cost.
 \row
+    \li \c{-a}, \c{--asynchronous-shapes}
+    \li Enables the {QtQuick.Shapes::Shape::asynchronous}{asynchronous} mode on all \l{Shape}
+    elements in the generated scene. This may improve CPU utilization and responsiveness.
+\row
     \li \c{-p}, \c{--optimize-paths}
     \li Enables optimization of paths before committing them to the QML file, potentially making
     them faster to load and render later.
@@ -53,7 +57,7 @@ In addition, it supports the following options:
     \li Stroke the outline (contour) of the filled shape instead of the original path.
 \row
     \li \c{-t}, \c{--type-name <string>}
-    \li In place of \l{Shape}, the output will use the type name <string> instead. This is
+    \li In place of \l{Shape}, the output will use the type name <string> instead. This
     enables using a custom item to override the default behavior of \l{Shape} items.
 \row
     \li \c{-v}, \c{--view}

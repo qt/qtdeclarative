@@ -33,6 +33,7 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_PROPERTY(RendererType preferredRendererType READ preferredRendererType WRITE setPreferredRendererType NOTIFY preferredRendererTypeChanged)
     Q_PROPERTY(QQuickVectorImageAnimations *animations READ animations CONSTANT REVISION(6, 10) FINAL)
     Q_PROPERTY(bool assumeTrustedSource READ assumeTrustedSource WRITE setAssumeTrustedSource NOTIFY assumeTrustedSourceChanged FINAL)
+    Q_PROPERTY(bool asynchronousShapes READ asynchronousShapes WRITE setAsynchronousShapes NOTIFY asynchronousShapesChanged REVISION(6, 11) FINAL)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
@@ -61,6 +62,9 @@ public:
     RendererType preferredRendererType() const;
     void setPreferredRendererType(RendererType newPreferredRendererType);
 
+    bool asynchronousShapes() const;
+    void setAsynchronousShapes(bool asynchronous);
+
     QQuickVectorImageAnimations *animations();
 
     bool assumeTrustedSource() const;
@@ -73,6 +77,7 @@ signals:
     void fillModeChanged();
 
     void preferredRendererTypeChanged();
+    void asynchronousShapesChanged();
     void assumeTrustedSourceChanged();
 
 private slots:

@@ -24,6 +24,7 @@ find_package(Qt6 REQUIRED COMPONENTS QuickTools)
 \badcode
 qt_target_qml_from_svg(target
                        [CURVE_RENDERER]
+                       [ASYNCHRONOUS_SHAPES]
                        [OPTIMIZE_PATHS]
                        [OUTLINE_STROKE_MODE]
                        [TYPE_NAME "MyShapeName"]
@@ -61,9 +62,9 @@ the generated file with a custom type. This can be useful to make general custom
 the shapes in the provided SVG files. The \c{TYPE_NAME} should refer to a QML type which is
 available in the \c{target} QML module.
 
-The options \c CURVE_RENDERER, \c OPTIMIZE_PATHS and \c OUTLINE_STROKE_MODE correspond to the
-\c{--curve-renderer}, \c{--optimize-paths} and \c{--outline-stroke-mode} in \l{svgtoqml}
-respectively.
+The options \c CURVE_RENDERER, \c ASYNCHRONOUS_SHAPES, \c OPTIMIZE_PATHS and \c OUTLINE_STROKE_MODE
+correspond to the \c{--curve-renderer}, \c{--asynchronous-shapes}, \c{--optimize-paths} and
+\c{--outline-stroke-mode} in \l{svgtoqml} respectively.
 */
 
 

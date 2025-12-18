@@ -534,6 +534,8 @@ void QQuickQmlGenerator::generatePath(const PathNodeInfo &info, const QRectF &ov
 
         if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
             stream() << "preferredRendererType: Shape.CurveRenderer";
+        if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::AsyncShapes))
+            stream() << "asynchronous: true";
         optimizePaths(info, overrideBoundingRect);
         //qCDebug(lcQuickVectorGraphics) << *node->qpath();
         generateNodeEnd(info);
@@ -1031,6 +1033,8 @@ void QQuickQmlGenerator::generatePathContainer(const StructureNodeInfo &info)
     m_indentLevel++;
     if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::CurveRenderer))
         stream() << "preferredRendererType: Shape.CurveRenderer";
+    if (m_flags.testFlag(QQuickVectorImageGenerator::GeneratorFlag::AsyncShapes))
+        stream() << "asynchronous: true";
     m_indentLevel--;
 
     m_inShapeItemLevel++;
