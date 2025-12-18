@@ -289,6 +289,10 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
                 qPrintable(colorComparisonErrorString.arg("red")
                 .arg(QColorConstants::Cyan.red())
                 .arg(colorPicker->color().red())));
+
+    if (QSysInfo::productType() == "opensuse-leap" && QSysInfo::productVersion() == QLatin1String("16.0"))
+        QEXPECT_FAIL("", "QTBUG-142386: opensuse-leap 16.0 fails", Continue);
+
     FUZZYCOMPARE(colorPicker->color().green(), QColorConstants::Cyan.green(), 3,
                 qPrintable(colorComparisonErrorString.arg("green")
                 .arg(QColorConstants::Cyan.green())
