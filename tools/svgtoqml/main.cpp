@@ -91,9 +91,7 @@ int main(int argc, char *argv[])
     const auto outFileName = args.size() > 1 ? args.at(1) : QString{};
 
     const bool needsGui = outFileName.isEmpty() || parser.isSet(guiOption);
-    const QStringList platforms = QPlatformIntegrationFactory::keys();
     const bool useMinimalPlugin = qEnvironmentVariableIsEmpty("QT_QPA_PLATFORM")
-                                  && platforms.contains("minimal")
                                   && !needsGui;
     if (useMinimalPlugin)
         qputenv("QT_QPA_PLATFORM", QByteArrayLiteral("minimal"));
