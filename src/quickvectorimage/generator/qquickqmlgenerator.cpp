@@ -26,6 +26,30 @@ static QString sanitizeString(const QString &input)
     return s;
 }
 
+
+QQuickAnimatedProperty::PropertyAnimation QQuickAnimatedProperty::PropertyAnimation::simplified() const
+{
+    QQuickAnimatedProperty::PropertyAnimation res = *this;
+    int consecutiveEquals = 0;
+    int prevTimePoint = -1;
+    QVariant prevValue;
+    for (const auto &[timePoint, value] : frames.asKeyValueRange()) {
+        if (value != prevValue) {
+            consecutiveEquals = 1;
+            prevValue = value;
+        } else if (consecutiveEquals < 2) {
+            consecutiveEquals++;
+        } else {
+            // Third consecutive equal value found, remove the redundant middle one
+            res.frames.remove(prevTimePoint);
+            res.easingPerFrame.remove(prevTimePoint);
+        }
+        prevTimePoint = timePoint;
+    }
+
+    return res;
+}
+
 QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImageGenerator::GeneratorFlags flags, const QString &outFileName)
     : QQuickGenerator(fileName, flags)
     , outputFileName(outFileName)
@@ -859,7 +883,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
 
     QQuickAnimatedProperty pathFactor(QVariant::fromValue(0));
     QString pathId = shapePathId + "_ip"_L1;
-    if (!info.path.isAnimated()) {
+    if (!info.path.isAnimated() || (info.path.animation(0).startOffset == 0 && info.path.animation(0).isConstant())) {
         QString svgPathString = painterPath ? QQuickVectorImageGenerator::Utils::toSvgString(*painterPath) : QQuickVectorImageGenerator::Utils::toSvgString(*quadPath);
         stream() <<   "PathSvg { path: \"" << svgPathString << "\" }";
     } else {
@@ -870,13 +894,18 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
         m_indentLevel++;
         QQuickAnimatedProperty::PropertyAnimation pathFactorAnim = info.path.animation(0);
         auto &frames = pathFactorAnim.frames;
-        int pathIdx = 0;
+        int pathIdx = -1;
+        QString lastSvg;
         for (auto it = frames.begin(); it != frames.end(); ++it) {
             QString svg = QQuickVectorImageGenerator::Utils::toSvgString(it->value<QPainterPath>());
-            stream() << "\"" << svg << "\"";
-            if (pathIdx < frames.size() - 1)
-                stream(SameLine) << ",";
-            *it = QVariant::fromValue(pathIdx++);
+            if (svg != lastSvg) {
+                if (pathIdx >= 0)
+                    stream(SameLine) << ",";
+                stream() << "\"" << svg << "\"";
+                ++pathIdx;
+                lastSvg = svg;
+            }
+            *it = QVariant::fromValue(pathIdx);
         }
         pathFactor.addAnimation(pathFactorAnim);
         m_indentLevel--;

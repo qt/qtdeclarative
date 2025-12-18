@@ -18,10 +18,11 @@
 #include <QMap>
 #include <QVariant>
 #include <QtGui/private/qbezier_p.h>
+#include "qquickgenerator_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAnimatedProperty
+class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickAnimatedProperty
 {
 public:
     struct PropertyAnimation {
@@ -48,6 +49,8 @@ public:
             }
             return true;
         }
+
+        PropertyAnimation simplified() const;
     };
 
     QQuickAnimatedProperty(const QVariant &defaultValue)
@@ -85,7 +88,7 @@ public:
         if (m_animationGroups.isEmpty())
             beginAnimationGroup();
 
-        m_animations.append(animation);
+        m_animations.append(animation.simplified());
     }
 
     qsizetype animationGroupCount() const
