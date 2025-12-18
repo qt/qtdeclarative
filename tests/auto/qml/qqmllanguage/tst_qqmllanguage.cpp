@@ -9758,10 +9758,10 @@ void tst_qqmllanguage::overrideSemantics_invalid_data() {
     const Phrase property_var_p = {QQmlJSGrammar::T_PROPERTY, QQmlJSGrammar::T_VAR, propName};
 
     const Phrase override_property_var_p = QQmlJSGrammar::T_OVERRIDE + property_var_p;
-    addTestRow({}, override_property_var_p, "Nothing to override. Remove override keyword");
+    addTestRow({}, override_property_var_p, "Nothing to override. Remove \"override\" keyword");
 
     addTestRow(property_var_p, override_property_var_p,
-               "Cannot override non virtual property. Add virtual to the property of the base object");
+               "Cannot override non virtual property. Add \"virtual\" to the property of the base object");
 
     const Phrase final_property_var_p = QQmlJSGrammar::T_FINAL + property_var_p;
     addTestRow(final_property_var_p, override_property_var_p, "Cannot override FINAL property");

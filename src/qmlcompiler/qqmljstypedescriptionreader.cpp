@@ -261,7 +261,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                               "attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
                               "isStructured, isComposite, hasCustomParser, enforcesScopedEnums, "
-                              "aliases, exportMetaObjectRevisions, deferredNames, metaObjectHash,"
+                              "aliases, exportMetaObjectRevisions, deferredNames, metaObjectHash, "
                               "and immediateNames in script bindings, not \"%1\".")
                                    .arg(name));
             }
@@ -439,8 +439,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
                        tr("Expected only type, name, lineNumber, revision, isPointer, "
                           "isTypeConstant, isReadonly, isRequired, "
                           "isFinal, isList, bindable, read, write, isPropertyConstant, reset, "
-                          "notify, index, and "
-                          "privateClass and script bindings."));
+                          "notify, index, privateClass and script bindings."));
         }
     }
 

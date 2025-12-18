@@ -184,12 +184,12 @@ public:
     {
         switch (reason) {
         case OverrideSemantics::Status::MissingBase:
-            return tr("Nothing to override. Remove override keyword");
+            return tr("Nothing to override. Remove \"override\" keyword");
         case OverrideSemantics::Status::OverridingFinal:
             return tr("Cannot override FINAL property");
         case OverrideSemantics::Status::OverridingNonVirtual:
-            return tr("Cannot override non virtual property. Add virtual to the property of the "
-                      "base object");
+            return tr("Cannot override non virtual property. Add \"virtual\" to the property of "
+                      "the base object");
         default:
             return tr("unknown");
         }

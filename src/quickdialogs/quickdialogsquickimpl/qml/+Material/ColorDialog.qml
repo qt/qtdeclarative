@@ -77,7 +77,7 @@ ColorDialogImpl {
             Layout.alignment: Qt.AlignRight
             Layout.rightMargin: 24
 
-            Accessible.name: qsTr("Eye dropper")
+            Accessible.name: qsTr("Eyedropper")
         }
     }
 
