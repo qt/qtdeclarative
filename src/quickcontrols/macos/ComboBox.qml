@@ -10,6 +10,15 @@ NativeStyle.DefaultComboBox {
     id: control
     readonly property Item __focusFrameTarget: control
 
+    background: NativeStyle.ComboBox {
+        control: control
+        contentWidth: contentItem.implicitWidth
+        contentHeight: contentItem.implicitHeight
+        useNinePatchImage: false
+
+        readonly property bool __ignoreNotCustomizable: true
+    }
+
     contentItem: T.TextField {
         implicitWidth: contentWidth
         implicitHeight: contentHeight

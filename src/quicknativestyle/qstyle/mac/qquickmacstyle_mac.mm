@@ -4173,16 +4173,31 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
             //            // all the hassle.
             //        } else
             //#endif
-            if (combo->editable)
-                rect = LargeSmallMini(opt,
-                                        opt->rect.adjusted(5, 6, -6, -7),
-                                        opt->rect.adjusted(4, 4, -5, -7),
-                                        opt->rect.adjusted(5, 4, -4, -6));
-            else
-                rect = LargeSmallMini(opt,
-                                        opt->rect.adjusted(6, 4, -7, -7),
-                                        opt->rect.adjusted(6, 7, -6, -5),
-                                        opt->rect.adjusted(9, 5, -5, -7));
+            if (combo->editable) {
+                if (qt_apple_runningWithLiquidGlass()) {
+                    rect = LargeSmallMini(opt,
+                                          opt->rect.adjusted(4, 4, -4, -4),
+                                          opt->rect.adjusted(4, 4, -5, -7),
+                                          opt->rect.adjusted(5, 4, -4, -6));
+                } else {
+                    rect = LargeSmallMini(opt,
+                                          opt->rect.adjusted(5, 6, -6, -7),
+                                          opt->rect.adjusted(4, 4, -5, -7),
+                                          opt->rect.adjusted(5, 4, -4, -6));
+                }
+            } else {
+                if (qt_apple_runningWithLiquidGlass()) {
+                    rect = LargeSmallMini(opt,
+                                          opt->rect.adjusted(4, 4, -4, -4),
+                                          opt->rect.adjusted(6, 7, -6, -5),
+                                          opt->rect.adjusted(9, 5, -5, -7));
+                } else {
+                    rect = LargeSmallMini(opt,
+                                          opt->rect.adjusted(6, 4, -7, -7),
+                                          opt->rect.adjusted(6, 7, -6, -5),
+                                          opt->rect.adjusted(9, 5, -5, -7));
+                }
+            }
         }
         break;
     case SE_LabelLayoutItem:
@@ -5252,7 +5267,10 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
             QRectF editRect;
             switch (cs) {
             case QStyleHelper::SizeLarge:
-                editRect = combo->rect.adjusted(15, 7, -25, -9);
+                if (qt_apple_runningWithLiquidGlass())
+                    editRect = combo->rect.adjusted(15, 7, -25, -7);
+                else
+                    editRect = combo->rect.adjusted(15, 7, -25, -9);
                 break;
             case QStyleHelper::SizeSmall:
                 if (combo->editable)
