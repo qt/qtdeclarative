@@ -661,11 +661,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 
     // Click on the Cut menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
-    QQuickWindow *contextMenuPopupWindow = &window;
-    if (contextMenuPrivate->usePopupWindow())
-        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
-    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(cutMenuItem));
+    QVERIFY(clickButton(cutMenuItem));
     QCOMPARE(editor->property("text").toString(), mementoStr);
     QCOMPARE(qGuiApp->clipboard()->text(), cutText);
 #else
@@ -731,11 +727,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
 
     // Click on the Copy menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
-    QQuickWindow *contextMenuPopupWindow = &window;
-    if (contextMenuPrivate->usePopupWindow())
-        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
-    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(copyMenuItem));
+    QVERIFY(clickButton(copyMenuItem));
     QCOMPARE(editor->property("text").toString(), mementoMoriStr);
     const auto *clipboard = QGuiApplication::clipboard();
     QCOMPARE(clipboard->text(), mementoStr);
@@ -799,11 +791,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
 
     // Click on the Paste menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
-    QQuickWindow *contextMenuPopupWindow = &window;
-    if (contextMenuPrivate->usePopupWindow())
-        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
-    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(pasteMenuItem));
+    QVERIFY(clickButton(pasteMenuItem));
     QCOMPARE(editor->property("text").toString(), mementoMoriStr + clipboard->text());
 #else
     QTest::keyClick(&window, Qt::Key_Escape);
@@ -865,11 +853,7 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
     QVERIFY(deleteMenuItem->isEnabled());
 
     // Click on the Delete menu item and close the menu.
-    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
-    QQuickWindow *contextMenuPopupWindow = &window;
-    if (contextMenuPrivate->usePopupWindow())
-        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
-    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(deleteMenuItem));
+    QVERIFY(clickButton(deleteMenuItem));
     QCOMPARE(editor->property("text").toString(), mementoStr);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
@@ -916,11 +900,7 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
     QCOMPARE(selectAllMenuItem->text(), "Select All");
 
     // Click on the Select All menu item and close the menu.
-    auto *contextMenuPrivate = QQuickPopupPrivate::get(contextMenu->menu());
-    QQuickWindow *contextMenuPopupWindow = &window;
-    if (contextMenuPrivate->usePopupWindow())
-        contextMenuPopupWindow = contextMenuPrivate->popupWindow;
-    QTest::mouseClick(contextMenuPopupWindow, Qt::LeftButton, Qt::NoModifier, mapCenterToWindow(selectAllMenuItem));
+    QVERIFY(clickButton(selectAllMenuItem));
     QCOMPARE(editor->property("selectedText").toString(), mementoMoriStr);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
