@@ -110,6 +110,10 @@ void tst_Scenegraph::initTestCase()
     QByteArray msg;
     if (!QBaselineTest::connectToBaselineServer(&msg))
         QSKIP(msg);
+
+    const char *freezeEnv = "QT_QUICKVECTORIMAGE_FREEZE";
+    if (!qEnvironmentVariableIsSet(freezeEnv))
+        qputenv(freezeEnv, "-1");
 }
 
 void tst_Scenegraph::init()

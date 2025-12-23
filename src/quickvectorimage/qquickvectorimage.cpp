@@ -10,6 +10,7 @@
 #include <QtCore/qloggingcategory.h>
 
 #include <private/qquicktranslate_p.h>
+#include <private/qquickanimation_p.h>
 
 #include <private/qfactoryloader_p.h>
 
@@ -109,6 +110,18 @@ void QQuickVectorImagePrivate::loadFile()
 
     q->setImplicitWidth(rootItem->width());
     q->setImplicitHeight(rootItem->height());
+
+    static int freezeTime = qEnvironmentVariableIntValue("QT_QUICKVECTORIMAGE_FREEZE");
+    if (freezeTime != 0) {
+        if (freezeTime < 0)
+            freezeTime = 400; // TBD: calculate better default, e.g. midtime of total anim duration
+        q->animations()->setPaused(true);
+        const QList<QQuickAbstractAnimation *> anims = rootItem->findChildren<QQuickAbstractAnimation *>();
+        for (QQuickAbstractAnimation *anim : anims) {
+            if (anim->group() == nullptr)
+                anim->setCurrentTime(freezeTime);
+        }
+    }
 
     q->updateAnimationProperties();
     q->updateRootItemScale();
