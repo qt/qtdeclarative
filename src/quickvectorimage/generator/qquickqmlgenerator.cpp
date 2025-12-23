@@ -635,6 +635,13 @@ void QQuickQmlGenerator::generateEasing(const QQuickAnimatedProperty::PropertyAn
     }
 }
 
+static int processAnimationTime(int time)
+{
+    static qreal multiplier = qreal(qEnvironmentVariable("QT_QUICKVECTORIMAGE_TIME_DILATION", QStringLiteral("1.0"))
+                                        .toDouble());
+    return std::round(multiplier * time);
+}
+
 void QQuickQmlGenerator::generatePropertyAnimation(const QQuickAnimatedProperty &property,
                                                    const QString &targetName,
                                                    const QString &propertyName,
@@ -668,7 +675,7 @@ void QQuickQmlGenerator::generatePropertyAnimation(const QQuickAnimatedProperty 
         stream() << "SequentialAnimation {";
         m_indentLevel++;
 
-        const int startOffset = animation.startOffset;
+        const int startOffset = processAnimationTime(animation.startOffset);
         if (startOffset > 0)
             stream() << "PauseAnimation { duration: " << startOffset << " }";
 
@@ -685,7 +692,7 @@ void QQuickQmlGenerator::generatePropertyAnimation(const QQuickAnimatedProperty 
         QVariant previousValue;
         for (auto it = animation.frames.constBegin(); it != animation.frames.constEnd(); ++it) {
             const int time = it.key();
-            const int frameTime = time - previousTime;
+            const int frameTime = processAnimationTime(time - previousTime);
             const QVariant &value = it.value();
 
             if (previousValue.isValid() && previousValue == value) {
@@ -1144,7 +1151,7 @@ void QQuickQmlGenerator::generateAnimateMotionPath(const QString &targetName,
     count = 0;
     for (auto it = animation.frames.constBegin(); it != animation.frames.constEnd(); ++it, ++count) {
         const int time = it.key();
-        const int frameTime = time - previousTime;
+        const int frameTime = processAnimationTime(time - previousTime);
         const QPainterPath path = it.value().value<QPainterPath>();
         if (frameTime > 0) {
             if (path.isEmpty()) {
@@ -1281,7 +1288,7 @@ void QQuickQmlGenerator::generateAnimateTransform(const QString &targetName, con
         stream() << "SequentialAnimation {";
         m_indentLevel++;
 
-        const int startOffset = firstAnimation.startOffset;
+        const int startOffset = processAnimationTime(firstAnimation.startOffset);
         if (startOffset > 0)
             stream() << "PauseAnimation { duration: " << startOffset << " }";
 
@@ -1327,7 +1334,7 @@ void QQuickQmlGenerator::generateAnimateTransform(const QString &targetName, con
             QVariantList previousParameters;
             for (auto it = animation.frames.constBegin(); it != animation.frames.constEnd(); ++it) {
                 const int time = it.key();
-                const int frameTime = time - previousTime;
+                const int frameTime = processAnimationTime(time - previousTime);
                 const QVariantList &parameters = it.value().value<QVariantList>();
                 if (parameters.isEmpty())
                     continue;
