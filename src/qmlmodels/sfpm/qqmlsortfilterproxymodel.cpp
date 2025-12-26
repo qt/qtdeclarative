@@ -940,10 +940,10 @@ void QQmlSortFilterProxyModelPrivate::sort_source_rows(
 {
     if (m_primarySortColumn >= 0) {
         if (m_sortOrder == Qt::AscendingOrder) {
-            QSortFilterProxyModelLessThan lt(m_primarySortColumn, source_parent, model, this);
+            QQmlSortFilterProxyModelLessThan lt(m_primarySortColumn, source_parent, model, this);
             std::stable_sort(source_rows.begin(), source_rows.end(), lt);
         } else {
-            QSortFilterProxyModelGreaterThan gt(m_primarySortColumn, source_parent, model, this);
+            QQmlSortFilterProxyModelGreaterThan gt(m_primarySortColumn, source_parent, model, this);
             std::stable_sort(source_rows.begin(), source_rows.end(), gt);
         }
     } else if (m_sortOrder == Qt::AscendingOrder) {
