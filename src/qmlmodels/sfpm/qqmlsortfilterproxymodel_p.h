@@ -30,8 +30,8 @@ class QQmlFilterCompositor;
 class QQmlSorterBase;
 class QQmlSorterCompositor;
 class QQmlSortFilterProxyModelPrivate;
-class QSortFilterProxyModelLessThan;
-class QSortFilterProxyModelGreaterThan;
+class QQmlSortFilterProxyModelLessThan;
+class QQmlSortFilterProxyModelGreaterThan;
 
 class Q_QMLMODELS_EXPORT QQmlSortFilterProxyModel : public QAbstractProxyModel, public QQmlParserStatus
 {
@@ -132,8 +132,8 @@ private:
     Q_DISABLE_COPY(QQmlSortFilterProxyModel)
     Q_DECLARE_PRIVATE(QQmlSortFilterProxyModel)
 
-    friend class QSortFilterProxyModelLessThan;
-    friend class QSortFilterProxyModelGreaterThan;
+    friend class QQmlSortFilterProxyModelLessThan;
+    friend class QQmlSortFilterProxyModelGreaterThan;
 };
 
 QT_END_NAMESPACE

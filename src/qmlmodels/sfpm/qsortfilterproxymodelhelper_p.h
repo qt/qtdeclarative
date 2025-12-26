@@ -22,16 +22,16 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSortFilterProxyModelLessThan;
-class QSortFilterProxyModelGreaterThan;
+class QQmlSortFilterProxyModelLessThan;
+class QQmlSortFilterProxyModelGreaterThan;
 class QQmlSortFilterProxyModel;
 
 using QModelIndexPairList = QList<std::pair<QModelIndex, QPersistentModelIndex>>;
 
 class Q_QMLMODELS_EXPORT QSortFilterProxyModelHelper
 {
-    friend class QSortFilterProxyModelGreaterThan;
-    friend class QSortFilterProxyModelLessThan;
+    friend class QQmlSortFilterProxyModelGreaterThan;
+    friend class QQmlSortFilterProxyModelLessThan;
 
 public:
     QSortFilterProxyModelHelper();
@@ -154,10 +154,10 @@ struct QSortFilterProxyModelDataChanged
     QModelIndex bottomRight;
 };
 
-class QSortFilterProxyModelLessThan
+class QQmlSortFilterProxyModelLessThan
 {
 public:
-    inline QSortFilterProxyModelLessThan(int column, const QModelIndex &parent,
+    inline QQmlSortFilterProxyModelLessThan(int column, const QModelIndex &parent,
                                          const QAbstractItemModel *source,
                                          const QSortFilterProxyModelHelper *helper)
         : sort_column(column), source_parent(parent), source_model(source), proxy_model(helper) {}
@@ -176,10 +176,10 @@ private:
     const QSortFilterProxyModelHelper *proxy_model;
 };
 
-class QSortFilterProxyModelGreaterThan
+class QQmlSortFilterProxyModelGreaterThan
 {
 public:
-    inline QSortFilterProxyModelGreaterThan(int column, const QModelIndex &parent,
+    inline QQmlSortFilterProxyModelGreaterThan(int column, const QModelIndex &parent,
                                             const QAbstractItemModel *source,
                                             const QSortFilterProxyModelHelper *helper)
         : sort_column(column), source_parent(parent),
