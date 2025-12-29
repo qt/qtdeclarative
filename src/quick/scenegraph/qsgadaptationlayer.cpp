@@ -131,12 +131,12 @@ void QSGDistanceFieldGlyphCache::populate(const QVector<glyph_t> &glyphs)
 void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
 {
     QSet<glyph_t> unusedGlyphs;
-    int count = glyphs.size();
-    for (int i = 0; i < count; ++i) {
-        glyph_t glyphIndex = glyphs.at(i);
-        GlyphData &gd = glyphData(glyphIndex);
-        if (--gd.ref == 0)
-            unusedGlyphs.insert(glyphIndex);
+    for (glyph_t glyphIndex : glyphs) {
+        if (auto it = m_glyphsData.find(glyphIndex); it != m_glyphsData.end()) {
+            GlyphData &gd = it.value();
+            if (--gd.ref == 0)
+                unusedGlyphs.insert(glyphIndex);
+        }
     }
     releaseGlyphs(unusedGlyphs);
 }
