@@ -4844,6 +4844,17 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 }
             #endif
 
+            QRectF frameRect = cw.adjustedControlFrame(sf->rect);
+
+            #if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(260000)
+            if (__builtin_available(macOS 26, *)) {
+                const auto oneDevicePx = 1.0 / p->device()->devicePixelRatioF();
+                frameRect = frameRect.adjusted(+oneDevicePx, -oneDevicePx, -oneDevicePx, +oneDevicePx);
+            }
+            #endif
+
+            searchField.frame = frameRect.toCGRect();
+
             if (sf->subControls == QStyle::SC_SearchFieldSearch) {
                 // Draw only the search icon
                 CGRect rect = [cell searchButtonRectForBounds:searchField.bounds];
@@ -4854,8 +4865,6 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 [cell drawWithFrame:rect inView:searchField];
             } else {
                 // Draw the frame
-                QRectF frameRect = cw.adjustedControlFrame(sf->rect);
-                searchField.frame = frameRect.toCGRect();
                 [cell setStringValue:sf->text.toNSString()];
                 d->drawNSViewInRect(searchField, frameRect, p, ^(CGContextRef, const CGRect &r) {
                     [cell drawWithFrame:r inView:searchField];
@@ -5523,6 +5532,8 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
 
           auto *searchField = static_cast<NSSearchField *>(d->cocoaControl(cw));
           auto *cell = static_cast<NSSearchFieldCell *>(searchField.cell);
+          const CGRect bounds = searchField.bounds;
+
           switch (sc) {
           case SC_SearchFieldEditField:{
               ret = editRect.toAlignedRect();
@@ -5530,7 +5541,7 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
               break;
           }
           case SC_SearchFieldClear: {
-              const CGRect r = [cell cancelButtonRectForBounds:ret.toCGRect()];
+              const CGRect r = [cell cancelButtonRectForBounds:bounds];
               ret = QRectF::fromCGRect(r).toRect();
               ret.translate(0, -1);
               ret = visualRect(sf->direction, sf->rect, ret);
@@ -5538,7 +5549,7 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
               break;
           }
           case SC_SearchFieldSearch: {
-              const CGRect r = [cell searchButtonRectForBounds:ret.toCGRect()];
+              const CGRect r = [cell searchButtonRectForBounds:bounds];
               ret = QRectF::fromCGRect(r).toRect();
               ret.translate(0, -1);
               ret = visualRect(sf->direction, sf->rect, ret);

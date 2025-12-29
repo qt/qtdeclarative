@@ -82,6 +82,7 @@ T.SearchField {
         subControl: NativeStyle.SearchField.Frame
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
+        useNinePatchImage: false
 
         readonly property bool __ignoreNotCustomizable: true
     }
