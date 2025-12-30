@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
     MenuSeparator is used to visually distinguish between groups of items in a
     menu by separating them with a line.
 
-    \image qtquickcontrols-menuseparator.png
+    \image qtquickcontrols-menuseparator.webp
            {Menu separator dividing menu items}
 
     \quotefromfile qtquickcontrols-menuseparator-custom.qml

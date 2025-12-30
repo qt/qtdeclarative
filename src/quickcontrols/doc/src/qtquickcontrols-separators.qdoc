@@ -17,7 +17,7 @@
 
     \section1 MenuSeparator Control
 
-    \image qtquickcontrols-menuseparator.png
+    \image qtquickcontrols-menuseparator.webp
            {Menu separator dividing menu items}
 
     \l MenuSeparator should be used to separate items (typically MenuItem
