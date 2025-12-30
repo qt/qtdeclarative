@@ -955,7 +955,9 @@ void QQuickCanvasItem::checkAnimationCallbacks()
 bool QQuickCanvasItem::save(const QString &filename, const QSizeF &imageSize) const
 {
     Q_D(const QQuickCanvasItem);
-    QUrl url = d->baseUrl.resolved(QUrl::fromLocalFile(filename));
+    QUrl url;
+    url.setPath(filename); // `filename` may contain # or % characters
+    url = d->baseUrl.resolved(url);
     return toImage(QRectF(QPointF(0, 0), imageSize)).save(url.toLocalFile());
 }
 
