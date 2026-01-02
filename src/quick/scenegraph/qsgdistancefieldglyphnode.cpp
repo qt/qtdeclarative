@@ -90,10 +90,11 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
         return;
 
     if (m_glyph_cache != oldCache) {
-        if (oldCache) {
+        if (oldCache)
             oldCache->unregisterGlyphNode(this);
-        }
-        m_glyph_cache->registerGlyphNode(this);
+
+        if (m_glyph_cache)
+            m_glyph_cache->registerGlyphNode(this);
     }
     if (m_glyph_cache)
         m_glyph_cache->populate(glyphs.glyphIndexes());
