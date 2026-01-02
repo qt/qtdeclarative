@@ -23,7 +23,7 @@ class Q_QML_EXPORT QQmlPropertyMap : public QObject
     QML_ANONYMOUS
 public:
 #if QT_DEPRECATED_SINCE(6, 11)
-    QT_DEPRECATED_VERSION_X_6_11("Use factory or protected two-argument constructor instead.")
+    QT_DEPRECATED_VERSION_X_6_11("Use create() or the protected two-argument constructor instead.")
     explicit QQmlPropertyMap(QObject *parent = nullptr);
 #endif
 
