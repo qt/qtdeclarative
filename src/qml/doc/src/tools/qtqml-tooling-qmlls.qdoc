@@ -4,7 +4,6 @@
 /*!
 \page qtqml-tooling-qmlls.html
 \title \QMLLS
-\keyword \QMLLS Reference
 \brief A tool that helps you write code in your favorite LSP-supporting editor.
 \ingroup qtqml-tooling
 \ingroup qtqml-tooling-devtools
