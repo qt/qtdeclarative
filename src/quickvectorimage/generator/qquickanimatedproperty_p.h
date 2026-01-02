@@ -25,7 +25,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickAnimatedProperty
 {
 public:
-    struct PropertyAnimation {
+    struct Q_QUICKVECTORIMAGEGENERATOR_EXPORT PropertyAnimation {
         enum Flag {
             NoFlags = 0,
             FreezeAtEnd = 1,
