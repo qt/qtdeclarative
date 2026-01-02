@@ -35,9 +35,9 @@ class Q_QUICK_EXPORT QQuickTextSelection : public QObject, public QQmlParserStat
     Q_INTERFACES(QQmlParserStatus)
 
     // specify the selection
-    Q_PROPERTY(QQuickTextDocument *document READ document WRITE setDocument NOTIFY documentChanged FINAL REVISION(6, 11))
-    Q_PROPERTY(int selectionStart READ selectionStart WRITE setSelectionStart NOTIFY selectionStartChanged FINAL REVISION(6, 11))
-    Q_PROPERTY(int selectionEnd READ selectionEnd WRITE setSelectionEnd NOTIFY selectionEndChanged FINAL REVISION(6, 11))
+    Q_PROPERTY(QQuickTextDocument *document READ document WRITE setDocument NOTIFY documentChanged FINAL)
+    Q_PROPERTY(int selectionStart READ selectionStart WRITE setSelectionStart NOTIFY selectionStartChanged FINAL)
+    Q_PROPERTY(int selectionEnd READ selectionEnd WRITE setSelectionEnd NOTIFY selectionEndChanged FINAL)
 
     // modify the selected text
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
@@ -46,7 +46,7 @@ class Q_QUICK_EXPORT QQuickTextSelection : public QObject, public QQmlParserStat
     Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment NOTIFY alignmentChanged FINAL)
 
     QML_NAMED_ELEMENT(TextSelection)
-    QML_ADDED_IN_VERSION(6, 7)
+    QML_ADDED_IN_VERSION(6, 11)
 
 public:
 
@@ -109,17 +109,17 @@ public:
     Qt::Alignment alignment() const;
     void setAlignment(Qt::Alignment align);
 
-    Q_REVISION(6, 11) Q_INVOKABLE bool moveSelectionStart(MoveOperation op, int n = 1);
-    Q_REVISION(6, 11) Q_INVOKABLE bool moveSelectionEnd(MoveOperation op, int n = 1);
+    Q_INVOKABLE bool moveSelectionStart(MoveOperation op, int n = 1);
+    Q_INVOKABLE bool moveSelectionEnd(MoveOperation op, int n = 1);
 
-    Q_REVISION(6, 11) Q_INVOKABLE void duplicate();
+    Q_INVOKABLE void duplicate();
 
-    Q_REVISION(6, 11) Q_INVOKABLE void linkTo(const QUrl &destination);
+    Q_INVOKABLE void linkTo(const QUrl &destination);
 
 Q_SIGNALS:
-    Q_REVISION(6, 11) void documentChanged();
-    Q_REVISION(6, 11) void selectionStartChanged();
-    Q_REVISION(6, 11) void selectionEndChanged();
+    void documentChanged();
+    void selectionStartChanged();
+    void selectionEndChanged();
     void textChanged();
     void fontChanged();
     void colorChanged();
