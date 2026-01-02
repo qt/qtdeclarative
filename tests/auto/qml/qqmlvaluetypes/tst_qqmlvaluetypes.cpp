@@ -309,7 +309,7 @@ void tst_qqmlvaluetypes::easingCurve()
 
         QCOMPARE(static_cast<QEasingCurve::Type>(object->property("r_type").toInt()), QEasingCurve::InOutElastic);
         QCOMPARE(object->property("r_amplitude").toReal(), 0.25);
-        QCOMPARE(object->property("r_overshoot").toReal(), 1.70158); // The default value for this easing type.
+        QCOMPARE(object->property("r_overshoot").toReal(), 0.5); // As set by MyTypeObject
         QCOMPARE(object->property("r_period").toReal(), 0.75);
         const QList<qreal> expectedBezierCurve = { 0.4, 0.4, 0.8, 0.8, 1, 1 };
         QCOMPARE(object->property("r_bezierCurve").value<QList<qreal>>(), expectedBezierCurve);
@@ -353,7 +353,7 @@ void tst_qqmlvaluetypes::easingCurve()
         std::unique_ptr<MyTypeObject> object { qobject_cast<MyTypeObject *>(component.create()) };
         QVERIFY2(object, qPrintable(component.errorString()));
 
-        QString tostring = QLatin1String("QEasingCurve(InOutElastic, 0.25, 1.70158, 0.75, )");
+        QString tostring = QLatin1String("QEasingCurve(InOutElastic, 0.25, 0.5, 0.75, )");
         QCOMPARE(object->property("tostring").toString(), tostring);
         QCOMPARE(object->property("equalsString").toBool(), true);
         QCOMPARE(object->property("equalsSelf").toBool(), true);
