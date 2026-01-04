@@ -288,7 +288,17 @@ void tst_examples::snippets()
 
     QFETCH(QString, file);
 
-    QQmlComponent component(&engine, QUrl::fromLocalFile(file));
+    QUrl url = QUrl::fromLocalFile(file);
+#if !QT_CONFIG(qml_labs)
+    QStringList filesUsingLabs {
+        "boundaryRule.qml"
+    };
+
+    if (filesUsingLabs.contains(url.fileName()))
+        QSKIP("Test requires feature qml-labs");
+#endif
+
+    QQmlComponent component(&engine, url);
     if (component.status() == QQmlComponent::Error)
         qWarning() << component.errors();
     QCOMPARE(component.status(), QQmlComponent::Ready);

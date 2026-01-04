@@ -91,7 +91,7 @@
 #include "mysignals.h"
 #include "namespacedtypes.h"
 #include "type.h"
-#if QT_CONFIG(qml_table_model)
+#if QT_CONFIG(qml_labs) && QT_CONFIG(qml_table_model)
 #include "qmltablemodel.h"
 #endif
 #include "stringtourl.h"
@@ -3360,7 +3360,7 @@ void tst_qmltc::checkExportsNoFileName()
     QCOMPARE(w.myString(), u"Hello! I should be exported by qmltc"_s);
 }
 
-#if QT_CONFIG(qml_table_model)
+#if QT_CONFIG(qml_labs) && QT_CONFIG(qml_table_model)
 void tst_qmltc::qmlTableModel()
 {
     QQmlEngine e;

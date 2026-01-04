@@ -105,7 +105,7 @@ private slots:
     void checkExportsAreCompiling();
     void checkExportsNoFileName();
 
-#if QT_CONFIG(qml_table_model)
+#if QT_CONFIG(qml_labs) && QT_CONFIG(qml_table_model)
     void qmlTableModel();
 #endif
     void urlToString();

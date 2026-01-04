@@ -3,6 +3,8 @@
 
 # Generated from tableview.pro.
 
-add_subdirectory(abstracttablemodel)
+if(QT_FEATURE_qml_labs)
+    add_subdirectory(abstracttablemodel)
+endif()
 add_subdirectory(listmodel)
 # add_subdirectory(storagemodel) # TODO: C++ API changed

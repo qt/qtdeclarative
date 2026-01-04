@@ -169,7 +169,7 @@ if(QT_FEATURE_quick_tableview)
     endif()
 endif()
 
-if(QT_FEATURE_qml_table_model)
+if(QT_FEATURE_qml_labs AND QT_FEATURE_qml_table_model)
     list(APPEND qml_sources QmlTableModel.qml)
     list(APPEND common_libraries Qt::LabsQmlModelsPrivate)
 endif()

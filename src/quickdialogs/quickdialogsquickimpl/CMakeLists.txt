@@ -9,11 +9,9 @@ set(qml_files
     "qml/ColorDialog.qml"
     "qml/ColorInputs.qml"
     "qml/DelegateBackground.qml"
-    "qml/FileDialog.qml"
     "qml/FileDialogDelegate.qml"
     "qml/FileDialogDelegateLabel.qml"
     "qml/FolderBreadcrumbBar.qml"
-    "qml/FolderDialog.qml"
     "qml/FolderDialogDelegate.qml"
     "qml/FolderDialogDelegateLabel.qml"
     "qml/FontDialog.qml"
@@ -25,45 +23,52 @@ set(qml_files
     "qml/SideBar.qml"
     "qml/+Fusion/ColorDialog.qml"
     "qml/+Fusion/ColorInputs.qml"
-    "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
     "qml/+Fusion/FolderBreadcrumbBar.qml"
-    "qml/+Fusion/FolderDialog.qml"
     "qml/+Fusion/FolderDialogDelegate.qml"
     "qml/+Fusion/FontDialog.qml"
     "qml/+Fusion/MessageDialog.qml"
     "qml/+Fusion/SideBar.qml"
     "qml/+Imagine/ColorDialog.qml"
     "qml/+Imagine/ColorInputs.qml"
-    "qml/+Imagine/FileDialog.qml"
     "qml/+Imagine/FileDialogDelegate.qml"
     "qml/+Imagine/FolderBreadcrumbBar.qml"
-    "qml/+Imagine/FolderDialog.qml"
     "qml/+Imagine/FolderDialogDelegate.qml"
     "qml/+Imagine/FontDialog.qml"
     "qml/+Imagine/MessageDialog.qml"
     "qml/+Imagine/SideBar.qml"
     "qml/+Material/ColorDialog.qml"
     "qml/+Material/ColorInputs.qml"
-    "qml/+Material/FileDialog.qml"
     "qml/+Material/FileDialogDelegate.qml"
     "qml/+Material/FolderBreadcrumbBar.qml"
-    "qml/+Material/FolderDialog.qml"
     "qml/+Material/FolderDialogDelegate.qml"
     "qml/+Material/FontDialog.qml"
     "qml/+Material/MessageDialog.qml"
     "qml/+Material/SideBar.qml"
     "qml/+Universal/ColorInputs.qml"
     "qml/+Universal/ColorDialog.qml"
-    "qml/+Universal/FileDialog.qml"
     "qml/+Universal/FileDialogDelegate.qml"
     "qml/+Universal/FolderBreadcrumbBar.qml"
-    "qml/+Universal/FolderDialog.qml"
     "qml/+Universal/FolderDialogDelegate.qml"
     "qml/+Universal/FontDialog.qml"
     "qml/+Universal/MessageDialog.qml"
     "qml/+Universal/SideBar.qml"
 )
+
+if(QT_FEATURE_qml_labs)
+    list(APPEND qml_files
+        "qml/FileDialog.qml"
+        "qml/FolderDialog.qml"
+        "qml/+Fusion/FileDialog.qml"
+        "qml/+Fusion/FolderDialog.qml"
+        "qml/+Imagine/FileDialog.qml"
+        "qml/+Imagine/FolderDialog.qml"
+        "qml/+Material/FileDialog.qml"
+        "qml/+Material/FolderDialog.qml"
+        "qml/+Universal/FileDialog.qml"
+        "qml/+Universal/FolderDialog.qml"
+    )
+endif()
 
 qt_internal_add_qml_module(QuickDialogs2QuickImpl
     URI "QtQuick.Dialogs.quickimpl"
@@ -117,13 +122,16 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private
-        Qt::LabsFolderListModelPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui
         Qt::Quick
     NO_GENERATE_EXTRA_QMLDIRS
 )
+
+if(QT_FEATURE_qml_labs)
+    add_dependencies(QuickDialogs2QuickImpl Qt::LabsFolderListModelPrivate)
+endif()
 
 add_dependencies(QuickDialogs2QuickImpl Qt::QuickControls2Basic)
 

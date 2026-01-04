@@ -79,6 +79,21 @@ void tst_Snippets::verify()
     if (QTest::currentDataTag() != QLatin1String("qtquickcontrols-spinbox-custom"))
         QTest::failOnWarning();
 
+    QUrl url = QUrl::fromLocalFile(input);
+#if !QT_CONFIG(qml_labs)
+    QStringList filesUsingLabs {
+        "qtquickcontrols-headerview-simple.qml",
+        "qtquickcontrols-headerview.qml",
+        "qtquickcontrols-headerviewdelegate.qml",
+        "qtquickcontrols-selectionrectangle.qml",
+        "qtquickcontrols-tableviewdelegate-custom.qml",
+        "qtquickcontrols-tableviewdelegate.qml"
+    };
+
+    if (filesUsingLabs.contains(url.fileName()))
+        QSKIP("Test requires feature qml-labs");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
 
@@ -86,7 +101,6 @@ void tst_Snippets::verify()
     QSignalSpy warnings(&engine, SIGNAL(warnings(QList<QQmlError>)));
     QVERIFY(warnings.isValid());
 
-    QUrl url = QUrl::fromLocalFile(input);
     component.loadUrl(url);
 
     QScopedPointer<QObject> root(component.create());

@@ -5438,6 +5438,10 @@ void tst_QmlCppCodegen::scopeIdLookup()
 
 void tst_QmlCppCodegen::scopeObjectDestruction()
 {
+#if !QT_CONFIG(qml_labs)
+    QSKIP("Test requires feature qml-labs");
+#endif
+
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/fileDialog.qml"_s));
 

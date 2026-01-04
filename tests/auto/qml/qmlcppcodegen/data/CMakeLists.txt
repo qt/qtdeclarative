@@ -189,7 +189,6 @@ set(qml_files
     failures.qml
     fallbacklookups.qml
     fallbackresettable.qml
-    fileDialog.qml
     finalUser.qml
     flagEnum.qml
     fromBoolValue.qml
@@ -368,8 +367,14 @@ set(qml_files
     voidfunction.qml
     writeBackReferenceObject.qml
     writeback.qml
-    dummy_imports.qml
 )
+
+if(QT_FEATURE_qml_labs)
+    list(APPEND qml_files
+        fileDialog.qml
+        dummy_imports.qml
+    )
+endif()
 
 set(resource_files
     ProgressBar/built-with-Qt_Large.png
