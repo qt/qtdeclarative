@@ -703,7 +703,7 @@ QQuickAbstractButton *QQuickDialogButtonBox::standardButton(QPlatformDialogHelpe
     This property cannot be used together with the
     \l {DialogButtonBox::defaultButton} {defaultButton} property.
 
-    \sa standardButtons, {DialogButtonBox::defaultButton}
+    \sa standardButtons, defaultButton
 */
 QPlatformDialogHelper::StandardButton QQuickDialogButtonBox::defaultStandardButton() const
 {
