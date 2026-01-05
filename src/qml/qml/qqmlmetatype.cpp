@@ -1518,6 +1518,42 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(
     return QQmlPropertyCache::ConstPtr();
 }
 
+bool QQmlMetaType::canConvert(QObject *o, QMetaType metaType)
+{
+    QQmlMetaTypeDataPtr data;
+
+    // There can be multiple composite types mapped to the same metatype. Since a property metatype
+    // alone cannot specify which property cache is actually meant, the only thing we can do here
+    // is check them all.
+    // TODO: Ideally, the QQmlMetaTypeData should be completely dissolved and every composite
+    //       metatype should be specific to the type loader that created it. Then we wouldn't have
+    //       these problems.
+    auto [it, end] = data->compositeTypes.equal_range(metaType.iface());
+    if (it != end) {
+        do {
+            if (QQmlMetaObject::canConvert(
+                        o, QQmlMetaTypeData::propertyCacheForPotentialInlineComponentType(
+                                   metaType, it))) {
+                return true;
+            }
+        } while(++it != end);
+
+        // If it is a composite type and nothing matches we have a certain "no".
+        // We don't call metaObject() on the type then because that searches compositeTypes, too.
+        return false;
+    }
+
+    const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    if (type && type->typeId == metaType)
+        return QQmlMetaObject::canConvert(o, type->baseMetaObject);
+
+    // Types we don't know may still have metaobjects
+    if (const QMetaObject *metaObject = metaType.metaObject())
+        return QQmlMetaObject::canConvert(o, metaObject);
+
+    return false;
+}
+
 void QQmlMetaType::unregisterType(int typeIndex)
 {
     QQmlMetaTypeDataPtr data;

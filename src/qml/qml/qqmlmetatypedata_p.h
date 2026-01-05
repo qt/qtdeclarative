@@ -118,6 +118,9 @@ struct QQmlMetaTypeData
     QQmlPropertyCache::ConstPtr propertyCache(const QQmlType &type, QTypeRevision version);
     QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t) const;
 
+    static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
+            QMetaType t, const QQmlMetaTypeData::CompositeTypes::const_iterator &iter);
+
     void setTypeRegistrationFailures(QStringList *failures)
     {
         m_typeRegistrationFailures = failures;
@@ -139,7 +142,6 @@ struct QQmlMetaTypeData
 
     void clearCompositeTypes();
     void clearCompositeMetaTypes();
-
 private:
     QStringList *m_typeRegistrationFailures = nullptr;
 };

@@ -167,6 +167,7 @@ public:
     static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(QMetaType metaType);
     static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(
             QMetaType metaType, QTypeRevision version);
+    static bool canConvert(QObject *o, QMetaType metaType);
 
     static void freeUnusedTypesAndCaches();
 

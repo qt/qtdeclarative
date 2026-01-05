@@ -9252,7 +9252,14 @@ public:
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         object->setProperty("delegate", QVariant::fromValue(&component));
         QMetaObject::invokeMethod(object.get(), "doInstantiate");
-        QVERIFY(object->property("innerObject").value<QObject *>() != nullptr);
+
+        QObject *innerObject = object->property("innerObject").value<QObject *>();
+        QVERIFY(innerObject != nullptr);
+
+        QObject *withProperty = innerObject->property("objectWithProperty").value<QObject *>();
+        QVERIFY(withProperty != nullptr);
+
+        QCOMPARE(withProperty, object->property("objectWithProperty").value<QObject *>());
     }
 
     QQmlEngine engine;

@@ -1946,25 +1946,26 @@ bool QQmlPropertyPrivate::write(
         } else {
             varType = variantMetaType;
         }
-        QQmlMetaObject valMo = rawMetaObjectForType(varType);
-        if (valMo.isNull() || !varType.flags().testFlag(QMetaType::PointerToQObject))
+
+        if (!varType.flags().testFlag(QMetaType::PointerToQObject))
             return false;
+
         QObject *o = *static_cast<QObject *const *>(val.constData());
-        QQmlMetaObject propMo = rawMetaObjectForType(propertyMetaType);
-
-        if (o)
-            valMo = o;
-
-        if (QQmlMetaObject::canConvert(valMo, propMo)) {
-            return property.writeProperty(object, &o, flags);
-        } else if (!o && QQmlMetaObject::canConvert(propMo, valMo)) {
-            // In the case of a null QObject, we assign the null if there is
-            // any change that the null variant type could be up or down cast to
-            // the property type.
-            return property.writeProperty(object, &o, flags);
-        } else {
-            return false;
+        if (o) {
+            // If we have an object, we can use that to obtain and check the metaobject.
+            // Composite property type. We can check all candidate composite types in one go.
+            return QQmlMetaType::canConvert(o, propertyMetaType)
+                    && property.writeProperty(object, &o, flags);
         }
+
+        // In the case of a null QObject, we assign the null if there is
+        // any chance that the variant type could be up or down cast to
+        // the property type.
+        const QQmlMetaObject valMo = rawMetaObjectForType(varType);
+        const QQmlMetaObject propMo = rawMetaObjectForType(propertyMetaType);
+        if (QQmlMetaObject::canConvert(valMo, propMo) || QQmlMetaObject::canConvert(propMo, valMo))
+            return property.writeProperty(object, &o, flags);
+        return false;
     } else if (ConvertAndAssignResult result = tryConvertAndAssign(
                        object, property, value, flags, propertyMetaType, variantMetaType, isUrl,
                        enginePriv)) {
