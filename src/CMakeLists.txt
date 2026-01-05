@@ -77,7 +77,7 @@ endif()
 
 add_subdirectory(labs)
 
-if(TARGET Qt::QuickTemplates2 AND QT_FEATURE_quicktemplates2_container)
+if(QT_FEATURE_quick_dialogs AND TARGET Qt::QuickTemplates2 AND QT_FEATURE_quicktemplates2_container)
     add_subdirectory(quickdialogs)
 endif()
 

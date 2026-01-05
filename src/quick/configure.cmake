@@ -37,6 +37,11 @@ qt_feature("quick-designer" PRIVATE
     LABEL "Support for Qt Quick Designer"
     PURPOSE "Provides support for the Qt Quick Designer in Qt Creator."
 )
+qt_feature("quick-dialogs" PRIVATE
+    SECTION "Qt Quick"
+    LABEL "Support for Qt Quick Dialogs"
+    PURPOSE "Allows you to create and interact with system dialogs from QML."
+)
 qt_feature("quick-flipable" PRIVATE
     SECTION "Qt Quick"
     LABEL "Flipable item"
@@ -130,6 +135,7 @@ qt_configure_add_summary_section(NAME "Qt Quick")
 qt_configure_add_summary_entry(ARGS "quick-animatedimage")
 qt_configure_add_summary_entry(ARGS "quick-canvas")
 qt_configure_add_summary_entry(ARGS "quick-designer")
+qt_configure_add_summary_entry(ARGS "quick-dialogs")
 qt_configure_add_summary_entry(ARGS "quick-flipable")
 qt_configure_add_summary_entry(ARGS "quick-gridview")
 qt_configure_add_summary_entry(ARGS "quick-listview")

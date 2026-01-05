@@ -26,7 +26,7 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
     NO_GENERATE_CPP_EXPORTS
     QT_LICENSE_ID QT_COMMERCIAL_OR_GPL3
 )
-qt_internal_extend_target(QuickControlsTestUtilsPrivate CONDITION QT_FEATURE_quicktemplates2_container
+qt_internal_extend_target(QuickControlsTestUtilsPrivate CONDITION QT_FEATURE_quick_dialogs AND QT_FEATURE_quicktemplates2_container
     SOURCES
         dialogstestutils.cpp
         dialogstestutils_p.h
