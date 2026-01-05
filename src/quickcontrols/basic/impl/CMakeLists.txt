@@ -5,6 +5,10 @@
 ## qtquickcontrols2basicstyleimplplugin Plugin:
 #####################################################################
 
+set_source_files_properties(TextEditingContextMenu.qml PROPERTIES
+    QT_QML_SOURCE_VERSIONS "6.11"
+)
+
 qt_internal_add_qml_module(QuickControls2BasicStyleImpl
     URI "QtQuick.Controls.Basic.impl"
     VERSION "${PROJECT_VERSION}"
