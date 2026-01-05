@@ -40,6 +40,10 @@ set(qml_files
     "ScrollView.qml"
 )
 
+set_source_files_properties(SearchField.qml PROPERTIES
+    QT_QML_SOURCE_VERSIONS "6.10"
+)
+
 qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
     URI "QtQuick.Controls.Windows"
     VERSION "${PROJECT_VERSION}"

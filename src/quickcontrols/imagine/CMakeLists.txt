@@ -94,6 +94,9 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
 set_source_files_properties(VerticalHeaderViewDelegate.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "6.10"
 )
+set_source_files_properties(SearchField.qml PROPERTIES
+    QT_QML_SOURCE_VERSIONS "6.10"
+)
 
 add_subdirectory(impl)
 
