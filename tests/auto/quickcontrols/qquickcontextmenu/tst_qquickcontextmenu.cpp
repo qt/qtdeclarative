@@ -467,7 +467,9 @@ void tst_QQuickContextMenu::textControlsMenuKey()
 
     // focus the TextField and give position 0, 0: expect the TextField's menu
     {
+        window->requestActivate();
         textField->forceActiveFocus();
+        QTRY_VERIFY(window->activeFocusItem());
         QContextMenuEvent cme(QContextMenuEvent::Keyboard, {}, window->mapToGlobal(QPoint()));
         QGuiApplication::sendEvent(window, &cme);
         auto *openMenu = textField->findChild<QQuickMenu *>();
