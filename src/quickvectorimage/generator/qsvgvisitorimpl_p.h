@@ -25,11 +25,13 @@ class QTextStream;
 class QSvgTinyDocument;
 class QString;
 class QQuickItem;
+class QSvgStyleResolver;
 
 class QSvgVisitorImpl : public QSvgVisitor
 {
 public:
     QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator, bool assumeTrustedSource);
+    ~QSvgVisitorImpl() override;
     bool traverse();
 
 protected:
@@ -77,6 +79,7 @@ private:
     QString m_svgFileName;
     QQuickGenerator *m_generator;
     bool m_assumeTrustedSource;
+    std::unique_ptr<QSvgStyleResolver> m_styleResolver;
 };
 
 QT_END_NAMESPACE
