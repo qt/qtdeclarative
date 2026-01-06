@@ -1674,6 +1674,19 @@ private:
 };
 }
 
+// TODO: This is nasty because we destruct QVariant-owned data.
+//       We need to do this because ConstructInPlace evidently constructs it again.
+//       We rely on the call to ConstructInPlace to happen right after, so that the
+//       QVariant will be fixed before it has a chance to get destructed or copied.
+static void destroyReturnValueBeforeConstructInPlace(
+        QMetaType returnType, void *returnValue, QMetaObject::Call callType)
+{
+    if (callType == QMetaObject::ConstructInPlace
+            && (returnType.flags() & QMetaType::NeedsDestruction)) {
+        returnType.destruct(returnValue);
+    }
+}
+
 static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMetaType returnType, int argCount,
                                          const QMetaType *argTypes, ExecutionEngine *engine, CallData *callArgs,
                                          QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
@@ -1711,6 +1724,7 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
         for (int ii = 0; ii < args.size(); ++ii)
             argData[ii] = args[ii].dataPtr();
 
+        destroyReturnValueBeforeConstructInPlace(returnType, argData[0], callType);
         object.metacall(callType, index, argData.data());
 
         return args[0].toValue(engine);
@@ -1722,6 +1736,7 @@ static ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index, QMe
 
         void *args[] = { arg.dataPtr() };
 
+        destroyReturnValueBeforeConstructInPlace(returnType, args[0], callType);
         object.metacall(callType, index, args);
 
         return arg.toValue(engine);
