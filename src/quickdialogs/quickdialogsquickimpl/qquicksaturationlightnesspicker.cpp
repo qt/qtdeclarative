@@ -127,6 +127,7 @@ QSGNode *QQuickSaturationLightnessPickerCanvas::updatePaintNode(QSGNode *oldNode
             auto* mat = new QQuickSaturationLightnessPickerMaterial();
             geomNode->setMaterial(mat);
             geomNode->setFlag(QSGNode::OwnsMaterial);
+            m_lastSize = QSize();   //to force it to set vertex positions
         }
         else {
             geom = geomNode->geometry();
