@@ -29,11 +29,13 @@ class QSvgDocument;
 class QSvgFeFilterPrimitive;
 class QString;
 class QQuickItem;
+class QSvgStyleResolver;
 
 class QSvgVisitorImpl : public QSvgVisitor
 {
 public:
     QSvgVisitorImpl(const QString svgFileName, QQuickGenerator *generator, bool assumeTrustedSource);
+    ~QSvgVisitorImpl() override;
     bool doTraversal();
 
 protected:
@@ -108,6 +110,7 @@ private:
     int m_defsLevel = 0;
 
     QString m_linkSuffix;
+    std::unique_ptr<QSvgStyleResolver> m_styleResolver;
 };
 
 QT_END_NAMESPACE

@@ -147,8 +147,6 @@ protected:
     QSvgExtraStates m_svgState;
 };
 
-Q_GLOBAL_STATIC(QSvgStyleResolver, styleResolver)
-
 namespace {
 inline bool isPathContainer(const QSvgStructureNode *node)
 {
@@ -282,8 +280,11 @@ QSvgVisitorImpl::QSvgVisitorImpl(const QString svgFileName,
     : m_svgFileName(svgFileName)
     , m_generator(generator)
     , m_assumeTrustedSource(assumeTrustedSource)
+    , m_styleResolver(new QSvgStyleResolver)
 {
 }
+
+QSvgVisitorImpl::~QSvgVisitorImpl() = default;
 
 bool QSvgVisitorImpl::doTraversal()
 {
@@ -696,21 +697,21 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
     const bool isTextArea = node->type() == QSvgNode::Textarea;
 
     QString text;
-    const QSvgFont *svgFont = styleResolver->states().svgFont;
+    const QSvgFont *svgFont = m_styleResolver->states().svgFont;
     bool needsRichText = false;
     bool preserveWhiteSpace = node->whitespaceMode() == QSvgText::Preserve;
-    const QGradient *mainGradient = styleResolver->currentFillGradient();
+    const QGradient *mainGradient = m_styleResolver->currentFillGradient();
 
     QFontEngine *fontEngine = nullptr;
     if (svgFont != nullptr) {
-        fontEngine = new QSvgFontEngine(svgFont, styleResolver->painter().font().pointSize());
+        fontEngine = new QSvgFontEngine(svgFont, m_styleResolver->painter().font().pointSize());
         fontEngine->ref.ref();
     }
 
 #if QT_CONFIG(texthtmlparser)
     bool needsPathNode = mainGradient != nullptr
                            || svgFont != nullptr
-                           || styleResolver->currentStrokeGradient() != nullptr;
+                           || m_styleResolver->currentStrokeGradient() != nullptr;
 #endif
     for (const auto *tspan : node->tspans()) {
         if (!tspan) {
@@ -721,7 +722,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         // Note: We cannot get the font directly from the style, since this does
         // not apply the weight, since this is relative and depends on current state.
         handleBaseNodeSetup(tspan);
-        QFont font = styleResolver->painter().font();
+        QFont font = m_styleResolver->painter().font();
 
         QString styleTagContent;
 
@@ -746,26 +747,26 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
             styleTagContent += QStringLiteral("font-variant: small-caps;");
         }
 
-        if (styleResolver->currentFillGradient() != nullptr
-            && styleResolver->currentFillGradient() != mainGradient) {
-            const QGradient grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
+        if (m_styleResolver->currentFillGradient() != nullptr
+            && m_styleResolver->currentFillGradient() != mainGradient) {
+            const QGradient grad = m_styleResolver->applyOpacityToGradient(*m_styleResolver->currentFillGradient(), m_styleResolver->currentFillOpacity());
             styleTagContent += gradientCssDescription(&grad) + u';';
 #if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
 #endif
         }
 
-        const QColor currentStrokeColor = styleResolver->currentStrokeColor();
+        const QColor currentStrokeColor = m_styleResolver->currentStrokeColor();
         if (currentStrokeColor.alpha() > 0) {
             QString strokeColor = colorCssDescription(currentStrokeColor);
             styleTagContent += QStringLiteral("-qt-stroke-color:%1;").arg(strokeColor);
-            styleTagContent += QStringLiteral("-qt-stroke-width:%1px;").arg(styleResolver->currentStrokeWidth());
-            styleTagContent += QStringLiteral("-qt-stroke-dasharray:%1;").arg(dashArrayString(styleResolver->currentStroke().dashPattern()));
-            styleTagContent += QStringLiteral("-qt-stroke-dashoffset:%1;").arg(styleResolver->currentStroke().dashOffset());
-            styleTagContent += QStringLiteral("-qt-stroke-lineCap:%1;").arg(capStyleName(styleResolver->currentStroke().capStyle()));
-            styleTagContent += QStringLiteral("-qt-stroke-lineJoin:%1;").arg(joinStyleName(styleResolver->currentStroke().joinStyle()));
-            if (styleResolver->currentStroke().joinStyle() == Qt::MiterJoin || styleResolver->currentStroke().joinStyle() == Qt::SvgMiterJoin)
-                styleTagContent += QStringLiteral("-qt-stroke-miterlimit:%1;").arg(styleResolver->currentStroke().miterLimit());
+            styleTagContent += QStringLiteral("-qt-stroke-width:%1px;").arg(m_styleResolver->currentStrokeWidth());
+            styleTagContent += QStringLiteral("-qt-stroke-dasharray:%1;").arg(dashArrayString(m_styleResolver->currentStroke().dashPattern()));
+            styleTagContent += QStringLiteral("-qt-stroke-dashoffset:%1;").arg(m_styleResolver->currentStroke().dashOffset());
+            styleTagContent += QStringLiteral("-qt-stroke-lineCap:%1;").arg(capStyleName(m_styleResolver->currentStroke().capStyle()));
+            styleTagContent += QStringLiteral("-qt-stroke-lineJoin:%1;").arg(joinStyleName(m_styleResolver->currentStroke().joinStyle()));
+            if (m_styleResolver->currentStroke().joinStyle() == Qt::MiterJoin || m_styleResolver->currentStroke().joinStyle() == Qt::SvgMiterJoin)
+                styleTagContent += QStringLiteral("-qt-stroke-miterlimit:%1;").arg(m_styleResolver->currentStroke().miterLimit());
 #if QT_CONFIG(texthtmlparser)
             needsPathNode = true;
 #endif
@@ -840,10 +841,10 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         handleBaseNodeEnd(tspan);
     }
 
-    if (preserveWhiteSpace && (needsRichText || styleResolver->currentFillGradient() != nullptr))
+    if (preserveWhiteSpace && (needsRichText || m_styleResolver->currentFillGradient() != nullptr))
         text = QStringLiteral("<span style=\"white-space: pre-wrap\">") + text + QStringLiteral("</span>");
 
-    QFont font = styleResolver->painter().font();
+    QFont font = m_styleResolver->painter().font();
     if (font.pixelSize() <= 0 && font.pointSize() > 0)
         font.setPixelSize(font.pointSize()); // Pixel size stored as point size by SVG parser
 
@@ -892,12 +893,12 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                         if (fmt.foreground().gradient() != nullptr && fmt.foreground().gradient()->type() != QGradient::NoGradient)
                             info.grad = *fmt.foreground().gradient();
                     } else {
-                        info.fillColor.setDefaultValue(styleResolver->currentFillColor());
+                        info.fillColor.setDefaultValue(m_styleResolver->currentFillColor());
                     }
 
                     info.path.setDefaultValue(QVariant::fromValue(p));
 
-                    const QGradient *strokeGradient = styleResolver->currentStrokeGradient();
+                    const QGradient *strokeGradient = m_styleResolver->currentStrokeGradient();
                     QPen pen;
                     if (fmt.hasProperty(QTextCharFormat::TextOutline)) {
                         pen = fmt.textOutline();
@@ -906,17 +907,17 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                             info.strokeStyle.color.setDefaultValue(pen.color());
                         }
                     } else {
-                        pen = styleResolver->currentStroke();
+                        pen = m_styleResolver->currentStroke();
                         if (strokeGradient == nullptr) {
                             info.strokeStyle = StrokeStyle::fromPen(pen);
-                            info.strokeStyle.color.setDefaultValue(styleResolver->currentStrokeColor());
+                            info.strokeStyle.color.setDefaultValue(m_styleResolver->currentStrokeColor());
                         }
                     }
 
-                    if (info.grad.type() == QGradient::NoGradient && styleResolver->currentFillGradient() != nullptr)
-                        info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
+                    if (info.grad.type() == QGradient::NoGradient && m_styleResolver->currentFillGradient() != nullptr)
+                        info.grad = m_styleResolver->applyOpacityToGradient(*m_styleResolver->currentFillGradient(), m_styleResolver->currentFillOpacity());
 
-                    info.fillTransform = styleResolver->currentFillTransform();
+                    info.fillTransform = m_styleResolver->currentFillTransform();
 
                     m_generator->generatePath(info, boundingRect);
 
@@ -951,9 +952,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
 
                             QPainterPath p = font.pathForGlyph(glyphIndex);
                             p.translate(pos + node->position() + baselineTranslation);
-                            if (styleResolver->states().textAnchor == Qt::AlignHCenter)
+                            if (m_styleResolver->states().textAnchor == Qt::AlignHCenter)
                                 p.translate(QPointF(-0.5 * width, 0));
-                            else if (styleResolver->states().textAnchor == Qt::AlignRight)
+                            else if (m_styleResolver->states().textAnchor == Qt::AlignRight)
                                 p.translate(QPointF(-width, 0));
                             paths.append(p);
                         }
@@ -1014,9 +1015,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         info.text = text;
         info.isTextArea = isTextArea;
         info.needsRichText = needsRichText;
-        info.fillColor.setDefaultValue(styleResolver->currentFillColor());
-        info.alignment = styleResolver->states().textAnchor;
-        info.strokeColor.setDefaultValue(styleResolver->currentStrokeColor());
+        info.fillColor.setDefaultValue(m_styleResolver->currentFillColor());
+        info.alignment = m_styleResolver->states().textAnchor;
+        info.strokeColor.setDefaultValue(m_styleResolver->currentStrokeColor());
 
         m_generator->generateTextNode(info);
     }
@@ -1479,9 +1480,9 @@ bool QSvgVisitorImpl::visitDocumentNodeStart(const QSvgDocument *node)
 void QSvgVisitorImpl::visitDocumentNodeEnd(const QSvgDocument *node)
 {
     handleBaseNodeEnd(node);
-    qCDebug(lcQuickVectorImage) << "REVERT" << node->nodeId() << node->type() << (styleResolver->painter().pen().style() != Qt::NoPen)
-                                   << styleResolver->painter().pen().color().name() << (styleResolver->painter().pen().brush().style() != Qt::NoBrush)
-                                   << styleResolver->painter().pen().brush().color().name();
+    qCDebug(lcQuickVectorImage) << "REVERT" << node->nodeId() << node->type() << (m_styleResolver->painter().pen().style() != Qt::NoPen)
+                                   << m_styleResolver->painter().pen().color().name() << (m_styleResolver->painter().pen().brush().style() != Qt::NoBrush)
+                                   << m_styleResolver->painter().pen().brush().color().name();
 
     StructureNodeInfo info;
     fillCommonNodeInfo(node, info);
@@ -1910,15 +1911,15 @@ void QSvgVisitorImpl::fillAnimationInfo(const QSvgNode *node, NodeInfo &info)
 
 void QSvgVisitorImpl::handleBaseNodeSetup(const QSvgNode *node)
 {
-    qCDebug(lcQuickVectorImage) << "Before SETUP" << node << "fill" << styleResolver->currentFillColor()
-                                   << "stroke" << styleResolver->currentStrokeColor() << styleResolver->currentStrokeWidth()
+    qCDebug(lcQuickVectorImage) << "Before SETUP" << node << "fill" << m_styleResolver->currentFillColor()
+                                   << "stroke" << m_styleResolver->currentStrokeColor() << m_styleResolver->currentStrokeWidth()
                                    << node->nodeId() << " type: " << node->typeName()  << " " << node->type();
 
-    node->applyStyle(&styleResolver->painter(), styleResolver->states());
+    node->applyStyle(&m_styleResolver->painter(), m_styleResolver->states());
 
-    qCDebug(lcQuickVectorImage) << "After SETUP" << node << "fill" << styleResolver->currentFillColor()
-                                   << "stroke" << styleResolver->currentStrokeColor()
-                                   << styleResolver->currentStrokeWidth() << node->nodeId();
+    qCDebug(lcQuickVectorImage) << "After SETUP" << node << "fill" << m_styleResolver->currentFillColor()
+                                   << "stroke" << m_styleResolver->currentStrokeColor()
+                                   << m_styleResolver->currentStrokeWidth() << node->nodeId();
 }
 
 void QSvgVisitorImpl::handleBaseNode(const QSvgNode *node)
@@ -1931,10 +1932,10 @@ void QSvgVisitorImpl::handleBaseNode(const QSvgNode *node)
 
 void QSvgVisitorImpl::handleBaseNodeEnd(const QSvgNode *node)
 {
-    node->revertStyle(&styleResolver->painter(), styleResolver->states());
+    node->revertStyle(&m_styleResolver->painter(), m_styleResolver->states());
 
-    qCDebug(lcQuickVectorImage) << "After END" << node << "fill" << styleResolver->currentFillColor()
-                                   << "stroke" << styleResolver->currentStrokeColor() << styleResolver->currentStrokeWidth()
+    qCDebug(lcQuickVectorImage) << "After END" << node << "fill" << m_styleResolver->currentFillColor()
+                                   << "stroke" << m_styleResolver->currentStrokeColor() << m_styleResolver->currentStrokeWidth()
                                    << node->nodeId();
 }
 
@@ -1948,17 +1949,17 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     if (fillStyle)
         info.fillRule = fillStyle->fillRule();
 
-    const QGradient *strokeGradient = styleResolver->currentStrokeGradient();
+    const QGradient *strokeGradient = m_styleResolver->currentStrokeGradient();
 
     info.path.setDefaultValue(QVariant::fromValue(path));
-    info.fillColor.setDefaultValue(styleResolver->currentFillColor());
+    info.fillColor.setDefaultValue(m_styleResolver->currentFillColor());
     if (strokeGradient == nullptr) {
-        info.strokeStyle = StrokeStyle::fromPen(styleResolver->currentStroke());
-        info.strokeStyle.color.setDefaultValue(styleResolver->currentStrokeColor());
+        info.strokeStyle = StrokeStyle::fromPen(m_styleResolver->currentStroke());
+        info.strokeStyle.color.setDefaultValue(m_styleResolver->currentStrokeColor());
     }
-    if (styleResolver->currentFillGradient() != nullptr)
-        info.grad = styleResolver->applyOpacityToGradient(*styleResolver->currentFillGradient(), styleResolver->currentFillOpacity());
-    info.fillTransform = styleResolver->currentFillTransform();
+    if (m_styleResolver->currentFillGradient() != nullptr)
+        info.grad = m_styleResolver->applyOpacityToGradient(*m_styleResolver->currentFillGradient(), m_styleResolver->currentFillOpacity());
+    info.fillTransform = m_styleResolver->currentFillTransform();
 
     fillPathAnimationInfo(node, info);
 
@@ -1970,7 +1971,7 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
 
         strokeInfo.grad = *strokeGradient;
 
-        QPainterPathStroker stroker(styleResolver->currentStroke());
+        QPainterPathStroker stroker(m_styleResolver->currentStroke());
         strokeInfo.path.setDefaultValue(QVariant::fromValue(stroker.createStroke(path)));
         m_generator->generatePath(strokeInfo);
     }
