@@ -2517,11 +2517,8 @@ bool CallArgument::fromValue(QMetaType metaType, ExecutionEngine *engine, const 
         }
 
         if (type == qMetaTypeId<QJSManagedValue>()) {
-            Scope scope(engine);
-            ScopedValue v(scope, value);
-            qjsManagedValuePtr = new (&allocData) QJSManagedValue;
-            // This points to a JS heap object that cannot be immutable. const_cast-ing is fine here.
-            *QJSManagedValuePrivate::memberPtr(qjsManagedValuePtr) = const_cast<Value *>(&value);
+            qjsManagedValuePtr = new (&allocData) QJSManagedValue(
+                    QJSManagedValuePrivate::create(engine, value));
             return true;
         }
 

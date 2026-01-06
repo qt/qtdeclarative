@@ -17,6 +17,8 @@
 
 #include "qjsmanagedvalue.h"
 
+#include <private/qv4managed_p.h>
+
 QT_BEGIN_NAMESPACE
 
 // ### Qt 7: Use this for proper PIMPL
@@ -24,7 +26,12 @@ class QJSManagedValuePrivate
 {
 public:
     static QV4::Value *member(const QJSManagedValue *jsmv) { return jsmv->d; }
-    static QV4::Value **memberPtr(QJSManagedValue *jsmv) { return &jsmv->d; }
+    static QJSManagedValue create(QV4::ExecutionEngine *engine, const QV4::Value &value)
+    {
+        QJSManagedValue result(engine);
+        *result.d = value;
+        return result;
+    }
 };
 
 QT_END_NAMESPACE
