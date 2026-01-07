@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
+import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Controls.impl
 
@@ -9,7 +10,7 @@ Menu {
     id: menu
     popupType: Qt.platform.pluginName !== "wayland" ? Popup.Window : Popup.Item
 
-    required property var editor
+    required property Item editor
 
     UndoAction {
         editor: menu.editor

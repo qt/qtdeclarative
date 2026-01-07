@@ -14,5 +14,5 @@ T.Action {
     enabled: !editor.readOnly && editor.selectedText.length > 0
     onTriggered: editor.remove(editor.selectionStart, editor.selectionEnd)
 
-    required property var editor
+    required property Item editor
 }

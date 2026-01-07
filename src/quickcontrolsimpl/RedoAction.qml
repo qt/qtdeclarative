@@ -13,5 +13,5 @@ T.Action {
     enabled: editor.canRedo
     onTriggered: editor.redo()
 
-    required property var editor
+    required property Item editor
 }

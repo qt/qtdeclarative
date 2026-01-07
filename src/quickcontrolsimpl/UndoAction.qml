@@ -13,5 +13,5 @@ T.Action {
     enabled: editor.canUndo
     onTriggered: editor.undo()
 
-    required property var editor
+    required property Item editor
 }

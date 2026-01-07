@@ -21,5 +21,5 @@ T.Action {
 
     // Can't be T.Control because otherwise it would fail to assign TextField/TextArea to it,
     // and we'd need TextFieldCutAction and TextAreaCutAction.
-    required property var editor
+    required property Item editor
 }

@@ -14,5 +14,5 @@ T.Action {
     enabled: editor.selectedText.length > 0 && editor.hasOwnProperty("copy")
     onTriggered: editor.copy()
 
-    required property var editor
+    required property Item editor
 }

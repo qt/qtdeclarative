@@ -13,5 +13,5 @@ T.Action {
     shortcut: StandardKey.SelectAll
     onTriggered: editor.selectAll()
 
-    required property var editor
+    required property Item editor
 }

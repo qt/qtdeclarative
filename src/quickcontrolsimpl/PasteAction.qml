@@ -14,5 +14,5 @@ T.Action {
     enabled: !editor.readOnly && editor.hasOwnProperty("paste")
     onTriggered: editor.paste()
 
-    required property var editor
+    required property Item editor
 }
