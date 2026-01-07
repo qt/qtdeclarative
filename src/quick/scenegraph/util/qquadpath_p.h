@@ -227,6 +227,11 @@ public:
     int elementCount() const { return m_elements.size(); }
     bool isEmpty() const { return m_elements.size() == 0; }
     int elementCountRecursive() const;
+    int lineCount() const
+    {
+        return std::count_if(m_elements.cbegin(), m_elements.cend(),
+                             [](const Element &e) { return e.isLine(); });
+    }
 
     static QQuadPath fromPainterPath(const QPainterPath &path, PathHints hints = {});
     QPainterPath toPainterPath() const;
