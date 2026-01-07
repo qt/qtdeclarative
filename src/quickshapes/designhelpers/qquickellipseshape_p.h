@@ -54,7 +54,7 @@ public:
                        RESET resetBorderMode FINAL)
 
     QML_NAMED_ELEMENT(EllipseShape)
-    QML_ADDED_IN_VERSION(6, 10)
+    QML_ADDED_IN_VERSION(6, 11)
 
 public:
     QQuickEllipseShape(QQuickItem *parent = nullptr);
