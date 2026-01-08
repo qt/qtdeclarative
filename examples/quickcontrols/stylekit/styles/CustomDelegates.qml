@@ -28,17 +28,20 @@ Style {
     }
 
     component UnderlayDelegate : Item {
-        // If the base type is not a StyleKitDelegate, the delegate must implement two required
-        // properties: 'control' and 'delegateProperties'. The former points to the Qt Quick Control
-        // that uses the delegate, and the latter points to the StyleKitDelegateProperties that
-        // describes how it should be styled.
-        required property QtObject control
+        /* Custom delegates that don't inherit from StyleKitDelegate can optionally
+         * declare 'delegateProperties' and 'control' properties. Use delegateProperties
+         * to bind to style attributes like color, radius, and opacity. Use control
+         * to access the Quick Control the owns the delegate. */
         required property StyleKitDelegateProperties delegateProperties
+        required property QtObject control
 
-        width: parent.width
-        height: parent.height
         implicitWidth: delegateProperties.implicitWidth
         implicitHeight: delegateProperties.implicitHeight
+        width: parent.width
+        height: parent.height
+        scale: delegateProperties.scale
+        rotation: delegateProperties.rotation
+        visible: delegateProperties.visible
 
         Rectangle {
             id: underlay
@@ -64,7 +67,7 @@ Style {
         }
 
         StyleKitDelegate {
-            control: parent.control
+            // Embed a StyleKitDelegate to render the standard delegate on top of the custom one
             delegateProperties: parent.delegateProperties
         }
     }
@@ -73,21 +76,24 @@ Style {
         // You can pass your own properties from the style as well, like
         // here, where we use 'isFirst' to tell whether the delegate instance
         // represents the first or the second handle, in case of a RangeSlider.
+        // By adding a 'control' property, we can access the slider's value(s).
+        id: sliderHandle
         property bool isFirstHandle: false
+        required property QtObject control
 
         Text {
-            rotation: control.vertical ? -90 : 0
+            rotation: sliderHandle.control.vertical ? -90 : 0
             anchors.centerIn: parent
             font.pixelSize: 9
             text: {
-                if (control instanceof T.RangeSlider) {
-                    if (isFirstHandle)
-                        return control.first.value.toFixed(0)
+                if (sliderHandle.control instanceof T.RangeSlider) {
+                    if (sliderHandle.isFirstHandle)
+                        return sliderHandle.control.first.value.toFixed(0)
                     else
-                        return control.second.value.toFixed(0)
+                        return sliderHandle.control.second.value.toFixed(0)
                 }
 
-                return control.value.toFixed(0)
+                return sliderHandle.control.value.toFixed(0)
             }
         }
     }
@@ -99,7 +105,6 @@ Style {
         width: parent.width
         height: parent.height
 
-        required property QtObject control
         required property StyleKitDelegateProperties delegateProperties
 
         // The following properties are used by the shader (noise.frag)
@@ -126,9 +131,12 @@ Style {
 
         StyleKitDelegate {
             id: unifiedSourceItem
-            control: parent.control
             delegateProperties: parent.delegateProperties
+            width: parent.width
+            height: parent.height
             visible: false
+            rotation: 0.0
+            scale: 1.0
         }
     }
 
@@ -136,7 +144,6 @@ Style {
         implicitWidth: delegateProperties.implicitWidth
         implicitHeight: delegateProperties.implicitHeight
 
-        required property QtObject control
         required property StyleKitDelegateProperties delegateProperties
 
         // The following properties are used by the shader (wave.frag)
@@ -165,7 +172,6 @@ Style {
     }
 
     component CustomShadowDelegate : Item {
-        required property QtObject control
         required property StyleKitDelegateProperties delegateProperties
 
         x: delegateProperties.shadow.verticalOffset
@@ -222,6 +228,7 @@ Style {
     }
 
     textField {
+        background.shadow.color: "lightgray"
         background.shadow.verticalOffset: 14
         background.shadow.horizontalOffset: 14
         background.shadow.delegate: CustomShadowDelegate {}

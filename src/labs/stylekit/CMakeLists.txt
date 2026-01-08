@@ -18,6 +18,7 @@ qt_internal_add_qml_module(QtQuickStyleKit
         qqstylekitcontrolproperties_p.h qqstylekitcontrolproperties.cpp
         qqstylekitcustomcontrol_p.h qqstylekitcustomcontrol.cpp
         qqstylekitdebug_p.h qqstylekitdebug.cpp
+        qqstylekitdelegate_p.h qqstylekitdelegate.cpp
         qqstylekitglobal_p.h qqstylekitglobal.cpp
         qqstylekitpalette_p.h qqstylekitpalette.cpp
         qqstylekitfont_p.h qqstylekitfont.cpp
@@ -68,4 +69,5 @@ qt_internal_add_qml_module(QtQuickStyleKit
         Qt6::QuickPrivate
         Qt6::QuickTemplates2
         Qt6::QuickTemplates2Private
+        Qt6::QuickControls2ImplPrivate
 )

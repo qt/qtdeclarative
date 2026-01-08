@@ -13,8 +13,10 @@ Style {
         implicitHeight: unifiedSourceItem.implicitHeight
         width: parent.width
         height: parent.height
+        scale: delegateProperties.scale
+        rotation: delegateProperties.rotation
+        visible: delegateProperties.visible
 
-        required property QtObject control;
         required property StyleKitDelegateProperties delegateProperties
 
         readonly property bool isDarkBg: {
@@ -41,9 +43,12 @@ Style {
 
         StyleKitDelegate {
             id: unifiedSourceItem
-            control: noiseDelegate.control
             delegateProperties: noiseDelegate.delegateProperties
+            width: parent.width
+            height: parent.height
             visible: false
+            rotation: 0.0
+            scale: 1.0
         }
     }
 
