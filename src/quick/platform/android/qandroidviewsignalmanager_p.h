@@ -76,7 +76,7 @@ private:
 
     QMap<connection_key_t, ConnectionInfo> m_connections;
     QQuickView *m_view;
-    QVector<QueuedConnectionInfo> m_queuedConnections;
+    QList<QueuedConnectionInfo> m_queuedConnections;
     QMutex m_queueMutex;
 };
 

@@ -817,36 +817,36 @@ QT_WARNING_POP
 void tst_DragHandler::touchDragMultiSliders_data()
 {
     QTest::addColumn<int>("sliderRow");
-    QTest::addColumn<QVector<int> >("whichSliders");
-    QTest::addColumn<QVector<int> >("startingCenterOffsets");
-    QTest::addColumn<QVector<QVector2D> >("movements");
+    QTest::addColumn<QList<int> >("whichSliders");
+    QTest::addColumn<QList<int> >("startingCenterOffsets");
+    QTest::addColumn<QList<QVector2D> >("movements");
 
     QTest::newRow("Drag Knob: start on the knobs, drag down") <<
-        0 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
+        0 << QList<int> { 0, 1, 2 } << QList<int> { 0, 0, 0 } << QList<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
     QTest::newRow("Drag Knob: start on the knobs, drag diagonally downward") <<
-        0 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
+        0 << QList<int> { 0, 1, 2 } << QList<int> { 0, 0, 0 } << QList<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
     QTest::newRow("Drag Anywhere: start on the knobs, drag down") <<
-        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
+        1 << QList<int> { 0, 1, 2 } << QList<int> { 0, 0, 0 } << QList<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
     QTest::newRow("Drag Anywhere: start on the knobs, drag diagonally downward") <<
-        1 << QVector<int> { 0, 1, 2 } << QVector<int> { 0, 0, 0 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
+        1 << QList<int> { 0, 1, 2 } << QList<int> { 0, 0, 0 } << QList<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
     // TODO these next two fail because the DragHandler grabs when a finger
     // drags across it from outside, but should rather start only if it is pressed inside
 //    QTest::newRow("Drag Knob: start above the knobs, drag down") <<
-//        0 << QVector<int> { 0, 1, 2 } << QVector<int> { -30, -30, -30 } << QVector<QVector2D> { {0, 40}, {0, 60}, {0, 80} };
+//        0 << QList<int> { 0, 1, 2 } << QList<int> { -30, -30, -30 } << QList<QVector2D> { {0, 40}, {0, 60}, {0, 80} };
 //    QTest::newRow("Drag Knob: start above the knobs, drag diagonally downward") <<
-//        0 << QVector<int> { 0, 1, 2 } << QVector<int> { -30, -30, -30 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
+//        0 << QList<int> { 0, 1, 2 } << QList<int> { -30, -30, -30 } << QList<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
     QTest::newRow("Drag Anywhere: start above the knobs, drag down") <<
-        1 << QVector<int> { 0, 1, 2 } << QVector<int> { -20, -30, -40 } << QVector<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
+        1 << QList<int> { 0, 1, 2 } << QList<int> { -20, -30, -40 } << QList<QVector2D> { {0, 60}, {0, 60}, {0, 60} };
     QTest::newRow("Drag Anywhere: start above the knobs, drag diagonally downward") <<
-        1 << QVector<int> { 0, 1, 2 } << QVector<int> { -20, -30, -40 } << QVector<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
+        1 << QList<int> { 0, 1, 2 } << QList<int> { -20, -30, -40 } << QList<QVector2D> { {20, 40}, {20, 60}, {20, 80} };
 }
 
 void tst_DragHandler::touchDragMultiSliders()
 {
     QFETCH(int, sliderRow);
-    QFETCH(QVector<int>, whichSliders);
-    QFETCH(QVector<int>, startingCenterOffsets);
-    QFETCH(QVector<QVector2D>, movements);
+    QFETCH(QList<int>, whichSliders);
+    QFETCH(QList<int>, startingCenterOffsets);
+    QFETCH(QList<QVector2D>, movements);
     const int moveCount = 8;
 
     QScopedPointer<QQuickView> windowPtr;
@@ -855,10 +855,10 @@ void tst_DragHandler::touchDragMultiSliders()
     QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchscreen.get());
 
     QQuickRepeater *rowRepeater = window->rootObject()->findChildren<QQuickRepeater *>()[sliderRow];
-    QVector<QQuickItem *> knobs;
-    QVector<QQuickDragHandler *> dragHandlers;
-    QVector<QQuickTapHandler *> tapHandlers;
-    QVector<QPointF> startPoints;
+    QList<QQuickItem *> knobs;
+    QList<QQuickDragHandler *> dragHandlers;
+    QList<QQuickTapHandler *> tapHandlers;
+    QList<QPointF> startPoints;
     for (int sli : whichSliders) {
         QQuickItem *slider = rowRepeater->itemAt(sli);
         QVERIFY(slider);
@@ -873,7 +873,7 @@ void tst_DragHandler::touchDragMultiSliders()
         qCDebug(lcPointerTests) << "row" << sliderRow << "slider" << sli << slider->objectName() <<
             "start" << startingCenterOffsets[sli] << startPoints[sli];
     }
-    QVector<QPointF> touchPoints = startPoints;
+    QList<QPointF> touchPoints = startPoints;
 
     // Press
     for (int sli : whichSliders)

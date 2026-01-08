@@ -676,7 +676,7 @@ bool QQmlImports::resolveType(
         QQmlType *type_return, QList<QQmlError> *errors,
         QQmlType::RegistrationType registrationType, bool *typeRecursionDetected) const
 {
-    const QVector<QHashedStringRef> splitName = type.split(Dot);
+    const QList<QHashedStringRef> splitName = type.split(Dot);
     auto resolveTypeInNamespace = [&](
             QHashedStringRef unqualifiedtype, QQmlImportNamespace *nameSpace,
             QList<QQmlError> *errors) -> bool {

@@ -111,7 +111,7 @@ void QSGSoftwareInternalRectangleNode::setGradientStops(const QGradientStops &st
             //Clip stops to only the first below 0.0 and above 1.0
             int below = -1;
             int above = -1;
-            QVector<int> between;
+            QList<int> between;
             for (int i = 0; i < stops.size(); ++i) {
                 if (stops.at(i).first < 0.0) {
                     below = i;

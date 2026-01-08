@@ -86,7 +86,7 @@ protected:
     QSGAreaAllocator m_allocator;
     QRhiTexture *m_texture = nullptr;
     QSize m_size;
-    QVector<TextureBase *> m_pending_uploads;
+    QList<TextureBase *> m_pending_uploads;
     friend class TextureBase;
     friend class TextureBasePrivate;
 

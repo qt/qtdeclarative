@@ -83,7 +83,7 @@ void QQmlListAccessor::setList(const QVariant &v)
     if (int i = 0; [&](){bool ok = false; i = v.toInt(&ok); return ok;}()) {
         // Here we have to check for an upper limit, because down the line code might (well, will)
         // allocate memory depending on the number of elements. The upper limit cannot be INT_MAX:
-        //      QVector<QPointer<QQuickItem>> something;
+        //      QList<QPointer<QQuickItem>> something;
         //      something.resize(count());
         // (See e.g. QQuickRepeater::regenerate())
         // This will allocate data along the lines of:

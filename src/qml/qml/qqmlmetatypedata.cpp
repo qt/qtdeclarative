@@ -131,7 +131,7 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
     if (auto pc = propertyCacheForVersion(type.index(), version))
         return pc;
 
-    QVector<QQmlType> types;
+    QList<QQmlType> types;
 
     quint8 maxMinorVersion = 0;
 

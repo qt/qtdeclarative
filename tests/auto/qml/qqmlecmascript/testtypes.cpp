@@ -267,7 +267,7 @@ public:
     {
         return stringList;
     }
-    Q_INVOKABLE QVector<QString> stringsVector(const QStringList& stringList) const
+    Q_INVOKABLE QList<QString> stringsVector(const QStringList& stringList) const
     {
         return stringList.toVector();
     }
@@ -288,7 +288,7 @@ public:
     {
         return v;
     }
-    Q_INVOKABLE QVector<int> integerVector(QVector<int> v) const
+    Q_INVOKABLE QList<int> integerVector(QList<int> v) const
     {
         return v;
     }
@@ -297,7 +297,7 @@ public:
     {
         return v;
     }
-    Q_INVOKABLE QVector<qreal> realVector(QVector<qreal> v) const
+    Q_INVOKABLE QList<qreal> realVector(QList<qreal> v) const
     {
         return v;
     }
@@ -306,7 +306,7 @@ public:
     {
         return v;
     }
-    Q_INVOKABLE QVector<bool> boolVector(QVector<bool> v) const
+    Q_INVOKABLE QList<bool> boolVector(QList<bool> v) const
     {
         return v;
     }

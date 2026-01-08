@@ -558,7 +558,7 @@ public:
 
     QVariant path() const;
     void setPath(const QVariant &path);
-    void setPath(const QVector<QPointF> &path);
+    void setPath(const QList<QPointF> &path);
     QPointF start() const;
     void addToPath(QPainterPath &path, const QQuickPathData &data) override;
 
@@ -567,7 +567,7 @@ Q_SIGNALS:
     void startChanged();
 
 private:
-    QVector<QPointF> m_path;
+    QList<QPointF> m_path;
 };
 
 class Q_QUICK_EXPORT QQuickPathMultiline : public QQuickCurve
@@ -582,7 +582,7 @@ public:
 
     QVariant paths() const;
     void setPaths(const QVariant &paths);
-    void setPaths(const QVector<QVector<QPointF>> &paths);
+    void setPaths(const QList<QList<QPointF>> &paths);
     QPointF start() const;
     void addToPath(QPainterPath &path, const QQuickPathData &) override;
 
@@ -593,7 +593,7 @@ Q_SIGNALS:
 private:
     QPointF absolute(const QPointF &relative) const;
 
-    QVector<QVector<QPointF>> m_paths;
+    QList<QList<QPointF>> m_paths;
 };
 
 struct QQuickCachedBezier

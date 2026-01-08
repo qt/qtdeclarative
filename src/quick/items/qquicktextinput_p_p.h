@@ -232,7 +232,7 @@ public:
     QInputControl *m_inputControl;
 
     QList<int> m_transactions;
-    QVector<Command> m_history;
+    QList<Command> m_history;
 
     QColor color;
     QColor selectionColor;

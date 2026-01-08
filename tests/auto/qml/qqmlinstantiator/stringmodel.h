@@ -10,7 +10,7 @@
 class StringModel : public QAbstractItemModel
 {
     Q_OBJECT
-    QVector<QString> items;
+    QList<QString> items;
     QHash<int, QByteArray> roles;
     QString name;
 

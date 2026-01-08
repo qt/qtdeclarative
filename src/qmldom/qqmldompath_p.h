@@ -20,11 +20,11 @@
 #include "qqmldom_global.h"
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/QList>
 #include <QtCore/QMetaEnum>
 #include <QtCore/QString>
 #include <QtCore/QStringView>
 #include <QtCore/QStringList>
-#include <QtCore/QVector>
 #include <QtCore/QDebug>
 
 #include <functional>
@@ -350,16 +350,16 @@ inline bool operator>=(const PathComponent& lhs, const PathComponent& rhs){ retu
 
 class PathData {
 public:
-    PathData(const QStringList &strData, const QVector<PathComponent> &components)
+    PathData(const QStringList &strData, const QList<PathComponent> &components)
         : strData(strData), components(components)
     {}
-    PathData(const QStringList &strData, const QVector<PathComponent> &components,
+    PathData(const QStringList &strData, const QList<PathComponent> &components,
              const std::shared_ptr<PathData> &parent)
         : strData(strData), components(components), parent(parent)
     {}
 
     QStringList strData;
-    QVector<PathComponent> components;
+    QList<PathComponent> components;
     std::shared_ptr<PathData> parent;
 };
 

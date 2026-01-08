@@ -127,8 +127,8 @@ void QSGDefaultGlyphNode::updateGeometry()
 
     GlyphInfo glyphInfo;
 
-    const QVector<quint32> indexes = m_glyphs.glyphIndexes();
-    const QVector<QPointF> positions = m_glyphs.positions();
+    const QList<quint32> indexes = m_glyphs.glyphIndexes();
+    const QList<QPointF> positions = m_glyphs.positions();
 
     const int maxGlyphs = (USHRT_MAX + 1) / 4; // 16384
     const int maxVertices = maxGlyphs * 4; // 65536
@@ -170,8 +170,8 @@ void QSGDefaultGlyphNode::updateGeometry()
         QSGGeometry::TexturedPoint2D *vertexData = g->vertexDataAsTexturedPoint2D();
         quint16 *indexData = g->indexDataAsUShort();
 
-        QVector<QSGGeometry::TexturedPoint2D> tempVertexData(maxVertices);
-        QVector<quint16> tempIndexData(maxIndexes);
+        QList<QSGGeometry::TexturedPoint2D> tempVertexData(maxVertices);
+        QList<quint16> tempIndexData(maxIndexes);
 
         for (int i = 0; i < maxGlyphs; i++) {
             tempVertexData[i * 4 + 0] = vertexData[i * 4 + 0];

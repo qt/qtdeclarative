@@ -166,7 +166,7 @@ public:
         ints << join;
     }
 
-    inline void setLineDash(const QVector<qreal> &pattern)
+    inline void setLineDash(const QList<qreal> &pattern)
     {
         commands << QQuickContext2D::LineDash;
         reals << pattern.size();
@@ -241,18 +241,18 @@ private:
     int pathIdx;
     int imageIdx;
     int pixmapIdx;
-    QVector<QQuickContext2D::PaintCommand> commands;
+    QList<QQuickContext2D::PaintCommand> commands;
 
-    QVector<int> ints;
-    QVector<bool> bools;
-    QVector<qreal> reals;
-    QVector<QRectF> rects;
-    QVector<QColor> colors;
-    QVector<QTransform> matrixes;
-    QVector<QBrush> brushes;
-    QVector<QPainterPath> pathes;
-    QVector<QImage> images;
-    QVector<QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
+    QList<int> ints;
+    QList<bool> bools;
+    QList<qreal> reals;
+    QList<QRectF> rects;
+    QList<QColor> colors;
+    QList<QTransform> matrixes;
+    QList<QBrush> brushes;
+    QList<QPainterPath> pathes;
+    QList<QImage> images;
+    QList<QQmlRefPointer<QQuickCanvasPixmap> > pixmaps;
     QMutex queueLock;
 };
 

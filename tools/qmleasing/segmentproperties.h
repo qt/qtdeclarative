@@ -19,7 +19,7 @@ public:
         m_splineEditor = splineEditor;
     }
 
-    void setSegment(int segment, QVector<QPointF> points, bool smooth, bool last)
+    void setSegment(int segment, QList<QPointF> points, bool smooth, bool last)
     {
         m_segment = segment;
         m_points = points;
@@ -41,7 +41,7 @@ private:
     Ui_Pane m_ui_pane_p;
 
     SplineEditor *m_splineEditor;
-    QVector<QPointF> m_points;
+    QList<QPointF> m_points;
     int m_segment;
     bool m_smooth;
     bool m_last;

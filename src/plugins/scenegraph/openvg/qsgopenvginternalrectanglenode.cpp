@@ -92,7 +92,7 @@ void QSGOpenVGInternalRectangleNode::setGradientStops(const QGradientStops &stop
             //Clip stops to only the first below 0.0 and above 1.0
             int below = -1;
             int above = -1;
-            QVector<int> between;
+            QList<int> between;
             for (int i = 0; i < stops.count(); ++i) {
                 if (stops.at(i).first < 0.0) {
                     below = i;
@@ -217,7 +217,7 @@ void QSGOpenVGInternalRectangleNode::render()
             vgSetParameteri(m_rectanglePaint, VG_PAINT_COLOR_RAMP_SPREAD_MODE, VG_COLOR_RAMP_SPREAD_PAD);
             vgSetParameteri(m_rectanglePaint, VG_PAINT_COLOR_RAMP_PREMULTIPLIED, false);
 
-            QVector<VGfloat> stops;
+            QList<VGfloat> stops;
             for (const QGradientStop &stop : std::as_const(m_gradientStops)) {
                 // offset
                 stops.append(stop.first);
@@ -313,7 +313,7 @@ void QSGOpenVGInternalRectangleNode::generateRectanglePath(const QRectF &rect, f
             };
 
             // Create command data
-            QVector<VGfloat> coordinates(5);
+            QList<VGfloat> coordinates(5);
             coordinates[0] = rect.x();
             coordinates[1] = rect.y();
             coordinates[2] = rect.width();
@@ -330,7 +330,7 @@ void QSGOpenVGInternalRectangleNode::generateRectanglePath(const QRectF &rect, f
                 VG_CLOSE_PATH
             };
 
-            QVector<VGfloat> coordinates(8);
+            QList<VGfloat> coordinates(8);
             const QPointF topLeft = transform().map(rect.topLeft());
             const QPointF topRight = transform().map(rect.topRight());
             const QPointF bottomLeft = transform().map(rect.bottomLeft());
@@ -369,7 +369,7 @@ void QSGOpenVGInternalRectangleNode::generateRectanglePath(const QRectF &rect, f
         };
 
         // Create command data
-        QVector<VGfloat> coordinates(26);
+        QList<VGfloat> coordinates(26);
 
         coordinates[0] =  rect.x() + adjustedRadius / 2;
         coordinates[1] =  rect.y();
@@ -429,7 +429,7 @@ void QSGOpenVGInternalRectangleNode::generateBorderPath(const QRectF &rect, floa
             };
 
             // Create command data
-            QVector<VGfloat> coordinates(10);
+            QList<VGfloat> coordinates(10);
             // Outside Square
             coordinates[0] = rect.x();
             coordinates[1] = rect.y();
@@ -458,7 +458,7 @@ void QSGOpenVGInternalRectangleNode::generateBorderPath(const QRectF &rect, floa
                 VG_CLOSE_PATH
             };
 
-            QVector<VGfloat> coordinates(16);
+            QList<VGfloat> coordinates(16);
             QRectF insideRect = rect.marginsRemoved(QMarginsF(borderWidth, borderHeight, borderWidth, borderHeight));
             QPointF outsideBottomLeft = transform().map(rect.bottomLeft());
             QPointF outsideBottomRight = transform().map(rect.bottomRight());
@@ -514,7 +514,7 @@ void QSGOpenVGInternalRectangleNode::generateBorderPath(const QRectF &rect, floa
         float adjustedRadius = radius * 2;
 
         // Create command data
-        QVector<VGfloat> coordinates(31);
+        QList<VGfloat> coordinates(31);
         // Outside Rounded Rect
         coordinates[0] =  rect.x() + adjustedRadius / 2;
         coordinates[1] =  rect.y();
@@ -591,7 +591,7 @@ void QSGOpenVGInternalRectangleNode::generateBorderPath(const QRectF &rect, floa
         float adjustedInnerRadius = (radius - qMax(borderWidth, borderHeight)) * 2;
 
         // Create command data
-        QVector<VGfloat> coordinates(52);
+        QList<VGfloat> coordinates(52);
 
         // Outer
         coordinates[0] =  rect.x() + adjustedRadius / 2;

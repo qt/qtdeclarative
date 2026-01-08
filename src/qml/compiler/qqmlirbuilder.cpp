@@ -1981,7 +1981,7 @@ JSCodeGen::JSCodeGen(
     _fileNameIsUrl = true;
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
+QList<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
         const QList<CompiledFunctionOrExpression> &functions)
 {
     auto qmlName = [&](const CompiledFunctionOrExpression &c) {
@@ -1990,7 +1990,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
         else
             return QStringLiteral("%qml-expression-entry");
     };
-    QVector<int> runtimeFunctionIndices(functions.size());
+    QList<int> runtimeFunctionIndices(functions.size());
 
     QV4::Compiler::ScanFunctions scan(this, document->code, QV4::Compiler::ContextType::Global);
     scan.enterGlobalEnvironment(QV4::Compiler::ContextType::Binding);
@@ -2018,7 +2018,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
     scan.leaveEnvironment();
 
     if (hasError())
-        return QVector<int>();
+        return QList<int>();
 
     _context = nullptr;
 

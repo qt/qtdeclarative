@@ -47,8 +47,8 @@ private:
     QColor m_color = Qt::black;
 
     struct GlyphInfo {
-        QVector<quint32> indexes;
-        QVector<QPointF> positions;
+        QList<quint32> indexes;
+        QList<QPointF> positions;
     };
 
     uint m_dirtyGeometry: 1;

@@ -121,7 +121,7 @@ public:
 
     QPainterPath _path;
     QList<QQuickPathElement*> _pathElements;
-    mutable QVector<QPointF> _pointCache;
+    mutable QList<QPointF> _pointCache;
     QList<QQuickPath::AttributePoint> _attributePoints;
     QStringList _attributes;
     QList<QQuickCurve*> _pathCurves;

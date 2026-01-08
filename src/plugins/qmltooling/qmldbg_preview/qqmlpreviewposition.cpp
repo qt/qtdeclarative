@@ -13,9 +13,9 @@
 
 QT_BEGIN_NAMESPACE
 
-static QVector<QQmlPreviewPosition::ScreenData> initScreensData()
+static QList<QQmlPreviewPosition::ScreenData> initScreensData()
 {
-    QVector<QQmlPreviewPosition::ScreenData> screensData;
+    QList<QQmlPreviewPosition::ScreenData> screensData;
 
     for (QScreen *screen : QGuiApplication::screens()) {
         QQmlPreviewPosition::ScreenData sd{screen->name(), screen->geometry()};
@@ -147,7 +147,7 @@ void QQmlPreviewPosition::readLastPositionFromByteArray(const QByteArray &array)
 
     stream >> majorVersion >> minorVersion;
 
-    QVector<ScreenData> initScreensData;
+    QList<ScreenData> initScreensData;
     stream >> initScreensData;
 
     if (m_currentInitScreensData != initScreensData)

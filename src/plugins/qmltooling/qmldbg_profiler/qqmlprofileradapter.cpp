@@ -107,7 +107,7 @@ qint64 QQmlProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &messag
     return -1;
 }
 
-void QQmlProfilerAdapter::receiveData(const QVector<QQmlProfilerData> &new_data,
+void QQmlProfilerAdapter::receiveData(const QList<QQmlProfilerData> &new_data,
                                       const QQmlProfiler::LocationHash &new_locations)
 {
     if (data.isEmpty())

@@ -41,7 +41,7 @@ QSGRhiDistanceFieldGlyphCache::~QSGRhiDistanceFieldGlyphCache()
 void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 {
     QList<GlyphPosition> glyphPositions;
-    QVector<glyph_t> glyphsToRender;
+    QList<glyph_t> glyphsToRender;
 
     if (m_areaAllocator == nullptr)
         m_areaAllocator = new QSGAreaAllocator(QSize(maxTextureSize(), m_maxTextureCount * maxTextureSize()));
@@ -111,7 +111,7 @@ bool QSGRhiDistanceFieldGlyphCache::isActive() const
 
 void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
-    typedef QHash<TextureInfo *, QVector<glyph_t> > GlyphTextureHash;
+    typedef QHash<TextureInfo *, QList<glyph_t> > GlyphTextureHash;
     typedef GlyphTextureHash::const_iterator GlyphTextureHashConstIt;
 
     GlyphTextureHash glyphTextures;
@@ -333,7 +333,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
     if (qtdfTable.isEmpty())
         return false;
 
-    typedef QHash<TextureInfo *, QVector<glyph_t> > GlyphTextureHash;
+    typedef QHash<TextureInfo *, QList<glyph_t> > GlyphTextureHash;
 
     GlyphTextureHash glyphTextures;
 
@@ -488,7 +488,7 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
             createTexture(texInfo, width, height, textureData);
 
-            QVector<glyph_t> glyphs = glyphTextures.value(texInfo);
+            QList<glyph_t> glyphs = glyphTextures.value(texInfo);
 
             Texture t;
             t.texture = texInfo->texture;

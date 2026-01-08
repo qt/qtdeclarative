@@ -274,7 +274,7 @@ public:
         QString name; // optional, f.ex. the filename, used for debugging purposes only
         QShader rhiShader;
         Type type;
-        QVector<Variable> variables;
+        QList<Variable> variables;
 
         // Vertex inputs are not tracked here as QSGGeometry::AttributeSet
         // hardwires that anyways so it is up to the shader to provide
@@ -329,7 +329,7 @@ public:
         ShaderData() {}
         bool hasShaderCode = false;
         QSGGuiThreadShaderEffectManager::ShaderInfo shaderInfo;
-        QVector<VariableData> varData;
+        QList<VariableData> varData;
     };
 
     struct SyncData {
@@ -402,7 +402,7 @@ class Q_QUICK_EXPORT QSGDistanceFieldGlyphConsumer
 public:
     virtual ~QSGDistanceFieldGlyphConsumer();
 
-    virtual void invalidateGlyphs(const QVector<quint32> &glyphs) = 0;
+    virtual void invalidateGlyphs(const QList<quint32> &glyphs) = 0;
     QIntrusiveListNode node;
 };
 typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphConsumer::node> QSGDistanceFieldGlyphConsumerList;
@@ -464,8 +464,8 @@ public:
     inline TexCoord glyphTexCoord(glyph_t glyph);
     inline const Texture *glyphTexture(glyph_t glyph);
 
-    void populate(const QVector<glyph_t> &glyphs);
-    void release(const QVector<glyph_t> &glyphs);
+    void populate(const QList<glyph_t> &glyphs);
+    void release(const QList<glyph_t> &glyphs);
 
     void update();
 
@@ -500,8 +500,8 @@ protected:
     virtual void releaseGlyphs(const QSet<glyph_t> &glyphs) = 0;
 
     void setGlyphsPosition(const QList<GlyphPosition> &glyphs);
-    void setGlyphsTexture(const QVector<glyph_t> &glyphs, const Texture &tex);
-    void markGlyphsToRender(const QVector<glyph_t> &glyphs);
+    void setGlyphsTexture(const QList<glyph_t> &glyphs, const Texture &tex);
+    void markGlyphsToRender(const QList<glyph_t> &glyphs);
     inline void removeGlyph(glyph_t glyph);
 
     void updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize);

@@ -40,7 +40,7 @@ public:
                        joinStyleChanged FINAL)
     Q_PROPERTY(QQuickShapePath::StrokeStyle strokeStyle READ strokeStyle WRITE setStrokeStyle NOTIFY
                        strokeStyleChanged FINAL)
-    Q_PROPERTY(QVector<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY
+    Q_PROPERTY(QList<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY
                        dashPatternChanged FINAL)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient NOTIFY
                        gradientChanged RESET resetFillGradient FINAL)
@@ -79,8 +79,8 @@ public:
     QQuickShapePath::StrokeStyle strokeStyle() const;
     void setStrokeStyle(QQuickShapePath::StrokeStyle style);
 
-    QVector<qreal> dashPattern() const;
-    void setDashPattern(const QVector<qreal> &array);
+    QList<qreal> dashPattern() const;
+    void setDashPattern(const QList<qreal> &array);
 
     QQuickShapeGradient *fillGradient() const;
     void setFillGradient(QQuickShapeGradient *fillGradient);

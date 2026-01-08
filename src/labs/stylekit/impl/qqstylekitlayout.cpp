@@ -27,7 +27,7 @@ static qreal height(QQStyleKitLayoutItem *li, qreal availableHeight = .0)
     return qMax(.0, h);
 }
 
-static qreal totalWidth(const QVector<QQStyleKitLayoutItem *> &items, qreal spacing)
+static qreal totalWidth(const QList<QQStyleKitLayoutItem *> &items, qreal spacing)
 {
     qreal total = .0;
     for (QQStyleKitLayoutItem *li : items) {
@@ -37,7 +37,7 @@ static qreal totalWidth(const QVector<QQStyleKitLayoutItem *> &items, qreal spac
     return total;
 }
 
-static qreal totalHeight(const QVector<QQStyleKitLayoutItem *> &items)
+static qreal totalHeight(const QList<QQStyleKitLayoutItem *> &items)
 {
     qreal maxHeight = .0;
     for (QQStyleKitLayoutItem *li : items) {
@@ -397,9 +397,9 @@ void QQStyleKitLayout::updateLayout()
         return;
     m_updatingLayout = true;
 
-    QVector<QQStyleKitLayoutItem *> left;
-    QVector<QQStyleKitLayoutItem *> right;
-    QVector<QQStyleKitLayoutItem *> center;
+    QList<QQStyleKitLayoutItem *> left;
+    QList<QQStyleKitLayoutItem *> right;
+    QList<QQStyleKitLayoutItem *> center;
 
     for (QQStyleKitLayoutItem *li : m_layoutItems) {
         if (!li->item() || !li->item()->isVisible())

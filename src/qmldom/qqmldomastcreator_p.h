@@ -134,9 +134,9 @@ private:
 
     MutableDomItem qmlFile;
     std::shared_ptr<QmlFile> qmlFilePtr;
-    QVector<QmlStackElement> nodeStack;
+    QList<QmlStackElement> nodeStack;
     QList<ScriptStackElement> scriptNodeStack;
-    QVector<int> arrayBindingLevels;
+    QList<int> arrayBindingLevels;
     FileLocations::Tree rootMap;
     int m_nestedFunctionDepth = 0;
     bool m_enableScriptExpressions = false;

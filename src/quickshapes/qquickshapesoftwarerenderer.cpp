@@ -86,7 +86,7 @@ void QQuickShapeSoftwareRenderer::setCapStyle(int index, QQuickShapePath::CapSty
 }
 
 void QQuickShapeSoftwareRenderer::setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                                                    qreal dashOffset, const QVector<qreal> &dashPattern)
+                                                    qreal dashOffset, const QList<qreal> &dashPattern)
 {
     ShapePathGuiData &d(m_sp[index]);
     switch (strokeStyle) {

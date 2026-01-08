@@ -69,7 +69,7 @@ private:
         int userState = -1;
     };
 
-    QVector<Block> m_blocks;
+    QList<Block> m_blocks;
 
     QString m_content;
     bool m_modified = false;

@@ -498,16 +498,16 @@ inline bool operator!=(const StackSlot &l, const StackSlot &r) { return l.stackS
 Q_QML_EXPORT
 QString dumpBytecode(
         const char *bytecode, int len, int nLocals, int nFormals, int beginOffset, int endOffset,
-        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
-                QVector<CompiledData::CodeOffsetToLineAndStatement>());
+        const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QList<CompiledData::CodeOffsetToLineAndStatement>());
 QString dumpBytecode(
         const char *bytecode, int len, int nLocals, int nFormals, int startLine = 1,
-        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
-                QVector<CompiledData::CodeOffsetToLineAndStatement>());
+        const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QList<CompiledData::CodeOffsetToLineAndStatement>());
 inline QString dumpBytecode(
         const QByteArray &bytecode, int nLocals, int nFormals, int startLine = 1,
-        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
-                QVector<CompiledData::CodeOffsetToLineAndStatement>())
+        const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping =
+                QList<CompiledData::CodeOffsetToLineAndStatement>())
 {
     return dumpBytecode(bytecode.constData(), bytecode.size(), nLocals, nFormals, startLine,
                         lineAndStatementNumberMapping);

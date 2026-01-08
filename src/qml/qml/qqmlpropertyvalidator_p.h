@@ -33,7 +33,7 @@ public:
             QQmlTypeLoader *typeLoader, const QQmlImports *imports,
             const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
 
-    QVector<QQmlError> validate();
+    QList<QQmlError> validate();
 
     QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(0); }
     QUrl documentSourceUrl() const { return compilationUnit->url(); }
@@ -41,7 +41,7 @@ public:
     QQmlTypeLoader *typeLoader() const { return m_typeLoader; }
 
 private:
-    QVector<QQmlError> validateObject(
+    QList<QQmlError> validateObject(
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             bool populatingValueTypeGroupProperty = false,
             QQmlPropertyResolver::RevisionCheck checkRevision
@@ -55,9 +55,9 @@ private:
 
     bool canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const;
 
-    Q_REQUIRED_RESULT QVector<QQmlError> recordError(
+    Q_REQUIRED_RESULT QList<QQmlError> recordError(
             const QV4::CompiledData::Location &location, const QString &description) const;
-    Q_REQUIRED_RESULT QVector<QQmlError> recordError(const QQmlError &error) const;
+    Q_REQUIRED_RESULT QList<QQmlError> recordError(const QQmlError &error) const;
     QString stringAt(int index) const { return compilationUnit->stringAt(index); }
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {
@@ -70,7 +70,7 @@ private:
     const QV4::CompiledData::Unit *qmlUnit;
     const QQmlPropertyCacheVector &propertyCaches;
 
-    QVector<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
+    QList<QV4::CompiledData::BindingPropertyData> * const bindingPropertyDataPerObject;
 };
 
 QT_END_NAMESPACE

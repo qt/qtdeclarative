@@ -69,7 +69,7 @@ private:
     QShader m_vs;
     QShader m_fs;
 
-    void recordDrawCalls(const QVector<DrawCall> &drawCalls,
+    void recordDrawCalls(const QList<DrawCall> &drawCalls,
                          QRhiCommandBuffer *cb,
                          QRhiShaderResourceBindings *srb,
                          bool blendOneOne = false);
@@ -120,7 +120,7 @@ private:
     private:
         void gather(Node *n);
         RhiVisualizer *visualizer;
-        QVector<DrawCall> drawCalls;
+        QList<DrawCall> drawCalls;
         QRhiBuffer *vbuf = nullptr;
         QRhiBuffer *ibuf = nullptr;
         QRhiBuffer *ubuf = nullptr;
@@ -140,7 +140,7 @@ private:
         void gather(Batch *b);
         RhiVisualizer *visualizer;
         bool forceUintIndex;
-        QVector<DrawCall> drawCalls;
+        QList<DrawCall> drawCalls;
         QRhiBuffer *ubuf = nullptr;
         QRhiShaderResourceBindings *srb = nullptr;
     } m_batchVis;
@@ -154,7 +154,7 @@ private:
     private:
         void gather(QSGNode *node);
         RhiVisualizer *visualizer;
-        QVector<DrawCall> drawCalls;
+        QList<DrawCall> drawCalls;
         QRhiBuffer *vbuf = nullptr;
         QRhiBuffer *ibuf = nullptr;
         QRhiBuffer *ubuf = nullptr;
@@ -170,7 +170,7 @@ private:
     private:
         void gather(Node *n);
         RhiVisualizer *visualizer;
-        QVector<DrawCall> drawCalls;
+        QList<DrawCall> drawCalls;
         QRhiBuffer *vbuf = nullptr;
         QRhiBuffer *ibuf = nullptr;
         QRhiBuffer *ubuf = nullptr;

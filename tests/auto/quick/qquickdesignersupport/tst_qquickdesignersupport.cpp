@@ -548,7 +548,7 @@ void tst_qquickdesignersupport::testNotifyPropertyChangeCallBack()
 // We have to use this ugly approach, because the signature of
 // registerFixResourcePathsForObjectCallBack doesn't accept
 // a proper lambda with a capture list
-static QVector<QObject*> s_allSubObjects;
+static QList<QObject*> s_allSubObjects;
 
 static void fixResourcePathsForObjectCallBackFunction(QObject *object)
 {

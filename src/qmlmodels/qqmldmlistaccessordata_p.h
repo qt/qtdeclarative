@@ -263,7 +263,7 @@ public:
         return new QQmlDMListAccessorData(metaType, this, index, row, column, value);
     }
 
-    bool notify(const QQmlAdaptorModel &model, const QList<QQmlDelegateModelItem *> &items, int index, int count, const QVector<int> &) const override
+    bool notify(const QQmlAdaptorModel &model, const QList<QQmlDelegateModelItem *> &items, int index, int count, const QList<int> &) const override
     {
         for (auto modelItem : items) {
             const int modelItemIndex = modelItem->modelIndex();

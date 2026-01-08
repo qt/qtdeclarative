@@ -3093,7 +3093,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
     // currently unused srb that is layout-compatible with our binding list.
     if (!e->srb) {
         // reuse a QVector as our work area, thus possibly reusing the underlying allocation too
-        QVector<quint32> &layoutDesc(m_shaderManager->srbLayoutDescSerializeWorkspace);
+        QList<quint32> &layoutDesc(m_shaderManager->srbLayoutDescSerializeWorkspace);
         layoutDesc.clear();
         QRhiShaderResourceBinding::serializeLayoutDescription(bindings.cbegin(), bindings.cend(), std::back_inserter(layoutDesc));
         e->srb = m_shaderManager->srbPool.take(layoutDesc);

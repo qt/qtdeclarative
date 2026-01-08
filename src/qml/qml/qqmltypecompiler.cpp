@@ -198,7 +198,7 @@ const QQmlImports *QQmlTypeCompiler::imports() const
     return typeData->imports();
 }
 
-QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
+QList<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
 {
     return &document->objects;
 }
@@ -767,7 +767,7 @@ template<>
 bool QQmlComponentAndAliasResolver<QQmlTypeCompiler>::wrapImplicitComponent(QmlIR::Binding *binding)
 {
     QQmlJS::MemoryPool *pool = m_compiler->memoryPool();
-    QVector<QmlIR::Object *> *qmlObjects = m_compiler->qmlObjects();
+    QList<QmlIR::Object *> *qmlObjects = m_compiler->qmlObjects();
 
     // emulate "import QML 1.0" and then wrap the component in "QML.Component {}"
     QQmlType componentType = QQmlMetaType::qmlType(

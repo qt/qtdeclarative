@@ -1521,7 +1521,7 @@ struct PolishItemSpan {
  * For instance, two consecutive spans {99,0} and {1,2000} } instructs to
  * construct 99 items with no repolish, and 1 item with 2000 repolishes (in that sibling order)
  */
-typedef QVector<PolishItemSpan> PolishItemSpans;
+typedef QList<PolishItemSpan> PolishItemSpans;
 
 Q_DECLARE_METATYPE(PolishItemSpan)
 Q_DECLARE_METATYPE(PolishItemSpans)

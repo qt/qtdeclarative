@@ -108,7 +108,7 @@ BacktraceJob::BacktraceJob(QV4DataCollector *collector, int fromFrame, int toFra
 void BacktraceJob::run()
 {
     QJsonArray frameArray;
-    QVector<QV4::StackFrame> frames = collector->engine()->stackTrace(toFrame);
+    QList<QV4::StackFrame> frames = collector->engine()->stackTrace(toFrame);
     for (int i = fromFrame; i < toFrame && i < frames.size(); ++i)
         frameArray.push_back(collector->buildFrame(frames[i], i));
     if (frameArray.isEmpty()) {
@@ -127,7 +127,7 @@ FrameJob::FrameJob(QV4DataCollector *collector, int frameNr) :
 
 void FrameJob::run()
 {
-    QVector<QV4::StackFrame> frames = collector->engine()->stackTrace(frameNr + 1);
+    QList<QV4::StackFrame> frames = collector->engine()->stackTrace(frameNr + 1);
     if (frameNr >= frames.size()) {
         success = false;
     } else {
@@ -152,7 +152,7 @@ void ScopeJob::run()
     success = collector->collectScope(&object, frameNr, scopeNr);
 
     if (success) {
-        QVector<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
+        QList<QV4::Heap::ExecutionContext::ContextType> scopeTypes =
                 collector->getScopeTypes(frameNr);
         result[QLatin1String("type")] = QV4DataCollector::encodeScopeType(scopeTypes[scopeNr]);
     } else {

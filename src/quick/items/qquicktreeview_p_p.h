@@ -40,7 +40,7 @@ public:
     void itemReusedCallback(int serializedModelIndex, QObject *object) override;
     void dataChangedCallback(const QModelIndex &topLeft,
                              const QModelIndex &bottomRight,
-                             const QVector<int> &roles);
+                             const QList<int> &roles);
 
     void updateRequiredProperties(int serializedModelIndex, QObject *object, bool init);
     void updateSelection(const QRect &oldSelection, const QRect &newSelection) override;

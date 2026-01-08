@@ -48,7 +48,7 @@ class QQuickWindow;
       the same handler multiple times
 */
 struct QQuickPointingDeviceExtra {
-    QVector<QObject *> deliveryTargets;
+    QList<QObject *> deliveryTargets;
 };
 
 class Q_QUICK_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
@@ -85,8 +85,8 @@ public:
     QQuickItem *lastUngrabbed = nullptr;
     QStack<QPointerEvent *> eventsInDelivery;
     QFlatMap<QPointer<QQuickItem>, uint> hoverItems;
-    QVector<QQuickItem *> hasFiltered; // during event delivery to a single receiver, the filtering parents for which childMouseEventFilter was already called
-    QVector<QQuickItem *> skipDelivery; // during delivery of one event to all receivers, Items to which we know delivery is no longer necessary
+    QList<QQuickItem *> hasFiltered; // during event delivery to a single receiver, the filtering parents for which childMouseEventFilter was already called
+    QList<QQuickItem *> skipDelivery; // during delivery of one event to all receivers, Items to which we know delivery is no longer necessary
 
     std::unique_ptr<QMutableTouchEvent> delayedTouch;
     QList<const QPointingDevice *> knownPointingDevices;
@@ -133,7 +133,7 @@ public:
     void clearGrabbers(QPointerEvent *pointerEvent);
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
     static QPointerEvent *clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos = std::nullopt);
-    void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
+    void deliverToPassiveGrabbers(const QList<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
     bool sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
     bool sendFilteredPointerEvent(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
     bool sendFilteredPointerEventImpl(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
@@ -176,11 +176,11 @@ public:
     void deliverUpdatedPoints(QPointerEvent *event);
     void deliverMatchingPointsToItem(QQuickItem *item, bool isGrabber, QPointerEvent *pointerEvent, bool handlersOnly = false);
 
-    QVector<QQuickItem *> eventTargets(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
+    QList<QQuickItem *> eventTargets(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
                                        qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate) const;
-    QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointerEvent *event, const QEventPoint &point,
+    QList<QQuickItem *> pointerTargets(QQuickItem *, const QPointerEvent *event, const QEventPoint &point,
                                          bool checkMouseButtons, bool checkAcceptsTouch) const;
-    QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
+    QList<QQuickItem *> mergePointerTargets(const QList<QQuickItem *> &list1, const QList<QQuickItem *> &list2) const;
 
     // hover delivery
     enum class HoverChange : uint8_t {
@@ -214,7 +214,7 @@ public:
     static bool dragOverThreshold(QVector2D delta);
 
     // context menu events
-    QVector<QQuickItem *> contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const;
+    QList<QQuickItem *> contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const;
     void deliverContextMenuEvent(QContextMenuEvent *event);
 };
 

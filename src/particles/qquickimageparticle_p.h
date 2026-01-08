@@ -407,7 +407,7 @@ private:
     bool m_explicitRotation;
     bool m_explicitDeformation;
     bool m_explicitAnimation;
-    QHash<int, QVector<QQuickParticleData*> > m_shadowData;
+    QHash<int, QList<QQuickParticleData*> > m_shadowData;
     void clearShadows();
     QQuickParticleData* getShadowDatum(QQuickParticleData* datum);
 

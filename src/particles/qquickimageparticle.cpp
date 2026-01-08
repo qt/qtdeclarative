@@ -1161,7 +1161,7 @@ static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 
 void QQuickImageParticle::clearShadows()
 {
-    foreach (const QVector<QQuickParticleData*> data, m_shadowData)
+    foreach (const QList<QQuickParticleData*> data, m_shadowData)
         qDeleteAll(data);
     m_shadowData.clear();
 }
@@ -1174,7 +1174,7 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
         return datum;
     if (!m_shadowData.contains(datum->groupId)) {
         QQuickParticleGroupData* gd = m_system->groupData[datum->groupId];
-        QVector<QQuickParticleData*> data;
+        QList<QQuickParticleData*> data;
         const int gdSize = gd->size();
         data.reserve(gdSize);
         for (int i = 0; i < gdSize; i++) {

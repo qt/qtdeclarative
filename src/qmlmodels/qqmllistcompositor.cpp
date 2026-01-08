@@ -392,7 +392,7 @@ QQmlListCompositor::insert_iterator QQmlListCompositor::findInsertPosition(Group
 */
 
 void QQmlListCompositor::append(
-        void *list, int index, int count, uint flags, QVector<Insert> *inserts)
+        void *list, int index, int count, uint flags, QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count << flags)
     insert(m_end, list, index, count, flags, inserts);
@@ -407,7 +407,7 @@ void QQmlListCompositor::append(
 */
 
 void QQmlListCompositor::insert(
-        Group group, int before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
+        Group group, int before, void *list, int index, int count, uint flags, QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< group << before << list << index << count << flags)
     insert(findInsertPosition(group, before), list, index, count, flags, inserts);
@@ -422,7 +422,7 @@ void QQmlListCompositor::insert(
 */
 
 QQmlListCompositor::iterator QQmlListCompositor::insert(
-        iterator before, void *list, int index, int count, uint flags, QVector<Insert> *inserts)
+        iterator before, void *list, int index, int count, uint flags, QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< before << list << index << count << flags)
     if (inserts) {
@@ -476,7 +476,7 @@ QQmlListCompositor::iterator QQmlListCompositor::insert(
 */
 
 void QQmlListCompositor::setFlags(
-        Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts)
+        Group fromGroup, int from, int count, Group group, int flags, QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
     setFlags(find(fromGroup, from), count, group, flags, inserts);
@@ -490,7 +490,7 @@ void QQmlListCompositor::setFlags(
 */
 
 void QQmlListCompositor::setFlags(
-        iterator from, int count, Group group, uint flags, QVector<Insert> *inserts)
+        iterator from, int count, Group group, uint flags, QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
@@ -586,7 +586,7 @@ void QQmlListCompositor::setFlags(
 */
 
 void QQmlListCompositor::clearFlags(
-        Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removes)
+        Group fromGroup, int from, int count, Group group, uint flags, QList<Remove> *removes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << count << group << flags)
     clearFlags(find(fromGroup, from), count, group, flags, removes);
@@ -600,7 +600,7 @@ void QQmlListCompositor::clearFlags(
 */
 
 void QQmlListCompositor::clearFlags(
-        iterator from, int count, Group group, uint flags, QVector<Remove> *removes)
+        iterator from, int count, Group group, uint flags, QList<Remove> *removes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< from << count << flags)
     if (!flags || !count)
@@ -735,8 +735,8 @@ void QQmlListCompositor::move(
         int to,
         int count,
         Group moveGroup,
-        QVector<Remove> *removes,
-        QVector<Insert> *inserts)
+        QList<Remove> *removes,
+        QList<Insert> *inserts)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< fromGroup << from << toGroup << to << count)
     Q_ASSERT(count > 0);
@@ -912,10 +912,10 @@ void QQmlListCompositor::clear()
 }
 
 void QQmlListCompositor::listItemsInserted(
-        QVector<Insert> *translatedInsertions,
+        QList<Insert> *translatedInsertions,
         void *list,
-        const QVector<QQmlChangeSet::Change> &insertions,
-        const QVector<MovedFlags> *movedFlags)
+        const QList<QQmlChangeSet::Change> &insertions,
+        const QList<MovedFlags> *movedFlags)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << insertions)
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
@@ -941,7 +941,7 @@ void QQmlListCompositor::listItemsInserted(
                     if (insertion.isMove()) {
                         // If the insert was part of a move replace the default flags with
                         // the flags from the source range.
-                        for (QVector<MovedFlags>::const_iterator move = movedFlags->begin();
+                        for (QList<MovedFlags>::const_iterator move = movedFlags->begin();
                                 move != movedFlags->end();
                                 ++move) {
                             if (move->moveId == insertion.moveId) {
@@ -1022,23 +1022,23 @@ void QQmlListCompositor::listItemsInserted(
 */
 
 void QQmlListCompositor::listItemsInserted(
-        void *list, int index, int count, QVector<Insert> *translatedInsertions)
+        void *list, int index, int count, QList<Insert> *translatedInsertions)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count > 0);
 
-    QVector<QQmlChangeSet::Change> insertions;
+    QList<QQmlChangeSet::Change> insertions;
     insertions.append(QQmlChangeSet::Change(index, count));
 
     listItemsInserted(translatedInsertions, list, insertions);
 }
 
 void QQmlListCompositor::listItemsRemoved(
-        QVector<Remove> *translatedRemovals,
+        QList<Remove> *translatedRemovals,
         void *list,
-        QVector<QQmlChangeSet::Change> *removals,
-        QVector<QQmlChangeSet::Change> *insertions,
-        QVector<MovedFlags> *movedFlags)
+        QList<QQmlChangeSet::Change> *removals,
+        QList<QQmlChangeSet::Change> *insertions,
+        QList<MovedFlags> *movedFlags)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << *removals)
 
@@ -1049,7 +1049,7 @@ void QQmlListCompositor::listItemsRemoved(
             continue;
         }
         bool removed = false;
-        for (QVector<QQmlChangeSet::Change>::iterator removal = removals->begin();
+        for (QList<QQmlChangeSet::Change>::iterator removal = removals->begin();
                 !removed && removal != removals->end();
                 ++removal) {
             int relativeIndex = removal->index - it->index;
@@ -1067,7 +1067,7 @@ void QQmlListCompositor::listItemsRemoved(
                 }
                 if (removal->isMove()) {
                     // If the removal was part of a move find the corresponding insert.
-                    QVector<QQmlChangeSet::Change>::iterator insertion = insertions->begin();
+                    QList<QQmlChangeSet::Change>::iterator insertion = insertions->begin();
                     for (; insertion != insertions->end() && insertion->moveId != removal->moveId;
                             ++insertion) {}
                     Q_ASSERT(insertion != insertions->end());
@@ -1211,12 +1211,12 @@ void QQmlListCompositor::listItemsRemoved(
 
 
 void QQmlListCompositor::listItemsRemoved(
-        void *list, int index, int count, QVector<Remove> *translatedRemovals)
+        void *list, int index, int count, QList<Remove> *translatedRemovals)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count >= 0);
 
-    QVector<QQmlChangeSet::Change> removals;
+    QList<QQmlChangeSet::Change> removals;
     removals.append(QQmlChangeSet::Change(index, count));
     listItemsRemoved(translatedRemovals, list, &removals, nullptr, nullptr);
 }
@@ -1237,15 +1237,15 @@ void QQmlListCompositor::listItemsMoved(
         int from,
         int to,
         int count,
-        QVector<Remove> *translatedRemovals,
-        QVector<Insert> *translatedInsertions)
+        QList<Remove> *translatedRemovals,
+        QList<Insert> *translatedInsertions)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << from << to << count)
     Q_ASSERT(count >= 0);
 
-    QVector<QQmlChangeSet::Change> removals;
-    QVector<QQmlChangeSet::Change> insertions;
-    QVector<MovedFlags> movedFlags;
+    QList<QQmlChangeSet::Change> removals;
+    QList<QQmlChangeSet::Change> insertions;
+    QList<MovedFlags> movedFlags;
     removals.append(QQmlChangeSet::Change(from, count, 0));
     insertions.append(QQmlChangeSet::Change(to, count, 0));
 
@@ -1254,9 +1254,9 @@ void QQmlListCompositor::listItemsMoved(
 }
 
 void QQmlListCompositor::listItemsChanged(
-        QVector<Change> *translatedChanges,
+        QList<Change> *translatedChanges,
         void *list,
-        const QVector<QQmlChangeSet::Change> &changes)
+        const QList<QQmlChangeSet::Change> &changes)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << changes)
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {
@@ -1293,11 +1293,11 @@ void QQmlListCompositor::listItemsChanged(
 */
 
 void QQmlListCompositor::listItemsChanged(
-        void *list, int index, int count, QVector<Change> *translatedChanges)
+        void *list, int index, int count, QList<Change> *translatedChanges)
 {
     QT_QML_TRACE_LISTCOMPOSITOR(<< list << index << count)
     Q_ASSERT(count >= 0);
-    QVector<QQmlChangeSet::Change> changes;
+    QList<QQmlChangeSet::Change> changes;
     changes.append(QQmlChangeSet::Change(index, count));
     listItemsChanged(translatedChanges, list, changes);
 }
@@ -1305,8 +1305,8 @@ void QQmlListCompositor::listItemsChanged(
 void QQmlListCompositor::transition(
         Group from,
         Group to,
-        QVector<QQmlChangeSet::Change> *removes,
-        QVector<QQmlChangeSet::Change> *inserts)
+        QList<QQmlChangeSet::Change> *removes,
+        QList<QQmlChangeSet::Change> *inserts)
 {
     int removeCount = 0;
     for (iterator it(m_ranges.next, 0, Default, m_groupCount); *it != &m_ranges; *it = it->next) {

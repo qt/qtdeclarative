@@ -141,7 +141,7 @@ public:
     QString condition;     // optional
 };
 
-QVector<Breakpoint> qt_v4Breakpoints;
+QList<Breakpoint> qt_v4Breakpoints;
 Breakpoint qt_v4LastStop;
 
 void qt_v4TriggerBreakpoint(const Breakpoint &bp, QV4::Function *function)

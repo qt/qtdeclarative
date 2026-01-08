@@ -117,8 +117,8 @@ private:
     ListModel *m_listModel;
     std::unique_ptr<QPropertyNotifier> translationChangeHandler;
 
-    QVector<class DynamicRoleModelNode *> m_modelObjects;
-    QVector<QString> m_roles;
+    QList<class DynamicRoleModelNode *> m_modelObjects;
+    QList<QString> m_roles;
 
     struct ElementSync
     {
@@ -126,13 +126,13 @@ private:
         DynamicRoleModelNode *target = nullptr;
         int srcIndex = -1;
         int targetIndex = -1;
-        QVector<int> changedRoles;
+        QList<int> changedRoles;
     };
 
     static bool sync(QQmlListModel *src, QQmlListModel *target);
     static QQmlListModel *createWithOwner(QQmlListModel *newOwner);
 
-    void emitItemsChanged(int index, int count, const QVector<int> &roles);
+    void emitItemsChanged(int index, int count, const QList<int> &roles);
     void emitItemsAboutToBeInserted(int index, int count);
     void emitItemsInserted();
 

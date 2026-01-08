@@ -121,7 +121,7 @@ void RhiVisualizer::visualize()
     }
 }
 
-void RhiVisualizer::recordDrawCalls(const QVector<DrawCall> &drawCalls,
+void RhiVisualizer::recordDrawCalls(const QList<DrawCall> &drawCalls,
                                     QRhiCommandBuffer *cb,
                                     QRhiShaderResourceBindings *srb,
                                     bool blendOneOne)

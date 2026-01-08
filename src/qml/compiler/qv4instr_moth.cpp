@@ -106,14 +106,14 @@ QString dumpArguments(int argc, int argv, int nFormals)
 
 QString dumpBytecode(
         const char *code, int len, int nLocals, int nFormals, int /*startLine*/,
-        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
+        const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
 {
     return dumpBytecode(code, len, nLocals, nFormals, 0, len - 1, lineAndStatementNumberMapping);
 }
 
 QString dumpBytecode(
         const char *code, int len, int nLocals, int nFormals, int beginOffset, int endOffset,
-        const QVector<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
+        const QList<CompiledData::CodeOffsetToLineAndStatement> &lineAndStatementNumberMapping)
 {
     Q_ASSERT(beginOffset <= endOffset && 0 <= beginOffset && endOffset <= len);
 

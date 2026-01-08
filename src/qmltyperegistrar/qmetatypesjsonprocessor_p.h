@@ -263,8 +263,8 @@ public:
     void postProcessTypes();
     void postProcessForeignTypes();
 
-    QVector<MetaType> types() const { return m_types; }
-    QVector<MetaType> foreignTypes() const { return m_foreignTypes; }
+    QList<MetaType> types() const { return m_types; }
+    QList<MetaType> foreignTypes() const { return m_foreignTypes; }
     QList<QAnyStringView> referencedTypes() const { return m_referencedTypes; }
     QList<UsingDeclaration> usingDeclarations() const { return m_usingDeclarations; }
     QList<QString> includes() const { return m_includes; }
@@ -290,7 +290,7 @@ private:
     static PreProcessResult preProcess(const MetaType &classDef, PopulateMode populateMode);
     void addRelatedTypes();
 
-    void sortTypes(QVector<MetaType> &types);
+    void sortTypes(QList<MetaType> &types);
     QString resolvedInclude(QAnyStringView include);
     void processTypes(const QCborMap &types);
     void processForeignTypes(const QCborMap &types);
@@ -304,8 +304,8 @@ private:
     QList<QAnyStringView> m_referencedTypes;
     QList<QAnyStringView> m_primitiveTypes;
     QList<UsingDeclaration> m_usingDeclarations;
-    QVector<MetaType> m_types;
-    QVector<MetaType> m_foreignTypes;
+    QList<MetaType> m_types;
+    QList<MetaType> m_foreignTypes;
     QDuplicateTracker<QString> m_seenMetaTypesFiles;
     bool m_privateIncludes = false;
 };

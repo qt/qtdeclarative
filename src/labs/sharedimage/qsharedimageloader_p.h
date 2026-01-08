@@ -39,7 +39,7 @@ class Q_LABSSHAREDIMAGE_EXPORT QSharedImageLoader : public QObject
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    typedef QVector<QVariant> ImageParameters;
+    typedef QList<QVariant> ImageParameters;
 
     QSharedImageLoader(QObject *parent = nullptr);
     ~QSharedImageLoader();

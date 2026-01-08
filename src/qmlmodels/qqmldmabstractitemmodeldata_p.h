@@ -70,7 +70,7 @@ private:
     void setValue(int role, const QVariant &value);
 
     VDMAbstractItemModelDataType *m_type;
-    QVector<QVariant> m_cachedData;
+    QList<QVariant> m_cachedData;
 };
 
 class VDMAbstractItemModelDataType final
@@ -108,7 +108,7 @@ public:
             const QList<QQmlDelegateModelItem *> &items,
             int index,
             int count,
-            const QVector<int> &roles) const override
+            const QList<int> &roles) const override
     {
         bool changed = roles.isEmpty() && !watchedRoles.isEmpty();
         if (!changed && !watchedRoles.isEmpty() && watchedRoleIds.isEmpty()) {

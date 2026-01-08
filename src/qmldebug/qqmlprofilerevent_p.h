@@ -48,10 +48,10 @@ struct QQmlProfilerEvent {
     }
 
     template<typename Number>
-    QQmlProfilerEvent(qint64 timestamp, int typeIndex, const QVector<Number> &data)
+    QQmlProfilerEvent(qint64 timestamp, int typeIndex, const QList<Number> &data)
         : m_timestamp(timestamp), m_typeIndex(typeIndex)
     {
-        assignNumbers<QVector<Number>, Number>(data);
+        assignNumbers<QList<Number>, Number>(data);
     }
 
     QQmlProfilerEvent(const QQmlProfilerEvent &other)

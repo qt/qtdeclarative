@@ -126,7 +126,7 @@ private slots:
 
     void loopThroughAllStates()
     {
-        QVector<QmlState> stateList = getStates();
+        QList<QmlState> stateList = getStates();
 
         QCOMPARE(stateList.size(), 2);
 
@@ -138,7 +138,7 @@ private slots:
             QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
 
             Reply replyType;
-            QVector<QmlState> replyStateList;
+            QList<QmlState> replyStateList;
 
             QString changedStateName;
             readPacket >> replyType >> changedStateName;
@@ -149,21 +149,21 @@ private slots:
 
 private:
 
-    QVector<QmlElement> getTranslatableTextOccurrences()
+    QList<QmlElement> getTranslatableTextOccurrences()
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createTranslatableTextOccurrencesRequest(packet));
         QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
 
         Reply replyType;
-        QVector<QmlElement> qmlElementList;
+        QList<QmlElement> qmlElementList;
         readPacket >> replyType;
         readPacket >> qmlElementList;
 
         return qmlElementList;
     }
 
-    QVector<QmlState> getStates()
+    QList<QmlState> getStates()
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createStateListRequest(packet));
@@ -171,7 +171,7 @@ private:
         QVersionedPacket<QQmlDebugConnector> readPacket(replies.at(0));
 
         Reply replyType;
-        QVector<QmlState> stateList;
+        QList<QmlState> stateList;
         readPacket >> replyType;
         readPacket >> stateList;
 
@@ -188,14 +188,14 @@ private:
         // QTest::qWait(500);
     }
 
-    QVector<TranslationIssue> getTranslationIssues()
+    QList<TranslationIssue> getTranslationIssues()
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createTranslationIssuesRequest(packet));
         QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
 
         Reply replyType;
-        QVector<TranslationIssue> translationIssues;
+        QList<TranslationIssue> translationIssues;
         readPacket >> replyType;
         readPacket >> translationIssues;
 
@@ -297,7 +297,7 @@ private:
             readPacket >> replyType;
             debugString.append(replyTypeToString(replyType));
             if (replyType == Reply::TranslationIssues) {
-                QVector<TranslationIssue> translationIssues;
+                QList<TranslationIssue> translationIssues;
                 readPacket >> translationIssues;
                 QStringList translationIssueStrings;
                 std::transform(translationIssues.cbegin(),
@@ -335,7 +335,7 @@ private:
 
 int main(int argc, char *argv[])
 {
-    QVector<char *> argv2(argc + 2);
+    QList<char *> argv2(argc + 2);
     for (int i = 0; i < argc; ++i)
         argv2[i] = argv[i];
 

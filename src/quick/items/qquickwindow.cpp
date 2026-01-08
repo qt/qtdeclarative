@@ -277,7 +277,7 @@ static bool transformDirtyOnItemOrAncestor(const QQuickItem *item)
 */
 struct PolishLoopDetector
 {
-    PolishLoopDetector(const QVector<QQuickItem*> &itemsToPolish)
+    PolishLoopDetector(const QList<QQuickItem*> &itemsToPolish)
         : itemsToPolish(itemsToPolish)
     {
     }
@@ -322,7 +322,7 @@ struct PolishLoopDetector
         }
         return false;
     }
-    const QVector<QQuickItem*> &itemsToPolish;      // Just a ref to the one in polishItems()
+    const QList<QQuickItem*> &itemsToPolish;      // Just a ref to the one in polishItems()
     int numPolishLoopsInSequence = 0;
 };
 

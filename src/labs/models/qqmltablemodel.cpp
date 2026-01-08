@@ -421,7 +421,7 @@ void QQmlTableModel::moveRow(int fromRowIndex, int toRowIndex, int rows)
         rows = from - to;
     }
 
-    QVector<QVariant> store;
+    QList<QVariant> store;
     store.reserve(rows);
     for (int i = 0; i < (toRowIndex - fromRowIndex); ++i)
         store.append(mRows.at(fromRowIndex + rows + i));

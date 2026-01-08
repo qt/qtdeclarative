@@ -435,13 +435,13 @@ void QQuickShapePath::setDashOffset(qreal offset)
     \include shapepath.qdocinc {dashPattern-property} {QtQuick.Shapes::ShapePath}
 */
 
-QVector<qreal> QQuickShapePath::dashPattern() const
+QList<qreal> QQuickShapePath::dashPattern() const
 {
     Q_D(const QQuickShapePath);
     return d->sfp.dashPattern;
 }
 
-void QQuickShapePath::setDashPattern(const QVector<qreal> &array)
+void QQuickShapePath::setDashPattern(const QList<qreal> &array)
 {
     Q_D(QQuickShapePath);
     if (d->sfp.dashPattern != array) {

@@ -1313,7 +1313,7 @@ static inline char *v4StackTrace(const ExecutionContext *context)
     QTextStream str(&result);
     str << "stack=[";
     if (context && context->engine()) {
-        const QVector<StackFrame> stackTrace = context->engine()->stackTrace(20);
+        const QList<StackFrame> stackTrace = context->engine()->stackTrace(20);
         for (int i = 0; i < stackTrace.size(); ++i) {
             if (i)
                 str << ',';

@@ -26,7 +26,7 @@
 
 #include <QVariant>
 #include <QtCore/qdebug.h>
-#include <QVector>
+#include <QList>
 
 QT_BEGIN_NAMESPACE
 
@@ -638,9 +638,9 @@ QString QQmlBinding::expression() const
     return QStringLiteral("function() { [native code] }");
 }
 
-QVector<QQmlProperty> QQmlBinding::dependencies() const
+QList<QQmlProperty> QQmlBinding::dependencies() const
 {
-    QVector<QQmlProperty> dependencies;
+    QList<QQmlProperty> dependencies;
     if (!m_target.data())
         return dependencies;
 

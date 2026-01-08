@@ -169,7 +169,7 @@ const int QMacStylePrivate::PushButtonLeftOffset = 6;
 const int QMacStylePrivate::PushButtonRightOffset = 12;
 const int QMacStylePrivate::PushButtonContentPadding = 6;
 
-QVector<QPointer<QObject> > QMacStylePrivate::scrollBars;
+QList<QPointer<QObject> > QMacStylePrivate::scrollBars;
 
 static const QColor titlebarSeparatorLineActive(111, 111, 111);
 static const QColor titlebarSeparatorLineInactive(131, 131, 131);
@@ -2553,7 +2553,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
             }
             QPainterPathStroker theStroker;
             theStroker.setCapStyle(Qt::FlatCap);
-            theStroker.setDashPattern(QVector<qreal>() << 1 << 2);
+            theStroker.setDashPattern(QList<qreal>() << 1 << 2);
             path = theStroker.createStroke(path);
             const auto dark = isDarkMode() ? opt->palette.dark().color().darker()
                                                                : QColor(0, 0, 0, 119);

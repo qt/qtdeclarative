@@ -18,7 +18,7 @@
 
 #include <QMultiMap>
 #include <QHash>
-#include <QVector>
+#include <QList>
 #include <QByteArray>
 #include <QMutex>
 

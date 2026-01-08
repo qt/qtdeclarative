@@ -449,13 +449,13 @@ void QQuickStarShape::setStrokeStyle(QQuickShapePath::StrokeStyle style)
    {QtQuick.Shapes.DesignHelpers::StarShape}
 */
 
-QVector<qreal> QQuickStarShape::dashPattern() const
+QList<qreal> QQuickStarShape::dashPattern() const
 {
     Q_D(const QQuickStarShape);
     return d->path->dashPattern();
 }
 
-void QQuickStarShape::setDashPattern(const QVector<qreal> &array)
+void QQuickStarShape::setDashPattern(const QList<qreal> &array)
 {
     Q_D(QQuickStarShape);
     d->path->setDashPattern(array);

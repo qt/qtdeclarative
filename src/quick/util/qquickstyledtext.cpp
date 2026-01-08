@@ -3,7 +3,7 @@
 // Qt-Security score:critical reason:data-parser
 
 #include <QStack>
-#include <QVector>
+#include <QList>
 #include <QPainter>
 #include <QTextLayout>
 #include <QDebug>
@@ -170,7 +170,7 @@ void QQuickStyledText::parse(const QString &string, QTextLayout &layout,
 
 void QQuickStyledTextPrivate::parse()
 {
-    QVector<QTextLayout::FormatRange> ranges;
+    QList<QTextLayout::FormatRange> ranges;
     QStack<QTextCharFormat> formatStack;
 
     QString drawText;

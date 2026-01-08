@@ -53,7 +53,7 @@ public:
         return ret || (ret && event->exclusiveGrabber(point) != this);
     }
 
-    bool grabPoints(QPointerEvent * event, const QVector<QEventPoint> & points)
+    bool grabPoints(QPointerEvent * event, const QList<QEventPoint> & points)
     {
         if (points.isEmpty())
             return false;

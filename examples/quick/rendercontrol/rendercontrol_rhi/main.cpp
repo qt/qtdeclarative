@@ -99,8 +99,8 @@ private:
 
     qint64 m_frameCount = 0;
     QSize m_thumbnailSize;
-    QVector<double> m_cpuTimes;
-    QVector<double> m_gpuTimes;
+    QList<double> m_cpuTimes;
+    QList<double> m_gpuTimes;
 
     QLabel *m_apiMsg;
     QLabel *m_statusMsg;
@@ -110,7 +110,7 @@ private:
 
     QScrollArea *m_scrollArea;
     QGridLayout *m_grid;
-    QVector<QWidget *> m_gridWidgets;
+    QList<QWidget *> m_gridWidgets;
 
 public:
 #if QT_CONFIG(vulkan)
@@ -119,7 +119,7 @@ public:
 
     ImageLabel *m_focus = nullptr;
     QLabel *m_fullSizeViewerWindow = nullptr;
-    QVector<QImage> m_frames;
+    QList<QImage> m_frames;
 
     bool m_mirrorVertically = false;
 };

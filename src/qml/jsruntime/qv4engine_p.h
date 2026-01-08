@@ -895,7 +895,7 @@ private:
 
     QHash<QString, quint32> m_consoleCount;
 
-    QVector<Deletable *> m_extensionData;
+    QList<Deletable *> m_extensionData;
 
     QMultiHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> m_compilationUnits;
 };

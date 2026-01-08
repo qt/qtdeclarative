@@ -1357,7 +1357,7 @@ void tst_TouchMouse::touchPointDeliveryOrder()
 
     QTest::QTouchEventSequence touchSeq = QTest::touchEvent(&window, touchscreen.get(), false);
 
-    QVector<QQuickItem*> events;
+    QList<QQuickItem*> events;
     EventItem *background = window.rootObject()->findChild<EventItem*>("background");
     EventItem *left = window.rootObject()->findChild<EventItem*>("left");
     EventItem *middle = window.rootObject()->findChild<EventItem*>("middle");

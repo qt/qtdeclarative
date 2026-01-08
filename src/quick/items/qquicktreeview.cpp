@@ -340,7 +340,7 @@ void QQuickTreeViewPrivate::itemReusedCallback(int serializedModelIndex, QObject
 }
 
 void QQuickTreeViewPrivate::dataChangedCallback(
-        const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+        const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles)
 {
     Q_Q(QQuickTreeView);
     Q_UNUSED(roles);

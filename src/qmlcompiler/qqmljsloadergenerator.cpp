@@ -9,7 +9,7 @@
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
-#include <QVector>
+#include <QList>
 #include <QtEndian>
 #include <QStack>
 #include <QFileInfo>

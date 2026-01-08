@@ -33,14 +33,14 @@ public:
     void endTrace(qint64 timestamp, const QList<int> &engineIds) final;
 
     QPointer<QQmlProfilerClient> client; // Owned by QQmlDebugTest
-    QVector<QQmlProfilerEventType> types;
+    QList<QQmlProfilerEventType> types;
 
-    QVector<QQmlProfilerEvent> qmlMessages;
-    QVector<QQmlProfilerEvent> javascriptMessages;
-    QVector<QQmlProfilerEvent> jsHeapMessages;
-    QVector<QQmlProfilerEvent> asynchronousMessages;
-    QVector<QQmlProfilerEvent> pixmapMessages;
-    QVector<QQmlProfilerEvent> unhandledEvents;
+    QList<QQmlProfilerEvent> qmlMessages;
+    QList<QQmlProfilerEvent> javascriptMessages;
+    QList<QQmlProfilerEvent> jsHeapMessages;
+    QList<QQmlProfilerEvent> asynchronousMessages;
+    QList<QQmlProfilerEvent> pixmapMessages;
+    QList<QQmlProfilerEvent> unhandledEvents;
     bool isComplete = false;
 
     qsizetype numLoadedEventTypes() const final;
@@ -225,7 +225,7 @@ private:
     void checkJsHeap();
     bool verify(MessageListType type, int expectedPosition,
                 const QQmlProfilerEventType &expected, quint32 checks,
-                const QVector<qint64> &expectedNumbers);
+                const QList<qint64> &expectedNumbers);
 
     QList<QQmlDebugClient *> createClients() override;
     QScopedPointer<QQmlProfilerTestClient> m_client;
@@ -255,8 +255,8 @@ private:
     bool m_flushInterval = false;
 
     // Don't use ({...}) here as MSVC will interpret that as the "QVector(int size)" ctor.
-    const QVector<qint64> m_rangeStart = (QVector<qint64>() << RangeStart);
-    const QVector<qint64> m_rangeEnd = (QVector<qint64>() << RangeEnd);
+    const QList<qint64> m_rangeStart = (QList<qint64>() << RangeStart);
+    const QList<qint64> m_rangeEnd = (QList<qint64>() << RangeEnd);
 };
 
 #define VERIFY(type, position, expected, checks, numbers) \
@@ -302,7 +302,7 @@ void tst_QQmlProfilerService::checkTraceReceived()
     QVERIFY(m_process->exitStatus() != QProcess::CrashExit);
     QTRY_VERIFY2(m_client->isComplete, "No trace received in time.");
 
-    QVector<qint64> numbers;
+    QList<qint64> numbers;
 
     // must start with "StartTrace"
     QQmlProfilerEventType expected(Event, MaximumRangeType, StartTrace);
@@ -374,14 +374,14 @@ void tst_QQmlProfilerService::checkJsHeap()
 
 bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType type,
                                      int expectedPosition, const QQmlProfilerEventType &expected,
-                                     quint32 checks, const QVector<qint64> &expectedNumbers)
+                                     quint32 checks, const QList<qint64> &expectedNumbers)
 {
     if (!m_client) {
         qWarning() << "No debug client available";
         return false;
     }
 
-    const QVector<QQmlProfilerEvent> *target = nullptr;
+    const QList<QQmlProfilerEvent> *target = nullptr;
     switch (type) {
         case MessageListQML:          target = &(m_client->qmlMessages); break;
         case MessageListJavaScript:   target = &(m_client->javascriptMessages); break;
@@ -456,7 +456,7 @@ bool tst_QQmlProfilerService::verify(tst_QQmlProfilerService::MessageListType ty
         }
 
         if (checks & CheckNumbers) {
-            const QVector<qint64> actualNumbers = event.numbers<QVector<qint64>>();
+            const QList<qint64> actualNumbers = event.numbers<QList<qint64>>();
             if (actualNumbers != expectedNumbers) {
 
                 QStringList expectedList;
@@ -501,7 +501,7 @@ void tst_QQmlProfilerService::cleanup()
         const QQmlProfilerEventLocation location = type.location();
         qDebug() << i << data.timestamp() << type.message() << type.rangeType() << type.detailType()
                  << location.filename() << location.line() << location.column()
-                 << data.numbers<QVector<qint64>>();
+                 << data.numbers<QList<qint64>>();
     };
 
     if (m_client && QTest::currentTestFailed()) {
@@ -593,14 +593,14 @@ void tst_QQmlProfilerService::pixmapCacheData()
         return QQmlProfilerEventType(PixmapCacheEvent, MaximumRangeType, type);
     };
 
-    QVector<qint64> numbers;
+    QList<qint64> numbers;
 
     // image starting to load
     VERIFY(MessageListPixmap, 0, createType(PixmapLoadingStarted),
            CheckMessageType | CheckDetailType, numbers);
 
     // image size
-    numbers = QVector<qint64>({2, 2, 1});
+    numbers = QList<qint64>({2, 2, 1});
     VERIFY(MessageListPixmap, 1, createType(PixmapSizeKnown),
            CheckMessageType | CheckDetailType | CheckNumbers, numbers);
 
@@ -762,7 +762,7 @@ void tst_QQmlProfilerService::memory()
     QVERIFY(smallItems > 5);
 }
 
-static bool hasCompileEvents(const QVector<QQmlProfilerEventType> &types)
+static bool hasCompileEvents(const QList<QQmlProfilerEventType> &types)
 {
     for (const QQmlProfilerEventType &type : types) {
         if (type.message() == MaximumMessage && type.rangeType() == Compiling)
@@ -853,11 +853,11 @@ void tst_QQmlProfilerService::noFeatures()
 
     // must start with "StartTrace"
     VERIFY(MessageListAsynchronous, 0, QQmlProfilerEventType(Event, MaximumRangeType, StartTrace),
-           CheckMessageType | CheckDetailType, QVector<qint64>());
+           CheckMessageType | CheckDetailType, QList<qint64>());
 
     // must end with "EndTrace"
     VERIFY(MessageListAsynchronous, 1, QQmlProfilerEventType(Event, MaximumRangeType, EndTrace),
-           CheckMessageType | CheckDetailType, QVector<qint64>());
+           CheckMessageType | CheckDetailType, QList<qint64>());
 }
 
 QTEST_MAIN(tst_QQmlProfilerService)

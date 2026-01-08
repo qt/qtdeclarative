@@ -50,7 +50,7 @@ public:
 
     int lineHeightOffset() const;
     QString elidedText(qreal lineWidth, const QTextLine &line, const QTextLine *nextLine = nullptr) const;
-    void elideFormats(int start, int length, int offset, QVector<QTextLayout::FormatRange> *elidedFormats);
+    void elideFormats(int start, int length, int offset, QList<QTextLayout::FormatRange> *elidedFormats);
     void clearFormats();
 
     void processHoverEvent(QHoverEvent *event);
@@ -179,7 +179,7 @@ public:
         QRect rect;
     };
 
-    QVector<LinkDesc> getLinks() const;
+    QList<LinkDesc> getLinks() const;
 
     static QString anchorAt(const QTextLayout *layout, const QPointF &mousePos);
     QString anchorAt(const QPointF &pos) const;

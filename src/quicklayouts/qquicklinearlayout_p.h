@@ -100,7 +100,7 @@ public:
     Qt::Orientation orientation;
     unsigned m_recurRearrangeCounter : 2;
     unsigned m_rearranging : 1;
-    QVector<QQuickItem *> m_invalidateAfterRearrange;
+    QList<QQuickItem *> m_invalidateAfterRearrange;
     Qt::LayoutDirection m_layoutDirection : 2;
 
     QQuickLayoutStyleInfo *styleInfo;

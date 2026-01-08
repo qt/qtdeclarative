@@ -81,7 +81,7 @@ public:
 
     static bool expandingStrokeEnabled();
 
-    QVector<quint32> uncookedIndexes() const
+    QList<quint32> uncookedIndexes() const
     {
         return m_uncookedIndexes;
     }
@@ -132,8 +132,8 @@ private:
 protected:
     QScopedPointer<QSGCurveStrokeMaterial> m_material;
 
-    QVector<StrokeVertex> m_uncookedVertexes;
-    QVector<quint32> m_uncookedIndexes;
+    QList<StrokeVertex> m_uncookedVertexes;
+    QList<quint32> m_uncookedIndexes;
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGCurveStrokeNode::TriangleFlags)

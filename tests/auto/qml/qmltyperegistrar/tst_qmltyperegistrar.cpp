@@ -462,8 +462,8 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     MetaTypesJsonProcessor processor(true);
     QVERIFY(processor.processTypes({ ":/duplicatedExports.json" }));
     processor.postProcessTypes();
-    QVector<MetaType> types = processor.types();
-    QVector<MetaType> typesforeign = processor.foreignTypes();
+    QList<MetaType> types = processor.types();
+    QList<MetaType> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     const auto expectWarning = [](const char *message) {
@@ -513,8 +513,8 @@ void tst_qmltyperegistrar::consistencyWarnings()
 
     processor.postProcessForeignTypes();
 
-    QVector<MetaType> types = processor.types();
-    QVector<MetaType> typesforeign = processor.foreignTypes();
+    QList<MetaType> types = processor.types();
+    QList<MetaType> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     QString outputData;
@@ -591,8 +591,8 @@ void tst_qmltyperegistrar::enumWarnings()
     processor.postProcessTypes();
     processor.postProcessForeignTypes();
 
-    QVector<MetaType> types = processor.types();
-    QVector<MetaType> typesforeign = processor.foreignTypes();
+    QList<MetaType> types = processor.types();
+    QList<MetaType> typesforeign = processor.foreignTypes();
     r.setTypes(types, typesforeign);
 
     QString outputData;

@@ -32,8 +32,8 @@ FunctionCallProperties FunctionCall::properties() const
 Profiler::Profiler(QV4::ExecutionEngine *engine) : featuresEnabled(0), m_engine(engine)
 {
     static const int metatypes[] = {
-        qRegisterMetaType<QVector<QV4::Profiling::FunctionCallProperties> >(),
-        qRegisterMetaType<QVector<QV4::Profiling::MemoryAllocationProperties> >(),
+        qRegisterMetaType<QList<QV4::Profiling::FunctionCallProperties> >(),
+        qRegisterMetaType<QList<QV4::Profiling::MemoryAllocationProperties> >(),
         qRegisterMetaType<FunctionLocationHash>()
     };
     Q_UNUSED(metatypes);
@@ -57,7 +57,7 @@ bool operator<(const FunctionCall &call1, const FunctionCall &call2)
 void Profiler::reportData()
 {
     std::sort(m_data.begin(), m_data.end());
-    QVector<FunctionCallProperties> properties;
+    QList<FunctionCallProperties> properties;
     FunctionLocationHash locations;
     properties.reserve(m_data.size());
 

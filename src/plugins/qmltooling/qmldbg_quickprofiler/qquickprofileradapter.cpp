@@ -130,7 +130,7 @@ qint64 QQuickProfilerAdapter::sendMessages(qint64 until, QList<QByteArray> &mess
     return -1;
 }
 
-void QQuickProfilerAdapter::receiveData(const QVector<QQuickProfilerData> &new_data)
+void QQuickProfilerAdapter::receiveData(const QList<QQuickProfilerData> &new_data)
 {
     if (m_data.isEmpty())
         m_data = new_data;

@@ -51,7 +51,7 @@ public:
     tst_qqmllistmodelworkerscript()
         : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
-        qRegisterMetaType<QVector<int> >();
+        qRegisterMetaType<QList<int> >();
     }
 
 private:
@@ -476,7 +476,7 @@ void tst_qqmllistmodelworkerscript::get_worker()
     QList<QVariant> spyResult = spy.takeFirst();
     QCOMPARE(spyResult.at(0).value<QModelIndex>(), model.index(index, 0, QModelIndex()));
     QCOMPARE(spyResult.at(1).value<QModelIndex>(), model.index(index, 0, QModelIndex()));  // only 1 item is modified at a time
-    QVERIFY(spyResult.at(2).value<QVector<int> >().contains(role));
+    QVERIFY(spyResult.at(2).value<QList<int> >().contains(role));
 }
 
 void tst_qqmllistmodelworkerscript::get_worker_data()

@@ -211,7 +211,7 @@ public:
             qCDebug(lcTableViewDelegateLifecycle()) << "begin top-left:" << toString();
         }
 
-        void begin(Qt::Edge edgeToLoad, int edgeIndex, const QVector<int> visibleCellsInEdge, QQmlIncubator::IncubationMode incubationMode)
+        void begin(Qt::Edge edgeToLoad, int edgeIndex, const QList<int> visibleCellsInEdge, QQmlIncubator::IncubationMode incubationMode)
         {
             Q_ASSERT(!m_active);
             m_active = true;
@@ -261,7 +261,7 @@ public:
 
     private:
         Qt::Edge m_edge = Qt::Edge(0);
-        QVector<int> m_visibleCellsInEdge;
+        QList<int> m_visibleCellsInEdge;
         int m_edgeIndex = 0;
         int m_currentIndex = 0;
         bool m_active = false;

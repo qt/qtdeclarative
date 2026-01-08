@@ -190,22 +190,22 @@ public:
 
     const iterator &end() { return m_end; }
 
-    void append(void *list, int index, int count, uint flags, QVector<Insert> *inserts = nullptr);
-    void insert(Group group, int before, void *list, int index, int count, uint flags, QVector<Insert> *inserts = nullptr);
-    iterator insert(iterator before, void *list, int index, int count, uint flags, QVector<Insert> *inserts = nullptr);
+    void append(void *list, int index, int count, uint flags, QList<Insert> *inserts = nullptr);
+    void insert(Group group, int before, void *list, int index, int count, uint flags, QList<Insert> *inserts = nullptr);
+    iterator insert(iterator before, void *list, int index, int count, uint flags, QList<Insert> *inserts = nullptr);
 
-    void setFlags(Group fromGroup, int from, int count, Group group, int flags, QVector<Insert> *inserts = nullptr);
-    void setFlags(iterator from, int count, Group group, uint flags, QVector<Insert> *inserts = nullptr);
-    void setFlags(Group fromGroup, int from, int count, uint flags, QVector<Insert> *inserts = nullptr) {
+    void setFlags(Group fromGroup, int from, int count, Group group, int flags, QList<Insert> *inserts = nullptr);
+    void setFlags(iterator from, int count, Group group, uint flags, QList<Insert> *inserts = nullptr);
+    void setFlags(Group fromGroup, int from, int count, uint flags, QList<Insert> *inserts = nullptr) {
         setFlags(fromGroup, from, count, fromGroup, flags, inserts); }
-    void setFlags(const iterator from, int count, uint flags, QVector<Insert> *inserts = nullptr) {
+    void setFlags(const iterator from, int count, uint flags, QList<Insert> *inserts = nullptr) {
         setFlags(from, count, from.group, flags, inserts); }
 
-    void clearFlags(Group fromGroup, int from, int count, Group group, uint flags, QVector<Remove> *removals = nullptr);
-    void clearFlags(iterator from, int count, Group group, uint flags, QVector<Remove> *removals = nullptr);
-    void clearFlags(Group fromGroup, int from, int count, uint flags, QVector<Remove> *removals = nullptr) {
+    void clearFlags(Group fromGroup, int from, int count, Group group, uint flags, QList<Remove> *removals = nullptr);
+    void clearFlags(iterator from, int count, Group group, uint flags, QList<Remove> *removals = nullptr);
+    void clearFlags(Group fromGroup, int from, int count, uint flags, QList<Remove> *removals = nullptr) {
         clearFlags(fromGroup, from, count, fromGroup, flags, removals); }
-    void clearFlags(const iterator &from, int count, uint flags, QVector<Remove> *removals = nullptr) {
+    void clearFlags(const iterator &from, int count, uint flags, QList<Remove> *removals = nullptr) {
         clearFlags(from, count, from.group, flags, removals); }
 
     bool verifyMoveTo(Group fromGroup, int from, Group toGroup, int to, int count, Group group) const;
@@ -217,20 +217,20 @@ public:
             int to,
             int count,
             Group group,
-            QVector<Remove> *removals = nullptr,
-            QVector<Insert> *inserts = nullptr);
+            QList<Remove> *removals = nullptr,
+            QList<Insert> *inserts = nullptr);
     void clear();
 
-    void listItemsInserted(void *list, int index, int count, QVector<Insert> *inserts);
-    void listItemsRemoved(void *list, int index, int count, QVector<Remove> *removals);
-    void listItemsMoved(void *list, int from, int to, int count, QVector<Remove> *removals, QVector<Insert> *inserts);
-    void listItemsChanged(void *list, int index, int count, QVector<Change> *changes);
+    void listItemsInserted(void *list, int index, int count, QList<Insert> *inserts);
+    void listItemsRemoved(void *list, int index, int count, QList<Remove> *removals);
+    void listItemsMoved(void *list, int from, int to, int count, QList<Remove> *removals, QList<Insert> *inserts);
+    void listItemsChanged(void *list, int index, int count, QList<Change> *changes);
 
     void transition(
             Group from,
             Group to,
-            QVector<QQmlChangeSet::Change> *removes,
-            QVector<QQmlChangeSet::Change> *inserts);
+            QList<QQmlChangeSet::Change> *removes,
+            QList<QQmlChangeSet::Change> *inserts);
 
 private:
     Range m_ranges;
@@ -254,20 +254,20 @@ private:
     };
 
     void listItemsRemoved(
-            QVector<Remove> *translatedRemovals,
+            QList<Remove> *translatedRemovals,
             void *list,
-            QVector<QQmlChangeSet::Change> *removals,
-            QVector<QQmlChangeSet::Change> *insertions = nullptr,
-            QVector<MovedFlags> *movedFlags = nullptr);
+            QList<QQmlChangeSet::Change> *removals,
+            QList<QQmlChangeSet::Change> *insertions = nullptr,
+            QList<MovedFlags> *movedFlags = nullptr);
     void listItemsInserted(
-            QVector<Insert> *translatedInsertions,
+            QList<Insert> *translatedInsertions,
             void *list,
-            const QVector<QQmlChangeSet::Change> &insertions,
-            const QVector<MovedFlags> *movedFlags = nullptr);
+            const QList<QQmlChangeSet::Change> &insertions,
+            const QList<MovedFlags> *movedFlags = nullptr);
     void listItemsChanged(
-            QVector<Change> *translatedChanges,
+            QList<Change> *translatedChanges,
             void *list,
-            const QVector<QQmlChangeSet::Change> &changes);
+            const QList<QQmlChangeSet::Change> &changes);
 
     friend Q_AUTOTEST_EXPORT QDebug operator <<(QDebug debug, const QQmlListCompositor &list);
 };

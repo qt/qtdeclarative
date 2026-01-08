@@ -22,7 +22,7 @@ QT_BEGIN_NAMESPACE
 struct QQmlEnumData
 {
     QString name;
-    QVector<QQmlEnumValue> values;
+    QList<QQmlEnumValue> values;
 };
 
 QT_END_NAMESPACE

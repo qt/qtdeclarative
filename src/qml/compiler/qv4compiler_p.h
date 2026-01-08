@@ -127,11 +127,11 @@ private:
     Module *module;
 
     QList<CompiledData::Lookup> lookups;
-    QVector<CompiledData::RegExp> regexps;
-    QVector<ReturnedValue> constants;
+    QList<CompiledData::RegExp> regexps;
+    QList<ReturnedValue> constants;
     QByteArray jsClassData;
-    QVector<int> jsClassOffsets;
-    QVector<CompiledData::TranslationData> translations;
+    QList<int> jsClassOffsets;
+    QList<CompiledData::TranslationData> translations;
 };
 
 }

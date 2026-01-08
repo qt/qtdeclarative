@@ -47,13 +47,13 @@ struct QQmlDelegateModelGroupChange : Object {
 };
 
 struct QQmlDelegateModelGroupChangeArray : Object {
-    void init(const QVector<QQmlChangeSet::Change> &changes);
+    void init(const QList<QQmlChangeSet::Change> &changes);
     void destroy() {
         delete changes;
         Object::destroy();
     }
 
-    QVector<QQmlChangeSet::Change> *changes;
+    QList<QQmlChangeSet::Change> *changes;
 };
 
 
@@ -105,7 +105,7 @@ public:
     ~QQmlDelegateModelEngineData();
 
     QV4::ReturnedValue array(QV4::ExecutionEngine *engine,
-                             const QVector<QQmlChangeSet::Change> &changes);
+                             const QList<QQmlChangeSet::Change> &changes);
 
     QV4::PersistentValue changeProto;
 };
@@ -301,7 +301,7 @@ void QQmlDelegateModel::componentComplete()
     while (!d->m_pendingParts.isEmpty())
         static_cast<QQmlPartsModel *>(d->m_pendingParts.first())->updateFilterGroup();
 
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Insert> inserts;
     d->m_count = d->adaptorModelCount();
     d->m_compositor.append(
             &d->m_adaptorModel,
@@ -851,8 +851,8 @@ void QQmlDelegateModelPrivate::updateFilterGroup()
 
     QQmlDelegateModelGroupPrivate::get(m_groups[m_compositorGroup])->emitters.insert(this);
     if (m_compositorGroup != previousGroup) {
-        QVector<QQmlChangeSet::Change> removes;
-        QVector<QQmlChangeSet::Change> inserts;
+        QList<QQmlChangeSet::Change> removes;
+        QList<QQmlChangeSet::Change> inserts;
         m_compositor.transition(previousGroup, m_compositorGroup, &removes, &inserts);
 
         QQmlChangeSet changeSet;
@@ -1122,7 +1122,7 @@ void QQmlDelegateModelPrivate::reuseItem(QQmlDelegateModelItem *item, int newMod
     // Notify the application that all 'dynamic'/role-based context data has
     // changed as well (their getter function will use the updated index).
     auto const itemAsList = QList<QQmlDelegateModelItem *>() << item;
-    auto const updateAllRoles = QVector<int>();
+    auto const updateAllRoles = QList<int>();
     m_adaptorModel.notify(itemAsList, newModelIndex, 1, updateAllRoles);
 
     if (QQmlDelegateModelAttached *att = static_cast<QQmlDelegateModelAttached *>(
@@ -1464,7 +1464,7 @@ void QQmlDelegateModel::setWatchedRoles(const QList<QByteArray> &roles)
 void QQmlDelegateModelPrivate::addGroups(
         Compositor::iterator from, int count, Compositor::Group group, int groupFlags)
 {
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Insert> inserts;
     m_compositor.setFlags(from, count, group, groupFlags, &inserts);
     itemsInserted(inserts);
     emitChanges();
@@ -1473,7 +1473,7 @@ void QQmlDelegateModelPrivate::addGroups(
 void QQmlDelegateModelPrivate::removeGroups(
         Compositor::iterator from, int count, Compositor::Group group, int groupFlags)
 {
-    QVector<Compositor::Remove> removes;
+    QList<Compositor::Remove> removes;
     m_compositor.clearFlags(from, count, group, groupFlags, &removes);
     itemsRemoved(removes);
     emitChanges();
@@ -1482,8 +1482,8 @@ void QQmlDelegateModelPrivate::removeGroups(
 void QQmlDelegateModelPrivate::setGroups(
         Compositor::iterator from, int count, Compositor::Group group, int groupFlags)
 {
-    QVector<Compositor::Remove> removes;
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Remove> removes;
+    QList<Compositor::Insert> inserts;
 
     m_compositor.setFlags(from, count, group, groupFlags, &inserts);
     itemsInserted(inserts);
@@ -1509,12 +1509,12 @@ bool QQmlDelegateModel::event(QEvent *e)
     return QQmlInstanceModel::event(e);
 }
 
-void QQmlDelegateModelPrivate::itemsChanged(const QVector<Compositor::Change> &changes)
+void QQmlDelegateModelPrivate::itemsChanged(const QList<Compositor::Change> &changes)
 {
     if (!m_delegate)
         return;
 
-    QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedChanges(m_groupCount);
+    QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedChanges(m_groupCount);
 
     for (const Compositor::Change &change : changes) {
         for (int i = 1; i < m_groupCount; ++i) {
@@ -1528,14 +1528,14 @@ void QQmlDelegateModelPrivate::itemsChanged(const QVector<Compositor::Change> &c
         QQmlDelegateModelGroupPrivate::get(m_groups[i])->changeSet.change(translatedChanges.at(i));
 }
 
-void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QVector<int> &roles)
+void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QList<int> &roles)
 {
     Q_D(QQmlDelegateModel);
     if (count <= 0 || !d->m_complete)
         return;
 
     if (d->m_adaptorModel.notify(d->m_cache, index, count, roles)) {
-        QVector<Compositor::Change> changes;
+        QList<Compositor::Change> changes;
         d->m_compositor.listItemsChanged(&d->m_adaptorModel, index, count, &changes);
         d->itemsChanged(changes);
         d->emitChanges();
@@ -1564,8 +1564,8 @@ void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QVector<int>
        affected items (including  invalidating their cache entries) and afterwards
        reinserting them.
     */
-    QVector<Compositor::Remove> removes;
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Remove> removes;
+    QList<Compositor::Insert> inserts;
     d->m_compositor.listItemsRemoved(&d->m_adaptorModel, index, count, &removes);
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     QQmlDelegateModelItem::ObjectSpanReference guard(cache);
@@ -1596,8 +1596,8 @@ static void incrementIndexes(QQmlDelegateModelItem *cacheItem, int count, const 
 }
 
 void QQmlDelegateModelPrivate::itemsInserted(
-        const QVector<Compositor::Insert> &inserts,
-        QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
+        const QList<Compositor::Insert> &inserts,
+        QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
         QHash<int, QList<QQmlDelegateModelItem *> > *movedItems)
 {
     int cacheIndex = 0;
@@ -1654,9 +1654,9 @@ void QQmlDelegateModelPrivate::itemsInserted(
         incrementIndexes(cache.at(cacheIndex), m_groupCount, inserted);
 }
 
-void QQmlDelegateModelPrivate::itemsInserted(const QVector<Compositor::Insert> &inserts)
+void QQmlDelegateModelPrivate::itemsInserted(const QList<Compositor::Insert> &inserts)
 {
-    QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedInserts(m_groupCount);
+    QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedInserts(m_groupCount);
     itemsInserted(inserts, &translatedInserts);
     Q_ASSERT(m_cache.size() == m_compositor.count(Compositor::Cache));
     if (!m_delegate)
@@ -1691,7 +1691,7 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
         }
     }
 
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Insert> inserts;
     d->m_compositor.listItemsInserted(&d->m_adaptorModel, index, count, &inserts);
     d->itemsInserted(inserts);
     d->emitChanges();
@@ -1705,8 +1705,8 @@ void QQmlDelegateModel::_q_itemsInserted(int index, int count)
 // in turn will try to load the data from the model (which should have already freed it), resulting
 // in a use-after-free. See QTBUG-59256.
 void QQmlDelegateModelPrivate::itemsRemoved(
-        const QVector<Compositor::Remove> &removes,
-        QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
+        const QList<Compositor::Remove> &removes,
+        QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
         QHash<int, QList<QQmlDelegateModelItem *> > *movedItems)
 {
     int cacheIndex = 0;
@@ -1804,9 +1804,9 @@ void QQmlDelegateModelPrivate::itemsRemoved(
         incrementIndexes(cache.at(cacheIndex), m_groupCount, removed);
 }
 
-void QQmlDelegateModelPrivate::itemsRemoved(const QVector<Compositor::Remove> &removes)
+void QQmlDelegateModelPrivate::itemsRemoved(const QList<Compositor::Remove> &removes)
 {
-    QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedRemoves(m_groupCount);
+    QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedRemoves(m_groupCount);
     itemsRemoved(removes, &translatedRemoves);
     Q_ASSERT(m_cache.size() == m_compositor.count(Compositor::Cache));
     if (!m_delegate)
@@ -1849,7 +1849,7 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         }
     }
 
-    QVector<Compositor::Remove> removes;
+    QList<Compositor::Remove> removes;
     d->m_compositor.listItemsRemoved(&d->m_adaptorModel, index, count, &removes);
     d->itemsRemoved(removes);
 
@@ -1857,14 +1857,14 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
 }
 
 void QQmlDelegateModelPrivate::itemsMoved(
-        const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts)
+        const QList<Compositor::Remove> &removes, const QList<Compositor::Insert> &inserts)
 {
     QHash<int, QList<QQmlDelegateModelItem *> > movedItems;
 
-    QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedRemoves(m_groupCount);
+    QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedRemoves(m_groupCount);
     itemsRemoved(removes, &translatedRemoves, &movedItems);
 
-    QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedInserts(m_groupCount);
+    QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> translatedInserts(m_groupCount);
     itemsInserted(inserts, &translatedInserts, &movedItems);
     Q_ASSERT(m_cache.size() == m_compositor.count(Compositor::Cache));
     Q_ASSERT(movedItems.isEmpty());
@@ -1909,8 +1909,8 @@ void QQmlDelegateModel::_q_itemsMoved(int from, int to, int count)
         }
     }
 
-    QVector<Compositor::Remove> removes;
-    QVector<Compositor::Insert> inserts;
+    QList<Compositor::Remove> removes;
+    QList<Compositor::Insert> inserts;
     d->m_compositor.listItemsMoved(&d->m_adaptorModel, from, to, count, &removes, &inserts);
     d->itemsMoved(removes, inserts);
     d->emitChanges();
@@ -2034,8 +2034,8 @@ void QQmlDelegateModel::handleModelReset()
             }
         }
 
-        QVector<Compositor::Remove> removes;
-        QVector<Compositor::Insert> inserts;
+        QList<Compositor::Remove> removes;
+        QList<Compositor::Insert> inserts;
         if (oldCount)
             d->m_compositor.listItemsRemoved(&d->m_adaptorModel, 0, oldCount, &removes);
         if (d->m_count)
@@ -2071,7 +2071,7 @@ void QQmlDelegateModel::_q_rowsAboutToBeRemoved(const QModelIndex &parent, int b
         d->m_adaptorModel.invalidateModel();
 
         if (d->m_complete && oldCount > 0) {
-            QVector<Compositor::Remove> removes;
+            QList<Compositor::Remove> removes;
             d->m_compositor.listItemsRemoved(&d->m_adaptorModel, 0, oldCount, &removes);
             d->itemsRemoved(removes);
             d->emitChanges();
@@ -2107,7 +2107,7 @@ void QQmlDelegateModel::_q_columnsInserted(const QModelIndex &parent, int begin,
     Q_UNUSED(end);
     if (parent == d->m_adaptorModel.rootIndex && begin == 0) {
         // mark all items as changed
-        _q_itemsChanged(0, d->m_count, QVector<int>());
+        _q_itemsChanged(0, d->m_count, QList<int>());
     }
 }
 
@@ -2117,7 +2117,7 @@ void QQmlDelegateModel::_q_columnsRemoved(const QModelIndex &parent, int begin, 
     Q_UNUSED(end);
     if (parent == d->m_adaptorModel.rootIndex && begin == 0) {
         // mark all items as changed
-        _q_itemsChanged(0, d->m_count, QVector<int>());
+        _q_itemsChanged(0, d->m_count, QList<int>());
     }
 }
 
@@ -2129,11 +2129,11 @@ void QQmlDelegateModel::_q_columnsMoved(const QModelIndex &parent, int start, in
     if ((parent == d->m_adaptorModel.rootIndex && start == 0)
         || (destination == d->m_adaptorModel.rootIndex && column == 0)) {
         // mark all items as changed
-        _q_itemsChanged(0, d->m_count, QVector<int>());
+        _q_itemsChanged(0, d->m_count, QList<int>());
     }
 }
 
-void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
+void QQmlDelegateModel::_q_dataChanged(const QModelIndex &begin, const QModelIndex &end, const QList<int> &roles)
 {
     Q_D(QQmlDelegateModel);
     if (begin.parent() == d->m_adaptorModel.rootIndex)
@@ -2164,7 +2164,7 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
         }
 
         // mark all items as changed
-        _q_itemsChanged(0, d->m_count, QVector<int>());
+        _q_itemsChanged(0, d->m_count, QList<int>());
 
     } else if (hint == QAbstractItemModel::HorizontalSortHint) {
         // Ignored
@@ -2218,7 +2218,7 @@ QQmlDelegateModelPrivate::insert(Compositor::insert_iterator &before, const QV4:
     cacheItem->setGroups(groups | Compositor::UnresolvedFlag | Compositor::CacheFlag);
 
     // Must be before the new object is inserted into the cache or its indexes will be adjusted too.
-    itemsInserted(QVector<Compositor::Insert>(
+    itemsInserted(QList<Compositor::Insert>(
             1, Compositor::Insert(before, 1, cacheItem->groups() & ~Compositor::CacheFlag)));
 
     m_cache.insert(before.cacheIndex(), cacheItem);
@@ -3344,7 +3344,7 @@ void QQmlDelegateModelGroup::create(QQmlV4FunctionPtr args)
 
     QObject *object = model->object(group, index, QQmlIncubator::AsynchronousIfNested);
     if (object) {
-        QVector<Compositor::Insert> inserts;
+        QList<Compositor::Insert> inserts;
         Compositor::iterator it = model->m_compositor.find(group, index);
         model->m_compositor.setFlags(it, 1, d->group, Compositor::PersistedFlag, &inserts);
         model->itemsInserted(inserts);
@@ -3436,12 +3436,12 @@ void QQmlDelegateModelGroup::resolve(QQmlV4FunctionPtr args)
         from += 1;
 
     model->itemsMoved(
-            QVector<Compositor::Remove>(1, Compositor::Remove(fromIt, 1, unresolvedFlags, 0)),
-            QVector<Compositor::Insert>(1, Compositor::Insert(toIt, 1, unresolvedFlags, 0)));
+            QList<Compositor::Remove>(1, Compositor::Remove(fromIt, 1, unresolvedFlags, 0)),
+            QList<Compositor::Insert>(1, Compositor::Insert(toIt, 1, unresolvedFlags, 0)));
     model->itemsInserted(
-            QVector<Compositor::Insert>(1, Compositor::Insert(toIt, 1, (resolvedFlags & ~unresolvedFlags) | Compositor::CacheFlag)));
+            QList<Compositor::Insert>(1, Compositor::Insert(toIt, 1, (resolvedFlags & ~unresolvedFlags) | Compositor::CacheFlag)));
     toIt.incrementIndexes(1, resolvedFlags | unresolvedFlags);
-    model->itemsRemoved(QVector<Compositor::Remove>(1, Compositor::Remove(toIt, 1, resolvedFlags)));
+    model->itemsRemoved(QList<Compositor::Remove>(1, Compositor::Remove(toIt, 1, resolvedFlags)));
 
     model->m_compositor.setFlags(toGroup, to, 1, unresolvedFlags & ~Compositor::UnresolvedFlag);
     model->m_compositor.clearFlags(fromGroup, from, 1, unresolvedFlags);
@@ -3686,8 +3686,8 @@ void QQmlDelegateModelGroup::move(QQmlV4FunctionPtr args)
     } else if (!model->m_compositor.verifyMoveTo(fromGroup, from, toGroup, to, count, d->group)) {
         qmlWarning(this) << tr("move: to index out of range");
     } else if (count > 0) {
-        QVector<Compositor::Remove> removes;
-        QVector<Compositor::Insert> inserts;
+        QList<Compositor::Remove> removes;
+        QList<Compositor::Insert> inserts;
 
         model->m_compositor.move(fromGroup, from, toGroup, to, count, d->group, &removes, &inserts);
         model->itemsMoved(removes, inserts);
@@ -3786,8 +3786,8 @@ void QQmlPartsModel::updateFilterGroup()
 
     QQmlDelegateModelGroupPrivate::get(model->m_groups[m_compositorGroup])->emitters.insert(this);
     if (m_compositorGroup != previousGroup) {
-        QVector<QQmlChangeSet::Change> removes;
-        QVector<QQmlChangeSet::Change> inserts;
+        QList<QQmlChangeSet::Change> removes;
+        QList<QQmlChangeSet::Change> inserts;
         model->m_compositor.transition(previousGroup, m_compositorGroup, &removes, &inserts);
 
         QQmlChangeSet changeSet;
@@ -3941,7 +3941,7 @@ void QQmlPartsModel::emitModelUpdated(const QQmlChangeSet &changeSet, bool reset
         emit countChanged();
 
     QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_model);
-    QVector<int> pendingPackageInitializations;
+    QList<int> pendingPackageInitializations;
     qSwap(pendingPackageInitializations, m_pendingPackageInitializations);
     for (int index : pendingPackageInitializations) {
         if (!model->m_delegate || index < 0 || index >= model->m_compositor.count(m_compositorGroup))
@@ -4130,7 +4130,7 @@ struct QQmlDelegateModelGroupChangeArray : public QV4::Object
     V4_OBJECT2(QQmlDelegateModelGroupChangeArray, QV4::Object)
     V4_NEEDS_DESTROY
 public:
-    static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QVector<QQmlChangeSet::Change> &changes)
+    static QV4::Heap::QQmlDelegateModelGroupChangeArray *create(QV4::ExecutionEngine *engine, const QList<QQmlChangeSet::Change> &changes)
     {
         return engine->memoryManager->allocate<QQmlDelegateModelGroupChangeArray>(changes);
     }
@@ -4178,10 +4178,10 @@ public:
     }
 };
 
-void QV4::Heap::QQmlDelegateModelGroupChangeArray::init(const QVector<QQmlChangeSet::Change> &changes)
+void QV4::Heap::QQmlDelegateModelGroupChangeArray::init(const QList<QQmlChangeSet::Change> &changes)
 {
     Object::init();
-    this->changes = new QVector<QQmlChangeSet::Change>(changes);
+    this->changes = new QList<QQmlChangeSet::Change>(changes);
     QV4::Scope scope(internalClass->engine);
     QV4::ScopedObject o(scope, this);
     o->setArrayType(QV4::Heap::ArrayData::Custom);
@@ -4205,7 +4205,7 @@ QQmlDelegateModelEngineData::~QQmlDelegateModelEngineData()
 }
 
 QV4::ReturnedValue QQmlDelegateModelEngineData::array(QV4::ExecutionEngine *v4,
-                                                      const QVector<QQmlChangeSet::Change> &changes)
+                                                      const QList<QQmlChangeSet::Change> &changes)
 {
     QV4::Scope scope(v4);
     QV4::ScopedObject o(scope, QQmlDelegateModelGroupChangeArray::create(v4, changes));

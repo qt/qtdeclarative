@@ -43,7 +43,7 @@ public:
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));
     }
 
-    void allocate(MemoryPool *pool, const QVector<T> &vector)
+    void allocate(MemoryPool *pool, const QList<T> &vector)
     {
         count = vector.size();
         data = reinterpret_cast<T*>(pool->allocate(count * sizeof(T)));

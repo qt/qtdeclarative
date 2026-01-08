@@ -125,8 +125,8 @@ void QSGCurveGlyphNode::updateGeometry()
         m_styleNode = outlineNode;
     }
 
-    const QVector<quint32> indexes = m_glyphs.glyphIndexes();
-    const QVector<QPointF> positions = m_glyphs.positions();
+    const QList<quint32> indexes = m_glyphs.glyphIndexes();
+    const QList<QPointF> positions = m_glyphs.positions();
     for (qsizetype i = 0; i < indexes.size(); ++i) {
         if (i == 0)
             m_baseLine = positions.at(i);

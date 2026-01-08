@@ -125,7 +125,7 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
     object->id = serializedObject->objectId();
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
-    QVector<int> functionIndices;
+    QList<int> functionIndices;
     functionIndices.reserve(serializedObject->nFunctions + serializedObject->nBindings / 2);
 
     for (uint i = 0; i < serializedObject->nBindings; ++i) {

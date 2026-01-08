@@ -36,7 +36,7 @@ public:
     QQmlOpenMetaObjectType(const QMetaObject *base);
     ~QQmlOpenMetaObjectType();
 
-    void createProperties(const QVector<QByteArray> &names);
+    void createProperties(const QList<QByteArray> &names);
     int createProperty(const QByteArray &name);
 
     int propertyOffset() const;

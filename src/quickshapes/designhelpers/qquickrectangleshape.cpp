@@ -991,13 +991,13 @@ void QQuickRectangleShape::setDashOffset(qreal offset)
     \include shapepath.qdocinc {dashPattern-property} {QtQuick.Shapes.DesignHelpers::RectangleShape}
 */
 
-QVector<qreal> QQuickRectangleShape::dashPattern() const
+QList<qreal> QQuickRectangleShape::dashPattern() const
 {
     Q_D(const QQuickRectangleShape);
     return d->shapePath->dashPattern();
 }
 
-void QQuickRectangleShape::setDashPattern(const QVector<qreal> &array)
+void QQuickRectangleShape::setDashPattern(const QList<qreal> &array)
 {
     Q_D(QQuickRectangleShape);
     d->shapePath->setDashPattern(array);

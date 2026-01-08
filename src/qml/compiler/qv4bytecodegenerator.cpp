@@ -134,7 +134,7 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
 
     // collect content and line numbers
     QByteArray code;
-    QVector<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumbers;
+    QList<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumbers;
 
     currentLine = -1;
     currentStatement = -1;

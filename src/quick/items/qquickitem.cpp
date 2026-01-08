@@ -723,7 +723,7 @@ void QQuickKeyNavigationAttached::setFocusNavigation(QQuickItem *currentItem, co
 {
     QQuickItem *initialItem = currentItem;
     bool isNextItem = false;
-    QVector<QQuickItem *> visitedItems;
+    QList<QQuickItem *> visitedItems;
     do {
         isNextItem = false;
         if (currentItem->isVisible() && currentItem->isEnabled()) {

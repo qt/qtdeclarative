@@ -48,7 +48,7 @@ class Q_QUICK_EXPORT QQuickShaderEffectMesh : public QObject
 
 public:
     QQuickShaderEffectMesh(QObject *parent = nullptr);
-    virtual bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) = 0;
+    virtual bool validateAttributes(const QList<QByteArray> &attributes, int *posIndex) = 0;
     // If 'geometry' != 0, 'attrCount' is the same as last time the function was called.
     virtual QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                         const QRectF &srcRect, const QRectF &rect) = 0;
@@ -71,7 +71,7 @@ class Q_QUICK_EXPORT QQuickGridMesh : public QQuickShaderEffectMesh
     QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickGridMesh(QObject *parent = nullptr);
-    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
+    bool validateAttributes(const QList<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                 const QRectF &srcRect, const QRectF &rect) override;
     QString log() const  override { return m_log; }
@@ -103,7 +103,7 @@ class QQuickBorderImageMesh : public QQuickShaderEffectMesh
 public:
     QQuickBorderImageMesh(QObject *parent = nullptr);
 
-    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
+    bool validateAttributes(const QList<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                 const QRectF &srcRect, const QRectF &rect) override;
 

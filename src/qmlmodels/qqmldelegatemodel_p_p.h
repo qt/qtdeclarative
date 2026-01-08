@@ -538,18 +538,18 @@ public:
     void setGroups(Compositor::iterator from, int count, Compositor::Group group, int groupFlags);
 
     void itemsInserted(
-            const QVector<Compositor::Insert> &inserts,
-            QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
+            const QList<Compositor::Insert> &inserts,
+            QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedInserts,
             QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = nullptr);
-    void itemsInserted(const QVector<Compositor::Insert> &inserts);
+    void itemsInserted(const QList<Compositor::Insert> &inserts);
     void itemsRemoved(
-            const QVector<Compositor::Remove> &removes,
-            QVarLengthArray<QVector<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
+            const QList<Compositor::Remove> &removes,
+            QVarLengthArray<QList<QQmlChangeSet::Change>, Compositor::MaximumGroupCount> *translatedRemoves,
             QHash<int, QList<QQmlDelegateModelItem *> > *movedItems = nullptr);
-    void itemsRemoved(const QVector<Compositor::Remove> &removes);
+    void itemsRemoved(const QList<Compositor::Remove> &removes);
     void itemsMoved(
-            const QVector<Compositor::Remove> &removes, const QVector<Compositor::Insert> &inserts);
-    void itemsChanged(const QVector<Compositor::Change> &changes);
+            const QList<Compositor::Remove> &removes, const QList<Compositor::Insert> &inserts);
+    void itemsChanged(const QList<Compositor::Change> &changes);
     void emitChanges();
     void emitModelUpdated(const QQmlChangeSet &changeSet, bool reset) override;
     void delegateChanged(bool add = true, bool remove = true);
@@ -649,7 +649,7 @@ private:
     QString m_part;
     QString m_filterGroup;
     QList<QByteArray> m_watchedRoles;
-    QVector<int> m_pendingPackageInitializations; // vector holds model indices
+    QList<int> m_pendingPackageInitializations; // vector holds model indices
     Compositor::Group m_compositorGroup;
     bool m_inheritGroup;
     bool m_modelUpdatePending = true;

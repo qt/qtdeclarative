@@ -149,9 +149,9 @@ static QJsonArray tryExtractQmlPluginURIs(const QStaticPlugin &plugin)
     return metadataUriList;
 }
 
-static QVector<StaticPluginMapping> staticQmlPlugins()
+static QList<StaticPluginMapping> staticQmlPlugins()
 {
-    QVector<StaticPluginMapping> qmlPlugins;
+    QList<StaticPluginMapping> qmlPlugins;
     const auto staticPlugins = QPluginLoader::staticPlugins();
     qmlPlugins.reserve(staticPlugins.size());
 
@@ -192,7 +192,7 @@ static QStringList versionUriList(const VersionedURI &uri)
     \a versionUris, which is a list of all possible versioned URI combinations - see
    versionUriList() above.
  */
-static QVector<StaticPluginMapping> staticQmlPluginsMatchingURI(const VersionedURI &uri)
+static QList<StaticPluginMapping> staticQmlPluginsMatchingURI(const VersionedURI &uri)
 {
     static const auto qmlPlugins = staticQmlPlugins();
 
@@ -201,7 +201,7 @@ static QVector<StaticPluginMapping> staticQmlPluginsMatchingURI(const VersionedU
     // If a module has several plugins, they must all have the same version. Start by
     // populating pluginPairs with relevant plugins to cut the list short early on:
     const QStringList versionedURIs = versionUriList(uri);
-    QVector<StaticPluginMapping> matches;
+    QList<StaticPluginMapping> matches;
     std::copy_if(qmlPlugins.begin(), qmlPlugins.end(), std::back_inserter(matches),
                  [&](const auto &pluginMapping) {
                      return versionedURIs.contains(pluginMapping.metadataURI);

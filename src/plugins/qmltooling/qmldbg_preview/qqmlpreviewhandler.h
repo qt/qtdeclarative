@@ -86,7 +86,7 @@ private:
     QScopedPointer<QQuickItem> m_dummyItem;
     QList<QQmlEngine *> m_engines;
     QPointer<QQuickItem> m_currentRootItem;
-    QVector<QPointer<QObject>> m_createdObjects;
+    QList<QPointer<QObject>> m_createdObjects;
     QScopedPointer<QQmlComponent> m_component;
     QPointer<QQuickWindow> m_currentWindow;
     qreal m_zoomFactor = 1.0;

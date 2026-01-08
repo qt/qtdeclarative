@@ -91,25 +91,25 @@ struct RuntimeCounters::Data {
         tag2 = Type(signature & 7);
     }
 
-    typedef QVector<quint64> Counters;
+    typedef QList<quint64> Counters;
     QHash<const char *, Counters> counters;
 
     inline void count(const char *func) {
-        QVector<quint64> &cnt = counters[func];
+        QList<quint64> &cnt = counters[func];
         if (cnt.isEmpty())
             cnt.resize(64);
         cnt[0] += 1;
     }
 
     inline void count(const char *func, unsigned tag) {
-        QVector<quint64> &cnt = counters[func];
+        QList<quint64> &cnt = counters[func];
         if (cnt.isEmpty())
             cnt.resize(64);
         cnt[mangle(tag)] += 1;
     }
 
     inline void count(const char *func, unsigned tag1, unsigned tag2) {
-        QVector<quint64> &cnt = counters[func];
+        QList<quint64> &cnt = counters[func];
         if (cnt.isEmpty())
             cnt.resize(64);
         cnt[mangle(tag1, tag2)] += 1;

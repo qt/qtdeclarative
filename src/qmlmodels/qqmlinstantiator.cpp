@@ -115,8 +115,8 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
     }
 
     int difference = 0;
-    QHash<int, QVector<QPointer<QObject> > > moved;
-    const QVector<QQmlChangeSet::Change> &removes = changeSet.removes();
+    QHash<int, QList<QPointer<QObject> > > moved;
+    const QList<QQmlChangeSet::Change> &removes = changeSet.removes();
     for (const QQmlChangeSet::Change &remove : removes) {
         int index = qMin(remove.index, objects.size());
         int count = qMin(remove.index + remove.count, objects.size()) - index;
@@ -136,11 +136,11 @@ void QQmlInstantiatorPrivate::_q_modelUpdated(const QQmlChangeSet &changeSet, bo
         difference -= remove.count;
     }
 
-    const QVector<QQmlChangeSet::Change> &inserts = changeSet.inserts();
+    const QList<QQmlChangeSet::Change> &inserts = changeSet.inserts();
     for (const QQmlChangeSet::Change &insert : inserts) {
         int index = qMin(insert.index, objects.size());
         if (insert.isMove()) {
-            QVector<QPointer<QObject> > movedObjects = moved.value(insert.moveId);
+            QList<QPointer<QObject> > movedObjects = moved.value(insert.moveId);
             objects = objects.mid(0, index) + movedObjects + objects.mid(index);
         } else {
             if (insert.index <= objects.size())

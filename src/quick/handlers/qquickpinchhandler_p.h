@@ -123,7 +123,7 @@ private:
     qreal m_startDistance = 0;
     qreal m_accumulatedStartCentroidDistance = 0;
     QPointF m_startTargetPos;
-    QVector<PointData> m_startAngles;
+    QList<PointData> m_startAngles;
     QQuickMatrix4x4 m_transform;
 };
 

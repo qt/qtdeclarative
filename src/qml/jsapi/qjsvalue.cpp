@@ -105,7 +105,7 @@
   reads the array we created above back into a list:
 
   \code
-  QVector<int> integers;
+  QList<int> integers;
   const int length = jsArray.property("length").toInt();
   for (int i = 0; i < length; ++i) {
       integers.append(jsArray.property(i).toInt());

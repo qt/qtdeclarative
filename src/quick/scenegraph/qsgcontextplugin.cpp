@@ -41,7 +41,7 @@ struct QSGAdaptationBackendData
     QString name;
     QSGContextFactoryInterface::Flags flags;
 
-    QVector<QSGContextFactoryInterface *> builtIns;
+    QList<QSGContextFactoryInterface *> builtIns;
 
     QString quickWindowBackendRequest;
 };

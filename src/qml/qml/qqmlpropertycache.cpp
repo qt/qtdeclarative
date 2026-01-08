@@ -397,7 +397,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
 void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flags flags,
                                      int coreIndex, QMetaType returnType,
                                      const QList<QByteArray> &names,
-                                     const QVector<QMetaType> &parameterTypes)
+                                     const QList<QMetaType> &parameterTypes)
 {
     int argumentCount = names.size();
 
@@ -433,7 +433,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     setNamedProperty(name, methodIndex + methodOffset(), methodIndexCache.data() + methodIndex);
 }
 
-void QQmlPropertyCache::appendEnum(const QString &name, const QVector<QQmlEnumValue> &values)
+void QQmlPropertyCache::appendEnum(const QString &name, const QList<QQmlEnumValue> &values)
 {
     QQmlEnumData data;
     data.name = name;

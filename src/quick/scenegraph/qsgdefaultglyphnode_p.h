@@ -42,11 +42,11 @@ private:
 
     QSGRenderContext *m_context;
     DefaultGlyphNodeType m_glyphNodeType;
-    QVector<QSGNode *> m_nodesToDelete;
+    QList<QSGNode *> m_nodesToDelete;
 
     struct GlyphInfo {
-        QVector<quint32> indexes;
-        QVector<QPointF> positions;
+        QList<quint32> indexes;
+        QList<QPointF> positions;
     };
 
     uint m_dirtyGeometry: 1;

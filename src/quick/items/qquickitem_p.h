@@ -434,7 +434,7 @@ public:
         QQuickLayoutMirroringAttached* layoutDirectionAttached;
         QQuickEnterKeyAttached *enterKeyAttached;
         QQuickItemKeyFilter *keyHandler;
-        QVector<QQuickPointerHandler *> pointerHandlers;
+        QList<QQuickPointerHandler *> pointerHandlers;
         QObject *contextMenu;
 #if QT_CONFIG(quick_shadereffect)
         mutable QQuickItemLayer *layer;
@@ -491,7 +491,7 @@ public:
 
     inline Qt::MouseButtons acceptedMouseButtons() const;
 
-    QVector<QQuickItemPrivate::ChangeListener> changeListeners;
+    QList<QQuickItemPrivate::ChangeListener> changeListeners;
 
     void addItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);
     void updateOrAddItemChangeListener(QQuickItemChangeListener *listener, ChangeTypes types);

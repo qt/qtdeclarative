@@ -300,7 +300,7 @@ void QQuick_initializeModule()
     Q_ASSERT(qtqml);
 
     // This is used by QQuickPath, and on macOS it fails to automatically register.
-    qRegisterMetaType<QVector<QVector<QPointF>>>();
+    qRegisterMetaType<QList<QList<QPointF>>>();
 
     QQml_setColorProvider(getColorProvider());
     QQml_setGuiProvider(getGuiProvider());

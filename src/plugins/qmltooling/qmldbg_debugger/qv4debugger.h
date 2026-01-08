@@ -87,8 +87,8 @@ public:
     };
     ExecutionState currentExecutionState() const;
 
-    QVector<QV4::StackFrame> stackTrace(int frameLimit = -1) const;
-    QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
+    QList<QV4::StackFrame> stackTrace(int frameLimit = -1) const;
+    QList<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame = 0) const;
 
     QV4::Function *getFunction() const;
     void runInEngine(QV4DebugJob *job);

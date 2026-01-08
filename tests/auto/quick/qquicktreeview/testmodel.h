@@ -14,9 +14,9 @@ public:
     ~TreeItem();
 
     int row() const;
-    QVector<TreeItem *> m_childItems;
+    QList<TreeItem *> m_childItems;
     TreeItem *m_parentItem;
-    QVector<QVariant> m_entries;
+    QList<QVariant> m_entries;
 };
 
 // ########################################################

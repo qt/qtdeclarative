@@ -111,8 +111,8 @@ void tst_QQMLTypeLoader::trimCache()
 {
     QQmlEngine engine;
     QQmlTypeLoader *loader = QQmlTypeLoader::get(&engine);
-    QVector<QQmlTypeData *> releaseLater;
-    QVector<QV4::CompiledData::CompilationUnit *> releaseCompilationUnitLater;
+    QList<QQmlTypeData *> releaseLater;
+    QList<QV4::CompiledData::CompilationUnit *> releaseCompilationUnitLater;
     for (int i = 0; i < 256; ++i) {
         QUrl url = testFileUrl("trim_cache.qml");
         url.setQuery(QString::number(i));

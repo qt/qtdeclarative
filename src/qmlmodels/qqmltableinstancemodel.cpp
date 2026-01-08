@@ -268,7 +268,7 @@ void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModel
     // Notify the application that all 'dynamic'/role-based context data has
     // changed as well (their getter function will use the updated index).
     auto const itemAsList = QList<QQmlDelegateModelItem *>() << item;
-    auto const updateAllRoles = QVector<int>();
+    auto const updateAllRoles = QList<int>();
     m_adaptorModel.notify(itemAsList, newModelIndex, 1, updateAllRoles);
 
     // Inform the view that the item is recycled. This will typically result
@@ -472,7 +472,7 @@ void QQmlTableInstanceModel::setModel(const QVariant &model)
     emit modelChanged();
 }
 
-void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles)
+void QQmlTableInstanceModel::dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QList<int> &roles)
 {
     // This function is called when model data has changed. In that case, we tell the adaptor model
     // to go through all the items we have created, find the ones that are affected, and notify that

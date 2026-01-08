@@ -998,7 +998,7 @@ void QQuickItemViewPrivate::applyPendingChanges()
         layout();
 }
 
-int QQuickItemViewPrivate::findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const
+int QQuickItemViewPrivate::findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QList<QQmlChangeSet::Change> &changes) const
 {
     for (int i=0; i<changes.size(); i++) {
         for (int j=changes[i].index; j<changes[i].index + changes[i].count; j++) {
@@ -2161,8 +2161,8 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
     totalInsertionResult->visiblePos = prevFirstItemInViewPos;
     totalRemovalResult->visiblePos = prevFirstItemInViewPos;
 
-    const QVector<QQmlChangeSet::Change> &removals = currentChanges.pendingChanges.removes();
-    const QVector<QQmlChangeSet::Change> &insertions = currentChanges.pendingChanges.inserts();
+    const QList<QQmlChangeSet::Change> &removals = currentChanges.pendingChanges.removes();
+    const QList<QQmlChangeSet::Change> &insertions = currentChanges.pendingChanges.inserts();
     ChangeResult insertionResult(prevFirstItemInViewPos);
     ChangeResult removalResult(prevFirstItemInViewPos);
 

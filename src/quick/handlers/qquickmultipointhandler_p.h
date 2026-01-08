@@ -64,15 +64,15 @@ protected:
     QList<QQuickHandlerPoint> &currentPoints();
     QQuickHandlerPoint &mutableCentroid();
     bool hasCurrentPoints(QPointerEvent *event);
-    QVector<QEventPoint> eligiblePoints(QPointerEvent *event);
+    QList<QEventPoint> eligiblePoints(QPointerEvent *event);
     qreal averageTouchPointDistance(const QPointF &ref);
     qreal averageStartingDistance(const QPointF &ref);
     qreal averageTouchPointAngle(const QPointF &ref);
     qreal averageStartingAngle(const QPointF &ref);
-    QVector<PointData> angles(const QPointF &ref) const;
-    static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
-    void acceptPoints(const QVector<QEventPoint> &points);
-    bool grabPoints(QPointerEvent *event, const QVector<QEventPoint> &points);
+    QList<PointData> angles(const QPointF &ref) const;
+    static qreal averageAngleDelta(const QList<PointData> &old, const QList<PointData> &newAngles);
+    void acceptPoints(const QList<QEventPoint> &points);
+    bool grabPoints(QPointerEvent *event, const QList<QEventPoint> &points);
     void moveTarget(QPointF pos);
 
     Q_DECLARE_PRIVATE(QQuickMultiPointHandler)

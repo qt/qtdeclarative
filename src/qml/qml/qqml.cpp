@@ -578,9 +578,9 @@ QObject *QQmlPrivate::SingletonInstanceFunctor::operator()(QQmlEngine *qeng, QJS
     return m_object;
 };
 
-static QVector<QTypeRevision> availableRevisions(const QMetaObject *metaObject)
+static QList<QTypeRevision> availableRevisions(const QMetaObject *metaObject)
 {
-    QVector<QTypeRevision> revisions;
+    QList<QTypeRevision> revisions;
     if (!metaObject)
         return revisions;
     const int propertyOffset = metaObject->propertyOffset();
@@ -619,18 +619,18 @@ void assignVersions(Registration *registration, QTypeRevision revision,
     registration->revision = revision;
 }
 
-static QVector<QTypeRevision> prepareRevisions(const QMetaObject *metaObject, QTypeRevision added)
+static QList<QTypeRevision> prepareRevisions(const QMetaObject *metaObject, QTypeRevision added)
 {
     auto revisions = availableRevisions(metaObject);
     revisions.append(added);
     return revisions;
 }
 
-static void uniqueRevisions(QVector<QTypeRevision> *revisions, QTypeRevision defaultVersion,
+static void uniqueRevisions(QList<QTypeRevision> *revisions, QTypeRevision defaultVersion,
                             QTypeRevision added)
 {
     bool revisionsHaveMajorVersions = false;
-    for (QTypeRevision revision : QVector<QTypeRevision>(*revisions)) { // yes, copy
+    for (QTypeRevision revision : QList<QTypeRevision>(*revisions)) { // yes, copy
         // allow any minor version for each explicitly specified past major one
         if (revision.hasMajorVersion()) {
             revisionsHaveMajorVersions = true;
@@ -1115,7 +1115,7 @@ namespace QQmlPrivate {
 template<>
 void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
         const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
-        QVector<int> *qmlTypeIds, const QMetaObject *extension, bool)
+        QList<int> *qmlTypeIds, const QMetaObject *extension, bool)
 {
     using T = QQmlTypeNotAvailable;
 

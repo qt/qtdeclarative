@@ -195,7 +195,7 @@ public:
     void viewItemTransitionFinished(QQuickItemViewTransitionableItem *item) override;
 #endif
 
-    int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QVector<QQmlChangeSet::Change> &changes) const;
+    int findMoveKeyIndex(QQmlChangeSet::MoveKey key, const QList<QQmlChangeSet::Change> &changes) const;
 
     void checkVisible() const;
     void showVisibleItems() const;
@@ -293,7 +293,7 @@ public:
     };
 #if QT_CONFIG(quick_viewtransitions)
     QQuickItemViewTransitioner *transitioner;
-    QVector<FxViewItem *> releasePendingTransition;
+    QList<FxViewItem *> releasePendingTransition;
 #endif
 
     mutable qreal minExtent;

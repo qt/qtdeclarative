@@ -1237,7 +1237,7 @@ void tst_qquickanimations::easingProperties()
 
         QVERIFY(animObject != nullptr);
         QCOMPARE(animObject->easing().type(), QEasingCurve::BezierSpline);
-        QVector<QPointF> points = animObject->easing().toCubicSpline();
+        QList<QPointF> points = animObject->easing().toCubicSpline();
         QCOMPARE(points.size(), 3);
         QCOMPARE(points.at(0), QPointF(0.5, 0.2));
         QCOMPARE(points.at(1), QPointF(0.13, 0.65));
@@ -1343,18 +1343,18 @@ void tst_qquickanimations::signalOrder()
     QVERIFY(root);
     QQuickAbstractAnimation *animation = root->findChild<QQuickAbstractAnimation*>(animationType);
 
-    const QVector<void (QQuickAbstractAnimation::*)()> signalsToConnect = {
+    const QList<void (QQuickAbstractAnimation::*)()> signalsToConnect = {
         &QQuickAbstractAnimation::started,
         &QQuickAbstractAnimation::stopped,
         &QQuickAbstractAnimation::finished
     };
-    const QVector<const char*> expectedSignalOrder = {
+    const QList<const char*> expectedSignalOrder = {
         "started",
         "stopped",
         "finished"
     };
 
-    QVector<const char*> actualSignalOrder;
+    QList<const char*> actualSignalOrder;
 
     for (int i = 0; i < signalsToConnect.size(); ++i) {
         const char *str = expectedSignalOrder.at(i);

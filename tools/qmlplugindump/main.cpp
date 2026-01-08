@@ -543,7 +543,7 @@ public:
         qml->writeStringBinding("name", QUtf8StringView(id));
 
         // collect type information
-        QVector<QmlTypeInfo> typeInfo;
+        QList<QmlTypeInfo> typeInfo;
         const auto types = qmlTypesByCppName.value(meta->className());
         for (const QQmlType &type : types) {
             const QMetaObject *extendedObject = type.extensionFunction() ? type.metaObject() : nullptr;

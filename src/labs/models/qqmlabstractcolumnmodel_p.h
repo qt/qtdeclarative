@@ -113,7 +113,7 @@ protected:
     bool mComponentCompleted = false;
     int mColumnCount = 0;
     // Each entry contains information about the properties of the column at that index.
-    QVector<ColumnMetadata> mColumnMetadata;
+    QList<ColumnMetadata> mColumnMetadata;
     // key = property index (0 to number of properties across all columns)
     // value = role name
     QHash<int, QByteArray> mRoleNames;

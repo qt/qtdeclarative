@@ -77,19 +77,19 @@ public:
 
     QQmlChangeSet &operator =(const QQmlChangeSet &changeSet);
 
-    const QVector<Change> &removes() const { return m_removes; }
-    const QVector<Change> &inserts() const { return m_inserts; }
-    const QVector<Change> &changes() const { return m_changes; }
+    const QList<Change> &removes() const { return m_removes; }
+    const QList<Change> &inserts() const { return m_inserts; }
+    const QList<Change> &changes() const { return m_changes; }
 
     void insert(int index, int count);
     void remove(int index, int count);
     void move(int from, int to, int count, int moveId);
     void change(int index, int count);
 
-    void insert(const QVector<Change> &inserts);
-    void remove(const QVector<Change> &removes, QVector<Change> *inserts = nullptr);
-    void move(const QVector<Change> &removes, const QVector<Change> &inserts);
-    void change(const QVector<Change> &changes);
+    void insert(const QList<Change> &inserts);
+    void remove(const QList<Change> &removes, QList<Change> *inserts = nullptr);
+    void move(const QList<Change> &removes, const QList<Change> &inserts);
+    void change(const QList<Change> &changes);
     void apply(const QQmlChangeSet &changeSet);
 
     bool isEmpty() const { return m_removes.empty() && m_inserts.empty() && m_changes.isEmpty(); }
@@ -105,12 +105,12 @@ public:
     int difference() const { return m_difference; }
 
 private:
-    void remove(QVector<Change> *removes, QVector<Change> *inserts);
-    void change(QVector<Change> *changes);
+    void remove(QList<Change> *removes, QList<Change> *inserts);
+    void change(QList<Change> *changes);
 
-    QVector<Change> m_removes;
-    QVector<Change> m_inserts;
-    QVector<Change> m_changes;
+    QList<Change> m_removes;
+    QList<Change> m_inserts;
+    QList<Change> m_changes;
     int m_difference;
 };
 

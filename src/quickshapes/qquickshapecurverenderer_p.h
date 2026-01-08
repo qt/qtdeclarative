@@ -53,7 +53,7 @@ public:
     void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) override;
     void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) override;
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                        qreal dashOffset, const QVector<qreal> &dashPattern) override;
+                        qreal dashOffset, const QList<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
@@ -67,7 +67,7 @@ public:
     void setRootNode(QSGNode *node);
     void clearNodeReferences();
 
-    using NodeList = QVector<QSGCurveAbstractNode *>;
+    using NodeList = QList<QSGCurveAbstractNode *>;
 
     enum DirtyFlag
     {
@@ -132,8 +132,8 @@ private:
 
     QQuickItem *m_item;
     QSGNode *m_rootNode = nullptr;
-    QVector<PathData> m_paths;
-    QVector<PathData> m_removedPaths;
+    QList<PathData> m_paths;
+    QList<PathData> m_removedPaths;
     void (*m_asyncCallback)(void *) = nullptr;
     void *m_asyncCallbackData = nullptr;
     static int debugVisualizationFlags;

@@ -113,7 +113,7 @@ void tst_PropertyRequirements::constantOrNotifyableFull()
 
 void tst_PropertyRequirements::testAllQmlTypes(TestDepth testDepth, FailuresByProperty &failuresByProperty)
 {
-    const QVector<QByteArray> qmlData {
+    const QList<QByteArray> qmlData {
         "import QtQml 2.2\nQtObject {}",
         "import QtQml.Models 2.2\nListModel {}",
         "import QtQuick 2.5\nItem {}",

@@ -293,7 +293,7 @@ protected:
             const QString &property, const QQmlJS::SourceLocation &location,
             const std::optional<QQmlJSFixSuggestion> &fixSuggestion = {});
 
-    QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
+    QList<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
     void setAllBindings();
     void addDefaultProperties();
     void processDefaultProperties();
@@ -317,7 +317,7 @@ protected:
     bool isImportPrefix(QString prefix) const;
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
-    QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;
+    QList<QQmlJSAnnotation> m_pendingMethodAnnotations;
 
     struct PendingPropertyType
     {
@@ -370,16 +370,16 @@ protected:
         T data;
     };
 
-    QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
-    QVector<PendingPropertyType> m_pendingPropertyTypes;
-    QVector<PendingMethodTypeAnnotations> m_pendingMethodTypeAnnotations;
-    QVector<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
-    QVector<RequiredProperty> m_requiredProperties;
-    QVector<QQmlJSScope::Ptr> m_objectBindingScopes;
-    QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
+    QHash<QQmlJSScope::Ptr, QList<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
+    QList<PendingPropertyType> m_pendingPropertyTypes;
+    QList<PendingMethodTypeAnnotations> m_pendingMethodTypeAnnotations;
+    QList<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
+    QList<RequiredProperty> m_requiredProperties;
+    QList<QQmlJSScope::Ptr> m_objectBindingScopes;
+    QList<QQmlJSScope::Ptr> m_objectDefinitionScopes;
 
-    QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QString>>> m_propertyBindings;
-    QVector<Alias> m_aliasDefinitions;
+    QHash<QQmlJSScope::Ptr, QList<WithVisibilityScope<QString>>> m_propertyBindings;
+    QList<Alias> m_aliasDefinitions;
     QHash<Property, QList<Alias>> m_propertyAliases;
 
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;

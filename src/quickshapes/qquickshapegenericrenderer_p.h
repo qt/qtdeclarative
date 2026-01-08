@@ -65,7 +65,7 @@ public:
     void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) override;
     void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) override;
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                        qreal dashOffset, const QVector<qreal> &dashPattern) override;
+                        qreal dashOffset, const QList<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
@@ -80,9 +80,9 @@ public:
     void setRootNode(QQuickShapeGenericNode *node);
 
     struct Color4ub { unsigned char r, g, b, a; };
-    typedef QVector<QSGGeometry::ColoredPoint2D> VertexContainerType;
-    typedef QVector<QSGGeometry::TexturedPoint2D> TexturedVertexContainerType;
-    typedef QVector<quint32> IndexContainerType;
+    typedef QList<QSGGeometry::ColoredPoint2D> VertexContainerType;
+    typedef QList<QSGGeometry::TexturedPoint2D> TexturedVertexContainerType;
+    typedef QList<quint32> IndexContainerType;
 
     static void triangulateFill(const QPainterPath &path,
                                 const Color4ub &fillColor,
@@ -129,7 +129,7 @@ private:
     QQuickItem *m_item;
     QSGRendererInterface::GraphicsApi m_api;
     QQuickShapeGenericNode *m_rootNode;
-    QVector<ShapePathData> m_sp;
+    QList<ShapePathData> m_sp;
     int m_accDirty;
     void (*m_asyncCallback)(void *);
     void *m_asyncCallbackData;

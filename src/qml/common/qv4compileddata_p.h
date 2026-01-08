@@ -83,7 +83,7 @@ class ResolvedTypeReference;
 namespace CompiledData {
 
 // index is per-object binding index
-using BindingPropertyData = QVector<const QQmlPropertyData *>;
+using BindingPropertyData = QList<const QQmlPropertyData *>;
 
 // map from name index
 struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
@@ -1505,7 +1505,7 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     // index is object index. This allows fast access to the
     // property data when initializing bindings, avoiding expensive
     // lookups by string (property name).
-    QVector<BindingPropertyData> bindingPropertyDataPerObject;
+    QList<BindingPropertyData> bindingPropertyDataPerObject;
 
     ResolvedTypeReferenceMap resolvedTypes;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
@@ -1514,7 +1514,7 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
 
     QQmlType qmlType;
 
-    QVector<QQmlRefPointer<QQmlScriptData>> dependentScripts;
+    QList<QQmlRefPointer<QQmlScriptData>> dependentScripts;
 
 public:
     // --- interface for QQmlPropertyCacheCreator

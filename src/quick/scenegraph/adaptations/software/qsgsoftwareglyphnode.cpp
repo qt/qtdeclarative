@@ -29,8 +29,8 @@ QRectF calculateBoundingRect(const QPointF &position, const QGlyphRun &glyphs)
 
     int margin = fontEngine->glyphMargin(glyphFormat);
 
-    const QVector<uint> glyphIndexes = glyphs.glyphIndexes();
-    const QVector<QPointF> glyphPositions = glyphs.positions();
+    const QList<uint> glyphIndexes = glyphs.glyphIndexes();
+    const QList<QPointF> glyphPositions = glyphs.positions();
     for (int i = 0, n = qMin(glyphIndexes.size(), glyphPositions.size()); i < n; ++i) {
         glyph_metrics_t gm = fontEngine->alphaMapBoundingBox(glyphIndexes.at(i), QFixedPoint(), QTransform(), glyphFormat);
 

@@ -958,7 +958,7 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(const QEventPoint &point) co
             dragOverThreshold(delta.y(), Qt::YAxis, point));
 }
 
-QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QInputDevice *device)
+QList<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QInputDevice *device)
 {
     return QQuickDeliveryAgentPrivate::deviceExtra(device)->deliveryTargets;
 }

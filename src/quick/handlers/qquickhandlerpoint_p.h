@@ -63,7 +63,7 @@ public:
 
     void reset();
     void reset(const QPointerEvent *event, const QEventPoint &point);
-    void reset(const QVector<QQuickHandlerPoint> &points);
+    void reset(const QList<QQuickHandlerPoint> &points);
 
 private:
     int m_id = -1;

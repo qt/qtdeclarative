@@ -634,7 +634,7 @@ void tst_QJSEngine::toScriptValueBuiltin_data()
     vm.clear(); vm.insert("point1", QPointF(42.24, 24.42)); vm.insert("point2", QPointF(42.24, 24.42));
     QTest::newRow("qvariantmap_point") << QVariant(vm);
     QTest::newRow("qvariant") << QVariant(QVariant(42));
-    QTest::newRow("QList<QString>") << QVariant::fromValue(QVector<QString>() << "1" << "2" << "3" << "4");
+    QTest::newRow("QList<QString>") << QVariant::fromValue(QList<QString>() << "1" << "2" << "3" << "4");
     QTest::newRow("QStringList") << QVariant::fromValue(QStringList() << "1" << "2" << "3" << "4");
     QTest::newRow("QMap<QString, QString>") << QVariant::fromValue(QMap<QString, QString>{{ "1", "2" }, { "3", "4" }});
     QTest::newRow("QHash<QString, QString>") << QVariant::fromValue(QHash<QString, QString>{{ "1", "2" }, { "3", "4" }});
@@ -1688,7 +1688,7 @@ Q_DECLARE_METATYPE(Foo)
 Q_DECLARE_METATYPE(Foo*)
 
 Q_DECLARE_METATYPE(QList<Foo>)
-Q_DECLARE_METATYPE(QVector<QChar>)
+Q_DECLARE_METATYPE(QList<QChar>)
 Q_DECLARE_METATYPE(QStack<int>)
 Q_DECLARE_METATYPE(QQueue<char>)
 

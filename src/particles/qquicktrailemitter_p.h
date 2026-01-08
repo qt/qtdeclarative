@@ -125,7 +125,7 @@ private Q_SLOTS:
     void recalcParticlesPerSecond();
 
 private:
-    QVector<qreal> m_lastEmission;
+    QList<qreal> m_lastEmission;
     int m_particlesPerParticlePerSecond;
     qreal m_lastTimeStamp;
     qreal m_emitterXVariation;

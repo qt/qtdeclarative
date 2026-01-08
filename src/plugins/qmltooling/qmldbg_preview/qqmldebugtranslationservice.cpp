@@ -111,7 +111,7 @@ public:
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         packet << Reply::StateList;
-        QVector<QmlState> qmlStates;
+        QList<QmlState> qmlStates;
 
         if (QQuickItem *rootItem = currentRootItem()) {
             QQuickStateGroup *stateGroup = QQuickItemPrivate::get(rootItem)->_states();
@@ -167,7 +167,7 @@ public:
         QVersionedPacket<QQmlDebugConnector> packet;
         packet << Reply::TranslatableTextOccurrences;
 
-        QVector<QmlElement> qmlElements;
+        QList<QmlElement> qmlElements;
 
         for (auto &&information : std::as_const(objectTranslationBindingMultiMap)) {
 
@@ -229,7 +229,7 @@ public:
         QVersionedPacket<QQmlDebugConnector> packet;
         packet << Reply::TranslationIssues;
 
-        QVector<TranslationIssue> issues;
+        QList<TranslationIssue> issues;
         for (auto &&information : std::as_const(objectTranslationBindingMultiMap)) {
             if (!proxyTranslator->hasTranslation(information)) {
                 TranslationIssue issue;
@@ -262,7 +262,7 @@ public:
 
     bool watchTextElides = false;
     QMultiMap<QObject*, TranslationBindingInformation> objectTranslationBindingMultiMap;
-    QHash<QObject*, QVector<QMetaObject::Connection>> elideConnections;
+    QHash<QObject*, QList<QMetaObject::Connection>> elideConnections;
     ProxyTranslator *proxyTranslator;
 
     bool enableWatchTranslations = false;

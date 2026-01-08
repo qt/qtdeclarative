@@ -21,12 +21,12 @@ class QV4DataCollector
 {
 public:
     typedef uint Ref;
-    typedef QVector<uint> Refs;
+    typedef QList<uint> Refs;
 
     static QV4::Heap::ExecutionContext *findScope(QV4::Heap::ExecutionContext *ctxt, int scope);
     static int encodeScopeType(QV4::Heap::ExecutionContext::ContextType scopeType);
 
-    QVector<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame);
+    QList<QV4::Heap::ExecutionContext::ContextType> getScopeTypes(int frame);
     QV4::Heap::ExecutionContext *findContext(int frame);
     QV4::CppStackFrame *findFrame(int frame);
 

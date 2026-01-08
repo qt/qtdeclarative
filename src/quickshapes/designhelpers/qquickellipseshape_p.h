@@ -46,7 +46,7 @@ public:
                        strokeStyleChanged FINAL)
     Q_PROPERTY(QQuickShapePath::FillRule fillRule READ fillRule WRITE setFillRule NOTIFY
                        fillRuleChanged FINAL)
-    Q_PROPERTY(QVector<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY
+    Q_PROPERTY(QList<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY
                        dashPatternChanged FINAL)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient NOTIFY
                        gradientChanged RESET resetFillGradient FINAL)
@@ -96,8 +96,8 @@ public:
     QQuickShapePath::FillRule fillRule() const;
     void setFillRule(QQuickShapePath::FillRule fillRule);
 
-    QVector<qreal> dashPattern() const;
-    void setDashPattern(const QVector<qreal> &array);
+    QList<qreal> dashPattern() const;
+    void setDashPattern(const QList<qreal> &array);
 
     QQuickShapeGradient *fillGradient() const;
     void setFillGradient(QQuickShapeGradient *fillGradient);

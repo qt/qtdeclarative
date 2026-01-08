@@ -352,12 +352,12 @@ public:
     void setTimer(const QElapsedTimer &timer) { m_timer = timer; }
 
 Q_SIGNALS:
-    void dataReady(const QVector<QQmlProfilerData> &, const QQmlProfiler::LocationHash &);
+    void dataReady(const QList<QQmlProfilerData> &, const QQmlProfiler::LocationHash &);
 
 protected:
     QElapsedTimer m_timer;
     QHash<quintptr, RefLocation> m_locations;
-    QVector<QQmlProfilerData> m_data;
+    QList<QQmlProfilerData> m_data;
 };
 
 //
@@ -492,7 +492,7 @@ QT_END_NAMESPACE
 
 #if QT_CONFIG(qml_debug)
 
-Q_DECLARE_METATYPE(QVector<QQmlProfilerData>)
+Q_DECLARE_METATYPE(QList<QQmlProfilerData>)
 Q_DECLARE_METATYPE(QQmlProfiler::LocationHash)
 
 #endif // QT_CONFIG(qml_debug)

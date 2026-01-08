@@ -285,7 +285,7 @@ void QQuickShapeCurveRenderer::setCapStyle(int index, QQuickShapePath::CapStyle 
 void QQuickShapeCurveRenderer::setStrokeStyle(int index,
                                             QQuickShapePath::StrokeStyle strokeStyle,
                                             qreal dashOffset,
-                                            const QVector<qreal> &dashPattern)
+                                            const QList<qreal> &dashPattern)
 {
     auto &pathData = m_paths[index];
     pathData.pen.setStyle(Qt::PenStyle(strokeStyle));
@@ -644,7 +644,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
                                            node->appendTriangle(v, n, uvForPoint);
                                        });
     } else {
-        QVector<QQuickShapeWireFrameNode<SimpleWFT>::WireFrameVertex> wfVertices;
+        QList<QQuickShapeWireFrameNode<SimpleWFT>::WireFrameVertex> wfVertices;
         wfVertices.reserve(approxDataCount);
         QSGCurveProcessor::processFill(path,
                                        path.fillRule(),
@@ -660,7 +660,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addFillNodes(const 
                                        });
 
         wfNode.reset(new QQuickShapeWireFrameNode<SimpleWFT>);
-        const QVector<quint32> indices = node->uncookedIndexes();
+        const QList<quint32> indices = node->uncookedIndexes();
         QSGGeometry *wfg = new QSGGeometry(QQuickShapeWireFrameNode<SimpleWFT>::attributes(),
                                            wfVertices.size(),
                                            indices.size(),
@@ -694,7 +694,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
     NodeList ret;
     const QColor &color = pen.color();
 
-    QVector<QQuickShapeWireFrameNode<StrokeWFT>::WireFrameVertex> wfVertices;
+    QList<QQuickShapeWireFrameNode<StrokeWFT>::WireFrameVertex> wfVertices;
 
     QTriangulatingStroker stroker;
     const auto painterPath = path.toPainterPath();
@@ -774,7 +774,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addTriangulatingStr
         addStrokeTriangle(p[0], p[1], p[2]);
     }
 
-    QVector<quint32> indices = node->uncookedIndexes();
+    QList<quint32> indices = node->uncookedIndexes();
     if (indices.size() > 0) {
         node->setColor(color);
 
@@ -845,7 +845,7 @@ QQuickShapeCurveRenderer::NodeList QQuickShapeCurveRenderer::addCurveStrokeNodes
     const bool debug = debugVisualization() & DebugCurves;
     auto *node = new QSGCurveStrokeNode;
     node->setDebug(0.2f * debug);
-    QVector<QQuickShapeWireFrameNode<StrokeWFT>::WireFrameVertex> wfVertices;
+    QList<QQuickShapeWireFrameNode<StrokeWFT>::WireFrameVertex> wfVertices;
 
     const float penWidth = pen.widthF();
 

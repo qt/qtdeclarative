@@ -199,7 +199,7 @@ void QQuickShapeGenericRenderer::setCapStyle(int index, QQuickShapePath::CapStyl
 }
 
 void QQuickShapeGenericRenderer::setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                                                   qreal dashOffset, const QVector<qreal> &dashPattern)
+                                                   qreal dashOffset, const QList<qreal> &dashPattern)
 {
     ShapePathData &d(m_sp[index]);
     d.pen.setStyle(Qt::PenStyle(strokeStyle));
@@ -473,7 +473,7 @@ void QQuickShapeGenericRenderer::triangulateFill(const QPainterPath &path,
     size_t indexByteSize;
     if (ts.indices.type() == QVertexIndexVector::UnsignedShort) {
         *indexType = QSGGeometry::UnsignedShortType;
-        // fillIndices is still QVector<quint32>. Just resize to N/2 and pack
+        // fillIndices is still QList<quint32>. Just resize to N/2 and pack
         // the N quint16s into it.
         fillIndices->resize(ts.indices.size() / 2);
         indexByteSize = ts.indices.size() * sizeof(quint16);

@@ -2796,7 +2796,7 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
     bool hasExplicit = false;
     //an explicit animation has been specified
     if (d->toIsDefined) {
-        QVector<QString> errorMessages;
+        QList<QString> errorMessages;
         bool successfullyCreatedDefaultProperty = false;
 
         for (int i = 0; i < props.size(); ++i) {

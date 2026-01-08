@@ -693,8 +693,8 @@ void QQuickParticleSystem::emittersChanged()
     if (!m_componentComplete)
         return;
 
-    QVector<int> previousSizes;
-    QVector<int> newSizes;
+    QList<int> previousSizes;
+    QList<int> newSizes;
     previousSizes.reserve(groupData.size());
     newSizes.reserve(groupData.size());
     for (int i = 0, ei = groupData.size(); i != ei; ++i) {

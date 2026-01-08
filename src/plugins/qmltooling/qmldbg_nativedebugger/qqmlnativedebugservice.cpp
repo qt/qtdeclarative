@@ -104,7 +104,7 @@ public:
     bool m_haveBreakPoints;
     bool m_breakOnThrow;
     int m_lastBreakpoint;
-    QVector<BreakPoint> m_breakPoints;
+    QList<BreakPoint> m_breakPoints;
 };
 
 void BreakPointHandler::handleSetBreakpoint(QJsonObject *response, const QJsonObject &arguments)

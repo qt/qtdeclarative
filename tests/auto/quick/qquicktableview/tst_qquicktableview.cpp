@@ -4848,12 +4848,12 @@ void tst_QQuickTableView::checkContentSize()
 
 void tst_QQuickTableView::checkSelectionModelWithRequiredSelectedProperty_data()
 {
-    QTest::addColumn<QVector<QPoint>>("selected");
+    QTest::addColumn<QList<QPoint>>("selected");
     QTest::addColumn<QPoint>("toggle");
 
-    QTest::newRow("nothing selected") << QVector<QPoint>() << QPoint(0,0);
-    QTest::newRow("one item selected") << (QVector<QPoint>() << QPoint(0, 0)) << QPoint(1, 1);
-    QTest::newRow("two items selected") << (QVector<QPoint>() << QPoint(1, 1) << QPoint(2, 2)) << QPoint(1, 1);
+    QTest::newRow("nothing selected") << QList<QPoint>() << QPoint(0,0);
+    QTest::newRow("one item selected") << (QList<QPoint>() << QPoint(0, 0)) << QPoint(1, 1);
+    QTest::newRow("two items selected") << (QList<QPoint>() << QPoint(1, 1) << QPoint(2, 2)) << QPoint(1, 1);
 }
 
 void tst_QQuickTableView::checkSelectionModelWithRequiredSelectedProperty()
@@ -4861,7 +4861,7 @@ void tst_QQuickTableView::checkSelectionModelWithRequiredSelectedProperty()
     // Check that if you add a "required property selected" to the delegate,
     // TableView will give it a value upon creation that matches the state
     // in the selection model.
-    QFETCH(QVector<QPoint>, selected);
+    QFETCH(QList<QPoint>, selected);
     QFETCH(QPoint, toggle);
 
     LOAD_TABLEVIEW("tableviewwithselected1.qml");

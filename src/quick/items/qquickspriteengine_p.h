@@ -21,7 +21,6 @@
 QT_REQUIRE_CONFIG(quick_sprite);
 
 #include <QObject>
-#include <QVector>
 #include <QTimer>
 #include <QElapsedTimer>
 #include <QList>
@@ -213,11 +212,11 @@ protected:
     int goalSeek(int curState, int idx, int dist=-1);
     QList<QQuickStochasticState*> m_states;
     //### Consider struct or class for the four data variables?
-    QVector<int> m_things;//int is the index in m_states of the current state
-    QVector<int> m_goals;
-    QVector<int> m_duration;
-    QVector<int> m_startTimes;
-    QVector<std::pair<uint, QVector<int> > > m_stateUpdates;//### This could be done faster - priority queue?
+    QList<int> m_things;//int is the index in m_states of the current state
+    QList<int> m_goals;
+    QList<int> m_duration;
+    QList<int> m_startTimes;
+    QList<std::pair<uint, QList<int> > > m_stateUpdates;//### This could be done faster - priority queue?
 
     QElapsedTimer m_advanceTimer;
     uint m_timeOffset;

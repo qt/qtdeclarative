@@ -27,11 +27,11 @@ public:
     QQuickProfilerAdapter(QObject *parent = nullptr);
     ~QQuickProfilerAdapter();
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
-    void receiveData(const QVector<QQuickProfilerData> &new_data);
+    void receiveData(const QList<QQuickProfilerData> &new_data);
 
 private:
     int next;
-    QVector<QQuickProfilerData> m_data;
+    QList<QQuickProfilerData> m_data;
 };
 
 QT_END_NAMESPACE

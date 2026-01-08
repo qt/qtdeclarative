@@ -862,7 +862,7 @@ struct QML_PARSER_EXPORT BoundName
     bool isInjected() const { return typeAnnotation.tag() == Injected; }
 };
 
-struct BoundNames : public QVector<BoundName>
+struct BoundNames : public QList<BoundName>
 {
     int indexOf(const QString &name, int from = 0) const
     {

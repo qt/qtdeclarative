@@ -46,7 +46,7 @@ public:
     void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) override;
     void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) override;
     void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                        qreal dashOffset, const QVector<qreal> &dashPattern) override;
+                        qreal dashOffset, const QList<qreal> &dashPattern) override;
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
@@ -70,7 +70,7 @@ private:
         QBrush brush;
         Qt::FillRule fillRule;
     };
-    QVector<ShapePathGuiData> m_sp;
+    QList<ShapePathGuiData> m_sp;
     float m_triangulationScale = 1.0f;
 };
 
@@ -95,7 +95,7 @@ private:
         float strokeWidth;
         QBrush brush;
     };
-    QVector<ShapePathRenderData> m_sp;
+    QList<ShapePathRenderData> m_sp;
     QRectF m_boundingRect;
 
     friend class QQuickShapeSoftwareRenderer;

@@ -41,7 +41,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
 
-QVector<QQmlError> QQmlPropertyValidator::validate()
+QList<QQmlError> QQmlPropertyValidator::validate()
 {
     return validateObject(/*root object*/0, /*instantiatingBinding*/nullptr);
 }
@@ -64,7 +64,7 @@ struct BindingFinder
     }
 };
 
-QVector<QQmlError> QQmlPropertyValidator::validateObject(
+QList<QQmlError> QQmlPropertyValidator::validateObject(
         int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
         bool populatingValueTypeGroupProperty,
         QQmlPropertyResolver::RevisionCheck checkRevision) const
@@ -86,7 +86,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 
     QQmlPropertyCache::ConstPtr propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
-        return QVector<QQmlError>();
+        return QList<QQmlError>();
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
@@ -217,7 +217,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                       && !binding->hasFlag(QV4::CompiledData::Binding::IsOnAssignment);
 
             // As this is a sub-object, its properties are qualified. We can ignore revisions.
-            const QVector<QQmlError> subObjectValidatorErrors = validateObject(
+            const QList<QQmlError> subObjectValidatorErrors = validateObject(
                     binding->value.objectIndex, binding, populatingValueTypeGroupProperty,
                     QQmlPropertyResolver::IgnoreRevision);
 
@@ -358,14 +358,14 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->verifyBindings(compilationUnit, customBindings);
         customParser->validator = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
-        QVector<QQmlError> parserErrors = customParser->errors();
+        QList<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty())
             return parserErrors;
     }
 
     (*bindingPropertyDataPerObject)[objectIndex] = collectedBindingPropertyData;
 
-    QVector<QQmlError> noError;
+    QList<QQmlError> noError;
     return noError;
 }
 
@@ -668,16 +668,16 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr 
     return false;
 }
 
-QVector<QQmlError> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
+QList<QQmlError> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
 {
-    QVector<QQmlError> errors;
+    QList<QQmlError> errors;
     errors.append(qQmlCompileError(location, description));
     return errors;
 }
 
-QVector<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) const
+QList<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) const
 {
-    QVector<QQmlError> errors;
+    QList<QQmlError> errors;
     errors.append(error);
     return errors;
 }

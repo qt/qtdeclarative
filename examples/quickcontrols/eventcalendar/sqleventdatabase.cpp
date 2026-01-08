@@ -13,7 +13,7 @@ SqlEventDatabase::SqlEventDatabase()
     createConnection();
 }
 
-QVector<Event> SqlEventDatabase::eventsForDate(QDate date)
+QList<Event> SqlEventDatabase::eventsForDate(QDate date)
 {
     const QString queryStr = QString::fromLatin1("SELECT * FROM Event WHERE '%1' >= startDate AND '%1' <= endDate").arg(date.toString("yyyy-MM-dd"));
     QSqlQuery query(queryStr);
@@ -22,7 +22,7 @@ QVector<Event> SqlEventDatabase::eventsForDate(QDate date)
         return {};
     }
 
-    QVector<Event> events;
+    QList<Event> events;
     while (query.next()) {
         Event event;
         event.name = query.value("name").toString();

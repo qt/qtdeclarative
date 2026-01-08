@@ -646,10 +646,10 @@ static QQmlJSAnnotation::Value bindingToVariant(QQmlJS::AST::Statement *statemen
     }
 }
 
-QVector<QQmlJSAnnotation> QQmlJSImportVisitor::parseAnnotations(QQmlJS::AST::UiAnnotationList *list)
+QList<QQmlJSAnnotation> QQmlJSImportVisitor::parseAnnotations(QQmlJS::AST::UiAnnotationList *list)
 {
 
-    QVector<QQmlJSAnnotation> annotationList;
+    QList<QQmlJSAnnotation> annotationList;
 
     for (UiAnnotationList *item = list; item != nullptr; item = item->next) {
         UiAnnotation *annotation = item->annotation;
@@ -1262,7 +1262,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
             continue;
         }
 
-        QVector<QQmlJSScope::ConstPtr> scopesToSearch;
+        QList<QQmlJSScope::ConstPtr> scopesToSearch;
         for (QQmlJSScope::ConstPtr scope = defScope; scope; scope = scope->baseType()) {
             const auto descendants = QList<QQmlJSScope::ConstPtr>()
                     << scope << qmlScopeDescendants(scope);

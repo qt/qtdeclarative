@@ -100,7 +100,7 @@ void QQuickHandlerPoint::reset(const QPointerEvent *event, const QEventPoint &po
         m_velocity = point.velocity();
 }
 
-void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
+void QQuickHandlerPoint::reset(const QList<QQuickHandlerPoint> &points)
 {
     if (points.isEmpty()) {
         qWarning("reset: no points");

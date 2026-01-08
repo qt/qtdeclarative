@@ -398,8 +398,8 @@ void QSGTextMaskMaterial::updateCache(QFontEngine::GlyphFormat glyphFormat)
 }
 
 void QSGTextMaskMaterial::populate(const QPointF &p,
-                                   const QVector<quint32> &glyphIndexes,
-                                   const QVector<QPointF> &glyphPositions,
+                                   const QList<quint32> &glyphIndexes,
+                                   const QList<QPointF> &glyphPositions,
                                    QSGGeometry *geometry,
                                    QRectF *boundingRect,
                                    QPointF *baseLine,
@@ -407,7 +407,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
 {
     Q_ASSERT(m_font.isValid());
     QPointF position(p.x(), p.y() - m_font.ascent());
-    QVector<QFixedPoint> fixedPointPositions;
+    QList<QFixedPoint> fixedPointPositions;
     const int glyphPositionsSize = glyphPositions.size();
     fixedPointPositions.reserve(glyphPositionsSize);
     for (int i=0; i < glyphPositionsSize; ++i)

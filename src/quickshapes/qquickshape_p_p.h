@@ -57,7 +57,7 @@ public:
     virtual void setJoinStyle(int index, QQuickShapePath::JoinStyle joinStyle, int miterLimit) = 0;
     virtual void setCapStyle(int index, QQuickShapePath::CapStyle capStyle) = 0;
     virtual void setStrokeStyle(int index, QQuickShapePath::StrokeStyle strokeStyle,
-                                qreal dashOffset, const QVector<qreal> &dashPattern) = 0;
+                                qreal dashOffset, const QList<qreal> &dashPattern) = 0;
     virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
     virtual void setFillTextureProvider(int index, QQuickItem *textureProviderItem) = 0;
     virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
@@ -98,7 +98,7 @@ struct QQuickShapeStrokeFillParams
     QQuickShapePath::StrokeStyle strokeStyle;
     bool cosmeticStroke = false;
     qreal dashOffset;
-    QVector<qreal> dashPattern;
+    QList<qreal> dashPattern;
     QQuickShapeGradient *fillGradient;
     QSGTransform fillTransform;
     QQuickItem *fillItem;
@@ -170,7 +170,7 @@ public:
     qreal getImplicitHeight() const override;
 
     int effectRefCount;
-    QVector<QQuickShapePath *> sp;
+    QList<QQuickShapePath *> sp;
     QElapsedTimer syncTimer;
     QQuickAbstractPathRenderer *renderer = nullptr;
     int syncTimingTotalDirty = 0;

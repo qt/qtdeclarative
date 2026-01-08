@@ -139,7 +139,7 @@ public:
         qreal lineWidth;
         Qt::PenCapStyle lineCap;
         Qt::PenJoinStyle lineJoin;
-        QVector<qreal> lineDash;
+        QList<qreal> lineDash;
         qreal lineDashOffset;
         qreal miterLimit;
         qreal shadowOffsetX;

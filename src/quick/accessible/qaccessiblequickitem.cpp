@@ -47,7 +47,7 @@ public:
     // QAccessibleHyperlinkInterface
     QString anchor() const override
     {
-        const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
+        const QList<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
         if (linkIndex < links.size())
             return links.at(linkIndex).m_anchor;
         return QString();
@@ -55,7 +55,7 @@ public:
 
     QString anchorTarget() const override
     {
-        const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
+        const QList<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
         if (linkIndex < links.size())
             return links.at(linkIndex).m_anchorTarget;
         return QString();
@@ -63,7 +63,7 @@ public:
 
     int startIndex() const override
     {
-        const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
+        const QList<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
         if (linkIndex < links.size())
             return links.at(linkIndex).m_startIndex;
         return -1;
@@ -71,7 +71,7 @@ public:
 
     int endIndex() const override
     {
-        const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
+        const QList<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
         if (linkIndex < links.size())
             return links.at(linkIndex).m_endIndex;
         return -1;
@@ -114,7 +114,7 @@ QWindow *QAccessibleHyperlink::window() const
 /* \reimp */
 QRect QAccessibleHyperlink::rect() const
 {
-    const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
+    const QList<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
     if (linkIndex < links.size()) {
         const QPoint tl = itemScreenRect(textItem()).topLeft();
         return links.at(linkIndex).rect.translated(tl);

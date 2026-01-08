@@ -18,7 +18,7 @@
 #include <QtCore/QDir>
 #include <QtCore/QPluginLoader>
 #include <QtCore/QStringList>
-#include <QtCore/QVector>
+#include <QtCore/QList>
 #include <QtCore/qwaitcondition.h>
 
 QT_BEGIN_NAMESPACE

@@ -89,7 +89,7 @@ public:
 
     static int cmp(const ErrorGroups &g1, const ErrorGroups &g2);
 
-    QVector<ErrorGroup> groups;
+    QList<ErrorGroup> groups;
 };
 
 inline bool operator==(const ErrorGroups& lhs, const ErrorGroups& rhs){ return ErrorGroups::cmp(lhs,rhs) == 0; }

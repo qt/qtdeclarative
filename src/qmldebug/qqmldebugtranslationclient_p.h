@@ -32,9 +32,9 @@ public:
 
     virtual void messageReceived(const QByteArray &message) override;
     bool languageChanged = false;
-    QVector<QQmlDebugTranslation::TranslationIssue> translationIssues;
-    QVector<QQmlDebugTranslation::QmlElement> qmlElements;
-    QVector<QQmlDebugTranslation::QmlState> qmlStates;
+    QList<QQmlDebugTranslation::TranslationIssue> translationIssues;
+    QList<QQmlDebugTranslation::QmlElement> qmlElements;
+    QList<QQmlDebugTranslation::QmlState> qmlStates;
 };
 
 QT_END_NAMESPACE

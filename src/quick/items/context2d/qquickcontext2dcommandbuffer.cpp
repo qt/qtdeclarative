@@ -329,7 +329,7 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
         case QQuickContext2D::LineDash:
         {
             const qreal count = takeReal();
-            QVector<qreal> pattern;
+            QList<qreal> pattern;
             pattern.reserve(count);
             for (uint i = 0; i < count; i++) {
                 pattern.append(takeReal());

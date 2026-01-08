@@ -94,7 +94,7 @@ Q_QUICK_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher matcher
 static QKeySequence valueToKeySequence(const QVariant &value, const QQuickShortcut *const shortcut)
 {
     if (value.userType() == QMetaType::Int) {
-        const QVector<QKeySequence> s =
+        const QList<QKeySequence> s =
                 QKeySequence::keyBindings(static_cast<QKeySequence::StandardKey>(value.toInt()));
         if (s.size() > 1) {
             const QString templateString = QString::fromUtf16(
@@ -206,10 +206,10 @@ QVariantList QQuickShortcut::sequences() const
 
 void QQuickShortcut::setSequences(const QVariantList &values)
 {
-    // convert QVariantList to QVector<QKeySequence>
-    QVector<Shortcut> requestedShortcuts;
+    // convert QVariantList to QList<QKeySequence>
+    QList<Shortcut> requestedShortcuts;
     for (const QVariant &v : values) {
-        const QVector<QKeySequence> list = valueToKeySequences(v);
+        const QList<QKeySequence> list = valueToKeySequences(v);
         for (const QKeySequence &s : list) {
             Shortcut sc;
             sc.userValue = v;

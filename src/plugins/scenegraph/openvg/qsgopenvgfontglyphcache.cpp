@@ -43,7 +43,7 @@ QSGOpenVGFontGlyphCache::~QSGOpenVGFontGlyphCache()
         vgDestroyFont(m_font);
 }
 
-void QSGOpenVGFontGlyphCache::populate(const QVector<quint32> &glyphs)
+void QSGOpenVGFontGlyphCache::populate(const QList<quint32> &glyphs)
 {
     QSet<quint32> referencedGlyphs;
     QSet<quint32> newGlyphs;
@@ -68,7 +68,7 @@ void QSGOpenVGFontGlyphCache::populate(const QVector<quint32> &glyphs)
         requestGlyphs(newGlyphs);
 }
 
-void QSGOpenVGFontGlyphCache::release(const QVector<quint32> &glyphs)
+void QSGOpenVGFontGlyphCache::release(const QList<quint32> &glyphs)
 {
     QSet<quint32> unusedGlyphs;
     int count = glyphs.count();

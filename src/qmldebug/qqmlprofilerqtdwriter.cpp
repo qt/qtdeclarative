@@ -61,8 +61,8 @@ public:
     };
 
     // data storage
-    QVector<QQmlProfilerEventType> eventTypes;
-    QVector<QQmlProfilerEvent> events;
+    QList<QQmlProfilerEventType> eventTypes;
+    QList<QQmlProfilerEvent> events;
 
     qint64 traceStartTime = std::numeric_limits<qint64>::max();
     qint64 traceEndTime = std::numeric_limits<qint64>::min();
@@ -266,8 +266,8 @@ void QQmlProfilerQtdWriterPrivate::sortStartTimes()
 
     // assuming startTimes is partially sorted
     // identify blocks of events and sort them with quicksort
-    QVector<QQmlProfilerEvent>::iterator itFrom = events.end() - 2;
-    QVector<QQmlProfilerEvent>::iterator itTo = events.end() - 1;
+    QList<QQmlProfilerEvent>::iterator itFrom = events.end() - 2;
+    QList<QQmlProfilerEvent>::iterator itTo = events.end() - 1;
 
     while (itFrom != events.begin() && itTo != events.begin()) {
         // find block to sort

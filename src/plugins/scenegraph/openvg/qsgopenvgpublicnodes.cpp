@@ -86,7 +86,7 @@ void QSGOpenVGRectangleNode::render()
         };
 
         // Create command data
-        QVector<VGfloat> coordinates(5);
+        QList<VGfloat> coordinates(5);
         coordinates[0] = m_rect.x();
         coordinates[1] = m_rect.y();
         coordinates[2] = m_rect.width();
@@ -105,7 +105,7 @@ void QSGOpenVGRectangleNode::render()
                 VG_CLOSE_PATH
             };
 
-            QVector<VGfloat> coordinates(8);
+            QList<VGfloat> coordinates(8);
             const QPointF topLeft = transform().map(m_rect.topLeft());
             const QPointF topRight = transform().map(m_rect.topRight());
             const QPointF bottomLeft = transform().map(m_rect.bottomLeft());

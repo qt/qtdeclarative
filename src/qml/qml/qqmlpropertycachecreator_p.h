@@ -63,7 +63,7 @@ struct QQmlBindingInstantiationContext {
     const QQmlPropertyData *instantiatingProperty = nullptr;
 };
 
-struct QQmlPendingGroupPropertyBindings : public QVector<QQmlBindingInstantiationContext>
+struct QQmlPendingGroupPropertyBindings : public QList<QQmlBindingInstantiationContext>
 {
     void resolveMissingPropertyCaches(
             QQmlPropertyCacheVector *propertyCaches) const;
@@ -461,7 +461,7 @@ QQmlPropertyCacheCreator<ObjectContainer>::tryDeriveCacheFrom(
     auto eend = obj->enumsEnd();
     for (; e != eend; ++e) {
         const int enumValueCount = e->enumValueCount();
-        QVector<QQmlEnumValue> values;
+        QList<QQmlEnumValue> values;
         values.reserve(enumValueCount);
 
         auto enumValue = e->enumValuesBegin();
@@ -559,7 +559,7 @@ QQmlPropertyCacheCreator<ObjectContainer>::tryDeriveCacheFrom(
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
-        QVector<QMetaType> parameterTypes;
+        QList<QMetaType> parameterTypes;
         auto formal = function->formalsBegin();
         auto end = function->formalsEnd();
         for (; formal != end; ++formal) {

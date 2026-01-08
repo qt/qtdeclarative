@@ -890,13 +890,13 @@ void QQuickEllipseShape::setFillRule(QQuickShapePath::FillRule fillRule)
     \include shapepath.qdocinc {dashPattern-property} {QtQuick.Shapes.DesignHelpers::EllipseShape}
 */
 
-QVector<qreal> QQuickEllipseShape::dashPattern() const
+QList<qreal> QQuickEllipseShape::dashPattern() const
 {
     Q_D(const QQuickEllipseShape);
     return d->path->dashPattern();
 }
 
-void QQuickEllipseShape::setDashPattern(const QVector<qreal> &array)
+void QQuickEllipseShape::setDashPattern(const QList<qreal> &array)
 {
     Q_D(QQuickEllipseShape);
     d->path->setDashPattern(array);

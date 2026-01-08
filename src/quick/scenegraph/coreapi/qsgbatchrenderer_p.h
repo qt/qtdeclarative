@@ -172,7 +172,7 @@ public:
         releaseExplicit(pageIndex, index);
     }
 
-    QVector<AllocatorPage<Type, PageSize> *> pages;
+    QList<AllocatorPage<Type, PageSize> *> pages;
     int m_freePage = 0;
 };
 
@@ -623,8 +623,8 @@ struct GraphicsPipelineStateKey
 {
     GraphicsState state;
     const ShaderManagerShader *sms;
-    QVector<quint32> renderTargetDescription;
-    QVector<quint32> srbLayoutDescription;
+    QList<quint32> renderTargetDescription;
+    QList<quint32> srbLayoutDescription;
     struct {
         size_t renderTargetDescriptionHash;
         size_t srbLayoutDescriptionHash;
@@ -634,8 +634,8 @@ struct GraphicsPipelineStateKey
                                            const QRhiRenderPassDescriptor *rpDesc,
                                            const QRhiShaderResourceBindings *srb)
     {
-        const QVector<quint32> rtDesc = rpDesc->serializedFormat();
-        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        const QList<quint32> rtDesc = rpDesc->serializedFormat();
+        const QList<quint32> srbDesc = srb->serializedLayoutDescription();
         return { state, sms, rtDesc, srbDesc, { qHash(rtDesc), qHash(srbDesc) } };
     }
 };
@@ -682,8 +682,8 @@ public:
 
     QHash<GraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelineCache;
 
-    QMultiHash<QVector<quint32>, QRhiShaderResourceBindings *> srbPool;
-    QVector<quint32> srbLayoutDescSerializeWorkspace;
+    QMultiHash<QList<quint32>, QRhiShaderResourceBindings *> srbPool;
+    QList<quint32> srbLayoutDescSerializeWorkspace;
 
 public Q_SLOTS:
     void invalidated();

@@ -233,7 +233,7 @@ private:
     QVarLengthArray<BinaryTreeNode, 16> m_currentLineTree;
 
     QList<TextDecoration> m_lines;
-    QVector<BinaryTreeNode> m_processedNodes;
+    QList<BinaryTreeNode> m_processedNodes;
 
     qreal m_devicePixelRatio = 1.0;
 

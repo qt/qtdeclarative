@@ -697,7 +697,7 @@ struct QQuickContext2DStyle : public QV4::Object
 
 DEFINE_OBJECT_VTABLE(QQuickContext2DStyle);
 
-QImage qt_image_convolute_filter(const QImage& src, const QVector<qreal>& weights, int radius = 0)
+QImage qt_image_convolute_filter(const QImage& src, const QList<qreal>& weights, int radius = 0)
 {
     // weights 3x3 => delta 1
     int delta = radius ? radius : qFloor(qSqrt(weights.size()) / qreal(2));
@@ -778,7 +778,7 @@ void qt_image_boxblur(QImage& image, int radius, bool quality)
     int passes = quality? 3: 1;
     int filterSize = 2 * radius + 1;
     for (int i = 0; i < passes; ++i)
-        image = qt_image_convolute_filter(image, QVector<qreal>() << 1.0 / (filterSize * filterSize), radius);
+        image = qt_image_convolute_filter(image, QList<qreal>() << 1.0 / (filterSize * filterSize), radius);
 }
 
 static QPainter::CompositionMode qt_composite_mode_from_string(const QString &compositeOperator)
@@ -2046,7 +2046,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
     QV4::Scoped<QQuickJSContext2D> r(scope, *thisObject);
     CHECK_CONTEXT(r)
 
-    const QVector<qreal> pattern = r->d()->context()->state.lineDash;
+    const QList<qreal> pattern = r->d()->context()->state.lineDash;
     QV4::ScopedArrayObject array(scope, scope.engine->newArrayObject(pattern.size()));
     array->arrayReserve(pattern.size());
     for (int i = 0; i < pattern.size(); i++)
@@ -2096,7 +2096,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_setLineDash(const QV4::Fun
 
     QV4::ScopedValue v(scope);
     const uint arrayLength = array->getLength();
-    QVector<qreal> dashes;
+    QList<qreal> dashes;
     dashes.reserve(arrayLength);
     for (uint i = 0; i < arrayLength; ++i) {
         v = array->get(i);

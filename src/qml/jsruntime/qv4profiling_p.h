@@ -239,14 +239,14 @@ public:
 
 Q_SIGNALS:
     void dataReady(const QV4::Profiling::FunctionLocationHash &,
-                   const QVector<QV4::Profiling::FunctionCallProperties> &,
-                   const QVector<QV4::Profiling::MemoryAllocationProperties> &);
+                   const QList<QV4::Profiling::FunctionCallProperties> &,
+                   const QList<QV4::Profiling::MemoryAllocationProperties> &);
 
 private:
     QV4::ExecutionEngine *m_engine;
     QElapsedTimer m_timer;
-    QVector<FunctionCall> m_data;
-    QVector<MemoryAllocationProperties> m_memory_data;
+    QList<FunctionCall> m_data;
+    QList<MemoryAllocationProperties> m_memory_data;
     QHash<quintptr, SentMarker> m_sentLocations;
 
     friend class FunctionCallProfiler;
@@ -291,8 +291,8 @@ Q_DECLARE_TYPEINFO(QV4::Profiling::Profiler::SentMarker, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)
-Q_DECLARE_METATYPE(QVector<QV4::Profiling::FunctionCallProperties>)
-Q_DECLARE_METATYPE(QVector<QV4::Profiling::MemoryAllocationProperties>)
+Q_DECLARE_METATYPE(QList<QV4::Profiling::FunctionCallProperties>)
+Q_DECLARE_METATYPE(QList<QV4::Profiling::MemoryAllocationProperties>)
 
 #endif // QT_CONFIG(qml_debug)
 

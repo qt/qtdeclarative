@@ -141,7 +141,7 @@ private:
         if (idx < 0 || idx >= length)
             return;
 
-        QVector<T *> stash;
+        QList<T *> stash;
         if (list->clear != qslow_clear) {
             stash.reserve(length);
             for (qsizetype i = 0; i < length; ++i)
@@ -173,7 +173,7 @@ private:
         const qsizetype length = list->count(list) - 1;
         if (length < 0)
             return;
-        QVector<T *> stash;
+        QList<T *> stash;
         stash.reserve(length);
         for (qsizetype i = 0; i < length; ++i)
             stash.append(list->at(list, i));

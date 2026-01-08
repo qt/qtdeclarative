@@ -243,7 +243,7 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
     output << uR"(
     QT_WARNING_PUSH QT_WARNING_DISABLE_DEPRECATED)"_s;
 
-    QVector<QAnyStringView> typesRegisteredAnonymously;
+    QList<QAnyStringView> typesRegisteredAnonymously;
 
     const auto fillTypesRegisteredAnonymously = [&](const auto &members, QAnyStringView typeName) {
         bool foundRevisionEntry = false;
@@ -432,7 +432,7 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
 
                         QAnyStringView superClassName = object.name;
 
-                        QVector<QAnyStringView> classesToCheck;
+                        QList<QAnyStringView> classesToCheck;
 
                         auto checkForRevisions = [&](QAnyStringView typeName) -> void {
                             auto typeAsMap = findType(typeName);
@@ -567,7 +567,7 @@ void QmlTypeRegistrar::setIncludes(const QList<QString> &includes)
     m_includes = includes;
 }
 void QmlTypeRegistrar::setTypes(
-        const QVector<MetaType> &types, const QVector<MetaType> &foreignTypes)
+        const QList<MetaType> &types, const QList<MetaType> &foreignTypes)
 {
     m_types = types;
     m_foreignTypes = foreignTypes;

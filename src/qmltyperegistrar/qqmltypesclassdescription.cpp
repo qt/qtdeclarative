@@ -70,12 +70,12 @@ MetaType FoundType::select(const MetaType &category, QAnyStringView relation) co
 }
 
 FoundType QmlTypesClassDescription::findType(
-        const QVector<MetaType> &types, const QVector<MetaType> &foreign,
+        const QList<MetaType> &types, const QList<MetaType> &foreign,
         const QAnyStringView &name, const QList<QAnyStringView> &namespaces)
 {
     const auto tryFindType = [&](QAnyStringView qualifiedName) -> FoundType {
         FoundType result;
-        for (const QVector<MetaType> &t : {types, foreign}) {
+        for (const QList<MetaType> &t : {types, foreign}) {
             const auto [first, last] = std::equal_range(
                     t.begin(), t.end(), qualifiedName, Compare());
             for (auto it = first; it != last; ++it) {
@@ -129,8 +129,8 @@ FoundType QmlTypesClassDescription::findType(
 }
 
 void QmlTypesClassDescription::collectSuperClasses(
-        const MetaType &classDef, const QVector<MetaType> &types,
-        const QVector<MetaType> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
+        const MetaType &classDef, const QList<MetaType> &types,
+        const QList<MetaType> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
     const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
     QAnyStringView superClassCandidate;
@@ -175,8 +175,8 @@ void QmlTypesClassDescription::handleRegisterEnumClassesUnscoped(
 }
 
 void QmlTypesClassDescription::collectLocalAnonymous(
-        const MetaType &classDef, const QVector<MetaType> &types,
-        const QVector<MetaType> &foreign, QTypeRevision defaultRevision)
+        const MetaType &classDef, const QList<MetaType> &types,
+        const QList<MetaType> &foreign, QTypeRevision defaultRevision)
 {
     file = classDef.inputFile();
     lineNumber = classDef.lineNumber();
@@ -211,8 +211,8 @@ void QmlTypesClassDescription::collectLocalAnonymous(
 }
 
 void QmlTypesClassDescription::collect(
-        const MetaType &classDef, const QVector<MetaType> &types,
-        const QVector<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision)
+        const MetaType &classDef, const QList<MetaType> &types,
+        const QList<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision)
 {
     if (file.isEmpty()) {
         file = classDef.inputFile();
@@ -469,7 +469,7 @@ void QmlTypesClassDescription::collect(
 }
 
 FoundType QmlTypesClassDescription::collectRelated(
-        QAnyStringView related, const QVector<MetaType> &types, const QVector<MetaType> &foreign,
+        QAnyStringView related, const QList<MetaType> &types, const QList<MetaType> &foreign,
         QTypeRevision defaultRevision, const QList<QAnyStringView> &namespaces)
 {
     if (FoundType other = findType(types, foreign, related, namespaces)) {

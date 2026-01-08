@@ -448,13 +448,13 @@ void QQuickRegularPolygonShape::setStrokeStyle(QQuickShapePath::StrokeStyle styl
    {QtQuick.Shapes.DesignHelpers::RegularPolygonShape}
 */
 
-QVector<qreal> QQuickRegularPolygonShape::dashPattern() const
+QList<qreal> QQuickRegularPolygonShape::dashPattern() const
 {
     Q_D(const QQuickRegularPolygonShape);
     return d->path->dashPattern();
 }
 
-void QQuickRegularPolygonShape::setDashPattern(const QVector<qreal> &array)
+void QQuickRegularPolygonShape::setDashPattern(const QList<qreal> &array)
 {
     Q_D(QQuickRegularPolygonShape);
     d->path->setDashPattern(array);

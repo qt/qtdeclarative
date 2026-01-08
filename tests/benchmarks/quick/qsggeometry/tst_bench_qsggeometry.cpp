@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 #include <qtest.h>
-#include <QtCore/QVector>
+#include <QtCore/QList>
 #include <QElapsedTimer>
 #include <QtQuick/QSGGeometry>
 #include <numeric>
@@ -196,7 +196,7 @@ void GeometryBenchmark::runVertexBenchmark(const GeometryUpdateParams& params,
                            + (params.vertexCountStep * params.totalFramesOfAnimation);
 
     // Create a collection to hold Y values for verifying data integrity
-    QVector<float> yValues(finalVertexCount);
+    QList<float> yValues(finalVertexCount);
 
     // Populate values collection with pseudo-data up to minimum vertices
     for (int i = 0; i < params.startingVertexPosition; ++i) {

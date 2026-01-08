@@ -23,8 +23,8 @@ VGPath qPainterPathToVGPath(const QPainterPath &path)
     if (count == 0)
         return vgpath;
 
-    QVector<VGfloat> coords;
-    QVector<VGubyte> segments;
+    QList<VGfloat> coords;
+    QList<VGubyte> segments;
 
     int curvePos = 0;
     QPointF temp;
@@ -136,7 +136,7 @@ void qDrawTiled(VGImage image, const QSize imageSize, const QRectF &targetRect, 
 
     // Save the current image transform matrix
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    QVector<float> originalMatrix(9);
+    QList<float> originalMatrix(9);
     vgGetMatrix(originalMatrix.data());
 
     while (!qFuzzyCompare(yPos, targetRect.y() + targetRect.height()) &&
@@ -282,7 +282,7 @@ void qDrawSubImage(VGImage image, const QRectF &sourceRect, const QPointF &destO
 
     // Save the current image transform matrix
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
-    QVector<float> originalMatrix(9);
+    QList<float> originalMatrix(9);
     vgGetMatrix(originalMatrix.data());
 
     // Get the child Image
@@ -295,9 +295,9 @@ void qDrawSubImage(VGImage image, const QRectF &sourceRect, const QPointF &destO
     vgLoadMatrix(originalMatrix.constData());
 }
 
-const QVector<VGfloat> qColorToVGColor(const QColor &color, float opacity)
+const QList<VGfloat> qColorToVGColor(const QColor &color, float opacity)
 {
-    QVector<VGfloat> vgColor(4);
+    QList<VGfloat> vgColor(4);
     float r, g, b, a;
     color.getRgbF(&r, &g, &b, &a);
     vgColor[0] = r;

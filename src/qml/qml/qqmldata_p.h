@@ -192,7 +192,7 @@ public:
         Q_DISABLE_COPY(DeferredData);
     };
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
-    QVector<DeferredData *> deferredData;
+    QList<DeferredData *> deferredData;
 
     void deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &,
                    const QQmlRefPointer<QQmlContextData> &, const QString &inlineComponentName);

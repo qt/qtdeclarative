@@ -200,7 +200,7 @@ public:
         appendTriangle({v1, v2, v3}, {}, uvForPoint);
     }
 
-    QVector<quint32> uncookedIndexes() const
+    QList<quint32> uncookedIndexes() const
     {
         return m_uncookedIndexes;
     }
@@ -256,8 +256,8 @@ private:
 
     QScopedPointer<QSGMaterial> m_material;
 
-    QVector<CurveNodeVertex> m_uncookedVertexes;
-    QVector<quint32> m_uncookedIndexes;
+    QList<CurveNodeVertex> m_uncookedVertexes;
+    QList<quint32> m_uncookedIndexes;
 
     QSGGradientCache::GradientDesc m_fillGradient;
     QSGTextureProvider *m_textureProvider = nullptr;

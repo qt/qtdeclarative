@@ -98,7 +98,7 @@ struct QQmlMetaTypeData
     QSet<int> interfaces;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
-    QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
+    QList<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
     QHash<const QMetaObject *, QQmlPropertyCache::ConstPtr> propertyCaches;
 

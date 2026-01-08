@@ -43,12 +43,12 @@ public:
     static void updateStats();
     static void printTotalStats();
 private:
-    static QVector<qreal> timePerFrame;
-    static QVector<int> timesPerFrames;
+    static QList<qreal> timePerFrame;
+    static QList<int> timesPerFrames;
 };
 
-QVector<qreal> RenderStatistics::timePerFrame;
-QVector<int> RenderStatistics::timesPerFrames;
+QList<qreal> RenderStatistics::timePerFrame;
+QList<int> RenderStatistics::timesPerFrames;
 
 void RenderStatistics::updateStats()
 {
@@ -147,7 +147,7 @@ struct Options
     bool verbose = false;
     bool rhi = false;
     bool rhiBackendSet = false;
-    QVector<Qt::ApplicationAttribute> applicationAttributes;
+    QList<Qt::ApplicationAttribute> applicationAttributes;
     QString translationFile;
     QmlApplicationType applicationType = DefaultQmlApplicationType;
     QQuickWindow::TextRenderType textRenderType;

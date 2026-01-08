@@ -102,7 +102,7 @@ void tst_Sanity::initTestCase()
     }
 
     // Then, collect the files from each installed style directory.
-    const QVector<std::pair<QString, QString>> styleRelativePaths = {
+    const QList<std::pair<QString, QString>> styleRelativePaths = {
         { "basic", "QtQuick/Controls/Basic" },
         { "fusion", "QtQuick/Controls/Fusion" },
         { "material", "QtQuick/Controls/Material" },

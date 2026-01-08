@@ -313,7 +313,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
     Q_ASSERT(nRegisters == 0);
     registerOffset = bytecodeGenerator->currentRegister();
 
-    QVector<Context::MemberMap::Iterator> localsInTDZ;
+    QList<Context::MemberMap::Iterator> localsInTDZ;
     const auto registerLocal = [this, &localsInTDZ](Context::MemberMap::iterator member) {
         if (member->isLexicallyScoped()) {
             localsInTDZ << member;
@@ -323,7 +323,7 @@ void Context::setupFunctionIndices(Moth::BytecodeGenerator *bytecodeGenerator)
         }
     };
 
-    QVector<Context::MemberMap::Iterator> registersInTDZ;
+    QList<Context::MemberMap::Iterator> registersInTDZ;
     const auto allocateRegister = [bytecodeGenerator, &registersInTDZ](Context::MemberMap::iterator member) {
         if (member->isLexicallyScoped())
             registersInTDZ << member;

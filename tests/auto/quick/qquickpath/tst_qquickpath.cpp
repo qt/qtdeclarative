@@ -35,8 +35,8 @@ private slots:
 private:
     void arc(QSizeF scale);
     void angleArc(QSizeF scale);
-    void catmullRomCurve(QSizeF scale, const QVector<QPointF> &points);
-    void closedCatmullRomCurve(QSizeF scale, const QVector<QPointF> &points);
+    void catmullRomCurve(QSizeF scale, const QList<QPointF> &points);
+    void closedCatmullRomCurve(QSizeF scale, const QList<QPointF> &points);
     void svg(QSizeF scale);
     void line(QSizeF scale);
     void rectangle(const QQuickPath *path, const QRectF &rect);
@@ -147,7 +147,7 @@ void tst_QuickPath::angleArc()
     angleArc(QSizeF(2.7,0.92));
 }
 
-void tst_QuickPath::catmullRomCurve(QSizeF scale, const QVector<QPointF> &points)
+void tst_QuickPath::catmullRomCurve(QSizeF scale, const QList<QPointF> &points)
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("curve.qml"));
@@ -197,7 +197,7 @@ void tst_QuickPath::catmullRomCurve()
                                     QPointF(200, 795) });
 }
 
-void tst_QuickPath::closedCatmullRomCurve(QSizeF scale, const QVector<QPointF> &points)
+void tst_QuickPath::closedCatmullRomCurve(QSizeF scale, const QList<QPointF> &points)
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("closedcurve.qml"));

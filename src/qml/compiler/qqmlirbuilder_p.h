@@ -474,7 +474,7 @@ struct Q_QML_COMPILER_EXPORT Document
     QList<const QV4::CompiledData::Import *> imports;
     QList<Pragma*> pragmas;
     QQmlJS::AST::UiProgram *program;
-    QVector<Object*> objects;
+    QList<Object*> objects;
     QV4::Compiler::JSUnitGenerator jsGenerator;
 
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> javaScriptCompilationUnit;
@@ -607,7 +607,7 @@ public:
 
     QList<const QV4::CompiledData::Import *> _imports;
     QList<Pragma*> _pragmas;
-    QVector<Object*> _objects;
+    QList<Object*> _objects;
 
     QV4::CompiledData::TypeReferenceMap _typeReferences;
 
@@ -638,7 +638,7 @@ struct Q_QML_COMPILER_EXPORT JSCodeGen : public QV4::Compiler::Codegen
               bool storeSourceLocations = false);
 
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
-    QVector<int>
+    QList<int>
     generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions);
 
     bool generateRuntimeFunctions(QmlIR::Object *object);

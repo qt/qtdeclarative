@@ -6,7 +6,7 @@
 
 #include <QObject>
 #include <QtQml>
-#include <QVector>
+#include <QList>
 
 #include "event.h"
 
@@ -19,7 +19,7 @@ class SqlEventDatabase : public QObject
 public:
     SqlEventDatabase();
 
-    QVector<Event> eventsForDate(QDate date);
+    QList<Event> eventsForDate(QDate date);
 
 private:
     static void createConnection();

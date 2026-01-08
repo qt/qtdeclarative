@@ -446,7 +446,7 @@ void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QS
     QQmlJSMetaMethod method;
 
     if (isMethod) {
-        const QVector<QQmlJSMetaMethod> methods = qmlScope->methods(name);
+        const QList<QQmlJSMetaMethod> methods = qmlScope->methods(name);
         if (methods.isEmpty())
             return;
         method = methods.constFirst();

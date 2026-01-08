@@ -5,7 +5,7 @@
 #define QSGOPENVGGLYPHNODE_H
 
 #include <private/qsgadaptationlayer_p.h>
-#include <QtCore/QVector>
+#include <QtCore/QList>
 
 #include <VG/openvg.h>
 
@@ -46,8 +46,8 @@ private:
     QColor m_styleColor;
 
     QSGOpenVGFontGlyphCache *m_glyphCache;
-    QVector<VGfloat> m_xAdjustments;
-    QVector<VGfloat> m_yAdjustments;
+    QList<VGfloat> m_xAdjustments;
+    QList<VGfloat> m_yAdjustments;
     VGPaint m_fontColorPaint;
     VGPaint m_styleColorPaint;
 

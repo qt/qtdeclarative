@@ -152,12 +152,12 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role) override
     {
         Q_UNUSED(value);
-        QVector<int> changedRole(1, role);
+        QList<int> changedRole(1, role);
         emit dataChanged(index, index, changedRole);
         return true;
     }
 
-    void groupedSetData(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+    void groupedSetData(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles)
     {
         emit dataChanged(topLeft, bottomRight, roles);
     }
@@ -220,12 +220,12 @@ public:
         Node *dest = (Node *)destinationParent.internalPointer();
         if (!dest)
             dest = tree;
-        QVector<Node *> buffer = src->children.mid(sourceRow, count);
+        QList<Node *> buffer = src->children.mid(sourceRow, count);
         if (src != dest) {
             src->removeRows(sourceRow, count, true /* keep alive */);
             dest->addRows(destinationChild, count);
         } else {
-            QVector<Node *> &c = dest->children;
+            QList<Node *> &c = dest->children;
             if (sourceRow < destinationChild) {
                 memmove(&c[sourceRow], &c[sourceRow + count], sizeof(Node *) * (destinationChild - sourceRow - count));
                 destinationChild -= count;
@@ -259,7 +259,7 @@ public:
         Q_DISABLE_COPY_MOVE(Node)
 
         Node *parent;
-        QVector<Node *> children;
+        QList<Node *> children;
 
         Node(int rows, Node *p = 0) : parent(p)
         {

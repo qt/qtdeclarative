@@ -39,7 +39,7 @@ struct MetaPropertyData {
 
     inline int count() { return m_data.size(); }
 
-    QVector<std::pair<QVariant, bool> > m_data;
+    QList<std::pair<QVariant, bool> > m_data;
 };
 
 QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine)

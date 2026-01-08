@@ -43,7 +43,7 @@ public:
     virtual void onParentChanged(QQuickItem * /*oldParent*/, QQuickItem * /*newParent*/) {}
     virtual void onEnabledChanged() {}
 
-    static QVector<QObject *> &deviceDeliveryTargets(const QInputDevice *device);
+    static QList<QObject *> &deviceDeliveryTargets(const QInputDevice *device);
 
     QPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;

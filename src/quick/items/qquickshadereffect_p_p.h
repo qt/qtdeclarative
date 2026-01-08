@@ -117,7 +117,7 @@ private:
     QSet<int> m_dirtyTextures[NShader];
     QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
 
-    QVector<QtPrivate::EffectSlotMapper *> m_mappers[NShader];
+    QList<QtPrivate::EffectSlotMapper *> m_mappers[NShader];
 
     QHash<QQuickItem *, QMetaObject::Connection> m_destroyedConnections;
 };

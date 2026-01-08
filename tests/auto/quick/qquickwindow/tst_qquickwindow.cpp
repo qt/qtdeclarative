@@ -1138,12 +1138,12 @@ void tst_qquickwindow::touchEvent_velocity()
     delete item;
 }
 
-using ItemVector = QVector<std::shared_ptr<QQuickItem>>;
+using ItemVector = QList<std::shared_ptr<QQuickItem>>;
 void tst_qquickwindow::mergeTouchPointLists_data()
 {
     QTest::addColumn<ItemVector>("list1");
     QTest::addColumn<ItemVector>("list2");
-    QTest::addColumn<QVector<QQuickItem *>>("expected");
+    QTest::addColumn<QList<QQuickItem *>>("expected");
     QTest::addColumn<bool>("showItem");
 
     auto item1 = std::make_shared<QQuickItem>();
@@ -1152,55 +1152,55 @@ void tst_qquickwindow::mergeTouchPointLists_data()
     auto item4 = std::make_shared<QQuickItem>();
     auto item5 = std::make_shared<QQuickItem>();
 
-    QTest::newRow("empty") << ItemVector() << ItemVector() << QVector<QQuickItem *>();
+    QTest::newRow("empty") << ItemVector() << ItemVector() << QList<QQuickItem *>();
     QTest::newRow("single list left")
             << (ItemVector() << item1 << item2 << item3)
             << ItemVector()
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("single list right")
             << ItemVector()
             << (ItemVector() << item1 << item2 << item3)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("two lists identical")
             << (ItemVector() << item1 << item2 << item3)
             << (ItemVector() << item1 << item2 << item3)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("two lists 1")
             << (ItemVector() << item1 << item2 << item5)
             << (ItemVector() << item3 << item4 << item5)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 2")
             << (ItemVector() << item1 << item2 << item5)
             << (ItemVector() << item3 << item4 << item5)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 3")
             << (ItemVector() << item1 << item2 << item3)
             << (ItemVector() << item1 << item4 << item5)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 4")
             << (ItemVector() << item1 << item3 << item4)
             << (ItemVector() << item2 << item3 << item5)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 5")
             << (ItemVector() << item1 << item2 << item4)
             << (ItemVector() << item1 << item3 << item4)
-            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get());
+            << (QList<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get());
 }
 
 void tst_qquickwindow::mergeTouchPointLists()
 {
     QFETCH(ItemVector, list1);
     QFETCH(ItemVector, list2);
-    QFETCH(QVector<QQuickItem *>, expected);
+    QFETCH(QList<QQuickItem *>, expected);
 
     QQuickWindow win;
     auto windowPrivate = QQuickWindowPrivate::get(&win);
 
-    QVector<QQuickItem *> a;
+    QList<QQuickItem *> a;
     for (const auto &item : list1)
         a.append(item.get());
 
-    QVector<QQuickItem *> b;
+    QList<QQuickItem *> b;
     for (const auto &item : list2)
         b.append(item.get());
 
@@ -1631,7 +1631,7 @@ public:
         QQuickWindow *window = qobject_cast<QQuickWindow *>(obj);
         images.append(window->grabWindow());
     }
-    QVector<QImage> images;
+    QList<QImage> images;
 };
 
 void tst_qquickwindow::earlyGrab()
@@ -3281,7 +3281,7 @@ QDebug operator<<(QDebug dbg, const DeliveryRecord &pair)
     return dbg;
 }
 
-typedef QVector<DeliveryRecord> DeliveryRecordVector;
+typedef QList<DeliveryRecord> DeliveryRecordVector;
 
 class EventItem : public QQuickRectangle
 {
@@ -3312,8 +3312,8 @@ public:
      * preconditions. If all calls had the expected precondition, returns true.
      */
     bool testFilterPreConditions() const { return !m_filterNotPreAccepted; }
-    static QVector<DeliveryRecord> &deliveryList() { return m_deliveryList; }
-    static void setExpectedDeliveryList(const QVector<DeliveryRecord> &v) { m_expectedDeliveryList = v; }
+    static QList<DeliveryRecord> &deliveryList() { return m_deliveryList; }
+    static void setExpectedDeliveryList(const QList<DeliveryRecord> &v) { m_expectedDeliveryList = v; }
 
     bool isRelevant(QQuickItem *receiver, QEvent *e)
     {
@@ -3369,7 +3369,7 @@ private:
 DeliveryRecordVector EventItem::m_expectedDeliveryList;
 DeliveryRecordVector EventItem::m_deliveryList;
 
-typedef QVector<const char*> CharStarVector;
+typedef QList<const char*> CharStarVector;
 
 Q_DECLARE_METATYPE(CharStarVector)
 

@@ -15,9 +15,9 @@ public:
     ~TreeItem();
 
     int row() const;
-    QVector<TreeItem *> m_childItems;
+    QList<TreeItem *> m_childItems;
     TreeItem *m_parentItem;
-    QVector<QVariant> m_entries;
+    QList<QVariant> m_entries;
     int rootRow = -1;
 };
 
@@ -46,7 +46,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 private:
-    QVector<TreeItem *> m_rootItems;
+    QList<TreeItem *> m_rootItems;
     int m_columnCount = 2;
 };
 

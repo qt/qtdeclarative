@@ -597,7 +597,7 @@ void tst_qquickanimatedimage::sourceChangesOnFrameChanged()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("colors.qml"));
-    QVector<QQuickAnimatedImage*> images;
+    QList<QQuickAnimatedImage*> images;
 
     // Run multiple animations in parallel, this should be fast
     for (int loops = 0; loops < 25; ++loops) {

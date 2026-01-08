@@ -56,7 +56,7 @@ public:
     tst_qqmllistmodel()
         : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
-        qRegisterMetaType<QVector<int> >();
+        qRegisterMetaType<QList<int> >();
     }
 
 private:
@@ -817,7 +817,7 @@ void tst_qqmllistmodel::get()
     QList<QVariant> spyResult = spy.takeFirst();
     QCOMPARE(spyResult.at(0).value<QModelIndex>(), model->index(index, 0, QModelIndex()));
     QCOMPARE(spyResult.at(1).value<QModelIndex>(), model->index(index, 0, QModelIndex()));  // only 1 item is modified at a time
-    QCOMPARE(spyResult.at(2).value<QVector<int> >(), (QVector<int>() << role));
+    QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
 }
 
 void tst_qqmllistmodel::get_data()
@@ -939,7 +939,7 @@ void tst_qqmllistmodel::get_nested()
         QList<QVariant> spyResult = spy.takeFirst();
         QCOMPARE(spyResult.at(0).value<QModelIndex>(), childModel->index(index, 0, QModelIndex()));
         QCOMPARE(spyResult.at(1).value<QModelIndex>(), childModel->index(index, 0, QModelIndex()));  // only 1 item is modified at a time
-        QCOMPARE(spyResult.at(2).value<QVector<int> >(), (QVector<int>() << role));
+        QCOMPARE(spyResult.at(2).value<QList<int> >(), (QList<int>() << role));
     }
 }
 

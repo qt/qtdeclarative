@@ -20,7 +20,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4object_p.h>
 #include <private/qv4mmdefs_p.h>
-#include <QVector>
+#include <QList>
 
 #define MM_DEBUG 0
 
@@ -429,7 +429,7 @@ public:
     HugeItemAllocator hugeItemAllocator;
     PersistentValueStorage *m_persistentValues;
     PersistentValueStorage *m_weakValues;
-    QVector<Value *> m_pendingFreedObjectWrapperValue;
+    QList<Value *> m_pendingFreedObjectWrapperValue;
     Heap::MapObject *weakMaps = nullptr;
     Heap::SetObject *weakSets = nullptr;
 

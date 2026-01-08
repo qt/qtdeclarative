@@ -385,7 +385,7 @@ class TestThreadProvider : public QQuickImageProvider
             if (!ok)
                 cond.wait(&mutex);
             mutex.unlock();
-            QVector<int> v;
+            QList<int> v;
             for (int i = 0; i < 10000; i++)
                 v.prepend(i); //do some computation
             QImage image(50,50, QImage::Format_RGB32);

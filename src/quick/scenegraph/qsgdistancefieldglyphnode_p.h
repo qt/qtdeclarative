@@ -46,7 +46,7 @@ public:
     void update() override;
     void preprocess() override;
 
-    void invalidateGlyphs(const QVector<quint32> &glyphs) override;
+    void invalidateGlyphs(const QList<quint32> &glyphs) override;
 
     void updateGeometry();
 
@@ -77,8 +77,8 @@ private:
     int m_renderTypeQuality;
 
     struct GlyphInfo {
-        QVector<quint32> indexes;
-        QVector<QPointF> positions;
+        QList<quint32> indexes;
+        QList<QPointF> positions;
     };
     QSet<quint32> m_allGlyphIndexesLookup;
     // m_glyphs holds pointers to the GlyphInfo.indexes and positions arrays, so we need to hold on to them

@@ -192,7 +192,7 @@ bool QQmlAbstractColumnModel::setData(const QModelIndex &index, const QVariant &
         return false;
     }
 
-    QVector<int> rolesChanged;
+    QList<int> rolesChanged;
     rolesChanged.append(role);
     emit dataChanged(index, index, rolesChanged);
     emit rowsChanged();

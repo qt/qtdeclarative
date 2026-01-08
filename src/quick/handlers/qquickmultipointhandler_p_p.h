@@ -35,7 +35,7 @@ public:
     QMetaProperty &xMetaProperty() const;
     QMetaProperty &yMetaProperty() const;
 
-    QVector<QQuickHandlerPoint> currentPoints;
+    QList<QQuickHandlerPoint> currentPoints;
     QQuickHandlerPoint centroid;
     int minimumPointCount;
     int maximumPointCount;

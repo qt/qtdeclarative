@@ -780,7 +780,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
         return visitor(fPath, *this);
     QList<QSet<quintptr>> visited(path.length() + 1);
     Path myPath = path;
-    QVector<ResolveToDo> toDos(1); // invariant: always increase pathIndex to guarantee end even with only partial visited match
+    QList<ResolveToDo> toDos(1); // invariant: always increase pathIndex to guarantee end even with only partial visited match
     if (path.headKind() == Path::Kind::Root) {
         DomItem root = *this;
         PathRoot contextId = path.headRoot();
@@ -893,7 +893,7 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     }
                     toFind = path[iPath++];
                 } while (toFind.headKind() == Path::Kind::Empty);
-                QVector<Path::Kind> validFind({Path::Kind::Key, Path::Kind::Field, Path::Kind::Field, Path::Kind::Index});
+                QList<Path::Kind> validFind({Path::Kind::Key, Path::Kind::Field, Path::Kind::Field, Path::Kind::Index});
                 if (!validFind.contains(toFind.headKind())) {
                     myResolveErrors().error(tr("After an empty path only key, field or indexes are supported, not %1.").arg(toFind.toString()))
                             .handle(errorHandler);
@@ -1873,7 +1873,7 @@ static bool visitQualifiedNameLookup(
         function_ref<bool(const DomItem &)> visitor, LookupType lookupType,
         const ErrorHandler &errorHandler, QList<Path> *visitedRefs)
 {
-    QVector<ResolveToDo> lookupToDos(
+    QList<ResolveToDo> lookupToDos(
             { ResolveToDo{ newIt, 1 } }); // invariant: always increase pathIndex to guarantee
     // end even with only partial visited match
     QList<QSet<quintptr>> lookupVisited(subpath.size() + 1);

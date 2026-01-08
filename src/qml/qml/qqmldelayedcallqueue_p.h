@@ -58,7 +58,7 @@ private:
     void executeAllExpired_Later();
 
     QV4::ExecutionEngine *m_engine;
-    QVector<DelayedFunctionCall> m_delayedFunctionCalls;
+    QList<DelayedFunctionCall> m_delayedFunctionCalls;
     QMetaMethod m_tickedMethod;
     bool m_callbackOutstanding;
 };

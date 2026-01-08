@@ -149,9 +149,9 @@ void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *grabber, QPoin
     }
 }
 
-QVector<QEventPoint> QQuickMultiPointHandler::eligiblePoints(QPointerEvent *event)
+QList<QEventPoint> QQuickMultiPointHandler::eligiblePoints(QPointerEvent *event)
 {
-    QVector<QEventPoint> ret;
+    QList<QEventPoint> ret;
     // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
     // In other cases however, check whether it would be OK to steal the grab if the handler chooses to do that.
     bool stealingAllowed = event->isBeginEvent() || event->isEndEvent();
@@ -259,7 +259,7 @@ QQuickHandlerPoint &QQuickMultiPointHandler::mutableCentroid()
     return d->centroid;
 }
 
-QVector<QQuickHandlerPoint> &QQuickMultiPointHandler::currentPoints()
+QList<QQuickHandlerPoint> &QQuickMultiPointHandler::currentPoints()
 {
     Q_D(QQuickMultiPointHandler);
     return d->currentPoints;
@@ -305,10 +305,10 @@ qreal QQuickMultiPointHandler::averageStartingDistance(const QPointF &ref)
     return ret / d->currentPoints.size();
 }
 
-QVector<QQuickMultiPointHandler::PointData> QQuickMultiPointHandler::angles(const QPointF &ref) const
+QList<QQuickMultiPointHandler::PointData> QQuickMultiPointHandler::angles(const QPointF &ref) const
 {
     Q_D(const QQuickMultiPointHandler);
-    QVector<PointData> angles;
+    QList<PointData> angles;
     angles.reserve(d->currentPoints.size());
     for (const QQuickHandlerPoint &p : d->currentPoints) {
         qreal angle = QLineF(ref, p.scenePosition()).angle();
@@ -317,7 +317,7 @@ QVector<QQuickMultiPointHandler::PointData> QQuickMultiPointHandler::angles(cons
     return angles;
 }
 
-qreal QQuickMultiPointHandler::averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles)
+qreal QQuickMultiPointHandler::averageAngleDelta(const QList<PointData> &old, const QList<PointData> &newAngles)
 {
     qreal avgAngleDelta = 0;
     int numSamples = 0;
@@ -349,7 +349,7 @@ qreal QQuickMultiPointHandler::averageAngleDelta(const QVector<PointData> &old, 
     return avgAngleDelta;
 }
 
-void QQuickMultiPointHandler::acceptPoints(const QVector<QEventPoint> &points)
+void QQuickMultiPointHandler::acceptPoints(const QList<QEventPoint> &points)
 {
     // "auto point" is a copy, but it's OK because
     // setAccepted() changes QEventPointPrivate::accept via the shared d-pointer
@@ -357,7 +357,7 @@ void QQuickMultiPointHandler::acceptPoints(const QVector<QEventPoint> &points)
         point.setAccepted();
 }
 
-bool QQuickMultiPointHandler::grabPoints(QPointerEvent *event, const QVector<QEventPoint> &points)
+bool QQuickMultiPointHandler::grabPoints(QPointerEvent *event, const QList<QEventPoint> &points)
 {
     if (points.isEmpty())
         return false;

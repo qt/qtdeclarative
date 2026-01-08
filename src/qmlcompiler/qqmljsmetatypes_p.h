@@ -288,8 +288,8 @@ public:
 
     bool isValid() const { return !m_name.isEmpty(); }
 
-    const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
-    void setAnnotations(QVector<QQmlJSAnnotation> annotations) { m_annotations = annotations; }
+    const QList<QQmlJSAnnotation>& annotations() const { return m_annotations; }
+    void setAnnotations(QList<QQmlJSAnnotation> annotations) { m_annotations = annotations; }
 
     void setJsFunctionIndex(RelativeFunctionIndex index)
     {
@@ -402,7 +402,7 @@ class QQmlJSMetaProperty
     QWeakPointer<const QQmlJSScope> m_aliasTargetScope;
     QWeakPointer<const QQmlJSScope> m_type;
     QQmlJS::SourceLocation m_sourceLocation;
-    QVector<QQmlJSAnnotation> m_annotations;
+    QList<QQmlJSAnnotation> m_annotations;
     bool m_isList = false;
     bool m_isWritable = false;
     bool m_isPointer = false;

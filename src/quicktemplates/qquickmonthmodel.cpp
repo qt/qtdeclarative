@@ -36,7 +36,7 @@ public:
     int year;
     QString title;
     QLocale locale;
-    QVector<QDateTime> dates;
+    QList<QDateTime> dates;
     QDate today;
 };
 

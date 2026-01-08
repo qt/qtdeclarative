@@ -246,7 +246,7 @@ QSettings *QQmlSettingsLabsPrivate::instance() const
             qmlWarning(q) << "Failed to initialize QSettings instance. Status code is: " << int(settings->status());
 
             if (settings->status() == QSettings::AccessError) {
-                QVector<QString> missingIdentifiers;
+                QList<QString> missingIdentifiers;
                 if (QCoreApplication::organizationName().isEmpty())
                     missingIdentifiers.append(QLatin1String("organizationName"));
                 if (QCoreApplication::organizationDomain().isEmpty())

@@ -17,7 +17,7 @@
 
 #include <QtQuick/QQuickItem>
 #include <QElapsedTimer>
-#include <QVector>
+#include <QList>
 #include <QVarLengthArray>
 #include <QHash>
 #include <QSet>
@@ -98,7 +98,7 @@ private:
     int m_size;
     int m_end;
     QQuickParticleDataHeapNode m_tmp;
-    QVector<QQuickParticleDataHeapNode> m_data;
+    QList<QQuickParticleDataHeapNode> m_data;
     QHash<int,int> m_lookups;
 };
 
@@ -182,7 +182,7 @@ public:
     QQuickParticleVarLengthArray<QQuickParticlePainter*, 4> painters;//TODO: What if they are dynamically removed?
 
     //TODO: Refactor particle data list out into a separate class
-    QVector<QQuickParticleData*> data;
+    QList<QQuickParticleData*> data;
     FreeList freeList;
     QQuickParticleDataHeap dataHeap;
     bool recycle(); //Force recycling round, returns true if all indexes are now reusable
@@ -200,7 +200,7 @@ private:
     int m_size;
     QQuickParticleSystem* m_system;
     // Only used in recycle() for tracking of alive particles after latest recycling round
-    QVector<QQuickParticleData*> m_latestAliveParticles;
+    QList<QQuickParticleData*> m_latestAliveParticles;
 };
 
 struct Color4ub {
@@ -376,7 +376,7 @@ public:
 
     //Data members here for ease of related class and auto-test usage. Not "public" API. TODO: d_ptrize
     QSet<QQuickParticleData*> needsReset;
-    QVector<QQuickParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
+    QList<QQuickParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QQuickStochasticEngine* stateEngine;
 
     QHash<QString, int> groupIds;

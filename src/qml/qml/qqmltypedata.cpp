@@ -91,7 +91,7 @@ bool QQmlTypeData::loadFromDiskCache(const QQmlRefPointer<QV4::CompiledData::Com
 
     m_compiledData = unit;
 
-    QVector<QV4::CompiledData::InlineComponent> ics;
+    QList<QV4::CompiledData::InlineComponent> ics;
     for (int i = 0, count = m_compiledData->objectCount(); i < count; ++i) {
         auto object = m_compiledData->objectAt(i);
         m_typeReferences.collectFromObject(object);
@@ -616,7 +616,7 @@ void QQmlTypeData::done()
         {
             // Sanity check property bindings
             QQmlPropertyValidator validator(typeLoader(), m_importCache.data(), m_compiledData);
-            QVector<QQmlError> errors = validator.validate();
+            QList<QQmlError> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
                 return;

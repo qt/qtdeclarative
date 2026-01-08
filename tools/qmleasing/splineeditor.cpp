@@ -10,7 +10,7 @@
 #include <QContextMenuEvent>
 #include <QDebug>
 #include <QApplication>
-#include <QVector>
+#include <QList>
 #include <QPainterPath>
 
 const int canvasWidth = 640;
@@ -653,7 +653,7 @@ void SplineEditor::setEasingCurve(const QString &code)
         const auto cleanCode = QStringView(code).mid(1, code.size() - 2);
         const auto stringList = cleanCode.split(QLatin1Char(','), Qt::SkipEmptyParts);
         if (stringList.size() >= 6 && (stringList.size() % 6 == 0)) {
-            QVector<qreal> realList;
+            QList<qreal> realList;
             realList.reserve(stringList.size());
             for (const QStringView &string : stringList) {
                 bool ok;
@@ -661,7 +661,7 @@ void SplineEditor::setEasingCurve(const QString &code)
                 if (!ok)
                     return;
             }
-            QVector<QPointF> points;
+            QList<QPointF> points;
             const int count = realList.size() / 2;
             points.reserve(count);
             for (int i = 0; i < count; ++i)

@@ -3718,7 +3718,7 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     m_preeditCursor = event->preeditString().size();
     hasImState = !event->preeditString().isEmpty();
     bool cursorVisible = true;
-    QVector<QTextLayout::FormatRange> formats;
+    QList<QTextLayout::FormatRange> formats;
     for (int i = 0; i < event->attributes().size(); ++i) {
         const QInputMethodEvent::Attribute &a = event->attributes().at(i);
         if (a.type == QInputMethodEvent::Cursor) {

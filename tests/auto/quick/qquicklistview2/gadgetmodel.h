@@ -37,7 +37,7 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
 private:
-    QVector<MyGadget> m_gadgets;
+    QList<MyGadget> m_gadgets;
 };
 
 #endif // GADGETMODEL_H

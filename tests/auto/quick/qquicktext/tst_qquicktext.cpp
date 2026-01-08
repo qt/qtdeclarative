@@ -31,7 +31,7 @@ DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
 Q_DECLARE_METATYPE(QQuickText::TextFormat)
 
-typedef QVector<QPointF> PointVector;
+typedef QList<QPointF> PointVector;
 Q_DECLARE_METATYPE(PointVector);
 
 typedef qreal (*ExpectedBaseline)(QQuickText *item);
@@ -850,7 +850,7 @@ void tst_qquicktext::textFormat()
         QVERIFY(textPrivate);
 
         // underline a mnemonic
-        QVector<QTextLayout::FormatRange> formats;
+        QList<QTextLayout::FormatRange> formats;
         QTextLayout::FormatRange range;
         range.start = 0;
         range.length = 1;

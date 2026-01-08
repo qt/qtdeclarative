@@ -63,8 +63,8 @@ public:
     static Signal Change(int index, int count) {
         Signal signal = { index, count, -3, -1, 0 }; return signal; }
 
-    typedef QVector<Signal> SignalList;
-    typedef QVector<SignalList> SignalListList;
+    typedef QList<Signal> SignalList;
+    typedef QList<SignalList> SignalListList;
 
     template<typename T>
     void move(int from, int to, int n, T *items)
@@ -93,7 +93,7 @@ public:
             *t = *f;
     }
 
-    bool applyChanges(QVector<int> &list, const QVector<QVector<Signal> > &changes)
+    bool applyChanges(QList<int> &list, const QList<QList<Signal> > &changes)
     {
         for (const SignalList &sl : changes) {
             if (!applyChanges(list, sl))
@@ -102,7 +102,7 @@ public:
         return true;
     }
 
-    bool applyChanges(QVector<int> &list, const QVector<Signal> &changes)
+    bool applyChanges(QList<int> &list, const QList<Signal> &changes)
     {
         QHash<QQmlChangeSet::MoveKey, int> removedValues;
         for (const Signal &signal : changes) {
@@ -186,10 +186,10 @@ Q_DECLARE_METATYPE(tst_qqmlchangeset::SignalListList)
 
 #if 0
 # define VERIFY_EXPECTED_OUTPUT \
-    QVector<int> inputList; \
+    QList<int> inputList; \
     for (int i = 0; i < 40; ++i) \
         inputList.append(i); \
-    QVector<int> outputList = inputList; \
+    QList<int> outputList = inputList; \
     if (!applyChanges(inputList, input)) { \
         qDebug() << input; \
         qDebug() << output; \
@@ -1328,7 +1328,7 @@ void tst_qqmlchangeset::removeConsecutive()
     QFETCH(SignalList, input);
     QFETCH(SignalList, output);
 
-    QVector<QQmlChangeSet::Change> removes;
+    QList<QQmlChangeSet::Change> removes;
     for (const Signal &signal : std::as_const(input)) {
         QVERIFY(signal.isRemove());
         removes.append(QQmlChangeSet::Change(signal.index, signal.count, signal.moveId, signal.offset));
@@ -1368,7 +1368,7 @@ void tst_qqmlchangeset::insertConsecutive()
     QFETCH(SignalList, input);
     QFETCH(SignalList, output);
 
-    QVector<QQmlChangeSet::Change> inserts;
+    QList<QQmlChangeSet::Change> inserts;
     for (const Signal &signal : std::as_const(input)) {
         QVERIFY(signal.isInsert());
         inserts.append(QQmlChangeSet::Change(signal.index, signal.count, signal.moveId, signal.offset));
@@ -1502,10 +1502,10 @@ void tst_qqmlchangeset::random()
         for (const QQmlChangeSet::Change &insert : accumulatedSet.inserts())
             output << Insert(insert.index, insert.count, insert.moveId, insert.offset);
 
-        QVector<int> inputList;
+        QList<int> inputList;
         for (int i = 0; i < 40; ++i)
             inputList.append(i);
-        QVector<int> outputList = inputList;
+        QList<int> outputList = inputList;
         if (!applyChanges(inputList, input)) {
             qDebug() << "Invalid input list";
             qDebug() << input;

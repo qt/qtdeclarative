@@ -1023,10 +1023,10 @@ QPointerEvent *QQuickDeliveryAgentPrivate::clonePointerEvent(QPointerEvent *even
     return ret;
 }
 
-void QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QObject> > &passiveGrabbers,
+void QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(const QList<QPointer <QObject> > &passiveGrabbers,
                                                           QPointerEvent *pointerEvent)
 {
-    const QVector<QObject *> &eventDeliveryTargets =
+    const QList<QObject *> &eventDeliveryTargets =
             QQuickPointerHandlerPrivate::deviceDeliveryTargets(pointerEvent->device());
     QVarLengthArray<std::pair<QQuickItem *, bool>, 4> sendFilteredPointerEventResult;
     hasFiltered.clear();
@@ -1352,7 +1352,7 @@ bool QQuickDeliveryAgentPrivate::deliverSinglePointEventUntilAccepted(QPointerEv
     Q_ASSERT(event->points().size() == 1);
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->pointingDevice()).clear();
     QEventPoint &point = event->point(0);
-    QVector<QQuickItem *> targetItems = pointerTargets(rootItem, event, point, false, false);
+    QList<QQuickItem *> targetItems = pointerTargets(rootItem, event, point, false, false);
     point.setAccepted(false);
 
     // Let passive grabbers see the event. This must be done before we deliver the
@@ -2138,10 +2138,10 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     width and height aren't declared.)
 */
 // FIXME: should this be iterative instead of recursive?
-QVector<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, const QEvent *event, int pointId,
+QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, const QEvent *event, int pointId,
         QPointF localPos, QPointF scenePos, qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate) const
 {
-    QVector<QQuickItem *> targets;
+    QList<QQuickItem *> targets;
     auto itemPrivate = QQuickItemPrivate::get(item);
 
     // If the item clips, or all children are inside, and it's not the root item,
@@ -2226,7 +2226,7 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item,
     "visited" when delivering any event for which QPointerEvent::isBeginEvent()
     is \c true.
 */
-QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *item, const QPointerEvent *event, const QEventPoint &point,
+QList<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *item, const QPointerEvent *event, const QEventPoint &point,
                                                                  bool checkMouseButtons, bool checkAcceptsTouch) const
 {
     auto predicate = [point, checkMouseButtons, checkAcceptsTouch](QQuickItem *item, const QEvent *ev) -> std::optional<bool> {
@@ -2252,9 +2252,9 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
     Returns a joined list consisting of the items in \a list1 and \a list2.
     \a list1 has priority; common items come last.
 */
-QVector<QQuickItem *> QQuickDeliveryAgentPrivate::mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const
+QList<QQuickItem *> QQuickDeliveryAgentPrivate::mergePointerTargets(const QList<QQuickItem *> &list1, const QList<QQuickItem *> &list2) const
 {
-    QVector<QQuickItem *> targets = list1;
+    QList<QQuickItem *> targets = list1;
     // start at the end of list2
     // if item not in list, append it
     // if item found, move to next one, inserting before the last found one
@@ -2340,13 +2340,13 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
 
     // If some points weren't grabbed, deliver only to non-grabber PointerHandlers in reverse paint order
     if (!allPointsGrabbed(event)) {
-        QVector<QQuickItem *> targetItems;
+        QList<QQuickItem *> targetItems;
         for (auto &point : event->points()) {
             // Presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints.
             // Don't find handlers for points that are already grabbed by an Item (such as Flickable).
             if (point.state() == QEventPoint::Pressed || qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(point)))
                 continue;
-            QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, false, false);
+            QList<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, false, false);
             if (targetItems.size()) {
                 targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
             } else {
@@ -2406,7 +2406,7 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
 */
 bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event, bool handlersOnly)
 {
-    QVector<QQuickItem *> targetItems;
+    QList<QQuickItem *> targetItems;
     const bool isTouch = isTouchEvent(event);
     if (isTouch && event->isBeginEvent() && isDeliveringTouchAsMouse()) {
         if (auto point = const_cast<QPointingDevicePrivate *>(QPointingDevicePrivate::get(touchMouseDevice))->queryPointById(touchMouseId)) {
@@ -2432,7 +2432,7 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
         // reset state to prevent a double-click event.
         if (isTouch && point.state() == QEventPoint::Pressed)
             resetIfDoubleTapPrevented(point);
-        QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, !isTouch, isTouch);
+        QList<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, !isTouch, isTouch);
         if (targetItems.size()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
         } else {
@@ -2440,7 +2440,7 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
         }
     }
 
-    QVector<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
+    QList<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
 
     for (auto &item : safeTargetItems) {
         if (item.isNull())
@@ -3020,7 +3020,7 @@ bool QQuickDeliveryAgentPrivate::dragOverThreshold(QVector2D delta)
     (Similar to \l pointerTargets(), necessary because QContextMenuEvent is not
     a QPointerEvent.)
 */
-QVector<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const
+QList<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const
 {
     auto predicate = [](QQuickItem *, const QEvent *) -> std::optional<bool> {
         return std::nullopt;
@@ -3040,9 +3040,9 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::contextMenuTargets(QQuickItem 
 void QQuickDeliveryAgentPrivate::deliverContextMenuEvent(QContextMenuEvent *event)
 {
     skipDelivery.clear();
-    QVector<QQuickItem *> targetItems = contextMenuTargets(rootItem, event);
+    QList<QQuickItem *> targetItems = contextMenuTargets(rootItem, event);
     qCDebug(lcContextMenu) << "delivering context menu event" << event << "to" << targetItems.size() << "target item(s)";
-    QVector<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
+    QList<QPointer<QQuickItem>> safeTargetItems(targetItems.begin(), targetItems.end());
     for (auto &item : safeTargetItems) {
         qCDebug(lcContextMenu) << "- attempting to deliver to" << item;
         if (item.isNull())

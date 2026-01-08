@@ -6417,22 +6417,22 @@ bool operator==(const QJSValueConvertible &lhs, const QJSValueConvertible &rhs) 
 class TestItem : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY( QVector<QPointF> positions MEMBER m_points  )
+    Q_PROPERTY( QList<QPointF> positions MEMBER m_points  )
     Q_PROPERTY( QSet<QByteArray> barrays MEMBER m_barrays  )
-    Q_PROPERTY( QVector<QJSValueConvertible> convertibles MEMBER m_convertibles)
+    Q_PROPERTY( QList<QJSValueConvertible> convertibles MEMBER m_convertibles)
 
 public:
     TestItem() = default;
-    QVector< QPointF > m_points;
+    QList< QPointF > m_points;
     QSet<QByteArray> m_barrays;
-    QVector<QJSValueConvertible> m_convertibles;
+    QList<QJSValueConvertible> m_convertibles;
 };
 
 
-Q_DECLARE_METATYPE(QVector<QPointF>);
+Q_DECLARE_METATYPE(QList<QPointF>);
 Q_DECLARE_METATYPE(QSet<QByteArray>);
 Q_DECLARE_METATYPE(QJSValueConvertible);
-Q_DECLARE_METATYPE(QVector<QJSValueConvertible>);
+Q_DECLARE_METATYPE(QList<QJSValueConvertible>);
 
 void tst_qqmllanguage::arrayToContainer()
 {
@@ -6445,7 +6445,7 @@ void tst_qqmllanguage::arrayToContainer()
     );
     QQmlEngine engine;
     qmlRegisterType<TestItem>("qt.test", 1, 0, "TestItem");
-    QVector<QPointF> points { QPointF (2.0, 3.0) };
+    QList<QPointF> points { QPointF (2.0, 3.0) };
     QSet<QByteArray> barrays { QByteArray("hello"), QByteArray("world") };
     engine.rootContext()->setContextProperty("test", QVariant::fromValue(points));
     QQmlComponent component(&engine, testFileUrl("arrayToContainer.qml"));

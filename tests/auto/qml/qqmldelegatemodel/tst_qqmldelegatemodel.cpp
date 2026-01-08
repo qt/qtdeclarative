@@ -105,7 +105,7 @@ public:
     }
 
 protected:
-    QVector<QString> mValues;
+    QList<QString> mValues;
 };
 
 class AbstractItemModel : public BaseAbstractItemModel

@@ -87,7 +87,7 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(QV4::Executi
 
     std::pair<QObject *, int> functionData = QV4::QObjectMethod::extractQtMethod(func);
 
-    QVector<DelayedFunctionCall>::Iterator iter;
+    QList<DelayedFunctionCall>::Iterator iter;
     if (functionData.second != -1) {
         // This is a QObject function wrapper
         iter = self->m_delayedFunctionCalls.begin();
@@ -163,10 +163,10 @@ void QQmlDelayedCallQueue::executeAllExpired_Later()
 {
     // Make a local copy of the list and clear m_delayedFunctionCalls
     // This ensures correct behavior in the case of recursive calls to Qt.callLater()
-    QVector<DelayedFunctionCall> delayedCalls = m_delayedFunctionCalls;
+    QList<DelayedFunctionCall> delayedCalls = m_delayedFunctionCalls;
     m_delayedFunctionCalls.clear();
 
-    QVector<DelayedFunctionCall>::Iterator iter = delayedCalls.begin();
+    QList<DelayedFunctionCall>::Iterator iter = delayedCalls.begin();
     while (iter != delayedCalls.end()) {
         DelayedFunctionCall& dfc = *iter;
         dfc.execute(m_engine);

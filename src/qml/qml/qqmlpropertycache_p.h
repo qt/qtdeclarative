@@ -327,15 +327,15 @@ private:
                       const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                       QMetaType returnType, const QList<QByteArray> &names,
-                      const QVector<QMetaType> &parameterTypes);
-    void appendEnum(const QString &, const QVector<QQmlEnumValue> &);
+                      const QList<QMetaType> &parameterTypes);
+    void appendEnum(const QString &, const QList<QQmlEnumValue> &);
 
     QQmlPropertyCacheMethodArguments *createArgumentsObject(int count,
                                                             const QList<QByteArray> &names);
 
-    typedef QVector<QQmlPropertyData> IndexCache;
+    typedef QList<QQmlPropertyData> IndexCache;
     typedef QLinkedStringMultiHash<std::pair<int, QQmlPropertyData *> > StringCache;
-    typedef QVector<QTypeRevision> AllowedRevisionCache;
+    typedef QList<QTypeRevision> AllowedRevisionCache;
 
     const QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *,
                                    const QQmlRefPointer<QQmlContextData> &) const;
@@ -392,7 +392,7 @@ private:
     IndexCache signalHandlerIndexCache;
     StringCache stringCache;
     AllowedRevisionCache allowedRevisionCache;
-    QVector<QQmlEnumData> enumCache;
+    QList<QQmlEnumData> enumCache;
 
     QQmlMetaObjectPointer _metaObject;
     QByteArray _dynamicClassName;

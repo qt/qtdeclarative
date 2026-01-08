@@ -303,7 +303,7 @@ public:
     ~QQuickProfiler() override;
 
 Q_SIGNALS:
-    void dataReady(const QVector<QQuickProfilerData> &data);
+    void dataReady(const QList<QQuickProfilerData> &data);
 
 protected:
     friend class QQuickProfilerAdapter;
@@ -311,7 +311,7 @@ protected:
     static QQuickProfiler *s_instance;
     QMutex m_dataMutex;
     QElapsedTimer m_timer;
-    QVector<QQuickProfilerData> m_data;
+    QList<QQuickProfilerData> m_data;
     QQuickProfilerSceneGraphData m_sceneGraphData;
 
     QQuickProfiler(QObject *parent);

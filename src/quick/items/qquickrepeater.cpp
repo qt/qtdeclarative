@@ -574,7 +574,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     }
 
     int difference = 0;
-    QHash<int, QVector<QPointer<QQuickItem> > > moved;
+    QHash<int, QList<QPointer<QQuickItem> > > moved;
     for (const QQmlChangeSet::Change &remove : changeSet.removes()) {
         int index = qMin(remove.index, d->deletables.size());
         int count = qMin(remove.index + remove.count, d->deletables.size()) - index;
@@ -600,7 +600,7 @@ void QQuickRepeater::modelUpdated(const QQmlChangeSet &changeSet, bool reset)
     for (const QQmlChangeSet::Change &insert : changeSet.inserts()) {
         int index = qMin(insert.index, d->deletables.size());
         if (insert.isMove()) {
-            QVector<QPointer<QQuickItem> > items = moved.value(insert.moveId);
+            QList<QPointer<QQuickItem> > items = moved.value(insert.moveId);
             d->deletables = d->deletables.mid(0, index) + items + d->deletables.mid(index);
             QQuickItem *stackBefore = index + items.size() < d->deletables.size()
                     ? d->deletables.at(index + items.size())

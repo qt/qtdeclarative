@@ -33,8 +33,8 @@ private:
     void sendMessages(const QString &name, const QList<QByteArray> &messages);
     void announceObjectAvailability(const QString &objectType, QObject *object, bool available);
 
-    QVector<QQmlDebugService *> m_services;
-    QVector<QJSEngine *> m_engines;
+    QList<QQmlDebugService *> m_services;
+    QList<QJSEngine *> m_engines;
     bool m_blockingMode;
 };
 

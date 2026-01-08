@@ -28,12 +28,12 @@ public:
     QQmlProfilerAdapter(QQmlProfilerService *service, QQmlTypeLoader *loader);
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
 
-    void receiveData(const QVector<QQmlProfilerData> &new_data,
+    void receiveData(const QList<QQmlProfilerData> &new_data,
                      const QQmlProfiler::LocationHash &locations);
 
 private:
     void init(QQmlProfilerService *service, QQmlProfiler *profiler);
-    QVector<QQmlProfilerData> data;
+    QList<QQmlProfilerData> data;
     QQmlProfiler::LocationHash locations;
     int next;
 };

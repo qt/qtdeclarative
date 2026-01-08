@@ -12,9 +12,9 @@ QHashedStringRef QHashedStringRef::mid(int offset, int length) const
                             (length == -1 || (offset + length) > m_length)?(m_length - offset):length);
 }
 
-QVector<QHashedStringRef> QHashedStringRef::split(const QChar sep) const
+QList<QHashedStringRef> QHashedStringRef::split(const QChar sep) const
 {
-    QVector<QHashedStringRef> ret;
+    QList<QHashedStringRef> ret;
     auto curLength = 0;
     auto curOffset = m_data;
     for (int offset = 0; offset < m_length; ++offset) {

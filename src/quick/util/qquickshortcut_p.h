@@ -102,7 +102,7 @@ private:
     bool m_autorepeat;
     Qt::ShortcutContext m_context;
     Shortcut m_shortcut;
-    QVector<Shortcut> m_shortcuts;
+    QList<Shortcut> m_shortcuts;
 };
 
 QT_END_NAMESPACE

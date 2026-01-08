@@ -868,7 +868,7 @@ int QSGRhiSupport::chooseSampleCount(int samples, QRhi *rhi)
         msaaSampleCount = qEnvironmentVariableIntValue("QSG_SAMPLES");
     msaaSampleCount = qMax(1, msaaSampleCount);
     if (msaaSampleCount > 1) {
-        const QVector<int> supportedSampleCounts = rhi->supportedSampleCounts();
+        const QList<int> supportedSampleCounts = rhi->supportedSampleCounts();
         if (!supportedSampleCounts.contains(msaaSampleCount)) {
             int reducedSampleCount = 1;
             for (int i = supportedSampleCounts.size() - 1; i >= 0; --i) {

@@ -83,8 +83,8 @@ private:
     bool isControlPointSmooth(int i) const;
 
     QEasingCurve m_easingCurve;
-    QVector<QPointF> m_controlPoints;
-    QVector<bool> m_smoothList;
+    QList<QPointF> m_controlPoints;
+    QList<bool> m_smoothList;
     int m_numberOfSegments;
     int m_activeControlPoint;
     bool m_mouseDrag;

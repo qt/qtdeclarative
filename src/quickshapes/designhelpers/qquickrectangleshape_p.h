@@ -47,7 +47,7 @@ class Q_QUICKSHAPESDESIGNHELPERS_EXPORT QQuickRectangleShape : public QQuickShap
     Q_PROPERTY(QQuickShapePath::CapStyle capStyle READ capStyle WRITE setCapStyle NOTIFY capStyleChanged FINAL)
     Q_PROPERTY(QQuickShapePath::StrokeStyle strokeStyle READ strokeStyle WRITE setStrokeStyle NOTIFY strokeStyleChanged FINAL)
     Q_PROPERTY(qreal dashOffset READ dashOffset WRITE setDashOffset NOTIFY dashOffsetChanged FINAL)
-    Q_PROPERTY(QVector<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged FINAL)
+    Q_PROPERTY(QList<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged FINAL)
     Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient FINAL)
     Q_PROPERTY(BorderMode borderMode READ borderMode WRITE setBorderMode RESET resetBorderMode FINAL)
 
@@ -141,8 +141,8 @@ public:
     qreal dashOffset() const;
     void setDashOffset(qreal offset);
 
-    QVector<qreal> dashPattern() const;
-    void setDashPattern(const QVector<qreal> &array);
+    QList<qreal> dashPattern() const;
+    void setDashPattern(const QList<qreal> &array);
 
     QQuickShapeGradient *fillGradient() const;
     void setFillGradient(QQuickShapeGradient *fillGradient);

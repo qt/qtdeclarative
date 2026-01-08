@@ -99,7 +99,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     if (m_glyph_cache)
         m_glyph_cache->populate(glyphs.glyphIndexes());
 
-    const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
+    const QList<quint32> glyphIndexes = m_glyphs.glyphIndexes();
     for (int i = 0; i < glyphIndexes.size(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
     qCDebug(lcSgText, "inserting %" PRIdQSIZETYPE " glyphs, %" PRIdQSIZETYPE " unique",
@@ -141,7 +141,7 @@ void QSGDistanceFieldGlyphNode::preprocess()
     setFlag(UsePreprocess, false);
 }
 
-void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QVector<quint32> &glyphs)
+void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QList<quint32> &glyphs)
 {
     if (m_dirtyGeometry)
         return;
@@ -175,8 +175,8 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     Q_ASSERT(g->indexType() == QSGGeometry::UnsignedShortType);
     m_glyphsInOtherTextures.clear();
 
-    const QVector<quint32> indexes = m_glyphs.glyphIndexes();
-    const QVector<QPointF> positions = m_glyphs.positions();
+    const QList<quint32> indexes = m_glyphs.glyphIndexes();
+    const QList<QPointF> positions = m_glyphs.positions();
     qreal fontPixelSize = m_glyphs.rawFont().pixelSize();
 
     // The template parameters here are assuming that most strings are short, 64

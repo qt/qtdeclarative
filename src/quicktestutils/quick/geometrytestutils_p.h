@@ -16,7 +16,7 @@
 //
 
 #include <QObject>
-#include <QVector>
+#include <QList>
 #include <QSize>
 #include <private/qglobal_p.h>
 
@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 
-class QSizeChangeListener : public QObject, public QVector<QSize>
+class QSizeChangeListener : public QObject, public QList<QSize>
 {
     Q_OBJECT
 public:

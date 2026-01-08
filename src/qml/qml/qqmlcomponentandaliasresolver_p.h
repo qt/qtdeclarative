@@ -133,9 +133,9 @@ private:
     QQmlPropertyCacheVector *m_propertyCaches = nullptr;
 
     // indices of the objects that are actually Component {}
-    QVector<quint32> m_componentRoots;
-    QVector<int> m_objectsWithAliases;
-    QVector<CompiledBinding *> m_generalizedGroupProperties;
+    QList<quint32> m_componentRoots;
+    QList<int> m_objectsWithAliases;
+    QList<CompiledBinding *> m_generalizedGroupProperties;
     QSet<const QV4::CompiledData::Alias *> resolvedAliases;
     typename ObjectContainer::IdToObjectMap m_idToObjectIndex;
 };
@@ -441,7 +441,7 @@ QQmlError QQmlComponentAndAliasResolver<ObjectContainer>::resolveAliases(int com
     bool atLeastOneAliasResolved;
     do {
         atLeastOneAliasResolved = false;
-        QVector<int> pendingObjects;
+        QList<int> pendingObjects;
 
         for (int objectIndex: std::as_const(m_objectsWithAliases)) {
 

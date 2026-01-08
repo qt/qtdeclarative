@@ -60,7 +60,7 @@ private:
     bool explicitDelegateModelAccess : 1;
     int itemCount;
 
-    QVector<QPointer<QQuickItem> > deletables;
+    QList<QPointer<QQuickItem> > deletables;
 };
 
 QT_END_NAMESPACE

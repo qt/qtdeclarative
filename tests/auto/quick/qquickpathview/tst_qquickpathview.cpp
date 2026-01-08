@@ -2700,9 +2700,9 @@ void tst_QQuickPathView::objectModelMove()
     QCOMPARE(pathView->count(), 3);
 
     // Keep track of the amount of listeners
-    QVector<QString> itemObjectNames;
+    QList<QString> itemObjectNames;
     itemObjectNames << QLatin1String("red") << QLatin1String("green") << QLatin1String("blue");
-    QVector<QQuickItem*> childItems;
+    QList<QQuickItem*> childItems;
     for (const QString &itemObjectName : std::as_const(itemObjectNames)) {
         QQuickItem *childItem = findItem<QQuickItem>(pathView, itemObjectName);
         QVERIFY(childItem);

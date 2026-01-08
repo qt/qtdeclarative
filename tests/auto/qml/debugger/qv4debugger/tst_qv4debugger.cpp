@@ -260,8 +260,8 @@ public:
     int m_targetScope = -1;
     QList<QV4Debugger::ExecutionState> m_statesWhenPaused;
     QList<TestBreakPoint> m_breakPointsToAddWhenPaused;
-    QVector<QV4::StackFrame> m_stackTrace;
-    QVector<NamedRefs> m_capturedScope;
+    QList<QV4::StackFrame> m_stackTrace;
+    QList<NamedRefs> m_capturedScope;
     qint64 m_thrownValue;
     QV4DataCollector collector;
 
@@ -273,7 +273,7 @@ public:
     };
 
 
-    QVector<ExpressionRequest> m_expressionRequests;
+    QList<ExpressionRequest> m_expressionRequests;
     QV4Debugger::Speed m_resumeSpeed;
     QList<QJsonObject> m_expressionResults;
     QList<QJsonObject> m_lookupResults;

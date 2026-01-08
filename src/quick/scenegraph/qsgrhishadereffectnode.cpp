@@ -528,7 +528,7 @@ QSGRhiShaderEffectMaterial::~QSGRhiShaderEffectMaterial()
     delete m_dummyTexture;
 }
 
-static bool hasAtlasTexture(const QVector<QSGTextureProvider *> &textureProviders)
+static bool hasAtlasTexture(const QList<QSGTextureProvider *> &textureProviders)
 {
     for (QSGTextureProvider *tp : textureProviders) {
         if (tp && tp->texture() && tp->texture()->isAtlasTexture())
@@ -970,7 +970,7 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
     const QShaderDescription desc = result->rhiShader.description();
 
     int ubufBinding = -1;
-    const QVector<QShaderDescription::UniformBlock> ubufs = desc.uniformBlocks();
+    const QList<QShaderDescription::UniformBlock> ubufs = desc.uniformBlocks();
     const int ubufCount = ubufs.size();
     for (int i = 0; i < ubufCount; ++i) {
         const QShaderDescription::UniformBlock &ubuf(ubufs[i]);
@@ -990,7 +990,7 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         }
     }
 
-    const QVector<QShaderDescription::InOutVariable> combinedImageSamplers = desc.combinedImageSamplers();
+    const QList<QShaderDescription::InOutVariable> combinedImageSamplers = desc.combinedImageSamplers();
     const int samplerCount = combinedImageSamplers.size();
     for (int i = 0; i < samplerCount; ++i) {
         const QShaderDescription::InOutVariable &combinedImageSampler(combinedImageSamplers[i]);

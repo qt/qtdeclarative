@@ -68,9 +68,9 @@ private:
     QString m_settingsKey;
     QTimer m_savePositionTimer;
     Position m_lastWindowPosition;
-    QVector<QWindow *> m_positionedWindows;
+    QList<QWindow *> m_positionedWindows;
 
-    QVector<ScreenData> m_currentInitScreensData;
+    QList<ScreenData> m_currentInitScreensData;
 };
 
 QT_END_NAMESPACE

@@ -286,7 +286,7 @@ struct Q_QML_EXPORT StackFrame {
     int line = -1;
     int column = -1;
 };
-typedef QVector<StackFrame> StackTrace;
+typedef QList<StackFrame> StackTrace;
 
 namespace JIT {
 

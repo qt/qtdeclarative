@@ -35,8 +35,8 @@ public:
     const QRawFont &referenceFont() const { return m_referenceFont; }
     int glyphCount() const { return m_glyphCount; }
 
-    void populate(const QVector<quint32> &glyphs);
-    void release(const QVector<quint32> &glyphs);
+    void populate(const QList<quint32> &glyphs);
+    void release(const QList<quint32> &glyphs);
 
     VGFont font() { return m_font; }
 

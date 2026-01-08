@@ -33,11 +33,11 @@ template <typename T>  struct Array
 typedef Array<int> IndexArray;
 typedef Array<const void *> ListArray;
 
-typedef QVector<QQmlListCompositor::Remove> RemoveList;
-typedef QVector<QQmlListCompositor::Insert> InsertList;
-typedef QVector<QQmlListCompositor::Change> ChangeList;
+typedef QList<QQmlListCompositor::Remove> RemoveList;
+typedef QList<QQmlListCompositor::Insert> InsertList;
+typedef QList<QQmlListCompositor::Change> ChangeList;
 
-typedef QVector<Range> RangeList;
+typedef QList<Range> RangeList;
 
 Q_DECLARE_METATYPE(RangeList)
 Q_DECLARE_METATYPE(RemoveList)
@@ -503,7 +503,7 @@ void tst_qqmllistcompositor::clearFlags()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Remove> removes;
+    QList<C::Remove> removes;
     compositor.clearFlags(group, index, count, flags, &removes);
 
     QCOMPARE(removes, expectedRemoves);
@@ -685,7 +685,7 @@ void tst_qqmllistcompositor::setFlags()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Insert> inserts;
+    QList<C::Insert> inserts;
     compositor.setFlags(group, index, count, flags, &inserts);
 
     QCOMPARE(inserts, expectedInserts);
@@ -972,8 +972,8 @@ void tst_qqmllistcompositor::move()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Remove> removes;
-    QVector<C::Insert> inserts;
+    QList<C::Remove> removes;
+    QList<C::Insert> inserts;
     compositor.move(fromGroup, from, toGroup, to, count, fromGroup, &removes, &inserts);
 
     QCOMPARE(removes, expectedRemoves);
@@ -1020,7 +1020,7 @@ void tst_qqmllistcompositor::moveFromEnd()
     compositor.move(C::Default, 0, C::Default, 0, 1, C::Default);
 
     // The existing item is anchored at 0 so prepending an item to the source will append it here
-    QVector<C::Insert> inserts;
+    QList<C::Insert> inserts;
     compositor.listItemsInserted(a, 0, 1, &inserts);
 
     QCOMPARE(inserts.size(), 1);
@@ -1206,7 +1206,7 @@ void tst_qqmllistcompositor::listItemsInserted()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Insert> inserts;
+    QList<C::Insert> inserts;
     compositor.listItemsInserted(list, index, count, &inserts);
 
     QCOMPARE(inserts, expectedInserts);
@@ -1342,7 +1342,7 @@ void tst_qqmllistcompositor::listItemsRemoved()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Remove> removes;
+    QList<C::Remove> removes;
     compositor.listItemsRemoved(list, index, count, &removes);
 
     QCOMPARE(removes, expectedRemoves);
@@ -1536,8 +1536,8 @@ void tst_qqmllistcompositor::listItemsMoved()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Remove> removes;
-    QVector<C::Insert> inserts;
+    QList<C::Remove> removes;
+    QList<C::Insert> inserts;
     compositor.listItemsMoved(list, from, to, count, &removes, &inserts);
 
     QCOMPARE(removes, expectedRemoves);
@@ -1616,7 +1616,7 @@ void tst_qqmllistcompositor::listItemsChanged()
     for (const Range &range : std::as_const(ranges))
         compositor.append(range.list, range.index, range.count, range.flags);
 
-    QVector<C::Change> changes;
+    QList<C::Change> changes;
     compositor.listItemsChanged(list, index, count, &changes);
 
     QCOMPARE(changes, expectedChanges);

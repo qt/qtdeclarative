@@ -54,7 +54,7 @@ public:
 
     static DynamicRoleModelNode *create(const QVariantMap &obj, QQmlListModel *owner);
 
-    void updateValues(const QVariantMap &object, QVector<int> &roles);
+    void updateValues(const QVariantMap &object, QList<int> &roles);
 
     QVariant getValue(const QString &name) const
     {
@@ -76,7 +76,7 @@ public:
         return m_uid;
     }
 
-    static QVector<int> sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target);
+    static QList<int> sync(DynamicRoleModelNode *src, DynamicRoleModelNode *target);
 
 private:
     QQmlListModel *m_owner;
@@ -105,7 +105,7 @@ public:
     int m_elementIndex;
 
     void updateValues();
-    void updateValues(const QVector<int> &roles);
+    void updateValues(const QList<int> &roles);
 
     bool initialized() const { return m_initialized; }
 
@@ -224,7 +224,7 @@ private:
 
     int currentBlock;
     int currentBlockOffset;
-    QVector<Role *> roles;
+    QList<Role *> roles;
     QStringHash<Role *> roleHash;
 };
 
@@ -262,7 +262,7 @@ public:
     ListElement(int existingUid);
     ~ListElement();
 
-    static QVector<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
+    static QList<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
 
 private:
 
@@ -367,13 +367,13 @@ public:
 
     enum class SetElement {WasJustInserted, IsCurrentlyUpdated};
 
-    void set(int elementIndex, QV4::Object *object, QVector<int> *roles);
+    void set(int elementIndex, QV4::Object *object, QList<int> *roles);
     void set(int elementIndex, QV4::Object *object, SetElement reason = SetElement::IsCurrentlyUpdated);
 
     int append(QV4::Object *object);
     void insert(int elementIndex, QV4::Object *object);
 
-    Q_REQUIRED_RESULT QVector<std::function<void()>> remove(int index, int count);
+    Q_REQUIRED_RESULT QList<std::function<void()>> remove(int index, int count);
 
     int appendElement();
     void insertElement(int index);
@@ -396,7 +396,7 @@ private:
         ListElement *target = nullptr;
         int srcIndex = -1;
         int targetIndex = -1;
-        QVector<int> changedRoles;
+        QList<int> changedRoles;
     };
 
     void newElement(int index);

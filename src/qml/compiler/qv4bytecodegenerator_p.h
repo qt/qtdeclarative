@@ -294,8 +294,8 @@ private:
     void packInstruction(I &i);
     void adjustJumpOffsets();
 
-    QVector<I> instructions;
-    QVector<int> labels;
+    QList<I> instructions;
+    QList<int> labels;
     ExceptionHandler *currentExceptionHandler = nullptr;
     int regCount = 0;
 public:

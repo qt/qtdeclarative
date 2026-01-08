@@ -124,8 +124,8 @@ public:
         virtual QString stringAt(int) const { return QString(); }
 
         QQmlRefPointer<QQmlImports> m_importCache;
-        QVector<PendingImportPtr> m_unresolvedImports;
-        QVector<QQmlRefPointer<QQmlQmldirData>> m_qmldirs;
+        QList<PendingImportPtr> m_unresolvedImports;
+        QList<QQmlRefPointer<QQmlQmldirData>> m_qmldirs;
         QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;
     };
 

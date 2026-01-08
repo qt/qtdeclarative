@@ -3,7 +3,7 @@
 
 #include <qpa/qplatformnativeinterface.h>
 #include <QtGui/QGuiApplication>
-#include <QtCore/QVector>
+#include <QtCore/QList>
 #include <QtCore/QDebug>
 
 #include "qopenvgcontext_p.h"
@@ -89,7 +89,7 @@ void QOpenVGContext::getConfigs()
     EGLint configsAvailable = 0;
     eglGetConfigs(m_display, 0, 0, &configsAvailable);
 
-    QVector<EGLConfig> configs(configsAvailable);
+    QList<EGLConfig> configs(configsAvailable);
     eglGetConfigs(m_display, configs.data(), configs.size(), &configsAvailable);
 
     for (EGLConfig config : configs) {

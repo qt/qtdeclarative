@@ -74,7 +74,7 @@ QJSValue QuickTestUtil::callerFile(int frameIndex) const
     QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Scope scope(v4);
 
-    QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+    QList<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
     return (stack.size() > frameIndex + 1)
             ? QJSValuePrivate::fromReturnedValue(
                   v4->newString(stack.at(frameIndex + 1).source)->asReturnedValue())
@@ -86,7 +86,7 @@ int QuickTestUtil::callerLine(int frameIndex) const
     QQmlEngine *engine = qmlEngine(this);
     QV4::ExecutionEngine *v4 = engine->handle();
 
-    QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
+    QList<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
     if (stack.size() > frameIndex + 1)
         return qAbs(stack.at(frameIndex + 1).line);
     return -1;

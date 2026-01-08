@@ -79,7 +79,7 @@ public:
     }
 
     QPointer<QQmlInstanceModel> model;
-    QVector<QPointer<QObject>> objects;
+    QList<QPointer<QObject>> objects;
     QQmlComponent *delegate = nullptr;
     int requestedIndex = -1;
     bool componentComplete:1;

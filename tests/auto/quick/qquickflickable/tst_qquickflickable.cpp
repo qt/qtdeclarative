@@ -70,7 +70,7 @@ public:
     int touchUpdates;
     int touchReleases;
     int ungrabs;
-    QVector<QEventPoint::State> touchPointStates;
+    QList<QEventPoint::State> touchPointStates;
 
 protected:
     void touchEvent(QTouchEvent *ev) override

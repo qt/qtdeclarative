@@ -60,7 +60,7 @@ public:
                 const QList<QQmlDelegateModelItem *> &,
                 int,
                 int,
-                const QVector<int> &) const { return false; }
+                const QList<int> &) const { return false; }
         virtual void replaceWatchedRoles(
                 QQmlAdaptorModel &,
                 const QList<QByteArray> &,
@@ -132,7 +132,7 @@ public:
             const QList<QQmlDelegateModelItem *> &items,
             int index,
             int count,
-            const QVector<int> &roles) const {
+            const QList<int> &roles) const {
         return accessors->notify(*this, items, index, count, roles); }
     inline void replaceWatchedRoles(
             const QList<QByteArray> &oldRoles, const QList<QByteArray> &newRoles) {

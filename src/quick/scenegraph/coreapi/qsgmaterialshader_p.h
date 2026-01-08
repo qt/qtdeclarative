@@ -50,7 +50,7 @@ public:
         ShaderStageData(const QShader &shader) : shader(shader) { }
         QShader shader;
         QShader::Variant shaderVariant = QShader::StandardShader;
-        QVector<int> vertexInputLocations; // excluding rewriter-inserted ones
+        QList<int> vertexInputLocations; // excluding rewriter-inserted ones
         int qt_order_attrib_location = -1; // rewriter-inserted
     };
     QHash<QShader::Stage, ShaderStageData> shaders;

@@ -68,13 +68,13 @@ struct Class {
 
     uint nameIndex;
     uint constructorIndex = UINT_MAX;
-    QVector<Method> staticMethods;
-    QVector<Method> methods;
+    QList<Method> staticMethods;
+    QList<Method> methods;
 };
 
 struct TemplateObject {
-    QVector<uint> strings;
-    QVector<uint> rawStrings;
+    QList<uint> strings;
+    QList<uint> rawStrings;
     bool operator==(const TemplateObject &other) {
         return strings == other.strings && rawStrings == other.rawStrings;
     }
@@ -115,18 +115,18 @@ struct Module {
     QHash<QQmlJS::AST::Node *, Context *> contextMap;
     QList<Context *> functions;
     QList<Context *> blocks;
-    QVector<Class> classes;
-    QVector<TemplateObject> templateObjects;
+    QList<Class> classes;
+    QList<TemplateObject> templateObjects;
     Context *rootContext;
     QString fileName;
     QString finalUrl;
     QDateTime sourceTimeStamp;
     uint unitFlags = 0; // flags merged into CompiledData::Unit::flags
     bool debugMode = false;
-    QVector<ExportEntry> localExportEntries;
-    QVector<ExportEntry> indirectExportEntries;
-    QVector<ExportEntry> starExportEntries;
-    QVector<ImportEntry> importEntries;
+    QList<ExportEntry> localExportEntries;
+    QList<ExportEntry> indirectExportEntries;
+    QList<ExportEntry> starExportEntries;
+    QList<ImportEntry> importEntries;
     QStringList moduleRequests;
 };
 
@@ -155,7 +155,7 @@ struct Context {
             quint32 offset;
             QQmlJS::SourceLocation location;
         };
-        QVector<Entry> entries;
+        QList<Entry> entries;
     };
 
     struct Member {
@@ -179,14 +179,14 @@ struct Context {
     QQmlJS::AST::Type *returnType = nullptr;
     QStringList locals;
     QStringList moduleRequests;
-    QVector<ImportEntry> importEntries;
-    QVector<ExportEntry> exportEntries;
+    QList<ImportEntry> importEntries;
+    QList<ExportEntry> exportEntries;
     QString localNameForDefaultExport;
-    QVector<Context *> nestedContexts;
+    QList<Context *> nestedContexts;
 
     ControlFlow *controlFlow = nullptr;
     QByteArray code;
-    QVector<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumberMapping;
+    QList<CompiledData::CodeOffsetToLineAndStatement> lineAndStatementNumberMapping;
     std::unique_ptr<SourceLocationTable> sourceLocationTable;
     std::vector<unsigned> labelInfo;
 

@@ -42,7 +42,7 @@ QSGSoftwareRenderableNode *QSGAbstractSoftwareRenderer::renderableNode(QSGNode *
 }
 
 // Used by GammaRay
-const QVector<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderableNodes() const
+const QList<QSGSoftwareRenderableNode*> &QSGAbstractSoftwareRenderer::renderableNodes() const
 {
     return m_renderableNodes;
 }

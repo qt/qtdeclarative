@@ -50,7 +50,7 @@ struct RequiredPropertyInfo
     QString propertyName;
     QUrl fileUrl;
     QV4::CompiledData::Location location;
-    QVector<AliasToRequiredInfo> aliasesToRequired;
+    QList<AliasToRequiredInfo> aliasesToRequired;
 };
 
 struct RequiredPropertyKey

@@ -205,11 +205,11 @@ void tst_PointHandler::simultaneousMultiTouch()
     QList<QQuickPointHandler *> handlers = window->rootObject()->findChildren<QQuickPointHandler *>();
     QCOMPARE(handlers.size(), 3);
 
-    QVector<QSignalSpy*> activeSpies;
-    QVector<QSignalSpy*> pointSpies;
-    QVector<QSignalSpy*> translationSpies;
-    QVector<QPoint> points{{100,100}, {200, 200}, {100, 300}};
-    QVector<QPoint> pressPoints = points;
+    QList<QSignalSpy*> activeSpies;
+    QList<QSignalSpy*> pointSpies;
+    QList<QSignalSpy*> translationSpies;
+    QList<QPoint> points{{100,100}, {200, 200}, {100, 300}};
+    QList<QPoint> pressPoints = points;
     for (auto h : handlers) {
         activeSpies << new QSignalSpy(h, SIGNAL(activeChanged()));
         pointSpies << new QSignalSpy(h, SIGNAL(pointChanged()));
@@ -218,7 +218,7 @@ void tst_PointHandler::simultaneousMultiTouch()
 
     QTest::touchEvent(window, touchscreen.get()).press(1, points[0], window).press(2, points[1], window).press(3, points[2], window);
     QQuickTouchUtils::flush(window);
-    QVector<int> pointIndexPerHandler;
+    QList<int> pointIndexPerHandler;
     int i = 0;
     for (auto h : handlers) {
         QTRY_COMPARE(h->active(), true);

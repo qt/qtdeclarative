@@ -408,7 +408,7 @@ Heap::Module *ExecutableCompilationUnit::instantiate()
 }
 
 const Value *ExecutableCompilationUnit::resolveExportRecursively(
-        QV4::String *exportName, QVector<ResolveSetEntry> *resolveSet) const
+        QV4::String *exportName, QList<ResolveSetEntry> *resolveSet) const
 {
     if (!module())
         return nullptr;
@@ -487,7 +487,7 @@ const CompiledData::ExportEntry *ExecutableCompilationUnit::lookupNameInExportTa
 }
 
 void ExecutableCompilationUnit::getExportedNamesRecursively(
-        QStringList *names, QVector<const ExecutableCompilationUnit*> *exportNameSet,
+        QStringList *names, QList<const ExecutableCompilationUnit*> *exportNameSet,
         bool includeDefaultExport) const
 {
     if (exportNameSet->contains(this))

@@ -57,7 +57,7 @@ public:
     QSGRhiTextureGlyphCache *rhiGlyphCache() const;
 
     void populate(const QPointF &position,
-                  const QVector<quint32> &glyphIndexes, const QVector<QPointF> &glyphPositions,
+                  const QList<quint32> &glyphIndexes, const QList<QPointF> &glyphPositions,
                   QSGGeometry *geometry, QRectF *boundingRect, QPointF *baseLine,
                   const QMargins &margins = QMargins(0, 0, 0, 0));
 

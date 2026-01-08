@@ -54,7 +54,7 @@ protected:
     QRect backgroundRect();
     // only known after calling optimizeRenderList()
     bool isOpaque() const { return m_isOpaque; }
-    const QVector<QSGSoftwareRenderableNode*> &renderableNodes() const;
+    const QList<QSGSoftwareRenderableNode*> &renderableNodes() const;
 
 private:
     void nodeAdded(QSGNode *node);
@@ -65,7 +65,7 @@ private:
     void nodeOpacityUpdated(QSGNode *node);
 
     QHash<QSGNode*, QSGSoftwareRenderableNode*> m_nodes;
-    QVector<QSGSoftwareRenderableNode*> m_renderableNodes;
+    QList<QSGSoftwareRenderableNode*> m_renderableNodes;
 
     QSGSimpleRectNode *m_background;
 

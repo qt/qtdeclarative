@@ -26,7 +26,7 @@ private slots:
     void testQproperty();
 
 private:
-    bool findProperties(const QVector<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value);
+    bool findProperties(const QList<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value);
 };
 
 tst_bindingdependencyapi::tst_bindingdependencyapi()
@@ -127,7 +127,7 @@ void tst_bindingdependencyapi::testSingleDep()
     QCOMPARE(dependency, QQmlProperty(referencedObject, "labelText"));
 }
 
-bool tst_bindingdependencyapi::findProperties(const QVector<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value)
+bool tst_bindingdependencyapi::findProperties(const QList<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value)
 {
     auto dep = std::find_if(properties.cbegin(), properties.cend(), [&](const QQmlProperty &dep) {
         return dep.object() == obj

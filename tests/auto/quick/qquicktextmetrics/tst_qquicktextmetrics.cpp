@@ -58,7 +58,7 @@ void tst_QQuickTextMetrics::functionsWithArguments_data()
             << QString::fromLatin1("@@@@@@@")
             << QString::fromLatin1("Hello");
 
-    QVector<Qt::TextElideMode> elideModes;
+    QList<Qt::TextElideMode> elideModes;
     elideModes << Qt::ElideLeft << Qt::ElideMiddle << Qt::ElideRight << Qt::ElideNone;
 
     for (int stringIndex = 0; stringIndex < strings.size(); ++stringIndex) {

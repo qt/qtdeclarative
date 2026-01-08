@@ -131,7 +131,7 @@ private:
     QQmlDelegateModelItem *resolveModelItem(int index);
     void destroyModelItem(QQmlDelegateModelItem *modelItem, DestructionMode mode);
 
-    void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
+    void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QList<int> &roles);
     void modelAboutToBeResetCallback();
     void forceSetModel(const QVariant &model);
 

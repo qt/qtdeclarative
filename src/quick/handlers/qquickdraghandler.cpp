@@ -206,7 +206,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
         bool allOverThreshold = QQuickDeliveryAgentPrivate::isTouchEvent(event) ?
                 static_cast<QTouchEvent *>(event)->touchPointStates() != QEventPoint::Released :
                 !event->isEndEvent();
-        QVector<QEventPoint> chosenPoints;
+        QList<QEventPoint> chosenPoints;
 
         if (event->isBeginEvent())
             m_pressedInsideTarget = target() && currentPoints().size() > 0;

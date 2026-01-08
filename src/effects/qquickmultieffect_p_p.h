@@ -147,7 +147,7 @@ private:
     QGfxSourceProxyME *m_shaderSource = nullptr;
     QQuickShaderEffect *m_shaderEffect = nullptr;
     QQuickShaderEffectSource *m_dummyShaderSource = nullptr;
-    QVector<QQuickShaderEffect *> m_blurEffects;
+    QList<QQuickShaderEffect *> m_blurEffects;
     bool m_autoPaddingEnabled = true;
     QRectF m_paddingRect;
     qreal m_brightness = 0.0;

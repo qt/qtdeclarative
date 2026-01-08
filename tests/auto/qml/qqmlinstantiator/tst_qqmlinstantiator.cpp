@@ -231,7 +231,7 @@ void tst_qqmlinstantiator::createAndRemove()
         qobject_cast<QQmlInstantiator*>(rootObject->findChild<QObject*>("instantiator1"));
     QVERIFY(instantiator != nullptr);
     model->drop(1);
-    QVector<QString> names;
+    QList<QString> names;
     names << "Beta" << "Gamma" << "Delta";
     for (int i=0; i<3; i++) {
         QObject *object = instantiator->objectAt(i);

@@ -274,7 +274,7 @@ protected:
 private:
 
     // List of QQmlDataBlob's that I am waiting for to complete.
-    QVector<QQmlRefPointer<QQmlDataBlob>> m_waitingFor;
+    QList<QQmlRefPointer<QQmlDataBlob>> m_waitingFor;
 
     int m_redirectCount:30;
     bool m_inCallback:1;

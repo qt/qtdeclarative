@@ -178,7 +178,7 @@ public:
 
 public:
     mutable QPointer<QObject> autoDefaultButton;
-    static  QVector<QPointer<QObject> > scrollBars;
+    static  QList<QPointer<QObject> > scrollBars;
 
     mutable QPointer<QQuickItem> focusWidget; // TODO: rename to focusItem
     mutable NSView *backingStoreNSView;

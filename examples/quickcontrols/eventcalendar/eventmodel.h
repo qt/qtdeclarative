@@ -50,7 +50,7 @@ private:
 
     SqlEventDatabase *m_eventDatabase = nullptr;
     QDate m_date;
-    QVector<Event> m_events;
+    QList<Event> m_events;
 };
 
 #endif // CONTACTMODEL_H

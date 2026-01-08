@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 QSGOpenVGNodeVisitor::QSGOpenVGNodeVisitor()
 {
     //Store the current matrix state
-    QVector<VGfloat> matrix(9);
+    QList<VGfloat> matrix(9);
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
     vgGetMatrix(matrix.data());
 
@@ -35,7 +35,7 @@ QSGOpenVGNodeVisitor::QSGOpenVGNodeVisitor()
 
 bool QSGOpenVGNodeVisitor::visit(QSGTransformNode *node)
 {
-    const QVector<float> matrixData = { node->matrix().constData()[0], node->matrix().constData()[1], node->matrix().constData()[3],
+    const QList<float> matrixData = { node->matrix().constData()[0], node->matrix().constData()[1], node->matrix().constData()[3],
                                         node->matrix().constData()[4], node->matrix().constData()[5], node->matrix().constData()[7],
                                         node->matrix().constData()[12], node->matrix().constData()[13], node->matrix().constData()[15] };
     const QOpenVGMatrix matrix2d(matrixData.constData());
@@ -213,7 +213,7 @@ VGPath QSGOpenVGNodeVisitor::generateClipPath(const QRectF &rect) const
     const QOpenVGMatrix &transform = m_transformStack.top();
 
     // Create command data
-    QVector<VGfloat> coordinates(8);
+    QList<VGfloat> coordinates(8);
     const QPointF topLeft = transform.map(rect.topLeft());
     const QPointF topRight = transform.map(rect.topRight());
     const QPointF bottomLeft = transform.map(rect.bottomLeft());

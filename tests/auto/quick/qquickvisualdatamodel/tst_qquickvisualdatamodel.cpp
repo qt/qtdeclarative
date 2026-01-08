@@ -69,7 +69,7 @@ public:
             return -1;
         }
         Branch *parent;
-        QVector<Node> children;
+        QList<Node> children;
 
     };
 
@@ -1210,10 +1210,10 @@ void tst_qquickvisualdatamodel::watchedRoles()
     emit model.dataChanged(model.index(0), model.index(4));
     QCOMPARE(spy.size(), 0);
 
-    emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Name);
+    emit model.dataChanged(model.index(0), model.index(4), QList<int>() << QaimModel::Name);
     QCOMPARE(spy.size(), 0);
 
-    emit model.dataChanged(model.index(0), model.index(4), QVector<int>() << QaimModel::Number);
+    emit model.dataChanged(model.index(0), model.index(4), QList<int>() << QaimModel::Number);
     QCOMPARE(spy.size(), 0);
 
     vdm->setWatchedRoles(QList<QByteArray>() << "name" << "dummy");
@@ -1224,13 +1224,13 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
-    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    emit model.dataChanged(model.index(1), model.index(6), QList<int>() << QaimModel::Name);
     QCOMPARE(spy.size(), 2);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
-    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    emit model.dataChanged(model.index(8), model.index(8), QList<int>() << QaimModel::Number);
     QCOMPARE(spy.size(), 2);
 
     vdm->setWatchedRoles(QList<QByteArray>() << "number" << "dummy");
@@ -1241,10 +1241,10 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
-    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    emit model.dataChanged(model.index(1), model.index(6), QList<int>() << QaimModel::Name);
     QCOMPARE(spy.size(), 3);
 
-    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    emit model.dataChanged(model.index(8), model.index(8), QList<int>() << QaimModel::Number);
     QCOMPARE(spy.size(), 4);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
@@ -1258,13 +1258,13 @@ void tst_qquickvisualdatamodel::watchedRoles()
     QCOMPARE(changeSet.changes().at(0).index, 0);
     QCOMPARE(changeSet.changes().at(0).count, 5);
 
-    emit model.dataChanged(model.index(1), model.index(6), QVector<int>() << QaimModel::Name);
+    emit model.dataChanged(model.index(1), model.index(6), QList<int>() << QaimModel::Name);
     QCOMPARE(spy.size(), 6);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 1);
     QCOMPARE(changeSet.changes().at(0).count, 6);
 
-    emit model.dataChanged(model.index(8), model.index(8), QVector<int>() << QaimModel::Number);
+    emit model.dataChanged(model.index(8), model.index(8), QList<int>() << QaimModel::Number);
     QCOMPARE(spy.size(), 7);
     changeSet = spy.last().at(0).value<QQmlChangeSet>();
     QCOMPARE(changeSet.changes().at(0).index, 8);
@@ -4453,7 +4453,7 @@ public:
     }
 
 private:
-    QVector<QSharedPointer<ComponentEntity>> mContents;
+    QList<QSharedPointer<ComponentEntity>> mContents;
 };
 
 

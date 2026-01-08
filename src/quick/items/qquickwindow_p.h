@@ -192,7 +192,7 @@ public:
     QQuickItem *dirtyItemList;
     QList<QSGNode *> cleanupNodeList;
 
-    QVector<QQuickItem *> itemsToPolish;
+    QList<QQuickItem *> itemsToPolish;
 
     qreal lastReportedItemDevicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
