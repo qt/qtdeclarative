@@ -111,7 +111,7 @@ void tst_QQuickAccessible::init()
 
 void tst_QQuickAccessible::cleanup()
 {
-    const EventList list = QTestAccessibility::events();
+    const auto list = QTestAccessibility::events();
     if (!list.isEmpty()) {
         qWarning().noquote() << list.size()
                              << "accessibility event(s) were not handled in testfunction '"
