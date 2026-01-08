@@ -350,6 +350,27 @@ void QQuickHoverHandler::setHovered(bool hovered)
     This property is not used in HoverHandler.
 */
 
+/*!
+    \qmlproperty bool QtQuick::HoverHandler::enabled
+
+    If a HoverHandler is disabled, it will reject all events
+    and no signals will be emitted.
+
+    If a HoverHandler's \l parent is \l {Item::enabled}{disabled}, the
+    HoverHandler continues to react to hover events by default. This is because
+    hover feedback effects and tooltips may be useful even when a control is
+    disabled. If you want to disable the HoverHandler when its parent is
+    disabled, you can add a binding:
+
+    \qml
+    Item {
+        HoverHandler {
+            enabled: parent.enabled
+        }
+    }
+    \endqml
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qquickhoverhandler_p.cpp"
