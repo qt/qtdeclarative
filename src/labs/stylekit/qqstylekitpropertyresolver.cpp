@@ -490,6 +490,11 @@ QVariant QQStyleKitPropertyResolver::readProperty(
      * result in calls to writeStyleProperty(). */
     style->syncPaletteFromReader(styleReader);
 
+    /* Cache the state of the style reader to avoid rebuilding the same helper
+     * structures on subsequent reads. In practice, a single style reader
+     * typically processes many properties in sequence rather than just one. */
+    cacheReaderState(styleReader->controlState());
+
     const QQStyleKitExtendableControlType exactType = styleReader->type();
     const QList<QQStyleKitExtendableControlType> baseTypes = baseTypesForType(exactType);
 
@@ -615,10 +620,7 @@ QVariant QQStyleKitPropertyResolver::readStyleProperty(
                 return value;
         }
 
-        style->syncPaletteFromReader(styleReader);
-        cacheReaderState(styleReader->controlState());
-        const QVariant value = readProperty(ids, styleReader, style);
-        return value;
+        return readProperty(ids, styleReader, style);
     }
 
     Q_UNREACHABLE();
