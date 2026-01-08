@@ -65,7 +65,8 @@ depends += \
     qtcmake \
     qtquickeffectmaker \
     qtlocation \
-    qtmultimedia
+    qtmultimedia \
+    qtgraphicaleffects5compat
 
 {headerdirs,sourcedirs} += \
     .. \

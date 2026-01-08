@@ -32,13 +32,13 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \ingroup qtquick-effects
     \brief Applies post-processing effect to an item.
 
-    The MultiEffect type, the successor to the deprecated Qt Graphical Effects
-    from Qt 5, applies a post-processing effect to the \l source item. Compared
-    to the Qt Graphical Effects module, MultiEffect combines multiple
-    effects (blur, shadow, colorization etc.) into a single item and shader
-    which makes it better for multiple effects. There are several shader
-    variations and the most optimal one gets selected based on the features
-    used.
+    The MultiEffect type, the successor to the \l{Qt 5 Compatibility APIs: Graphical Effects}{Qt Graphical Effects}
+    from Qt 5, applies a post-processing effect to the \l source item. In contrast to the
+    \l{Qt 5 Compatibility APIs: Graphical Effects}{Qt Graphical Effects} module, MultiEffect makes
+    it possible to combine multiple effects (blur, shadow, colorization etc.) into a single item and
+    shader. You can use \l{MultiEffect} if you only need a single effect at no additional overhead,
+    but you can also use it to apply multiple effects to an item without the cost of multiple render
+    passes.
 
     MultiEffect is designed specifically for most common effects and can be easily animated.
     If the MultiEffect doesn't contain the effect you need, consider implementing a custom
