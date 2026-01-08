@@ -587,10 +587,17 @@ bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
 }
 
 /*!
-     \qmlproperty bool QtQuick::PointerHandler::enabled
+    \qmlproperty bool QtQuick::PointerHandler::enabled
 
-     If a PointerHandler is disabled, it will reject all events
-     and no signals will be emitted.
+    If a PointerHandler is disabled, it will reject all events
+    and no signals will be emitted.
+
+    If a PointerHandler's \l parent is \l {Item::enabled}{disabled},
+    the handler will also be effectively disabled, even when the \c enabled
+    property remains \c true.
+
+    \note HoverHandler behaves differently: see the documentation of its
+    \l {HoverHandler::}{enabled} property for more information.
 */
 bool QQuickPointerHandler::enabled() const
 {
