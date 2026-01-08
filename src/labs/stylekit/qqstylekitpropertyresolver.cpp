@@ -669,10 +669,10 @@ bool QQStyleKitPropertyResolver::writeStyleProperty(
              * When later reading a property via propagation, we can skip that control entirely
              * if it has no stored values corresponding to the state requested by the StyleKitReader. */
             control->m_writtenStates |= nestedState;
-            /* Optimization: Track which properties a control’s subclass (style, theme, or
-             * variation) defines values for, and for which states. When reading a property
-             * later, we can skip the style/theme/variation entirely if it has no stored
-             * values for it, or if none match the state requested by the StyleKitReader. */
+            /* Optimization: Track which properties a style, theme, or variation defines
+             * values for, and for which states. When reading a property later, we can skip
+             * the style/theme/variation entirely if it has no stored values for it, or if
+             * none match the state requested by the StyleKitReader. */
             QQStyleKitControls *controls = control->controls();
             const QQSK::State alreadyWrittenStates = controls->m_writtenPropertyPaths[propertyPathId.pathId()];
             controls->m_writtenPropertyPaths[propertyPathId.pathId()] = alreadyWrittenStates | nestedState;
