@@ -2247,6 +2247,15 @@ static bool callArrowFunction(
     Q_UNREACHABLE_RETURN(false);
 }
 
+static void throwIsNotAFunctionError(
+        const AOTCompiledContext *aotContext, QV4::Lookup *lookup, const QString &object)
+{
+    aotContext->engine->handle()->throwTypeError(
+            QStringLiteral("Property '%1' of object %2 is not a function").arg(
+                    aotContext->compilationUnit->runtimeStrings[lookup->nameIndex]->toQString(),
+                    object));
+};
+
 bool AOTCompiledContext::callQmlContextPropertyLookup(uint index, void **args, int argc) const
 {
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
@@ -2254,17 +2263,18 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(uint index, void **args, i
     if (lookup->call == QV4::Lookup::Call::ContextGetterScopeObjectMethod)
         return callQObjectMethod(engine->handle(), lookup, qmlScopeObject, args, argc);
 
-    const auto doCall = [&](auto &&call) {
+    if (lookup->call == QV4::Lookup::Call::ContextGetterScopeObjectProperty) {
         QV4::Scope scope(engine->handle());
         QV4::ScopedValue undefined(scope);
         QV4::Scoped<QV4::ArrowFunction> function(
                 scope, lookup->contextGetter(scope.engine, undefined));
-        Q_ASSERT(function);
-        return call(scope.engine, function, qmlScopeObject, args, argc);
-    };
+        if (function)
+            return callArrowFunction(scope.engine, function, qmlScopeObject, args, argc);
 
-    if (lookup->call == QV4::Lookup::Call::ContextGetterScopeObjectProperty)
-        return doCall(&callArrowFunction);
+        QV4::Scoped<QV4::QObjectWrapper> object(
+                scope, QV4::QObjectWrapper::wrap(scope.engine, qmlScopeObject));
+        throwIsNotAFunctionError(this, lookup, object->toQStringNoThrow());
+    }
 
     return false;
 }
@@ -2344,13 +2354,7 @@ void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index, int relati
 
     QV4::Scoped<QV4::QObjectWrapper> object(
             scope, QV4::QObjectWrapper::wrap(scope.engine, qmlScopeObject));
-    scope.engine->throwTypeError(
-            QStringLiteral("Property '%1' of object %2 is not a function").arg(
-                    compilationUnit->runtimeStrings[lookup->nameIndex]->toQString(),
-                    object->toQStringNoThrow()));
-
-    lookup->releasePropertyCache();
-    lookup->call = QV4::Lookup::Call::ContextGetterGeneric;
+    throwIsNotAFunctionError(this, lookup, object->toQStringNoThrow());
 }
 
 bool AOTCompiledContext::loadContextIdLookup(uint index, void *target) const
@@ -2447,10 +2451,10 @@ bool AOTCompiledContext::callObjectPropertyLookup(
         // The getter mustn't touch the asVariant bit
         Q_ASSERT(!lookup->asVariant);
 
-        // If the method can't be shadowed, it has to stay the same.
-        Q_ASSERT(function);
+        if (function)
+            return callArrowFunction(scope.engine, function, object, args, argc);
 
-        return callArrowFunction(scope.engine, function, qmlScopeObject, args, argc);
+        throwIsNotAFunctionError(this, lookup, thisObject->toQStringNoThrow());
     }
     default:
         break;
@@ -2469,16 +2473,10 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
 
-    const auto throwInvalidObjectError = [&](const QString &object) {
-        scope.engine->throwTypeError(
-                QStringLiteral("Property '%1' of object %2 is not a function").arg(
-                        compilationUnit->runtimeStrings[lookup->nameIndex]->toQString(), object));
-    };
-
     const auto *ddata = QQmlData::get(object, false);
     if (ddata && ddata->hasVMEMetaObject && ddata->jsWrapper.isNullOrUndefined()) {
         // We cannot lookup functions on an object with VME metaobject but no QObjectWrapper
-        throwInvalidObjectError(QStringLiteral("[object Object]"));
+        throwIsNotAFunctionError(this, lookup, QStringLiteral("[object Object]"));
         return;
     }
 
@@ -2496,7 +2494,7 @@ void AOTCompiledContext::initCallObjectPropertyLookupAsVariant(uint index, QObje
         return;
     }
 
-    throwInvalidObjectError(thisObject->toQStringNoThrow());
+    throwIsNotAFunctionError(this, lookup, thisObject->toQStringNoThrow());
 }
 
 void AOTCompiledContext::initCallObjectPropertyLookup(
@@ -2510,16 +2508,10 @@ void AOTCompiledContext::initCallObjectPropertyLookup(
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
 
-    const auto throwInvalidObjectError = [&]() {
-        scope.engine->throwTypeError(
-                QStringLiteral("Property '%1' of object [object Object] is not a function")
-                        .arg(compilationUnit->runtimeStrings[lookup->nameIndex]->toQString()));
-    };
-
     const auto *ddata = QQmlData::get(object, false);
     if (ddata && ddata->hasVMEMetaObject && ddata->jsWrapper.isNullOrUndefined()) {
         // We cannot lookup functions on an object with VME metaobject but no QObjectWrapper
-        throwInvalidObjectError();
+        throwIsNotAFunctionError(this, lookup, QStringLiteral("[object Object]"));
         return;
     }
 
@@ -2538,7 +2530,7 @@ void AOTCompiledContext::initCallObjectPropertyLookup(
         return;
     }
 
-    throwInvalidObjectError();
+    throwIsNotAFunctionError(this, lookup, thisObject->toQStringNoThrow());
 }
 
 bool AOTCompiledContext::loadGlobalLookup(uint index, void *target) const
