@@ -688,6 +688,14 @@ void QQmlJSImportVisitor::setAllBindings()
         if (!checkTypeResolved(type))
             continue;
 
+        // create() expects that the types are fully resolved
+        // TODO: Ideally, this extra isFullyResolved shouldn't be needed.
+        //  and should handled inside checkTypeResolved above but that function
+        //  also contains checkCustomParser(type) for whatever reason.
+        // So if a type is not fully resolved but also has a custom parser,
+        // we would still call it->create without types being fully resolved.
+        if (!type->isFullyResolved())
+            continue;
         auto binding = it->create();
         if (!binding.isValid())
             continue;

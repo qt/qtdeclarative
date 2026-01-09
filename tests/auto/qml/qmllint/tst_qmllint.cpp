@@ -158,6 +158,8 @@ private Q_SLOTS:
     void shadow_data();
     void shadow();
 
+    void crashes();
+
 #if QT_CONFIG(library)
     void hasTestPlugin();
     void testPlugin_data();
@@ -3996,6 +3998,21 @@ void TestQmllint::noSettingsPollution()
 
     run({ aFile, bFile });
     run({ bFile, aFile });
+}
+
+void TestQmllint::crashes()
+{
+    CallQmllintOptions options;
+    CallQmllintChecks checks;
+    const QJsonArray warnings = callQmllint(testFile("propertyChangesCrash.qml"), options, checks);
+
+    QVERIFY(warnings.size() <= 2);
+
+    checkResult(
+            warnings,
+            Result{ { Message{
+                              u"FooBar was not found. Did you add all imports and dependencies?"_s },
+                      Message{ u"Cannot assign to non-existent default property"_s } } });
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)
