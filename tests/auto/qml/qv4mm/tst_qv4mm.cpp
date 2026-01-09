@@ -69,6 +69,8 @@ private slots:
     void dontCrashOnScopedStackFrame();
     void sweepTriggeringChunkAllocation_data();
     void sweepTriggeringChunkAllocation();
+
+    void partitionGrowingContainer();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -1308,6 +1310,86 @@ void tst_qv4mm::sweepTriggeringChunkAllocation()
     QVERIFY(!pval.isEmpty());
     QVERIFY(pval.asManaged()->inUse());
     QCOMPARE(pval.asManaged()->toQStringNoThrow(), QLatin1String("foobar"));
+
+    for (const QV4::BlockAllocator *allocator : {
+                 &engine.memoryManager->blockAllocator,
+                 &engine.memoryManager->icAllocator }) {
+        std::vector<QV4::HeapItem *> freeItems;
+        if (QV4::HeapItem *nextFree = allocator->nextFree) {
+            // nextFree has to point into some live chunk.
+            const auto it = std::find(
+                    allocator->chunks.begin(), allocator->chunks.end(), nextFree->chunk());
+            QVERIFY(it != allocator->chunks.end());
+            freeItems.push_back(nextFree);
+        }
+
+        for (int i = 0; i < QV4::BlockAllocator::NumBins; ++i) {
+            for (QV4::HeapItem *heapItem = allocator->freeBins[i];
+                    heapItem; heapItem = heapItem->freeData.next) {
+
+                // Every free list item has to be part of some live chunk.
+                auto it = std::find(
+                        allocator->chunks.cbegin(), allocator->chunks.cend(), heapItem->chunk());
+                QVERIFY(it != allocator->chunks.cend());
+                freeItems.push_back(heapItem);
+            }
+        }
+
+        // There must not be any duplicate free list items.
+        std::sort(freeItems.begin(), freeItems.end());
+        const auto it = std::unique(freeItems.begin(), freeItems.end());
+        QCOMPARE(it, freeItems.end());
+    }
+}
+
+void tst_qv4mm::partitionGrowingContainer()
+{
+    std::vector<int> prePopulated;
+    std::vector<int> growing;
+    std::vector<int> extraEntries;
+
+    for (int i = 0; i < 256; ++i) {
+        growing.push_back((i * 37) % 512);
+        extraEntries.push_back((i * 41) % 512);
+    }
+
+    prePopulated = growing;
+    prePopulated.insert(prePopulated.end(), extraEntries.begin(), extraEntries.end());
+
+    std::size_t predicateCallsPrePopulated = 0;
+    const auto it = std::partition(prePopulated.begin(), prePopulated.end(), [&](int entry) {
+        ++predicateCallsPrePopulated;
+        return entry < 256;
+    });
+
+    std::size_t predicateCallsGrowing = 0;
+    const std::size_t j = QV4::partition(growing, [&](const std::size_t index) {
+        ++predicateCallsGrowing;
+        if (index < extraEntries.size())
+            growing.push_back(extraEntries[index]);
+        return growing[index] < 256;
+    });
+
+    // We've iterated every entry exactly once, thereby adding each extraEntry exactly once.
+    // Now the sizes of the two vectors are the same.
+    QCOMPARE(predicateCallsGrowing, growing.size());
+    QCOMPARE(predicateCallsPrePopulated, prePopulated.size());
+    QCOMPARE(growing.size(), prePopulated.size());
+
+    // Since both vectors have the same entries, the partitioning point is at the same place.
+    QCOMPARE(j, it - prePopulated.begin());
+
+    // The entries before the partition point fulfill the predicate
+    for (std::size_t index = 0; index < j; ++index) {
+        QVERIFY(growing[index] < 256);
+        QVERIFY(prePopulated[index] < 256);
+    }
+
+    // The entries after the partition point don't fulfill the predicate
+    for (std::size_t index = j; index < growing.size(); ++index) {
+        QVERIFY(growing[index] >= 256);
+        QVERIFY(prePopulated[index] >= 256);
+    }
 }
 
 QTEST_MAIN(tst_qv4mm)

@@ -529,59 +529,18 @@ done:
     return m;
 }
 
-// index based version of partition to handle potential growth at the end
-template<class UnaryPred>
-qsizetype partition(std::vector<Chunk *> &container, UnaryPred p)
-{
-    std::size_t first = 0, last = container.size();
-    while (first != last && p(container.at(first)))
-        ++first;
-    // handle the case where the container has grown
-    if (last != container.size()) {
-        while (first != container.size() && p(container.at(first)))
-            ++first;
-        last = container.size();
-    }
-
-    if (first == last)
-        return first;
-
-    for (auto i = first++; i != last; ++i) {
-        if (p(container.at(i))) {
-            std::swap(container.at(i), container.at(first));
-            ++first;
-        }
-    }
-
-    // handle the case that new chunks have been added
-    auto newSize = container.size();
-    if (last != newSize) {
-        Q_ASSERT(last < newSize);
-        // must check container.size() instead of newSize, as we would
-        // still grow the container
-        for (auto i = last; i != container.size(); ++i) {
-            if (p(container.at(i))) {
-                std::swap(container.at(i), container.at(first));
-                ++first;
-            }
-        }
-    }
-
-    return first;
-}
-
 void BlockAllocator::sweep()
 {
+    const auto firstEmptyChunkPos = partition(chunks, [this](const std::size_t i) {
+        return chunks.at(i)->sweep(engine);
+    });
+    const auto firstEmptyChunk = chunks.begin() + firstEmptyChunkPos;
+
     nextFree = nullptr;
     nFree = 0;
     memset(freeBins, 0, sizeof(freeBins));
 
     usedSlotsAfterLastSweep = 0;
-
-    auto firstEmptyChunkPos = partition(chunks, [this](Chunk *c) {
-        return c->sweep(engine);
-    });
-    auto firstEmptyChunk = chunks.begin() + firstEmptyChunkPos;
 
     std::for_each(chunks.begin(), firstEmptyChunk, [this](Chunk *c) {
         c->sortIntoBins(freeBins, NumBins);

@@ -28,6 +28,56 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
+// Iterate a potentially growing container without querying the size on each iteration.
+// Return the first index where p doesn't hold, or the end of the container.
+template<typename Container, typename UnaryPred>
+typename Container::size_type reiterate(
+        Container &container, typename Container::size_type first, UnaryPred &&p)
+{
+    auto last = container.size();
+    while (first < last) {
+        do {
+            if (!p(first))
+                return first;
+        } while (++first < last);
+
+        Q_ASSERT(first == last);
+
+        // Re-fetch the container size.
+        // If the container hasn't grown, we're done since last == first, still.
+        // Otherwise, do one more round via the "while (first < last)" above.
+        last = container.size();
+    }
+
+    // Returning last here allows input of an out of range first, saving us
+    // one size check ahead of running this.
+    return last;
+}
+
+// index based version of partition to handle potential growth at the end
+template<typename Container, class UnaryPred>
+typename Container::size_type partition(Container &container, UnaryPred &&p)
+{
+    // Figure out the first entry where p doesn't hold.
+    auto first = reiterate(container, 0, p);
+
+    // Iterate the remaining entries and swap any entry where p holds
+    // to the (moving) end of the front section of the container.
+    // Any time we do that, the front section grows by 1. Therefore, the back
+    // section can only contain entries where p doesn't hold in the end.
+    reiterate(container, first + 1, [&p, &container, &first](const auto i) {
+        if (p(i)) {
+            // It's important to re-resolve container.at(i) for the std::swap.
+            // The container may have grown as result of determining p, thereby
+            // invalidating any reference to an entry taken before.
+            std::swap(container.at(i), container.at(first++));
+        }
+        return true;
+    });
+
+    return first;
+}
+
 struct GCData { virtual ~GCData(){};};
 
 struct GCIteratorStorage {
