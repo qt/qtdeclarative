@@ -151,7 +151,7 @@ namespace {
 inline bool isPathContainer(const QSvgStructureNode *node)
 {
     bool foundPath = false;
-    for (const auto *child : node->renderers()) {
+    for (const auto &child : node->renderers()) {
         switch (child->type()) {
             // nodes that shouldn't go inside Shape{}
         case QSvgNode::Switch:
@@ -193,7 +193,7 @@ inline bool isPathContainer(const QSvgStructureNode *node)
                 //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform";
                 return false;
             }
-            const QList<QSvgAbstractAnimation *> animations = child->document()->animator()->animationsForNode(child);
+            const auto animations = child->document()->animator()->animationsForNode(child.get());
             if (!animations.isEmpty()) {
                 //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform animation";
                 return false;
@@ -297,13 +297,13 @@ bool QSvgVisitorImpl::doTraversal()
     if (m_assumeTrustedSource)
         options.setFlag(QtSvg::AssumeTrustedSource);
 
-    auto *doc = QSvgDocument::load(m_svgFileName, options);
+    const auto doc = QSvgDocument::load(m_svgFileName, options);
     if (!doc) {
         qCDebug(lcQuickVectorImage) << "Not a valid Svg File : " << m_svgFileName;
         return false;
     }
 
-    QSvgVisitor::traverse(doc);
+    QSvgVisitor::traverse(doc.get());
     return true;
 }
 
