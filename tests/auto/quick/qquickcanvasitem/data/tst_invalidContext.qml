@@ -44,7 +44,11 @@ Item {
 
     TestCase {
         name: "invalidContext"
-        when: myCanvas.parent === null && myCanvas.paintContext !== null
+        when: {
+            if (Qt.platform.os === "qnx")
+                skip("This is extremely slow on QNX. See QTBUG-143312")
+            return myCanvas.parent === null && myCanvas.paintContext !== null
+        }
 
         function test_paintContextInvalid() {
             verify(myCanvas.paintContext);
