@@ -301,7 +301,7 @@ QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
     // pointer handlers, we inform the button about its pressed state from the tap
     // handler instead. This will ensure that we emit button signals like
     // pressed, clicked, and doubleClicked.
-    connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, d, tapHandler] {
+    connect(tapHandler, &QQuickTapHandler::pressedChanged, this, [this, d, tapHandler] {
         auto view = treeView();
         if (view && !view->pointerNavigationEnabled())
             return;
