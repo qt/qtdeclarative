@@ -431,7 +431,7 @@ QQuickTreeView::QQuickTreeView(QQuickItem *parent)
 
     auto tapHandler = new QQuickTapHandler(this);
     tapHandler->setAcceptedModifiers(Qt::NoModifier);
-    connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, tapHandler]{
+    connect(tapHandler, &QQuickTapHandler::doubleTapped, this, [this, tapHandler] {
         if (!pointerNavigationEnabled())
             return;
         if (editTriggers() & DoubleTapped)
