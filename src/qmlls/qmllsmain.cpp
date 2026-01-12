@@ -506,7 +506,7 @@ int qmllsMain(int argv, char *argc[])
         });
     };
     QObject::connect(r.get(), &StdinReader::eof, &app, exit);
-    QObject::connect(qmlServer.server(), &QLanguageServer::exit, exit);
+    QObject::connect(qmlServer.server(), &QLanguageServer::exit, &workerThread, exit);
 
     emit r->readNextMessage();
     workerThread.start();
