@@ -376,7 +376,7 @@ public:
         : removedAtIndex(false)
         , backwards(iEnd < iBegin)
     {
-        conn = QObject::connect(model, &QQmlInstanceModel::modelUpdated,
+        conn = QObject::connect(model, &QQmlInstanceModel::modelUpdated, model,
                 [&] (const QQmlChangeSet &changeSet, bool /*reset*/)
         {
             for (const QQmlChangeSet::Change &rem : changeSet.removes()) {

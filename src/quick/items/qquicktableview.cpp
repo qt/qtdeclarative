@@ -5121,7 +5121,7 @@ void QQuickTableViewPrivate::init()
     // being hovered/dragged. For those cases, we fall back to setting the current index
     // on tap instead. A double tap on a resize area should also revert the section size
     // back to its implicit size.
-    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, q, tapHandler] {
+    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, q, [this, q, tapHandler] {
         if (!tapHandler->isPressed())
             return;
 
@@ -5132,12 +5132,12 @@ void QQuickTableViewPrivate::init()
             handleTap(tapHandler->point());
     });
 
-    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, [this, q, tapHandler] {
+    QObject::connect(tapHandler, &QQuickTapHandler::singleTapped, q, [this, q, tapHandler] {
         if (q->isInteractive())
             handleTap(tapHandler->point());
     });
 
-    QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, [this, q, tapHandler] {
+    QObject::connect(tapHandler, &QQuickTapHandler::doubleTapped, q, [this, q, tapHandler] {
         const bool resizeRow = resizableRows && hoverHandler->m_row != -1;
         const bool resizeColumn = resizableColumns && hoverHandler->m_column != -1;
 
@@ -6808,7 +6808,7 @@ void QQuickTableView::edit(const QModelIndex &index)
     if (!d->editModel) {
         d->editModel = new QQmlTableInstanceModel(qmlContext(this));
         d->editModel->useImportVersion(d->resolveImportVersion());
-        QObject::connect(d->editModel, &QQmlInstanceModel::initItem,
+        QObject::connect(d->editModel, &QQmlInstanceModel::initItem, this,
                          [this, d] (int serializedModelIndex, QObject *object) {
             // initItemCallback will call setRequiredProperty for each required property in the
             // delegate, both for this class, but also also for any subclasses. setRequiredProperty
@@ -7122,7 +7122,7 @@ QQuickTableViewHoverHandler::QQuickTableViewHoverHandler(QQuickTableView *view)
 {
     setMargin(5);
 
-    connect(this, &QQuickHoverHandler::hoveredChanged, [this] {
+    connect(this, &QQuickHoverHandler::hoveredChanged, this, [this] {
         if (!isHoveringGrid())
             return;
         m_row = -1;
@@ -7512,7 +7512,7 @@ void QQuickTableViewSectionDragHandler::handleEventPoint(QPointerEvent *event, Q
                                 &QQuickTableViewSectionDragHandler::handleDragDropAction);
                     }
                     // Connect the timer for scroling
-                    QObject::connect(&m_scrollTimer, &QTimer::timeout, [&]{
+                    QObject::connect(&m_scrollTimer, &QTimer::timeout, this, [&]{
                         const QSizeF dist = tableViewPrivate->scrollTowardsPoint(m_dragPoint, m_step);
                         m_dragPoint.rx() += dist.width() > 0 ? m_step.width() : -m_step.width();
                         m_dragPoint.ry() += dist.height() > 0 ? m_step.height() : -m_step.height();
