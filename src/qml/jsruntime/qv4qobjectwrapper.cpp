@@ -389,18 +389,6 @@ ReturnedValue QObjectWrapper::getProperty(
     }
 }
 
-ReturnedValue QObjectWrapper::getMethodFallback(
-        ExecutionEngine *engine, Heap::Object *wrapper, QObject *qobject,
-        QV4::String *name, Flags flags)
-{
-    QQmlPropertyData local;
-    const QQmlPropertyData *property = QQmlPropertyCache::property(
-            qobject, name, engine->callingQmlContext(), &local);
-    return property
-            ? getProperty(engine, wrapper, qobject, property, flags)
-            : Encode::undefined();
-}
-
 static OptionalReturnedValue getDestroyOrToStringMethod(
         ExecutionEngine *v4, String *name, Heap::Object *qobj, bool *hasProperty = nullptr)
 {
@@ -1132,12 +1120,25 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     }
 
     if (!ddata || !ddata->propertyCache) {
-        QV4::ScopedValue result(scope, getMethodFallback(
-                engine, This->d(), qobj, name, lookup->forCall ? NoFlag : AttachMethods));
-        lookup->qobjectMethodLookup.ic.set(engine, object->internalClass());
-        if (QObjectMethod *method = result->as<QObjectMethod>())
+        QQmlPropertyData local;
+        const QQmlPropertyData *property = QQmlPropertyCache::property(
+                qobj, name, engine->callingQmlContext(), &local);
+        if (!property)
+            return Encode::undefined();
+        QV4::ScopedValue result(scope, getProperty(
+                engine, This->d(), qobj, property, lookup->forCall ? NoFlag : AttachMethods));
+        if (QObjectMethod *method = result->as<QObjectMethod>()) {
+            lookup->qobjectMethodLookup.ic.set(engine, object->internalClass());
             lookup->qobjectMethodLookup.method.set(engine, method->d());
-        lookup->call = Lookup::Call::GetterQObjectMethodFallback;
+            lookup->call = Lookup::Call::GetterQObjectMethodFallback;
+        } else {
+            lookup->qobjectFallbackLookup.metaObject = quintptr(qobj->metaObject()) + 1;
+            lookup->qobjectFallbackLookup.metaType = quintptr(property->propType().iface()) + 1;
+            lookup->qobjectFallbackLookup.coreIndex = property->coreIndex();
+            lookup->qobjectFallbackLookup.notifyIndex = property->notifyIndex();
+            lookup->qobjectFallbackLookup.isConstantOrResettable = property->isConstant() ? 1 : 0;
+            lookup->call = Lookup::Call::GetterQObjectPropertyFallback;
+        }
         return result->asReturnedValue();
     }
     const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);

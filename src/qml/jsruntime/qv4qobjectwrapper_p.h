@@ -180,10 +180,6 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
             const QQmlPropertyData *property, Flags flags);
 
-    static ReturnedValue getMethodFallback(
-            ExecutionEngine *engine, Heap::Object *wrapper, QObject *object,
-            QV4::String *name, Flags flags);
-
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
 
     template <typename ReversalFunctor> static ReturnedValue lookupPropertyGetterImpl(

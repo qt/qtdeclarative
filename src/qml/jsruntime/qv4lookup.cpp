@@ -479,9 +479,15 @@ ReturnedValue Lookup::getterFallbackMethod(Lookup *lookup, ExecutionEngine *engi
             scope,
             engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[lookup->nameIndex]);
 
+    QQmlPropertyData local;
+    const QQmlPropertyData *property = QQmlPropertyCache::property(
+            qobj, name, engine->callingQmlContext(), &local);
+    if (!property)
+        return Encode::undefined();
+
     QV4::ScopedValue result(
-            scope, QObjectWrapper::getMethodFallback(
-                           engine, This->d(), qobj, name,
+            scope, QObjectWrapper::getProperty(
+                           engine, This->d(), qobj, property,
                            lookup->forCall ? QObjectWrapper::NoFlag : QObjectWrapper::AttachMethods));
 
     // In the general case we cannot rely on the method to exist or stay the same across calls.
