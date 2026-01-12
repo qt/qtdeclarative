@@ -533,7 +533,7 @@ void Heap::ReferenceObject::connectToNotifySignal(QObject *obj, int property, QQ
     // this kind of need, and thus go for the simpler solution,
     // which can be changed later if the need arises.
     new (onDelete) QMetaObject::Connection(
-            QObject::connect(obj, &QObject::destroyed, [this](){ setDirty(true); }));
+            QObject::connect(obj, &QObject::destroyed, obj, [this](){ setDirty(true); }));
 }
 
 void Heap::ReferenceObject::connectToBindable(QObject *obj, int property, QQmlEngine *engine)
@@ -547,7 +547,7 @@ void Heap::ReferenceObject::connectToBindable(QObject *obj, int property, QQmlEn
     bindableNotifier = new QPropertyNotifier(obj->metaObject()->property(property).bindable(obj)
                                                      .addNotifier([this](){ setDirty(true); }));
     new (onDelete) QMetaObject::Connection(
-            QObject::connect(obj, &QObject::destroyed, [this]() { setDirty(true); }));
+            QObject::connect(obj, &QObject::destroyed, obj, [this]() { setDirty(true); }));
 }
 
 bool ReferenceObject::shouldConnect(Heap::ReferenceObject *ref)
