@@ -165,7 +165,8 @@ bool QQuickStackElement::load(QV4::ExecutionEngine *v4, QQuickStackView *parent)
         ownItem = true;
 
         if (component->isLoading()) {
-            QObject::connect(component, &QQmlComponent::statusChanged, [this](QQmlComponent::Status status) {
+            QObject::connect(component, &QQmlComponent::statusChanged, component,
+                             [this](QQmlComponent::Status status) {
                 if (status == QQmlComponent::Ready)
                     load(component->engine()->handle(), view);
                 else if (status == QQmlComponent::Error)

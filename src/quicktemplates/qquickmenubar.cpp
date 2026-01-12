@@ -465,7 +465,7 @@ void QQuickMenuBarPrivate::insertMenu(int index, QQuickMenu *menu, QQuickMenuBar
     auto menuPrivate = QQuickMenuPrivate::get(menu);
     menuPrivate->menuBar = q;
 
-    QObject::connect(menuBarItem, &QQuickMenuBarItem::visibleChanged, [this, menuBarItem]{
+    QObject::connect(menuBarItem, &QQuickMenuBarItem::visibleChanged, q, [this, menuBarItem]{
         syncMenuBarItemVisibilty(menuBarItem);
     });
 
@@ -968,7 +968,8 @@ void QQuickMenuBar::itemAdded(int index, QQuickItem *item)
         QObjectPrivate::connect(menuBarItem, &QQuickControl::hoveredChanged, d, &QQuickMenuBarPrivate::onItemHovered);
         QObjectPrivate::connect(menuBarItem, &QQuickMenuBarItem::triggered, d, &QQuickMenuBarPrivate::onItemTriggered);
         if (QQuickMenu *menu = menuBarItem->menu())
-            connect(menu, &QQuickPopup::aboutToHide, [this, menu]{ d_func()->onMenuAboutToHide(menu); });
+            connect(menu, &QQuickPopup::aboutToHide, this,
+                    [this, menu] { d_func()->onMenuAboutToHide(menu); });
     }
     d->updateImplicitContentSize();
     emit menusChanged();
