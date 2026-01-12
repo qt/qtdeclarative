@@ -12,7 +12,8 @@
     about an open SSL connection and to allow the application to control
     certain features of that connection.
     The sslConfiguration encapsulates QSslConfiguration object inside.
-    The sslConfiguration calls defaultSslCongiguration in ctor.
+    The sslConfiguration defaults are initialized by calling
+    \l QSslConfiguration::defaultConfiguration.
 
     \sa QSslConfiguration
 */
@@ -43,7 +44,7 @@
     configuration.
 
     The default value is the same as set by
-    \l QSslConfiguration::defaultSslConfiguration().
+    \l QSslConfiguration::defaultConfiguration().
 
     \sa QSsl::SslOptions
 */
