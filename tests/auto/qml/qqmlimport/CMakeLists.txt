@@ -32,6 +32,7 @@ file(GLOB_RECURSE test_data_glob
 list(APPEND test_data ${test_data_glob})
 
 add_subdirectory(MyStaticModule)
+add_subdirectory(MyDynamicModule)
 
 qt_internal_add_test(tst_qqmlimport
     SOURCES
@@ -44,8 +45,10 @@ qt_internal_add_test(tst_qqmlimport
         Qt::Quick
         Qt::QuickTestUtilsPrivate
         tst_qqmlimport_static_moduleplugin
+        tst_qqmlimport_dynamic_module
     TESTDATA ${test_data}
 )
+add_dependencies(tst_qqmlimport tst_qqmlimport_dynamic_moduleplugin)
 
 qt_internal_add_resource(tst_qqmlimport "preferred"
     PREFIX

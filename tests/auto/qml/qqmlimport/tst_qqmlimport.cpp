@@ -497,19 +497,22 @@ void tst_QQmlImport::singletonVersionResolution()
 void tst_QQmlImport::removeDynamicPlugin()
 {
     qmlClearTypeRegistrations();
+
     QQmlEngine engine;
+    QTest::ignoreMessage(QtWarningMsg, "Registered dynamic plugin!");
     {
         // Load something that adds a dynamic plugin
-        QQmlComponent component(&engine, testFileUrl("importQtQuickTooling.qml"));
-        // Make sure to use something other than QtTest here, since the !plugins.isEmpty()
-        // check will fail if we do.
+        QQmlComponent component(&engine, testFileUrl("importDynamicModule.qml"));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     }
     const QStringList &plugins = QQmlPluginImporter::plugins();
+
+    QTest::ignoreMessage(QtWarningMsg, "Unregistered dynamic plugin!");
     QVERIFY(!plugins.isEmpty());
     for (const QString &plugin : plugins)
         QVERIFY(QQmlPluginImporter::removePlugin(plugin));
     QVERIFY(QQmlPluginImporter::plugins().isEmpty());
+
     qmlClearTypeRegistrations();
 }
 

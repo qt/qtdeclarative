@@ -45,7 +45,10 @@ struct QmlPlugin
         const Loader &loader = std::get<Loader>(data);
         if (!loader)
             return {};
+
 #if QT_CONFIG(library)
+        if (auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance()))
+            extensionPlugin->unregisterTypes();
         if (!loader->unload())
             return loader->errorString();
 #endif
