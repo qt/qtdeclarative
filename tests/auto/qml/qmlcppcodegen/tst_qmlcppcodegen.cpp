@@ -280,6 +280,7 @@ private slots:
     void stringLength();
     void stringToByteArray();
     void structuredValueType();
+    void multiEnginePropertyCache();
     void takeNumbers();
     void takeNumbers_data();
     void testIsnan();
@@ -5792,6 +5793,26 @@ void tst_QmlCppCodegen::structuredValueType()
     WeatherModelUrl w2;
     w2.setStrings(QStringList({u"three"_s, u"two"_s, u"one"_s}));
     QCOMPARE(o->property("w2").value<WeatherModelUrl>(), w2);
+}
+
+void tst_QmlCppCodegen::multiEnginePropertyCache()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/multiEnginePropertyCache.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> o(c.create());
+    QVERIFY(o);
+
+    {
+        QJSEngine other;
+        other.newQObject(o.get());
+    }
+
+    QTest::ignoreMessage(QtDebugMsg, "close1");
+    o->setProperty("foo", 1);
+
+    QTest::ignoreMessage(QtDebugMsg, "close2");
+    o->setProperty("bar", 2);
 }
 
 void tst_QmlCppCodegen::takeNumbers()

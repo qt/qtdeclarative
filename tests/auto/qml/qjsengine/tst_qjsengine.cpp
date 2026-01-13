@@ -1116,7 +1116,7 @@ void tst_QJSEngine::newQObjectPropertyCache()
         engine.newQObject(obj.data());
         QVERIFY(QQmlData::get(obj.data())->propertyCache);
     }
-    QVERIFY(!QQmlData::get(obj.data())->propertyCache);
+    QVERIFY(QQmlData::get(obj.data())->propertyCache);
 }
 
 void tst_QJSEngine::newQMetaObject() {
