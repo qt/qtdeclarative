@@ -373,7 +373,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                             qmlInvalidLintDirective, loc);
         }
 
-        if (categories.isEmpty()) {
+        if (words.size() == 2) {
             const auto &loggerCategories = logger->categories();
             for (const auto &option : loggerCategories)
                 categories << option.id().name().toString();

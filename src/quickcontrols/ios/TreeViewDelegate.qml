@@ -80,7 +80,7 @@ T.TreeViewDelegate {
     // The edit delegate is a separate component, and doesn't need
     // to follow the same strict rules that are applied to a control.
     // qmllint disable attached-property-reuse
-    // qmllint disable controls-sanity
+    // qmllint disable QuickControlsSanity.controls-sanity
     TableView.editDelegate: FocusScope {
         width: parent.width
         height: parent.height
@@ -109,5 +109,5 @@ T.TreeViewDelegate {
         Component.onCompleted: textField.selectAll()
     }
     // qmllint enable attached-property-reuse
-    // qmllint enable controls-sanity
+    // qmllint enable QuickControlsSanity.controls-sanity
 }
