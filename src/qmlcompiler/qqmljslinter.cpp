@@ -350,6 +350,21 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
     QHash<int, QSet<QString>> enablesPerLine;
     QHash<int, QSet<QString>> oneLineDisablesPerLine;
 
+    struct PostponedWarning
+    {
+        QString message;
+        QQmlSA::LoggerWarningId category;
+        QQmlJS::SourceLocation location;
+    };
+
+    std::vector<PostponedWarning> postponedWarnings;
+    auto guard = qScopeGuard([&postponedWarnings, &logger]() {
+        // only log messages after processing the logger->ignoreWarnings() calls, so that the
+        // qmlInvalidLintDirective warnings can be disabled if needed.
+        for (const auto &warning : postponedWarnings)
+            logger->log(warning.message, warning.category, warning.location);
+    });
+
     const QString code = logger->code();
     const QStringList lines = code.split(u'\n');
     const auto loggerCategories = logger->categories();
@@ -372,9 +387,11 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
 
             if (categoryExists)
                 categories << category;
-            else
-                logger->log(u"qmllint directive on unknown category \"%1\""_s.arg(category),
-                            qmlInvalidLintDirective, loc);
+            else {
+                postponedWarnings.push_back(
+                        { u"qmllint directive on unknown category \"%1\""_s.arg(category),
+                          qmlInvalidLintDirective, loc });
+            }
         }
 
         if (words.size() == 2) {
@@ -405,8 +422,9 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command),
-                        qmlInvalidLintDirective, loc);
+            postponedWarnings.push_back(
+                    { u"Invalid qmllint directive \"%1\" provided"_s.arg(command),
+                      qmlInvalidLintDirective, loc });
         }
     }
 

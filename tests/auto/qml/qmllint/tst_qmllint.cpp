@@ -1515,6 +1515,11 @@ void TestQmllint::dirtyQmlSnippet_data()
     QTest::newRow("functionDefinitionInGroupedProperty")
             // should not crash for now, see QTBUG-142091 to get the actual warning
             << u"Item { foo { bar: Array.from((i) => (1)) } }"_s << Result{} << defaultOptions;
+    QTest::newRow("invalidLint")
+            << u"Item {} // qmllint disable ThisCategoryDoesNotExist\n"_s
+            << Result{ { { "qmllint directive on unknown category \"ThisCategoryDoesNotExist\""_L1,
+                           1, 11 } } }
+            << defaultOptions;
 
     QTest::newRow("nonRootEnum1")
             << u"Item { enum E { A, B, C } }"_s
@@ -1679,6 +1684,9 @@ void TestQmllint::cleanQmlSnippet_data()
                 << u"property int myContextProperty1: 42; property var a: myContextProperty1"_s
                 << options;
     }
+    QTest::newRow("disableInvalidLint")
+            << u" // qmllint disable ThisCategoryDoesNotExist invalid-lint-directive\n"_s
+            << defaultOptions;
     QTest::newRow("duplicateList") << u"Item {} Item {}"_s << defaultOptions;
     QTest::newRow("duplicateList2")
             << u"property list<Item> myList; myList: Item {} myList: Item {}"_s << defaultOptions;
