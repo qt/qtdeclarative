@@ -2392,6 +2392,8 @@ QQuickItem::~QQuickItem()
 #if QT_CONFIG(accessibility)
     if (QGuiApplicationPrivate::is_app_running && !QGuiApplicationPrivate::is_app_closing && QAccessible::isActive())
         QAccessibleCache::instance()->sendObjectDestroyedEvent(this);
+
+    d->isAccessible = false;
 #endif
 
     if (d->windowRefCount > 1)
