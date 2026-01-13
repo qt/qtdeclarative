@@ -324,6 +324,7 @@ set(qml_files
     stringLength.qml
     stringToByteArray.qml
     structuredValueType.qml
+    multiEnginePropertyCache.qml
     takenumber.qml
     testlogger.js
     text.qml
