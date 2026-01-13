@@ -5,8 +5,6 @@
 ## StyleKit Module:
 #####################################################################
 
-add_subdirectory(impl)
-
 qt_internal_add_qml_module(QtQuickStyleKit
     URI Qt.labs.StyleKit
     IMPORTS QtQuick.Controls.Basic
@@ -71,3 +69,6 @@ qt_internal_add_qml_module(QtQuickStyleKit
         Qt6::QuickTemplates2Private
         Qt6::QuickControls2ImplPrivate
 )
+
+# impl links to QuickStyleKit, so it must be built after it
+add_subdirectory(impl)

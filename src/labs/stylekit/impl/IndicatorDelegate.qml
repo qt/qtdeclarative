@@ -10,8 +10,8 @@ import Qt.labs.StyleKit.impl
 DelegateContainer {
     id: root
 
-    implicitWidth: Math.max(_delegateImplicitWidth, indicatorLayout.implicitWidth)
-    implicitHeight: Math.max(_delegateImplicitHeight, indicatorLayout.implicitHeight)
+    implicitWidth: Math.max(delegateInstance ? delegateInstance.implicitWidth : 0, indicatorLayout.implicitWidth)
+    implicitHeight: Math.max(delegateInstance ? delegateInstance.implicitHeight : 0, indicatorLayout.implicitHeight)
 
     transformOrigin: Item.TopLeft
     rotation: vertical ? 90 : 0
@@ -25,17 +25,6 @@ DelegateContainer {
      * track / progress). This amount be controlled with firstProgress and secondProgress. */
     property real firstProgress: 0.0
     property real secondProgress: 1.0
-
-    readonly property real _delegateImplicitWidth: root.indicatorProperties.implicitWidth > 0
-                    ? root.indicatorProperties.implicitWidth
-                    : delegateInstance
-                        ? delegateInstance.implicitWidth
-                        : 0
-    readonly property real _delegateImplicitHeight: root.indicatorProperties.implicitHeight > 0
-                    ? root.indicatorProperties.implicitHeight
-                    : delegateInstance
-                        ? delegateInstance.implicitHeight
-                        : 0
 
     StyleKitLayout {
         id: indicatorLayout
@@ -66,6 +55,7 @@ DelegateContainer {
                 ? fgItem.width - indicatorProperties.foreground.minimumWidth
                 : fgItem.width)
         y: fgItem.y
+        z: 1
         width: fgItem.fillWidth ? (indicatorProperties.foreground.minimumWidth
                                     + ((secondProgress - firstProgress) * (fgItem.width
                                         - indicatorProperties.foreground.minimumWidth)))

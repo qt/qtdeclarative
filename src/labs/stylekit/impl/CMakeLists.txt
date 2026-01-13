@@ -5,20 +5,16 @@
 ## StyleKitImpl Module:
 #####################################################################
 
-set_source_files_properties(DelegateSingleton.qml
-    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-
 qt_internal_add_qml_module(QtQuickStyleKitImpl
     URI Qt.labs.StyleKit.impl
     DEPENDENCIES
         QtQuick/auto
     SOURCES
+        qqstylekitdelegatecontainer_p.h qqstylekitdelegatecontainer.cpp
         qqstylekitlayout_p.h qqstylekitlayout.cpp
     QML_FILES
         BackgroundAndIndicatorDelegate.qml
         BackgroundDelegate.qml
-        DelegateContainer.qml
-        DelegateSingleton.qml
         FallbackStyle.qml
         HandleDelegate.qml
         IndicatorDelegate.qml
@@ -29,4 +25,5 @@ qt_internal_add_qml_module(QtQuickStyleKitImpl
         Qt6::QuickPrivate
         Qt6::QuickTemplates2
         Qt6::QuickTemplates2Private
+        Qt6::QtQuickStyleKit
 )
