@@ -72,7 +72,7 @@ qt_feature("quickcontrols2-windows" PRIVATE
     SECTION "Quick Controls 2"
     LABEL "Windows"
     PURPOSE "Provides a native Windows desktop style."
-    CONDITION QT_FEATURE_quickcontrols2_basic AND WIN32
+    CONDITION QT_FEATURE_quickcontrols2_fusion AND WIN32
 )
 qt_configure_add_summary_section(NAME "Qt Quick Controls 2")
 qt_configure_add_summary_entry(
