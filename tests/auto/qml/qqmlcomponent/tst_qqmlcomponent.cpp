@@ -162,6 +162,7 @@ private slots:
     void bindingInRequired();
     void repeatedSetDataWithInlineComponent();
     void setInitialPropertyInteraction();
+    void invalidBaseUrl();
 
 private:
     QQmlEngine engine;
@@ -1941,6 +1942,20 @@ void tst_qqmlcomponent::setInitialPropertyInteraction()
     }
 
     comp.completeCreate();
+}
+
+void tst_qqmlcomponent::invalidBaseUrl()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import "."
+        FooBar {}
+    )", QUrl());
+
+    QVERIFY(component.isError());
+    QVERIFY(component.errorString().contains(
+            "Can't resolve relative qmldir URL ./qmldir on invalid base URL"_L1));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

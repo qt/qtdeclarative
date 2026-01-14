@@ -885,6 +885,17 @@ bool QQmlTypeLoader::Blob::addFileImport(const QQmlTypeLoader::Blob::PendingImpo
     QString path = importUrl.path();
     path.append(QLatin1String(path.endsWith(QLatin1Char('/')) ? "qmldir" : "/qmldir"));
     importUrl.setPath(path);
+
+    // Can't resolve a relative URL if we don't know where we are
+    if (!finalUrl().isValid() && importUrl.isRelative()) {
+        QQmlError error;
+        error.setDescription(
+                QString::fromLatin1("Can't resolve relative qmldir URL %1 on invalid base URL")
+                .arg(importUrl.toString()));
+        errors->append(error);
+        return false;
+    }
+
     QUrl qmldirUrl = finalUrl().resolved(importUrl);
     if (!QQmlImports::isLocal(qmldirUrl)) {
         // This is a remote file; the import is currently incomplete
