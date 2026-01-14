@@ -102,7 +102,7 @@ public:
 
 protected:
     QQuickItem *item() const { return static_cast<QQuickItem*>(object()); }
-    void *interface_cast(QAccessible::InterfaceType t) override;
+    virtual void *interface_cast(QAccessible::InterfaceType t) override;
 
 private:
     // for Text nodes:
