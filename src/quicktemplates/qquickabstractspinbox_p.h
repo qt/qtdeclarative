@@ -285,40 +285,43 @@ public:
         Qt::InputMethodHints inputMethodHints = Qt::ImhDigitsOnly;
     };
 
+private:
+    QQuickAbstractSpinBoxPrivate *d_func()
+    {
+        auto *derived = static_cast<Derived *>(this);
+        return static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+    }
+
+    const QQuickAbstractSpinBoxPrivate *d_func() const
+    {
+        const auto *derived = static_cast<const Derived *>(this);
+        return static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+    }
+
 public:
     ValueType from() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->from;
+        return d_func()->from;
     }
 
     ValueType to() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->to;
+        return d_func()->to;
     }
 
     ValueType value() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->value;
+        return d_func()->value;
     }
 
     ValueType stepSize() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->stepSize;
+        return d_func()->stepSize;
     }
 
     bool isEditable() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->editable;
+        return d_func()->editable;
     }
 
     void setEditable(bool editable)
@@ -345,9 +348,7 @@ public:
 #if QT_CONFIG(validator)
     QValidator *validator() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->validator;
+        return d_func()->validator;
     }
 
     void setValidator(QValidator *validator)
@@ -427,38 +428,29 @@ public:
 
     bool wrap() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->wrap;
+        return d_func()->wrap;
     }
 
     QString displayText() const
     {
-        auto *derived = static_cast<const Derived *>(this);
-        auto *d = static_cast<const QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        return d->displayText;
+        return d_func()->displayText;
     }
 
 public:
     void increase()
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        d->increase(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
+        d_func()->increase(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
     }
 
     void decrease()
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
-        d->decrease(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
+        d_func()->decrease(QQuickAbstractSpinBoxPrivate::ValueStatus::Unmodified);
     }
 
 protected:
     void handleFocusInEvent(QFocusEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         // When an editable derived SpinBox gets focus, it must pass on the focus to its editor.
         if (d->editable && d->contentItem && !d->contentItem->hasActiveFocus())
@@ -467,8 +459,7 @@ protected:
 
     void handleHoverEnterEvent(QHoverEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         d->updateHover(event->position());
         event->ignore();
@@ -476,8 +467,7 @@ protected:
 
     void handleHoverMoveEvent(QHoverEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         d->updateHover(event->position());
         event->ignore();
@@ -485,8 +475,7 @@ protected:
 
     void handleHoverLeaveEvent(QHoverEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         d->down->setHovered(false);
         d->up->setHovered(false);
@@ -495,8 +484,7 @@ protected:
 
     void handleKeyPressEvent(QKeyEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         switch (event->key()) {
         case Qt::Key_Up:
@@ -526,8 +514,7 @@ protected:
 
     void handleKeyReleaseEvent(QKeyEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         if (d->editable && (event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return))
             d->updateValue();
@@ -539,8 +526,7 @@ protected:
 
     void handleTimerEvent(QTimerEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         if (event->timerId() == d->delayTimer) {
             d->startPressRepeat();
@@ -555,8 +541,7 @@ protected:
 #if QT_CONFIG(wheelevent)
     void handleWheelEvent(QWheelEvent *event)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         if (d->wheelEnabled) {
             const QPointF angle = event->angleDelta();
@@ -582,8 +567,7 @@ protected:
 
     void handleComponentComplete()
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         QQuickIndicatorButtonPrivate::get(d->up)->executeIndicator(true);
         QQuickIndicatorButtonPrivate::get(d->down)->executeIndicator(true);
@@ -598,16 +582,14 @@ protected:
 
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
         if (d->editable && change == QQuickItem::ItemActiveFocusHasChanged && !value.boolValue)
             d->updateValue();
     }
 
     void handleLocaleChange()
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
         d->updateDisplayText();
     }
 
@@ -618,8 +600,7 @@ protected:
 
     void handleAccessibilityActiveChanged(bool active)
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
 
         if (active)
             d->q_func()->setAccessibleProperty("editable", d->editable);
@@ -648,8 +629,7 @@ protected:
 
     ~QQuickAbstractSpinBox()
     {
-        auto *derived = static_cast<Derived *>(this);
-        auto *d = static_cast<QQuickAbstractSpinBoxPrivate *>(derived->d_base_func());
+        auto *d = d_func();
         d->removeImplicitSizeListener(d->up->indicator());
         d->removeImplicitSizeListener(d->down->indicator());
     }
