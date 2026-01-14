@@ -551,7 +551,6 @@ void tst_QQuickAccessible::basicPropertiesTest()
     auto textInterface = textInput->textInterface();
     QVERIFY(textInterface);
     auto editableTextInterface = textInput->editableTextInterface();
-    QEXPECT_FAIL("", "EditableTextInterface is not implemented", Continue);
     QVERIFY(editableTextInterface);
     auto newText = QString("a new text");
     textInput->setText(QAccessible::Value, newText);
@@ -1026,6 +1025,10 @@ void tst_QQuickAccessible::editableTextInterface_data()
     QTest::addColumn<bool>("readOnly");
 
     QTest::newRow("Label") << "label" << false << true;
+    QTest::newRow("TextInput") << "textInput" << true << false;
+    QTest::newRow("TextInput_readOnly") << "textInput" << true << true;
+    QTest::newRow("TextField") << "textField" << true << false;
+    QTest::newRow("TextField_readOnly") << "textField" << true << true;
     QTest::newRow("TextEdit") << "textEdit" << true << false;
     QTest::newRow("TextEdit_readOnly") << "textEdit" << true << true;
     QTest::newRow("TextArea") << "textArea" << true << false;

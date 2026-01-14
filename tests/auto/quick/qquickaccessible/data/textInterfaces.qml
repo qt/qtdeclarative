@@ -8,6 +8,14 @@ Column {
         objectName: "label"
     }
 
+    TextInput {
+        objectName: "textInput"
+    }
+
+    TextField {
+        objectName: "textField"
+    }
+
     TextEdit {
         objectName: "textEdit"
     }
