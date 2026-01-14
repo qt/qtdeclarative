@@ -4,7 +4,7 @@
 /*!
     \page qtquick-android-classes.html
     \title Qt Quick Android Classes
-    \summary The Qt Quick module provides classes for embedding Qt Quick in Android Applications.
+    \summary {The Qt Quick module provides classes for embedding Qt Quick in Android Applications.}
 
     \note Classes under this module require \l{Qt for Android}.
 
