@@ -77,8 +77,8 @@ private slots:
     void controlsThatShouldSendObjectShow_data();
     void controlsThatShouldSendObjectShow();
 
-    void editableTextInteface_data();
-    void editableTextInteface();
+    void editableTextInterface_data();
+    void editableTextInterface();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -589,7 +589,6 @@ void tst_QQuickAccessible::basicPropertiesTest()
     QCOMPARE(textEditTextInterface->selectionCount(), 0);
 
     auto textEditEditableTextInterface = textEdit->editableTextInterface();
-    QEXPECT_FAIL("", "EditableTextInterface is not implemented", Continue);
     QVERIFY(textEditEditableTextInterface);
     textEdit->setText(QAccessible::Value, newText);
     QCOMPARE(textEdit->text(QAccessible::Value), newText);
@@ -1020,16 +1019,20 @@ Window { visible: true
     QVERIFY(QTestAccessibility::containsEvent(&ev));
 }
 
-void tst_QQuickAccessible::editableTextInteface_data()
+void tst_QQuickAccessible::editableTextInterface_data()
 {
     QTest::addColumn<QString>("objectName");
     QTest::addColumn<bool>("editable");
     QTest::addColumn<bool>("readOnly");
 
     QTest::newRow("Label") << "label" << false << true;
+    QTest::newRow("TextEdit") << "textEdit" << true << false;
+    QTest::newRow("TextEdit_readOnly") << "textEdit" << true << true;
+    QTest::newRow("TextArea") << "textArea" << true << false;
+    QTest::newRow("TextArea_readOnly") << "textArea" << true << true;
 }
 
-void tst_QQuickAccessible::editableTextInteface()
+void tst_QQuickAccessible::editableTextInterface()
 {
     QFETCH(QString, objectName);
     QFETCH(bool, editable);
@@ -1054,11 +1057,29 @@ void tst_QQuickAccessible::editableTextInteface()
     QAccessibleTextInterface *textIface = itemIface->textInterface();
     QVERIFY(textIface);
 
+    // The read-only text items does not have editable text interface.
+    // But they could be editable, for example a read-only TextEdit.
+    if (editable)
+        QVERIFY2(item->setProperty("readOnly", readOnly), "Failed to set readOnly property");
+
     QAccessibleEditableTextInterface *editableIface = itemIface->editableTextInterface();
-    if (!editable || readOnly)
+    if (!editable || readOnly) {
         QVERIFY(editableIface == nullptr);
-    else
+    } else {
         QVERIFY(editableIface != nullptr);
+
+        itemIface->setText(QAccessible::Value, QString("This is a text"));
+        QCOMPARE(accessibleQuickItem->text(QAccessible::Value), QString("This is a text"));
+
+        editableIface->replaceText(10, 14, "test");
+        QCOMPARE(accessibleQuickItem->text(QAccessible::Value), QString("This is a test"));
+
+        editableIface->insertText(9, " new");
+        QCOMPARE(accessibleQuickItem->text(QAccessible::Value), QString("This is a new test"));
+
+        editableIface->deleteText(9, 13);
+        QCOMPARE(accessibleQuickItem->text(QAccessible::Value), QString("This is a test"));
+    }
 }
 
 QTEST_MAIN(tst_QQuickAccessible)

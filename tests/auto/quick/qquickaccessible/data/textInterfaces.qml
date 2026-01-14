@@ -7,4 +7,12 @@ Column {
     Label {
         objectName: "label"
     }
+
+    TextEdit {
+        objectName: "textEdit"
+    }
+
+    TextArea {
+        objectName: "textArea"
+    }
 }

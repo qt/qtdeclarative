@@ -26,6 +26,32 @@ void QAccessibleQuickTextEdit::setSelection(int selectionIndex, int startOffset,
         textEdit()->select(startOffset, endOffset);
 }
 
+void *QAccessibleQuickTextEdit::interface_cast(QAccessible::InterfaceType type)
+{
+    // Expose EditableTextInterface based on actual text edit's editability.
+    // Base class QAccessibleQuickItem::interface_cast() handles TextInterface
+    // automatically for role() == EditableText|StaticText|Heading.
+    if ((type == QAccessible::EditableTextInterface) && !textEdit()->isReadOnly())
+        return static_cast<QAccessibleEditableTextInterface *>(this);
+    return QAccessibleQuickItem::interface_cast(type);
+}
+
+void QAccessibleQuickTextEdit::deleteText(int startOffset, int endOffset)
+{
+    textEdit()->remove(startOffset, endOffset);
+}
+
+void QAccessibleQuickTextEdit::insertText(int offset, const QString &text)
+{
+    textEdit()->insert(offset, text);
+}
+
+void QAccessibleQuickTextEdit::replaceText(int startOffset, int endOffset, const QString &text)
+{
+    textEdit()->remove(startOffset, endOffset);
+    textEdit()->insert(startOffset, text);
+}
+
 #endif // accessibility
 
 QT_END_NAMESPACE
