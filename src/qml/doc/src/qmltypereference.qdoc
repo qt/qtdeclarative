@@ -241,7 +241,7 @@ is automatically converted into a QRectF value.
 
 The Easing singleton provides access to the \c Easing enum, which is
 typically used by \l {PropertyAnimation::easing}{animations}. It also
-provides the \l valueForProgress function as a convenience API:
+provides \l {QEasingCurve::valueForProgress}{valueForProgress} function as a convenience API:
 
 \snippet qml/Easing.qml 0
 
