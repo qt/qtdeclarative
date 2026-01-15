@@ -698,7 +698,6 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
@@ -778,7 +777,6 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
@@ -850,7 +848,6 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
@@ -915,7 +912,6 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
@@ -981,7 +977,6 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl(qmlFileName)));
-    window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
     auto *editor = window.rootObject()->property("editor").value<QQuickItem *>();
