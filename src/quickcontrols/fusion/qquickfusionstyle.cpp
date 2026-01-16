@@ -48,21 +48,25 @@ bool QQuickFusionStyle::isHighContrast()
 
 QColor QQuickFusionStyle::highlight(QQuickPalette *palette)
 {
-    return palette->highlight();
+    return palette ? palette->highlight() : QColor();
 }
 
 QColor QQuickFusionStyle::highlightedText(QQuickPalette *palette)
 {
-    return palette->highlightedText();
+    return palette ? palette->highlightedText() : QColor();
 }
 
 QColor QQuickFusionStyle::outline(QQuickPalette *palette)
 {
+    if (!palette)
+        return QColor();
     return isHighContrast() ? palette->windowText() : palette->window().darker(140);
 }
 
 QColor QQuickFusionStyle::highlightedOutline(QQuickPalette *palette)
 {
+    if (!palette)
+        return QColor();
     if (isHighContrast()) {
         if (QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Light) {
             return highlight(palette).darker(125);
@@ -80,11 +84,13 @@ QColor QQuickFusionStyle::highlightedOutline(QQuickPalette *palette)
 
 QColor QQuickFusionStyle::tabFrameColor(QQuickPalette *palette)
 {
-    return buttonColor(palette).lighter(104);
+    return palette ? buttonColor(palette).lighter(104) : QColor();
 }
 
 QColor QQuickFusionStyle::buttonColor(QQuickPalette *palette, bool highlighted, bool down, bool hovered)
 {
+    if (!palette)
+        return QColor();
     QColor buttonColor = palette->button();
     int val = qGray(buttonColor.rgb());
     buttonColor = buttonColor.lighter(100 + qMax(1, (180 - val)/6));
@@ -101,6 +107,8 @@ QColor QQuickFusionStyle::buttonColor(QQuickPalette *palette, bool highlighted, 
 
 QColor QQuickFusionStyle::buttonOutline(QQuickPalette *palette, bool highlighted, bool enabled)
 {
+    if (!palette)
+        return QColor();
     QColor darkOutline = enabled && highlighted ? highlightedOutline(palette) : outline(palette);
     return !enabled ? darkOutline.lighter(115) : darkOutline;
 }
@@ -128,6 +136,8 @@ QColor QQuickFusionStyle::mergedColors(const QColor &colorA, const QColor &color
 
 QColor QQuickFusionStyle::grooveColor(QQuickPalette *palette)
 {
+    if (!palette)
+        return QColor();
     QColor color = buttonColor(palette).toHsv();
     color.setHsv(color.hue(),
                  qMin(255, color.saturation()),
