@@ -1,0 +1,4 @@
+import QtQml
+Binding {
+    restoreMode {}
+}
