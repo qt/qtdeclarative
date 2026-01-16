@@ -163,6 +163,7 @@ private slots:
     void repeatedSetDataWithInlineComponent();
     void setInitialPropertyInteraction();
     void invalidBaseUrl();
+    void uselessGroupProperty();
 
 private:
     QQmlEngine engine;
@@ -1956,6 +1957,17 @@ void tst_qqmlcomponent::invalidBaseUrl()
     QVERIFY(component.isError());
     QVERIFY(component.errorString().contains(
             "Can't resolve relative qmldir URL ./qmldir on invalid base URL"_L1));
+}
+
+void tst_qqmlcomponent::uselessGroupProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("uselessGroupProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(!object);
+    QVERIFY(component.errorString().contains(
+            "Using grouped property syntax on restoreMode which has no properties"));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

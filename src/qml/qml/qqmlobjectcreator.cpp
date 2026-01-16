@@ -944,7 +944,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
                 groupObject = valueType;
                 valueTypeProperty = bindingProperty;
-            } else {
+            } else if (bindingProperty->propType().flags() & QMetaType::PointerToQObject) {
                 void *argv[1] = { &groupObject };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, bindingProperty->coreIndex(), argv);
                 if (!groupObject) {
@@ -963,6 +963,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 }
 
                 bindingTarget = groupObject;
+            } else {
+                recordError(
+                        binding->location,
+                        tr("Using grouped property syntax on %1 which has no properties")
+                                .arg(stringAt(binding->propertyNameIndex)));
+                return false;
             }
 
             if (!populateInstance(groupObjectIndex, groupObject, bindingTarget, valueTypeProperty,
