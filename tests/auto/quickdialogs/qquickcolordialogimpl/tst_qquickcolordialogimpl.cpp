@@ -36,8 +36,7 @@ class tst_QQuickColorDialogImpl : public QQmlDataTest
     Q_OBJECT
 
 public:
-    tst_QQuickColorDialogImpl();
-    static void initMain()
+    tst_QQuickColorDialogImpl();    static void initMain()
     {
         // We need to set this attribute.
         QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
@@ -62,6 +61,7 @@ private slots:
     void dialogCanMoveBetweenWindows();
     void checkModality_data();
     void checkModality();
+    void checkFrameless();
 
 private:
     bool closePopup(DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> *dialogHelper,
@@ -718,6 +718,18 @@ void tst_QQuickColorDialogImpl::checkModality()
     QSignalSpy cmaMouseSpy(childMouseArea, &QQuickMouseArea::clicked);
     QTest::mouseClick(childWindow, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
     QCOMPARE(cmaMouseSpy.size(), expectedChildWindowClickCount);
+}
+
+void tst_QQuickColorDialogImpl::checkFrameless()
+{
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    QSKIP("Frameless window is not supported on Android/IOS");
+#endif
+    DialogTestHelper<QQuickColorDialog, QQuickColorDialogImpl> dialogHelper(this, "colorDialogFrameless.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+
+    QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
 
 

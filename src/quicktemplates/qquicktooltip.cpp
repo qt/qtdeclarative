@@ -97,6 +97,7 @@ class QQuickToolTipPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickToolTip)
 
 public:
+    QQuickToolTipPrivate();
     void startDelay();
     void stopDelay();
 
@@ -104,8 +105,6 @@ public:
     void stopTimeout();
 
     void opened() override;
-
-    Qt::WindowFlags popupWindowType() const override;
 
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolTip); }
 
@@ -115,6 +114,11 @@ public:
     QBasicTimer delayTimer;
     QBasicTimer timeoutTimer;
 };
+
+QQuickToolTipPrivate::QQuickToolTipPrivate()
+{
+    windowFlags = Qt::ToolTip;
+}
 
 void QQuickToolTipPrivate::startDelay()
 {
@@ -144,11 +148,6 @@ void QQuickToolTipPrivate::opened()
 {
     QQuickPopupPrivate::opened();
     startTimeout();
-}
-
-Qt::WindowFlags QQuickToolTipPrivate::popupWindowType() const
-{
-    return Qt::ToolTip;
 }
 
 QQuickToolTip::QQuickToolTip(QQuickItem *parent)

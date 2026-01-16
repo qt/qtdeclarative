@@ -50,6 +50,7 @@ private slots:
     void resultReflectsLastStandardButtonPressed();
     void checkModality_data();
     void checkModality();
+    void checkFrameless();
 };
 
 // We don't want to fail on warnings until QTBUG-98964 is fixed,
@@ -437,6 +438,17 @@ void tst_QQuickMessageDialogImpl::checkModality()
     QCOMPARE(cmaMouseSpy.size(), expectedChildWindowClickCount);
 }
 
+void tst_QQuickMessageDialogImpl::checkFrameless()
+{
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    QSKIP("Frameless window is not supported on Android/IOS");
+#endif
+    DialogTestHelper<QQuickMessageDialog, QQuickMessageDialogImpl> dialogHelper(this, "messageDialogFrameless.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+
+    QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
+}
 
 QTEST_MAIN(tst_QQuickMessageDialogImpl)
 

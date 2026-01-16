@@ -171,11 +171,6 @@ void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
     }
 }
 
-Qt::WindowFlags QQuickDialogPrivate::popupWindowType() const
-{
-    return Qt::Dialog;
-}
-
 QQuickDialog::QQuickDialog(QObject *parent)
     : QQuickDialog(*(new QQuickDialogPrivate), parent)
 {

@@ -53,6 +53,7 @@ private slots:
     void setCurrentFontFromApi();
     void checkModality_data();
     void checkModality();
+    void checkFrameless();
 
 private:
     QQuickAbstractButton *findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText)
@@ -666,6 +667,18 @@ void tst_QQuickFontDialogImpl::checkModality()
     QSignalSpy cmaMouseSpy(childMouseArea, &QQuickMouseArea::clicked);
     QTest::mouseClick(childWindow, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
     QCOMPARE(cmaMouseSpy.size(), expectedChildWindowClickCount);
+}
+
+void tst_QQuickFontDialogImpl::checkFrameless()
+{
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    QSKIP("Frameless window is not supported on Android/IOS");
+#endif
+    DialogTestHelper<QQuickFontDialog, QQuickFontDialogImpl> dialogHelper(this, "fontDialogFrameless.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+
+    QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
 
 QTEST_MAIN(tst_QQuickFontDialogImpl)

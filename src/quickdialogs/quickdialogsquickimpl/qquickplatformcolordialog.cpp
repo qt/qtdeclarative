@@ -106,6 +106,7 @@ bool QQuickPlatformColorDialog::show(Qt::WindowFlags flags, Qt::WindowModality m
 
     auto popupPrivate = QQuickPopupPrivate::get(m_dialog);
     popupPrivate->getAnchors()->setCenterIn(m_dialog->parentItem());
+    popupPrivate->setPopupWindowFlags(flags);
 
     QSharedPointer<QColorDialogOptions> options = QPlatformColorDialogHelper::options();
 

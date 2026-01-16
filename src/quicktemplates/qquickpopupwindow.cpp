@@ -68,7 +68,7 @@ QQuickPopupWindow::QQuickPopupWindow(QQuickPopup *popup, QWindow *parent)
     setWidth(d->m_popupItem->implicitWidth());
     setHeight(d->m_popupItem->implicitHeight());
 
-    const auto flags = QQuickPopupPrivate::get(popup)->popupWindowType();
+    const auto flags = QQuickPopupPrivate::get(popup)->popupWindowFlags();
 
     // For popup windows, we'll need to draw everything, in order to have enough control over the styling.
     if (flags & Qt::Popup)

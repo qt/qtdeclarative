@@ -949,9 +949,14 @@ void QQuickPopupPrivate::opened()
 #endif
 }
 
-Qt::WindowFlags QQuickPopupPrivate::popupWindowType() const
+Qt::WindowFlags QQuickPopupPrivate::popupWindowFlags() const
 {
-    return Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
+    return windowFlags;
+}
+
+void QQuickPopupPrivate::setPopupWindowFlags(Qt::WindowFlags flags)
+{
+    windowFlags = flags;
 }
 
 QMarginsF QQuickPopupPrivate::getMargins() const

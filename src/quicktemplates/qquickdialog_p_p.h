@@ -29,6 +29,7 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDialog)
+    QQuickDialogPrivate() { windowFlags = Qt::Dialog;}
 
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {
@@ -40,8 +41,6 @@ public:
     virtual void handleAccept();
     virtual void handleReject();
     virtual void handleClick(QQuickAbstractButton *button);
-
-    Qt::WindowFlags popupWindowType() const override;
 
     int result = 0;
     QQuickDialogButtonBox *buttonBox = nullptr;
