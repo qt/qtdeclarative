@@ -56,6 +56,8 @@ private slots:
     void invalidTarget();
 
     void badSignalHandlerName();
+
+    void invalidContext();
 private:
     QQmlEngine engine;
     void prefixes();
@@ -476,6 +478,15 @@ void tst_qqmlconnections::badSignalHandlerName()
     QCOMPARE(root->property("handled").toInt(), 3);
 }
 
+void tst_qqmlconnections::invalidContext()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("invalidContext.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QTRY_COMPARE(object->property("choice"), QVariant::fromValue<int>(4));
+}
 
 QTEST_MAIN(tst_qqmlconnections)
 
