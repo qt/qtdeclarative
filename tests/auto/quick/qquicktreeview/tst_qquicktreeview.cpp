@@ -101,6 +101,7 @@ private slots:
     void editOnNonEditableCell();
     void delegateModelAccess_data();
     void delegateModelAccess();
+    void nullModel();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -1801,6 +1802,15 @@ void tst_qquicktreeview::delegateModelAccess()
     aAt0 = -1;
     QMetaObject::invokeMethod(treeView, "aAt0", Q_RETURN_ARG(double, aAt0));
     QCOMPARE(aAt0, expected);
+}
+
+void tst_qquicktreeview::nullModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("nullModel.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
 }
 
 QTEST_MAIN(tst_qquicktreeview)
