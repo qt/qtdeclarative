@@ -390,7 +390,7 @@ void QQmlConnections::connectSignalsToMethods()
 
     QObject *target = this->target();
     QQmlData *ddata = QQmlData::get(this);
-    if (!ddata)
+    if (!ddata || !ddata->propertyCache || !ddata->context || !ddata->context->isValid())
         return;
 
     QV4::ExecutionEngine *engine = ddata->context->engine()->handle();
