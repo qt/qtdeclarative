@@ -38,6 +38,8 @@ private slots:
     void overriddenSignals();
     void duplicateIdsAndGeneralizedGroupProperties();
 
+   void nonExistentGeneralizedGroup();
+
 private:
     QQmlEngine engine;
 };
@@ -787,6 +789,18 @@ void tst_qqmlpropertycache::duplicateIdsAndGeneralizedGroupProperties()
     QTest::ignoreMessage(QtDebugMsg, "4 false false false");
 
     QScopedPointer<QObject> o(c.create());
+}
+
+void tst_qqmlpropertycache::nonExistentGeneralizedGroup()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQml
+        QtObject{grid{id:grid}}
+    )", QUrl());
+    QVERIFY(component.isError());
+    QVERIFY(component.errorString().contains("Cannot assign to non-existent property \"grid\""));
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
