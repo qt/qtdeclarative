@@ -97,7 +97,8 @@ public:
             oldCache->release();
         }
         data[index] = replacement.data();
-        replacement->addref();
+        if (replacement)
+            replacement->addref();
         Q_ASSERT(data[index].isT1());
     }
 
