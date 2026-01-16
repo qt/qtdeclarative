@@ -85,6 +85,7 @@ bool QQuickPlatformMessageDialog::show(Qt::WindowFlags flags, Qt::WindowModality
 
     auto popupPrivate = QQuickPopupPrivate::get(m_dialog);
     popupPrivate->getAnchors()->setCenterIn(m_dialog->parentItem());
+    popupPrivate->setPopupWindowFlags(flags);
 
     QSharedPointer<QMessageDialogOptions> options = QPlatformMessageDialogHelper::options();
     m_dialog->setTitle(options->windowTitle());

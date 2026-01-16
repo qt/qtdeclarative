@@ -148,6 +148,7 @@ bool QQuickPlatformFolderDialog::show(Qt::WindowFlags flags, Qt::WindowModality 
 
     auto popupPrivate = QQuickPopupPrivate::get(m_dialog);
     popupPrivate->getAnchors()->setCenterIn(m_dialog->parentItem());
+    popupPrivate->setPopupWindowFlags(flags);
 
     QSharedPointer<QFileDialogOptions> options = QPlatformFileDialogHelper::options();
     m_dialog->setTitle(options->windowTitle());

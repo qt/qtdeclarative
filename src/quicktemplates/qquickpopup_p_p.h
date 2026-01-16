@@ -121,7 +121,8 @@ public:
 
     virtual void opened();
 
-    virtual Qt::WindowFlags popupWindowType() const;
+    Qt::WindowFlags popupWindowFlags() const;
+    void setPopupWindowFlags(Qt::WindowFlags flags);
 
     QMarginsF getMargins() const;
 
@@ -205,6 +206,7 @@ public:
     QString title;
     QQuickPopup::PopupType popupType = QQuickPopup::Item;
     Qt::WindowModality popupWndModality = Qt::NonModal;
+    Qt::WindowFlags windowFlags = Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
 
     friend class QQuickPopupTransitionManager;
 };

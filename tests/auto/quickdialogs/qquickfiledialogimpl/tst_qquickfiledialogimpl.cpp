@@ -102,6 +102,7 @@ private slots:
     void checkModality_data();
     void checkModality();
     void folderBreadcrumbBarDoesntGrow();
+    void checkFrameless();
 
 private:
     enum DelegateOrderPolicy
@@ -1979,6 +1980,18 @@ void tst_QQuickFileDialogImpl::folderBreadcrumbBarDoesntGrow()
     QVERIFY(doubleClickButton(subSubDirDelegate));
 
     QCOMPARE(folderBreadcrumbBar->width(), initialFolderBreadcrumbBarWidth);
+}
+
+void tst_QQuickFileDialogImpl::checkFrameless()
+{
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    QSKIP("Frameless window is not supported on Android/IOS");
+#endif
+    FileDialogTestHelper dialogHelper(this, "fileDialogFrameless.qml");
+    OPEN_QUICK_DIALOG();
+    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+
+    QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
 
 QTEST_MAIN(tst_QQuickFileDialogImpl)
