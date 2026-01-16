@@ -516,9 +516,8 @@ void QQuickTreeView::expandRecursively(int row, int depth)
         if (isExpanded && depth == 1)
             return;
         expandRowRecursively(row);
-    } else {
+    } else if (const auto model = d->m_treeModelToTableModel.model()) {
         // Expand all root nodes recursively
-        const auto model = d->m_treeModelToTableModel.model();
         for (int r = 0; r < model->rowCount(); ++r) {
             const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
             if (rootRow != -1)
@@ -620,9 +619,8 @@ void QQuickTreeView::collapseRecursively(int row)
 
     if (row >= 0) {
         collapseRowRecursive(row);
-    } else {
+    } else if (const auto model = d->m_treeModelToTableModel.model()) {
         // Collapse all root nodes recursively
-        const auto model = d->m_treeModelToTableModel.model();
         for (int r = 0; r < model->rowCount(); ++r) {
             const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
             if (rootRow != -1)

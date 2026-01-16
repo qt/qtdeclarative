@@ -99,6 +99,7 @@ private slots:
     void editUsingEditTriggers();
     void editOnNonEditableCell_data();
     void editOnNonEditableCell();
+    void nullModel();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -1670,6 +1671,15 @@ void tst_qquicktreeview::editOnNonEditableCell()
         QVERIFY(!treeView->property(kEditItem).value<QQuickItem *>());
         QVERIFY(!treeView->property(kEditIndex).value<QModelIndex>().isValid());
     }
+}
+
+void tst_qquicktreeview::nullModel()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("nullModel.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
 }
 
 QTEST_MAIN(tst_qquicktreeview)
