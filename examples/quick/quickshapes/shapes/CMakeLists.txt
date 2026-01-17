@@ -55,6 +55,7 @@ qt_add_qml_module(shapesexample
         "fillTransform.qml"
         "rectangle.qml"
         "fillItem.qml"
+        "cosmetic.qml"
 )
 
 install(TARGETS shapesexample

@@ -16,6 +16,7 @@ Rectangle {
 
     Shape {
         id: ctr
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
         containsMode: Shape.FillContains
 

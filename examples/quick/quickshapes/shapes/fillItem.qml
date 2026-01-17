@@ -14,10 +14,16 @@ Rectangle {
         id: image
         source: Images.qtLogo
         visible: false
+
+        layer.enabled: true
+        layer.textureSize: Qt.size(64, 64)
+        layer.smooth: true
+        layer.wrapMode: ShaderEffectSource.Repeat
     }
 
     Shape {
         id: shape
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
 
         ShapePath {

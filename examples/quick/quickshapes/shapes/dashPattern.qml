@@ -10,6 +10,7 @@ Rectangle {
     height: 256
     Shape {
         id: shape
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
 
         ShapePath {

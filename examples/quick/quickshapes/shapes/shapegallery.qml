@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Shapes
 
 pragma ComponentBehavior: Bound
@@ -10,6 +11,9 @@ Rectangle {
     id: root
     width: 1024
     height: 768
+
+    property int requestedBackend: curveCheck.checkState === Qt.Checked ? Shape.CurveRenderer
+                                                                        : Shape.UnknownRenderer
 
     readonly property color col: "lightsteelblue"
     gradient: Gradient {
@@ -37,6 +41,7 @@ Rectangle {
         anchors {
             fill: parent
             margins: 10
+            topMargin: 40
         }
         color: "lightBlue"
         clip: true
@@ -158,39 +163,45 @@ Rectangle {
                     name: qsTr("Fill item")
                     shapeUrl: "fillItem.qml"
                 }
+                ListElement {
+                    name: qsTr("Cosmetic stroke")
+                    shapeUrl: "cosmetic.qml"
+                }
             }
         }
     }
 
-    Text {
+    CheckBox {
+        id: curveCheck
         anchors.right: parent.right
+        anchors.rightMargin: backendText.anchors.leftMargin
+        anchors.top: parent.top
+        anchors.margins: 10
+        font.pointSize: 18
+        text: "Request Curve Renderer"
+    }
+
+    Text {
+        id: backendText
+        anchors.left: parent.left
+        anchors.leftMargin: 20
+        anchors.top: parent.top
+        anchors.margins: 10
         // used only to get the renderer type
         Shape {
             id: dummyShape
+            preferredRendererType: root.requestedBackend
             ShapePath { }
         }
         color: "darkBlue"
-        font.pointSize: 12
-        readonly property variant rendererStrings: [ qsTr("Unknown"), qsTr("Generic (QtGui triangulator)"), qsTr("GL_NV_path_rendering"), qsTr("Software (QPainter)"), qsTr("Curve Renderer") ]
+        font.pointSize: curveCheck.font.pointSize
+        readonly property variant rendererStrings: [
+            qsTr("Unknown"),
+            qsTr("Geometry Renderer (QtGui triangulator)"),
+            qsTr("GL_NV_path_rendering"),
+            qsTr("Software (QPainter)"),
+            qsTr("Curve Renderer")
+        ]
         text: "Active Shape backend: " + rendererStrings[dummyShape.rendererType]
-        SequentialAnimation on opacity {
-            NumberAnimation {
-                from: 1
-                to: 0
-                duration: 5000
-            }
-            PauseAnimation {
-                duration: 5000
-            }
-            NumberAnimation {
-                from: 0
-                to: 1
-                duration: 1000
-            }
-            PauseAnimation {
-                duration: 5000
-            }
-            loops: Animation.Infinite
-        }
     }
 }

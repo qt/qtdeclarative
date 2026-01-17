@@ -11,6 +11,7 @@ Rectangle {
 
     Shape {
         id: myShape
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
 
         ShapePath {

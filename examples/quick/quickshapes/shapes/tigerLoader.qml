@@ -27,6 +27,13 @@ Rectangle {
             asynchronous: true
             visible: status == Loader.Ready
             scale: 0.4
+            Connections {
+                target: root
+                function onRequestedBackendChanged() {
+                    if (shapeLoader.status == Loader.Ready)
+                        shapeLoader.item.preferredRendererType = root.requestedBackend
+                }
+            }
         }
     }
 }

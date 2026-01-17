@@ -9,6 +9,7 @@ Rectangle {
     width: 256
     height: 256
     Shape {
+        preferredRendererType: root.requestedBackend
         width: 200
         height: 150
         anchors.centerIn: parent

@@ -11,6 +11,7 @@ Rectangle {
 
     Shape {
         id: circ1
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
 
         ShapePath {
@@ -50,6 +51,7 @@ Rectangle {
 
     Shape {
         id: circ2
+        preferredRendererType: root.requestedBackend
         anchors.fill: parent
 
         SequentialAnimation on opacity {

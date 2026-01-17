@@ -19,6 +19,7 @@ Rectangle {
             model: 2
             delegate: Shape {
                 id: delegate
+                preferredRendererType: root.requestedBackend
 
                 required property int index
 

@@ -15,6 +15,7 @@ Rectangle {
         border.color: "black"
 
         Shape {
+            preferredRendererType: root.requestedBackend
             anchors.fill: parent
 
             ShapePath {
@@ -58,6 +59,7 @@ Rectangle {
         }
 
         Shape {
+            preferredRendererType: root.requestedBackend
             anchors.fill: parent
             ShapePath {
                 strokeColor: "gray"
