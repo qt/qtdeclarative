@@ -124,6 +124,12 @@ qt_feature("quick-draganddrop" PUBLIC
     PURPOSE "Drag and drop support for Qt Quick"
     CONDITION ( QT_FEATURE_draganddrop ) AND ( QT_FEATURE_regularexpression )
 )
+qt_feature("quick-vectorimage" PRIVATE
+    SECTION "Qt Quick"
+    LABEL "VectorImage item"
+    PURPOSE "Provides the VectorImage item."
+    CONDITION TARGET Qt::Svg AND QT_FEATURE_quick_path
+)
 
 qt_feature("quick-pixmap-cache-threaded-download" PUBLIC
     SECTION "Qt Quick"
@@ -147,4 +153,5 @@ qt_configure_add_summary_entry(ARGS "quick-positioners")
 qt_configure_add_summary_entry(ARGS "quick-repeater")
 qt_configure_add_summary_entry(ARGS "quick-shadereffect")
 qt_configure_add_summary_entry(ARGS "quick-sprite")
+qt_configure_add_summary_entry(ARGS "quick-vectorimage")
 qt_configure_end_summary_section() # end of "Qt Quick" section

@@ -50,7 +50,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
         add_subdirectory(quickshapes)
     endif()
 
-    if(TARGET Qt::Svg)
+    if(QT_FEATURE_quick_vectorimage)
         add_subdirectory(quickvectorimage)
     endif()
 

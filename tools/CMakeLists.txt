@@ -67,7 +67,7 @@ if(NOT (ANDROID OR WASM OR IOS OR VISIONOS OR rtems))
         add_subdirectory(qmleasing)
     endif()
 
-    if(TARGET Qt::Quick AND TARGET Qt::Svg)
+    if(TARGET Qt::Quick AND QT_FEATURE_quick_vectorimage)
         add_subdirectory(svgtoqml)
     endif()
 endif() # NOT (ANDROID OR WASM OR IOS OR rtems)
