@@ -27,23 +27,90 @@ Pragmas are instructions to the QML engine itself that can be used to specify
 certain characteristics of objects in the current file or to modify how the
 engine interprets code. The following pragmas are exaplained in details below.
 
-\list
-\li \c Singleton
-\li \c ListPropertyAssignBehavior
-\li \c ComponentBehavior
-\li \c FunctionSignatureBehavior
-\li \c NativeMethodBehavior
-\li \c ValueTypeBehavior
-\li \c Translator
-\endlist
+\table
+\header
+    \li pragma
+    \li values
+    \li default value
+    \li since
+\row
+    \li \l{Structure of a QML Document#Singleton}{Singleton}
+    \li
+    \li
+    \li 5.2 //! 200a869441562d62e7fc0867599097e0599f0411
+\row
+    \li {1, 3} \l{Structure of a QML Document#ListPropertyAssignBehavior}{ListPropertyAssignBehavior}
+    \li Append
+    \li X
+    \li 6.3 //! f2a15482ddd289a36b04316a2b6ebed83eb017c5
+\row
+    \li Replace
+    \li
+    \li 6.3
+\row
+    \li ReplaceIfNotDefault
+    \li
+    \li 6.3
+\row
+    \li {1, 2} \l{Structure of a QML Document#ComponentBehavior}{ComponentBehavior}
+    \li Bound
+    \li
+    \li 6.4 //! 4d71091a198fbbd3f84c61af0f2915493f2dad1a
+\row
+    \li Unbound
+    \li X
+    \li 6.4 //! 4d71091a198fbbd3f84c61af0f2915493f2dad1a
+\row
+    \li {1, 2} \l{Structure of a QML Document#FunctionSignatureBehavior}{FunctionSignatureBehavior}
+    \li Ignored
+    \li
+    \li 6.5 //! de2d7cba76bcfbe0a29271df1178c176d00bf9b4
+\row
+    \li Enforced
+    \li X
+    \li 6.5
+\row
+    \li {1, 2} \l{Structure of a QML Document#NativeMethodBehavior}{NativeMethodBehavior}
+    \li AcceptThisObject
+    \li
+    \li 6.5 //! 3fd3a2a9d06505d549cc4a7c18819a17c6622dfd
+\row
+    \li RejectThisObject
+    \li X
+    \li 6.5
+\row
+    \li {1, 5} \l{Structure of a QML Document#ValueTypeBehavior}{ValueTypeBehavior}
+    \li Reference
+    \li X
+    \li 6.5 //! ec58c0ddb7fe1ebf33c80335ab9435e53fd00274
+\row
+    \li Copy
+    \li
+    \li 6.5
+\row
+    \li Addressable
+    \li
+    \li 6.6 //! 35152b432e82fc274c3983d0f369666a899cde49
+\row
+    \li Inaddressable
+    \li X
+    \li 6.6
+\row
+    \li Assertable
+    \li
+    \li 6.8 //! 71e259837967f1eee50c057229094c2a971a1a61
+\row
+    \li \l{Structure of a QML Document#Translator}{Translator}
+    \li <translation context>
+    \li <file name>
+    \li 6.7 //! d6e0d5630a49e9614a70bf960a213b3eff03a68e
+\endtable
 
 \keyword QML.Singleton
 \section2 Singleton
 
-\c{pragma Singleton} declares the component defined in the QML document as
-singleton. Singletons are created only once per QML engine. In order to use
-a QML-declared singleton you also have to register it with its module. See
-\l{qt_target_qml_sources} for how to do this with CMake.
+\c{pragma Singleton} declares the component defined at the root of the QML
+document as singleton. See \l {Singletons in QML} for more information.
 
 \keyword QML.ListPropertyAssignBehavior
 \keyword QML.Append
