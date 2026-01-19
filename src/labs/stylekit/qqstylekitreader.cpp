@@ -298,7 +298,7 @@ void QQStyleKitReader::resetAll()
         reader->clearLocalStorage();
         reader->rebuildEffectivePalette();
         reader->rebuildEffectiveFont();
-        reader->emitChangedForAllStyleProperties();
+        reader->emitChangedForAllStyleProperties(EmitFlag::AllProperties);
     }
 }
 
@@ -548,7 +548,7 @@ void QQStyleKitReader::onPaletteChanged()
 
     if (rebuildEffectivePalette()) {
         clearLocalStorage();
-        emitChangedForAllStyleProperties();
+        emitChangedForAllStyleProperties(EmitFlag::Colors);
     }
 }
 

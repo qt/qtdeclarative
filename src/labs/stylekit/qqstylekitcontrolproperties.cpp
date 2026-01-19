@@ -195,7 +195,7 @@ void QQStyleKitPropertyGroup::handleStylePropertiesChanged(CHANGED_SIGNALS... ch
     Q_UNREACHABLE();
 }
 
-void QQStyleKitPropertyGroup::emitChangedForAllStylePropertiesRecursive()
+void QQStyleKitPropertyGroup::emitChangedForAllStylePropertiesRecursive(EmitFlags emitFlags)
 {
     /* This function will emit changed signals for all style properties in the
      * StyleKit API (for a single QQStyleKitReader), which is needed after
@@ -204,20 +204,28 @@ void QQStyleKitPropertyGroup::emitChangedForAllStylePropertiesRecursive()
     const QMetaObject* meta = metaObject();
     for (int i = startIndex; i < meta->propertyCount(); ++i) {
         const QMetaProperty prop = meta->property(i);
-        const QMetaObject* metaObject = QMetaType::fromName(prop.typeName()).metaObject();
-        if (metaObject) {
-            if (metaObject->inherits(&QQStyleKitDelegateProperties::staticMetaObject)) {
+        const QMetaObject* propMetaObject = QMetaType::fromName(prop.typeName()).metaObject();
+        if (propMetaObject) {
+            if (propMetaObject->inherits(&QQStyleKitDelegateProperties::staticMetaObject)) {
                 /* Skip recursing into QQStyleKitDelegateProperties, because those are lazy
                  * created when read, and reading them from here would accidentally
                  * create them. */
                 continue;
             }
-            if (metaObject->inherits(&QQStyleKitPropertyGroup::staticMetaObject)) {
+            if (propMetaObject->inherits(&QQStyleKitPropertyGroup::staticMetaObject)) {
                 // The property is of type QQStyleKitPropertyGroup, so recurse into it
                 QObject *childObj = qvariant_cast<QObject *>(property(prop.name()));
                 if (auto *child = qobject_cast<QQStyleKitPropertyGroup *>(childObj))
-                    child->emitChangedForAllStylePropertiesRecursive();
+                    child->emitChangedForAllStylePropertiesRecursive(emitFlags);
                 continue;
+            }
+        }
+
+        if (!emitFlags.testFlag(EmitFlag::AllProperties)) {
+            // Only emit for color properties when the Colors flag is set
+            if (emitFlags.testFlag(EmitFlag::Colors)) {
+                if (prop.metaType() != QMetaType::fromType<QColor>())
+                    continue;
             }
         }
 
@@ -1059,21 +1067,23 @@ void QQStyleKitControlProperties::forEachUsedDelegate(
     }
 }
 
-void QQStyleKitControlProperties::emitChangedForAllStyleProperties()
+void QQStyleKitControlProperties::emitChangedForAllStyleProperties(EmitFlags emitFlags)
 {
     /* This brute-force function will emit update signals for _all_ style properties
      * in the QQStyleKitStyle API. Doing so is typically needed after a style-, or theme
      * change, as we don't know which properties are affected by such a big change. */
-    emit leftPaddingChanged();
-    emit rightPaddingChanged();
-    emit topPaddingChanged();
-    emit bottomPaddingChanged();
-    emit spacingChanged();
-    emit transitionChanged();
-    emit textChanged();
+    if (emitFlags.testFlag(EmitFlag::AllProperties)) {
+        emit leftPaddingChanged();
+        emit rightPaddingChanged();
+        emit topPaddingChanged();
+        emit bottomPaddingChanged();
+        emit spacingChanged();
+        emit transitionChanged();
+        emit textChanged();
+    }
 
-    forEachUsedDelegate([](QQStyleKitDelegateProperties *delegate, QQSK::Delegate, const QString &){
-        delegate->emitChangedForAllStylePropertiesRecursive();
+    forEachUsedDelegate([=](QQStyleKitDelegateProperties *delegate, QQSK::Delegate, const QString &){
+        delegate->emitChangedForAllStylePropertiesRecursive(emitFlags);
     });
 }
 
