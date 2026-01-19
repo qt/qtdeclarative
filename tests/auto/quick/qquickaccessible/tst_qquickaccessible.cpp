@@ -22,6 +22,7 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
+#include <QtQuick/private/qaccessiblequickitem_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -75,6 +76,9 @@ private slots:
     void relations();
     void controlsThatShouldSendObjectShow_data();
     void controlsThatShouldSendObjectShow();
+
+    void editableTextInteface_data();
+    void editableTextInteface();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -1014,6 +1018,47 @@ Window { visible: true
     QAccessibleEvent ev(rootItem, QAccessible::ObjectShow);
     // Don't use QVERIFY_EVENT, because it gets very noisy when additional events are found
     QVERIFY(QTestAccessibility::containsEvent(&ev));
+}
+
+void tst_QQuickAccessible::editableTextInteface_data()
+{
+    QTest::addColumn<QString>("objectName");
+    QTest::addColumn<bool>("editable");
+    QTest::addColumn<bool>("readOnly");
+
+    QTest::newRow("Label") << "label" << false << true;
+}
+
+void tst_QQuickAccessible::editableTextInteface()
+{
+    QFETCH(QString, objectName);
+    QFETCH(bool, editable);
+    QFETCH(bool, readOnly);
+
+    auto clearEvents = qScopeGuard([]{ QTestAccessibility::clearEvents(); });
+
+    auto window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("textInterfaces.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window.get()));
+
+    QQuickItem *item = window->findChild<QQuickItem *>(objectName);
+    QVERIFY(item);
+
+    QAccessibleInterface *itemIface = QAccessible::queryAccessibleInterface(item);
+    QVERIFY(itemIface);
+
+    QAccessibleQuickItem *accessibleQuickItem = static_cast<QAccessibleQuickItem *>(itemIface);
+    QVERIFY(accessibleQuickItem);
+
+    QAccessibleTextInterface *textIface = itemIface->textInterface();
+    QVERIFY(textIface);
+
+    QAccessibleEditableTextInterface *editableIface = itemIface->editableTextInterface();
+    if (!editable || readOnly)
+        QVERIFY(editableIface == nullptr);
+    else
+        QVERIFY(editableIface != nullptr);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)
