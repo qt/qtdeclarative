@@ -82,8 +82,12 @@ public:
 
     bool reportConfigForFiles(const QStringList &files);
 
+    void saveValues() { m_savedValues = m_values; }
+    void restoreValues() { m_values = m_savedValues; }
+
 protected:
     QString m_currentSettingsPath;
+    QVariantHash m_savedValues;
     QVariantHash m_values;
     Searcher m_searcher;
     QStringList m_recognizedIniSections;

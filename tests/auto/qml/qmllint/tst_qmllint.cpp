@@ -176,6 +176,7 @@ private Q_SLOTS:
 
     void replayImportWarnings();
     void errorCategory();
+    void noSettingsPollution();
 
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
@@ -3969,6 +3970,28 @@ void TestQmllint::shadow()
 {
     // reuse testing logic from dirtyQmlSnippet
     dirtyQmlSnippet();
+}
+
+void TestQmllint::noSettingsPollution()
+{
+    const QString aFile = testFile(u"NoSettingsPollution/A.qml"_s);
+    const QString bFile = testFile(u"NoSettingsPollution/folder/B.qml"_s);
+
+    const auto run = [&](const QStringList &args) {
+        QProcess qmllint;
+        qmllint.setProgram(m_qmllintPath);
+        qmllint.setArguments(args);
+        qmllint.setProcessChannelMode(QProcess::MergedChannels);
+        qmllint.start();
+        QVERIFY(qmllint.waitForFinished());
+        const QString output = qmllint.readAllStandardOutput();
+        QVERIFY(output.contains("[comma]"_L1));
+        QVERIFY(output.contains(aFile.toUtf8()));
+        QVERIFY(!output.contains(bFile.toUtf8()));
+    };
+
+    run({ aFile, bFile });
+    run({ bFile, aFile });
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)
