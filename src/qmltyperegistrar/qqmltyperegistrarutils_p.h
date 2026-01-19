@@ -29,7 +29,7 @@ QDebug warning(QAnyStringView fileName, int lineNumber = 0);
 
 QDebug error(QAnyStringView fileName, int lineNumber = 0);
 
-int mergeQtConfFiles(const QString &pathToList);
+int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtConfsList);
 
 QT_END_NAMESPACE
 

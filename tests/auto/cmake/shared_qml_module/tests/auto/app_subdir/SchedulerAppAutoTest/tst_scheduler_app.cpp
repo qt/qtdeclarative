@@ -6,6 +6,9 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QCoreApplication>
+#include <QDir>
+#include <QFileInfo>
 
 class tst_scheduler_app : public QObject
 {
@@ -21,6 +24,7 @@ private slots:
 
     void launch();
     void qtconf();
+    void correctAppleQtConfLocation();
 };
 
 tst_scheduler_app::tst_scheduler_app() {}
@@ -68,6 +72,31 @@ void tst_scheduler_app::qtconf()
     }
 }
 
+void tst_scheduler_app::correctAppleQtConfLocation()
+{
+#if !defined(Q_OS_DARWIN)
+    QSKIP("This test is only relevant for Apple platforms");
+#else
+    // Check that the qt.conf file is not located next to the executable.
+    QFileInfo executableInfo(QCoreApplication::applicationFilePath());
+    QDir executableDir = executableInfo.dir();
+    QString qtConfPath = executableDir.filePath(QLatin1String("qt.conf"));
+    QVERIFY2(!QFileInfo::exists(qtConfPath),
+             qPrintable(QString("qt.conf should not exist at: %1").arg(qtConfPath)));
+
+    // Check that the qt.conf file is located in the Resources directory.
+    QCOMPARE(executableDir.dirName(), QLatin1String("MacOS"));
+    QDir contentsDir = executableDir;
+    QVERIFY(contentsDir.cdUp());
+    // Contents/Resources should exist at this point.
+    QString resourcesPath = contentsDir.filePath(QLatin1String("Resources"));
+    QDir resourcesDir(resourcesPath);
+    QVERIFY(resourcesDir.exists());
+    QString qtConfResourcesPath = resourcesDir.filePath(QLatin1String("qt.conf"));
+    QVERIFY2(QFileInfo::exists(qtConfResourcesPath),
+             qPrintable(QString("qt.conf should exist at: %1").arg(qtConfResourcesPath)));
+#endif
+}
 
 QTEST_MAIN(tst_scheduler_app)
 

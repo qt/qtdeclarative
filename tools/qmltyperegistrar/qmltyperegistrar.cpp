@@ -112,6 +112,11 @@ int main(int argc, char **argv)
     mergeQtConf.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(mergeQtConf);
 
+    QCommandLineOption mergeQtConfPaths("merge-qt-conf-merged-paths"_L1);
+    mergeQtConfPaths.setValueName("qtconf final paths list"_L1);
+    mergeQtConfPaths.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(mergeQtConfPaths);
+
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
@@ -121,8 +126,8 @@ int main(int argc, char **argv)
 
     parser.process(arguments);
 
-    if (parser.isSet(mergeQtConf)) {
-        return mergeQtConfFiles(parser.value(mergeQtConf));
+    if (parser.isSet(mergeQtConf) && parser.isSet(mergeQtConfPaths)) {
+        return mergeQtConfFiles(parser.value(mergeQtConf), parser.value(mergeQtConfPaths));
     }
 
     const QString module = parser.value(importNameOption);
