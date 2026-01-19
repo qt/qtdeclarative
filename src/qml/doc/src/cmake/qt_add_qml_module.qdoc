@@ -551,6 +551,23 @@ module \c{YourModule}, if a QML file specifies \c{import YourModule 3.14}, this
 results in importing  version \c{3.14} of \c{QtQuick}. For related modules that
 follow a common versioning scheme, you should use \c{auto}.
 
+Entries in \c IMPORTS may also refer to CMake targets by prefixing the target
+name with the \c TARGET keyword. In this case, the QML module URI is determined
+automatically from the target. This requires opting into the CMake policy
+\l{QTP0005}.
+
+For example, a QML module can import another module by referring to the
+CMake target that provides it:
+
+\badcode
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    IMPORTS
+        TARGET OtherQmlModule
+)
+\endcode
+
 \c OPTIONAL_IMPORTS provides a list of other QML modules that this module
 \e may import at run-time. These are not automatically imported by the QML
 engine when importing the current module, but rather serve as hints to tools
@@ -612,6 +629,32 @@ qt_add_qml_module(myTarget
 )
 \endcode
 
+Entries in \c DEPENDENCIES may also refer to CMake targets by prefixing the
+target name with the \c TARGET keyword. In this case, the QML module URI and
+import path are determined automatically from the target. This requires
+opting into the CMake policy \l{QTP0005}.
+
+For example, a QML module can declare a dependency on another module by
+referring to the CMake target that provides it:
+
+\badcode
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    DEPENDENCIES
+        TARGET OtherQmlModule
+)
+\endcode
+
+\note Using TARGET <cmake-target> in DEPENDENCIES or IMPORTS does not automatically
+link against the given target. It is used only to derive QML metadata, import paths,
+and to establish build-order dependencies. If the QML module or its generated plugin
+requires symbols from that target, the target must still be linked explicitly using
+target_link_libraries().
+
+\note The <cmake-target> used with the \c TARGET keyword must be a target built
+by your project (not an imported target provided by find_package).
+
 \note Adding the module to \c DEPENDENCIES is not necessary if the module
 is already imported via the \c IMPORTS option. The recommended way is to
 use the lighter alternative \c DEPENDENCIES over \c IMPORTS.
@@ -633,9 +676,6 @@ store a list of additional targets that will also need to be installed.
 These additional targets are generated internally by \c{qt_add_qml_module()}
 and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
-
-\note Since Qt 6.8, it is possible to pass a target name to IMPORTS and
-DEPENDENCIES. See \l{QTP0005} for more details.
 
 \target PLUGIN_TARGET
 \section2 Targets and plugin targets
