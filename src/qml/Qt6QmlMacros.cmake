@@ -126,8 +126,34 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     # is available.
     set(QT_CMAKE_EXPORT_NAMESPACE "${qt_cmake_export_namespace}")
 
-    set(effective_outdir $<TARGET_FILE_DIR:${target}>)
-    set(qtconf_file "${effective_outdir}/${target}_qt.part.conf")
+    get_target_property(target_binary_dir "${target}" BINARY_DIR)
+    set(config_infix "")
+    get_property(is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    if(is_multi_config)
+        set(config_infix "_$<CONFIG>")
+    endif()
+
+    # Location for creating the partial qt conf files.
+    set(qt_part_conf_file "${target_binary_dir}/.qt/qtconfs${config_infix}/${target}_qt.part.conf")
+
+    # Put the final qt.conf file next to the target binary, depending on the where the platform
+    # expects it.
+    get_target_property(is_apple_bundle "${target}" MACOSX_BUNDLE)
+
+    if(APPLE AND is_apple_bundle)
+        if(NOT CMAKE_SYSTEM_NAME OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+            # macOS has a Resources subdir in app bundles.
+            set(resources_suffix "/Resources")
+        else()
+            # Other Apple platforms don't.
+            set(resources_suffix "")
+        endif()
+        set(effective_outdir "$<TARGET_BUNDLE_CONTENT_DIR:${target}>${resources_suffix}")
+    else()
+        set(effective_outdir "$<TARGET_FILE_DIR:${target}>")
+    endif()
+    set(qt_conf_file_final "${effective_outdir}/qt.conf")
+
     get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
 
     # Add the current executable's qml module location as an import path as well.
@@ -155,13 +181,17 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
             list(JOIN qt_all_qml_output_dirs "\n"  qt_all_qml_output_dirs)
 
             file(GENERATE
-                OUTPUT "${qtconf_file}"
+                OUTPUT "${qt_part_conf_file}"
                 CONTENT "${qt_all_qml_output_dirs}\n"
             )
             set_property(
                 DIRECTORY ${PROJECT_SOURCE_DIR}
                 APPEND
-                PROPERTY QT_QMLDIR_ALL_PARTS "${qtconf_file}"
+                PROPERTY QT_QMLDIR_ALL_PARTS "${qt_part_conf_file}"
+            )
+            set_source_files_properties(
+                "${qt_part_conf_file}"
+                PROPERTIES _qt_qml_final_qt_conf_path "${qt_conf_file_final}"
             )
             set_property(
                 DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -177,18 +207,34 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
             return()
         endif()
         list(JOIN all_parts "\n"  all_parts_string)
-        set(command_args_location "${PROJECT_BINARY_DIR}/.qt/qtconf_list_$<CONFIG>")
+
+        set(qt_conf_list_path "${PROJECT_BINARY_DIR}/.qt/qtconf_list${config_infix}")
         file(GENERATE
-            OUTPUT "${command_args_location}"
+            OUTPUT "${qt_conf_list_path}"
             CONTENT "${all_parts_string}\n"
         )
+
+        # Collect the mappings from partial qt.conf files to final qt.conf file location.
+        set(all_parts_final_conf_paths "")
+        foreach(qt_conf_part_file IN LISTS all_parts)
+            get_source_file_property(final_qt_conf_path "${qt_conf_part_file}"
+                _qt_qml_final_qt_conf_path)
+            string(APPEND all_parts_final_conf_paths "${qt_conf_part_file};${final_qt_conf_path}\n")
+        endforeach()
+        set(qt_conf_final_paths_path "${PROJECT_BINARY_DIR}/.qt/qtconf_path_list${config_infix}")
+        file(GENERATE
+            OUTPUT "${qt_conf_final_paths_path}"
+            CONTENT "${all_parts_final_conf_paths}"
+        )
+
         _qt_internal_get_tool_wrapper_script_path(tool_wrapper)
         add_custom_command(
-            OUTPUT "${command_args_location}.done"
+            OUTPUT "${qt_conf_list_path}.done"
             COMMAND
             ${tool_wrapper}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
-            --merge-qt-conf "${command_args_location}"
+            --merge-qt-conf "${qt_conf_list_path}"
+            --merge-qt-conf-merged-paths "${qt_conf_final_paths_path}"
             COMMENT "Generating qt.conf file"
             DEPENDS
                 ${all_parts}
@@ -196,7 +242,7 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
         )
         # actually not specific to $target, but we need a unique identifier
         set(customtargetname "generate_finalqtconf_${target}")
-        add_custom_target("${customtargetname}" DEPENDS "${command_args_location}.done")
+        add_custom_target("${customtargetname}" DEPENDS "${qt_conf_list_path}.done")
         get_directory_property(all_targets
             DIRECTORY ${PROJECT_SOURCE_DIR}
             QT_QMLDIR_DEFERRED_WRITEOUT_ALL_TARGETS
