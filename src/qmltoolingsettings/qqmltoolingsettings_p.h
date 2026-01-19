@@ -40,11 +40,15 @@ public:
                                         const QString &baseForRelativePaths) const;
     bool isSet(const QString &name) const;
 
+    void saveValues() { m_savedValues = m_values; }
+    void restoreValues() { m_values = m_savedValues; }
+
 private:
     QString m_toolName;
     QString m_currentSettingsPath;
     QHash<QString, QString> m_seenDirectories;
     QVariantHash m_values;
+    QVariantHash m_savedValues;
 
     bool read(const QString &settingsFilePath);
 };

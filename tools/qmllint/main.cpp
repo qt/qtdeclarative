@@ -355,9 +355,11 @@ All warnings can be set to three levels:
         parser.showHelp(-1);
     }
 
+    settings.saveValues();
     QJsonArray jsonFiles;
 
     for (const QString &filename : positionalArguments) {
+        settings.restoreValues();
         if (!parser.isSet(ignoreSettings))
             settings.search(filename);
         updateLogLevels();
