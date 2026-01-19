@@ -1,0 +1,59 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-modules-cmake-integration.html
+\title Tying it all together with CMake
+\brief Building QML modules with CMake
+
+When creating QML modules, CMake provides the infrastructure to properly register
+QML types, generate necessary metadata, and ensure your module is correctly packaged
+and deployable. This page outlines the recommended workflow.
+
+\section1 Using qt_add_qml_module
+
+The \l{qt_add_qml_module} command is the standard and recommended way to create QML modules.
+It handles all the complex details of QML module creation:
+
+\code
+qt_add_qml_module(my_qml_module
+    URI MyModule
+    QML_FILES
+        MyType.qml
+        AnotherType.qml
+    SOURCES
+        mytype.cpp mytype.h
+)
+\endcode
+
+This single command:
+\list
+\li Creates the module target
+\li Registers QML types from C++ and QML files
+\li Generates a qmldir file
+\li Handles type registration
+\li Sets up proper import paths
+\li Enables QML tooling support (\l{qmllint}, \l{\QMLLS}{qmlls}, etc.)
+\endlist
+
+\section1 Adding Further QML Files
+
+For QML files added after the initial \c{qt_add_qml_module} call, use
+\l{qt_target_qml_sources}:
+
+\code
+qt_target_qml_sources(my_qml_module
+    QML_FILES
+        DynamicallyAddedType.qml
+)
+\endcode
+
+This can be done based on platform, configuration or other factors.
+
+\section1 Detailed CMake Reference
+
+For complete details on all CMake commands, properties, variables, and policies,
+see \l{CMake Integration for QML}.
+
+\sa {QML Modules}, {qt_add_qml_module}
+*/

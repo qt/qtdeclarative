@@ -1,0 +1,37 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtquick-profiling.html
+\ingroup qtquick-tools
+\title Profiling QML Applications
+\brief Provides information on how to use QML's profiling tools.
+
+\section1 QML Profiler
+
+With the \l{\QC: Profiling QML Applications}{QML Profiler} you can analyze
+your QML code for performance performance issues. The profiler is part of
+both \QC and \QDS. The best way to use it is to utilize \{QC}'s or \{QDS}'s
+defaults for build and run settings.
+
+If you are building or running manually, in order to use the QML Profiler,
+you need to enable the \l{QML debugging infrastructure}.
+
+\section1 Using the command line qmlprofiler tool
+
+Qt provides the \l{qmlprofiler} command line tool to capture profiling data in a
+file. The file can later be loaded into \QC or \QDS for analysis. It
+\l{Connecting to applications}{connects} to the application using the
+debugging protocol.
+
+To run this tool, after starting the application with the
+\l{QML debugging infrastructure} enabled, enter the following command:
+
+\c {qmlprofiler -p <port> -attach <ip address>}
+
+It is advisable to use the \c{services} argument to \c{-qmljsdebugger} in order to
+limit the debug infrastructure to only the services required. These are typically
+\c{CanvasFrameRate}, \c{EngineControl}, and \c{DebugMessages}. Having other services
+enabled may influence the profiling results.
+
+*/

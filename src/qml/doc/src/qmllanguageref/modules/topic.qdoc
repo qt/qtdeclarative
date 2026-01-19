@@ -23,8 +23,42 @@ Defining of a QML module allows:
     without breaking client code
 \endlist
 
+\section1 Modern QML Modules
 
-\section1 Defining a QML Module
+QML Modules are best defined using the CMake API, in particular \l{qt_add_qml_module}.
+The following sections describe all aspects of creating a modern QML module.
+
+\section2 Defining Object Types through QML Documents
+
+\l{Defining Object Types through QML Documents}{QML types can be defined directly in QML documents},
+which is the simplest way to create reusable components. Each QML file that starts with a capital
+letter automatically defines a type that can be used by other QML files in the same module.
+
+\section2 Defining QML Types from C++
+
+For better performance or access to low-level APIs, types can be
+\l{Overview - QML and C++ Integration}{defined in C++ and exposed to QML}. C++ types provide full
+control over properties, methods, and signals while benefiting from static typing and compilation.
+
+\section2 Tying it All Together with CMake
+
+The \l{Tying it all together with CMake}{\c{qt_add_qml_module} CMake command} brings together QML
+files, C++ types, and resources into a cohesive module. It handles type registration, resource
+compilation, and QML tooling integration automatically, making it the recommended approach for
+modern QML module development.
+
+\section2 Modernizing QML Modules
+
+This \l{Modernizing QML Modules}{guide} helps migrate older CMake-based QML modules to newer
+versions of Qt. It covers how to adapt to newer CMake policies and avoid outdated techniques.
+
+\section2 Fine Tuning QML Modules
+
+Advanced module configuration options in \l{Writing QML Modules}{Writing QML Modules} allow
+fine-grained control over module behavior. This includes adding multiple QML modules to the same
+binary, versioning, custom directory layouts, and advanced topics on QML plugins.
+
+\section1 Old QML Modules
 
 \note Use the \l{Port QML modules to CMake}{CMake API} to define a QML Module.
 Define your QML module manually only if you need to use \c qmake.
@@ -46,7 +80,7 @@ Note that defining a module is not the only way to share common QML types
 within a project - a simple \l{Importing QML Document Directories}
 {QML document directory import} may also be used for this purpose.
 
-\section1 Supported QML Module Types
+\section2 Supported QML Module Types
 
 There are two different types of modules supported by QML:
 \list
@@ -66,7 +100,7 @@ Please see the documentation about
 \l{qtqml-syntax-imports.html#module-namespace-imports}{importing a QML module}
 for more information on the topic.
 
-\section1 Providing Types and Functionality in a C++ Plugin
+\section2 Providing Types and Functionality in a C++ Plugin
 
 An application which has a lot of logic implemented in C++, or which defines
 types in C++ and exposes them to QML, may wish to implement a QML plugin.  A
@@ -81,5 +115,5 @@ register any types that the plugin provides, but must not do anything else
 
 See \l{qtqml-modules-cppplugins.html}{Creating C++ Plugins For QML} for more information.
 
-\sa {Modern QML modules}, {Port QML modules to CMake}
+\sa {Modernizing QML Modules}, {Port QML modules to CMake}
 */

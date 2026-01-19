@@ -1,0 +1,78 @@
+// Copyright (C) 2025 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+//! [qml-language-reference-structure]
+    \li \l{qtqml-language-topic.html}{The QML Language}
+        \list
+        \li \l{qtqml-syntax-basics.html}{QML Basics}
+        \li \l{qtqml-documents-topic.html}{QML Documents}
+            \list
+            \li \l{qtqml-documents-structure.html}{Structure of a QML Document}
+            \li \l{qtqml-syntax-objectattributes.html}{QML Object Attributes}
+            \endlist
+        \li \l{qtqml-syntax-propertybinding.html}{Property Binding}
+        \li \l{qtqml-syntax-signals.html}{Signal and Handler Event System}
+        \li \l{qtqml-syntax-imports.html}{Import Statements}
+            \list
+            \li \l{qtqml-syntax-directoryimports.html}{Importing QML Document Directories}
+            \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources in QML}
+            \endlist
+        \li \l{qtqml-syntax-overridesemantics.html}{Property Shadowing and Override Semantics}
+        \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
+        \li \l{qtqml-documents-networktransparency.html}{Resource Loading and Network Transparency}
+        \endlist
+
+    \li \l{qtqml-typesystem-topic.html}{The QML Type System}
+        \list
+        \li \l{qtqml-typesystem-objecttypes.html}{QML Object Types}
+        \li \l{qtqml-typesystem-valuetypes.html}{QML Value Types}
+        \li \l{qtqml-typesystem-enumerations.html}{QML Enumerations}
+        \li \l{qtqml-typesystem-sequencetypes.html}{QML Sequence Types}
+        \li \l{qml-singleton.html}{Singletons in QML}
+        \li \l{qtqml-typesystem-attachedtypes.html}{QML Attached Types}
+        \li \l{qtqml-typesystem-namespaces.html}{QML Namespaces}
+        \li \l{qtqml-javascript-expressions.html}{JavaScript Types}
+        \li \l{qtqml-cppintegration-data.html}{Data Type Conversion Between QML and C++}
+        \li \l{qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
+        \li \l{qtqml-integrating-with-js-values-from-cpp.html}{Integrating with JavaScript values from C++}
+        \li \l{qtqml-cppintegration-contextproperties.html}{Embedding C++ Objects into QML with Context Properties}
+        \endlist
+
+    \li \l{qtqml-modules-topic.html}{QML Modules}
+        \list
+        \li \l{qtqml-documents-definetypes.html}{Defining Object Types through QML Documents}
+        \li \l{qtqml-cppintegration-overview.html}{Defining QML Types from C++}
+            \list
+            \li \l{qtqml-cppintegration-definetypes.html}{Registering Types}
+            \li \l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++ Types to QML}
+            \li \l{qtqml-cppintegration-exposecppstate.html}{Exposing State from C++ to QML}
+            \endlist
+        \li \l{qtqml-modules-cmake-integration.html}{Tying it all together with CMake}
+        \li \l{qt6-modernize-qml-modules.html}{Modernizing QML modules}
+        \li \l{qtqml-writing-a-module.html}{Fine Tuning QML Modules}
+        \li \l{qt6-port-to-qt-add-qml-module.html}{Port QML modules to CMake}
+        \li \l{qtqml-modules-qmldir.html}{Module Definition qmldir Files}
+        \li \l{qtqml-modules-identifiedmodules.html}{Identified Modules}
+        \li \l{qtqml-modules-legacymodules.html}{Legacy Modules}
+        \li \l{qtqml-modules-cppplugins.html}{Creating C++ Plugins for QML}
+        \endlist
+
+    \li \l{qtqml-javascript-topic.html}{JavaScript in QML}
+        \list
+        \li \l{qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents}
+        \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
+        \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources in QML}
+        \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
+            \list
+            \li \l{qtqml-javascript-qmlglobalobject.html}{QML Global Object}
+            \li \l{qml-qtqml-number.html}{The Number JavaScript Object}
+            \li \l{qml-qtqml-date.html}{The Date JavaScript Object}
+            \li \l{qml-qtqml-xmlhttprequest.html}{The XMLHttpRequest JavaScript Object}
+            \li \l{qtqml-javascript-functionlist.html}{List of JavaScript Objects and Functions}
+            \endlist
+        \li \l{qtjavascript.html}{Making Applications Scriptable with JavaScript}
+        \endlist
+//! [qml-language-reference-structure]
+*/
+

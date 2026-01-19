@@ -11,94 +11,120 @@
     \list
     \li \l{The QML Reference}
         \list
-            \li \l{QML Syntax Basics}
-            \li \l{Import Statements}
-            \li \l{Importing QML Document Directories}
-            \li \l{QML Object Attributes}
-            \li \l{Property Binding}
-            \li \l{Signal and Handler Event System}
-            \li \l{The QML Type System}
-                \list
-                \li \l{QML Value Types}
-                \li \l{QML Object Types}
-                \li \l{QML Sequence Types}
-                \li \l{QML Enumerations}
-                \li \l{QML Namespaces}
-                \li \l{QML Value Type and Sequence References}
-                \endlist
-            \li \l{QML Modules}
-                \list
-                    \li \l{Module Definition qmldir Files}{Specifying a QML module}
-                    \li \l{Identified Modules}
-                    \li \l{Legacy Modules}
-                    \li \l{Creating C++ Plugins for QML}
-                \endlist
-            \li \l{QML Documents}
-                \list
-                    \li \l{Structure of a QML Document}
-                    \li \l{Defining Object Types through QML Documents}{Defining Object Types in QML}
-                    \li \l{Resource Loading and Network Transparency}
-                    \li \l{Scope and Naming Resolution}
-                \endlist
+        \include includes/qml-language-reference.qdocinc qml-language-reference-structure
         \endlist
-    \li \l{Singletons in QML}
-    \li \l{The QML Disk Cache}
-    \li \l{Overview - QML and C++ Integration}{QML and C++ Integration}
+
+    \li \l{Prototyping, Debugging and Profiling QML Applications}
         \list
-            \li \l{Defining QML Types from C++}
-            \li \l{Embedding C++ Objects into QML with Context Properties}
-            \li \l{Data Type Conversion Between QML and C++}
-            \li \l{Exposing Attributes of C++ Types to QML}
-            \li \l{Exposing State from C++ to QML}
-            \li \l{Interacting with QML Objects from C++}
-            \li \l{Integrating with JavaScript values from C++}
-            \li \l{Important C++ Classes Provided By The Qt QML Module}{Important C++ Classes}
-            \li \l{Writing QML Extensions with C++}
-            \li \l{Writing advanced QML Extensions with C++}
+        \li \l{Prototyping with the QML Runtime Tool}
+        \li \l{qmlpreview}{Qt Quick QML Preview}
+        \li \l{Debugging QML Applications}
+        \li \l{Profiling QML Applications}
         \endlist
-    \li \l{Integrating QML and JavaScript}{QML and JavaScript Integration}
-        \list
-            \li \l{Making Applications Scriptable}
-            \li \l{JavaScript Expressions in QML Documents}{JavaScript Expressions}
-            \li \l{Dynamic QML Object Creation from JavaScript}
-            \li \l{Defining JavaScript Resources in QML}{Defining JavaScript Resources}
-            \li \l{Importing JavaScript Resources in QML}{Importing JavaScript Resources}
-            \li \l{JavaScript Host Environment}
-            \li \l{Memory Management in the JavaScript Engine}
-            \li \l{Configuring the JavaScript Engine}
-            \li \l{QML Global Object}
-            \li \l{List of JavaScript Objects and Functions}
-        \endlist
-    \li \l{Writing QML Modules}
-    \li \l{Modern QML modules}
-    \li \l{Prototyping with the QML Runtime Tool}
-    \li \l{Debugging QML Applications}
-    \li \l{Deploying QML applications}
+
     \li \l{Qt Qml Tooling}
         \list
-            \li \l{qmllint}
-            \li \l{qmlformat}
-            \li \l{\QMLLS}{qmlls}
-            \li \l{qmlprofiler}
-            \li \l{qml}
-            \li \l{qmlpreview}
-            \li \l{Qt Quick Compiler}
-            \li \l{QML type compiler}
+        \li \l{Qt Quick Compiler}
+            \list
             \li \l{QML script compiler}
-            \li \l{qmltyperegistrar}
-            \li \l{qmlimportscanner}
-            \li \l{svgtoqml}
-            \li \l{qmlcachegen}
-            \li \l{qmlcontextpropertydump}
+            \li \l{QML type compiler}
+            \endlist
+        \li \l{Deploying QML Applications}{Deployment}
+        \li \l{qmllint}
+            \list
+            \li \l{QML Lint Warning and Errors}
+                \list
+                \li \l{Cannot access singleton as a property of an object}
+                \li \l{Alias cycle}
+                \li \l{Attached property reuse}
+                \li \l{Comma}
+                \li \l{Confusing minuses}
+                \li \l{Confusing pluses}
+                \li \l{Deprecated}
+                \li \l{Duplicate enum entries}
+                \li \l{Duplicate Imports}
+                \li \l{Duplicate inline components}
+                \li \l{Duplicate bindings}
+                \li \l{Duplicated name}
+                \li \l{Enum entry matches enum}
+                \li \l{Enum key case}
+                \li \l{Warnings occurred while importing}
+                \li \l{Incompatible type}
+                \li \l{Inheritance cycle}
+                \li \l{Inline component enums}
+                \li \l{Invalid qmllint directives}
+                \li \l{Literal constructor}
+                \li \l{Missing enum entry}
+                \li \l{Missing property}
+                \li \l{Missing type}
+                \li \l{Multiline strings}
+                \li \l{Non-list property}
+                \li \l{Enum declared outside the root element}
+                \li \l{Quick: Attached property type}
+                \li \l{Readonly property}
+                \li \l{Recursion depths errors}
+                \li \l{Redundant Optional Chaining}
+                \li \l{Component is missing a required property}
+                \li \l{Restricted type}
+                \li \l{Signal handler parameters}
+                \li \l{Syntax}
+                \li \l{Duplicate id}
+                \li \l{Id quotation}
+                \li \l{Top level component}
+                \li \l{Uncreatable type}
+                \li \l{Unqualified}
+                \li \l{Unresolved alias}
+                \li \l{Unresolved type}
+                \li \l{Unterminated non-empty case block}
+                \li \l{Unused imports}
+                \li \l{Use proper function}
+                \li \l{Var used before declaration}
+                \li \l{Do not use void in expressions}
+                \li \l{Warn about using assignment in conditions}
+                \li \l{With}
+                \endlist
+            \endlist
+        \li \l{\QMLLS}{qmlls}
+        \li \l{qmlcachegen}
+        \li \l{QML type compiler}{qmltc}
+        \li \l{qmlformat}
+        \li \l{qmltyperegistrar}
+        \li \l{qml}
+        \li \l{qmlimportscanner}
+        \li \l{qmlcontextpropertydump}
+        \li \l{svgtoqml}
         \endlist
-    \li \l{Changes to Qt QML}{Upgrade from Qt 5}
+
+    \li \l{CMake Integration for QML}
         \list
-            \li \l{Port QML modules to CMake}
+        \li \l{qt_add_qml_module}
+        \li \l{qt_target_qml_sources}
+        \li \l{qt_add_qml_plugin}
+        \li \l{qt_deploy_qml_imports}
+        \li \l{qt_generate_deploy_qml_app_script}
+        \li \l{qt_generate_foreign_qml_types}
+        \li \l{qt_import_qml_plugins}
+        \li \l{qt_query_qml_module}
+        \li \l{qt_target_compile_qml_to_cpp}
+        \li \l{CMake Global Variables in Qt6 Qml}{CMake Global Variables for QML}
+        \li \l{CMake Global Properties in Qt6 Qml}{CMake Global Properties for QML}
+        \li \l{CMake Source File Properties in Qt6 Qml}{CMake Source File Properties for QML}
+        \li \l{CMake Policies for QML}
+            \list
+            \li \l{qt-cmake-policy-qtp0001.html}{QTP0001}
+            \li \l{qt-cmake-policy-qtp0004.html}{QTP0004}
+            \li \l{qt-cmake-policy-qtp0005.html}{QTP0005}
+            \endlist
         \endlist
-    \li \l{QML Lint Warning and Errors}
-    \li \l{CMake Global Properties in Qt6 Qml}{CMake Global Properties}
-    \li \l{CMake Source File Properties in Qt6 Qml}{CMake Source File Properties}
-    \li \l{CMake Global Variables in Qt6 Qml}{CMake Global Variables}
+
+    \li \l{Advanced QML Topics}
+        \list
+        \li \l{The QML Disk Cache}
+        \li \l{Configuring the JavaScript Engine}
+        \li \l{Memory Management in the JavaScript Engine}
+        \endlist
+
+    \li \l{Changes to Qt QML}{Upgrade from Qt 5}
     \endlist
 
 */

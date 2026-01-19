@@ -1,0 +1,179 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-typesystem-attachedtypes.html
+\title QML Attached Types
+\brief Using attached properties and signals in QML
+
+Attached properties and signals are a mechanism for objects to be annotated with extra
+properties or signals that are not part of their base type. Attached properties are
+accessed through a namespaced syntax that identifies the type providing the attached
+properties.
+
+\section1 Overview
+
+Some types have properties or signals that can be \e{attached} to other objects, providing
+additional functionality without requiring inheritance. An attached property or signal is
+accessed by prefixing the property or signal name with the name of the attaching type.
+
+For example, the \l ListView type has an attached property called \c isCurrentItem that
+can be accessed on any item within the ListView's delegate:
+
+\qml
+ListView {
+    width: 240
+    height: 320
+    model: 3
+    delegate: Rectangle {
+        width: 100
+        height: 30
+        color: ListView.isCurrentItem ? "red" : "yellow"
+    }
+}
+\endqml
+
+Here, \c{ListView.isCurrentItem} is an attached property that is made available to each
+delegate item by the ListView.
+
+\section1 Attached Properties
+
+Attached properties allow you to add properties to objects that are otherwise defined
+by a base type. The property values are stored externally to the object and accessed
+through the attaching type's name.
+
+Common examples include:
+\list
+\li \l{ListView} attached properties (\c isCurrentItem, \c view)
+\li \l{GridView} attached properties
+\li \l{Keys} attached properties for keyboard event handling
+\li \l{Component} attached properties (\c onCompleted, \c onDestruction)
+\endlist
+
+\section1 Attached Signals
+
+Similar to attached properties, attached signals allow types to provide additional
+signal handlers to objects. These are commonly used for lifecycle events.
+
+For example, the Component type provides attached signals:
+
+\qml
+Rectangle {
+    Component.onCompleted: {
+        console.log("Rectangle creation completed")
+    }
+
+    Component.onDestruction: {
+        console.log("Rectangle is being destroyed")
+    }
+}
+\endqml
+
+\section1 Creating Attached Properties in C++
+
+To create attached properties for your own types from C++, you need to:
+
+\list 1
+\li Create an attached properties class that inherits from QObject
+\li Implement the attached properties in this class
+\li Add the \c QML_ATTACHED macro to your main type
+\li Implement a static \c qmlAttachedProperties() method
+\endlist
+
+Example:
+
+\code
+class MyAttachedType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+    QML_ANONYMOUS
+
+public:
+    MyAttachedType(QObject *parent = nullptr) : QObject(parent) {}
+
+    int value() const { return m_value; }
+    void setValue(int value)
+    {
+        if (m_value != value) {
+            m_value = value;
+            emit valueChanged();
+        }
+    }
+
+signals:
+    void valueChanged();
+
+private:
+    int m_value = 0;
+};
+
+class MyType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_ATTACHED(MyAttachedType)
+
+public:
+    static MyAttachedType *qmlAttachedProperties(QObject *object)
+    {
+        return new MyAttachedType(object);
+    }
+};
+\endcode
+
+Usage in QML:
+
+\qml
+Item {
+    MyType.value: 42
+}
+\endqml
+
+If the attaching type (\c{MyType} in this case) does nothing but attach
+properties to other objects, you can phrase this as a single class:
+
+\code
+class MyType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+    QML_ELEMENT
+    QML_ATTACHED(MyType)
+
+public:
+    static MyType *qmlAttachedProperties(QObject *object)
+    {
+        return new MyType(object);
+    }
+
+    MyType(QObject *parent = nullptr) : QObject(parent) {}
+
+    int value() const { return m_value; }
+    void setValue(int value)
+    {
+        if (m_value != value) {
+            m_value = value;
+            emit valueChanged();
+        }
+    }
+
+signals:
+    void valueChanged();
+
+private:
+    int m_value = 0;
+};
+\endcode
+
+\section1 When to Use Attached Properties
+
+Attached properties are useful when:
+\list
+\li You want to add context-specific information to items (like ListView's \c isCurrentItem)
+\li Properties logically belong to a container or context rather than the item itself
+\li You want to avoid cluttering base types with specialized properties
+\endlist
+
+\sa {QML Object Types}, {The QML Type System}, {Defining QML Types from C++}
+*/

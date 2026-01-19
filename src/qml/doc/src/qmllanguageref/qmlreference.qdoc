@@ -18,76 +18,7 @@ QML types in the guide originate from the \l{Qt Qml} or \l{Qt Quick}
 modules.
 
 \list
-    \li \l{qtqml-syntax-basics.html}{QML Syntax Basics}
-        \list
-        \li \l{qtqml-syntax-imports.html}{Import Statements}
-        \li \l{qtqml-syntax-basics.html#object-declarations}{Object Declarations}
-        \list
-            \li \l{qtqml-syntax-basics.html#child-objects}{Child Objects}
-        \endlist
-        \li \l{qtqml-syntax-basics.html#comments}{Comments}
-        \endlist
-
-    \li \l{qtqml-syntax-objectattributes.html}{QML Object Attributes}
-        \list
-        \li \l{qtqml-syntax-objectattributes.html#the-id-attribute}{The \e id Attribute}
-        \li \l{qtqml-syntax-objectattributes.html#property-attributes}{Property Attributes}
-        \li \l{qtqml-syntax-objectattributes.html#signal-attributes}{Signal Attributes}
-        \li \l{qtqml-syntax-objectattributes.html#method-attributes}{Method Attributes}
-        \li \l{qtqml-syntax-objectattributes.html#attached-properties-and-attached-signal-handlers}{Attached Properties and Attached Signal Handlers}
-        \li \l{qtqml-syntax-objectattributes.html#enumeration-attributes}{Enumeration Attributes}
-        \endlist
-
-    \li \l{qtqml-syntax-propertybinding.html}{Property Binding}
-
-    \li \l{qtqml-syntax-signals.html}{Signal and Handler Event System}
-
-    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
-        \list
-        \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
-        \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
-        \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
-        \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
-        \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
-        \li \l{qtqml-javascript-finetuning.html}{Configuring the JavaScript engine}
-        \endlist
-
-    \li \l{qtqml-typesystem-topic.html}{The QML Type System}
-        \list
-        \li \l{qtqml-typesystem-valuetypes.html}{QML Value Types}
-        \li \l{qtqml-typesystem-topic.html#javascript-types}{JavaScript Types}
-        \li \l{qtqml-typesystem-objecttypes.html}{QML Object Types}
-            \list
-            \li \l{qtqml-documents-definetypes.html}{Defining Object Types from QML}
-            \li \l{qtqml-cppintegration-definetypes.html}{Defining Object Types from C++}
-            \endlist
-        \li \l{qtqml-typesystem-sequencetypes.html}{QML Sequence Types}
-        \li \l{qtqml-typesystem-namespaces.html}{QML Namespaces}
-        \endlist
-
-    \li \l{qtqml-modules-topic.html}{QML Modules}
-        \list
-        \li \l{qtqml-modules-qmldir.html}{Specifying A QML Module}
-        \li \l{qtqml-modules-topic.html#supported-qml-module-types}{Supported QML Module Types}
-            \list
-            \li \l{qtqml-modules-identifiedmodules.html}{Identified Modules}
-            \li \l{qtqml-modules-legacymodules.html}{Legacy Modules}
-            \endlist
-        \li \l{qtqml-modules-cppplugins.html}{Providing Types and Functionality in a C++ Plugin}
-        \endlist
-
-    \li \l{qtqml-documents-topic.html}{QML Documents}
-        \list
-        \li \l{qtqml-documents-structure.html}{Structure of a QML Document}
-        \li \l{Syntax of the QML Language}
-        \li \l{qtqml-documents-definetypes.html}{Defining Object Types through QML Documents}
-            \list
-            \li \l{qtqml-documents-definetypes.html#defining-an-object-type-with-a-qml-file}{Defining an Object Type with a QML File}
-            \li \l{qtqml-documents-definetypes.html#accessible-attributes-of-custom-types}{Accessible Attributes of Custom Types}
-            \endlist
-        \li \l{qtqml-documents-networktransparency.html}{Resource Loading and Network Transparency}
-        \li \l{qtqml-documents-scope.html}{Scope and Naming Resolution}
-        \endlist
+\include includes/qml-language-reference.qdocinc qml-language-reference-structure
 \endlist
 
 */

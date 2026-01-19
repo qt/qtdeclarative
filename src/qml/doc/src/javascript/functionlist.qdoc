@@ -243,9 +243,9 @@
 
     Additionally, the QML engine adds the following functions to the \l Number prototype:
     \list
-    \li \l {Number::fromLocaleString}{fromLocaleString(locale, number)}
-    \li \l {Number::toLocaleCurrencyString}{toLocaleCurrencyString(locale, symbol)}
-    \li \l {Number::toLocaleString}{toLocaleString(locale, format, precision)}
+    \li \l {string Number::fromLocaleString(locale, number)}{fromLocaleString(locale, number)}
+    \li \l {string Number::toLocaleCurrencyString(locale, symbol)}{toLocaleCurrencyString(locale, symbol)}
+    \li \l {string Number::toLocaleString(locale, format, precision)}{toLocaleString(locale, format, precision)}
     \endlist
 
     \section2 The Number Object
@@ -382,12 +382,13 @@
     \li \c {[Symbol.toPrimitive](hint)}
     \endlist
 
-    Additionally, the QML engine adds the following functions to the \l Date prototype:
+    Additionally, the QML engine adds the following functions to the
+    \l{The Date JavaScript Object}{Date} prototype:
     \list
-    \li \l {Date::timeZoneUpdated}{timeZoneUpdated()}
-    \li \l {Date::toLocaleDateString}{toLocaleDateString(locale, format)}
-    \li \l {Date::toLocaleString}{toLocaleString(locale, format)}
-    \li \l {Date::toLocaleTimeString}{toLocaleTimeString(locale, format)}
+    \li \l {string Date::timeZoneUpdated()}{timeZoneUpdated()}
+    \li \l {string Date::toLocaleDateString(locale, format)}{toLocaleDateString(locale, format)}
+    \li \l {string Date::toLocaleString(locale, format)}{toLocaleString(locale, format)}
+    \li \l {string Date::toLocaleTimeString(locale, format)}{toLocaleTimeString(locale, format)}
     \endlist
 
     \section1 RegExp Objects

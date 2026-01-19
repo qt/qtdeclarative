@@ -42,13 +42,10 @@ registered as an instantiable QML type}, so that it can be instantiated and used
 \l{qtqml-cppintegration-definetypes.html#registering-singleton-objects-with-a-singleton-type}
 {Singleton Type} so that a single instance of the class may be imported from QML code, allowing the
 instance's properties, methods and signals to be accessed from QML
-\li An instance of the class can be \l{qtqml-cppintegration-contextproperties.html}{embedded into
-QML code} as a \e {context property} or \e {context object}, allowing the instance's properties,
-methods and signals to be accessed from QML
 \endlist
 
-These are the most common methods of accessing C++ functionality from QML code; for more options and
-details, see the main documentation pages that are described in the sections further below.
+These are the most common methods of accessing C++ functionality from QML code. The
+\l{qqmlintegration.h}{QML Type Registration Macros} offer a number of other options and variants.
 Additionally, aside from the ability to access C++ functionality from QML, the \l {Qt Qml} module also
 provides ways to do the reverse and manipulate QML objects from C++ code. See
 \l{qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++} for more
@@ -58,11 +55,18 @@ It is often desirable to expose some state as global properties to QML.
 \l{qtqml-cppintegration-exposecppstate.html}{Exposing State from C++ to QML}
 describes how to do this.
 
-Finally, the C++ code may be integrated into either a C++ application or a C++ plugin depending on
-whether it is to be distributed as a standalone application or a library. A plugin can be integrated
-with a QML module that can then be imported and used by QML code in other applications; see
+The C++ code may be integrated into either a C++ application or a standalone QML module,
+depending on whether it is to be distributed as a standalone application or a library. A QML module
+can contain a C++ plugin that can then be dynamically loaded by the QML engine. This allows an
+application to use QML modules that weren't linked into the binary.
+
+You can also manually create standalone plugins. See
 \l{qtqml-modules-cppplugins.html}{Providing Types and Functionality in a C++ Plugin} for more
-information.
+information. This is not recommended.
+
+Finally An instance of the class can be \l{qtqml-cppintegration-contextproperties.html}{embedded
+into QML code} as a \e {context property} or \e {context object}, allowing the instance's
+properties, methods and signals to be accessed from QML. Context properties should be avoided.
 
 \section1 Choosing the Correct Integration Method Between C++ and QML
 

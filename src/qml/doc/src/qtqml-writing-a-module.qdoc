@@ -458,6 +458,6 @@ linker does not drop parts of the module in various scenarios.
 As the plugin creates an image provider, it no longer has a trivial
 \c initializeEngine function. Therefore, the plugin is no longer optional.
 
-\sa {Changes to Qt QML}, {Modern QML modules}, {Port QML modules to CMake}
+\sa {Changes to Qt QML}, {Modernizing QML Modules}, {Port QML modules to CMake}
 
 */

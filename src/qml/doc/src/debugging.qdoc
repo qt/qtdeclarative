@@ -217,12 +217,6 @@ or
 
 When the application is running, an IDE or a tool that implements the binary
 protocol can connect to the open port.
-
-Qt provides a \c qmlprofiler command line tool to capture profiling data in a
-file. To run this tool, enter the following command:
-
-\c {qmlprofiler -p <port> -attach <ip address>}
-
 \section1 Debugging with \QC
 
 \QC uses the debugging infrastructure to debug, inspect, and profile QML

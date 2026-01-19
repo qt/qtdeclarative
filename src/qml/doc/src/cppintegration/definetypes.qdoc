@@ -979,4 +979,5 @@ public:
 };
 \endcode
 
+\sa {qqmlintegration.h}{QML Type Registration Macros}, {Overview - QML and C++ Integration}
 */

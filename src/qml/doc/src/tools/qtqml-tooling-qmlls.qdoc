@@ -246,7 +246,7 @@ yet to be supported:
 \list
     \li using QMake or imperative type registration---see \l{Port QML modules to CMake}
     \li that were not built---\QMLLS uses the build information to find QML modules
-    \li where QML modules don't follow the guidelines in \l{Modern QML modules}
+    \li where QML modules don't follow the guidelines in \l{Modernizing QML Modules}
 \endlist
 
 */

@@ -1,0 +1,104 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-cmake-integration.html
+\title CMake Integration for QML
+\brief CMake commands, properties, and policies for QML module development
+
+Qt provides extensive CMake integration for building QML modules and applications.
+
+\section1 Core CMake Commands
+
+\section2 qt_add_qml_module
+
+The \l{qt_add_qml_module} command is the primary function for creating QML modules in CMake.
+It handles QML type registration, resource embedding, plugin creation, and integration with
+Qt's build system, providing a declarative way to define all aspects of a QML module.
+
+\section2 qt_target_qml_sources
+
+The \l{qt_target_qml_sources} command adds QML files and resources to an existing QML module
+target. This is useful for organizing large modules or conditionally including QML files based
+on build configuration.
+
+\section2 qt_add_qml_plugin
+
+The \l{qt_add_qml_plugin} command creates a QML plugin library that can be dynamically loaded
+by the QML engine. While \c{qt_add_qml_module} typically handles plugin creation automatically,
+this function provides lower-level control when needed.
+
+\section1 Deployment Commands
+
+\section2 qt_deploy_qml_imports
+
+The \l{qt_deploy_qml_imports} command identifies and deploys all QML imports used by your
+application, including their dependencies. This ensures that all necessary QML modules and
+plugins are packaged with your application.
+
+\section2 qt_generate_deploy_qml_app_script
+
+The \l{qt_generate_deploy_qml_app_script} command generates a platform-specific deployment
+script that handles copying QML modules, plugins, and other resources to the correct locations
+in your application bundle or installation directory.
+
+\section2 qt_import_qml_plugins
+
+The \l{qt_import_qml_plugins} command ensures that QML plugins are properly linked into
+statically-built applications, generating the necessary initialization code to register
+the plugins with the QML engine.
+
+\section1 Advanced Commands
+
+\section2 qt_generate_foreign_qml_types
+
+The \l{qt_generate_foreign_qml_types} command creates QML type registrations for C++ types
+that are defined in other libraries or modules. This enables you to expose third-party or
+Qt types to QML without modifying their source code.
+
+\section2 qt_query_qml_module
+
+The \l{qt_query_qml_module} command retrieves information about a QML module, such as its
+URI, version, plugin target, and type information file paths. This is useful for build
+system introspection and tooling integration.
+
+\section2 qt_target_compile_qml_to_cpp
+
+The \l{qt_target_compile_qml_to_cpp} command enables compilation of QML files to C++ using
+\l{qmltc}(the QML type compiler). This provides an alternative to component-based
+instantiation with improved performance for statically-known QML types.
+
+\section1 CMake Variables and Properties
+
+Qt QML provides several CMake variables and properties to configure QML module behavior:
+
+\section2 Global Variables
+
+\l{CMake Global Variables in Qt6 Qml} control default behavior across all QML modules in your
+project. These include variables for output directories, cache file generation, and tooling
+integration, allowing you to configure QML compilation settings at a project-wide level.
+
+\section2 Global Properties
+
+\l{CMake Global Properties in Qt6 Qml} affect how the build system processes QML modules and can be
+used to customize aspects like linter target organization and build-time code generation.
+
+\section2 Source File Properties
+
+\l{CMake Source File Properties in Qt6 Qml} allow fine-grained control over individual QML files
+within a module. You can use these properties to mark files as singletons, exclude them from
+compilation steps, specify custom type names, or control other per-file behaviors in the QML type
+system.
+
+\section1 CMake Policies
+
+Qt QML defines several CMake policies to control backward compatibility and behavior.
+
+\section2 CMake Policies for QML
+
+The \l{CMake Policies for QML} page provides an overview of all QML-related CMake policies
+and how they affect module behavior. Policies allow you to opt-in to new behaviors while
+maintaining compatibility with existing projects.
+
+\sa {QML Modules}, {qt_add_qml_module}, {Writing QML Modules}
+*/

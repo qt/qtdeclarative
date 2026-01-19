@@ -405,7 +405,7 @@ If the player enters a name, we send the data to the service using this code in 
 
 \snippet tutorials/samegame/samegame4/samegame.js 1
 
-The \l XMLHttpRequest in this code is the same as the \c XMLHttpRequest() as you'll find in standard browser JavaScript, and can be used in the same way to dynamically get XML
+The \l{The XMLHttpRequest JavaScript Object}{XMLHttpRequest} in this code is the same as the \c XMLHttpRequest() as you'll find in standard browser JavaScript, and can be used in the same way to dynamically get XML
 or QML from the web service to display the high scores. We don't worry about the response in this case - we just post the high
 score data to the web server. If it had returned a QML file (or a URL to a QML file) you could instantiate it in much the same
 way as you did with the blocks.
@@ -422,7 +422,7 @@ By following this tutorial you've seen how you can write a fully functional appl
 \li Build your application with \l {Qt Quick QML Types}{QML types}
 \li Add application logic \l{JavaScript Expressions in QML Documents}{with JavaScript code}
 \li Add animations with \l {Behavior}{Behaviors} and \l{Qt Quick States}{states}
-\li Store persistent application data using, for example, \l QtQuick.LocalStorage or \l XMLHttpRequest
+\li Store persistent application data using, for example, \l QtQuick.LocalStorage or \l{The XMLHttpRequest JavaScript Object}{XMLHttpRequest}
 \endlist
 
 There is so much more to learn about QML that we haven't been able to cover in this tutorial. Check out all the

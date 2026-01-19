@@ -27,8 +27,8 @@ See \l{qtqml-cppintegration-data.html}{Data Type Conversion Between QML and C++}
 for more details.)
 
 In general, these are accessible from QML regardless of whether a
-QObject-derived class has been \l{Registering C++ types with the QML type
-system}{registered with the QML type system}. However, if a class is to be
+QObject-derived class has been \l{Registering C++ Types with the QML Type
+System}{registered with the QML type system}. However, if a class is to be
 used in a way that requires the engine to access additional type information
 — for example, if the class itself is to be used as a method parameter or
 property, or if one of its enum types is to be used in this way — then the
@@ -62,7 +62,7 @@ type that is supported by the QML engine.
 
 By default, the engine supports a number of Qt C++ types and can automatically
 convert them as appropriately when used from QML. Additionally, C++ classes
-that are \l{Registering C++ types with the QML type system}{registered} with
+that are \l{Registering C++ Types with the QML Type System}{registered} with
 the QML type system can be used as data types, as can their enums if
 appropriately registered. See \l{qtqml-cppintegration-data.html}{Data Type
 Conversion Between QML and C++} for further information.
@@ -226,8 +226,8 @@ to be used in bindings should have a NOTIFY signal instead.
 \section2 Properties with Object Types
 
 Object-type properties are accessible from QML providing that the object type
-has been appropriately \l{Registering C++ types with the QML type
-system}{registered} with the QML type system.
+has been appropriately \l{Registering C++ Types with the QML Type
+System}{registered} with the QML type system.
 
 For example, the \c Message type might have a \c body property of type
 \c MessageBody*:
@@ -250,8 +250,8 @@ class MessageBody : public QObject
 }
 \endcode
 
-Suppose the \c Message type was \l{Registering C++ types with the QML type
-system}{registered} with the QML type system, allowing it to be used as an
+Suppose the \c Message type was \l{Registering C++ Types with the QML Type
+System}{registered} with the QML type system, allowing it to be used as an
 object type from QML code:
 
 \qml
@@ -320,7 +320,7 @@ void MessageBoard::append_message(QQmlListProperty<Message> *list, Message *msg)
 \endcode
 
 Note that the template class type for the QQmlListProperty — in this case,
-\c Message — must be \l{Registering C++ types with the QML type system}
+\c Message — must be \l{Registering C++ Types with the QML Type System}
 {registered} with the QML type system.
 
 
@@ -552,8 +552,8 @@ signal with a single parameter, \c subject:
  };
 \endcode
 
-If the \c MessageBoard type was \l{Registering C++ types with the QML type
-system}{registered} with the QML type system, then a \c MessageBoard object
+If the \c MessageBoard type was \l{Registering C++ Types with the QML Type
+System}{registered} with the QML type system, then a \c MessageBoard object
 declared in QML could receive the \c newMessagePosted() signal using a signal
 handler named \c onNewMessagePosted, and examine the \c subject parameter
 value:
@@ -574,5 +574,5 @@ Classes may have multiple signals with the same name, but only the final
 signal is accessible as a QML signal. Note that signals with the same name
 but different parameters cannot be distinguished from one another.
 
-
+\sa {qqmlintegration.h}{QML Type Registration Macros}, {Defining QML Types from C++}
 */

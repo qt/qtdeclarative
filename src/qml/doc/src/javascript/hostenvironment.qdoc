@@ -100,7 +100,14 @@ Note that QML makes the following modifications to native objects:
 
 \list
 \li An \l {string}{arg()} function is added to the \c String prototype.
-\li Locale-aware conversion functions are added to the \l Date and \l Number prototypes.
+\li Locale-aware conversion functions are added to the \l{The Date JavaScript Object}{Date} and \l{The Number JavaScript Object}{Number} prototypes.
+\endlist
+
+See also:
+\list
+\li \l{The Date JavaScript Object}{Number} - The Number JavaScript object
+\li \l{The Date JavaScript Object}{Date} - The Date JavaScript object
+\li \l{The XMLHttpRequest JavaScript Object}{XMLHttpRequest} - The XMLHttpRequest JavaScript object
 \endlist
 
 In addition, QML also extends the behavior of the instanceof function to

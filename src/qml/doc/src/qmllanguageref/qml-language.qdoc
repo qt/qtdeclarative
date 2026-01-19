@@ -1,0 +1,74 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-language-topic.html
+\title The QML Language
+\brief Overview of the QML language fundamentals
+
+The QML language provides the foundation for building dynamic and declarative user interfaces.
+This section covers the core language features and syntax.
+
+\section1 Core Concepts
+
+\section2 QML Basics
+
+\l{QML Basics} introduces the fundamentals of QML, including object declarations,
+property assignments, and hierarchical object structures. Understanding these basics is essential
+for writing any QML code.
+
+\section2 QML Documents
+
+\l{QML Documents} explains how QML code is organized into files and the structure of a QML document.
+Each document can define reusable types and includes imports, object declarations, and property
+definitions.
+
+\section2 Property Binding
+
+\l{Property Binding} is one of QML's most powerful features, allowing properties to automatically
+update when their dependencies change. Bindings create dynamic relationships between properties
+without requiring imperative code.
+
+\section2 Signal and Handler Event System
+
+The \l{Signal and Handler Event System} provides QML's event handling mechanism. Objects can emit
+signals when certain events occur, and other objects can respond by implementing signal handlers,
+enabling loose coupling between components.
+
+\section1 Import System
+
+\section2 Import Statements
+
+\l{Import Statements} allow you to include \l{QML Modules}, JavaScript files and ECMAScript modules
+in your QML documents. They define what types and functionality are available within a document's
+scope.
+
+\l{Importing QML Document Directories} enables you to import all QML types from a directory without
+explicitly defining a module. This is useful for sharing QML components within a project during
+development.
+
+\l{Importing JavaScript Resources in QML} explains how to include JavaScript files from the
+JavaScript perspective. This includes importing into QML documents or into other JavaScript files.
+
+\section1 Advanced Language Features
+
+\section2 Property Shadowing and Override Semantics
+
+\l{Property Shadowing and Override Semantics} describes what happens when derived types redefine
+properties from their base types. Understanding these semantics is crucial for proper inheritance
+and component customization.
+
+\section2 Scope and Naming Resolution
+
+\l{Scope and Naming Resolution} explains how QML resolves identifiers and properties in nested
+object hierarchies. This includes understanding ID scopes, context properties, and the JavaScript
+scope chain.
+
+\section2 Resource Loading and Network Transparency
+
+\l{Resource Loading and Network Transparency} shows how QML can load resources from local files
+or network URLs using the same syntax. This allows seamless integration of remote content and
+simplifies asset management.
+
+\sa {The QML Reference}, {The QML Type System}
+*/

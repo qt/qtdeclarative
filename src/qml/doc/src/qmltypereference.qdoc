@@ -114,9 +114,9 @@ that reliably exists (daylight-savings transitions skip an hour, near
 one end or the other of a day).
 
 This value type is provided by the QML language. It can be implicitly converted
-to a \l{QtQml::Date}{Date} object.
+to a \l{The Date JavaScript Object}{Date} object.
 
-\sa {QtQml::Date}{QML Date object}, {QML Value Types}
+\sa {The Date JavaScript Object}{QML Date object}, {QML Value Types}
 */
 
 /*!

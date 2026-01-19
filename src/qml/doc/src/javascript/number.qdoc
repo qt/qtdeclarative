@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \qmltype Number
+    \page qml-qtqml-number.html
+    \title The Number JavaScript Object
+
     \inqmlmodule QtQml
     \brief The Number object provides represents a number value.
 
@@ -10,10 +12,8 @@
     locale aware functions.
 
     \sa {QtQml::Locale}{Locale}
-*/
 
-/*!
-    \qmlmethod string Number::toLocaleString(locale,format,precision)
+    \section1 string Number::toLocaleString(locale, format, precision)
 
     Converts the Number to a string suitable for the specified \a locale
     in the specified \a format, with the specified \a precision.
@@ -60,20 +60,16 @@
     \endqml
 
     \sa {QtQml::Locale}{Locale}
-*/
 
-/*!
-    \qmlmethod string Number::toLocaleCurrencyString(locale,symbol)
+    \section1 string Number::toLocaleCurrencyString(locale, symbol)
 
     Converts the Number to a currency using the currency and conventions of the specified
     \a locale.  If \a symbol is specified it will be used as the currency
     symbol.
 
     \sa Locale::currencySymbol()
-*/
 
-/*!
-    \qmlmethod string Number::fromLocaleString(locale,number)
+    \section1 string Number::fromLocaleString(locale, number)
 
     Returns a Number by parsing \a number using the conventions of the supplied \a locale.
 

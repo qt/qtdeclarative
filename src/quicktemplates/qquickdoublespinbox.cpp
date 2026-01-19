@@ -340,7 +340,7 @@ void QQuickDoubleSpinBox::setDecimals(int decimals)
     the conversion, if applicable.
 
     The default implementation does the conversion using
-    \l {QtQml::Number::toLocaleString()}{Number.toLocaleString}():
+    \l {string Number::toLocaleString(locale, format, precision)}{Number.toLocaleString}():
 
     \code
     textFromValue: function(value, decimals, locale) {

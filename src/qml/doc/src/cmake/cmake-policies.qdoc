@@ -1,0 +1,29 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page cmake-policies-qml.html
+\title CMake Policies for QML
+\brief Overview of CMake policies affecting QML module behavior
+
+Qt QML provides several CMake policies to control backward compatibility and behavior
+of QML-related CMake commands.
+
+\section1 Available Policies
+
+\list
+\li \l{QTP0001} - Controls QML module versioning behavior
+\li \l{QTP0004} - Controls QML module output directory structure
+\li \l{QTP0005} - Controls QML type registration behavior
+\endlist
+
+\section1 Setting Policies
+
+Use \c{qt_policy()} or \c{cmake_policy()} to set these policies in your CMakeLists.txt:
+
+\code
+qt_policy(SET QTP0001 NEW)
+\endcode
+
+\sa {CMake Integration for QML}, {qt_add_qml_module}
+*/

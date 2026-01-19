@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 
 /*!
-    \qmltype Date
+    \page qml-qtqml-date.html
+    \title The Date JavaScript Object
     \inqmlmodule QtQml
     \brief Provides date functions.
 
@@ -78,10 +79,8 @@
     "implementation-dependent" in the ECMAScript standard, this is still valid, though.
 
     \sa {QtQml::Locale}{Locale}
-*/
 
-/*!
-    \qmlmethod string Date::toLocaleString(locale, format)
+    \section1 string Date::toLocaleString(locale, format)
 
     Converts the Date to a string containing the date and time
     suitable for the specified \a locale
@@ -101,10 +100,8 @@
         text: "The date is: " + new Date().toLocaleString(Qt.locale("de_DE"))
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::toLocaleDateString(locale, format)
+    \section1 string Date::toLocaleDateString(locale, format)
 
     Converts the Date to a string containing the date suitable for the specified \a locale
     in the specified \a format.
@@ -123,10 +120,8 @@
         text: "The date is: " + new Date().toLocaleDateString(Qt.locale("de_DE"))
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::toLocaleTimeString(locale, format)
+    \section1 string Date::toLocaleTimeString(locale, format)
 
     Converts the Date to a string containing the time suitable for the specified \a locale
     in the specified \a format.
@@ -145,12 +140,10 @@
         text: "The date is: " + new Date().toLocaleTimeString(Qt.locale("de_DE"))
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::fromLocaleString(locale, dateTimeString, format)
+    \section1 string Date::fromLocaleString(locale, dateTimeString, format)
 
-    Converts the datetime string \a dateTimeString to a \l {QtQml::Date}{Date}
+    Converts the datetime string \a dateTimeString to a \l {The Date JavaScript Object}{Date}
     object using \a locale and \a format.
 
     If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
@@ -172,12 +165,10 @@
         }
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::fromLocaleDateString(locale, dateString, format)
+    \section1 string Date::fromLocaleDateString(locale, dateString, format)
 
-    Converts the date string \a dateString to a \l {QtQml::Date}{Date} object
+    Converts the date string \a dateString to a \l {The Date JavaScript Object}{Date} object
     using \a locale and \a format.
 
     If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
@@ -202,12 +193,10 @@
         }
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::fromLocaleTimeString(locale, timeString, format)
+    \section1 string Date::fromLocaleTimeString(locale, timeString, format)
 
-    Converts the time string \a timeString to a \l {QtQml::Date}{Date} object
+    Converts the time string \a timeString to a \l {The Date JavaScript Object}{Date} object
     using \a locale and \a format.
 
     If \a format is not specified, \l {QtQml::Locale}{Locale.LongFormat} will
@@ -232,10 +221,8 @@
         }
     }
     \endcode
-*/
 
-/*!
-    \qmlmethod string Date::timeZoneUpdated()
+    \section1 string Date::timeZoneUpdated()
 
     Informs the JS engine that the system's timezone has been changed, which is necessary
     for the correct manipulation of datetime data.

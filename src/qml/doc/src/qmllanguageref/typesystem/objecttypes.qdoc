@@ -28,6 +28,10 @@ For more information about C++ and the different QML integration methods,
 see the
 \l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
 
+There are two built-in object types that can be used without importing any other
+modules: \l{QtObject} is the base type of all object types. \l{Component} can be
+used to define new object types inline in QML documents.
+
 \section1 Defining Object Types from QML
 
 

@@ -1,0 +1,40 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtqml-advanced-topics.html
+\title Advanced QML Topics
+\brief Advanced features and optimization techniques for QML
+
+This section covers advanced topics for optimizing and fine-tuning QML applications.
+
+\section1 Caching and Performance
+
+\section2 The QML Disk Cache
+
+\l{The QML disk cache}{The QML disk cache} stores compiled QML and JavaScript code on disk
+to improve application startup time. When a QML document is loaded for the first time, it's
+compiled to bytecode and cached in a platform-specific location. Subsequent loads of the
+same document can use the cached bytecode instead of recompiling from source, significantly
+reducing initialization overhead.
+
+\section1 JavaScript Engine Configuration
+
+\section2 Configuring the JavaScript Engine
+
+\l{Configuring the JavaScript engine}{The JavaScript engine can be configured} with various
+environment variables to control compilation behavior, garbage collection settings, and
+runtime optimizations. These settings allow you to tune the JavaScript engine for specific
+use cases, such as favoring startup time over peak performance or adjusting memory usage
+patterns.
+
+\section2 Memory Management in the JavaScript Engine
+
+\l{Memory Management in the JavaScript Engine}{The JavaScript engine uses garbage collection}
+to automatically reclaim memory from objects that are no longer in use. Understanding how
+the garbage collector works, including generational collection strategies and heap organization,
+helps you write QML and JavaScript code that performs efficiently and avoids common memory-related
+performance pitfalls.
+
+\sa {QML Profiler}, {JavaScript Host Environment}
+*/

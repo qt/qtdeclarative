@@ -10,6 +10,22 @@ the developer and designer experience and includes some internal tools
 used by Qt. The following sections offer a concise overview of these tools
 and utilities, along with links to additional information about each of them.
 
+\section1 Qt Quick Compiler
+
+The \l{Qt Quick Compiler} processes QML and JavaScript code at compile time to improve
+application performance. It consists of two main components: the QML type compiler
+which generates C++ classes from QML types, and the QML script compiler which compiles
+bindings and functions to efficient byte code and C++. This results in faster
+application startup and more efficient execution of QML code.
+
+\section1 Deployment
+
+\l{Deploying QML Applications} requires bundling all necessary QML files, JavaScript resources,
+plugins, and dependencies with your application. Qt provides tools and CMake functions to
+automate the deployment process, ensuring that all required QML imports and their dependencies
+are correctly identified and packaged. This includes handling platform-specific requirements
+for distributing QML modules and plugins.
+
 \section1 Developer tools
 
 A set of tools provided by the Qt Qml module that aim to facilitate a QML

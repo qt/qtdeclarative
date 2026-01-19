@@ -359,7 +359,7 @@ void QQuickSpinBox::setLive(bool live)
     locale that should be used for the conversion, if applicable.
 
     The default implementation does the conversion using
-    \l {QtQml::Number::toLocaleString()}{Number.toLocaleString}():
+    \l {string Number::toLocaleString(locale, format, precision)}{Number.toLocaleString}():
 
     \code
     textFromValue: function(value, locale) { return Number(value).toLocaleString(locale, 'f', 0); }

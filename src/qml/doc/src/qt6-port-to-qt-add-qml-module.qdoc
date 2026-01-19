@@ -9,7 +9,7 @@
 QML modules have become more powerful and easier to use in Qt 6. The following sections describe
 how to port QML modules to the \l qt_add_qml_module CMake API.
 
-See also \l{Modern QML modules} on how to modernize a QML module that already uses \l
+See also \l{Modernizing QML Modules} on how to modernize a QML module that already uses \l
 qt_add_qml_module.
 
 \section1 Identify issues to fix
@@ -184,5 +184,5 @@ SomeType {
 Note that files inside a QML module automatically import their own QML module. You can remove the
 self-imports.
 
-\sa {Changes to Qt QML}, {Modern QML modules}
+\sa {Changes to Qt QML}, {Modernizing QML Modules}
 */

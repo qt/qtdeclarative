@@ -87,4 +87,15 @@ JavaScript engine uses for handling memory and compiling JavaScript. See
 \l{qtqml-javascript-finetuning.html}{Configuring the JavaScript engine} for
 more information on these parameters.
 
+\section1 Making Applications Scriptable
+
+Beyond using JavaScript within QML documents, Qt also allows you to embed a
+JavaScript engine in C++ applications to make them scriptable. This allows
+extending application functionality using JavaScript without recompiling the
+application.
+
+See \l{Making Applications Scriptable} for detailed information about using
+the JavaScript engine in C++ applications, including how to expose QObject
+instances to scripts and security considerations.
+
 */

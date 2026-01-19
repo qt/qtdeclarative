@@ -257,5 +257,5 @@
 
     \endlist
 
-    \sa {Modern QML modules}, {Port QML modules to CMake}
+    \sa {Modernizing QML Modules}, {Port QML modules to CMake}
 */

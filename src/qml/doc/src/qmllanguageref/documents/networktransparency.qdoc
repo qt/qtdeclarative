@@ -110,5 +110,5 @@ This is equivalent to downloading and executing "http://evil.com/evil.exe". \b {
 will not prevent particular resources from being loaded}. Unlike JavaScript code that is run within a web browser, a QML application can load remote or local filesystem resources in the same way as any other native applications, so application developers must be careful in loading and executing any content.
 
 As with any application accessing other content beyond its control, a QML application should
-perform appropriate checks on any untrusted data it loads. \b {Do not, for example, use \c import, \l Loader or \l XMLHttpRequest to load any untrusted code or content.}
+perform appropriate checks on any untrusted data it loads. \b {Do not, for example, use \c import, \l Loader or \l{The XMLHttpRequest JavaScript Object}{XMLHttpRequest} to load any untrusted code or content.}
 */

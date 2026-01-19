@@ -21,17 +21,6 @@ documents which can then be imported.
 Wherever the type definitions come from, the engine will enforce type-safety
 for properties and instances of those types.
 
-
-\section1 QML Value Types
-
-The QML language has built-in support for various primitive types including
-integers, double-precision floating point numbers, strings, and boolean values.
-Objects may have properties of these types, and values of these types may be
-passed as arguments to methods of objects.
-
-See the \l{qtqml-typesystem-valuetypes.html}{QML Value Types} documentation for
-more information about value types.
-
 \section1 QML Object Types
 
 A QML object type is a type from which a QML object can be instantiated. QML
@@ -44,6 +33,16 @@ Finally, every QML document implicitly defines a QML object type, which can be
 re-used in other QML documents.  See the documentation about
 \l{qtqml-typesystem-objecttypes.html}{object types in the QML type system} for
 in-depth information about object types.
+
+\section1 QML Value Types
+
+The QML language has built-in support for various primitive types including
+integers, double-precision floating point numbers, strings, and boolean values.
+Objects may have properties of these types, and values of these types may be
+passed as arguments to methods of objects.
+
+See the \l{qtqml-typesystem-valuetypes.html}{QML Value Types} documentation for
+more information about value types.
 
 \section1 QML Sequence Types
 
@@ -59,6 +58,22 @@ Enumerations are treated as special properties of types in QML.
 
 See the the documentation about \l{QML Enumerations} for in-depth
 information about enumerations.
+
+\section1 Singleton Types
+
+QML supports singleton types, which provide a way to define a type of which only
+one instance exists in each QML engine. Singleton types are useful for providing
+application-wide state or functionality.
+
+See \l{Singletons in QML} for more details.
+
+\section1 Attached Types
+
+Attached properties and signal handlers allow types to provide additional
+properties and signals that can be attached to other objects. This is a powerful
+mechanism for adding contextual information to QML objects.
+
+See \l{QML Attached Types} for more details.
 
 \section1 QML Namespaces
 
@@ -93,5 +108,36 @@ Item {
 
 See \l {qtqml-javascript-expressions.html}{JavaScript Expressions in QML Documents} for more details.
 
+\section1 C++ Integration
+
+\section2 Data Type Conversion Between QML and C++
+
+When integrating QML with C++, data often needs to be transferred between the two
+environments. The QML engine provides automatic conversion between QML and C++ types
+for common data types, while custom types require
+\l{Registering C++ Types with the QML Type System}{explicit registration}.
+
+See \l{Data Type Conversion Between QML and C++} for more details.
+
+\section2 Interacting with QML Objects from C++
+
+C++ code can access and manipulate QML objects by obtaining references to them from
+the QML engine. This allows C++ code to read and write properties, invoke methods,
+and connect to signals on QML objects.
+
+See \l{Interacting with QML Objects from C++} for more details.
+
+\section2 Integrating with JavaScript Values from C++
+
+The QML engine represents JavaScript values using the QJSValue and related classes,
+which allows C++ code to work with JavaScript objects, functions, and primitive
+values. This enables seamless integration between C++ and JavaScript code.
+
+See \l{Integrating with JavaScript values from C++} for more details.
+
+\section2 Embedding C++ Objects into QML with Context Properties
+
+Context properties should be avoided. See
+\l{Embedding C++ Objects into QML with Context Properties} for more details.
 
 */
