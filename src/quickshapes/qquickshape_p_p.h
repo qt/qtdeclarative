@@ -61,7 +61,7 @@ public:
     virtual void setFillGradient(int index, QQuickShapeGradient *gradient) = 0;
     virtual void setFillTextureProvider(int index, QQuickItem *textureProviderItem) = 0;
     virtual void setFillTransform(int index, const QSGTransform &transform) = 0;
-    virtual void setTriangulationScale(qreal) { }
+    virtual void setTriangulationScale(int, qreal) { }
     virtual void handleSceneChange(QQuickWindow *window) = 0;
 
     // Render thread, with gui blocked

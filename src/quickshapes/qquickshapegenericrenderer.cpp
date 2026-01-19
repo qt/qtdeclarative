@@ -272,10 +272,11 @@ void QQuickShapeGenericRenderer::setFillTransform(int index, const QSGTransform 
     d.syncDirty |= DirtyFillTransform;
 }
 
-void QQuickShapeGenericRenderer::setTriangulationScale(qreal scale)
+void QQuickShapeGenericRenderer::setTriangulationScale(int index, qreal scale)
 {
-    // No dirty, this is called at the start of every sync. Just store the value.
-    m_triangulationScale = scale;
+    ShapePathData &d(m_sp[index]);
+    d.triangulationScale = scale;
+    d.syncDirty |= DirtyStrokeGeom;
 }
 
 void QQuickShapeFillRunnable::run()
@@ -367,7 +368,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 r->path = d.path;
                 r->fillColor = d.fillColor;
                 r->supportsElementIndexUint = supportsElementIndexUint;
-                r->triangulationScale = m_triangulationScale;
+                r->triangulationScale = d.triangulationScale;
                 // Unlikely in practice but in theory m_sp could be
                 // resized. Therefore, capture 'i' instead of 'd'.
                 QObject::connect(r, &QQuickShapeFillRunnable::done, qApp, [this, i](QQuickShapeFillRunnable *r) {
@@ -394,7 +395,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             } else {
                 triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType,
                                 supportsElementIndexUint,
-                                m_triangulationScale);
+                                d.triangulationScale);
             }
         }
 
@@ -409,7 +410,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 r->pen = d.pen;
                 r->strokeColor = d.strokeColor;
                 r->clipSize = QSize(m_item->width(), m_item->height());
-                r->triangulationScale = m_triangulationScale;
+                r->triangulationScale = d.triangulationScale;
                 QObject::connect(r, &QQuickShapeStrokeRunnable::done, qApp, [this, i](QQuickShapeStrokeRunnable *r) {
                     if (!r->orphaned && i < m_sp.size()) {
                         ShapePathData &d(m_sp[i]);
@@ -429,7 +430,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
 #endif
             } else {
                 triangulateStroke(d.path, d.pen, d.strokeColor, &d.strokeVertices,
-                                  QSize(m_item->width(), m_item->height()), m_triangulationScale);
+                                  QSize(m_item->width(), m_item->height()), d.triangulationScale);
             }
         }
     }

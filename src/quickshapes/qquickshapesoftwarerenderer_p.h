@@ -50,7 +50,7 @@ public:
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
-    void setTriangulationScale(qreal scale) override;
+    void setTriangulationScale(int index, qreal scale) override;
     void endSync(bool async) override;
     void handleSceneChange(QQuickWindow *window) override;
 
@@ -66,12 +66,12 @@ private:
         QPainterPath path;
         QPen pen;
         float strokeWidth;
+        float triangulationScale;
         QColor fillColor;
         QBrush brush;
         Qt::FillRule fillRule;
     };
     QList<ShapePathGuiData> m_sp;
-    float m_triangulationScale = 1.0f;
 };
 
 class QQuickShapeSoftwareRenderNode : public QSGRenderNode
@@ -93,6 +93,7 @@ private:
         QPainterPath path;
         QPen pen;
         float strokeWidth;
+        float triangulationScale;
         QBrush brush;
     };
     QList<ShapePathRenderData> m_sp;

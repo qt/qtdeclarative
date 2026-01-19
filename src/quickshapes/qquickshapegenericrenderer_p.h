@@ -69,7 +69,7 @@ public:
     void setFillGradient(int index, QQuickShapeGradient *gradient) override;
     void setFillTextureProvider(int index, QQuickItem *textureProviderItem) override;
     void setFillTransform(int index, const QSGTransform &transform) override;
-    void setTriangulationScale(qreal scale) override;
+    void setTriangulationScale(int index, qreal scale) override;
     void endSync(bool async) override;
     void setAsyncCallback(void (*)(void *), void *) override;
     Flags flags() const override { return SupportsAsync; }
@@ -103,6 +103,7 @@ private:
 
     struct ShapePathData {
         float strokeWidth;
+        float triangulationScale;
         QPen pen;
         Color4ub strokeColor = { uchar(0), uchar(0), uchar(0), uchar(0) };
         Color4ub fillColor = { uchar(0), uchar(0), uchar(0), uchar(0) };
@@ -133,7 +134,6 @@ private:
     int m_accDirty;
     void (*m_asyncCallback)(void *);
     void *m_asyncCallbackData;
-    float m_triangulationScale = 1.0;
 };
 
 class QQuickShapeFillRunnable : public QObject, public QRunnable

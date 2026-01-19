@@ -1583,7 +1583,7 @@ void QQuickShapePrivate::sync()
     bool countChanged = false;
     const qreal det = windowToItemTransform().determinant();
     const qreal adjTriangulationScale = triangulationScale /
-            (qIsNaN(det) || qIsNull(det) ? qreal(1) : qSqrt(qAbs(windowToItemTransform().determinant())));
+            (qIsNaN(det) || qIsNull(det) ? qreal(1) : qSqrt(qAbs(det)));
     renderer->beginSync(count, &countChanged);
 
     qCDebug(lcShapeSync) << "syncing" << count << "path(s)";
@@ -1604,12 +1604,12 @@ void QQuickShapePrivate::sync()
         if (dirty & QQuickShapePathPrivate::DirtyStrokeWidth) {
             // TODO adjust triangulationScale regardless of the env var, after we're satisfied that there are no significant regressions
             if (p->cosmeticStroke() || QSGCurveStrokeNode::expandingStrokeEnabled()) {
-                renderer->setTriangulationScale(adjTriangulationScale);
+                renderer->setTriangulationScale(i, adjTriangulationScale);
                 qCDebug(lcShapeSync) << "  - DirtyStrokeWidth:" << p->strokeWidth()
                                      << "cosmetic:" << p->cosmeticStroke() << "triangulationScale"
                                      << triangulationScale << "adjusted to" << adjTriangulationScale;
             } else {
-                renderer->setTriangulationScale(triangulationScale);
+                renderer->setTriangulationScale(i, triangulationScale);
                 qCDebug(lcShapeSync) << "  - DirtyStrokeWidth:" << p->strokeWidth()
                                      << "cosmetic:" << p->cosmeticStroke() << "triangulationScale" << triangulationScale;
             }
