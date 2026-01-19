@@ -1,0 +1,172 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-context-properties.html
+\ingroup qmllint-warnings-and-errors
+
+\title Context properties
+\brief [context-properties] A context property was used.
+
+\qmllintwarningcategory context-properties
+
+\section1 Potential context property access detected
+
+\section2 What happened?
+A potential \l{Embedding C++ Objects into QML with Context Properties}{context property}
+ access was detected.
+
+\section2 Why is this bad?
+By using context properties in your QML code, you create a dependency from your
+QML code to the specific context you have in mind when writing it. This limits
+reusability of your code since the context may be different in other places
+where it might be used. Furthermore, the dependency is not declared. You never
+import the context or otherwise state what you expect. Therefore, anyone
+trying to reuse your code will have difficulties finding out whether the
+place where it is reused has a context sufficient for your code.
+
+QML tooling can't use the context property: the \l{Qt Quick Compiler}{compiler} can't
+compile this file to C++ and \l{qmllint} as well as \l{\QMLLS} can't provide useful
+warnings on that file.
+
+\section2 Example
+
+\code
+// main.cpp
+int main(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+    QQuickView view;
+    view.rootContext()
+        ->setContextProperty("myProperty", QDateTime::currentDateTime());
+    view.loadFromModule("MyModule", "Main");
+    view.show();
+    app.exec();
+}
+\endcode
+
+\qml
+// Main.qml
+import QtQuick
+
+Item {
+    Component.onCompleted: console.log(myProperty)
+}
+\endqml
+
+To fix this warning, you can:
+\list
+\li Make the property required.
+\li Use a singleton.
+\li Add an entry to \c{.contextProperties.ini}.
+\endlist
+
+\section3 Using a required property
+
+Use required properties for context properties that have different values in different
+components. To fix this warning with a required property, use one of the
+\c{setInitialProperties} methods instead of \l{QQmlContext::}{setContextProperty}:
+
+\list
+ \li \l{QQuickView::setInitialProperties},
+ \li \l{QQmlComponent::setInitialProperties},
+ \li \l{QQmlApplicationEngine::setInitialProperties},
+ \li \l{QQmlIncubator::setInitialProperties}, or
+ \li \l{QQuickWidget::setInitialProperties}.
+\endlist
+
+Also define the required property in \c{Main.qml}.
+
+\code
+// main.cpp
+int main(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+    QQuickView view;
+    view.setInitialProperties( { {"myProperty", QDateTime::currentDateTime()}  } );
+    view.loadFromModule("MyModule", "Main");
+    view.show();
+    app.exec();
+}
+\endcode
+
+\qml
+// Main.qml
+import QtQuick
+
+Item {
+    required property date myProperty
+    Component.onCompleted: console.log(myProperty)
+}
+\endqml
+
+See also \l{Exposing State from C++ to QML}.
+
+\section3 Using a singleton
+
+Use singletons for context properties that have the same value in all components.
+To fix this warning with a \l{Singletons in QML}{singleton}, remove the
+\l{QQmlContext::}{setContextProperty} call, define a
+singleton and replace the context property usage with the singleton property.
+
+\code
+// mysingleton.h
+class MySingleton : public QObject {
+    Q_OBJECT
+    QML_SINGLETON
+    QML_ELEMENT
+    Q_PROPERTY(QDateTime myProperty MEMBER m_myProperty NOTIFY myPropertyChanged FINAL)
+
+    QDateTime m_myProperty = QDateTime::currentDateTime();
+signals:
+    void myPropertyChanged();
+};
+// main.cpp
+int main(int argc, char **argv)
+{
+    QGuiApplication app(argc, argv);
+    QQuickView view;
+    view.loadFromModule("MyModule", "Main");
+    view.show();
+    app.exec();
+}
+\endcode
+
+\qml
+// Main.qml
+import QtQuick
+
+Item {
+    Component.onCompleted: console.log(MySingleton.myProperty)
+}
+\endqml
+
+See also \l{Exposing State from C++ to QML}.
+
+\section3 Adding an entry to .contextProperties.ini
+
+If you can't replace the context property, create a
+\l{Context property settings}{.contextProperties.ini} file in your project
+source directory if there is none, and write the following content:
+
+\badcode
+[General]
+disableUnqualifiedAccess = "myProperty"
+warnOnUsage = "myProperty"
+disableHeuristic = false
+\endcode
+
+To silence this warning if the \c{.contextProperties.ini} file already exists,
+append the context property name to the already existing lists:
+
+\badcode
+[General]
+disableUnqualifiedAccess = "someOtherProperty,myProperty"
+warnOnUsage = "someOtherProperty,myProperty"
+disableHeuristic = false
+\endcode
+
+See also \l{Context property settings} for more information on the
+\c {.contextProperties.ini} format.
+
+*/
