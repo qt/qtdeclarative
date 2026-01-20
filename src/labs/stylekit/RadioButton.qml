@@ -12,10 +12,10 @@ T.RadioButton {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            radioButtonLayout.implicitWidth + implicitContentWidth)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + styleReader.topPadding + styleReader.bottomPadding,
-                             radioButtonLayout.implicitHeight)
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
     leftPadding: radioButtonLayout.padding.left
     topPadding: radioButtonLayout.padding.top

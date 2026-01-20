@@ -12,10 +12,10 @@ T.ComboBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            comboLayout.implicitWidth + implicitContentWidth)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + styleReader.topPadding + styleReader.bottomPadding,
-                             comboLayout.implicitHeight)
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
     leftPadding: comboLayout.padding.left
     rightPadding: comboLayout.padding.right

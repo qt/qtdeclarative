@@ -12,10 +12,10 @@ T.CheckBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            checkBoxLayout.implicitWidth + implicitContentWidth)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + styleReader.topPadding + styleReader.bottomPadding,
-                             checkBoxLayout.implicitHeight)
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
     leftPadding: checkBoxLayout.padding.left
     topPadding: checkBoxLayout.padding.top
