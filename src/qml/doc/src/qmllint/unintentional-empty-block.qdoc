@@ -1,0 +1,44 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-unintentional-empty-block.html
+\ingroup qmllint-warnings-and-errors
+
+\title Unintentional empty block
+\brief [unintentional-empty-block] An empty block was created, likely in place of an object literal.
+
+\qmllintwarningcategory unintentional-empty-block
+
+\section1 Unintentional empty block
+
+\section2 What happened?
+An empty block was declared as the expression for a property binding.
+
+You likely intended to declare an empty object literal instead. To do so, wrap
+the literal in parentheses. This is required to disambiguate the literal from
+an empty block.
+
+\section2 Why is that bad?
+Assigning a block with no instructions as a property binding does nothing and
+might confuse the reader. When evaluating that binding, no instructions will be
+executed and the binding will evaluate to undefined.
+
+\section2 Example
+\qml
+import QtQml
+
+QtObject {
+    property var v: {} // This is not an empty object literal!
+}
+\endqml
+To fix this warning, wrap the object literal in parentheses, or remove the
+binding altogether:
+\qml
+import QtQml
+
+QtObject {
+    property var v: ({}) // This is an empty object literal
+}
+\endqml
+*/
