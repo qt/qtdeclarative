@@ -1,0 +1,45 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-prefer-non-var-properties.html
+\ingroup qmllint-warnings-and-errors
+
+\title Prefer non-var properties
+\brief [prefer-non-var-properties] Prefer non-var properties over var properties.
+
+\qmllintwarningcategory prefer-non-var-properties
+
+\section1 Prefer more specific type over var
+
+\section2 What happened?
+You defined a property in QML with type \c{var} instead of a more specific one,
+like \c{int} or \c{string} for example.
+
+\section2 Why is that bad?
+This affects the readability of the code and the QML tooling can't apply specific
+type optimizations.
+
+You should avoid using \c{var} as property type for properties that always holds
+the same type. To avoid false positives, qmllint only warns about readonly
+properties with simple bindings. In other cases, it may not be able to
+distinguish properties that have to be var, because they need to hold multiple types,
+from properties that always hold the same type.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    readonly property var myP: 42
+}
+\endqml
+To fix this warning, replace \c{var} with the specific type.
+\qml
+import QtQuick
+
+Item {
+    readonly property int myP: 42
+}
+\endqml
+*/
