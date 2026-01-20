@@ -1,0 +1,50 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-function-used-before-declaration.html
+\ingroup qmllint-warnings-and-errors
+
+\title Function used before its declaration
+\brief [function-used-before-declaration] A function was used before its declaration.
+
+\qmllintwarningcategory function-used-before-declaration
+
+This category is disabled by default.
+
+\section1 Function usage before its declaration
+
+\section2 What happened?
+You called a function or used its name before the function was declared.
+
+\section2 Why is that bad?
+It makes the code more difficult to read and may cause confusion.
+
+Note that the function is made available before its declaration due to
+\l{https://developer.mozilla.org/en-US/docs/Glossary/Hoisting}{hoisting}.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        g(42)
+        function g() { return 42; }
+    }
+}
+\endqml
+
+To fix this warning, move the declaration before the usage.
+
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        function g() { return 42; }
+        g(42)
+    }
+}
+\endqml
+*/
