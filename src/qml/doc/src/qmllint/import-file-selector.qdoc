@@ -1,0 +1,51 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-import-file-selector.html
+\ingroup qmllint-warnings-and-errors
+
+\title Import file selector
+\brief [import-file-selector] Imports using file selectors.
+
+\qmllintwarningcategory import-file-selector
+
+This category is disabled by default due to current limitations in QML tooling towards
+QML modules with file selectors.
+
+\section1 Warnings occurred while importing
+
+\section2 What happened?
+The QML tooling found ambiguous types in an \l{Import Statements}{imported module}
+due to \l{Using File Selectors with Qt Quick Controls}{file selector} usages in the
+imported module. The QML runtime selects the appropriate file based on a runtime
+configuration, while the QML tooling has no information on which file will be
+selected, creating the ambiguity.
+
+
+\section2 Why is that bad?
+QML tooling can't use the import: the \l{Qt Quick Compiler}{compiler} can't compile
+this file to C++ and \l{qmllint} as well as \l{\QMLLS} can't provide useful warnings
+on that file.
+
+\omit
+// TODO: add example once there is a way to make tooling understand file selectors
+\section2 Example
+\qml
+// Main.qml
+import QtQuick
+
+Item {
+}
+\endqml
+To fix this warning, ...
+
+\qml
+import QtQuick
+
+Item {
+}
+\endqml
+
+\endomit
+*/
