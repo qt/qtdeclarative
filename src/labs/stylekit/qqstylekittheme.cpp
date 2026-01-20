@@ -11,6 +11,47 @@
 
 QT_BEGIN_NAMESPACE
 
+static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
+{
+    switch (type) {
+    case QQStyleKitReader::ControlType::AbstractButton:
+    case QQStyleKitReader::ControlType::Button:
+    case QQStyleKitReader::ControlType::FlatButton:
+        return QQuickTheme::Button;
+    case QQStyleKitReader::ControlType::CheckBox:
+        return QQuickTheme::CheckBox;
+    case QQStyleKitReader::ControlType::ComboBox:
+        return QQuickTheme::ComboBox;
+    case QQStyleKitReader::ControlType::GroupBox:
+        return QQuickTheme::GroupBox;
+    case QQStyleKitReader::ControlType::ItemDelegate:
+        return QQuickTheme::ItemView;
+    case QQStyleKitReader::ControlType::Label:
+        return QQuickTheme::Label;
+    case QQStyleKitReader::ControlType::RadioButton:
+        return QQuickTheme::RadioButton;
+    case QQStyleKitReader::ControlType::SpinBox:
+        return QQuickTheme::SpinBox;
+    case QQStyleKitReader::ControlType::SwitchControl:
+        return QQuickTheme::Switch;
+    case QQStyleKitReader::ControlType::TabBar:
+    case QQStyleKitReader::ControlType::TabButton:
+        return QQuickTheme::TabBar;
+    case QQStyleKitReader::ControlType::TextArea:
+        return QQuickTheme::TextArea;
+    case QQStyleKitReader::ControlType::TextInput:
+    case QQStyleKitReader::ControlType::TextField:
+        return QQuickTheme::TextField;
+    case QQStyleKitReader::ControlType::ToolBar:
+    case QQStyleKitReader::ControlType::ToolButton:
+    case QQStyleKitReader::ControlType::ToolSeparator:
+        return QQuickTheme::ToolBar;
+    default:
+        return QQuickTheme::System;
+    }
+    Q_UNREACHABLE();
+}
+
 QQStyleKitTheme::QQStyleKitTheme(QObject *parent)
     : QQStyleKitStyleAndThemeBase(parent)
 {
@@ -23,6 +64,23 @@ QQStyleKitStyle *QQStyleKitTheme::style() const
         return nullptr;
     Q_ASSERT(qobject_cast<QQStyleKitStyle *>(parentObj));
     return static_cast<QQStyleKitStyle *>(parentObj);
+}
+
+QPalette QQStyleKitTheme::paletteForReader(QQStyleKitReader *reader) const
+{
+    Q_ASSERT(reader);
+    const QQuickTheme::Scope scope = scopeForType(reader->type());
+    return effectivePaletteForScope(scope);
+}
+
+QPalette QQStyleKitTheme::effectivePaletteForScope(QQuickTheme::Scope scope) const
+{
+    if (scope < QQuickTheme::System || scope >= NScopes) {
+        qWarning() << Q_FUNC_INFO << "Invalid scope" << int(scope);
+        return QPalette();
+    }
+
+    return m_effectivePalettes[int(scope)];
 }
 
 void QQStyleKitTheme::updateThemePalette()
@@ -54,12 +112,12 @@ void QQStyleKitTheme::updateThemePalette()
 
         if (nearestFallback) {
             if (auto *p = (nearestFallback->*getter)())
-                result = result.resolve(p->toQPalette());
+                result = p->toQPalette();
         }
 
         if (palettes()->isSet(scope)) {
             if (auto *p = (palettes()->*getter)())
-                result = result.resolve(p->toQPalette());
+                result = p->toQPalette().resolve(result);
         }
 
         return result;
@@ -68,8 +126,8 @@ void QQStyleKitTheme::updateThemePalette()
     auto setResolved = [&](QQuickPalette* (QQStyleKitPalette::*getter)() const,
         QQuickTheme::Scope scope)
     {
-        const QPalette resolved = resolveFromPaletteChain(scope, getter);
-        theme->setPalette(scope, resolved);
+        QPalette resolved = resolveFromPaletteChain(scope, getter);
+        m_effectivePalettes[int(scope)] = resolved;
     };
 
     setResolved(&QQStyleKitPalette::system, QQuickTheme::System);
@@ -91,9 +149,6 @@ void QQStyleKitTheme::updateThemePalette()
     setResolved(&QQStyleKitPalette::toolBar, QQuickTheme::ToolBar);
     setResolved(&QQStyleKitPalette::toolTip, QQuickTheme::ToolTip);
     setResolved(&QQStyleKitPalette::tumbler, QQuickTheme::Tumbler);
-
-    QEvent event(QEvent::ApplicationPaletteChange);
-    QGuiApplication::sendEvent(qGuiApp, &event);
 }
 
 void QQStyleKitTheme::updateQuickTheme()

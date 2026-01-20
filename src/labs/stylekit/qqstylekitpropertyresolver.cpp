@@ -488,7 +488,7 @@ QVariant QQStyleKitPropertyResolver::readProperty(
     /* Sync the palette of the style with the palette of the current reader. Note
      * that this can cause palette bindings in the style to change, which will
      * result in calls to writeStyleProperty(). */
-    style->setPalette(styleReader->palette());
+    style->syncPaletteFromReader(styleReader);
 
     const QQStyleKitExtendableControlType exactType = styleReader->type();
     const QList<QQStyleKitExtendableControlType> baseTypes = baseTypesForType(exactType);
@@ -615,7 +615,7 @@ QVariant QQStyleKitPropertyResolver::readStyleProperty(
                 return value;
         }
 
-        style->setPalette(styleReader->palette());
+        style->syncPaletteFromReader(styleReader);
         cacheReaderState(styleReader->controlState());
         const QVariant value = readProperty(ids, styleReader, style);
         return value;

@@ -36,6 +36,8 @@ public:
 
     QQStyleKitStyle *style() const;
 
+    QPalette paletteForReader(QQStyleKitReader *reader) const;
+
 signals:
     void targetChanged();
 
@@ -43,15 +45,18 @@ protected:
     void componentComplete() override;
 
 private:
-    Q_DISABLE_COPY(QQStyleKitTheme)
-
-    bool m_completed = false;
-
     void updateThemePalette();
     void updateQuickTheme();
+    QPalette effectivePaletteForScope(QQuickTheme::Scope scope) const;
+
+    bool m_completed = false;
+    static int const NScopes = int(QQuickTheme::Tumbler) + 1;
+    QPalette m_effectivePalettes[NScopes];
 
     friend class QQStyleKitAttached;
     friend class QQStyleKitStyle;
+
+    Q_DISABLE_COPY(QQStyleKitTheme)
 };
 
 QT_END_NAMESPACE

@@ -276,6 +276,7 @@ void QQStyleKitReader::resetAll()
     for (QQStyleKitReader *reader : s_allReaders) {
         reader->m_effectiveVariationsDirty = true;
         reader->clearLocalStorage();
+        reader->rebuildEffectivePalette();
         reader->emitChangedForAllStyleProperties();
         reader->updateFontFromTheme();
     }
@@ -523,14 +524,40 @@ void QQStyleKitReader::setPalette(QQuickPalette *palette)
     onPaletteChanged();
 }
 
+QPalette QQStyleKitReader::effectivePalette() const
+{
+    return m_effectivePalette;
+}
+
 void QQStyleKitReader::onPaletteChanged()
 {
     const QQStyleKitStyle *style = QQStyleKitStyle::current();
     if (!style || !style->loaded())
         return;
 
-    clearLocalStorage();
-    emitChangedForAllStyleProperties();
+    if (rebuildEffectivePalette()) {
+        clearLocalStorage();
+        emitChangedForAllStyleProperties();
+    }
+}
+
+bool QQStyleKitReader::rebuildEffectivePalette()
+{
+    auto mergedPalette = style()->paletteForReader(this);
+    const auto stylePaletteResolveMask = mergedPalette.resolveMask();
+    if (m_palette) {
+        // The control palette takes precedence over the style palette
+        const auto controlPalette = m_palette->toQPalette();
+        mergedPalette = controlPalette.resolve(mergedPalette);
+        // Explicitly set the resolve mask to make sure it is not lost during the resolve operation
+        // when the control palette has a resolveMask of 0
+        mergedPalette.setResolveMask(stylePaletteResolveMask | controlPalette.resolveMask());
+    }
+    if (m_effectivePalette == mergedPalette)
+        return false;
+
+    m_effectivePalette = mergedPalette;
+    return true;
 }
 
 QFont QQStyleKitReader::font() const

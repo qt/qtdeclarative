@@ -117,6 +117,7 @@ public:
 
     QQuickPalette *palette() const;
     void setPalette(QQuickPalette *palette);
+    QPalette effectivePalette() const;
 
     bool vertical() const;
     void setVertical(bool vertical);
@@ -171,6 +172,8 @@ private:
     void instantiatePropertyChanges(QQmlComponent *comp);
     void maybeTrackDelegates();
 
+    bool rebuildEffectivePalette();
+
 private:
     Q_DISABLE_COPY(QQStyleKitReader)
 
@@ -185,6 +188,7 @@ private:
     bool m_effectiveVariationsDirty: 1;
 
     QPointer<QQuickPalette> m_palette;
+    QPalette m_effectivePalette;
     QFont m_font;
     mutable QQStyleKitPropertyStorage m_storage;
     AlternateState m_alternateState = AlternateState::Alternate1;

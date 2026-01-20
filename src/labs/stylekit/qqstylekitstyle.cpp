@@ -38,6 +38,19 @@ QQuickPalette *QQStyleKitStyle::palette() const
     return m_paletteProxy;
 }
 
+void QQStyleKitStyle::setPalette(QQuickPalette *palette)
+{
+    if (m_paletteProxy == palette)
+        return;
+    if (m_isUpdatingPalette)
+        return;
+
+    QScopedValueRollback<bool> rb(m_isUpdatingPalette, true);
+    m_paletteProxy = palette;
+
+    emit paletteChanged();
+}
+
 QQmlComponent *QQStyleKitStyle::light() const
 {
     return m_light;
@@ -295,6 +308,11 @@ QFont QQStyleKitStyle::fontForReader(QQStyleKitReader *reader) const
     }
 }
 
+QPalette QQStyleKitStyle::paletteForReader(QQStyleKitReader *reader) const
+{
+    return m_theme->paletteForReader(reader);
+}
+
 bool QQStyleKitStyle::loaded() const
 {
     /* Before both the style and theme has completed loading
@@ -321,30 +339,16 @@ void QQStyleKitStyle::executeFallbackStyle(bool complete)
         quickCompleteDeferred(this, name, m_fallbackStyle);
 }
 
-void QQStyleKitStyle::setPalette(QQuickPalette *palette)
+void QQStyleKitStyle::syncPaletteFromReader(const QQStyleKitReader *reader)
 {
-    if (m_palette && palette && m_palette->toQPalette() == palette->toQPalette())
+    if (m_isUpdatingPalette)
         return;
-
-    if (m_palette)
-        QObject::disconnect(m_palette, nullptr, this, nullptr);
-
-    m_palette = palette;
-
-    if (m_palette)
-        QObject::connect(m_palette, &QQuickPalette::changed,
-                         this, &QQStyleKitStyle::syncPaletteFromReader);
-
-    syncPaletteFromReader();
-}
-
-void QQStyleKitStyle::syncPaletteFromReader()
-{
-    QPalette p = m_palette ? m_palette->toQPalette() : QPalette{};
-    // Mark all roles as resolved
-    p.setResolveMask(~QPalette::ResolveMask(0));
-    m_paletteProxy->fromQPalette(p);
-    QScopedValueRollback rollback(m_isUpdatingPalette, true);
+    QScopedValueRollback<bool> rb(m_isUpdatingPalette, true);
+    QPalette p = reader ? reader->effectivePalette() : QPalette{};
+    if (p == m_lastReaderPalette)
+        return;
+    m_lastReaderPalette = p;
+    m_paletteProxy->fromQPalette(m_lastReaderPalette);
     emit paletteChanged();
 }
 

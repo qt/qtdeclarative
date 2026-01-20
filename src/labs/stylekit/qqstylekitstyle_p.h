@@ -55,6 +55,7 @@ public:
     ~QQStyleKitStyle();
 
     QQuickPalette *palette() const;
+    void setPalette(QQuickPalette *palette);
 
     QQStyleKitStyle *fallbackStyle() const;
     void setFallbackStyle(QQStyleKitStyle *fallbackStyle);
@@ -78,6 +79,7 @@ public:
     static QQStyleKitStyle *current();
 
     QFont fontForReader(QQStyleKitReader *reader) const;
+    QPalette paletteForReader(QQStyleKitReader *reader) const;
 
     // For now, used by qqcontrolstowidgetstyle
     Q_INVOKABLE QList<QObject *> customThemesAsList();
@@ -99,10 +101,8 @@ private:
     void parseThemes();
     void recreateTheme();
     void executeFallbackStyle(bool complete = false);
-    void setPalette(QQuickPalette *palette);
-    void syncPaletteFromReader();
+    void syncPaletteFromReader(const QQStyleKitReader *reader);
 
-private:
     Q_DISABLE_COPY(QQStyleKitStyle)
 
     bool m_completed = false;
@@ -114,6 +114,7 @@ private:
     QPointer<QQStyleKitTheme> m_theme;
     QPointer<QQmlComponent> m_currentThemeComponent;
     QQuickPalette *m_paletteProxy = nullptr;
+    QPalette m_lastReaderPalette;
     QPointer<QQuickPalette> m_palette;
     QString m_themeName;
     QString m_effectiveThemeName;
