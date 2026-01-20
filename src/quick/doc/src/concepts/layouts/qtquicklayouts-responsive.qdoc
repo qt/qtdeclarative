@@ -65,7 +65,7 @@
     for various form factors. Especially with more complex layouts this might be
     useful to improve and maintain a reasonable source code structure.
 
-    Note, that the \l{LayoutItemProxy} API is a technical preview and might
+    Note, that the \l{LayoutItemProxy} API is in a technology preview state and might
     be subject to change or removal in future Qt versions.
 
     \section1 Adaptive hierarchy, adaptive layout
@@ -74,7 +74,7 @@
     the hierarchy. A small stand-alone button in a small layout might be
     combined with other buttons and put into a box of a larger layout. An item
     that is fully visible in one layout, might require a \l {Flickable} in
-    another, smaller layout. In this scenario, it is best to rely on the \l {LayoutItemProxy}. The \l {LayoutItemProxy} allows to move \l{Item}{Items} across various hierarchy levels and between different \l{Item::parent}{Item.parent}. 
+    another, smaller layout. In this scenario, it is best to rely on the \l {LayoutItemProxy}. The \l {LayoutItemProxy} allows to move \l{Item}{Items} across various hierarchy levels and between different \l{Item::parent}{Item.parent}.
 
     The \l {Qt Quick Layouts - Responsive Layout Example} shows a case where an
     item is moved between different hierarchy levels, put into a \l {Flickable}
