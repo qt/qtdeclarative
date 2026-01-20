@@ -1,0 +1,47 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-confusing-expression-statement.html
+\ingroup qmllint-warnings-and-errors
+
+\title Confusing expression statement
+\brief [confusing-expression-statement] Confusing expression statements.
+
+\qmllintwarningcategory confusing-expression-statement
+
+\section1 Expression statement has no obvious effect
+
+\section2 What happened?
+You used an expression statement that has no obvious effect.
+
+\section2 Why is that bad?
+It makes the code more difficult to read and may cause confusion. Usually,
+it indicates that some expression result was ignored.
+
+The expression statement is compiled into bytecode and evaluated at runtime,
+despite not having any effect.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    function add(a: int, b: int) : int {
+        a + b
+    }
+}
+\endqml
+To fix this warning, remove the expression without effect or use the
+expression result.
+
+\qml
+import QtQuick
+
+Item {
+    function add(a: int, b: int) : int {
+        return a + b
+    }
+}
+\endqml
+*/
