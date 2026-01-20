@@ -1,0 +1,48 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-enums-are-not-types.html
+\ingroup qmllint-warnings-and-errors
+
+\title Enums are not types
+\brief [enums-are-not-types] Enum names used as type annotations.
+
+\qmllintwarningcategory enums-are-not-types
+
+\section1 QML enumerations are not types
+
+\section2 What happened?
+You used an enum name inside a type annotation.
+
+\section2 Why is that bad?
+An enum name is not a type and therefore can't be used in a type annotation. QML tooling is
+not able to use the type annotation: the \l{Qt Quick Compiler}{compiler} can't compile this
+method to C++ and \l{qmllint} as well as \l{\QMLLS} can't analyze this method.
+
+\section2 Example
+\qml
+// Main.qml
+import QtQuick
+
+Item {
+    enum HelloWorld { Hello, World }
+    function f(e: Main.HelloWorld): bool {
+        return e == World
+    }
+}
+\endqml
+To fix this warning, replace the enum name in the type annotation with the underlying type,
+like \c{int} if the underlying type needs at most 32 bit, or otherwise \c{double}, for example.
+
+\qml
+import QtQuick
+
+Item {
+    enum HelloWorld { Hello, World }
+    function f(e: int): bool {
+        return e === World
+    }
+}
+\endqml
+*/
