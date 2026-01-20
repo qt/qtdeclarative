@@ -1,0 +1,63 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-equality-type-coercion.html
+\ingroup qmllint-warnings-and-errors
+
+\title Loose equality comparison type coercion
+\brief [equality-type-coercion] Using loose equality comparison operators may coerce values.
+
+\qmllintwarningcategory equality-type-coercion
+
+\section1 Loose equality comparison type coercion
+
+\section2 What happened?
+Two values were compared for equality using the loose comparison operators.
+
+\section2 Why is that bad?
+The loose comparison operators can coerce values to a different type before
+checking for equality. This can lead to unexpected results.
+
+\section2 Example
+Here is an example with a list of Rectangles and a TextInput. When the user
+enters a number, the Rectangle at that index is highlighted.
+The code has a flaw. If the input is empty, the first rectangle is highlighted
+in red, because "" == 0.
+\qml
+import QtQuick
+
+Item {
+    TextInput {
+        id: input
+    }
+    Repeater {
+        model: 3
+        Rectangle {
+            // first rectangle is red on empty input
+            color: input.text == index ? "red" : "blue"
+        }
+    }
+}
+\endqml
+In general, use the strict comparison operators \c{===} and \c{!==}.
+Even if you are aware of the coercion, it is still recommended to use explicit
+casts and strict comparisons instead.
+\qml
+import QtQuick
+
+Item {
+    TextInput {
+        id: input
+    }
+    Repeater {
+        model: 3
+        Rectangle {
+            // check inputs, use explicit casts, and strict equality operators
+            color: input.text.length !== 0
+                   && Number(input.text) === index ? "red" : "blue"
+        }
+    }
+}
+\endqml
+*/

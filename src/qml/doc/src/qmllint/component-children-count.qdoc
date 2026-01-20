@@ -1,0 +1,56 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-component-children-count.html
+\ingroup qmllint-warnings-and-errors
+
+\title Components must have exactly one child
+\brief [component-children-count] A component has the wrong number of children.
+
+\qmllintwarningcategory component-children-count
+
+\section1 Components must have exactly one child
+
+\section2 What happened?
+A Component has the wrong number of children. It must have exactly one.
+
+\section2 Why is that bad?
+The root component of the file won't be instantiable and will cause an error at
+runtime.
+
+\section2 Example
+\qml
+Component {
+    Rectangle {
+        width: 50
+        height: 50
+        color: "red"
+    }
+    Rectangle {
+        width: 50
+        height: 50
+        color: "blue"
+    }
+}
+\endqml
+To fix this warning, make sure the component has exactly one child. If it is
+empty, add a child to it. If it contains multiple, either remove the excess
+children, or wrap the children into a single top-level child of the component.
+\qml
+Component {
+    Item {
+        Rectangle {
+            width: 50
+            height: 50
+            color: "red"
+        }
+        Rectangle {
+            width: 50
+            height: 50
+            color: "blue"
+        }
+    }
+}
+\endqml
+*/

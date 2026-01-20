@@ -1,0 +1,43 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-unreachable-code.html
+\ingroup qmllint-warnings-and-errors
+
+\title Unreachable code
+\brief [unreachable-code] Some instructions are unreachable.
+
+\qmllintwarningcategory unreachable-code
+
+\section1 Unreachable code
+
+\section2 What happened?
+Instructions in your code are unreachable and will never be executed.
+
+\section2 Why is that bad?
+Unreachable code does not contribute to the program logic and bloats the disk
+and memory footprint of the application. Unreachable code can be a sign of
+underlying bugs or logic errors.
+
+\section2 Example
+\qml
+function f(b: bool) : string {
+    if (b)
+        return "true"
+    else
+        return "false"
+    return "something else??" // unreachable statement
+}
+\endqml
+To fix this warning, remove the dead instructions or refactor your code to make
+all logic reachable.
+\qml
+function f(b: bool) : string {
+    if (b)
+        return "true"
+    else
+        return "false"
+}
+\endqml
+*/

@@ -1,0 +1,97 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-stale-property-read.html
+\ingroup qmllint-warnings-and-errors
+
+\title Stale property read
+\brief [stale-property-read] Reading non-constant and non-notifiable property.
+
+\qmllintwarningcategory stale-property-read
+
+\section1 Reading non-constant and non-notifiable property
+
+\section2 What happened?
+A property that is both non-constant and non-notifyable is used in a binding.
+
+\section2 Why is that bad?
+\l{The Property System}{Constant properties} never change in value.
+\l{The Property System}{Notifiable properties} notify bindings depending on
+them when they change in value so the bindings can re-evaluate.
+
+Because this property is neither constant nor notifiable, it could change
+during the program's execution without notifying dependent bindings. This
+would leave the bindings in a potentially outdated state, as their value
+depends on the property.
+
+\section2 Example
+\code
+class Circle : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(double radius READ radius WRITE setRadius FINAL)
+public:
+    double radius() const { return m_radius; }
+    void setRadius(double radius) { m_radius = radius; }
+private:
+    double m_radius = 1;
+};
+\endcode
+\qml
+import QtQuick
+
+Item {
+    Circle {
+        id: circle
+        property double area: Math.PI * radius * radius
+    }
+
+    Component.onCompleted: {
+        console.log(circle.area) // 3.14159...
+        circle.radius = 2
+        console.log(circle.area) // 3.14159...
+    }
+}
+\endqml
+To fix this warning, either mark the property as
+\l{The Property System}{constant} if it will not change in value or make it
+\l{The Property System}{notifiable}.
+\code
+class Circle : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(double radius READ radius WRITE setRadius NOTIFY radiusChanged FINAL)
+public:
+    double radius() const { return m_radius; }
+    void setRadius(double radius) {
+        if (radius != m_radius) {
+            m_radius = radius;
+            emit radiusChanged();
+        }
+    }
+signals:
+    void radiusChanged();
+private:
+    double m_radius = 1;
+};
+\endcode
+\qml
+import QtQuick
+
+Item {
+    Circle {
+        id: circle
+        property double area: Math.PI * radius * radius
+    }
+
+    Component.onCompleted: {
+        console.log(circle.area) // 3.14159...
+        circle.radius = 2
+        console.log(circle.area) // 12.5663...
+    }
+}
+\endqml
+*/
