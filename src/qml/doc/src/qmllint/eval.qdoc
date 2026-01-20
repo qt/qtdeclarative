@@ -1,0 +1,53 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qmllint-warnings-and-errors-eval.html
+\ingroup qmllint-warnings-and-errors
+
+\title Eval
+\brief [eval] Usage of eval.
+
+\qmllintwarningcategory eval
+
+\section1 Do not use eval
+
+\section2 What happened?
+You used \c {eval} in your code.
+
+\section2 Why is that bad?
+The \c{eval} method is slow and potentially dangerous. \c{eval} executes its
+argument as if it were its own JavaScript script, which adds some overhead to the
+execution. The argument passed to \c{eval} is potentially a vector for remote
+code execution attacks.
+
+\section2 Example
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        let myString = "x",
+        myObject = {
+            x: 10
+        },
+        value = eval("myObject." + myString);
+    }
+}
+\endqml
+To fix this warning, rewrite the code so that it doesn't contain any \c {eval}
+calls.
+\qml
+import QtQuick
+
+Item {
+    function f() {
+        let myString = "x",
+        myObject = {
+            x: 10
+        },
+        value = myObject[myString];
+    }
+}
+\endqml
+*/
