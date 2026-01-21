@@ -386,10 +386,11 @@ QSGMaterialType *QSGCurveFillMaterial::type() const
 
 QSGMaterialShader *QSGCurveFillMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QSGCurveFillMaterialShader(node()->gradientType(),
                                           node()->gradientType() == QGradient::NoGradient
-                                              && node()->fillTextureProvider() != nullptr,
-                                          renderMode == QSGRendererInterface::RenderMode3D,
+                                            && node()->fillTextureProvider() != nullptr,
+                                          node()->useStandardDerivatives(),
                                           viewCount());
 }
 

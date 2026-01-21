@@ -25,6 +25,7 @@ class QSGCurveAbstractNode : public QSGGeometryNode
 public:
     virtual void setColor(QColor col) = 0;
     virtual void cookGeometry() = 0;
+    virtual void setUseStandardDerivatives(bool useStandardDerivatives) = 0;
     bool isDebugNode = false;
 };
 

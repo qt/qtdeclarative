@@ -72,15 +72,7 @@ protected:
         static QSGMaterialType strokeExpandingType;
         return m_strokeExpanding ? &strokeExpandingType : &legacyType;
     }
-    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override
-    {
-        int variant = int(QSGCurveStrokeMaterialShader::Variant::Default);
-        if (m_strokeExpanding)
-            variant |= int(QSGCurveStrokeMaterialShader::Variant::Expanding);
-        if (renderMode == QSGRendererInterface::RenderMode3D)
-            variant |= int(QSGCurveStrokeMaterialShader::Variant::Derivatives);
-        return new QSGCurveStrokeMaterialShader(variant, viewCount());
-    }
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QSGCurveStrokeNode *m_node;
     bool m_strokeExpanding = false;

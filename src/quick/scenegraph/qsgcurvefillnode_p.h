@@ -231,6 +231,16 @@ public:
         m_boundsSize = boundsSize;
     }
 
+    bool useStandardDerivatives() const
+    {
+        return m_useStandardDerivatives;
+    }
+
+    void setUseStandardDerivatives(bool useStandardDerivatives) override
+    {
+        m_useStandardDerivatives = useStandardDerivatives;
+    }
+
 private Q_SLOTS:
     void handleTextureChanged()
     {
@@ -266,6 +276,7 @@ private:
     QColor m_color = Qt::white;
     QGradient::Type m_gradientType = QGradient::NoGradient;
     float m_debug = 0.0f;
+    bool m_useStandardDerivatives = false;
 };
 
 QT_END_NAMESPACE

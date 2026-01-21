@@ -89,4 +89,15 @@ int QSGCurveStrokeMaterial::compare(const QSGMaterial *other) const
     return typeDif;
 }
 
+QSGMaterialShader *QSGCurveStrokeMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
+{
+    Q_UNUSED(renderMode);
+    int variant = int(QSGCurveStrokeMaterialShader::Variant::Default);
+    if (m_strokeExpanding)
+        variant |= int(QSGCurveStrokeMaterialShader::Variant::Expanding);
+    if (node()->useStandardDerivatives())
+        variant |= int(QSGCurveStrokeMaterialShader::Variant::Derivatives);
+    return new QSGCurveStrokeMaterialShader(variant, viewCount());
+}
+
 QT_END_NAMESPACE

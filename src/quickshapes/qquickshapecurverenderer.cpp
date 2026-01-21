@@ -150,6 +150,11 @@ public:
         Q_UNUSED(col);
     }
 
+    void setUseStandardDerivatives(bool useStandardDerivatives) override
+    {
+        Q_UNUSED(useStandardDerivatives);
+    }
+
     void setCosmeticStroke(bool c)
     {
         m_material->setCosmeticStroke(c);
@@ -466,6 +471,12 @@ void QQuickShapeCurveRunnable::run()
     emit done(this);
 }
 
+static bool disableScreenSpaceDerivativeShader()
+{
+    static bool d = qEnvironmentVariableIntValue("QT_QUICKSHAPES_DISABLE_STANDARD_DERIVATIVES") != 0;
+    return d;
+}
+
 void QQuickShapeCurveRenderer::updateNode()
 {
     if (!m_rootNode)
@@ -506,6 +517,13 @@ void QQuickShapeCurveRenderer::updateNode()
     }
     m_removedPaths.clear();
 
+    const bool supportsDerivatives = m_item != nullptr
+                                     && m_item->window() != nullptr
+                                     && m_item->window()->rhi() != nullptr
+                                     && !disableScreenSpaceDerivativeShader()
+            ? m_item->window()->rhi()->isFeatureSupported(QRhi::ScreenSpaceDerivatives)
+            : false;
+
     for (int i = 0; i < m_paths.size(); i++) {
         PathData &pathData = m_paths[i];
         if (pathData.currentRunner) {
@@ -525,6 +543,7 @@ void QQuickShapeCurveRenderer::updateNode()
             if (newData.m_dirty & FillDirty) {
                 pathData.fillPath = newData.fillPath;
                 for (auto *node : std::as_const(newData.fillNodes)) {
+                    node->setUseStandardDerivatives(supportsDerivatives);
                     if (nextNode)
                         m_rootNode->insertChildNodeBefore(node, nextNode);
                     else
@@ -535,6 +554,7 @@ void QQuickShapeCurveRenderer::updateNode()
             }
             if (newData.m_dirty & StrokeDirty) {
                 for (auto *node : std::as_const(newData.strokeNodes)) {
+                    node->setUseStandardDerivatives(supportsDerivatives);
                     if (nextNode)
                         m_rootNode->insertChildNodeBefore(node, nextNode);
                     else

@@ -106,6 +106,16 @@ public:
         return m_localScale;
     }
 
+    bool useStandardDerivatives() const
+    {
+        return m_useStandardDerivatives;
+    }
+
+    void setUseStandardDerivatives(bool useStandardDerivatives) override
+    {
+        m_useStandardDerivatives = useStandardDerivatives;
+    }
+
 private:
 
     struct StrokeVertex
@@ -128,6 +138,7 @@ private:
     float m_strokeWidth = 0.0f;
     float m_debug = 0.0f;
     float m_localScale = 1.0f;
+    bool m_useStandardDerivatives = false;
 
 protected:
     QScopedPointer<QSGCurveStrokeMaterial> m_material;
