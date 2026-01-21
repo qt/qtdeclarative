@@ -58,7 +58,7 @@ Qt Quick Applications and related modules, visit the \l{QML Applications} page.
         \b{Beginning with QML and Qt Quick}
         \list
         \li \l{First Steps with QML}
-        \li \l{Getting Started Programming with Qt Quick}{Alarms Application}
+        \li \l{Getting Started programming with Qt Quick: An Alarm Application}{Alarms Application}
         \li \l{\QDS: Your First UI}{\QDS Tutorials}
         \li \l{QML Advanced Tutorial}{SameGame}
         \endlist

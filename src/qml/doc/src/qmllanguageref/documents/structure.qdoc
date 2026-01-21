@@ -459,7 +459,8 @@ pragma Translator: myTranslationContext
 pragma Translator: "myTranslationContext"
 \endqml
 
-For more information on internationalization with QML, see \l{QML: Use qsTr()}{Use qsTr}.
+For more information on internationalization with QML, see
+\l{Writing Source Code for Translation#QML}{Writing Source Code for Translation in QML}.
 
 \section1 Imports
 

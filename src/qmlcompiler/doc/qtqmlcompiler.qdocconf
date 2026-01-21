@@ -37,7 +37,8 @@ depends += \
     qtquickcontrols \
     qmake \
     qtcmake \
-    qtqml
+    qtqml \
+    qtlinguist
 
 headerdirs  += ..
 

@@ -120,7 +120,7 @@ how QML types are used. In addition, there are several demos which show how
 QML code is used in applications.
 
 \list
-\li \l{Getting Started Programming with Qt Quick} - a tutorial showing the
+\li \l{Getting Started programming with Qt Quick: An Alarm Application} - a tutorial showing the
     creation of a simple alarm application.
 \li \l{Qt Quick Examples and Tutorials}
 \endlist

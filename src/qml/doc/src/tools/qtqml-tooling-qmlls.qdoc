@@ -79,7 +79,7 @@ accurate and up-to-date warnings and completion items for C++
 defined QML types.
 
 You can
-\l{Disabling automatic CMake builds}{disable this feature}.
+\l{Configuring Automatic CMake Builds}{disable this feature}.
 
 \section2 Documentation Hints
 

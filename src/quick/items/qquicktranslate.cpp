@@ -417,8 +417,6 @@ void QQuickRotation::setAxis(Qt::Axis axis)
 
     This property only affects rotations around the x and y axes. Rotations around
     the z axis (2D rotations) are not influenced by this property.
-
-    \sa QMatrix4x4::projectedRotate()
 */
 qreal QQuickRotation::distanceToPlane() const
 {

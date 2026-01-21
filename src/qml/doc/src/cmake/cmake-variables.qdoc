@@ -59,7 +59,7 @@ to the cmake executable.
 
 This variable has no effect if \l{QT_QML_GENERATE_QMLLS_INI} is disabled.
 
-\sa QT_QML_GENERATE_QMLLS_INI, {Disabling automatic CMake builds}
+\sa QT_QML_GENERATE_QMLLS_INI, {Configuring Automatic CMake Builds}
 */
 
 /*!
@@ -97,7 +97,7 @@ to your top-level project \c{.gitignore}, for example.
 The globbing is required because .qmlls.ini files are generated in \e{all source
 subdirectories} that define QML Modules.
 
-\sa QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS, {Disabling automatic CMake builds}
+\sa QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS, {Configuring Automatic CMake Builds}
 */
 
 /*!

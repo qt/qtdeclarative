@@ -63,9 +63,8 @@ Item { ... }
 If adding the import statement does not help, take a look at your
 \l{Import Statements#QML Import Path}{import paths}.
 
-If you get this warning via \QMLLS, your
-\l{qtqml-tooling-qmlls.html#setting-up-qml-language-server-in-your-editor}{setup}
-might be incomplete.
+If you get this warning via \QMLLS, your \l{Setting up \QMLLS in Your Editor}{setup} might be
+incomplete.
 
 \section1 For QML module authors
 

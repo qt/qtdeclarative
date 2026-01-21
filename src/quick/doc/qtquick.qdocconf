@@ -43,14 +43,17 @@ qhp.QtQuick.subprojects.examples.sortPages = true
 tagfile = qtquick.tags
 
 depends += \
+    qtconcurrent \
     qtcore \
     qtopengl \
     qtqml \
     qtqmlmodels \
     qtqmlxmllistmodel \
+    qtqmlworkerscript \
     qtqmltest \
     qtqmlcore \
     qtgui \
+    qtlinguist \
     qtlottie \
     qtquickcontrols \
     qtquick3d \

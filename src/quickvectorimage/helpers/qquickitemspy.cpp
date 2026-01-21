@@ -28,7 +28,7 @@ QQuickItemSpy::~QQuickItemSpy()
 }
 
 /*!
-    \qmlproperty size QtQuick.VectorImage.Helpers::ItemType::requiredTextureSize
+    \qmlproperty size QtQuick.VectorImage.Helpers::ItemSpy::requiredTextureSize
 
     The texture size needed to render this item's width and height without scaling artifacts.
     This accounts for the current transform as well as high-dpi scaling.

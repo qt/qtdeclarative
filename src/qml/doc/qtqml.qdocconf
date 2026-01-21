@@ -44,7 +44,8 @@ depends += \
     qtquickcontrols \
     qmake \
     qtsvg \
-    qtcmake
+    qtcmake \
+    qtlinguist
 
 headerdirs  += ..
 
