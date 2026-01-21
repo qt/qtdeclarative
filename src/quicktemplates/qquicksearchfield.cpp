@@ -40,6 +40,42 @@ QT_BEGIN_NAMESPACE
     \image qtquickcontrols-searchfield.gif
            {Search field with search icon and clear button}
 
+    \section1 SearchField's Indicators
+
+    SearchField provides two optional embedded indicator buttons: \l searchIndicator and
+    \l clearIndicator.
+
+    These are not indicators in the sense of \l BusyIndicator or \l ProgressBar. Instead,
+    they are interactive controls embedded into the field (similar to the up/down buttons
+    in \l SpinBox). Pressing \l searchIndicator triggers \l searchButtonPressed(), and pressing
+    \l clearIndicator triggers \l clearButtonPressed().
+
+    In addition to exposing the actions, the indicator buttons provide interaction state
+    (pressed/hovered/focused, etc.) that can be used by styles.
+
+    \section2 Customizing indicator content
+
+    The \l searchIndicator and \l clearIndicator properties are read-only. Customization is
+    supported through their internal properties.
+
+    In particular, the button's visual content is provided by its \c indicator item, which is
+    writable. This allows the default content to be replaced or removed entirely.
+
+    For example, to remove both indicator icons:
+
+    \code
+    SearchField {
+        searchIndicator.indicator: null
+        clearIndicator.indicator: null
+    }
+    \endcode
+
+    This is a supported customization scenario. Different SearchField variants may omit one
+    of the buttons (for example, providing only a search button) or replace the indicator
+    content with an alternative item (for example, a microphone icon to trigger speech input).
+
+    \sa searchIndicator, clearIndicator, searchButtonPressed(), clearButtonPressed()
+
     \section1 SearchField Model Roles
 
     SearchField is able to visualize standard \l {qml-data-models}{data models}
@@ -894,10 +930,17 @@ void QQuickSearchField::setLive(const bool live)
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::SearchField::searchIndicator
-    \readonly
+    \include qquickindicatorbutton.qdocinc {properties} {SearchField} {searchIndicator}
 
-    This property holds the search indicator.
+    This property holds the search indicator. Pressing it triggers
+    \l searchButtonPressed().
+
+    It is exposed so that styles and applications can customize it through its
+    internal properties (for example, replacing or removing the \c searchIndicator
+    via \c searchIndicator.indicator, or reacting to interaction state such as
+    pressed and hovered).
+
+    \sa {SearchField's Indicators}
  */
 QQuickIndicatorButton *QQuickSearchField::searchIndicator() const
 {
@@ -906,10 +949,17 @@ QQuickIndicatorButton *QQuickSearchField::searchIndicator() const
 }
 
 /*!
-    \qmlproperty real QtQuick.Controls::SearchField::clearIndicator
-    \readonly
+    \include qquickindicatorbutton.qdocinc {properties} {SearchField} {clearIndicator}
 
-    This property holds the clear indicator.
+    This property holds the clear indicator. Pressing it triggers
+    \l clearButtonPressed().
+
+    It is exposed so that styles and applications can customize it through its
+    internal properties (for example, replacing or removing the \c clearIndicator
+    via \c clearIndicator.indicator, or reacting to interaction state such as
+    pressed and hovered).
+
+    \sa {SearchField's Indicators}
 */
 QQuickIndicatorButton *QQuickSearchField::clearIndicator() const
 {
