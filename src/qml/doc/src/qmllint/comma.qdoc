@@ -26,9 +26,11 @@ Item {
     Component.onCompleted: init(config, true), enableLogging(categories), run(1000) // millis
 }
 \endqml
+
 To fix this warning, refactor the code to use distinct statements for each
 operation. This way, each side effect is explicit instead of happening as part
 of another unrelated operation:
+
 \qml
 import QtQuick
 
@@ -40,4 +42,59 @@ Item {
     }
 }
 \endqml
+
+In addition, there are some special considerations for cases where comma
+expressions appear because a variable is intentionally being captured for a
+binding, as in the following code, where \c previewOfFirstPage is a function
+defined in C++ which internally depends on \c{Config.fontSize}:
+
+\qml
+Text {
+   // This causes the function to re-run when fontSize changes
+   text: Config.fontSize, documentProvider.previewOfFirstPage()
+}
+\endqml
+
+
+If you encounter this situation, consider one of the following
+approaches:
+
+\list
+\li If a function such as \c previewOfFirstPage depends on a property,
+    prefer making this dependency explicit by passing the value as an argument.
+    \qml
+    Text {
+       text: documentProvider.previewOfFirstPage(Config.fontSize)
+    }
+    \endqml
+\li If changing the function signature is undesirable for API reasons, consider
+    replacing the function with a Q_PROPERTY instead, so that change
+    notifications for it can be emitted when the depenency is modified in C++:
+    \code
+    void Config::setFontSize(int fontSize) {
+       if (m_fontSize == fontSize)
+          return;
+       m_fontSize = fontSize;
+       emit fontSizeChanged();
+       emit previewOfFirstPageChanged();
+    }
+    \endcode
+    \qml
+    Text {
+       text: documentProvider.previewOfFirstPage
+    }
+    \endqml
+\li If modifying the C++ implementation or adding QML dependencies is not
+    possible, use a \c qmllint directive to silence the warning. Include a
+    comment explaining that the intention is to capture the variable in the
+    binding.
+    \code
+    Text {
+       // This causes the function to re-run when fontSize changes
+       text: Config.fontSize, documentProvider.previewOfFirstPage() // qmllint disable comma
+    }
+
+    \endcode
+\endlist
 */
+
