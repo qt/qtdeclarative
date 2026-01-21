@@ -12,9 +12,8 @@ anti-patterns.
 
 \e qmllint is a tool shipped with Qt, that verifies the syntatic validity of
 QML files. You can \l{Using qmllint with CMake}{integrate qmllint into your build system}
-for ease of use. It also warns about some QML anti-patterns. If you want to
-disable a specific warning type, you can find the appropriate flag for doing so
-by passing \c{--help} on the command line.
+for ease of use. It also warns about some QML anti-patterns. See
+\{Configuring qmllint warnings} for how to disable a specific warning type.
 
 \note When using IDE, such as Qt Creator, you don't need to run \c qmllint
 manually. The IDE uses \l {QML Language Server#Linting}{QML Language Server},
@@ -25,10 +24,8 @@ are more warnings than a limit which can be configured with \c{--max-warnings},
 the exit code will be non-zero.
 Minor issues however (such as unused imports) are just informational messages
 by default and will never affect the exit code.
-qmllint is very configurable and allows for disabling warnings or changing how
-they are treated.
-Users may freely turn any issue into a warning, informational message, or
-disable them outright.
+qmllint is very configurable and allows for
+\l{Configuring qmllint warnings}{disabling warnings or changing how they are treated}.
 
 qmllint warns about:
 \list
@@ -56,8 +53,9 @@ To get an overview and explanation of all available command line options, run \c
 
 qmllint can warn you about code that cannot be compiled by \l{qmlsc}.
 
-These warnings are not enabled by default. In order to enable them specify
-\c{--compiler warning} or adjust your settings file accordingly.
+These warnings are not enabled by default. In order to enable them,
+\l{Configuring qmllint warnings}{configure qmllint} to use the compiler warning
+category.
 
 \section2 Using qmllint with CMake
 For projects using the \l{qt6_add_qml_module}{qt_add_qml_module()} CMake API for creating QML
@@ -121,6 +119,26 @@ warning or a list of warnings you want to disable instead of disabling all
 warnings. This can be done by simply listing warning categories after \c{qmllint disable} (the names are
 the same as the options listed in \c{--help}).
 
+
+\section2 Configuring qmllint warnings
+
+You can configure the warnings that qmllint emits and their severity level.
+These levels can be \c{info}, \{warning}, \c{error}, or \c{disable}. You can
+customize the warnings using the \c{.qmllint.ini} settings file or by passing
+command line options to qmllint. Command line options override the default and
+the settings file.
+
+To customize the level of a warning category via the command line, set the
+corresponding command line option to the desired level.
+
+For example, to disable warnings about deprecations, call qmllint with the
+\c{--deprecated=disable} option. And to turn unused imports into an error, pass
+\c{--unused-imports=error}.
+
+Customizing warnings in a more permanent way can be done by modifying the
+settings file. See the upcoming section on \l{Settings} files for more details.
+
+
 \section2 Settings
 
 In addition to passing command-line options, you can also
@@ -131,16 +149,17 @@ Setting files are named \c{.qmllint.ini} and look like this:
 
 \quotefile qmllint/config.ini
 
-Warning levels may be set to \c{info}, \c{warning} or \c{disable} just as with
-command line options.
+Warning levels may be set to \c{info}, \c{warning}, \c{error}, or \c{disable}
+just as with command line options.
 
 qmllint will automatically look for a settings file at the location of the qml
 file that is being linted.
 It also looks through all parent directories to find this file and
 automatically applies the settings therein. You can disable this behavior by
 using \c{--ignore-settings}.
-You may always override these defaults by specifying command line parameters
-that take precedence over the warning levels in settings.
+You may always override these defaults by specifying
+\l{Configuring qmllint warnings}{command line parameters} that take precedence
+over the warning levels in settings.
 
 \section3 Context property settings
 
