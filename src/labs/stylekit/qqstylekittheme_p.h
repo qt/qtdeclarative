@@ -38,9 +38,6 @@ public:
 
     QPalette paletteForReader(QQStyleKitReader *reader) const;
 
-signals:
-    void targetChanged();
-
 protected:
     void componentComplete() override;
 
