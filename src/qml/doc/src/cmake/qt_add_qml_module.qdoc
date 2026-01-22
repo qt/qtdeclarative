@@ -570,7 +570,7 @@ for the default import.
 \c DEPENDENCIES provides a list of other QML modules that this module depends
 on, but doesn't necessarily import. It would typically be used for dependencies
 that only exist at the C++ level, such as a module registering a class to QML
-which is a subclass of one defined in another module.
+which uses or inherits C++ defined types defined in another module.
 
 For example, if one would like to subclass \c QQuickItem as following:
 
@@ -579,10 +579,38 @@ class MyItem: public QQuickItem { ... };
 \endcode
 
 then one has to make sure that the module containing \c QQuickItem, called
-\c QtQuick, is declared as a dependency via the \c DEPENDENCIES option. Not
-doing so might result in errors during type compilation with
-\l{QML type compiler}{qmltc} or during binding and function compilation to C++
+\c QtQuick, is declared as a dependency via the \c DEPENDENCIES option:
+
+\badcode
+qt_add_qml_module(myTarget
+    ...
+    DEPENDENCIES QtQuick
+)
+\endcode
+
+Not doing so might result in linting errors, errors during type compilation
+with \l{QML type compiler}{qmltc} or during binding and function compilation to C++
 with \l{qmlcachegen-auto}{qmlcachegen}.
+
+Another example might be:
+\code
+class MyComponent : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+
+    // ...
+
+signals:
+    void sigZoomAtMousePosition(const QPointF& aMousePos, double aZoomScaleFactor);
+};
+\endcode
+where \c{DEPENDENCIES QtQml} is required for QML tooling to find and use QPointF:
+\badcode
+qt_add_qml_module(myTarget
+    ...
+    DEPENDENCIES QtQml
+)
+\endcode
 
 \note Adding the module to \c DEPENDENCIES is not necessary if the module
 is already imported via the \c IMPORTS option. The recommended way is to
