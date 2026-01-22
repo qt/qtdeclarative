@@ -243,7 +243,7 @@ void QQStyleKitStyle::recreateTheme()
     if (m_theme->palettes())
         m_theme->palettes()->setFallbackPalette(palettes());
     if (this == current()) {
-        m_theme->updateQuickTheme();
+        m_theme->updateThemePalette();
         QQStyleKitReader::resetAll();
     }
 

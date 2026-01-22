@@ -64,7 +64,7 @@ void QQStyleKitAttached::setStyle(QQStyleKitStyle *style)
     m_style = style;
 
     if (m_style && m_style->m_theme)
-        m_style->m_theme->updateQuickTheme();
+        m_style->m_theme->updateThemePalette();
     if (m_style->loaded())
         QQStyleKitReader::resetAll();
 

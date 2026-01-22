@@ -43,7 +43,6 @@ protected:
 
 private:
     void updateThemePalette();
-    void updateQuickTheme();
     QPalette effectivePaletteForScope(QQuickTheme::Scope scope) const;
 
     bool m_completed = false;

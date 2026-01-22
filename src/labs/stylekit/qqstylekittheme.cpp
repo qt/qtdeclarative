@@ -140,11 +140,6 @@ void QQStyleKitTheme::updateThemePalette()
     setResolved(&QQStyleKitPalette::tumbler, QQuickTheme::Tumbler);
 }
 
-void QQStyleKitTheme::updateQuickTheme()
-{
-    updateThemePalette();
-}
-
 void QQStyleKitTheme::componentComplete()
 {
     QQStyleKitControls::componentComplete();
