@@ -98,8 +98,13 @@ QString QAccessibleQuickWindow::text(QAccessible::Text text) const
 QAccessibleInterface *QAccessibleQuickWindow::childAt(int x, int y) const
 {
     Q_ASSERT(window());
-    for (int i = childCount() - 1; i >= 0; --i) {
-        QAccessibleInterface *childIface = child(i);
+
+    if (!window()->contentItem())
+        return nullptr;
+
+    const QList<QQuickItem *> kids = accessibleUnignoredChildren(window()->contentItem(), true);
+    for (int i = kids.size() - 1; i >= 0; --i) {
+        QAccessibleInterface *childIface = QAccessible::queryAccessibleInterface(kids.at(i));
         if (childIface && !childIface->state().invisible) {
             if (QAccessibleInterface *iface = childIface->childAt(x, y))
                 return iface;
