@@ -96,6 +96,26 @@ function(_qt_internal_parse_qml_module_dependency dependency was_marked_as_targe
     endif()
 endfunction()
 
+# Helper function to get the import path needed to find the '${target}' Qml module.
+# TLDR: Subtracts the qml module's TARGET_PATH from its qmldir location.
+function(_qt_internal_get_qml_module_import_path target out_var)
+    # To get the module import path, we need to subtract the target path from the qmldir
+    # dir path.
+    qt6_query_qml_module("${target}" QMLDIR qmldir_location)
+    get_filename_component(module_location "${qmldir_location}" DIRECTORY)
+
+    get_target_property(module_target_path "${target}" _qt_qml_module_target_path)
+    string(REPLACE "/" ";" module_target_path_parts "${module_target_path}")
+
+    # Go up one subdir from the module location, for each subdir in the target path.
+    set(module_import_path "${module_location}")
+    foreach(part IN LISTS module_target_path_parts)
+        get_filename_component(module_import_path "${module_import_path}" DIRECTORY)
+    endforeach()
+
+    set(${out_var} "${module_import_path}" PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     # _qt_internal_write_qmldir_part is deferred to be called in the root
     # CMAKE_BINARY_DIR. If find_package(Qt6) is not called in the root of the project (like in the
@@ -118,11 +138,7 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     )
     if(dependency_targets)
         foreach(dep_target ${dependency_targets})
-            qt6_query_qml_module(${dep_target}
-                QMLDIR qmldir_location
-            )
-            get_filename_component(module_location "${qmldir_location}" DIRECTORY)
-            get_filename_component(module_import_path "${module_location}" DIRECTORY)
+            _qt_internal_get_qml_module_import_path("${dep_target}" module_import_path)
             list(APPEND qt_all_qml_output_dirs ${module_import_path})
         endforeach()
         if (qt_all_qml_output_dirs)
@@ -196,11 +212,7 @@ function(_qt_internal_writebuilddir_qtconf_nondeferred property_folder writeout_
             continue()
         endif()
         foreach(dep_target ${dependency_targets})
-            qt6_query_qml_module(${dep_target}
-                QMLDIR qmldir_location
-            )
-            get_filename_component(module_location "${qmldir_location}" DIRECTORY)
-            get_filename_component(module_import_path "${module_location}" DIRECTORY)
+            _qt_internal_get_qml_module_import_path("${dep_target}" module_import_path)
             list(APPEND qt_all_qml_output_dirs ${module_import_path})
         endforeach()
     endforeach()

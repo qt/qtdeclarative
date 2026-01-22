@@ -3,6 +3,7 @@
 
 #include <QTest>
 #include <QLibraryInfo>
+#include <QDebug>
 
 class tst_models : public QObject
 {
@@ -29,16 +30,28 @@ void tst_models::cleanupTestCase() {}
 
 void tst_models::qtconf()
 {
-    auto importPaths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
-    QCOMPARE_GE(importPaths.size(), 2);
-    if (importPaths.at(0).endsWith("nested")) {
-        QDir dir(importPaths.at(1));
-        QVERIFY(dir.exists("Scheduler"));
-    } else if (importPaths.at(1).endsWith("nested")) {
-        QDir dir(importPaths.at(0));
-        QVERIFY(dir.exists("Scheduler"));
-    } else {
-        QFAIL("Expected import paths were not found");
+    const QList<QString> importPaths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
+
+    qDebug() << "Import paths:" << importPaths;
+
+    struct PathCheck {
+        QString caseDescription;
+        std::function<bool(const QString &)> predicate;
+    };
+
+    const QList<PathCheck> requiredCases = {
+        {"import path containing 'nested.module' module",
+         [](const QString &path) {
+           return path.endsWith("external") &&
+                  QDir(path).exists("nested/module");
+         }},
+        {"import path containing containing 'Scheduler' module",
+         [](const QString &path) { return QDir(path).exists("Scheduler"); }}};
+
+    for (const PathCheck &currentCase : requiredCases) {
+        bool found = std::any_of(importPaths.cbegin(), importPaths.cend(), currentCase.predicate);
+        if (!found)
+            QFAIL(qPrintable(QString("Expected %1 not found").arg(currentCase.caseDescription)));
     }
 }
 
