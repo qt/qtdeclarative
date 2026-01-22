@@ -85,39 +85,30 @@ QPalette QQStyleKitTheme::effectivePaletteForScope(QQuickTheme::Scope scope) con
 
 void QQStyleKitTheme::updateThemePalette()
 {
-    auto *theme = QQuickTheme::instance();
-    if (!theme)
+    const QQStyleKitPalette *pals = palettes();
+    if (!pals)
         return;
 
-    // QQuickTheme currently offers only one default platform palette for all controls.
-    // This implementation will instead inherit the corresponding platform palette for each
-    // control type. Hence, for now, we don't use QQuickTheme::usePlatformPalette, but roll
-    // our own version instead.
-    theme->setUsePlatformPalette(false);
+    // Collect palette fallback chain
+    QVector<const QQStyleKitPalette *> fbChain;
+    for (auto *fb = pals; fb; fb = fb->fallbackPalette())
+    fbChain.append(fb);
+
     auto resolveFromPaletteChain = [&](QQuickTheme::Scope scope,
         QQuickPalette* (QQStyleKitPalette::*getter)() const) -> QPalette
     {
         QPalette result;
-        if (!palettes())
-            return result;
 
-        // Find the nearest fallback that explicitly set this scope
-        const QQStyleKitPalette *nearestFallback = nullptr;
-        for (auto *fb = palettes()->fallbackPalette(); fb; fb = fb->fallbackPalette()) {
+        // Apply from farthest fallback -> local
+        for (int i = fbChain.size() - 1; i >= 0; --i) {
+            const QQStyleKitPalette *fb = fbChain[i];
             if (fb->isSet(scope)) {
-                nearestFallback = fb;
-                break;
+                if (auto *p = (fb->*getter)())
+                    result = p->toQPalette().resolve(result);
+            } else if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
+                if (auto *sys = fb->system())
+                    result = sys->toQPalette().resolve(result);
             }
-        }
-
-        if (nearestFallback) {
-            if (auto *p = (nearestFallback->*getter)())
-                result = p->toQPalette();
-        }
-
-        if (palettes()->isSet(scope)) {
-            if (auto *p = (palettes()->*getter)())
-                result = p->toQPalette().resolve(result);
         }
 
         return result;
@@ -126,8 +117,7 @@ void QQStyleKitTheme::updateThemePalette()
     auto setResolved = [&](QQuickPalette* (QQStyleKitPalette::*getter)() const,
         QQuickTheme::Scope scope)
     {
-        QPalette resolved = resolveFromPaletteChain(scope, getter);
-        m_effectivePalettes[int(scope)] = resolved;
+        m_effectivePalettes[int(scope)] = resolveFromPaletteChain(scope, getter);
     };
 
     setResolved(&QQStyleKitPalette::system, QQuickTheme::System);
