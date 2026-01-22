@@ -420,19 +420,23 @@ QJSValue QQuickSpinBox::valueFromText() const
 }
 
 /*!
-    \include qquickspinbox.qdocinc {upAndDown} {SpinBox} {up} {increase()}
+    \include qquickindicatorbutton.qdocinc {properties} {SpinBox} {up}
 
     The \c up.hovered property was introduced in \l{QtQuick.Controls} 2.1,
     and the \c up.implicitIndicatorWidth and \c up.implicitIndicatorHeight
     properties were introduced in \l{QtQuick.Controls} 2.5.
+
+    \sa increase()
 */
 
 /*!
-    \include qquickspinbox.qdocinc {upAndDown} {SpinBox} {down} {decrease()}
+    \include qquickindicatorbutton.qdocinc {properties} {SpinBox} {down}
 
     The \c down.hovered property was introduced in \l{QtQuick.Controls} 2.1,
     and the \c down.implicitIndicatorWidth and \c down.implicitIndicatorHeight
     properties were introduced in \l{QtQuick.Controls} 2.5.
+
+    \sa decrease()
 */
 
 /*!

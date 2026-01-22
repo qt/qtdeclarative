@@ -47,18 +47,6 @@ This property holds whether the spinbox is editable. The default value is \c fal
 \sa validator
 //! [editable]
 
-//! [upAndDown]
-\qmlproperty bool QtQuick.Controls::\1::\2.pressed
-\qmlproperty Item QtQuick.Controls::\1::\2.indicator
-\qmlproperty bool QtQuick.Controls::\1::\2.hovered
-\qmlproperty real QtQuick.Controls::\1::\2.implicitIndicatorWidth
-\qmlproperty real QtQuick.Controls::\1::\2.implicitIndicatorHeight
-
-This grouped property holds the \2 indicator item and its associated properties.
-
-\sa \3
-//! [upAndDown]
-
 //! [inputMethodHints]
 \since QtQuick.Controls 2.2 (Qt 5.9)
 \qmlproperty flags QtQuick.Controls::\1::inputMethodHints
