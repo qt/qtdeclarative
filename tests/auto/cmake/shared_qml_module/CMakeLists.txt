@@ -21,4 +21,6 @@ if(NOT WIN32)
     # We can't run the test on Windows without deploying it
     # or without otherwise ensuring that the Qt DLLs are found
     add_test(NAME tst_models COMMAND tst_models)
+
+    add_test(NAME tst_scheduler_app COMMAND tst_scheduler_app)
 endif()

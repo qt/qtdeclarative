@@ -117,6 +117,8 @@ function(_qt_internal_get_qml_module_import_path target out_var)
 endfunction()
 
 function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
+    set(qt_all_qml_output_dirs "")
+
     # _qt_internal_write_qmldir_part is deferred to be called in the root
     # CMAKE_BINARY_DIR. If find_package(Qt6) is not called in the root of the project (like in the
     # Qt Creator super repo), QT_CMAKE_EXPORT_NAMESPACE will not be defined.
@@ -127,6 +129,12 @@ function(_qt_internal_write_qmldir_part target qt_cmake_export_namespace)
     set(effective_outdir $<TARGET_FILE_DIR:${target}>)
     set(qtconf_file "${effective_outdir}/${target}_qt.part.conf")
     get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
+
+    # Add the current executable's qml module location as an import path as well.
+    # Helps finding the executable qml module for macOS app bundles.
+    _qt_internal_get_qml_module_import_path("${target}" own_module_import_path)
+    list(APPEND qt_all_qml_output_dirs ${own_module_import_path})
+
     get_directory_property(counter
          DIRECTORY ${PROJECT_SOURCE_DIR}
          QT_QMLDIR_DEFERRED_WRITEOUT_COUNTER
@@ -206,6 +214,12 @@ function(_qt_internal_writebuilddir_qtconf_nondeferred property_folder writeout_
         QT_QML_TARGETS_FOR_DEFERRED_QTCONF_WRITEOUT
     )
     set(qtconf_file "${writeout_folder}/qt.conf")
+
+    # Add the current executable's qml module location as an import path as well.
+    # Helps finding the executable qml module for macOS app bundles.
+    _qt_internal_get_qml_module_import_path("${target}" own_module_import_path)
+    list(APPEND qt_all_qml_output_dirs ${own_module_import_path})
+
     foreach(target IN LISTS targets)
         get_target_property(dependency_targets "${target}" QT_QML_DEPENDENT_QML_MODULE_TARGETS)
         if(NOT dependency_targets)
