@@ -169,14 +169,17 @@ access warnings for context property usages, while \c{.qmllint.ini} only allows 
 disable all unqualified access warnings, potentially including non-context property
 related ones.
 
-Context property settings are named \c{.contextProperties.ini} and look like this:
+Context property settings are named \c{.contextProperties.ini} and should be located
+inside the source folder of your project. They look like this:
 
 \quotefile qmllint/contextProperties.ini
 
 To disable qmllint warnings about unqualified access to a context property name,
-add the context property name to \c{disableUnqualifiedAccess}.
+add the context property name to \c{disableUnqualifiedAccess}. Separate multiple
+context property names with a comma.
 
-To  warn about context property usages, add the context property name to \c{warnOnUsage}.
+To warn about context property usages, add the context property name to \c{warnOnUsage}.
+Separate multiple context property names with a comma.
 
 To control the qmllint heuristic, set \c{disableHeuristic} to \c{true} or \c{false}.
 
