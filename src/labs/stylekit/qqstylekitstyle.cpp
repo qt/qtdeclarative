@@ -255,9 +255,9 @@ QQStyleKitStyle* QQStyleKitStyle::current()
     return QQStyleKit::qmlAttachedProperties()->style();
 }
 
-QFont QQStyleKitStyle::fontForReader(QQStyleKitReader *reader) const
+QFont QQStyleKitStyle::fontForControlType(QQStyleKitExtendableControlType type) const
 {
-    switch (reader->type()) {
+    switch (type) {
         case QQStyleKitReader::ControlType::AbstractButton:
         case QQStyleKitReader::ControlType::Button:
         case QQStyleKitReader::ControlType::FlatButton:
@@ -295,9 +295,9 @@ QFont QQStyleKitStyle::fontForReader(QQStyleKitReader *reader) const
     }
 }
 
-QPalette QQStyleKitStyle::paletteForReader(QQStyleKitReader *reader) const
+QPalette QQStyleKitStyle::paletteForControlType(QQStyleKitExtendableControlType type) const
 {
-    return m_theme->paletteForReader(reader);
+    return m_theme->paletteForControlType(type);
 }
 
 bool QQStyleKitStyle::loaded() const

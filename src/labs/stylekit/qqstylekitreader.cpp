@@ -268,7 +268,7 @@ void QQStyleKitReader::updateControl()
         Q_UNREACHABLE();
     }
 
-    setFont(resolvedFontWithOverrides(this, style->fontForReader(this)));
+    setFont(resolvedFontWithOverrides(this, style->fontForControlType(this->type())));
 }
 
 void QQStyleKitReader::resetAll()
@@ -288,7 +288,7 @@ void QQStyleKitReader::updateFontFromTheme()
     if (!style || !style->loaded())
         return;
 
-    setFont(resolvedFontWithOverrides(this, style->fontForReader(this)));
+    setFont(resolvedFontWithOverrides(this, style->fontForControlType(this->type())));
 }
 
 void QQStyleKitReader::populateLocalStorage()
@@ -543,7 +543,7 @@ void QQStyleKitReader::onPaletteChanged()
 
 bool QQStyleKitReader::rebuildEffectivePalette()
 {
-    auto mergedPalette = style()->paletteForReader(this);
+    auto mergedPalette = style()->paletteForControlType(this->type());
     const auto stylePaletteResolveMask = mergedPalette.resolveMask();
     if (m_palette) {
         // The control palette takes precedence over the style palette

@@ -66,10 +66,9 @@ QQStyleKitStyle *QQStyleKitTheme::style() const
     return static_cast<QQStyleKitStyle *>(parentObj);
 }
 
-QPalette QQStyleKitTheme::paletteForReader(QQStyleKitReader *reader) const
+QPalette QQStyleKitTheme::paletteForControlType(QQStyleKitExtendableControlType type) const
 {
-    Q_ASSERT(reader);
-    const QQuickTheme::Scope scope = scopeForType(reader->type());
+    const QQuickTheme::Scope scope = scopeForType(type);
     return effectivePaletteForScope(scope);
 }
 

@@ -36,7 +36,7 @@ public:
 
     QQStyleKitStyle *style() const;
 
-    QPalette paletteForReader(QQStyleKitReader *reader) const;
+    QPalette paletteForControlType(QQStyleKitExtendableControlType type) const;
 
 protected:
     void componentComplete() override;
