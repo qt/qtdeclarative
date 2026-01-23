@@ -533,95 +533,26 @@ QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, con
                        const QList<QQmlJS::LoggerCategory> &categories,
                        const QQmlJS::HeuristicContextProperties &heuristicContextProperties)
 {
-    // Make sure that we don't expose an old logger if we return before a new one is created.
-    m_logger.reset();
+    const LintResult lintResult =
+            lintFileImpl(filename, fileContents, silent, json, qmlImportPaths, qmldirFiles,
+                         resourceFiles, categories, heuristicContextProperties);
+    if (!json)
+        return lintResult;
 
     QJsonArray warnings;
+    processMessages(warnings);
+
     QJsonObject result;
+    result[u"filename"_s] = QFileInfo(filename).absoluteFilePath();
+    result[u"warnings"] = warnings;
+    result[u"success"] = lintResult == LintSuccess;
 
-    LintResult success = LintSuccess;
+    json->append(result);
+    return lintResult;
+}
 
-    QScopeGuard jsonOutput([&] {
-        if (!json)
-            return;
-
-        result[u"filename"_s] = QFileInfo(filename).absoluteFilePath();
-        result[u"warnings"] = warnings;
-        result[u"success"] = success == LintSuccess;
-
-        json->append(result);
-    });
-
-    QString code;
-
-    if (fileContents == nullptr) {
-        QFile file(filename);
-        if (!file.open(QFile::ReadOnly)) {
-            if (json) {
-                addJsonWarning(
-                        warnings,
-                        QQmlJS::DiagnosticMessage { QStringLiteral("Failed to open file %1: %2")
-                                                            .arg(filename, file.errorString()),
-                                                    QtCriticalMsg, QQmlJS::SourceLocation() },
-                        qmlImport.name());
-            } else if (!silent) {
-                qWarning() << "Failed to open file" << filename << file.error();
-            }
-            success = FailedToOpen;
-            return success;
-        }
-
-        code = QString::fromUtf8(file.readAll());
-        file.close();
-    } else {
-        code = *fileContents;
-    }
-
-    m_fileContents = code;
-
-    QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-
-    QFileInfo info(filename);
-    const QString lowerSuffix = info.suffix().toLower();
-    const bool isESModule = lowerSuffix == QLatin1String("mjs");
-    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
-
-    m_logger.reset(new QQmlJSLogger);
-    m_logger->setFilePath(m_useAbsolutePath ? info.absoluteFilePath() : filename);
-    m_logger->setCode(code);
-    m_logger->setSilent(silent || json);
-
-    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
-    QQmlJS::Parser parser(&engine);
-
-    if (!(isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
-                       : parser.parse())) {
-        success = FailedToParse;
-        const auto diagnosticMessages = parser.diagnosticMessages();
-        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-            if (json)
-                addJsonWarning(warnings, m, qmlSyntax.name());
-            m_logger->log(m.message, qmlSyntax, m.loc);
-        }
-        return success;
-    }
-
-    if (isJavaScript)
-        return success;
-
-    m_importer.setImportPaths(qmlImportPaths);
-
-    std::optional<QQmlJSResourceFileMapper> mapper;
-    if (!resourceFiles.isEmpty())
-        mapper.emplace(resourceFiles);
-    m_importer.setResourceFileMapper(mapper.has_value() ? &*mapper : nullptr);
-
-    QQmlJS::LinterVisitor v{ &m_importer, m_logger.get(),
-                             QQmlJSImportVisitor::implicitImportDirectory(
-                                     m_logger->filePath(), m_importer.resourceFileMapper()),
-                             qmldirFiles, &engine };
-
+void QQmlJSLinter::setupLoggingCategoriesInLogger(const QList<QQmlJS::LoggerCategory> &categories)
+{
     if (m_enablePlugins) {
         for (const Plugin &plugin : m_plugins) {
             for (const QQmlJS::LoggerCategory &category : plugin.categories())
@@ -636,6 +567,72 @@ QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, con
         m_logger->setCategoryIgnored(it->id(), it->isIgnored());
         m_logger->setCategoryLevel(it->id(), it->level());
     }
+}
+
+QQmlJSLinter::LintResult
+QQmlJSLinter::lintFileImpl(const QString &filename, const QString *fileContents, const bool silent,
+                       QJsonArray *json, const QStringList &qmlImportPaths,
+                       const QStringList &qmldirFiles, const QStringList &resourceFiles,
+                       const QList<QQmlJS::LoggerCategory> &categories,
+                       const QQmlJS::HeuristicContextProperties &heuristicContextProperties)
+{
+    QString code;
+
+    QFileInfo info(filename);
+    const QString lowerSuffix = info.suffix().toLower();
+    const bool isESModule = lowerSuffix == QLatin1String("mjs");
+    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
+
+    m_logger.reset(new QQmlJSLogger);
+    m_logger->setFilePath(m_useAbsolutePath ? info.absoluteFilePath() : filename);
+    m_logger->setSilent(silent || json);
+    setupLoggingCategoriesInLogger(categories);
+
+    if (fileContents == nullptr) {
+        QFile file(filename);
+        if (!file.open(QFile::ReadOnly)) {
+            m_logger->log("Failed to open file %1: %2"_L1.arg(filename, file.errorString()),
+                          qmlImport, QQmlJS::SourceLocation());
+            return FailedToOpen;
+        }
+
+        code = QString::fromUtf8(file.readAll());
+        file.close();
+    } else {
+        code = *fileContents;
+    }
+
+    m_fileContents = code;
+    m_logger->setCode(code);
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+
+    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
+    QQmlJS::Parser parser(&engine);
+
+    if (!(isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
+                       : parser.parse())) {
+        const auto diagnosticMessages = parser.diagnosticMessages();
+        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
+            m_logger->log(m.message, qmlSyntax, m.loc);
+        return FailedToParse;
+    }
+
+    if (isJavaScript)
+        return LintSuccess;
+
+    m_importer.setImportPaths(qmlImportPaths);
+
+    std::optional<QQmlJSResourceFileMapper> mapper;
+    if (!resourceFiles.isEmpty())
+        mapper.emplace(resourceFiles);
+    m_importer.setResourceFileMapper(mapper.has_value() ? &*mapper : nullptr);
+
+    QQmlJS::LinterVisitor v{ &m_importer, m_logger.get(),
+                             QQmlJSImportVisitor::implicitImportDirectory(
+                                     m_logger->filePath(), m_importer.resourceFileMapper()),
+                             qmldirFiles, &engine };
 
     parseComments(m_logger.get(), engine.comments());
 
@@ -724,13 +721,8 @@ QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, con
     }
     passMan->analyze(QQmlJSScope::createQQmlSAElement(v.result()));
 
-    if (m_logger->hasErrors()) {
-        success = HasErrors;
-        if (json)
-            processMessages(warnings);
-        return success;
-    } else if (m_logger->hasWarnings())
-        success = HasWarnings;
+    if (m_logger->hasErrors())
+        return HasErrors;
 
     // passMan now has a pointer to the moved from type resolver
     // we fix this in setPassManager
@@ -756,16 +748,34 @@ QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, con
     }
 
     if (m_logger->hasErrors())
-        success = HasErrors;
-    else if (m_logger->hasWarnings())
-        success = HasWarnings;
+        return HasErrors;
+    if (m_logger->hasWarnings())
+         return HasWarnings;
 
-    if (json)
-        processMessages(warnings);
-    return success;
+    return LintSuccess;
 }
 
 QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
+        const QString &module, const bool silent, QJsonArray *json,
+        const QStringList &qmlImportPaths, const QStringList &resourceFiles)
+{
+    const LintResult lintResult = lintModuleImpl(module, silent, json, qmlImportPaths, resourceFiles);
+    if (!json)
+        return lintResult;
+
+    QJsonArray warnings;
+    processMessages(warnings);
+
+    QJsonObject result;
+    result[u"module"_s] = module;
+    result[u"warnings"] = warnings;
+    result[u"success"] = lintResult == LintSuccess;
+
+    json->append(result);
+    return lintResult;
+}
+
+QQmlJSLinter::LintResult QQmlJSLinter::lintModuleImpl(
         const QString &module, const bool silent, QJsonArray *json,
         const QStringList &qmlImportPaths, const QStringList &resourceFiles)
 {
@@ -781,23 +791,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
         m_importer.setResourceFileMapper(&mapper);
     else
         m_importer.setResourceFileMapper(nullptr);
-
-    QJsonArray warnings;
-    QJsonObject result;
-
-    bool success = true;
-
-    QScopeGuard jsonOutput([&] {
-        if (!json)
-            return;
-
-        result[u"module"_s] = module;
-
-        result[u"warnings"] = warnings;
-        result[u"success"] = success;
-
-        json->append(result);
-    });
 
     m_logger.reset(new QQmlJSLogger);
     m_logger->setFilePath(module);
@@ -919,12 +912,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
         m_logger->log(message, qmlUnresolvedType, QQmlJS::SourceLocation());
     }
 
-    if (json)
-        processMessages(warnings);
-
-    success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
-
-    return success ? LintSuccess : HasWarnings;
+    return (m_logger->hasWarnings() || m_logger->hasErrors()) ? HasWarnings : LintSuccess;
 }
 
 QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent)

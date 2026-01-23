@@ -134,6 +134,14 @@ public:
     void clearCache() { m_importer.clearCache(); }
 
 private:
+    LintResult lintFileImpl(const QString &filename, const QString *fileContents, const bool silent,
+                            QJsonArray *json, const QStringList &qmlImportPaths,
+                            const QStringList &qmldirFiles, const QStringList &resourceFiles,
+                            const QList<QQmlJS::LoggerCategory> &categories,
+                            const QQmlJS::HeuristicContextProperties &heuristicContextProperties);
+    LintResult lintModuleImpl(const QString &uri, const bool silent, QJsonArray *json,
+                              const QStringList &qmlImportPaths, const QStringList &resourceFiles);
+    void setupLoggingCategoriesInLogger(const QList<QQmlJS::LoggerCategory> &categories);
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
     void processMessages(QJsonArray &warnings);
     ContextPropertyInfo

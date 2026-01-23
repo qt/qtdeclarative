@@ -653,11 +653,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("invalidId1.qml")
             << Result{ { { "Failed to parse id"_L1 } } };
     QTest::newRow("Invalid_syntax_JS")
-            << QStringLiteral("failure1.js")
-            << Result{ { { "Expected token `;'"_L1, 4, 12, QtCriticalMsg } } };
+            << QStringLiteral("failure1.js") << Result{ { { "Expected token `;'"_L1, 4, 12 } } };
     QTest::newRow("Invalid_syntax_QML")
-            << QStringLiteral("failure1.qml")
-            << Result{ { { "Expected token `:'"_L1, 4, 8, QtCriticalMsg } } };
+            << QStringLiteral("failure1.qml") << Result{ { { "Expected token `:'"_L1, 4, 8 } } };
     QTest::newRow("IsNotAnEntryOfEnum")
             << QStringLiteral("IsNotAnEntryOfEnum.qml")
             << Result{ { { "Member \"Mode\" not found on type \"Item\""_L1, 12, 29 },
