@@ -79,6 +79,7 @@ Page {
                     locale: monthGrid.locale
                     Layout.fillWidth: true
                     Layout.column: 1
+                    Accessible.name: qsTr("Week days")
                 }
 
                 WeekNumberColumn {
@@ -86,6 +87,7 @@ Page {
                     year: monthGrid.year
                     month: monthGrid.month
                     Layout.fillHeight: true
+                    Accessible.name: qsTr("Week numbers")
                 }
 
                 MonthGrid {
@@ -95,6 +97,7 @@ Page {
                     month: currentDate.getMonth()
                     readonly property date currentDate: new Date()
                     Layout.fillWidth: true
+                    Accessible.name: qsTr("A grid displaying all the days in a month")
                 }
             }
         }

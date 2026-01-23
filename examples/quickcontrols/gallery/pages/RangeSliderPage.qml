@@ -23,7 +23,7 @@ ScrollablePage {
             first.value: 0.25
             second.value: 0.75
             anchors.horizontalCenter: parent.horizontalCenter
-            Accessible.name: qsTr("demo range slider")
+            Accessible.name: qsTr("Horizontal range slider")
         }
 
         RangeSlider {
@@ -32,7 +32,7 @@ ScrollablePage {
             first.value: 0.25
             second.value: 0.75
             anchors.horizontalCenter: parent.horizontalCenter
-            Accessible.name: qsTr("vertical demo slider")
+            Accessible.name: qsTr("Vertical range slider")
         }
     }
 }

@@ -38,6 +38,7 @@ Flickable {
                 rotation: 90
                 source: "../images/arrows.png"
                 anchors.horizontalCenter: parent.horizontalCenter
+                Accessible.name: qsTr("Image of an arrow pointing in both vertical directions")
             }
         }
     }
