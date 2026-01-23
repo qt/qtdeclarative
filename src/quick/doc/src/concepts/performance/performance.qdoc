@@ -1069,4 +1069,55 @@ articles:
         \l{http://www.agner.org/optimize/}.
 \endlist
 
+\section1 Fast Boot and Startup Optimization
+
+Based on real-world experience optimizing Qt Quick applications for fast boot,
+consider the following best practices:
+
+\list
+\li Design your application to start fast from the beginning. Think what you
+    want the user to see first.
+\li Use the \l{QML Profiler} to identify bottlenecks in startup.
+\li Use chain loading. Run only as many \l{Loader}{loaders} as you have cores
+    in your CPU (e.g two cores: two loaders running at the same time).
+\li The first \l{Loader}{loader} should not be asynchronous, so that some
+    content is shown immediately. Trigger the asynchronous loaders after.
+\li Connect to back-end services only when required.
+\li Create \l{QML Modules} that are imported when required. Using lazily-loaded
+    modules and types you can can make non-critical services available to your
+    application as needed.
+\li Optimize your PNG/JPG images using tools such as optipng.
+\li Optimize your 3D models by reducing the amount of vertices and removing
+    parts that are not visible.
+\li Optimise the 3D model loading by using glTF.
+\li Limit use of clip and opacity, as these can impact performance.
+\li Measure GPU limitations and take those into account when designing the UI.
+    See \l{qrhi.html#frame-captures-and-performance-profiling}{Frame Captures
+    and Performance Profiling} for more information.
+\li Use \l{Qt Quick Compiler} to pre-compile the QML files.
+\li Investigate if static linking is possible for your architecture.
+\li Strive for declarative bindings instead of imperative signal handlers.
+\li Keep property bindings simple. In general, keep QML code simple, fun and
+    readable. Good performance follows.
+\li Replace complex controls with images or shaders if creation time is an
+    issue.
+\endlist
+
+Do not:
+\list
+\li Go overboard with QML. Even if you use QML, you don’t need to do absolutely
+    everything in QML.
+\li Initialize everything in your main.cpp.
+\li Create big singletons that contain all the required interfaces.
+\li Create complex delegates for \l{ListView} or other views.
+\li Use clip unless absolutely necessary.
+\li Fall into the common trap of overusing Loaders. \l{Loader} is great for
+    lazy-loading larger things like application pages, but introduces too much
+    overhead for loading simple things. It’s not black magic that speeds up
+    anything and everything. It’s an extra item with an extra QML context.
+\endlist
+
+These practices help achieve sub-second startup times and smooth user
+experiences, especially on embedded devices.
+
 */
