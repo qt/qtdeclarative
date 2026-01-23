@@ -611,13 +611,15 @@ QQmlJSLinter::lintFileImpl(const QString &filename, const QString *fileContents,
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
     QQmlJS::Parser parser(&engine);
 
-    if (!(isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
-                       : parser.parse())) {
-        const auto diagnosticMessages = parser.diagnosticMessages();
-        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
-            m_logger->log(m.message, qmlSyntax, m.loc);
+    const bool parseSuccess = isJavaScript
+            ? (isESModule ? parser.parseModule() : parser.parseProgram())
+            : parser.parse();
+    const auto diagnosticMessages = parser.diagnosticMessages();
+    for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages)
+        m_logger->log(m.message, qmlSyntax, m.loc);
+
+    if (!parseSuccess)
         return FailedToParse;
-    }
 
     if (isJavaScript)
         return LintSuccess;

@@ -1527,6 +1527,11 @@ void TestQmllint::dirtyQmlSnippet_data()
             << Result{ { { "Enum entry should be named differently than the enum itself to avoid "
                            "confusion."_L1, 1, 10 } } }
             << defaultOptions;
+    QTest::newRow("final-override-warning-from-parser")
+            << u"virtual final property int evil"_s
+            << Result{ { { "The 'virtual' cannot be combined with 'final', as these attributes are mutually exclusive"_L1,
+                           1, 1 } } }
+            << defaultOptions;
     QTest::newRow("functionDefinitionInGroupedProperty")
             // should not crash for now, see QTBUG-142091 to get the actual warning
             << u"Item { foo { bar: Array.from((i) => (1)) } }"_s << Result{} << defaultOptions;
@@ -1691,7 +1696,7 @@ void TestQmllint::cleanQmlSnippet_data()
         options.rootUrls.append(testFile("ContextProperties/src"_L1));
 
         QTest::newRow("contextPropertiesHidden")
-                << u"required property int myContextProperty1: 42; property var a: myContextProperty1"_s
+                << u"property int myContextProperty1: 42; property var a: myContextProperty1"_s
                 << options;
     }
     QTest::newRow("duplicateList") << u"Item {} Item {}"_s << defaultOptions;
