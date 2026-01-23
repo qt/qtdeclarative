@@ -1,0 +1,188 @@
+/*! \internal
+    \page qq-palette-system Qt Quick Palette System
+
+    \image html palette-system-resolution.svg "Qt Quick palette resolution chain — highest priority at top"
+
+    This page explains how %Qt determines the final color of a UI control, end
+    to end. The journey starts at the raw platform color APIs and passes
+    through several distinct subsystems before arriving at the `color`
+    property in a QML file. Understanding each layer, and how it hands off to
+    the next, is the key to debugging color issues or extending the system.
+
+    The system is easiest to reason about as a *priority stack*. Every brush
+    role in a QPalette can be either *resolved* (explicitly set) or *unresolved*
+    (inherited). When a role is unresolved at one layer, the layer below provides
+    the value. The diagram above illustrates this stack; the sections below describe
+    each layer in detail, starting from the lowest priority and working upward.
+
+    The Material and Universal styles are a special case — they bypass the
+    palette system entirely and are described in
+    \ref material_universal_styles "The Material and Universal styles".
+
+    \section palette_data_structure QPalette — the data structure
+
+    QPalette is the shared currency of the whole system. It is a table of
+    \ref QBrush "brushes" indexed by two dimensions:
+
+    - **Group** — `Active`, `Inactive`, or `Disabled`. Reflects whether
+      the widget or item currently has keyboard focus, is visible but
+      unfocused, or is non-interactive.
+    - **Role** — WindowText, %Button, Light, Midlight, Dark, Mid, Text,
+      BrightText, ButtonText, Base, %Window, Shadow, Highlight,
+      HighlightedText, Link, LinkVisited, AlternateBase, ToolTipBase,
+      ToolTipText, PlaceholderText, and Accent.
+
+    Each brush normally carries a fill color and may carry additional paint
+    properties. Alongside the brush data every QPalette has a
+    `resolveMask` — a bitmask with one bit per role. %A **set** bit means
+    "this role was explicitly assigned and must not be silently overridden".
+
+    The key function for combining two palettes is:
+    \code
+        QPalette QPalette::resolve(const QPalette &other) const;
+    \endcode
+    It returns a new palette that keeps every role whose bit is set in
+    `this`, and pulls the remaining roles from `other`. This single
+    function is the merging mechanism used at almost every layer boundary.
+
+    \note In %Qt Quick, QPalette is wrapped by QQuickPalette, which works the
+    same way but restricts each brush to a plain fill color.
+
+    \section layer1_platform_theme Layer 1 — QPlatformTheme: the system palette
+
+    QPlatformTheme::palette() is the foundation. The platform plugin
+    implements this virtual function to turn native OS color values into a
+    QPalette:
+
+    - **Windows** —
+      [GetSysColor()](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getsyscolor)
+    - **GTK3** —
+      [gtk_style_context_lookup_color()](https://docs.gtk.org/gtk3/method.StyleContext.lookup_color.html)
+    - Other platforms use equivalent native APIs.
+
+    When called with the default argument `QPlatformTheme::SystemPalette`
+    this is the *system palette* — the one that honors the user's OS theme
+    and personalization settings. The function can also be called with other
+    `Palette` enum values to return per-widget-class "role" palettes (e.g.
+    `ToolButtonPalette`), which QApplication uses to give individual widget
+    types their own defaults.
+
+    \section layer2_application_palette Layer 2 — QGuiApplication / QApplication: the application palette
+
+    `QGuiApplicationPrivate::generateApplicationPalette()` builds the *application palette*
+     by composing the layers below it in four steps:
+
+    1. Start with **QStyle::standardPalette()** as the base. This generic
+       palette works without any platform theme.
+    2. **Resolve** the system palette over it: roles explicitly provided by
+       QPlatformTheme::palette() fill in or override the corresponding roles
+       from the standard palette.
+    3. Reset `resolveMask` to `0`. This lets the next step — and any
+       later user-set brushes — distinguish themselves from style-generated
+       values.
+    4. Apply **QStyle::polish(QPalette &)** so the active style can adjust
+       any roles it cares about.
+
+    The resulting palette has `resolveMask` `0` and acts as a fallback.
+    Any roles later set explicitly via **QGuiApplication::setPalette()** take
+    precedence because those brushes are marked resolved.
+
+    In QApplication (%Qt Widgets), per-widget-class palette overrides can
+    additionally be registered via `QApplication::setPalette(palette, className)`.
+
+    \section layer3_item_palette_tree Layer 3 — QQuickPaletteProviderPrivateBase: the item palette tree
+
+    %Qt Quick introduces a per-item palette. QQuickWindowPrivate,
+    QQuickItemPrivate, and QQuickPopupPrivate all inherit from
+    QQuickPaletteProviderPrivateBase, giving every window, item, and popup
+    both a `palette` and a `defaultPalette`.
+
+    Palettes are **lazily initialized**. On first access:
+
+    - The item inherits all unresolved roles from its parent item's palette.
+    - Inheritance walks the parent chain until QQuickWindow is reached.
+    - QQuickWindow fills its own unresolved roles from `defaultPalette()`.
+
+    The base implementation of `defaultPalette()` returns a default-constructed
+    QPalette() — a copy of the application palette with `resolveMask` `0` —
+    so all roles are available for override by higher-priority layers.
+
+    When the application palette changes (e.g. after QGuiApplication::setPalette()
+    or an OS theme switch), a `ApplicationPaletteChange` event is dispatched
+    to every QQuickWindow, QQuickItem, and QQuickPopup, which then
+    re-inherit from the updated application palette.
+
+    \section layer4_style_palette Layer 4 — QQuickTheme: the style palette
+
+    %Qt Quick Controls overrides `defaultPalette()` on virtually every control
+    type to return **QQuickTheme::palette(scope)** instead of the plain
+    application palette. This is how styles give controls a distinct look
+    without modifying the application-wide QPalette.
+
+    QQuickStylePlugin::createTheme() constructs the QQuickTheme singleton when
+    the style plugin loads. At that point two things happen:
+
+    1. The plugin calls **initializeTheme(QQuickTheme *)** (and optionally **updateTheme()**)
+       to populate the theme palettes. What this means in practice depends on the style:
+       - **Fusion** and **macOS** — set `preferPlatformTheme = true`,
+         which makes QQuickTheme delegate directly to
+         QPlatformTheme::palette() so the controls always follow the
+         system palette.
+       - **Imagine**, **FluentWinUI3**, and **iOS** — supply fully
+         custom palettes independent of the platform.
+       - **Windows** — calls
+         QWindowsApplication::populateLightSystemPalette() to use the
+         system light-mode colors regardless of the current OS theme (dark
+         mode is not supported in this style at the time of writing).
+    2. If a config file is found at the path given by
+       `QT_QUICK_CONTROLS_CONF`, or at `:/qtquickcontrols2.conf`, the
+       parser marks any brushes found there as resolved in the theme palette.
+       These override everything the style itself provides, making the config
+       file the highest-priority override short of a direct QML binding.
+
+    The **scope** argument to **QQuickTheme::palette(Scope)**
+    and **QQuickTheme::setPalette(Scope, const QPalette &)** lets a style supply
+    different palettes for different control types. For example, a style can
+    use a palette with a distinct accent color for buttons while keeping a
+    neutral palette for other controls. The default scope is `System`.
+
+    \section material_universal_styles The Material and Universal styles
+
+    These two styles completely bypass the palette system. Instead of
+    QQuickPaletteProviderPrivateBase or QQuickTheme, each control's color
+    bindings look up values directly from an *attached-object singleton* —
+    QQuickMaterialStyle or QQuickUniversalStyle.
+
+    The singleton holds two hard-coded color arrays (one for light mode, one
+    for dark mode) and derives from QQuickAttachedPropertyPropagator to
+    cascade style-property changes down the item tree, filling the role that
+    the palette parent chain fills for other styles.
+
+    Some customization is available through the config file and environment
+    variables:
+    - [Material style customization](https://doc.qt.io/qt-6/qtquickcontrols-material.html)
+    - [Universal style customization](https://doc.qt.io/qt-6/qtquickcontrols-universal.html)
+
+    \section full_order_of_precedence Full order of precedence
+
+    For all styles except Material and Universal, the final color for a given
+    brush role is determined by the first layer in this list that has it
+    explicitly set:
+
+    1. %A direct `color:` binding in QML.
+    2. The `palette` property set on the item or an ancestor item in QML or
+       C++ (roles propagate to descendants; unset roles are inherited from
+       the parent).
+    3. The config file (`qtquickcontrols2.conf` / `QT_QUICK_CONTROLS_CONF`).
+    4. **QGuiApplication::setPalette()** — only brushes with their
+       `resolveMask` bit set.
+    5. **QStyle::polish(QPalette &)**.
+    6. **QPlatformTheme::palette()** — the platform system palette.
+    7. **QStyle::standardPalette()** — the generic base fallback.
+
+    For the Material and Universal styles the stack is simpler:
+
+    1. %A direct `color:` binding in QML.
+    2. The config file or style-specific environment variables.
+    3. The built-in hard-coded light/dark color arrays.
+*/
