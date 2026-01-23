@@ -29,7 +29,10 @@ Page {
 
             ToolSeparator { }
 
-            ToolButton { text: "\u2699" }
+            ToolButton {
+                text: "\u2699"
+                Accessible.name: qsTr("Settings")
+            }
         }
     }
 
@@ -53,6 +56,7 @@ Page {
                 verticalAlignment: Text.AlignVCenter
                 text: "\u2139"
 
+                Accessible.name: qsTr("Info")
                 Layout.fillHeight: true
                 Layout.preferredWidth: height
             }
@@ -68,7 +72,10 @@ Page {
 
             ToolSeparator { }
 
-            ToolButton { text: "\u2630" }
+            ToolButton {
+                text: "\u2630"
+                Accessible.name: "Hamburger menu"
+            }
         }
     }
 }

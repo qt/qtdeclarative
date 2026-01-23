@@ -53,6 +53,7 @@ ScrollablePage {
             id: colorSearch
             suggestionModel: colorFilter
             anchors.horizontalCenter: parent.horizontalCenter
+            Accessible.name: qsTr("Demo searchfield")
         }
     }
 }

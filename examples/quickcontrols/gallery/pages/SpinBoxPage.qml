@@ -24,7 +24,7 @@ ScrollablePage {
             value: 50
             anchors.horizontalCenter: parent.horizontalCenter
             editable: true
-            Accessible.name: qsTr("demo spinbox")
+            Accessible.name: qsTr("Demo spinbox")
         }
 
         Label {
@@ -40,7 +40,7 @@ ScrollablePage {
             stepSize: 0.1
             anchors.horizontalCenter: parent.horizontalCenter
             editable: true
-            Accessible.name: qsTr("demo spinbox for floating point numbers")
+            Accessible.name: qsTr("Demo spinbox for floating point numbers")
         }
     }
 }
