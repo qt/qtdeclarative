@@ -46,6 +46,7 @@ class QQmlCodeModelManager : public QObject
 public:
     QQmlCodeModelManager(QObject *parent = nullptr, QQmlToolingSharedSettings *settings = nullptr);
     ~QQmlCodeModelManager();
+    void prepareForShutdown();
 
     OpenDocumentSnapshot snapshotByUrl(const QByteArray &url);
     OpenDocument openDocumentByUrl(const QByteArray &url);

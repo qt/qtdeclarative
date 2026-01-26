@@ -57,10 +57,17 @@ QQmlCodeModelManager::QQmlCodeModelManager(QObject *parent, QQmlToolingSharedSet
     appendWorkspace(defaultCodeModel, ManagedByServer);
 }
 
+void QQmlCodeModelManager::prepareForShutdown()
+{
+    for (auto it = m_workspaces.begin(), end = m_workspaces.end(); it != end; ++it)
+        it->codeModel->prepareForShutdown();
+}
+
 QQmlCodeModelManager::~QQmlCodeModelManager()
 {
     m_cmakeProber.kill();
     m_cmakeProber.waitForFinished();
+    prepareForShutdown();
 }
 
 QQmlCodeModelManager::WorkspaceIterator

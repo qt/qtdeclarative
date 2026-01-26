@@ -90,6 +90,13 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     qCWarning(lspServerLog) << "Did Setup";
 }
 
+QQmlLanguageServer::~QQmlLanguageServer()
+{
+    // note: the server modules might be in use by the QQmlCodeModel thread, so wait for the
+    // QQmlCodeModel threads to finish before destroying the server modules.
+    m_codeModelManager.prepareForShutdown();
+}
+
 void QQmlLanguageServer::registerHandlers(QLanguageServer *server,
                                           QLanguageServerProtocol *protocol)
 {

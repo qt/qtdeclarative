@@ -112,6 +112,8 @@ public:
     explicit QQmlCodeModel(const QByteArray &rootUrl = {}, QObject *parent = nullptr,
                            QQmlToolingSharedSettings *settings = nullptr);
     ~QQmlCodeModel();
+    void prepareForShutdown();
+
     QQmlJS::Dom::DomItem currentEnv() const { return m_currentEnv; };
     QQmlJS::Dom::DomItem validEnv() const { return m_validEnv; };
     OpenDocumentSnapshot snapshotByUrl(const QByteArray &url);
@@ -228,6 +230,7 @@ private:
     int m_nUpdateInProgress = 0;
     CMakeStatus m_cmakeStatus = RequiresInitialization;
     int m_cmakeJobs = 1;
+    State m_state = QQmlCodeModel::State::Running;
     bool m_verbose = false;
 };
 
