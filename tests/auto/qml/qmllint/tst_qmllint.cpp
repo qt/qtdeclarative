@@ -139,6 +139,9 @@ private Q_SLOTS:
 
     void maxWarnings();
 
+    void useProperFunction_data();
+    void useProperFunction();
+
 #if QT_CONFIG(library)
     void hasTestPlugin();
     void testPlugin_data();
@@ -838,14 +841,6 @@ void TestQmllint::dirtyQmlCode_data()
                        { { "Cannot assign binding of type QQuickItem to QObject"_L1 } },
                        {},
                        Result::ExitsNormally };
-    QTest::newRow("callJSValue")
-            << QStringLiteral("callJSValueProp.qml")
-            << Result{ { { "Property \"jsValue\" is a QJSValue property. It may or may not be "
-                           "a method. Use a regular Q_INVOKABLE instead."_L1 } } };
-    QTest::newRow("callVarProp")
-            << QStringLiteral("callVarProp.qml")
-            << Result{ { { "Property \"foo\" is a var property. It may or may not be a "
-                           "method. Use a regular function instead."_L1 } } };
     QTest::newRow("connectionsBinding")
             << QStringLiteral("autofix/ConnectionsHandler.qml")
             << Result{ { { "Implicitly defining \"onWidthChanged\" as signal handler in "
@@ -1114,18 +1109,6 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1, 16, 27 } },
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
             << Result{ { { "Member \"foobar\" not found on type \"QQuickScreenAttached\""_L1 } } };
-    QTest::newRow("shadowedMethod")
-            << QStringLiteral("shadowedMethod.qml")
-            << Result{ { { "Method \"foo\" is shadowed by a property."_L1 } } };
-    QTest::newRow("shadowedSignal")
-            << QStringLiteral("shadowedSignal.qml")
-            << Result{ { { "Signal \"pressed\" is shadowed by a property."_L1 } } };
-    QTest::newRow("shadowedSignalWithId")
-            << QStringLiteral("shadowedSignalWithId.qml")
-            << Result{ { { "Signal \"pressed\" is shadowed by a property"_L1 } } };
-    QTest::newRow("shadowedSlot")
-            << QStringLiteral("shadowedSlot.qml")
-            << Result{ { { "Slot \"move\" is shadowed by a property"_L1 } } };
     {
         const auto msgGen = [](const QString &name, quint32 line, quint32 col) {
             return Message{ "Reading non-constant and non-notifiable property %1. Binding might "_L1
@@ -3653,6 +3636,52 @@ void TestQmllint::errorCategory()
         QVERIFY(output.startsWith("Warning: "));
     }
 
+}
+
+void TestQmllint::useProperFunction_data()
+{
+    // note: use the same column as dirtyQmlSnippet_data() to reuse dirtyQmlSnippet() in shadow().
+    QTest::addColumn<QString>("code");
+    QTest::addColumn<Result>("result");
+    QTest::addColumn<CallQmllintOptions>("options");
+
+    CallQmllintOptions defaultOptions;
+    defaultOptions.enableCategories.append(qmlUseProperFunction.name().toString());
+
+    QTest::newRow("shadowedMethod") << u"function foo() {}\n property bool foo: false"_s
+                                    << Result::clean() << defaultOptions;
+    QTest::newRow("shadowedSignal")
+            << u"MouseArea { Component.onCompleted: pressed(); }"_s
+            << Result{ { { "Signal \"pressed\" is shadowed by a property." } } } << defaultOptions;
+    QTest::newRow("shadowedSignalWithId")
+            << u"MouseArea { id: mouseArea; Component.onCompleted: mouseArea.pressed() }"_s
+            << Result{ { { "Signal \"pressed\" is shadowed by a property." } } } << defaultOptions;
+    QTest::newRow("shadowedSlot")
+            << u"ObjectModel { property bool move: false; Component.onCompleted: move(); }"_s
+            << Result{ { { "Slot \"move\" is shadowed by a property." } } } << defaultOptions;
+    QTest::newRow("callJSValue")
+            << u"import CallJSValue\n"
+               u"TypeWithQJSValue {\n"
+               u"     Component.onCompleted: jsValue(42);\n"
+               u"}\n"_s
+            << Result{ { { "Property \"jsValue\" is a QJSValue property. It may or may not be "
+                           "a method. Use a regular Q_INVOKABLE instead."_L1 } } }
+            << defaultOptions;
+    QTest::newRow("callVarProp")
+            << u"import QtQml\n"
+               u"QtObject {\n"
+               u"    property var foo: () => {}\n"
+               u"    Component.onCompleted: foo()\n"
+               u"}\n"_s
+            << Result{ { { "Property \"foo\" is a var property. It may or may not be a "
+                           "method. Use a regular function instead."_L1 } } }
+            << defaultOptions;
+}
+
+void TestQmllint::useProperFunction()
+{
+    // reuse testing logic from dirtyQmlSnippet
+    dirtyQmlSnippet();
 }
 
 void TestQmllint::noSettingsPollution()

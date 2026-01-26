@@ -151,7 +151,7 @@ using namespace Qt::StringLiterals;
     X(qmlUnusedImports, "unused-imports", "UnusedImports", "Warn about unused imports", QtInfoMsg, \
       false, false)                                                                                \
     X(qmlUseProperFunction, "use-proper-function", "UseProperFunction",                            \
-      "Warn if var is used for storing functions", QtWarningMsg, false, false)                     \
+      "Warn if var is used for storing functions", QtWarningMsg, true, false)                      \
     X(qmlVarUsedBeforeDeclaration, "var-used-before-declaration", "VarUsedBeforeDeclaration",      \
       "Warn if a variable is used before declaration", QtWarningMsg, false, false)                 \
     X(qmlVoid, "void", "Void", "Warn about void expressions.", QtWarningMsg, true, false)          \
