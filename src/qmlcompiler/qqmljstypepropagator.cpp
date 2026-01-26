@@ -759,15 +759,6 @@ bool QQmlJSTypePropagator::checkForEnumProblems(
                     fixSuggestion);
             return true;
         }
-    } else if (base.variant() == QQmlJSRegisterContent::MetaType) {
-        const QQmlJSMetaEnum metaEn = base.scopeType()->enumeration(propertyName);
-        if (metaEn.isValid() && !metaEn.isScoped() && !metaEn.isQml()) {
-            const QString error
-                    = u"You cannot access unscoped enum \"%1\" from here."_s.arg(propertyName);
-            addError(error);
-            m_logger->log(error, qmlRestrictedType, currentSourceLocation());
-            return true;
-        }
     }
 
     return false;

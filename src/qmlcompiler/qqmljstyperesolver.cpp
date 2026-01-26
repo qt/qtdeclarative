@@ -1250,7 +1250,7 @@ bool QQmlJSTypeResolver::checkEnums(
 
     const auto enums = scope.containedType()->ownEnumerations();
     for (const auto &enumeration : enums) {
-        if ((enumeration.isScoped() || enumeration.isQml()) && enumeration.name() == name) {
+        if (enumeration.name() == name) {
             *result = m_pool->createEnumeration(
                     enumeration, QString(),
                     QQmlJSRegisterContent::Enum,
@@ -1258,8 +1258,8 @@ bool QQmlJSTypeResolver::checkEnums(
             return true;
         }
 
-        if ((!enumeration.isScoped() || enumeration.isQml()
-             || !scope.containedType()->enforcesScopedEnums()) && enumeration.hasKey(name)) {
+        if (!(scope.containedType()->enforcesScopedEnums() && enumeration.isScoped())
+            && enumeration.hasKey(name)) {
             *result = m_pool->createEnumeration(
                     enumeration, name,
                     QQmlJSRegisterContent::Enum,

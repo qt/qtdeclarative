@@ -660,9 +660,6 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("NonExistentListProperty")
             << QStringLiteral("nonExistentListProperty.qml")
             << Result{ { { "Could not find property \"objs\"."_L1 } } };
-    QTest::newRow("NotScopedEnumCpp")
-            << QStringLiteral("NotScopedEnumCpp.qml")
-            << Result{ { { "You cannot access unscoped enum \"TheEnum\" from here."_L1, 5, 49 } } };
     QTest::newRow("OnAssignment")
             << QStringLiteral("onAssignment.qml")
             << Result{ { { "Member \"loops\" not found on type \"bool\""_L1 } } };
@@ -942,11 +939,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("enumInvalid.qml")
             << Result{ { { "Member \"red\" not found on type \"QtObject\""_L1, 5, 25 },
                          { "Member \"red\" not found on type \"QtObject\""_L1, 6, 25 },
-                         { "You cannot access unscoped enum \"Unscoped\" from here."_L1, 8, 32 },
-                         { "You cannot access unscoped enum \"Unscoped\" from here."_L1, 9, 38 },
-                         { "Member \"S2\" not found on type \"EnumTesterScoped\""_L1, 10, 38 }, },
-                       { { "Did you mean \"S2\"?"_L1, 0, 0, QtInfoMsg } },
-                       { { "Did you mean \"U2\"?"_L1, 10, 38, QtInfoMsg } } };
+                         { "Member \"S2\" not found on type \"EnumTesterScoped\""_L1, 8, 38 }, },
+                       { },
+                       { { "Did you mean \"U2\"?"_L1, 8 } } };
     QTest::newRow("enumsAreNotTypes_functionAnnotations")
             << QStringLiteral("EnumsAreNotTypes_functionAnnotations.qml")
             << Result{ { { "QML enumerations are not types. Use underlying type "
