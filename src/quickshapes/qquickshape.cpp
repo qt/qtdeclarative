@@ -567,17 +567,17 @@ void QQuickShapePath::setFillItem(QQuickItem *fillItem)
 /*!
     \qmlpropertygroup QtQuick.Shapes::ShapePath::trim
     \qmlproperty real QtQuick.Shapes::ShapePath::trim.start
-    \qmlproperty real QtQuick.Shapes::ShapePath::trim.stop
+    \qmlproperty real QtQuick.Shapes::ShapePath::trim.end
     \qmlproperty real QtQuick.Shapes::ShapePath::trim.offset
     \since 6.10
 
     Specifies the section of this path that will be displayed.
 
-    The section is defined by the path length fractions \c start and \c stop. By default, \c start
-    is 0 (denoting the start of the path) and \c stop is 1 (denoting the end of the path), so the
+    The section is defined by the path length fractions \c start and \c end. By default, \c start
+    is 0 (denoting the start of the path) and \c end is 1 (denoting the end of the path), so the
     entire path is displayed.
 
-    The value of \c offset is added to \c start and \c stop. If that causes over- or underrun of the
+    The value of \c offset is added to \c start and \c end. If that causes over- or underrun of the
     [0, 1] range, the values will be wrapped around, as will the resulting path section. The
     effective range of \c offset is between -1 and 1. The default value is 0.
 */
