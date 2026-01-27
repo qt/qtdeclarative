@@ -34,6 +34,14 @@ void QQuickColorImage::resetColor()
     setColor(Qt::transparent);
 }
 
+/*!
+    \internal
+
+    This property holds the original color of the image.
+
+    This allows avoiding colorization if the \c color set by the style or user
+    is the same as the default color.
+*/
 QColor QQuickColorImage::defaultColor() const
 {
     return m_defaultColor;
