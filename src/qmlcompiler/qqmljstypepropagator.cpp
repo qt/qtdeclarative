@@ -515,25 +515,8 @@ bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const 
 
     QString propertyType = u"Property"_s;
 
-    auto methods = scope->methods(name);
-
     QString errorType;
-    if (!methods.isEmpty()) {
-        errorType = u"shadowed by a property."_s;
-        switch (methods.first().methodType()) {
-        case QQmlJSMetaMethodType::Signal:
-            propertyType = u"Signal"_s;
-            break;
-        case QQmlJSMetaMethodType::Slot:
-            propertyType = u"Slot"_s;
-            break;
-        case QQmlJSMetaMethodType::Method:
-            propertyType = u"Method"_s;
-            break;
-        default:
-            Q_UNREACHABLE();
-        }
-    } else if (property.type() == m_typeResolver->varType()) {
+    if (property.type() == m_typeResolver->varType()) {
         errorType =
                 u"a var property. It may or may not be a method. Use a regular function instead."_s;
     } else if (property.type() == m_typeResolver->jsValueType()) {

@@ -3972,13 +3972,13 @@ void TestQmllint::useProperFunction_data()
             << defaultOptions;
     QTest::newRow("shadowedSignal")
             << u"MouseArea { Component.onCompleted: pressed(); }"_s
-            << Result{ { { "Signal \"pressed\" is shadowed by a property." } } } << defaultOptions;
+            << Result{ { { "Property \"pressed\" is not a method" } } } << defaultOptions;
     QTest::newRow("shadowedSignalWithId")
             << u"MouseArea { id: mouseArea; Component.onCompleted: mouseArea.pressed() }"_s
-            << Result{ { { "Signal \"pressed\" is shadowed by a property." } } } << defaultOptions;
+            << Result{ { { "Property \"pressed\" is not a method" } } } << defaultOptions;
     QTest::newRow("shadowedSlot")
             << u"ObjectModel { property bool move: false; Component.onCompleted: move(); }"_s
-            << Result{ { { "Slot \"move\" is shadowed by a property." } } } << defaultOptions;
+            << Result{ { { "Property \"move\" is not a method" } } } << defaultOptions;
     QTest::newRow("callJSValue")
             << u"import CallJSValue\n"
                u"TypeWithQJSValue {\n"
