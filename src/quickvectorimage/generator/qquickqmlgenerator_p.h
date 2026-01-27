@@ -162,6 +162,7 @@ private:
     QStringList m_extraImports;
     QMap<std::array<qreal, 4>, QString> m_easings;
     QSet<QString> m_generatedIds;
+    quint32 m_nodeCounter = 0;
 };
 
 QT_END_NAMESPACE

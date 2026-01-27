@@ -43,6 +43,9 @@ QQuickItemGenerator::~QQuickItemGenerator()
 
 bool QQuickItemGenerator::generateRootNode(const StructureNodeInfo &info)
 {
+    if (Q_UNLIKELY(errorState()))
+        return false;
+
     bool cont = QQuickQmlGenerator::generateRootNode(info);
     if (info.stage == StructureNodeStage::End) {
         if (m_qmlContext == nullptr) {
