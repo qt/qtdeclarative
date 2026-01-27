@@ -69,7 +69,7 @@ set(qml_files
     "VerticalHeaderView.qml"
     "VerticalHeaderViewDelegate.qml"
 )
-if (QT_FEATURE_quicktemplates2_calendar)
+if(QT_FEATURE_quicktemplates2_calendar)
     list(APPEND qml_files
         "Calendar.qml"
         "CalendarModel.qml"
@@ -78,7 +78,7 @@ if (QT_FEATURE_quicktemplates2_calendar)
         "WeekNumberColumn.qml"
     )
 endif()
-if (QT_FEATURE_quick_tableview)
+if(QT_FEATURE_quick_tableview)
     list(APPEND qml_files
         "TableViewDelegate.qml"
     )
@@ -87,7 +87,7 @@ if (QT_FEATURE_quick_tableview)
         QT_QML_SOURCE_VERSIONS "6.9"
     )
 endif()
-if (QT_FEATURE_quick_treeview)
+if(QT_FEATURE_quick_treeview)
     list(APPEND qml_files
         "TreeViewDelegate.qml"
     )
@@ -99,7 +99,7 @@ set_source_files_properties(Action.qml PROPERTIES
 set_source_files_properties(ActionGroup.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.3;6.0"
 )
-if (QT_FEATURE_quicktemplates2_calendar)
+if(QT_FEATURE_quicktemplates2_calendar)
     set_source_files_properties(Calendar.qml PROPERTIES
         QT_QML_SINGLETON_TYPE TRUE
         QT_QML_SOURCE_VERSIONS "6.3"
@@ -135,7 +135,7 @@ set_source_files_properties(MenuBarItem.qml PROPERTIES
 set_source_files_properties(MenuSeparator.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
-if (QT_FEATURE_quicktemplates2_calendar)
+if(QT_FEATURE_quicktemplates2_calendar)
     set_source_files_properties(MonthGrid.qml PROPERTIES
         QT_QML_SOURCE_VERSIONS "6.3"
     )
@@ -161,7 +161,7 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
 set_source_files_properties(VerticalHeaderViewDelegate.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "6.10"
 )
-if (QT_FEATURE_quicktemplates2_calendar)
+if(QT_FEATURE_quicktemplates2_calendar)
     set_source_files_properties(WeekNumberColumn.qml PROPERTIES
         QT_QML_SOURCE_VERSIONS "6.3"
     )

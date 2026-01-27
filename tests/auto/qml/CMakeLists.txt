@@ -126,7 +126,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qqmlpropertycachecreator)
     add_subdirectory(qqmlpropertymap)
 # special case begin
-    if (TARGET Qt::Sql)
+    if(TARGET Qt::Sql)
 # special case end
         add_subdirectory(qqmlsqldatabase)
 # special case begin
@@ -177,7 +177,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(bindingdependencyapi)
     add_subdirectory(v4misc)
     add_subdirectory(qqmldelegatemodel) # special case
-    if (QT_FEATURE_qml_xmllistmodel)
+    if(QT_FEATURE_qml_xmllistmodel)
         add_subdirectory(qqmlxmllistmodel)
     endif()
 endif()

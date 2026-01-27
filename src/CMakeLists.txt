@@ -62,7 +62,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quickcontrolsimpl)
     add_subdirectory(quickcontrols)
 
-    if (QT_FEATURE_quickcontrols2_macos OR QT_FEATURE_quickcontrols2_windows)
+    if(QT_FEATURE_quickcontrols2_macos OR QT_FEATURE_quickcontrols2_windows)
         add_subdirectory(quicknativestyle)
     endif()
 
@@ -88,7 +88,7 @@ endif()
 add_subdirectory(qmlcompiler)
 add_subdirectory(qmldom)
 
-if (QT_FEATURE_commandlineparser)
+if(QT_FEATURE_commandlineparser)
     add_subdirectory(qmlformat)
 endif()
 
@@ -100,7 +100,7 @@ endif()
 
 if(QT_FEATURE_thread AND QT_FEATURE_filesystemwatcher AND QT_FEATURE_processenvironment
         AND TARGET Qt::LanguageServerPrivate)
-    if (NOT CMAKE_CROSSCOMPILING OR QT_FORCE_BUILD_TOOLS)
+    if(NOT CMAKE_CROSSCOMPILING OR QT_FORCE_BUILD_TOOLS)
         add_subdirectory(qmlls)
     endif()
 endif()
