@@ -106,6 +106,7 @@ void tst_qmltoolingsettings::reportConfigForFiles()
     QVERIFY(out.contains("File"));
     QVERIFY(out.contains("Settings File"));
     QVERIFY(out.contains(expectedResultCapture));
+    QVERIFY(!settings.isSet("HelloFromB"));
 }
 
 void tst_qmltoolingsettings::searchOptions_data()
