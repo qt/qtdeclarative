@@ -85,10 +85,9 @@ Rectangle {
             bottomLeftBevel: true
             bottomRightBevel: true
         }
-
-        // strokeColor
         RectangleShapeBase {
             strokeColor: "red"
+            bevel: true
         }
 
         // strokeWidth
