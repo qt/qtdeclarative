@@ -84,7 +84,7 @@ int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtCon
         while (dirIt.hasNext()) {
             QFile partialFile(dirIt.next());
             if (!partialFile.open(QFile::ReadOnly | QFile::Text)) {
-                qDebug() << "could not open" << partialFile.fileName();
+                qCritical() << "could not open" << partialFile.fileName();
                 return EXIT_FAILURE;
             }
             while (!partialFile.atEnd()) {
@@ -124,7 +124,7 @@ int mergeQtConfFiles(const QString &pathToList, const QString &pathToMergedQtCon
 
         QFile consolidatedQtConfFile(mergedQtConfFilePath);
         if (!consolidatedQtConfFile.open(QFile::WriteOnly | QFile::Text)) {
-            qDebug() << "could not open" << consolidatedQtConfFile.fileName();
+            qCritical() << "could not open" << consolidatedQtConfFile.fileName();
             return EXIT_FAILURE;
         }
         QTextStream out(&consolidatedQtConfFile);
