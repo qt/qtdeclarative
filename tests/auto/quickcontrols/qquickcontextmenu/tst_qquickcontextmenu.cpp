@@ -644,10 +644,10 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
     QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
-    // Erase the text. Undo should then be enabled, but not redo.
+    // Modify the text. Undo should then be enabled, but not redo.
     QTest::keySequence(&window, QKeySequence::SelectAll);
-    QTest::keyClick(&window, Qt::Key_Backspace);
-    QCOMPARE(editor->property("text").toString(), QString());
+    QTest::keyClick(&window, Qt::Key_0);
+    QCOMPARE(editor->property("text").toString(), "0");
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 
@@ -669,7 +669,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Click on the Redo menu item. Undo should then be enabled.
     QVERIFY(clickMenuItem(redoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
-    QCOMPARE(editor->property("text").toString(), QString());
+    QCOMPARE(editor->property("text").toString(), "0");
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 }
