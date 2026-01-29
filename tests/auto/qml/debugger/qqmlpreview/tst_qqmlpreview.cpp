@@ -450,8 +450,8 @@ void tst_QQmlPreview::qqcStyleSelection()
     QVERIFY(m_client);
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
     m_client->triggerLoad(testFileUrl(file));
-    QTRY_VERIFY(m_files.contains(testFile(file)));
-    QTRY_VERIFY(m_files.contains(testFile("qqc2.conf")));
+    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile(file)), 2000);
+    QTRY_VERIFY_WITH_TIMEOUT(m_files.contains(testFile("qqc2.conf")), 2000);
     verifyProcessOutputContains("loaded");
 
     m_process->stop();
