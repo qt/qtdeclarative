@@ -1903,55 +1903,11 @@ void QQmlJSImportVisitor::endVisit(UiInlineComponent *component)
     m_nextIsInlineComponent = false; // might have missed an inline component if file contains invalid QML
 }
 
-static constexpr QLatin1String s_method = "method"_L1;
-static constexpr QLatin1String s_signal = "signal"_L1;
-static constexpr QLatin1String s_property = "property"_L1;
-
-static void warnForDuplicates(const QQmlJSScope::ConstPtr &scope, const QString &name,
-                              QLatin1String type, const QQmlJS::SourceLocation &location,
-                              QQmlJSLogger *logger)
-{
-    static constexpr QLatin1String duplicateMessage =
-            "Duplicated %1 name \"%2\", \"%2\" is already a %3."_L1;
-    if (const auto methods = scope->ownMethods(name); !methods.isEmpty()) {
-        logger->log(duplicateMessage.arg(type, name,
-                                         methods.front().methodType() == QQmlSA::MethodType::Signal
-                                                 ? s_signal
-                                                 : s_method),
-                    qmlDuplicatedName, location);
-    }
-    if (scope->hasOwnProperty(name))
-        logger->log(duplicateMessage.arg(type, name, s_property), qmlDuplicatedName, location);
-
-    static constexpr QLatin1String warningMessage =
-            "%1 \"%2\" already exists in base type \"%3\", use a different name."_L1;
-
-    if (scope->hasMethod(name)) {
-        const auto owner = QQmlJSScope::ownerOfMethod(scope, name).scope;
-        const bool isSignal =
-                owner->methods(name).front().methodType() == QQmlJSMetaMethodType::Signal;
-        logger->log(
-                    warningMessage.arg(isSignal ? "Signal"_L1 : "Method"_L1, name,
-                                       QQmlJSUtils::getScopeName(owner, QQmlSA::ScopeType::QMLScope)),
-                    qmlShadow, location);
-    }
-    if (scope->hasProperty(name)) {
-        const auto owner = QQmlJSScope::ownerOfProperty(scope, name).scope;
-        logger->log(
-                    warningMessage.arg("Property"_L1, name,
-                                       QQmlJSUtils::getScopeName(owner, QQmlSA::ScopeType::QMLScope)),
-                    qmlShadow, location);
-    }
-}
-
 bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 {
     switch (publicMember->type) {
     case UiPublicMember::Signal: {
         const QString signalName = publicMember->name.toString();
-        warnForDuplicates(m_currentScope, signalName, s_signal, publicMember->identifierToken,
-                          m_logger);
-
         UiParameterList *param = publicMember->parameters;
         QQmlJSMetaMethod method;
         method.setMethodType(QQmlJSMetaMethodType::Signal);
@@ -1972,9 +1928,6 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
     }
     case UiPublicMember::Property: {
         const QString propertyName = publicMember->name.toString();
-        warnForDuplicates(m_currentScope, propertyName, s_property, publicMember->identifierToken,
-                          m_logger);
-
         QString typeName = buildName(publicMember->memberType);
         if (typeName.contains(u'.') && typeName.front().isLower()) {
             logLowerCaseImport(typeName, publicMember->typeToken, m_logger);
@@ -2164,10 +2117,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
 
         method.setJsFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
 
-        if (m_currentScope->scopeType() == QQmlSA::ScopeType::QMLScope) {
-            warnForDuplicates(m_currentScope, method.methodName(), s_method, fexpr->identifierToken,
-                              m_logger);
-        } else {
+        if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope) {
             // note: lambda methods have no identifier token
             const QQmlJS::SourceLocation functionLocation = fexpr->identifierToken.isValid()
                     ? fexpr->identifierToken
