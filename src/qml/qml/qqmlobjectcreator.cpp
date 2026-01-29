@@ -1493,27 +1493,21 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     qSwap(_qmlContext, qmlContext);
 
-    bool ok = populateInstance(index, instance, /*binding target*/instance, /*value type property*/nullptr);
-    if (ok) {
-        if (isContextObject && !pendingAliasBindings.empty()) {
-            bool processedAtLeastOneBinding = false;
-            do {
-                processedAtLeastOneBinding = false;
-                for (std::vector<PendingAliasBinding>::iterator it = pendingAliasBindings.begin();
-                        it != pendingAliasBindings.end(); ) {
-                    if ((*it)(sharedState.data())) {
-                        it = pendingAliasBindings.erase(it);
-                        processedAtLeastOneBinding = true;
-                    } else {
-                        ++it;
-                    }
-                }
-            } while (processedAtLeastOneBinding && pendingAliasBindings.empty());
-            Q_ASSERT(pendingAliasBindings.empty());
-        }
-    } else {
+    const bool ok = populateInstance(
+            index, instance, /*binding target*/instance, /*value type property*/nullptr);
+    if (!ok) {
         // an error occurred, so we can't setup the pending alias bindings
         pendingAliasBindings.clear();
+    } else if (isContextObject) {
+        while (!pendingAliasBindings.empty()) {
+            for (std::vector<PendingAliasBinding>::iterator it = pendingAliasBindings.begin();
+                    it != pendingAliasBindings.end(); ) {
+                if ((*it)(sharedState.data()))
+                    it = pendingAliasBindings.erase(it);
+                else
+                    ++it;
+            }
+        }
     }
 
     qSwap(_qmlContext, qmlContext);
