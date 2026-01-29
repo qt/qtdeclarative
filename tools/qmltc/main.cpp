@@ -38,7 +38,7 @@ void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
         if (category.id() == qmlUnusedImports)
             continue;
         // shadowing is fine for qmltc
-        if (category.id() == qmlShadow)
+        if (category.id() == qmlShadow || category.id() == qmlPropertyOverride)
             continue;
         logger.setCategoryLevel(category.id(), QtCriticalMsg);
         logger.setCategoryIgnored(category.id(), false);

@@ -79,6 +79,7 @@ extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlNonRootEnums;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPlugin;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPreferNonVarProperties;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPrefixedImportType;
+extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlPropertyOverride;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlReadOnlyProperty;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRecursionDepthErrors;
 extern const Q_QMLCOMPILER_EXPORT QQmlSA::LoggerWarningId qmlRedundantOptionalChaining;

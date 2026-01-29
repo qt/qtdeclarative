@@ -102,7 +102,10 @@ using namespace Qt::StringLiterals;
       "Warn about non-list properties", QtWarningMsg, false, false)                                \
     X(qmlNonRootEnums, "non-root-enum", "NonRootEnum",                                             \
       "Warn about enums defined outside the root component", QtWarningMsg, false, false)           \
-    X(qmlUnterminatedCase, "unterminated-case", "UnterminatedCase", "Warn about non-empty case "   \
+    X(qmlPropertyOverride, "property-override", "PropertyOverride",                                \
+      "Warn about wrongly overriding properties from a base class", QtWarningMsg, false, false)    \
+    X(qmlUnterminatedCase, "unterminated-case", "UnterminatedCase",                                \
+      "Warn about non-empty case "                                                                 \
       "blocks that are not terminated by control flow or by a fallthrough comment",                \
       QtWarningMsg, false, false)                                                                  \
     X(qmlPlugin, "plugin", "LintPluginWarnings", "Warn if a qmllint plugin finds an issue",        \

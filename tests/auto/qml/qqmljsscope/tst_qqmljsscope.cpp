@@ -69,7 +69,9 @@ class tst_qqmljsscope : public QQmlDataTest
         QQmlJSLogger logger;
         logger.setFilePath(resolvedFile);
         logger.setCode(sourceCode);
-        logger.setCategoryIgnored(qmlShadow, true); // some files shadow properties on purpose
+        // some files shadow properties on purpose
+        logger.setCategoryIgnored(qmlShadow, true);
+        logger.setCategoryIgnored(qmlPropertyOverride, true);
         logger.setSilent(expectErrorsOrWarnings);
         QQmlJSScope::Ptr target = QQmlJSScope::create();
         target->setOwnModuleName(u"HelloModule"_s);

@@ -1758,7 +1758,7 @@ void TestQmllint::cleanQmlSnippet_data()
                u"}"_s << defaultOptions;
     QTest::newRow("requiredFromBaseShadowedAndSatisfiedByBinding")
             << u"component Base: Item { property var r1; }\n"
-               u"component Foo: Base { required property var r1; } // qmllint disable shadow\n"
+               u"component Foo: Base { required property var r1; } // qmllint disable property-override\n"
                u"Foo { r1: 42 }"_s
             << defaultOptions;
     QTest::newRow("testSnippet") << u"property int qwer: 123"_s << defaultOptions;
@@ -3889,7 +3889,36 @@ void TestQmllint::shadow_data()
 
     CallQmllintOptions defaultOptions;
     defaultOptions.enableCategories.append(qmlShadow.name().toString());
+    // filename of the snippet is empty
+    const QString fileName = testFile("");
 
+    QTest::newRow("duplicatedMethod")
+            << u"function hello() {}"
+               u"function hello() {}"_s
+            << Result{ {
+                               { "Duplicated method name \"hello\", \"hello\" is already a method."_L1,
+                                 1, 29 },
+                       },
+                       { { "Method \"hello\" already exists in base type" } } }
+            << defaultOptions;
+    QTest::newRow("duplicatedProperty")
+            << u"property int hello;"
+               u"property int hello;"_s
+            << Result{ {
+                               { "Duplicated property name \"hello\", \"hello\" is already a property."_L1,
+                                 1, 33 },
+                       },
+                       { { "Property \"hello\" already exists in base type" } } }
+            << defaultOptions;
+    QTest::newRow("duplicatedSignal")
+            << u"signal hello();"
+               u"signal hello();"_s
+            << Result{ {
+                               { "Duplicated signal name \"hello\", \"hello\" is already a signal."_L1,
+                                 1, 23 },
+                       },
+                       { { "Signal \"hello\" already exists in base type" } } }
+            << defaultOptions;
     QTest::newRow("shadowMethod")
             << u"component IC: Item { function f() {} }\n"
                u"IC { function f() {} }"_s
@@ -3951,6 +3980,60 @@ void TestQmllint::shadow_data()
                u"IC { function f() {} }"_s
             << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 15 } } }
             << defaultOptions;
+
+    QTest::newRow("shadowFinalWithProperty")
+            << u"component IC: Item { final property int f; }\n"
+               u"IC { property var f; }"_s
+            << Result{ { { "Member \"f\" shadows final member \"f\" from base type \"IC\", use a different name."_L1,
+                           2, 19 } } }
+            << defaultOptions;
+    QTest::newRow("shadowFinalWithOverride")
+            << u"component IC: Item { final property int f; }\n"
+               u"IC { override property var f; }"_s
+            << Result{ { { "Member \"f\" overrides final member \"f\" from base type \"IC\", use a different name and remove the \"override\""_L1,
+                           2, 28 } } }
+            << defaultOptions;
+    QTest::newRow("shadowPropertyWithFinal")
+            << u"component IC: Item { property int f; }\n"
+               u"IC { final property var f; }"_s
+            << Result{ { { "Property \"f\" already exists in base type \"IC\""_L1, 2, 25 } } }
+            << defaultOptions;
+    QTest::newRow("shadowMissingPropertyWithOverride")
+            << u"Item { override property var blablabla; }"_s
+            << Result{ { { "Member \"blablabla\" does not override anything. Consider removing \"override\"."_L1,
+                           1, 30 } } }
+            << defaultOptions;
+    QTest::newRow("shadowPropertyWithOverride")
+            << u"component IC: Item { property int f; }\n"
+               u"IC { override property var f; }"_s
+            << Result{ { { "Member \"f\" overrides a non-virtual member from base type \"IC\", use a different name or mark the property as virtual in the base type."_L1,
+                           2, 28 } } }
+            << defaultOptions;
+    QTest::newRow("shadowPropertyWithVirtual")
+            << u"component IC: Item { property int f; }\n"
+               u"IC { virtual property var f; }"_s
+            << Result{ { { "Property \"f\" already exists in base type \"IC\", use a different name."_L1,
+                           2, 27 } } }
+            << defaultOptions;
+    QTest::newRow("shadowVirtualWithVirtual")
+            << u"component IC: Item { virtual property int f; }\n"
+               u"IC { virtual property var f; }"_s
+            << Result{ { { "Member \"f\" shadows member \"f\" from base type \"IC\", use a different name or add a final or override specifier."_L1,
+                           2, 27 } } }
+            << defaultOptions;
+    QTest::newRow("shadowVirtualWithOverride")
+            << u"component IC: Item { virtual property int f; }\n"
+               u"IC { override property var f; }"_s
+            << Result::clean() << defaultOptions;
+    QTest::newRow("shadowVirtualWithOverride2")
+            << u"component IC: Item { virtual property int f; }\n"
+               u"component IC2 :IC { override property var f; }\n"
+               u"component IC3 :IC2 { override property var f; }\n"
+               u"IC3 { override property var f; }"_s
+            << Result::clean() << defaultOptions;
+    QTest::newRow("shadowVirtualWithFinal") << u"component IC: Item { virtual property int f; }\n"
+                                               u"IC { final property var f; }"_s
+                                            << Result::clean() << defaultOptions;
 
     {
         CallQmllintOptions options = defaultOptions;
