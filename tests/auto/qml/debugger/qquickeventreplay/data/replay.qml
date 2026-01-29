@@ -4,9 +4,17 @@
 import QtQuick
 
 Window {
+    id: window
     visible: true
     width: 100
     height: 100
+
+    Component.onCompleted: window.requestActivate()
+    onActiveChanged: {
+        if (active)
+            console.log("window active")
+    }
+
     MouseArea {
         focus: true
         anchors.fill: parent

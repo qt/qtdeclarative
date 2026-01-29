@@ -10,9 +10,12 @@ Window {
     width: 100
     height: 100
 
+    Component.onCompleted: window.requestActivate()
+
     Timer {
+        id: timer
         interval: 100
-        running: true
+        running: window.active
         onTriggered: {
             event.keyClick(Qt.Key_Q, Qt.NoModifier, -1)
             event.mouseMove(area, 12, 13, -1, Qt.NoButton, Qt.NoModifier)
@@ -22,6 +25,7 @@ Window {
 
     MouseArea {
         id: area
+        focus: true
         anchors.fill: parent
         onClicked: console.log("clicked")
     }

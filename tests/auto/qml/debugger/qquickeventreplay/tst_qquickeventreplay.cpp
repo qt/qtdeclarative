@@ -133,6 +133,8 @@ void tst_QQuickEventReplay::receiveEvent()
 void tst_QQuickEventReplay::replayEvent()
 {
     startQmlProcess("replay.qml");
+    QTRY_VERIFY(m_process->output().contains("window active"));
+
     const QQmlProfilerEventType mouseType {Event, MaximumRangeType, Mouse};
     m_replayClient->sendEvent(mouseType, {
         0ll, 0, QList<int>({InputMouseMove, 12, 13})
