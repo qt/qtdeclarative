@@ -62,6 +62,8 @@ private slots:
     void delegateModelAccess();
 
     void recursiveDrain();
+
+    void deleteFromItemsChanged();
 };
 
 class BaseAbstractItemModel : public QAbstractItemModel
@@ -1040,6 +1042,58 @@ void tst_QQmlDelegateModel::recursiveDrain()
     QVERIFY(!o.isNull());
 
     QTRY_VERIFY(o->property("height").toDouble() < 4.0);
+}
+
+class ChangingModel : public QAbstractListModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    ChangingModel()
+    {
+        QTimer::singleShot(1, this, [this]{
+            value = "Bla";
+            Q_EMIT dataChanged(index(0), index(rowCount()-1), {Qt::UserRole});
+        });
+    }
+
+    int rowCount(const QModelIndex &parent = {}) const override
+    {
+        Q_UNUSED(parent);
+        return 1;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        Q_UNUSED(index);
+        return role == Qt::UserRole ? QVariant::fromValue(value) : QVariant();
+    }
+
+    QHash<int, QByteArray> roleNames() const override
+    {
+        return {{Qt::UserRole, "theRole"}};
+    }
+
+private:
+    QString value = "Foo";
+};
+
+void tst_QQmlDelegateModel::deleteFromItemsChanged()
+{
+    static const bool initialized = []() {
+        qmlRegisterTypesAndRevisions<ChangingModel>("Test", 1);
+        return true;
+    }();
+    Q_UNUSED(initialized);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deleteFromItemsChanged.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+    QCOMPARE(object->objectName(), "Foo");
+    QTRY_COMPARE(object->objectName(), "Bla");
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

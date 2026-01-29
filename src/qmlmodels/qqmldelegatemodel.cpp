@@ -1567,16 +1567,18 @@ void QQmlDelegateModel::_q_itemsChanged(int index, int count, const QList<int> &
     QList<Compositor::Remove> removes;
     QList<Compositor::Insert> inserts;
     d->m_compositor.listItemsRemoved(&d->m_adaptorModel, index, count, &removes);
-    const QList<QQmlDelegateModelItem *> cache = d->m_cache;
-    QQmlDelegateModelItem::ObjectSpanReference guard(cache);
-    for (const auto& removed: removes) {
-        if (!d->m_cache.isSharedWith(cache))
-            break;
-        QQmlDelegateModelItem *item = cache.value(removed.cacheIndex(), nullptr);
-        if (!d->m_cache.contains(item))
-            continue;
-        if (item->modelIndex() != -1)
-            item->setModelIndex(-1, -1, -1);
+    {
+        const QList<QQmlDelegateModelItem *> cache = d->m_cache;
+        QQmlDelegateModelItem::ObjectSpanReference guard(cache);
+        for (const auto &removed: std::as_const(removes)) {
+            if (!d->m_cache.isSharedWith(cache))
+                break;
+            QQmlDelegateModelItem *item = cache.value(removed.cacheIndex(), nullptr);
+            if (!d->m_cache.contains(item))
+                continue;
+            if (item->modelIndex() != -1)
+                item->setModelIndex(-1, -1, -1);
+        }
     }
     d->m_compositor.listItemsInserted(&d->m_adaptorModel, index, count, &inserts);
     d->itemsMoved(removes, inserts);
