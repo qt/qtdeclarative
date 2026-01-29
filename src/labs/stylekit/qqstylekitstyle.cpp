@@ -38,19 +38,6 @@ QQuickPalette *QQStyleKitStyle::palette() const
     return m_paletteProxy;
 }
 
-void QQStyleKitStyle::setPalette(QQuickPalette *palette)
-{
-    if (m_paletteProxy == palette)
-        return;
-    if (m_isUpdatingPalette)
-        return;
-
-    QScopedValueRollback<bool> rb(m_isUpdatingPalette, true);
-    m_paletteProxy = palette;
-
-    emit paletteChanged();
-}
-
 QQmlComponent *QQStyleKitStyle::light() const
 {
     return m_light;
@@ -339,17 +326,21 @@ void QQStyleKitStyle::executeFallbackStyle(bool complete)
         quickCompleteDeferred(this, name, m_fallbackStyle);
 }
 
-void QQStyleKitStyle::syncPaletteFromReader(const QQStyleKitReader *reader)
+void QQStyleKitStyle::syncFromQPalette(const QPalette &palette)
 {
     if (m_isUpdatingPalette)
         return;
     QScopedValueRollback<bool> rb(m_isUpdatingPalette, true);
-    QPalette p = reader ? reader->effectivePalette() : QPalette{};
-    if (p == m_lastReaderPalette)
+    if (palette == m_effectivePalette)
         return;
-    m_lastReaderPalette = p;
-    m_paletteProxy->fromQPalette(m_lastReaderPalette);
+    m_effectivePalette = palette;
+    m_paletteProxy->fromQPalette(m_effectivePalette);
     emit paletteChanged();
+}
+
+QPalette QQStyleKitStyle::effectivePalette() const
+{
+    return m_effectivePalette;
 }
 
 void QQStyleKitStyle::componentComplete()

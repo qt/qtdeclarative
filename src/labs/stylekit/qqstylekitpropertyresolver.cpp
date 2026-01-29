@@ -462,7 +462,7 @@ QVariant QQStyleKitPropertyResolver::readPropertyInStyle(
         if (auto *fallbackStyle = style->fallbackStyle()) {
             /* Recurse into the fallback style, and search for the property there. If not
              * found, and the fallback style has a fallback style, the recursion continues. */
-            fallbackStyle->setPalette(style->palette());
+            fallbackStyle->syncFromQPalette(style->effectivePalette());
             value = readPropertyInStyle(ids, exactType, baseTypes, fallbackStyle);
             if (value.isValid())
                 break;
@@ -488,7 +488,7 @@ QVariant QQStyleKitPropertyResolver::readProperty(
     /* Sync the palette of the style with the palette of the current reader. Note
      * that this can cause palette bindings in the style to change, which will
      * result in calls to writeStyleProperty(). */
-    style->syncPaletteFromReader(styleReader);
+    style->syncFromQPalette(styleReader->effectivePalette());
 
     /* Cache the state of the style reader to avoid rebuilding the same helper
      * structures on subsequent reads. In practice, a single style reader

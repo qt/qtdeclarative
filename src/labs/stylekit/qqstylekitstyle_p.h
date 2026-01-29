@@ -55,7 +55,6 @@ public:
     ~QQStyleKitStyle();
 
     QQuickPalette *palette() const;
-    void setPalette(QQuickPalette *palette);
 
     QQStyleKitStyle *fallbackStyle() const;
     void setFallbackStyle(QQStyleKitStyle *fallbackStyle);
@@ -101,7 +100,8 @@ private:
     void parseThemes();
     void recreateTheme();
     void executeFallbackStyle(bool complete = false);
-    void syncPaletteFromReader(const QQStyleKitReader *reader);
+    void syncFromQPalette(const QPalette &palette);
+    QPalette effectivePalette() const;
 
     Q_DISABLE_COPY(QQStyleKitStyle)
 
@@ -114,7 +114,7 @@ private:
     QPointer<QQStyleKitTheme> m_theme;
     QPointer<QQmlComponent> m_currentThemeComponent;
     QQuickPalette *m_paletteProxy = nullptr;
-    QPalette m_lastReaderPalette;
+    QPalette m_effectivePalette;
     QPointer<QQuickPalette> m_palette;
     QString m_themeName;
     QString m_effectiveThemeName;
