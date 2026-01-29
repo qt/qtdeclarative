@@ -482,9 +482,6 @@ QVariant QQStyleKitPropertyResolver::readPropertyInStyle(
 QVariant QQStyleKitPropertyResolver::readProperty(
     const PropertyPathIds &ids, QQStyleKitReader *styleReader, QQStyleKitStyle *style)
 {
-    if (styleReader->m_effectiveVariationsDirty)
-        rebuildVariationsForReader(styleReader, style);
-
     /* Sync the palette of the style with the palette of the current reader. Note
      * that this can cause palette bindings in the style to change, which will
      * result in calls to writeStyleProperty(). */
@@ -494,6 +491,9 @@ QVariant QQStyleKitPropertyResolver::readProperty(
      * structures on subsequent reads. In practice, a single style reader
      * typically processes many properties in sequence rather than just one. */
     cacheReaderState(styleReader->controlState());
+
+    if (styleReader->m_effectiveVariationsDirty)
+        rebuildVariationsForReader(styleReader, style);
 
     const QQStyleKitExtendableControlType exactType = styleReader->type();
     const QList<QQStyleKitExtendableControlType> baseTypes = baseTypesForType(exactType);
