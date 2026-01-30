@@ -27,7 +27,7 @@ class QQStyleKitDelegateContainer : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *delegateProperties READ delegateProperties WRITE setDelegateProperties NOTIFY delegatePropertiesChanged FINAL)
-    Q_PROPERTY(QObject *parentControl READ parentControl WRITE setParentControl NOTIFY parentControlChanged REQUIRED FINAL)
+    Q_PROPERTY(QObject *quickControl READ quickControl WRITE setQuickControl NOTIFY quickControlChanged REQUIRED FINAL)
     Q_PROPERTY(QQuickItem *delegateInstance READ delegateInstance NOTIFY delegateInstanceChanged FINAL)
     Q_PROPERTY(bool usingDefaultDelegate READ usingDefaultDelegate NOTIFY usingDefaultDelegateChanged FINAL)
     QML_NAMED_ELEMENT(DelegateContainer)
@@ -39,15 +39,15 @@ public:
     QQStyleKitDelegateProperties *delegateProperties() const;
     void setDelegateProperties(QQStyleKitDelegateProperties *delegateProperties);
 
-    QObject *parentControl() const;
-    void setParentControl(QObject *control);
+    QObject *quickControl() const;
+    void setQuickControl(QObject *control);
 
     QQuickItem *delegateInstance() const;
     bool usingDefaultDelegate() const;
 
 signals:
     void delegatePropertiesChanged();
-    void parentControlChanged();
+    void quickControlChanged();
     void delegateInstanceChanged();
     void usingDefaultDelegateChanged();
 

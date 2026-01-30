@@ -44,13 +44,13 @@ DelegateContainer {
                 fillHeight: indicatorProperties.foreground.implicitHeight === Style.Stretch
             }
         ]
-        mirrored: parentControl.mirrored
+        mirrored: quickControl.mirrored
     }
 
     DelegateContainer {
         id: foreground
         parent: root
-        parentControl: root.parentControl
+        quickControl: root.quickControl
         delegateProperties: root.indicatorProperties.foreground
         x: fgItem.x
         y: fgItem.y

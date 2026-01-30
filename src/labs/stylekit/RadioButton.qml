@@ -67,7 +67,7 @@ T.RadioButton {
     }
 
     indicator: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: styleReader.indicator
         x: indicatorItem.x
         y: indicatorItem.y
@@ -89,7 +89,7 @@ T.RadioButton {
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

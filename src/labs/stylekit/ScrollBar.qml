@@ -34,12 +34,12 @@ T.ScrollBar {
     }
 
     contentItem: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: styleReader.indicator
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

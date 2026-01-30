@@ -123,7 +123,7 @@ T.SpinBox {
     }
 
     up.indicator: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: upProperties.indicator.up
         x: upIndicatorItem.x
         y: upIndicatorItem.y
@@ -132,7 +132,7 @@ T.SpinBox {
     }
 
     down.indicator: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: downProperties.indicator.down
         x: downIndicatorItem.x
         y: downIndicatorItem.y
@@ -141,7 +141,7 @@ T.SpinBox {
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

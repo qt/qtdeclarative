@@ -53,7 +53,7 @@ T.TabButton {
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

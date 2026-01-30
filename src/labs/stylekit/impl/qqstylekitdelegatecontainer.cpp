@@ -48,17 +48,17 @@ void QQStyleKitDelegateContainer::setDelegateProperties(QQStyleKitDelegateProper
     emit delegatePropertiesChanged();
 }
 
-QObject *QQStyleKitDelegateContainer::parentControl() const
+QObject *QQStyleKitDelegateContainer::quickControl() const
 {
     return m_control;
 }
 
-void QQStyleKitDelegateContainer::setParentControl(QObject *control)
+void QQStyleKitDelegateContainer::setQuickControl(QObject *control)
 {
     if (m_control == control)
         return;
     m_control = control;
-    emit parentControlChanged();
+    emit quickControlChanged();
 }
 
 QQuickItem *QQStyleKitDelegateContainer::delegateInstance() const

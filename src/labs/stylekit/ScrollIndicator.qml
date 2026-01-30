@@ -33,7 +33,7 @@ T.ScrollIndicator {
     }
 
     contentItem: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: styleReader.indicator
         opacity: 0 // TODO: let style decide how, and when, to hide a ScrollIndicator
 
@@ -62,7 +62,7 @@ T.ScrollIndicator {
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

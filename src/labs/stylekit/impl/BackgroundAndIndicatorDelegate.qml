@@ -29,7 +29,7 @@ Item {
 
     required property StyleKitDelegateProperties indicatorProperties
     required property StyleKitDelegateProperties backgroundProperties
-    required property T.Control parentControl
+    required property T.Control quickControl
     property alias indicator: indicator
     property bool vertical: false
 
@@ -37,10 +37,10 @@ Item {
         id: indicatorLayout
         container: root
         contentMargins {
-            left: parentControl.leftPadding
-            right: parentControl.rightPadding
-            top: parentControl.topPadding
-            bottom: parentControl.bottomPadding
+            left: quickControl.leftPadding
+            right: quickControl.rightPadding
+            top: quickControl.topPadding
+            bottom: quickControl.bottomPadding
         }
         layoutItems: [
             StyleKitLayoutItem {
@@ -55,7 +55,7 @@ Item {
                 fillHeight: indicatorProperties.implicitHeight === Style.Stretch
             }
         ]
-        mirrored: parentControl.mirrored
+        mirrored: quickControl.mirrored
     }
 
     states: State {
@@ -65,29 +65,29 @@ Item {
         when: true
         PropertyChanges {
             background.parent: root
-            background.x: parentControl.leftInset
-            background.y: parentControl.topInset
-            background.width: root.width - parentControl.leftInset - parentControl.rightInset
-            background.height: root.height - parentControl.topInset - parentControl.bottomInset
+            background.x: quickControl.leftInset
+            background.y: quickControl.topInset
+            background.width: root.width - quickControl.leftInset - quickControl.rightInset
+            background.height: root.height - quickControl.topInset - quickControl.bottomInset
         }
     }
 
     BackgroundDelegate {
         id: background
-        parentControl: root.parentControl
+        quickControl: root.quickControl
         delegateProperties: root.backgroundProperties
     }
 
     IndicatorDelegate {
         id: indicator
-        parentControl: root.parentControl
+        quickControl: root.quickControl
         indicatorProperties: root.indicatorProperties
         vertical: root.vertical
         z: 1
-        x: !vertical ? indicatorItem.x : parentControl.leftPadding + (parentControl.availableWidth - height) / 2
-        y: !vertical ? indicatorItem.y : parentControl.topPadding + width
-        width: !vertical ? indicatorItem.width : __stretchBgWidth ? parentControl.availableHeight : implicitWidth//indicatorItem.height
-        height: !vertical ? indicatorItem.height : __stretchBgHeight ? parentControl.availableWidth : implicitHeight//indicatorItem.width
+        x: !vertical ? indicatorItem.x : quickControl.leftPadding + (quickControl.availableWidth - height) / 2
+        y: !vertical ? indicatorItem.y : quickControl.topPadding + width
+        width: !vertical ? indicatorItem.width : __stretchBgWidth ? quickControl.availableHeight : implicitWidth//indicatorItem.height
+        height: !vertical ? indicatorItem.height : __stretchBgHeight ? quickControl.availableWidth : implicitHeight//indicatorItem.width
         readonly property bool __stretchBgWidth: root.indicatorProperties.implicitWidth === Style.Stretch
         readonly property bool __stretchBgHeight: root.indicatorProperties.implicitHeight === Style.Stretch
     }

@@ -32,7 +32,7 @@ T.ProgressBar {
     }
 
     contentItem: IndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: styleReader.indicator
         secondProgress: control.visualPosition
 
@@ -102,7 +102,7 @@ T.ProgressBar {
     }
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: styleReader.background
     }
 }

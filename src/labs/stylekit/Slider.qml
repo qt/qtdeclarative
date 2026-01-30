@@ -74,12 +74,12 @@ T.Slider {
     }
 
     handle: HandleDelegate {
-        parentControl: control
+        quickControl: control
         handleProperties: styleReader.handle
     }
 
     background: BackgroundAndIndicatorDelegate {
-        parentControl: control
+        quickControl: control
         indicatorProperties: styleReader.indicator
         backgroundProperties: styleReader.background
         indicator.secondProgress: control.position

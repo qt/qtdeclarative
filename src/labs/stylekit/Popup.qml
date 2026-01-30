@@ -34,7 +34,7 @@ T.Popup {
     font: __styleReader.font
 
     background: BackgroundDelegate {
-        parentControl: control
+        quickControl: control
         backgroundProperties: control.__styleReader.background
     }
 }
