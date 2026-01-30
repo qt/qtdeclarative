@@ -11,11 +11,6 @@ QT_BEGIN_NAMESPACE
 
 namespace {
 
-inline int wrapIndex(int index, int size)
-{
-    return (index + size) % size;
-}
-
 inline qreal arc_angle(qreal angle)
 {
     return angle - 90;
@@ -97,9 +92,9 @@ void QQuickStarShapePrivate::constructRoundedPolygonPath()
     auto *ppath = QQuickShapePathPrivate::get(path);
 
     for (size_t i = 0; i < size; ++i) {
-        const auto &a = points[wrapIndex(i, size)];
-        const auto &b = points[wrapIndex(i - 1, size)];
-        const auto &c = points[wrapIndex(i + 1, size)];
+        const auto &a = points[i];
+        const auto &b = points[(i == 0 ? size : i) - 1];
+        const auto &c = points[(i + 1 == size) ? 0 : (i + 1)];
 
         const QVector2D ab = b - a;
         const QVector2D ac = c - a;
