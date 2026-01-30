@@ -1,3 +1,6 @@
 # QTBUG-137400
 [menuItemShouldntTriggerOnRelease]
 opensuse-leap
+
+[textControlsMenuKey]
+* # QTBUG-143701
