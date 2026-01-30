@@ -55,6 +55,13 @@ QtObject {
 
     property string uglyString: "with\nnewline" + 'with"quot' + "with\\slashes";
 
+    property var emptyEqualsZero: "" == 0
+    property var zeroEqualsEmpty: 0 == ""
+    property var emptyEqualsNull: "" == null
+    property var nullEqualsEmpty: null == ""
+    property var emptyEqualsUndefined: "" == undefined
+    property var undefinedEqualsEmpty: undefined == ""
+
     property QtObject nullObject1: aInObject ? null : self
     property QtObject nullObject2: {
         if (lengthInArray)

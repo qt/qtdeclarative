@@ -41,6 +41,7 @@ private:
     QJSEngine engine;
 
     const QList<QJSPrimitiveValue> operands = {
+        QJSPrimitiveValue(QString()),
         QJSPrimitiveNull(), QJSPrimitiveUndefined(), true, false,
         std::numeric_limits<int>::min(), -10, -1, 0, 1, 10, std::numeric_limits<int>::max(),
         -std::numeric_limits<double>::infinity(), -100.1, -1.2, -0.0, 0.0, 1.2, 100.1,
@@ -810,21 +811,33 @@ void tst_QJSPrimitiveValue::equals()
     QVERIFY(!null.equals(num));
     QVERIFY(!undefined.equals(num));
 
+    QJSPrimitiveValue zero(eng.toPrimitiveValue(0));
+    QJSPrimitiveValue one(eng.toPrimitiveValue(1));
+
+    QJSPrimitiveValue emptyString(eng.toPrimitiveValue(QString()));
+    QJSPrimitiveValue zeroString = eng.toPrimitiveValue(QStringLiteral("0"));
+    QJSPrimitiveValue oneString = eng.toPrimitiveValue(QStringLiteral("1"));
+
     QJSPrimitiveValue sant(eng.toPrimitiveValue(true));
-    QVERIFY(sant.equals(eng.toPrimitiveValue(1)));
-    QVERIFY(sant.equals(eng.toPrimitiveValue(QStringLiteral("1"))));
+    QVERIFY(sant.equals(one));
+    QVERIFY(sant.equals(oneString));
     QVERIFY(sant.equals(sant));
-    QVERIFY(!sant.equals(eng.toPrimitiveValue(0)));
+    QVERIFY(!sant.equals(zero));
+    QVERIFY(!sant.equals(zeroString));
     QVERIFY(!sant.equals(undefined));
     QVERIFY(!sant.equals(null));
+    QVERIFY(!sant.equals(emptyString));
 
     QJSPrimitiveValue falskt(eng.toPrimitiveValue(false));
-    QVERIFY(falskt.equals(eng.toPrimitiveValue(0)));
-    QVERIFY(falskt.equals(eng.toPrimitiveValue(QStringLiteral("0"))));
+    QVERIFY(falskt.equals(zero));
+    QVERIFY(falskt.equals(zeroString));
+    QVERIFY(falskt.equals(emptyString));
     QVERIFY(falskt.equals(falskt));
     QVERIFY(!falskt.equals(sant));
     QVERIFY(!falskt.equals(undefined));
     QVERIFY(!falskt.equals(null));
+    QVERIFY(!falskt.equals(one));
+    QVERIFY(!falskt.equals(oneString));
 
     {
         QJSPrimitiveValue var1(eng.toPrimitiveValue(QVariant::fromValue(QPoint(1, 2))));
@@ -836,6 +849,47 @@ void tst_QJSPrimitiveValue::equals()
         QJSPrimitiveValue var2(eng.toPrimitiveValue(QVariant::fromValue(QPoint(3, 4))));
         QVERIFY(!var1.equals(var2));
     }
+
+    QVERIFY(emptyString.equals(zero));
+    QVERIFY(emptyString.equals(falskt));
+    QVERIFY(!emptyString.equals(zeroString));
+    QVERIFY(!emptyString.equals(one));
+    QVERIFY(!emptyString.equals(oneString));
+    QVERIFY(!emptyString.equals(null));
+    QVERIFY(!emptyString.equals(undefined));
+    QVERIFY(!emptyString.equals(sant));
+
+    QVERIFY(zero.equals(falskt));
+    QVERIFY(zero.equals(emptyString));
+    QVERIFY(!zero.equals(sant));
+    QVERIFY(!zero.equals(null));
+    QVERIFY(!zero.equals(undefined));
+
+    QVERIFY(zeroString.equals(falskt));
+    QVERIFY(!zeroString.equals(emptyString));
+    QVERIFY(!zeroString.equals(sant));
+    QVERIFY(!zeroString.equals(null));
+    QVERIFY(!zeroString.equals(undefined));
+
+    QVERIFY(one.equals(sant));
+    QVERIFY(!one.equals(falskt));
+    QVERIFY(!one.equals(emptyString));
+    QVERIFY(!one.equals(null));
+    QVERIFY(!one.equals(undefined));
+
+    QVERIFY(oneString.equals(sant));
+    QVERIFY(!oneString.equals(falskt));
+    QVERIFY(!oneString.equals(emptyString));
+    QVERIFY(!oneString.equals(null));
+    QVERIFY(!oneString.equals(undefined));
+
+    QVERIFY(!null.equals(zero));
+    QVERIFY(!null.equals(zeroString));
+    QVERIFY(!null.equals(emptyString));
+
+    QVERIFY(!undefined.equals(zero));
+    QVERIFY(!undefined.equals(zeroString));
+    QVERIFY(!undefined.equals(emptyString));
 }
 
 void tst_QJSPrimitiveValue::strictlyEquals()

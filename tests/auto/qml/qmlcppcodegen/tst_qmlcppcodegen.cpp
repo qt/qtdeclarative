@@ -1511,6 +1511,13 @@ void tst_QmlCppCodegen::conversions()
     QCOMPARE(object->property("uglyString").toString(),
              u"with\nnewlinewith\"quotwith\\slashes"_s);
 
+    QCOMPARE(object->property("emptyEqualsZero"), QVariant::fromValue<bool>(true));
+    QCOMPARE(object->property("zeroEqualsEmpty"), QVariant::fromValue<bool>(true));
+    QCOMPARE(object->property("emptyEqualsNull"), QVariant::fromValue<bool>(false));
+    QCOMPARE(object->property("nullEqualsEmpty"), QVariant::fromValue<bool>(false));
+    QCOMPARE(object->property("emptyEqualsUndefined"), QVariant::fromValue<bool>(false));
+    QCOMPARE(object->property("undefinedEqualsEmpty"), QVariant::fromValue<bool>(false));
+
     QCOMPARE(qvariant_cast<QObject *>(object->property("nullObject1")), nullptr);
     QCOMPARE(qvariant_cast<QObject *>(object->property("nullObject2")), object.data());
 
