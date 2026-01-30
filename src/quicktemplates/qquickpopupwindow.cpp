@@ -115,7 +115,8 @@ void QQuickPopupWindow::resizeEvent(QResizeEvent *e)
     if (!d->m_popupItem)
         return;
 
-    qCDebug(lcPopupWindow) << "A window system event changed the popup's size to be " << e->size();
+    qCDebug(lcPopupWindow).nospace() << "A window system event changed the popup's ("
+        << d->m_popup << ") size to " << e->size();
     QQuickPopupPrivate *popupPrivate = QQuickPopupPrivate::get(d->m_popup);
 
     const auto topLeftFromSystem = global2Local(d->geometry.topLeft());
@@ -400,7 +401,8 @@ void QQuickPopupWindow::handlePopupPositionChangeFromWindowSystem(const QPoint &
 
     const auto windowPos = global2Local(pos);
     if (Q_LIKELY(windowPos)) {
-        qCDebug(lcPopupWindow) << "A window system event changed the popup's position to be " << *windowPos;
+        qCDebug(lcPopupWindow).nospace() << "A window system event changed the popup's"
+            << " (" << d->m_popup << ") position to " << *windowPos;
         QQuickPopupPrivate::get(popup)->setEffectivePosFromWindowPos(*windowPos);
     }
 }
