@@ -42,18 +42,18 @@ class QJSPrimitiveValue
         template<typename T>
         static double op(const QString &lhs, T rhs)
         {
-            return Concrete::op(fromString(lhs).toDouble(), rhs);
+            return Concrete::op(numberFromString(lhs).toDouble(), rhs);
         }
 
         template<typename T>
         static double op(T lhs, const QString &rhs)
         {
-            return Concrete::op(lhs, fromString(rhs).toDouble());
+            return Concrete::op(lhs, numberFromString(rhs).toDouble());
         }
 
         static double op(const QString &lhs, const QString &rhs)
         {
-            return Concrete::op(fromString(lhs).toDouble(), fromString(rhs).toDouble());
+            return Concrete::op(numberFromString(lhs).toDouble(), numberFromString(rhs).toDouble());
         }
     };
 
@@ -248,7 +248,7 @@ public:
         case Boolean:   return asBoolean();
         case Integer:   return asInteger();
         case Double:    return QJSNumberCoercion::toInteger(asDouble());
-        case String:    return fromString(asString()).toInteger();
+        case String:    return numberFromString(asString()).toInteger();
         }
 
         // GCC 8.x does not treat __builtin_unreachable() as constexpr
@@ -267,7 +267,7 @@ public:
         case Boolean:   return asBoolean();
         case Integer:   return asInteger();
         case Double:    return asDouble();
-        case String:    return fromString(asString()).toDouble();
+        case String:    return numberFromString(asString()).toDouble();
         }
 
         // GCC 8.x does not treat __builtin_unreachable() as constexpr
@@ -471,7 +471,7 @@ public:
             // Promote the other side to double (or recognize lhs as undefined/null)
             return other.equals(*this);
         case String:
-            return fromString(asString()).parsedEquals(other);
+            return numberFromString(asString()).parsedEquals(other);
         }
 
         return false;
@@ -566,10 +566,10 @@ public:
            if (rhs.type() == String)
                return lhs.asString() <= rhs.asString();
            else
-               return fromString(lhs.asString()) <= rhs;
+               return numberFromString(lhs.asString()) <= rhs;
         }
         if (rhs.type() == String)
-            return lhs <= fromString(rhs.asString());
+            return lhs <= numberFromString(rhs.asString());
 
         if (lhs.isNanOrUndefined() || rhs.isNanOrUndefined())
             return false;
@@ -582,10 +582,10 @@ public:
            if (rhs.type() == String)
                return lhs.asString() >= rhs.asString();
            else
-               return fromString(lhs.asString()) >= rhs;
+               return numberFromString(lhs.asString()) >= rhs;
         }
         if (rhs.type() == String)
-            return lhs >= fromString(rhs.asString());
+            return lhs >= numberFromString(rhs.asString());
 
         if (lhs.isNanOrUndefined() || rhs.isNanOrUndefined())
             return false;
@@ -607,7 +607,7 @@ private:
         return type() != Undefined && equals(other);
     }
 
-    static QJSPrimitiveValue fromString(const QString &string)
+    static QJSPrimitiveValue numberFromString(const QString &string)
     {
         bool ok;
         const int intValue = string.toInt(&ok);
@@ -617,6 +617,8 @@ private:
         const double doubleValue = string.toDouble(&ok);
         if (ok)
             return doubleValue;
+        if (string.isEmpty())
+            return 0;
         if (string == QStringLiteral("Infinity"))
             return std::numeric_limits<double>::infinity();
         if (string == QStringLiteral("-Infinity"))
