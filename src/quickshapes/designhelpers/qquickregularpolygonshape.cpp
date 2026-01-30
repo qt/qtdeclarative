@@ -15,11 +15,6 @@ QQuickRegularPolygonShapePrivate::~QQuickRegularPolygonShapePrivate() = default;
 
 namespace {
 
-inline int wrapIndex(int index, int size)
-{
-    return (index + size) % size;
-}
-
 qreal intersect(QVector2D p, QVector2D dir1, QVector2D q, QVector2D dir2)
 {
     const auto r = dir1.normalized();
@@ -63,9 +58,9 @@ void QQuickRegularPolygonShapePrivate::updateBisectors()
     // The minimum length of the two neighboring corner bisectors intersection point is the
     // maximum for the center of the circle that make up the corner radius.
     for (size_t i = 0; i < size; ++i) {
-        const auto &a = points[wrapIndex(i, size)];
-        const auto &b = points[wrapIndex(i - 1, size)];
-        const auto &c = points[wrapIndex(i + 1, size)];
+        const auto &a = points[i];
+        const auto &b = points[(i == 0 ? size : i) - 1];
+        const auto &c = points[(i + 1 == size) ? 0 : (i + 1)];
 
         const QVector2D vAB(b.x() - a.x(), b.y() - a.y());
         const QVector2D vAC(c.x() - a.x(), c.y() - a.y());
@@ -107,9 +102,11 @@ void QQuickRegularPolygonShapePrivate::constructRoundedPolygonPath()
 
     const auto size = points.size();
     for (size_t i = 0; i < size; ++i) {
-        const auto &a = points[wrapIndex(i, size)];
-        const auto &b = points[wrapIndex(i - 1, size)];
-        const auto &c = points[wrapIndex(i + 1, size)];
+        const size_t idxMinusOne = (i == 0 ? size : i) - 1;
+        const size_t idxPlusOne = (i + 1 == size) ? 0 : (i + 1);
+        const auto &a = points[i];
+        const auto &b = points[idxMinusOne];
+        const auto &c = points[idxPlusOne];
         qreal r = cornerRadius;
 
         const QVector2D vAB(b.x() - a.x(), b.y() - a.y());
@@ -117,9 +114,11 @@ void QQuickRegularPolygonShapePrivate::constructRoundedPolygonPath()
 
         // Calculate the intersection points of the two neighboring bisectors
         const qreal tAB =
-                intersect(a, bisectors[wrapIndex(i, size)], b, bisectors[wrapIndex(i - 1, size)]);
+                intersect(a, bisectors[i],
+                          b, bisectors[idxMinusOne]);
         const qreal tAC =
-                intersect(a, bisectors[wrapIndex(i, size)], c, bisectors[wrapIndex(i + 1, size)]);
+                intersect(a, bisectors[i],
+                          c, bisectors[idxPlusOne]);
         const qreal tMax = std::min(tAB, tAC);
 
         // Angle between the two vectors AB and AC as radians
