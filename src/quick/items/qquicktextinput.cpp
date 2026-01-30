@@ -3060,10 +3060,12 @@ void QQuickTextInput::q_canPasteChanged()
     Q_D(QQuickTextInput);
     bool old = d->canPaste;
 #if QT_CONFIG(clipboard)
-    if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
-        d->canPaste = !d->m_readOnly && mimeData->hasText();
-    else
-        d->canPaste = false;
+    bool canPaste = false;
+    if (!d->m_readOnly) {
+        if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
+            canPaste = mimeData->hasText();
+    }
+    d->canPaste = canPaste;
 #endif
 
     bool changed = d->canPaste != old || !d->canPasteValid;
