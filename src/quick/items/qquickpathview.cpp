@@ -8,6 +8,7 @@
 #include "qquicktext_p.h"
 
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickstate_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qqmlopenmetaobject_p.h>
@@ -1834,15 +1835,19 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
         // but we need to look at position relative to the PathView itself.
         const auto &point = pe->points().first();
         QPointF localPos = mapFromScene(point.scenePosition());
-        QQuickItem *grabber = qmlobject_cast<QQuickItem *>(pe->exclusiveGrabber(point));
-        if (grabber == this && d->stealMouse) {
+        QObject *grabber = pe->exclusiveGrabber(point);
+        QQuickPointerHandler *grabberHandler = qmlobject_cast<QQuickPointerHandler *>(grabber);
+        QQuickItem *grabberItem = grabberHandler ? grabberHandler->parentItem() : qmlobject_cast<QQuickItem *>(grabber);
+        if (grabberItem == this && d->stealMouse) {
             // we are already the grabber and we do want the mouse event to ourselves.
             return true;
         }
 
-        bool grabberDisabled = grabber && !grabber->isEnabled();
+        bool grabberDisabled = (grabberItem && !grabberItem->isEnabled()) || (grabberHandler && !grabberHandler->enabled());
         bool stealThisEvent = d->stealMouse;
-        if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
+        const bool mouseFromTouch = pe->pointingDevice()->type() == QPointingDevice::DeviceType::TouchScreen;
+        if ((stealThisEvent || contains(localPos)) && (!grabberItem ||
+             (!grabberItem->keepMouseGrab() && (!mouseFromTouch || !grabberItem->keepTouchGrab())) || grabberDisabled)) {
             // Make a localized copy of the QMouseEvent.
             QMutableSinglePointEvent localizedEvent(*static_cast<QMouseEvent *>(pe));
             QMutableEventPoint::setPosition(localizedEvent.point(0), localPos);
@@ -1863,20 +1868,23 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
                 break;
             }
 
-            grabber = qmlobject_cast<QQuickItem *>(localizedEvent.exclusiveGrabber(localizedEvent.points().first()));
-            if ((grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this) || grabberDisabled)
+            grabber = localizedEvent.exclusiveGrabber(localizedEvent.points().first());
+            grabberHandler = qmlobject_cast<QQuickPointerHandler *>(grabber);
+            grabberItem = grabberHandler ? grabberHandler->parentItem() : qmlobject_cast<QQuickItem *>(grabber);
+            grabberDisabled = (grabberItem && !grabberItem->isEnabled()) || (grabberHandler && !grabberHandler->enabled());
+            if ((grabberItem && stealThisEvent && !grabberItem->keepMouseGrab() && grabber != this) || grabberDisabled)
                 pe->setExclusiveGrabber(point, this);
 
             const bool filtered = stealThisEvent || grabberDisabled;
             if (filtered)
-                pe->setAccepted(stealThisEvent && grabber == this && grabber->isEnabled());
+                pe->setAccepted(stealThisEvent && grabberItem == this && !grabberDisabled);
 
             return filtered;
         } else if (d->timer.isValid()) {
             d->timer.invalidate();
             d->fixOffset();
         }
-        if (pe->type() == QEvent::MouseButtonRelease || (grabber && grabber->keepMouseGrab() && !grabberDisabled))
+        if (pe->type() == QEvent::MouseButtonRelease || (grabberItem && grabberItem->keepMouseGrab() && !grabberDisabled))
             d->stealMouse = false;
         return false;
     }

@@ -18,6 +18,7 @@
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQml/private/qqmlvaluetype_p.h>
 #include <QtGui/qstandarditemmodel.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QStringListModel>
 #include <QFile>
 #include <QEvent>
@@ -131,6 +132,7 @@ private slots:
     void requiredPropertiesInDelegate();
     void requiredPropertiesInDelegatePreventUnrelated();
     void touchMove();
+    void respectKeepTouchGrab();
     void mousePressAfterFlick();
     void qtbug90479();
     void overCached();
@@ -2860,6 +2862,63 @@ void tst_QQuickPathView::touchMove()
     QCOMPARE(flickStartedSpy.size(), 1);
     QCOMPARE(flickEndedSpy.size(), 1);
 
+}
+
+void tst_QQuickPathView::respectKeepTouchGrab()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("withSliders.qml")));
+    QQuickPathView *pathview = window.rootObject()->findChild<QQuickPathView *>();
+    QVERIFY(pathview);
+    QQuickItem *leftSlider = pathview->currentItem()->findChild<QQuickItem *>("adHocSlider");
+    QVERIFY(leftSlider);
+    QQuickItem *rightSlider = pathview->currentItem()->findChild<QQuickItem *>("controlsSlider");
+    QVERIFY(rightSlider);
+
+    const auto *touchScreenPriv = QPointingDevicePrivate::get(touchscreen.get());
+    auto dragAndGrab = [&window, this, pathview, touchScreenPriv](QQuickItem *slider) {
+        QSignalSpy movingSpy(pathview, &QQuickPathView::movingChanged);
+        QSignalSpy moveStartedSpy(pathview, &QQuickPathView::movementStarted);
+        QSignalSpy draggingSpy(pathview, &QQuickPathView::draggingChanged);
+        QSignalSpy dragStartedSpy(pathview, &QQuickPathView::dragStarted);
+        QSignalSpy flickStartedSpy(pathview, &QQuickPathView::flickStarted);
+
+        QPoint p = (slider->position() + slider->boundingRect().center()).toPoint();
+        const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+        const int currentIdx = pathview->currentIndex();
+
+        QTest::touchEvent(&window, touchscreen.get()).press(1, p, &window);
+
+        // drag upwards to get the slider moving
+        for (int i = 0; i < 3; ++i) {
+            p.setY(p.y() - dragThreshold);
+            QTest::touchEvent(&window, touchscreen.get()).move(1, p, &window);
+            QQuickTouchUtils::flush(&window);
+        }
+        const QObject* grabber = touchScreenPriv->pointById(1)->exclusiveGrabber;
+        QVERIFY(grabber); // either Slider or DragHandler, but not null
+
+        // drag sideways: grabber stays the same, PathView does not take over
+        for (int dx = dragThreshold; dx < 80; ++dx) {
+            QTest::touchEvent(&window, touchscreen.get()).move(1, p + QPoint(dx, 0), &window);
+            QQuickTouchUtils::flush(&window);
+            QCOMPARE(touchScreenPriv->pointById(1)->exclusiveGrabber, grabber);
+        }
+
+        QTest::touchEvent(&window, touchscreen.get()).release(1, p, &window);
+        QQuickTouchUtils::flush(&window);
+        QTRY_COMPARE(touchScreenPriv->pointById(1)->exclusiveGrabber, nullptr);
+
+        QCOMPARE(movingSpy.size(), 0);
+        QCOMPARE(moveStartedSpy.size(), 0);
+        QCOMPARE(draggingSpy.size(), 0);
+        QCOMPARE(dragStartedSpy.size(), 0);
+        QCOMPARE(flickStartedSpy.size(), 0);
+        QCOMPARE(pathview->currentIndex(), currentIdx);
+    };
+
+    dragAndGrab(leftSlider);
+    dragAndGrab(rightSlider);
 }
 
 void tst_QQuickPathView::mousePressAfterFlick() // QTBUG-115121
