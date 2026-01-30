@@ -111,6 +111,7 @@ namespace QQuickControlsTestUtils
     };
 
     [[nodiscard]] bool arePopupWindowsSupported();
+    [[nodiscard]] QQuickPopup *popupParent(QQuickItem *item);
 }
 
 namespace QQuickTest

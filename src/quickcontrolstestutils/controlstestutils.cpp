@@ -137,14 +137,22 @@ bool QQuickControlsTestUtils::clickButton(QQuickAbstractButton *button)
 
     QSignalSpy spy(button, &QQuickAbstractButton::clicked);
     if (!spy.isValid()) {
-        qWarning() << "button" << button << "must have a valid clicked signal";
+        qWarning() << "Button" << button << "must have a valid clicked signal";
         return false;
     }
 
     const QPoint buttonCenter = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
     QTest::mouseClick(button->window(), Qt::LeftButton, Qt::NoModifier, buttonCenter);
     if (spy.size() != 1) {
-        qWarning() << "clicked signal of button" << button << "was not emitted after clicking";
+        QDebug warning(QtWarningMsg);
+        warning.nospace() << "The clicked signal of button " << button << " was not emitted after "
+            << "clicking at " << buttonCenter << ".";
+        const QQuickPopup *popup = popupParent(button);
+        if (popup && !popup->isOpened()) {
+            warning << " The popup it's in (" << popup << ") is no longer opened; "
+                << "the click may have missed the button and gone outside of the popup, "
+                << "causing it to close.";
+        }
         return false;
     }
 
@@ -261,6 +269,25 @@ bool QQuickControlsTestUtils::arePopupWindowsSupported()
 #else
     return false;
 #endif
+}
+
+/*!
+    \internal
+
+    Finds the popup that \a item is in, or returns \c nullptr.
+*/
+QQuickPopup *QQuickControlsTestUtils::popupParent(QQuickItem *item)
+{
+    QQuickItem *parentItem = item;
+    while (parentItem) {
+        auto *parentAsPopupItem = qobject_cast<QQuickPopupItem *>(parentItem);
+        if (parentAsPopupItem)
+            return QQuickPopupItemPrivate::get(parentAsPopupItem)->popup;
+
+        parentItem = parentItem->parentItem();
+    }
+
+    return nullptr;
 }
 
 QByteArray QQuickTest::Private::qActiveFocusFailureMessage(QQuickPopup *popup)
