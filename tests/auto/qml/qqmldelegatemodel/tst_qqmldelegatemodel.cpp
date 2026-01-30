@@ -64,6 +64,7 @@ private slots:
     void recursiveDrain();
 
     void deleteFromItemsChanged();
+    void releaseWhileStrongRef();
 };
 
 class BaseAbstractItemModel : public QAbstractItemModel
@@ -1094,6 +1095,68 @@ void tst_QQmlDelegateModel::deleteFromItemsChanged()
     QVERIFY(object);
     QCOMPARE(object->objectName(), "Foo");
     QTRY_COMPARE(object->objectName(), "Bla");
+}
+
+static QQmlDelegateModelItem *dataForObject(QObject *object)
+{
+    for (QQmlRefPointer<QQmlContextData> context = QQmlData::get(object)->context; context;
+            context = context->parent()) {
+        if (QObject *extraObject = context->extraObject())
+            return static_cast<QQmlDelegateModelItem *>(extraObject);
+        if (QObject *contextObject = context->contextObject())
+            return static_cast<QQmlDelegateModelItem *>(contextObject);
+    }
+    return nullptr;
+}
+
+void tst_QQmlDelegateModel::releaseWhileStrongRef()
+{
+    QQmlEngine engine;
+    QQmlComponent modelComponent(&engine);
+    modelComponent.setData("import QtQml.Models\nDelegateModel {}\n", QUrl());
+    QVERIFY2(modelComponent.isReady(), qPrintable(modelComponent.errorString()));
+
+    std::unique_ptr<QObject> o(modelComponent.create());
+    QQmlDelegateModel *delegateModel = qobject_cast<QQmlDelegateModel*>(o.get());
+    QVERIFY(delegateModel);
+
+    QQmlComponent delegateComponent(&engine);
+    delegateComponent.setData("import QtQml\nQtObject {}\n", QUrl());
+    QVERIFY2(delegateComponent.isReady(), qPrintable(delegateComponent.errorString()));
+    delegateModel->setDelegate(&delegateComponent);
+
+    const QStringList model({"item0", "item1", "item2"});
+    delegateModel->setModel(QVariant::fromValue(model));
+    QCOMPARE(delegateModel->count(), 3);
+
+    QObject *object = delegateModel->object(0, QQmlIncubator::Synchronous);
+    QVERIFY(object);
+
+    QQmlDelegateModelItem *delegateModelItem = dataForObject(object);
+    QVERIFY(delegateModelItem);
+    QCOMPARE(delegateModelItem->object(), object);
+
+    QCOMPARE(delegateModelItem->objectWeakRef(), 1);
+    QCOMPARE(delegateModelItem->objectStrongRef(), 0);
+
+    {
+        // Create a strong reference (simulates ObjectReference guard on stack)
+        QQmlDelegateModelItem::ObjectReference guard(delegateModelItem);
+        QCOMPARE(delegateModelItem->objectStrongRef(), 1);
+
+        // Try to release while strong reference exists. It mustn't crash here.
+        // We can't teach all possible views to avoid this situation.
+        QCOMPARE(delegateModel->release(object), QQmlDelegateModel::Referenced);
+
+        // Object should still be valid
+        QVERIFY(delegateModelItem->object());
+    }
+
+    // After guard is destroyed, strongRef=0
+    QCOMPARE(delegateModelItem->objectStrongRef(), 0);
+
+    // Now release should succeed
+    QCOMPARE(delegateModel->release(object), QQmlDelegateModel::Destroyed);
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)

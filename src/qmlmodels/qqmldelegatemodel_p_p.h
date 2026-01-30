@@ -160,7 +160,7 @@ public:
     {
         if (m_objectWeakRef > 0)
             --m_objectWeakRef;
-        return m_objectWeakRef == 0 && !(m_groups & Compositor::PersistedFlag);
+        return !isObjectReferenced();
     }
     void clearObjectWeakReferences()
     {
