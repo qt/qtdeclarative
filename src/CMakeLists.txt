@@ -12,6 +12,7 @@ add_subdirectory(qmltoolingsettings)
 add_subdirectory(qmltyperegistrar)
 add_subdirectory(qmlintegration)
 add_subdirectory(qml)
+add_subdirectory(qmlpreview)
 add_subdirectory(qmlmodels)
 
 add_subdirectory(core)

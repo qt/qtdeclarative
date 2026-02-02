@@ -52,6 +52,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
+// Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
 #define QV4_DATA_STRUCTURE_VERSION 0x4c // Dropped enum value location
 
 class QIODevice;
@@ -104,9 +105,26 @@ struct TableIterator
     const Container *container;
     int index;
 
-    const ItemType *operator->() { return (container->*IndexedGetter)(index); }
-    ItemType operator*() {return *operator->();}
-    void operator++() { ++index; }
+    const ItemType *operator->() const { return (container->*IndexedGetter)(index); }
+    ItemType operator*() const {return *operator->();}
+
+    TableIterator &operator++()
+    {
+        ++index;
+        return *this;
+    }
+
+    TableIterator operator++(int)
+    {
+        TableIterator result(container, index);
+        ++index;
+        return result;
+    }
+
+    TableIterator operator+(int offset) const { return TableIterator(container, index + offset); }
+    TableIterator operator-(int offset) const { return TableIterator(container, index - offset); }
+    int operator-(TableIterator other) const { return index - other.index; }
+
     bool operator==(const TableIterator &rhs) const { return index == rhs.index; }
     bool operator!=(const TableIterator &rhs) const { return index != rhs.index; }
 };

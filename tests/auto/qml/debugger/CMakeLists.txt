@@ -26,6 +26,7 @@ if(NOT (CMAKE_CROSSCOMPILING OR (MACOS AND TEST_architecture_arch STREQUAL "x86_
 endif()
 
 if(QT_FEATURE_private_tests)
+    add_subdirectory(qqmlpreviewdiff)
     add_subdirectory(qqmldebugclient)
     add_subdirectory(qqmldebuglocal)
     add_subdirectory(qv4debugger)
