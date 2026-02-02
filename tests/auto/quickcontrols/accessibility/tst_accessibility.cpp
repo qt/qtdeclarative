@@ -6,8 +6,11 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
+#include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/private/qguiapplication_p.h>
@@ -39,6 +42,8 @@ private slots:
 
     void accessibleName();
     void locale();
+
+    void defaultButton();
 
 private:
     QQmlEngine engine;
@@ -468,6 +473,39 @@ void tst_accessibility::locale()
             chineseButtonAcc->attributesInterface()->attributeValue(QAccessible::Attribute::Locale);
     QVERIFY(chineseLocaleVariant.isValid() && localeVariant.canConvert<QLocale>());
     QCOMPARE(chineseLocaleVariant.toLocale(), QLocale("zh_CN"));
+#endif
+}
+
+void tst_accessibility::defaultButton()
+{
+#if QT_CONFIG(accessibility)
+    if (!QAccessible::isActive()) {
+        QPlatformAccessibility *accessibility = platformAccessibility();
+        if (!accessibility)
+            QSKIP("No QPlatformAccessibility available.");
+        accessibility->setActive(true);
+    }
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Controls\nDialogButtonBox {\n"
+                      "standardButtons: DialogButtonBox.Ok | DialogButtonBox.No\n"
+                      "defaultStandardButton: DialogButtonBox.Ok\n"
+                      "}", QUrl());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(object.get());
+    QVERIFY(buttonBox);
+    QVERIFY(QQuickTest::qWaitForPolish(buttonBox));
+    QCOMPARE(buttonBox->count(), 2);
+
+    for (int i = 0; i < buttonBox->count(); ++i) {
+        QQuickButton *button = qobject_cast<QQuickButton *>(buttonBox->itemAt(i));
+        QVERIFY(button);
+        QAccessibleInterface *buttonAccessible = QAccessible::queryAccessibleInterface(button);
+        QVERIFY(buttonAccessible);
+        QCOMPARE(buttonAccessible->state().defaultButton, button->isHighlighted());
+    }
 #endif
 }
 

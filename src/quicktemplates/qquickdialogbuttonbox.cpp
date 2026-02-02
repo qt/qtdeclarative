@@ -14,6 +14,9 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
+#if QT_CONFIG(accessibility)
+#include <QtQuick/private/qquickaccessibleattached_p.h>
+#endif
 #include <QtQuick/private/qquickitemview_p.h>
 
 #include <algorithm>
@@ -335,6 +338,10 @@ void QQuickDialogButtonBoxPrivate::updateFocus()
         if (auto *button = qobject_cast<QQuickButton *>(contentModel->get(i))) {
             button->setFocus(i == indexOfFocusButton);
             button->setHighlighted(button == buttonToHighlight);
+#if QT_CONFIG(accessibility)
+            if (auto *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(button, true)))
+                accessibleAttached->set_defaultButton(button == buttonToHighlight);
+#endif
         }
     }
 }
