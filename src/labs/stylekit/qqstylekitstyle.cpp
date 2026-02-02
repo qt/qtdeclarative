@@ -118,7 +118,12 @@ QList<QQStyleKitCustomTheme *> QQStyleKitStyle::customThemes() const
 
 void QQStyleKitStyle::parseThemes()
 {
-    m_themeNames = QStringList({kSystem, kLight, kDark});
+    m_themeNames = QStringList({kSystem});
+
+    if (m_light)
+        m_themeNames << kLight;
+    if (m_dark)
+        m_themeNames << kDark;
 
     for (auto *customTheme : customThemes()) {
         const QString name = customTheme->name();
@@ -170,7 +175,7 @@ void QQStyleKitStyle::recreateTheme()
             effectiveThemeComponent = m_light;
         }
         else if (scheme == Qt::ColorScheme::Dark) {
-            effectiveThemeName =kDark;
+            effectiveThemeName = kDark;
             effectiveThemeComponent = m_dark;
         }
     } else if (QString::compare(m_themeName, kLight, Qt::CaseInsensitive) == 0) {
