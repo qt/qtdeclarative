@@ -85,6 +85,7 @@ private slots:
     void componentReturnType();
     void compositeSingleton();
     void compositeTypeMethod();
+    void conditionalEval();
     void confusedModule();
     void consoleObject();
     void consoleTrace();
@@ -1268,6 +1269,33 @@ void tst_QmlCppCodegen::compositeTypeMethod()
     QVERIFY(!object.isNull());
     QSignalSpy spy(object.data(), SIGNAL(foo()));
     QTRY_VERIFY(spy.size() > 0);
+}
+
+void tst_QmlCppCodegen::conditionalEval()
+{
+    QQmlEngine engine;
+
+    const QString urlString = u"qrc:/qt/qml/TestTypes/conditionalEval.qml"_s;
+
+    QQmlComponent component(&engine, QUrl(urlString));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+
+    const QString cannotAssignUndefined = u"Unable to assign [undefined] to QString"_s;
+    for (int line : {4, 5, 12}) {
+        QTest::ignoreMessage(
+                    QtWarningMsg,
+                    qPrintable(u"%1:%2:5: %3"_s.arg(
+                                   urlString, QString::number(line), cannotAssignUndefined)));
+    }
+
+    std::unique_ptr<QObject> object(component.create());
+    QVERIFY(object);
+
+    for (const char *property : {"foo", "bar", "baz"}) {
+        const QVariant value = object->property(property);
+        QCOMPARE(value.metaType(), QMetaType::fromType<QString>());
+        QVERIFY(value.toString().isEmpty());
+    }
 }
 
 void tst_QmlCppCodegen::confusedModule()

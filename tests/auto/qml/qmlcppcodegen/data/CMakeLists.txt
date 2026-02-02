@@ -136,6 +136,7 @@ set(qml_files
     componentReturnType.qml
     compositeTypeMethod.qml
     compositesingleton.qml
+    conditionalEval.qml
     consoleObject.qml
     consoleTrace.qml
     construct.qml

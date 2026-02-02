@@ -181,11 +181,17 @@ public:
 
         void addReadRegister(int registerIndex, QQmlJSRegisterContent reg)
         {
-            const VirtualRegister &source = registers[registerIndex];
             VirtualRegister &target = m_readRegisters[registerIndex];
             target.content = reg;
-            target.canMove = source.canMove;
-            target.affectedBySideEffects = source.affectedBySideEffects;
+
+            const auto source = registers.find(registerIndex);
+            if (source == registers.end()) {
+                target.canMove = false;
+                target.affectedBySideEffects = false;
+            } else {
+                target.canMove = source->second.canMove;
+                target.affectedBySideEffects = source->second.affectedBySideEffects;
+            }
         }
 
         void addReadAccumulator(QQmlJSRegisterContent reg)
