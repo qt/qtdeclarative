@@ -7,7 +7,6 @@ import QtQml.Models
 import TestTableModel
 import QtQuick.Controls
 import QtQuick.Layouts
-import Qt.labs.qmlmodels
 
 ApplicationWindow {
     id: window

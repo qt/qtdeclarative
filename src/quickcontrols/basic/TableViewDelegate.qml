@@ -4,7 +4,6 @@
 
 import QtQuick
 import QtQuick.Controls.impl
-import Qt.labs.qmlmodels as QtLabsQmlModels
 import QtQuick.Templates as T
 
 T.TableViewDelegate {
@@ -52,18 +51,8 @@ T.TableViewDelegate {
             let model = control.tableView.model
             if (!model)
                 return
-            // The setData() APIs are different in QAbstractItemModel and QQmlTableModel.
-            // This is an issue and will be fixed later, probably by deprecating the wrong
-            // API in QQmlTableModel. There is a ticket reported this issue and a workaround
-            // is provided in the description: https://bugreports.qt.io/browse/QTBUG-104733
-            // But temporarily we need to manage this by checking the model's type.
-            let succeed = false
             const index = model.index(control.row, control.column)
-            if (model instanceof QtLabsQmlModels.TableModel)
-                succeed = model.setData(index, "edit", textField.text)
-            else
-                succeed = model.setData(index, textField.text, Qt.EditRole)
-            if (!succeed)
+            if (!model.setData(index, textField.text, Qt.EditRole))
                 console.warn("The model does not allow setting the EditRole data.")
         }
 
