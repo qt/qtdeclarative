@@ -1523,6 +1523,8 @@ bool Codegen::visit(BinaryExpression *ast)
         if (hasError())
             return false;
         r.loadInAccumulator();
+        // The location saved above may have been overwritten when evaluating the rhs expression
+        bytecodeGenerator->setLocation(ast->left->firstSourceLocation());
         if (exprAccept(nx))
             setExprResult(left.storeConsumeAccumulator());
         else
