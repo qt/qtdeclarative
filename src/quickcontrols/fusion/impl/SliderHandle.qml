@@ -10,7 +10,6 @@ import QtQuick.Controls.Fusion.impl
 Rectangle {
     id: handle
 
-    property var palette
     property bool pressed
     property bool hovered
     property bool vertical
