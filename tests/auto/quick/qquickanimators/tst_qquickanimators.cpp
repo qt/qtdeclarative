@@ -6,7 +6,9 @@
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickanimator_p.h>
+#include <QtQuick/private/qquickanimatorjob_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
+#include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickrepeater_p.h>
 #include <QtQuick/private/qquickanimatorcontroller_p.h>
 #include <QtQuick/private/qquickanimation_p_p.h>
@@ -32,6 +34,7 @@ private slots:
     void testMultiWinAnimator();
     void testTransitions();
     void testTransitionsWithImplicitFrom();
+    void testAnimationPause();
 };
 
 tst_Animators::tst_Animators()
@@ -164,6 +167,24 @@ void tst_Animators::testTransitionsWithImplicitFrom()
     QTRY_COMPARE(rectangle->x(), 0); // the render thread has to sync first
     QCOMPARE(rectangle->state(), "left");
     QVERIFY(controller->m_runningAnimators.isEmpty());
+}
+
+void tst_Animators::testAnimationPause()
+{
+    QScopedPointer<QQuickView> view(createView());
+    view->setSource(testFileUrl("scaleAnimator.qml"));
+    QQuickItem *root = view->rootObject();
+    QVERIFY(root);
+
+    QQuickAnimator *animator = root->property("animator").value<QQuickAnimator *>();
+    QVERIFY(animator);
+    animator->start();
+    // isRunning becomes true as soon as start() is called so instead we check
+    // if currentTime has progressed or not to make sure animation started playing
+    QTRY_VERIFY(animator->currentTime() > 0);
+    auto job = dynamic_cast<QQuickAnimatorProxyJob*>(animator->qtAnimation());
+    animator->setPaused(true);
+    QTRY_COMPARE(job->m_internalState, QQuickAnimatorProxyJob::State_Paused);
 }
 
 QT_END_NAMESPACE

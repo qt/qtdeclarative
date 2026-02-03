@@ -37,6 +37,9 @@ static void qquickanimator_invalidate_jobs(QAbstractAnimationJob *job)
 
 void QQuickAnimatorController::windowNodesDestroyed()
 {
+    for (const QSharedPointer<QAbstractAnimationJob> &toPause : std::as_const(m_rootsPendingPause))
+        toPause->pause();
+    m_rootsPendingPause.clear();
     for (const QSharedPointer<QAbstractAnimationJob> &toStop : std::as_const(m_rootsPendingStop)) {
         qquickanimator_invalidate_jobs(toStop.data());
         toStop->stop();
@@ -86,6 +89,11 @@ static void qquickanimator_sync_before_start(QAbstractAnimationJob *job)
 
 void QQuickAnimatorController::beforeNodeSync()
 {
+    for (const QSharedPointer<QAbstractAnimationJob> &toPause : std::as_const(m_rootsPendingPause)) {
+        toPause->pause();
+        m_animationRoots.remove(toPause.data());
+    }
+    m_rootsPendingPause.clear();
     for (const QSharedPointer<QAbstractAnimationJob> &toStop : std::as_const(m_rootsPendingStop)) {
         toStop->stop();
         m_animationRoots.remove(toStop.data());
@@ -167,18 +175,27 @@ void QQuickAnimatorController::start_helper(QAbstractAnimationJob *job)
 void QQuickAnimatorController::start(const QSharedPointer<QAbstractAnimationJob> &job)
 {
     m_rootsPendingStart.insert(job);
+    m_rootsPendingPause.remove(job);
     m_rootsPendingStop.remove(job);
     job->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
     start_helper(job.data());
     requestSync();
 }
 
-
 // Called by the proxy when it is time to stop an animation job.
 void QQuickAnimatorController::cancel(const QSharedPointer<QAbstractAnimationJob> &job)
 {
     m_rootsPendingStart.remove(job);
+    m_rootsPendingPause.remove(job);
     m_rootsPendingStop.insert(job);
+}
+
+// Called by the proxy when it is time to pause an animation job.
+void QQuickAnimatorController::pause(const QSharedPointer<QAbstractAnimationJob> &job)
+{
+    m_rootsPendingStart.remove(job);
+    m_rootsPendingStop.remove(job);
+    m_rootsPendingPause.insert(job);
 }
 
 
