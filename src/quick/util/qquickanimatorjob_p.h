@@ -60,6 +60,8 @@ public Q_SLOTS:
     void sceneGraphInitialized();
 
 private:
+    friend class tst_Animators;
+
     void syncBackCurrentValues();
     void readyToAnimate();
     void setWindow(QQuickWindow *window);

@@ -46,6 +46,7 @@ public:
     // These are called from the GUI thread (the proxy)
     void start(const QSharedPointer<QAbstractAnimationJob> &job);
     void cancel(const QSharedPointer<QAbstractAnimationJob> &job);
+    void pause(const QSharedPointer<QAbstractAnimationJob> &job);
     bool isPendingStart(const QSharedPointer<QAbstractAnimationJob> &job) const { return m_rootsPendingStart.contains(job); }
 
     void lock() { m_mutex.lock(); }
@@ -65,6 +66,7 @@ private:
     QHash<QAbstractAnimationJob *, QSharedPointer<QAbstractAnimationJob> > m_animationRoots;
     QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingStop;
     QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingStart;
+    QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingPause;
 
     QQuickWindow *m_window;
     QMutex m_mutex;
