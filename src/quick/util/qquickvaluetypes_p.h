@@ -44,6 +44,7 @@ class Q_QUICK_EXPORT QQuickColorValueType : private QColor
     Q_PROPERTY(qreal hslSaturation READ hslSaturation WRITE setHslSaturation FINAL)
     Q_PROPERTY(qreal hslLightness READ hslLightness WRITE setHslLightness FINAL)
     Q_PROPERTY(bool valid READ isValid FINAL)
+    Q_PROPERTY(int rgba READ rgba FINAL)
     Q_GADGET
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QColor)
@@ -75,6 +76,7 @@ public:
     qreal hslSaturation() const;
     qreal hslLightness() const;
     bool isValid() const;
+    int rgba() const;
     void setR(qreal);
     void setG(qreal);
     void setB(qreal);

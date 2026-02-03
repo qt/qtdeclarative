@@ -969,6 +969,11 @@ void tst_qqmlvaluetypes::color()
         QCOMPARE(object->property("equalsColorRHS").toBool(), object->property("equalsColor").toBool());
         QCOMPARE(object->property("colorEqualsCopy").toBool(), true);
         QCOMPARE(object->property("copyEqualsColor").toBool(), object->property("colorEqualsCopy").toBool());
+
+        QCOMPARE(object->property("colorEqualsDifferentF16Precision").toBool(), false);
+        QCOMPARE(object->property("rgbaEqualsDifferentF16Precision").toBool(), true);
+        QCOMPARE(object->property("colorEqualsDifferentSpec").toBool(), false);
+        QCOMPARE(object->property("rgbaEqualsDifferentSpec").toBool(), true);
     }
 }
 

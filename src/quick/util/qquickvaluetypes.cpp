@@ -27,6 +27,11 @@ QString QQuickColorValueType::toString() const
     return QColor::name(QColor::alpha() != 255 ? QColor::HexArgb : QColor::HexRgb);
 }
 
+int QQuickColorValueType::rgba() const
+{
+    return QColor::rgba();
+}
+
 QColor QQuickColorValueType::lighter(qreal factor) const
 {
     if (std::isnan(factor)) {

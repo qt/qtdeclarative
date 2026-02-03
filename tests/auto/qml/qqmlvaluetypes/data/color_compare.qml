@@ -34,4 +34,9 @@ MyTypeObject {
     property bool equalsColorRHS: (Qt.rgba(0.2, 0.88, 0.6, 0.34) == color) // true
     property bool colorEqualsCopy: (color == copy) // true
     property bool copyEqualsColor: (copy == color) // true
+
+    property bool colorEqualsDifferentF16Precision: (Qt.rgba(0.5, 0.5, 0.5, 1) == Qt.rgba(0.501, 0.5, 0.5, 1))           // false
+    property bool rgbaEqualsDifferentF16Precision: (Qt.rgba(0.5, 0.5, 0.5, 1).rgba == Qt.rgba(0.501, 0.5, 0.5, 1).rgba)  // true
+    property bool colorEqualsDifferentSpec: (Qt.rgba(1, 0, 0, 1) == Qt.hsva(0, 1, 1, 1))                                 // false
+    property bool rgbaEqualsDifferentSpec: (Qt.rgba(1, 0, 0, 1).rgba == Qt.hsva(0, 1, 1, 1).rgba)                        // true
 }
