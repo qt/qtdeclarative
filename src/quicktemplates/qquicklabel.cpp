@@ -291,14 +291,16 @@ QFont QQuickLabel::font() const
     Q_D(const QQuickLabel);
     QFont font = QQuickText::font();
     // The resolve mask should inherit from the requestedFont
-    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    font.setResolveMask(d->extra.isAllocated() ? d->extra->requestedFont.resolveMask() : 0);
     return font;
 }
 
 void QQuickLabel::setFont(const QFont &font)
 {
     Q_D(QQuickLabel);
-    if (d->extra.value().requestedFont.resolveMask() == font.resolveMask() && d->extra.value().requestedFont == font)
+    if (d->extra.isAllocated()
+            && d->extra.value().requestedFont.resolveMask() == font.resolveMask()
+            && d->extra.value().requestedFont == font)
         return;
 
     d->extra.value().requestedFont = font;
