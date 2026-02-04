@@ -726,10 +726,6 @@ void QmlObject::writeOutId(const DomItem &self, OutWriter &ow) const
                 .writeRegion(IdColonTokenRegion)
                 .ensureSpace()
                 .writeRegion(IdNameRegion, idStr());
-        if (ow.lineWriter.options().attributesSequence
-            == LineWriterOptions::AttributesSequence::Normalize) {
-            ow.ensureNewline(2);
-        }
         if (myId) {
             myId.writeOutPost(ow);
             ow.ensureNewline(1);
@@ -808,10 +804,9 @@ QList<std::pair<SourceLocation, DomItem>> QmlObject::orderOfAttributes(const Dom
     return attribs;
 }
 
-void QmlObject::writeOutAttributes(const DomItem &self, OutWriter &ow, const DomItem &component,
+void QmlObject::writeOutAttributes(OutWriter &ow, const Attributes &attribs,
                                    const QString &code) const
 {
-    const QList<std::pair<SourceLocation, DomItem>> attribs = orderOfAttributes(self, component);
     qsizetype iAttr = 0;
     while (iAttr != attribs.size()) {
         auto &el = attribs[iAttr++];
@@ -1084,18 +1079,25 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
     ow.writeRegion(LeftBraceRegion);
     int baseIndent = ow.increaseIndent();
 
-    // *always* put id first
-    writeOutId(self, ow);
-
     DomItem component;
     if (isRootObject)
         component = self.containingObject();
+    const Attributes attributes = orderOfAttributes(self, component);
+
+    // *always* put id first
+    writeOutId(self, ow);
+
+    if (!idStr().isEmpty() && ow.lineWriter.options().attributesSequence
+                == LineWriterOptions::AttributesSequence::Normalize) {
+        ow.ensureNewline(attributes.empty() ? 1 : 2);
+    }
+
     if (ow.lineWriter.options().attributesSequence
         == LineWriterOptions::AttributesSequence::Preserve) {
         QString code;
         if (std::shared_ptr<QmlFile> qmlFilePtr = self.ownerAs<QmlFile>())
             code = qmlFilePtr->code();
-        writeOutAttributes(self, ow, component, code);
+        writeOutAttributes(ow, attributes, code);
     } else {
         writeOutSortedAttributes(self, ow, component);
     }

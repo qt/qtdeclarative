@@ -46,6 +46,9 @@ private Q_SLOTS:
     void semicolonRule_data();
     void semicolonRule();
 
+    void normalizedId_data();
+    void normalizedId();
+
 private:
     QString formatInMemory(const QString &fileToFormat, bool *didSucceed = nullptr,
                            LineWriterOptions options = LineWriterOptions(),
@@ -441,6 +444,35 @@ void TestQmlformat::semicolonRule()
 
     QVERIFY(wasSuccessful && !output.isEmpty());
     QCOMPARE(output, readTestFile(formattedFile));
+}
+
+void TestQmlformat::normalizedId_data()
+{
+    QTest::addColumn<QString>("fileNameBase");
+
+    QTest::addRow("soloId") << "normalizedSoloId";
+    QTest::addRow("soloIdCommented") << "normalizedSoloIdCommented";
+    QTest::addRow("idAndItem") << "normalizedIdAndItem";
+    QTest::addRow("idAndItemCommented") << "normalizedIdAndItemCommented";
+}
+
+void TestQmlformat::normalizedId()
+{
+    QFETCH(QString, fileNameBase);
+
+    bool wasSuccessful = false;
+
+    LineWriterOptions opts;
+    opts.attributesSequence = QQmlJS::Dom::LineWriterOptions::AttributesSequence::Normalize;
+#ifdef Q_OS_WIN
+    opts.lineEndings = QQmlJS::Dom::LineWriterOptions::LineEndings::Windows;
+#endif
+
+    const QString file = testFile(fileNameBase + ".qml");
+    QString output = formatInMemory(file, &wasSuccessful, opts, WriteOutCheck::None);
+    QVERIFY(wasSuccessful && !output.isEmpty());
+    auto exp = readTestFile(fileNameBase + ".formatted.qml");
+    QCOMPARE(output, exp);
 }
 
 QTEST_MAIN(TestQmlformat)
