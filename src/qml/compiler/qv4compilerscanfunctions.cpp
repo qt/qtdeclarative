@@ -720,23 +720,73 @@ bool ScanFunctions::enterFunction(
     return true;
 }
 
+enum class Iteration { Continue, Break };
+
+struct ContextCounter
+{
+    Q_DISABLE_COPY_MOVE(ContextCounter)
+#ifdef QT_NO_DEBUG
+    ContextCounter(Module *) {}
+    void operator++() {}
+    void dismiss() {}
+#else
+    ContextCounter(Module *m) : module(m) {}
+    ~ContextCounter() { Q_ASSERT(numContexts == module->contextMap.size()); }
+
+    void operator++() { numContexts++; }
+    void dismiss() { numContexts = module->contextMap.size(); }
+
+private:
+    Module *module = nullptr;
+    qsizetype numContexts = 0;
+#endif
+};
+
+
+template<typename Action>
+void forEachContext(Module *m, Action &&action)
+{
+    ContextCounter counter(m);
+
+    if (!m->rootContext)
+        return;
+
+    QVarLengthArray<Context *> stack {m->rootContext};
+    do {
+        Context *current = stack.back();
+        stack.pop_back();
+
+        for (Context *child : std::as_const(current->nestedContexts))
+            stack.push_back(child);
+
+        if (action(current) == Iteration::Break) {
+            counter.dismiss();
+            return;
+        }
+
+        ++counter;
+    } while (!stack.empty());
+}
+
 void ScanFunctions::calcEscapingVariables()
 {
     Module *m = _cg->_module;
 
-    for (Context *inner : std::as_const(m->contextMap)) {
+    forEachContext(m, [](Context *inner) {
         if (inner->usesArgumentsObject != Context::UsesArgumentsObject::Used)
-            continue;
+            return Iteration::Continue;
         if (inner->contextType != ContextType::Block && !inner->isArrowFunction)
-            continue;
+            return Iteration::Continue;
         Context *c = inner->parent;
         while (c && (c->contextType == ContextType::Block || c->isArrowFunction))
             c = c->parent;
         if (c)
             c->usesArgumentsObject = Context::UsesArgumentsObject::Used;
         inner->usesArgumentsObject = Context::UsesArgumentsObject::NotUsed;
-    }
-    for (Context *inner : std::as_const(m->contextMap)) {
+        return Iteration::Continue;
+    });
+
+    forEachContext(m, [](Context *inner) {
         if (!inner->parent || inner->usesArgumentsObject == Context::UsesArgumentsObject::Unknown)
             inner->usesArgumentsObject = Context::UsesArgumentsObject::NotUsed;
         if (inner->usesArgumentsObject == Context::UsesArgumentsObject::Used) {
@@ -747,20 +797,21 @@ void ScanFunctions::calcEscapingVariables()
                 inner->requiresExecutionContext = true;
             }
         }
-    }
+        return Iteration::Continue;
+    });
 
-    for (Context *c : std::as_const(m->contextMap)) {
+    forEachContext(m, [](Context *c) {
         if (c->contextType != ContextType::ESModule)
-            continue;
+            return Iteration::Continue;
         for (const auto &entry: std::as_const(c->exportEntries)) {
             auto mIt = c->members.constFind(entry.localName);
             if (mIt != c->members.constEnd())
                 mIt->canEscape = true;
         }
-        break;
-    }
+        return Iteration::Break;
+    });
 
-    for (Context *inner : std::as_const(m->contextMap)) {
+    forEachContext(m, [](Context *inner) {
         for (const QString &var : std::as_const(inner->usedVariables)) {
             Context *c = inner;
             while (c) {
@@ -822,8 +873,11 @@ void ScanFunctions::calcEscapingVariables()
                 c->usesThis = true;
             c->innerFunctionAccessesThis |= innerFunctionAccessesThis;
         }
-    }
-    for (Context *c : std::as_const(m->contextMap)) {
+
+        return Iteration::Continue;
+    });
+
+    forEachContext(m, [m](Context *c) {
         if (c->innerFunctionAccessesThis) {
             // add an escaping 'this' variable
             c->addLocalVar(QStringLiteral("this"), Context::VariableDefinition, VariableScope::Let);
@@ -873,7 +927,9 @@ void ScanFunctions::calcEscapingVariables()
             for (const auto &m : std::as_const(c->members))
                 m.canEscape = true;
         }
-    }
+
+        return Iteration::Continue;
+    });
 
     static const bool showEscapingVars = qEnvironmentVariableIsSet("QV4_SHOW_ESCAPING_VARS");
     if (showEscapingVars) {
