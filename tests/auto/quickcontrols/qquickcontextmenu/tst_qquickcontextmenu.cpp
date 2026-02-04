@@ -656,7 +656,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QTRY_VERIFY(contextMenu->menu()->isOpened());
 
     // Click on the Undo menu item. Redo should then be enabled.
-    QVERIFY(clickButton(undoMenuItem));
+    QVERIFY(clickMenuItem(undoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
     QCOMPARE(editor->property("text").toString(), expectedTextComplete);
     QVERIFY(!undoMenuItem->isEnabled());
@@ -667,7 +667,7 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QTRY_VERIFY(contextMenu->menu()->isOpened());
 
     // Click on the Redo menu item. Undo should then be enabled.
-    QVERIFY(clickButton(redoMenuItem));
+    QVERIFY(clickMenuItem(redoMenuItem));
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
     QCOMPARE(editor->property("text").toString(), QString());
     QVERIFY(undoMenuItem->isEnabled());
@@ -730,7 +730,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCut()
 
     // Click on the Cut menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    QVERIFY(clickButton(cutMenuItem));
+    QVERIFY(clickMenuItem(cutMenuItem));
     QCOMPARE(editor->property("text").toString(), textFirstHalf);
     QCOMPARE(qGuiApp->clipboard()->text(), cutText);
 #else
@@ -802,7 +802,7 @@ void tst_QQuickContextMenu::textEditingContextMenuCopy()
 
     // Click on the Copy menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    QVERIFY(clickButton(copyMenuItem));
+    QVERIFY(clickMenuItem(copyMenuItem));
     QCOMPARE(editor->property("text").toString(), expectedTextComplete);
     const auto *clipboard = QGuiApplication::clipboard();
     QCOMPARE(clipboard->text(), textFirstHalf);
@@ -871,7 +871,7 @@ void tst_QQuickContextMenu::textEditingContextMenuPaste()
 
     // Click on the Paste menu item (if enabled) and close the menu.
 #if QT_CONFIG(clipboard)
-    QVERIFY(clickButton(pasteMenuItem));
+    QVERIFY(clickMenuItem(pasteMenuItem));
     QCOMPARE(editor->property("text").toString(), expectedTextComplete + clipboard->text());
 #else
     QTest::keyClick(&window, Qt::Key_Escape);
@@ -939,7 +939,7 @@ void tst_QQuickContextMenu::textEditingContextMenuDelete()
     QVERIFY(deleteMenuItem->isEnabled());
 
     // Click on the Delete menu item and close the menu.
-    QVERIFY(clickButton(deleteMenuItem));
+    QVERIFY(clickMenuItem(deleteMenuItem));
     QCOMPARE(editor->property("text").toString(), textFirstHalf);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
@@ -989,7 +989,7 @@ void tst_QQuickContextMenu::textEditingContextMenuSelectAll()
     QCOMPARE(selectAllMenuItem->text(), "Select All");
 
     // Click on the Select All menu item and close the menu.
-    QVERIFY(clickButton(selectAllMenuItem));
+    QVERIFY(clickMenuItem(selectAllMenuItem));
     QCOMPARE(editor->property("selectedText").toString(), expectedTextComplete);
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 

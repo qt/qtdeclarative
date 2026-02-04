@@ -25,6 +25,8 @@ class QQmlEngine;
 class QQuickApplicationWindow;
 class QQuickAbstractButton;
 class QQuickControl;
+class QQuickMenuItem;
+class QQuickPopup;
 
 namespace QQuickControlsTestUtils
 {
@@ -55,6 +57,7 @@ namespace QQuickControlsTestUtils
 
     [[nodiscard]] bool verifyButtonClickable(QQuickAbstractButton *button);
     [[nodiscard]] bool clickButton(QQuickAbstractButton *button);
+    [[nodiscard]] bool clickMenuItem(QQuickMenuItem *menuItem);
     [[nodiscard]] bool doubleClickButton(QQuickAbstractButton *button);
     [[nodiscard]] QString visualFocusFailureMessage(QQuickControl *control);
 
