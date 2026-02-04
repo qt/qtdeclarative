@@ -152,7 +152,7 @@ public:
 
     void maybeSynthesizeContextMenuEvent(QMouseEvent *event) override;
 
-    void dirtyItem(QQuickItem *);
+    void dirtyItem(QQuickItem *item, bool maySkipUpdate = false);
     void cleanup(QSGNode *);
 
     void ensureCustomRenderTarget();

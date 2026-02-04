@@ -6984,7 +6984,7 @@ void QQuickItemPrivate::dirty(DirtyType type)
         dirtyAttributes |= type;
         if (window && componentComplete) {
             addToDirtyList();
-            QQuickWindowPrivate::get(window)->dirtyItem(q);
+            QQuickWindowPrivate::get(window)->dirtyItem(q, true);
         }
     }
     if (type & (TransformOrigin | Transform | BasicTransform | Position | Size | Clip))
@@ -7004,7 +7004,7 @@ void QQuickItemPrivate::addToDirtyList()
         if (nextDirtyItem) QQuickItemPrivate::get(nextDirtyItem)->prevDirtyItem = &nextDirtyItem;
         prevDirtyItem = &p->dirtyItemList;
         p->dirtyItemList = q;
-        p->dirtyItem(q);
+        p->dirtyItem(q, true);
     }
     Q_ASSERT(prevDirtyItem);
 }

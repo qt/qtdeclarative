@@ -3,6 +3,7 @@
 
 #include <qtest.h>
 
+#include <QSignalSpy>
 #include <QList>
 #include <QByteArray>
 #include <private/qquickshadereffect_p.h>
@@ -70,6 +71,7 @@ private slots:
 
     void hideParent();
     void testPropertyMappings();
+    void testUpdateOfInvisibleItem();
 
 private:
     enum PresenceFlags {
@@ -175,6 +177,21 @@ void tst_qquickshadereffect::testPropertyMappings()
     QTRY_VERIFY_WITH_TIMEOUT(view.rootObject()->property("finished").toBool(), 2s);
 }
 
+void tst_qquickshadereffect::testUpdateOfInvisibleItem()
+{
+    QQuickView view;
+    view.setSource(QUrl(QStringLiteral("qrc:/data/invisibleUpdate.qml")));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QSignalSpy spy(&view, &QQuickWindow::afterRendering);
+    spy.wait(1000);
+    spy.clear();
+
+    view.rootObject()->setProperty("mirrorImage", true);
+    spy.wait(1000);
+    QCOMPARE(spy.count(), 1);
+}
 QTEST_MAIN(tst_qquickshadereffect)
 
 #include "tst_qquickshadereffect.moc"

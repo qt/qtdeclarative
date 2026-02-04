@@ -45,6 +45,7 @@ set(resources_resource_files
     "data/twoImagesOneShaderEffect.qml"
     "data/testprop.frag"
     "data/testProperties.qml"
+    "data/invisibleUpdate.qml"
 )
 
 qt_internal_add_resource(tst_qquickshadereffect "resources"

@@ -879,7 +879,7 @@ QQmlListProperty<QObject> QQuickWindowPrivate::data()
     return ret;
 }
 
-void QQuickWindowPrivate::dirtyItem(QQuickItem *item)
+void QQuickWindowPrivate::dirtyItem(QQuickItem *item, bool maySkipUpdate)
 {
     Q_Q(QQuickWindow);
 
@@ -887,7 +887,10 @@ void QQuickWindowPrivate::dirtyItem(QQuickItem *item)
     if (itemPriv->dirtyAttributes & QQuickItemPrivate::ChildrenStackingChanged)
         needsChildWindowStackingOrderUpdate = true;
 
-    q->maybeUpdate();
+    if (!maySkipUpdate
+        || (itemPriv->effectiveVisible || item->isTextureProvider()
+            || (itemPriv->extra.isAllocated() && itemPriv->extra->effectRefCount > 0)))
+        q->maybeUpdate();
 }
 
 /*!
