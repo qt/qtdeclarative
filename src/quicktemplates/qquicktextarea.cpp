@@ -518,14 +518,16 @@ QFont QQuickTextArea::font() const
     Q_D(const QQuickTextArea);
     QFont font = QQuickTextEdit::font();
     // The resolve mask should inherit from the requestedFont
-    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    font.setResolveMask(d->extra.isAllocated() ? d->extra->requestedFont.resolveMask() : 0);
     return font;
 }
 
 void QQuickTextArea::setFont(const QFont &font)
 {
     Q_D(QQuickTextArea);
-    if (d->extra.value().requestedFont.resolveMask() == font.resolveMask() && d->extra.value().requestedFont == font)
+    if (d->extra.isAllocated()
+            && d->extra.value().requestedFont.resolveMask() == font.resolveMask()
+            && d->extra.value().requestedFont == font)
         return;
 
     d->extra.value().requestedFont = font;
