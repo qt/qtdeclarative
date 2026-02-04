@@ -173,6 +173,7 @@ private slots:
 
     void textObjectRespectsDpr_data();
     void textObjectRespectsDpr();
+    void clearTruncated();
 
     void textObjectBaselineAlignment();
     void textObjectBaselineVsBottomAlignment();
@@ -5298,6 +5299,17 @@ void tst_qquicktext::textObjectBaselineVsBottomAlignment()
     QVERIFY2(bottomY > baselineY,
              qPrintable(QString("AlignBottom (%1) should be below AlignBaseline (%2)")
                         .arg(bottomY).arg(baselineY)));
+}
+
+void tst_qquicktext::clearTruncated()
+{
+    QQmlComponent component(&engine, testFile("ellipsisText.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QQuickText *text = qobject_cast<QQuickText *>(object.data());
+    QVERIFY(text);
+    QVERIFY(text->truncated());
+    text->setText("");
+    QVERIFY(!text->truncated());
 }
 
 QT_END_NAMESPACE

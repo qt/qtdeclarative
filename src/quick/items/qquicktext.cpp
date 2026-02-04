@@ -472,6 +472,10 @@ void QQuickTextPrivate::updateSize()
         signalSizeChange(previousSize);
         lineCount = 1;
         emit q->lineCountChanged();
+        if (truncated) {
+            truncated = false;
+            emit q->truncatedChanged();
+        }
         updateType = UpdatePaintNode;
         q->update();
         return;
