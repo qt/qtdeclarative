@@ -732,10 +732,6 @@ void QmlObject::writeOutId(const DomItem &self, OutWriter &ow) const
                 .writeRegion(fLoc, IdColonTokenRegion)
                 .ensureSpace()
                 .writeRegion(fLoc, IdNameRegion, idStr());
-        if (ow.lineWriter.options().attributesSequence
-            == LineWriterOptions::AttributesSequence::Normalize) {
-            ow.ensureNewline(2);
-        }
         if (myId) {
             myId.writeOutPost(ow);
             ow.ensureNewline(1);
@@ -814,10 +810,9 @@ QList<std::pair<SourceLocation, DomItem>> QmlObject::orderOfAttributes(const Dom
     return attribs;
 }
 
-void QmlObject::writeOutAttributes(const DomItem &self, OutWriter &ow, const DomItem &component,
+void QmlObject::writeOutAttributes(OutWriter &ow, const Attributes &attribs,
                                    const QString &code) const
 {
-    const QList<std::pair<SourceLocation, DomItem>> attribs = orderOfAttributes(self, component);
     qsizetype iAttr = 0;
     while (iAttr != attribs.size()) {
         auto &el = attribs[iAttr++];
@@ -1015,10 +1010,8 @@ splitBindings(const DomItem &bindings, const QSet<QString> &mergedDefBinding,
 }
 
 void QmlObject::writeOutSortedAttributes(const DomItem &self, OutWriter &ow,
-                                         const DomItem &component) const
+                                         const DomItem &component, const Attributes &attribs) const
 {
-    const QList<std::pair<SourceLocation, DomItem>> attribs = orderOfAttributes(self, component);
-
     int spacerId = 0;
     quint32 counter = ow.counter();
 
@@ -1141,20 +1134,27 @@ void QmlObject::writeOut(const DomItem &self, OutWriter &ow, const QString &onTa
     ow.ensureSpace();
     ow.writeRegion(fLoc, LeftBraceRegion);
 
-    // *always* put id first
-    writeOutId(self, ow);
-
     DomItem component;
     if (isRootObject)
         component = self.containingObject();
+    const Attributes attributes = orderOfAttributes(self, component);
+
+    // *always* put id first
+    writeOutId(self, ow);
+
+    if (!idStr().isEmpty() && ow.lineWriter.options().attributesSequence
+                == LineWriterOptions::AttributesSequence::Normalize) {
+        ow.ensureNewline(attributes.empty() ? 1 : 2);
+    }
+
     if (ow.lineWriter.options().attributesSequence
         == LineWriterOptions::AttributesSequence::Preserve) {
         QString code;
         if (std::shared_ptr<QmlFile> qmlFilePtr = self.ownerAs<QmlFile>())
             code = qmlFilePtr->code();
-        writeOutAttributes(self, ow, component, code);
+        writeOutAttributes(ow, attributes, code);
     } else {
-        writeOutSortedAttributes(self, ow, component);
+        writeOutSortedAttributes(self, ow, component, attributes);
     }
     ow.writeRegion(fLoc, RightBraceRegion);
 }

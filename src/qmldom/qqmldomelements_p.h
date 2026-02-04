@@ -920,12 +920,12 @@ public:
 
     QList<std::pair<SourceLocation, DomItem>> orderOfAttributes(const DomItem &self,
                                                             const DomItem &component) const;
-    void writeOutAttributes(const DomItem &self, OutWriter &ow, const DomItem &component,
-                            const QString &code) const;
+    using Attributes = QList<std::pair<SourceLocation, DomItem>>;
+    void writeOutAttributes(OutWriter &ow, const Attributes &attribs, const QString &code) const;
 
     void writeOutSortedEnumerations(const QList<DomItem> &descs, OutWriter &ow) const;
-    void writeOutSortedAttributes(const DomItem &self, OutWriter &ow,
-                                  const DomItem &component) const;
+    void writeOutSortedAttributes(const DomItem &self, OutWriter &ow, const DomItem &component,
+                                  const Attributes &attribs) const;
     void writeOutSortedPropertyDefinition(const DomItem &self, OutWriter &ow,
                                           QSet<QString> &mergedDefBinding,
                                           const QStringList &keys) const;

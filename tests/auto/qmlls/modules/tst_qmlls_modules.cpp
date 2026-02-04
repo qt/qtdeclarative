@@ -858,6 +858,8 @@ void tst_qmlls_modules::documentFormatting_data()
     excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedObjectsSpacing.qml"_s;
     excludedFiles << u"tests/auto/qml/qmlformat/data/sortingImports.qml"_s;
     excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedGroupAttributesTogether.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedIdAndItem.qml"_s;
+    excludedFiles << u"tests/auto/qml/qmlformat/data/normalizedIdAndItemCommented.qml"_s;
 
     // excluded because it crashes Dom construction
     // TODO: fix QQMLDomAstConstructor to not crash on these files, see QTBUG-116392
@@ -866,7 +868,7 @@ void tst_qmlls_modules::documentFormatting_data()
     excludedFiles << u"tests/auto/qml/qmlformat/data/nestedFunctions.qml"_s;
 
     const auto shouldSkip = [&excludedFiles](const QString &fileName) {
-        for (const QString &file : excludedFiles) {
+        for (const QString &file : std::as_const(excludedFiles)) {
             if (fileName.endsWith(file))
                 return true;
         }
