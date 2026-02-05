@@ -164,6 +164,7 @@ private slots:
 #endif
     void cleanupRhi();
     void dontRecreateRootElementOnWindowChange();
+    void preserveClearColorOnWindowChange();
     void setInitialProperties();
     void fromModuleCtor();
     void loadFromModule_data();
@@ -1362,6 +1363,22 @@ void tst_qquickwidget::dontRecreateRootElementOnWindowChange()
     QCoreApplication::sendEvent(quickWidget, &event);
 
     QVERIFY(!wasDestroyed);
+}
+
+void tst_qquickwidget::preserveClearColorOnWindowChange()
+{
+    auto *quickWidget = new QQuickWidget();
+    quickWidget->setSource(testFileUrl("rectangle.qml"));
+
+    QColor color("#F00BAA");
+    quickWidget->setClearColor(color);
+
+    QVERIFY(quickWidget->quickWindow()->color() == color);
+
+    QEvent event(QEvent::WindowChangeInternal);
+    QCoreApplication::sendEvent(quickWidget, &event);
+
+    QVERIFY(quickWidget->quickWindow()->color() == color);
 }
 
 void tst_qquickwidget::setInitialProperties()
