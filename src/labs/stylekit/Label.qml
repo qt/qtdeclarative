@@ -25,15 +25,14 @@ T.Label {
     }
 
     // FIXME: Should work when assigned to control.font directly
-    font.family: styleReader.font.family
-    font.pointSize: styleReader.font.pointSize
-    font.weight: styleReader.font.weight
-    font.italic: styleReader.font.italic
-    font.underline: styleReader.font.underline
-    font.bold: styleReader.font.bold
+    font.family: styleReader.effectiveFont.family
+    font.pointSize: styleReader.effectiveFont.pointSize
+    font.weight: styleReader.effectiveFont.weight
+    font.italic: styleReader.effectiveFont.italic
+    font.underline: styleReader.effectiveFont.underline
+    font.bold: styleReader.effectiveFont.bold
 
     color: styleReader.text.color
-
     linkColor: control.palette.link
 
     background: BackgroundDelegate {

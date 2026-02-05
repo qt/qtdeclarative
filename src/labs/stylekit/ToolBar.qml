@@ -28,8 +28,8 @@ T.ToolBar {
         type: StyleKitReader.ToolBar
         enabled: control.enabled
         focused: control.activeFocus
-        palette: control.palette
         hovered: control.hovered
+        palette: control.palette
     }
 
     background: BackgroundDelegate {

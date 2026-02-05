@@ -72,6 +72,16 @@ QPalette QQStyleKitTheme::paletteForControlType(QQStyleKitExtendableControlType 
     return effectivePaletteForScope(scope);
 }
 
+QFont QQStyleKitTheme::fontForControlType(QQStyleKitExtendableControlType type) const
+{
+    const QQuickTheme::Scope scope = scopeForType(type);
+    if (scope < QQuickTheme::System || scope >= NScopes) {
+        qWarning() << Q_FUNC_INFO << "Invalid scope" << int(scope);
+        return QFont();
+    }
+    return m_effectiveFonts[int(scope)];
+}
+
 QPalette QQStyleKitTheme::effectivePaletteForScope(QQuickTheme::Scope scope) const
 {
     if (scope < QQuickTheme::System || scope >= NScopes) {
@@ -82,7 +92,7 @@ QPalette QQStyleKitTheme::effectivePaletteForScope(QQuickTheme::Scope scope) con
     return m_effectivePalettes[int(scope)];
 }
 
-void QQStyleKitTheme::updateThemePalette()
+void QQStyleKitTheme::updateThemePalettes()
 {
     const QQStyleKitPalette *pals = palettes();
     if (!pals)
@@ -91,7 +101,7 @@ void QQStyleKitTheme::updateThemePalette()
     // Collect palette fallback chain
     QVector<const QQStyleKitPalette *> fbChain;
     for (auto *fb = pals; fb; fb = fb->fallbackPalette())
-    fbChain.append(fb);
+        fbChain.append(fb);
 
     auto resolveFromPaletteChain = [&](QQuickTheme::Scope scope,
         QQuickPalette* (QQStyleKitPalette::*getter)() const) -> QPalette
@@ -104,7 +114,8 @@ void QQStyleKitTheme::updateThemePalette()
             if (fb->isSet(scope)) {
                 if (auto *p = (fb->*getter)())
                     result = p->toQPalette().resolve(result);
-            } else if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
+            }
+            if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
                 if (auto *sys = fb->system())
                     result = sys->toQPalette().resolve(result);
             }
@@ -138,6 +149,41 @@ void QQStyleKitTheme::updateThemePalette()
     setResolved(&QQStyleKitPalette::toolBar, QQuickTheme::ToolBar);
     setResolved(&QQStyleKitPalette::toolTip, QQuickTheme::ToolTip);
     setResolved(&QQStyleKitPalette::tumbler, QQuickTheme::Tumbler);
+}
+
+void QQStyleKitTheme::updateThemeFonts()
+{
+    const QQStyleKitFont *fonts = this->fonts();
+    if (!fonts)
+        return;
+
+    // Collect font fallback chain
+    QVector<const QQStyleKitFont *> fbChain;
+    for (auto *fb = fonts; fb; fb = fb->fallbackFont())
+        fbChain.append(fb);
+
+    auto resolveFromFontChain = [&](QQuickTheme::Scope scope) -> QFont
+    {
+        QFont result;
+
+        // Apply from farthest fallback -> local
+        for (int i = fbChain.size() - 1; i >= 0; --i) {
+            const QQStyleKitFont *fb = fbChain[i];
+            if (fb->isSet(scope)) {
+                result = fb->fontForScope(scope).resolve(result);
+            }
+            if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
+                result = fb->fontForScope(QQuickTheme::System).resolve(result);
+            }
+        }
+
+        return result;
+    };
+
+    for (int i = 0; i < NScopes; ++i) {
+        const QQuickTheme::Scope scope = static_cast<QQuickTheme::Scope>(i);
+        m_effectiveFonts[i] = resolveFromFontChain(scope);
+    }
 }
 
 void QQStyleKitTheme::componentComplete()

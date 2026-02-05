@@ -36,6 +36,7 @@ T.ToolButton {
         hovered: control.hovered || control.pressed
         pressed: control.pressed
         palette: control.palette
+        font: control.font
     }
 
     contentItem: IconLabel {
@@ -45,7 +46,7 @@ T.ToolButton {
 
         icon: control.icon
         text: control.text
-        font: styleReader.font // FIXME: should be inherited from control
+        font: styleReader.effectiveFont
         color: styleReader.text.color
         alignment: styleReader.text.alignment
     }

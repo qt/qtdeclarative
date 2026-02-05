@@ -38,6 +38,7 @@ T.ItemDelegate {
         pressed: control.pressed
         highlighted: control.highlighted
         palette: control.palette
+        font: control.font
     }
 
     contentItem: IconLabel {
@@ -46,7 +47,7 @@ T.ItemDelegate {
         display: control.display
         icon: control.icon
         text: control.text
-        font: styleReader.font
+        font: styleReader.effectiveFont
         color: styleReader.text.color
         alignment: styleReader.text.alignment
         topPadding: styleReader.text.topPadding

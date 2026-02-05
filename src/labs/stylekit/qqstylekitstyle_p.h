@@ -77,8 +77,8 @@ public:
 
     static QQStyleKitStyle *current();
 
-    QFont fontForControlType(QQStyleKitExtendableControlType type) const;
     QPalette paletteForControlType(QQStyleKitExtendableControlType type) const;
+    QFont fontForControlType(QQStyleKitExtendableControlType type) const;
 
     // For now, used by qqcontrolstowidgetstyle
     Q_INVOKABLE QList<QObject *> customThemesAsList();

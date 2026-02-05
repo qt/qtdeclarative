@@ -136,21 +136,18 @@ signals:
 private:
     Q_DISABLE_COPY(QQStyleKitFont)
 
-    void ensureEffectiveUpToDate() const;
-    void markEffectiveDirty() { m_effectiveDirty = true; }
-
     void setFontForScope(QQuickTheme::Scope scope, const QFont &font, void (QQStyleKitFont::*signal)());
 
     bool isSet(QQuickTheme::Scope scope) const { return (m_setMask & (1u << int(scope))) != 0; }
     void markSet(QQuickTheme::Scope scope) { m_setMask |= (1u << int(scope)); }
 
     static const int NScopes = QQuickTheme::Tumbler + 1;
-    QFont m_local[NScopes];
-    mutable QFont m_effective[NScopes];
+    QFont m_fonts[NScopes];
     quint32 m_setMask = 0;
-    mutable bool m_effectiveDirty = false;
 
     QQStyleKitFont *m_fallback = nullptr;
+
+    friend class QQStyleKitTheme;
 };
 
 QT_END_NAMESPACE

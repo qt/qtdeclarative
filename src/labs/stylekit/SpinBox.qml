@@ -31,6 +31,7 @@ T.SpinBox {
         hovered: control.hovered || control.down.hovered || control.up.hovered
         pressed: control.down.pressed || control.up.pressed
         palette: control.palette
+        font: control.font
     }
 
     StyleKitReader {
@@ -103,7 +104,7 @@ T.SpinBox {
         z: 2
         text: control.displayText
 
-        font: styleReader.font
+        font: styleReader.effectiveFont
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         color: styleReader.text.color

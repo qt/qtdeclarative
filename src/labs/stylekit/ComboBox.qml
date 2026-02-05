@@ -33,8 +33,8 @@ T.ComboBox {
         hovered: control.hovered || control.pressed
         pressed: control.down
         highlighted: control.highlighted
-        // variations: editable, flat
         palette: control.palette
+        font: control.font
     }
 
     StyleKitLayout {
@@ -89,7 +89,6 @@ T.ComboBox {
     }
 
     contentItem: TextInput {
-        font: styleReader.font
         text: control.editable ? control.editText : control.displayText
         enabled: control.editable
         autoScroll: control.editable
@@ -100,6 +99,7 @@ T.ComboBox {
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         color: styleReader.text.color
+        font: styleReader.effectiveFont
         verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask
         horizontalAlignment: styleReader.text.alignment & Qt.AlignHorizontal_Mask
         padding: styleReader.text.padding

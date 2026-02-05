@@ -25,12 +25,12 @@ T.TextArea {
     bottomPadding: styleReader.bottomPadding
 
     // FIXME: Should work when assigned to control.font directly
-    font.family: styleReader.font.family
-    font.pointSize: styleReader.font.pointSize
-    font.weight: styleReader.font.weight
-    font.italic: styleReader.font.italic
-    font.underline: styleReader.font.underline
-    font.bold: styleReader.font.bold
+    font.family: styleReader.effectiveFont.family
+    font.pointSize: styleReader.effectiveFont.pointSize
+    font.weight: styleReader.effectiveFont.weight
+    font.italic: styleReader.effectiveFont.italic
+    font.underline: styleReader.effectiveFont.underline
+    font.bold: styleReader.effectiveFont.bold
 
     color: styleReader.text.color
     verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask
@@ -58,7 +58,7 @@ T.TextArea {
         height: control.availableHeight
 
         text: control.placeholderText
-        font: control.font
+        font: styleReader.effectiveFont
         color: control.placeholderTextColor
         verticalAlignment: control.verticalAlignment
         horizontalAlignment: control.horizontalAlignment

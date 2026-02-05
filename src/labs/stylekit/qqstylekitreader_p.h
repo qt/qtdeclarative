@@ -40,7 +40,8 @@ class QQStyleKitReader : public QQStyleKitControlProperties
     Q_PROPERTY(bool pressed READ pressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(bool vertical READ vertical WRITE setVertical NOTIFY verticalChanged FINAL)
     Q_PROPERTY(bool highlighted READ highlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
-    Q_PROPERTY(QFont font READ font NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QFont effectiveFont READ effectiveFont NOTIFY effectiveFontChanged FINAL)
     Q_PROPERTY(QQuickPalette *palette READ palette WRITE setPalette NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QQStyleKitControlProperties *global READ global CONSTANT FINAL)
 
@@ -127,6 +128,7 @@ public:
 
     QFont font() const;
     void setFont(const QFont &font);
+    QFont effectiveFont() const;
 
     QQStyleKitControlProperties *global() const;
 
@@ -139,8 +141,6 @@ public:
     static void setTransitionEnabled(bool enabled);
     static bool transitionEnabled();
     static void resetAll();
-
-    void updateFontFromTheme();
 
     static QList<QQStyleKitReader *> s_allReaders;
 
@@ -157,6 +157,7 @@ signals:
     void verticalChanged();
     void highlightedChanged();
     void fontChanged();
+    void effectiveFontChanged();
 
 private slots:
     void onPaletteChanged();
@@ -173,6 +174,7 @@ private:
     void maybeTrackDelegates();
 
     bool rebuildEffectivePalette();
+    bool rebuildEffectiveFont();
 
 private:
     Q_DISABLE_COPY(QQStyleKitReader)
@@ -190,6 +192,9 @@ private:
     QPointer<QQuickPalette> m_palette;
     QPalette m_effectivePalette;
     QFont m_font;
+    QFont m_effectiveFont;
+    bool m_effectiveFontDirty = true;
+    quint64 m_lastTextFontOverridesSignature = 0;
     mutable QQStyleKitPropertyStorage m_storage;
     AlternateState m_alternateState = AlternateState::Alternate1;
     QQSK::State m_state = QQSK::StateFlag::Unspecified;

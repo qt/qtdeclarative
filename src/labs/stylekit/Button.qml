@@ -36,6 +36,7 @@ T.Button {
         hovered: control.hovered || control.pressed
         pressed: control.pressed
         palette: control.palette
+        font: control.font
     }
 
     contentItem: IconLabel {
@@ -44,7 +45,7 @@ T.Button {
         display: control.display
         icon: control.icon
         text: control.text
-        font: styleReader.font // FIXME: should be inherited from control
+        font: styleReader.effectiveFont
         color: styleReader.text.color
         alignment: styleReader.text.alignment
         topPadding: styleReader.text.topPadding

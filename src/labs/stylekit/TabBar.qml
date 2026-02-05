@@ -28,8 +28,8 @@ T.TabBar {
         type: StyleKitReader.TabBar
         enabled: control.enabled
         focused: control.activeFocus
-        palette: control.palette
         hovered: control.hovered
+        palette: control.palette
     }
 
     contentItem: ListView {

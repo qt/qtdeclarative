@@ -13,7 +13,7 @@ QQStyleKitFont::QQStyleKitFont(QObject *parent)
 #define DEFINE_FONT_GETTER(scopeName, scopeEnum) \
     QFont QQStyleKitFont::scopeName() const \
     { \
-        return fontForScope(QQuickTheme::scopeEnum); \
+        return m_fonts[int(QQuickTheme::scopeEnum)]; \
     }
 
 DEFINE_FONT_GETTER(system, System)
@@ -65,17 +65,11 @@ DEFINE_FONT_SETTER(Tumbler, Tumbler, tumblerChanged)
 void QQStyleKitFont::setFontForScope(QQuickTheme::Scope scope, const QFont &font, void (QQStyleKitFont::*signal)())
 {
     const int index = int(scope);
-    if (isSet(scope) && m_local[index] == font)
+    if (isSet(scope) && m_fonts[index] == font)
         return;
 
-    QFont local = font;
-    // TODO: Figure out resolve mask to set here
-
-    m_local[index] = font;
+    m_fonts[index] = font;
     markSet(scope);
-
-    m_effectiveDirty = true;
-
     emit (this->*signal)();
 }
 
@@ -92,103 +86,13 @@ void QQStyleKitFont::setFallbackFont(QQStyleKitFont *fallback)
     if (m_fallback == fallback)
         return;
 
-    if (m_fallback)
-        disconnect(m_fallback, nullptr, this, nullptr);
-
     m_fallback = fallback;
-
-    markEffectiveDirty();
-    ensureEffectiveUpToDate();
-
-    if (m_fallback) {
-        auto makeHandler = [this](void (QQStyleKitFont::*signal)()) {
-            return [this, signal] {
-                markEffectiveDirty();
-                emit (this->*signal)();
-            };
-        };
-        connect(m_fallback, &QQStyleKitFont::systemChanged, this,
-            makeHandler(&QQStyleKitFont::systemChanged));
-        connect(m_fallback, &QQStyleKitFont::buttonChanged, this,
-            makeHandler(&QQStyleKitFont::buttonChanged));
-        connect(m_fallback, &QQStyleKitFont::checkBoxChanged, this,
-            makeHandler(&QQStyleKitFont::checkBoxChanged));
-        connect(m_fallback, &QQStyleKitFont::comboBoxChanged, this,
-            makeHandler(&QQStyleKitFont::comboBoxChanged));
-        connect(m_fallback, &QQStyleKitFont::groupBoxChanged, this,
-            makeHandler(&QQStyleKitFont::groupBoxChanged));
-        connect(m_fallback, &QQStyleKitFont::itemViewChanged, this,
-            makeHandler(&QQStyleKitFont::itemViewChanged));
-        connect(m_fallback, &QQStyleKitFont::labelChanged, this,
-            makeHandler(&QQStyleKitFont::labelChanged));
-        connect(m_fallback, &QQStyleKitFont::listViewChanged, this,
-            makeHandler(&QQStyleKitFont::listViewChanged));
-        connect(m_fallback, &QQStyleKitFont::menuChanged, this,
-            makeHandler(&QQStyleKitFont::menuChanged));
-        connect(m_fallback, &QQStyleKitFont::menuBarChanged, this,
-            makeHandler(&QQStyleKitFont::menuBarChanged));
-        connect(m_fallback, &QQStyleKitFont::radioButtonChanged, this,
-            makeHandler(&QQStyleKitFont::radioButtonChanged));
-        connect(m_fallback, &QQStyleKitFont::spinBoxChanged, this,
-            makeHandler(&QQStyleKitFont::spinBoxChanged));
-        connect(m_fallback, &QQStyleKitFont::switchControlChanged, this,
-            makeHandler(&QQStyleKitFont::switchControlChanged));
-        connect(m_fallback, &QQStyleKitFont::tabBarChanged, this,
-            makeHandler(&QQStyleKitFont::tabBarChanged));
-        connect(m_fallback, &QQStyleKitFont::textAreaChanged, this,
-            makeHandler(&QQStyleKitFont::textAreaChanged));
-        connect(m_fallback, &QQStyleKitFont::textFieldChanged, this,
-            makeHandler(&QQStyleKitFont::textFieldChanged));
-        connect(m_fallback, &QQStyleKitFont::toolBarChanged, this,
-            makeHandler(&QQStyleKitFont::toolBarChanged));
-        connect(m_fallback, &QQStyleKitFont::toolTipChanged, this,
-            makeHandler(&QQStyleKitFont::toolTipChanged));
-        connect(m_fallback, &QQStyleKitFont::tumblerChanged, this,
-            makeHandler(&QQStyleKitFont::tumblerChanged));
-    }
     emit fallbackFontChanged();
 }
 
 QFont QQStyleKitFont::fontForScope(QQuickTheme::Scope scope) const
 {
-    ensureEffectiveUpToDate();
-    return m_effective[int(scope)];
-}
-
-void QQStyleKitFont::ensureEffectiveUpToDate() const
-{
-    if (!m_effectiveDirty)
-        return;
-
-    const int sysIdx = int(QQuickTheme::System);
-
-    {
-        const QFont localSys = isSet(QQuickTheme::System) ? m_local[sysIdx] : QFont();
-        const QFont fbSys = m_fallback ? m_fallback->fontForScope(QQuickTheme::System) : QFont();
-        // TODO: Resolve mask?
-        m_effective[sysIdx] = localSys.resolve(fbSys);
-
-    }
-
-    const QFont systemEff = m_effective[sysIdx];
-    const QFont fallbackSystem = m_fallback ? m_fallback->fontForScope(QQuickTheme::System) : QFont();
-
-    // Scopes: localScope > localSystem > fallbackScope > fallbackSystem
-    for (int i = 0; i < NScopes; ++i) {
-        if (i == sysIdx)
-            continue;
-
-        const QQuickTheme::Scope scope = static_cast<QQuickTheme::Scope>(i);
-        const QFont localRole = isSet(scope) ? m_local[i] : QFont();
-        const QFont fallbackRole = m_fallback ? m_fallback->fontForScope(scope) : QFont();
-
-        QFont fallbackLayer = fallbackRole.resolve(fallbackSystem);
-        QFont base = systemEff.resolve(fallbackLayer);
-        // TODO: Resolve mask?
-        m_effective[i] = localRole.resolve(base);
-    }
-
-    m_effectiveDirty = false;
+    return m_fonts[int(scope)];
 }
 
 QT_END_NAMESPACE

@@ -18,20 +18,36 @@ using namespace Qt::StringLiterals;
 static const QString kAlternate1 = "A1"_L1;
 static const QString kAlternate2 = "A2"_L1;
 
-static QFont resolvedFontWithOverrides(const QQStyleKitReader *reader, const QFont &baseFont)
+static quint64 textFontOverridesSignature(const QQStyleKitTextProperties *t)
 {
-    Q_ASSERT(reader);
-    QFont font = baseFont;
-    const QQStyleKitTextProperties *textProps = reader->global()->text();
-    if (!textProps)
-        return font;
-    if (textProps->isDefined(QQSK::Property::Bold))
-        font.setBold(textProps->styleProperty<bool>(QQSK::Property::Bold));
-    if (textProps->isDefined(QQSK::Property::Italic))
-        font.setItalic(textProps->styleProperty<bool>(QQSK::Property::Italic));
-    if (textProps->isDefined(QQSK::Property::PointSize))
-        font.setPointSizeF(textProps->styleProperty<qreal>(QQSK::Property::PointSize));
-    return font;
+    if (!t)
+        return 0;
+
+    quint64 sig = 0;
+
+    // bit 0: bold defined, bit 1: bold value
+    if (t->isDefined(QQSK::Property::Bold)) {
+        sig |= (quint64(1) << 0);
+        if (t->styleProperty<bool>(QQSK::Property::Bold))
+            sig |= (quint64(1) << 1);
+    }
+    // bit 2: italic defined, bit 3: italic value
+    if (t->isDefined(QQSK::Property::Italic)) {
+        sig |= (quint64(1) << 2);
+        if (t->styleProperty<bool>(QQSK::Property::Italic))
+            sig |= (quint64(1) << 3);
+    }
+    // bit 4: pointSize defined, bits 5..: quantized pointSize
+    if (t->isDefined(QQSK::Property::PointSize)) {
+        sig |= (quint64(1) << 4);
+        const qreal ps = t->styleProperty<qreal>(QQSK::Property::PointSize);
+        // 64-bit signature: 5 bits used, 59 bits available for pointSize
+        constexpr int payloadBits = 64 - 5;
+        const qint64 maxQ = (quint64(1) << payloadBits) - 1;
+        const quint64 q = quint64(qBound<qint64>(0, qRound64(ps * 64.0), maxQ));
+        sig |= (q << 5);
+    }
+    return sig;
 }
 
 QList<QQStyleKitReader *> QQStyleKitReader::s_allReaders;
@@ -268,7 +284,11 @@ void QQStyleKitReader::updateControl()
         Q_UNREACHABLE();
     }
 
-    setFont(resolvedFontWithOverrides(this, style->fontForControlType(this->type())));
+    auto textOverrideSig = textFontOverridesSignature(global()->text());
+    if (m_lastTextFontOverridesSignature != textOverrideSig)
+        m_effectiveFontDirty = true;
+    m_lastTextFontOverridesSignature = textOverrideSig;
+    rebuildEffectiveFont();
 }
 
 void QQStyleKitReader::resetAll()
@@ -277,18 +297,9 @@ void QQStyleKitReader::resetAll()
         reader->m_effectiveVariationsDirty = true;
         reader->clearLocalStorage();
         reader->rebuildEffectivePalette();
+        reader->rebuildEffectiveFont();
         reader->emitChangedForAllStyleProperties();
-        reader->updateFontFromTheme();
     }
-}
-
-void QQStyleKitReader::updateFontFromTheme()
-{
-    const QQStyleKitStyle *style = QQStyleKitStyle::current();
-    if (!style || !style->loaded())
-        return;
-
-    setFont(resolvedFontWithOverrides(this, style->fontForControlType(this->type())));
 }
 
 void QQStyleKitReader::populateLocalStorage()
@@ -571,7 +582,48 @@ void QQStyleKitReader::setFont(const QFont &font)
         return;
 
     m_font = font;
+    m_effectiveFontDirty = true;
     emit fontChanged();
+
+    rebuildEffectiveFont();
+}
+
+QFont QQStyleKitReader::effectiveFont() const
+{
+    return m_effectiveFont;
+}
+
+bool QQStyleKitReader::rebuildEffectiveFont()
+{
+    const QQStyleKitStyle *style = QQStyleKitStyle::current();
+    if (!style || !style->loaded())
+        return false;
+
+    if (!m_effectiveFontDirty)
+        return false;
+
+    // Rebuild font from style and control font
+    // Control font takes precedence over style font
+    QFont mergedFont = style->fontForControlType(this->type());
+    mergedFont = m_font.resolve(mergedFont);
+    mergedFont.setResolveMask(mergedFont.resolveMask() | m_font.resolveMask());
+
+    const QQStyleKitTextProperties *textProps = global()->text();
+    if (textProps) {
+        if (textProps->isDefined(QQSK::Property::Bold))
+            mergedFont.setBold(textProps->styleProperty<bool>(QQSK::Property::Bold));
+        if (textProps->isDefined(QQSK::Property::Italic))
+            mergedFont.setItalic(textProps->styleProperty<bool>(QQSK::Property::Italic));
+        if (textProps->isDefined(QQSK::Property::PointSize))
+            mergedFont.setPointSizeF(textProps->styleProperty<qreal>(QQSK::Property::PointSize));
+    }
+
+    if (m_effectiveFont == mergedFont)
+        return false;
+
+    m_effectiveFont = mergedFont;
+    emit effectiveFontChanged();
+    return true;
 }
 
 QQStyleKitControlProperties *QQStyleKitReader::global() const

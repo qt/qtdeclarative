@@ -32,6 +32,7 @@ T.Switch {
         pressed: control.pressed
         checked: control.checked
         palette: control.palette
+        font: control.font
     }
 
     StyleKitLayout {
@@ -85,7 +86,7 @@ T.Switch {
 
     contentItem: CheckLabel {
         text: control.text
-        font: styleReader.font
+        font: styleReader.effectiveFont
         color: styleReader.text.color
         horizontalAlignment: styleReader.text.alignment & Qt.AlignHorizontal_Mask
         verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask

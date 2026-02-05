@@ -37,17 +37,21 @@ public:
     QQStyleKitStyle *style() const;
 
     QPalette paletteForControlType(QQStyleKitExtendableControlType type) const;
+    QFont fontForControlType(QQStyleKitExtendableControlType type) const;
 
 protected:
     void componentComplete() override;
 
 private:
-    void updateThemePalette();
+    void updateThemePalettes();
+    void updateThemeFonts();
+
     QPalette effectivePaletteForScope(QQuickTheme::Scope scope) const;
 
     bool m_completed = false;
     static int const NScopes = int(QQuickTheme::Tumbler) + 1;
     QPalette m_effectivePalettes[NScopes];
+    QFont m_effectiveFonts[NScopes];
 
     friend class QQStyleKitAttached;
     friend class QQStyleKitStyle;

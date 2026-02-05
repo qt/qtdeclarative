@@ -34,6 +34,7 @@ T.RadioButton {
         hovered: control.hovered
         pressed: control.pressed
         palette: control.palette
+        font: control.font
     }
 
     StyleKitLayout {
@@ -75,7 +76,7 @@ T.RadioButton {
 
     contentItem: CheckLabel {
         text: control.text
-        font: styleReader.font
+        font: styleReader.effectiveFont
         color: styleReader.text.color
         horizontalAlignment: styleReader.text.alignment & Qt.AlignHorizontal_Mask
         verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask

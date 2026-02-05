@@ -36,6 +36,7 @@ T.GroupBox {
         focused: control.activeFocus
         hovered: control.hovered
         palette: control.palette
+        font: control.font
     }
 
     label: Text {
@@ -44,13 +45,13 @@ T.GroupBox {
         rightPadding: styleReader.text.rightPadding
         bottomPadding: styleReader.text.bottomPadding
         topPadding: styleReader.text.topPadding
-        width: control.width
         verticalAlignment: styleReader.text.alignment
         horizontalAlignment: styleReader.text.alignment
-        text: control.title
+        font: styleReader.effectiveFont
         color: styleReader.text.color
+        width: control.width
+        text: control.title
         elide: Text.ElideRight
-        font: styleReader.font
     }
 
     background: BackgroundDelegate {
