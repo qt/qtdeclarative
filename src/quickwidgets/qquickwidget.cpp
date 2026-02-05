@@ -276,6 +276,9 @@ void QQuickWidgetPrivate::handleWindowChange()
     renderControl = new QQuickWidgetRenderControl(q);
     initOffscreenWindow();
 
+    if (oldOffScreenWindow)
+        offscreenWindow->setColor(oldOffScreenWindow->color());
+
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 
