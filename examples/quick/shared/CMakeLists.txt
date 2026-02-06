@@ -6,6 +6,9 @@ set_source_files_properties(Images.qml
         QT_QML_SINGLETON_TYPE true
 )
 
+# this QML module is generated multiple times and therefore would get multiple .qmlls.ini files...
+set(QT_QML_GENERATE_QMLLS_INI OFF)
+
 qt_add_qml_module(${PROJECT_NAME}_shared
     URI shared
     PLUGIN_TARGET ${PROJECT_NAME}_shared
