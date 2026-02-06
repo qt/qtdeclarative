@@ -619,6 +619,14 @@ Heap::Module *ExecutableCompilationUnit::module() const
 
 void ExecutableCompilationUnit::setModule(Heap::Module *module)
 {
+    // We don't necessarily hold any other references to ES modules. So, if the GC
+    // is running right now, we need to mark it. Otherwise it might collect it even
+    // though it's still reachable via the engine's list of compilation units.
+    QV4::WriteBarrier::markCustom(engine, [module](QV4::MarkStack *stack) {
+        if constexpr (QV4::WriteBarrier::isInsertionBarrier) {
+            module->mark(stack);
+        }
+    });
     m_valueOrModule = module;
 }
 
