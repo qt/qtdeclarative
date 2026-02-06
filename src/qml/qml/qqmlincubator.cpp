@@ -9,6 +9,8 @@
 #include "qqmlobjectcreator_p.h"
 #include <private/qqmlcomponent_p.h>
 
+QT_BEGIN_NAMESPACE
+
 void QQmlEnginePrivate::incubate(
         QQmlIncubator &i, const QQmlRefPointer<QQmlContextData> &forContext)
 {
@@ -808,3 +810,4 @@ QQmlIncubator::Status QQmlIncubatorPrivate::calculateStatus() const
         return QQmlIncubator::Null;
 }
 
+QT_END_NAMESPACE
