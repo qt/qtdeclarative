@@ -230,8 +230,9 @@ struct Q_QML_EXPORT Value : public StaticValue
     template<typename T>
     Value &operator=(const Scoped<T> &t);
 };
-Q_STATIC_ASSERT(std::is_trivial_v<Value>);
-Q_STATIC_ASSERT(sizeof(Value) == sizeof(StaticValue));
+static_assert(std::is_trivially_copyable_v<Value>);
+static_assert(std::is_trivially_default_constructible_v<Value>);
+static_assert(sizeof(Value) == sizeof(StaticValue));
 
 template<>
 inline StaticValue &StaticValue::operator=<Value>(const Value &value)

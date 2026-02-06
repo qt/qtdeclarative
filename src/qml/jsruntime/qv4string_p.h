@@ -114,7 +114,8 @@ struct Q_QML_EXPORT String : StringOrSymbol {
 private:
     static void append(const String *data, QChar *ch);
 };
-Q_STATIC_ASSERT(std::is_trivial_v<String>);
+static_assert(std::is_trivially_copyable_v<String>);
+static_assert(std::is_trivially_default_constructible_v<String>);
 
 struct ComplexString : String {
     void init(String *l, String *n);
@@ -127,7 +128,8 @@ struct ComplexString : String {
     };
     int len;
 };
-Q_STATIC_ASSERT(std::is_trivial_v<ComplexString>);
+static_assert(std::is_trivially_copyable_v<ComplexString>);
+static_assert(std::is_trivially_default_constructible_v<ComplexString>);
 
 inline
 int String::length() const {

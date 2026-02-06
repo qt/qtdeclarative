@@ -54,7 +54,8 @@ private:
     Base *ptr;
 };
 typedef Pointer<char *, 0> V4PointerCheck;
-Q_STATIC_ASSERT(std::is_trivial_v<V4PointerCheck>);
+static_assert(std::is_trivially_copyable_v<V4PointerCheck>);
+static_assert(std::is_trivially_default_constructible_v<V4PointerCheck>);
 
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
@@ -127,13 +128,14 @@ struct Q_QML_EXPORT Base {
     Q_ALWAYS_INLINE void _setDestroyed() {}
 #endif
 };
-Q_STATIC_ASSERT(std::is_trivial_v<Base>);
+static_assert(std::is_trivially_copyable_v<Base>);
+static_assert(std::is_trivially_default_constructible_v<Base>);
 // This class needs to consist only of pointer sized members to allow
 // for a size/offset translation when cross-compiling between 32- and
 // 64-bit.
-Q_STATIC_ASSERT(std::is_standard_layout<Base>::value);
-Q_STATIC_ASSERT(offsetof(Base, internalClass) == 0);
-Q_STATIC_ASSERT(sizeof(Base) == QT_POINTER_SIZE);
+static_assert(std::is_standard_layout<Base>::value);
+static_assert(offsetof(Base, internalClass) == 0);
+static_assert(sizeof(Base) == QT_POINTER_SIZE);
 
 inline
 void Base::mark(QV4::MarkStack *markStack)
@@ -218,7 +220,8 @@ private:
     QtSharedPointer::ExternalRefCountData *d;
     T *qObject;
 };
-Q_STATIC_ASSERT(std::is_trivial_v<QV4QPointer<QObject>>);
+static_assert(std::is_trivially_copyable_v<QV4QPointer<QObject>>);
+static_assert(std::is_trivially_default_constructible_v<QV4QPointer<QObject>>);
 #endif
 
 }

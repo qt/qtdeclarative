@@ -74,7 +74,8 @@ struct RegExp : Base {
 
     int captureCount() const { return subPatternCount + 1; }
 };
-Q_STATIC_ASSERT(std::is_trivial_v<RegExp>);
+static_assert(std::is_trivially_copyable_v<RegExp>);
+static_assert(std::is_trivially_default_constructible_v<RegExp>);
 
 }
 

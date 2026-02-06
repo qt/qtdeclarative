@@ -271,7 +271,8 @@ public:
     template<typename ManagedType>
     inline typename ManagedType::Data *allocManaged(std::size_t size, Heap::InternalClass *ic)
     {
-        Q_STATIC_ASSERT(std::is_trivial_v<typename ManagedType::Data>);
+        static_assert(std::is_trivially_copyable_v<typename ManagedType::Data>);
+        static_assert(std::is_trivially_default_constructible_v<typename ManagedType::Data>);
         size = align(size);
         typename ManagedType::Data *d = static_cast<typename ManagedType::Data *>(allocData(size));
         d->internalClass.set(engine, ic);
