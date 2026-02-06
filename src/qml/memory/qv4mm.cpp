@@ -1614,7 +1614,7 @@ void GCStateMachine::transition() {
     if (timeLimit.count() > 0) {
         deadline = QDeadlineTimer(timeLimit);
         bool deadlineExpired = false;
-        while (!(deadlineExpired = deadline.hasExpired()) && state != GCState::Invalid) {
+        do {
             if (state > GCState::InitCallDestroyObjects) {
                 /* initCallDestroyObjects is the last action which drains the mark
                    stack by default. But as our write-barrier might end up putting
@@ -1635,7 +1635,7 @@ void GCStateMachine::transition() {
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             if (stateInfo.breakAfter)
                 break;
-        }
+        } while (!(deadlineExpired = deadline.hasExpired()) && state != GCState::Invalid);
         if (deadlineExpired)
             handleTimeout(state);
         if (state != GCState::Invalid)
