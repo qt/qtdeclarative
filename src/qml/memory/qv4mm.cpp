@@ -1546,23 +1546,28 @@ static GCState executeWithLoggingIfEnabled(GCStateMachine* that, GCStateInfo& st
     return next;
 }
 
+static void redrainDuringSweep(GCStateMachine *that)
+{
+    if (that->state > GCState::InitCallDestroyObjects) {
+        /* initCallDestroyObjects is the last action which drains the mark
+           stack by default. But as our write-barrier might end up putting
+           objects on the markStack which still reference other objects.
+           Especially when we call user code triggered by Component.onDestruction,
+           but also when we run into a timeout.
+           We don't redrain before InitCallDestroyObjects, as that would
+           potentially lead to useless busy-work (e.g., if the last referencs
+           to objects are removed while the mark phase is running)
+        */
+        redrain(that);
+    }
+}
+
 void GCStateMachine::transition() {
     if (timeLimit.count() > 0) {
         deadline = QDeadlineTimer(timeLimit);
         bool deadlineExpired = false;
         do {
-            if (state > GCState::InitCallDestroyObjects) {
-                /* initCallDestroyObjects is the last action which drains the mark
-                   stack by default. But as our write-barrier might end up putting
-                   objects on the markStack which still reference other objects.
-                   Especially when we call user code triggered by Component.onDestruction,
-                   but also when we run into a timeout.
-                   We don't redrain before InitCallDestroyObjects, as that would
-                   potentially lead to useless busy-work (e.g., if the last referencs
-                   to objects are removed while the mark phase is running)
-                */
-                redrain(this);
-            }
+            redrainDuringSweep(this);
             qCDebug(lcGcStateTransitions) << "Preparing to execute the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
@@ -1581,6 +1586,7 @@ void GCStateMachine::transition() {
     } else {
         deadline = QDeadlineTimer::Forever;
         while (state != GCState::Invalid) {
+            redrainDuringSweep(this);
             qCDebug(lcGcStateTransitions) << "Preparing to execute the"
                                           << QMetaEnum::fromType<GCState>().key(state) << "state";
             GCStateInfo& stateInfo = stateInfoMap[int(state)];
