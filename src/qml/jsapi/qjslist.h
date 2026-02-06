@@ -343,7 +343,8 @@ private:
 };
 
 // QJSListForInIterator must not require initialization so that we can jump over it with goto.
-static_assert(std::is_trivial_v<QJSListForInIterator>);
+static_assert(std::is_trivially_copyable_v<QJSListForInIterator>);
+static_assert(std::is_trivially_default_constructible_v<QJSListForInIterator>);
 
 struct QJSListForOfIterator
 {
@@ -362,7 +363,8 @@ private:
 };
 
 // QJSListForOfIterator must not require initialization so that we can jump over it with goto.
-static_assert(std::is_trivial_v<QJSListForOfIterator>);
+static_assert(std::is_trivially_copyable_v<QJSListForOfIterator>);
+static_assert(std::is_trivially_default_constructible_v<QJSListForOfIterator>);
 
 QT_END_NAMESPACE
 

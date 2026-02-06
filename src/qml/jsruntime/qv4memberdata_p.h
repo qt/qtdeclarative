@@ -30,7 +30,8 @@ namespace Heap {
 DECLARE_HEAP_OBJECT(MemberData, Base) {
     DECLARE_MARKOBJECTS(MemberData)
 };
-Q_STATIC_ASSERT(std::is_trivial_v<MemberData>);
+static_assert(std::is_trivially_copyable_v<MemberData>);
+static_assert(std::is_trivially_default_constructible_v<MemberData>);
 
 }
 

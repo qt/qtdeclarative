@@ -277,7 +277,8 @@ const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 
             dptr->_checkIsInitialized(); \
             return dptr; \
         } \
-        Q_STATIC_ASSERT(std::is_trivial_v<QV4::Heap::DataClass>);
+        static_assert(std::is_trivially_copyable_v<QV4::Heap::DataClass>); \
+        static_assert(std::is_trivially_default_constructible_v<QV4::Heap::DataClass>);
 
 #define V4_PROTOTYPE(p) \
     static QV4::Object *defaultPrototype(QV4::ExecutionEngine *e) \

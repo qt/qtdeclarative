@@ -617,7 +617,8 @@ struct StaticValue
 #  error "unsupported pointer size"
 #endif
 };
-Q_STATIC_ASSERT(std::is_trivial_v<StaticValue>);
+static_assert(std::is_trivially_copyable_v<StaticValue>);
+static_assert(std::is_trivially_default_constructible_v<StaticValue>);
 
 struct Encode {
     static constexpr ReturnedValue undefined() {

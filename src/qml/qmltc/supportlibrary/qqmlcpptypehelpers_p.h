@@ -23,7 +23,8 @@
  */
 template<typename T>
 using passByConstRefOrValue =
-        std::conditional_t<((sizeof(T) > 3 * sizeof(void *)) || !std::is_trivial_v<T>), const T &,
+        std::conditional_t<((sizeof(T) > 3 * sizeof(void *)) || !(std::is_trivially_copyable_v<T> && std::is_trivially_default_constructible_v<T>)),
+                           const T &,
                            T>;
 
 #endif // QQMLCPPTYPEHELPERS_P_H

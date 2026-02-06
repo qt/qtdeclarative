@@ -57,12 +57,13 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     quint8 padding_[4];
 #endif
 };
-Q_STATIC_ASSERT(std::is_trivial_v<ExecutionContext>);
-Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
+static_assert(std::is_trivially_copyable_v<ExecutionContext>);
+static_assert(std::is_trivially_default_constructible_v<ExecutionContext>);
+static_assert(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
 
-Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, outer) == 0);
-Q_STATIC_ASSERT(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
+static_assert(std::is_standard_layout<ExecutionContextData>::value);
+static_assert(offsetof(ExecutionContextData, outer) == 0);
+static_assert(offsetof(ExecutionContextData, activation) == offsetof(ExecutionContextData, outer) + QT_POINTER_SIZE);
 
 #define CallContextMembers(class, Member) \
     Member(class, Pointer, JavaScriptFunctionObject *, function) \
@@ -90,7 +91,8 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
             locals.values[i] = Value::emptyValue();
     }
 };
-Q_STATIC_ASSERT(std::is_trivial_v<CallContext>);
+Q_STATIC_ASSERT(std::is_trivially_copyable_v<CallContext>);
+Q_STATIC_ASSERT(std::is_trivially_default_constructible_v<CallContext>);
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
 Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 //### The following size check fails on Win8. With the ValueArray at the end of the
