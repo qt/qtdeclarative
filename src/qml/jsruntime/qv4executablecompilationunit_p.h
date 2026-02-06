@@ -189,6 +189,10 @@ public:
     void setModule(Heap::Module *module);
 
     ReturnedValue value() const { return m_valueOrModule.asReturnedValue(); }
+
+    // Non-ES script values are held in the context's importedScripts array.
+    // That one uses the generic write barrier we have for JavaScript arrays.
+    // We don't need to markCustom() here.
     void setValue(const QV4::Value &value) { m_valueOrModule = value; }
 
     const CompiledData::Unit *unitData() const { return m_compilationUnit->data; }
