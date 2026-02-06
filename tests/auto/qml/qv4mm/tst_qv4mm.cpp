@@ -72,6 +72,7 @@ private slots:
 
     void partitionGrowingContainer();
     void transitionWithExpiredDeadline();
+    void redrainDuringSweepWhenRunningToCompletion();
 };
 
 tst_qv4mm::tst_qv4mm()
@@ -1419,6 +1420,41 @@ void tst_qv4mm::transitionWithExpiredDeadline()
         // At least one step must have executed. That creates the mark stack.
         QVERIFY(mm->m_markStack);
     }
+}
+
+void tst_qv4mm::redrainDuringSweepWhenRunningToCompletion()
+{
+    // When running GC to completion (timeLimit == 0), the markStack should be
+    // drained before each state (via redrainDuringSweep).
+
+    QV4::ExecutionEngine engine;
+    auto *mm = engine.memoryManager;
+    auto *sm = mm->gcStateMachine.get();
+
+    QV4::Scope scope(&engine);
+
+    // Run GC up to HandleQObjectWrappers (after InitCallDestroyObjects)
+    mm->gcBlocked = QV4::MemoryManager::NormalBlocked;
+    sm->reset();
+    while (sm->state != QV4::GCState::Invalid
+           && sm->state < QV4::GCState::HandleQObjectWrappers) {
+        QV4::GCStateInfo &stateInfo = sm->stateInfoMap[int(sm->state)];
+        sm->state = stateInfo.execute(sm, sm->stateData);
+    }
+    QCOMPARE(sm->state, QV4::GCState::HandleQObjectWrappers);
+    QVERIFY(mm->m_markStack);
+
+    QV4::ScopedObject referenced(scope, engine.newObject());
+    QVERIFY(!referenced->heapObject()->isMarked());
+
+    sm->timeLimit = std::chrono::microseconds(0);
+    sm->transition();
+
+    QCOMPARE(sm->state, QV4::GCState::Invalid);
+    mm->gcBlocked = QV4::MemoryManager::Unblocked;
+
+    // The referenced object has to survive the GC completion because it's on the stack.
+    QVERIFY(referenced->heapObject()->inUse());
 }
 
 QTEST_MAIN(tst_qv4mm)
