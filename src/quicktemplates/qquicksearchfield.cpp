@@ -191,6 +191,22 @@ QT_BEGIN_NAMESPACE
     \sa searchTriggered()
  */
 
+/*!
+    \qmlsignal void QtQuick.Controls::SearchField::searchButtonPressed()
+
+    This signal is emitted when the search button is pressed.
+
+    \sa clearButtonPressed()
+*/
+
+/*!
+    \qmlsignal void QtQuick.Controls::SearchField::clearButtonPressed()
+
+    This signal is emitted when the clear button is pressed.
+
+    \sa searchButtonPressed()
+*/
+
 namespace {
     enum Activation { NoActivate, Activate };
     enum Highlighting { NoHighlight, Highlight };
