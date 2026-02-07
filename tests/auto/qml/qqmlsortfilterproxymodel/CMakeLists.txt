@@ -27,8 +27,6 @@ qt_internal_add_test(tst_qqmlsortfilterproxymodel
         Qt::Quick
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
-        Qt::LabsQmlModels
-        Qt::LabsQmlModelsPrivate
     TESTDATA ${test_data}
 )
 

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick
-import Qt.labs.qmlmodels
+import QtQml.Models
 import Test
 
 ListView {

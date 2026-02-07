@@ -1,5 +1,4 @@
 import QtQuick
-import Qt.labs.qmlmodels
 import QtQml.Models
 
 Item {
