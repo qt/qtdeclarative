@@ -379,7 +379,7 @@ QSGMaterialType *QSGCurveFillMaterial::type() const
     Q_ASSERT((index & ~3) == 0); // Only two first bits for gradient type
 
     if (node()->gradientType() == QGradient::NoGradient && node()->fillTextureProvider() != nullptr)
-        index = 5;
+        index = 4;
 
     return &type[index];
 }
