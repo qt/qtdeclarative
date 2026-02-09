@@ -16,12 +16,14 @@ T.ApplicationWindow {
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
 
+    color: styleReader.background.color
+
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
         type: StyleKitReader.ApplicationWindow
         palette: control.palette
     }
-
-    color: styleReader.background.color
 }

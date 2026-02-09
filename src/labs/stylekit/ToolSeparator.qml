@@ -21,6 +21,8 @@ T.ToolSeparator {
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
 
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader

@@ -27,6 +27,8 @@ T.ItemDelegate {
     icon.height: 16
     icon.color: styleReader.text.color
 
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
@@ -38,7 +40,6 @@ T.ItemDelegate {
         pressed: control.pressed
         highlighted: control.highlighted
         palette: control.palette
-        font: control.font
     }
 
     contentItem: IconLabel {
@@ -47,7 +48,7 @@ T.ItemDelegate {
         display: control.display
         icon: control.icon
         text: control.text
-        font: styleReader.effectiveFont
+        font: control.font
         color: styleReader.text.color
         alignment: styleReader.text.alignment
         topPadding: styleReader.text.topPadding

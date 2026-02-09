@@ -22,6 +22,8 @@ T.TabBar {
     bottomPadding: styleReader.bottomPadding
     spacing: styleReader.spacing
 
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader

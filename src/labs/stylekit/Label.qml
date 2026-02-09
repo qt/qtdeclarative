@@ -15,6 +15,11 @@ T.Label {
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
 
+    font: styleReader.font
+
+    color: styleReader.text.color
+    linkColor: control.palette.link
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
@@ -23,17 +28,6 @@ T.Label {
         focused: control.activeFocus
         palette: control.palette
     }
-
-    // FIXME: Should work when assigned to control.font directly
-    font.family: styleReader.effectiveFont.family
-    font.pointSize: styleReader.effectiveFont.pointSize
-    font.weight: styleReader.effectiveFont.weight
-    font.italic: styleReader.effectiveFont.italic
-    font.underline: styleReader.effectiveFont.underline
-    font.bold: styleReader.effectiveFont.bold
-
-    color: styleReader.text.color
-    linkColor: control.palette.link
 
     background: BackgroundDelegate {
         parentControl: control

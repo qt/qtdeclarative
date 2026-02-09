@@ -24,6 +24,8 @@ T.ComboBox {
 
     spacing: styleReader.spacing
 
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
@@ -34,7 +36,6 @@ T.ComboBox {
         pressed: control.down
         highlighted: control.highlighted
         palette: control.palette
-        font: control.font
     }
 
     StyleKitLayout {
@@ -90,6 +91,7 @@ T.ComboBox {
 
     contentItem: TextInput {
         text: control.editable ? control.editText : control.displayText
+        font: control.font
         enabled: control.editable
         autoScroll: control.editable
         readOnly: control.down
@@ -99,7 +101,6 @@ T.ComboBox {
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText
         color: styleReader.text.color
-        font: styleReader.effectiveFont
         verticalAlignment: styleReader.text.alignment & Qt.AlignVertical_Mask
         horizontalAlignment: styleReader.text.alignment & Qt.AlignHorizontal_Mask
         padding: styleReader.text.padding

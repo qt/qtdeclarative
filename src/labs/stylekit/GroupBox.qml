@@ -28,6 +28,8 @@ T.GroupBox {
     rightInset: styleReader.background.rightMargin
     leftInset: styleReader.background.leftMargin
 
+    font: styleReader.font
+
     StyleKitControl.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
@@ -36,7 +38,6 @@ T.GroupBox {
         focused: control.activeFocus
         hovered: control.hovered
         palette: control.palette
-        font: control.font
     }
 
     label: Text {
@@ -47,8 +48,8 @@ T.GroupBox {
         topPadding: styleReader.text.topPadding
         verticalAlignment: styleReader.text.alignment
         horizontalAlignment: styleReader.text.alignment
-        font: styleReader.effectiveFont
         color: styleReader.text.color
+        font: control.font
         width: control.width
         text: control.title
         elide: Text.ElideRight

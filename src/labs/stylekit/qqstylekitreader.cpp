@@ -286,7 +286,7 @@ void QQStyleKitReader::updateControl()
 
     auto textOverrideSig = textFontOverridesSignature(global()->text());
     if (m_lastTextFontOverridesSignature != textOverrideSig)
-        m_effectiveFontDirty = true;
+        m_fontDirty = true;
     m_lastTextFontOverridesSignature = textOverrideSig;
     rebuildEffectiveFont();
 }
@@ -295,6 +295,7 @@ void QQStyleKitReader::resetAll()
 {
     for (QQStyleKitReader *reader : s_allReaders) {
         reader->m_effectiveVariationsDirty = true;
+        reader->m_fontDirty = true;
         reader->clearLocalStorage();
         reader->rebuildEffectivePalette();
         reader->rebuildEffectiveFont();
@@ -576,53 +577,31 @@ QFont QQStyleKitReader::font() const
     return m_font;
 }
 
-void QQStyleKitReader::setFont(const QFont &font)
-{
-    if (m_font == font)
-        return;
-
-    m_font = font;
-    m_effectiveFontDirty = true;
-    emit fontChanged();
-
-    rebuildEffectiveFont();
-}
-
-QFont QQStyleKitReader::effectiveFont() const
-{
-    return m_effectiveFont;
-}
-
 bool QQStyleKitReader::rebuildEffectiveFont()
 {
     const QQStyleKitStyle *style = QQStyleKitStyle::current();
     if (!style || !style->loaded())
         return false;
 
-    if (!m_effectiveFontDirty)
+    if (!m_fontDirty)
         return false;
 
-    // Rebuild font from style and control font
-    // Control font takes precedence over style font
-    QFont mergedFont = style->fontForControlType(this->type());
-    mergedFont = m_font.resolve(mergedFont);
-    mergedFont.setResolveMask(mergedFont.resolveMask() | m_font.resolveMask());
-
+    QFont font = style->fontForControlType(this->type());
     const QQStyleKitTextProperties *textProps = global()->text();
     if (textProps) {
         if (textProps->isDefined(QQSK::Property::Bold))
-            mergedFont.setBold(textProps->styleProperty<bool>(QQSK::Property::Bold));
+            font.setBold(textProps->bold());
         if (textProps->isDefined(QQSK::Property::Italic))
-            mergedFont.setItalic(textProps->styleProperty<bool>(QQSK::Property::Italic));
+            font.setItalic(textProps->italic());
         if (textProps->isDefined(QQSK::Property::PointSize))
-            mergedFont.setPointSizeF(textProps->styleProperty<qreal>(QQSK::Property::PointSize));
+            font.setPointSizeF(textProps->pointSize());
     }
 
-    if (m_effectiveFont == mergedFont)
+    if (m_font == font)
         return false;
 
-    m_effectiveFont = mergedFont;
-    emit effectiveFontChanged();
+    m_font = font;
+    emit fontChanged();
     return true;
 }
 
