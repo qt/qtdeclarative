@@ -119,9 +119,7 @@ bool gcDone(const QV4::ExecutionEngine *engine) {
 
 void gc(QV4::ExecutionEngine &engine, GCFlags flags)
 {
-    engine.memoryManager->runGC();
-    while (!gcDone(&engine))
-        engine.memoryManager->gcStateMachine->step();
+    engine.memoryManager->runFullGC();
     if (int(GCFlags::DontSendPostedEvents) & int(flags))
         return;
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);

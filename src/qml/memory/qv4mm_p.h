@@ -391,7 +391,7 @@ public:
 
     void dumpStats() const;
 
-    size_t getUsedMem() const;
+    size_t getRegularItemsMem() const;
     size_t getAllocatedMem() const;
     size_t getLargeItemsMem() const;
 
@@ -495,18 +495,33 @@ public:
     Blockness gcBlocked = Unblocked;
     bool aggressiveGC = false;
     bool crossValidateIncrementalGC = false;
-    bool gcStats = false;
-    bool gcCollectorStats = false;
 
     int allocationCount = 0;
     size_t lastAllocRequestedSlots = 0;
 
-    struct {
-        size_t maxReservedMem = 0;
+    struct Statistics {
         size_t maxAllocatedMem = 0;
-        size_t maxUsedMem = 0;
+        size_t maxUsedBeforeGC = 0;
+        size_t maxUsedAfterGC = 0;
         uint allocations[BlockAllocator::NumBins];
-    } statistics;
+    };
+
+    struct CollectorStatistics
+    {
+        qint64 gcTime = 0;
+        size_t oldUnmanagedSize = 0;
+        size_t regularItemsBefore = 0;
+        size_t largeItemsBefore = 0;
+        size_t oldChunks = 0;
+        bool triggeredByUnmanagedHeap = false;
+
+        void start(MemoryManager *mm);
+        void step(MemoryManager *mm);
+        void end(MemoryManager *mm);
+    };
+
+    std::unique_ptr<Statistics> statistics;
+    std::unique_ptr<CollectorStatistics> collectorStatistics;
 };
 
 /*!
