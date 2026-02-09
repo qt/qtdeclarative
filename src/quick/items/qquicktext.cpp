@@ -1584,10 +1584,7 @@ QQuickText::~QQuickText()
 
     Sets the family name of the font.
 
-    The family name is case insensitive and may optionally include a foundry
-    name, for example "Helvetica [Cronyx]".
-    If the family is available from more than one foundry and the foundry isn't specified, an arbitrary foundry is chosen.
-    If the family isn't available a family will be set using the font matching algorithm.
+    \include qmltypereference.qdoc qml-font-family
 */
 
 /*!
@@ -1596,8 +1593,7 @@ QQuickText::~QQuickText()
 
     Sets the style name of the font.
 
-    The style name is case insensitive. If set, the font will be matched against style name instead
-    of the font properties \l font.weight, \l font.bold and \l font.italic.
+    \include qmltypereference.qdoc qml-font-style-name
 */
 
 /*!
@@ -1609,22 +1605,7 @@ QQuickText::~QQuickText()
 /*!
     \qmlproperty int QtQuick::Text::font.weight
 
-    The requested weight of the font. The weight requested must be an integer
-    between 1 and 1000, or one of the predefined values:
-
-    \value Font.Thin        100
-    \value Font.ExtraLight  200
-    \value Font.Light       300
-    \value Font.Normal      400 (default)
-    \value Font.Medium      500
-    \value Font.DemiBold    600
-    \value Font.Bold        700
-    \value Font.ExtraBold   800
-    \value Font.Black       900
-
-    \qml
-    Text { text: "Hello"; font.weight: Font.DemiBold }
-    \endqml
+    \include qmltypereference.qdoc qml-font-weight
 */
 
 /*!
@@ -1665,8 +1646,7 @@ QQuickText::~QQuickText()
 
     Sets the letter spacing for the font.
 
-    Letter spacing changes the default spacing between individual letters in the font.
-    A positive value increases the letter spacing by the corresponding pixels; a negative value decreases the spacing.
+    \include qmltypereference.qdoc qml-font-letter-spacing
 */
 
 /*!
@@ -1674,9 +1654,7 @@ QQuickText::~QQuickText()
 
     Sets the word spacing for the font.
 
-    Word spacing changes the default spacing between individual words.
-    A positive value increases the word spacing by a corresponding amount of pixels,
-    while a negative value decreases the inter-word spacing accordingly.
+    \include qmltypereference.qdoc qml-font-word-spacing
 */
 
 /*!
@@ -1684,122 +1662,37 @@ QQuickText::~QQuickText()
 
     Sets the capitalization for the text.
 
-    \value Font.MixedCase       the normal case: no capitalization change is applied
-    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
-    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
-    \value Font.SmallCaps       alters the text to be rendered in small-caps type
-    \value Font.Capitalize      alters the text to be rendered with the first character of
-                                each word as an uppercase character
-
-    \qml
-    Text { text: "Hello"; font.capitalization: Font.AllLowercase }
-    \endqml
+    \include qmltypereference.qdoc qml-font-capitalization
 */
 
 /*!
     \qmlproperty enumeration QtQuick::Text::font.hintingPreference
     \since 5.8
 
-    Sets the preferred hinting on the text. This is a hint to the underlying text rendering system
-    to use a certain level of hinting, and has varying support across platforms. See the table in
-    the documentation for QFont::HintingPreference for more details.
+    Sets the preferred hinting on the text.
 
-    \note This property only has an effect when used together with render type Text.NativeRendering.
-
-    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting         If possible, render text without hinting the outlines
-           of the glyphs. The text layout will be typographically accurate, using the same metrics
-           as are used, for example, when printing.
-    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
-           but align glyphs to the pixel grid in the vertical direction. The text will appear
-           crisper on displays where the density is too low to give an accurate rendering
-           of the glyphs. But since the horizontal metrics of the glyphs are unhinted, the text's
-           layout will be scalable to higher density devices (such as printers) without impacting
-           details such as line breaks.
-    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and
-           vertical directions. The text will be altered to optimize legibility on the target
-           device, but since the metrics will depend on the target size of the text, the positions
-           of glyphs, line breaks, and other typographical detail will not scale, meaning that a
-           text layout may look different on devices with different pixel densities.
-
-    \qml
-    Text { text: "Hello"; renderType: Text.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
-    \endqml
+    \include qmltypereference.qdoc qml-font-hinting-preference
 */
 
 /*!
     \qmlproperty bool QtQuick::Text::font.kerning
     \since 5.10
 
-    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
-    improve performance when creating or changing the text, at the expense of some cosmetic
-    features. The default value is true.
-
-    \qml
-    Text { text: "OATS FLAVOUR WAY"; font.kerning: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-kerning
 */
 
 /*!
     \qmlproperty bool QtQuick::Text::font.preferShaping
     \since 5.10
 
-    Sometimes, a font will apply complex rules to a set of characters in order to
-    display them correctly. In some writing systems, such as Brahmic scripts, this is
-    required in order for the text to be legible, but in for example Latin script, it is merely
-    a cosmetic feature. Setting the \c preferShaping property to false will disable all
-    such features when they are not required, which will improve performance in most cases.
-
-    The default value is true.
-
-    \qml
-    Text { text: "Some text"; font.preferShaping: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-prefer-shaping
 */
 
 /*!
     \qmlproperty object QtQuick::Text::font.variableAxes
     \since 6.7
 
-//! [qml-font-variable-axes]
-    Applies floating point values to variable axes in variable fonts.
-
-    Variable fonts provide a way to store multiple variations (with different weights, widths
-    or styles) in the same font file. The variations are given as floating point values for
-    a pre-defined set of parameters, called "variable axes". Specific instances are typically
-    given names by the font designer, and, in Qt, these can be selected using setStyleName()
-    just like traditional sub-families.
-
-    In some cases, it is also useful to provide arbitrary values for the different axes. For
-    instance, if a font has a Regular and Bold sub-family, you may want a weight in-between these.
-    You could then manually request this by supplying a custom value for the "wght" axis in the
-    font.
-
-    \qml
-        Text {
-            text: "Foobar"
-            font.family: "MyVariableFont"
-            font.variableAxes: { "wght": (Font.Normal + Font.Bold) / 2.0 }
-        }
-    \endqml
-
-    If the "wght" axis is supported by the font and the given value is within its defined range,
-    a font corresponding to the weight 550.0 will be provided.
-
-    There are a few standard axes than many fonts provide, such as "wght" (weight), "wdth" (width),
-    "ital" (italic) and "opsz" (optical size). They each have indivdual ranges defined in the font
-    itself. For instance, "wght" may span from 100 to 900 (QFont::Thin to QFont::Black) whereas
-    "ital" can span from 0 to 1 (from not italic to fully italic).
-
-    A font may also choose to define custom axes; the only limitation is that the name has to
-    meet the requirements for a QFont::Tag (sequence of four latin-1 characters.)
-
-    By default, no variable axes are set.
-
-    \note On Windows, variable axes are not supported if the optional GDI font backend is in use.
-
-    \sa QFont::setVariableAxis()
-//! [qml-font-variable-axes]
+    \include qmltypereference.qdoc qml-font-variable-axes
 */
 
 
@@ -1807,113 +1700,21 @@ QQuickText::~QQuickText()
     \qmlproperty object QtQuick::Text::font.features
     \since 6.6
 
-//! [qml-font-features]
-    Applies integer values to specific OpenType features when shaping the text based on the contents
-    in \a features. This provides advanced access to the font shaping process, and can be used
-    to support font features that are otherwise not covered in the API.
-
-    The font features are represented by a map from four-letter tags to integer values. This integer
-    value passed along with the tag in most cases represents a boolean value: A zero value means the
-    feature is disabled, and a non-zero value means it is enabled. For certain font features,
-    however, it may have other interpretations. For example, when applied to the \c salt feature, the
-    value is an index that specifies the stylistic alternative to use.
-
-    For example, the \c frac font feature will convert diagonal fractions separated with a slash
-    (such as \c 1/2) with a different representation. Typically this will involve baking the full
-    fraction into a single character width (such as \c ½).
-
-    If a font supports the \c frac feature, then it can be enabled in the shaper as in the following
-    code:
-
-    \qml
-    Text {
-        text: "One divided by two is 1/2"
-        font.family: "MyFractionFont"
-        font.features: { "frac": 1 }
-    }
-    \endqml
-
-    Multiple features can be assigned values in the same mapping. For instance,
-    if you would like to also disable kerning for the font, you can explicitly
-    disable this as follows:
-
-    \qml
-    Text {
-        text: "One divided by two is 1/2"
-        font.family: "MyFractionFont"
-        font.features: { "frac": 1, "kern": 0 }
-    }
-    \endqml
-
-    You can also collect the font properties in an object:
-
-    \qml
-    Text {
-        text: "One divided by two is 1/2"
-        font: {
-            family: "MyFractionFont"
-            features: { "frac": 1, "kern": 0 }
-        }
-    }
-    \endqml
-
-    \note By default, Qt will enable and disable certain font features based on other font
-    properties. In particular, the \c kern feature will be enabled/disabled depending on the
-    \l font.kerning property of the QFont. In addition, all ligature features (\c liga, \c clig,
-    \c dlig, \c hlig) will be disabled if a \l font.letterSpacing is set, but only for writing
-    systems where the use of ligature is cosmetic. For writing systems where ligatures are required,
-    the features will remain in their default state. The values set using \c font.features will
-    override the default behavior. If, for instance, \c{"kern"} is set to 1, then kerning will
-    always be enabled, regardless of whether the \l font.kerning property is set to false. Similarly,
-    if it is set to \c 0, it will always be disabled.
-
-    \sa QFont::setFeature()
-//! [qml-font-features]
+    \include qmltypereference.qdoc qml-font-features
 */
 
 /*!
     \qmlproperty bool QtQuick::Text::font.contextFontMerging
     \since 6.8
 
-//! [qml-font-context-font-merging]
-    If the selected font does not contain a certain character, Qt automatically chooses a
-    similar-looking fallback font that contains the character. By default this is done on a
-    character-by-character basis.
-
-    This means that in certain uncommon cases, many different fonts may be used to represent one
-    string of text even if it's in the same script. Setting \c contextFontMerging to true will try
-    finding the fallback font that matches the largest subset of the input string instead. This
-    will be more expensive for strings where missing glyphs occur, but may give more consistent
-    results. By default, \c contextFontMerging is \c{false}.
-
-    \sa QFont::StyleStrategy
-//! [qml-font-context-font-merging]
+    \include qmltypereference.qdoc qml-font-context-font-merging
 */
 
 /*!
     \qmlproperty bool QtQuick::Text::font.preferTypoLineMetrics
     \since 6.8
 
-//! [qml-font-prefer-typo-line-metrics] For compatibility reasons, OpenType fonts contain two
-    competing sets of the vertical line metrics that provide the \l{QFontMetricsF::ascent()}{ascent},
-    \l{QFontMetricsF::descent()}{descent} and \l{QFontMetricsF::leading()}{leading} of the font. These
-    are often referred to as the
-    \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#uswinascent}{win} (Windows)
-    metrics and the \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#sta}{typo}
-    (typographical) metrics. While the specification recommends using the \c typo metrics for line
-    spacing, many applications prefer the \c win metrics unless the \c{USE_TYPO_METRICS} flag is set in
-    the \l{https://learn.microsoft.com/en-us/typography/opentype/spec/os2#fsselection}{fsSelection}
-    field of the font. For backwards-compatibility reasons, this is also the case for Qt applications.
-    This is not an issue for fonts that set the \c{USE_TYPO_METRICS} flag to indicate that the \c{typo}
-    metrics are valid, nor for fonts where the \c{win} metrics and \c{typo} metrics match up. However,
-    for certain fonts the \c{win} metrics may be larger than the preferable line spacing and the
-    \c{USE_TYPO_METRICS} flag may be unset by mistake. For such fonts, setting
-    \c{font.preferTypoLineMetrics} may give superior results.
-
-    By default, \c preferTypoLineMetrics is \c{false}.
-
-    \sa QFont::StyleStrategy
-//! [qml-font-prefer-typo-line-metrics]
+    \include qmltypereference.qdoc qml-font-prefer-typo-line-metrics
 */
 
 

@@ -3173,9 +3173,7 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     Sets the family name of the font.
 
-    The family name is case insensitive and may optionally include a foundry name, e.g. "Helvetica [Cronyx]".
-    If the family is available from more than one foundry and the foundry isn't specified, an arbitrary foundry is chosen.
-    If the family isn't available a family will be set using the font matching algorithm.
+    \include qmltypereference.qdoc qml-font-family
 */
 
 /*!
@@ -3253,8 +3251,7 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     Sets the letter spacing for the font.
 
-    Letter spacing changes the default spacing between individual letters in the font.
-    A positive value increases the letter spacing by the corresponding pixels; a negative value decreases the spacing.
+   \include qmltypereference.qdoc qml-font-letter-spacing
 */
 
 /*!
@@ -3262,9 +3259,7 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     Sets the word spacing for the font.
 
-    Word spacing changes the default spacing between individual words.
-    A positive value increases the word spacing by a corresponding amount of pixels,
-    while a negative value decreases the inter-word spacing accordingly.
+    \include qmltypereference.qdoc qml-font-word-spacing
 */
 
 /*!
@@ -3272,72 +3267,47 @@ void QQuickPathMultiline::addToPath(QPainterPath &path, const QQuickPathData &)
 
     Sets the capitalization for the text.
 
-    \value Font.MixedCase       no capitalization change is applied
-    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
-    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
-    \value Font.SmallCaps       alters the text to be rendered in small-caps type
-    \value Font.Capitalize      alters the text to be rendered with the first character of
-                                each word as an uppercase character
-
-    \qml
-    PathText { text: "Hello"; font.capitalization: Font.AllLowercase }
-    \endqml
+    \include qmltypereference.qdoc qml-font-capitalization
 */
 
 /*!
     \qmlproperty bool QtQuick::PathText::font.kerning
 
-    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
-    improve performance when creating or changing the text, at the expense of some cosmetic
-    features. The default value is true.
-
-    \qml
-    PathText { text: "OATS FLAVOUR WAY"; font.kerning: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-kerning
 */
 
 /*!
     \qmlproperty bool QtQuick::PathText::font.preferShaping
 
-    Sometimes, a font will apply complex rules to a set of characters in order to
-    display them correctly. In some writing systems, such as Brahmic scripts, this is
-    required in order for the text to be legible, but in e.g. Latin script, it is merely
-    a cosmetic feature. Setting the \c preferShaping property to false will disable all
-    such features when they are not required, which will improve performance in most cases.
-
-    The default value is true.
-
-    \qml
-    PathText { text: "Some text"; font.preferShaping: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-prefer-shaping
 */
 
 /*!
     \qmlproperty object QtQuick::PathText::font.variableAxes
     \since 6.7
 
-    \include qquicktext.cpp qml-font-variable-axes
+    \include qmltypereference.qdoc qml-font-variable-axes
 */
 
 /*!
     \qmlproperty object QtQuick::PathText::font.features
     \since 6.6
 
-    \include qquicktext.cpp qml-font-features
+    \include qmltypereference.qdoc qml-font-features
 */
 
 /*!
     \qmlproperty bool QtQuick::PathText::font.contextFontMerging
     \since 6.8
 
-    \include qquicktext.cpp qml-font-context-font-merging
+    \include qmltypereference.qdoc qml-font-context-font-merging
 */
 
 /*!
     \qmlproperty bool QtQuick::PathText::font.preferTypoLineMetrics
     \since 6.8
 
-    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
+    \include qmltypereference.qdoc qml-font-prefer-typo-line-metrics
 */
 void QQuickPathText::updatePath() const
 {

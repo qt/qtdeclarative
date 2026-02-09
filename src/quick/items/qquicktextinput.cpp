@@ -231,9 +231,7 @@ QString QQuickTextInputPrivate::realText() const
 
     Sets the family name of the font.
 
-    The family name is case insensitive and may optionally include a foundry name, e.g. "Helvetica [Cronyx]".
-    If the family is available from more than one foundry and the foundry isn't specified, an arbitrary foundry is chosen.
-    If the family isn't available a family will be set using the font matching algorithm.
+    \include qmltypereference.qdoc qml-font-family
 */
 
 /*!
@@ -255,22 +253,7 @@ QString QQuickTextInputPrivate::realText() const
 /*!
     \qmlproperty int QtQuick::TextInput::font.weight
 
-    The requested weight of the font. The weight requested must be an integer
-    between 1 and 1000, or one of the predefined values:
-
-    \value Font.Thin        100
-    \value Font.ExtraLight  200
-    \value Font.Light       300
-    \value Font.Normal      400 (default)
-    \value Font.Medium      500
-    \value Font.DemiBold    600
-    \value Font.Bold        700
-    \value Font.ExtraBold   800
-    \value Font.Black       900
-
-    \qml
-    TextInput { text: "Hello"; font.weight: Font.DemiBold }
-    \endqml
+    \include qmltypereference.qdoc qml-font-weight
 */
 
 /*!
@@ -311,8 +294,7 @@ QString QQuickTextInputPrivate::realText() const
 
     Sets the letter spacing for the font.
 
-    Letter spacing changes the default spacing between individual letters in the font.
-    A positive value increases the letter spacing by the corresponding pixels; a negative value decreases the spacing.
+    \include qmltypereference.qdoc qml-font-letter-spacing
 */
 
 /*!
@@ -320,9 +302,7 @@ QString QQuickTextInputPrivate::realText() const
 
     Sets the word spacing for the font.
 
-    Word spacing changes the default spacing between individual words.
-    A positive value increases the word spacing by a corresponding amount of pixels,
-    while a negative value decreases the inter-word spacing accordingly.
+    \include qmltypereference.qdoc qml-font-word-spacing
 */
 
 /*!
@@ -330,105 +310,58 @@ QString QQuickTextInputPrivate::realText() const
 
     Sets the capitalization for the text.
 
-    \value Font.MixedCase       the normal case: no capitalization change is applied
-    \value Font.AllUppercase    alters the text to be rendered in all uppercase type
-    \value Font.AllLowercase    alters the text to be rendered in all lowercase type
-    \value Font.SmallCaps       alters the text to be rendered in small-caps type
-    \value Font.Capitalize      alters the text to be rendered with the first character of
-                                each word as an uppercase character
-
-    \qml
-    TextInput { text: "Hello"; font.capitalization: Font.AllLowercase }
-    \endqml
+    \include qmltypereference.qdoc qml-font-capitalization
 */
 
 /*!
     \qmlproperty enumeration QtQuick::TextInput::font.hintingPreference
     \since 5.8
 
-    Sets the preferred hinting on the text. This is a hint to the underlying text rendering system
-    to use a certain level of hinting, and has varying support across platforms. See the table in
-    the documentation for QFont::HintingPreference for more details.
+    Sets the preferred hinting on the text.
 
-    \note This property only has an effect when used together with render type TextInput.NativeRendering.
-
-    \value Font.PreferDefaultHinting    Use the default hinting level for the target platform.
-    \value Font.PreferNoHinting         If possible, render text without hinting the outlines
-           of the glyphs. The text layout will be typographically accurate, using the same metrics
-           as are used e.g. when printing.
-    \value Font.PreferVerticalHinting   If possible, render text with no horizontal hinting,
-           but align glyphs to the pixel grid in the vertical direction. The text will appear
-           crisper on displays where the density is too low to give an accurate rendering
-           of the glyphs. But since the horizontal metrics of the glyphs are unhinted, the text's
-           layout will be scalable to higher density devices (such as printers) without impacting
-           details such as line breaks.
-    \value Font.PreferFullHinting       If possible, render text with hinting in both horizontal and
-           vertical directions. The text will be altered to optimize legibility on the target
-           device, but since the metrics will depend on the target size of the text, the positions
-           of glyphs, line breaks, and other typographical detail will not scale, meaning that a
-           text layout may look different on devices with different pixel densities.
-
-    \qml
-    TextInput { text: "Hello"; renderType: TextInput.NativeRendering; font.hintingPreference: Font.PreferVerticalHinting }
-    \endqml
+    \include qmltypereference.qdoc qml-font-hinting-preference
 */
 
 /*!
     \qmlproperty bool QtQuick::TextInput::font.kerning
     \since 5.10
 
-    Enables or disables the kerning OpenType feature when shaping the text. Disabling this may
-    improve performance when creating or changing the text, at the expense of some cosmetic
-    features. The default value is true.
-
-    \qml
-    TextInput { text: "OATS FLAVOUR WAY"; font.kerning: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-kerning
 */
 
 /*!
     \qmlproperty bool QtQuick::TextInput::font.preferShaping
     \since 5.10
 
-    Sometimes, a font will apply complex rules to a set of characters in order to
-    display them correctly. In some writing systems, such as Brahmic scripts, this is
-    required in order for the text to be legible, but in e.g. Latin script, it is merely
-    a cosmetic feature. Setting the \c preferShaping property to false will disable all
-    such features when they are not required, which will improve performance in most cases.
-
-    The default value is true.
-
-    \qml
-    TextInput { text: "Some text"; font.preferShaping: false }
-    \endqml
+    \include qmltypereference.qdoc qml-font-prefer-shaping
 */
 
 /*!
     \qmlproperty object QtQuick::TextInput::font.variableAxes
     \since 6.7
 
-    \include qquicktext.cpp qml-font-variable-axes
+    \include qmltypereference.qdoc qml-font-variable-axes
 */
 
 /*!
     \qmlproperty object QtQuick::TextInput::font.features
     \since 6.6
 
-    \include qquicktext.cpp qml-font-features
+    \include qmltypereference.qdoc qml-font-features
 */
 
 /*!
     \qmlproperty bool QtQuick::TextInput::font.contextFontMerging
     \since 6.8
 
-    \include qquicktext.cpp qml-font-context-font-merging
+    \include qmltypereference.qdoc qml-font-context-font-merging
 */
 
 /*!
     \qmlproperty bool QtQuick::TextInput::font.preferTypoLineMetrics
     \since 6.8
 
-    \include qquicktext.cpp qml-font-prefer-typo-line-metrics
+    \include qmltypereference.qdoc qml-font-prefer-typo-line-metrics
 */
 QFont QQuickTextInput::font() const
 {
