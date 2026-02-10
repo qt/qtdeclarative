@@ -337,7 +337,7 @@ namespace QtAndroidQuickViewEmbedding
     }
 }
 
-Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+extern "C" Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
 {
     Q_UNUSED(vm)
     Q_UNUSED(reserved)
