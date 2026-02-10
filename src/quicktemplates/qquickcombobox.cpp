@@ -8,6 +8,7 @@
 #include "qquickabstractbutton_p_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
+#include "qquickpopupwindow_p_p.h"
 
 #include <QtCore/qregularexpression.h>
 #include <QtCore/qabstractitemmodel.h>
@@ -1486,6 +1487,9 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
         QQuickComboBoxPrivate::hideOldPopup(d->popup);
     }
     if (popup) {
+#if QT_CONFIG(wayland)
+        QQuickPopupPrivate::get(popup)->extendedWindowType = QNativeInterface::Private::QWaylandWindow::ComboBox;
+#endif
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
         QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);

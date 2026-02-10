@@ -47,7 +47,9 @@ private:
     void handlePopupPositionChangeFromWindowSystem(const QPoint &pos);
     void implicitWidthChanged();
     void implicitHeightChanged();
-
+#if QT_CONFIG(wayland)
+    QRect parentControlGeometry() const;
+#endif
     Q_DISABLE_COPY(QQuickPopupWindow)
     Q_DECLARE_PRIVATE(QQuickPopupWindow)
 };

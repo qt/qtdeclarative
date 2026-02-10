@@ -118,6 +118,9 @@ public:
 QQuickToolTipPrivate::QQuickToolTipPrivate()
 {
     windowFlags = Qt::ToolTip;
+#if QT_CONFIG(wayland)
+    extendedWindowType = QNativeInterface::Private::QWaylandWindow::ToolTip;
+#endif
 }
 
 void QQuickToolTipPrivate::startDelay()

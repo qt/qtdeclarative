@@ -670,6 +670,13 @@ bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
 
 QMarginsF QQuickPopupPrivate::windowInsets() const
 {
+    // Don't honor negative insets on wayland. If we do,
+    // it would impact the popup window's geometry.
+    // We assume that the compositor will draw window decorations.
+#if QT_CONFIG(wayland)
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+        return {0, 0, 0, 0};
+#endif
     Q_Q(const QQuickPopup);
     // If the popup has negative insets, it means that its background is pushed
     // outside the bounds of the popup. This is fine when the popup is an item in the

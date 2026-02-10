@@ -288,7 +288,6 @@ void QQuickPopupPositioner::reposition()
 void QQuickPopupPositioner::repositionPopupWindow()
 {
     auto *p = QQuickPopupPrivate::get(popup());
-    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
 
     QPointF requestedPos(p->x, p->y);
     // Shift the window position a bit back, so that the top-left of the
@@ -303,6 +302,12 @@ void QQuickPopupPositioner::repositionPopupWindow()
         return;
     }
 
+    // Wayland does server side repositioning.
+    // All other platforms handle the repositioning on the client side.
+    if (QGuiApplication::platformName().startsWith(QLatin1String("wayland")))
+        return;
+
+    QQuickPopupItem *popupItem = static_cast<QQuickPopupItem *>(m_popup->popupItem());
     const QQuickItem *centerInParent = p->anchors ? p->getAnchors()->centerIn() : nullptr;
     const QQuickOverlay *centerInOverlay = qobject_cast<const QQuickOverlay *>(centerInParent);
     bool skipFittingStep = false;
@@ -322,9 +327,7 @@ void QQuickPopupPositioner::repositionPopupWindow()
                                                  : p->parentItem->mapToGlobal(windowPos.x(), windowPos.y());
     QRectF rect = { globalCoords.x(), globalCoords.y(), popupItem->width(), popupItem->height() };
 
-    // QTBUG-99618: On wayland, we can't use QWindow::mapToGlobal(), and should use a xdg_positioner instead.
-    static bool isWayland = QGuiApplication::platformName().startsWith(QLatin1String("wayland"));
-    if (!skipFittingStep && !isWayland) {
+    if (!skipFittingStep) {
         const QScreen *screenAtPopupPosition = QGuiApplication::screenAt(globalCoords.toPoint());
         const QScreen *screen = screenAtPopupPosition ? screenAtPopupPosition : QGuiApplication::primaryScreen();
         const QRectF bounds = screen->availableGeometry().toRectF();

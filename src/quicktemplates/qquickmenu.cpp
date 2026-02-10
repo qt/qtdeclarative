@@ -287,6 +287,9 @@ public:
 QQuickMenuPrivate::QQuickMenuPrivate()
 {
     cascade = shouldCascade();
+#if QT_CONFIG(wayland)
+    extendedWindowType = QNativeInterface::Private::QWaylandWindow::Menu;
+#endif
 }
 
 void QQuickMenuPrivate::init()

@@ -124,6 +124,9 @@ void QQuickMenuItemPrivate::setSubMenu(QQuickMenu *newSubMenu)
         QObjectPrivate::connect(newSubMenu, &QQuickPopup::enabledChanged, this, &QQuickMenuItemPrivate::updateEnabled);
         q->setText(newSubMenu->title());
         q->setIcon(newSubMenu->icon());
+#if QT_CONFIG(wayland)
+        QQuickMenuPrivate::get(newSubMenu)->extendedWindowType = QNativeInterface::Private::QWaylandWindow::SubMenu;
+#endif
     }
 
     subMenu = newSubMenu;

@@ -21,6 +21,7 @@
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 #include <QtCore/private/qobject_p.h>
+#include <QtGui/qpa/qplatformwindow_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquicktransitionmanager_p_p.h>
@@ -207,6 +208,10 @@ public:
     QQuickPopup::PopupType popupType = QQuickPopup::Item;
     Qt::WindowModality popupWndModality = Qt::NonModal;
     Qt::WindowFlags windowFlags = Qt::Popup | Qt::FramelessWindowHint | Qt::NoDropShadowWindowHint;
+#if QT_CONFIG(wayland)
+    // The extended window type is used by the wayland compositor to support things like flipping of menus and combobox popups
+    QNativeInterface::Private::QWaylandWindow::WindowType extendedWindowType = QNativeInterface::Private::QWaylandWindow::Default;
+#endif
 
     friend class QQuickPopupTransitionManager;
 };
