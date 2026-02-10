@@ -156,7 +156,6 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(const Function *function, bool basicB
         skip(reason);
         QQmlJSAotFunction result;
         result.skipReason = reason;
-        result.signature = u"    Q_UNUSED(contextUnit);\n    Q_UNUSED(argTypes);\n"_s;
         return result;
     }
 

@@ -275,6 +275,7 @@ private slots:
     void signalsWithLists();
     void signatureIgnored();
     void simpleBinding();
+    void skippedFunction();
     void storeElementSideEffects();
     void storeMetaEnum();
     void stringArg();
@@ -5732,6 +5733,17 @@ void tst_QmlCppCodegen::simpleBinding()
         QCOMPARE(base->cppProp.value(), 9);
         QCOMPARE(base->cppProp2.value(), 18);
     }
+}
+
+void tst_QmlCppCodegen::skippedFunction()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/AnotherScriptString.qml"_s));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    // we only care that that the file was compiled, and this did not cause
+    // C++ compiler warnings
 }
 
 void tst_QmlCppCodegen::storeElementSideEffects()
