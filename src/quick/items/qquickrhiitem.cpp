@@ -599,6 +599,18 @@ void QQuickRhiItem::setSampleCount(int samples)
 }
 
 /*!
+    \enum QQuickRhiItem::TextureFormat
+    Specifies the format of the backing texture to which the QQuickRhiItem renders.
+
+    \value RGBA8 See QRhiTexture::RGBA8. This is the default.
+    \value RGBA16F See QRhiTexture::RGBA16F.
+    \value RGBA32F See QRhiTexture::RGBA32F.
+    \value RGB10A2 See QRhiTexture::RGB10A2.
+
+    \sa QRhiTexture
+ */
+
+/*!
     \property QQuickRhiItem::colorBufferFormat
 
     This property controls the texture format for the texture used as the color
