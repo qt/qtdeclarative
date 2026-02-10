@@ -7,7 +7,7 @@ import android.util.Log;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The QtQuickViewContent represents a QML component that can be loaded by a QtQuickView instance.
@@ -20,6 +20,7 @@ import java.util.Random;
 public abstract class QtQuickViewContent
 {
     private final static String TAG = "QtQuickViewContent";
+    private static AtomicInteger m_nextSignalId = new AtomicInteger();
 
     private WeakReference<QtQuickView> m_viewReference;
     private QtQmlStatusChangeListener m_statusChangeListener = null;
@@ -228,8 +229,7 @@ public abstract class QtQuickViewContent
 
     static int generateSignalId()
     {
-        Random rand = new Random();
-        return rand.nextInt();
+        return m_nextSignalId.getAndIncrement();
     }
 
     /**
