@@ -424,13 +424,13 @@ void QQmlBindPrivate::validate(QQmlBind *q) const
 
     \qml
     // produces warning: "Unable to assign [undefined] to double value"
-    value: if (mouse.pressed) mouse.mouseX
+    targetProperty: if (mouse.pressed) mouse.mouseX
     \endqml
 
     The Binding type can prevent this warning.
 
     \qml
-    Binding on value {
+    Binding on targetProperty {
         when: mouse.pressed
         value: mouse.mouseX
     }
@@ -439,6 +439,44 @@ void QQmlBindPrivate::validate(QQmlBind *q) const
     The Binding type restores any previously set direct bindings on the
     property.
 
+    However, the binding to \c{Binding}'s \l{value} property is still evaluated
+    unconditionally, even when \c{when} is \c{false}.
+
+    This might cause warnings when the Binding is for example used to guard
+    against a value being \c{null}:
+
+    \qml
+    Binding on targetProperty {
+        when: root.object !== null
+        //  produces warning: "TypeError: Cannot read property 'someProperty' of null"
+        value: root.object.someProperty
+    }
+    \endqml
+
+    There are to ways to avoid this issue:
+    \list
+    \li If the target has an \c id, you can use the syntax described in
+        \l{Multiple targets in one Binding}, which also causes the
+        binding expression to only run when the \c{Binding} is enabled:
+        \qml
+        Binding {
+            when: root.object !== null
+            root.targetProperty: root.object.someProperty
+        }
+        \endqml
+
+    \li You can repeat the check in the binding and return early:
+        \qml
+        Binding on targetProperty {
+            when: root.object !== null
+            value: {
+                if (root.object === null)
+                    return
+                return root.object.someProperty
+            }
+        }
+        \endqml
+    \endlist
     \section1 Multiple targets in one Binding
 
     You can specify multiple bindings to the same object in one Binding element:
