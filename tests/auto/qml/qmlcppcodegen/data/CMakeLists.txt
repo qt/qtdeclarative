@@ -50,6 +50,7 @@ set(qml_files
     AccessModelMethodsFromOutside.qml
     Action.qml
     AnonymousComposite.qml
+    AnotherScriptString.qml
     ArraySequenceLengthInterop.qml
     B.qml
     BadType.qml
@@ -484,6 +485,21 @@ qt6_add_qml_module(codegen_test_module
     OUTPUT_DIRECTORY TestTypes # Make sure tst_qmlcachegen doesn't see our output
     __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
 )
+
+# we want the generated C++ code to be warning free
+if(MSVC)
+    # intentionally empty, no easy way to have a higher warning level
+    # without causing a warning about overriding the level
+else()
+    # assumption: everything that's not MSVC handles Wall and Wextra
+    target_compile_options(codegen_test_module PRIVATE -Wall -Wextra)
+    # TODO: this should be enabled everywhere, but MSVC in CI seems to ignore the pragma
+    # which silences divide by 0 warnings...
+    set_property(TARGET codegen_test_module
+                 PROPERTY COMPILE_WARNING_AS_ERROR ON
+    )
+endif()
+
 
 target_link_libraries(codegen_test_module PRIVATE Qt6::QmlPrivate)
 

@@ -583,7 +583,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
                                     "QMetaType *argTypes) {\n%3}, %4 },")
                      .arg(func.key())
                      .arg(func->numArguments)
-                     .arg(func->signature, function)
+                     .arg(func->signature.isEmpty() ? u"    Q_UNUSED(contextUnit);\n    Q_UNUSED(argTypes);\n"_s : func->signature, function)
                      .toUtf8().constData());
         }
 
