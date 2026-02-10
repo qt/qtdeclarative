@@ -418,7 +418,6 @@ Style {
         palettes {
             system.window: "gainsboro"
             textField.text: "#4e4e4e"
-            listView.highlight: "blue"
             spinBox.highlight: "lightgray"
 
             button {

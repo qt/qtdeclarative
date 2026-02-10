@@ -46,8 +46,6 @@ private:
     void updateThemePalettes();
     void updateThemeFonts();
 
-    QPalette effectivePaletteForScope(QQuickTheme::Scope scope) const;
-
     bool m_completed = false;
     static int const NScopes = int(QQuickTheme::Tumbler) + 1;
     QPalette m_effectivePalettes[NScopes];

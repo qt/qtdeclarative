@@ -30,11 +30,8 @@ class QQStyleKitFont : public QObject
     Q_PROPERTY(QFont checkBox READ checkBox WRITE setCheckBox NOTIFY checkBoxChanged FINAL)
     Q_PROPERTY(QFont comboBox READ comboBox WRITE setComboBox NOTIFY comboBoxChanged FINAL)
     Q_PROPERTY(QFont groupBox READ groupBox WRITE setGroupBox NOTIFY groupBoxChanged FINAL)
-    Q_PROPERTY(QFont itemView READ itemView WRITE setItemView NOTIFY itemViewChanged FINAL)
+    Q_PROPERTY(QFont itemDelegate READ itemDelegate WRITE setItemDelegate NOTIFY itemDelegateChanged FINAL)
     Q_PROPERTY(QFont label READ label WRITE setLabel NOTIFY labelChanged FINAL)
-    Q_PROPERTY(QFont listView READ listView WRITE setListView NOTIFY listViewChanged FINAL)
-    Q_PROPERTY(QFont menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
-    Q_PROPERTY(QFont menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL)
     Q_PROPERTY(QFont radioButton READ radioButton WRITE setRadioButton NOTIFY radioButtonChanged FINAL)
     Q_PROPERTY(QFont spinBox READ spinBox WRITE setSpinBox NOTIFY spinBoxChanged FINAL)
     Q_PROPERTY(QFont switchControl READ switchControl WRITE setSwitchControl NOTIFY switchControlChanged FINAL)
@@ -42,8 +39,6 @@ class QQStyleKitFont : public QObject
     Q_PROPERTY(QFont textArea READ textArea WRITE setTextArea NOTIFY textAreaChanged FINAL)
     Q_PROPERTY(QFont textField READ textField WRITE setTextField NOTIFY textFieldChanged FINAL)
     Q_PROPERTY(QFont toolBar READ toolBar WRITE setToolBar NOTIFY toolBarChanged FINAL)
-    Q_PROPERTY(QFont toolTip READ toolTip WRITE setToolTip NOTIFY toolTipChanged FINAL)
-    Q_PROPERTY(QFont tumbler READ tumbler WRITE setTumbler NOTIFY tumblerChanged FINAL)
 
     QML_NAMED_ELEMENT(StyleKitFont)
 
@@ -64,20 +59,11 @@ public:
     QFont groupBox() const;
     void setGroupBox(const QFont &font);
 
-    QFont itemView() const;
-    void setItemView(const QFont &font);
+    QFont itemDelegate() const;
+    void setItemDelegate(const QFont &font);
 
     QFont label() const;
     void setLabel(const QFont &font);
-
-    QFont listView() const;
-    void setListView(const QFont &font);
-
-    QFont menu() const;
-    void setMenu(const QFont &font);
-
-    QFont menuBar() const;
-    void setMenuBar(const QFont &font);
 
     QFont radioButton() const;
     void setRadioButton(const QFont &font);
@@ -100,16 +86,8 @@ public:
     QFont toolBar() const;
     void setToolBar(const QFont &font);
 
-    QFont toolTip() const;
-    void setToolTip(const QFont &font);
-
-    QFont tumbler() const;
-    void setTumbler(const QFont &font);
-
     QQStyleKitFont *fallbackFont() const;
     void setFallbackFont(QQStyleKitFont *fallback);
-
-    QFont fontForScope(QQuickTheme::Scope scope) const;
 
 signals:
     void systemChanged();
@@ -117,11 +95,8 @@ signals:
     void checkBoxChanged();
     void comboBoxChanged();
     void groupBoxChanged();
-    void itemViewChanged();
+    void itemDelegateChanged();
     void labelChanged();
-    void listViewChanged();
-    void menuChanged();
-    void menuBarChanged();
     void radioButtonChanged();
     void spinBoxChanged();
     void switchControlChanged();
@@ -129,13 +104,12 @@ signals:
     void textAreaChanged();
     void textFieldChanged();
     void toolBarChanged();
-    void toolTipChanged();
-    void tumblerChanged();
     void fallbackFontChanged();
 
 private:
     Q_DISABLE_COPY(QQStyleKitFont)
 
+    QFont fontForScope(QQuickTheme::Scope scope) const;
     void setFontForScope(QQuickTheme::Scope scope, const QFont &font, void (QQStyleKitFont::*signal)());
 
     bool isSet(QQuickTheme::Scope scope) const { return (m_setMask & (1u << int(scope))) != 0; }

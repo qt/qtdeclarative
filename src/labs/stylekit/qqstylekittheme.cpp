@@ -69,27 +69,13 @@ QQStyleKitStyle *QQStyleKitTheme::style() const
 QPalette QQStyleKitTheme::paletteForControlType(QQStyleKitExtendableControlType type) const
 {
     const QQuickTheme::Scope scope = scopeForType(type);
-    return effectivePaletteForScope(scope);
+    return m_effectivePalettes[int(scope)];
 }
 
 QFont QQStyleKitTheme::fontForControlType(QQStyleKitExtendableControlType type) const
 {
     const QQuickTheme::Scope scope = scopeForType(type);
-    if (scope < QQuickTheme::System || scope >= NScopes) {
-        qWarning() << Q_FUNC_INFO << "Invalid scope" << int(scope);
-        return QFont();
-    }
     return m_effectiveFonts[int(scope)];
-}
-
-QPalette QQStyleKitTheme::effectivePaletteForScope(QQuickTheme::Scope scope) const
-{
-    if (scope < QQuickTheme::System || scope >= NScopes) {
-        qWarning() << Q_FUNC_INFO << "Invalid scope" << int(scope);
-        return QPalette();
-    }
-
-    return m_effectivePalettes[int(scope)];
 }
 
 void QQStyleKitTheme::updateThemePalettes()
@@ -135,20 +121,14 @@ void QQStyleKitTheme::updateThemePalettes()
     setResolved(&QQStyleKitPalette::checkBox, QQuickTheme::CheckBox);
     setResolved(&QQStyleKitPalette::comboBox, QQuickTheme::ComboBox);
     setResolved(&QQStyleKitPalette::groupBox, QQuickTheme::GroupBox);
-    setResolved(&QQStyleKitPalette::itemView, QQuickTheme::ItemView);
+    setResolved(&QQStyleKitPalette::itemDelegate, QQuickTheme::ItemView);
     setResolved(&QQStyleKitPalette::label, QQuickTheme::Label);
-    setResolved(&QQStyleKitPalette::listView, QQuickTheme::ListView);
-    setResolved(&QQStyleKitPalette::menu, QQuickTheme::Menu);
-    setResolved(&QQStyleKitPalette::menuBar, QQuickTheme::MenuBar);
     setResolved(&QQStyleKitPalette::radioButton, QQuickTheme::RadioButton);
     setResolved(&QQStyleKitPalette::spinBox, QQuickTheme::SpinBox);
-    setResolved(&QQStyleKitPalette::switchControl, QQuickTheme::Switch);
     setResolved(&QQStyleKitPalette::tabBar, QQuickTheme::TabBar);
     setResolved(&QQStyleKitPalette::textArea, QQuickTheme::TextArea);
     setResolved(&QQStyleKitPalette::textField, QQuickTheme::TextField);
     setResolved(&QQStyleKitPalette::toolBar, QQuickTheme::ToolBar);
-    setResolved(&QQStyleKitPalette::toolTip, QQuickTheme::ToolTip);
-    setResolved(&QQStyleKitPalette::tumbler, QQuickTheme::Tumbler);
 }
 
 void QQStyleKitTheme::updateThemeFonts()

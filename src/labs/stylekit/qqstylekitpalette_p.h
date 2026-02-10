@@ -30,11 +30,8 @@ class QQStyleKitPalette : public QObject
     Q_PROPERTY(QQuickPalette *button READ button NOTIFY buttonChanged FINAL)
     Q_PROPERTY(QQuickPalette *comboBox READ comboBox NOTIFY comboBoxChanged FINAL)
     Q_PROPERTY(QQuickPalette *groupBox READ groupBox NOTIFY groupBoxChanged FINAL)
-    Q_PROPERTY(QQuickPalette *itemView READ itemView NOTIFY itemViewChanged FINAL)
+    Q_PROPERTY(QQuickPalette *itemDelegate READ itemDelegate NOTIFY itemDelegateChanged FINAL)
     Q_PROPERTY(QQuickPalette *label READ label NOTIFY labelChanged FINAL)
-    Q_PROPERTY(QQuickPalette *listView READ listView NOTIFY listViewChanged FINAL)
-    Q_PROPERTY(QQuickPalette *menu READ menu NOTIFY menuChanged FINAL)
-    Q_PROPERTY(QQuickPalette *menuBar READ menuBar NOTIFY menuBarChanged FINAL)
     Q_PROPERTY(QQuickPalette *radioButton READ radioButton NOTIFY radioButtonChanged FINAL)
     Q_PROPERTY(QQuickPalette *spinBox READ spinBox NOTIFY spinBoxChanged FINAL)
     Q_PROPERTY(QQuickPalette *switchControl READ switchControl NOTIFY switchControlChanged FINAL)
@@ -42,8 +39,6 @@ class QQStyleKitPalette : public QObject
     Q_PROPERTY(QQuickPalette *textArea READ textArea NOTIFY textAreaChanged FINAL)
     Q_PROPERTY(QQuickPalette *textField READ textField NOTIFY textFieldChanged FINAL)
     Q_PROPERTY(QQuickPalette *toolBar READ toolBar NOTIFY toolBarChanged FINAL)
-    Q_PROPERTY(QQuickPalette *toolTip READ toolTip NOTIFY toolTipChanged FINAL)
-    Q_PROPERTY(QQuickPalette *tumbler READ tumbler NOTIFY tumblerChanged FINAL)
 
     QML_NAMED_ELEMENT(StyleKitPalette)
 
@@ -55,11 +50,8 @@ public:
     QQuickPalette *button() const;
     QQuickPalette *comboBox() const;
     QQuickPalette *groupBox() const;
-    QQuickPalette *itemView() const;
+    QQuickPalette *itemDelegate() const;
     QQuickPalette *label() const;
-    QQuickPalette *listView() const;
-    QQuickPalette *menu() const;
-    QQuickPalette *menuBar() const;
     QQuickPalette *radioButton() const;
     QQuickPalette *spinBox() const;
     QQuickPalette *switchControl() const;
@@ -67,8 +59,6 @@ public:
     QQuickPalette *textArea() const;
     QQuickPalette *textField() const;
     QQuickPalette *toolBar() const;
-    QQuickPalette *toolTip() const;
-    QQuickPalette *tumbler() const;
 
     QQStyleKitPalette *fallbackPalette() const;
     void setFallbackPalette(QQStyleKitPalette *fallback);
@@ -79,11 +69,8 @@ signals:
     void buttonChanged();
     void comboBoxChanged();
     void groupBoxChanged();
-    void itemViewChanged();
+    void itemDelegateChanged();
     void labelChanged();
-    void listViewChanged();
-    void menuChanged();
-    void menuBarChanged();
     void radioButtonChanged();
     void spinBoxChanged();
     void switchControlChanged();
@@ -91,8 +78,6 @@ signals:
     void textAreaChanged();
     void textFieldChanged();
     void toolBarChanged();
-    void toolTipChanged();
-    void tumblerChanged();
     void fallbackPaletteChanged();
 
 private:
@@ -108,11 +93,8 @@ private:
     mutable std::unique_ptr<QQuickPalette> m_button;
     mutable std::unique_ptr<QQuickPalette> m_comboBox;
     mutable std::unique_ptr<QQuickPalette> m_groupBox;
-    mutable std::unique_ptr<QQuickPalette> m_itemView;
+    mutable std::unique_ptr<QQuickPalette> m_itemDelegate;
     mutable std::unique_ptr<QQuickPalette> m_label;
-    mutable std::unique_ptr<QQuickPalette> m_listView;
-    mutable std::unique_ptr<QQuickPalette> m_menu;
-    mutable std::unique_ptr<QQuickPalette> m_menuBar;
     mutable std::unique_ptr<QQuickPalette> m_radioButton;
     mutable std::unique_ptr<QQuickPalette> m_spinBox;
     mutable std::unique_ptr<QQuickPalette> m_switchControl;
@@ -120,8 +102,6 @@ private:
     mutable std::unique_ptr<QQuickPalette> m_textArea;
     mutable std::unique_ptr<QQuickPalette> m_textField;
     mutable std::unique_ptr<QQuickPalette> m_toolBar;
-    mutable std::unique_ptr<QQuickPalette> m_toolTip;
-    mutable std::unique_ptr<QQuickPalette> m_tumbler;
 
     QQStyleKitPalette *m_fallbackPalette = nullptr;
 
