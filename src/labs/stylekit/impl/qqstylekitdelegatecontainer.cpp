@@ -66,6 +66,11 @@ QQuickItem *QQStyleKitDelegateContainer::delegateInstance() const
     return m_delegateInstance;
 }
 
+bool QQStyleKitDelegateContainer::usingDefaultDelegate() const
+{
+    return m_delegateComponent == s_defaultDelegateComponent;
+}
+
 void QQStyleKitDelegateContainer::updateImplicitSize()
 {
     setImplicitWidth(m_delegateInstance ? m_delegateInstance->implicitWidth() : 0);
@@ -87,6 +92,8 @@ void QQStyleKitDelegateContainer::maybeCreateDelegate()
 
     disconnect(m_delegateProperties, &QQStyleKitDelegateProperties::visibleChanged,
                this, &QQStyleKitDelegateContainer::maybeCreateDelegate);
+
+    const bool wasUsingDefaultDelegate = usingDefaultDelegate();
 
     if (QQmlComponent *delegateComponent = m_delegateProperties->delegate()) {
         m_delegateComponent = delegateComponent;
@@ -122,6 +129,9 @@ void QQStyleKitDelegateContainer::maybeCreateDelegate()
     updateImplicitSize();
     connect(m_delegateInstance, &QQuickItem::implicitWidthChanged, this, &QQStyleKitDelegateContainer::updateImplicitSize);
     connect(m_delegateInstance, &QQuickItem::implicitHeightChanged, this, &QQStyleKitDelegateContainer::updateImplicitSize);
+
+    if (usingDefaultDelegate() != wasUsingDefaultDelegate)
+        emit usingDefaultDelegateChanged();
 }
 
 void QQStyleKitDelegateContainer::maybeCreateShadow()

@@ -338,6 +338,7 @@ Style {
         // indicator.implicitHeight: UnifiedStyle.Stretch
         indicator.foreground.minimumWidth: 50
         indicator.foreground.margins: 2
+        indicator.foreground.delegate: null
         handle {
             leftMargin: 8
             rightMargin: 8

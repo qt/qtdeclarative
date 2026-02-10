@@ -222,7 +222,6 @@ Style {
         background.visible: true
         background.delegate: NoiseDelegate {}
         indicator.delegate: NoiseDelegate {}
-        indicator.foreground.delegate: NoiseDelegate {}
         handle.delegate: SliderHandle { isFirstHandle: true }
         handle.second.delegate: SliderHandle { isFirstHandle: false }
     }
