@@ -436,6 +436,7 @@ void QSGDefaultPainterNode::setSmoothPainting(bool s)
 
     m_smoothPainting = s;
     m_dirtyRenderTarget = true;
+    m_dirtyTexture = true;
 }
 
 void QSGDefaultPainterNode::setFillColor(const QColor &c)
