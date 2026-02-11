@@ -226,7 +226,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(StrokeStyle strokeStyle READ strokeStyle WRITE setStrokeStyle NOTIFY strokeStyleChanged)
     Q_PROPERTY(qreal dashOffset READ dashOffset WRITE setDashOffset NOTIFY dashOffsetChanged)
     Q_PROPERTY(QList<qreal> dashPattern READ dashPattern WRITE setDashPattern NOTIFY dashPatternChanged)
-    Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient RESET resetFillGradient)
+    Q_PROPERTY(QQuickShapeGradient *fillGradient READ fillGradient WRITE setFillGradient NOTIFY fillGradientChanged RESET resetFillGradient)
     Q_PROPERTY(QSizeF scale READ scale WRITE setScale NOTIFY scaleChanged OVERRIDE REVISION(1, 14))
     Q_PROPERTY(PathHints pathHints READ pathHints WRITE setPathHints NOTIFY pathHintsChanged REVISION(6, 7) FINAL)
     Q_PROPERTY(QMatrix4x4 fillTransform READ fillTransform WRITE setFillTransform NOTIFY fillTransformChanged REVISION(6, 8) FINAL)
@@ -339,6 +339,7 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
+    void fillGradientChanged();
 
     Q_REVISION(6, 7) void pathHintsChanged();
     Q_REVISION(6, 8) void fillTransformChanged();

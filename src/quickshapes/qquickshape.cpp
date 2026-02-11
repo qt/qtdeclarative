@@ -486,6 +486,7 @@ void QQuickShapePath::setFillGradient(QQuickShapeGradient *gradient)
         if (d->sfp.fillGradient)
             qmlobject_connect(d->sfp.fillGradient, QQuickShapeGradient, SIGNAL(updated()),
                               this, QQuickShapePath, SLOT(_q_fillGradientChanged()));
+        emit fillGradientChanged();
         d->dirty |= QQuickShapePathPrivate::DirtyFillGradient;
         emit shapePathChanged();
     }
