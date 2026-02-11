@@ -16,7 +16,7 @@ global CMake variables:
 
 \title QT_QML_OUTPUT_DIRECTORY
 
-\brief Base output directory below which QML modules will be created by default.
+\summary{Base output directory below which QML modules will be created by default.}
 
 The \l{qt6_add_qml_module}{qt6_add_qml_module()} command accepts an
 \c OUTPUT_DIRECTORY argument which specifies where the QML module's \c qmldir
@@ -43,7 +43,7 @@ modules, or to merge sets of QML modules under a common base point.
 
 \title QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS
 
-\brief Customizes the value of no-cmake-calls in .qmlls.ini files for \QMLLS.
+\summary{Customizes the value of no-cmake-calls in .qmlls.ini files for \QMLLS.}
 \cmakevariablesince 6.10
 
 \c QT_QML_GENERATE_QMLLS_INI_NO_CMAKE_CALLS is a boolean that controls the \c no-cmake-calls value in
@@ -68,7 +68,7 @@ This variable has no effect if \l{QT_QML_GENERATE_QMLLS_INI} is disabled.
 
 \title QT_QML_GENERATE_QMLLS_INI
 
-\brief Enables autogeneration of .qmlls.ini files for \QMLLS.
+\summary{Enables autogeneration of .qmlls.ini files for \QMLLS.}
 \warning This variable is deprecated since Qt 6.10. No replacement needed.
 \cmakevariablesince 6.7
 
@@ -106,7 +106,7 @@ subdirectories} that define QML Modules.
 
 \title QT_QML_NO_CACHEGEN
 
-\brief Disables compilation of QML files into bytecode or C++ code.
+\summary{Disables compilation of QML files into bytecode or C++ code.}
 \cmakevariablesince 6.8.1
 
 \c QT_QML_NO_CACHEGEN is a CMake variable that can be set to disable the compilation of QML files
@@ -142,7 +142,7 @@ qt_add_qml_module(MyModule
 
 \title QT_QML_GENERATE_AOTSTATS
 
-\brief Controls whether QML Compiler statistics collection is enabled.
+\summary{Controls whether QML Compiler statistics collection is enabled.}
 \cmakevariablesince 6.8.3
 
 When a QML project is configured using \l{qt_add_qml_module}, by default,
@@ -167,7 +167,7 @@ set(QT_QML_GENERATE_AOTSTATS OFF)
 
 \title QT_QMLLINT_CONTEXT_PROPERTY_DUMP
 
-\brief Enables dumping of context properties in lint targets.
+\summary{Enables dumping of context properties in lint targets.}
 \cmakevariablesince 6.11
 
 When the \c QT_QMLLINT_CONTEXT_PROPERTY_DUMP variable is enabled, \l{qmllint-auto}{linting targets}
