@@ -1995,13 +1995,17 @@ static std::optional<Location> createCppTypeLocation(const QQmlJSScope::ConstPtr
                                                      const QStringList &headerLocations,
                                                      const QQmlJS::SourceLocation &location)
 {
+    const TextPosition endPosition{ static_cast<int>(location.startLine) + 1, 1 };
+    const QFileInfo filePathInfo(type->filePath());
+    if (filePathInfo.isAbsolute() && filePathInfo.exists())
+        return Location{ type->filePath(), location, endPosition };
+
     const QString filePath = findFilePathFromFileName(headerLocations, type->filePath(), {});
     if (filePath.isEmpty()) {
         qCWarning(QQmlLSUtilsLog) << "Couldn't find the C++ file '%1'."_L1.arg(type->filePath());
         return {};
     }
 
-    const TextPosition endPosition{ static_cast<int>(location.startLine) + 1, 1 };
     return Location{ filePath, location, endPosition };
 }
 

@@ -75,4 +75,22 @@ Module {
             lineNumber: 38
         }
     }
+    Component {
+        file: "mycomponentfromnoncppheader.java"
+        lineNumber: 42
+        name: "MyComponentFromNonCpp"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["ModuleWithComponent/MyComponentFromNonCpp 254.0"]
+        Property {
+            name: "myProperty"
+            type: "int"
+            read: "myProperty"
+            write: "setMyProperty"
+            notify: "myPropertyChanged"
+            lineNumber: 12
+            index: 0
+        }
+        Signal { name: "myPropertyChanged" }
+    }
 }

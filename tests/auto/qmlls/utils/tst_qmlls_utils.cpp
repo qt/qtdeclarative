@@ -1979,6 +1979,10 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     QTest::addRow("componentFromCpp") << testFile("findDefinition/UseMyCppComponent.qml"_L1) << 3
                                       << 1 << componentFromCppHeaderPath << 42 << 1 << strlen("")
                                       << QStringList{ testFile("findDefinition"_L1) };
+    QTest::addRow("componentFromJava")
+            << testFile("findDefinition/UseMyCppComponent.qml"_L1) << 16 << 44
+            << testFile("findDefinition/SomeIncludeFolder/mycomponentfromnoncppheader.java"_L1)
+            << 42 << 1 << strlen("") << QStringList{ testFile("findDefinition"_L1) };
     QTest::addRow("propertyFromCpp") << testFile("findDefinition/UseMyCppComponent.qml"_L1) << 4
                                      << 6 << componentFromCppHeaderPath << 12 << 1 << strlen("")
                                      << QStringList{ testFile("findDefinition"_L1) };
@@ -2099,6 +2103,47 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     QCOMPARE(definition->sourceLocation().startLine, quint32(expectedLine));
     QCOMPARE(definition->sourceLocation().startColumn, quint32(expectedCharacter));
     QCOMPARE(definition->sourceLocation().length, quint32(expectedLength));
+}
+
+void tst_qmlls_utils::findDefinitionFromAbsoluteLocation()
+{
+    QTemporaryDir build;
+    QVERIFY(build.isValid());
+
+    QDir(build.path()).mkdir("ModuleWithComponent");
+    QFile::copy(testFile("ModuleWithComponent/qmldir"),
+                build.filePath("ModuleWithComponent/qmldir"));
+
+    QFile headerFile(build.filePath("ModuleWithComponent/mycomponentfromnoncppheader.java"));
+    QVERIFY(headerFile.open(QFile::WriteOnly | QFile::Text));
+
+    QFile qmltypes(testFile("ModuleWithComponent/plugin.qmltypes"));
+    QVERIFY(qmltypes.open(QFile::ReadOnly | QFile::Text));
+    QByteArray qmltypesContent = qmltypes.readAll();
+
+    const QByteArray expectedFilePath = headerFile.fileName().toUtf8();
+    qmltypesContent.replace("mycomponentfromnoncppheader.java", expectedFilePath);
+
+    QFile newQmltypes(build.filePath("ModuleWithComponent/plugin.qmltypes"));
+    QVERIFY(newQmltypes.open(QFile::WriteOnly | QFile::Text));
+    newQmltypes.write(qmltypesContent);
+
+    auto [env, file] = createEnvironmentAndLoadFile(
+            testFile("findDefinition/UseMyCppComponent.qml"_L1), { build.path() });
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), 15, 43);
+
+    QCOMPARE(locations.size(), 1);
+
+    auto definition = QQmlLSUtils::findDefinitionOf(locations.front().domItem, { build.path() });
+    QVERIFY(definition);
+
+    QCOMPARE(definition->filename(), expectedFilePath);
+
+    QCOMPARE(definition->sourceLocation().startLine, quint32(42));
+    QCOMPARE(definition->sourceLocation().startColumn, quint32(1));
+    QCOMPARE(definition->sourceLocation().length, quint32(0));
 }
 
 void tst_qmlls_utils::resolveExpressionType_data()

@@ -57,6 +57,8 @@ private slots:
     void findDefinitionFromLocation_data();
     void findDefinitionFromLocation();
 
+    void findDefinitionFromAbsoluteLocation();
+
     void findLocationOfItem_data();
     void findLocationOfItem();
 
