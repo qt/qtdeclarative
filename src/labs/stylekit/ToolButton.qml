@@ -54,6 +54,6 @@ T.ToolButton {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 }

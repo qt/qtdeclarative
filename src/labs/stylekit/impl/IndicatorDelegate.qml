@@ -16,9 +16,9 @@ DelegateContainer {
     transformOrigin: Item.TopLeft
     rotation: vertical ? 90 : 0
     scale: vertical ? -1 : 1
-    delegateProperties: root.indicatorProperties
+    delegateStyle: root.indicatorStyle
 
-    required property StyleKitDelegateProperties indicatorProperties
+    required property DelegateStyle indicatorStyle
     property bool vertical: false
 
     /* Some indicators (Slider, RangeSlider) should let the foreground delegate
@@ -35,13 +35,13 @@ DelegateContainer {
             StyleKitLayoutItem {
                 id: fgItem
                 item: foreground
-                alignment: indicatorProperties.foreground.alignment
-                margins.left: indicatorProperties.foreground.leftMargin
-                margins.right: indicatorProperties.foreground.rightMargin
-                margins.top: indicatorProperties.foreground.topMargin
-                margins.bottom: indicatorProperties.foreground.bottomMargin
-                fillWidth: indicatorProperties.foreground.implicitWidth === Style.Stretch
-                fillHeight: indicatorProperties.foreground.implicitHeight === Style.Stretch
+                alignment: indicatorStyle.foreground.alignment
+                margins.left: indicatorStyle.foreground.leftMargin
+                margins.right: indicatorStyle.foreground.rightMargin
+                margins.top: indicatorStyle.foreground.topMargin
+                margins.bottom: indicatorStyle.foreground.bottomMargin
+                fillWidth: indicatorStyle.foreground.implicitWidth === Style.Stretch
+                fillHeight: indicatorStyle.foreground.implicitHeight === Style.Stretch
             }
         ]
         mirrored: quickControl.mirrored
@@ -51,7 +51,7 @@ DelegateContainer {
         id: foreground
         parent: root
         quickControl: root.quickControl
-        delegateProperties: root.indicatorProperties.foreground
+        delegateStyle: root.indicatorStyle.foreground
         x: fgItem.x
         y: fgItem.y
         z: 1
@@ -72,11 +72,11 @@ DelegateContainer {
             PropertyChanges {
                 target: foreground
                 x: fgItem.x + root.firstProgress * (fgItem.fillWidth
-                    ? fgItem.width - delegateProperties.minimumWidth : fgItem.width)
+                    ? fgItem.width - delegateStyle.minimumWidth : fgItem.width)
                 y: fgItem.y
-                width: fgItem.fillWidth ? (delegateProperties.minimumWidth
+                width: fgItem.fillWidth ? (delegateStyle.minimumWidth
                     + ((root.secondProgress - root.firstProgress) * (fgItem.width
-                    - delegateProperties.minimumWidth)))
+                    - delegateStyle.minimumWidth)))
                         : (root.secondProgress - root.firstProgress) * fgItem.width
                 height: fgItem.height
             }

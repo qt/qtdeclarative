@@ -9,21 +9,21 @@ import Qt.labs.StyleKit.impl
 
 RectangularShadow {
     required property QtObject control
-    required property StyleKitDelegateProperties delegateProperties
+    required property DelegateStyle delegateStyle
 
     width: parent.width
     height: parent.height
-    color: delegateProperties.shadow.color
-    opacity: delegateProperties.shadow.opacity
-    blur: delegateProperties.shadow.blur
-    scale: delegateProperties.shadow.scale
-    radius: delegateProperties.radius
-    topLeftRadius: delegateProperties.topLeftRadius
-    topRightRadius: delegateProperties.topRightRadius
-    bottomLeftRadius: delegateProperties.bottomLeftRadius
-    bottomRightRadius: delegateProperties.bottomRightRadius
-    visible: delegateProperties.shadow.visible
+    color: delegateStyle.shadow.color
+    opacity: delegateStyle.shadow.opacity
+    blur: delegateStyle.shadow.blur
+    scale: delegateStyle.shadow.scale
+    radius: delegateStyle.radius
+    topLeftRadius: delegateStyle.topLeftRadius
+    topRightRadius: delegateStyle.topRightRadius
+    bottomLeftRadius: delegateStyle.bottomLeftRadius
+    bottomRightRadius: delegateStyle.bottomRightRadius
+    visible: delegateStyle.shadow.visible
     offset: Qt.vector2d(
-                delegateProperties.shadow.horizontalOffset,
-                delegateProperties.shadow.verticalOffset)
+                delegateStyle.shadow.horizontalOffset,
+                delegateStyle.shadow.verticalOffset)
 }

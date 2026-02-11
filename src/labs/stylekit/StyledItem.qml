@@ -8,7 +8,7 @@ StyledItemBase {
     // (C++), so that a custom delegate that embeds a StyledItemBase as a child
     // (to create overlay or underlay effects) can override them to handle how and
     // where to apply the transform.
-    scale: delegateProperties.scale
-    rotation: delegateProperties.rotation
-    visible: delegateProperties.visible
+    scale: delegateStyle.scale
+    rotation: delegateStyle.rotation
+    visible: delegateStyle.visible
 }

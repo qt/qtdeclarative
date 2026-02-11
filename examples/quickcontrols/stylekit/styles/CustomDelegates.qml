@@ -29,27 +29,27 @@ Style {
 
     component UnderlayDelegate : Item {
         /* Custom delegates that don't inherit from StyledItem can optionally
-         * declare 'delegateProperties' and 'control' properties. Use delegateProperties
+         * declare 'delegateStyle' and 'control' properties. Use delegateStyle
          * to bind to style attributes like color, radius, and opacity. Use control
          * to access the Quick Control the owns the delegate. */
-        required property StyleKitDelegateProperties delegateProperties
+        required property DelegateStyle delegateStyle
         required property QtObject control
 
-        implicitWidth: delegateProperties.implicitWidth
-        implicitHeight: delegateProperties.implicitHeight
+        implicitWidth: delegateStyle.implicitWidth
+        implicitHeight: delegateStyle.implicitHeight
         width: parent.width
         height: parent.height
-        scale: delegateProperties.scale
-        rotation: delegateProperties.rotation
-        visible: delegateProperties.visible
+        scale: delegateStyle.scale
+        rotation: delegateStyle.rotation
+        visible: delegateStyle.visible
 
         Rectangle {
             id: underlay
             anchors.centerIn: parent
             width: 10 + (parent.width / 2)
             height: 10 + (parent.height / 2)
-            radius: delegateProperties.radius
-            scale: delegateProperties.data.underlayScale
+            radius: delegateStyle.radius
+            scale: delegateStyle.data.underlayScale
             opacity: 0.5
             border.width: 8
             border.color: palette.accent
@@ -68,7 +68,7 @@ Style {
 
         StyledItem {
             // Embed a StyledItem to render the standard delegate on top of the custom one
-            delegateProperties: parent.delegateProperties
+            delegateStyle: parent.delegateStyle
         }
     }
 
@@ -106,11 +106,11 @@ Style {
         width: parent.width
         height: parent.height
 
-        required property StyleKitDelegateProperties delegateProperties
+        required property DelegateStyle delegateStyle
 
         // The following properties are used by the shader (noise.frag)
         property size sourceItemSize: Qt.size(unifiedSourceItem.width, unifiedSourceItem.height)
-        property color borderColor: delegateProperties.border.color
+        property color borderColor: delegateStyle.border.color
         property real borderMaskEnabled: 1
         property real borderMaskThreshold: 0.001
         property real particleDensity: 0.1
@@ -132,7 +132,7 @@ Style {
 
         StyledItem {
             id: unifiedSourceItem
-            delegateProperties: parent.delegateProperties
+            delegateStyle: parent.delegateStyle
             width: parent.width
             height: parent.height
             visible: false
@@ -142,10 +142,10 @@ Style {
     }
 
     component WavingQt : ShaderEffect {
-        implicitWidth: delegateProperties.implicitWidth
-        implicitHeight: delegateProperties.implicitHeight
+        implicitWidth: delegateStyle.implicitWidth
+        implicitHeight: delegateStyle.implicitHeight
 
-        required property StyleKitDelegateProperties delegateProperties
+        required property DelegateStyle delegateStyle
 
         // The following properties are used by the shader (wave.frag)
         property real amplitude: 0.04 * 0.5
@@ -173,19 +173,19 @@ Style {
     }
 
     component CustomShadowDelegate : Item {
-        required property StyleKitDelegateProperties delegateProperties
+        required property DelegateStyle delegateStyle
 
-        x: delegateProperties.shadow.verticalOffset
-        y: delegateProperties.shadow.horizontalOffset
+        x: delegateStyle.shadow.verticalOffset
+        y: delegateStyle.shadow.horizontalOffset
         width: parent.width
         height: parent.height
 
         Rectangle {
             width: parent.width
             height: parent.height
-            radius: parent.delegateProperties.radius
-            color: parent.delegateProperties.shadow.color
-            opacity: parent.delegateProperties.shadow.opacity
+            radius: parent.delegateStyle.radius
+            color: parent.delegateStyle.shadow.color
+            opacity: parent.delegateStyle.shadow.opacity
         }
 
         Text {

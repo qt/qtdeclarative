@@ -8,6 +8,6 @@ import Qt.labs.StyleKit
 import Qt.labs.StyleKit.impl
 
 DelegateContainer {
-    delegateProperties: handleProperties
-    required property StyleKitDelegateProperties handleProperties
+    delegateStyle: handleStyle
+    required property DelegateStyle handleStyle
 }

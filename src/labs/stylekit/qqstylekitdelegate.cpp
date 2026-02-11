@@ -15,20 +15,20 @@ QQStyleKitDelegate::QQStyleKitDelegate(QQuickItem *parent)
 {
 }
 
-QQStyleKitDelegateProperties *QQStyleKitDelegate::delegateProperties() const
+QQStyleKitDelegateProperties *QQStyleKitDelegate::delegateStyle() const
 {
     return m_delegateProperties;
 }
 
-void QQStyleKitDelegate::setDelegateProperties(QQStyleKitDelegateProperties *delegateProperties)
+void QQStyleKitDelegate::setDelegateStyle(QQStyleKitDelegateProperties *delegateStyle)
 {
-    if (m_delegateProperties == delegateProperties)
+    if (m_delegateProperties == delegateStyle)
         return;
 
     if (m_delegateProperties)
         disconnect(m_delegateProperties, nullptr, this, nullptr);
 
-    m_delegateProperties = delegateProperties;
+    m_delegateProperties = delegateStyle;
 
     if (!qmlEngine(this)) {
         qmlWarning(this) << "Unable to draw delegate: no QQmlEngine found";
@@ -43,7 +43,7 @@ void QQStyleKitDelegate::setDelegateProperties(QQStyleKitDelegateProperties *del
     connect(m_delegateProperties, &QQStyleKitDelegateProperties::implicitWidthChanged, this, &QQStyleKitDelegate::updateImplicitSize);
     connect(m_delegateProperties, &QQStyleKitDelegateProperties::implicitHeightChanged, this, &QQStyleKitDelegate::updateImplicitSize);
 
-    emit delegatePropertiesChanged();
+    emit delegateStyleChanged();
 }
 
 void QQStyleKitDelegate::updateImplicitSize()
@@ -52,7 +52,7 @@ void QQStyleKitDelegate::updateImplicitSize()
         return;
 
     /* The implicit size is determined by the following priority:
-     * 1. Explicit implicit size set on StyleKitDelegateProperties
+     * 1. Explicit implicit size set on QQStyleKitDelegateProperties
      * 2. Implicit size of the image (if present)
      * 3. Zero
      * The implicit size is read-only because it's calculated in C++ from internal
@@ -90,13 +90,13 @@ void QQStyleKitDelegate::maybeCreateColor()
                 z: -3
                 width: parent.width
                 height: parent.height
-                color: delegateProperties.color
-                topLeftRadius: delegateProperties.topLeftRadius
-                topRightRadius: delegateProperties.topRightRadius
-                bottomLeftRadius: delegateProperties.bottomLeftRadius
-                bottomRightRadius: delegateProperties.bottomRightRadius
-                border.width: delegateProperties.border.width
-                border.color: delegateProperties.border.color
+                color: delegateStyle.color
+                topLeftRadius: delegateStyle.topLeftRadius
+                topRightRadius: delegateStyle.topRightRadius
+                bottomLeftRadius: delegateStyle.bottomLeftRadius
+                bottomRightRadius: delegateStyle.bottomRightRadius
+                border.width: delegateStyle.border.width
+                border.color: delegateStyle.border.color
             }
         )");
         component->setData(qmlCode.toUtf8(), QUrl());
@@ -144,13 +144,13 @@ void QQStyleKitDelegate::maybeCreateGradient()
                 width: parent.width
                 height: parent.height
                 color: "transparent"
-                gradient: delegateProperties.gradient
-                topLeftRadius: delegateProperties.topLeftRadius
-                topRightRadius: delegateProperties.topRightRadius
-                bottomLeftRadius: delegateProperties.bottomLeftRadius
-                bottomRightRadius: delegateProperties.bottomRightRadius
-                border.width: delegateProperties.border.width
-                border.color: delegateProperties.border.color
+                gradient: delegateStyle.gradient
+                topLeftRadius: delegateStyle.topLeftRadius
+                topRightRadius: delegateStyle.topRightRadius
+                bottomLeftRadius: delegateStyle.bottomLeftRadius
+                bottomRightRadius: delegateStyle.bottomRightRadius
+                border.width: delegateStyle.border.width
+                border.color: delegateStyle.border.color
             }
         )");
         component->setData(qmlCode.toUtf8(), QUrl());
@@ -197,9 +197,9 @@ void QQStyleKitDelegate::maybeCreateImage()
                 z: -1
                 width: parent.width
                 height: parent.height
-                color: delegateProperties.image.color
-                source: delegateProperties.image.source
-                fillMode: delegateProperties.image.fillMode
+                color: delegateStyle.image.color
+                source: delegateStyle.image.source
+                fillMode: delegateStyle.image.fillMode
             }
         )");
         component->setData(qmlCode.toUtf8(), QUrl());

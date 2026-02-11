@@ -262,7 +262,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitProp
     Q_PROPERTY(QObject *data READ data WRITE setData NOTIFY dataChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitDelegateProperties)
+    QML_NAMED_ELEMENT(DelegateStyle)
 
 public:
     QQStyleKitDelegateProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);

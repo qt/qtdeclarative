@@ -82,7 +82,7 @@ T.ComboBox {
 
     indicator: IndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
+        indicatorStyle: styleReader.indicator
         x: indicatorItem.x
         y: indicatorItem.y
         width: indicatorItem.width
@@ -112,7 +112,7 @@ T.ComboBox {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 
     // TODO: Use the Popup control as is for now,

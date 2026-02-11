@@ -35,6 +35,6 @@ T.Popup {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: control.__styleReader.background
+        backgroundStyle: control.__styleReader.background
     }
 }

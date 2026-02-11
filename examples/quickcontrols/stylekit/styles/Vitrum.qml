@@ -13,21 +13,21 @@ Style {
         implicitHeight: unifiedSourceItem.implicitHeight
         width: parent.width
         height: parent.height
-        scale: delegateProperties.scale
-        rotation: delegateProperties.rotation
-        visible: delegateProperties.visible
+        scale: delegateStyle.scale
+        rotation: delegateStyle.rotation
+        visible: delegateStyle.visible
 
-        required property StyleKitDelegateProperties delegateProperties
+        required property DelegateStyle delegateStyle
 
         readonly property bool isDarkBg: {
-            let bgColor = delegateProperties.color
+            let bgColor = delegateStyle.color
             let luminance = (0.2126 * bgColor.r) +  (0.7152 * bgColor.g) +  (0.0722 * bgColor.b);
             return luminance < 0.5;
         }
 
         // The following properties are used by the shader
         property size sourceItemSize: Qt.size(unifiedSourceItem.width, unifiedSourceItem.height)
-        property color borderColor: delegateProperties.border.color
+        property color borderColor: delegateStyle.border.color
         property real borderMaskEnabled: 1
         property real borderMaskThreshold: 0.001
         property real particleDensity: 0.2
@@ -35,7 +35,7 @@ Style {
         property color particleColor: "black"
         property Item source: ShaderEffectSource { live: true; sourceItem: unifiedSourceItem }
         property real time: 0
-        property real particleOpacity: (delegateProperties.opacity === 1
+        property real particleOpacity: (delegateStyle.opacity === 1
                                        ? (isDarkBg ? 0.15 : 0.05)
                                        : (isDarkBg ? 0.5 : 0.1))
 
@@ -43,7 +43,7 @@ Style {
 
         StyledItem {
             id: unifiedSourceItem
-            delegateProperties: noiseDelegate.delegateProperties
+            delegateStyle: noiseDelegate.delegateStyle
             width: parent.width
             height: parent.height
             visible: false

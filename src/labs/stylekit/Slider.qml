@@ -75,13 +75,13 @@ T.Slider {
 
     handle: HandleDelegate {
         quickControl: control
-        handleProperties: styleReader.handle
+        handleStyle: styleReader.handle
     }
 
     background: BackgroundAndIndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
-        backgroundProperties: styleReader.background
+        indicatorStyle: styleReader.indicator
+        backgroundStyle: styleReader.background
         indicator.secondProgress: control.position
         vertical: control.vertical
     }

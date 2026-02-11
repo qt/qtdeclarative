@@ -33,7 +33,7 @@ T.ProgressBar {
 
     contentItem: IndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
+        indicatorStyle: styleReader.indicator
         secondProgress: control.visualPosition
 
         Connections {
@@ -103,6 +103,6 @@ T.ProgressBar {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 }

@@ -25,27 +25,27 @@ QQStyleKitDelegateContainer::~QQStyleKitDelegateContainer()
         disconnect(m_delegateInstance, nullptr, this, nullptr);
 }
 
-QQStyleKitDelegateProperties *QQStyleKitDelegateContainer::delegateProperties() const
+QQStyleKitDelegateProperties *QQStyleKitDelegateContainer::delegateStyle() const
 {
     return m_delegateProperties;
 }
 
-void QQStyleKitDelegateContainer::setDelegateProperties(QQStyleKitDelegateProperties *delegateProperties)
+void QQStyleKitDelegateContainer::setDelegateStyle(QQStyleKitDelegateProperties *delegateProperties)
 {
     if (m_delegateProperties == delegateProperties)
         return;
 
     if (m_delegateProperties) {
-        /* We don't expect delegateProperties to change after componentCompleted(), since it's bound
+        /* We don't expect m_delegateProperties to change after componentCompleted(), since it's bound
          * to a controls StyleKitReader, which is not supposed to change. So, considering that there
          * might be hundreds of delegate instances in an application, we try to save some connections
          * this way. But note, this is only an optimization, not a technical limitation. */
-        qmlWarning(this) << "Changing delegateProperties on StyleKitContainer is not supported.";
+        qmlWarning(this) << "Changing delegateStyle on StyleKitContainer is not supported.";
         return;
     }
 
     m_delegateProperties = delegateProperties;
-    emit delegatePropertiesChanged();
+    emit delegateStyleChanged();
 }
 
 QObject *QQStyleKitDelegateContainer::quickControl() const
@@ -123,7 +123,7 @@ void QQStyleKitDelegateContainer::maybeCreateDelegate()
     m_delegateInstance->setParent(this);
     m_delegateInstance->setParentItem(this);
     m_delegateInstance->setProperty("control", QVariant::fromValue(m_control.get()));
-    m_delegateInstance->setProperty("delegateProperties", QVariant::fromValue(m_delegateProperties.get()));
+    m_delegateInstance->setProperty("delegateStyle", QVariant::fromValue(m_delegateProperties.get()));
     m_delegateComponent->completeCreate();
 
     updateImplicitSize();
@@ -196,7 +196,7 @@ void QQStyleKitDelegateContainer::maybeCreateShadow()
     m_shadowInstance->setParentItem(this);
     m_shadowInstance->setZ(-1);
     m_shadowInstance->setProperty("control", QVariant::fromValue(m_control.get()));
-    m_shadowInstance->setProperty("delegateProperties", QVariant::fromValue(m_delegateProperties.get()));
+    m_shadowInstance->setProperty("delegateStyle", QVariant::fromValue(m_delegateProperties.get()));
     m_shadowComponent->completeCreate();
 }
 

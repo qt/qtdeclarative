@@ -35,11 +35,11 @@ T.ScrollBar {
 
     contentItem: IndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
+        indicatorStyle: styleReader.indicator
     }
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 }

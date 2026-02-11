@@ -26,7 +26,7 @@ class QQStyleKitDelegateProperties;
 class QQStyleKitDelegateContainer : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQStyleKitDelegateProperties *delegateProperties READ delegateProperties WRITE setDelegateProperties NOTIFY delegatePropertiesChanged FINAL)
+    Q_PROPERTY(QQStyleKitDelegateProperties *delegateStyle READ delegateStyle WRITE setDelegateStyle NOTIFY delegateStyleChanged FINAL)
     Q_PROPERTY(QObject *quickControl READ quickControl WRITE setQuickControl NOTIFY quickControlChanged REQUIRED FINAL)
     Q_PROPERTY(QQuickItem *delegateInstance READ delegateInstance NOTIFY delegateInstanceChanged FINAL)
     Q_PROPERTY(bool usingDefaultDelegate READ usingDefaultDelegate NOTIFY usingDefaultDelegateChanged FINAL)
@@ -36,8 +36,8 @@ public:
     explicit QQStyleKitDelegateContainer(QQuickItem *parent = nullptr);
     ~QQStyleKitDelegateContainer() override;
 
-    QQStyleKitDelegateProperties *delegateProperties() const;
-    void setDelegateProperties(QQStyleKitDelegateProperties *delegateProperties);
+    QQStyleKitDelegateProperties *delegateStyle() const;
+    void setDelegateStyle(QQStyleKitDelegateProperties *delegateProperties);
 
     QObject *quickControl() const;
     void setQuickControl(QObject *control);
@@ -46,7 +46,7 @@ public:
     bool usingDefaultDelegate() const;
 
 signals:
-    void delegatePropertiesChanged();
+    void delegateStyleChanged();
     void quickControlChanged();
     void delegateInstanceChanged();
     void usingDefaultDelegateChanged();

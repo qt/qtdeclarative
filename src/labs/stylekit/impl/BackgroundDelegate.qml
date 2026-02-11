@@ -7,6 +7,6 @@ import Qt.labs.StyleKit
 import Qt.labs.StyleKit.impl
 
 DelegateContainer {
-    required property StyleKitDelegateProperties backgroundProperties
-    delegateProperties: backgroundProperties
+    required property DelegateStyle backgroundStyle
+    delegateStyle: backgroundStyle
 }

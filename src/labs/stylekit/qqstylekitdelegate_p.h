@@ -26,17 +26,17 @@ class QQStyleKitDelegateProperties;
 class QQStyleKitDelegate : public QQuickImplicitSizeItem
 {
     Q_OBJECT
-    Q_PROPERTY(QQStyleKitDelegateProperties *delegateProperties READ delegateProperties WRITE setDelegateProperties NOTIFY delegatePropertiesChanged REQUIRED FINAL)
+    Q_PROPERTY(QQStyleKitDelegateProperties *delegateStyle READ delegateStyle WRITE setDelegateStyle NOTIFY delegateStyleChanged REQUIRED FINAL)
     QML_NAMED_ELEMENT(StyledItemBase)
 
 public:
     explicit QQStyleKitDelegate(QQuickItem *parent = nullptr);
 
-    QQStyleKitDelegateProperties *delegateProperties() const;
-    void setDelegateProperties(QQStyleKitDelegateProperties *delegateProperties);
+    QQStyleKitDelegateProperties *delegateStyle() const;
+    void setDelegateStyle(QQStyleKitDelegateProperties *delegateStyle);
 
 signals:
-    void delegatePropertiesChanged();
+    void delegateStyleChanged();
 
 private:
     void updateImplicitSize();

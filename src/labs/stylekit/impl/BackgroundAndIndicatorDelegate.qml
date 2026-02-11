@@ -27,8 +27,8 @@ Item {
                     : Math.max(background.implicitWidth,
                                indicatorLayout.implicitWidth)
 
-    required property StyleKitDelegateProperties indicatorProperties
-    required property StyleKitDelegateProperties backgroundProperties
+    required property DelegateStyle indicatorStyle
+    required property DelegateStyle backgroundStyle
     required property T.Control quickControl
     property alias indicator: indicator
     property bool vertical: false
@@ -46,13 +46,13 @@ Item {
             StyleKitLayoutItem {
                 id: indicatorItem
                 item: root.indicator
-                alignment: indicatorProperties.alignment
-                margins.left: indicatorProperties.leftMargin
-                margins.right: indicatorProperties.rightMargin
-                margins.top: indicatorProperties.topMargin
-                margins.bottom: indicatorProperties.bottomMargin
-                fillWidth: indicatorProperties.implicitWidth === Style.Stretch
-                fillHeight: indicatorProperties.implicitHeight === Style.Stretch
+                alignment: indicatorStyle.alignment
+                margins.left: indicatorStyle.leftMargin
+                margins.right: indicatorStyle.rightMargin
+                margins.top: indicatorStyle.topMargin
+                margins.bottom: indicatorStyle.bottomMargin
+                fillWidth: indicatorStyle.implicitWidth === Style.Stretch
+                fillHeight: indicatorStyle.implicitHeight === Style.Stretch
             }
         ]
         mirrored: quickControl.mirrored
@@ -75,20 +75,20 @@ Item {
     BackgroundDelegate {
         id: background
         quickControl: root.quickControl
-        delegateProperties: root.backgroundProperties
+        delegateStyle: root.backgroundStyle
     }
 
     IndicatorDelegate {
         id: indicator
         quickControl: root.quickControl
-        indicatorProperties: root.indicatorProperties
+        indicatorStyle: root.indicatorStyle
         vertical: root.vertical
         z: 1
         x: !vertical ? indicatorItem.x : quickControl.leftPadding + (quickControl.availableWidth - height) / 2
         y: !vertical ? indicatorItem.y : quickControl.topPadding + width
         width: !vertical ? indicatorItem.width : __stretchBgWidth ? quickControl.availableHeight : implicitWidth//indicatorItem.height
         height: !vertical ? indicatorItem.height : __stretchBgHeight ? quickControl.availableWidth : implicitHeight//indicatorItem.width
-        readonly property bool __stretchBgWidth: root.indicatorProperties.implicitWidth === Style.Stretch
-        readonly property bool __stretchBgHeight: root.indicatorProperties.implicitHeight === Style.Stretch
+        readonly property bool __stretchBgWidth: root.indicatorStyle.implicitWidth === Style.Stretch
+        readonly property bool __stretchBgHeight: root.indicatorStyle.implicitHeight === Style.Stretch
     }
 }

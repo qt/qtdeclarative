@@ -66,7 +66,7 @@ T.Switch {
 
     indicator: IndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
+        indicatorStyle: styleReader.indicator
         x: indicatorItem.x
         y: indicatorItem.y
         width: indicatorItem.width
@@ -74,7 +74,7 @@ T.Switch {
 
         HandleDelegate {
             quickControl: control
-            handleProperties: styleReader.handle
+            handleStyle: styleReader.handle
             x: control.checked
                ? indicator.width - width - styleReader.handle.rightMargin
                : styleReader.handle.leftMargin
@@ -100,6 +100,6 @@ T.Switch {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 }

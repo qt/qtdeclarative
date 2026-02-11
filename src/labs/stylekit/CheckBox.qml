@@ -68,7 +68,7 @@ T.CheckBox {
 
     indicator: IndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReader.indicator
+        indicatorStyle: styleReader.indicator
         x: indicatorItem.x
         y: indicatorItem.y
         width: indicatorItem.width
@@ -90,6 +90,6 @@ T.CheckBox {
 
     background: BackgroundDelegate {
         quickControl: control
-        backgroundProperties: styleReader.background
+        backgroundStyle: styleReader.background
     }
 }

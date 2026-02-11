@@ -117,18 +117,18 @@ T.RangeSlider {
 
     first.handle: HandleDelegate {
         quickControl: control
-        handleProperties: styleReaderFirst.handle.first
+        handleStyle: styleReaderFirst.handle.first
     }
 
     second.handle: HandleDelegate {
         quickControl: control
-        handleProperties: styleReaderSecond.handle.second
+        handleStyle: styleReaderSecond.handle.second
     }
 
     background: BackgroundAndIndicatorDelegate {
         quickControl: control
-        indicatorProperties: styleReaderIndicator.indicator
-        backgroundProperties: styleReaderIndicator.background
+        indicatorStyle: styleReaderIndicator.indicator
+        backgroundStyle: styleReaderIndicator.background
         indicator.firstProgress: control.first.position
         indicator.secondProgress: control.second.position
         vertical: control.vertical
