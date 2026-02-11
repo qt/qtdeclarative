@@ -27,6 +27,7 @@ private slots:
     void ctor_intWithEngine();
     void ctor_stringWithEngine();
     void ctor_copyAndAssignWithEngine();
+    void divisionByZero();
     void toString();
     void toNumber();
     void toBoolean();
@@ -442,6 +443,24 @@ void tst_QJSPrimitiveValue::ctor_copyAndAssignWithEngine()
     v = QJSPrimitiveValue();
     QCOMPARE(v5.strictlyEquals(v), false);
     QCOMPARE(v5.toDouble(), 1.0);
+}
+
+void tst_QJSPrimitiveValue::divisionByZero()
+{
+    QJSPrimitiveValue zero(0.0);
+    QJSPrimitiveValue pos(1);
+    QJSPrimitiveValue neg(-1);
+
+    QJSPrimitiveValue quietNan = zero / zero;
+    QVERIFY(qIsNaN(quietNan.toDouble()));
+
+    QJSPrimitiveValue inf = pos / zero;
+    QVERIFY(qIsInf(inf.toDouble()));
+    QCOMPARE_GT(inf, 0);
+
+    QJSPrimitiveValue ninf = neg / zero;
+    QVERIFY(qIsInf(ninf.toDouble()));
+    QCOMPARE_LT(ninf, 0);
 }
 
 void tst_QJSPrimitiveValue::toString()
