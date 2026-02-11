@@ -8,7 +8,7 @@
 \title qt_add_qml_plugin
 \keyword qt6_add_qml_plugin
 
-\brief Defines a plugin associated with a QML module.
+\summary{Defines a plugin associated with a QML module.}
 
 \include cmake-find-package-qml.qdocinc
 

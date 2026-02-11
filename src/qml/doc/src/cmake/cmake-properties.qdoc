@@ -19,7 +19,7 @@ global CMake properties:
 
 \title QT_QMLLINTER_TARGETS_FOLDER
 
-\brief Sets the FOLDER property for targets that belong to the QML linter.
+\summary{Sets the FOLDER property for targets that belong to the QML linter.}
 
 \cmakepropertysince 6.5
 \preliminarycmakeproperty
