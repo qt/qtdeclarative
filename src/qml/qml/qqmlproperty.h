@@ -23,7 +23,7 @@ class QQmlPropertyPrivate;
 class Q_QML_EXPORT QQmlProperty
 {
     Q_GADGET
-    QML_ANONYMOUS
+    QML_VALUE_TYPE(qmlProperty)
 
     Q_PROPERTY(QObject *object READ object CONSTANT FINAL)
     Q_PROPERTY(QString name READ name CONSTANT FINAL)

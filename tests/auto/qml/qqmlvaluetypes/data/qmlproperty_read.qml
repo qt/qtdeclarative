@@ -6,4 +6,6 @@ MyTypeObject {
     property string colorPropertyName: colorProperty.name
     property QtObject invalidPropertyObject: invalidProperty.object
     property string invalidPropertyName: invalidProperty.name
+
+    property qmlProperty colorPropertyCopy: colorProperty
 }

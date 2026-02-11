@@ -298,6 +298,10 @@ void tst_qqmlvaluetypes::qmlproperty()
     QCOMPARE(object->property("colorPropertyName").toString(), "color");
     QCOMPARE(object->property("invalidPropertyObject").value<QObject *>(), nullptr);
     QCOMPARE(object->property("invalidPropertyName").toString(), "");
+
+    QQmlProperty colorPropertyCopy = object->property("colorPropertyCopy").value<QQmlProperty>();
+    QVERIFY(colorPropertyCopy.isValid());
+    QCOMPARE(colorPropertyCopy, object->colorProperty());
 }
 
 void tst_qqmlvaluetypes::easingCurve()

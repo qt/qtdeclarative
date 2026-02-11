@@ -233,6 +233,36 @@ is automatically converted into a QRectF value.
 */
 
 /*!
+\qmlvaluetype qmlProperty
+\nativetype QQmlProperty
+\inqmlmodule QtQml
+\ingroup qtqmlvaluetypes
+\since 6.12
+\brief a value referring to a property of an object.
+
+The \c qmlProperty type refers to a property of a specific object instance.
+
+An invalid value of type \c qmlProperty has a \c null \c object and
+an empty \c name.
+
+\c qmlProperty values are not constructible from QML but can be passed from C++.
+
+\sa {QML Value Types}
+*/
+
+/*!
+\qmlproperty QtObject qmlProperty::object
+
+This read-only property holds the object of the referenced property.
+*/
+
+/*!
+\qmlproperty string qmlProperty::name
+
+This read-only property holds the name of the referenced property.
+*/
+
+/*!
 \qmltype Easing
 \nativetype QQmlEasing
 \inqmlmodule QtQml
