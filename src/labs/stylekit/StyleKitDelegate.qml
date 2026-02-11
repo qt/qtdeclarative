@@ -10,4 +10,5 @@ StyleKitDelegateBase {
     // where to apply the transform.
     scale: delegateProperties.scale
     rotation: delegateProperties.rotation
+    visible: delegateProperties.visible
 }

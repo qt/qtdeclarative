@@ -90,7 +90,6 @@ void QQStyleKitDelegate::maybeCreateColor()
                 z: -3
                 width: parent.width
                 height: parent.height
-                visible: delegateProperties.visible
                 color: delegateProperties.color
                 topLeftRadius: delegateProperties.topLeftRadius
                 topRightRadius: delegateProperties.topRightRadius
@@ -144,7 +143,6 @@ void QQStyleKitDelegate::maybeCreateGradient()
                 z: -2
                 width: parent.width
                 height: parent.height
-                visible: delegateProperties.visible
                 color: "transparent"
                 gradient: delegateProperties.gradient
                 topLeftRadius: delegateProperties.topLeftRadius
@@ -199,7 +197,6 @@ void QQStyleKitDelegate::maybeCreateImage()
                 z: -1
                 width: parent.width
                 height: parent.height
-                visible: delegateProperties.visible
                 color: delegateProperties.image.color
                 source: delegateProperties.image.source
                 fillMode: delegateProperties.image.fillMode
