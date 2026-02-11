@@ -5,7 +5,7 @@
 ## StyleKitImpl Module:
 #####################################################################
 
-qt_internal_add_qml_module(QtQuickStyleKitImpl
+qt_internal_add_qml_module(LabsStyleKitImpl
     URI Qt.labs.StyleKit.impl
     DEPENDENCIES
         QtQuick/auto
@@ -25,5 +25,5 @@ qt_internal_add_qml_module(QtQuickStyleKitImpl
         Qt6::QuickPrivate
         Qt6::QuickTemplates2
         Qt6::QuickTemplates2Private
-        Qt6::QtQuickStyleKit
+        Qt6::LabsStyleKit
 )

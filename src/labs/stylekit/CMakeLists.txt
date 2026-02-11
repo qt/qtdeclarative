@@ -5,7 +5,7 @@
 ## StyleKit Module:
 #####################################################################
 
-qt_internal_add_qml_module(QtQuickStyleKit
+qt_internal_add_qml_module(LabsStyleKit
     URI Qt.labs.StyleKit
     IMPORTS QtQuick.Controls.Basic
     SOURCES

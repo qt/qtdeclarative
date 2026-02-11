@@ -25,7 +25,7 @@
 
 #include "qqstylekitglobal_p.h"
 #include "qqstylekitpropertyresolver_p.h"
-#include <QtQtQuickStyleKit/qtqtquickstylekitexports.h>
+#include <QtLabsStyleKit/qtlabsstylekitexports.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -175,7 +175,7 @@ signals:
 
 // ************* QQStyleKitShadowProperties ****************
 
-class Q_QTQUICKSTYLEKIT_EXPORT QQStyleKitShadowProperties : public QQStyleKitPropertyGroup
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitShadowProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
@@ -232,7 +232,7 @@ signals:
 
 // ************* QQStyleKitDelegateProperties ****************
 
-class Q_QTQUICKSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitPropertyGroup
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
