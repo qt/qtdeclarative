@@ -10235,6 +10235,18 @@ void tst_qqmllanguage::multiTypeResolution()
     QScopedPointer<QObject> o2(c2.create());
     QVERIFY(o2);
     QCOMPARE(o2->objectName(), "blue");
+
+    QQmlComponent c3(&engine1, testFileUrl("MultiEngineICList.qml"));
+    QVERIFY2(c3.isReady(), qPrintable(c3.errorString()));
+    std::unique_ptr<QObject> o3(c3.create());
+    QVERIFY(o3);
+    QCOMPARE(o3->objectName(), "2 2");
+
+    QQmlComponent c4(&engine2, testFileUrl("MultiEngineICList.qml"));
+    QVERIFY2(c4.isReady(), qPrintable(c4.errorString()));
+    std::unique_ptr<QObject> o4(c4.create());
+    QVERIFY(o4);
+    QCOMPARE(o4->objectName(), "2 2");
 }
 
 QTEST_MAIN(tst_qqmllanguage)
