@@ -1517,10 +1517,11 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(
     return QQmlPropertyCache::ConstPtr();
 }
 
-bool QQmlMetaType::canConvert(QObject *o, QMetaType metaType)
+template<typename From, typename CanConvertPropCache, typename CanConvertMetaObject>
+bool canConvertToPropCacheOrMetaObject(
+        const QQmlMetaTypeDataPtr &data, const From &from, QMetaType metaType,
+        CanConvertPropCache &&canConvertPropCache, CanConvertMetaObject &&canConvertMetaObject)
 {
-    QQmlMetaTypeDataPtr data;
-
     // There can be multiple composite types mapped to the same metatype. Since a property metatype
     // alone cannot specify which property cache is actually meant, the only thing we can do here
     // is check them all.
@@ -1530,8 +1531,8 @@ bool QQmlMetaType::canConvert(QObject *o, QMetaType metaType)
     auto [it, end] = data->compositeTypes.equal_range(metaType.iface());
     if (it != end) {
         do {
-            if (QQmlMetaObject::canConvert(
-                        o, QQmlMetaTypeData::propertyCacheForPotentialInlineComponentType(
+            if (canConvertPropCache(
+                        from, QQmlMetaTypeData::propertyCacheForPotentialInlineComponentType(
                                    metaType, it))) {
                 return true;
             }
@@ -1543,14 +1544,52 @@ bool QQmlMetaType::canConvert(QObject *o, QMetaType metaType)
     }
 
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
-    if (type && type->typeId == metaType)
-        return QQmlMetaObject::canConvert(o, type->baseMetaObject);
+    if (type && type->typeId == metaType && type->baseMetaObject)
+        return canConvertMetaObject(from, type->baseMetaObject);
 
     // Types we don't know may still have metaobjects
     if (const QMetaObject *metaObject = metaType.metaObject())
-        return QQmlMetaObject::canConvert(o, metaObject);
+        return canConvertMetaObject(from, metaObject);
 
     return false;
+}
+
+bool QQmlMetaType::canConvert(QObject *o, QMetaType metaType)
+{
+    QQmlMetaTypeDataPtr data;
+
+    return canConvertToPropCacheOrMetaObject(
+            data, o, metaType, [](QObject *o, const QQmlPropertyCache::ConstPtr &propCache) {
+        return QQmlMetaObject::canConvert(o, propCache);
+    }, [](QObject *o, const QMetaObject *metaObject) {
+        return QQmlMetaObject::canConvert(o, metaObject);
+    });
+}
+
+static bool inherits(
+        const QQmlPropertyCache::ConstPtr &derived, const QQmlPropertyCache::ConstPtr &base)
+{
+    for (QQmlPropertyCache::ConstPtr parent = derived; parent; parent = parent->parent()) {
+        if (parent == base)
+            return true;
+    }
+
+    return false;
+}
+
+bool QQmlMetaType::canConvert(const QQmlPropertyCache::ConstPtr &from, QMetaType metaType)
+{
+    QQmlMetaTypeDataPtr data;
+
+    return canConvertToPropCacheOrMetaObject(
+           data, from, metaType,
+           [](const QQmlPropertyCache::ConstPtr &from, const QQmlPropertyCache::ConstPtr &to) {
+        return inherits(from, to);
+    }, [&](const QQmlPropertyCache::ConstPtr &from, const QMetaObject *toMeta) {
+        if (const QMetaObject *fromMeta = from->metaObject())
+            return QQmlMetaObject::canConvert(fromMeta, toMeta);
+        return inherits(from, data->propertyCache(toMeta, QTypeRevision()));
+    });
 }
 
 void QQmlMetaType::unregisterType(int typeIndex)
