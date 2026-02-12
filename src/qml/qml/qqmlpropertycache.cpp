@@ -1366,9 +1366,7 @@ int countMetaObjectFields(const QMetaObject &mo, StringVisitor stringVisitor)
 
 } // anonymous namespace
 
-// Temporary leniency to allow for smooth transition of moc change - QTBUG-142186
-static_assert(QMetaObjectPrivate::OutputRevision == 13 || QMetaObjectPrivate::OutputRevision == 14,
-              "Check and adjust determineMetaObjectSizes");
+static_assert(QMetaObjectPrivate::OutputRevision == 13, "Check and adjust determineMetaObjectSizes");
 
 bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount,
                                                  int *stringCount)

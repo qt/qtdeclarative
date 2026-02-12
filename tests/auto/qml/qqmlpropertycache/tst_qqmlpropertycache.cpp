@@ -609,17 +609,9 @@ void tst_qqmlpropertycache::metaObjectSize_data()
     QTest::addColumn<int>("expectedFieldCount");
     QTest::addColumn<int>("expectedStringCount");
 
-    // TODO temporarilly handle both output format for a smoother revision transition.
-    // Remove revision 13 version asap
-    if (QtMocConstants::OutputRevision == 13) {
-        TEST_CLASS(TestClass, 49, 10);
-        TEST_CLASS(TestClassWithParameters, 24, 4);
-        TEST_CLASS(TestClassWithClassInfo, 17, 3);
-    } else if (QtMocConstants::OutputRevision == 14) {
-        TEST_CLASS(TestClass, 50, 11);
-        TEST_CLASS(TestClassWithParameters, 25, 5);
-        TEST_CLASS(TestClassWithClassInfo, 18, 4);
-    }
+    TEST_CLASS(TestClass, 49, 10);
+    TEST_CLASS(TestClassWithParameters, 24, 4);
+    TEST_CLASS(TestClassWithClassInfo, 17, 3);
 }
 
 void tst_qqmlpropertycache::metaObjectSize()
