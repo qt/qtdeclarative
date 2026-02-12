@@ -21,9 +21,10 @@ QQmlProxyMetaObject::QQmlProxyMetaObject(QObject *obj, const QList<ProxyData> *m
 
 QQmlProxyMetaObject::~QQmlProxyMetaObject()
 {
-    if (parent)
-        delete parent;
-    parent = nullptr;
+    // If the parent still exists, we're being deleted while the object is still alive.
+    // In that case, restore the parent.
+    if (QDynamicMetaObjectData *dynamicParent = std::exchange(parent, nullptr))
+        QObjectPrivate::get(object)->metaObject = dynamicParent;
 
     if (proxies)
         delete [] proxies;
@@ -130,10 +131,12 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 
 void QQmlProxyMetaObject::objectDestroyed(QObject *object)
 {
-    if (parent)
-        parent->objectDestroyed(object);
-    else
-        QDynamicMetaObjectData::objectDestroyed(object);
+    // The object is being deleted. parent will likely delete itself on objectDestroyed().
+    // We don't want to keep a dangling pointer, so null it. Also, we're in
+    // ~QObjectPrivate(). Don't mess with object anymore here.
+    if (QDynamicMetaObjectData *dynamicParent = std::exchange(parent, nullptr))
+        dynamicParent->objectDestroyed(object);
+    QDynamicMetaObjectData::objectDestroyed(object);
 }
 
 QT_END_NAMESPACE
