@@ -1038,7 +1038,7 @@ QQStyleKitControlState *QQStyleKitControlProperties::asQQStyleKitState() const
 void QQStyleKitControlProperties::forEachUsedDelegate(
     std::function<void (QQStyleKitDelegateProperties *, QQSK::Delegate, const QString &)> f)
 {
-    // If adding more delegates here, remember to keep StyleKitAnimation.qml in sync
+    // If adding more delegates here, remember to keep StyleAnimation.qml in sync
     if (m_background)
         f(m_background, QQSK::Delegate::Background, "background"_L1);
 

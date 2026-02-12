@@ -43,7 +43,7 @@ Style {
         text.color: "blue"
 
         transition: Transition {
-            StyleKitAnimation {
+            StyleAnimation {
                 animateColors: true
                 animateBackgroundBorder: true
                 duration: 300

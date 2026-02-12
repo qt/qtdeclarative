@@ -43,7 +43,7 @@ Style {
         }
 
         transition: Transition {
-            StyleKitAnimation {
+            StyleAnimation {
                 animateColors: true
                 animateBackgroundShadow: true
                 animateHandleShadow: true
@@ -94,7 +94,7 @@ Style {
     checkBox {
         transition: Transition {
             NumberAnimation {
-                // Using a StyleKitAnimation for transitions is optional. A StyleKitAnimation can be
+                // Using a StyleAnimation for transitions is optional. A StyleAnimation can be
                 // used in parallel with other animations, or not used at all. Here we choose to use
                 // a NumberAnimation instead to animate the 'checked' image so that it bounces.
                 properties: "indicator.foreground.leftMargin, indicator.foreground.rightMargin"
