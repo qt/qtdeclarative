@@ -395,11 +395,11 @@ void QQmlTreeModel::doInsert(const QModelIndex &parent, int rowIndex, const QVar
                 ? row
                 : row.value<QJSValue>().toVariant();
 
-    auto *newChild = new QQmlTreeRow(data);
+    auto newChild = std::make_unique<QQmlTreeRow>(data);
     if (parent.isValid())
-        static_cast<QQmlTreeRow *>(parent.internalPointer())->insertChild(rowIndex, newChild);
+        static_cast<QQmlTreeRow *>(parent.internalPointer())->insertChild(rowIndex, std::move(newChild));
     else
-        mRows.insert(mRows.begin() + rowIndex, std::unique_ptr<QQmlTreeRow>(newChild));
+        mRows.insert(mRows.begin() + rowIndex, std::move(newChild));
 
     qCDebug(lcTreeModel).nospace() << "inserted the following row to the row "
         << parent << " at index "
@@ -757,28 +757,27 @@ bool QQmlTreeModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int
                        destinationParent, destinationChild))
         return false;
 
-    // Root-level children live in mRows on the model, not in a QQmlTreeRow,
+   // Root-level children live in mRows on the model, not in a QQmlTreeRow,
     // so internalPointer() is nullptr for the root QModelIndex.
-    auto takeChild = [this](const QModelIndex &parent, int row) -> QQmlTreeRow * {
+    auto takeChild = [this](const QModelIndex &parent, int row) -> std::unique_ptr<QQmlTreeRow> {
         if (parent.isValid())
             return static_cast<QQmlTreeRow *>(parent.internalPointer())->takeChild(row);
         auto it = std::next(mRows.begin(), row);
-        QQmlTreeRow *child = it->release();
+        std::unique_ptr<QQmlTreeRow> child = std::move(*it);
         mRows.erase(it);
         return child;
     };
 
-    auto insertChild = [this](const QModelIndex &parent, int row, QQmlTreeRow *child) {
+    auto insertChild = [this](const QModelIndex &parent, int row, std::unique_ptr<QQmlTreeRow> child) {
         if (parent.isValid()) {
-            static_cast<QQmlTreeRow *>(parent.internalPointer())->insertChild(row, child);
+            static_cast<QQmlTreeRow *>(parent.internalPointer())->insertChild(row, std::move(child));
         } else {
             child->setParent(nullptr);
-            mRows.insert(std::next(mRows.begin(), row),
-                         std::unique_ptr<QQmlTreeRow>(child));
+            mRows.insert(std::next(mRows.begin(), row), std::move(child));
         }
     };
 
-    std::vector<QQmlTreeRow *> buffer;
+    std::vector<std::unique_ptr<QQmlTreeRow>> buffer;
     buffer.reserve(count);
     for (int i = 0; i < count; ++i)
         buffer.push_back(takeChild(sourceParent, sourceRow));
@@ -791,7 +790,7 @@ bool QQmlTreeModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int
         insertAt -= count;
 
     for (int i = 0; i < count; ++i)
-        insertChild(destinationParent, insertAt + i, buffer[i]);
+        insertChild(destinationParent, insertAt + i, std::move(buffer[i]));
 
     endMoveRows();
     emit rowsChanged();

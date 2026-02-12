@@ -35,10 +35,10 @@ void QQmlTreeRow::addChild(QQmlTreeRow *child)
     child->setParent(this);
 }
 
-void QQmlTreeRow::insertChild(int index, QQmlTreeRow *child)
+void QQmlTreeRow::insertChild(int index, std::unique_ptr<QQmlTreeRow> child)
 {
-    m_children.insert(m_children.begin() + index, std::unique_ptr<QQmlTreeRow>(child));
     child->setParent(this);
+    m_children.insert(m_children.begin() + index, std::move(child));
 }
 
 void QQmlTreeRow::unpackVariantMap(const QVariantMap &variantMap)
@@ -67,10 +67,10 @@ void QQmlTreeRow::removeChildAt(int i)
     m_children.erase(std::next(m_children.begin(), i));
 }
 
-QQmlTreeRow* QQmlTreeRow::takeChild(int i)
+std::unique_ptr<QQmlTreeRow> QQmlTreeRow::takeChild(int i)
 {
     auto it = std::next(m_children.begin(), i);
-    QQmlTreeRow *child = it->release();
+    std::unique_ptr<QQmlTreeRow> child = std::move(*it);
     m_children.erase(it);
     return child;
 }
