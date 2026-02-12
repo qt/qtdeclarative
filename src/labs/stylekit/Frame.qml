@@ -22,10 +22,10 @@ T.Frame {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.Frame
+        controlType: StyleReader.Frame
         enabled: control.enabled
         focused: control.activeFocus
         palette: control.palette

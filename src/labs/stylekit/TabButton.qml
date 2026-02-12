@@ -28,10 +28,10 @@ T.TabButton {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.TabButton
+        controlType: StyleReader.TabButton
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked

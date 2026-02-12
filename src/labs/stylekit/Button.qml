@@ -28,10 +28,10 @@ T.Button {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: control.flat ? StyleKitReader.FlatButton : StyleKitReader.Button
+        controlType: control.flat ? StyleReader.FlatButton : StyleReader.Button
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked

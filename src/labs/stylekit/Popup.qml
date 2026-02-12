@@ -11,12 +11,12 @@ import Qt.labs.StyleKit.impl
 T.Popup {
     id: control
 
-    StyleVariation.controlType: __styleReader.type
-    readonly property StyleKitReader __styleReader: StyleKitReader {
-        // TODO: making StyleKitReader a child object of T.Popup makes the
+    StyleVariation.controlType: __styleReader.controlType
+    readonly property StyleReader __styleReader: StyleReader {
+        // TODO: making StyleReader a child object of T.Popup makes the
         // popup not open on press. So use a __styleReader property for now
         // until we know the reason why.
-        type: StyleKitReader.Popup
+        controlType: StyleReader.Popup
         enabled: control.enabled
         focused: control.activeFocus
         palette: control.palette

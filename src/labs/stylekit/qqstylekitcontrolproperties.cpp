@@ -140,8 +140,8 @@ T *QQStyleKitPropertyGroup::lazyCreateGroup(T * const &ptr, QQSK::PropertyGroup 
 #define CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(CONTROL_PROPERTIES, GROUP_PATH) \
 if (this == CONTROL_PROPERTIES -> GROUP_PATH ) { \
     for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders) { \
-        const auto baseTypes = QQStyleKitPropertyResolver::baseTypesForType(reader->type()); \
-        if (reader->type() != controlType && !baseTypes.contains(controlType)) \
+        const auto baseTypes = QQStyleKitPropertyResolver::baseTypesForType(reader->controlType()); \
+        if (reader->controlType() != controlType && !baseTypes.contains(controlType)) \
             continue; \
         reader->clearLocalStorage(); \
         ((reader-> GROUP_PATH ->*changedSignals)(), ...); \
@@ -1092,7 +1092,7 @@ void QQStyleKitControlProperties::emitGlobally(
     QQStyleKitExtendableControlType controlType, CHANGED_SIGNALS... changedSignals) const
 {
     for (QQStyleKitReader *reader : QQStyleKitReader::s_allReaders) {
-        if (reader->type() != controlType)
+        if (reader->controlType() != controlType)
             continue;
         ((reader->*changedSignals)(), ...);
     }

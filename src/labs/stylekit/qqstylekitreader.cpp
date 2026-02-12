@@ -373,19 +373,19 @@ bool QQStyleKitReader::dontEmitChangedSignals() const
     return m_dontEmitChangedSignals;
 }
 
-QQStyleKitExtendableControlType QQStyleKitReader::type() const
+QQStyleKitExtendableControlType QQStyleKitReader::controlType() const
 {
     return m_type;
 }
 
-void QQStyleKitReader::setType(QQStyleKitExtendableControlType type)
+void QQStyleKitReader::setControlType(QQStyleKitExtendableControlType type)
 {
     if (m_type == type)
         return;
 
     m_type = type;
     populateLocalStorage();
-    emit typeChanged();
+    emit controlTypeChanged();
     updateControl();
 }
 
@@ -555,7 +555,7 @@ void QQStyleKitReader::onPaletteChanged()
 
 bool QQStyleKitReader::rebuildEffectivePalette()
 {
-    auto mergedPalette = style()->paletteForControlType(this->type());
+    auto mergedPalette = style()->paletteForControlType(this->controlType());
     const auto stylePaletteResolveMask = mergedPalette.resolveMask();
     if (m_palette) {
         // The control palette takes precedence over the style palette
@@ -586,7 +586,7 @@ bool QQStyleKitReader::rebuildEffectiveFont()
     if (!m_fontDirty)
         return false;
 
-    QFont font = style->fontForControlType(this->type());
+    QFont font = style->fontForControlType(controlType());
     const QQStyleKitTextProperties *textProps = global()->text();
     if (textProps) {
         if (textProps->isDefined(QQSK::Property::Bold))

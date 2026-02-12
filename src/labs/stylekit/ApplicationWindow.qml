@@ -20,10 +20,10 @@ T.ApplicationWindow {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ApplicationWindow
+        controlType: StyleReader.ApplicationWindow
         palette: control.palette
     }
 }

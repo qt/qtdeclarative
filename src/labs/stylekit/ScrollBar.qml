@@ -21,10 +21,10 @@ T.ScrollBar {
     bottomPadding: styleReader.bottomPadding
     spacing: styleReader.spacing
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ScrollBar
+        controlType: StyleReader.ScrollBar
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

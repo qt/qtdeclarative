@@ -32,7 +32,7 @@ class QQStyleKitPropertyResolver;
 class QQStyleKitReader : public QQStyleKitControlProperties
 {
     Q_OBJECT
-    Q_PROPERTY(QQStyleKitExtendableControlType type READ type WRITE setType NOTIFY typeChanged FINAL)
+    Q_PROPERTY(QQStyleKitExtendableControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool focused READ focused WRITE setFocused NOTIFY focusedChanged FINAL)
     Q_PROPERTY(bool checked READ checked WRITE setChecked NOTIFY checkedChanged FINAL)
@@ -44,7 +44,7 @@ class QQStyleKitReader : public QQStyleKitControlProperties
     Q_PROPERTY(QQuickPalette *palette READ palette WRITE setPalette NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QQStyleKitControlProperties *global READ global CONSTANT FINAL)
 
-    QML_NAMED_ELEMENT(StyleKitReader)
+    QML_NAMED_ELEMENT(StyleReader)
 
 public:
     enum ControlType {
@@ -94,8 +94,8 @@ public:
     QQStyleKitReader(QObject *parent = nullptr);
     ~QQStyleKitReader();
 
-    QQStyleKitExtendableControlType type() const;
-    void setType(QQStyleKitExtendableControlType type);
+    QQStyleKitExtendableControlType controlType() const;
+    void setControlType(QQStyleKitExtendableControlType type);
 #ifdef QT_DEBUG
     ControlType typeAsControlType() const;
 #endif
@@ -142,7 +142,7 @@ public:
     static QList<QQStyleKitReader *> s_allReaders;
 
 signals:
-    void typeChanged();
+    void controlTypeChanged();
     void customTypeChanged();
     void propertiesChanged();
     void enabledChanged();

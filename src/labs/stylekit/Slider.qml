@@ -61,10 +61,10 @@ T.Slider {
         }
     ]
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.Slider
+        controlType: StyleReader.Slider
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

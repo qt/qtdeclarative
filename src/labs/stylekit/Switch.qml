@@ -24,10 +24,10 @@ T.Switch {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.SwitchControl
+        controlType: StyleReader.SwitchControl
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

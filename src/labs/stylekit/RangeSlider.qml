@@ -79,12 +79,12 @@ T.RangeSlider {
         }
     ]
 
-    readonly property StyleKitReader styleReader: styleReaderFirst
+    readonly property StyleReader styleReader: styleReaderFirst
 
-    StyleVariation.controlType: styleReaderFirst.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReaderFirst.controlType
+    StyleReader {
         id: styleReaderFirst
-        type: StyleKitReader.Slider
+        controlType: StyleReader.Slider
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.first.hovered
@@ -93,9 +93,9 @@ T.RangeSlider {
         vertical: !control.horizontal
     }
 
-    StyleKitReader {
+    StyleReader {
         id: styleReaderSecond
-        type: StyleKitReader.Slider
+        controlType: StyleReader.Slider
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.second.hovered
@@ -104,9 +104,9 @@ T.RangeSlider {
         vertical: !control.horizontal
     }
 
-    StyleKitReader {
+    StyleReader {
         id: styleReaderIndicator
-        type: StyleKitReader.Slider
+        controlType: StyleReader.Slider
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered || control.first.hovered || control.second.hovered

@@ -32,10 +32,10 @@ T.TextField {
     selectedTextColor: control.palette.highlightedText
     placeholderTextColor: control.palette.placeholderText
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.TextField
+        controlType: StyleReader.TextField
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

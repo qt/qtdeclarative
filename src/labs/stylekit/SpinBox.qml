@@ -24,10 +24,10 @@ T.SpinBox {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.SpinBox
+        controlType: StyleReader.SpinBox
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered || control.down.hovered || control.up.hovered
@@ -35,9 +35,9 @@ T.SpinBox {
         palette: control.palette
     }
 
-    StyleKitReader {
+    StyleReader {
         id: upProperties
-        type: StyleKitReader.SpinBox
+        controlType: StyleReader.SpinBox
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.up.hovered
@@ -45,9 +45,9 @@ T.SpinBox {
         palette: control.palette
     }
 
-    StyleKitReader {
+    StyleReader {
         id: downProperties
-        type: StyleKitReader.SpinBox
+        controlType: StyleReader.SpinBox
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.down.hovered

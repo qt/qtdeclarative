@@ -26,10 +26,10 @@ T.ComboBox {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ComboBox
+        controlType: StyleReader.ComboBox
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered || control.pressed

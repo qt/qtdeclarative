@@ -34,10 +34,10 @@ T.TextArea {
     selectedTextColor: control.palette.highlightedText
     placeholderTextColor: control.palette.placeholderText
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.TextArea
+        controlType: StyleReader.TextArea
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

@@ -26,10 +26,10 @@ T.Page {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.Page
+        controlType: StyleReader.Page
         enabled: control.enabled
         focused: control.activeFocus
         palette: control.palette

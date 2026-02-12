@@ -137,7 +137,7 @@ void QQStyleKitPropertyResolver::addTypeVariationsToReader(
     /* Inside each Type Variation, check if the control type that styleReader represents has
      * been defined. If so, it means that the variation might affect it, and should therefore be
      * added to the style readers list of effective variations. */
-    const QQStyleKitExtendableControlType styleReaderType = styleReader->type();
+    const QQStyleKitExtendableControlType styleReaderType = styleReader->controlType();
     const auto styleReaderBaseType = baseTypesForType(styleReaderType);
 
     const auto inStyleVariations = *qvariant_cast<QList<QQStyleKitVariation *> *>(inStyleVariationsVar);
@@ -178,7 +178,7 @@ void QQStyleKitPropertyResolver::addInstanceVariationsToReader(
      * variations that has the potential to affect the control type, or its base types,
      * that the styleReader represents. The variations that are closest to styleReader
      * in the hierarchy will be added first and take precendence over the ones added last. */
-    const QQStyleKitExtendableControlType styleReaderType = styleReader->type();
+    const QQStyleKitExtendableControlType styleReaderType = styleReader->controlType();
     const auto styleReaderBaseTypes = baseTypesForType(styleReaderType);
 
     for (const QString &attachedVariationName : inAppVariationNames) {
@@ -496,7 +496,7 @@ QVariant QQStyleKitPropertyResolver::readProperty(
     if (styleReader->m_effectiveVariationsDirty)
         rebuildVariationsForReader(styleReader, style);
 
-    const QQStyleKitExtendableControlType exactType = styleReader->type();
+    const QQStyleKitExtendableControlType exactType = styleReader->controlType();
     const QList<QQStyleKitExtendableControlType> baseTypes = baseTypesForType(exactType);
 
     QVariant value;

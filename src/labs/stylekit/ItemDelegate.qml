@@ -29,10 +29,10 @@ T.ItemDelegate {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ItemDelegate
+        controlType: StyleReader.ItemDelegate
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked

@@ -23,10 +23,10 @@ T.Pane {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.Pane
+        controlType: StyleReader.Pane
         enabled: control.enabled
         focused: control.activeFocus
         palette: control.palette

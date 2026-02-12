@@ -26,10 +26,10 @@ T.CheckBox {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.CheckBox
+        controlType: StyleReader.CheckBox
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked

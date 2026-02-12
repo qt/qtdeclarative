@@ -24,9 +24,9 @@ T.ScrollView {
     topPadding: __styleReader.topPadding
     leftPadding: __styleReader.leftPadding
 
-    StyleVariation.controlType: __styleReader.type
-    property StyleKitReader __styleReader: StyleKitReader {
-        type: StyleKitReader.ScrollView
+    StyleVariation.controlType: __styleReader.controlType
+    property StyleReader __styleReader: StyleReader {
+        controlType: StyleReader.ScrollView
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

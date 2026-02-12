@@ -28,10 +28,10 @@ T.ToolButton {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ToolButton
+        controlType: StyleReader.ToolButton
         enabled: control.enabled
         focused: control.activeFocus
         checked: control.checked

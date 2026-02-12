@@ -30,10 +30,10 @@ T.GroupBox {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.GroupBox
+        controlType: StyleReader.GroupBox
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

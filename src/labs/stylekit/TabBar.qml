@@ -24,10 +24,10 @@ T.TabBar {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.TabBar
+        controlType: StyleReader.TabBar
         enabled: control.enabled
         focused: control.activeFocus
         hovered: control.hovered

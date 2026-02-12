@@ -23,10 +23,10 @@ T.ToolSeparator {
 
     font: styleReader.font
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.ToolSeparator
+        controlType: StyleReader.ToolSeparator
         enabled: control.enabled
         hovered: control.hovered
         focused: control.activeFocus

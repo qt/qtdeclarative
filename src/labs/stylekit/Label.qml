@@ -20,10 +20,10 @@ T.Label {
     color: styleReader.text.color
     linkColor: control.palette.link
 
-    StyleVariation.controlType: styleReader.type
-    StyleKitReader {
+    StyleVariation.controlType: styleReader.controlType
+    StyleReader {
         id: styleReader
-        type: StyleKitReader.Label
+        controlType: StyleReader.Label
         enabled: control.enabled
         focused: control.activeFocus
         palette: control.palette
