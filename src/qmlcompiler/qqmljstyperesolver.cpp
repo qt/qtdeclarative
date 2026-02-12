@@ -1607,7 +1607,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(
                 return true;
             }
         }
-
+        // don't look up enums on ids...
+        if (type.variant() == QQmlJSRegisterContent::ObjectById)
+            return false;
         return checkEnums(resultScope, name, &result);
     };
 

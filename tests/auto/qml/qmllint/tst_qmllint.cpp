@@ -1784,6 +1784,29 @@ void TestQmllint::cleanQmlSnippet_data()
     QTest::newRow("ambiguity-enum-and-chained-attached-property")
             << u"import EnumList\nFlexboxLayout { direction: FlexboxLayout.Row; }"_s
             << defaultOptions;
+    QTest::newRow("ambiguity-enum-and-attached-property")
+            << u"import QtQuick\n"
+               "Item {\n"
+               "    id: myItem\n"
+               "    enum MyEnum { Component }\n"
+               "    Item { property var myP: myItem.Component.completed() }\n"
+               "}"_s
+            << defaultOptions;
+    QTest::newRow("ambiguity-enum-and-attached-property2")
+            << u"import QtQuick\n"
+               "Item {\n"
+               "    id: myItem\n"
+               "    enum Component { SomeValue }\n"
+               "    Item { property var myP: myItem.Component.completed() }\n"
+               "}"_s
+            << defaultOptions;
+    QTest::newRow("ambiguity-enum-and-attached-property-sanity")
+            << u"import QtQuick\n"
+               "Item {\n"
+               "    id: myItem\n"
+               "    Item { property var myP: myItem.Component.completed() }\n"
+               "}"_s
+            << defaultOptions;
 }
 
 void TestQmllint::cleanQmlSnippet()
