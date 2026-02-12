@@ -29,7 +29,7 @@ class QQStyleKitStyleAndThemeBase : public QQStyleKitControls
     Q_PROPERTY(QQStyleKitFont *fonts READ fonts NOTIFY fontsChanged FINAL)
     Q_PROPERTY(QQStyleKitPalette *palettes READ palettes NOTIFY palettesChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
-    QML_NAMED_ELEMENT(ThemeProperties)
+    QML_NAMED_ELEMENT(AbstractStyle)
 
 public:
     QQStyleKitStyleAndThemeBase(QObject *parent = nullptr);

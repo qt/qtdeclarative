@@ -62,7 +62,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *groupBox READ groupBox WRITE set_groupBox NOTIFY groupBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *textArea READ textArea WRITE set_textArea NOTIFY textAreaChanged FINAL)
     QML_UNCREATABLE("This component is abstract, and cannot be instantiated")
-    QML_NAMED_ELEMENT(StyleKitControls)
+    QML_NAMED_ELEMENT(AbstractStylableControls)
 
     Q_PROPERTY(QQmlListProperty<QObject> data READ data NOTIFY dataChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "data")
