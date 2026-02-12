@@ -29,7 +29,7 @@ class QQStyleKitControl : public QQStyleKitControlState
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQStyleKitVariation> variations READ variations FINAL)
-    QML_NAMED_ELEMENT(StyleKitControl)
+    QML_NAMED_ELEMENT(ControlStyle)
 
 public:
     QQStyleKitControl(QObject *parent = nullptr);

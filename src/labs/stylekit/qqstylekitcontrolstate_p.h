@@ -34,7 +34,7 @@ class QQStyleKitControlState : public QQStyleKitControlProperties
     Q_PROPERTY(QQStyleKitControlState *disabled READ disabled NOTIFY disabledChanged FINAL)
     Q_PROPERTY(QQStyleKitControlState *highlighted READ highlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(QQStyleKitControlState *vertical READ vertical NOTIFY verticalChanged FINAL)
-    QML_NAMED_ELEMENT(StyleKitControlState)
+    QML_NAMED_ELEMENT(ControlState)
 
 public:
     QQStyleKitControlState(QObject *parent = nullptr);

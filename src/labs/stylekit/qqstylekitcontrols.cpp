@@ -29,8 +29,8 @@ const QList<QObject *> QQStyleKitControls::children() const
  * them from the style/application (e.g from Style or Theme). We don't lazy
  * create any controls while resolving style properties, as undefined controls would
  * anyway not contain any property overrides. The properties have setters too, to
- * allow the style/application to share custom StyleKitControls the classical
- * way, e.g button: StyleKitControl { id: button }. */
+ * allow the style/application to share custom ControlStyle the classical
+ * way, e.g button: ControlStyle { id: button }. */
 QQStyleKitControl* QQStyleKitControls::getControl(QQStyleKitExtendableControlType controlType) const
 {
     if (!m_controls.contains(controlType))

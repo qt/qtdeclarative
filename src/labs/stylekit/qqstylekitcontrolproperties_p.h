@@ -123,7 +123,7 @@ class QQStyleKitImageProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
     Q_PROPERTY(QQuickImage::FillMode fillMode READ fillMode WRITE setFillMode NOTIFY fillModeChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitImageProperties)
+    QML_NAMED_ELEMENT(ImageStyle)
 
 public:
     QQStyleKitImageProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -154,7 +154,7 @@ class QQStyleKitBorderProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitBorderProperties)
+    QML_NAMED_ELEMENT(BorderStyle)
 
 public:
     QQStyleKitBorderProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -187,7 +187,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitShadowProperties : public QQStyleKitProper
     Q_PROPERTY(bool visible READ visible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitShadowProperties)
+    QML_NAMED_ELEMENT(ShadowStyle)
 
 public:
     QQStyleKitShadowProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -387,7 +387,7 @@ class QQStyleKitHandleProperties : public QQStyleKitDelegateProperties
     Q_PROPERTY(QQStyleKitDelegateProperties *first READ first NOTIFY firstChanged FINAL)
     Q_PROPERTY(QQStyleKitDelegateProperties *second READ second NOTIFY secondChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitHandleProperties)
+    QML_NAMED_ELEMENT(HandleStyle)
 
 public:
     QQStyleKitHandleProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -413,7 +413,7 @@ class QQStyleKitIndicatorProperties : public QQStyleKitDelegateProperties
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *foreground READ foreground NOTIFY foregroundChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitIndicatorProperties)
+    QML_NAMED_ELEMENT(IndicatorStyle)
 
 public:
     QQStyleKitIndicatorProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -442,7 +442,7 @@ class QQStyleKitIndicatorWithSubTypes : public QQStyleKitDelegateProperties
     Q_PROPERTY(QQStyleKitIndicatorProperties *up READ up NOTIFY upChanged FINAL)
     Q_PROPERTY(QQStyleKitIndicatorProperties *down READ down NOTIFY downChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitIndicatorPropertiesWithSubTypes)
+    QML_NAMED_ELEMENT(IndicatorStyleWithSubTypes)
 
 public:
     QQStyleKitIndicatorWithSubTypes(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -485,7 +485,7 @@ class QQStyleKitTextProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding NOTIFY bottomPaddingChanged FINAL)
 
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(StyleKitTextProperties)
+    QML_NAMED_ELEMENT(TextStyle)
 
 public:
     QQStyleKitTextProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -561,7 +561,7 @@ class QQStyleKitControlProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(QQStyleKitTextProperties *text READ text NOTIFY textChanged FINAL)
     Q_PROPERTY(QQuickTransition *transition READ transition WRITE setTransition NOTIFY transitionChanged FINAL)
     QML_UNCREATABLE("This component acts as an interface, and cannot be instantiated")
-    QML_NAMED_ELEMENT(StyleKitControlProperties)
+    QML_NAMED_ELEMENT(ControlStyleProperties)
 
 public:
     QQStyleKitControlProperties(QQSK::PropertyGroup group, QObject *parent = nullptr);
