@@ -36,6 +36,8 @@ QProcessScheduler::~QProcessScheduler()
     m_process.waitForFinished();
 }
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // use of std::variant
 void QProcessScheduler::schedule(const QList<Command> &list, const Id &id)
 {
     for (const auto &x : list) {
@@ -47,6 +49,7 @@ void QProcessScheduler::schedule(const QList<Command> &list, const Id &id)
     if (!m_isRunning)
         processNext();
 }
+QT_WARNING_POP
 
 void QProcessScheduler::processNext()
 {
