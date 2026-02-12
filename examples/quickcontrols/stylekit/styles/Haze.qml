@@ -194,17 +194,17 @@ Style {
         }
     }
 
-    // You can define one or more Instance Variations that can be enabled from the
-    // application using the attached 'StyleKitControl.variations' property.
+    // You can define one or more StyleVariations that can be enabled from the
+    // application using the attached 'StyleVariation.variations' property.
     // Inside a variation, you list the controls that should receive alternative
     // styling when the variation is active. Any properties defined in a variation
     // override those set in the Style or Theme.
     //
-    // For example, if you set "StyleKitControl.variations: ['mini']" on a GroupBox
+    // For example, if you set "StyleVariation.variations: ['mini']" on a GroupBox
     // in the application, all controls inside that GroupBox will be affected.
     // Exactly which controls are impacted depends on which ones you style inside
     // the variation.
-    Variation {
+    StyleVariation {
         name: "mini"
 
         control {
@@ -243,7 +243,7 @@ Style {
         }
     }
 
-    Variation {
+    StyleVariation {
         name: "alert"
         abstractButton.background {
             color: "orchid"
@@ -252,19 +252,19 @@ Style {
         }
     }
 
-    // You can also define Type Variations. Unlike Instance Variations—which apply
-    // only to specific control instances—Type Variations are applied to *all*
-    // instances of a control type without requiring the application to use attached
-    // properties.
-    //
-    // In this example, we specify that all Buttons that are children of a Frame
-    // should receive alternative styling, differentiating them from other Buttons.
+    /* You can also set one or more StyleVariations on a control type. Unlike Instance
+     * variations—which apply only to specific control instances—type variations are applied
+     * to *all* instances of a control type without requiring the application to use attached
+     * properties.
+     *
+     * In this example, we specify that all Buttons that are children of a Frame
+     * should receive alternative styling, differentiating them from other Buttons. */
     frame {
         background {
             border.width: 1
             shadow.visible: true
         }
-        variations: Variation {
+        variations: StyleVariation {
             button.background {
                 radius: 0
                 color: palette.accent
@@ -272,9 +272,10 @@ Style {
             }
         }
     }
-    /* Because 'groupBox' falls back to 'frame', any Variation applied to a frame
-     * is automatically inherited by all group boxes. Since I only want the Variation
-     * on the frame itself, I need to explicitly unset it for group boxes. */
+    /* Because 'groupBox' falls back to 'frame', any StyleVariation applied to a frame
+     * is automatically inherited by a groupBox as well. Since I in this example only want the
+     * different styling on frames, not group boxes, I can simply unset the variation
+     * for group boxes. */
     groupBox.variations: []
 
     readonly property int fancyButton: 0
@@ -786,7 +787,7 @@ Style {
                 background.color: "white"
             }
 
-            Variation {
+            StyleVariation {
                 name: "alert"
                 abstractButton.background {
                     color: "lime"

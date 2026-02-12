@@ -32,7 +32,7 @@ T.TextField {
     selectedTextColor: control.palette.highlightedText
     placeholderTextColor: control.palette.placeholderText
 
-    StyleKitControl.controlType: styleReader.type
+    StyleVariation.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
         type: StyleKitReader.TextField

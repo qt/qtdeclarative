@@ -24,21 +24,17 @@
 QT_BEGIN_NAMESPACE
 
 class QQStyleKitVariation;
-class QQStyleKitControlAttached;
 
 class QQStyleKitControl : public QQStyleKitControlState
 {
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<QQStyleKitVariation> variations READ variations FINAL)
     QML_NAMED_ELEMENT(StyleKitControl)
-    QML_ATTACHED(QQStyleKitControlAttached)
 
 public:
     QQStyleKitControl(QObject *parent = nullptr);
 
     QQmlListProperty<QQStyleKitVariation> variations();
-
-    static QQStyleKitControlAttached *qmlAttachedProperties(QObject *object);
 
 private:
     QVariant readStyleProperty(PropertyStorageId key) const;
@@ -57,37 +53,6 @@ private:
     friend class QQStyleKitPropertyResolver;
     friend class QQStyleKitPropertyGroup;
     friend class QQStyleKitControls;
-};
-
-class QQStyleKitControlAttached : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(QStringList variations READ variations WRITE setVariations NOTIFY variationsChanged FINAL)
-    Q_PROPERTY(QQStyleKitExtendableControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)
-
-public:
-    QQStyleKitControlAttached(QObject *parent);
-
-    QStringList variations() const;
-    void setVariations(const QStringList &variations);
-
-    QQStyleKitExtendableControlType controlType();
-    void setControlType(QQStyleKitExtendableControlType type);
-
-signals:
-    void variationsChanged();
-    void controlTypeChanged();
-
-private:
-    // m_variations is used for resolving in-app QQStyleKitVariations
-    QStringList m_variations;
-    // m_controlType is used for resolving in-style QQStyleKitVariations
-    QQStyleKitExtendableControlType m_controlType = QQStyleKitReader::ControlType::Unspecified;
-
-    static int s_variationCount;
-
-    friend class QQStyleKit;
-    friend class QQStyleKitPropertyResolver;
 };
 
 QT_END_NAMESPACE

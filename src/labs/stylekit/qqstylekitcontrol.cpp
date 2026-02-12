@@ -7,8 +7,6 @@
 
 QT_BEGIN_NAMESPACE
 
-int QQStyleKitControlAttached::s_variationCount = 0;
-
 QQStyleKitControl::QQStyleKitControl(QObject *parent)
     : QQStyleKitControlState(parent)
 {
@@ -47,11 +45,6 @@ QQmlListProperty<QQStyleKitVariation> QQStyleKitControl::variations()
     return QQmlListProperty<QQStyleKitVariation>(this, value);
 }
 
-QQStyleKitControlAttached *QQStyleKitControl::qmlAttachedProperties(QObject *object)
-{
-    return new QQStyleKitControlAttached(object);
-}
-
 QVariant QQStyleKitControl::readStyleProperty(PropertyStorageId key) const
 {
     return m_storage.value(key);
@@ -73,44 +66,6 @@ QQStyleKitExtendableControlType QQStyleKitControl::controlType() const
     const auto &controlsMap = controls()->m_controls;
     Q_ASSERT(std::find(controlsMap.begin(), controlsMap.end(), this) != controlsMap.end());
     return controlsMap.key(const_cast<QQStyleKitControl *>(this));
-}
-
-QQStyleKitControlAttached::QQStyleKitControlAttached(QObject *parent)
-    : QObject(parent)
-{
-}
-
-QStringList QQStyleKitControlAttached::variations() const
-{
-    return m_variations;
-}
-
-void QQStyleKitControlAttached::setVariations(const QStringList &variations)
-{
-    if (m_variations == variations)
-        return;
-
-    /* As an optimization, we count the number of variations set from the application.
-     * That way, if s_variationCount == 1, for example, and we found a variation while
-     * resolving the effective variations for a specific QQStyleReader, we can stop the search. */
-    s_variationCount++;
-
-    m_variations = variations;
-    emit variationsChanged();
-}
-
-QQStyleKitExtendableControlType QQStyleKitControlAttached::controlType()
-{
-    return m_controlType;
-}
-
-void QQStyleKitControlAttached::setControlType(QQStyleKitExtendableControlType type)
-{
-    if (m_controlType == type)
-        return;
-
-    m_controlType = type;
-    emit controlTypeChanged();
 }
 
 QT_END_NAMESPACE

@@ -28,7 +28,7 @@ T.Button {
 
     font: styleReader.font
 
-    StyleKitControl.controlType: styleReader.type
+    StyleVariation.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
         type: control.flat ? StyleKitReader.FlatButton : StyleKitReader.Button

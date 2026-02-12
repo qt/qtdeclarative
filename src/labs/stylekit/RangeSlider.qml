@@ -81,7 +81,7 @@ T.RangeSlider {
 
     readonly property StyleKitReader styleReader: styleReaderFirst
 
-    StyleKitControl.controlType: styleReaderFirst.type
+    StyleVariation.controlType: styleReaderFirst.type
     StyleKitReader {
         id: styleReaderFirst
         type: StyleKitReader.Slider

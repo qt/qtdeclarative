@@ -61,7 +61,7 @@ T.Slider {
         }
     ]
 
-    StyleKitControl.controlType: styleReader.type
+    StyleVariation.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
         type: StyleKitReader.Slider

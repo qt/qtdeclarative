@@ -210,10 +210,10 @@ void QQStyleKitPropertyResolver::rebuildVariationsForReader(
     QQStyleKitReader *styleReader, const QQStyleKitStyle *style)
 {
     /* Traverse up the parent chain of \a styleReader, and for each parent, look for an
-     * instance of QQStyleKitControlAttached. And for each attached object, check if it
+     * instance of QQStyleKitVariationAttached. And for each attached object, check if it
      * has variations that can potentially affect the style reader. If so, add the
      * variations to the style readers list of effective variations.
-     * A QQStyleKitControlAttached can specify both Instance Variations and Type Variations.
+     * A QQStyleKitVariationAttached can specify both Instance Variations and Type Variations.
      * The former should affect all descendant StyleKitReaders of the parent, while the
      * latter should only affect descendant StyleKitReaders of a specific type. */
     Q_ASSERT(styleReader->m_effectiveVariationsDirty);
@@ -221,9 +221,9 @@ void QQStyleKitPropertyResolver::rebuildVariationsForReader(
     styleReader->m_effectiveInAppVariations.clear();
     styleReader->m_effectiveInStyleVariations.clear();
 
-    const bool hasInstanceVariations = QQStyleKitControlAttached::s_variationCount > 0;
-    const bool styleHasVariations = QQStyleKitVariation::s_variationCount > 0;
-    if (!styleHasVariations) {
+    const bool hasInstanceVariations = QQStyleKitVariationAttached::s_instanceVariationCount > 0;
+    const bool hasTypeVariations = QQStyleKitVariation::s_typeVariationCount > 0;
+    if (!hasTypeVariations && !hasInstanceVariations) {
         /* No variations are defined in the current style or theme. In that case
          * it doesn't matter if the application has variations set - they
          * will anyway not map to any variations in the style. */
@@ -244,13 +244,13 @@ void QQStyleKitPropertyResolver::rebuildVariationsForReader(
 
     QObject *parentObj = styleReader;
     while (parentObj) {
-        QObject *attachedObject = qmlAttachedPropertiesObject<QQStyleKitControl>(parentObj, false);
+        QObject *attachedObject = qmlAttachedPropertiesObject<QQStyleKitVariation>(parentObj, false);
         if (attachedObject) {
-            auto *controlAtt = static_cast<QQStyleKitControlAttached *>(attachedObject);
+            auto *variationAtt = static_cast<QQStyleKitVariationAttached *>(attachedObject);
             if (hasInstanceVariations)
-                addInstanceVariationsToReader(styleReader, controlAtt->variations(), stylesAndThemes);
-            if (styleHasVariations)
-                addTypeVariationsToReader(styleReader, controlAtt->controlType(), style);
+                addInstanceVariationsToReader(styleReader, variationAtt->variations(), stylesAndThemes);
+            if (hasTypeVariations)
+                addTypeVariationsToReader(styleReader, variationAtt->controlType(), style);
         }
 
         parentObj = parentObj->parent();

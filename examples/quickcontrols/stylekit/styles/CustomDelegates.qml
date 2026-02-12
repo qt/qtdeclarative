@@ -233,7 +233,7 @@ Style {
         background.shadow.delegate: CustomShadowDelegate {}
         // verify that the delegate is allowed to change per state
         pressed.background.shadow.delegate: CustomShadowDelegate {}
-        variations: Variation {
+        variations: StyleVariation {
             button.background {
                 delegate: null
                 implicitWidth: 30

@@ -21,7 +21,7 @@ T.ProgressBar {
     bottomPadding: styleReader.bottomPadding
     spacing: styleReader.spacing
 
-    StyleKitControl.controlType: styleReader.type
+    StyleVariation.controlType: styleReader.type
     StyleKitReader {
         id: styleReader
         type: StyleKitReader.ProgressBar
