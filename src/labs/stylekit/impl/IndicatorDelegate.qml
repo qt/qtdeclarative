@@ -63,7 +63,7 @@ DelegateContainer {
              * delegate is being used. If a custom delegate is used, it is responsible for sizing
              * itself based on the available space (which is given by the size of this container).
              * (And ideally, resizing the container to match the progress should eventually be moved
-             * out of this file, and into StyleKitDelegate, or perhaps a new StyleKitIndicatorDelegate).
+             * out of this file, and into StyledItem, or perhaps a new StyledIndicatorItem).
              * Resizing the container to match the progress when a custom delegate is being used
              * assumes too much about how the delegate implements the progress, and prevents custom
              * delegates from implementing it by other means (e.g. a circular progress

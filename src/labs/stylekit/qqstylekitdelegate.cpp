@@ -113,7 +113,7 @@ void QQStyleKitDelegate::maybeCreateColor()
 
 void QQStyleKitDelegate::maybeCreateGradient()
 {
-    /* Unlike a Rectangle, a StyleKitDelegate draws both the color and the gradient at
+    /* Unlike a Rectangle, a StyledItem draws both the color and the gradient at
      * the same time. This allows a style to define them independently. That way you can
      * define a common semi-transparent grayscale gradient once for a delegate in the style
      * (e.g for control.background.gradient), and then tint it with different colors for

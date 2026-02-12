@@ -9,10 +9,10 @@ Style {
 
     // Define some custom delegates:
 
-    component OverlayDelegate : StyleKitDelegate {
-        // Using StyleKitDelegate as the base type is the easiest approach when creating
-        // a custom delegate. A StyleKitDelegate will draw the delegate as configured by
-        // the style, and give up the opportunity to place your own items on top.
+    component OverlayDelegate : StyledItem {
+        // Using StyledItem as the base type is the easiest approach when creating
+        // a custom delegate. A StyledItem will draw the delegate as configured by
+        // the style, and give you the opportunity to place your own items on top.
         // Note that all delegates used in StyleKit, custom or not, are laid out by
         // StyleKit, so you only need to focus on the appearance.
         Rectangle {
@@ -28,7 +28,7 @@ Style {
     }
 
     component UnderlayDelegate : Item {
-        /* Custom delegates that don't inherit from StyleKitDelegate can optionally
+        /* Custom delegates that don't inherit from StyledItem can optionally
          * declare 'delegateProperties' and 'control' properties. Use delegateProperties
          * to bind to style attributes like color, radius, and opacity. Use control
          * to access the Quick Control the owns the delegate. */
@@ -66,14 +66,14 @@ Style {
             }
         }
 
-        StyleKitDelegate {
-            // Embed a StyleKitDelegate to render the standard delegate on top of the custom one
+        StyledItem {
+            // Embed a StyledItem to render the standard delegate on top of the custom one
             delegateProperties: parent.delegateProperties
         }
     }
 
-    component SliderHandle : StyleKitDelegate {
-        // You can pass your own properties from the style as well, like
+    component SliderHandle : StyledItem {
+        // You can pass your own properties from the style, like
         // here, where we use 'isFirst' to tell whether the delegate instance
         // represents the first or the second handle, in case of a RangeSlider.
         // By adding a 'control' property, we can access the slider's value(s).
@@ -99,7 +99,8 @@ Style {
     }
 
     component NoiseDelegate : ShaderEffect {
-        // Its also possible to use more advanced delegates with graphical effects.
+        // Use graphical effects in combination with StyledItem to create more
+        // complex delegate appearances. In this delegate, we create a noise overlay.
         implicitWidth: unifiedSourceItem.implicitWidth
         implicitHeight: unifiedSourceItem.implicitHeight
         width: parent.width
@@ -129,7 +130,7 @@ Style {
             duration: 1000
         }
 
-        StyleKitDelegate {
+        StyledItem {
             id: unifiedSourceItem
             delegateProperties: parent.delegateProperties
             width: parent.width
@@ -197,7 +198,7 @@ Style {
     }
 
     // Define the style itself, and tell it to use the custom delegates to render
-    // the controls (instead of the otherwise default StyleKitDelegate):
+    // the controls (instead of the otherwise default StyledItem):
 
     checkBox.checked.indicator.delegate: OverlayDelegate {}
     radioButton.checked.indicator.foreground.delegate: OverlayDelegate {}

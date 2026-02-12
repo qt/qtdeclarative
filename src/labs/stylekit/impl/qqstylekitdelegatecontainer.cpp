@@ -105,7 +105,7 @@ void QQStyleKitDelegateContainer::maybeCreateDelegate()
             const QString qmlCode = QString::fromUtf8(R"(
                 import QtQuick
                 import Qt.labs.StyleKit
-                StyleKitDelegate {
+                StyledItem {
                     width: parent.width
                     height: parent.height
                 }

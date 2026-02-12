@@ -41,7 +41,7 @@ Style {
 
         fragmentShader: "qrc:/effects/noise.qsb"
 
-        StyleKitDelegate {
+        StyledItem {
             id: unifiedSourceItem
             delegateProperties: noiseDelegate.delegateProperties
             width: parent.width

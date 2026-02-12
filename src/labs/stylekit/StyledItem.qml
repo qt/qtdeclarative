@@ -3,9 +3,9 @@
 
 import Qt.labs.StyleKit
 
-StyleKitDelegateBase {
-    // These properties are bound here in QML, rather than in StyleKitDelegateBase
-    // (C++), so that a custom delegate that embeds a StyleKitDelegate as a child
+StyledItemBase {
+    // These properties are bound here in QML, rather than in StyledItemBase
+    // (C++), so that a custom delegate that embeds a StyledItemBase as a child
     // (to create overlay or underlay effects) can override them to handle how and
     // where to apply the transform.
     scale: delegateProperties.scale
