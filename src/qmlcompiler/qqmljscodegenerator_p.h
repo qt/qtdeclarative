@@ -335,6 +335,16 @@ private:
     void rejectIfNonQObjectOut(const QString &error);
     void rejectIfBadArray();
 
+    struct GeneratePragmaWarningBlock {
+        Q_DISABLE_COPY_MOVE(GeneratePragmaWarningBlock)
+        GeneratePragmaWarningBlock(QQmlJSCodeGenerator *generator);
+        ~GeneratePragmaWarningBlock();
+
+        void silenceDivideByZero();
+
+        QQmlJSCodeGenerator *m_generator;
+    };
+
 
     QString eqIntExpression(int lhsConst);
 
