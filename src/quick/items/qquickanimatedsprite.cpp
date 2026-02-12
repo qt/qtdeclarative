@@ -241,7 +241,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlmethod int QtQuick::AnimatedSprite::restart()
+    \qmlmethod void QtQuick::AnimatedSprite::restart()
 
     Stops, then starts the sprite animation.
 */
@@ -389,7 +389,7 @@ void QQuickAnimatedSprite::componentComplete()
 }
 
 /*!
-    \qmlmethod QtQuick::AnimatedSprite::start()
+    \qmlmethod void QtQuick::AnimatedSprite::start()
     \since 5.15
 
     Starts the sprite animation. If the animation is already running, calling
@@ -419,7 +419,7 @@ void QQuickAnimatedSprite::start()
 }
 
 /*!
-    \qmlmethod QtQuick::AnimatedSprite::stop()
+    \qmlmethod void QtQuick::AnimatedSprite::stop()
     \since 5.15
 
     Stops the sprite animation. If the animation is not running, calling this
@@ -441,9 +441,9 @@ void QQuickAnimatedSprite::stop()
 }
 
 /*!
-    \qmlmethod int QtQuick::AnimatedSprite::advance()
+    \qmlmethod void QtQuick::AnimatedSprite::advance(int frames = 1)
 
-    Advances the sprite animation by one frame.
+    Advances the sprite animation by a specified number of \a frames.
 */
 void QQuickAnimatedSprite::advance(int frames)
 {
@@ -476,7 +476,7 @@ void QQuickAnimatedSprite::itemChange(ItemChange change, const ItemChangeData &v
 }
 
 /*!
-    \qmlmethod int QtQuick::AnimatedSprite::pause()
+    \qmlmethod void QtQuick::AnimatedSprite::pause()
 
     Pauses the sprite animation. This does nothing if
     \l paused is \c true.
@@ -496,7 +496,7 @@ void QQuickAnimatedSprite::pause()
 }
 
 /*!
-    \qmlmethod int QtQuick::AnimatedSprite::resume()
+    \qmlmethod void QtQuick::AnimatedSprite::resume()
 
     Resumes the sprite animation if \l paused is \c true;
     otherwise, this does nothing.

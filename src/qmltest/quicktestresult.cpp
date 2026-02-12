@@ -362,7 +362,7 @@ QStringList QuickTestResult::tagsToRun() const
 }
 
 /*!
-    \qmlmethod TestResult::reset()
+    \qmlmethod void TestResult::reset()
 
     Resets all pass/fail/skip counters and prepare for testing.
 */
@@ -373,7 +373,7 @@ void QuickTestResult::reset()
 }
 
 /*!
-    \qmlmethod TestResult::startLogging()
+    \qmlmethod void TestResult::startLogging()
 
     Starts logging to the test output stream and writes the
     test header.
@@ -391,7 +391,7 @@ void QuickTestResult::startLogging()
 }
 
 /*!
-    \qmlmethod TestResult::stopLogging()
+    \qmlmethod void TestResult::stopLogging()
 
     Writes the test footer to the test output stream and then stops logging.
 

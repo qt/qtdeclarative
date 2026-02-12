@@ -565,7 +565,7 @@ bool QQuickWorkerScript::ready() const
 }
 
 /*!
-    \qmlmethod WorkerScript::sendMessage(jsobject message)
+    \qmlmethod void WorkerScript::sendMessage(jsobject message)
 
     Sends the given \a message to a worker script handler in another
     thread. The other worker script handler can receive this message

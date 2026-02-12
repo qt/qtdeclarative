@@ -981,7 +981,7 @@ int QQuickTextInput::selectionEnd() const
     return d->lastSelectionEnd;
 }
 /*!
-    \qmlmethod QtQuick::TextInput::select(int start, int end)
+    \qmlmethod void QtQuick::TextInput::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -2162,7 +2162,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, const 
 #endif // im
 
 /*!
-    \qmlmethod QtQuick::TextInput::deselect()
+    \qmlmethod void QtQuick::TextInput::deselect()
 
     Removes active text selection.
 */
@@ -2173,7 +2173,7 @@ void QQuickTextInput::deselect()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::selectAll()
+    \qmlmethod void QtQuick::TextInput::selectAll()
 
     Causes all text to be selected.
 */
@@ -2184,9 +2184,9 @@ void QQuickTextInput::selectAll()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::isRightToLeft(int start, int end)
+    \qmlmethod bool QtQuick::TextInput::isRightToLeft(int start, int end)
 
-    Returns true if the natural reading direction of the editor text
+    Returns \c true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
 */
 bool QQuickTextInput::isRightToLeft(int start, int end)
@@ -2201,7 +2201,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
 
 #if QT_CONFIG(clipboard)
 /*!
-    \qmlmethod QtQuick::TextInput::cut()
+    \qmlmethod void QtQuick::TextInput::cut()
 
     Moves the currently selected text to the system clipboard.
 
@@ -2219,7 +2219,7 @@ void QQuickTextInput::cut()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::copy()
+    \qmlmethod void QtQuick::TextInput::copy()
 
     Copies the currently selected text to the system clipboard.
 
@@ -2234,7 +2234,7 @@ void QQuickTextInput::copy()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::paste()
+    \qmlmethod void QtQuick::TextInput::paste()
 
     Replaces the currently selected text by the contents of the system clipboard.
 */
@@ -2247,7 +2247,7 @@ void QQuickTextInput::paste()
 #endif // clipboard
 
 /*!
-    \qmlmethod QtQuick::TextInput::undo()
+    \qmlmethod void QtQuick::TextInput::undo()
 
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
@@ -2265,7 +2265,7 @@ void QQuickTextInput::undo()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::redo()
+    \qmlmethod void QtQuick::TextInput::redo()
 
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
@@ -2281,7 +2281,7 @@ void QQuickTextInput::redo()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::insert(int position, string text)
+    \qmlmethod void QtQuick::TextInput::insert(int position, string text)
 
     Inserts \a text into the TextInput at \a position.
 */
@@ -2354,7 +2354,7 @@ void QQuickTextInput::insert(int position, const QString &text)
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::remove(int start, int end)
+    \qmlmethod void QtQuick::TextInput::remove(int start, int end)
 
     Removes the section of text that is between the \a start and \a end positions from the TextInput.
 */
@@ -2432,7 +2432,7 @@ void QQuickTextInput::remove(int start, int end)
 
 
 /*!
-    \qmlmethod QtQuick::TextInput::selectWord()
+    \qmlmethod void QtQuick::TextInput::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -2708,7 +2708,7 @@ void QQuickTextInput::moveCursorSelection(int position)
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::moveCursorSelection(int position, SelectionMode mode)
+    \qmlmethod void QtQuick::TextInput::moveCursorSelection(int position, SelectionMode mode)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter.  (To only move the cursor, set the \l cursorPosition property.)
@@ -4915,7 +4915,7 @@ void QQuickTextInputPrivate::deleteEndOfLine()
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::ensureVisible(int position)
+    \qmlmethod void QtQuick::TextInput::ensureVisible(int position)
     \since 5.4
 
     Scrolls the contents of the text input so that the specified character
@@ -4931,7 +4931,7 @@ void QQuickTextInput::ensureVisible(int position)
 }
 
 /*!
-    \qmlmethod QtQuick::TextInput::clear()
+    \qmlmethod void QtQuick::TextInput::clear()
     \since 5.7
 
     Clears the contents of the text input

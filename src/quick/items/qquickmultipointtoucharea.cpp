@@ -280,7 +280,7 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
 */
 
 /*!
-    \qmlmethod QtQuick::GestureEvent::grab()
+    \qmlmethod void QtQuick::GestureEvent::grab()
 
     Acquires an exclusive grab of the mouse and all the \l touchPoints, and
     calls \l {QQuickItem::setKeepTouchGrab()}{setKeepTouchGrab()} and

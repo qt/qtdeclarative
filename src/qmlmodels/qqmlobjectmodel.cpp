@@ -380,7 +380,7 @@ QObject *QQmlObjectModel::get(int index) const
 }
 
 /*!
-    \qmlmethod QtQml.Models::ObjectModel::append(object item)
+    \qmlmethod void QtQml.Models::ObjectModel::append(object item)
     \since 5.6
 
     Appends a new \a item to the end of the model.
@@ -398,7 +398,7 @@ void QQmlObjectModel::append(QObject *object)
 }
 
 /*!
-    \qmlmethod QtQml.Models::ObjectModel::insert(int index, object item)
+    \qmlmethod void QtQml.Models::ObjectModel::insert(int index, object item)
     \since 5.6
 
     Inserts a new \a item to the model at position \a index.
@@ -423,7 +423,7 @@ void QQmlObjectModel::insert(int index, QObject *object)
 }
 
 /*!
-    \qmlmethod QtQml.Models::ObjectModel::move(int from, int to, int n = 1)
+    \qmlmethod void QtQml.Models::ObjectModel::move(int from, int to, int n = 1)
     \since 5.6
 
     Moves \a n items \a from one position \a to another.
@@ -450,7 +450,7 @@ void QQmlObjectModel::move(int from, int to, int n)
 }
 
 /*!
-    \qmlmethod QtQml.Models::ObjectModel::remove(int index, int n = 1)
+    \qmlmethod void QtQml.Models::ObjectModel::remove(int index, int n = 1)
     \since 5.6
 
     Removes \a n items at \a index from the model.
@@ -468,7 +468,7 @@ void QQmlObjectModel::remove(int index, int n)
 }
 
 /*!
-    \qmlmethod QtQml.Models::ObjectModel::clear()
+    \qmlmethod void QtQml.Models::ObjectModel::clear()
     \since 5.6
 
     Clears all items from the model.

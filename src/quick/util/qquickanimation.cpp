@@ -489,8 +489,8 @@ void QQuickAbstractAnimation::setGroup(QQuickAnimationGroup *g, int index)
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::start()
-    \brief Starts the animation
+    \qmlmethod void QtQuick::Animation::start()
+    \brief Starts the animation.
 
     If the animation is already running, calling this method has no effect.  The
     \c running property will be true following a call to \c start().
@@ -501,8 +501,8 @@ void QQuickAbstractAnimation::start()
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::pause()
-    \brief Pauses the animation
+    \qmlmethod void QtQuick::Animation::pause()
+    \brief Pauses the animation.
 
     If the animation is already paused or not \c running, calling this method has no effect.
     The \c paused property will be true following a call to \c pause().
@@ -513,8 +513,8 @@ void QQuickAbstractAnimation::pause()
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::resume()
-    \brief Resumes a paused animation
+    \qmlmethod void QtQuick::Animation::resume()
+    \brief Resumes a paused animation.
 
     If the animation is not paused or not \c running, calling this method has no effect.
     The \c paused property will be false following a call to \c resume().
@@ -525,8 +525,8 @@ void QQuickAbstractAnimation::resume()
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::stop()
-    \brief Stops the animation
+    \qmlmethod void QtQuick::Animation::stop()
+    \brief Stops the animation.
 
     If the animation is not running, calling this method has no effect.  Both the
     \c running and \c paused properties will be false following a call to \c stop().
@@ -550,8 +550,8 @@ void QQuickAbstractAnimation::stop()
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::restart()
-    \brief Restarts the animation
+    \qmlmethod void QtQuick::Animation::restart()
+    \brief Restarts the animation.
 
     This is a convenience method, and is equivalent to calling \c stop() and
     then \c start().
@@ -563,8 +563,8 @@ void QQuickAbstractAnimation::restart()
 }
 
 /*!
-    \qmlmethod QtQuick::Animation::complete()
-    \brief Stops the animation, jumping to the final property values
+    \qmlmethod void QtQuick::Animation::complete()
+    \brief Stops the animation, jumping to the final property values.
 
     If the animation is not running, calling this method has no effect.  The
     \c running property will be false following a call to \c complete().

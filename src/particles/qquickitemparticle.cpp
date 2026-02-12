@@ -22,21 +22,21 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \qmlmethod QtQuick.Particles::ItemParticle::freeze(Item item)
+    \qmlmethod void QtQuick.Particles::ItemParticle::freeze(Item item)
 
     Suspends the flow of time for the logical particle which \a item represents,
     allowing you to control its movement.
 */
 
 /*!
-    \qmlmethod QtQuick.Particles::ItemParticle::unfreeze(Item item)
+    \qmlmethod void QtQuick.Particles::ItemParticle::unfreeze(Item item)
 
     Restarts the flow of time for the logical particle which \a item represents,
     allowing it to be moved by the particle system again.
 */
 
 /*!
-    \qmlmethod QtQuick.Particles::ItemParticle::take(Item item, bool prioritize)
+    \qmlmethod void QtQuick.Particles::ItemParticle::take(Item item, bool prioritize)
 
     Asks the ItemParticle to take over control of \a item positioning temporarily.
     It will follow the movement of a logical particle when one is available.
@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlmethod QtQuick.Particles::ItemParticle::give(Item item)
+    \qmlmethod void QtQuick.Particles::ItemParticle::give(Item item)
 
     Orders the ItemParticle to give you control of the \a item. It will cease
     controlling it and the item will lose its association to the logical

@@ -441,7 +441,7 @@ QVariant QQmlSettingsLabs::value(const QString &key, const QVariant &defaultValu
 }
 
 /*!
-   \qmlmethod Settings::setValue(string key, var value)
+   \qmlmethod void Settings::setValue(string key, var value)
 
    Sets the value of setting \a key to \a value. If the key already exists,
    the previous value is overwritten.
@@ -458,7 +458,7 @@ void QQmlSettingsLabs::setValue(const QString &key, const QVariant &value)
 }
 
 /*!
-   \qmlmethod Settings::sync()
+   \qmlmethod void Settings::sync()
 
     Writes any unsaved changes to permanent storage, and reloads any
     settings that have been changed in the meantime by another

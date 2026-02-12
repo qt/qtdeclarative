@@ -594,7 +594,7 @@ qreal QQmlXmlListModel::progress() const
 }
 
 /*!
-    \qmlmethod QtQml.XmlListModel::XmlListModel::errorString()
+    \qmlmethod string QtQml.XmlListModel::XmlListModel::errorString()
 
     Returns a string description of the last error that occurred
     if \l status is \l {XmlListModel}.Error.
@@ -616,7 +616,7 @@ void QQmlXmlListModel::componentComplete()
 }
 
 /*!
-    \qmlmethod QtQml.XmlListModel::XmlListModel::reload()
+    \qmlmethod void QtQml.XmlListModel::XmlListModel::reload()
 
     Reloads the model.
 */

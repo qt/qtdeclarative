@@ -4986,7 +4986,7 @@ void QQuickItem::mapToGlobal(QQmlV4FunctionPtr args) const
 #endif
 
 /*!
-    \qmlmethod QtQuick::Item::forceActiveFocus()
+    \qmlmethod void QtQuick::Item::forceActiveFocus()
 
     Forces active focus on the item.
 
@@ -5017,7 +5017,7 @@ void QQuickItem::forceActiveFocus()
 }
 
 /*!
-    \qmlmethod QtQuick::Item::forceActiveFocus(Qt::FocusReason reason)
+    \qmlmethod void QtQuick::Item::forceActiveFocus(Qt::FocusReason reason)
     \overload
 
     Forces active focus on the item with the given \a reason.
@@ -5106,7 +5106,7 @@ QQuickItem *QQuickItem::childAt(qreal x, qreal y) const
 }
 
 /*!
-    \qmlmethod QtQuick::Item::dumpItemTree()
+    \qmlmethod void QtQuick::Item::dumpItemTree()
 
     Dumps some details about the
     \l {Concepts - Visual Parent in Qt Quick}{visual tree of Items} starting

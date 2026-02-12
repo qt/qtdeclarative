@@ -234,7 +234,7 @@ qreal QQuickFontMetrics::lineWidth() const
 }
 
 /*!
-    \qmlmethod qreal QtQuick::FontMetrics::advanceWidth(string text)
+    \qmlmethod real QtQuick::FontMetrics::advanceWidth(string text)
 
     This method returns the advance in pixels of the characters in \a text.
     This is the distance from the position of the string to where the next

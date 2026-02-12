@@ -581,7 +581,7 @@ void QQuickShaderEffectSource::setSamples(int count)
 }
 
 /*!
-    \qmlmethod QtQuick::ShaderEffectSource::scheduleUpdate()
+    \qmlmethod void QtQuick::ShaderEffectSource::scheduleUpdate()
 
     Schedules a re-rendering of the texture for the next frame.
     Use this to update the texture when \l live is false.

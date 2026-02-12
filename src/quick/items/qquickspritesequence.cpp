@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
     If it is possible to return to the \c goalSprite from the starting point of the \c goalSprite,
     it will continue to do so until \c goalSprite is set to \c "" or an unreachable state.
 */
-/*! \qmlmethod QtQuick::SpriteSequence::jumpTo(string sprite)
+/*! \qmlmethod void QtQuick::SpriteSequence::jumpTo(string sprite)
 
     This function causes the SpriteSequence to jump to the specified \a sprite immediately;
     intermediate sprites are not played.

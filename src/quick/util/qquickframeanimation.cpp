@@ -332,8 +332,8 @@ qreal QQuickFrameAnimation::elapsedTime() const
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::start()
-    \brief Starts the frame animation
+    \qmlmethod void QtQuick::FrameAnimation::start()
+    \brief Starts the frame animation.
 
     If the frame animation is already running, calling this method has no effect.  The
     \c running property will be true following a call to \c start().
@@ -344,8 +344,8 @@ void QQuickFrameAnimation::start()
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::stop()
-    \brief Stops the frame animation
+    \qmlmethod void QtQuick::FrameAnimation::stop()
+    \brief Stops the frame animation.
 
     If the frame animation is not running, calling this method has no effect. Both the \c running and
     \c paused properties will be false following a call to \c stop().
@@ -357,8 +357,8 @@ void QQuickFrameAnimation::stop()
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::restart()
-    \brief Restarts the frame animation
+    \qmlmethod void QtQuick::FrameAnimation::restart()
+    \brief Restarts the frame animation.
 
     If the FrameAnimation is not running it will be started, otherwise it will be
     stopped, reset to initial state and started. The \c running property
@@ -371,8 +371,8 @@ void QQuickFrameAnimation::restart()
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::pause()
-    \brief Pauses the frame animation
+    \qmlmethod void QtQuick::FrameAnimation::pause()
+    \brief Pauses the frame animation.
 
     If the frame animation is already paused or not \c running, calling this method has no effect.
     The \c paused property will be true following a call to \c pause().
@@ -383,8 +383,8 @@ void QQuickFrameAnimation::pause()
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::resume()
-    \brief Resumes a paused frame animation
+    \qmlmethod void QtQuick::FrameAnimation::resume()
+    \brief Resumes a paused frame animation.
 
     If the frame animation is not paused or not \c running, calling this method has no effect.
     The \c paused property will be false following a call to \c resume().
@@ -395,8 +395,8 @@ void QQuickFrameAnimation::resume()
 }
 
 /*!
-    \qmlmethod QtQuick::FrameAnimation::reset()
-    \brief Resets the frame animation properties
+    \qmlmethod void QtQuick::FrameAnimation::reset()
+    \brief Resets the frame animation properties.
 
     Calling this method resets the \c frame and \c elapsedTime to their initial
     values (0). This method has no effect on \c running or \c paused properties

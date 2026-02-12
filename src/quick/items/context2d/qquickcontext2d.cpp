@@ -2058,7 +2058,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
 }
 
 /*!
-    \qmlmethod QtQuick::Context2D::setLineDash(array pattern)
+    \qmlmethod void QtQuick::Context2D::setLineDash(array pattern)
     \since QtQuick 2.11
     Sets the dash pattern to the given pattern.
 
@@ -3069,7 +3069,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::Fun
 
 // drawing images
 /*!
-  \qmlmethod QtQuick::Context2D::drawImage(variant image, real dx, real dy)
+  \qmlmethod void QtQuick::Context2D::drawImage(variant image, real dx, real dy)
   Draws the given \a image on the canvas at position (\a dx, \a dy).
   Note:
   The \a image type can be an Image item, an image url or a CanvasImageData object.
@@ -3086,7 +3086,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::Fun
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
-  \qmlmethod QtQuick::Context2D::drawImage(variant image, real dx, real dy, real dw, real dh)
+  \qmlmethod void QtQuick::Context2D::drawImage(variant image, real dx, real dy, real dw, real dh)
   This is an overloaded function.
   Draws the given item as \a image onto the canvas at point (\a dx, \a dy) and with width \a dw,
   height \a dh.
@@ -3106,7 +3106,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::Fun
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-drawimage}{W3C 2d context standard for drawImage}
   */
 /*!
-  \qmlmethod QtQuick::Context2D::drawImage(variant image, real sx, real sy, real sw, real sh, real dx, real dy, real dw, real dh)
+  \qmlmethod void QtQuick::Context2D::drawImage(variant image, real sx, real sy, real sw, real sh, real dx, real dy, real dw, real dh)
   This is an overloaded function.
   Draws the given item as \a image from source point (\a sx, \a sy) and source width \a sw, source height \a sh
   onto the canvas at point (\a dx, \a dy) and with width \a dw, height \a dh.

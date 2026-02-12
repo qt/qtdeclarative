@@ -3415,7 +3415,7 @@ void QQuickText::setRenderType(QQuickText::RenderType renderType)
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 #if QT_DEPRECATED_SINCE(5, 15)
 /*!
-    \qmlmethod QtQuick::Text::doLayout()
+    \qmlmethod void QtQuick::Text::doLayout()
     \deprecated
 
     Use \l forceLayout() instead.
@@ -3428,7 +3428,7 @@ void QQuickText::doLayout()
 #endif
 #endif
 /*!
-    \qmlmethod QtQuick::Text::forceLayout()
+    \qmlmethod void QtQuick::Text::forceLayout()
     \since 5.9
 
     Triggers a re-layout of the displayed text.
@@ -3440,7 +3440,7 @@ void QQuickText::forceLayout()
 }
 
 /*!
-    \qmlmethod QtQuick::Text::linkAt(real x, real y)
+    \qmlmethod string QtQuick::Text::linkAt(real x, real y)
     \since 5.3
 
     Returns the link string at point \a x, \a y in content coordinates,

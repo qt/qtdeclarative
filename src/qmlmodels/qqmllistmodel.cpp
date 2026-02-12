@@ -2390,7 +2390,7 @@ int QQmlListModel::count() const
 }
 
 /*!
-    \qmlmethod ListModel::clear()
+    \qmlmethod void ListModel::clear()
 
     Deletes all content from the model. In particular this invalidates all objects you may have
     retrieved using \l get().
@@ -2403,7 +2403,7 @@ void QQmlListModel::clear()
 }
 
 /*!
-    \qmlmethod ListModel::remove(int index, int count = 1)
+    \qmlmethod void ListModel::remove(int index, int count = 1)
 
     Deletes \a count number of items at \a index from the model.
 
@@ -2482,7 +2482,7 @@ void QQmlListModel::updateTranslations()
 }
 
 /*!
-    \qmlmethod ListModel::insert(int index, jsobject dict)
+    \qmlmethod void ListModel::insert(int index, jsobject dict)
 
     Adds a new item to the list model at position \a index, with the
     values in \a dict.
@@ -2545,7 +2545,7 @@ void QQmlListModel::insert(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod ListModel::move(int from, int to, int n)
+    \qmlmethod void ListModel::move(int from, int to, int n)
 
     Moves \a n items \a from one position \a to another.
 
@@ -2602,7 +2602,7 @@ void QQmlListModel::move(int from, int to, int n)
 }
 
 /*!
-    \qmlmethod ListModel::append(jsobject dict)
+    \qmlmethod void ListModel::append(jsobject dict)
 
     Adds a new item to the end of the list model, with the
     values in \a dict.
@@ -2721,7 +2721,7 @@ QJSValue QQmlListModel::get(int index) const
 }
 
 /*!
-    \qmlmethod ListModel::set(int index, jsobject dict)
+    \qmlmethod void ListModel::set(int index, jsobject dict)
 
     Changes the item at \a index in the list model with the
     values in \a dict. Properties not appearing in \a dict
@@ -2777,7 +2777,7 @@ void QQmlListModel::set(int index, const QJSValue &value)
 }
 
 /*!
-    \qmlmethod ListModel::setProperty(int index, string property, variant value)
+    \qmlmethod void ListModel::setProperty(int index, string property, var value)
 
     Changes the \a property of the item at \a index in the list model to \a value.
 
@@ -2812,7 +2812,7 @@ void QQmlListModel::setProperty(int index, const QString& property, const QVaria
 }
 
 /*!
-    \qmlmethod ListModel::sync()
+    \qmlmethod void ListModel::sync()
 
     Writes any unsaved changes to the list model after it has been modified
     from a worker script.

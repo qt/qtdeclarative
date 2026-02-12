@@ -385,8 +385,8 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlmethod QtQuick::DragEvent::accept()
-    \qmlmethod QtQuick::DragEvent::accept(enumeration action)
+    \qmlmethod void QtQuick::DragEvent::accept()
+    \qmlmethod void QtQuick::DragEvent::accept(enumeration action)
 
     Accepts the drag event.
 
@@ -394,7 +394,7 @@ void QQuickDropArea::dropEvent(QDropEvent *event)
 */
 
 /*!
-    \qmlmethod QtQuick::DragEvent::acceptProposedAction()
+    \qmlmethod void QtQuick::DragEvent::acceptProposedAction()
     \since 5.2
 
     Accepts the drag event with the \l proposedAction.

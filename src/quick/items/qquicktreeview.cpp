@@ -159,7 +159,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::expand(row)
+    \qmlmethod void QtQuick::TreeView::expand(row)
 
     Expands the tree node at the given \a row in the view.
 
@@ -172,7 +172,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::expandRecursively(row = -1, depth = -1)
+    \qmlmethod void QtQuick::TreeView::expandRecursively(row = -1, depth = -1)
     \since 6.4
 
     Expands the tree node at the given \a row in the view recursively down to
@@ -195,7 +195,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::expandToIndex(QModelIndex index)
+    \qmlmethod void QtQuick::TreeView::expandToIndex(QModelIndex index)
     \since 6.4
 
     Expands the tree from the given model \a index, and recursively all the way up
@@ -213,7 +213,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::collapse(row)
+    \qmlmethod void QtQuick::TreeView::collapse(row)
 
     Collapses the tree node at the given \a row in the view.
 
@@ -226,7 +226,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::collapseRecursively(row = -1)
+    \qmlmethod void QtQuick::TreeView::collapseRecursively(row = -1)
     \since 6.4
 
     Collapses the tree node at the given \a row in the view recursively down to
@@ -246,7 +246,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TreeView::toggleExpanded(row)
+    \qmlmethod void QtQuick::TreeView::toggleExpanded(row)
 
     Toggles if the tree node at the given \a row should be expanded.
     This is a convenience for doing:

@@ -3690,7 +3690,7 @@ qreal QQuickListView::maxXExtent() const
 }
 
 /*!
-    \qmlmethod QtQuick::ListView::incrementCurrentIndex()
+    \qmlmethod void QtQuick::ListView::incrementCurrentIndex()
 
     Increments the current index.  The current index will wrap
     if keyNavigationWraps is true and it is currently at the end.
@@ -3710,7 +3710,7 @@ void QQuickListView::incrementCurrentIndex()
 }
 
 /*!
-    \qmlmethod QtQuick::ListView::decrementCurrentIndex()
+    \qmlmethod void QtQuick::ListView::decrementCurrentIndex()
 
     Decrements the current index.  The current index will wrap
     if keyNavigationWraps is true and it is currently at the beginning.
@@ -3972,7 +3972,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 #endif
 
 /*!
-    \qmlmethod QtQuick::ListView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod void QtQuick::ListView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by \a mode:
 
@@ -4005,8 +4005,8 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod QtQuick::ListView::positionViewAtBeginning()
-    \qmlmethod QtQuick::ListView::positionViewAtEnd()
+    \qmlmethod void QtQuick::ListView::positionViewAtBeginning()
+    \qmlmethod void QtQuick::ListView::positionViewAtEnd()
 
     Positions the view at the beginning or end, taking into account any header or footer.
 
@@ -4065,7 +4065,7 @@ void QQuickListViewPrivate::translateAndTransitionItemsAfter(int afterModelIndex
 */
 
 /*!
-    \qmlmethod QtQuick::ListView::forceLayout()
+    \qmlmethod void QtQuick::ListView::forceLayout()
 
     Responding to changes in the model is usually batched to happen only once
     per frame. This means that inside script blocks it is possible for the

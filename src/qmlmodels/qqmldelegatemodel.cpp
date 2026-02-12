@@ -2824,7 +2824,7 @@ QQmlDelegateModel *QQmlDelegateModelAttached::model() const
 }
 
 /*!
-    \qmlattachedproperty stringlist QtQml.Models::DelegateModel::groups
+    \qmlattachedproperty list<string> QtQml.Models::DelegateModel::groups
 
     This attached property holds the name of DelegateModelGroups the item belongs to.
 
@@ -3218,8 +3218,8 @@ bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *ind
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::insert(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQml.Models::DelegateModelGroup::insert(jsdict data, var groups = undefined)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::insert(int index, jsdict data, array groups = undefined)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::insert(jsdict data, var groups = undefined)
 
     Creates a new entry at \a index in a DelegateModel with the values from \a data that
     correspond to roles in the model assigned to DelegateModel::model.
@@ -3281,9 +3281,9 @@ void QQmlDelegateModelGroup::insert(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::create(int index)
-    \qmlmethod QtQml.Models::DelegateModelGroup::create(int index, jsdict data, array groups = undefined)
-    \qmlmethod QtQml.Models::DelegateModelGroup::create(jsdict data, array groups = undefined)
+    \qmlmethod var QtQml.Models::DelegateModelGroup::create(int index)
+    \qmlmethod var QtQml.Models::DelegateModelGroup::create(int index, jsdict data, array groups = undefined)
+    \qmlmethod var QtQml.Models::DelegateModelGroup::create(jsdict data, array groups = undefined)
 
     Returns a reference to the instantiated item at \a index in the group.
 
@@ -3360,7 +3360,7 @@ void QQmlDelegateModelGroup::create(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::resolve(int from, int to)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::resolve(int from, int to)
 
     Binds an unresolved item at \a from to an item in DelegateModel::model at index \a to.
 
@@ -3474,7 +3474,7 @@ void QQmlDelegateModelGroup::resolve(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::remove(int index, int count)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::remove(int index, int count)
 
     Removes \a count items starting at \a index from the group.
 */
@@ -3548,7 +3548,7 @@ bool QQmlDelegateModelGroupPrivate::parseGroupArgs(
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::addGroups(int index, int count, stringlist groups)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::addGroups(int index, int count, list<string> groups)
 
     Adds \a count items starting at \a index to \a groups.
 */
@@ -3578,7 +3578,7 @@ void QQmlDelegateModelGroup::addGroups(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::removeGroups(int index, int count, stringlist groups)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::removeGroups(int index, int count, list<string> groups)
 
     Removes \a count items starting at \a index from \a groups.
 */
@@ -3608,7 +3608,7 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::setGroups(int index, int count, list<string> groups)
 
     Changes the group membership of \a count items starting at \a index. The items are removed from
     their existing groups and added to \a groups.
@@ -3639,7 +3639,7 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::move(var from, var to, int count)
+    \qmlmethod void QtQml.Models::DelegateModelGroup::move(var from, var to, int count)
 
     Moves \a count at \a from in a group \a to a new position.
 

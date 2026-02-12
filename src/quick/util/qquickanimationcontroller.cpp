@@ -143,7 +143,7 @@ void QQuickAnimationController::setAnimation(QQuickAbstractAnimation *animation)
 }
 
 /*!
-    \qmlmethod QtQuick::AnimationController::reload()
+    \qmlmethod void QtQuick::AnimationController::reload()
     \brief Reloads the animation properties
 
     If the animation properties changed, calling this method to reload the animation definations.
@@ -193,7 +193,7 @@ void QQuickAnimationController::componentFinalized()
 }
 
 /*!
-    \qmlmethod QtQuick::AnimationController::completeToBeginning()
+    \qmlmethod void QtQuick::AnimationController::completeToBeginning()
     \brief Finishes running the controlled animation in a backwards direction.
 
     After calling this method, the animation runs normally from the current progress point
@@ -222,7 +222,7 @@ void QQuickAnimationController::completeToBeginning()
 }
 
 /*!
-    \qmlmethod QtQuick::AnimationController::completeToEnd()
+    \qmlmethod void QtQuick::AnimationController::completeToEnd()
     \brief Finishes running the controlled animation in a forwards direction.
 
     After calling this method, the animation runs normally from the current progress point

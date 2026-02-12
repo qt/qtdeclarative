@@ -581,7 +581,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::forceLayout
+    \qmlmethod void QtQuick::TableView::forceLayout()
 
     Responding to changes in the model are batched so that they are handled
     only once per frame. This means the TableView delays showing any changes
@@ -860,7 +860,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
+    \qmlmethod void QtQuick::TableView::positionViewAtCell(point cell, PositionMode mode, point offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
     that \a cell is at the position specified by \a mode. \a mode
@@ -919,7 +919,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
+    \qmlmethod void QtQuick::TableView::positionViewAtIndex(QModelIndex index, PositionMode mode, point offset, rect subRect)
     \since 6.5
 
     Positions the view such that \a index is at the position specified
@@ -963,14 +963,14 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, PositionMode mode, point offset, rect subRect)
+    \qmlmethod void QtQuick::TableView::positionViewAtCell(int column, int row, PositionMode mode, point offset, rect subRect)
     \deprecated
 
     Use \l {positionViewAtIndex()}{positionViewAtIndex(index(row, column), ...)} instead.
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtRow(int row, PositionMode mode, real offset, rect subRect)
+    \qmlmethod void QtQuick::TableView::positionViewAtRow(int row, PositionMode mode, real offset, rect subRect)
 
     Positions \l {Flickable::}{contentY} such that \a row is at the position specified
     by \a mode, \a offset and \a subRect.
@@ -982,7 +982,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, PositionMode mode, real offset, rect subRect)
+    \qmlmethod void QtQuick::TableView::positionViewAtColumn(int column, PositionMode mode, real offset, rect subRect)
 
     Positions \l {Flickable::}{contentX} such that \a column is at the position specified
     by \a mode, \a offset and \a subRect.
@@ -994,7 +994,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::moveColumn(int source, int destination)
+    \qmlmethod void QtQuick::TableView::moveColumn(int source, int destination)
     \since 6.8
 
     Moves a column from the \a source to the \a destination position.
@@ -1005,7 +1005,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::clearColumnReordering()
+    \qmlmethod void QtQuick::TableView::clearColumnReordering()
     \since 6.8
 
     Resets any previously applied column reordering.
@@ -1015,7 +1015,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::moveRow(int source, int destination)
+    \qmlmethod void QtQuick::TableView::moveRow(int source, int destination)
     \since 6.8
 
     Moves a row from the \a source to the \a destination position.
@@ -1026,7 +1026,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::clearRowReordering()
+    \qmlmethod void QtQuick::TableView::clearRowReordering()
     \since 6.8
 
     Resets any previously applied row reordering.
@@ -1157,7 +1157,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::setColumnWidth(int column, real size)
+    \qmlmethod void QtQuick::TableView::setColumnWidth(int column, real size)
 
     Sets the explicit column width of column \a column to \a size.
 
@@ -1203,7 +1203,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::clearColumnWidths()
+    \qmlmethod void QtQuick::TableView::clearColumnWidths()
 
     Clears all the column widths set with \l setColumnWidth().
 
@@ -1213,7 +1213,7 @@
 */
 
 /*!
-    \qmlmethod qreal QtQuick::TableView::explicitColumnWidth(int column)
+    \qmlmethod real QtQuick::TableView::explicitColumnWidth(int column)
 
     Returns the width of the \a column set with \l setColumnWidth(). This width might
     differ from the actual width of the column, if a \l columnWidthProvider
@@ -1229,7 +1229,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::setRowHeight(int row, real size)
+    \qmlmethod void QtQuick::TableView::setRowHeight(int row, real size)
 
     Sets the explicit row height of row \a row to \a size.
 
@@ -1275,7 +1275,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::clearRowHeights()
+    \qmlmethod void QtQuick::TableView::clearRowHeights()
 
     Clears all the row heights set with \l setRowHeight().
 
@@ -1285,7 +1285,7 @@
 */
 
 /*!
-    \qmlmethod qreal QtQuick::TableView::explicitRowHeight(int row)
+    \qmlmethod real QtQuick::TableView::explicitRowHeight(int row)
 
     Returns the height of the \a row set with \l setRowHeight(). This height might
     differ from the actual height of the column, if a \l rowHeightProvider
@@ -1383,7 +1383,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::edit(QModelIndex modelIndex)
+    \qmlmethod void QtQuick::TableView::edit(QModelIndex modelIndex)
     \since 6.5
 
     This function starts an editing session for the cell that represents
@@ -1401,7 +1401,7 @@
 */
 
 /*!
-    \qmlmethod QtQuick::TableView::closeEditor()
+    \qmlmethod void QtQuick::TableView::closeEditor()
     \since 6.5
 
     If the user is editing a cell, calling this function will

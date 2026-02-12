@@ -1335,7 +1335,7 @@ QQuickTextSelection *QQuickTextEdit::cursorSelection() const
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::moveCursorSelection(int position, SelectionMode mode)
+    \qmlmethod void QtQuick::TextEdit::moveCursorSelection(int position, SelectionMode mode)
 
     Moves the cursor to \a position and updates the selection according to the optional \a mode
     parameter. (To only move the cursor, set the \l cursorPosition property.)
@@ -2034,7 +2034,7 @@ void QQuickTextEdit::keyReleaseEvent(QKeyEvent *event)
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::deselect()
+    \qmlmethod void QtQuick::TextEdit::deselect()
 
     Removes active text selection.
 */
@@ -2047,7 +2047,7 @@ void QQuickTextEdit::deselect()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::selectAll()
+    \qmlmethod void QtQuick::TextEdit::selectAll()
 
     Causes all text to be selected.
 */
@@ -2058,7 +2058,7 @@ void QQuickTextEdit::selectAll()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::selectWord()
+    \qmlmethod void QtQuick::TextEdit::selectWord()
 
     Causes the word closest to the current cursor position to be selected.
 */
@@ -2071,7 +2071,7 @@ void QQuickTextEdit::selectWord()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::select(int start, int end)
+    \qmlmethod void QtQuick::TextEdit::select(int start, int end)
 
     Causes the text from \a start to \a end to be selected.
 
@@ -2103,9 +2103,9 @@ void QQuickTextEdit::select(int start, int end)
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::isRightToLeft(int start, int end)
+    \qmlmethod bool QtQuick::TextEdit::isRightToLeft(int start, int end)
 
-    Returns true if the natural reading direction of the editor text
+    Returns \c true if the natural reading direction of the editor text
     found between positions \a start and \a end is right to left.
 */
 bool QQuickTextEdit::isRightToLeft(int start, int end)
@@ -2120,7 +2120,7 @@ bool QQuickTextEdit::isRightToLeft(int start, int end)
 
 #if QT_CONFIG(clipboard)
 /*!
-    \qmlmethod QtQuick::TextEdit::cut()
+    \qmlmethod void QtQuick::TextEdit::cut()
 
     Moves the currently selected text to the system clipboard.
 */
@@ -2131,7 +2131,7 @@ void QQuickTextEdit::cut()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::copy()
+    \qmlmethod void QtQuick::TextEdit::copy()
 
     Copies the currently selected text to the system clipboard.
 */
@@ -2142,7 +2142,7 @@ void QQuickTextEdit::copy()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::paste()
+    \qmlmethod void QtQuick::TextEdit::paste()
 
     Replaces the currently selected text by the contents of the system clipboard.
 */
@@ -2155,7 +2155,7 @@ void QQuickTextEdit::paste()
 
 
 /*!
-    \qmlmethod QtQuick::TextEdit::undo()
+    \qmlmethod void QtQuick::TextEdit::undo()
 
     Undoes the last operation if undo is \l {canUndo}{available}. Deselects any
     current selection, and updates the selection start to the current cursor
@@ -2169,7 +2169,7 @@ void QQuickTextEdit::undo()
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::redo()
+    \qmlmethod void QtQuick::TextEdit::redo()
 
     Redoes the last operation if redo is \l {canRedo}{available}.
 */
@@ -3452,7 +3452,7 @@ QString QQuickTextEdit::getFormattedText(int start, int end) const
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::insert(int position, string text)
+    \qmlmethod void QtQuick::TextEdit::insert(int position, string text)
 
     Inserts \a text into the TextEdit at \a position.
 */
@@ -3655,7 +3655,7 @@ void QQuickTextEdit::append(const QString &text)
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::linkAt(real x, real y)
+    \qmlmethod string QtQuick::TextEdit::linkAt(real x, real y)
     \since 5.3
 
     Returns the link string at point \a x, \a y in content coordinates,
@@ -3821,7 +3821,7 @@ void QQuickTextEdit::setTabStopDistance(qreal distance)
 }
 
 /*!
-    \qmlmethod QtQuick::TextEdit::clear()
+    \qmlmethod void QtQuick::TextEdit::clear()
     \since 5.7
 
     Clears the contents of the text edit

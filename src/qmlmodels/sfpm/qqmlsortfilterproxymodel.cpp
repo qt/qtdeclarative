@@ -269,7 +269,7 @@ void QQmlSortFilterProxyModel::invalidateFilter()
 }
 
 /*!
-    \qmlmethod SortFilterProxyModel::invalidate()
+    \qmlmethod void SortFilterProxyModel::invalidate()
 
     This method invalidates the model by reevaluating the configured filters
     and sorters on the source model data.
@@ -284,7 +284,7 @@ void QQmlSortFilterProxyModel::invalidate()
 }
 
 /*!
-    \qmlmethod SortFilterProxyModel::invalidateSorter()
+    \qmlmethod void SortFilterProxyModel::invalidateSorter()
 
     This method force the sort filter proxy model to reevaluate the configured
     sorters against the data. It can used in the case where dynamic sorting
@@ -298,7 +298,7 @@ void QQmlSortFilterProxyModel::invalidateSorter()
 }
 
 /*!
-    \qmlmethod SortFilterProxyModel::setPrimarySorter(sorter)
+    \qmlmethod void SortFilterProxyModel::setPrimarySorter(sorter)
 
     This method allows to set the primary sorter in the sort filter proxy
     model. The primary sorter will be evaluated before all other sorters

@@ -1383,7 +1383,7 @@ QByteArray QtObject::atob(const QVariantList &data) const
 }
 
 /*!
-    \qmlmethod Qt::quit()
+    \qmlmethod void Qt::quit()
 
     This function causes the QQmlEngine::quit() signal to be emitted.
     Within the \l {Prototyping with the QML Runtime Tool}{qml tool},
@@ -1400,7 +1400,7 @@ void QtObject::quit() const
 }
 
 /*!
-    \qmlmethod Qt::exit(int retCode)
+    \qmlmethod void Qt::exit(int retCode)
 
     This function causes the QQmlEngine::exit(int) signal to be emitted.
     Within the \l {Prototyping with the QML Runtime Tool}{qml tool},
@@ -1741,7 +1741,7 @@ QBindable<QString> QtObject::uiLanguageBindable()
 
 #if QT_CONFIG(qml_locale)
 /*!
-    \qmlmethod Qt::locale(name)
+    \qmlmethod locale Qt::locale(name)
 
     Returns a JS object representing the locale with the specified
     \a name, which has the format "language[_territory][.codeset][@modifier]"
@@ -1757,6 +1757,8 @@ QBindable<QString> QtObject::uiLanguageBindable()
     valid ISO 369 code, the "C" locale is used instead. If country
     is not present, or is not a valid ISO 3166 code, the most
     appropriate country is chosen for the specified language.
+
+    The returned object is of an anonymous QML type backed by \l QLocale.
 
     \sa Locale
 */
@@ -1798,7 +1800,7 @@ QQmlSourceLocation QQmlBindingFunction::currentLocation() const
 DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 
 /*!
-    \qmlmethod Qt::binding(function)
+    \qmlmethod var Qt::binding(var function)
 
     Returns a JavaScript object representing a \l{Property Binding}{property binding},
     with a \a function that evaluates the binding.
@@ -1860,7 +1862,7 @@ void QtObject::callLater(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod Qt::enumStringToValue(enumType, keyName)
+    \qmlmethod real Qt::enumStringToValue(enumType, keyName)
 
     Returns the numeric value of key \a keyName in enum \a enumType. If the
     enum could not be found, a \c TypeError is thrown. If the key is not an
@@ -1878,7 +1880,7 @@ double QtObject::enumStringToValue(const QJSManagedValue &enumType, const QStrin
 }
 
 /*!
-    \qmlmethod Qt::enumValueToString(enumType, keyValue)
+    \qmlmethod string Qt::enumValueToString(enumType, keyValue)
 
     Returns the string representation of a key of enum \a enumType that has the
     value \a keyValue. If the enum could not be found, a \c TypeError is
@@ -1907,7 +1909,7 @@ QString QtObject::enumValueToString(const QJSManagedValue &enumType, double valu
 }
 
 /*!
-    \qmlmethod Qt::enumValueToStrings(enumType, keyValue)
+    \qmlmethod list<string> Qt::enumValueToStrings(enumType, keyValue)
 
     Returns a list of the string representation of all the keys of enum
     \a enumType that have the value \a keyValue. If the enum could not be
@@ -2664,8 +2666,8 @@ ReturnedValue GlobalExtensions::method_string_arg(const FunctionObject *b, const
 }
 
 /*!
-\qmlmethod Qt::callLater(function)
-\qmlmethod Qt::callLater(function, argument1, argument2, ...)
+\qmlmethod void Qt::callLater(function)
+\qmlmethod void Qt::callLater(function, argument1, argument2, ...)
 \since 5.8
 Use this function to eliminate redundant calls to a function or signal.
 

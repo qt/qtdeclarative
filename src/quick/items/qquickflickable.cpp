@@ -2183,7 +2183,7 @@ void QQuickFlickable::geometryChange(const QRectF &newGeometry, const QRectF &ol
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::flick(qreal xVelocity, qreal yVelocity)
+    \qmlmethod void QtQuick::Flickable::flick(qreal xVelocity, qreal yVelocity)
 
     Flicks the content with \a xVelocity horizontally and \a yVelocity vertically in pixels/sec.
 
@@ -2233,7 +2233,7 @@ void QQuickFlickablePrivate::flickingStarted(bool flickingH, bool flickingV)
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::cancelFlick()
+    \qmlmethod void QtQuick::Flickable::cancelFlick()
 
     Cancels the current flick animation.
 */
@@ -2247,7 +2247,7 @@ void QQuickFlickable::cancelFlick()
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::positionViewAtChild(QQuickItem *child, PositionMode mode, point offset)
+    \qmlmethod void QtQuick::Flickable::positionViewAtChild(QQuickItem *child, PositionMode mode, point offset)
     \since 6.11
 
     Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
@@ -2304,7 +2304,7 @@ void QQuickFlickable::positionViewAtChild(QQuickItem *child, PositionMode mode, 
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::flickToChild(QQuickItem *child, PositionMode mode, point offset)
+    \qmlmethod void QtQuick::Flickable::flickToChild(QQuickItem *child, PositionMode mode, point offset)
     \since 6.11
 
     Flicks the flickable such that \a child item (if it is a child) is at the position
@@ -2353,7 +2353,7 @@ void QQuickFlickable::flickToChild(QQuickItem *child, PositionMode mode, const Q
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::flickTo(point position)
+    \qmlmethod void QtQuick::Flickable::flickTo(point position)
     \since 6.11
 
     Flicks the flickable to \a position.
@@ -2770,7 +2770,7 @@ qreal QQuickFlickable::originX() const
 
 
 /*!
-    \qmlmethod QtQuick::Flickable::resizeContent(real width, real height, QPointF center)
+    \qmlmethod void QtQuick::Flickable::resizeContent(real width, real height, point center)
 
     Resizes the content to \a width x \a height about \a center.
 
@@ -2808,7 +2808,7 @@ void QQuickFlickable::resizeContent(qreal w, qreal h, QPointF center)
 }
 
 /*!
-    \qmlmethod QtQuick::Flickable::returnToBounds()
+    \qmlmethod void QtQuick::Flickable::returnToBounds()
 
     Ensures the content is within legal bounds.
 

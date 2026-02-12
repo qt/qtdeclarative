@@ -2248,7 +2248,7 @@ void QQuickGridView::initItem(int index, QObject *obj)
 }
 
 /*!
-    \qmlmethod QtQuick::GridView::moveCurrentIndexUp()
+    \qmlmethod void QtQuick::GridView::moveCurrentIndexUp()
 
     Move the currentIndex up one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2292,7 +2292,7 @@ void QQuickGridView::moveCurrentIndexUp()
 }
 
 /*!
-    \qmlmethod QtQuick::GridView::moveCurrentIndexDown()
+    \qmlmethod void QtQuick::GridView::moveCurrentIndexDown()
 
     Move the currentIndex down one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2335,7 +2335,7 @@ void QQuickGridView::moveCurrentIndexDown()
 }
 
 /*!
-    \qmlmethod QtQuick::GridView::moveCurrentIndexLeft()
+    \qmlmethod void QtQuick::GridView::moveCurrentIndexLeft()
 
     Move the currentIndex left one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2378,7 +2378,7 @@ void QQuickGridView::moveCurrentIndexLeft()
 
 
 /*!
-    \qmlmethod QtQuick::GridView::moveCurrentIndexRight()
+    \qmlmethod void QtQuick::GridView::moveCurrentIndexRight()
 
     Move the currentIndex right one item in the view.
     The current index will wrap if keyNavigationWraps is true and it
@@ -2653,7 +2653,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 }
 
 /*!
-    \qmlmethod QtQuick::GridView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod void QtQuick::GridView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:
@@ -2686,8 +2686,8 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod QtQuick::GridView::positionViewAtBeginning()
-    \qmlmethod QtQuick::GridView::positionViewAtEnd()
+    \qmlmethod void QtQuick::GridView::positionViewAtBeginning()
+    \qmlmethod void QtQuick::GridView::positionViewAtEnd()
 
     Positions the view at the beginning or end, taking into account any header or footer.
 
@@ -2769,7 +2769,7 @@ bool QQuickGridViewPrivate::needsRefillForAddedOrRemovedIndex(int modelIndex) co
 */
 
 /*!
-    \qmlmethod QtQuick::GridView::forceLayout()
+    \qmlmethod void QtQuick::GridView::forceLayout()
 
     Responding to changes in the model is usually batched to happen only once
     per frame. This means that inside script blocks it is possible for the

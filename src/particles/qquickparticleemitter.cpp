@@ -164,19 +164,19 @@ QT_BEGIN_NAMESPACE
     high-volume particle systems.
 */
 
-/*! \qmlmethod QtQuick.Particles::Emitter::burst(int count)
+/*! \qmlmethod void QtQuick.Particles::Emitter::burst(int count)
 
     Emits a number of particles, specified by \a count, from this emitter immediately.
 */
 
-/*! \qmlmethod QtQuick.Particles::Emitter::burst(int count, int x, int y)
+/*! \qmlmethod void QtQuick.Particles::Emitter::burst(int count, int x, int y)
 
     Emits a number of particles, specified by \a count, from this emitter immediately.
     The particles are emitted as if the Emitter was positioned at (\a {x}, \a {y}) but
     all other properties are the same.
 */
 
-/*! \qmlmethod QtQuick.Particles::Emitter::pulse(int duration)
+/*! \qmlmethod void QtQuick.Particles::Emitter::pulse(int duration)
 
     If the emitter is not enabled, enables it for a specified \a duration
     (in milliseconds) and then switches it back off.

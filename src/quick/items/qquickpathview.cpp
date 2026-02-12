@@ -775,7 +775,7 @@ QQuickItem *QQuickPathView::currentItem() const
 }
 
 /*!
-    \qmlmethod QtQuick::PathView::incrementCurrentIndex()
+    \qmlmethod void QtQuick::PathView::incrementCurrentIndex()
 
     Increments the current index.
 
@@ -789,7 +789,7 @@ void QQuickPathView::incrementCurrentIndex()
 }
 
 /*!
-    \qmlmethod QtQuick::PathView::decrementCurrentIndex()
+    \qmlmethod void QtQuick::PathView::decrementCurrentIndex()
 
     Decrements the current index.
 
@@ -1393,7 +1393,7 @@ void QQuickPathView::setMovementDirection(QQuickPathView::MovementDirection dir)
 }
 
 /*!
-    \qmlmethod QtQuick::PathView::positionViewAtIndex(int index, PositionMode mode)
+    \qmlmethod void QtQuick::PathView::positionViewAtIndex(int index, PositionMode mode)
 
     Positions the view such that the \a index is at the position specified by
     \a mode:

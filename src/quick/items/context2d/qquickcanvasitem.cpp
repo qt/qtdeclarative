@@ -879,7 +879,7 @@ void QQuickCanvasItem::requestAnimationFrame(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod QtQuick::Canvas::cancelRequestAnimationFrame(int handle)
+    \qmlmethod void QtQuick::Canvas::cancelRequestAnimationFrame(int handle)
 
     This function will cancel the animation callback referenced by \a handle.
 */
@@ -899,7 +899,7 @@ void QQuickCanvasItem::cancelRequestAnimationFrame(QQmlV4FunctionPtr args)
 
 
 /*!
-    \qmlmethod QtQuick::Canvas::requestPaint()
+    \qmlmethod void QtQuick::Canvas::requestPaint()
 
     Request the entire visible region be re-drawn.
 
@@ -912,7 +912,7 @@ void QQuickCanvasItem::requestPaint()
 }
 
 /*!
-    \qmlmethod QtQuick::Canvas::markDirty(rect area)
+    \qmlmethod void QtQuick::Canvas::markDirty(rect area)
 
     Marks the given \a area as dirty, so that when this area is visible the
     canvas renderer will redraw it. This will trigger the \c paint signal.
@@ -980,7 +980,7 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 */
 
 /*!
-    \qmlmethod QtQuick::Canvas::loadImage(url image, size sourceSize = undefined)
+    \qmlmethod void QtQuick::Canvas::loadImage(url image, size sourceSize = undefined)
 
     Loads the given \a image asynchronously.
 
@@ -1016,7 +1016,7 @@ void QQuickCanvasItem::loadImage(const QUrl& url, QSizeF sourceSize)
     }
 }
 /*!
-    \qmlmethod QtQuick::Canvas::unloadImage(url image)
+    \qmlmethod void QtQuick::Canvas::unloadImage(url image)
 
     Unloads the \a image.
 
@@ -1033,7 +1033,7 @@ void QQuickCanvasItem::unloadImage(const QUrl& url)
 }
 
 /*!
-    \qmlmethod QtQuick::Canvas::isImageError(url image)
+    \qmlmethod bool QtQuick::Canvas::isImageError(url image)
 
     Returns \c true if the \a image failed to load, \c false otherwise.
 
@@ -1048,8 +1048,8 @@ bool QQuickCanvasItem::isImageError(const QUrl& url) const
 }
 
 /*!
-  \qmlmethod QtQuick::Canvas::isImageLoading(url image)
-  Returns true if the \a image is currently loading.
+  \qmlmethod bool QtQuick::Canvas::isImageLoading(url image)
+  Returns \c true if the \a image is currently loading.
 
   \sa loadImage()
 */
@@ -1061,8 +1061,8 @@ bool QQuickCanvasItem::isImageLoading(const QUrl& url) const
         && d->pixmaps.value(fullPathUrl)->pixmap()->isLoading();
 }
 /*!
-  \qmlmethod QtQuick::Canvas::isImageLoaded(url image)
-  Returns true if the \a image is successfully loaded and ready to use.
+  \qmlmethod bool QtQuick::Canvas::isImageLoaded(url image)
+  Returns \c true if the \a image is successfully loaded and ready to use.
 
   \sa loadImage()
 */
