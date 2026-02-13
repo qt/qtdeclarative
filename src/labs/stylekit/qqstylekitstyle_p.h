@@ -46,10 +46,10 @@ class QQStyleKitStyle : public QQStyleKitStyleAndThemeBase
     QML_NAMED_ELEMENT(BaseStyle)
 
 public:
-    enum Contstants {
-        Stretch = -1,
+    enum Constants {
+        Stretch = -1, // Use all available space
     };
-    Q_ENUM(Contstants)
+    Q_ENUM(Constants)
 
     QQStyleKitStyle(QObject *parent = nullptr);
     ~QQStyleKitStyle();
