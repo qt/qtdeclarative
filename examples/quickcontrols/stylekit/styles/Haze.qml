@@ -19,10 +19,10 @@ Style {
     control {
         // 'control' is the fallback for all the controls. Any properties that are not
         // overridden by a specific control underneath will be read from here instead.
-        leftPadding: 10
-        topPadding: 5
-        rightPadding: 10
-        bottomPadding: 5
+        leftPadding: 8
+        topPadding: 2
+        rightPadding: 8
+        bottomPadding: 2
 
         handle {
             implicitWidth: 25
@@ -66,7 +66,7 @@ Style {
         // have in common. Any properties not set here will fall back to those defined in 'control'.
         background {
             implicitWidth: 100
-            implicitHeight: 40
+            implicitHeight: 30
             opacity: 0.8
             radius: 8
 
@@ -89,6 +89,11 @@ Style {
         pressed {
             background.scale: 0.95
         }
+    }
+
+    flatButton {
+        background.shadow.visible: false
+        background.gradient: null
     }
 
     checkBox {
@@ -114,23 +119,23 @@ Style {
         pressed.background.scale: 1.0
     }
 
-    groupBox {
-        background.topMargin: 30
-        background.implicitHeight: 30
-        text.bold: true
-        spacing: 5
-        padding: 10
-    }
-
     pane {
         // 'pane' is the fallback for all pane based controls, such as 'frame' and 'groupBox'.
         //  Any properties not set here will fall back to those defined in 'control'.
+        spacing: 5
+        padding: 20
         background {
             border.width: 0
             implicitWidth: 200
             implicitHeight: 200
             shadow.visible: false
         }
+    }
+
+    groupBox {
+        background.topMargin: 20
+        background.implicitHeight: 30
+        text.bold: true
     }
 
     radioButton {
@@ -161,6 +166,9 @@ Style {
             foreground {
                 radius: 8
             }
+        }
+        vertical {
+            background.implicitWidth: 150
         }
     }
 
@@ -241,6 +249,11 @@ Style {
             indicator.implicitHeight: 8
             indicator.implicitWidth: Style.Stretch
         }
+
+        pane {
+            padding: 20
+            spacing: 5
+        }
     }
 
     StyleVariation {
@@ -287,8 +300,9 @@ Style {
         // The 'controlType' can be any number between 0 and 100000.
         controlType: fancyButton
         background {
-            implicitWidth: 200
-            radius: 4
+            implicitWidth: 120
+            implicitHeight: 30
+            radius: 0
         }
     }
 
@@ -359,6 +373,9 @@ Style {
         }
 
         abstractButton {
+            background {
+                shadow.scale: 1.05
+            }
             hovered.background {
                 shadow.scale: 1.4
                 color: palette.accent
@@ -399,7 +416,7 @@ Style {
         CustomControl {
             controlType: fancyButton
             background {
-                color: "lightslategray"
+                color: "tan"
             }
         }
 
@@ -437,6 +454,7 @@ Style {
         }
 
         control {
+            text.color: "lightgray"
             background {
                 border.color: "#3d373b"
                 shadow.color: "#555555"
@@ -519,7 +537,7 @@ Style {
         CustomControl {
             controlType: fancyButton
             background {
-                color: "lightsteelblue"
+                color: "thistle"
             }
         }
 

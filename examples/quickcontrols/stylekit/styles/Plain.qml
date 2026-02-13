@@ -7,6 +7,9 @@ import Qt.labs.StyleKit
 Style {
     control {
         // We start by styling a control in its 'normal' state
+        leftPadding: 20
+        rightPadding: 20
+
         background {
             border.color: palette.accent
             radius: 4
@@ -34,6 +37,7 @@ Style {
         }
 
         checked {
+            text.color: "white"
             background {
                 color: palette.accent.darker(1.2)
                 scale: 0.95
@@ -63,22 +67,45 @@ Style {
         // In this style, we want to show the background for all button types, such as
         // 'button', 'checkBox', 'radioButton', etc, so we set 'background.visible: true'.
         // By default, the background is normally hidden for most controls.
-        background.visible: true
+        background {
+            visible: true
+            shadow {
+                color: "darkgray"
+                horizontalOffset: 2
+                verticalOffset: 2
+            }
+        }
     }
 
     itemDelegate {
         // We don't want the menu items in a ComboBox to fade, so we override and unset
         // the transition previously set for all controls in the 'control' section.
         transition: null
+        background.color: "transparent"
+        hovered {
+            background.color: palette.accent
+            text.color: "white"
+        }
+    }
+
+    popup {
+        // Remove padding so that item delegates span the full width
+        padding: 0
     }
 
     scrollBar {
+        // Hide the background, showing only the groove and handle
         background.visible: false
+        padding: 0
     }
 
     pane {
         /* The controls change background color on states like hover, but panes
          * should not. Override the property here to disable that behavior for panes. */
         background.color: "white"
+    }
+
+    applicationWindow {
+        background.color: "whitesmoke"
     }
 }

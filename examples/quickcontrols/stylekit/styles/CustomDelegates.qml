@@ -2,36 +2,84 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 import QtQuick
+import QtQuick.Shapes
 import QtQuick.Templates as T
 import Qt.labs.StyleKit
 
 Style {
 
-    // Define some custom delegates:
+    /******************************************************************
+     * Defining some helper types for the custom delegates further down
+     ******************************************************************/
+
+    component Star : Shape {
+        id: star
+        ShapePath {
+            fillColor: star.palette.accent
+            scale: Qt.size(star.width, star.height)
+            PathMove { x: 0.50; y: 0.00 }
+            PathLine { x: 0.59; y: 0.35 }
+            PathLine { x: 0.97; y: 0.35 }
+            PathLine { x: 0.66; y: 0.57 }
+            PathLine { x: 0.78; y: 0.91 }
+            PathLine { x: 0.50; y: 0.70 }
+            PathLine { x: 0.22; y: 0.91 }
+            PathLine { x: 0.34; y: 0.57 }
+            PathLine { x: 0.03; y: 0.35 }
+            PathLine { x: 0.41; y: 0.35 }
+            PathLine { x: 0.50; y: 0.00 }
+        }
+        NumberAnimation on rotation {
+            loops: Animation.Infinite
+            from: 0
+            to: 359
+            duration: 20000
+        }
+    }
+
+    component OverlayData: QtObject {
+        property real overlayScale: 1
+    }
+
+    /******************************************************************
+     * Define custom delegates. These replace the default StyledItem
+     * for selected controls in the style definition below.
+     ******************************************************************/
 
     component OverlayDelegate : StyledItem {
-        // Using StyledItem as the base type is the easiest approach when creating
-        // a custom delegate. A StyledItem will draw the delegate as configured by
-        // the style, and give you the opportunity to place your own items on top.
-        // Note that all delegates used in StyleKit, custom or not, are laid out by
-        // StyleKit, so you only need to focus on the appearance.
-        Rectangle {
-            width: 20
-            height: 15
-            scale: 2.5
-            radius: 255
-            opacity: 0.5
-            color: "transparent"
-            border.width: 4
-            border.color: palette.accent
+        /* Using StyledItem as the base type is the easiest approach when creating
+         * a custom delegate. A StyledItem will draw the delegate as configured by
+         * the style, and give you the opportunity to place your own items on top. */
+        id: delegate
+        width: parent.width
+        height: parent.height
+
+        Star {
+            width: 40
+            height: 40
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: -10
+            scale: delegate.delegateStyle.data.overlayScale
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 300
+                    easing.type: Easing.OutBounce
+                }
+            }
+        }
+        Text {
+            text: "overlay"
+            font.pixelSize: 8
+            y: -10
         }
     }
 
     component UnderlayDelegate : Item {
-        /* Custom delegates that don't inherit from StyledItem can optionally
-         * declare 'delegateStyle' and 'control' properties. Use delegateStyle
-         * to bind to style attributes like color, radius, and opacity. Use control
-         * to access the Quick Control the owns the delegate. */
+        /* Custom delegates that don't inherit from StyledItem needs to define
+         * 'delegateStyle' and 'control' properties, which are assinged to by StyleKit.
+         * Use 'delegateStyle' to bind to style attributes like color, radius, and opacity.
+         * Use 'control' to access the Quick Control the owns the delegate. */
+        id: delegate
         required property DelegateStyle delegateStyle
         required property QtObject control
 
@@ -43,46 +91,38 @@ Style {
         rotation: delegateStyle.rotation
         visible: delegateStyle.visible
 
-        Rectangle {
-            id: underlay
+        Star {
+            visible: delegate.control.checked
             anchors.centerIn: parent
-            width: 10 + (parent.width / 2)
-            height: 10 + (parent.height / 2)
-            radius: delegateStyle.radius
-            scale: delegateStyle.data.underlayScale
-            opacity: 0.5
-            border.width: 8
-            border.color: palette.accent
-            Behavior on scale {
-                NumberAnimation {
-                    duration: 100
-                }
-            }
-            NumberAnimation on rotation {
-                loops: Animation.Infinite
-                from: 0
-                to: 359
-                duration: 5000
-            }
+            anchors.verticalCenterOffset: -1
+            width: 60
+            height: 60
+        }
+
+        Text {
+            text: "underlay"
+            font.pixelSize: 8
+            y: -10
         }
 
         StyledItem {
-            // Embed a StyledItem to render the standard delegate on top of the custom one
-            delegateStyle: parent.delegateStyle
+            // Embed a StyledItem to render the standard delegate on top
+            delegateStyle: delegate.delegateStyle
         }
     }
 
     component SliderHandle : StyledItem {
-        // You can pass your own properties from the style, like
-        // here, where we use 'isFirst' to tell whether the delegate instance
-        // represents the first or the second handle, in case of a RangeSlider.
-        // By adding a 'control' property, we can access the slider's value(s).
+        /* Unlike the 'data' property, which varies per state, you can use regular
+         * QML properties to pass static information to a delegate. Here, 'isFirstHandle'
+         * distinguishes the first from the second handle in a RangeSlider, and
+         * 'control' gives access to the slider's current value(s). */
         id: sliderHandle
         property bool isFirstHandle: false
         required property QtObject control
 
         Text {
             rotation: sliderHandle.control.vertical ? -90 : 0
+            color: "ghostwhite"
             anchors.centerIn: parent
             font.pixelSize: 9
             text: {
@@ -99,8 +139,8 @@ Style {
     }
 
     component NoiseDelegate : ShaderEffect {
-        // Use graphical effects in combination with StyledItem to create more
-        // complex delegate appearances. In this delegate, we create a noise overlay.
+        /* Use graphical effects in combination with StyledItem to create more
+         * complex delegate appearances. In this delegate, we create a noise overlay. */
         implicitWidth: unifiedSourceItem.implicitWidth
         implicitHeight: unifiedSourceItem.implicitHeight
         width: parent.width
@@ -139,11 +179,18 @@ Style {
             rotation: 0.0
             scale: 1.0
         }
+
+        Text {
+            text: "noise"
+            font.pixelSize: 8
+            y: -10
+        }
     }
 
     component WavingQt : ShaderEffect {
         implicitWidth: delegateStyle.implicitWidth
         implicitHeight: delegateStyle.implicitHeight
+        visible: delegateStyle.visible
 
         required property DelegateStyle delegateStyle
 
@@ -190,58 +237,109 @@ Style {
 
         Text {
             anchors.right: parent.right
-            anchors.bottom: parent.bottom
+            anchors.top: parent.bottom
             anchors.rightMargin: 10
-            color: "white"
+            font.pixelSize: 8
             text: "Custom shadow"
         }
     }
 
-    // Define the style itself, and tell it to use the custom delegates to render
-    // the controls (instead of the otherwise default StyledItem):
+    /******************************************************************
+     * Define the style, assigning the custom delegates above to specific
+     * controls in place of the default StyledItem:
+     ******************************************************************/
 
-    checkBox.checked.indicator.delegate: OverlayDelegate {}
-    radioButton.checked.indicator.foreground.delegate: OverlayDelegate {}
-    switchControl.handle.delegate: WavingQt {}
+    applicationWindow {
+        background.color: "#544e52"
+    }
 
-    abstractButton {
+    control {
+        text.color: "ghostwhite"
         background {
-            delegate: UnderlayDelegate {}
-            shadow.opacity: 0
-            data: QtObject {
-                // When using custom delegates, you might need pass properties to it that
-                // should change per state. The 'data' property can be used for this purpose.
-                property real underlayScale: 1.1
+            border.color: "#3d373b"
+            shadow.color: "#555555"
+            color: "#8e848a"
+        }
+
+        handle {
+            color: "#8e848a"
+            border.color: Qt.darker("#544e52", 1.5)
+            shadow.color: "#808080"
+        }
+
+        indicator {
+            color: Qt.darker("#8e848a", 1.6)
+        }
+        hovered.background.color: Qt.lighter("#8e848a", 1.2)
+    }
+
+    button {
+        topPadding: 30
+        background {
+            delegate: OverlayDelegate{}
+            // Use the 'data' property to pass custom, per-state information to a custom delegate
+            data: OverlayData {
+                overlayScale: 0.5
             }
         }
-        hovered.background.data: QtObject {
-            property real underlayScale: 1.4
+        hovered.background.data: OverlayData {
+            overlayScale: 1.8
         }
+        pressed.background.data: OverlayData {
+            overlayScale: 1.6
+        }
+        checked.background.data: OverlayData {
+            overlayScale: 1.4
+        }
+    }
+
+    flatButton {
+        background.shadow.visible: false
+    }
+
+    checkBox {
+        indicator.foreground {
+            implicitWidth: 30
+            implicitHeight: 30
+            margins: 4
+            delegate: WavingQt {}
+        }
+    }
+
+    radioButton {
+        indicator.delegate: UnderlayDelegate {}
     }
 
     slider {
         background.visible: true
-        background.delegate: NoiseDelegate {}
-        indicator.delegate: NoiseDelegate {}
+        // background.delegate: NoiseDelegate {}
+        // indicator.delegate: NoiseDelegate {}
         handle.delegate: SliderHandle { isFirstHandle: true }
         handle.second.delegate: SliderHandle { isFirstHandle: false }
     }
 
     textField {
-        background.shadow.color: "lightgray"
-        background.shadow.verticalOffset: 14
-        background.shadow.horizontalOffset: 14
+        background.shadow.verticalOffset: 4
+        background.shadow.horizontalOffset: 4
         background.shadow.delegate: CustomShadowDelegate {}
-        // verify that the delegate is allowed to change per state
-        pressed.background.shadow.delegate: CustomShadowDelegate {}
-        variations: StyleVariation {
-            button.background {
-                delegate: null
-                implicitWidth: 30
-                implicitHeight: 20
-                margins: 10
-                shadow.color: "transparent"
-            }
+    }
+
+    switchControl {
+        background.visible: true
+        checked {
+            background.delegate: NoiseDelegate {}
+            indicator.foreground.delegate: NoiseDelegate {}
         }
     }
+
+    comboBox {
+        background.implicitWidth: 200
+    }
+
+    frame {
+        padding: 20
+        spacing: 50
+        hovered.background.color: "#8e848a"
+    }
+
 }
