@@ -2080,7 +2080,17 @@ function(_qt_internal_write_deferred_qmldir_file target)
     # Must happen here, because _qt_internal_target_generate_qmldir runs at
     # qt_add_qml_module time, likely before target_link_libraries has been
     # called
-    if(NOT "QtQuick" IN_LIST QT_QML_MODULE_DEPENDENCIES)
+    set(has_qtquick_dependency FALSE)
+    get_target_property(module_dependencies ${target} QT_QML_MODULE_DEPENDENCIES)
+    if(module_dependencies)
+        foreach(dependency IN LISTS module_dependencies)
+            if(dependency STREQUAL "QtQuick" OR dependency MATCHES "^QtQuick ")
+                set(has_qtquick_dependency TRUE)
+                break()
+            endif()
+        endforeach()
+    endif()
+    if(NOT has_qtquick_dependency)
         get_target_property(linked_libraries ${target} LINK_LIBRARIES)
         if((TARGET Qt6::Quick AND Qt6::Quick IN_LIST linked_libraries) OR
             (TARGET Qt::Quick AND Qt::Quick IN_LIST linked_libraries))
