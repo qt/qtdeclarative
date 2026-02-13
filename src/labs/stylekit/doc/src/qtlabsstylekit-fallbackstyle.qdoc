@@ -1,0 +1,22 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtlabsstylekit-fallbackstyle.html
+    \title Reference Fallback Style
+    \brief A reference fallback style
+
+    The following listing shows a fallback style similar to the one that
+    StyleKit uses when a \l {Style::}{fallbackStyle} is not explicitly set.
+    It provides a basic appearance similar to the Basic style, and serves as the
+    baseline for any properties not overridden by your style or its active theme.
+
+    \note This listing may not reflect the exact fallback style shipped with
+    the latest version of Qt. It is intended to illustrate how the controls
+    are styled by default, which can be helpful when styling your own controls
+    on top.
+
+    \snippet ReferenceFallbackStyle.qml 1
+
+    \sa {Style::fallbackStyle}{Style.fallbackStyle}, {qtlabsstylekit-property-resolution.html}{Property Resolution}
+*/

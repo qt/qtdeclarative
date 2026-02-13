@@ -16,6 +16,164 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Style
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits AbstractStyle
+    \brief The root type for a style definition.
+
+    \l Style is the root type in StyleKit for defining a complete visual style for
+    \l [QtQuickControls] {Qt Quick Controls}. A style lets you customize
+    the appearance of every control type — backgrounds, indicators, handles,
+    text, padding, and more — as well as how controls respond to states
+    such as \l {StyleKitControl::hovered}{hovered},
+    \l {ControlStyle::pressed}{pressed}, and
+    \l {ControlStyle::disabled}{disabled}, including animated
+    \l {ControlStyle::transition}{transitions} between them.
+
+    Styles support \l light and \l dark color schemes through \l {Theme}
+    {themes}, and you can add any number of \l {CustomTheme}{custom themes}
+    as well. \l {StyleVariation}{Style variations} allow you to define
+    alternative styling that can be applied to specific control instances
+    or entire control types. You can also define \l {CustomControl}
+    {custom controls} to extend the style beyond the built-in control set.
+
+    The following example shows a minimal style that defines some structural
+    properties shared by all themes, with separate light and dark themes for colors:
+
+    \snippet PlainStyle.qml 1
+
+    For a more complete example, see the \l{StyleKit Example}.
+
+    \labs
+
+    \sa Theme, CustomTheme, StyleVariation, ControlStyle, DelegateStyle,
+    CustomControl, {qtlabsstylekit-property-resolution.html}{Property Resolution}
+*/
+
+/*!
+    \qmlproperty list<string> Style::customThemeNames
+    \readonly
+
+    The names of all the \l {CustomTheme}{custom themes} defined in the style. This does not
+    include the \l{themeNames}{built-in themes.}
+
+    \sa themeNames, \themeName, CustomTheme
+*/
+
+/*!
+    \qmlproperty Component Style::dark
+
+    The dark theme component. It's instantiated and applied when the system is in
+    dark mode and \l themeName is \c "System", or when \l themeName is
+    explicitly set to \c "Dark".
+
+    \snippet StyleSnippets.qml dark
+
+    \sa light, themeName, {qtlabsstylekit-theme.html}{Theme}
+*/
+
+/*!
+    \qmlproperty Style Style::fallbackStyle
+
+    The fallback style used to resolve properties that are not explicitly
+    set in this style. When a property is not found in the style or its
+    active theme, StyleKit looks it up in the fallback style.
+
+    By default, the fallback style is set to an internal style that provides
+    a basic appearance similar to the \l {Qt Quick Controls - Basic Style}{Basic} style.
+
+    You can set this to a custom Style, or to \c null to disable
+    fallback resolution entirely. Note that setting it to \c null
+    means starting from a completely clean slate, which requires
+    you to set many more properties than otherwise needed. A
+    reference implementation of a fallback style can be found
+    \l {qtlabsstylekit-fallbackstyle.html}{here.}
+
+    \sa {qtlabsstylekit-property-resolution.html}{Property Resolution}
+*/
+
+/*!
+    \qmlproperty Component Style::light
+
+    The light theme component. It's instantiated and applied when the system is in
+    light mode and \l themeName is \c "System", or when \l themeName is
+    explicitly set to \c "Light".
+
+    \snippet StyleSnippets.qml light
+
+    \sa dark, themeName, {qtlabsstylekit-theme.html}{Theme}
+*/
+
+/*!
+    \qmlproperty palette Style::palette
+    \readonly
+
+    The palette of the control being styled.
+
+    Use this palette to bind colors in the style to the
+    \l {StyleReader::palette()}{palette} of the control being styled.
+    If the application assigns a different palette to a control, the
+    style will adapt, and the control will repaint.
+
+    \snippet StyleSnippets.qml palette
+
+    \sa {StyleReader::palette()} {StyleReader.palette}
+*/
+
+/*!
+    \qmlproperty Theme Style::theme
+    \readonly
+
+    The currently active theme instance.
+    It's instantiated from either the \l {light}{light theme component}, the
+    \l {dark}{dark theme component}, or one of the \l {CustomTheme}{custom themes},
+    depending on \l themeName.
+
+    When resolving a style property, StyleKit first looks for it in this
+    theme (\l {StyleVariation}{StyleVariations} aside). If the property is not found, it
+    falls back to search for it in the \l Style.
+
+    \sa themeName, light, dark
+*/
+
+/*!
+    \qmlproperty string Style::themeName
+
+    The name of the currently active theme. The default value is \c "System",
+    which automatically choose between \l light or \l dark depending on the
+    color scheme reported by \l QStyleHints::colorScheme.
+
+    You can set this property to change the current theme of this style.
+
+    \snippet StyleSnippets.qml themeName
+
+    Supported values:
+    \list
+        \li \c "System" \mdash follows \l QStyleHints::colorScheme (default)
+        \li \c "Light" \mdash forces the \l light theme
+        \li \c "Dark" \mdash forces the \l dark theme
+        \li \l {customThemeNames}{Any custom theme name}
+    \endlist
+
+    \note Themes are local to the \l Style where they are defined, and can only
+    be set as the current theme for that style. For the current theme to take
+    effect, the style it belongs to must also be the \l{StyleKit::style}{current style}
+    in the application.
+
+    \sa themeNames, theme
+*/
+
+/*!
+    \qmlproperty list<string> Style::themeNames
+    \readonly
+
+    The names of all available themes, including \c "System", \c "Light",
+    \c "Dark", and any \l {customThemeNames}{custom themes.}
+
+    \sa themeName, customThemeNames
+*/
+
 static const QString kSystem = "System"_L1;
 static const QString kLight = "Light"_L1;
 static const QString kDark = "Dark"_L1;

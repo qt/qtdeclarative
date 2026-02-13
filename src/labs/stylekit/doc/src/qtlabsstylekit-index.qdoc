@@ -36,6 +36,14 @@
         \li \b{Palette and Font Integration} - Configure control palettes and fonts using QML
     \endlist
 
+    The following example shows a minimal example of a Style:
+
+    \snippet PlainStyle.qml 1
+
+    This is how to set the style in your application:
+
+    \snippet PlainStyleMain.qml 1
+
     \section1 Using the Module in your Project
     The QML types of the module are available through the \c QtQuick.labs.StyleKit import.
     To use the types, add the following import statement to your .qml file:
