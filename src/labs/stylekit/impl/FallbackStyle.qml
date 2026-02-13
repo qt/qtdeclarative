@@ -201,11 +201,10 @@ BaseStyle {
     }
 
     scrollBar {
-        padding: 4
+        padding: 0
         background {
             implicitHeight: 10
-            border.width: 0
-            color: __transparent
+            visible: false
         }
         indicator {
             implicitHeight: 10
@@ -225,8 +224,7 @@ BaseStyle {
     scrollIndicator {
         background {
             implicitHeight: 6
-            border.width: 0
-            color: __transparent
+            visible: false
         }
         indicator {
             border.width: 0
