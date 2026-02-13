@@ -1,0 +1,54 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtlabsstylekit-index.html
+    \title Qt Labs StyleKit
+    \brief A high-level styling API for Qt Quick Controls
+
+    StyleKit is a declarative styling system for \l {Qt Quick Controls}, built on top of
+    \l {Qt Quick Templates 2}{Qt Quick Templates}. It lets you define a complete visual style
+    for all your controls from a single \l Style object, including support for themes, state-based
+    styling, and transitions.
+    StyleKit handles the underlying template implementation automatically, letting you focus
+    purely on visual aspects such as colors, dimensions, borders, and shadows.
+
+    A key strength of StyleKit is its hierarchical property system: set a property once
+    on a base type like \l {StyleKitControls::}{abstractButton}, and it
+    automatically applies to all button-like controls.
+    Override it where needed for specific controls or states. Changes to your
+    style are instantly reflected across all controls, ensuring consistency while still
+    allowing fine-grained customization.
+
+    For controls that need custom behavior beyond what StyleKit provides, you can still
+    implement custom templates and integrate them seamlessly alongside StyleKit-styled
+    controls.
+
+    \section1 Key Features
+
+    \list
+        \li \b{Declarative Styling} - An easy-to-use QML API that lets you focus on design over implementation
+        \li \b{Hierarchical Fallbacks} - All properties propagate. Set them once, override where needed
+        \li \b{State-Based Styling} - Design separate appearances for hovered, pressed, focused, etc.
+        \li \b{Animated Transitions} - Define smooth animations between states
+        \li \b{Theme Support} - Design light and dark themes, and any number of custom themes
+        \li \b{Variations} - Design multiple variations of the same controls
+        \li \b{Palette and Font Integration} - Configure control palettes and fonts using QML
+    \endlist
+
+    \section1 Using the Module in your Project
+    The QML types of the module are available through the \c QtQuick.labs.StyleKit import.
+    To use the types, add the following import statement to your .qml file:
+
+    \qml
+    import Qt.labs.StyleKit
+    \endqml
+
+    \section1 Articles and Guides
+
+    \section1 Examples
+
+    \section1 QML Types
+
+    \generatelist {qmltypesbymodule Qt.labs.StyleKit}
+*/

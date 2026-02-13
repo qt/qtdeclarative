@@ -1,0 +1,47 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtquickcontrols.qdocconf)
+
+project                 = QtLabsStyleKit
+description             = Qt Labs StyleKit Reference Documentation
+version                 = $QT_VERSION
+
+qhp.projects            = QtLabsStyleKit
+
+qhp.QtLabsStyleKit.file          = qtlabsstylekit.qhp
+qhp.QtLabsStyleKit.namespace     = org.qt-project.qtlabsstylekit.$QT_VERSION_TAG
+qhp.QtLabsStyleKit.virtualFolder = qtlabsstylekit
+qhp.QtLabsStyleKit.indexTitle    = Qt Labs StyleKit
+qhp.QtLabsStyleKit.indexRoot     =
+
+qhp.QtLabsStyleKit.subprojects = manual qmltypes
+qhp.QtLabsStyleKit.subprojects.manual.title = Qt Labs StyleKit
+qhp.QtLabsStyleKit.subprojects.manual.indexTitle = Qt Labs StyleKit
+qhp.QtLabsStyleKit.subprojects.manual.selectors = group:none
+
+qhp.QtLabsStyleKit.subprojects.qmltypes.title = QML Types
+qhp.QtLabsStyleKit.subprojects.qmltypes.indexTitle = Qt Labs StyleKit QML Types
+qhp.QtLabsStyleKit.subprojects.qmltypes.selectors = qmlclass
+qhp.QtLabsStyleKit.subprojects.qmltypes.sortPages = true
+
+depends = qtcore qtgui qtdoc qtqml qtqmlcore qtquick qtquickcontrols
+
+# This module has no documented C++ types, clear the module header
+moduleheader =
+
+exampledirs += snippets src
+
+{headerdirs,sourcedirs} += ..
+
+imagedirs += images
+
+navigation.landingpage  = "Qt Labs StyleKit"
+navigation.qmltypespage = "Qt Labs StyleKit QML Types"
+
+tagfile                 = qtlabsstylekit.tags
+
+macro.labs = "\\note \\e{Types in Qt.labs modules are not guaranteed to remain compatible in future versions.}"
+
+# When building in isolation, qdoc warns about missing dependency index
+# files (qtcore, qtgui, etc.) and unresolvable navigation links to
+# index.html. These resolve in a full Qt documentation build.
+warninglimit = 24

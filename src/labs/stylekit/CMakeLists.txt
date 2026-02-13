@@ -70,5 +70,9 @@ qt_internal_add_qml_module(LabsStyleKit
         Qt6::QuickControls2ImplPrivate
 )
 
+qt_internal_add_docs(LabsStyleKit
+    doc/qtlabsstylekit.qdocconf
+)
+
 # impl links to QuickStyleKit, so it must be built after it
 add_subdirectory(impl)
