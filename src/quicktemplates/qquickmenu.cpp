@@ -291,6 +291,9 @@ QQuickMenuPrivate::QQuickMenuPrivate()
 #if QT_CONFIG(wayland)
     extendedWindowType = QNativeInterface::Private::QWaylandWindow::Menu;
 #endif
+#if QT_CONFIG(xcb)
+    wmWindowType = QNativeInterface::Private::QXcbWindow::PopupMenu;
+#endif
 }
 
 void QQuickMenuPrivate::init()
@@ -1872,6 +1875,13 @@ void QQuickMenu::setVisible(bool visible)
         d->setNativeMenuVisible(visible);
         return;
     }
+
+#if QT_CONFIG(xcb)
+    if (QQuickMenuPrivate::get(d->rootMenu())->menuBar)
+        d->wmWindowType = QNativeInterface::Private::QXcbWindow::DropDownMenu;
+    else
+        d->wmWindowType = QNativeInterface::Private::QXcbWindow::PopupMenu;
+#endif
 
     // Either the native menu wasn't wanted, or it couldn't be created;
     // show the non-native menu.

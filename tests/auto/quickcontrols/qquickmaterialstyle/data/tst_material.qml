@@ -831,6 +831,7 @@ TestCase {
     Component {
         id: backgroundControlsComponent
         ApplicationWindow {
+            visible: true
             property Button button: Button { }
             property ComboBox combobox: ComboBox { }
             property Drawer drawer: Drawer { }
@@ -909,7 +910,7 @@ TestCase {
         // so they don't use the generic background color unless explicitly set, so we
         // compare the actual background rect color instead.
         if (data.inherit)
-            compare(control.background.color, "#ff0000")
+            tryCompare(control.background, "color", "#ff0000")
         else
             compare(control.background.color, defaultBackground)
 

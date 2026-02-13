@@ -16,7 +16,7 @@ Window {
         text: "window1"
     }
 
-    Dialog {
+    Popup {
         id: popup
         popupType: Popup.Window
         width: 400
@@ -33,6 +33,7 @@ Window {
 
     Window {
         id: window2
+        transientParent: window1
         x: 500
         y: 100
         width: 500

@@ -346,14 +346,21 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
 bool QQuickPopupWindow::event(QEvent *e)
 {
     Q_D(QQuickPopupWindow);
-#if QT_CONFIG(wayland)
     if (e->type() == QEvent::PlatformSurface && static_cast<QPlatformSurfaceEvent *>(e)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceCreated) {
+#if QT_CONFIG(wayland)
         if (auto *waylandWindow = dynamic_cast<QNativeInterface::Private::QWaylandWindow *>(handle())) {
             waylandWindow->setExtendedWindowType(QQuickPopupPrivate::get(d->m_popup)->extendedWindowType);
             waylandWindow->setParentControlGeometry(parentControlGeometry());
         }
-    }
 #endif
+#if QT_CONFIG(xcb)
+        if (auto *xcbWindow = dynamic_cast<QNativeInterface::Private::QXcbWindow *>(handle())) {
+            const auto xcbWindowType = QQuickPopupPrivate::get(d->m_popup)->wmWindowType;
+            if (xcbWindowType != QNativeInterface::Private::QXcbWindow::None)
+                xcbWindow->setWindowType(xcbWindowType);
+        }
+#endif
+    }
 
     if (d->filterPopupSpecialCases(e))
         return true;
@@ -388,6 +395,7 @@ void QQuickPopupWindow::windowChanged(QWindow *window)
     } else {
         d->m_popupParentItemWindow.clear();
     }
+    setTransientParent(window);
 }
 
 std::optional<QPoint> QQuickPopupWindow::global2Local(const QPoint &pos) const

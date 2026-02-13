@@ -287,8 +287,7 @@ void tst_QQuickMenu::mouse()
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
-    if (auto *popupWindow = menuPrivate->popupWindow)
-        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+    TRY_VERIFY_POPUP_OPENED(menu);
 
     QCOMPARE(visibleSpy.size(), 2);
     QVERIFY(menu->isVisible());
@@ -308,8 +307,7 @@ void tst_QQuickMenu::mouse()
         QVERIFY(!parentItem->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
-    if (auto *popupWindow = menuPrivate->popupWindow)
-        QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+    TRY_VERIFY_POPUP_OPENED(menu);
     QTRY_COMPARE(visibleSpy.size(), 4);
     QVERIFY(menu->isVisible());
     QVERIFY(parentItem->childItems().contains(menu->contentItem()->parentItem()));

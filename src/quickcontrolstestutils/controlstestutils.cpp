@@ -372,7 +372,9 @@ void QQuickControlsTestUtils::ApplicationAttributes::set(Qt::ApplicationAttribut
 
 bool QQuickControlsTestUtils::arePopupWindowsSupported()
 {
-#if defined(Q_OS_WINDOWS) || defined(Q_OS_MACOS)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_QNX) && QT_CONFIG(xcb)
+    return QGuiApplication::platformName().startsWith(QLatin1String("xcb"));
+#elif defined(Q_OS_WINDOWS) || defined(Q_OS_MACOS)
     return QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::Capability::MultipleWindows);
 #else
     return false;
