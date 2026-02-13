@@ -6,6 +6,9 @@ set_source_files_properties(CheckBox.qml TabSet.qml TextField.qml
         QT_QML_SOURCE_VERSIONS 2.1
 )
 
+# this QML module is generated multiple times and therefore would get multiple .qmlls.ini files...
+set(QT_QML_GENERATE_QMLLS_INI OFF)
+
 set_source_files_properties(Images.qml
     PROPERTIES
         QT_QML_SINGLETON_TYPE true
