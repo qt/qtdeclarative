@@ -7,9 +7,21 @@
 #include <QQmlContext>
 #include <qqml.h>
 #include <QMetaMethod>
+
+#include <private/qmlutils_p.h>
+#include <private/qobject_p.h>
+#include <private/qobject_p_p.h>
+
 #include <setjmp.h>
 
-#include <QtQuickTestUtils/private/qmlutils_p.h>
+#if defined(QT_ASAN_ENABLED) && __has_include(<sanitizer/lsan_interface.h>)
+#include <sanitizer/lsan_interface.h>
+#define LSAN_DISABLE() __lsan_disable()
+#define LSAN_ENABLE() __lsan_enable()
+#else
+#define LSAN_DISABLE()
+#define LSAN_ENABLE()
+#endif
 
 class ExportedClass : public QObject
 {
@@ -314,6 +326,13 @@ void tst_qqmlnotifier::lotsOfBindings()
 
 void tst_qqmlnotifier::deleteFromHandler()
 {
+    // Disable leak detection for this test. The longjmp from the fatal message handler
+    // bypasses destructors for multiple stack frames, causing unavoidable leaks:
+    // - QString/QByteArray in QQmlData::destroyed() and qFata() itself
+    // - ConnectionData and related allocations from partially-destroyed objects
+    LSAN_DISABLE();
+    auto enableLsan = qScopeGuard([] { LSAN_ENABLE(); });
+
     static jmp_buf jumpBuffer;
     enum {
         LongJmpSetup = 0,
@@ -331,6 +350,11 @@ void tst_qqmlnotifier::deleteFromHandler()
     QtMessageHandler defaultHandler = qInstallMessageHandler(myMessageHandler);
     auto cleanup = qScopeGuard([&]() {
         qInstallMessageHandler(defaultHandler);
+
+        // The longjmp leaves a dead currentSender in the connectionData. Clear it.
+        QObjectPrivate::ConnectionData *cd = QObjectPrivate::get(this)->connections;
+        QVERIFY(cd);
+        cd->currentSender = nullptr;
     });
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("objectRenamer.qml"));
