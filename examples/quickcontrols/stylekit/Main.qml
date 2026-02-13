@@ -13,12 +13,11 @@ ApplicationWindow {
     visible: true
     title: qsTr("StyleKit")
 
-    // Set which style to start the application with:
+    // Set the initial style:
     StyleKit.style: hazeStyle
 
-    // An application can provide multiple styles for the user to choose from,
-    // and each style includes its own set of themes.
-
+    // Instantiate the available styles. The user can switch between them
+    // at runtime, and each style provides its own set of themes.
     Haze { id: hazeStyle }
     Vitrum { id: vitrumStyle }
     CustomDelegates { id: delegateStyle }
@@ -35,12 +34,12 @@ ApplicationWindow {
         ColumnLayout {
             id: content
             x: 10
-            y: 30
+            y: app.spacing * 2
             transformOrigin: Item.TopLeft
             spacing: app.spacing * 2
 
             GroupBox {
-                title: "Button"
+                title: "Buttons"
                 RowLayout {
                     spacing: app.spacing
                     Button {
@@ -66,7 +65,7 @@ ApplicationWindow {
             }
 
             GroupBox {
-                title: "CheckBox and RadioButton"
+                title: "CheckBoxes and RadioButtons"
                 GridLayout {
                     rowSpacing: app.spacing
                     columnSpacing: app.spacing
@@ -102,7 +101,7 @@ ApplicationWindow {
             }
 
             GroupBox {
-                title: "Text input"
+                title: "Text inputs"
                 RowLayout {
                     spacing: app.spacing
 
@@ -143,23 +142,25 @@ ApplicationWindow {
             }
 
             GroupBox {
-                title: "Slider"
+                title: "Sliders"
                 RowLayout {
                     spacing: app.spacing
 
-                    Slider {
-                        id: slider1
-                        from: 0
-                        to: 10
-                        value: 5
-                    }
+                    ColumnLayout {
+                        Slider {
+                            id: slider1
+                            from: 0
+                            to: 10
+                            value: 5
+                        }
 
-                    RangeSlider {
-                        id: rangeSlider1
-                        from: 0
-                        to: 10
-                        first.value: 2
-                        second.value: 8
+                        RangeSlider {
+                            id: rangeSlider1
+                            from: 0
+                            to: 10
+                            first.value: 2
+                            second.value: 8
+                        }
                     }
 
                     Slider {
@@ -182,26 +183,7 @@ ApplicationWindow {
             }
 
             GroupBox {
-                title: "ItemDelegate"
-                ColumnLayout {
-                    spacing:  app.spacing
-
-                    ItemDelegate {
-                        id: itemDelegate1
-                        text: "ItemDelegate 1"
-                        Layout.fillWidth: true
-                    }
-
-                    ItemDelegate {
-                        id: itemDelegate2
-                        text: "ItemDelegate 2"
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-
-            GroupBox {
-                title: "Popup"
+                title: "Popups"
                 RowLayout {
                     spacing: app.spacing
 
@@ -213,34 +195,12 @@ ApplicationWindow {
             }
 
             GroupBox {
-                title: "Pane, Frame and GroupBox"
-                RowLayout {
-                    spacing: app.spacing
-
-                    Pane {
-                        id: pane1
-                        Text {
-                            anchors.centerIn: parent
-                            text: "This is a Pane"
-                        }
-                    }
-
-                    Frame {
-                        id: frame1
-                        Text {
-                            anchors.centerIn: parent
-                            text: "This is a Frame"
-                        }
-                    }
-                }
-            }
-
-            GroupBox {
                 title: "Variations"
                 StyleVariation.variations: ["mini"]
                 ColumnLayout {
-                    spacing: app.spacing
+                    spacing: app.spacing * 2
                     Text {
+                        visible: StyleKit.style === hazeStyle
                         text: "These controls are affected by an Instance Variation named 'mini'"
                     }
                     RowLayout {
@@ -270,19 +230,22 @@ ApplicationWindow {
                         }
                     }
                     Frame {
-                        Layout.preferredHeight: 80
+                        Layout.preferredHeight: 120
                         Layout.fillWidth: true
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Frame also has a Type Variation that affects Button"
+                        Column {
+                            spacing: 20
+                            anchors.fill: parent
+                            Text {
+                                visible: StyleKit.style === hazeStyle
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "Frame also has a Type Variation that affects Button"
+                            }
+                            Button {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "Button"
+                            }
                         }
-                        Button {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: app.spacing
-                            text: "Button"
-                        }
-                    }
+                     }
                 }
             }
 
@@ -305,13 +268,14 @@ ApplicationWindow {
             anchors.rightMargin: 10
             contentWidth: menuContents.implicitWidth
             contentHeight: menuContents.implicitHeight
-            spacing: app.spacing
             title: "Settings"
-            y: 26
+            y: app.spacing * 2
 
             GridLayout {
                 id: menuContents
                 columns: 2
+                rowSpacing: app.spacing
+                columnSpacing: app.spacing
 
                 Label { text: "Style" }
                 ComboBox {
@@ -321,9 +285,9 @@ ApplicationWindow {
                     currentValue: StyleKit.style
                     model: [
                         { value: hazeStyle, text: "Haze" },
-                        { value: vitrumStyle, text: "Vitrum" },
-                        { value: delegateStyle, text: "CustomDelegates" },
                         { value: plainStyle, text: "Plain" },
+                        { value: vitrumStyle, text: "Vitrum" },
+                        { value: delegateStyle, text: "CustomDelegates" }
                     ]
                     onCurrentTextChanged: {
                         StyleKit.style = model[currentIndex].value;
@@ -353,7 +317,7 @@ ApplicationWindow {
                         // set, or if that value is out-of-range WRT the slider. In both cases,
                         // this would lead to a binding loop.
                         let styleValue = StyleKit.style.control.background.radius
-                        if (styleValue === value || styleValue < from || styleValue > to)
+                        if (styleValue === value || styleValue < from || styleValue > to)
                             return
                         StyleKit.style.abstractButton.background.radius = value
                         StyleKit.style.groupBox.background.radius = value
@@ -380,13 +344,14 @@ ApplicationWindow {
         id: popup
         anchors.centerIn: parent
         closePolicy: Popup.NoAutoClose
+        popupType: Popup.Window
 
         ColumnLayout {
             anchors.centerIn: parent
-            spacing: 20
+            spacing: app.spacing * 2
 
             Label {
-                text: qsTr("This is a Label in a Popup")
+                text: qsTr("A Label in a Popup")
                 Layout.alignment: Qt.AlignHCenter
             }
 
@@ -403,8 +368,8 @@ ApplicationWindow {
     // define and style your own custom controls.
 
     component CustomButtonImplementation : Rectangle {
-        implicitWidth: fancyButton.background.implicitWidth
-        implicitHeight: fancyButton.background.implicitHeight
+        implicitWidth: fancyButton.background.implicitWidth + fancyButton.leftPadding + fancyButton.rightPadding
+        implicitHeight: fancyButton.background.implicitHeight + fancyButton.topPadding + fancyButton.bottomPadding
         radius: fancyButton.background.radius
         border.color: fancyButton.background.border.color
         border.width: fancyButton.background.border.width
@@ -432,9 +397,11 @@ ApplicationWindow {
         TapHandler {
             id: tapHandler
             onTapped: {
-                let allFancyButtons = StyleKit.style.theme.getControl(fancyButton.type)
-                if (allFancyButtons) // only hazeStyle has defined a fancyButtton
-                    allFancyButtons.background.color = "magenta"
+                // Change the background color of all controls whose
+                // controlType matches fancyButton.type.
+                let fancyButtons = StyleKit.style.theme.getControl(fancyButton.type)
+                if (fancyButtons) // Only the Haze style defines a fancyButton
+                    fancyButtons.background.color = "yellowgreen"
             }
         }
     }

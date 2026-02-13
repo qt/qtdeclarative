@@ -217,6 +217,7 @@ Style {
     }
 
     pane {
+        padding: 20
         background.delegate: null
     }
 

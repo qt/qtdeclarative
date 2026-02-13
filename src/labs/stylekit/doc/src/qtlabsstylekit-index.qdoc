@@ -60,6 +60,9 @@
     \section1 Articles and Guides
 
     \section1 Examples
+    \list
+        \li \l{StyleKit Example} - Shows how to style \l {Qt Quick Controls} using \l {Qt Labs StyleKit}{StyleKit}.
+    \endlist
 
     \section1 QML Types
 

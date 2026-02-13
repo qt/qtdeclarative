@@ -1,5 +1,5 @@
 include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
-include($QT_INSTALL_DOCS/config/exampleurl-qtquickcontrols.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtdeclarative.qdocconf)
 
 project                 = QtLabsStyleKit
 description             = Qt Labs StyleKit Reference Documentation
@@ -28,7 +28,14 @@ depends = qtcore qtgui qtdoc qtqml qtqmlcore qtquick qtquickcontrols
 # This module has no documented C++ types, clear the module header
 moduleheader =
 
-exampledirs += snippets src
+exampledirs += snippets
+
+# The StyleKit example lives under examples/quickcontrols/, but its docs
+# need to link to StyleKit types, which are not available during the
+# Quick Controls doc build. We therefore build the example docs here
+# and point examples to the example project file.
+examples += ../../../../examples/quickcontrols/stylekit/CMakeLists.txt
+examplesinstallpath = quickcontrols
 
 {headerdirs,sourcedirs} += ..
 

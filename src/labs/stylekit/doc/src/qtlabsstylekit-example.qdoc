@@ -1,0 +1,41 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example stylekit
+    \examplecategory {User Interface Components}
+    \title StyleKit Example
+    \brief Shows how to style \l {Qt Quick Controls} using \l {Qt Labs StyleKit}{StyleKit}.
+    \ingroup qtquickcontrols-examples
+
+    \image qtlabsstylekit-example.webp
+
+    This example shows how to style applications with \l {Qt Labs StyleKit}{StyleKit}.
+    It includes several styles that each demonstrate different aspects of styling:
+
+    \list
+        \li \b Plain - A minimal style with only the basics
+        \li \b Haze - An advanced style with multiple themes
+        \li \b Vitrum - A style targeting VR environments
+        \li \b CustomDelegates - A style demonstrating how to create overlays, underlays, and shader effects
+    \endlist
+
+    The example demonstrates, among other things, how to:
+
+    \list
+        \li Implement and switch between different styles.
+        \li Implement support for light and dark themes, as well as additional themes
+            such as high-contrast.
+        \li Use \l StyleVariation to provide alternative styling for
+            parts of the application.
+        \li Implement custom delegates to add overlay and underlay effects.
+        \li Apply shader-based visual effects to the controls.
+        \li Build custom controls using \l CustomControl and \l StyleReader.
+        \li Interact with a style at runtime, for example to change the
+            theme or adjust style properties like the background radius.
+    \endlist
+
+    \sa {Qt Labs StyleKit}, Style, Theme
+
+    \include examples-run.qdocinc
+*/
