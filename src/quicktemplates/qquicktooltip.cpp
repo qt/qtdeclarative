@@ -143,6 +143,10 @@ QQuickToolTipPrivate::QQuickToolTipPrivate()
 #if QT_CONFIG(wayland)
     extendedWindowType = QNativeInterface::Private::QWaylandWindow::ToolTip;
 #endif
+#if QT_CONFIG(xcb)
+    wmWindowType = QNativeInterface::Private::QXcbWindow::Tooltip;
+#endif
+
 }
 
 void QQuickToolTipPrivate::startDelay()

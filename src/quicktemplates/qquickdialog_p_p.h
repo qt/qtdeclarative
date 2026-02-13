@@ -29,7 +29,15 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickDialog)
-    QQuickDialogPrivate() { windowFlags = Qt::Dialog;}
+    QQuickDialogPrivate() {
+        windowFlags = Qt::Dialog;
+#if QT_CONFIG(wayland)
+        extendedWindowType = QNativeInterface::Private::QWaylandWindow::Default;
+#endif
+#if QT_CONFIG(xcb)
+        wmWindowType = QNativeInterface::Private::QXcbWindow::Dialog;
+#endif
+    }
 
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {

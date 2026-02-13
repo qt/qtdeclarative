@@ -1047,6 +1047,9 @@ void QQuickSearchField::setPopup(QQuickPopup *popup)
 #if QT_CONFIG(wayland)
         QQuickPopupPrivate::get(popup)->extendedWindowType = QNativeInterface::Private::QWaylandWindow::ComboBox;
 #endif
+#if QT_CONFIG(xcb)
+        QQuickPopupPrivate::get(popup)->wmWindowType = QNativeInterface::Private::QXcbWindow::Combo;
+#endif
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
         popup->setClosePolicy(QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent);
         QObjectPrivate::connect(popup, &QQuickPopup::visibleChanged, d,
