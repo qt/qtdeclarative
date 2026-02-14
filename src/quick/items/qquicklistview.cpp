@@ -3746,7 +3746,7 @@ void QQuickListViewPrivate::updateSectionCriteria()
 bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &change, ChangeResult *insertResult, QList<FxViewItem *> *addedItems, QList<MovedItem> *movingIntoView)
 {
     Q_Q(QQuickListView);
-#if QT_CONFIG(quick_viewtransitions)
+#if !QT_CONFIG(quick_viewtransitions)
     Q_UNUSED(movingIntoView)
 #endif
     int modelIndex = change.index;

@@ -2654,8 +2654,10 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
         }
 
         QQuickItemPrivate::get(quickItem)->removeItemChangeListener(this, itemChangeListenerTypes);
+#if QT_CONFIG(quick_viewtransitions)
         delete item->transitionableItem;
         item->transitionableItem = nullptr;
+#endif
     }
 
     delete item;
