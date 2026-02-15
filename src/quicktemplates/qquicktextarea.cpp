@@ -409,6 +409,10 @@ qreal QQuickTextAreaPrivate::getImplicitHeight() const
 
 void QQuickTextAreaPrivate::implicitWidthChanged()
 {
+    if (!initialized) {
+        QQuickTextEditPrivate::implicitWidthChanged();
+        return;
+    }
     Q_Q(QQuickTextArea);
     QQuickItemPrivate::implicitWidthChanged();
     emit q->implicitWidthChanged3();
@@ -416,6 +420,10 @@ void QQuickTextAreaPrivate::implicitWidthChanged()
 
 void QQuickTextAreaPrivate::implicitHeightChanged()
 {
+    if (!initialized) {
+        QQuickTextEditPrivate::implicitHeightChanged();
+        return;
+    }
     Q_Q(QQuickTextArea);
     QQuickItemPrivate::implicitHeightChanged();
     emit q->implicitHeightChanged3();
@@ -493,6 +501,7 @@ QQuickTextArea::QQuickTextArea(QQuickItem *parent)
     : QQuickTextEdit(*(new QQuickTextAreaPrivate), parent)
 {
     Q_D(QQuickTextArea);
+    d->initialized = true;
     setActiveFocusOnTab(true);
     setAcceptedMouseButtons(Qt::AllButtons);
     d->setImplicitResizeEnabled(false);
