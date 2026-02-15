@@ -120,6 +120,7 @@ public:
     };
     QLazilyAllocated<ExtraData> extra;
 
+    bool initialized = false;
     bool resizingBackground = false;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
