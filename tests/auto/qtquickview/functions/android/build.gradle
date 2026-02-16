@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application' version '8.3.0'
+    id 'com.android.application' version '9.0.0'
     id 'org.qtproject.qt.gradleplugin' version '1.2'
 }
 
