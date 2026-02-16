@@ -1913,6 +1913,9 @@ std::pair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorIte
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.size() - 1; ii >= 0; --ii) {
             QQuickItem *child = children.at(ii);
+            if (!child->isVisible() || !child->isEnabled() || QQuickItemPrivate::get(child)->culled)
+                continue;
+
             const QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
             QTransform childToParent;
             childPrivate->itemToParentTransform(&childToParent);

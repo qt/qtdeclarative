@@ -235,6 +235,7 @@ private slots:
     void transformChanged();
 
     void grabImage();
+    void invisibleItemCursorShape();
 
 private:
 
@@ -2694,6 +2695,17 @@ void tst_qquickitem::grabImage()
     QTRY_VERIFY(window->property("finishedSuccessfuly").toBool());
     QQuickItemGrabResult *result = window->property("itemGrabResult").value<QQuickItemGrabResult*>();
     QVERIFY(result);
+}
+
+void tst_qquickitem::invisibleItemCursorShape()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("invisibleItemCursorShape.qml")));
+    QQuickItem *root = qobject_cast<QQuickItem *>(window.rootObject());
+    QVERIFY(root);
+
+    QTest::mouseMove(&window, QPoint(100, 100));
+    QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
 }
 
 QTEST_MAIN(tst_qquickitem)
