@@ -3067,7 +3067,7 @@ void QQuickTextInput::q_canPasteChanged()
     bool canPaste = false;
     if (!d->m_readOnly) {
         if (const QMimeData *mimeData = QGuiApplication::clipboard()->mimeData())
-            canPaste = mimeData->hasText();
+            canPaste = mimeData->hasText() && !mimeData->text().isEmpty();
     }
     d->canPaste = canPaste;
 #endif
