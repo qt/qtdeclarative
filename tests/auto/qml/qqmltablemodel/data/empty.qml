@@ -12,6 +12,19 @@ Item {
     property alias testModel: testModel
     property alias tableView: tableView
 
+    function setInvalidRowsNumber() {
+        testModel.rows = 42   // should fail - type is int
+    }
+
+    function setInvalidRowsString() {
+        testModel.rows = "Hello world"    // should fail - type is QString
+    }
+
+    function setInvalidRowsObject() {
+        testModel.rows = ({ foo: 1 })   // should fail - type is JSObject
+    }
+
+
     function setRows() {
         testModel.rows = [
             {

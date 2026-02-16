@@ -33,6 +33,7 @@ private slots:
     void setDataThroughDelegate();
     void setRowsImperatively();
     void setRowsMultipleTimes();
+    void setRowsRejectsNonArray();
     void dataAndEditing();
     void omitTableModelColumnIndex();
     void complexRow();
@@ -1008,6 +1009,71 @@ void tst_QQmlTableModel::setRowsMultipleTimes()
     QCOMPARE(rowsChangedSpy.size(), 1);
     QCOMPARE(tableView->rows(), 3);
     QCOMPARE(tableView->columns(), 2);
+}
+
+void tst_QQmlTableModel::setRowsRejectsNonArray()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("empty.qml")));
+
+    auto *model = view.rootObject()->property("testModel").value<QAbstractItemModel*>();
+    QVERIFY(model);
+    QCOMPARE(model->rowCount(), 0);
+    QCOMPARE(model->columnCount(), 2);
+
+    QSignalSpy columnCountSpy(model, SIGNAL(columnCountChanged()));
+    QVERIFY(columnCountSpy.isValid());
+
+    QSignalSpy rowCountSpy(model, SIGNAL(rowCountChanged()));
+    QVERIFY(rowCountSpy.isValid());
+
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+
+    QQuickTableView *tableView = view.rootObject()->property("tableView").value<QQuickTableView*>();
+    QVERIFY(tableView);
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 2);
+
+    // Try to insert a number
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*must be an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsNumber"));
+    // Nothing happens
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 2);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), 0);
+
+    // Try to insert a string
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*must be an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsString"));
+    // Nothing happens
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 2);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), 0);
+
+    // Try to insert a string
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*must be an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsString"));
+    // Nothing happens
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 2);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), 0);
+
+    // Try to insert a JSON object
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but not an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsObject"));
+    // Nothing happens
+    QCOMPARE(tableView->rows(), 0);
+    QCOMPARE(tableView->columns(), 2);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), 0);
 }
 
 void tst_QQmlTableModel::dataAndEditing()

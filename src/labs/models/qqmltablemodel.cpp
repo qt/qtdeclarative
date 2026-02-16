@@ -161,6 +161,12 @@ void QQmlTableModel::setRows(const QVariant &rows)
     }
 
     const auto rowsAsJSValue = rows.value<QJSValue>();
+
+    if (!rowsAsJSValue.isArray()) {
+        qmlWarning(this) << "setRows(): \"rows\" is a QJSValue, but not an array";
+        return;
+    }
+
     const QVariantList rowsAsVariantList = rowsAsJSValue.toVariant().toList();
     if (rowsAsVariantList == mRows) {
         // No change.
