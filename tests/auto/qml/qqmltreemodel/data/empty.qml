@@ -85,6 +85,18 @@ Item {
                         ]
     }
 
+    function setInvalidRowsNumber() {
+        testModel.rows = 42   // should fail - type is int
+    }
+
+    function setInvalidRowsString() {
+        testModel.rows = "Hello world"    // should fail - type is QString
+    }
+
+    function setInvalidRowsObject() {
+        testModel.rows = ({ foo: 1 })   // should fail - type is JSObject
+    }
+
     TreeModel {
         id: treeModel
         objectName: "testModel"
