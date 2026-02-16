@@ -35,6 +35,7 @@ Q_LOGGING_CATEGORY(lcPtr, "qt.quick.pointer")
 Q_STATIC_LOGGING_CATEGORY(lcPtrLoc, "qt.quick.pointer.localization")
 Q_STATIC_LOGGING_CATEGORY(lcWheelTarget, "qt.quick.wheel.target")
 Q_LOGGING_CATEGORY(lcHoverTrace, "qt.quick.hover.trace")
+Q_LOGGING_CATEGORY(lcHoverCursor, "qt.quick.hover.cursor")
 Q_LOGGING_CATEGORY(lcFocus, "qt.quick.focus")
 Q_STATIC_LOGGING_CATEGORY(lcContextMenu, "qt.quick.contextmenu")
 

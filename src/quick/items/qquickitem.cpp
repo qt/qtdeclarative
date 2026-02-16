@@ -8526,7 +8526,7 @@ void QQuickItem::setCursor(const QCursor &cursor)
     Q_D(QQuickItem);
 
     Qt::CursorShape oldShape = d->extra.isAllocated() ? d->extra->cursor.shape() : Qt::ArrowCursor;
-    qCDebug(lcHoverTrace) << oldShape << "->" << cursor.shape();
+    qCDebug(lcHoverCursor) << oldShape << "->" << cursor.shape();
 
     if (oldShape != cursor.shape() || oldShape >= Qt::LastCursor || cursor.shape() >= Qt::LastCursor) {
         d->extra.value().cursor = cursor;

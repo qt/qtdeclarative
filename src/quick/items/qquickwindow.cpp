@@ -1888,10 +1888,10 @@ void QQuickWindowPrivate::updateCursor(const QPointF &scenePos, QQuickItem *root
             QQuickPointerHandlerPrivate::get(cursorItemAndHandler.second)->cursorDirty = false;
         if (cursorItem) {
             const auto cursor = QQuickItemPrivate::get(cursorItem)->effectiveCursor(cursorHandler);
-            qCDebug(lcHoverTrace) << "setting cursor" << cursor << "from" << cursorHandler << "or" << cursorItem;
+            qCDebug(lcHoverCursor) << "setting cursor" << cursor << "from" << cursorHandler << "or" << cursorItem;
             window->setCursor(cursor);
         } else {
-            qCDebug(lcHoverTrace) << "unsetting cursor";
+            qCDebug(lcHoverCursor) << "unsetting cursor";
             window->unsetCursor();
         }
     }
