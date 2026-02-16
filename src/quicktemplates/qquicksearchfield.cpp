@@ -414,14 +414,19 @@ void QQuickSearchFieldPrivate::createdItem(int index, QObject *object)
 void QQuickSearchFieldPrivate::suggestionCountChanged()
 {
     Q_Q(QQuickSearchField);
-    if (q->suggestionCount() == 0)
-        setCurrentItemAtIndex(-1, NoActivate);
+
+    if (q->suggestionCount() == 0) {
+        setCurrentIndex(-1);
+        setHighlightedIndex(-1, NoHighlight);
+        emit q->suggestionCountChanged();
+        return;
+    }
+
     // If the suggestionModel has been updated and the current text matches an item in
     // the model, update currentIndex and highlightedIndex to the index of that item.
     if (!text.isEmpty()) {
         for (int idx = 0; idx < q->suggestionCount(); ++idx) {
-            QString t = textAt(idx);
-            if (t == text) {
+            if (textAt(idx) == text) {
                 setCurrentItemAtIndex(idx, NoActivate);
                 updateHighlightedIndex();
                 break;
@@ -603,8 +608,10 @@ void QQuickSearchFieldPrivate::updateText()
 void QQuickSearchFieldPrivate::updateDisplayText()
 {
     Q_Q(QQuickSearchField);
-    const QString currentText = textAt(currentIndex);
+    if (currentIndex < 0)
+        return;
 
+    const QString currentText = textAt(currentIndex);
     if (text != currentText)
         q->setText(currentText);
 }
@@ -1341,6 +1348,7 @@ bool QQuickSearchField::eventFilter(QObject *object, QEvent *event)
     default:
         break;
     }
+
     return QQuickControl::eventFilter(object, event);
 }
 
