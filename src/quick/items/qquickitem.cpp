@@ -6909,7 +6909,8 @@ bool QQuickItemPrivate::effectivelyClipsEventHandlingChildren() const
             }
             if (!childPriv->eventHandlingChildrenWithinBoundsSet) {
                 eventHandlingChildrenWithinBounds = childPriv->effectivelyClipsEventHandlingChildren();
-                qCDebug(lcEffClip) << "child has children that go outside: giving up" << child;
+                if (!eventHandlingChildrenWithinBounds)
+                    qCDebug(lcEffClip) << "child has children that go outside: giving up" << child;
             }
         }
 #ifdef QT_BUILD_INTERNAL
