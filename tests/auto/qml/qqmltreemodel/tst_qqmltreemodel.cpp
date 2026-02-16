@@ -35,6 +35,7 @@ private slots:
     void setDataThroughDelegate();
     void setRowsForEmptyModel();
     void setRowsOnNonEmptyModel();
+    void setRowsRejectsNonArray();
     void setRow();
     void setData();
 };
@@ -947,6 +948,56 @@ void tst_QQmlTreeModel::setRowsOnNonEmptyModel()
     QCOMPARE(model->data(model->index(2, 3, QModelIndex()), roleNames.key("decoration")).toString(), u"orange"_s);
     QCOMPARE(model->data(model->index(2, 4, QModelIndex()), roleNames.key("display")).toDouble(), 2.5);
     QCOMPARE(model->data(model->index(2, 4, QModelIndex()), roleNames.key("decoration")).toString(), u"orange"_s);
+}
+
+void tst_QQmlTreeModel::setRowsRejectsNonArray()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("empty.qml")));
+
+    auto *model = view.rootObject()->property("testModel").value<QQmlTreeModel*>();
+    QVERIFY(model);
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+
+    QSignalSpy columnCountSpy(model, SIGNAL(columnCountChanged()));
+    QVERIFY(columnCountSpy.isValid());
+
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+    int rowsChangedSignalEmissions = 0;
+
+    QQuickTreeView *treeView = view.rootObject()->property("treeView").value<QQuickTreeView*>();
+    QVERIFY(treeView);
+    QCOMPARE(treeView->columns(), 5);
+    QCOMPARE(treeView->rows(), 0);  // treeView cannot call our treeSize
+
+    // try to set a number
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*must be an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsNumber"));
+    // setRows is returning early, nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to set a string
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*must be an array.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsString"));
+    // setRows is returning early, nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to set a JSObject
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but not an array"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsObject"));
+    // setRows is returning early, nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
 }
 
 void tst_QQmlTreeModel::setRow()
