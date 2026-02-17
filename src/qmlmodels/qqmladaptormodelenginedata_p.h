@@ -61,6 +61,7 @@ public:
         QMetaPropertyBuilder property = builder->addProperty(
                 propertyName, propertyType, propertyId);
         property.setWritable(isWritable);
+        property.setFinal(true);
     }
 
     V4_DEFINE_EXTENSION(QQmlAdaptorModelEngineData, get)
