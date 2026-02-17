@@ -83,20 +83,11 @@ QVariant QQmlTreeModel::rows() const
 
 void QQmlTreeModel::setRows(const QVariant &rows)
 {
-    if (rows.userType() != qMetaTypeId<QJSValue>()) {
-        qmlWarning(this) << "setRows(): \"rows\" must be an array; actual type is " << rows.typeName();
+    const std::optional<QVariantList> validated = validateRowsArgument(rows);
+    if (!validated)
         return;
-    }
 
-    const auto rowsAsJSValue = rows.value<QJSValue>();
-
-    if (!rowsAsJSValue.isArray()) {
-        qmlWarning(this) << "setRows(): the type of \"rows\" is " << jsTypeName(rowsAsJSValue)
-                         << " but an array is expected";
-        return;
-    }
-
-    const QVariantList rowsAsVariantList = rowsAsJSValue.toVariant().toList();
+    const QVariantList rowsAsVariantList = *validated;
 
     if (!mComponentCompleted) {
         // Store the rows until we can call setRowsPrivate() after component completion.

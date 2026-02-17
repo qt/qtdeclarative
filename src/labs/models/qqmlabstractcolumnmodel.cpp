@@ -439,6 +439,28 @@ QLatin1StringView QQmlAbstractColumnModel::jsTypeName(const QJSValue &v)
     return "unknown"_L1;
 }
 
+std::optional<QVariantList> QQmlAbstractColumnModel::validateRowsArgument(const QVariant &rows) const
+{
+    if (rows.userType() != qMetaTypeId<QJSValue>()) {
+        qmlWarning(this)
+            << "setRows(): \"rows\" must be an array; actual type is"
+            << rows.typeName();
+        return std::nullopt;
+    }
+
+    const auto rowsAsJSValue = rows.value<QJSValue>();
+
+    if (!rowsAsJSValue.isArray()) {
+        qmlWarning(this)
+            << "setRows(): the type of \"rows\" is"
+            << jsTypeName(rowsAsJSValue)
+            << "but an array is expected";
+        return std::nullopt;
+    }
+
+    return rowsAsJSValue.toVariant().toList();
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlabstractcolumnmodel_p.cpp"
