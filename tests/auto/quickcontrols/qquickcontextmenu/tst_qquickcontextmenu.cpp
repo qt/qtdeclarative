@@ -641,7 +641,8 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QTRY_VERIFY(!contextMenu->menu()->isVisible());
 
     // Ensure that the control has text if it's a SearchField.
-    QVERIFY(selectFirstItemIfSearchField(qobject_cast<QQuickSearchField *>(editor->parentItem())));
+    auto *searchField = qobject_cast<QQuickSearchField *>(editor->parentItem());
+    QVERIFY(selectFirstItemIfSearchField(searchField));
     QCOMPARE(editor->property("text").toString(), expectedTextComplete);
 
     // Modify the text. Undo should then be enabled, but not redo.
@@ -654,6 +655,11 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     // Right click on the editor to open the context menu.
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
     QTRY_VERIFY(contextMenu->menu()->isOpened());
+    if (searchField) {
+        // SearchField's popup should close when it loses focus,
+        // and it should stay closed (QTBUG-144237).
+        QTRY_VERIFY(!searchField->popup()->isVisible());
+    }
 
     // Click on the Undo menu item. Redo should then be enabled.
     QVERIFY(clickMenuItem(undoMenuItem));

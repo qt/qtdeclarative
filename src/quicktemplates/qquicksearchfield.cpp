@@ -1090,9 +1090,10 @@ bool QQuickSearchField::eventFilter(QObject *object, QEvent *event)
     switch (event->type()) {
     case QEvent::MouseButtonRelease: {
         QQuickTextInput *input = qobject_cast<QQuickTextInput *>(d->contentItem);
-        if (input->hasFocus()) {
-            if (!d->text.isEmpty() && !d->isPopupVisible() && (d->delegateModel && d->delegateModel->count() > 0))
-                d->showPopup();
+        if (input->hasFocus() && !d->text.isEmpty() && !d->isPopupVisible()
+                && (d->delegateModel && d->delegateModel->count() > 0)
+                && static_cast<QMouseEvent*>(event)->button() == Qt::LeftButton) {
+            d->showPopup();
         }
         break;
     }
