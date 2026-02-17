@@ -61,3 +61,5 @@ android
 android
 [Page::test_spacing]
 android
+[SelectionRectangle::test_selectionModeAuto]
+wayland

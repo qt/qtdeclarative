@@ -1,3 +1,6 @@
 # QTBUG-100254
 [keys]
 android
+
+[hovedAfterClosingWithEscape]
+wayland

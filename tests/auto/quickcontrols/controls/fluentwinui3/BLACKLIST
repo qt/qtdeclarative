@@ -44,6 +44,7 @@ android
 android
 [TextField::test_rightClick]
 android
+wayland
 [ToolTip::test_activateShortcutWhileToolTipVisible]
 android
 [TextArea::test_implicitSize]
@@ -84,3 +85,6 @@ android
 android
 [Tumbler::test_datePicker]
 android
+[SelectionRectangle::test_selectionModeAuto]
+wayland
+

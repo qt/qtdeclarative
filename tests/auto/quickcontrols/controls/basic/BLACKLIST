@@ -52,9 +52,12 @@ android
 android
 [TextField::test_rightClick]
 android
+wayland
 [ToolTip::test_activateShortcutWhileToolTipVisible]
 android
 [TextArea::test_implicitSize]
 android
 [TextArea::test_ignorePressRelease]
 android
+[SelectionRectangle::test_selectionModeAuto]
+wayland

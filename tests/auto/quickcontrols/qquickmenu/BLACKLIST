@@ -5,3 +5,6 @@ macos
 # QTBUG-98491
 [subMenuPosition]
 macos
+
+[contextMenuKeyboard]
+wayland
