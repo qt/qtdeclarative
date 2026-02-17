@@ -7,6 +7,64 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype ControlStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits ControlState
+    \brief Defines the visual properties for a control type.
+
+    A ControlStyle describes how a \l Control should be styled. Its API
+    largely mirrors that of a Qt Quick Control: it provides grouped
+    properties for delegates such as
+    \l {ControlStyleProperties::background}{background},
+    \l {ControlStyleProperties::indicator}{indicator},
+    \l {ControlStyleProperties::handle}{handle}, and
+    \l {ControlStyleProperties::text}{text}, along with layout
+    properties such as
+    \l {ControlStyleProperties::padding}{padding} and
+    \l {ControlStyleProperties::spacing}{spacing}. You can
+    configure these properties per \l {ControlState}{state}, and
+    specify \l {ControlStyleProperties::transition}{transitions}
+    to animate state changes. If you are familiar with the API of a
+    \l Control in Qt Quick Controls, you should find the
+    ControlStyle API easy to follow.
+
+    Each stylable control in a \l Style, \l Theme, or \l StyleVariation is a ControlStyle
+    instance. For example, in the snippet below, \l {AbstractStylableControls::}{control},
+    \l {AbstractStylableControls::}{button} and \l {AbstractStylableControls::}{slider}
+    are all ControlStyles:
+
+    \snippet ControlStyleSnippets.qml ControlStyle
+
+    \sa Style, Theme, StyleVariation, ControlState, DelegateStyle
+*/
+
+/*!
+    \qmlproperty list<StyleVariation> ControlStyle::variations
+
+    A list of \l {StyleVariation}{type variations} for this control type.
+
+    A type variation provides alternate styling for controls that are
+    children (or descendants) of this control type. For example, you
+    can use it to style all \l {Button}{buttons} inside a \l {Frame}{frame}
+    differently from buttons elsewhere:
+
+    \snippet VariationSnippets.qml frame with variation
+
+    You can also set it back to an empty list for a subtype, if you don't
+    want it to inherit the variations set on a base type:
+
+    \snippet VariationSnippets.qml groupbox without variation
+
+    Unlike instance variations — which are applied to specific control
+    instances via the \l {StyleVariation}{StyleVariation.variations}
+    attached property — type variations are applied to \e{all} instances
+    of this control type automatically, without requiring the application
+    to opt in.
+
+    \sa StyleVariation
+*/
+
 QQStyleKitControl::QQStyleKitControl(QObject *parent)
     : QQStyleKitControlState(parent)
 {
