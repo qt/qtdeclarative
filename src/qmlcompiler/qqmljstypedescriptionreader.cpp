@@ -253,16 +253,14 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 readImmediateNames(script, scope);
             } else if (name == QLatin1String("isJavaScriptBuiltin")) {
                 scope->setIsJavaScriptBuiltin(readBoolBinding(script));
-            } else if (name == QLatin1String("metaObjectHash")) {
-                scope->setMetaObjectHash(readStringBinding(script));
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only lineNumber, name, prototype, defaultProperty, "
                               "attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
                               "isStructured, isComposite, hasCustomParser, enforcesScopedEnums, "
-                              "aliases, exportMetaObjectRevisions, deferredNames, metaObjectHash, "
-                              "and immediateNames in script bindings, not \"%1\".")
+                              "aliases, exportMetaObjectRevisions, deferredNames, and "
+                              "immediateNames in script bindings, not \"%1\".")
                                    .arg(name));
             }
         } else {

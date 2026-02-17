@@ -348,9 +348,6 @@ public:
     bool isJavaScriptBuiltin() const { return m_flags.testFlag(JavaScriptBuiltin); }
     void setIsJavaScriptBuiltin(bool v) { m_flags.setFlag(JavaScriptBuiltin, v); }
 
-    QString metaObjectHash() const { return m_metaObjectHash; }
-    void setMetaObjectHash(const QString &hash) { m_metaObjectHash = hash; }
-
     bool isScript() const { return m_flags.testFlag(Script); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }
 
@@ -516,7 +513,6 @@ private:
     QString m_filePath;
     QString m_internalName;
     QString m_baseTypeNameOrError;
-    QString m_metaObjectHash;
 
     // We only need the revision for the base type as inheritance is
     // the only relation between two types where the revisions matter.

@@ -26,8 +26,6 @@ void tst_qmltyperegistrar::initTestCase()
     QFile file(QCoreApplication::applicationDirPath() + "/tst_qmltyperegistrar.qmltypes");
     QVERIFY(file.open(QIODevice::ReadOnly));
     qmltypesData = file.readAll();
-    // We don't want the output to change everytime a metaobject changes
-    qmltypesData = emptyMetaObjectHashes(qmltypesData);
     QVERIFY(file.atEnd());
     QCOMPARE(file.error(), QFile::NoError);
 
@@ -45,16 +43,6 @@ void tst_qmltyperegistrar::initTestCase()
         QFAIL(qPrintable(message));
     }
 #endif
-}
-
-QByteArray tst_qmltyperegistrar::emptyMetaObjectHashes(const QByteArray &qmltypes)
-{
-    QString copy = QString::fromUtf8(qmltypes);
-    const QString base64Symbols = QRegularExpression::escape(QStringLiteral("+/=")) + "a-zA-Z0-9";
-    const QRegularExpression re(
-            QStringLiteral(R"(metaObjectHash: "[0-9]+\$[%1]+")").arg(base64Symbols));
-    copy.replace(re, QStringLiteral(R"(metaObjectHash: "")"));
-    return copy.toUtf8();
 }
 
 void tst_qmltyperegistrar::qmltypesHasForeign()
@@ -814,7 +802,6 @@ void tst_qmltyperegistrar::unconstructibleValueType()
         exports: ["QmlTypeRegistrarTest/unconstructible 1.0"]
         isCreatable: false
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
     })"));
 }
 
@@ -828,7 +815,6 @@ void tst_qmltyperegistrar::constructibleValueType()
         accessSemantics: "value"
         exports: ["QmlTypeRegistrarTest/constructible 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Method {
             name: "Constructible"
             isConstructor: true
@@ -850,7 +836,6 @@ void tst_qmltyperegistrar::structuredValueType()
         exports: ["QmlTypeRegistrarTest/structured 1.0"]
         isStructured: true
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property { name: "i"; type: "int"; index: 0; lineNumber: 575; isFinal: true }
     })"));
 }
@@ -890,7 +875,6 @@ void tst_qmltyperegistrar::typedEnum()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/TypedEnum 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Enum {
             name: "UChar"
             type: "quint8"
@@ -1004,7 +988,6 @@ void tst_qmltyperegistrar::withNamespace()
         prototype: "Testing::Foo"
         exports: ["QmlTypeRegistrarTest/Bar 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property {
             name: "barProp"
             type: "int"
@@ -1043,7 +1026,6 @@ void tst_qmltyperegistrar::withNamespace()
         exports: ["QmlTypeRegistrarTest/Baz 1.0"]
         exportMetaObjectRevisions: [256]
         attachedType: "Testing::Foo"
-        metaObjectHash: ""
     })"));
 }
 
@@ -1138,7 +1120,6 @@ void tst_qmltyperegistrar::nameExplosion()
             "QmlTypeRegistrarTest/NameExplosion 1.0"
         ]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
     })"));
 
     QFETCH(QByteArray, qml);
@@ -1164,7 +1145,6 @@ void tst_qmltyperegistrar::javaScriptExtension()
         extensionIsJavaScript: true
         exports: ["QmlTypeRegistrarTest/JavaScriptExtension 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
     })"));
 }
 
@@ -1181,7 +1161,6 @@ void tst_qmltyperegistrar::relatedAddedInVersion()
             "QmlTypeRegistrarTest/AddedIn1_0 1.5"
         ]
         exportMetaObjectRevisions: [256, 261]
-        metaObjectHash: ""
     })"));
 }
 
@@ -1195,7 +1174,6 @@ void tst_qmltyperegistrar::longNumberTypes()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/LongNumberTypes 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property { name: "a"; type: "qlonglong"; index: 0; lineNumber: 772 }
         Property { name: "b"; type: "qlonglong"; index: 1; lineNumber: 773 }
         Property { name: "c"; type: "qulonglong"; index: 2; lineNumber: 774 }
@@ -1223,7 +1201,6 @@ void tst_qmltyperegistrar::constReturnType()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/ConstInvokable 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Method {
             name: "getObject"
             type: "QObject"
@@ -1244,7 +1221,6 @@ void tst_qmltyperegistrar::usingDeclaration()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/WithMyInt 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property {
             name: "a"
             type: "int"
@@ -1318,7 +1294,6 @@ void tst_qmltyperegistrar::omitQQmlV4FunctionPtrArg()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/JavaScriptFunction 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Method { name: "jsfunc"; isJavaScriptFunction: true; lineNumber: 844 }
     })"));
 }
@@ -1333,7 +1308,6 @@ void tst_qmltyperegistrar::preserveVoidStarPropTypes()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/VoidProperties 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property {
             name: "void1"
             type: "void"
@@ -1385,7 +1359,6 @@ void tst_qmltyperegistrar::inaccessibleBase()
         prototype: "InaccessibleBase"
         exports: ["QmlTypeRegistrarTest/AccessibleDerived 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property {
             name: "p"
             type: "InaccessibleProperty"
@@ -1408,7 +1381,6 @@ void tst_qmltyperegistrar::enumsExplicitlyScoped()
         exports: ["QmlTypeRegistrarTest/EnumsExplicitlyScoped 1.0"]
         enforcesScopedEnums: true
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
     })"));
 }
 
@@ -1437,7 +1409,6 @@ void tst_qmltyperegistrar::derivedFromInvisible()
         prototype: "InvisibleBase"
         exports: ["QmlTypeRegistrarTest/DerivedFromInvisible 1.0"]
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Property {
             name: "b"
             type: "int"
@@ -1461,7 +1432,6 @@ void tst_qmltyperegistrar::foreignNamespacedWithEnum()
         exports: ["QmlTypeRegistrarTest/ForeignQObject 1.0"]
         isCreatable: false
         exportMetaObjectRevisions: [256]
-        metaObjectHash: ""
         Enum {
             name: "Enum"
             isScoped: true

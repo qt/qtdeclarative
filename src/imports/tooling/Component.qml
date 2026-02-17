@@ -32,5 +32,4 @@ QtObject {
     property string accessSemantics: "reference"
     property string defaultProperty
     property string parentProperty
-    property string metaObjectHash
 }

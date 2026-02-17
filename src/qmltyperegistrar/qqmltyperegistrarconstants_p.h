@@ -63,7 +63,6 @@ static constexpr QLatin1StringView S_IS_SINGLETON                 { "isSingleton
 static constexpr QLatin1StringView S_IS_STRUCTURED                { "isStructured" };
 static constexpr QLatin1StringView S_IS_TYPE_CONSTANT             { "isTypeConstant" };
 static constexpr QLatin1StringView S_LINE_NUMBER                  { "lineNumber" };
-static constexpr QLatin1StringView S_META_OBJECT_HASH             { "metaObjectHash" };
 static constexpr QLatin1StringView S_METHOD                       { "Method" };
 static constexpr QLatin1StringView S_MODULE                       { "Module" };
 static constexpr QLatin1StringView S_NAME                         { "name" };
@@ -109,7 +108,6 @@ static constexpr QLatin1StringView S_ENUMS                        { "enums" };
 static constexpr QLatin1StringView S_FALSE                        { "false" };
 static constexpr QLatin1StringView S_FINAL                        { "final" };
 static constexpr QLatin1StringView S_GADGET                       { "gadget" };
-static constexpr QLatin1StringView S_HASHES                       { "hashes" };
 static constexpr QLatin1StringView S_IMMEDIATE_PROPERTY_NAMES     { "ImmediatePropertyNames" };
 static constexpr QLatin1StringView S_INDEX                        { "index" };
 static constexpr QLatin1StringView S_INPUT_FILE                   { "inputFile" };

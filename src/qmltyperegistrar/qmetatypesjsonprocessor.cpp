@@ -648,9 +648,8 @@ void MetaTypesJsonProcessor::processTypes(const QCborMap &types)
 {
     const QString include = resolvedInclude(types[S_INPUT_FILE].toStringView());
     const QCborArray classes = types[S_CLASSES].toArray();
-    const QCborMap hashes = types[S_HASHES].toMap();
     for (const QCborValue &cls : classes) {
-        const MetaType classDef(cls.toMap(), include, hashes);
+        const MetaType classDef(cls.toMap(), include);
 
         const PreProcessResult preprocessed = preProcess(classDef, PopulateMode::Yes);
         switch (preprocessed.mode) {
@@ -691,9 +690,8 @@ void MetaTypesJsonProcessor::processForeignTypes(const QCborMap &types)
 {
     const QString include = resolvedInclude(types[S_INPUT_FILE].toStringView());
     const QCborArray classes = types[S_CLASSES].toArray();
-    const QCborMap hashes = types[S_HASHES].toMap();
     for (const QCborValue &cls : classes) {
-        const MetaType classDef(cls.toMap(), include, hashes);
+        const MetaType classDef(cls.toMap(), include);
         PreProcessResult preprocessed = preProcess(classDef, PopulateMode::No);
 
         m_foreignTypes.emplaceBack(classDef);
@@ -814,16 +812,13 @@ Enum::Enum(const QCborMap &cbor)
         values.emplace_back(value.toStringView());
 }
 
-MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile,
-                                 const QCborMap &hashes)
+MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile)
     : cbor(cbor)
-    , hashes(hashes)
     , inputFile(inputFile)
 {
     className = cbor[S_CLASS_NAME].toStringView();
     lineNumber = cbor[S_LINENUMBER].toInteger(0);
-    const QCborValue &qualifiedClassNameCborValue = cbor[S_QUALIFIED_CLASS_NAME];
-    qualifiedClassName = qualifiedClassNameCborValue.toStringView();
+    qualifiedClassName = cbor[S_QUALIFIED_CLASS_NAME].toStringView();
 
     const QCborArray cborSuperClasses = cbor[S_SUPER_CLASSES].toArray();
     for (const QCborValue &superClass : cborSuperClasses)
@@ -864,12 +859,10 @@ MetaTypePrivate::MetaTypePrivate(const QCborMap &cbor, const QString &inputFile,
         kind = Kind::Object;
     else if (cbor[S_NAMESPACE].toBool())
         kind = Kind::Namespace;
-
-    metaObjectHash = hashes.value(qualifiedClassNameCborValue).toStringView();
 }
 
-MetaType::MetaType(const QCborMap &cbor, const QString &inputFile, const QCborMap &hashes)
-    : d(s_pool.emplace_back(std::make_unique<MetaTypePrivate>(cbor, inputFile, hashes)).get())
+MetaType::MetaType(const QCborMap &cbor, const QString &inputFile)
+    : d(s_pool.emplace_back(std::make_unique<MetaTypePrivate>(cbor, inputFile)).get())
 {}
 
 QT_END_NAMESPACE

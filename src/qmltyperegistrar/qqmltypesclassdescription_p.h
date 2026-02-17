@@ -67,7 +67,6 @@ struct QmlTypesClassDescription
     QAnyStringView nativeExtensionType;
     QAnyStringView sequenceValueType;
     QAnyStringView accessSemantics;
-    QAnyStringView metaObjectHash;
     QList<QTypeRevision> revisions;
     QTypeRevision addedInRevision;
     QTypeRevision removedInRevision;
