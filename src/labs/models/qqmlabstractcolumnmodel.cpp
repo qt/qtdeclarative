@@ -427,6 +427,17 @@ bool QQmlAbstractColumnModel::validateNewRow(QLatin1StringView functionName, con
     return true;
 }
 
+QLatin1StringView QQmlAbstractColumnModel::jsTypeName(const QJSValue &v)
+{
+    if (v.isArray()) return "array"_L1;
+    if (v.isObject()) return "object"_L1;
+    if (v.isString()) return "string"_L1;
+    if (v.isNumber()) return "number"_L1;
+    if (v.isBool()) return "boolean"_L1;
+    if (v.isNull()) return "null"_L1;
+    if (v.isUndefined()) return "undefined"_L1;
+    return "unknown"_L1;
+}
 
 QT_END_NAMESPACE
 

@@ -1066,7 +1066,7 @@ void tst_QQmlTableModel::setRowsRejectsNonArray()
     QCOMPARE(rowsChangedSpy.size(), 0);
 
     // Try to insert a JSON object
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but not an array.*"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but an array is expected"));
     QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsObject"));
     // Nothing happens
     QCOMPARE(tableView->rows(), 0);

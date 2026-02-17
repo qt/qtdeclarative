@@ -91,7 +91,8 @@ void QQmlTreeModel::setRows(const QVariant &rows)
     const auto rowsAsJSValue = rows.value<QJSValue>();
 
     if (!rowsAsJSValue.isArray()) {
-        qmlWarning(this) << "setRows(): \"rows\" is a QJSValue, but not an array";
+        qmlWarning(this) << "setRows(): the type of \"rows\" is " << jsTypeName(rowsAsJSValue)
+                         << " but an array is expected";
         return;
     }
 

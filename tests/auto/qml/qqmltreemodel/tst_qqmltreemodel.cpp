@@ -991,7 +991,7 @@ void tst_QQmlTreeModel::setRowsRejectsNonArray()
     QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
 
     // try to set a JSObject
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but not an array"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*but an array is expected"));
     QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsObject"));
     // setRows is returning early, nothing changes
     QCOMPARE(model->treeSize(), 0);
