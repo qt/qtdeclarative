@@ -49,6 +49,7 @@ private slots:
     void requiredModelData();
     void nestedRequired();
     void overriddenModelData();
+    void overriddenModelData2();
     void deleteRace();
     void persistedItemsStayInCache();
     void unknownContainersAsModel();
@@ -703,6 +704,43 @@ void tst_QQmlDelegateModel::overriddenModelData()
             QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
         }
     }
+}
+
+class ModelWithModelDataRole : public QAbstractListModel
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    ModelWithModelDataRole() { }
+
+    int rowCount(const QModelIndex &parent = {}) const override
+    {
+        Q_UNUSED(parent);
+        return 1;
+    }
+
+    QVariant data(const QModelIndex &index, int role) const override
+    {
+        Q_UNUSED(index);
+        Q_UNUSED(role);
+        return QVariant();
+    }
+
+    QHash<int, QByteArray> roleNames() const override { return { { Qt::UserRole, "modelData" } }; }
+};
+
+void tst_QQmlDelegateModel::overriddenModelData2()
+{
+    QTest::failOnWarning();
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("overriddenModelData2.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    const auto newModel = std::make_unique<ModelWithModelDataRole>();
+
+    o->setProperty("model", QVariant::fromValue(newModel.get()));
 }
 
 void tst_QQmlDelegateModel::deleteRace()
