@@ -122,12 +122,21 @@ void QQmlTreeModel::setRowsPrivate(const QVariantList &rowsAsVariantList)
 
     beginResetModel();
 
+    // In case the model is empty and we cannot insert any new rows in the loop below,
+    // we don't want to emit rowsChanged
+    const bool wasEmpty = mRows.empty();
+
     // We don't clear the column or role data, because a TreeModel should not be reused in that way.
     // Once it has valid data, its columns and roles are fixed.
     mRows.clear();
 
-    for (const auto &rowAsVariant : rowsAsVariantList)
-        mRows.push_back(std::make_unique<QQmlTreeRow>(rowAsVariant));
+    for (const auto &rowAsVariant : rowsAsVariantList) {
+        if (rowAsVariant.canConvert<QVariantMap>())
+            mRows.push_back(std::make_unique<QQmlTreeRow>(rowAsVariant));
+        else
+            qmlWarning(this) << "Cannot create tree row as the row does not contain "
+                             << "key-value pairs";
+    }
 
     // Gather metadata the first time rows is set.
     // If we call setrows on an empty model, mInitialRows will be empty, but mRows is not
@@ -135,7 +144,14 @@ void QQmlTreeModel::setRowsPrivate(const QVariantList &rowsAsVariantList)
         fetchColumnMetadata();
 
     endResetModel();
-    emit rowsChanged();
+
+    // was empty, still empty => no emit
+    // was empty, now non-empty => emit
+    // was not empty, now empty => emit
+    // was not empty, now non-empty => emit (there was a clear in-between)
+
+    if (!wasEmpty || !mRows.empty())
+        emit rowsChanged();
 }
 
 QVariant QQmlTreeModel::dataPrivate(const QModelIndex &index, const QString &roleName) const

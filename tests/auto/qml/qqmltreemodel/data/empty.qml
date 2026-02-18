@@ -97,6 +97,10 @@ Item {
         testModel.rows = ({ foo: 1 })   // should fail - type is JSObject
     }
 
+    function setInvalidRowsArray() {
+        testModel.rows = [1, 2, 3]      // "wrong kind of array"
+    }
+
     TreeModel {
         id: treeModel
         objectName: "testModel"
