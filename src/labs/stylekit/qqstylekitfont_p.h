@@ -40,7 +40,7 @@ class QQStyleKitFont : public QObject
     Q_PROPERTY(QFont textField READ textField WRITE setTextField NOTIFY textFieldChanged FINAL)
     Q_PROPERTY(QFont toolBar READ toolBar WRITE setToolBar NOTIFY toolBarChanged FINAL)
 
-    QML_NAMED_ELEMENT(StyleKitFont)
+    QML_NAMED_ELEMENT(StyleFont)
 
 public:
     QQStyleKitFont(QObject *parent = nullptr);

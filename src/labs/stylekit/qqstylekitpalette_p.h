@@ -40,7 +40,7 @@ class QQStyleKitPalette : public QObject
     Q_PROPERTY(QQuickPalette *textField READ textField NOTIFY textFieldChanged FINAL)
     Q_PROPERTY(QQuickPalette *toolBar READ toolBar NOTIFY toolBarChanged FINAL)
 
-    QML_NAMED_ELEMENT(StyleKitPalette)
+    QML_NAMED_ELEMENT(StylePalette)
 
 public:
     QQStyleKitPalette(QObject *parent = nullptr);
