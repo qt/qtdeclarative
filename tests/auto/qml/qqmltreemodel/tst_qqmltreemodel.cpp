@@ -998,6 +998,17 @@ void tst_QQmlTreeModel::setRowsRejectsNonArray()
     QCOMPARE(model->columnCount(), 5);
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to set an array that does not contain key-value pairs
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "setInvalidRowsArray"));
+    // setRows is not returning early
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
 }
 
 void tst_QQmlTreeModel::setRow()
