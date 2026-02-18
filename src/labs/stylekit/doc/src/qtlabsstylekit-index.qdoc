@@ -8,10 +8,15 @@
 
     StyleKit is a declarative styling system for \l {Qt Quick Controls}, built on top of
     \l {Qt Quick Templates 2}{Qt Quick Templates}. It lets you define a complete visual style
-    for all your controls from a single \l Style object, including support for themes, state-based
-    styling, and transitions.
+    for all your controls from a single \l Style object, including support for
+    \l {Theme}{themes}, \l {ControlStateStyle}{state-based} styling, and
+    \l {ControlStateStyle::transition}{transitions}.
     StyleKit handles the underlying template implementation automatically, letting you focus
-    purely on visual aspects such as colors, dimensions, borders, and shadows.
+    purely on visual aspects such as
+    \l {DelegateStyle::color}{colors},
+    \l {DelegateStyle::implicitWidth}{dimensions},
+    \l {DelegateStyle::border}{borders}, and
+    \l {DelegateStyle::shadow}{shadows}.
 
     A key strength of StyleKit is its hierarchical property system: set a property once
     on a base type like \l {StyleKitControls::}{abstractButton}, and it

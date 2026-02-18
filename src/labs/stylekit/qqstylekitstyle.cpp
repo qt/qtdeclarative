@@ -24,11 +24,14 @@ QT_BEGIN_NAMESPACE
 
     \l Style is the root type in StyleKit for defining a complete visual style for
     \l [QtQuickControls] {Qt Quick Controls}. A style lets you customize
-    the appearance of every control type — backgrounds, indicators, handles,
-    text, padding, and more — as well as how controls respond to states
-    such as \l {StyleKitControl::hovered}{hovered},
-    \l {ControlStyle::pressed}{pressed}, and
-    \l {ControlStyle::disabled}{disabled}, including animated
+    the appearance of \l {AbstractStylableControls}{every control type}
+    — \l {ControlStateStyle::background}{backgrounds}, \l {ControlStateStyle::indicator}{indicators},
+    \l {ControlStateStyle::handle}{handles}, \l {ControlStateStyle::}{text},
+    \l {ControlStateStyle::}{padding}, and more
+    — as well as how controls respond to states
+    such as \l {ControlStyle::}{hovered},
+    \l {ControlStyle::}{pressed}, and
+    \l {ControlStyle::}{disabled}, including animated
     \l {ControlStyle::transition}{transitions} between them.
 
     Styles support \l light and \l dark color schemes through \l {Theme}
@@ -58,7 +61,7 @@ QT_BEGIN_NAMESPACE
     The names of all the \l {CustomTheme}{custom themes} defined in the style. This does not
     include the \l{themeNames}{built-in themes.}
 
-    \sa themeNames, \themeName, CustomTheme
+    \sa themeNames, themeName, CustomTheme
 */
 
 /*!

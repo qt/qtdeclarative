@@ -9,6 +9,954 @@
 
 QT_BEGIN_NAMESPACE
 
+// ************* ControlStateStyle ****************
+
+/*!
+    \qmltype ControlStateStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the style for a control in a given state.
+
+    A ControlStateStyle contains the properties that can be styled for each
+    state a control can be in. This includes the visual building blocks
+    \l background, \l indicator, \l handle, and \l text, along with
+    layout properties such as \l padding and \l spacing, and more.
+
+    A \l ControlStyle inherits ControlStateStyle, since it represents the
+    \e normal state — that is, properties set directly on a
+    ControlStyle describe how the control looks when no other state
+    is active. State-specific overrides are set through nested states
+    such as \l pressed, \l hovered, and \l checked, and can be
+    animated by a \l transition.
+
+    Nested states are not mutually exclusive. Multiple states can be active at
+    the same time — for example, a button can be both hovered and
+    pressed simultaneously. When several states are active, all matching
+    state overrides are applied. If the same property is set in multiple
+    active states, conflicts are resolved using the following priority
+    order: \l pressed, \l hovered, \l highlighted, \l focused,
+    \l checked, \l vertical. So for example \c {pressed.background.color}
+    wins over \c {checked.background.color} if the control is both
+    \l pressed and \l checked.
+
+    The \l disabled state is an exception: a disabled control cannot
+    be interacted with, so the \l pressed, \l hovered, \l highlighted,
+    and \l focused states will not apply. However, \l disabled can
+    still be combined with states like \l checked and \l vertical.
+
+    The more deeply nested a state is, the more qualified it is.
+    For example, \c {hovered.pressed.background.color} takes precedence over
+    \c {hovered.background.color} when both \l hovered and \l pressed are
+    active. The nesting order does not matter:
+    \c {hovered.pressed} and \c {pressed.hovered} are equivalent.
+    However, if both forms are used at the same time, which one wins is
+    undefined.
+
+    Deeper nesting of states can also be used to resolve conflicts. If the same property
+    is set in both \l hovered and \l checked, the priority order means
+    the \l hovered value wins. If you would rather have the checked value win, or
+    use an altogether different value in that situation, you can override
+    the property in \c {hovered.checked}, which then takes precedence over both.
+
+    The following snippet shows how to style a button differently
+    depending on its state:
+
+    \snippet ControlStateStyle_states.qml States
+
+    \labs
+
+    \sa ControlStyle, DelegateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::pressed
+
+    Style overrides applied when the control is pressed (e.g. the
+    user is holding down a mouse button on it).
+
+    \sa hovered, highlighted, focused, checked, vertical, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::hovered
+
+    Style overrides applied when the mouse cursor is over the control.
+
+    \sa pressed, highlighted, focused, checked, vertical, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::highlighted
+
+    Style overrides applied when the control is highlighted. A control
+    is typically highlighted in order to draw the user's attention towards it.
+
+    \sa pressed, hovered, focused, checked, vertical, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::focused
+
+    Style overrides applied when the control has input focus.
+
+    \sa pressed, hovered, highlighted, checked, vertical, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::checked
+
+    Style overrides applied when the control is in a checked or
+    toggled-on state (e.g. a checked \l CheckBox or a toggled
+    \l Button).
+
+    \sa pressed, hovered, highlighted, focused, vertical, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::vertical
+
+    Style overrides applied when the control has a vertical
+    orientation (e.g. a vertical \l Slider or \l ScrollBar).
+
+    \sa pressed, hovered, highlighted, focused, checked, disabled
+*/
+
+/*!
+    \qmlproperty ControlStateStyle ControlStateStyle::disabled
+
+    Style overrides applied when the control is disabled.
+
+    A disabled control cannot be interacted with, so \l pressed,
+    \l hovered, \l highlighted, and \l focused will not be applied
+    at the same time as disabled.
+
+    \sa pressed, hovered, highlighted, focused, checked, vertical
+*/
+/*!
+    \qmlproperty DelegateStyle ControlStateStyle::background
+
+    Grouped property for styling the background of a control.
+
+    The background delegate is typically the main visual rectangle behind
+    the control. Use it to set \l {DelegateStyle::color}{colors},
+    \l {DelegateStyle::border}{borders},
+    \l {DelegateStyle::radius}{radii},
+    \l {DelegateStyle::shadow}{shadows},
+    \l {DelegateStyle::gradient}{gradients},
+    and \l {DelegateStyle::image}{images}.
+
+    \note The default \l {Style::fallbackStyle}{fallback style} sets \c {background.visible}
+    to \c false for controls that typically should not draw a background,
+    such as \l [QtQuickControls]{CheckBox}, \l [QtQuickControls]{RadioButton},
+    and \l [QtQuickControls]{Slider}. To show their background, set
+    \c {background.visible} to \c true explicitly.
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::bottomPadding
+
+    The \l [QtQuickControls]{Control Layout}{bottom padding}
+    of the control. If not set, falls back to \l padding.
+
+    \sa padding, topPadding, leftPadding, rightPadding
+*/
+
+/*!
+    \qmlproperty HandleStyle ControlStateStyle::handle
+
+    Grouped property for styling the handle of a control.
+
+    The handle is used by controls such as \l [QtQuickControls]{Switch},
+    \l [QtQuickControls]{Slider}, and \l [QtQuickControls]{RangeSlider}.
+    For a RangeSlider, the two handles can be styled individually through
+    \l {HandleStyle::first}{handle.first} and \l {HandleStyle::second}{handle.second}.
+
+    \sa HandleStyle, DelegateStyle
+*/
+
+/*!
+    \qmlproperty IndicatorStyle ControlStateStyle::indicator
+
+    Grouped property for styling the indicator of a control. For a
+    \l {AbstractStylableControls::}{checkBox}, the indicator is the
+    frame, and its \l {IndicatorStyle::}{foreground} is the check mark.
+    For a \l {AbstractStylableControls::}{slider}, the indicator is
+    the groove, and the foreground is the fill.
+
+    \sa DelegateStyle
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::leftPadding
+
+    The \l [QtQuickControls]{Control Layout}{left padding} of the control. If not set, falls back to
+    \l padding.
+
+    \sa padding, rightPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::padding
+
+    The uniform spacing between the
+    \l [QtQuickControls]{Control Layout}{control's content area and the
+    bounds of the control}. Setting this provides a default value for
+    \l leftPadding, \l rightPadding, \l topPadding, and \l bottomPadding.
+    Each side can be overridden individually.
+
+    \sa leftPadding, rightPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::rightPadding
+
+    The \l [QtQuickControls]{Control Layout}{right padding} of the control.
+    If not set, falls back to \l padding.
+
+    \sa padding, leftPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::spacing
+
+    The spacing between visual elements inside the control, for example
+    between an indicator and a label.
+*/
+
+/*!
+    \qmlproperty TextStyle ControlStateStyle::text
+
+    Grouped property for styling the text label of a control.
+*/
+
+/*!
+    \qmlproperty real ControlStateStyle::topPadding
+
+    The \l [QtQuickControls]{Control Layout}{top padding}
+    of the control. If not set, falls back to \l padding.
+
+    \sa padding, bottomPadding, leftPadding, rightPadding
+*/
+
+/*!
+    \qmlproperty Transition ControlStateStyle::transition
+
+    A \l [QtQuick]{Transition} used to animate style properties when the
+    control enters a new state, such as \l hovered or \l pressed. If set
+    to \c null (the default), property changes are applied immediately
+    without animation.
+
+    \snippet DelegateStyle_transitions.qml custom transition
+
+    To avoid repeating the same target properties for each delegate,
+    StyleKit provides \l StyleAnimation for convenience, which can be
+    used instead of, or in combination with, the
+    \l {Animation and Transitions in Qt Quick}{standard animations:}
+
+    \snippet DelegateStyle_transitions.qml transition
+
+    Also note that \l ColorAnimation has a special feature that
+    animates \e all color properties that changed during a
+    state change if \l {PropertyAnimation::}{property} and
+    \l {PropertyAnimation::}{properties} are left unset.
+*/
+
+// ************* DelegateStyle ****************
+
+/*!
+    \qmltype DelegateStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the visual appearance of an element within a control.
+
+    DelegateStyle describes the visual appearance of a visual element
+    within a \l ControlStyle, such as its \l {ControlStateStyle::}{background},
+    \l {ControlStateStyle::}{indicator}, or a sub-element like
+    \l {IndicatorStyle::foreground}{indicator.foreground}.
+    It provides properties for controlling
+    \l {DelegateStyle::implicitWidth}{size},
+    \l {DelegateStyle::}{color}, \l {DelegateStyle::}{border},
+    \l {DelegateStyle::}{radius}, \l {DelegateStyle::}{shadow},
+    \l {DelegateStyle::}{image}, \l {DelegateStyle::}{opacity}, and more.
+
+    \labs
+
+    \sa ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty Qt::Alignment DelegateStyle::alignment
+
+    The alignment of the delegate within its parent. The default
+    value is \c {Qt.AlignLeft | Qt.AlignVCenter}.
+*/
+
+/*!
+    \qmlproperty BorderStyle DelegateStyle::border
+
+    Grouped property for styling the border of this delegate.
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::bottomLeftRadius
+
+    The bottom-left corner radius. If not set, falls back to \l radius.
+
+    \sa radius, topLeftRadius, topRightRadius, bottomRightRadius
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::bottomMargin
+
+    The bottom margin of this delegate. If not set, falls back to
+    \l margins.
+
+    \sa margins, topMargin, leftMargin, rightMargin
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::bottomRightRadius
+
+    The bottom-right corner radius. If not set, falls back to \l radius.
+
+    \sa radius, topLeftRadius, topRightRadius, bottomLeftRadius
+*/
+
+/*!
+    \qmlproperty bool DelegateStyle::clip
+
+    Whether the delegate clips its contents. The default value is \c false.
+*/
+
+/*!
+    \qmlproperty color DelegateStyle::color
+
+    The fill color of this delegate. The default value is \c transparent.
+
+    Unlike a Quick \l [QtQuick]{Rectangle}, where a gradient replaces
+    the color, StyleKit draws the \l gradient on top of the color. This
+    means you can use a semi-transparent gradient as an overlay (for
+    example, a subtle shading effect) while the color shows through
+    underneath.
+
+    \snippet ControlStateStyle_properties.qml color and gradient
+
+    \sa gradient, opacity
+*/
+
+/*!
+    \qmlproperty QObject DelegateStyle::data
+
+    An arbitrary object that can be used for passing
+    custom data from the style to a custom \l delegate component.
+
+    This allows you to define custom style properties beyond what the
+    StyleKit API provides. The data object can vary between states and
+    themes, making it possible to style elements in a custom \l delegate
+    that are not covered by the built-in properties.
+
+    The following snippet uses a custom delegate that draws an overlay
+    \l Text whose color varies depending on the control's state. The delegate
+    inherits \l StyledItem, which is optional but ensures the rest of
+    the button background is rendered normally.
+
+    \snippet DelegateStyle_delegates.qml data
+
+    \note The \c data object is propagated as a whole. Unlike regular style
+    properties, individual properties \e inside the data object do not
+    propagate separately.
+
+    \sa delegate
+*/
+
+/*!
+    \qmlproperty Component DelegateStyle::delegate
+
+    The delegate used to render the DelegateStyle in a
+    \l {Qt Quick Controls}{Qt Quick Control}.
+
+    The default value is \c null, in which case \l StyledItem is used
+    for rendering instead.
+
+    The delegate needs to define the following required properties:
+    \qml
+    required property DelegateStyle delegateStyle
+    required property QtObject control
+    \endqml
+
+    \c delegateStyle points to the DelegateStyle that describes how the
+    delegate should be styled. \c control points to the
+    \l {Qt Quick Controls}{Qt Quick Control} that owns the delegate. The latter
+    can be used to resolve additional information about the control not
+    available from the style.
+
+    If you know the specific type of the owning control, you can use it
+    instead of \l QtObject for the \c control property. For example, since
+    a handle delegate in the snippet below is always used inside a Slider, the
+    type can be set to \l {Qt Quick Templates 2 QML Types}{T.Slider}:
+
+    \snippet DelegateStyle_delegates.qml delegate
+
+    \note If a DelegateStyle has a \l {shadow}{drop shadow} defined, it will be
+    drawn separately by a \l {ShadowStyle::delegate}{shadow delegate.}
+
+    \sa data
+*/
+
+/*!
+    \qmlproperty Gradient DelegateStyle::gradient
+
+    The gradient of this delegate. The default value is \c null (no gradient).
+
+    Unlike a Quick \l [QtQuick]{Rectangle}, where a gradient replaces
+    the color, StyleKit draws the \l gradient on top of the color. This
+    means you can use a semi-transparent gradient as an overlay (for
+    example, a subtle shading effect) while the color shows through
+    underneath.
+
+    \snippet ControlStateStyle_properties.qml color and gradient
+
+    \sa color
+*/
+
+/*!
+    \qmlproperty ImageStyle DelegateStyle::image
+
+    Grouped property for placing an image inside this delegate.
+
+    \sa ImageStyle
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::implicitHeight
+
+    The implicit height of this delegate.
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::implicitWidth
+
+    The implicit width of this delegate. Set this to \l {Style::Stretch}{Style.Stretch}
+    to make the delegate fill the available width of the control.
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::leftMargin
+
+    The left margin of this delegate. If not set, falls back to
+    \l margins.
+
+    \sa margins, rightMargin, topMargin, bottomMargin
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::margins
+
+    The uniform margin around this delegate. Setting this provides a
+    default value for \l leftMargin, \l rightMargin, \l topMargin,
+    and \l bottomMargin. Each side can be overridden individually.
+
+    \sa leftMargin, rightMargin, topMargin, bottomMargin
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::minimumWidth
+
+    The minimum width of this delegate. The delegate will not be sized
+    smaller than this value.
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::opacity
+
+    The opacity of this delegate, from \c 0.0 (fully transparent) to
+    \c 1.0 (fully opaque). The default value is \c 1.0.
+
+    \sa visible, color
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::radius
+
+    The corner radius applied to all four corners of this delegate.
+    Individual corners can be overridden with \l topLeftRadius,
+    \l topRightRadius, \l bottomLeftRadius, and \l bottomRightRadius.
+
+    \sa topLeftRadius, topRightRadius, bottomLeftRadius, bottomRightRadius
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::rightMargin
+
+    The right margin of this delegate. If not set, falls back to
+    \l margins.
+
+    \sa margins, leftMargin, topMargin, bottomMargin
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::rotation
+
+    The rotation of this delegate, in degrees.
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::scale
+
+    The scale factor of this delegate. The default value is \c 1.0.
+*/
+
+/*!
+    \qmlproperty ShadowStyle DelegateStyle::shadow
+
+    Grouped property for styling a drop shadow behind this delegate.
+
+    \sa ShadowStyle
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::topLeftRadius
+
+    The top-left corner radius. If not set, falls back to \l radius.
+
+    \sa radius, topRightRadius, bottomLeftRadius, bottomRightRadius
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::topMargin
+
+    The top margin of this delegate. If not set, falls back to
+    \l margins.
+
+    \sa margins, bottomMargin, leftMargin, rightMargin
+*/
+
+/*!
+    \qmlproperty real DelegateStyle::topRightRadius
+
+    The top-right corner radius. If not set, falls back to \l radius.
+
+    \sa radius, topLeftRadius, bottomLeftRadius, bottomRightRadius
+*/
+
+/*!
+    \qmlproperty bool DelegateStyle::visible
+
+    Whether this delegate is visible. The default value is \c true.
+
+    \note Although the default value is \c true, the
+    \l {Style::fallbackStyle}{fallback style} (which overrides many of the default
+    values) sets \c {background.visible} to \c false for controls that typically
+    should not draw a background, such as \l [QtQuickControls]{CheckBox},
+    \l [QtQuickControls]{RadioButton}, and \l [QtQuickControls]{Slider}.
+
+    \sa opacity
+*/
+
+// ************* ImageStyle ****************
+
+/*!
+    \qmltype ImageStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the image style for a delegate.
+
+    ImageStyle provides properties for placing an image inside a
+    \l DelegateStyle. It is available as the
+    \l {DelegateStyle::image}{image} grouped property on any delegate.
+
+    \labs
+
+    \sa DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty color ImageStyle::color
+
+    A color overlay applied to the image. This is typically used to tint
+    monochrome icons to match the style's color scheme.
+*/
+
+/*!
+    \qmlproperty enumeration ImageStyle::fillMode
+
+    How the image should be scaled or tiled within the delegate. The
+    value is one of the \l [QtQuick]{Image::fillMode}{Image.fillMode}
+    enum values.
+*/
+
+/*!
+    \qmlproperty url ImageStyle::source
+
+    The URL of the image to display inside the delegate.
+*/
+
+// ************* BorderStyle ****************
+
+/*!
+    \qmltype BorderStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the border style for a delegate.
+
+    BorderStyle provides properties for the border drawn around a
+    \l DelegateStyle. It is available as the
+    \l {DelegateStyle::border}{border} grouped property on any delegate.
+
+    \labs
+
+    \sa DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty color BorderStyle::color
+
+    The color of the border. The default value is \c transparent.
+*/
+
+/*!
+    \qmlproperty real BorderStyle::width
+
+    The width of the border in pixels.
+*/
+
+// ************* ShadowStyle ****************
+
+/*!
+    \qmltype ShadowStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the drop shadow style for a delegate.
+
+    ShadowStyle provides properties for rendering a drop shadow behind
+    a \l DelegateStyle. It is available as the
+    \l {DelegateStyle::shadow}{shadow} grouped property on any delegate.
+
+    \snippet DelegateStyle_shadow.qml drop shadow
+
+    By adjusting scale and color, shadows can also be used to create
+    glow effects. The following snippet adds a diffuse white glow to
+    the handle of a \l [QtQuickControls]{Switch} that intensifies
+    when checked:
+
+    \snippet DelegateStyle_shadow.qml glow
+
+    \labs
+
+    \sa DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty real ShadowStyle::blur
+
+    The blur of the shadow. A value of \c 0.0 produces a sharp shadow, while
+    larger values produce a softer, more diffuse shadow.
+    The default value is \c 10.0.
+*/
+
+/*!
+    \qmlproperty color ShadowStyle::color
+
+    The color of the shadow. The default value is \c transparent, which
+    means that no shadow will be drawn by default.
+
+    \sa visible, opacity
+*/
+
+/*!
+    \qmlproperty Component ShadowStyle::delegate
+
+    A custom QML \l [QML]{Component} that replaces the default shadow
+    rendering. When set, StyleKit instantiates this component instead
+    of drawing the default shadow.
+*/
+
+/*!
+    \qmlproperty real ShadowStyle::horizontalOffset
+
+    The horizontal offset of the shadow from the delegate, in pixels.
+*/
+
+/*!
+    \qmlproperty real ShadowStyle::opacity
+
+    The opacity of the shadow, from \c 0.0 (fully transparent) to
+    \c 1.0 (fully opaque). The default value is \c 1.0.
+
+    \sa visible, color
+*/
+
+/*!
+    \qmlproperty real ShadowStyle::scale
+
+    The scale factor of the shadow relative to the delegate.
+    The default value is \c 1.0.
+*/
+
+/*!
+    \qmlproperty real ShadowStyle::verticalOffset
+
+    The vertical offset of the shadow from the delegate, in pixels.
+*/
+
+/*!
+    \qmlproperty bool ShadowStyle::visible
+
+    Whether the shadow is visible. The default value is \c true.
+
+    However, since the default shadow \l color is \c transparent,
+    the shadow will not be visible unless a different color is set.
+
+    \sa opacity
+*/
+
+// ************* HandleStyle ****************
+
+/*!
+    \qmltype HandleStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits DelegateStyle
+    \brief Defines the handle style for controls such as \l [QtQuickControls]{Switch},
+    \l [QtQuickControls]{Slider} and \l [QtQuickControls]{RangeSlider}.
+
+    HandleStyle extends \l DelegateStyle with properties that are specific to
+    styling a handle.
+
+    Some controls have more than one handle. For example,
+    \l [QtQuickControls]{RangeSlider} has both a \l [QtQuickControls]{RangeSlider::}{first} and a \l [QtQuickControls]{RangeSlider::}{second} handle.
+    These can be styled independently using the \l first and \l second
+    sub-handles, \c {slider.handle.first} and \c {slider.handle.second}.
+    Properties not set on a sub-handle fall back to the handle itself.
+
+    \labs
+
+    \sa DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty DelegateStyle HandleStyle::first
+
+    Grouped property for styling the first handle of for example a
+    \l [QtQuickControls]{RangeSlider}. Unset properties fall back to
+    the HandleStyle itself.
+*/
+
+/*!
+    \qmlproperty DelegateStyle HandleStyle::second
+
+    Grouped property for styling the second handle of for example a
+    \l [QtQuickControls]{RangeSlider}. Unset properties fall back to
+    the HandleStyle itself.
+*/
+
+// ************* SubIndicatorStyle ****************
+
+/*!
+    \qmltype SubIndicatorStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits DelegateStyle
+    \brief Defines the style for a sub-indicator delegate.
+
+    SubIndicatorStyle extends \l DelegateStyle with a \l foreground
+    property. It is used for styling sub-indicator delegates such as
+    \l {IndicatorStyle::up}{indicator.up} and
+    \l {IndicatorStyle::down}{indicator.down} in controls
+    like \l [QtQuickControls]{SpinBox}.
+    It is equivalent to \l IndicatorStyle, but does not itself
+    contain sub-indicators.
+
+    \labs
+
+    \sa IndicatorStyle, DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty DelegateStyle SubIndicatorStyle::foreground
+
+    Grouped property for styling the foreground element of this
+    indicator. The foreground typically represents a checkmark, icon
+    or arrow rendered inside the indicator.
+*/
+
+// ************* IndicatorStyle ****************
+
+/*!
+    \qmltype IndicatorStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits DelegateStyle
+    \brief Defines the style for a control's indicator.
+
+    IndicatorStyle extends \l DelegateStyle with properties that are specific to
+    styling an indicator.
+
+    The IndicatorStyle itself describes the indicator background, while the
+    \l foreground describes the content drawn inside it. For example,
+    \c {checkBox.indicator} styles the check box frame and
+    \c {checkBox.indicator.foreground} styles the check mark. For
+    \l {AbstractStylableControls::}{switchControl},
+    \l {AbstractStylableControls::}{slider} and
+    \l {AbstractStylableControls::}{progressBar}, the indicator styles
+    the groove and the foreground styles the fill.
+
+    \snippet DelegateStyle_indicator.qml checkBox
+
+    Some controls have more than one indicator. For example,
+    \l [QtQuickControls]{SpinBox} has both an increment and a decrement
+    button. These can be styled independently using the \l up and \l down
+    sub-indicators, \c {spinBox.indicator.up} and
+    \c {spinBox.indicator.down}. Properties not set on a sub-indicator
+    fall back to the indicator itself.
+
+    \snippet DelegateStyle_indicator.qml up and down indicator
+
+    \labs
+
+    \sa SubIndicatorStyle, DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty SubIndicatorStyle IndicatorStyle::down
+
+    Grouped property for styling the down (decrement) sub-indicator.
+    This is used by controls such as \l [QtQuickControls]{SpinBox}.
+    Unset properties fall back to the indicator itself.
+
+    \sa up
+*/
+
+/*!
+    \qmlproperty DelegateStyle IndicatorStyle::foreground
+
+    Grouped property for styling the foreground element of this
+    indicator. For example, \c {checkBox.indicator} describes
+    the check box frame, while \c {checkBox.indicator.foreground} is the check mark.
+
+    For controls like \l {AbstractStylableControls::}{slider},
+    \l {AbstractStylableControls::}{progressBar}, and
+    \l {AbstractStylableControls::}{switchControl}, the \c {indicator.foreground}
+    represents the progress track or fill within the groove, while the \c indicator
+    itself represents the groove.
+*/
+
+/*!
+    \qmlproperty SubIndicatorStyle IndicatorStyle::up
+
+    Grouped property for styling the up (increment) sub-indicator.
+    This is used by controls such as \l [QtQuickControls]{SpinBox}.
+    Unset properties fall back to the indicator itself.
+
+    \sa down
+*/
+
+// ************* TextStyle ****************
+
+/*!
+    \qmltype TextStyle
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines the text style for a control's label.
+
+    TextStyle provides properties for controlling the appearance of
+    text labels within a control, such as
+    \l color, \l alignment and \l padding,
+    and certain font-related properties such as
+    \l {TextStyle::}{bold},
+    \l {TextStyle::}{italic}, and
+    \l {TextStyle::pointSize}{font size}.
+
+    It is available as the \l {ControlStateStyle::text}{text}
+    grouped property on every \l ControlStateStyle.
+
+    \labs
+
+    \sa DelegateStyle, ControlStyle, ControlStateStyle,
+        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+*/
+
+/*!
+    \qmlproperty Qt::Alignment TextStyle::alignment
+
+    The alignment of the text within its available area.
+*/
+
+/*!
+    \qmlproperty bool TextStyle::bold
+
+    Whether the text should be rendered in bold. The default value
+    is \c false.
+
+    \sa italic
+*/
+
+/*!
+    \qmlproperty real TextStyle::bottomPadding
+
+    The bottom padding around the text. If not set, falls back to
+    \l padding.
+
+    \sa padding, topPadding, leftPadding, rightPadding
+*/
+
+/*!
+    \qmlproperty color TextStyle::color
+
+    The color of the text.
+*/
+
+/*!
+    \qmlproperty bool TextStyle::italic
+
+    Whether the text should be rendered in italic. The default value
+    is \c false.
+
+    \sa bold
+*/
+
+/*!
+    \qmlproperty real TextStyle::leftPadding
+
+    The left padding around the text. If not set, falls back to
+    \l padding.
+
+    \sa padding, rightPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real TextStyle::padding
+
+    The uniform padding around the text. Setting this provides a
+    default value for \l leftPadding, \l rightPadding, \l topPadding,
+    and \l bottomPadding. Each side can be overridden individually.
+
+    \sa leftPadding, rightPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real TextStyle::pointSize
+
+    The point size of the text font.
+*/
+
+/*!
+    \qmlproperty real TextStyle::rightPadding
+
+    The right padding around the text. If not set, falls back to
+    \l padding.
+
+    \sa padding, leftPadding, topPadding, bottomPadding
+*/
+
+/*!
+    \qmlproperty real TextStyle::topPadding
+
+    The top padding around the text. If not set, falls back to
+    \l padding.
+
+    \sa padding, bottomPadding, leftPadding, rightPadding
+*/
+
 // ************* QQStyleKitPropertyGroup ****************
 
 QHash<PropertyPathId_t, QString> QQStyleKitPropertyGroup::s_pathStrings;

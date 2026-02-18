@@ -532,8 +532,8 @@ ApplicationWindow {
         //! [theme]
     }
 
-    // The rest of the file is not a part of the docs, it just creates a simple
-    // UI to test the doc style from the command line: qml ControlsSnippets.qml
+    // The rest of the file is not a part of the docs. It just implements a small
+    // UI to allow testing the style from the command line using the 'qml' app.
 
     ScrollView {
         anchors.fill: parent

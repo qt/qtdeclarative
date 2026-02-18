@@ -10,33 +10,37 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ControlStyle
     \inqmlmodule Qt.labs.StyleKit
-    \inherits ControlState
-    \brief Defines the visual properties for a control type.
+    \inherits ControlStateStyle
+    \brief Defines the style for a control in the \c normal state
 
     A ControlStyle describes how a \l Control should be styled. Its API
     largely mirrors that of a Qt Quick Control: it provides grouped
     properties for delegates such as
-    \l {ControlStyleProperties::background}{background},
-    \l {ControlStyleProperties::indicator}{indicator},
-    \l {ControlStyleProperties::handle}{handle}, and
-    \l {ControlStyleProperties::text}{text}, along with layout
+    \l {ControlState::background}{background},
+    \l {ControlState::indicator}{indicator},
+    \l {ControlState::handle}{handle}, and
+    \l {ControlState::text}{text}, along with layout
     properties such as
-    \l {ControlStyleProperties::padding}{padding} and
-    \l {ControlStyleProperties::spacing}{spacing}. You can
-    configure these properties per \l {ControlState}{state}, and
-    specify \l {ControlStyleProperties::transition}{transitions}
-    to animate state changes. If you are familiar with the API of a
-    \l Control in Qt Quick Controls, you should find the
-    ControlStyle API easy to follow.
+    \l {ControlState::padding}{padding} and
+    \l {ControlState::spacing}{spacing}.
+    If you are familiar with the API of a \l Control in Qt Quick Controls,
+    you should find the ControlStyle API easy to follow.
 
-    Each stylable control in a \l Style, \l Theme, or \l StyleVariation is a ControlStyle
-    instance. For example, in the snippet below, \l {AbstractStylableControls::}{control},
-    \l {AbstractStylableControls::}{button} and \l {AbstractStylableControls::}{slider}
+    ControlStyle inherits \l ControlStateStyle because it represents the
+    \e normal state: properties set directly on a ControlStyle describe
+    how the control looks when no other state is active. State-specific
+    overrides are set through nested states, such as \l {ControlStateStyle::}{hovered}
+    \l {ControlStateStyle::}{pressed}, and \l {ControlStateStyle::}{checked}.
+
+    \l {AbstractStylableControls}{Each stylable control} in a \l Style, \l Theme, or \l StyleVariation is a ControlStyle.
+    For example, in the snippet below, \l {AbstractStylableControls::}{control},
+    \l {AbstractStylableControls::}{button} and \l {AbstractStylableControls::}{radioButton}
     are all ControlStyles:
 
     \snippet ControlStyleSnippets.qml ControlStyle
 
-    \sa Style, Theme, StyleVariation, ControlState, DelegateStyle
+    \sa {AbstractStylableControls}{All stylable controls}, Style, Theme,
+        StyleVariation, ControlStateStyle, DelegateStyle
 */
 
 /*!
@@ -57,10 +61,10 @@ QT_BEGIN_NAMESPACE
     \snippet VariationSnippets.qml groupbox without variation
 
     Unlike instance variations — which are applied to specific control
-    instances via the \l {StyleVariation}{StyleVariation.variations}
-    attached property — type variations are applied to \e{all} instances
-    of this control type automatically, without requiring the application
-    to opt in.
+    instances from the application via the
+    \l {StyleVariation.variations} attached property — type
+    variations are applied to \e{all} instances of a control type from
+    the \l Style, without requiring the application to opt in.
 
     \sa StyleVariation
 */
