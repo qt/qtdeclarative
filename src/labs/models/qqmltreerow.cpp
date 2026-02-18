@@ -20,7 +20,7 @@ QQmlTreeRow::QQmlTreeRow(QQmlTreeRow *parentItem)
 QQmlTreeRow::QQmlTreeRow(const QVariant &data, QQmlTreeRow *parentItem)
     : m_parent(parentItem)
 {
-    QVariantMap variantMap = data.toJsonObject().toVariantMap();
+    QVariantMap variantMap = data.toMap();
     unpackVariantMap(variantMap);
 }
 
