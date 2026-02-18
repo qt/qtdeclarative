@@ -413,7 +413,7 @@ class QQStyleKitIndicatorProperties : public QQStyleKitDelegateProperties
     Q_OBJECT
     Q_PROPERTY(QQStyleKitDelegateProperties *foreground READ foreground NOTIFY foregroundChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(IndicatorStyle)
+    QML_NAMED_ELEMENT(SubIndicatorStyle)
 
 public:
     QQStyleKitIndicatorProperties(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);
@@ -442,7 +442,7 @@ class QQStyleKitIndicatorWithSubTypes : public QQStyleKitDelegateProperties
     Q_PROPERTY(QQStyleKitIndicatorProperties *up READ up NOTIFY upChanged FINAL)
     Q_PROPERTY(QQStyleKitIndicatorProperties *down READ down NOTIFY downChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
-    QML_NAMED_ELEMENT(IndicatorStyleWithSubTypes)
+    QML_NAMED_ELEMENT(IndicatorStyle)
 
 public:
     QQStyleKitIndicatorWithSubTypes(QQSK::PropertyGroup group, QQStyleKitControlProperties *parent = nullptr);

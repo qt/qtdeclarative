@@ -51,8 +51,6 @@ QT_BEGIN_NAMESPACE
     possible.
 
     \snippet ControlsSnippets.qml control
-
-    \sa {qtlabsstylekit-controls.html}{Control Types}
 */
 
 /*!

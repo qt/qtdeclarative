@@ -13,24 +13,75 @@ ApplicationWindow {
     StyleKit.style:
     //! [ControlStyle]
     Style {
-        control { // ControlStyle
+        control {
             padding: 6
-            background { // DelegateStyle
-                color: "slategray"
+            text {
+                color: "white"
             }
-            indicator { // DelegateStyle
-                foreground.color: "slateblue"
+            background {
+                radius: 4
+                border.color: "gray"
             }
-            handle { // DelegateStyle
+            indicator {
+                implicitWidth: 20
+                implicitHeight: 20
+                border.width: 1
+            }
+            handle {
+                implicitWidth: 20
+                implicitHeight: 20
                 radius: 10
             }
         }
 
-        button { // ControlStyle
+        button {
+            background {
+                implicitWidth: 120
+                shadow.opacity: 0.6
+                shadow.verticalOffset: 2
+                shadow.horizontalOffset: 2
+                shadow.color: "gray"
+                color: "lightsteelblue"
+                gradient: Gradient {
+                    GradientStop { position: 0.0; color: Qt.alpha("black", 0.0)}
+                    GradientStop { position: 1.0; color: Qt.alpha("black", 0.2)}
+                }
+            }
+            hovered {
+                background.color: "lightslategrey"
+            }
+            pressed {
+                background.scale: 0.95
+            }
         }
 
-        slider { // ControlStyle
+        radioButton {
         }
+
+        checkBox {
+        }
+
+        slider {
+        }
+
+        // etc...
     }
     //! [ControlStyle]
+
+    // The rest of the file is not a part of the docs. It just implements a small
+    // UI to allow testing the style from the command line using the 'qml' app.
+
+    ScrollView {
+        anchors.fill: parent
+        Column {
+            anchors.fill: parent
+            anchors.margins: 10
+            spacing: 10
+
+            Button {
+                text: "Button"
+                checkable: true
+            }
+        }
+    }
 }
