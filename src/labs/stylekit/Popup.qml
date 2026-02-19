@@ -31,6 +31,12 @@ T.Popup {
     topPadding: __styleReader.topPadding
     rightPadding: __styleReader.rightPadding
     bottomPadding: __styleReader.bottomPadding
+
+    leftInset: __styleReader.background.leftMargin
+    topInset: __styleReader.background.topMargin
+    rightInset: __styleReader.background.rightMargin
+    bottomInset: __styleReader.background.bottomMargin
+
     font: __styleReader.font
 
     background: BackgroundDelegate {

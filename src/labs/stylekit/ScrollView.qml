@@ -24,6 +24,11 @@ T.ScrollView {
     topPadding: __styleReader.topPadding
     leftPadding: __styleReader.leftPadding
 
+    rightInset: __styleReader.background.rightMargin
+    leftInset: __styleReader.background.leftMargin
+    topInset: __styleReader.background.topMargin
+    bottomInset: __styleReader.background.bottomMargin
+
     StyleVariation.controlType: __styleReader.controlType
     property StyleReader __styleReader: StyleReader {
         controlType: StyleReader.ScrollView

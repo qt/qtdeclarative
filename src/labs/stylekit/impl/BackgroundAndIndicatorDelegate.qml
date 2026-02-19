@@ -41,8 +41,8 @@ Item {
         }
         contentMargins {
             left: quickControl.leftPadding - quickControl.leftInset
-            right: quickControl.rightPadding - quickControl.rightInset
             top: quickControl.topPadding - quickControl.topInset
+            right: quickControl.rightPadding - quickControl.rightInset
             bottom: quickControl.bottomPadding - quickControl.bottomInset
         }
         layoutItems: [

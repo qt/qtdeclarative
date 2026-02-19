@@ -20,6 +20,12 @@ T.ToolBar {
     rightPadding: SafeArea.margins.right + styleReader.rightPadding
     topPadding: SafeArea.margins.top + styleReader.topPadding
     bottomPadding: SafeArea.margins.bottom + styleReader.bottomPadding
+
+    leftInset: styleReader.background.leftMargin
+    topInset: styleReader.background.topMargin
+    rightInset: styleReader.background.rightMargin
+    bottomInset: styleReader.background.bottomMargin
+
     spacing: styleReader.spacing
 
     font: styleReader.font
