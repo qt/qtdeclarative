@@ -575,6 +575,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     for (const auto &scope : std::as_const(m_objectBindingScopes)) {
         breakInheritanceCycles(scope);
         checkDeprecation(scope);
+        checkForComponentTypeWithProperties(scope);
     }
 
     for (const auto &scope : std::as_const(m_objectDefinitionScopes)) {
@@ -582,12 +583,14 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
             continue; // We're going to check this one below.
         breakInheritanceCycles(scope);
         checkDeprecation(scope);
+        checkForComponentTypeWithProperties(scope);
     }
 
     const auto &keys = m_pendingDefaultProperties.keys();
     for (const auto &scope : keys) {
         breakInheritanceCycles(scope);
         checkDeprecation(scope);
+        checkForComponentTypeWithProperties(scope);
     }
 
     resolveAliases();
@@ -1637,6 +1640,28 @@ void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sc
         default:
             break;
         }
+    }
+}
+
+void QQmlJSImportVisitor::checkForComponentTypeWithProperties(const QQmlJSScope::ConstPtr &scope)
+{
+    const QQmlJSScope::ConstPtr base = scope->baseType();
+    if (!base)
+        return;
+
+    // If the base type is composite itself, we ignore it being a QQmlCompoonent and
+    // assume you actually mean its contents (and produce a deprecation warning).
+    // We can ignore this case here.
+    if (base->isComposite())
+        return;
+
+    if (base->internalName() != "QQmlComponent"_L1)
+        return;
+
+    const auto ownProperties = scope->ownProperties();
+    for (const auto &property : ownProperties) {
+        m_logger->log("Component objects cannot declare new properties."_L1,
+                      qmlSyntax, property.sourceLocation());
     }
 }
 
