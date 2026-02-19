@@ -39,8 +39,15 @@ public:
 
     ~QQuickItemGrabResultPrivate()
     {
+        // Remove the unmanaged heap size we've added when creating the image in
+        // QQuickItemGrabResult::render(). If render() was never called the image is empty and
+        // its size is 0.
+        if (hasCallback())
+            qmlEngine->handle()->memoryManager->changeUnmanagedHeapSizeUsage(-image.sizeInBytes());
         delete cacheEntry;
     }
+
+    bool hasCallback() const { return qmlEngine && callback.isCallable(); }
 
     void ensureImageInCache() const {
         if (url.isEmpty() && !image.isNull()) {
@@ -217,8 +224,8 @@ bool QQuickItemGrabResult::event(QEvent *e)
 {
     Q_D(QQuickItemGrabResult);
     if (e->type() == Event_Grab_Completed) {
+        if (d->hasCallback()) {
         // JS callback
-        if (d->qmlEngine && d->callback.isCallable()) {
             d->callback.call(QJSValueList() << d->qmlEngine->newQObject(this));
             QQmlEngine::setObjectOwnership(this, QQmlEngine::JavaScriptOwnership);
         } else {
@@ -260,8 +267,22 @@ void QQuickItemGrabResult::render()
                               qMax(minSize.height(), effectiveTextureSize.height())));
     d->texture->scheduleUpdate();
     d->texture->updateTexture();
+
+    const qsizetype oldImageSize = d->image.sizeInBytes();
     d->image = d->texture->toImage();
     d->image.setDevicePixelRatio(d->devicePixelRatio);
+    const qsizetype newImageSize = d->image.sizeInBytes();
+    if (d->hasCallback()) {
+        // If we have a callback, we assume that it's going to be called, eventually. If you post
+        // an event that never arrives, you have worse problems. Based on that assumption, we track
+        // the (potentially large) image as unmanaged heap size already now. This is the only place
+        // where we can determine the size. In the dtor we need to "untrack" the image if it was
+        // tracked. So either we need to store an extra bit that tells us whether the callback was
+        // called or we need to live with stale unmanaged heap size in the unlikely case that it's
+        // never called. We choose the latter.
+        d->qmlEngine->handle()->memoryManager->changeUnmanagedHeapSizeUsage(
+                newImageSize - oldImageSize);
+    }
 
     delete d->texture;
     d->texture = nullptr;
