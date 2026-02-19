@@ -1139,11 +1139,11 @@ void QQmlJSImportVisitor::checkRequiredProperties()
     }
 
     const auto compType = m_rootScopeImports.type(u"Component"_s).scope;
-    const auto isInComponent = [&](const QQmlJSScope::ConstPtr &requiredScope) {
-        for (auto s = requiredScope; s; s = s->parentScope()) {
-            if (s->isWrappedInImplicitComponent() || s->baseType() == compType)
-                return true;
-        }
+    const auto isComponentRoot = [&](const QQmlJSScope::ConstPtr &requiredScope) {
+        if (requiredScope->isWrappedInImplicitComponent())
+            return true;
+        if (const auto s = requiredScope->parentScope(); s &&  s->baseType() == compType)
+            return true;
         return false;
     };
 
@@ -1278,8 +1278,10 @@ void QQmlJSImportVisitor::checkRequiredProperties()
 
                     QQmlJSScope::ConstPtr prevRequiredScope;
                     for (const QQmlJSScope::ConstPtr &requiredScope : std::as_const(scopesToSearch)) {
-                        if (isInComponent(requiredScope))
-                            continue;
+                        // Stop at component boundaries. We don't want to report the same problem
+                        // multiple times.
+                        if (isComponentRoot(requiredScope))
+                            break;
 
                         if (!scopeRequiresProperty(requiredScope, propName, descendant)) {
                             prevRequiredScope = requiredScope;

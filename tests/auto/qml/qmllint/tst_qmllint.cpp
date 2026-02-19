@@ -842,6 +842,11 @@ void TestQmllint::dirtyQmlCode_data()
                        { { "Cannot assign binding of type QQuickItem to QObject"_L1 } },
                        {},
                        Result::ExitsNormally };
+    QTest::newRow("componentDefinitionInnerRequiredProperty")
+            << u"componentDefinitionInnerRequiredProperty.qml"_s
+            << Result { { {
+                    "Component is missing required property bar from Rectangle"_L1, 11, 13
+               } } };
     QTest::newRow("connectionsBinding")
             << QStringLiteral("autofix/ConnectionsHandler.qml")
             << Result{ { { "Implicitly defining \"onWidthChanged\" as signal handler in "

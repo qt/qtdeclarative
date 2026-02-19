@@ -30,12 +30,17 @@ static QList<QQmlJSMetaProperty> unboundRequiredProperties(
     QList<QQmlJSMetaProperty> requiredProperties{};
 
     auto isPropertyRequired = [&type, &resolver](const auto &property) {
-        if (!type->isPropertyRequired(property.propertyName()))
-            return false;
-
         if (type->hasPropertyBindings(property.propertyName()))
             return false;
 
+        if (type->isPropertyRequired(property.propertyName()))
+            return true;
+
+        // We consider top-level aliases to required properties as required.
+        // This is somewhat blunt, but it captures the most common use case.
+        // If you have a type with multiple aliases to the same required property,
+        // the type will be impossible to instantiate, but that's a very strange
+        // arrangement in the first place.
         if (property.isAlias()) {
             QQmlJSUtils::AliasResolutionVisitor aliasVisitor;
 
@@ -45,37 +50,19 @@ static QList<QQmlJSMetaProperty> unboundRequiredProperties(
             if (result.kind != QQmlJSUtils::AliasTarget_Property)
                 return false;
 
-            // If the top level alias targets a property that is in
-            // the top level scope and that property is required, then
-            // we will already pick up the property during one of the
-            // iterations.
-            // Setting the property or the alias is the same so we
-            // discard one of the two, as otherwise we would require
-            // the user to pass two values for the same property ,in
-            // this case the alias.
-            //
-            // For example in:
-            //
-            // ```
-            // Item {
-            //   id: self
-            //   required property int foo
-            //   property alias bar: self.foo
-            // }
-            // ```
-            //
-            // Both foo and bar are required but setting one or the
-            // other is the same operation so that we should choose
-            // only one.
-            if (result.owner == type &&
-                type->isPropertyRequired(result.property.propertyName()))
+            if (!result.owner->isPropertyRequired(result.property.propertyName()))
+                return false;
+
+            if (result.owner == type)
                 return false;
 
             if (result.owner->hasPropertyBindings(result.property.propertyName()))
                 return false;
+
+            return true;
         }
 
-        return true;
+        return false;
     };
 
     const auto properties = type->properties();
