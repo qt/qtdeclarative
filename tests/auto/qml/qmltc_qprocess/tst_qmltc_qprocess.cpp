@@ -334,11 +334,10 @@ void tst_qmltc_qprocess::unboundRequiredPropertyInInlineComponent()
 void tst_qmltc_qprocess::componentDefinitionInnerRequiredProperty()
 {
     {
-        QEXPECT_FAIL("", "QTBUG-131777", Continue);
-        QFAIL("QTBUG-131777");
         const auto errors = runQmltc(u"componentDefinitionInnerRequiredProperty.qml"_s, false);
         QVERIFY(errors.contains(
-                u"componentDefinitionInnerRequiredProperty.qml:11:13: Component is missing required property bar from here [required]"
+                u"componentDefinitionInnerRequiredProperty.qml:11:13: "
+                "Component is missing required property bar from Rectangle [required]"
         ));
     }
 }

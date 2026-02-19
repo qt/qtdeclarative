@@ -928,9 +928,8 @@ void tst_qmltc::requiredPropertiesInitialization()
         &e,
         {
             aliasToInnerThatWillBeMarkedRequired,
-            // QTBUG-131777
-            //aliasToPropertyThatShadows,
-            //aliasToRequiredInner,
+            aliasToPropertyThatShadows,
+            aliasToRequiredInner,
             &inheritedRequiredProperty,
             nonRequiredInheritedPropertyThatWillBeMarkedRequired,
             objectList,
@@ -943,9 +942,7 @@ void tst_qmltc::requiredPropertiesInitialization()
     );
 
     QCOMPARE(created.aliasToInnerThatWillBeMarkedRequired(), aliasToInnerThatWillBeMarkedRequired);
-    QEXPECT_FAIL("", "QTBUG-131777", Continue);
     QCOMPARE(created.aliasToPropertyThatShadows(), aliasToPropertyThatShadows);
-    QEXPECT_FAIL("", "QTBUG-131777", Continue);
     QCOMPARE(created.aliasToRequiredInner(), aliasToRequiredInner);
     QCOMPARE(created.getInheritedRequiredProperty(), &inheritedRequiredProperty);
     QCOMPARE(created.getNonRequiredInheritedPropertyThatWillBeMarkedRequired(), nonRequiredInheritedPropertyThatWillBeMarkedRequired);
