@@ -432,6 +432,9 @@ void QQStyleKitLayout::updateLayout()
     const qreal paddedWidth = qMax(containerWidth - m_contentMargins.left() - m_contentMargins.right(), .0);
     const qreal paddedHeight = qMax(containerHeight - m_contentMargins.top() - m_contentMargins.bottom(), .0);
 
+    qreal maxTopMargin = .0;
+    qreal maxBottomMargin = .0;
+
     // Position left-aligned items
     {
         qreal x = paddedX;
@@ -449,6 +452,8 @@ void QQStyleKitLayout::updateLayout()
             li->setWidth(itemWidth);
             li->setHeight(itemHeight);
             x += itemWidth + margins.left() + margins.right() + m_spacing;
+            maxTopMargin = qMax(maxTopMargin, margins.top());
+            maxBottomMargin = qMax(maxBottomMargin, margins.bottom());
         }
     }
 
@@ -470,6 +475,8 @@ void QQStyleKitLayout::updateLayout()
             li->setWidth(itemWidth);
             li->setHeight(itemHeight);
             x -= m_spacing;
+            maxTopMargin = qMax(maxTopMargin, margins.top());
+            maxBottomMargin = qMax(maxBottomMargin, margins.bottom());
         }
     }
 
@@ -490,6 +497,8 @@ void QQStyleKitLayout::updateLayout()
             li->setWidth(itemWidth);
             li->setHeight(itemHeight);
             x += itemWidth + margins.left() + margins.right() + m_spacing;
+            maxTopMargin = qMax(maxTopMargin, margins.top());
+            maxBottomMargin = qMax(maxBottomMargin, margins.bottom());
         }
     }
 
@@ -514,9 +523,9 @@ void QQStyleKitLayout::updateLayout()
     // QQuickControl determines the contentItem geometry based on the control size and padding
     // So we include the layout's left/right widths into the padding calculation
     auto leftPadding = m_contentMargins.left() + leftWidth;
-    auto topPadding = m_contentMargins.top(); // TODO: support vertical layout items
+    auto topPadding = m_contentMargins.top() + maxTopMargin; // TODO: support vertical layout items
     auto rightPadding = m_contentMargins.right() + rightWidth;
-    auto bottomPadding = m_contentMargins.bottom(); // TODO: support vertical layout items
+    auto bottomPadding = m_contentMargins.bottom() + maxBottomMargin; // TODO: support vertical layout items
     if (isMirrored())
         std::swap(leftPadding, rightPadding);
     QMarginsF newPadding = QMarginsF(leftPadding, topPadding, rightPadding, bottomPadding);
