@@ -35,12 +35,15 @@ Item {
 
     StyleKitLayout {
         id: indicatorLayout
-        container: root
+        container: Item {
+            width: !vertical ? root.width : root.height
+            height: !vertical ? root.height : root.width
+        }
         contentMargins {
-            left: quickControl.leftPadding
-            right: quickControl.rightPadding
-            top: quickControl.topPadding
-            bottom: quickControl.bottomPadding
+            left: quickControl.leftPadding - quickControl.leftInset
+            right: quickControl.rightPadding - quickControl.rightInset
+            top: quickControl.topPadding - quickControl.topInset
+            bottom: quickControl.bottomPadding - quickControl.bottomInset
         }
         layoutItems: [
             StyleKitLayoutItem {
@@ -58,24 +61,12 @@ Item {
         mirrored: quickControl.mirrored
     }
 
-    states: State {
-        /* The delegate logic is moved out of the delegate, to relieve the style
-         * developer from having to re-invent it if he changes the delegate. To
-         * disable it, 'states' can be set to an empty array from the outside. */
-        when: true
-        PropertyChanges {
-            background.parent: root
-            background.x: quickControl.leftInset
-            background.y: quickControl.topInset
-            background.width: root.width - quickControl.leftInset - quickControl.rightInset
-            background.height: root.height - quickControl.topInset - quickControl.bottomInset
-        }
-    }
-
     BackgroundDelegate {
         id: background
         quickControl: root.quickControl
         delegateStyle: root.backgroundStyle
+        width: parent.width
+        height: parent.height
     }
 
     IndicatorDelegate {
@@ -84,11 +75,9 @@ Item {
         indicatorStyle: root.indicatorStyle
         vertical: root.vertical
         z: 1
-        x: !vertical ? indicatorItem.x : quickControl.leftPadding + (quickControl.availableWidth - height) / 2
-        y: !vertical ? indicatorItem.y : quickControl.topPadding + width
-        width: !vertical ? indicatorItem.width : __stretchBgWidth ? quickControl.availableHeight : implicitWidth//indicatorItem.height
-        height: !vertical ? indicatorItem.height : __stretchBgHeight ? quickControl.availableWidth : implicitHeight//indicatorItem.width
-        readonly property bool __stretchBgWidth: root.indicatorStyle.implicitWidth === Style.Stretch
-        readonly property bool __stretchBgHeight: root.indicatorStyle.implicitHeight === Style.Stretch
+        x: !vertical ? indicatorItem.x : indicatorItem.y
+        y: !vertical ? indicatorItem.y : indicatorItem.x + indicatorItem.width
+        width: !vertical ? indicatorItem.width : indicatorItem.width
+        height: !vertical ? indicatorItem.height : indicatorItem.height
     }
 }
