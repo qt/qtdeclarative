@@ -1622,6 +1622,10 @@ void TestQmllint::dirtyQmlSnippet_data()
                u"}"_s
             << Result{ { { "Component is missing required property r1 from Base"_L1, 6, 1 } } }
             << defaultOptions;
+    QTest::newRow("requiredInComponent")
+            << u"Item { Component { id: comp; required property var bla; Item {} } }"_s
+            << Result{ { { "Component objects cannot declare new properties."_L1, 1, 30 } } }
+            << defaultOptions;
     QTest::newRow("testSnippet")
             << u"property int qwer: \"Hello\""_s
             << Result{ { { "Cannot assign literal of type string to int"_L1 } } }
@@ -1707,9 +1711,6 @@ void TestQmllint::cleanQmlSnippet_data()
                u"property var r: 1.0   \n"_s
                u"property var s: \"s\" \n"_s
                u"property var b: true  \n"_s
-            << defaultOptions;
-    QTest::newRow("requiredInComponent")
-            << u"Item { Component { id: comp; required property var bla; Item {} } }"_s
             << defaultOptions;
     QTest::newRow("requiredInComponent2")
             << u"Item { Component { id: comp; Item { required property var bla } } }"_s

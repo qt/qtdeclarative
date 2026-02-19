@@ -301,7 +301,15 @@ void tst_qqmljsscope::componentWrappedObjects()
 
     const auto isGoodType = [](const QQmlJSScope::ConstPtr &type, const QString &propertyName,
                                bool isWrapped) {
-        return type->hasOwnProperty(propertyName)
+        const auto objectNameBindings = type->ownPropertyBindings(u"objectName"_s);
+        if (std::distance(objectNameBindings.first, objectNameBindings.second) != 1)
+            return false;
+
+        const QQmlJSMetaPropertyBinding objectNameBinding = *objectNameBindings.first;
+        if (objectNameBinding.bindingType() != QQmlSA::BindingType::StringLiteral)
+            return false;
+
+        return objectNameBinding.stringValue() == propertyName
                 && type->isWrappedInImplicitComponent() == isWrapped;
     };
 
