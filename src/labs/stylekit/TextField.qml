@@ -11,16 +11,21 @@ import Qt.labs.StyleKit.impl
 T.TextField {
     id: control
 
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                   Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding)
+    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
+                   || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                    contentHeight + topPadding + bottomPadding,
-                    placeholder.implicitHeight + topPadding + bottomPadding)
+                             contentHeight + topPadding + bottomPadding,
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     leftPadding: styleReader.leftPadding
     topPadding: styleReader.topPadding
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
+
+    leftInset: styleReader.background.leftMargin
+    topInset: styleReader.background.topMargin
+    rightInset: styleReader.background.rightMargin
+    bottomInset: styleReader.background.bottomMargin
 
     font: styleReader.font
 

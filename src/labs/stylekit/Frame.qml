@@ -20,6 +20,11 @@ T.Frame {
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
 
+    leftInset: styleReader.background.leftMargin
+    topInset: styleReader.background.topMargin
+    rightInset: styleReader.background.rightMargin
+    bottomInset: styleReader.background.bottomMargin
+
     font: styleReader.font
 
     StyleVariation.controlType: styleReader.controlType

@@ -23,10 +23,10 @@ T.GroupBox {
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
 
-    topInset: styleReader.background.topMargin
-    bottomInset: styleReader.background.bottomMargin
-    rightInset: styleReader.background.rightMargin
     leftInset: styleReader.background.leftMargin
+    topInset: styleReader.background.topMargin
+    rightInset: styleReader.background.rightMargin
+    bottomInset: styleReader.background.bottomMargin
 
     font: styleReader.font
 
@@ -41,6 +41,7 @@ T.GroupBox {
     }
 
     label: Text {
+        x: control.leftPadding
         padding: styleReader.text.padding
         leftPadding: styleReader.text.leftPadding
         rightPadding: styleReader.text.rightPadding

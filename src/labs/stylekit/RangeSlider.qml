@@ -23,6 +23,12 @@ T.RangeSlider {
     topPadding: styleReaderFirst.topPadding
     rightPadding: styleReaderFirst.rightPadding
     bottomPadding: styleReaderFirst.bottomPadding
+
+    leftInset: styleReaderFirst.background.leftMargin
+    topInset: styleReaderFirst.background.topMargin
+    rightInset: styleReaderFirst.background.rightMargin
+    bottomInset: styleReaderFirst.background.bottomMargin
+
     spacing: styleReaderFirst.spacing
 
     states: [
