@@ -237,6 +237,8 @@ private slots:
     void grabImage();
     void invisibleItemCursorShape();
 
+    void focusItemDestroyed();
+
 private:
 
     enum PaintOrderOp {
@@ -2706,6 +2708,20 @@ void tst_qquickitem::invisibleItemCursorShape()
 
     QTest::mouseMove(&window, QPoint(100, 100));
     QCOMPARE(window.cursor().shape(), Qt::ArrowCursor);
+}
+
+void tst_qquickitem::focusItemDestroyed()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("focusItemDestroyed.qml")));
+
+    QPointer<QObject> focusObject;
+    QTRY_VERIFY(focusObject = qApp->focusObject());
+    QCOMPARE(window.activeFocusItem(), focusObject);
+
+    // dialog will be closed by timer
+    QTRY_VERIFY(!focusObject);
+    QVERIFY(!window.activeFocusItem());
 }
 
 QTEST_MAIN(tst_qquickitem)
