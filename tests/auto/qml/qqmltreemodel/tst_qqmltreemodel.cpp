@@ -1009,6 +1009,36 @@ void tst_QQmlTreeModel::setRowsRejectsNonArray()
     QCOMPARE(model->columnCount(), 5);
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to append to an invalid row - int
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* could not find any node at the specified index"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "appendInvalidNumber"));
+    // appendRow returns early - nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to append to an invalid row - string
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* could not find any node at the specified index"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "appendInvalidString"));
+    // appendRow returns early - nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+
+    // try to append to an invalid row - array
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".* could not find any node at the specified index"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*does not contain.*"));
+    QVERIFY(QMetaObject::invokeMethod(view.rootObject(), "appendInvalidArray"));
+    // appendRow returns early - nothing changes
+    QCOMPARE(model->treeSize(), 0);
+    QCOMPARE(model->columnCount(), 5);
+    QCOMPARE(columnCountSpy.size(), 0);
+    QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
 }
 
 void tst_QQmlTreeModel::setRow()

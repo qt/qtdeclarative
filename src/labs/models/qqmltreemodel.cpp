@@ -228,17 +228,23 @@ void QQmlTreeModel::appendRow(QModelIndex parent, const QVariant &row)
         qmlWarning(this) << "append: could not find any node at the specified index"
                          << " - the new row will be appended to root";
 
-        beginInsertRows(QModelIndex(),
+        if (data.canConvert<QVariantMap>()) {
+            beginInsertRows(QModelIndex(),
                         static_cast<int>(mRows.size()),
                         static_cast<int>(mRows.size()));
 
-        mRows.push_back(std::make_unique<QQmlTreeRow>(data));
+            mRows.push_back(std::make_unique<QQmlTreeRow>(data));
 
-        // Gather metadata the first time a row is added.
-        if (mColumnMetadata.isEmpty())
-            fetchColumnMetadata();
+            // Gather metadata the first time a row is added.
+            if (mColumnMetadata.isEmpty())
+                fetchColumnMetadata();
 
-        endInsertRows();
+            endInsertRows();
+        } else {
+            qmlWarning(this) << "Cannot create tree row as the row does not contain "
+                             << "key-value pairs";
+            return;
+        }
     }
 
     emit rowsChanged();
