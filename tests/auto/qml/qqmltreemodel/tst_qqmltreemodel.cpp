@@ -36,6 +36,7 @@ private slots:
     void setRowsForEmptyModel();
     void setRowsOnNonEmptyModel();
     void setRowsRejectsNonArray();
+    void setRowsFromJSON();
     void setRow();
     void setData();
 };
@@ -1039,6 +1040,47 @@ void tst_QQmlTreeModel::setRowsRejectsNonArray()
     QCOMPARE(model->columnCount(), 5);
     QCOMPARE(columnCountSpy.size(), 0);
     QCOMPARE(rowsChangedSpy.size(), rowsChangedSignalEmissions);
+}
+
+void tst_QQmlTreeModel::setRowsFromJSON()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("setRowsViaJSON.qml")));
+
+    auto *model = view.rootObject()->property("testModel").value<QQmlTreeModel*>();
+    QVERIFY(model);
+
+    // The tree has been initialized from JSON
+    QCOMPARE(model->treeSize(), 4);
+    QCOMPARE(model->columnCount(), 5);
+
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(roleNames.size(), 1);
+    QVERIFY(roleNames.values().contains("display"));
+
+    QCOMPARE(model->data(model->index(0, 0, QModelIndex()), roleNames.key("display")).toBool(), false);
+    QCOMPARE(model->data(model->index(0, 1, QModelIndex()), roleNames.key("display")).toString(), QStringLiteral("\u2014"));
+    QCOMPARE(model->data(model->index(0, 2, QModelIndex()), roleNames.key("display")).toString(), u"folder"_s);
+    QCOMPARE(model->data(model->index(0, 3, QModelIndex()), roleNames.key("display")).toString(), u"Documents"_s);
+    QCOMPARE(model->data(model->index(0, 4, QModelIndex()), roleNames.key("display")).toString(), u"2025-07-01"_s);
+
+    QCOMPARE(model->data(model->index(1, 0, QModelIndex()), roleNames.key("display")).toBool(), false);
+    QCOMPARE(model->data(model->index(1, 1, QModelIndex()), roleNames.key("display")).toString(), QStringLiteral("\u2014"));
+    QCOMPARE(model->data(model->index(1, 2, QModelIndex()), roleNames.key("display")).toString(), u"folder"_s);
+    QCOMPARE(model->data(model->index(1, 3, QModelIndex()), roleNames.key("display")).toString(), u"Pictures"_s);
+    QCOMPARE(model->data(model->index(1, 4, QModelIndex()), roleNames.key("display")).toString(), u"2025-05-30"_s);
+
+    QCOMPARE(model->data(model->index({0,0}, 0), roleNames.key("display")).toBool(), true);
+    QCOMPARE(model->data(model->index({0,0}, 1), roleNames.key("display")).toString(), u"24 KB"_s);
+    QCOMPARE(model->data(model->index({0,0}, 2), roleNames.key("display")).toString(), u"file"_s);
+    QCOMPARE(model->data(model->index({0,0}, 3), roleNames.key("display")).toString(), u"Resume.pdf"_s);
+    QCOMPARE(model->data(model->index({0,0}, 4), roleNames.key("display")).toString(), u"2025-06-20"_s);
+
+    QCOMPARE(model->data(model->index({1,0}, 0), roleNames.key("display")).toBool(), true);
+    QCOMPARE(model->data(model->index({1,0}, 1), roleNames.key("display")).toString(), u"3.5 MB"_s);
+    QCOMPARE(model->data(model->index({1,0}, 2), roleNames.key("display")).toString(), u"file"_s);
+    QCOMPARE(model->data(model->index({1,0}, 3), roleNames.key("display")).toString(), u"Vacation.jpg"_s);
+    QCOMPARE(model->data(model->index({1,0}, 4), roleNames.key("display")).toString(), u"2025-05-15"_s);
 }
 
 void tst_QQmlTreeModel::setRow()
