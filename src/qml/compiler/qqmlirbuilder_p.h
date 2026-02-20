@@ -369,6 +369,8 @@ public:
     QString appendSignal(Signal *signal);
     QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
     QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
+    void setFirstAlias(Alias *alias) { aliases->first = alias; }
+
     void appendFunction(QmlIR::Function *f);
     void appendInlineComponent(InlineComponent *ic);
     void appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraData);
