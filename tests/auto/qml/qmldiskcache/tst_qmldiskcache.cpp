@@ -18,6 +18,66 @@
 #include <QStandardPaths>
 #include <QDirIterator>
 
+// C++ type that provides attached properties.  Used by
+// compositeAttachedPropertyChecksum to reproduce the real-world
+// scenario where a composite QML type extending this C++ type is
+// referenced as an attached-property type.
+class TestAttachedProperties : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+public:
+    explicit TestAttachedProperties(QObject *parent = nullptr) : QObject(parent) {}
+    int value() const { return m_value; }
+    void setValue(int v)
+    {
+        if (m_value != v) {
+            m_value = v;
+            emit valueChanged();
+        }
+    }
+signals:
+    void valueChanged();
+private:
+    int m_value = 0;
+};
+
+class TestAttachable : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(TestAttachedProperties)
+public:
+    explicit TestAttachable(QObject *parent = nullptr) : QObject(parent) {}
+    static TestAttachedProperties *qmlAttachedProperties(QObject *obj)
+    {
+        return new TestAttachedProperties(obj);
+    }
+};
+
+class TestAttachableB : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(TestAttachedProperties)
+public:
+    explicit TestAttachableB(QObject *parent = nullptr) : QObject(parent) {}
+    static TestAttachedProperties *qmlAttachedProperties(QObject *obj)
+    {
+        return new TestAttachedProperties(obj);
+    }
+};
+
+class TestAttachableC : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(TestAttachedProperties)
+public:
+    explicit TestAttachableC(QObject *parent = nullptr) : QObject(parent) {}
+    static TestAttachedProperties *qmlAttachedProperties(QObject *obj)
+    {
+        return new TestAttachedProperties(obj);
+    }
+};
+
 class tst_qmldiskcache: public QObject
 {
     Q_OBJECT
@@ -47,6 +107,9 @@ private slots:
     void inlineComponentDoesNotCauseConstantInvalidation_data();
     void inlineComponentDoesNotCauseConstantInvalidation();
     void selfReferencingSignalParameter();
+    void compositeAttachedPropertyChecksum();
+    void compositeAttachedCycleDirectAB();
+    void compositeAttachedCycleIndirectABC();
 
 private:
     QDir m_qmlCacheDirectory;
@@ -1421,6 +1484,167 @@ void tst_qmldiskcache::selfReferencingSignalParameter()
         QDateTime newCacheTimeStamp = QFileInfo(cacheFilePath).lastModified();
         QCOMPARE(newCacheTimeStamp, initialCacheTimeStamp);
     }
+}
+
+void tst_qmldiskcache::compositeAttachedPropertyChecksum()
+{
+    // Verifies that using attached properties via a composite type
+    // derived from an attaching C++ type produces a valid dependency
+    // checksum so the .qmlc cache is not needlessly invalidated:
+    //
+    //   1. TestAttachable is a C++ type with QML_ATTACHED.
+    //   2. CompositeAttachable.qml extends TestAttachable (composite type).
+    //   3. test.qml uses "CompositeAttachable.value: 42" (attached property).
+    //
+    // Previously, the composite type's ResolvedTypeReference had no
+    // compilation unit (needsCreation was false), causing addToHash()
+    // to fail and the dependency checksum to be all-zeros. On reload,
+    // verifyChecksum() would fail and the cache would be rewritten
+    // every time.
+
+    qmlRegisterType<TestAttachable>("TestModule", 1, 0, "TestAttachable");
+
+    QQmlEngine engine;
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    const QString compositeFilePath =
+            testCompiler.tempDir.path() + "/CompositeAttachable.qml";
+
+    {
+        QFile f(compositeFilePath);
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\nTestAttachable {}\n");
+    }
+
+    const QByteArray mainContents =
+            "import QtQml 2.0\n"
+            "QtObject {\n"
+            "    CompositeAttachable.value: 42\n"
+            "}\n";
+
+    testCompiler.clearCache();
+    QVERIFY2(testCompiler.writeTestFile(mainContents),
+             qPrintable(testCompiler.lastErrorString));
+
+    // First load: compiles from source and creates .qmlc cache.
+    QVERIFY2(testCompiler.loadTestFile(),
+             qPrintable(testCompiler.lastErrorString));
+
+    // Second load: must use the cached .qmlc without rewriting it.
+    // This fails without the fix because the dependency checksum
+    // would mismatch (empty vs all-zeros).
+    const QDateTime cacheModified =
+            QFileInfo(testCompiler.cacheFilePath).lastModified();
+
+    QVERIFY2(testCompiler.loadTestFile(),
+             qPrintable(testCompiler.lastErrorString));
+
+    QCOMPARE(QFileInfo(testCompiler.cacheFilePath).lastModified(),
+             cacheModified);
+}
+
+void tst_qmldiskcache::compositeAttachedCycleDirectAB()
+{
+    // Direct cycle: two composite types, each derived from a different
+    // attaching C++ base, each using the other's attached properties.
+    //
+    //   CompositeA.qml extends TestAttachable  and uses "CompositeB.value: 1"
+    //   CompositeB.qml extends TestAttachableB and uses "CompositeA.value: 2"
+    //
+    // The type loader must detect the circular dependency (A waits on B,
+    // B waits on A) and report an error.
+
+    qmlRegisterType<TestAttachable>("TestModule", 1, 0, "TestAttachable");
+    qmlRegisterType<TestAttachableB>("TestModule", 1, 0, "TestAttachableB");
+
+    QQmlEngine engine;
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    {
+        QFile f(testCompiler.tempDir.path() + "/CompositeA.qml");
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\n"
+                "TestAttachable {\n"
+                "    CompositeB.value: 1\n"
+                "}\n");
+    }
+    {
+        QFile f(testCompiler.tempDir.path() + "/CompositeB.qml");
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\n"
+                "TestAttachableB {\n"
+                "    CompositeA.value: 2\n"
+                "}\n");
+    }
+
+    QSKIP("Loading dependency cycles does not fail cleanly on 6.11");
+
+    // Load CompositeA — it depends on CompositeB and vice versa.
+    CleanlyLoadingComponent component(
+            &engine, testCompiler.tempDir.path() + "/CompositeA.qml");
+    QVERIFY(component.isError());
+    QVERIFY2(component.errorString().contains(QLatin1String("Cyclic dependency")),
+             qPrintable(component.errorString()));
+}
+
+void tst_qmldiskcache::compositeAttachedCycleIndirectABC()
+{
+    // Indirect cycle through an intermediate type:
+    //
+    //   CompositeA.qml extends TestAttachable  and uses "CompositeB.value: 1"
+    //   CompositeB.qml extends TestAttachableB and uses "CompositeC.value: 2"
+    //   CompositeC.qml extends TestAttachableC and uses "CompositeA.value: 3"
+    //
+    // The type loader currently only detects direct A↔B cycles in
+    // addDependency(). Indirect cycles (A→B→C→A) are not detected
+    // and cause all three types to wait on each other indefinitely.
+    // This test verifies that the cycle is detected; until the type
+    // loader gains transitive cycle detection this test is expected
+    // to fail.
+
+    QSKIP("Type loader does not detect indirect dependency cycles yet (only direct A<->B).");
+
+    qmlRegisterType<TestAttachable>("TestModule", 1, 0, "TestAttachable");
+    qmlRegisterType<TestAttachableB>("TestModule", 1, 0, "TestAttachableB");
+    qmlRegisterType<TestAttachableC>("TestModule", 1, 0, "TestAttachableC");
+
+    QQmlEngine engine;
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    {
+        QFile f(testCompiler.tempDir.path() + "/CompositeA.qml");
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\n"
+                "TestAttachable {\n"
+                "    CompositeB.value: 1\n"
+                "}\n");
+    }
+    {
+        QFile f(testCompiler.tempDir.path() + "/CompositeB.qml");
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\n"
+                "TestAttachableB {\n"
+                "    CompositeC.value: 2\n"
+                "}\n");
+    }
+    {
+        QFile f(testCompiler.tempDir.path() + "/CompositeC.qml");
+        QVERIFY(f.open(QIODevice::WriteOnly));
+        f.write("import TestModule 1.0\n"
+                "TestAttachableC {\n"
+                "    CompositeA.value: 3\n"
+                "}\n");
+    }
+
+    // Load CompositeA — it depends on B, B on C, C on A.
+    CleanlyLoadingComponent component(
+            &engine, testCompiler.tempDir.path() + "/CompositeA.qml");
+    QVERIFY(component.isError());
+    QVERIFY2(component.errorString().contains(QLatin1String("Cyclic dependency")),
+             qPrintable(component.errorString()));
 }
 
 QTEST_MAIN(tst_qmldiskcache)

@@ -41,9 +41,12 @@ public:
     QQmlType type() const { return m_type; }
     void setType(QQmlType type)  {  m_type = std::move(type); }
 
-    // The compilation unit is only stored for type references we need to create objects from.
-    // For everything else the QQmlType and QQmlPropertyCache are enough.
-    // Furthermore, if the reference points to a type from the same compilation unit, it also won't
+    // The compilation unit is stored for all composite type references that aren't
+    // self-references. It is needed both for object creation and for dependency
+    // checksum computation. Cyclic references between compilation units cannot
+    // occur because the type loader detects circular dependencies at resolution
+    // time, before buildTypeResolutionCaches runs.
+    // If the reference points to a type from the same compilation unit, it won't
     // hold a compilation unit since the object creator can just use the one it has already.
     QQmlRefPointer<QV4::CompiledData::CompilationUnit> compilationUnit()
     {
