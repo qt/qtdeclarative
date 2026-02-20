@@ -339,7 +339,7 @@ Q_SIGNALS:
     void strokeStyleChanged();
     void dashOffsetChanged();
     void dashPatternChanged();
-    void fillGradientChanged();
+    Q_REVISION(6, 11) void fillGradientChanged();
 
     Q_REVISION(6, 7) void pathHintsChanged();
     Q_REVISION(6, 8) void fillTransformChanged();
