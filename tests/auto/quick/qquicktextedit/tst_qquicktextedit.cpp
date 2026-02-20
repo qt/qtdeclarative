@@ -247,6 +247,9 @@ private slots:
     void textObjectRespectsDpr_data();
     void textObjectRespectsDpr();
 
+    void textObjectBaselineAlignment();
+    void textObjectBaselineVsBottomAlignment();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -7140,6 +7143,177 @@ void tst_qquicktextedit::textObjectRespectsDpr()
 
     QCOMPARE(customTextObject.drawnDpr, devicePixelRatio);
     QCOMPARE(customTextObject.drawnRect.size(), customTextObject.intrinsicSize(textDocument, 0, {}));
+}
+
+class ColoredTextObject : public QObject, public QTextObjectInterface
+{
+    Q_OBJECT
+    Q_INTERFACES(QTextObjectInterface)
+
+public:
+    using QObject::QObject;
+
+    QSizeF intrinsicSize(QTextDocument *, int, const QTextFormat &) override
+    {
+        return {20, 20};
+    }
+
+    void drawObject(QPainter *painter, const QRectF &rect, QTextDocument *,
+                    int, const QTextFormat &) override
+    {
+        painter->fillRect(rect, Qt::red);
+    }
+};
+
+static int findFirstRedPixelY(const QImage &img, int startY, int endY)
+{
+    for (int y = startY; y < endY; ++y) {
+        for (int x = 0; x < img.width(); ++x) {
+            const QColor c = img.pixelColor(x, y);
+            if (c.red() > 200 && c.green() < 50 && c.blue() < 50)
+                return y;
+        }
+    }
+    return -1;
+}
+
+void tst_qquicktextedit::textObjectBaselineAlignment()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("textObjectBaselineAlignment.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    auto *baselineText = window->rootObject()->findChild<QQuickTextEdit *>("baselineText");
+    auto *bottomText = window->rootObject()->findChild<QQuickTextEdit *>("bottomText");
+    auto *topText = window->rootObject()->findChild<QQuickTextEdit *>("topText");
+    QVERIFY(baselineText);
+    QVERIFY(bottomText);
+    QVERIFY(topText);
+
+    auto insertObject = [](QQuickTextEdit *textEdit, QTextCharFormat::VerticalAlignment alignment,
+                           ColoredTextObject *obj) {
+        auto *textDocument = textEdit->textDocument()->textDocument();
+        auto *documentLayout = textDocument->documentLayout();
+
+        documentLayout->registerHandler(QTextCharFormat::UserObject, obj);
+
+        QTextCursor cursor(textDocument);
+        QTextCharFormat format;
+        format.setObjectType(QTextCharFormat::UserObject);
+        format.setVerticalAlignment(alignment);
+        cursor.insertText(QString(QChar::ObjectReplacementCharacter), format);
+
+        textEdit->invalidate();
+    };
+
+    const qreal dpr = window->devicePixelRatio();
+    const int regionHeight = int(100 * dpr);
+
+    ColoredTextObject baselineObj, bottomObj, topObj;
+    insertObject(baselineText, QTextCharFormat::AlignBaseline, &baselineObj);
+    insertObject(bottomText, QTextCharFormat::AlignBottom, &bottomObj);
+    insertObject(topText, QTextCharFormat::AlignTop, &topObj);
+
+    // Wait for all objects to be rendered
+    QImage grab;
+    QTRY_VERIFY_WITH_TIMEOUT([&]() {
+        grab = window->grabWindow();
+        return findFirstRedPixelY(grab, 0, regionHeight) >= 0
+            && findFirstRedPixelY(grab, regionHeight, 2 * regionHeight) >= 0
+            && findFirstRedPixelY(grab, 2 * regionHeight, 3 * regionHeight) >= 0;
+    }(), 5000);
+
+    // Find Y position of the red object relative to each TextEdit's region
+    const int baselineY = findFirstRedPixelY(grab, 0, regionHeight);
+    const int bottomY = findFirstRedPixelY(grab, regionHeight, 2 * regionHeight) - regionHeight;
+    const int topY = findFirstRedPixelY(grab, 2 * regionHeight, 3 * regionHeight) - 2 * regionHeight;
+
+    QVERIFY2(baselineY >= 0, "AlignBaseline object not found in grab");
+    QVERIFY2(bottomY >= 0, "AlignBottom object not found in grab");
+    QVERIFY2(topY >= 0, "AlignTop object not found in grab");
+
+    // The fix: AlignBaseline should render at the same position as AlignBottom
+    // With a single font size, font descent == line descent,
+    // so AlignBaseline and AlignBottom produce the same position
+    QCOMPARE(baselineY, bottomY);
+
+    // Sanity check: AlignTop should differ from AlignBottom/AlignBaseline
+    QVERIFY2(topY != bottomY, "AlignTop should differ from AlignBottom");
+}
+
+void tst_qquicktextedit::textObjectBaselineVsBottomAlignment()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("textObjectMixedFontAlignment.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    auto *baselineText = window->rootObject()->findChild<QQuickTextEdit *>("baselineText");
+    auto *bottomText = window->rootObject()->findChild<QQuickTextEdit *>("bottomText");
+    QVERIFY(baselineText);
+    QVERIFY(bottomText);
+
+    // Insert inline objects with a small font (pixelSize 12) into text items
+    // that use a large font (pixelSize 50). This makes line.descent() (from
+    // the 50px text) much larger than QFontMetrics(format.font()).descent()
+    // (from the 12px object format), so AlignBaseline and AlignBottom must
+    // produce different Y positions.
+    auto insertObject = [](QQuickTextEdit *textEdit, QTextCharFormat::VerticalAlignment alignment,
+                           ColoredTextObject *obj) {
+        auto *textDocument = textEdit->textDocument()->textDocument();
+        auto *documentLayout = textDocument->documentLayout();
+
+        documentLayout->registerHandler(QTextCharFormat::UserObject, obj);
+
+        QTextCursor cursor(textDocument);
+        QTextCharFormat format;
+        format.setObjectType(QTextCharFormat::UserObject);
+        format.setVerticalAlignment(alignment);
+        QFont f;
+        f.setPixelSize(12);
+        format.setFont(f);
+        cursor.insertText(QString(QChar::ObjectReplacementCharacter), format);
+
+        textEdit->invalidate();
+    };
+
+    const qreal dpr = window->devicePixelRatio();
+    const int regionHeight = int(100 * dpr);
+
+    ColoredTextObject baselineObj, bottomObj;
+    insertObject(baselineText, QTextCharFormat::AlignBaseline, &baselineObj);
+    insertObject(bottomText, QTextCharFormat::AlignBottom, &bottomObj);
+
+    QImage grab;
+    QTRY_VERIFY_WITH_TIMEOUT([&]() {
+        grab = window->grabWindow();
+        return findFirstRedPixelY(grab, 0, regionHeight) >= 0
+            && findFirstRedPixelY(grab, regionHeight, 2 * regionHeight) >= 0;
+    }(), 5000);
+
+    const int baselineY = findFirstRedPixelY(grab, 0, regionHeight);
+    const int bottomY = findFirstRedPixelY(grab, regionHeight, 2 * regionHeight) - regionHeight;
+
+    QVERIFY2(baselineY >= 0, "AlignBaseline object not found in grab");
+    QVERIFY2(bottomY >= 0, "AlignBottom object not found in grab");
+
+    // With mixed font sizes, AlignBaseline (uses font descent) and
+    // AlignBottom (uses line descent) must differ
+    QVERIFY2(baselineY != bottomY,
+             qPrintable(QString("AlignBaseline (%1) and AlignBottom (%2) should differ "
+                                "with mixed font sizes").arg(baselineY).arg(bottomY)));
+
+    // AlignBottom should be lower (larger Y) since line.descent() > font descent
+    QVERIFY2(bottomY > baselineY,
+             qPrintable(QString("AlignBottom (%1) should be below AlignBaseline (%2)")
+                        .arg(bottomY).arg(baselineY)));
 }
 
 QT_END_NAMESPACE
