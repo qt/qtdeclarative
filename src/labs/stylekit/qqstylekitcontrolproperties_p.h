@@ -560,8 +560,8 @@ class QQStyleKitControlProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(QQStyleKitIndicatorWithSubTypes *indicator READ indicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQStyleKitTextProperties *text READ text NOTIFY textChanged FINAL)
     Q_PROPERTY(QQuickTransition *transition READ transition WRITE setTransition NOTIFY transitionChanged FINAL)
-    QML_UNCREATABLE("This component acts as an interface, and cannot be instantiated")
-    QML_NAMED_ELEMENT(ControlStyleProperties)
+    // This type is merged with ControlState, from a QML API point of view
+    QML_ANONYMOUS
 
 public:
     QQStyleKitControlProperties(QQSK::PropertyGroup group, QObject *parent = nullptr);
