@@ -195,6 +195,8 @@ void QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveG
     }
 }
 
+enum class DeepAliasResult { NoProperty, CannotAppend, Success };
+
 template<>
 typename QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliasesInObject(
@@ -208,6 +210,23 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
         return appendAliasToPropertyCache(
                 &component, alias, objectIndex, aliasIndex++, encodedIndex, aliasCacheCreator,
                 error);
+    };
+
+    const auto handleDeepAlias = [&](
+        const QV4::CompiledData::Alias *alias, const QQmlPropertyCache::ConstPtr &propertyCache,
+        int coreIndex, QStringView subProperty)
+    {
+        const QQmlPropertyResolver resolver = QQmlPropertyResolver(propertyCache);
+        const QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
+        if (!actualProperty)
+            return DeepAliasResult::NoProperty;
+
+        if (doAppendAlias(
+                alias, QQmlPropertyIndex(coreIndex, actualProperty->coreIndex()).toEncoded())) {
+            return DeepAliasResult::Success;
+        }
+
+        return DeepAliasResult::CannotAppend;
     };
 
     for (auto alias = obj->aliasesBegin(), end = obj->aliasesEnd(); alias != end; ++alias) {
@@ -275,28 +294,40 @@ QQmlComponentAndAliasResolver<QV4::CompiledData::CompilationUnit>::resolveAliase
 
         Q_ASSERT(subProperty.at(0).isLower());
 
-        bool isDeepAlias = false;
+        bool foundDeepAliasInBindings = false;
         for (auto it = targetObject->bindingsBegin(); it != targetObject->bindingsEnd(); ++it) {
             if (m_compiler->stringAt(it->propertyNameIndex) != property)
                 continue;
 
-            const QQmlPropertyResolver resolver
-                    = QQmlPropertyResolver(m_propertyCaches->at(it->value.objectIndex));
-            const QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
-            if (!actualProperty)
+            switch (handleDeepAlias(
+                    alias, m_propertyCaches->at(it->value.objectIndex), coreIndex, subProperty)) {
+            case DeepAliasResult::NoProperty:
                 continue;
-
-            if (doAppendAlias(
-                        alias, QQmlPropertyIndex(coreIndex, actualProperty->coreIndex()).toEncoded())) {
-                isDeepAlias = true;
+            case DeepAliasResult::CannotAppend:
+                return SomeAliasesResolved;
+            case DeepAliasResult::Success:
+                foundDeepAliasInBindings = true;
                 break;
             }
 
-            return SomeAliasesResolved;
+            break;
         }
 
-        if (!isDeepAlias)
+        if (foundDeepAliasInBindings)
+            continue;
+
+        const QQmlPropertyCache::ConstPtr typeCache
+                = QQmlMetaType::propertyCacheForType(targetProperty->propType());
+        if (!typeCache)
             return SomeAliasesResolved;
+
+        switch (handleDeepAlias(alias, typeCache, coreIndex, subProperty)) {
+        case DeepAliasResult::NoProperty:
+        case DeepAliasResult::CannotAppend:
+            return SomeAliasesResolved;
+        case DeepAliasResult::Success:
+            break;
+        }
     }
 
     return AllAliasesResolved;
