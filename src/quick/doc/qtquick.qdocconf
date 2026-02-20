@@ -83,10 +83,11 @@ depends += \
     ../../quickcontrols/doc/src/includes/ \
     ../../qmlmodels/doc/src/includes/
 
-# both have their own documentation project
+# the following projects have their own documentation project
 excludedirs += \
     ../../labs/platform \
-    ../../labs/models
+    ../../labs/models \
+    ../../labs/stylekit
 
 exampledirs += \
     ../../../examples/quick \
