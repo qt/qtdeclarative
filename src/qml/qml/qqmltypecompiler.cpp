@@ -829,6 +829,158 @@ void QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveGeneralizedGroupPro
         m_propertyCaches->set(binding->value.objectIndex, m_propertyCaches->at(targetObjectIndex));
 }
 
+/*!
+    \internal
+
+    Reorders the alias data within the linked list of \a obj so that
+    aliases targeting other aliases on the same object come after their
+    targets. This ensures that dependencies are resolved and appended to
+    the property cache first, which is necessary because the runtime
+    assumes that the property cache position matches the alias table index.
+
+    Only considers same-object dependencies (where the alias's target id
+    resolves to \a objectIndex). Cross-object dependencies are handled by
+    the multi-pass resolution in resolveAliases().
+*/
+static bool sortAliasDependencies(
+        QQmlTypeCompiler *compiler, QmlIR::Object *obj, int objectIndex,
+        const QMap<int, int> &idToObjectIndex, QQmlError *error)
+{
+    using AliasArray = QVarLengthArray<QmlIR::Alias *, 8>;
+
+    AliasArray ordered;
+    ordered.reserve(obj->aliasCount());
+
+    // Collect aliases as nodes in a graph. Non-local ones are already ordered.
+    AliasArray nodes;
+    for (QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+        const int targetObjIdx = idToObjectIndex.value(a->idIndex(), -1);
+        if (targetObjIdx == objectIndex)
+            nodes.append(a);
+        else
+            ordered.append(a);
+    }
+
+    // Nothing to sort here.
+    if (nodes.isEmpty())
+        return true;
+
+    // Collect dependencies as edges between nodes
+    QVarLengthArray<qsizetype, 8> edges(nodes.size(), -1);
+    for (qsizetype i = 0, end = nodes.size(); i < end; ++i) {
+        const QStringView propValue = compiler->stringAt(nodes[i]->propertyNameIndex);
+        const int dotIdx = propValue.indexOf(QLatin1Char('.'));
+        const QStringView targetName = dotIdx != -1 ? propValue.left(dotIdx) : propValue;
+        if (targetName.isEmpty())
+            continue;
+
+        for (qsizetype j = 0; j < end; ++j) {
+            if (j != i && compiler->stringAt(nodes[j]->nameIndex()) == targetName) {
+                edges[i] = j;
+                break;
+            }
+        }
+    }
+
+    // Simple DFS-based topological sort
+    for (qsizetype i = 0, end = nodes.size(); i < end; ++i) {
+        // Skip already inserted nodes
+        if (nodes[i] == nullptr)
+            continue;
+
+        // Follow the dependency chain to find the root.
+        QVarLengthArray<qsizetype, 8> chain;
+        for (qsizetype j = edges[i]; j != -1 && nodes[j]; j = edges[j]) {
+            if (!chain.contains(j)) {
+                chain.append(j);
+                continue;
+            }
+
+            *error = qQmlCompileError(
+                    nodes[j]->location,
+                    QQmlComponentAndAliasResolverBase::tr("Cyclic alias"));
+            return false;
+        }
+
+        // Emit in reverse (dependency first)
+        for (qsizetype k = chain.size() - 1; k >= 0; --k)
+            ordered.append(std::exchange(nodes[chain[k]], nullptr));
+        ordered.append(std::exchange(nodes[i], nullptr));
+    }
+
+    // Apply the ordering in the IR
+    obj->setFirstAlias(ordered[0]);
+    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i)
+        ordered[i]->next = ordered[i + 1];
+    ordered.last()->next = nullptr;
+
+    return true;
+}
+
+/*!
+    \internal
+
+    Attempts to resolve a "deep alias" — an alias whose sub-property path
+    goes through an inline component binding or through another alias.
+    For example: \c{alias foo: target.groupProp.innerProp}
+
+    Searches the target object's bindings and aliases for \a property, then
+    looks up \a subProperty on the bound/aliased object's property cache.
+
+    On success, updates \a propIdx with the resolved value-type index and
+    returns \c true.
+*/
+static bool resolveDeepAlias(
+        QQmlTypeCompiler *compiler, const QmlIR::Object *targetObject,
+        const QmlIR::Object &component, QStringView property, QStringView subProperty,
+        QQmlPropertyIndex &propIdx, const QQmlPropertyCacheVector *propertyCaches,
+        const QMap<int, int> &idToObjectIndex,
+        const QSet<const QV4::CompiledData::Alias *> &resolvedAliases)
+{
+    for (auto it = targetObject->bindingsBegin(), end = targetObject->bindingsEnd();
+            it != end; ++it) {
+        auto binding = *it;
+        if (compiler->stringAt(binding.propertyNameIndex) != property)
+            continue;
+        const auto &cache = propertyCaches->at(binding.value.objectIndex);
+        if (!cache)
+            continue;
+        QQmlPropertyResolver resolver(cache);
+        const QQmlPropertyData *pd = resolver.property(subProperty.toString());
+        if (!pd)
+            continue;
+        propIdx = QQmlPropertyIndex(propIdx.coreIndex(), pd->coreIndex());
+        return true;
+    }
+
+    for (auto it = targetObject->aliasesBegin(), end = targetObject->aliasesEnd();
+            it != end; ++it) {
+        auto innerAlias = *it;
+        if (compiler->stringAt(innerAlias.nameIndex()) != property)
+            continue;
+        // After resolution, idIndex() contains the runtime object id
+        // (set by setTargetObjectId), not the string table index.
+        int innerObjectIndex;
+        if (resolvedAliases.contains(&(*it)))
+            innerObjectIndex = objectForId(compiler, component, innerAlias.targetObjectId());
+        else
+            innerObjectIndex = idToObjectIndex.value(innerAlias.idIndex(), -1);
+        if (innerObjectIndex == -1)
+            continue;
+        const auto &cache = propertyCaches->at(innerObjectIndex);
+        if (!cache)
+            continue;
+        QQmlPropertyResolver resolver(cache);
+        const QQmlPropertyData *pd = resolver.property(subProperty.toString());
+        if (!pd)
+            continue;
+        propIdx = QQmlPropertyIndex(propIdx.coreIndex(), pd->coreIndex());
+        return true;
+    }
+
+    return false;
+}
+
 template<>
 typename QQmlComponentAndAliasResolver<QQmlTypeCompiler>::AliasResolutionResult
 QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
@@ -842,9 +994,15 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
 
     Q_UNUSED(component);
 
-    const QmlIR::Object * const obj = m_compiler->objectAt(objectIndex);
+    QmlIR::Object *obj = m_compiler->objectAt(objectIndex);
     if (!obj->aliasCount())
         return AllAliasesResolved;
+
+    // Reorder aliases so that same-object dependencies come before their
+    // dependents. This ensures the property cache ordering matches the
+    // alias table, which the runtime relies on.
+    if (!sortAliasDependencies(m_compiler, obj, objectIndex, m_idToObjectIndex, error))
+        return NoAliasResolved;
 
     int aliasIndex = 0;
     int numSkippedAliases = 0;
@@ -959,18 +1117,11 @@ QQmlComponentAndAliasResolver<QQmlTypeCompiler>::resolveAliasesInObject(
                     // could be a deep alias
                     bool isDeepAlias = subProperty.at(0).isLower();
                     if (isDeepAlias) {
-                        isDeepAlias = false;
-                        for (auto it = targetObject->bindingsBegin(); it != targetObject->bindingsEnd(); ++it) {
-                            auto binding = *it;
-                            if (m_compiler->stringAt(binding.propertyNameIndex) == property) {
-                                resolver = QQmlPropertyResolver(m_propertyCaches->at(binding.value.objectIndex));
-                                const QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
-                                if (actualProperty) {
-                                    propIdx = QQmlPropertyIndex(propIdx.coreIndex(), actualProperty->coreIndex());
-                                    isDeepAlias = true;
-                                }
-                            }
-                        }
+                        isDeepAlias = resolveDeepAlias(
+                                m_compiler, targetObject, component,
+                                property, subProperty,
+                                propIdx, m_propertyCaches, m_idToObjectIndex,
+                                resolvedAliases);
                     }
                     if (!isDeepAlias) {
                         *error = qQmlCompileError(

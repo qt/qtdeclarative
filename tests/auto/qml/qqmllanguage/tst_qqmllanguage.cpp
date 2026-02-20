@@ -522,6 +522,7 @@ private slots:
     void argumentsUsageInBindings();
 
     void aliasToLargeRevision();
+    void aliasToPropertyOfAlias();
     void propertyCycle();
 
     void urlWithFragment();
@@ -857,6 +858,7 @@ void tst_qqmllanguage::errors_data()
 
     QTest::newRow("assignComponentToWrongType") << "assignComponentToWrongType.qml" << "assignComponentToWrongType.errors.txt" << false;
     QTest::newRow("cyclicAlias") << "cyclicAlias.qml" << "cyclicAlias.errors.txt" << false;
+    QTest::newRow("cyclicSameObjectAlias") << "cyclicSameObjectAlias.qml" << "cyclicSameObjectAlias.errors.txt" << false;
 
     QTest::newRow("fuzzed.1") << "fuzzed.1.qml" << "fuzzed.1.errors.txt" << false;
     QTest::newRow("fuzzed.2") << "fuzzed.2.qml" << "fuzzed.2.errors.txt" << false;
@@ -9906,6 +9908,19 @@ void tst_qqmllanguage::aliasToLargeRevision()
     QCOMPARE(o->property("bb"), 14);
     QCOMPARE(o->property("cc"), 15);
     QCOMPARE(o->property("dd"), 16);
+}
+
+void tst_qqmllanguage::aliasToPropertyOfAlias()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("aliasToPropertyOfAlias.qml"));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("bar").toString(), "bar"_L1);
+
 }
 
 void tst_qqmllanguage::urlWithFragment()
