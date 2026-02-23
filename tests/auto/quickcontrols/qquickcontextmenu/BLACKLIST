@@ -4,3 +4,7 @@ opensuse-leap
 
 [textControlsMenuKey]
 * # QTBUG-143701
+
+[textEditingContextMenuUndoRedo]
+wayland
+

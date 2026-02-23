@@ -2,5 +2,8 @@
 [keys]
 android
 
-[hovedAfterClosingWithEscape]
+[hoverAfterClosingWithEscape]
+wayland
+
+[closeByClickingOutside]
 wayland

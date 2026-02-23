@@ -8,3 +8,6 @@ macos
 
 [contextMenuKeyboard]
 wayland
+
+[resetCurrentIndexUponPopup]
+wayland

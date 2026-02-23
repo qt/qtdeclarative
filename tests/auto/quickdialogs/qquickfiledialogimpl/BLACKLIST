@@ -5,3 +5,9 @@
 # QTBUG-92585
 [fileMode:OpenFiles]
 *
+
+[itemsDisabledWhenNecessary]
+wayland
+
+[fileMode]
+wayland
