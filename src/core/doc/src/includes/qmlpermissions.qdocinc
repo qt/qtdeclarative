@@ -26,9 +26,9 @@
 //! [status-docs]
 
 //! [request-docs]
-    \qmlmethod \1::request()
+    \qmlmethod void \1::request()
 
     Requests the permission with its current properties.
 
-    \sa QCoreApplication::requestPermission
+    \sa QCoreApplication::requestPermission()
 //! [request-docs]
