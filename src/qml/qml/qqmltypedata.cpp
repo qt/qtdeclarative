@@ -321,6 +321,7 @@ QQmlError QQmlTypeData::createTypeAndPropertyCaches(
     m_compiledData->typeNameCache = typeNameCache;
     m_compiledData->resolvedTypes = resolvedTypeCache;
     m_compiledData->inlineComponentData = m_inlineComponentData;
+    m_compiledData->qmlType = m_qmlType;
 
     QQmlPendingGroupPropertyBindings pendingGroupPropertyBindings;
 

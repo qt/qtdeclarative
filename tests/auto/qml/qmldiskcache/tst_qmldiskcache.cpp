@@ -46,6 +46,7 @@ private slots:
 
     void inlineComponentDoesNotCauseConstantInvalidation_data();
     void inlineComponentDoesNotCauseConstantInvalidation();
+    void selfReferencingSignalParameter();
 
 private:
     QDir m_qmlCacheDirectory;
@@ -1362,6 +1363,64 @@ void tst_qmldiskcache::inlineComponentDoesNotCauseConstantInvalidation()
     const quintptr data2 = testCompiler.unitData();
     QVERIFY(data2);
     QVERIFY(data1 != data2);
+}
+
+void tst_qmldiskcache::selfReferencingSignalParameter()
+{
+    QQmlEngine engine;
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    // Write a QML file that uses itself as a signal parameter type
+    const QString testFilePath = tempDir.path() + "/SelfReference.qml";
+    {
+        QFile f(testFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml\n"
+                                   "QtObject {\n"
+                                   "    property SelfReference self\n"
+                                   "    signal blah(selfParam: SelfReference)\n"
+                                   "    function returnSelf() : SelfReference { return this; }\n"
+                                   "}"));
+    }
+
+    const QString mainFilePath = tempDir.path() + "/main.qml";
+    {
+        QFile f(mainFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml\nSelfReference {}"));
+    }
+
+    // First load: compiles and creates cache
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(mainFilePath));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+
+    const QString cacheFilePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(testFilePath));
+    QVERIFY(QFile::exists(cacheFilePath));
+    QDateTime initialCacheTimeStamp = QFileInfo(cacheFilePath).lastModified();
+
+    engine.clearComponentCache();
+    waitForFileSystem();
+
+    // Second load: should use the cache without invalidation
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(mainFilePath));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+
+    {
+        QVERIFY(QFile::exists(cacheFilePath));
+        QDateTime newCacheTimeStamp = QFileInfo(cacheFilePath).lastModified();
+        QCOMPARE(newCacheTimeStamp, initialCacheTimeStamp);
+    }
 }
 
 QTEST_MAIN(tst_qmldiskcache)
