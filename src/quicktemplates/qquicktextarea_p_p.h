@@ -117,12 +117,10 @@ public:
         qreal rightInset = 0;
         qreal bottomInset = 0;
         QFont requestedFont;
-        QPalette requestedPalette;
     };
     QLazilyAllocated<ExtraData> extra;
 
     bool resizingBackground = false;
-    QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
     QString placeholder;
     QColor placeholderColor;

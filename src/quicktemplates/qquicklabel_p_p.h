@@ -101,7 +101,6 @@ public:
     QLazilyAllocated<ExtraData> extra;
 
     bool resizingBackground = false;
-    QPalette resolvedPalette;
     QQuickDeferredPointer<QQuickItem> background;
 };
 
