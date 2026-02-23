@@ -39,7 +39,8 @@ depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols
 
 exampledirs += .. \
                snippets \
-               ../../../tests/auto/qml/qqmltreemodel/data
+               ../../../tests/auto/qml/qqmltreemodel/data \
+               ../../../tests/manual/tableview/tablemodel/json
 
 
 imagedirs += images

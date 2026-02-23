@@ -128,6 +128,33 @@ Q_STATIC_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
     \l [QtQuickControls2]{TextField}, and so that delegate is declared
     last as a fallback.
 
+    \section1 Using the TableModel with External JSON Sources
+
+    If the structure of the data in a JSON object matches the structure defined
+    by the TableModel, it can be assigned directly to the model using the rows
+    property. All rows in the data must conform to the columns defined by the model.
+
+    For example, if the model is defined as:
+
+    \snippet main.qml model
+
+    The source has the required data but not necessarily in the
+    required structure, you can download and parse it into a form that
+    conforms to the structure that the model defines and assign the result directly.
+
+    \snippet main.qml parse
+
+    and the result can be assigned directly
+
+    \snippet main.qml assign
+
+    You can also provide the JSON object by importing a JavaScript file as a
+    module. See the documentation for \l TreeModel for an example on how to do this.
+
+    \warning Ensure that the JSON data comes from a trusted source. Since the
+    model dinamically populates its rows based on the input, malformed or
+    untrusted JSON can lead to unexpected behavior or performance issues.
+
     \sa TableModelColumn, TableView, QAbstractTableModel
 */
 
