@@ -15,6 +15,7 @@ ApplicationWindow {
     height: 300
     visible: true
 
+//![parse]
     function requestJson() {
         let doc = new XMLHttpRequest()
         doc.onreadystatechange = function() {
@@ -34,8 +35,11 @@ ApplicationWindow {
         doc.open("GET", "https://api.jolpi.ca/ergast/f1/2005/1/results.json")
         doc.send()
     }
+//![parse]
 
+//![assign]
     Component.onCompleted: requestJson()
+//![assign]
     // Same as the data we get from ergast. Use it while developing
     // to avoid flooding the server with requests.
     // Component.onCompleted: tableView.model.rows = CachedJsonData.drivers
@@ -58,6 +62,7 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
+//![model]
             model: TableModel {
                 TableModelColumn { display: "driverId" }
                 TableModelColumn { display: "code" }
@@ -67,6 +72,7 @@ ApplicationWindow {
                 TableModelColumn { display: "dateOfBirth" }
                 TableModelColumn { display: "nationality" }
             }
+//![model]
 
             delegate: TextField {
                 objectName: "tableViewTextFieldDelegate"
