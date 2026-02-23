@@ -249,7 +249,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     setRevision(QTypeRevision::fromEncodedVersion(m.revision()));
 }
 
-Q_LOGGING_CATEGORY(qqmlPropertyCacheAppend, "qt.qml.propertyCache.append")
+Q_LOGGING_CATEGORY(qqmlPropertyCacheAppend, "qt.qml.propertyCache.append", QtWarningMsg)
 
 /*!
     \internal
