@@ -234,6 +234,11 @@ void QSGRhiLayer::clearMainTexture()
     if (tempRt->create()) {
         m_context->currentFrameCommandBuffer()->beginPass(tempRt.get(), Qt::transparent, { 1.0f, 0 });
         m_context->currentFrameCommandBuffer()->endPass();
+        // Keep the objects alive until a later frame, because the current frame
+        // is only going to be submitted (endFrame) by the scenegraph at a
+        // later point.
+        tempRt.release()->deleteLater();
+        tempRp.release()->deleteLater();
     } else {
         qWarning("Failed to clear layer main texture in recursive mode");
     }
