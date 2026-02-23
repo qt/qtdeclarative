@@ -169,6 +169,9 @@ endif()
 set_source_files_properties(SearchField.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "6.10"
 )
+set_source_files_properties(DoubleSpinBox.qml PROPERTIES
+    QT_QML_SOURCE_VERSIONS "6.11"
+)
 
 add_subdirectory(impl)
 
