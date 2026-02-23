@@ -111,6 +111,8 @@ private slots:
     void compositeAttachedCycleDirectAB();
     void compositeAttachedCycleIndirectABC();
 
+    void selfReferenceDoesNotInvalidateCache();
+
 private:
     QDir m_qmlCacheDirectory;
 };
@@ -1645,6 +1647,60 @@ void tst_qmldiskcache::compositeAttachedCycleIndirectABC()
     QVERIFY(component.isError());
     QVERIFY2(component.errorString().contains(QLatin1String("Cyclic dependency")),
              qPrintable(component.errorString()));
+}
+
+// Verify that a self-referencing QML type (a type with a property of its own
+// type) can successfully reuse its disk cache. A self-reference produces a
+// ResolvedTypeReference with neither a valid QQmlType nor a compilationUnit,
+// which causes the dependency hash computation to fail and stores an all-zero
+// dependencyMD5Checksum. On reload the hash computation fails again, returning
+// an empty QByteArray that doesn't match the 16-byte all-zero field, so the
+// cache is always rejected and regenerated.
+void tst_qmldiskcache::selfReferenceDoesNotInvalidateCache()
+{
+    QQmlEngine engine;
+
+    QTemporaryDir tempDir;
+    QVERIFY(tempDir.isValid());
+
+    const QString testFilePath = tempDir.path() + "/SelfRef.qml";
+    {
+        QFile f(testFilePath);
+        QVERIFY2(f.open(QIODevice::WriteOnly), qPrintable(f.errorString()));
+        f.write(QByteArrayLiteral("import QtQml 2.0\n"
+                                  "QtObject {\n"
+                                  "    property SelfRef child: null\n"
+                                  "}"));
+    }
+
+    // First load: compiles from source and writes .qmlc
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+
+    const QString cacheFilePath = QV4::CompiledData::CompilationUnit::localCacheFilePath(
+            QUrl::fromLocalFile(testFilePath));
+    QVERIFY(QFile::exists(cacheFilePath));
+    QDateTime initialCacheTimeStamp = QFileInfo(cacheFilePath).lastModified();
+    engine.clearComponentCache();
+    waitForFileSystem();
+
+    // Second load: should reuse the cached .qmlc without regenerating it.
+    {
+        CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+
+    {
+        QVERIFY(QFile::exists(cacheFilePath));
+        QDateTime newCacheTimeStamp = QFileInfo(cacheFilePath).lastModified();
+        QCOMPARE(newCacheTimeStamp, initialCacheTimeStamp);
+    }
 }
 
 QTEST_MAIN(tst_qmldiskcache)
