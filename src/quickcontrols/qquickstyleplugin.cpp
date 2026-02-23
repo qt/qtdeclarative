@@ -104,14 +104,25 @@ void QQuickStylePlugin::registerTypes(const char *uri)
         qCDebug(lcStylePlugin).nospace() << "this style plugin belongs to the fallback style "
             << QQuickStylePrivate::fallbackStyle() << "; calling initializeTheme()";
     }
-    initializeTheme(theme);
-
-    themeChangeObserver.reset(new QQuickThemeChangeObserver);
-    connect(themeChangeObserver.get(), &QQuickThemeChangeObserver::paletteOrThemeChanged,
-            this, &QQuickStylePlugin::updateTheme);
 
     if (!isPrimaryFallback && !styleName.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << styleName);
+
+    // Create and initialize the theme, and hook it up to palette and theme changes.
+    // We are currently in the QML loader thread, but we have to return with an
+    // initialized theme so that controls get the right default values for
+    // palette and font. So we have to initialize the theme right now, even though
+    // that will access QGuiApplication globals (such as a the QPlatformTheme or
+    // QStyleHints singletons) from the wrong thread. It is ok, as the loader
+    // process is blocking the GUI thread anyway, so there are no concurrent
+    // writes to those singletons.
+    initializeTheme(theme);
+
+    // Updates must however go through the main thread. The Observer moves itself
+    // to the same thread as the QStyleHints instance, which is the main thread.
+    themeChangeObserver.reset(new QQuickThemeChangeObserver);
+    connect(themeChangeObserver.get(), &QQuickThemeChangeObserver::paletteOrThemeChanged,
+            this, &QQuickStylePlugin::updateTheme, Qt::DirectConnection);
 }
 
 void QQuickStylePlugin::unregisterTypes()
