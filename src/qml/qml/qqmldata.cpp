@@ -393,6 +393,7 @@ void QQmlData::removeFromContext()
     nextContextObject = nullptr;
     prevContextObject = nullptr;
     outerContext = nullptr;
+    context = nullptr;
 }
 
 void QQmlData::clearBindings()
@@ -421,6 +422,38 @@ bool QQmlData::clearSignalHandlers()
     }
 
     return true;
+}
+
+void QQmlData::clear()
+{
+    removeFromContext();
+    clearBindings();
+
+    compilationUnit.reset();
+    qDeleteAll(std::exchange(deferredData, {}));
+
+    if (!clearSignalHandlers())
+        qFatal("Can't clear QQmlData from signal handler");
+
+    BindingBitsType *bits = (bindingBitsArraySize == InlineBindingArraySize)
+            ? bindingBitsValue
+            : bindingBits;
+    memset(bits, 0, bindingBitsArraySize * sizeof(BindingBitsType));
+
+    propertyCache.reset();
+    ownContext.reset();
+
+    disconnectNotifiers(DeleteNotifyList::No);
+
+    delete std::exchange(extendedData, nullptr);
+    propertyObservers.clear();
+
+    lineNumber = 0;
+    columnNumber = 0;
+    rootObjectInCreation = false;
+    hasInterceptorMetaObject = false;
+    hasVMEMetaObject = false;
+    cuObjectIndex = -1;
 }
 
 void QQmlData::destroyed(QObject *object)

@@ -9,7 +9,9 @@ qt_internal_add_module(QmlPreviewPrivate
     STATIC
     INTERNAL_MODULE
     SOURCES
+        qqmlpreviewbindingpatchcontext.cpp qqmlpreviewbindingpatchcontext_p.h
         qqmlpreviewdiff.cpp qqmlpreviewdiff_p.h
+        qqmlpreviewobjectpatch.cpp qqmlpreviewobjectpatch_p.h
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::QmlPrivate

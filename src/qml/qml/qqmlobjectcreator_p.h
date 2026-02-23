@@ -202,6 +202,10 @@ public:
         });
     }
 
+    void repopulateBindings(
+            int index, QObject *instance,
+            const QQmlRefPointer<QQmlContextData> &instanceContext, InitFlags flags);
+
 private:
     QQmlObjectCreator(
             const QQmlRefPointer<QQmlContextData> &contextData,

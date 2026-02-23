@@ -275,6 +275,8 @@ public:
     Q_ALWAYS_INLINE static uint offsetForBit(int bit) { return static_cast<uint>(bit) / BitsPerType; }
     Q_ALWAYS_INLINE static BindingBitsType bitFlagForBit(int bit) { return BindingBitsType(1) << (static_cast<uint>(bit) & (BitsPerType - 1)); }
 
+    void clear();
+
 private:
     // For attachedProperties
     mutable QQmlDataExtended *extendedData = nullptr;

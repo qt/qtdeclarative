@@ -106,6 +106,8 @@ public:
     QV4::Function *function() const { return m_v4Function; }
     void setFunction(QV4::Function *f);
 
+    QQmlJavaScriptExpression *nextExpression() const { return m_nextExpression; }
+
     virtual void refresh();
 
     class DeleteWatcher {

@@ -2058,8 +2058,122 @@ QQmlComponent *QQmlObjectCreator::createComponent(
 {
     QQmlComponent *component = new QQmlComponent(engine, compilationUnit, index, parent);
     QQmlComponentPrivate::get(component)->setCreationContext(context);
-    QQmlData::get(component, /*create*/ true);
+    QQmlData *ddata = QQmlData::get(component, /*create*/ true);
+    Q_ASSERT(ddata);
+    ddata->compilationUnit = compilationUnit;
+    ddata->cuObjectIndex = index;
     return component;
+}
+
+/*!
+    \internal
+    Re-populate bindings, functions and child objects on an existing \a instance
+    whose VME metaobject chain has already been (re-)created externally.
+
+    Unlike initializeInstance(), this does not create a new VME — it uses the one
+    already installed on the object. It sets up the context, registers the object
+    by id, installs functions, evaluates bindings (which may create child objects),
+    and connects aliases.
+
+    Used by the QML preview/hot-reload system to rebuild an object's contents
+    after its VME hierarchy has been reconstructed.
+*/
+void QQmlObjectCreator::repopulateBindings(
+        int index, QObject *instance,
+        const QQmlRefPointer<QQmlContextData> &instanceContext, InitFlags flags)
+{
+    phase = QQmlObjectCreator::ObjectsCreated;
+
+    // If the object doesn't exist in the CU, there's nothing to do.
+    if (compilationUnit->objectCount() <= index)
+        return;
+
+    const auto oldContext = std::exchange(context, instanceContext);
+    const auto contextGuard = qScopeGuard([&]() {
+        context = oldContext;
+    });
+
+    auto rootContextGuard = qScopeGuard([&]() {
+        sharedState->rootContext.reset();
+    });
+    if (!sharedState->rootContext)
+        sharedState->rootContext = context;
+    else
+        rootContextGuard.dismiss();
+
+    QV4::Scope scope(engine->handle());
+    auto jsObjectsGuard = qScopeGuard([&]() {
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList();
+    });
+    if (!sharedState->allJavaScriptObjects.canTrack())
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(scope);
+    else
+        jsObjectsGuard.dismiss();
+
+    QQmlData *ddata = QQmlData::get(instance, /*create=*/true);
+    Q_ASSERT(ddata);
+
+    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
+
+    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(index);
+
+    // Set up internal state mirroring populateInstanceAndAliasBindings + populateInstance.
+    qSwap(_qobject, instance);
+    qSwap(_compiledObjectIndex, index);
+    qSwap(_compiledObject, obj);
+    qSwap(_ddata, ddata);
+    QObject *bindingTarget = _qobject;
+    qSwap(_bindingTarget, bindingTarget);
+    QObject *scopeObject = _qobject;
+    qSwap(_scopeObject, scopeObject);
+    const QQmlPropertyData *valueTypeProperty = nullptr;
+    qSwap(_valueTypeProperty, valueTypeProperty);
+
+    Q_ASSERT(sharedState->allJavaScriptObjects.canTrack());
+    sharedState->allJavaScriptObjects.trackObject(v4, _qobject);
+
+    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(scope.constructUndefined(1));
+    qSwap(_qmlContext, qmlContext);
+
+    QV4::ScopedValue scopeObjectProtector(scope);
+
+    QQmlPropertyCache::ConstPtr cache = propertyCaches->at(_compiledObjectIndex);
+    _ddata->propertyCache = cache;
+    qSwap(_propertyCache, cache);
+    qSwap(_vmeMetaObject, vmeMetaObject);
+
+    if (_compiledObject->objectId() < context->numIdValues())
+        registerObjectWithContextById(_compiledObject, _qobject);
+
+    _ddata->compilationUnit = compilationUnit;
+    _ddata->cuObjectIndex = int(_compiledObjectIndex);
+
+    if (_compiledObject->nFunctions > 0)
+        setupFunctions();
+    setupBindings(BindingMode::ApplyImmediate);
+
+    if (flags.testFlag(InitFlag::IsContextObject)) {
+        while (!pendingAliasBindings.empty()) {
+            for (auto it = pendingAliasBindings.begin(); it != pendingAliasBindings.end();) {
+                if ((*it)(sharedState.data()))
+                    it = pendingAliasBindings.erase(it);
+                else
+                    ++it;
+            }
+        }
+    }
+
+    // Restore swapped state.
+    qSwap(_vmeMetaObject, vmeMetaObject);
+    qSwap(_propertyCache, cache);
+    qSwap(_qmlContext, qmlContext);
+    qSwap(_scopeObject, scopeObject);
+    qSwap(_valueTypeProperty, valueTypeProperty);
+    qSwap(_bindingTarget, bindingTarget);
+    qSwap(_ddata, ddata);
+    qSwap(_compiledObject, obj);
+    qSwap(_compiledObjectIndex, index);
+    qSwap(_qobject, instance);
 }
 
 QQmlObjectCreatorRecursionWatcher::QQmlObjectCreatorRecursionWatcher(QQmlObjectCreator *creator)

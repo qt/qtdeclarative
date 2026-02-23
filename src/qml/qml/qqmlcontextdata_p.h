@@ -199,6 +199,7 @@ public:
     }
 
     void setExpressions(QQmlJavaScriptExpression *expressions) { m_expressions = expressions; }
+    QQmlJavaScriptExpression *expressions() const { return m_expressions; }
     QQmlJavaScriptExpression *takeExpressions()
     {
         QQmlJavaScriptExpression *expressions = m_expressions;
