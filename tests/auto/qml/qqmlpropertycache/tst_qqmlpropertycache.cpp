@@ -1131,11 +1131,11 @@ void tst_qqmlpropertycache::append_propertyAttr()
     QMetaObjectBuilder moBuilder;
     const QString propName = "p";
     moBuilder.addProperty(propName.toUtf8(), "int", -1);
-    const auto *mo = moBuilder.toMetaObject();
+    std::unique_ptr<QMetaObject, decltype(&free)> mo(moBuilder.toMetaObject(), &free);
 
     if (!warningPattern.isEmpty())
         QTest::ignoreMessage(level, QRegularExpression(warningPattern.toLatin1()));
-    cache->update(mo);
+    cache->update(mo.get());
 
     // no matter what the property is added
     QCOMPARE(cache->propertyCount(), mo->propertyCount());
