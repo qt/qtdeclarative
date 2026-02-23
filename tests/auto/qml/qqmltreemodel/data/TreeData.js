@@ -1,3 +1,4 @@
+//![file]
 let folders = [
     {
         "checked": false,
@@ -32,3 +33,4 @@ let folders = [
         ]
     }
 ]
+//![file]

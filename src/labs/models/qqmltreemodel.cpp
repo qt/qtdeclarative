@@ -56,6 +56,42 @@ static const QString ROWS_PROPERTY_NAME = u"rows"_s;
 
     To add new rows, use \l appendRow(). To modify existing rows, use
     \l setRow(), \l removeRow() and \l clear().
+
+    \section1 Using the TreeModel with External JSON Sources
+
+    While the intended use of the TreeModel is to define the JSON data in-place in
+    the QML file, you can use any JSON object with the model as long as
+    its structure matches the structure defined by the TreeModel. If all the rows
+    of the JSON object conform to the columns defined by the model, you can
+    assign it directly through the rows property.
+
+    The source of the JSON object can be a file. For example, if the model is
+    defined as
+
+    \snippet setRowsViaJSON.qml model
+
+    and the JSON object stored in the file and looks like
+
+    \snippet TreeData.js file
+
+    then this object can be provided by importing the JavaScript file as a
+
+    module
+
+    \snippet setRowsViaJSON.qml import
+
+    and then it can be assigned directly
+
+    \snippet setRowsViaJSON.qml assignment
+
+    \warning Ensure that the JSON data comes from a trusted source. Since the
+    model dinamically populates its rows based on the input, malformed or
+    untrusted JSON can lead to unexpected behavior or performance issues.
+
+    See \l TableModel for an another example where a JSON object is parsed
+    into and assigned as a JavaScript array.
+
+    \sa TableModelColumn, TreeView
 */
 
 QQmlTreeModel::QQmlTreeModel(QObject *parent)
