@@ -388,7 +388,14 @@ private:
                                .arg(qPrintable(name), className());
             return;
         }
-        case OverrideSemantics::Status::OverridingNonVirtual:
+        case OverrideSemantics::Status::OverridingNonVirtual: {
+            // TODO: Make this a warning as soon as we can
+            qCDebug(qqmlPropertyCacheAppend).noquote()
+                    << QStringLiteral("Member %1 of the object %2 overrides a non-virtual member. "
+                              "Consider renaming it or mark it virtual in the base object")
+                            .arg(qPrintable(name), className());
+            return;
+        }
         case OverrideSemantics::Status::OverridingNonVirtualError: {
             qCWarning(qqmlPropertyCacheAppend).noquote()
                     << QStringLiteral("Member %1 of the object %2 overrides a non-virtual member. "

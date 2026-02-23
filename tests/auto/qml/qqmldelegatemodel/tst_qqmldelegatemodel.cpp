@@ -654,14 +654,26 @@ void tst_QQmlDelegateModel::nestedRequired()
     QVERIFY(!delegate5);
 }
 
+static QLoggingCategory::CategoryFilter parentFilter;
+void logFilter(QLoggingCategory *category)
+{
+    if (qstrcmp(category->categoryName(), "qt.qml.propertyCache.append") == 0)
+        category->setEnabled(QtDebugMsg, true);
+    else if (parentFilter)
+        parentFilter(category);
+}
+
 void tst_QQmlDelegateModel::overriddenModelData()
 {
+    parentFilter = QLoggingCategory::installFilter(logFilter);
+    const auto restoreFilter = qScopeGuard([]() { QLoggingCategory::installFilter(parentFilter); });
+
     QTest::failOnWarning(QRegularExpression(
             "Final member [^ ]+ is overridden in class [^\\.]+. The override won't be used."));
     const auto overridenProperies = { "index", "column", "row", "hasModelChildren", "model" };
     for (const auto &property : overridenProperies) {
         QTest::ignoreMessage(
-                QtWarningMsg,
+                QtDebugMsg,
                 qPrintable(QLatin1String("Member ") + QLatin1String(property)
                            + QLatin1String(" of the object QQmlDMAbstractItemModelData overrides a "
                                            "non-virtual member. Consider renaming it or mark it "
