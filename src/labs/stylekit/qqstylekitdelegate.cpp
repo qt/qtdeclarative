@@ -69,13 +69,24 @@ void QQStyleKitDelegate::maybeCreateColor()
         return;
     if (!m_delegateProperties)
         return;
-    if (m_delegateProperties->color().alpha() == 0) {
+    if (m_delegateProperties->color().alpha() == 0
+        && (m_delegateProperties->border()->color().alpha() == 0
+            || m_delegateProperties->border()->width() == 0)) {
+        // Lazy-create the color rectangle later, if/when needed
         connect(m_delegateProperties, &QQStyleKitDelegateProperties::colorChanged,
+                this, &QQStyleKitDelegate::maybeCreateColor, Qt::UniqueConnection);
+        connect(m_delegateProperties->border(), &QQStyleKitBorderProperties::colorChanged,
+                this, &QQStyleKitDelegate::maybeCreateColor, Qt::UniqueConnection);
+        connect(m_delegateProperties->border(), &QQStyleKitBorderProperties::widthChanged,
                 this, &QQStyleKitDelegate::maybeCreateColor, Qt::UniqueConnection);
         return;
     }
 
     disconnect(m_delegateProperties, &QQStyleKitDelegateProperties::colorChanged,
+            this, &QQStyleKitDelegate::maybeCreateColor);
+    disconnect(m_delegateProperties->border(), &QQStyleKitBorderProperties::colorChanged,
+            this, &QQStyleKitDelegate::maybeCreateColor);
+    disconnect(m_delegateProperties->border(), &QQStyleKitBorderProperties::widthChanged,
             this, &QQStyleKitDelegate::maybeCreateColor);
 
     QQmlEngine *engine = qmlEngine(this);
@@ -91,6 +102,7 @@ void QQStyleKitDelegate::maybeCreateColor()
                 width: parent.width
                 height: parent.height
                 color: delegateStyle.color
+                opacity: delegateStyle.opacity
                 topLeftRadius: delegateStyle.topLeftRadius
                 topRightRadius: delegateStyle.topRightRadius
                 bottomLeftRadius: delegateStyle.bottomLeftRadius
