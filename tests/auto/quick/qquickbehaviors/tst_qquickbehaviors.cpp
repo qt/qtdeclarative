@@ -1,18 +1,24 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
-#include <QtTest/QTest>
-#include <qsignalspy.h>
-#include <QtQml/qqmlengine.h>
-#include <QtQml/qqmlcomponent.h>
-#include <QtQuick/qquickview.h>
-#include <QtQuick/private/qquickrectangle_p.h>
-#include <QtQuick/private/qquicktext_p.h>
-#include <QtQuick/private/qquickbehavior_p.h>
-#include <QtQuick/private/qquickanimation_p.h>
-#include <QtQuick/private/qquicksmoothedanimation_p.h>
-#include <private/qquickitem_p.h>
-#include <QtQuickTestUtils/private/qmlutils_p.h>
+
 #include "bindable.h"
+
+#include <private/qmlutils_p.h>
+#include <private/qquickanimation_p.h>
+#include <private/qquickbehavior_p.h>
+#include <private/qquickitem_p.h>
+#include <private/qquickrectangle_p.h>
+#include <private/qquicksmoothedanimation_p.h>
+#include <private/qquicktext_p.h>
+#include <private/qquicktranslate_p.h>
+
+#include <QtTest/qsignalspy.h>
+#include <QtTest/qtest.h>
+
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlengine.h>
+
+#include <QtQuick/qquickview.h>
 
 class tst_qquickbehaviors : public QQmlDataTest
 {
@@ -34,6 +40,7 @@ private slots:
     void valueType();
     void emptyBehavior();
     void duplicatedBehavior();
+    void behaviorOnValueTypeProperties();
     void explicitSelection();
     void nonSelectingBehavior();
     void reassignedAnimation();
@@ -227,8 +234,14 @@ void tst_qquickbehaviors::emptyBehavior()
 void tst_qquickbehaviors::duplicatedBehavior()
 {
     QTest::failOnWarning(QRegularExpression(".*"));
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg,
-                         QRegularExpression("Attempting to set another interceptor on.*"));
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg,
+            QRegularExpression(
+                    "Attempting to set another interceptor on [^ ]+ property x - unsupported"));
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg,
+            QRegularExpression(
+                    "Attempting to set another interceptor on [^ ]+ property axis - unsupported"));
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("duplicated.qml"));
     QScopedPointer<QQuickRectangle> rect(qobject_cast<QQuickRectangle *>(c.create()));
@@ -236,6 +249,35 @@ void tst_qquickbehaviors::duplicatedBehavior()
 
     // Expecting no crash
     QQuickItemPrivate::get(rect.data())->setState("moved");
+}
+
+void tst_qquickbehaviors::behaviorOnValueTypeProperties()
+{
+    QTest::failOnWarning();
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("behaviorOnValueTypeProperties.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    std::unique_ptr<QObject> obj(c.create());
+    QVERIFY(obj);
+
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(obj.get());
+    QVERIFY(rect);
+
+    QQmlListProperty<QQuickTransform> transformList = rect->transform();
+    QCOMPARE(transformList.count(&transformList), 1);
+    QQuickTransform *transform = transformList.at(&transformList, 0);
+    QVERIFY(transform);
+
+    QQuickRotation *rotation = qobject_cast<QQuickRotation *>(transform);
+    QVERIFY(rotation);
+
+    QCOMPARE(rotation->axis().x(), 1);
+    QCOMPARE(rotation->axis().y(), 0);
+    QCOMPARE(rotation->axis().z(), 0);
+
+    QTRY_COMPARE(rotation->axis().x(), .2f);
+    QTRY_COMPARE(rotation->axis().y(), .4f);
+    QTRY_COMPARE(rotation->axis().z(), .8f);
 }
 
 void tst_qquickbehaviors::explicitSelection()

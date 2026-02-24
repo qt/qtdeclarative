@@ -28,4 +28,14 @@ Rectangle {
             x: 200
         }
     }
+
+    transform: Rotation {
+        id: rectRotation
+        Behavior on axis {
+            ScriptAction { script: console.log("toplevel axis") }
+        }
+        axis {
+            Behavior on x { NumberAnimation { duration: 100 } }
+        }
+    }
 }
