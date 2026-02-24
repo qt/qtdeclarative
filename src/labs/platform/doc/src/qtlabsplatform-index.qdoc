@@ -21,6 +21,14 @@
     \l{Changes to Qt Quick Labs Platform} lists important changes in the
     module API and functionality that were done for the Qt 6 series of Qt.
 
+    \section1 Licenses
+
+    Qt Labs Platform is available under commercial licenses from \l{The Qt Company}.
+    In addition, it is available under the
+    \l{GNU Lesser General Public License, version 3}, or
+    the \l{GNU General Public License, version 2}.
+    See \l{Qt Licensing} for further details.
+
     \section1 Related Information
 
     \list
