@@ -30,6 +30,13 @@
     \section1 Experimental QML Types
     \generatelist qmltypesbymodule Qt.labs.qmlmodels
 
+    \section1 Licenses
+
+    Qt Qml Models is available under commercial licenses from \l{The Qt Company}.
+    In addition, it is available under the
+    \l{GNU Lesser General Public License, version 3}, or
+    the \l{GNU General Public License, version 2}.
+    See \l{Qt Licensing} for further details.
 */
 
 /*!
