@@ -1947,12 +1947,16 @@ void tst_qmlls_utils::findDefinitionFromLocation_data()
     {
         const QString mainQml = testFile(u"findDefinition/mymodule-source/MyModule/Main.qml"_s);
         const QString myComponentQml = testFile(u"findDefinition/mymodule-source/MyModule/X/Y/Z/MyComponent.qml"_s);
-
-        QTest::addRow("nestedFromOwnModule") << mainQml << 4 << 5 << myComponentQml << 3 << 1
-                                             << strlen("Item") << QStringList { testFile(u"findDefinition/mymodule-build"_s) };
-        QTest::addRow("nestedFromOwnModuleWithoutQmldirPrefer") << mainQml << 4 << 5 << myComponentQml << 3 << 1
-                                                                << strlen("Item")
-                                                                << QStringList { testFile(u"findDefinition/mymodule-build-without-qmldir-prefer"_s) };
+        QTest::addRow("nestedFromOwnModule")
+                << mainQml << 4 << 5 << myComponentQml << 3 << 1 << strlen("Item")
+                << QStringList { testFile(u"findDefinition/mymodule-build"_s) };
+    }
+    {
+        const QString mainQml = testFile(u"findDefinition/mymodule-without-qmldir-prefer-source/MyModuleWithoutQmldirPrefer/Main.qml"_s);
+        const QString myComponentQml = testFile(u"findDefinition/mymodule-without-qmldir-prefer-source/MyModuleWithoutQmldirPrefer/X/Y/Z/MyComponent.qml"_s);
+        QTest::addRow("nestedFromOwnModuleWithoutQmldirPrefer")
+                << mainQml << 4 << 5 << myComponentQml << 3 << 1 << strlen("Item")
+                << QStringList { testFile(u"findDefinition/mymodule-without-qmldir-prefer-build"_s) };
     }
 
     {

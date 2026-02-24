@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/SimpleModule">
+    <file alias="Main.qml">../Main.qml</file>
+    <file alias="qmldir">qmldir</file>
+  </qresource>
+</RCC>

@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/qt/qml/MyModuleWithoutQmldirPrefer/">
+    <file alias="Main.qml">../../../mymodule-without-qmldir-prefer-source/MyModuleWithoutQmldirPrefer/Main.qml</file>
+    <file alias="X/Y/Z/MyComponent.qml">../../../mymodule-without-qmldir-prefer-source/MyModuleWithoutQmldirPrefer/X/Y/Z/MyComponent.qml</file>
+  </qresource>
+</RCC>

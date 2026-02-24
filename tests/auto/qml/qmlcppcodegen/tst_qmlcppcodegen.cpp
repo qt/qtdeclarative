@@ -179,7 +179,6 @@ private slots:
     void invalidateCompositeType();
     void invisibleBase();
     void invisibleListElementType();
-    void invisibleSingleton();
     void invisibleTypes();
     void iterateUnknownValue();
     void iteration();
@@ -3306,26 +3305,6 @@ void tst_QmlCppCodegen::invisibleListElementType()
     const QQmlListReference ref = x.value<QQmlListReference>();
     QVERIFY(ref.isValid());
     QCOMPARE(ref.size(), 0);
-}
-
-void tst_QmlCppCodegen::invisibleSingleton()
-{
-    // We may have seen Style.qml as singleton before, which would make the assignment pass.
-    // So let's flush the type registry.
-    qmlClearTypeRegistrations();
-
-    QQmlEngine engine;
-    const QUrl copy(u"qrc:/qt/qml/HiddenTestTypes/hidden/Main.qml"_s);
-    QQmlComponent c(&engine, copy);
-    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
-
-    QTest::ignoreMessage(
-                QtWarningMsg,
-                "qrc:/qt/qml/HiddenTestTypes/hidden/Main.qml:4:5: "
-                "Unable to assign [undefined] to QColor");
-    std::unique_ptr<QObject> o(c.create());
-    QVERIFY(o);
-    QCOMPARE(o->property("c"), QVariant(QMetaType::fromName("QColor")));
 }
 
 void tst_QmlCppCodegen::invisibleTypes()

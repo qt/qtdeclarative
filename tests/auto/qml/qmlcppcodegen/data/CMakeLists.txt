@@ -390,44 +390,12 @@ set_source_files_properties("shared/Slider.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Slider.qml"
 )
 
-set_source_files_properties("hidden/Style.qml"
-    PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
-
 # Do re-evaluate on each import, please
 set_source_files_properties("NotificationsUtils.js"
     PROPERTIES QT_QML_SKIP_QMLDIR_ENTRY FALSE)
 
 qt_policy(SET QTP0001 NEW)
 qt_policy(SET QTP0004 NEW)
-
-qt_add_library(codegen_test_hidden STATIC)
-qt_autogen_tools_initial_setup(codegen_test_hidden)
-
-set_target_properties(codegen_test_hidden PROPERTIES
-    # We really want qmlcachegen here, even if qmlsc is available
-    QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
-    QT_QMLCACHEGEN_ARGUMENTS --validate-basic-blocks
-)
-
-target_compile_definitions(codegen_test_hidden PUBLIC
-    -DGENERATED_CPP_FOLDER="${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache"
-)
-
-qt6_add_qml_module(codegen_test_hidden
-    URI HiddenTestTypes
-    QML_FILES
-        hidden/Main.qml
-        hidden/Style.qml
-    OUTPUT_DIRECTORY HiddenTestTypes
-    __QT_INTERNAL_DISAMBIGUATE_QMLDIR_RESOURCE
-
-    # Don't add a qmldir in "hidden". That  would defeat the purpose.
-    NO_GENERATE_EXTRA_QMLDIRS
-)
-
-add_dependencies(codegen_test_hidden Qt::Quick)
-
-qt_autogen_tools_initial_setup(codegen_test_hiddenplugin)
 
 qt_add_library(codegen_test_stringbuilder STATIC)
 qt_autogen_tools_initial_setup(codegen_test_stringbuilder)

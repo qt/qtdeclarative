@@ -128,6 +128,8 @@ private Q_SLOTS:
     void idLocation();
     void lineNumber();
     void ownerOfEnum();
+    void ensureModuleName();
+    void sourceAndBuildTypeAreTheSame();
 
 public:
     tst_qqmljsscope()
@@ -1171,6 +1173,25 @@ void tst_qqmljsscope::ownerOfEnum()
     const auto cppEnumOwner = QQmlJSScope::ownerOfEnum(root, "CppEnum"_L1);
     QCOMPARE(cppEnumOwner.scope->internalName(), "CppEnumHolder"_L1);
     QVERIFY(cppEnumOwner.scope->filePath().endsWith("testtypes.h"_L1));
+}
+
+void tst_qqmljsscope::ensureModuleName()
+{
+    const auto root = run("SimpleModule/build/Main.qml");
+    QCOMPARE(root->moduleName(), "SimpleModule");
+}
+
+void tst_qqmljsscope::sourceAndBuildTypeAreTheSame()
+{
+    const QString build = testFile("SimpleModule/build/");
+
+    std::unique_ptr<QQmlJSResourceFileMapper> mapper(
+            new QQmlJSResourceFileMapper(QStringList() << (build + "resources.qrc")));
+    QQmlJSImporter importer(m_importer.importPaths() << build, mapper.get());
+
+    const auto sourceRoot = importer.importFile(testFile("SimpleModule/Main.qml"));
+    const auto buildRoot = importer.importFile(testFile("SimpleModule/build/Main.qml"));
+    QCOMPARE(sourceRoot, buildRoot);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

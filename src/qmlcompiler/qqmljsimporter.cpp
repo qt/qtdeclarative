@@ -968,16 +968,18 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
 
 QQmlJSScope::Ptr QQmlJSImporter::localFile2QQmlJSScope(const QString &filePath)
 {
+    // Use the build folder path as the canonical location for a type to prevent scope duplication.
+    const QString buildFolderFile = QQmlJSUtils::qmlBuildPathFromSourcePath(m_mapper, filePath);
     const QString sourceFolderFile = preferQmlFilesFromSourceFolder()
             ? QQmlJSUtils::qmlSourcePathFromBuildPath(m_mapper, filePath)
             : filePath;
 
-    const auto seen = m_importedFiles.find(sourceFolderFile);
+    const auto seen = m_importedFiles.find(buildFolderFile);
     if (seen != m_importedFiles.end())
         return *seen;
 
     return *m_importedFiles.insert(
-            sourceFolderFile,
+            buildFolderFile,
             { QQmlJSScope::create(),
               QSharedPointer<QDeferredFactory<QQmlJSScope>>(new QDeferredFactory<QQmlJSScope>(
                       this, {}, sourceFolderFile, QString(), false)) });
