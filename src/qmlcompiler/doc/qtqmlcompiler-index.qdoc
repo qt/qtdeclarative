@@ -81,4 +81,12 @@
                 \li \l{QML type compiler}
             \endlist
     \endlist
+
+    \section1 Licenses
+
+    Qt Qml Compiler is available under commercial licenses from \l{The Qt Company}.
+    In addition, it is available under the \l{GNU General Public License, version 3}
+    with \l{Qt GPL exception 1.0}.
+    See \l{Qt Licensing} for further details.
+
  */
