@@ -263,7 +263,7 @@ void QQuickShortcut::setSequences(const QVariantList &values)
     resemble a key sequence from the menu bar. It is best to display this text
     to the user (for example, on a tooltip).
 
-    \include qquickshortcut.qdocinc [multishortcut]
+    \include qquickshortcut.qdocinc multishortcut
 
     \sa sequence, portableText
 */
@@ -282,7 +282,7 @@ QString QQuickShortcut::nativeText() const
     "portable" format, suitable for reading and writing to a file. In many
     cases, it will look similar to the native text on Windows and X11.
 
-    \include qquickshortcut.qdocinc [multishortcut]
+    \include qquickshortcut.qdocinc multishortcut
 
     \sa sequence, nativeText
 */

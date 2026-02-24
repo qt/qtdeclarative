@@ -2275,7 +2275,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     \qmlproperty real QtQuick::PropertyAnimation::easing.period
     \qmlproperty list<real> QtQuick::PropertyAnimation::easing.bezierCurve
 
-//! propertyanimation.easing
+//! [propertyanimation.easing]
     \brief Specifies the easing curve used for the animation
 
     To specify an easing curve you need to specify at least the type. For some curves you can also specify
@@ -2479,7 +2479,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     end point: [cx1, cy1, cx2, cy2, endx, endy, ...].  The last point must be 1,1.
 
     See the \l {Qt Quick Examples - Animation#Easing Curves}{Easing Curves} for a demonstration of the different easing settings.
-//! propertyanimation.easing
+//! [propertyanimation.easing]
 */
 QEasingCurve QQuickPropertyAnimation::easing() const
 {
