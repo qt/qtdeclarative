@@ -1622,11 +1622,11 @@ void tst_qquickmenubar::menuPosition()
     editMenu->setPopupType(popupType);
     editMenu->setX(requestedPos.x());
     editMenu->setY(requestedPos.y());
-    editMenu->setVisible(true);
+    editMenu->open();
     TRY_VERIFY_POPUP_OPENED(editMenu);
 
     static const QString errorString1("Expected %1, was %2");
-    QVERIFY2(pixelsCloseEnough(editMenu->x(), requestedPos.x()), qPrintable(errorString1.arg(requestedPos.x()).arg(editMenu->x())));
+    QTRY_VERIFY2(pixelsCloseEnough(editMenu->x(), requestedPos.x()), qPrintable(errorString1.arg(requestedPos.x()).arg(editMenu->x())));
     QVERIFY2(pixelsCloseEnough(editMenu->y(), requestedPos.y()), qPrintable(errorString1.arg(requestedPos.y()).arg(editMenu->y())));
 
     QQuickItem *background = editMenu->background();
