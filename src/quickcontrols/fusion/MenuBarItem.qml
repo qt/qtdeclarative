@@ -32,7 +32,8 @@ T.MenuBarItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.down || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
+        defaultIconColor: control.down || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
+        color: defaultIconColor
     }
 
     background: Rectangle {

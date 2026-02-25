@@ -22,7 +22,6 @@ T.MenuBarItem {
 
     icon.width: 24
     icon.height: 24
-    icon.color: control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
@@ -33,7 +32,8 @@ T.MenuBarItem {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.palette.buttonText
+        defaultIconColor: control.palette.buttonText
+        color: defaultIconColor
     }
 
     background: Rectangle {
