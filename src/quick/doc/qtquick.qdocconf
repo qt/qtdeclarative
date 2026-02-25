@@ -54,7 +54,7 @@ depends += \
     qtqmlcore \
     qtgui \
     qtlinguist \
-    qtlottie \
+    qtlottieanimation \
     qtquickcontrols \
     qtquick3d \
     qtdoc \
