@@ -26,6 +26,8 @@ set(qml_files
     "Label.qml"
     "Menu.qml"
     "MenuItem.qml"
+    "MenuBar.qml"
+    "MenuBarItem.qml"
     "MenuSeparator.qml"
     "PageIndicator.qml"
     "Page.qml"
