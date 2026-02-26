@@ -7,6 +7,7 @@
 
 #include <QtQuick/private/qtquickglobal_p.h>
 
+#include <QtGui/qaccessibilityhints.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qeventpoint.h>
 #if QT_CONFIG(im)
@@ -37,6 +38,14 @@
 //
 
 QT_BEGIN_NAMESPACE
+
+struct QAccessibilityHintsForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QAccessibilityHints)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 10)
+};
 
 struct QStyleHintsForeign
 {
