@@ -16,6 +16,17 @@ set(qml_files
     "TextEditingContextMenu.qml"
 )
 
+set_source_files_properties(
+    CopyAction.qml
+    CutAction.qml
+    DeleteAction.qml
+    PasteAction.qml
+    SelectAllAction.qml
+    TextEditingContextMenu.qml
+    PROPERTIES
+        QT_QML_SOURCE_VERSIONS "6.11"
+)
+
 qt_internal_add_qml_module(QuickControls2IOSStyleImpl
     URI "QtQuick.Controls.iOS.impl"
     VERSION "${PROJECT_VERSION}"

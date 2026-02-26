@@ -10,7 +10,9 @@ set_source_files_properties(
     CutAction.qml
     DeleteAction.qml
     PasteAction.qml
+    RedoAction.qml
     SelectAllAction.qml
+    UndoAction.qml
     PROPERTIES
         QT_QML_SOURCE_VERSIONS "6.11"
 )
