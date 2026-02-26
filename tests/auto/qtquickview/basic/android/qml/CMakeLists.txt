@@ -13,7 +13,7 @@ qt_standard_project_setup()
 qt_add_executable(tst_qtquickview_basic_qml
     tst_qtquickview.cpp)
 
-set_source_files_properties(TestView.qml PROPERTIES QT_QML_GENERATE_JAVA_CLASS TRUE)
+set_source_files_properties(TestView.qml PROPERTIES QT_QML_GENERATE_ANDROID_JAVA_CLASS TRUE)
 qt_add_qml_module(tst_qtquickview_basic_qml
     URI TestViewModule
     VERSION 1.0

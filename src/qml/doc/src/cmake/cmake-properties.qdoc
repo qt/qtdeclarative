@@ -208,7 +208,7 @@ C++ during qmltc compilation.
 */
 
 /*!
-\page cmake-source-file-property-qt-qml-generate-java-class.html
+\page cmake-source-file-property-qt-qml-generate-android-java-class.html
 \ingroup cmake-source-file-properties-qtqml
 \ingroup cmake-android-build-properties
 
