@@ -13,7 +13,7 @@ qt_standard_project_setup()
 qt_add_executable(tst_qtquickview_statuslistener_qml
     tst_qtquickview.cpp)
 
-set_source_files_properties(TestView.qml PROPERTIES QT_QML_GENERATE_JAVA_CLASS TRUE)
+set_source_files_properties(TestView.qml PROPERTIES QT_QML_GENERATE_ANDROID_JAVA_CLASS TRUE)
 set_source_files_properties(Invalid.qml PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
     QT_QML_SKIP_QMLLINT TRUE
