@@ -1115,10 +1115,21 @@ void QQuickSearchField::focusInEvent(QFocusEvent *event)
     Q_D(QQuickSearchField);
     QQuickControl::focusInEvent(event);
 
-    if ((event->reason() == Qt::TabFocusReason || event->reason() == Qt::BacktabFocusReason
-         || event->reason() == Qt::ShortcutFocusReason)
-        && d->contentItem)
-        d->contentItem->forceActiveFocus(event->reason());
+    if (!d->contentItem)
+        return;
+
+    const auto reason = event->reason();
+    switch (reason) {
+    case Qt::TabFocusReason:
+    case Qt::BacktabFocusReason:
+    case Qt::ShortcutFocusReason:
+    case Qt::OtherFocusReason:
+        if (reason != Qt::OtherFocusReason || !d->isPopupVisible())
+            d->contentItem->forceActiveFocus(reason);
+        break;
+    default:
+        break;
+    }
 }
 
 void QQuickSearchField::focusOutEvent(QFocusEvent *event)
