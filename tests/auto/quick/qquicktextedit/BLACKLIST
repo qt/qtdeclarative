@@ -15,6 +15,7 @@ android
 android
 [cursorVisible]
 android
+wayland
 [transparentSelectionColor]
 android
 

@@ -4,3 +4,7 @@ xcb
 # QTBUG-100991
 [mousePropagationToParent]
 android
+[lastFocusChangeReason]
+wayland
+[embeddedInWidgetsFocus]
+wayland

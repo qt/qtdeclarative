@@ -3,3 +3,7 @@ android # QTBUG-104471
 [flickDuringFlicking]
 android # QTBUG-104471
 macos ci # QTBUG-105190
+[fetchMore]
+wayland
+[visibleBoundToCountGreaterThanZero]
+wayland

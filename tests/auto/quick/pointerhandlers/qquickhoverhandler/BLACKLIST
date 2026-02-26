@@ -2,3 +2,5 @@
 qnx
 windows
 macos
+[window]
+wayland

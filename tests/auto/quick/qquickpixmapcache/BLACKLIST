@@ -1,3 +1,6 @@
 # QTBUG-118064
 [slowDevice]
 *
+
+[slowDeviceInterrupted]
+wayland

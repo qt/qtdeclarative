@@ -56,3 +56,5 @@ android
 
 [SelectionRectangle::test_selectionModeAuto]
 wayland
+[ToolTip::test_makeVisibleWhileExitTransitionRunning]
+wayland

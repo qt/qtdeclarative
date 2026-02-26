@@ -7,3 +7,5 @@ android
 android
 [touchPassiveGrabbers]
 android
+[unsuitableEventDuringDrag]
+wayland
