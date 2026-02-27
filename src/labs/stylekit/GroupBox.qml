@@ -18,7 +18,12 @@ T.GroupBox {
 
     spacing: styleReader.spacing
 
-    topPadding: styleReader.topPadding + implicitLabelWidth > 0 ? implicitLabelHeight + spacing : 0
+    /* Note: Unlike other controls, the GroupBox topPadding includes the
+     * background's topMargin, which pushes the frame below the label.
+     * This ensures that padding still represents the space between the
+     * frame and the child controls, consistent with Pane and Frame. */
+    topPadding: styleReader.topPadding + styleReader.background.topMargin
+
     leftPadding: styleReader.leftPadding
     rightPadding: styleReader.rightPadding
     bottomPadding: styleReader.bottomPadding
