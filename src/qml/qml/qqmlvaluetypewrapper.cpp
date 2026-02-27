@@ -545,6 +545,8 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
         }
     });
 
+    Q_ALLOCA_DECLARE(void, rawPtr);
+
     if (d()->isReference()) {
         QT_WARNING_PUSH
         QT_WARNING_DISABLE_GCC("-Walloca-larger-than="); // for size = alignment = 0
@@ -552,7 +554,7 @@ bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
             const size_t size = d()->metaType().sizeOf();
             const size_t alignment = d()->metaType().alignOf();
             size_t space = size + alignment - 1;
-            Q_ALLOCA_VAR(void, rawPtr, space);
+            Q_ALLOCA_ASSIGN(void, rawPtr, space);
             void *alignedPtr = std::align(alignment, size, rawPtr, space);
             Q_ASSERT(alignedPtr);
             d()->setGadgetPtr(alignedPtr);
