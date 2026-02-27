@@ -84,6 +84,7 @@ T.SearchField {
     }
 
     contentItem: T.TextField {
+        implicitHeight: contentHeight + topPadding + bottomPadding
         z: 2
 
         text: control.text

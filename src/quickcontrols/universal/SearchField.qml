@@ -97,6 +97,8 @@ T.SearchField {
     }
 
     contentItem: T.TextField {
+        implicitHeight: contentHeight + topPadding + bottomPadding
+
         leftPadding: !control.mirrored ? 6 : 0
         rightPadding: !control.mirrored ? 6 : 0
 

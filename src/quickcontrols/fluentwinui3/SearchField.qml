@@ -121,13 +121,16 @@ T.SearchField {
     }
 
     contentItem: T.TextField {
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 contentHeight + topPadding + bottomPadding)
+
         leftPadding: control.__config.label_contentItem.leftPadding
         rightPadding: control.__config.label_contentItem.rightPadding
         topPadding: control.__config.label_contentItem.topPadding
         bottomPadding: control.__config.label_contentItem.bottomPadding
 
-        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                                 contentHeight + topPadding + bottomPadding)
+        topInset: -control.__config.label_contentItem.topInset || 0
+        bottomInset: -control.__config.label_contentItem.bottomInset || 0
 
         text: control.text
 
