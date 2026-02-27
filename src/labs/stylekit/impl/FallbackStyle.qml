@@ -135,13 +135,21 @@ BaseStyle {
         hovered.background.visible: true
     }
 
+    pane {
+        padding: 12
+        background {
+            implicitWidth: 200
+            implicitHeight: 200
+            color: __baseWhite
+        }
+    }
+
     frame {
         background.color: Qt.darker(__baseWhite, 1.05)
     }
 
     groupBox {
-        text.padding: 12
-        padding: 12
+        background.topMargin: 20
         background.implicitHeight: 20
     }
 
@@ -163,14 +171,6 @@ BaseStyle {
 
     page {
         background.border.width: 0
-    }
-
-    pane {
-        background {
-            implicitWidth: 200
-            implicitHeight: 200
-            color: __baseWhite
-        }
     }
 
     popup {
