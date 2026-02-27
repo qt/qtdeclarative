@@ -1389,7 +1389,7 @@ QQuickColorSpaceEnums::NamedColorSpace QQuickColorSpaceValueType::namedColorSpac
 void QQuickColorSpaceValueType::setNamedColorSpace(
         QQuickColorSpaceEnums::NamedColorSpace namedColorSpace)
 {
-    *this = { (QColorSpace::NamedColorSpace)namedColorSpace };
+    *static_cast<QColorSpace *>(this) = { (QColorSpace::NamedColorSpace)namedColorSpace };
 }
 
 QQuickColorSpaceEnums::Primaries QQuickColorSpaceValueType::primaries() const noexcept

@@ -31,7 +31,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_EXPORT QQuickColorValueType : public QColor
+class Q_QUICK_EXPORT QQuickColorValueType : private QColor
 {
     Q_PROPERTY(qreal r READ r WRITE setR FINAL)
     Q_PROPERTY(qreal g READ g WRITE setG FINAL)
@@ -87,7 +87,7 @@ public:
     void setHslLightness(qreal);
 };
 
-class Q_QUICK_EXPORT QQuickVector2DValueType : public QVector2D
+class Q_QUICK_EXPORT QQuickVector2DValueType : private QVector2D
 {
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
@@ -123,7 +123,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec) const;
 };
 
-class Q_QUICK_EXPORT QQuickVector3DValueType : public QVector3D
+class Q_QUICK_EXPORT QQuickVector3DValueType : private QVector3D
 {
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
@@ -164,7 +164,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec) const;
 };
 
-class Q_QUICK_EXPORT QQuickVector4DValueType : public QVector4D
+class Q_QUICK_EXPORT QQuickVector4DValueType : private QVector4D
 {
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
@@ -207,7 +207,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec) const;
 };
 
-class Q_QUICK_EXPORT QQuickQuaternionValueType : public QQuaternion
+class Q_QUICK_EXPORT QQuickQuaternionValueType : private QQuaternion
 {
     Q_PROPERTY(qreal scalar READ scalar WRITE setScalar FINAL)
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -255,7 +255,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QQuaternion &q) const;
 };
 
-class Q_QUICK_EXPORT QQuickMatrix4x4ValueType : public QMatrix4x4
+class Q_QUICK_EXPORT QQuickMatrix4x4ValueType : private QMatrix4x4
 {
     Q_PROPERTY(qreal m11 READ m11 WRITE setM11 FINAL)
     Q_PROPERTY(qreal m12 READ m12 WRITE setM12 FINAL)
@@ -413,7 +413,7 @@ enum Style {
 Q_ENUM_NS(Style)
 };
 
-class Q_QUICK_EXPORT QQuickFontValueType : public QFont
+class Q_QUICK_EXPORT QQuickFontValueType : private QFont
 {
     Q_GADGET
 
@@ -547,7 +547,7 @@ enum class TransferFunction {
 Q_ENUM_NS(TransferFunction)
 }
 
-class Q_QUICK_EXPORT QQuickColorSpaceValueType : public QColorSpace
+class Q_QUICK_EXPORT QQuickColorSpaceValueType : private QColorSpace
 {
     Q_GADGET
 
