@@ -19,7 +19,7 @@
     \l {DelegateStyle::shadow}{shadows}.
 
     A key strength of StyleKit is its hierarchical property system: set a property once
-    on a base type like \l {StyleKitControls::}{abstractButton}, and it
+    on a base type like \l {AbstractStylableControls::}{abstractButton}, and it
     automatically applies to all button-like controls.
     Override it where needed for specific controls or states. Changes to your
     style are instantly reflected across all controls, ensuring consistency while still

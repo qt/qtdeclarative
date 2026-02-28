@@ -102,7 +102,7 @@ QT_BEGIN_NAMESPACE
     active theme, StyleKit looks it up in the fallback style.
 
     By default, the fallback style is set to an internal style that provides
-    a basic appearance similar to the \l {Qt Quick Controls - Basic Style}{Basic} style.
+    a basic appearance similar to the \l {Basic Style}{Basic} style.
 
     You can set this to a custom Style, or to \c null to disable
     fallback resolution entirely. Note that setting it to \c null
