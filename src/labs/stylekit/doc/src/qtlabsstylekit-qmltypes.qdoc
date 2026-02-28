@@ -1,0 +1,37 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \qmlmodule Qt.labs.StyleKit
+    \techpreview
+    \title Qt Labs StyleKit QML Types
+    \ingroup qmlmodules
+    \brief Provides QML types for declarative styling of Qt Quick Controls.
+
+    The \l{Qt Labs StyleKit} module provides QML types for
+    declarative styling of \l{Qt Quick Controls}. StyleKit lets you define
+    a complete visual style for all your controls from a single Style object,
+    including support for themes, state-based styling, and transitions.
+
+    The QML types can be imported into your application using the
+    following import statement in your .qml file:
+
+    \qml
+    import Qt.labs.StyleKit
+    \endqml
+
+    \section1 QML Types
+
+    \generatelist {qmltypesbymodule Qt.labs.StyleKit}
+
+    \labs
+
+    \section1 Related Information
+
+    \list
+        \li \l {Qt Quick Controls QML Types}
+        \li \l {Styling Qt Quick Controls}
+    \endlist
+
+    \noautolist
+*/
