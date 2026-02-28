@@ -253,8 +253,9 @@ QT_BEGIN_NAMESPACE
     Grouped property for styling \l [QtQuickControls]{ScrollView}.
 
     ScrollView itself has no visual delegates to style. Its scroll bars can be
-    styled separately through the \l scrollBar property. But you can use \l padding
-    to control the space between the scroll bars and the content area.
+    styled separately through the \l scrollBar property. But you can use
+    \l {ControlStateStyle::padding}{padding} to control the space between
+    the scroll bars and the content area.
 
     Unset properties fall back to \l control.
 

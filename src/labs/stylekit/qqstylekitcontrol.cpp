@@ -11,18 +11,18 @@ QT_BEGIN_NAMESPACE
     \qmltype ControlStyle
     \inqmlmodule Qt.labs.StyleKit
     \inherits ControlStateStyle
-    \brief Defines the style for a control in the \c normal state
+    \brief Defines the style for a control in the \c normal state.
 
     A ControlStyle describes how a \l Control should be styled. Its API
     largely mirrors that of a Qt Quick Control: it provides grouped
     properties for delegates such as
-    \l {ControlState::background}{background},
-    \l {ControlState::indicator}{indicator},
-    \l {ControlState::handle}{handle}, and
-    \l {ControlState::text}{text}, along with layout
+    \l {ControlStateStyle::background}{background},
+    \l {ControlStateStyle::indicator}{indicator},
+    \l {ControlStateStyle::handle}{handle}, and
+    \l {ControlStateStyle::text}{text}, along with layout
     properties such as
-    \l {ControlState::padding}{padding} and
-    \l {ControlState::spacing}{spacing}.
+    \l {ControlStateStyle::padding}{padding} and
+    \l {ControlStateStyle::spacing}{spacing}.
     If you are familiar with the API of a \l Control in Qt Quick Controls,
     you should find the ControlStyle API easy to follow.
 
@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
     Unlike instance variations — which are applied to specific control
     instances from the application via the
-    \l {StyleVariation.variations} attached property — type
+    \l {StyleVariation::variations} attached property — type
     variations are applied to \e{all} instances of a control type from
     the \l Style, without requiring the application to opt in.
 
