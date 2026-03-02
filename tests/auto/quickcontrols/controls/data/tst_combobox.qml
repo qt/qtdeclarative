@@ -2482,4 +2482,26 @@ TestCase {
         control.delegate = delegateComponent1
         verify(delegateComponent2)
     }
+
+    // QTBUG-144146 - verify background size
+    Component {
+        id: comboboxBackgroundResize
+        ComboBox {
+            width: 100
+            height: 30
+        }
+    }
+
+    function test_backgroundResize() {
+        if (StyleInfo.styleName !== "FluentWinUI3")
+            skip("background size problem only exists in FluentWinUI3. " +
+                  "more details in QTBUG-144146")
+
+        let control = createTemporaryObject(comboboxBackgroundResize, testCase)
+        verify(control)
+
+        verify(control.children.length > 0)
+        compare(control.background.children[0].width, 100)
+        compare(control.background.children[0].height, 30)
+    }
 }
