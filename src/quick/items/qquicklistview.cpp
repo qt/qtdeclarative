@@ -2481,6 +2481,26 @@ QQuickListView::~QQuickListView()
 
     Note that the position of the current item
     may only be approximate until it becomes visible in the view.
+
+    As \c currentItem needs to work with any delegate, its type is \l{Item}.
+    Often, a \c ListView is however used with exactly one type of delegate.
+    In that case, casting \c currentItem to the delegate's type can help
+    tooling and lead to more efficient code:
+
+    \qml
+    component Message : Item {
+        required property string sender
+        required property string text
+    }
+    ListView {
+        id: messageView
+        delegate: Message {}
+        model: messageModel
+    }
+    Button {
+        text: "Reply to %1".arg((messageView.currentItem) as Message).sender
+    }
+    \endqml
 */
 
 /*!
