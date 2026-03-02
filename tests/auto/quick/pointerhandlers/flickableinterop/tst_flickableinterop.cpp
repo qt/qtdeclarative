@@ -914,7 +914,7 @@ void tst_FlickableInterop::nativeGesturePinchOnFlickableWithParentTapHandler()
     QSignalSpy tapSpy(tapHandler, &QQuickTapHandler::tapped);
 
     QObject *grabber = nullptr;
-    connect(device, &QPointingDevice::grabChanged, this,
+    connect(device, &QPointingDevice::grabChanged, window.rootObject(),
             [&grabber](QObject *g, QPointingDevice::GrabTransition transition, const QPointerEvent *, const QEventPoint &) {
         if (transition == QPointingDevice::GrabTransition::GrabExclusive)
             grabber = g;
