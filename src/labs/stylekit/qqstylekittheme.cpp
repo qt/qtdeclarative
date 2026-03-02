@@ -11,6 +11,42 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype Theme
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits AbstractStyle
+    \brief Defines color and style overrides for a color scheme.
+
+    A Theme overrides properties defined in a \l Style to provide a
+    distinct visual appearance for a particular color scheme. A style
+    typically configures structural properties such as implicit size,
+    padding, and radii, while a theme specifies colors, shadows, and
+    other visual attributes. However, this is not a restriction — a
+    theme can override any property that a style can set.
+
+    A style can provide a \l {Style::light}{light} and a
+    \l {Style::dark}{dark} theme. When \l {Style::themeName}{themeName}
+    is set to \c "System" (the default), the active theme follows the
+    \l {QStyleHints::colorScheme}{operating system's color scheme}.
+    You can also create additional themes using \l CustomTheme and
+    \l {Style::themeName}{switch between them} at runtime.
+
+    Properties that are not set in the theme fall back to those defined
+    in the \l Style.
+
+    The following example defines light, dark, and high-contrast
+    themes, each providing different colors for the controls:
+
+    \snippet ThemeSnippets.qml themes
+
+    For a complete example showing themes in action, see the
+    \l {StyleKit Example}.
+
+    \labs
+
+    \sa Style, CustomTheme
+*/
+
 static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
 {
     switch (type) {
