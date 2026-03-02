@@ -22,7 +22,7 @@ RectangularShadow {
     topRightRadius: delegateStyle.topRightRadius
     bottomLeftRadius: delegateStyle.bottomLeftRadius
     bottomRightRadius: delegateStyle.bottomRightRadius
-    visible: delegateStyle.shadow.visible
+    visible: delegateStyle.visible && delegateStyle.shadow.visible
     offset: Qt.vector2d(
                 delegateStyle.shadow.horizontalOffset,
                 delegateStyle.shadow.verticalOffset)
