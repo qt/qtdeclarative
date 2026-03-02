@@ -350,11 +350,13 @@ void TestQmllint::testUnqualified_data()
             << QStringLiteral("delegateContextProperties.qml")
             << Result { { Message { QStringLiteral("Unqualified access"), 6, 14 },
                           Message { QStringLiteral("Unqualified access"), 7, 15 },
-                          Message { QStringLiteral("model is implicitly injected into this "
-                                                   "delegate. Add a required property instead.") },
+                          Message { QStringLiteral("'model' is implicitly injected into this "
+                                                   "delegate. Add a required property 'model' to "
+                                                   "the delegate instead.") },
                           Message {
-                                  QStringLiteral("index is implicitly injected into this delegate. "
-                                                 "Add a required property instead.") } } };
+                                  QStringLiteral("'index' is implicitly injected into this "
+                                                 "delegate. Add a required property 'index' to the "
+                                                 "delegate instead.") } } };
     QTest::newRow("storeSloppy")
             << QStringLiteral("UnqualifiedInStoreSloppy.qml")
             << Result{ { Message{ QStringLiteral("Unqualified access"), 9, 26} } };
