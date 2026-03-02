@@ -8,29 +8,88 @@
 \title QTP0005
 \keyword qt_cmake_policy_qtp0005
 
-\summary {qt_add_qml_module's DEPENDENCIES argument accepts targets}
+\summary {qt_add_qml_module dependency keywords accept CMake targets}
 
-This policy was introduced in Qt 6.8. It allows passing targets to
-\l{qt_add_qml_module}{qt_add_qml_module()} \c DEPENDENCIES, \c IMPORTS, \c
-OPTIONAL_IMPORTS and \c DEFAULT_IMPORTS.
+This policy was introduced in Qt 6.8. It allows passing CMake targets to
+\l{qt_add_qml_module}{qt_add_qml_module()} via the \c DEPENDENCIES, \c IMPORTS,
+\c OPTIONAL_IMPORTS, and \c DEFAULT_IMPORTS keywords.
 
-Enabling this policy means that the arguments which are passed to the key words
-can be prefixed with TARGET, and are then treated as a target name.
+Enabling this policy means that arguments passed to those keywords can be prefixed
+with \c TARGET, and are then treated as a CMake target name. The QML module URI
+and import path are derived automatically from the target.
 
-The \c OLD behavior of this policy is that the "TARGET name" is treated as two
-URIs, "TARGET" and "name".
+The \c OLD behavior of this policy is that the token sequence \c{TARGET name} is
+treated as two separate URIs, \c{TARGET} and \c{name}.
 
-The \c NEW behavior of this policy is that \c TARGET is considered a keyword,
-and the URI is extracted from the target which follows next. It is a hard error
-if the name following \c TARGET does not name a target, or if that target does
+The \c NEW behavior of this policy is that \c TARGET is a keyword. The URI is
+extracted from the QML module target that follows. It is a hard error if the name
+following \c TARGET does not refer to an existing target, or if that target does
 not correspond to a QML module.
 
 In both the \c NEW and the \c OLD behavior it is possible to specify a module
 version by appending a slash and the version. See
 \l{Declaring module dependencies} for more details.
 
-Qt 6.8 issues warnings if you pass a URI to \c DEPENDENCIES which coincides
-with a target name.
+\section1 Background
+
+Before this policy, QML module dependencies had to be declared by their string
+URI, for example \c{QtQuick} or \c{com.example.mymodule}. This meant that the
+URI and, when needed, the import path of the dependency had to be kept consistent
+with the CMake target that provides the module.
+
+With the \c NEW behavior, you can refer to a dependency by its CMake target
+name instead. The build system then determines the correct URI and import path
+from the target automatically. This removes the need to manually specify
+\l{qt_add_qml_module}{IMPORT_PATH} entries for dependencies outside the default
+QML import path, reduces redundancy, and eliminates a class of copy-paste
+mistakes.
+
+\section1 Example
+
+Consider a module that depends on another module defined in the same project.
+With the \c OLD behavior (or before Qt 6.8), the URI must be spelled out
+explicitly:
+
+\badcode
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    DEPENDENCIES
+        OtherModule
+)
+\endcode
+
+With the \c NEW behavior (policy QTP0005 set to \c NEW), you can refer to the
+dependency by its CMake target name:
+
+\badcode
+qt_policy(SET QTP0005 NEW)
+
+qt_add_qml_module(other_module
+    URI OtherModule
+    VERSION 1.0
+)
+
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    DEPENDENCIES
+        TARGET other_module
+)
+\endcode
+
+The same \c TARGET syntax is available for \c IMPORTS, \c OPTIONAL_IMPORTS,
+and \c DEFAULT_IMPORTS.
+
+As shown above, you can set the policy explicitly with
+\c{qt_policy(SET QTP0005 NEW)} before calling \c{qt_add_qml_module()}.
+Alternatively, call
+\l{qt6_standard_project_setup}{qt_standard_project_setup()} with a
+\c REQUIRES version of 6.8 or later to enable all policies up to that version.
+
+Qt 6.8 issues a deprecation warning if you use \c TARGET as a token in
+\c DEPENDENCIES, \c IMPORTS, \c OPTIONAL_IMPORTS, or \c DEFAULT_IMPORTS while
+the policy is set to \c OLD.
 Use the \l qt_policy command to suppress the warning by explicitly setting
 the policy to \c OLD or \c NEW.
 

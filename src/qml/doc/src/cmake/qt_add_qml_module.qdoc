@@ -575,6 +575,22 @@ like \c qmllint. Versions can be specified in the same way as for \c IMPORTS.
 Each module listed here will be added as an \c{optional import} entry in the
 generated \l{Module Definition qmldir Files}{qmldir} file.
 
+Entries in \c OPTIONAL_IMPORTS may also refer to CMake targets by prefixing the
+target name with the \c TARGET keyword. In this case, the QML module URI is
+determined automatically from the target. This requires opting into the CMake
+policy \l{QTP0005}.
+
+For example:
+
+\badcode
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    OPTIONAL_IMPORTS
+        TARGET OptionalQmlModule
+)
+\endcode
+
 \c DEFAULT_IMPORTS specifies which of the optional imports are the default entries
 that should be loaded by tooling. One entry should be specified for every group of
 \c OPTIONAL_IMPORTS in the module. As optional imports are only resolved at runtime,
@@ -583,6 +599,25 @@ be resolved. To remedy this, you can specify one of the optional imports as the
 default import;  tooling will then pick it. If you have one optional import that
 gets used at runtime without any further configuration, that is an ideal candidate
 for the default import.
+
+Entries in \c DEFAULT_IMPORTS may also refer to CMake targets by prefixing the
+target name with the \c TARGET keyword. In this case, the QML module URI is
+determined automatically from the target. This requires opting into the CMake
+policy \l{QTP0005}.
+
+For example:
+
+\badcode
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 1.0
+    OPTIONAL_IMPORTS
+        TARGET BackendA
+        TARGET BackendB
+    DEFAULT_IMPORTS
+        TARGET BackendA
+)
+\endcode
 
 \c DEPENDENCIES provides a list of other QML modules that this module depends
 on, but doesn't necessarily import. It would typically be used for dependencies
@@ -646,14 +681,22 @@ qt_add_qml_module(my_module
 )
 \endcode
 
-\note Using TARGET <cmake-target> in DEPENDENCIES or IMPORTS does not automatically
-link against the given target. It is used only to derive QML metadata, import paths,
-and to establish build-order dependencies. If the QML module or its generated plugin
-requires symbols from that target, the target must still be linked explicitly using
-target_link_libraries().
+\note Using \c{TARGET <cmake-target>} in \c DEPENDENCIES, \c IMPORTS,
+\c OPTIONAL_IMPORTS, or \c DEFAULT_IMPORTS does not automatically link against
+the given target. It is used only to derive QML metadata, import paths, and to
+establish build-order dependencies. If the QML module or its generated plugin
+requires symbols from that target, the target must still be linked explicitly
+using \c target_link_libraries().
 
-\note The <cmake-target> used with the \c TARGET keyword must be a target built
-by your project (not an imported target provided by find_package).
+\note The \c{<cmake-target>} used with the \c TARGET keyword must be a target
+built by your project (not an imported target provided by \c{find_package}).
+
+\note When using \c{TARGET <cmake-target>} in \c DEPENDENCIES, \c IMPORTS,
+\c OPTIONAL_IMPORTS, or \c DEFAULT_IMPORTS, only the direct dependency on the
+specified target is established. Transitive QML module dependencies of the
+referenced target (that is, QML modules which that target itself depends on)
+are \e not automatically added. Each QML module dependency must be declared
+explicitly.
 
 \note Adding the module to \c DEPENDENCIES is not necessary if the module
 is already imported via the \c IMPORTS option. The recommended way is to
