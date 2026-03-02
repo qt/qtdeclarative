@@ -6,6 +6,54 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype CustomTheme
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Defines a named custom theme.
+
+    CustomTheme lets you add additional themes beyond
+    \l {Style::light}{light} and \l {Style::dark}{dark}.
+    While the light and dark themes are applied \l {Style::themeName}{automatically} based on the
+    operating system's color scheme, a CustomTheme must be activated
+    explicitly by the application. Apart from this difference, all themes work the same way.
+
+    You can define any number of custom themes inside a \l Style.
+
+    \snippet CustomThemeSnippets.qml custom themes
+
+    To activate a CustomTheme, set \l Style::themeName to its name
+    from the application:
+
+    \snippet CustomThemeSnippets.qml change theme
+
+    You can also set a CustomTheme as the default theme at start-up:
+
+    \snippet CustomThemeSnippets.qml custom theme at start-up
+
+    The custom themes defined in a Style can be queried at runtime
+    from \l {Style::customThemeNames} or \l {Style::themeNames}.
+
+    \labs
+
+    \sa Theme, Style::themeName, Style::customThemeNames
+*/
+
+/*!
+    \qmlproperty string CustomTheme::name
+
+    The name of this theme. This is the value you assign to
+    \l {Style::themeName} to activate it.
+*/
+
+/*!
+    \qmlproperty Component CustomTheme::theme
+
+    The \l Theme component that defines the theme. It will
+    only be instantiated when the theme is activated.
+
+    Properties not set in the theme fall back to those defined in the \l Style.
+*/
+
 QQStyleKitCustomTheme::QQStyleKitCustomTheme(QObject *parent)
     : QObject(parent)
 {
