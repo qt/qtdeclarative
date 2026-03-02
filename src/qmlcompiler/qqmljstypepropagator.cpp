@@ -372,8 +372,9 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                     continue;
                 if (it->objectType() == qmlScope) {
                     suggestion = QQmlJSFixSuggestion {
-                        name + " is implicitly injected into this delegate."
-                               " Add a required property instead."_L1,
+                        "'%1' is implicitly injected into this delegate. "
+                        "Add a required property '%1' to the delegate instead."_L1
+                                .arg(name),
                         qmlScope->sourceLocation()
                     };
                 };
