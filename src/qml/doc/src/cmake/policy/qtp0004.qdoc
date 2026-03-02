@@ -22,7 +22,58 @@ The \c OLD behavior of this policy is that a qmldir file is only generated for
 the root directory of a module.
 
 The \c NEW behavior of this policy is that for each directory with QML files in
-a module a separate qmldir file is generated.
+a module a separate qmldir file is generated. Each generated qmldir contains a
+\c prefer directive that redirects the implicit import to the module's canonical
+resource location.
+
+\section1 Background
+
+The QML engine always performs an implicit import of the directory a QML file
+resides in. For files in the module root directory, this implicit import
+resolves to the module itself, so all sibling components are visible. However,
+when QML files are placed in subdirectories, the implicit import resolves to
+that subdirectory instead. Components in the subdirectory then cannot see other
+components in the same module without adding an explicit \c import statement.
+This is a frequent source of errors.
+
+With the \c NEW behavior, the build system generates a qmldir file in each
+subdirectory containing a \c prefer directive pointing to the module's canonical
+resource location. This makes the implicit import of every QML file in the
+module equivalent to importing the module itself, so all components can find
+each other regardless of their directory.
+
+\section1 Example
+
+Consider a module with QML files split across multiple subdirectories:
+
+\badcode
+qt_add_qml_module(mymodule
+    URI MyModule
+    QML_FILES
+        Main.qml
+        controls/MyButton.qml
+        views/MyView.qml
+)
+\endcode
+
+A common need is for \c{views/MyView.qml} to use \c{MyButton} from the
+\c controls subdirectory. With the \c OLD behavior this fails silently:
+\c{views/MyView.qml} implicitly imports the \c views subdirectory, so
+\c{MyButton} is not found unless you add \c{import MyModule} explicitly.
+
+With the \c NEW behavior, an extra qmldir is generated in both the \c controls
+and \c views subdirectories. Each redirects the implicit import to the module's
+canonical resource location, so \c{views/MyView.qml} can use \c{MyButton}
+and any other type in the module without an explicit import.
+
+You can set the policy explicitly in your project before calling
+\c{qt_add_qml_module()}:
+\badcode
+qt_policy(SET QTP0004 NEW)
+\endcode
+Alternatively, call
+\l{qt6_standard_project_setup}{qt_standard_project_setup()} with a
+\c REQUIRES version of 6.8 or later.
 
 Qt 6.8 issues warnings if you do not explicitly set the policy.
 
