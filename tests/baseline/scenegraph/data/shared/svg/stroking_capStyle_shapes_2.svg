@@ -1,0 +1,12 @@
+<svg width="900" height="300" viewBox="0 0 130 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <polyline id="letterz" points="10,10 40,10 10,30 40,30" fill="none" stroke-width="2.5" stroke="black"/>
+    <polyline id="highlight" points="10,10 40,10 10,30 40,30" fill="none" stroke-width="0.1" stroke="yellow"/>
+  </defs>
+  <use href="#letterz" stroke-linecap="butt"/>
+  <use href="#highlight"/>
+  <use href="#letterz" x="40" stroke-linecap="round"/>
+  <use href="#highlight" x="40"/>
+  <use href="#letterz" x=" 80" stroke-linecap="square"/>
+  <use href="#highlight" x="80"/>
+</svg>

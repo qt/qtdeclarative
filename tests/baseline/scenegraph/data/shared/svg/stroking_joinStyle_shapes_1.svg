@@ -1,0 +1,12 @@
+<svg width="600" height="200" viewBox="0 0 30 10" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <g id="capTest">
+      <polyline points="1,8 1,2 7,2" fill="none" stroke-width="1" stroke="black"/>
+      <polyline points="1,8 1,2 7,2" fill="none" stroke-width="0.03" stroke="yellow"/>
+    </g>
+  </defs>
+  
+  <use href="#capTest" x="1" stroke-linejoin="bevel"/>
+  <use href="#capTest" x="11" stroke-linejoin="round"/>
+  <use href="#capTest" x="21" stroke-linejoin="miter"/>
+</svg>

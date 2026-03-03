@@ -849,6 +849,8 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
         stream() << "capStyle: " << QQuickVectorImageGenerator::Utils::strokeCapStyleString(info.strokeStyle.lineCapStyle);
         stream() << "joinStyle: " << QQuickVectorImageGenerator::Utils::strokeJoinStyleString(info.strokeStyle.lineJoinStyle);
         stream() << "miterLimit: " << info.strokeStyle.miterLimit;
+        if (info.strokeStyle.cosmetic)
+            stream() << "cosmeticStroke: true";
         if (info.strokeStyle.dashArray.length() != 0) {
             stream() << "strokeStyle: " << "ShapePath.DashLine";
             stream() << "dashPattern: " << QQuickVectorImageGenerator::Utils::listString(info.strokeStyle.dashArray);
