@@ -2317,79 +2317,17 @@
                         "value": "anonymous"
                     }
                 ],
-                "className": "URLPrototype",
+                "className": "URLSearchParams",
                 "methods": [
-                    {
-                        "access": "public",
-                        "arguments": [
-                        ],
-                        "isJavaScriptFunction": true,
-                        "name": "toString"
-                    },
-                    {
-                        "access": "public",
-                        "arguments": [
-                        ],
-                        "isJavaScriptFunction": true,
-                        "name": "toJSON"
-                    }
                 ],
                 "object": true,
                 "properties": [
-                    {
-                        "member": "fakeMember",
-                        "name": "hash"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "host"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "hostname"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "href"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "origin"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "password"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "pathname"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "port"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "protocol"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "search"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "searchParams"
-                    },
-                    {
-                        "member": "fakeMember",
-                        "name": "username"
-                    }
                 ],
-                "qualifiedClassName": "URLPrototype",
+                "qualifiedClassName": "URLSearchParams",
                 "superClasses": [
                     {
                         "access": "public",
-                        "name": "ObjectPrototype"
+                        "name": "URLPrototypeSearchParamsPrototype"
                     }
                 ]
             },
@@ -2400,29 +2338,17 @@
                         "value": "anonymous"
                     }
                 ],
-                "className": "URL",
+                "className": "URLPrototypeSearchParamsPrototype",
                 "methods": [
-                ],
-                "object": true,
-                "properties": [
-                ],
-                "qualifiedClassName": "URL",
-                "superClasses": [
                     {
                         "access": "public",
-                        "name": "URLPrototype"
-                    }
-                ]
-            },
-            {
-                "classInfos": [
-                    {
-                        "name": "QML.Element",
-                        "value": "anonymous"
-                    }
-                ],
-                "className": "URLSearchParamsPrototype",
-                "methods": [
+                        "arguments": [
+                        ],
+                        "isConstructor": true,
+                        "isJavaScriptFunction": true,
+                        "name": "constructor",
+                        "returnType": "URLSearchParams"
+                    },
                     {
                         "access": "public",
                         "arguments": [
@@ -2511,7 +2437,7 @@
                 "object": true,
                 "properties": [
                 ],
-                "qualifiedClassName": "URLSearchParamsPrototype",
+                "qualifiedClassName": "URLPrototypeSearchParamsPrototype",
                 "superClasses": [
                     {
                         "access": "public",
@@ -2526,17 +2452,142 @@
                         "value": "anonymous"
                     }
                 ],
-                "className": "URLSearchParams",
+                "className": "URLPrototypeSearchParams",
                 "methods": [
                 ],
                 "object": true,
                 "properties": [
                 ],
-                "qualifiedClassName": "URLSearchParams",
+                "qualifiedClassName": "URLPrototypeSearchParams",
                 "superClasses": [
                     {
                         "access": "public",
-                        "name": "URLSearchParamsPrototype"
+                        "name": "URLPrototypeSearchParamsPrototype"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "anonymous"
+                    }
+                ],
+                "className": "URLPrototype",
+                "methods": [
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isConstructor": true,
+                        "isJavaScriptFunction": true,
+                        "name": "constructor",
+                        "returnType": "URL"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "toString"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "toJSON"
+                    }
+                ],
+                "object": true,
+                "properties": [
+                    {
+                        "member": "fakeMember",
+                        "name": "hash",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "host",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "hostname",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "href",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "origin",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "password",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "pathname",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "port",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "protocol",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "search",
+                        "type": "string"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "searchParams",
+                        "type": "URLPrototypeSearchParams"
+                    },
+                    {
+                        "member": "fakeMember",
+                        "name": "username",
+                        "type": "string"
+                    }
+                ],
+                "qualifiedClassName": "URLPrototype",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "ObjectPrototype"
+                    }
+                ]
+            },
+            {
+                "classInfos": [
+                    {
+                        "name": "QML.Element",
+                        "value": "anonymous"
+                    }
+                ],
+                "className": "URL",
+                "methods": [
+                ],
+                "object": true,
+                "properties": [
+                ],
+                "qualifiedClassName": "URL",
+                "superClasses": [
+                    {
+                        "access": "public",
+                        "name": "URLPrototype"
                     }
                 ]
             },
@@ -5093,6 +5144,10 @@
                     },
                     {
                         "name": "HighContrast",
+                        "type": "number"
+                    },
+                    {
+                        "name": "ReducedMotion",
                         "type": "number"
                     },
                     {
@@ -9004,6 +9059,10 @@
                         "type": "number"
                     },
                     {
+                        "name": "ImhDecimaNumbersOnly",
+                        "type": "number"
+                    },
+                    {
                         "name": "ImhExclusiveInputMask",
                         "type": "number"
                     },
@@ -9189,6 +9248,10 @@
                     },
                     {
                         "name": "RangeModelDataRole",
+                        "type": "number"
+                    },
+                    {
+                        "name": "RangeModelAdapterRole",
                         "type": "number"
                     },
                     {
@@ -9598,6 +9661,31 @@
                         ],
                         "isJavaScriptFunction": true,
                         "name": "shift"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                            }
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "unshift"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                            {
+                            }
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "push"
+                    },
+                    {
+                        "access": "public",
+                        "arguments": [
+                        ],
+                        "isJavaScriptFunction": true,
+                        "name": "pop"
                     }
                 ],
                 "object": true,
