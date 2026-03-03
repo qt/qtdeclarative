@@ -21,6 +21,7 @@
 
 #include <QtCore/qpointer.h>
 
+#include <algorithm>
 #include <memory>
 
 QT_BEGIN_NAMESPACE
@@ -54,6 +55,22 @@ static bool allowSyntheticRightClick()
             allowRightClick = 1; // user didn't opt out
     }
     return allowRightClick != 0;
+}
+
+static QQuickDeliveryAgentPrivate::HoverItems::iterator findHoverStateByItem(QQuickDeliveryAgentPrivate::HoverItems &hoverItems, QQuickItem *item)
+{
+    return std::find_if(hoverItems.begin(), hoverItems.end(),
+                        [item](const QQuickDeliveryAgentPrivate::HoverItemState &hoverState) {
+                            return hoverState.item == item;
+                        });
+}
+
+static QQuickDeliveryAgentPrivate::HoverItems::const_iterator findHoverStateByItem(const QQuickDeliveryAgentPrivate::HoverItems &hoverItems, const QQuickItem *item)
+{
+    return std::find_if(hoverItems.cbegin(), hoverItems.cend(),
+                        [item](const QQuickDeliveryAgentPrivate::HoverItemState &hoverState) {
+                            return hoverState.item == item;
+                        });
 }
 
 void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent)
@@ -683,16 +700,16 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
 
     // while we don't modify hoveritems directly in the loop, the delivery of the event
     // is expected to reset the stored ID for each cleared item, and items might also
-    // be removed from the map in response to event delivery.
+    // be removed from the list in response to event delivery.
     // So we don't want to iterate over a const version of hoverItems here (it would be
     // misleading), but still use const_iterators to avoid  premature detach and constant
     // ref-count-checks.
     for (auto it = hoverItems.cbegin(); it != hoverItems.cend(); ++it) {
-        if (const auto &item = it.key()) {
+        if (QQuickItem *item = it->item) {
             deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, HoverChange::Clear);
             Q_ASSERT(([this, item]{
-                const auto &it2 = std::as_const(hoverItems).find(item);
-                return it2 == hoverItems.cend() || it2.value() == 0;
+                const auto it2 = findHoverStateByItem(std::as_const(hoverItems), item);
+                return it2 == hoverItems.cend() || it2->hoverId == 0;
             }()));
         }
     }
@@ -1255,8 +1272,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
     const QPointF localPos = item->mapFromScene(scenePos);
     const QPointF globalPos = item->mapToGlobal(localPos);
     const bool isHovering = item->contains(localPos);
-    const auto hoverItemIterator = hoverItems.find(item);
-    const bool wasHovering = hoverItemIterator != hoverItems.end() && hoverItemIterator.value() != 0;
+    auto hoverItemIterator = findHoverStateByItem(hoverItems, item);
+    const bool wasHovering = hoverItemIterator != hoverItems.end() && hoverItemIterator->hoverId != 0;
 
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
@@ -1273,9 +1290,9 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
         // line towards the root from now on.
         hoveredLeafItemFound = true;
         if (hoverItemIterator != hoverItems.end())
-            hoverItemIterator.value() = currentHoverId;
+            hoverItemIterator->hoverId = currentHoverId;
         else
-            hoverItems[item] = currentHoverId;
+            hoverItems.append({item, currentHoverId});
 
         if (wasHovering)
             accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
@@ -1283,7 +1300,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
             accepted = sendHoverEvent(QEvent::HoverEnter, item, scenePos, lastScenePos, modifiers, timestamp);
     } else if (wasHovering) {
         // A leave should never stop propagation
-        hoverItemIterator.value() = 0;
+        hoverItemIterator->hoverId = 0;
         sendHoverEvent(QEvent::HoverLeave, item, scenePos, lastScenePos, modifiers, timestamp);
     }
 
@@ -1324,10 +1341,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
                     // Mark the whole item as updated, even if only the handler is
                     // actually in a hovered state (because of HoverHandler.margins)
                     hoveredLeafItemFound = true;
+                    hoverItemIterator = findHoverStateByItem(hoverItems, item);
                     if (hoverItemIterator != hoverItems.end())
-                        hoverItemIterator.value() = currentHoverId;
+                        hoverItemIterator->hoverId = currentHoverId;
                     else
-                        hoverItems[item] = currentHoverId;
+                        hoverItems.append({item, currentHoverId});
                     if (hh->isBlocking()) {
                         qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
                         accepted = true;
@@ -2283,7 +2301,10 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
                     bool res = deliverHoverEventToItem(item, point.scenePosition(), point.sceneLastPosition(),
                                                        event->modifiers(), event->timestamp(), HoverChange::Set);
                     // if the event was accepted, then the item's ID must be valid
-                    Q_ASSERT(!res || hoverItems.value(item));
+                    Q_ASSERT(([this, item = item.get(), res]{
+                        const auto it2 = findHoverStateByItem(std::as_const(hoverItems), item);
+                        return !res || it2->hoverId != 0;
+                    }()));
                 }
             }
         }
