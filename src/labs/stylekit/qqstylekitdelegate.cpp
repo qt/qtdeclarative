@@ -10,6 +10,60 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype StyledItem
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits Item
+    \brief Renders a DelegateStyle.
+
+    StyledItem renders a \l DelegateStyle. It reads properties such as
+    \l {DelegateStyle::color}{color},
+    \l {DelegateStyle::border}{border},
+    \l {DelegateStyle::gradient}{gradient}, and
+    \l {DelegateStyle::image}{image}, and creates the corresponding
+    visual elements internally.
+
+    If the \l {DelegateStyle::delegate}{delegate} set on a DelegateStyle
+    is \c null (the default), StyledItem will automatically be used for rendering.
+
+    A custom \l {DelegateStyle::delegate}{delegate} can be set to
+    any Item. But combined with a StyledItem, you can retain
+    the default rendering while adding overlay, underlay, or shader effects.
+    The following snippet shows how to draw an extra Item on top of the
+    default delegate:
+
+    \snippet StyledItemOverlay.qml overlay
+
+    \labs
+
+    For more examples of overlays, underlays and shader effects, see the
+    \l{StyleKit Example}.
+
+    \sa DelegateStyle, {DelegateStyle::delegate}{delegate}, {DelegateStyle::data}{data}
+*/
+
+/*!
+    \qmlproperty DelegateStyle StyledItem::delegateStyle
+
+    The \l DelegateStyle that this item renders.
+
+    This property is \l {Required Properties}{required}. When
+    StyledItem is the root item of a
+    \l {DelegateStyle::delegate}{delegate}, it is set automatically.
+    But when used as a child inside a custom delegate, it must be set
+    explicitly.
+
+    The following snippet uses a custom delegate that draws a star
+    underneath the default slider handle. Since the root item is not
+    a StyledItem, it declares a \l {Required Properties}{required}
+    property \c {delegateStyle} (which is assigned automatically), and
+    forwards it to the child StyledItem:
+
+    \snippet StyledItemUnderlay.qml underlay
+
+    \sa DelegateStyle, {DelegateStyle::delegate}{delegate}, {DelegateStyle::data}{data}
+*/
+
 QQStyleKitDelegate::QQStyleKitDelegate(QQuickItem *parent)
     : QQuickImplicitSizeItem(*new QQuickImplicitSizeItemPrivate, parent)
 {
