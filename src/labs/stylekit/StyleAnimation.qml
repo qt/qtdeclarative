@@ -4,6 +4,15 @@
 
 import QtQuick
 
+/*!
+    \qmltype StyleAnimation
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits ParallelAnimation
+    \brief Animates style property changes during state transitions.
+
+    \labs
+*/
+
 ParallelAnimation {
     id: root
     property alias easing: colorAnimation.easing

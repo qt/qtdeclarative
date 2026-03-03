@@ -53,12 +53,7 @@ QT_BEGIN_NAMESPACE
     can use it to style all \l {Button}{buttons} inside a \l {Frame}{frame}
     differently from buttons elsewhere:
 
-    \snippet VariationSnippets.qml frame with variation
-
-    You can also set it back to an empty list for a subtype, if you don't
-    want it to inherit the variations set on a base type:
-
-    \snippet VariationSnippets.qml groupbox without variation
+    \snippet TypeVariationSnippets.qml frame with variation
 
     Unlike instance variations — which are applied to specific control
     instances from the application via the

@@ -55,6 +55,24 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty int Style::Stretch
+    \readonly
+
+    A sentinel value that, when assigned to a delegate's
+    \l {DelegateStyle::implicitWidth}{implicitWidth} or
+    \l {DelegateStyle::implicitHeight}{implicitHeight}, causes the delegate
+    to fill the available space along that axis. The space available will
+    be constrained by layout properties, such as \l {DelegateStyle::}{margins} and
+    \l {ControlStyle::}{padding}.
+
+    For example, to make a slider groove fill out the available width:
+
+    \snippet StyleSnippets.qml stretch
+
+    \sa DelegateStyle::implicitWidth, DelegateStyle::implicitHeight
+*/
+
+/*!
     \qmlproperty list<string> Style::customThemeNames
     \readonly
 
@@ -115,13 +133,13 @@ QT_BEGIN_NAMESPACE
     The palette of the control being styled.
 
     Use this palette to bind colors in the style to the
-    \l {StyleReader::palette()}{palette} of the control being styled.
+    \l {StyleReader::palette}{palette} of the control being styled.
     If the application assigns a different palette to a control, the
     style will adapt, and the control will repaint.
 
     \snippet StyleSnippets.qml palette
 
-    \sa {StyleReader::palette()} {StyleReader.palette}
+    \sa StyleReader::palette
 */
 
 /*!
