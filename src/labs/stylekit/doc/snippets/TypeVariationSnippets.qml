@@ -10,26 +10,26 @@ ApplicationWindow {
     height: 800
     visible: true
 
-    StyleKit.style: Style {
-        //! [frame with variation]
+    StyleKit.style:
+    //! [frame with variation]
+    Style {
         frame {
             variations: StyleVariation {
-                button.background {
-                    radius: 0
-                    color: palette.accent
+                button {
+                    text.color: "ghostwhite"
+                    background.border.width: 0
+                    background.color: "slategrey"
                 }
             }
         }
-        //! [frame with variation]
 
-        //! [groupbox without variation]
         groupBox {
             // groupBox falls back to frame. Therefore, if the varations set on a
             // frame is not wanted on a groupBox, just override it and set it back to [].
             variations: []
         }
-        //! [groupbox without variation]
     }
+    //! [frame with variation]
 
     // The rest of the file is not a part of the docs. It just implements a small
     // UI to allow testing the style from the command line using the 'qml' app.
@@ -42,21 +42,14 @@ ApplicationWindow {
             spacing: 10
 
             Button {
-                text: "Button"
+                text: "Button outside"
             }
 
             Frame {
-                width: 100
-                height: 100
-                clip: true
-                Flickable {
-                    anchors.fill: parent
-                    contentWidth: 200
-                    contentHeight: 200
-                    ScrollIndicator.vertical: ScrollIndicator {}
-                    ScrollIndicator.horizontal: ScrollIndicator {}
+                width: 400
+                Row {
                     Button {
-                        text: "Button inside Frame"
+                        text: "Button inside"
                     }
                 }
             }

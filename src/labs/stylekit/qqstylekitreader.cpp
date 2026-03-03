@@ -53,6 +53,18 @@ static quint64 textFontOverridesSignature(const QQStyleKitTextProperties *t)
 QList<QQStyleKitReader *> QQStyleKitReader::s_allReaders;
 QMap<QString, QQmlComponent *> QQStyleKitReader::s_propertyChangesComponents;
 
+/*!
+    \qmltype StyleReader
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Provides access to control state and palette for styling.
+
+    \labs
+*/
+
+/*!
+    \qmlproperty palette StyleReader::palette
+*/
+
 QQStyleKitReader::QQStyleKitReader(QObject *parent)
     : QQStyleKitControlProperties(QQSK::PropertyGroup::Control, parent)
     , m_dontEmitChangedSignals(false)

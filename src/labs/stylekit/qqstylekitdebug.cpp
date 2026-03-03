@@ -9,6 +9,67 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype StyleKitDebug
+    \inqmlmodule Qt.labs.StyleKit
+    \brief Traces how style properties are resolved for a control.
+
+    StyleKitDebug is a diagnostic tool that logs style property reads to the
+    debug output. It is useful for understanding why a control ends up with a
+    particular appearance, especially in complex styles that involve multiple
+    \l {Theme}{themes} or \l {StyleVariation}{style variations}.
+
+    It is accessed through \l {StyleKit::debug}{StyleKit.debug}.
+
+    \note This tool is experimental. Enabling it will severely degrade performance and should only
+    be used for debugging. The output format may change in future versions.
+
+    To start tracing, assign the \l{The id Attribute}{id} of a \l Control to the \l control property:
+
+    \code
+    StyleKit.debug.control = myButton
+    \endcode
+
+    Each resolved property is printed as a single line showing where the value
+    came from and what it resolved to:
+
+    \code
+    [read] StyleReader[Normal].button.background.color -> button[Normal] = #ff0000
+    \endcode
+
+    Use \l filter to limit the output to properties of interest.
+
+    \labs
+
+    \sa StyleKit::debug
+*/
+
+/*!
+    \qmlproperty Item StyleKitDebug::control
+
+    The \l{The id Attribute}{id} of the \l Control to trace.
+
+    When set, StyleKit logs all style property reads
+    for this item to the debug output. Set to \c null to stop tracing.
+
+    \sa filter
+*/
+
+/*!
+    \qmlproperty string StyleKitDebug::filter
+
+    A regular expression used to filter the debug output. Only lines matching
+    the pattern are printed. By default, all output is shown.
+
+    For example, to show only reads of the background color:
+
+    \code
+    StyleKit.debug.filter = "background.color"
+    \endcode
+
+    \sa control
+*/
+
 const QQStyleKitPropertyGroup *QQStyleKitDebug::groupBeingRead = nullptr;
 QPointer<QQuickItem> QQStyleKitDebug::m_item;
 QString QQStyleKitDebug::m_filter;

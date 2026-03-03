@@ -13,6 +13,76 @@ QT_BEGIN_NAMESPACE
 QPointer<QQStyleKitAttached> QQStyleKitAttached::s_instance;
 bool QQStyleKitAttached::s_transitionsEnabled = true;
 
+/*!
+    \qmltype StyleKit
+    \inqmlmodule Qt.labs.StyleKit
+    \brief A singleton for setting and accessing the current style.
+
+    \c StyleKit is a singleton for setting the application \l Style.
+
+    \snippet PlainStyleMain.qml 1
+
+    It also provides properties for global StyleKit configuration and debugging.
+
+    \labs
+
+    \sa Style, StyleVariation
+*/
+
+/*!
+    \qmlproperty Style StyleKit::style
+
+    The active style for the application.
+
+    Set this to a \l Style instance to apply it to all \l {Qt Quick Controls}.
+
+    \snippet PlainStyleMain.qml 1
+
+    \note For best startup performance, set the style on the root \l ApplicationWindow, before
+    any child controls.
+
+    \sa styleUrl, Style
+*/
+
+/*!
+    \qmlproperty string StyleKit::styleUrl
+
+    An alternative to \l style that loads a \l Style from a URL.
+
+    \sa style
+*/
+
+/*!
+    \qmlproperty bool StyleKit::transitionsEnabled
+
+    Controls whether transitions are enabled globally.
+
+    Set this to \c false to disable all transitions in the
+    current style.
+
+    The default value is \c true.
+
+    \sa {ControlStyle::transition}
+*/
+
+/*!
+    \qmlproperty StyleKitDebug StyleKit::debug
+    \readonly
+
+    A run-time debugging tool that can be used to trace
+    style properties for a specific \l Control.
+*/
+
+/*!
+    \qmlmethod bool StyleKit::styleLoaded()
+
+    Returns \c true when the active \l style and its current \l {Style::}{theme} have both
+    finished loading. This can be used to defer initialization logic that
+    depends on resolved style properties.
+
+    \sa style, {Style::}{theme}
+*/
+
 QQStyleKit::QQStyleKit(QObject *parent)
     : QObject(parent)
 {

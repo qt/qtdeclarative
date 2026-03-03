@@ -5,6 +5,19 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype CustomControl
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits ControlStyle
+    \brief Defines styling for a custom control type.
+
+    \labs
+*/
+
+/*!
+    \qmlproperty int CustomControl::controlType
+*/
+
 using namespace Qt::StringLiterals;
 
 QQStyleKitCustomControl::QQStyleKitCustomControl(QObject *parent)
