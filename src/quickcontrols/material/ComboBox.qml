@@ -45,6 +45,7 @@ T.ComboBox {
     }
 
     contentItem: T.TextField {
+        implicitHeight: contentHeight + topPadding + bottomPadding
         leftPadding: Material.textFieldHorizontalPadding
         topPadding: Material.textFieldVerticalPadding
         bottomPadding: Material.textFieldVerticalPadding

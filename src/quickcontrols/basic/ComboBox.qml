@@ -44,6 +44,7 @@ T.ComboBox {
     }
 
     contentItem: T.TextField {
+        implicitHeight: contentHeight + topPadding + bottomPadding
         leftPadding: !control.mirrored ? 12 : control.editable && activeFocus ? 3 : 1
         rightPadding: control.mirrored ? 12 : control.editable && activeFocus ? 3 : 1
         topPadding: 6 - control.padding

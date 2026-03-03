@@ -68,13 +68,16 @@ T.ComboBox {
     contentItem: T.TextField {
         text: control.editable ? control.editText : control.displayText
 
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                 contentHeight + topPadding + bottomPadding)
+
         topPadding: control.__config.label_contentItem.topPadding || 0
         leftPadding: control.__config.label_contentItem.leftPadding || 0
         rightPadding: control.__config.label_contentItem.rightPadding || 0
         bottomPadding: control.__config.label_contentItem.bottomPadding || 0
 
-        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                                 contentHeight + topPadding + bottomPadding)
+        topInset: -control.__config.label_contentItem.topInset || 0
+        bottomInset: -control.__config.label_contentItem.bottomInset || 0
 
         enabled: control.editable
         autoScroll: control.editable
