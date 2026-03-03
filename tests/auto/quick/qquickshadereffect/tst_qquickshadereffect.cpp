@@ -172,7 +172,7 @@ void tst_qquickshadereffect::testPropertyMappings()
 {
     QQuickView view;
     view.setSource(QUrl(QStringLiteral("qrc:/data/testProperties.qml")));
-    QTRY_VERIFY(view.rootObject()->property("finished").toBool());
+    QTRY_VERIFY_WITH_TIMEOUT(view.rootObject()->property("finished").toBool(), 2s);
 }
 
 QTEST_MAIN(tst_qquickshadereffect)
