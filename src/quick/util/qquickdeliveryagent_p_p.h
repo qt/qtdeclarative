@@ -84,7 +84,12 @@ public:
 #endif
     QQuickItem *lastUngrabbed = nullptr;
     QStack<QPointerEvent *> eventsInDelivery;
-    QFlatMap<QPointer<QQuickItem>, uint> hoverItems;
+    struct HoverItemState {
+        QPointer<QQuickItem> item;
+        uint hoverId = 0;
+    };
+    using HoverItems = QList<HoverItemState>;
+    HoverItems hoverItems;
     QList<QQuickItem *> hasFiltered; // during event delivery to a single receiver, the filtering parents for which childMouseEventFilter was already called
     QList<QQuickItem *> skipDelivery; // during delivery of one event to all receivers, Items to which we know delivery is no longer necessary
 
@@ -217,6 +222,7 @@ public:
     QList<QQuickItem *> contextMenuTargets(QQuickItem *item, const QContextMenuEvent *event) const;
     void deliverContextMenuEvent(QContextMenuEvent *event);
 };
+Q_DECLARE_TYPEINFO(QQuickDeliveryAgentPrivate::HoverItemState, Q_RELOCATABLE_TYPE);
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickDeliveryAgentPrivate::FocusOptions)
 
