@@ -400,7 +400,7 @@ QT_BEGIN_NAMESPACE
     \note If a DelegateStyle has a \l {shadow}{drop shadow} defined, it will be
     drawn separately by a \l {ShadowStyle::delegate}{shadow delegate.}
 
-    \sa data
+    \sa data, StyledItem
 */
 
 /*!
