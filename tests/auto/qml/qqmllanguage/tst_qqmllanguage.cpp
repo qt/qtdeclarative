@@ -2976,66 +2976,75 @@ void tst_qqmllanguage::dontDoubleCallClassBegin()
 void tst_qqmllanguage::reservedWords_data()
 {
     QTest::addColumn<QByteArray>("word");
+    QTest::addColumn<bool>("isECMAKeyword");
 
-    QTest::newRow("abstract") << QByteArray("abstract");
-    QTest::newRow("as") << QByteArray("as");
-    QTest::newRow("break") << QByteArray("break");
-    QTest::newRow("case") << QByteArray("case");
-    QTest::newRow("catch") << QByteArray("catch");
-    QTest::newRow("class") << QByteArray("class");
-    QTest::newRow("continue") << QByteArray("continue");
-    QTest::newRow("const") << QByteArray("const");
-    QTest::newRow("debugger") << QByteArray("debugger");
-    QTest::newRow("default") << QByteArray("default");
-    QTest::newRow("delete") << QByteArray("delete");
-    QTest::newRow("do") << QByteArray("do");
-    QTest::newRow("else") << QByteArray("else");
-    QTest::newRow("enum") << QByteArray("enum");
-    QTest::newRow("export") << QByteArray("export");
-    QTest::newRow("extends") << QByteArray("extends");
-    QTest::newRow("false") << QByteArray("false");
-    QTest::newRow("finally") << QByteArray("finally");
-    QTest::newRow("for") << QByteArray("for");
-    QTest::newRow("function") << QByteArray("function");
-    QTest::newRow("if") << QByteArray("if");
-    QTest::newRow("implements") << QByteArray("implements");
-    QTest::newRow("import") << QByteArray("import");
-    QTest::newRow("pragma") << QByteArray("pragma");
-    QTest::newRow("in") << QByteArray("in");
-    QTest::newRow("instanceof") << QByteArray("instanceof");
-    QTest::newRow("interface") << QByteArray("interface");
-    QTest::newRow("native") << QByteArray("native");
-    QTest::newRow("new") << QByteArray("new");
-    QTest::newRow("null") << QByteArray("null");
-    QTest::newRow("package") << QByteArray("package");
-    QTest::newRow("private") << QByteArray("private");
-    QTest::newRow("protected") << QByteArray("protected");
-    QTest::newRow("public") << QByteArray("public");
-    QTest::newRow("return") << QByteArray("return");
-    QTest::newRow("static") << QByteArray("static");
-    QTest::newRow("super") << QByteArray("super");
-    QTest::newRow("switch") << QByteArray("switch");
-    QTest::newRow("synchronized") << QByteArray("synchronized");
-    QTest::newRow("this") << QByteArray("this");
-    QTest::newRow("throw") << QByteArray("throw");
-    QTest::newRow("throws") << QByteArray("throws");
-    QTest::newRow("transient") << QByteArray("transient");
-    QTest::newRow("true") << QByteArray("true");
-    QTest::newRow("try") << QByteArray("try");
-    QTest::newRow("typeof") << QByteArray("typeof");
-    QTest::newRow("var") << QByteArray("var");
-    QTest::newRow("void") << QByteArray("void");
-    QTest::newRow("volatile") << QByteArray("volatile");
-    QTest::newRow("while") << QByteArray("while");
-    QTest::newRow("with") << QByteArray("with");
+    // ECMA keywords
+    QTest::newRow("break") << QByteArray("break") << true;
+    QTest::newRow("do") << QByteArray("do") << true;
+    QTest::newRow("in") << QByteArray("in") << true;
+    QTest::newRow("typeof") << QByteArray("typeof") << true;
+    QTest::newRow("case") << QByteArray("case") << true;
+    QTest::newRow("else") << QByteArray("else") << true;
+    QTest::newRow("void") << QByteArray("void") << true;
+    QTest::newRow("instanceof") << QByteArray("instanceof") << true;
+    QTest::newRow("var") << QByteArray("var") << true;
+    QTest::newRow("catch") << QByteArray("catch") << true;
+    QTest::newRow("export") << QByteArray("export") << true;
+    QTest::newRow("new") << QByteArray("new") << true;
+    QTest::newRow("class") << QByteArray("class") << true;
+    QTest::newRow("extends") << QByteArray("extends") << true;
+    QTest::newRow("return") << QByteArray("return") << true;
+    QTest::newRow("while") << QByteArray("while") << true;
+    QTest::newRow("const") << QByteArray("const") << true;
+    QTest::newRow("finally") << QByteArray("finally") << true;
+    QTest::newRow("super") << QByteArray("super") << true;
+    QTest::newRow("with") << QByteArray("with") << true;
+    QTest::newRow("continue") << QByteArray("continue") << true;
+    QTest::newRow("for") << QByteArray("for") << true;
+    QTest::newRow("switch") << QByteArray("switch") << true;
+    QTest::newRow("debugger") << QByteArray("debugger") << true;
+    QTest::newRow("function") << QByteArray("function") << true;
+    QTest::newRow("this") << QByteArray("this") << true;
+    QTest::newRow("default") << QByteArray("default") << true;
+    QTest::newRow("if") << QByteArray("if") << true;
+    QTest::newRow("throw") << QByteArray("throw") << true;
+    QTest::newRow("delete") << QByteArray("delete") << true;
+    QTest::newRow("import") << QByteArray("import") << true;
+    QTest::newRow("try") << QByteArray("try") << true;
+
+    // bool and null literals
+
+    QTest::newRow("false") << QByteArray("false") << true;
+    QTest::newRow("null") << QByteArray("null") << true;
+    QTest::newRow("true") << QByteArray("true") << true;
+
+    QTest::newRow("abstract") << QByteArray("abstract") << false;
+    QTest::newRow("as") << QByteArray("as") << false;
+    QTest::newRow("enum") << QByteArray("enum") << false;
+    QTest::newRow("implements") << QByteArray("implements") << false;
+    QTest::newRow("pragma") << QByteArray("pragma") << false;
+    QTest::newRow("interface") << QByteArray("interface") << false;
+    QTest::newRow("native") << QByteArray("native") << false;
+    QTest::newRow("package") << QByteArray("package") << false;
+    QTest::newRow("private") << QByteArray("private") << false;
+    QTest::newRow("protected") << QByteArray("protected") << false;
+    QTest::newRow("public") << QByteArray("public") << false;
+    QTest::newRow("static") << QByteArray("static") << false;
+    QTest::newRow("synchronized") << QByteArray("synchronized") << false;
+    QTest::newRow("throws") << QByteArray("throws") << false;
+    QTest::newRow("transient") << QByteArray("transient") << false;
+    QTest::newRow("volatile") << QByteArray("volatile") << false;
 }
 
 void tst_qqmllanguage::reservedWords()
 {
     QFETCH(QByteArray, word);
+    QFETCH(bool, isECMAKeyword);
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0\nQtObject { property string " + word + " }", QUrl());
-    QCOMPARE(component.errorString(), QLatin1String("<Unknown File>:2:28: Expected token `identifier'\n"));
+    QString errorMessage = "<Unknown File>:2:28: %1 keyword \"%2\" cannot be used as a QML identifier.\n"_L1
+            .arg(isECMAKeyword ? "ECMAScript"_L1 : "Reserved"_L1, QString::fromLatin1(word));
+    QCOMPARE(component.errorString(), errorMessage);
 }
 
 // Check that first child of qml is of given type. Empty type insists on error.

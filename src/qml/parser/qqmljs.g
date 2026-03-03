@@ -1769,6 +1769,34 @@ QmlIdentifier: T_IDENTIFIER
             | ECMAContextualKeyword
             | QMLContextualKeyword;
 
+--- error rules for QML Identifier, used to generate more sensible warnings
+
+--- enum is ECMA future reserved, but also part of QML
+FaultyQmlIdentifierQML: T_ENUM | T_PRAGMA | QMLReservedWord;
+QmlIdentifier: FaultyQmlIdentifierQML;
+/.
+    case $rule_number: {
+        syntaxError(loc(1),
+          QString::fromLatin1("Reserved keyword \"%1\" cannot be used as a QML identifier.")
+                             .arg(stringRef(1))
+        );
+    } break;
+./
+
+
+FaultyQmlIdentifierECMA: ECMAKeyword | ECMABooleanLiteral | ECMANullLiteral;
+QmlIdentifier: FaultyQmlIdentifierECMA;
+/.
+    case $rule_number: {
+        syntaxError(loc(1),
+          QString::fromLatin1("ECMAScript keyword \"%1\" cannot be used as a QML identifier.")
+                             .arg(stringRef(1))
+        );
+    } break;
+./
+--- end error rules
+
+
 --- ECMA Identifiers (262 ES 7 12.1)
 --- since qlarl doesn't support "NOT" we can't define a set IdentifierName \ ECMAReservedWord
 --- introducing JsIdentifier as a workaround,
