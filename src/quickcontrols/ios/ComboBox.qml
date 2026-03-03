@@ -85,8 +85,8 @@ T.ComboBox {
     contentItem: T.TextField {
         implicitWidth: control.__popupButtonStyle ? Math.max(implicitBackgroundWidth + leftInset + rightInset,
                                 contentWidth + leftPadding + rightPadding) : 0
-        implicitHeight: control.__popupButtonStyle ? Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                                 contentHeight + topPadding + bottomPadding) : 0
+        implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                                         contentHeight + topPadding + bottomPadding)
         padding: control.__popupButtonStyle ? 0 : 6
         text: control.editable ? control.editText : control.displayText
         enabled: control.editable
