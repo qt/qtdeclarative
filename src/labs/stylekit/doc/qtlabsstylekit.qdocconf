@@ -13,10 +13,7 @@ qhp.QtLabsStyleKit.virtualFolder = qtlabsstylekit
 qhp.QtLabsStyleKit.indexTitle    = Qt Labs StyleKit
 qhp.QtLabsStyleKit.indexRoot     =
 
-qhp.QtLabsStyleKit.subprojects = manual qmltypes
-qhp.QtLabsStyleKit.subprojects.manual.title = Qt Labs StyleKit
-qhp.QtLabsStyleKit.subprojects.manual.indexTitle = Qt Labs StyleKit
-qhp.QtLabsStyleKit.subprojects.manual.selectors = group:none
+qhp.QtLabsStyleKit.subprojects = qmltypes
 
 qhp.QtLabsStyleKit.subprojects.qmltypes.title = QML Types
 qhp.QtLabsStyleKit.subprojects.qmltypes.indexTitle = Qt Labs StyleKit QML Types
