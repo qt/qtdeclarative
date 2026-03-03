@@ -650,8 +650,6 @@ void tst_QQmlDelegateModel::nestedRequired()
             qPrintable(url.toString()
                        + QLatin1String(":13:9: Required property control was not initialized")));
     QObject *delegate5 = delegateModel3->object(0);
-
-    QEXPECT_FAIL("", "object should not be created with required property unset", Continue);
     QVERIFY(!delegate5);
 }
 

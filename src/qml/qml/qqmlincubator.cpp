@@ -51,7 +51,10 @@ void QQmlEnginePrivate::incubate(
 
         p->changeStatus(QQmlIncubator::Loading);
 
-        if (!watcher.hasRecursed()) {
+        if (!p->q) {
+            p->clear();
+            inProgressCreations--;
+        } else if (!watcher.hasRecursed()) {
             QQmlInstantiationInterrupt i;
             p->incubate(i);
         }
@@ -62,8 +65,12 @@ void QQmlEnginePrivate::incubate(
         p->vmeGuard.guard(p->creator.data());
         p->changeStatus(QQmlIncubator::Loading);
 
-        if (incubationController)
+        if (!p->q) {
+            p->clear();
+            inProgressCreations--;
+        } else if (incubationController) {
              incubationController->incubatingObjectCountChanged(incubatorCount);
+        }
     }
 }
 
@@ -340,10 +347,12 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
         if (watcher.hasRecursed())
             return;
 
-        if (errors.isEmpty())
+        if (errors.isEmpty()) {
             progress = QQmlIncubatorPrivate::Completing;
-        else
+        } else {
             progress = QQmlIncubatorPrivate::Completed;
+            delete std::exchange(result, nullptr);
+        }
 
         changeStatus(calculateStatus());
 
@@ -371,6 +380,9 @@ finishIncubate:
     if (progress == QQmlIncubatorPrivate::Completed && waitingFor.isEmpty()) {
         QExplicitlySharedDataPointer<QQmlIncubatorPrivate> isWaiting = waitingOnMe;
         clear();
+
+        if (!errors.isEmpty())
+            delete std::exchange(result, nullptr);
 
         if (isWaiting) {
             QRecursionWatcher<QQmlIncubatorPrivate, &QQmlIncubatorPrivate::recursion> watcher(isWaiting.data());

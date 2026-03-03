@@ -161,6 +161,9 @@ QQuickStackElement *QQuickStackElement::fromStackViewArg(
 bool QQuickStackElement::load(QV4::ExecutionEngine *v4, QQuickStackView *parent)
 {
     setView(parent);
+    if (init)
+        return item;
+
     if (!item) {
         ownItem = true;
 
