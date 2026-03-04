@@ -49,7 +49,7 @@ T.TabButton {
         font: control.font
         icon: control.icon
         defaultIconColor: control.down ? pressedText : control.hovered ? hoveredText : control.palette.buttonText
-        color: control.icon.color
+        color: defaultIconColor
 
         readonly property color pressedText: Application.styleHints.colorScheme === Qt.Light
             ? Qt.rgba(control.palette.buttonText.r, control.palette.buttonText.g, control.palette.buttonText.b, 0.447)

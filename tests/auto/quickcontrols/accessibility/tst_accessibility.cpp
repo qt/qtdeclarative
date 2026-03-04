@@ -1,13 +1,17 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include <QtCore/qloggingcategory.h>
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
+#include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTest/quicktest.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
@@ -19,6 +23,10 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #endif
 
+Q_LOGGING_CATEGORY(lcNoTransparentText, "qt.quick.controls.tests.accessibility.notransparenttext")
+
+using namespace QQuickControlsTestUtils;
+
 class tst_accessibility : public QQmlDataTest
 {
     Q_OBJECT
@@ -27,6 +35,8 @@ public:
     tst_accessibility();
 
 private slots:
+    void initTestCase() override;
+
     void a11y_data();
     void a11y();
 
@@ -44,9 +54,19 @@ private slots:
     void locale();
 
     void defaultButton();
+    void noTransparentText();
 
 private:
-    QQmlEngine engine;
+    /*
+        This is a pointer because:
+
+        #1: Using a new engine for each test row is very slow.
+        #2: qmlClearTypeRegistrations cannot be called while an engine exists.
+
+        Until QTBUG-134198 is implemented, we need to keep the engine around as long as possible
+        for #1, and destroy (and recreate) it when necessary for #2.
+    */
+    std::unique_ptr<QQmlEngine> engine;
 };
 
 #if QT_CONFIG(accessibility)
@@ -84,6 +104,17 @@ tst_accessibility::tst_accessibility()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
+
+void tst_accessibility::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+#if !defined(Q_OS_ANDROID)
+    // StyleInfo is not supported when cross-compiling: QTBUG-100191.
+    StyleInfo::instance()->initialize(QQC2_IMPORT_PATH);
+#endif
+    engine.reset(new QQmlEngine);
+}
+
 
 void tst_accessibility::a11y_data()
 {
@@ -142,7 +173,7 @@ void tst_accessibility::a11y()
     QFETCH(QAccessible::Role, role);
     QFETCH(QString, text);
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("defaults/" + adjustFileBaseName(fileBaseName) + ".qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -228,7 +259,7 @@ void tst_accessibility::override()
     const QString name = QTest::currentDataTag();
     const QString fileBaseName = name.toLower();
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("override/" + adjustFileBaseName(fileBaseName) + ".qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -271,7 +302,7 @@ void a11yDescendants(QAccessibleInterface *iface, Predicate pred)
 
 void tst_accessibility::ordering()
 {
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("ordering/page.qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -298,7 +329,7 @@ void tst_accessibility::actionAccessibility()
         accessibility->setActive(true);
     }
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("actionAccessibility/button.qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -329,7 +360,7 @@ void tst_accessibility::actionAccessibilityImplicitName()
         accessibility->setActive(true);
     }
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("actionAccessibility/button2.qml"));
 
     QScopedPointer<QObject> object(component.create());
@@ -356,7 +387,7 @@ void tst_accessibility::sliderTest()
         accessibility->setActive(true);
     }
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
     component.loadUrl(testFileUrl("item.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
@@ -405,7 +436,7 @@ void tst_accessibility::accessibleName()
         accessibility->setActive(true);
     }
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
 
     // verify that accessible name matches the button text if none was set explicitly
     component.loadUrl(testFileUrl("accessibleName/button.qml"));
@@ -444,7 +475,7 @@ void tst_accessibility::locale()
         accessibility->setActive(true);
     }
 
-    QQmlComponent component(&engine);
+    QQmlComponent component(engine.get());
 
     // verify that locale is the default locale if none was set explicitly
     component.loadUrl(testFileUrl("locale/button.qml"));
@@ -507,6 +538,209 @@ void tst_accessibility::defaultButton()
         QCOMPARE(buttonAccessible->state().defaultButton, button->isHighlighted());
     }
 #endif
+}
+
+// Not using data rows for this since they are generated at runtime rather than being hard-coded,
+// which could mess with test metrics.
+void tst_accessibility::noTransparentText()
+{
+#if defined(Q_OS_ANDROID)
+    QSKIP("StyleInfo is not supported when cross-compiling: QTBUG-100191");
+#endif
+
+    // We need to exclude types that QQuickView can't load, or controls that
+    // we know don't have text. By manually excluding rather than manually including,
+    // we ensure that new types are automatically tested. If they shouldn't be tested,
+    // or need to be accounted for in the test, they will cause a failure indicating that.
+    const QStringList exclusions = {
+        // Non-visual.
+        "AbstractButton",
+        "Action",
+        "ActionGroup",
+        "ButtonGroup",
+        "Calendar",
+        "CalendarModel",
+
+        // Required properties.
+        "HorizontalHeaderViewDelegate",
+        "TableViewDelegate",
+        "TreeViewDelegate",
+        "VerticalHeaderViewDelegate",
+
+        // No text property.
+        "ApplicationWindow",
+        "BusyIndicator",
+        "Container",
+        "Control",
+        "Dial",
+        "DialogButtonBox",
+        "Drawer",
+        "Frame",
+        "HorizontalHeaderView",
+        "VerticalHeaderView",
+        "Menu",
+        "MenuBar",
+        "MenuSeparator",
+        "Page",
+        "PageIndicator",
+        "Pane",
+        "Popup",
+        "ProgressBar",
+        "RangeSlider",
+        "ScrollBar",
+        "ScrollIndicator",
+        "ScrollView",
+        "SelectionRectangle",
+        "Slider",
+        "SplitView",
+        "StackView",
+        "SwipeView",
+        "TabBar",
+        "ToolBar",
+        "ToolSeparator",
+        "Tumbler",
+
+        // Style-specific non-Controls types.
+        // FluentWinUI3
+        "Config",
+        "StyleImage"
+    };
+
+    struct TextPropertyAccessInfo {
+        // Default: "text"
+        QString setterName;
+        // Default: "contentItem"
+        QString itemExpression;
+        // Allows overriding the above.
+        QHash<QString, QString> styleSpecificItemExpressions;
+    };
+
+    const QHash<QString, TextPropertyAccessInfo> textPropertyAccess = {
+        { "ComboBox", { "displayText", {}, {} } },
+        { "DayOfWeekRow", { "doNotSet", "contentItem.children[0]", {} } },
+        { "DelayButton", {
+            {},
+            "contentItem.children[0]",
+            {
+                { "Imagine", "contentItem" },
+                { "Material", "contentItem" },
+                { "Universal", "contentItem" }
+            }
+        }},
+        { "Dialog", { "title", "header", {} } },
+        { "DoubleSpinBox", { "doNotSet", {}, {} } },
+        { "Label", { {}, "this", {} } },
+        { "GroupBox", { "title", "label", {} } },
+        { "MonthGrid", { "doNotSet", "contentItem.children[0]", {} } },
+        { "SpinBox", { "doNotSet", {}, {} } },
+        { "TextArea", { {}, "this", {} } },
+        { "TextField", { {}, "this", {} } },
+        { "WeekNumberColumn", { "doNotSet", "contentItem.children[0]", {} } }
+    };
+
+    QList<StyleInfo::QmlFileData> installedQmlFiles = StyleInfo::instance()->installedQmlFiles();
+    const auto exclusionRemover = [&exclusions](const StyleInfo::QmlFileData &qmlFileData) {
+        for (const QString &exclusion : exclusions) {
+            if (qmlFileData.relativePath.endsWith(exclusion + QLatin1String(".qml")))
+                return true;
+        }
+        return false;
+    };
+    installedQmlFiles.erase(
+        std::remove_if(installedQmlFiles.begin(), installedQmlFiles.end(), exclusionRemover), installedQmlFiles.end());
+
+    qCDebug(lcNoTransparentText) << "Installed QML files after removing exclusions:";
+    for (auto it = installedQmlFiles.begin(); it != installedQmlFiles.end(); ++it) {
+        qCDebug(lcNoTransparentText) << "-" << it->styleName << it->typeName
+            << it->relativePath << it->absolutePath;
+    }
+
+    for (auto it = installedQmlFiles.constBegin(); it != installedQmlFiles.constEnd(); ++it) {
+        qCDebug(lcNoTransparentText) << "Testing" << it->styleName << it->relativePath
+            << it->absolutePath;
+
+        if (QQuickStyle::name() != it->styleName) {
+            // Can't have an engine alive when qmlClearTypeRegistrations is called.
+            auto cleanup = qScopeGuard([this](){ engine.reset(new QQmlEngine); });
+            engine.reset();
+            qmlClearTypeRegistrations();
+            QQuickStyle::setStyle(it->styleName);
+        }
+
+        // QTBUG-129447
+        if (it->styleName == "Imagine" && it->typeName == "Dialog") {
+            for (int i = 0; i < 3; ++i)
+                QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Dialog: Binding loop detected for property.*"));
+        }
+
+        // Load the QML for this type.
+        QQmlComponent component(engine.get());
+        const TextPropertyAccessInfo alternativePropertyAcess = textPropertyAccess.value(it->typeName);
+        const QString setterName = alternativePropertyAcess.setterName.isEmpty()
+            ? QLatin1String("text") : alternativePropertyAcess.setterName;
+        // "doNotSet" means we don't need to set anything.
+        const QString setterBinding = setterName != "doNotSet" ? setterName + ": 'Some text'" : "";
+        const QString qml = QString("import QtQuick.Controls.%1; %2 { %3 }")
+            .arg(it->styleName, it->typeName, setterBinding);
+        component.setData(qml.toUtf8(), QUrl());
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(component.isReady(), qPrintable(QString::fromLatin1("Failed to load QML for %1: %2QML:\n%3")
+            .arg(it->typeName, component.errorString(), qml)));
+
+        // Get the item that we should query for the text and color properties.
+        QString styleSpecificItemExpression
+            = alternativePropertyAcess.styleSpecificItemExpressions.value(it->styleName);
+        if (styleSpecificItemExpression.isEmpty()) {
+            // No style-specific expression was given; use the generic one.
+            styleSpecificItemExpression = alternativePropertyAcess.itemExpression;
+        }
+        const QString textItemExpression = styleSpecificItemExpression.isEmpty()
+            ? "contentItem" : styleSpecificItemExpression;
+        QQuickItem *textItem = nullptr;
+        // "this" means use the root object.
+        if (textItemExpression == QLatin1String("this")) {
+            textItem = qobject_cast<QQuickItem *>(root.get());
+        } else {
+            QQmlExpression itemQmlExpression(qmlContext(root.get()), root.get(), textItemExpression);
+            const QVariant evaluationResult = itemQmlExpression.evaluate();
+            if (!evaluationResult.isValid()) {
+                QString failureMessage = QString::fromLatin1("itemExpression \"%1\" for %2 %3 is invalid")
+                    .arg(textItemExpression, it->styleName, it->typeName);
+                if (itemQmlExpression.hasError())
+                    failureMessage += QLatin1String(": ") + itemQmlExpression.error().toString();
+                QFAIL(qPrintable(failureMessage));
+            }
+            textItem = evaluationResult.value<QQuickItem *>();
+        }
+        QVERIFY2(textItem, qPrintable(QString::fromLatin1(
+            "The item (%1) to use for the text and color properties of %2 %3 is null")
+            .arg(textItemExpression, it->styleName, it->typeName)));
+
+        // If it has an icon property, set icon.color to "transparent", which should only affect the
+        // icon color (make it use the original color), not the text color.
+        if (root->property("icon").isValid()) {
+            auto *asAbstractButton = qobject_cast<QQuickAbstractButton *>(root.get());
+            QVERIFY(asAbstractButton);
+            auto icon = asAbstractButton->icon();
+            icon.setColor(Qt::transparent);
+            asAbstractButton->setIcon(icon);
+            QCOMPARE(asAbstractButton->icon().color(), Qt::transparent);
+        }
+
+        // Confirm that the text is not empty and the color is not transparent.
+        QVERIFY(!textItem->property("text").toString().isEmpty());
+        const QVariant colorProperty = textItem->property("color");
+        QVERIFY2(colorProperty.isValid(), qPrintable(QString::fromLatin1(
+            "The item (%1) to use for %2 %3 has no color property")
+            .arg(textItemExpression, it->styleName, it->typeName)));
+        const auto color = colorProperty.value<QColor>();
+        QVERIFY2(color.isValid(), qPrintable(QString::fromLatin1(
+            "color property of the item (%1) to use for %2 %3 is invalid")
+            .arg(textItemExpression, it->styleName, it->typeName)));
+        QVERIFY2(color.alpha() != 0, qPrintable(QString::fromLatin1(
+            "color property of the item (%1) to use for %2 %3 is transparent")
+            .arg(textItemExpression, it->styleName, it->typeName)));
+    }
 }
 
 QTEST_MAIN(tst_accessibility)

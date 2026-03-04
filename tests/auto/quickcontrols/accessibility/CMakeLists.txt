@@ -40,6 +40,7 @@ qt_internal_add_test(tst_accessibility
         Qt::QuickTemplates2Private
         Qt::QuickTest
         Qt::QuickTestUtilsPrivate
+        Qt::QuickControlsTestUtilsPrivate
         Qt::TestPrivate
     TESTDATA ${test_data}
 )

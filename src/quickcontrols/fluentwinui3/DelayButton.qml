@@ -76,7 +76,7 @@ T.DelayButton {
 
             text: control.text
             font: control.font
-            color: control.icon.color
+            color: control.__buttonText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
@@ -90,7 +90,7 @@ T.DelayButton {
 
             text: control.text
             font: control.font
-            color: control.icon.color
+            color: control.__buttonText
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
