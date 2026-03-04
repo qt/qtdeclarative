@@ -23,6 +23,7 @@
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 
+#include "delegatechoosermodel.h"
 #include "testmodel.h"
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -320,6 +321,8 @@ private slots:
     void checkCellModelIdxAfterReorder();
     void checkEditAfterReorder();
     void checkSelectionAfterReorder();
+
+    void delegateChooserDataChange();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -8742,6 +8745,29 @@ void tst_QQuickTableView::checkSelectionAfterReorder()
 
     tableViewPrivate->clearSelection();
     QCOMPARE(selectionModel.hasSelection(), false);
+}
+
+void tst_QQuickTableView::delegateChooserDataChange()
+{
+    LOAD_TABLEVIEW("delegatechooser.qml");
+
+    const int rows = 2;
+    const int columns = 2;
+    DelegateChooserModel model{ rows, columns };
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(model.choice_delegates_count()[0], rows * columns);
+    QCOMPARE(model.choice_delegates_count()[1], 0);
+
+    model.switchChoice();
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(model.choice_delegates_count()[0], 0);
+    QCOMPARE(model.choice_delegates_count()[1], rows * columns);
+
+    tableView->setModel({ });
 }
 
 QTEST_MAIN(tst_QQuickTableView)
