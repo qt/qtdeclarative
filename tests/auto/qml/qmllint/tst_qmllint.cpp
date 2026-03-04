@@ -41,6 +41,23 @@ public:
         QtMsgType severity = QtWarningMsg;
     };
 
+    struct FixMessage
+    {
+        QString text = QString();
+        QString replacement = QString();
+        quint32 line = 0, column = 0;
+
+        // support tests that used to use a Message instead of a FixMessage
+        FixMessage(const QString &replacement, quint32 line = 0, quint32 column = 0)
+            : replacement(replacement), line(line), column(column)
+        {}
+
+        FixMessage(const QString &text, const QString &replacement, quint32 line = 0,
+                   quint32 column = 0)
+            : text(text), replacement(replacement), line(line), column(column)
+        {}
+    };
+
     struct Result
     {
         enum Flag {
@@ -60,7 +77,7 @@ public:
 
         QList<Message> expectedMessages = {};
         QList<Message> badMessages = {};
-        QList<Message> expectedReplacements = {};
+        QList<FixMessage> expectedReplacements = {};
 
         Flags flags = {};
 
@@ -187,10 +204,6 @@ private Q_SLOTS:
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
-    enum ReplacementOption {
-        NoReplacementSearch,
-        DoReplacementSearch,
-    };
 
     enum LintType { LintFile, LintModule };
 
@@ -253,8 +266,10 @@ private:
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
-                        ContainOption shouldContain = StringContained,
-                        ReplacementOption searchReplacements = NoReplacementSearch);
+                        ContainOption shouldContain = StringContained);
+    void searchReplacements(const QJsonArray &warnings, const QString &substring,
+                            const QString &replacementSubString, quint32 line, quint32 column,
+                            ContainOption shouldContain);
 
     template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler,
              typename ReplacementFailureHandler>
@@ -334,24 +349,23 @@ void TestQmllint::testUnqualified_data()
                                      33 } // builtin property
                    },
                    {},
-                   { { Message { u"root."_s, 9, 16 } }, { Message { u"root."_s, 13, 33 } } }
-               };
+                   { { { u"root."_s, 9, 16 }, { u"root."_s, 13, 33 } } } };
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << Result { {
-                                Message { QStringLiteral("Unqualified access"), 5, 21 },
-                                Message { QStringLiteral("Unqualified access"), 10, 21 },
-                                Message { QStringLiteral("Unqualified access"), 8, 29 },
-                                Message { QStringLiteral("Unqualified access"), 12, 34 },
-                        },
-                        {},
-                        {
-                                Message { QStringLiteral("function(mouse)"), 4, 22 },
-                                Message { QStringLiteral("function(mouse)"), 9, 24 },
-                                Message { QStringLiteral("(mouse) => "), 8, 16 },
-                                Message { QStringLiteral("(mouse) => "), 12, 21 },
-                        } };
+            << Result{ {
+                               Message{ QStringLiteral("Unqualified access"), 5, 21 },
+                               Message{ QStringLiteral("Unqualified access"), 10, 21 },
+                               Message{ QStringLiteral("Unqualified access"), 8, 29 },
+                               Message{ QStringLiteral("Unqualified access"), 12, 34 },
+                       },
+                       {},
+                       {
+                               { QStringLiteral("function(mouse) "), 4, 22 },
+                               { QStringLiteral("function(mouse) "), 9, 24 },
+                               { QStringLiteral("(mouse) => "), 8, 16 },
+                               { QStringLiteral("(mouse) => "), 12, 21 },
+                       } };
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement")
             << QStringLiteral("CatchStatement.qml")
@@ -362,7 +376,7 @@ void TestQmllint::testUnqualified_data()
                                 Message { QStringLiteral("Unqualified access"), 6, 25 },
                         },
                         {},
-                        { { Message { u"<id>."_s, 6, 25 } } } };
+                        { { FixMessage { u"<id>."_s, 6, 25 } } } };
 
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
@@ -966,7 +980,7 @@ void TestQmllint::dirtyQmlCode_data()
                          { "Member \"red\" not found on type \"QtObject\""_L1, 6, 25 },
                          { "Member \"S2\" not found on type \"EnumTesterScoped\""_L1, 8, 38 }, },
                        { },
-                       { { "Did you mean \"U2\"?"_L1, 8 } } };
+                       { { "Did you mean \"U2\"?"_L1, "U2"_L1, 8, 38 } } };
     QTest::newRow("enumsAreNotTypes_functionAnnotations")
             << QStringLiteral("EnumsAreNotTypes_functionAnnotations.qml")
             << Result{ { { "QML enumerations are not types. Use underlying type "
@@ -1055,8 +1069,8 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ { { "Unqualified access"_L1, 8, 31  } },
                        {},
                        { { "Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
-                           "outer components in nested components."_L1,
-                           0, 0, QtInfoMsg } },
+                           "outer components in nested components."_L1, "pragma ComponentBehavior: Bound\n"_L1,
+                           0, 0 } },
                        Result::AutoFixable };
     QTest::newRow("missingQmltypes")
             << QStringLiteral("missingQmltypes.qml")
@@ -1272,15 +1286,17 @@ void TestQmllint::dirtyQmlCode()
 static void addLocationOffsetTo(TestQmllint::Result *result, qsizetype lineOffset,
                                 qsizetype columnOffset = 0)
 {
-    for (auto *messages :
-         { &result->expectedMessages, &result->badMessages, &result->expectedReplacements }) {
+    auto processMessages = [lineOffset, columnOffset](auto messages) {
         for (auto &message : *messages) {
             if (message.line != 0)
                 message.line += lineOffset;
             if (message.column != 0)
                 message.column += columnOffset;
         }
-    }
+    };
+    processMessages(&result->expectedMessages);
+    processMessages(&result->badMessages);
+    processMessages(&result->expectedReplacements);
 }
 
 void TestQmllint::dirtyQmlSnippet_data()
@@ -1324,7 +1340,7 @@ void TestQmllint::dirtyQmlSnippet_data()
             << u"property color myColor: \"lbue\""_s
             << Result{ { { "Invalid color \"lbue\""_L1, 1, 25 } },
                        {},
-                       { { "Did you mean \"blue\"?", 1, 25 } } }
+                       { { "Did you mean \"blue\"?", "blue"_L1, 1, 25 } } }
             << defaultOptions;
     QTest::newRow("componentExactlyOneChild1")
             << u"Component { Item {} Item {} }"_s
@@ -2977,10 +2993,10 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
         searchWarnings(warnings, msg.text, msg.severity, msg.line, msg.column, StringNotContained);
     }
 
-    for (const Message &replacement : result.expectedReplacements) {
+    for (const FixMessage &replacement : result.expectedReplacements) {
         onReplacementFailures();
-        searchWarnings(warnings, replacement.text, replacement.severity, replacement.line,
-                       replacement.column, StringContained, DoReplacementSearch);
+        searchReplacements(warnings, replacement.text, replacement.replacement, replacement.line,
+                           replacement.column, StringContained);
     }
 
     // check for duplicates
@@ -2997,9 +3013,65 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
     QVERIFY2(firstDuplicate == sortedWarnings.constEnd(), "Found duplicate warnings!");
 }
 
+static bool warningsContainReplacement(const QJsonArray &warnings, const QString &substring,
+                                       const QString &replacementSubString, quint32 line,
+                                       quint32 column)
+{
+    for (const QJsonValueConstRef warningJson : warnings) {
+        for (const QJsonValueConstRef fix : warningJson[u"suggestions"].toArray()) {
+            QString replacement = fix[u"replacement"].toString();
+#ifdef Q_OS_WIN
+            // Replacements can contain native line endings
+            // but we need them to be uniform in order for them to conform to our test data
+            replacement = replacement.replace(u"\r\n"_s, u"\n"_s);
+#endif
+            if (replacement != replacementSubString)
+                continue;
+
+            if (!fix[u"message"].toString().contains(substring))
+                continue;
+
+            const quint32 fixLine = fix[u"line"].toInt();
+            const quint32 fixColumn = fix[u"column"].toInt();
+            if (line != 0 || column != 0) {
+                if (fixLine != line || fixColumn != column) {
+                    continue;
+                }
+            }
+            return true;
+        }
+    }
+    return false;
+}
+
+void TestQmllint::searchReplacements(const QJsonArray &warnings, const QString &substring,
+                                     const QString &replacementSubString, quint32 line, quint32 column,
+                                     ContainOption shouldContain)
+{
+    const bool contains =
+            warningsContainReplacement(warnings, substring, replacementSubString, line, column);
+
+    const auto toDescription = [](const QJsonArray &warnings, const QString &substring,
+                                  quint32 line, quint32 column, bool must = true) {
+        QString msg = QStringLiteral("qmllint output:\n%1\nIt %2 contain '%3'")
+                              .arg(QString::fromUtf8(
+                                           QJsonDocument(warnings).toJson(QJsonDocument::Indented)),
+                                   must ? u"must" : u"must NOT", substring);
+        if (line != 0 || column != 0)
+            msg += u" (%1:%2)"_s.arg(line).arg(column);
+
+        return msg;
+    };
+
+    const bool ok = contains == (shouldContain == StringContained);
+    if (!ok)
+        qWarning().noquote() << toDescription(warnings, substring, line, column);
+    QVERIFY(ok);
+}
+
 void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &substring,
                                  QtMsgType type, quint32 line, quint32 column,
-                                 ContainOption shouldContain, ReplacementOption searchReplacements)
+                                 ContainOption shouldContain)
 {
     bool contains = false;
 
@@ -3025,27 +3097,6 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
             if (fixMessage.contains(substring)) {
                 contains = true;
                 break;
-            }
-
-            if (searchReplacements == DoReplacementSearch) {
-                QString replacement = fix[u"replacement"].toString();
-#ifdef Q_OS_WIN
-                // Replacements can contain native line endings
-                // but we need them to be uniform in order for them to conform to our test data
-                replacement = replacement.replace(u"\r\n"_s, u"\n"_s);
-#endif
-
-                if (replacement.contains(substring)) {
-                    quint32 fixLine = fix[u"line"].toInt();
-                    quint32 fixColumn = fix[u"column"].toInt();
-                    if (line != 0 || column != 0) {
-                        if (fixLine != line || fixColumn != column) {
-                            continue;
-                        }
-                    }
-                    contains = true;
-                    break;
-                }
             }
         }
     }
@@ -3180,7 +3231,7 @@ void TestQmllint::attachedPropertyReuse()
                             "Using attached type MyStyle already initialized in a parent scope"_L1,
                             10, 16 } },
                     {},
-                    { Message{ "Reference it by id instead"_L1, 10, 16 } },
+                    { { "Reference it by id instead"_L1, "control."_L1, 10, 16 } },
                     Result::AutoFixable },
             {}, {}, {}, UseDefaultImports, &categories);
     runTest("pluginQuick_multipleAttachedPropertyReuse.qml",
@@ -3330,15 +3381,15 @@ void TestQmllint::valueTypesFromString()
                     },
                     { /*bad messages */ },
                     {
-                            Message{ u"({ width: 30, height: 50 })"_s },
-                            Message{ u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
-                            Message{ u"({ x: 30, y: 50 })"_s },
-                            Message{ u"({ x: 1, y: 2 })"_s },
-                            Message{ u"({ x: 1, y: 2 })"_s },
-                            Message{ u"({ x: 1, y: 2, z: 3 })"_s },
-                            Message{ u"({ x: 1, y: 2, z: 3, w: 4 })"_s },
-                            Message{ u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s },
-                            Message{
+                            { u"({ width: 30, height: 50 })"_s },
+                            { u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
+                            { u"({ x: 30, y: 50 })"_s },
+                            { u"({ x: 1, y: 2 })"_s },
+                            { u"({ x: 1, y: 2 })"_s },
+                            { u"({ x: 1, y: 2, z: 3 })"_s },
+                            { u"({ x: 1, y: 2, z: 3, w: 4 })"_s },
+                            { u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s },
+                            {
                                     u"({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_s },
                     } });
 }
