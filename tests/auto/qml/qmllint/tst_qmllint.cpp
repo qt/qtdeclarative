@@ -353,19 +353,23 @@ void TestQmllint::testUnqualified_data()
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << Result{ {
-                               Message{ QStringLiteral("Unqualified access"), 5, 21 },
-                               Message{ QStringLiteral("Unqualified access"), 10, 21 },
-                               Message{ QStringLiteral("Unqualified access"), 8, 29 },
-                               Message{ QStringLiteral("Unqualified access"), 12, 34 },
-                       },
-                       {},
-                       {
-                               { QStringLiteral("function(mouse) "), 4, 22 },
-                               { QStringLiteral("function(mouse) "), 9, 24 },
-                               { QStringLiteral("(mouse) => "), 8, 16 },
-                               { QStringLiteral("(mouse) => "), 12, 21 },
-                       } };
+            << Result{
+                   {
+                           Message{ QStringLiteral("Unqualified access"), 5, 21 },
+                           Message{ QStringLiteral("Unqualified access"), 10, 21 },
+                           Message{ QStringLiteral("Unqualified access"), 8, 29 },
+                           Message{ QStringLiteral("Unqualified access"), 12, 34 },
+                   },
+                   {},
+                   {
+                           { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
+                             "function(mouse) "_L1, 4, 22 },
+                           { QStringLiteral("function(mouse) "), 9, 24 },
+                           { QStringLiteral("(mouse) => "), 8, 16 },
+                           { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
+                             "(mouse) => "_L1, 12, 21 },
+                   }
+               };
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement")
             << QStringLiteral("CatchStatement.qml")

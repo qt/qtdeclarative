@@ -343,15 +343,12 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                 }
 
                 fixString += handler.isMultiline ? u") "_s : u") => "_s;
-
-                suggestion = QQmlJSFixSuggestion {
-                    name + u" is accessible in this scope because you are handling a signal"
-                           " at %1:%2. Use a function instead.\n"_s
-                        .arg(id.location.startLine)
-                        .arg(id.location.startColumn),
-                    fixLocation,
-                    fixString
-                };
+                suggestion =
+                        QQmlJSFixSuggestion{ u"\"%1\" is ambiguous. "
+                                             "Use a function instead: %2%3"_s.arg(
+                                                     name, fixString,
+                                                     handler.isMultiline ? "{ ... }"_L1 : "..."_L1),
+                                             fixLocation, fixString };
                 suggestion->setAutoApplicable();
             }
             break;
