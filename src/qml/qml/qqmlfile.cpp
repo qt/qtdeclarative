@@ -34,6 +34,10 @@ static char authority_downloads_documents[] = "com.android.providers.downloads.d
 static char authority_media_documents[] = "com.android.providers.media.documents";
 #endif
 
+#if defined(Q_OS_WASM)
+static char weblocalfile_string[] = "weblocalfile";
+#endif
+
 #if QT_DEPRECATED_SINCE(6, 11)
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
@@ -512,6 +516,11 @@ bool QQmlFile::isSynchronous(const QUrl &url)
         return true;
 #endif
 
+#if defined(Q_OS_WASM)
+    } else if (scheme.length() == 12 && 0 == scheme.compare(QLatin1String(weblocalfile_string), Qt::CaseInsensitive)) {
+        return true;
+#endif
+
     } else {
         return false;
     }
@@ -560,6 +569,14 @@ bool QQmlFile::isSynchronous(const QString &url)
     }
 #endif
 
+#if defined(Q_OS_WASM)
+    else if (f == QLatin1Char('w') || f == QLatin1Char('W')) {
+        return url.length() >= 14 /* weblocalfile:/ */ &&
+               url.startsWith(QLatin1String(weblocalfile_string), Qt::CaseInsensitive) &&
+               url[12] == QLatin1Char(':') && url[13] == QLatin1Char('/');
+    }
+#endif
+
     return false;
 }
 
@@ -602,6 +619,12 @@ bool QQmlFile::isLocalFile(const QUrl &url)
     if (scheme.length() == 7
          && scheme.startsWith(QLatin1String(content_string), Qt::CaseInsensitive))
         return hasLocalContentAuthority(url);
+#endif
+
+#if defined(Q_OS_WASM)
+    if (scheme.length() == 12
+         && scheme.startsWith(QLatin1String(weblocalfile_string), Qt::CaseInsensitive))
+        return true;
 #endif
 
     return false;
@@ -694,6 +717,11 @@ bool QQmlFile::isLocalFile(const QString &url)
         return hasScheme(url, content_string, strlen(content_string))
             && hasLocalContentAuthority(url, strlen(content_string));
 #endif
+#if defined(Q_OS_WASM)
+    case 'w':
+    case 'W':
+        return hasScheme(url, weblocalfile_string, strlen(weblocalfile_string));
+#endif
     default:
         break;
     }
@@ -724,6 +752,12 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
         return QString();
     }
 #endif
+
+#if defined(Q_OS_WASM)
+    if (url.scheme().compare(QLatin1String("weblocalfile"), Qt::CaseInsensitive) == 0)
+        return url.toString();
+#endif
+
     return url.toLocalFile();
 }
 
@@ -786,6 +820,11 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
         return isDoubleSlashed(url, strlen("assets:")) ? QString() : url;
     if (hasScheme(url, content_string, strlen(content_string)))
         return hasLocalContentAuthority(url, strlen(content_string)) ? url : QString();
+#endif
+
+#if defined(Q_OS_WASM)
+    if (hasScheme(url, weblocalfile_string, strlen(weblocalfile_string)))
+        return url;
 #endif
 
     return toLocalFile(url);
