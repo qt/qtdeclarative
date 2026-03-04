@@ -72,10 +72,11 @@ T.SearchField {
         imageConfig: indicatorConfig.indicator_up_background
 
         x: !control.mirrored ? control.width - width - control.spacing : control.spacing
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: control.topPadding
 
         implicitWidth: 32
         implicitHeight: 24
+        height: control.availableHeight
 
         ColorImage {
             x: (parent.width - width) / 2
@@ -103,9 +104,12 @@ T.SearchField {
         x: (!searchIndicator.indicator || !searchIndicator.indicator.visible)
            ? (!control.mirrored ? control.width - width - control.spacing : control.spacing)
            : (!control.mirrored ? control.width - width - (control.spacing * 2) - searchIndicator.indicator.width : searchIndicator.indicator.width + (control.spacing * 2))
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: control.topPadding
+
         implicitWidth: 32
         implicitHeight: 24
+        height: control.availableHeight
+
         visible: control.text.length > 0
 
         ColorImage {

@@ -38,9 +38,10 @@ T.SearchField {
     searchIndicator.indicator: Rectangle {
         implicitWidth: 28
         implicitHeight: 28
+        height: control.height - (background.border.width * 2)
 
         x: !control.mirrored ? 3 : control.width - width - 3
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: background.border.width
         color: control.palette.button
 
         ColorImage {
@@ -56,9 +57,10 @@ T.SearchField {
     clearIndicator.indicator: Rectangle {
         implicitWidth: 28
         implicitHeight: 28
+        height: control.height - (background.border.width * 2)
 
         x: control.mirrored ? 3 : control.width - width - 3
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: background.border.width
         visible: control.text.length > 0
         color: control.palette.button
 

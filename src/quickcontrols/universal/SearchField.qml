@@ -43,9 +43,10 @@ T.SearchField {
 
     searchIndicator.indicator: Item {
         x: !control.mirrored ? control.padding : control.width - width - control.padding
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: control.topPadding
         implicitWidth: 28
         implicitHeight: 28
+        height: control.availableHeight
 
         Rectangle {
             width: parent.width
@@ -70,9 +71,10 @@ T.SearchField {
 
     clearIndicator.indicator: Item {
         x: control.mirrored ? control.padding : control.width - width - control.padding
-        y: control.topPadding + (control.availableHeight - height) / 2
+        y: control.topPadding
         implicitWidth: 28
         implicitHeight: 28
+        height: control.availableHeight
         visible: control.text.length > 0
 
         Rectangle {
