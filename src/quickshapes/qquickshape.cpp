@@ -240,7 +240,7 @@ void QQuickShapePath::setStrokeWidth(qreal w)
 }
 
 /*! \since 6.11
-    \qmlproperty real QtQuick.Shapes::ShapePath::cosmeticStroke
+    \qmlproperty bool QtQuick.Shapes::ShapePath::cosmeticStroke
 
     This property holds whether the stroke width remains constant despite rendering scale.
 
