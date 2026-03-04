@@ -5,14 +5,15 @@
 #include "qquicktableview_p.h"
 #include "qquicktableview_p_p.h"
 
-#include <QtCore/qtimer.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qmimedata.h>
+#include <QtCore/qtimer.h>
+#include <QtQml/private/qqmlincubator_p.h>
+#include <QtQml/qqmlinfo.h>
+#include <QtQmlModels/private/qqmlchangeset_p.h>
+#include <QtQmlModels/private/qqmldelegatecomponent_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p_p.h>
-#include <QtQml/private/qqmlincubator_p.h>
-#include <QtQmlModels/private/qqmlchangeset_p.h>
-#include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitemgrabresult.h>
 
 #include <QtQuick/private/qquickflickable_p_p.h>
@@ -4752,6 +4753,7 @@ void QQuickTableViewPrivate::connectToModel()
         connect(aim, &QAbstractItemModel::columnsRemoved, this, &QQuickTableViewPrivate::columnsRemovedCallback);
         connect(aim, &QAbstractItemModel::modelReset, this, &QQuickTableViewPrivate::modelResetCallback);
         connect(aim, &QAbstractItemModel::layoutChanged, this, &QQuickTableViewPrivate::layoutChangedCallback);
+        connect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
     } else {
         QObjectPrivate::connect(model, &QQmlInstanceModel::modelUpdated, this, &QQuickTableViewPrivate::modelUpdated);
     }
@@ -4783,6 +4785,7 @@ void QQuickTableViewPrivate::disconnectFromModel()
         disconnect(aim, &QAbstractItemModel::columnsRemoved, this, &QQuickTableViewPrivate::columnsRemovedCallback);
         disconnect(aim, &QAbstractItemModel::modelReset, this, &QQuickTableViewPrivate::modelResetCallback);
         disconnect(aim, &QAbstractItemModel::layoutChanged, this, &QQuickTableViewPrivate::layoutChangedCallback);
+        disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQuickTableViewPrivate::dataChangedCallback);
     } else {
         QObjectPrivate::disconnect(model, &QQmlInstanceModel::modelUpdated, this, &QQuickTableViewPrivate::modelUpdated);
     }
@@ -4890,6 +4893,26 @@ void QQuickTableViewPrivate::modelResetCallback()
     Q_Q(QQuickTableView);
     q->closeEditor();
     scheduleRebuildTable(RebuildOption::All);
+}
+
+void QQuickTableViewPrivate::dataChangedCallback(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles)
+{
+    const auto *chooser = qobject_cast<const QQmlDelegateChooser *>(assignedDelegate);
+    if (!chooser)
+        return;
+
+    if (topLeft.column() > rightColumn() || bottomRight.column() < leftColumn() || topLeft.row() > bottomRow()
+        || bottomRight.row() < topRow()) {
+        return;
+    }
+
+    if (!roles.empty()) {
+        const int roleIndex = topLeft.model()->roleNames().key(chooser->role().toUtf8());
+        if (!roles.contains(roleIndex))
+            return;
+    }
+
+    scheduleRebuildTable(RebuildOption::ViewportOnly);
 }
 
 void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset, const QRectF subRect)

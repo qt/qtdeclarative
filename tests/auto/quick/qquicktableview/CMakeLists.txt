@@ -21,6 +21,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquicktableview
     SOURCES
+        delegatechoosermodel.h
         testmodel.h
         tst_qquicktableview.cpp
     LIBRARIES
