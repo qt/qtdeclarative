@@ -10,7 +10,6 @@ import QtQuick.Controls.impl
 import QtQuick.Controls.Fusion
 import QtQuick.Controls.Fusion.impl
 
-
 T.SearchField {
     id: control
 
@@ -38,13 +37,20 @@ T.SearchField {
         required property int index
     }
 
-    searchIndicator.indicator: Rectangle {
-        implicitWidth: 20
+    searchIndicator.indicator: PaddedRectangle {
+        implicitWidth: 22
         implicitHeight: 20
+        height: control.height - 2
 
-        x: !control.mirrored ? 2 : control.width - width - 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-        color: control.palette.base
+        x: !control.mirrored ? 1 : control.width - width - 1
+        y: 1
+
+        radius: 1.7
+        clip: true
+        topPadding: -2
+        leftPadding: -2
+
+        color: control.searchIndicator.pressed ? Fusion.buttonColor(control.palette, false, true, true) : "transparent"
 
         ColorImage {
             x: (parent.width - width) / 2
@@ -57,14 +63,21 @@ T.SearchField {
         }
     }
 
-    clearIndicator.indicator: Rectangle {
-        implicitWidth: 20
+    clearIndicator.indicator: PaddedRectangle {
+        implicitWidth: 22
         implicitHeight: 20
+        height: control.height - 2
 
-        x: control.mirrored ? 2 : control.width - width - 2
-        y: control.topPadding + (control.availableHeight - height) / 2
+        x: control.mirrored ? 1 : control.width - width - 1
+        y: 1
         visible: control.text.length > 0
-        color: control.palette.base
+
+        radius: 1.7
+        clip: true
+        topPadding: -2
+        leftPadding: -2
+
+        color: control.clearIndicator.pressed ? Fusion.buttonColor(control.palette, false, true, true) : "transparent"
 
         ColorImage {
             x: (parent.width - width) / 2
@@ -115,6 +128,60 @@ T.SearchField {
             width: parent.width - 4
             height: 1
             color: Fusion.topShadow
+        }
+
+        Rectangle {
+            x: !control.mirrored ? 1 : parent.width - width - 1
+            y: 1
+            width: control.searchIndicator.indicator && control.searchIndicator.indicator.visible
+                   ? control.searchIndicator.indicator.width + 1  : 0
+            height: parent.height - 2
+            radius: 2
+
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: Fusion.gradientStart(Fusion.buttonColor(control.palette, control.visualFocus, false, control.searchIndicator.hovered))
+                }
+                GradientStop {
+                    position: 1
+                    color: Fusion.gradientStop(Fusion.buttonColor(control.palette, control.visualFocus, false, control.searchIndicator.hovered))
+                }
+            }
+
+            Rectangle {
+                x: !control.mirrored ? parent.width - 1 : 0
+                width: 1
+                height: parent.height
+                color: Fusion.outline(control.palette)
+            }
+        }
+
+        Rectangle {
+            x: control.mirrored ? 1 : parent.width - width - 1
+            y: 1
+            width: control.clearIndicator.indicator && control.clearIndicator.indicator.visible
+                   ? control.clearIndicator.indicator.width + 1  : 0
+            height: parent.height - 2
+            radius: 2
+
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: Fusion.gradientStart(Fusion.buttonColor(control.palette, control.visualFocus, false, control.clearIndicator.hovered))
+                }
+                GradientStop {
+                    position: 1
+                    color: Fusion.gradientStop(Fusion.buttonColor(control.palette, control.visualFocus, false, control.clearIndicator.hovered))
+                }
+            }
+
+            Rectangle {
+                x: control.mirrored ? parent.width - 1 : 0
+                width: 1
+                height: parent.height
+                color: Fusion.outline(control.palette)
+            }
         }
     }
 
