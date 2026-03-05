@@ -520,6 +520,7 @@ private slots:
 
     void aliasToLargeRevision();
     void aliasToPropertyOfAlias();
+    void aliasesAndDefaultProperty();
 
     void urlWithFragment();
 
@@ -9856,6 +9857,21 @@ void tst_qqmllanguage::aliasToPropertyOfAlias()
 
     QCOMPARE(o->property("bar").toString(), "bar"_L1);
 
+}
+
+void tst_qqmllanguage::aliasesAndDefaultProperty()
+{
+    // This test is meant to capture the case where the reordering of aliases
+    // in the IR necessiates an update of the default property index
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("aliasesAndDefaultProperty.qml"));
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("label"), "should not change"_L1);
 }
 
 void tst_qqmllanguage::urlWithFragment()
