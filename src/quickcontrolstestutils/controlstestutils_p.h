@@ -48,12 +48,13 @@ namespace QQuickControlsTestUtils
         QScopedPointer<QQmlEngine> engine;
     };
 
-    typedef std::function<void(const QString &/*relativePath*/, const QUrl &/*absoluteUrl*/)> ForEachCallback;
+    typedef std::function<void(const QString &/*styleName*/, const QString &/*typeName*/,
+        const QString &/*relativePath*/, const QUrl &/*absoluteUrl*/)> ForEachCallback;
 
-    void forEachControl(QQmlEngine *engine, const QString &qqc2ImportPath, const QString &sourcePath,
+    void forEachControl(QQmlEngine *engine, const QString &qqc2ImportPath, const QString &styleName,
         const QString &targetPath, const QStringList &skipList, ForEachCallback callback);
-    void addTestRowForEachControl(QQmlEngine *engine, const QString &qqc2ImportPath, const QString &sourcePath,
-        const QString &targetPath, const QStringList &skipList = QStringList());
+    void addTestRowForEachControl(QQmlEngine *engine, const QString &qqc2ImportPath, const QString &styleName,
+                                  const QString &targetPath, const QStringList &skipList = QStringList());
 
     [[nodiscard]] bool verifyButtonClickable(QQuickAbstractButton *button);
     [[nodiscard]] bool clickButton(QQuickAbstractButton *button);
@@ -80,7 +81,34 @@ namespace QQuickControlsTestUtils
         QML_SINGLETON
 
     public:
+        // Used by C++.
+        void initialize(const QString &controlsImportPath);
+        static StyleInfo *instance();
+
+        // Needed for QML integration.
+        static StyleInfo *create(QQmlEngine *, QJSEngine *);
+
         QString styleName() const;
+
+        struct QmlFileData {
+            bool operator<(const QmlFileData &rhs) const;
+
+            QString styleName;
+            QString typeName;
+            QString relativePath;
+            QString absolutePath;
+        };
+
+        QList<QmlFileData> sourceQmlFiles() const;
+        QList<QmlFileData> installedQmlFiles() const;
+
+    private:
+        StyleInfo() = default;
+
+        void warnIfNotInitialized() const;
+
+        QList<QmlFileData> m_sourceQmlFiles;
+        QList<QmlFileData> m_installedQmlFiles;
     };
 
     class MockPlatformTheme : public QPlatformTheme

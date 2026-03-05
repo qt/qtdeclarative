@@ -103,16 +103,16 @@ void tst_Sanity::initTestCase()
 
     // Then, collect the files from each installed style directory.
     const QList<std::pair<QString, QString>> styleRelativePaths = {
-        { "basic", "QtQuick/Controls/Basic" },
-        { "fusion", "QtQuick/Controls/Fusion" },
-        { "material", "QtQuick/Controls/Material" },
-        { "universal", "QtQuick/Controls/Universal" },
+        { "Basic", "QtQuick/Controls/Basic" },
+        { "Fusion", "QtQuick/Controls/Fusion" },
+        { "Material", "QtQuick/Controls/Material" },
+        { "Universal", "QtQuick/Controls/Universal" },
         // TODO: add native styles: QTBUG-87108
-        { "ios", "QtQuick/Controls/iOS" }
+        { "iOS", "QtQuick/Controls/iOS" }
     };
     for (const auto &stylePathPair : styleRelativePaths) {
         forEachControl(&engine, QQC2_IMPORT_PATH, stylePathPair.first, stylePathPair.second, QStringList(),
-                [&](const QString &relativePath, const QUrl &absoluteUrl) {
+                [&](const QString &, const QString &relativePath, const QUrl &absoluteUrl) {
              installedQmlFiles.insert(relativePath, absoluteUrl.toLocalFile());
         });
     }

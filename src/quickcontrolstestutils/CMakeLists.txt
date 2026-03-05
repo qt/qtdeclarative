@@ -19,6 +19,7 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private

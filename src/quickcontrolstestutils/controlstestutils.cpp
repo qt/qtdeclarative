@@ -3,9 +3,11 @@
 
 #include "controlstestutils_p.h"
 
+#include <QtCore/qdiriterator.h>
 #include <QtTest/qsignalspy.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
@@ -51,7 +53,7 @@ bool QQuickControlsTestUtils::QQuickStyleHelper::updateStyle(const QString &styl
 }
 
 void QQuickControlsTestUtils::forEachControl(QQmlEngine *engine, const QString &qqc2ImportPath,
-    const QString &sourcePath, const QString &targetPath, const QStringList &skipList,
+    const QString &styleName, const QString &targetPath, const QStringList &skipList,
     QQuickControlsTestUtils::ForEachCallback callback)
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.
@@ -65,25 +67,25 @@ void QQuickControlsTestUtils::forEachControl(QQmlEngine *engine, const QString &
     // the engine's import path. This way we can use QQmlComponent to load each QML file
     // for benchmarking.
 
-    const QFileInfoList entries = QDir(qqc2ImportPath + QLatin1Char('/') + sourcePath).entryInfoList(
+    const QFileInfoList entries = QDir(qqc2ImportPath + QLatin1Char('/') + styleName.toLower()).entryInfoList(
         QStringList(QStringLiteral("*.qml")), QDir::Files);
     for (const QFileInfo &entry : entries) {
         QString name = entry.baseName();
         if (!skipList.contains(name)) {
             const auto importPathList = engine->importPathList();
             for (const QString &importPath : importPathList) {
-                QString name = entry.dir().dirName() + QLatin1Char('/') + entry.fileName();
+                const QString relativePath = entry.dir().dirName() + QLatin1Char('/') + entry.fileName();
                 QString filePath = importPath + QLatin1Char('/') + targetPath + QLatin1Char('/') + entry.fileName();
                 if (filePath.startsWith(QLatin1Char(':')))
                     filePath.prepend(QStringLiteral("qrc"));
                 if (QFile::exists(filePath)) {
-                    callback(name, QUrl::fromLocalFile(filePath));
+                    callback(styleName, name, relativePath, QUrl::fromLocalFile(filePath));
                     break;
                 } else {
                     QUrl url(filePath);
                     filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
                     if (!filePath.isEmpty() && QFile::exists(filePath)) {
-                        callback(name, url);
+                        callback(styleName, name, relativePath, url);
                         break;
                     }
                 }
@@ -93,12 +95,14 @@ void QQuickControlsTestUtils::forEachControl(QQmlEngine *engine, const QString &
 }
 
 void QQuickControlsTestUtils::addTestRowForEachControl(QQmlEngine *engine, const QString &qqc2ImportPath,
-    const QString &sourcePath, const QString &targetPath, const QStringList &skipList)
+    const QString &styleName, const QString &targetPath, const QStringList &skipList)
 {
-    forEachControl(engine, qqc2ImportPath, sourcePath, targetPath, skipList, [&](const QString &relativePath, const QUrl &absoluteUrl) {
+    forEachControl(engine, qqc2ImportPath, styleName, targetPath, skipList, [&](
+            const QString &, const QString &, const QString &relativePath, const QUrl &absoluteUrl) {
         QTest::newRow(qPrintable(relativePath)) << absoluteUrl;
     });
 }
+
 
 bool QQuickControlsTestUtils::verifyButtonClickable(QQuickAbstractButton *button)
 {
@@ -228,9 +232,103 @@ Q_INVOKABLE QQmlComponent *QQuickControlsTestUtils::ComponentCreator::createComp
     return component.release();
 }
 
+QQuickControlsTestUtils::StyleInfo *QQuickControlsTestUtils::StyleInfo::create(QQmlEngine *, QJSEngine *)
+{
+    return StyleInfo::instance();
+}
+
+QQuickControlsTestUtils::StyleInfo *QQuickControlsTestUtils::StyleInfo::instance()
+{
+    static std::unique_ptr<StyleInfo> instance(new StyleInfo);
+    // If this API was only used from QML, we could use the default JavaScriptOwnership
+    // and let the engine take ownership of us. However, it's possible to use this API
+    // only from C++, which means we need to take ownership just in case.
+    QJSEngine::setObjectOwnership(instance.get(), QJSEngine::CppOwnership);
+    return instance.get();
+}
+
+void QQuickControlsTestUtils::StyleInfo::initialize(const QString &controlsImportPath)
+{
+#if defined(Q_OS_ANDROID)
+    qWarning() << "StyleInfo is not supported when cross-compiling: QTBUG-100191";
+    return;
+#endif
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QString::fromLatin1(
+        "import QtQuick.Templates; Control { }").toUtf8(), QUrl());
+
+    const QStringList qmlTypeNames = QQmlMetaType::qmlTypeNames();
+
+    // Collect the files from each style in the source tree.
+    QDirIterator it(controlsImportPath, QStringList() << QLatin1String("*.qml") << QLatin1String("*.js"),
+        QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext()) {
+        it.next();
+        QFileInfo info = it.fileInfo();
+        if (qmlTypeNames.contains(QLatin1String("QtQuick.Templates/") + info.baseName())) {
+            const auto dirName = info.dir().dirName();
+            const auto typeName = info.fileName();
+            m_sourceQmlFiles.append({dirName, typeName, dirName + "/" + typeName, info.filePath() });
+        }
+    }
+
+    // Gather the list of styles.
+    QStringList builtInStyles = QQuickStylePrivate::builtInStyles();
+    // TODO: add native styles: QTBUG-87108. Originally this list was hard-coded
+    // and didn't include them.
+    const QStringList nativeStyles = { QLatin1String("macOS"), QLatin1String("Windows") };
+    builtInStyles.removeIf([&nativeStyles](const QString &styleName){
+        return nativeStyles.contains(styleName);
+    });
+
+    QList<std::pair<QString, QString>> styleRelativePaths;
+    for (const auto &styleName : std::as_const(builtInStyles)) {
+        // E.g. { "Basic", "QtQuick/Controls/Basic" }
+        styleRelativePaths.append(std::make_pair(styleName, QLatin1String("QtQuick/Controls/") + styleName));
+    }
+
+    // Then, collect the files from each installed style directory.
+    for (const auto &stylePathPair : styleRelativePaths) {
+        forEachControl(&engine, controlsImportPath, stylePathPair.first, stylePathPair.second, QStringList(),
+                [&](const QString &styleName, const QString &typeName, const QString &relativePath,
+                    const QUrl &absoluteUrl) {
+            m_installedQmlFiles.append({ styleName, typeName, relativePath, absoluteUrl.toLocalFile() });
+        });
+    }
+
+    std::sort(m_sourceQmlFiles.begin(), m_sourceQmlFiles.end());
+    std::sort(m_installedQmlFiles.begin(), m_installedQmlFiles.end());
+}
+
 QString QQuickControlsTestUtils::StyleInfo::styleName() const
 {
     return QQuickStyle::name();
+}
+
+void QQuickControlsTestUtils::StyleInfo::warnIfNotInitialized() const
+{
+    if (m_sourceQmlFiles.isEmpty())
+        qWarning() << "StyleInfo hasn't been initialized";
+}
+
+bool QQuickControlsTestUtils::StyleInfo::QmlFileData::operator<(
+    const QQuickControlsTestUtils::StyleInfo::QmlFileData &rhs) const
+{
+    return relativePath < rhs.relativePath;
+}
+
+QList<QQuickControlsTestUtils::StyleInfo::QmlFileData> QQuickControlsTestUtils::StyleInfo::sourceQmlFiles() const
+{
+    warnIfNotInitialized();
+    return m_sourceQmlFiles;
+}
+
+QList<QQuickControlsTestUtils::StyleInfo::QmlFileData> QQuickControlsTestUtils::StyleInfo::installedQmlFiles() const
+{
+    warnIfNotInitialized();
+    return m_installedQmlFiles;
 }
 
 /*!
