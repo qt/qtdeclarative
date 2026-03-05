@@ -901,8 +901,11 @@ bool QQmlPropertyPrivate::removeBinding(
 {
     Q_ASSERT(o);
 
-    auto [target, targetIndex] = findAliasTarget(o, index);
-    return removeOldBinding(target, targetIndex, flags);
+    const auto [target, targetPropertyIndex] = findAliasTarget(o, index);
+
+    // If the target property index is invalid, there is no property. The alias targets the "target"
+    // object itself. You can't have a binding on a bare object so there is nothing to do here.
+    return !targetPropertyIndex.isValid() || removeOldBinding(target, targetPropertyIndex, flags);
 }
 
 bool QQmlPropertyPrivate::removeBinding(
