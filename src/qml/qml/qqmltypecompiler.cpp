@@ -851,9 +851,17 @@ static bool sortAliasDependencies(
     AliasArray ordered;
     ordered.reserve(obj->aliasCount());
 
+    // if the default property is an alias, we need to later update the default property index
+    QmlIR::Alias *defaultPropertyAlias = nullptr;
+    qsizetype aliasCounter = 0;
+
+
     // Collect aliases as nodes in a graph. Non-local ones are already ordered.
     AliasArray nodes;
-    for (QmlIR::Alias *a = obj->firstAlias(); a; a = a->next) {
+    for (QmlIR::Alias *a = obj->firstAlias(); a; ++aliasCounter, a = a->next) {
+        if (obj->defaultPropertyIsAlias && aliasCounter == obj->indexOfDefaultPropertyOrAlias) {
+            defaultPropertyAlias = a;
+        }
         const int targetObjIdx = idToObjectIndex.value(a->idIndex(), -1);
         if (targetObjIdx == objectIndex)
             nodes.append(a);
@@ -910,8 +918,13 @@ static bool sortAliasDependencies(
 
     // Apply the ordering in the IR
     obj->setFirstAlias(ordered[0]);
-    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i)
+    if (ordered[0] == defaultPropertyAlias)
+        obj->indexOfDefaultPropertyOrAlias = 0;
+    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i) {
         ordered[i]->next = ordered[i + 1];
+        if (ordered[i] == defaultPropertyAlias)
+            obj->indexOfDefaultPropertyOrAlias = i;
+    }
     ordered.last()->next = nullptr;
 
     return true;
