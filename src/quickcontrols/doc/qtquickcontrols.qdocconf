@@ -37,7 +37,7 @@ qhp.QtQuickControls.subprojects.classes.indexTitle = Qt Quick Controls C++ Class
 qhp.QtQuickControls.subprojects.classes.selectors = class fake:headerfile
 qhp.QtQuickControls.subprojects.classes.sortPages = true
 
-depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickdialogs qtsql qtwidgets qtlabsplatform qmake qtcmake qtvirtualkeyboard
+depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickdialogs qtsql qtwidgets qtlabsplatform qmake qtcmake qtvirtualkeyboard qtlabsstylekit
 
 # Specify the install path under QT_INSTALL_EXAMPLES
 # Note: paths passed to \example command must contain the parent directory, e.g.
