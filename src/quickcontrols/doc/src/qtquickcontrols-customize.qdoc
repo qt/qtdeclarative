@@ -1117,4 +1117,18 @@
         Here is an example of customizing the vertical header view delegate:
 
         \snippet qtquickcontrols-headerviewdelegate-custom.qml vertical-delegate
+
+    \section1 Styling Controls using StyleKit
+
+    The \l{Qt Labs StyleKit} module provides a set of QML types for styling
+    Qt Quick Controls, built on top of \l{Qt Quick Templates}.
+    It lets you define a complete visual style for
+    all your controls from a single Style object, including support for
+    themes, state-based styling, and transitions. StyleKit handles the
+    underlying template implementation automatically, letting you focus
+    purely on visual aspects such as colors, dimensions, borders, and shadows.
+
+    The \l{Qt Labs StyleKit} module is a Technology Preview module in
+    Qt 6.11.
+
 */
