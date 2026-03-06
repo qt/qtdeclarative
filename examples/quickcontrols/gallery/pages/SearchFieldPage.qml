@@ -31,7 +31,7 @@ ScrollablePage {
 
         SortFilterProxyModel {
             id: colorFilter
-            model: colorModel
+            sourceModel: colorModel
             sorters: [
                 RoleSorter {
                     roleName: "color"

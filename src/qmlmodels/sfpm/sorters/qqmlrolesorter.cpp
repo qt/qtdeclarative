@@ -23,7 +23,7 @@ QT_BEGIN_NAMESPACE
 
     \qml
     SortFilterProxyModel {
-        model: sourceModel
+        sourceModel: model
         sorters: [
             RoleSorter { roleName: "firstname" }
         ]

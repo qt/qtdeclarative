@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
 
     \qml
     SortFilterProxyModel {
-        model: sourceModel
+        sourceModel: model
         filters: [
             ValueFilter {
                 roleName: "favorite"

@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 
     SortFilterProxyModel {
         id: fruitFilter
-        model: fruitModel
+        sourceModel: fruitModel
         sorters: [
             RoleSorter {
                 roleName: "name"

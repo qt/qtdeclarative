@@ -124,7 +124,6 @@ public:
     int m_primarySortColumn = -1;
     int m_proxySortColumn = -1;
     Qt::SortOrder m_sortOrder = Qt::AscendingOrder;
-    QVariant m_sourceModel;
 };
 
 QT_END_NAMESPACE

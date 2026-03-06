@@ -41,7 +41,9 @@ class Q_QMLMODELS_EXPORT QQmlSortFilterProxyModel : public QAbstractProxyModel, 
 
     Q_PROPERTY(QQmlListProperty<QQmlFilterBase> filters READ filters NOTIFY filtersChanged FINAL)
     Q_PROPERTY(QQmlListProperty<QQmlSorterBase> sorters READ sorters NOTIFY sortersChanged FINAL)
-    Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
+#if QT_DEPRECATED_SINCE(6, 12)
+    Q_PROPERTY(QAbstractItemModel *model READ model WRITE setModel NOTIFY modelChanged FINAL)
+#endif
     Q_PROPERTY(bool dynamicSortFilter READ dynamicSortFilter WRITE setDynamicSortFilter NOTIFY dynamicSortFilterChanged FINAL)
     Q_PROPERTY(bool recursiveFiltering READ recursiveFiltering WRITE setRecursiveFiltering NOTIFY recursiveFilteringChanged FINAL)
     Q_PROPERTY(bool autoAcceptChildRows READ autoAcceptChildRows WRITE setAutoAcceptChildRows NOTIFY autoAcceptChildRowsChanged FINAL)
@@ -58,6 +60,13 @@ public:
     // Provides configured sorters in this model
     QQmlListProperty<QQmlSorterBase> sorters();
 
+#if QT_DEPRECATED_SINCE(6, 12)
+    QT_DEPRECATED_X("Use QAbstractItemModel *sourceModel() instead")
+    QAbstractItemModel *model();
+    QT_DEPRECATED_X("Use setSourceModel(QAbstractItemModel *) instead")
+    void setModel(QAbstractItemModel *model);
+#endif
+
     bool dynamicSortFilter() const;
     void setDynamicSortFilter(const bool enabled);
 
@@ -66,9 +75,6 @@ public:
 
     bool autoAcceptChildRows() const;
     void setAutoAcceptChildRows(const bool enabled);
-
-    QVariant model() const;
-    void setModel(QVariant &sourceModel);
 
     Q_INVOKABLE void invalidate();
     Q_INVOKABLE void invalidateSorter();
@@ -101,6 +107,8 @@ public:
     QItemSelection mapSelectionToSource(const QItemSelection &proxySelection) const override;
     QItemSelection mapSelectionFromSource(const QItemSelection &sourceSelection) const override;
 
+    void setSourceModel(QAbstractItemModel *sourceModel) override;
+
     // Internal methods
     void setPrimarySortColumn(const int column);
     void setPrimarySortOrder(const Qt::SortOrder sortOrder);
@@ -117,7 +125,6 @@ protected:
 private:
     void classBegin() override {};
     void componentComplete() override;
-    void setSourceModel(QAbstractItemModel *sourceModel) override;
     void invalidateFilter();
 
 Q_SIGNALS:

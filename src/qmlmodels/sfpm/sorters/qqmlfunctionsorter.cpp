@@ -24,7 +24,7 @@ QT_BEGIN_NAMESPACE
 
     \qml
     SortFilterProxyModel {
-        model: sourceModel
+        sourceModel: model
         sorters: [
             FunctionSorter {
                 id: functionSorter

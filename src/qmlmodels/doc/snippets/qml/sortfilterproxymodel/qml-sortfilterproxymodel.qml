@@ -24,7 +24,7 @@ ApplicationWindow {
 
     SortFilterProxyModel {
         id: ageFilterModel
-        model: listModel
+        sourceModel: listModel
         filters: [
             AgeFilter { }
         ]

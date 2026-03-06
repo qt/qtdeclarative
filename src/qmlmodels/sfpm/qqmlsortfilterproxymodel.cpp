@@ -45,7 +45,7 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
 
     SortFilterProxyModel {
         id: sfpm
-        model: processModel
+        sourceModel: processModel
         sorters: [
             RoleSorter {
                 roleName: "user"
@@ -161,6 +161,30 @@ QQmlListProperty<QQmlSorterBase> QQmlSortFilterProxyModel::sorters()
     return d->m_sorters->sortersListProperty();
 }
 
+#if QT_DEPRECATED_SINCE(6, 12)
+/*!
+    \qmlproperty QAbstractItemModel* SortFilterProxyModel::model
+    \deprecated [6.12] Use \l sourceModel instead.
+
+    This property holds the source model of type \l {QAbstractItemModel}
+    used as the source for this proxy model.
+*/
+QAbstractItemModel *QQmlSortFilterProxyModel::model()
+{
+    Q_D(QQmlSortFilterProxyModel);
+    return d->model;
+}
+
+void QQmlSortFilterProxyModel::setModel(QAbstractItemModel *model)
+{
+    Q_D(QQmlSortFilterProxyModel);
+    if (model == d->model)
+        return;
+    setSourceModel(model);
+    emit modelChanged();
+}
+#endif
+
 /*!
     \qmlproperty bool SortFilterProxyModel::dynamicSortFilter
 
@@ -232,33 +256,6 @@ void QQmlSortFilterProxyModel::setAutoAcceptChildRows(const bool enabled)
     emit autoAcceptChildRowsChanged();
 }
 
-/*!
-    \qmlproperty var SortFilterProxyModel::model
-
-    This property allows to set source model for the sort filter proxy model.
-*/
-QVariant QQmlSortFilterProxyModel::model() const
-{
-    Q_D(const QQmlSortFilterProxyModel);
-    return d->m_sourceModel;
-}
-
-void QQmlSortFilterProxyModel::setModel(QVariant &model)
-{
-    Q_D(QQmlSortFilterProxyModel);
-    if (d->m_sourceModel == model)
-        return;
-
-    auto *itemModel = qobject_cast<QAbstractItemModel *>(qvariant_cast<QObject*>(model));
-    if (!itemModel ) {
-        qWarning("QQmlSortFilterProxyModel: supports only QAIM for now");
-        return;
-    }
-    d->m_sourceModel = model;
-    setSourceModel(itemModel);
-    emit modelChanged();
-}
-
 /*! internal
  *
  */
@@ -320,9 +317,6 @@ void QQmlSortFilterProxyModel::setPrimarySorter(QQmlSorterBase *sorter)
     }
 }
 
-/*!
-    \internal
- */
 void QQmlSortFilterProxyModel::setSourceModel(QAbstractItemModel *sourceModel)
 {
     Q_D(QQmlSortFilterProxyModel);
@@ -511,7 +505,7 @@ bool QQmlSortFilterProxyModel::hasChildren(const QModelIndex &parent) const
 int QQmlSortFilterProxyModel::columnCount(const QModelIndex &parent) const
 {
     Q_D(const QQmlSortFilterProxyModel);
-    if (d->m_sourceModel.isNull() || !d->m_sourceModel.isValid())
+    if (!d->model)
         return 0;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())
@@ -523,7 +517,7 @@ int QQmlSortFilterProxyModel::columnCount(const QModelIndex &parent) const
 int QQmlSortFilterProxyModel::rowCount(const QModelIndex &parent) const
 {
     Q_D(const QQmlSortFilterProxyModel);
-    if (d->m_sourceModel.isNull() || !d->m_sourceModel.isValid())
+    if (!d->model)
         return 0;
     QModelIndex source_parent = mapToSource(parent);
     if (parent.isValid() && !source_parent.isValid())

@@ -83,7 +83,7 @@ TestCase {
 
             SortFilterProxyModel {
                 id: countryFilter
-                model: countryModels
+                sourceModel: countryModels
                 sorters: RoleSorter { roleName: "text" }
 
                 filters: FunctionFilter {

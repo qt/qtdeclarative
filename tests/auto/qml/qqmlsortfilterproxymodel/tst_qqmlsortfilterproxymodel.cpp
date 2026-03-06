@@ -139,9 +139,8 @@ void tst_QQmlSortFilterProxyModel::checkProxyModel()
     std::unique_ptr<QStandardItemModel> standardModel(new QStandardItemModel(2, 2, this));
     std::unique_ptr<QQmlSortFilterProxyModel> proxyModel(new QQmlSortFilterProxyModel(this));
 
-    QVariant sourceModel = QVariant::fromValue(standardModel.get());
     // Set the standard model as the source model to the proxy
-    proxyModel->setModel(sourceModel);
+    proxyModel->setSourceModel(standardModel.get());
 
     // Test proxy model to ensure that it abides by the rules of item models
     // QAbstractItemModelTester verifies it internally when its created
@@ -158,9 +157,8 @@ void tst_QQmlSortFilterProxyModel::checkProxyModel()
         }
     }
 
-    QVariant modelVar = QVariant::fromValue(standardModel.get());
     // Reset the model to the standard model
-    proxyModel->setModel(modelVar);
+    proxyModel->setSourceModel(standardModel.get());
     QCOMPARE(proxyModel->rowCount(), standardModel->rowCount());
     QCOMPARE(proxyModel->columnCount(), standardModel->columnCount());
     for (int row = 0; row < proxyModel->rowCount(); ++row) {
@@ -219,14 +217,13 @@ void tst_QQmlSortFilterProxyModel::validateFilters()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     auto filters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
 
     auto resetFilters = [sfpmModel, &filters] {
@@ -273,14 +270,13 @@ void tst_QQmlSortFilterProxyModel::multipleFilters()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     auto *functionFilter = object->property("functionFilter0").value<QQmlFunctionFilter *>();
     QVERIFY(functionFilter);
     functionFilter->setProperty("expression", "true");
@@ -310,14 +306,13 @@ void tst_QQmlSortFilterProxyModel::filterAbility()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
 
     auto *functionFilter = object->property("functionFilter0").value<QQmlFunctionFilter *>();
     QVERIFY(functionFilter);
@@ -356,14 +351,13 @@ void tst_QQmlSortFilterProxyModel::filterInverted()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     auto *valueFilter = object->property("valueFilter").value<QQmlValueFilter *>();
     QVERIFY(valueFilter);
     valueFilter->setValue(tableModel.data(tableModel.index(0, 0, QModelIndex()), Qt::UserRole));
@@ -387,14 +381,13 @@ void tst_QQmlSortFilterProxyModel::validateValueFilterProperties()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     auto filters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
     auto *valueFilter = object->property("valueFilter").value<QQmlValueFilter *>();
     QVERIFY(valueFilter);
@@ -448,14 +441,13 @@ void tst_QQmlSortFilterProxyModel::validateFunctionFilterProperties()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     auto filters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
 
     auto *functionFilter = object->property("functionFilter1").value<QQmlFunctionFilter *>();
@@ -484,14 +476,13 @@ void tst_QQmlSortFilterProxyModel::verifyDynamicSortFilterProperty()
     QVERIFY(!object.isNull());
 
     CustomTableModel tableModel;
-    QVariant sourceModel = QVariant::fromValue(&tableModel);
     QCOMPARE(tableModel.rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(tableModel.columnCount(), CustomTableModel::s_columnCount);
 
     // Set the value filter in Qml SFPM
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&tableModel);
     QCOMPARE(sfpmModel->rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(sfpmModel->columnCount(), CustomTableModel::s_columnCount);
 
@@ -610,8 +601,7 @@ void tst_QQmlSortFilterProxyModel::validateSorters()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
     auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
     auto *sorter = object->property(sorterType.toLatin1()).value<QQmlSorterBase *>();
     QVERIFY(sorter);
@@ -681,8 +671,7 @@ void tst_QQmlSortFilterProxyModel::multipleSorters()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
     auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
     sorters.append(&sorters, sorter2); // String sorter (for column 0)
     sorters.append(&sorters, sorter1); // Role sorter (for column 1)
@@ -734,8 +723,7 @@ void tst_QQmlSortFilterProxyModel::sorterAbility()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
 
     auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
     auto *sorter1 = object->property(sortersList.at(0).toLatin1()).value<QQmlSorterBase *>();
@@ -816,10 +804,8 @@ void tst_QQmlSortFilterProxyModel::validateRoleSorterProperties()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
-
     auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
+    sfpmModel->setSourceModel(&standardModel);
     sorters.append(&sorters, sorter);
 
     column = -1;
@@ -894,8 +880,7 @@ void tst_QQmlSortFilterProxyModel::validateStringSorterProperties()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
 
     auto *sorter = object->property(sorterType.toLatin1()).value<QQmlStringSorter *>();
     QVERIFY(sorter);
@@ -957,8 +942,7 @@ void tst_QQmlSortFilterProxyModel::validateFunctionSorterProperties()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
 
     auto *sorter = object->property(sorterType.toLatin1()).value<QQmlFunctionSorter *>();
     QVERIFY(sorter);
@@ -1029,8 +1013,7 @@ void tst_QQmlSortFilterProxyModel::primarySorter()
 
     auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
     QVERIFY(sfpmModel);
-    QVariant sourceModel = QVariant::fromValue(&standardModel);
-    sfpmModel->setModel(sourceModel);
+    sfpmModel->setSourceModel(&standardModel);
     auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
     sorters.append(&sorters, sorter1);
     sorters.append(&sorters, primarySorter1);

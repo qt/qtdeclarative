@@ -164,8 +164,7 @@ void tst_qqmlsortfilterproxymodel::cleanupTestCase()
 void tst_qqmlsortfilterproxymodel::init()
 {
     QSignalSpy modelResetSpy(m_sfpmModel, SIGNAL(modelReset()));
-    QVariant sourceModel = QVariant::fromValue(m_aimModel);
-    m_sfpmModel->setModel(sourceModel);
+    m_sfpmModel->setSourceModel(m_aimModel);
     QCOMPARE(modelResetSpy.count(), 1);
 }
 
@@ -178,8 +177,7 @@ void tst_qqmlsortfilterproxymodel::cleanup()
 
     QSignalSpy modelResetSpy(m_sfpmModel, SIGNAL(modelReset()));
     CustomListModel model(this, 0);
-    QVariant sourceModel = QVariant::fromValue(&model);
-    m_sfpmModel->setModel(sourceModel);
+    m_sfpmModel->setSourceModel(&model);
     QCOMPARE(modelResetSpy.count(), 1);
 }
 

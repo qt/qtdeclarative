@@ -30,7 +30,7 @@ RowLayout {
 
     SortFilterProxyModel {
         id: modelFilter
-        model: ListModel {
+        sourceModel: ListModel {
             ListElement { color: "blue" }
             ListElement { color: "green" }
             ListElement { color: "red" }
