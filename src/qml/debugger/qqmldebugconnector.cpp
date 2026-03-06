@@ -37,7 +37,7 @@ struct QQmlDebugConnectorParams {
             QCoreApplicationPrivate *appD =
                     static_cast<QCoreApplicationPrivate*>(QObjectPrivate::get(qApp));
             if (appD)
-                arguments = appD->qmljsDebugArgumentsString();
+                arguments = appD->qmljs_debug_arguments;
         }
     }
 };
