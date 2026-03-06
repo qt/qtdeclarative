@@ -1329,8 +1329,15 @@ void QQuickTextInput::setEchoMode(QQuickTextInput::EchoMode echo)
     Flags that alter behaviour are:
 
     \value Qt.ImhHiddenText         Characters should be hidden, as is typically used when entering passwords.
+
+                                    Note that Android IMEs deliberately only
+                                    allow Latin/ASCII character input for password fields.
     \value Qt.ImhSensitiveData      Typed text should not be stored by the active input method
                                     in any persistent storage like predictive user dictionary.
+
+                                    Note that the Qt Framework treats this as a visible password
+                                    and in this case Android IMEs deliberately only
+                                    allow Latin/ASCII character input.
     \value Qt.ImhNoAutoUppercase    The input method should not try to automatically switch to
                                     upper case when a sentence ends.
     \value Qt.ImhPreferNumbers      Numbers are preferred (but not required).
