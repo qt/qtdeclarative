@@ -1659,6 +1659,12 @@ void TestQmllint::cleanQmlSnippet_data()
             << u"function f(a:int, b: int): bool { return a == b; }"_s << defaultOptions;
     QTest::newRow("equality-with-coercion2")
             << u"function f(a, b) { return a == null && b == undefined; }"_s << defaultOptions;
+    QTest::newRow("listAssignment") << u"import TestTypes\n"
+                                       "BirthdayParty {\n"
+                                       "    function f() {\n"
+                                       "        guests = [];\n"
+                                       "    }\n"
+                                       "}"_s << defaultOptions;
     QTest::newRow("lowerCaseId") << u"id: root"_s << defaultOptions;
     QTest::newRow("preferNonVarProperties_nonReadOnly")
             << u"property var i: 1     \n"_s
