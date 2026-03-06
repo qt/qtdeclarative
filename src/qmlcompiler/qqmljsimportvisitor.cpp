@@ -2621,12 +2621,10 @@ void QQmlJSImportVisitor::endVisit(UiScriptBinding *)
 
 bool QQmlJSImportVisitor::visit(UiArrayBinding *arrayBinding)
 {
+    createAttachedAndGroupedScopes(arrayBinding->qualifiedId);
     enterEnvironment(QQmlSA::ScopeType::QMLScope, buildName(arrayBinding->qualifiedId),
                      arrayBinding->firstSourceLocation());
     m_currentScope->setIsArrayScope(true);
-
-    // TODO: support group/attached properties
-
     return true;
 }
 
@@ -2638,14 +2636,23 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
     // other expressions involving lists (e.g. `var p: [1,2,3]`) are considered
     // to be script bindings
     const auto children = m_currentScope->childScopes();
-    const auto propertyName = QQmlJSUtils::getScopeName(m_currentScope, QQmlSA::ScopeType::QMLScope);
     leaveEnvironment();
+
+    const int scopesEnteredCounter = openAttachedAndGroupedScopes(arrayBinding->qualifiedId);
+    auto guard = qScopeGuard([this, scopesEnteredCounter]() {
+        for (int i = 0; i < scopesEnteredCounter; ++i)
+            leaveEnvironment();
+    });
 
     if (checkCustomParser(m_currentScope)) {
         // These warnings do not apply for custom parsers and their children and need to be handled
         // on a case by case basis
         return;
     }
+
+    auto group = arrayBinding->qualifiedId;
+    for (; group->next; group = group->next) { }
+    const QString propertyName = group->name.toString();
 
     qsizetype i = 0;
     for (auto element = arrayBinding->members; element; element = element->next, ++i) {
@@ -3028,28 +3035,18 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
     return true;
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
+void QQmlJSImportVisitor::createAttachedAndGroupedScopes(UiQualifiedId *propertyName)
 {
-    // ... __styleData: QtObject {...}
-
-    Q_ASSERT(uiob->qualifiedTypeNameId);
-
     bool needsResolution = false;
     int scopesEnteredCounter = 0;
-
-    const QString typeName = buildName(uiob->qualifiedTypeNameId);
-    if (typeName.front().isLower() && typeName.contains(u'.')) {
-        logLowerCaseImport(typeName, uiob->qualifiedTypeNameId->identifierToken, m_logger);
-    }
-
     QString prefix;
-    for (auto group = uiob->qualifiedId; group->next; group = group->next) {
+    for (auto group = propertyName; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
         if (idName.isEmpty())
             break;
 
-        if (group == uiob->qualifiedId && isImportPrefix(idName)) {
+        if (group == propertyName && isImportPrefix(idName)) {
             prefix = idName + u'.';
             continue;
         }
@@ -3078,6 +3075,20 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
         QQmlJSScope::resolveTypes(
                 m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
     }
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
+{
+    // ... __styleData: QtObject {...}
+
+    Q_ASSERT(uiob->qualifiedTypeNameId);
+
+    const QString typeName = buildName(uiob->qualifiedTypeNameId);
+    if (typeName.front().isLower() && typeName.contains(u'.')) {
+        logLowerCaseImport(typeName, uiob->qualifiedTypeNameId->identifierToken, m_logger);
+    }
+
+    createAttachedAndGroupedScopes(uiob->qualifiedId);
 
     enterEnvironment(QQmlSA::ScopeType::QMLScope, typeName,
                      uiob->qualifiedTypeNameId->identifierToken);
@@ -3087,24 +3098,18 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
+int QQmlJSImportVisitor::openAttachedAndGroupedScopes(UiQualifiedId *propertyName)
 {
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
-    // must be mutable, as we might mark it as implicitly wrapped in a component
-    const QQmlJSScope::Ptr childScope = m_currentScope;
-    leaveEnvironment();
-
-    auto group = uiob->qualifiedId;
-    int scopesEnteredCounter = 0;
-
     QString prefix;
+    int scopesEnteredCounter = 0;
+    auto group = propertyName;
     for (; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
         if (idName.isEmpty())
             break;
 
-        if (group == uiob->qualifiedId && isImportPrefix(idName)) {
+        if (group == propertyName && isImportPrefix(idName)) {
             prefix = idName + u'.';
             continue;
         }
@@ -3119,10 +3124,23 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         prefix.clear();
     }
+    return scopesEnteredCounter;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
+{
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports.contextualTypes(), &m_usedTypes);
+    // must be mutable, as we might mark it as implicitly wrapped in a component
+    const QQmlJSScope::Ptr childScope = m_currentScope;
+    leaveEnvironment();
+
+    const int scopesEnteredCounter = openAttachedAndGroupedScopes(uiob->qualifiedId);
 
     // on ending the visit to UiObjectBinding, set the property type to the
     // just-visited one if the property exists and this type is valid
 
+    auto group = uiob->qualifiedId;
+    for (; group->next; group = group->next) { }
     const QString propertyName = group->name.toString();
 
     if (m_currentScope->isNameDeferred(propertyName)) {

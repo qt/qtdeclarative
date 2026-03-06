@@ -155,6 +155,8 @@ protected:
     virtual bool checkCustomParser(const QQmlJSScope::ConstPtr &scope);
 
     void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, const QString &name);
+    void createAttachedAndGroupedScopes(QQmlJS::AST::UiQualifiedId *propertyName);
+    int openAttachedAndGroupedScopes(QQmlJS::AST::UiQualifiedId *propertyName);
 
     QString m_implicitImportDirectory;
     QStringList m_qmldirFiles;

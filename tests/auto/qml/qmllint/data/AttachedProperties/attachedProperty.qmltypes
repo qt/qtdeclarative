@@ -1,4 +1,4 @@
-import QtQuick.tooling 1.2
+﻿import QtQuick.tooling 1.2
 Module {
     Component {
         file: "attachedtype.h"
@@ -16,6 +16,15 @@ Module {
         prototype: "QObject"
         Property { name: "count"; type: "int"; read: "getCount"; write: "setCount" }
         Property { name: "str"; type: "QString"; read: "getStr"; write: "setStr" }
+        Property { name: "mylist"; type: "QString"; read: "getStr"; write: "setStr" }
+        Property {
+            name: "myList"
+            type: "QObject"
+            isList: true
+            read: "myList"
+            write: "setMyList"
+            notify: "myListChanged"
+        }
         Property { name: "object"; type: "QObject"; isPointer: true; read: "getObject"; write: "setObject" }
     }
     Component {
