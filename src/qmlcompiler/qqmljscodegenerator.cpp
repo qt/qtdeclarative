@@ -4435,8 +4435,15 @@ QString QQmlJSCodeGenerator::convertStored(
     } else if (const auto ctor = m_typeResolver->selectConstructor(to, from, &isExtension);
                ctor.isValid()) {
         const auto argumentTypes = ctor.parameters();
-        return (isExtension ? to->extensionType().scope->internalName() : to->internalName())
-                + u"("_s + convertStored(from, argumentTypes[0].type(), variable) + u")"_s;
+        const QString argument = convertStored(from, argumentTypes[0].type(), variable);
+        if (isExtension) {
+            // We typically use private inheritance for the foreign/extension trick.
+            // Therefore we need to jump through some hoops to extract the actual value here.
+            return u"reinterpret_cast<%1 &&>(std::forward<%2>(%2(%3)))"_s.arg(
+                    to->internalName(), to->extensionType().scope->internalName(), argument);
+        }
+
+        return u"%1(%2)"_s.arg(to->internalName(), argument);
     }
 
     if (to == m_typeResolver->stringType()
