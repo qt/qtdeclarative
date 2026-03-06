@@ -652,6 +652,12 @@ void tst_QQuickContextMenu::textEditingContextMenuUndoRedo()
     QVERIFY(undoMenuItem->isEnabled());
     QVERIFY(!redoMenuItem->isEnabled());
 
+    // If it's a SearchField, ensure that the popup is closed.
+    if (searchField) {
+        QTest::keyClick(&window, Qt::Key_Escape);
+        QTRY_VERIFY(!contextMenu->menu()->isVisible());
+    }
+
     // Right click on the editor to open the context menu.
     QTest::mouseClick(&window, Qt::RightButton, Qt::NoModifier, mapCenterToWindow(editor));
     QTRY_VERIFY(contextMenu->menu()->isOpened());
