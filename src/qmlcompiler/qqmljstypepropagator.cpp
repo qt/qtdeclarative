@@ -692,7 +692,7 @@ void QQmlJSTypePropagator::generate_StoreNameCommon(int nameIndex)
         return;
     }
 
-    if (!type.isWritable()) {
+    if (!type.isWritable() && !type.isList()) {
         addError(u"Can't assign to read-only property %1"_s.arg(name));
 
         m_logger->log(u"Cannot assign to read-only property %1"_s.arg(name), qmlReadOnlyProperty,
