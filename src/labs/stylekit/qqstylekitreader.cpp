@@ -13,6 +13,214 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype StyleReader
+    \inqmlmodule Qt.labs.StyleKit
+    \inherits ControlStyleProperties
+    \brief Reads properties from the active Style for a specific control.
+
+    StyleReader is the bridge between a control in \l {Qt Quick Controls}
+    and the \l {StyleKit::style}{active style}. It exposes all the style
+    properties — \l {ControlStyleProperties::background}{backgrounds},
+    \l {ControlStyleProperties::indicator}{indicators},
+    \l {ControlStyleProperties::handle}{handles},
+    \l {ControlStyleProperties::text}{text},
+    \l {ControlStyleProperties::padding}{padding},
+    and more — that a control, and its delegates, should bind to.
+    All built-in StyleKit controls use a StyleReader internally for this purpose.
+
+    The state properties — \l hovered, \l pressed, \l focused, \l checked,
+    \l highlighted, etc. — tell StyleReader which state the control is in.
+    It uses these to resolve and read the correct property values from
+    the \l Style, taking \l {Theme}{Themes}, \l {StyleVariation}{StyleVariations},
+    \l {AbstractStylableControls}{fallback types}, and property propagation
+    into account.
+
+    When implementing a \l CustomControl, you can follow the same approach as
+    the built-in controls:
+
+    \snippet StyleReaderSnippets.qml custom control
+
+    \note The style properties inherited from \l ControlStyleProperties do not map
+    directly to the \l Style. Instead, they reflect a cache of potentially interpolated
+    values during an active \l {ControlStyle::}{transition}. Writing to them will \e not
+    update the corresponding properties in the \l Style and may interfere with ongoing
+    transitions. Write directly to the \l Style when you need to change a style property.
+
+    \labs
+
+    \sa CustomControl, Style, {StyleVariation::controlType}{StyleVariation.controlType}
+*/
+
+/*!
+    \qmlproperty enumeration StyleReader::controlType
+
+    Identifies which control type in the \l Style this reader reads
+    properties from. This can either be set to one of the predefined values
+    below, or to a \l {CustomControl::controlType}{custom control type} defined in the
+    \l Style.
+
+    \value StyleReader.Button         \l {Button}
+    \value StyleReader.CheckBox       \l {CheckBox}
+    \value StyleReader.ComboBox       \l {ComboBox}
+    \value StyleReader.Frame          \l {Frame}
+    \value StyleReader.GroupBox       \l {GroupBox}
+    \value StyleReader.ItemDelegate   \l {ItemDelegate}
+    \value StyleReader.Label          \l {Label}
+    \value StyleReader.Menu           \l {Menu}
+    \value StyleReader.Dialog         \l {Dialog}
+    \value StyleReader.Page           \l {Page}
+    \value StyleReader.Pane           \l {Pane}
+    \value StyleReader.Popup          \l {Popup}
+    \value StyleReader.ProgressBar    \l {ProgressBar}
+    \value StyleReader.RadioButton    \l {RadioButton}
+    \value StyleReader.ScrollBar      \l {ScrollBar}
+    \value StyleReader.ScrollView     \l {ScrollView}
+    \value StyleReader.SearchField    \l {SearchField}
+    \value StyleReader.Slider         \l {Slider}
+    \value StyleReader.SpinBox        \l {SpinBox}
+    \value StyleReader.Switch         \l {Switch}
+    \value StyleReader.TabBar         \l {TabBar}
+    \value StyleReader.TabButton      \l {TabButton}
+    \value StyleReader.TextArea       \l {TextArea}
+    \value StyleReader.TextField      \l {TextField}
+    \value StyleReader.ToolBar        \l {ToolBar}
+    \value StyleReader.ToolButton     \l {ToolButton}
+    \value StyleReader.ToolSeparator  \l {ToolSeparator}
+
+    \sa {StyleVariation::controlType}{StyleVariation.controlType}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::enabled
+
+    Whether the control is enabled.
+
+    Bind this to the control's \l {Item::enabled}{enabled} property.
+
+    The default value is \c true.
+
+    \sa {ControlStyleState::enabled}{ControlStyleState.disabled}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::hovered
+
+    Whether the control is hovered.
+
+    Bind this to the control's \l {Control::hovered}{hovered} property.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::hovered}{ControlStateStyle.hovered}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::pressed
+
+    Whether the control is pressed.
+
+    Bind this to the control's \l {AbstractButton::pressed}{pressed} property.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::pressed}{ControlStateStyle.pressed}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::focused
+
+    Whether the control has active focus.
+
+    Bind this to the control's \l {Item::activeFocus}{activeFocus} property.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::focused}{ControlStateStyle.focused}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::checked
+
+    Whether the control is checked.
+
+    Bind this to the control's \l {AbstractButton::checked}{checked} property.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::checked}{ControlStateStyle.checked}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::highlighted
+
+    Whether the control is highlighted.
+
+    Bind this to the control's \l {Button::highlighted}{highlighted} property.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::highlighted}{ControlStateStyle.highlighted}
+*/
+
+/*!
+    \qmlproperty bool StyleReader::vertical
+
+    Whether the control is oriented vertically.
+
+    Bind this to the control's \l {Slider::orientation}{orientation}.
+
+    The default value is \c false.
+
+    \sa {ControlStateStyle::vertical}{ControlStateStyle.vertical}
+*/
+
+/*!
+    \qmlproperty palette StyleReader::palette
+
+    The palette of the control. StyleKit uses this to resolve color properties
+    that bind the \l {Style::}{palette} in the \l Style.
+
+    Bind this to the control's \l {Control::palette}{palette} property.
+
+    \sa {Style::palette}{Style.palette}
+*/
+
+/*!
+    \qmlproperty font StyleReader::font
+    \readonly
+
+    The effective font for this control type, as defined by the
+    \l {AbstractStyle::fonts}{style}. This also takes into account any font
+    overrides set in the \l {ControlStyle::}{text} properties of the style.
+
+    Bind the control's \l {Control::font}{font} property to this property.
+
+    \note Unlike properties such as \l hovered, \l pressed and \l palette — which
+    is forwarded from the control to the StyleReader — \l font is an output. Bind the
+    control's \l {Control::font}{font} property to this value, not the other way around.
+*/
+
+/*!
+    \qmlproperty ControlProperties StyleReader::global
+    \readonly
+
+    Provides direct access to the style properties, bypassing any ongoing
+    \l {ControlStyle::}{transition}.
+
+    While a state transition is ongoing, style properties read from a StyleReader
+    may return interpolated values. By prepending \c global to the property path,
+    you bypass the transition and get the end-state values immediately.
+
+    For example, when transitioning from \l hovered to \l pressed, \c {background.color}
+    may return an interpolated value between the \l {DelegateStyle::}{color} in the
+    \l {ControlStateStyle::}{hovered} state and the color in the
+    \l {ControlStateStyle::}{pressed} state. \c {global.background.color}, on the
+    other hand, returns the color in the pressed state directly.
+
+    \sa {StyleKit::transitionsEnabled}{transitionsEnabled}
+*/
+
 using namespace Qt::StringLiterals;
 
 static const QString kAlternate1 = "A1"_L1;
@@ -53,17 +261,7 @@ static quint64 textFontOverridesSignature(const QQStyleKitTextProperties *t)
 QList<QQStyleKitReader *> QQStyleKitReader::s_allReaders;
 QMap<QString, QQmlComponent *> QQStyleKitReader::s_propertyChangesComponents;
 
-/*!
-    \qmltype StyleReader
-    \inqmlmodule Qt.labs.StyleKit
-    \brief Provides access to control state and palette for styling.
 
-    \labs
-*/
-
-/*!
-    \qmlproperty palette StyleReader::palette
-*/
 
 QQStyleKitReader::QQStyleKitReader(QObject *parent)
     : QQStyleKitControlProperties(QQSK::PropertyGroup::Control, parent)

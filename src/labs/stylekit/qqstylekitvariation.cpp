@@ -122,17 +122,19 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlattachedproperty int StyleVariation::controlType
 
-    This property identifies the control type of the item it is attached to.
+    This property identifies the \l {StyleReader::controlType}{control type} of
+    the item it is attached to.
 
     StyleKit uses it to resolve \l {Type Variations}{type variations} for descendant
     controls — if a parent item's \c controlType matches a control type that has
     \l {ControlStyle::}{variations} defined in the \l Style, those variations apply
     to all descendant controls.
 
-    Built-in StyleKit controls set this property automatically. Custom controls
+    Built-in controls set this property automatically. Custom controls
     must set it explicitly to participate in type variation resolution.
 
-    \sa {ControlStyle::variations}{ControlStyle.variations}, StyleReader
+    \sa {ControlStyle::variations}{ControlStyle.variations},
+        {StyleReader::controlType}{StyleReader.controlType}
 */
 
 int QQStyleKitVariation::s_typeVariationCount = 0;

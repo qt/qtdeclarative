@@ -9,131 +9,28 @@
 
 QT_BEGIN_NAMESPACE
 
-// ************* ControlStateStyle ****************
+// ************* ControlStyleProperties ****************
 
 /*!
-    \qmltype ControlStateStyle
+    \qmltype ControlStyleProperties
     \inqmlmodule Qt.labs.StyleKit
-    \brief Defines the style for a control in a given state.
+    \brief Defines the stylable properties for a control.
 
-    A ControlStateStyle contains the properties that can be styled for each
-    state a control can be in. This includes the visual building blocks
-    \l background, \l indicator, \l handle, and \l text, along with
-    layout properties such as \l padding and \l spacing, and more.
+    ControlStyleProperties defines the stylable properties for a
+    control: the visual building blocks \l background, \l indicator, \l handle,
+    and \l text, as well as layout properties like \l padding, \l spacing,
+    and \l transition.
 
-    A \l ControlStyle inherits ControlStateStyle, since it represents the
-    \e normal state — that is, properties set directly on a
-    ControlStyle describe how the control looks when no other state
-    is active. State-specific overrides are set through nested states
-    such as \l pressed, \l hovered, and \l checked, and can be
-    animated by a \l transition.
-
-    Nested states are not mutually exclusive. Multiple states can be active at
-    the same time — for example, a button can be both hovered and
-    pressed simultaneously. When several states are active, all matching
-    state overrides are applied. If the same property is set in multiple
-    active states, conflicts are resolved using the following priority
-    order: \l pressed, \l hovered, \l highlighted, \l focused,
-    \l checked, \l vertical. So for example \c {pressed.background.color}
-    wins over \c {checked.background.color} if the control is both
-    \l pressed and \l checked.
-
-    The \l disabled state is an exception: a disabled control cannot
-    be interacted with, so the \l pressed, \l hovered, \l highlighted,
-    and \l focused states will not apply. However, \l disabled can
-    still be combined with states like \l checked and \l vertical.
-
-    The more deeply nested a state is, the more qualified it is.
-    For example, \c {hovered.pressed.background.color} takes precedence over
-    \c {hovered.background.color} when both \l hovered and \l pressed are
-    active. The nesting order does not matter:
-    \c {hovered.pressed} and \c {pressed.hovered} are equivalent.
-    However, if both forms are used at the same time, which one wins is
-    undefined.
-
-    Deeper nesting of states can also be used to resolve conflicts. If the same property
-    is set in both \l hovered and \l checked, the priority order means
-    the \l hovered value wins. If you would rather have the checked value win, or
-    use an altogether different value in that situation, you can override
-    the property in \c {hovered.checked}, which then takes precedence over both.
-
-    The following snippet shows how to style a button differently
-    depending on its state:
-
-    \snippet ControlStateStyle_states.qml States
+    The style properties are accessed through inherited types such as
+    \l ControlStyle and \l StyleReader.
 
     \labs
 
-    \sa ControlStyle, DelegateStyle,
-        {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
+    \sa ControlStyle, StyleReader, ControlStateStyle, DelegateStyle
 */
 
 /*!
-    \qmlproperty ControlStateStyle ControlStateStyle::pressed
-
-    Style overrides applied when the control is pressed (e.g. the
-    user is holding down a mouse button on it).
-
-    \sa hovered, highlighted, focused, checked, vertical, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::hovered
-
-    Style overrides applied when the mouse cursor is over the control.
-
-    \sa pressed, highlighted, focused, checked, vertical, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::highlighted
-
-    Style overrides applied when the control is highlighted. A control
-    is typically highlighted in order to draw the user's attention towards it.
-
-    \sa pressed, hovered, focused, checked, vertical, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::focused
-
-    Style overrides applied when the control has input focus.
-
-    \sa pressed, hovered, highlighted, checked, vertical, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::checked
-
-    Style overrides applied when the control is in a checked or
-    toggled-on state (e.g. a checked \l CheckBox or a toggled
-    \l Button).
-
-    \sa pressed, hovered, highlighted, focused, vertical, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::vertical
-
-    Style overrides applied when the control has a vertical
-    orientation (e.g. a vertical \l Slider or \l ScrollBar).
-
-    \sa pressed, hovered, highlighted, focused, checked, disabled
-*/
-
-/*!
-    \qmlproperty ControlStateStyle ControlStateStyle::disabled
-
-    Style overrides applied when the control is disabled.
-
-    A disabled control cannot be interacted with, so \l pressed,
-    \l hovered, \l highlighted, and \l focused will not be applied
-    at the same time as disabled.
-
-    \sa pressed, hovered, highlighted, focused, checked, vertical
-*/
-/*!
-    \qmlproperty DelegateStyle ControlStateStyle::background
+    \qmlproperty DelegateStyle ControlStyleProperties::background
 
     Grouped property for styling the background of a control.
 
@@ -153,7 +50,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::bottomPadding
+    \qmlproperty real ControlStyleProperties::bottomPadding
 
     The \l [QtQuickControls]{Control Layout}{bottom padding}
     of the control. If not set, falls back to \l padding.
@@ -162,7 +59,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty HandleStyle ControlStateStyle::handle
+    \qmlproperty HandleStyle ControlStyleProperties::handle
 
     Grouped property for styling the handle of a control.
 
@@ -175,7 +72,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty IndicatorStyle ControlStateStyle::indicator
+    \qmlproperty IndicatorStyle ControlStyleProperties::indicator
 
     Grouped property for styling the indicator of a control. For a
     \l {AbstractStylableControls::}{checkBox}, the indicator is the
@@ -187,7 +84,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::leftPadding
+    \qmlproperty real ControlStyleProperties::leftPadding
 
     The \l [QtQuickControls]{Control Layout}{left padding} of the control. If not set, falls back to
     \l padding.
@@ -196,7 +93,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::padding
+    \qmlproperty real ControlStyleProperties::padding
 
     The uniform spacing between the
     \l [QtQuickControls]{Control Layout}{control's content area and the
@@ -208,7 +105,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::rightPadding
+    \qmlproperty real ControlStyleProperties::rightPadding
 
     The \l [QtQuickControls]{Control Layout}{right padding} of the control.
     If not set, falls back to \l padding.
@@ -217,20 +114,20 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::spacing
+    \qmlproperty real ControlStyleProperties::spacing
 
     The spacing between visual elements inside the control, for example
     between an indicator and a label.
 */
 
 /*!
-    \qmlproperty TextStyle ControlStateStyle::text
+    \qmlproperty TextStyle ControlStyleProperties::text
 
     Grouped property for styling the text label of a control.
 */
 
 /*!
-    \qmlproperty real ControlStateStyle::topPadding
+    \qmlproperty real ControlStyleProperties::topPadding
 
     The \l [QtQuickControls]{Control Layout}{top padding}
     of the control. If not set, falls back to \l padding.
@@ -239,7 +136,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Transition ControlStateStyle::transition
+    \qmlproperty Transition ControlStyleProperties::transition
 
     A \l [QtQuick]{Transition} used to animate style properties when the
     control enters a new state, such as \l hovered or \l pressed. If set
@@ -269,8 +166,8 @@ QT_BEGIN_NAMESPACE
     \brief Defines the visual appearance of an element within a control.
 
     DelegateStyle describes the visual appearance of a visual element
-    within a \l ControlStyle, such as its \l {ControlStateStyle::}{background},
-    \l {ControlStateStyle::}{indicator}, or a sub-element like
+    within a \l ControlStyle, such as its \l {ControlStyleProperties::}{background},
+    \l {ControlStyleProperties::}{indicator}, or a sub-element like
     \l {IndicatorStyle::foreground}{indicator.foreground}.
     It provides properties for controlling
     \l {DelegateStyle::implicitWidth}{size},
@@ -866,7 +763,7 @@ QT_BEGIN_NAMESPACE
     \l {TextStyle::}{italic}, and
     \l {TextStyle::pointSize}{font size}.
 
-    It is available as the \l {ControlStateStyle::text}{text}
+    It is available as the \l {ControlStyleProperties::text}{text}
     grouped property on every \l ControlStateStyle.
 
     \labs
