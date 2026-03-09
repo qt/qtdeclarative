@@ -21,11 +21,7 @@ import java.security.InvalidParameterException;
  * It brings the power of Qt Quick into your Android app, making it possible to use various Qt Quick
  * APIs, in Android Java or Kotlin apps.
  *
- * <b>Known limitations:</b>
- * <ul>
- * <li> Only CMake is supported, not qmake.
- * <li> Only one QtQuickView can be added to your app, adding multiple outcomes unknown.
- * </ul>
+ * <b>Known limitation:</b> Only CMake is supported, not qmake.
  * @see <a href="https://doc.qt.io/qt-6/qquickview.html">Qt QQuickView</a>
  **/
 public class QtQuickView extends QtView {
