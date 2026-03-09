@@ -54,6 +54,9 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
 {
     m_connection.reset(new QQmlDebugConnection);
     m_qmlPreviewClient.reset(new QQmlPreviewClient(m_connection.data()));
+    QQmlPreviewClient::Settings settings;
+    settings.enableInPlaceUpdates = false;
+    m_qmlPreviewClient->sendConfiguration(settings);
     m_connectTimer.setInterval(1000);
 
     m_loadTimer.setInterval(100);

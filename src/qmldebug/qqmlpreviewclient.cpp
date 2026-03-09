@@ -46,6 +46,12 @@ void QQmlPreviewClient::messageReceived(const QByteArray &message)
         emit fps(info);
         break;
     }
+    case Confirmation: {
+        Settings settings;
+        packet >> settings.enableInPlaceUpdates;
+        emit confirmation(settings);
+        break;
+    }
     default:
         emit error(QString::fromLatin1("Unknown command received: %1").arg(command));
         break;
@@ -70,6 +76,13 @@ void QQmlPreviewClient::sendError(const QString &path)
 {
     QPacket packet(connection()->currentDataStreamVersion());
     packet << static_cast<qint8>(Error) << path;
+    sendMessage(packet.data());
+}
+
+void QQmlPreviewClient::sendConfiguration(const Settings &config)
+{
+    QPacket packet(connection()->currentDataStreamVersion());
+    packet << static_cast<qint8>(Configuration) << config.enableInPlaceUpdates;
     sendMessage(packet.data());
 }
 

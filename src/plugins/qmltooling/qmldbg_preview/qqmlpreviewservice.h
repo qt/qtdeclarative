@@ -40,6 +40,8 @@ public:
         Zoom,
         Fps,
         AnimationSpeed,
+        Configuration,
+        Confirmation,
     };
 
     static const QString s_key;
@@ -55,6 +57,7 @@ public:
     void forwardRequest(const QString &file);
     void forwardError(const QString &error);
     void forwardFps(const QQmlPreviewHandler::FpsInfo &frames);
+    void forwardConfirmation(const QQmlPreviewHandler::Settings &settings);
 
     QQuickItem *currentRootItem();
 
@@ -68,6 +71,7 @@ Q_SIGNALS:
     void clearCache();
     void zoom(qreal factor);
     void animationSpeed(qreal factor);
+    void settingsChanged(const QQmlPreviewHandler::Settings &settings);
 
 private:
     QScopedPointer<QQmlPreviewFileEngineHandler> m_fileEngine;

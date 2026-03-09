@@ -101,6 +101,17 @@ void QQmlPreviewHandler::removeEngine(QQmlEngine *qmlEngine)
     m_createdObjects.removeAll(nullptr);
 }
 
+void QQmlPreviewHandler::load(const QUrl &url)
+{
+    return m_settings.enableInPlaceUpdates ? loadPatch(url) : loadUrl(url);
+}
+
+void QQmlPreviewHandler::loadPatch(const QUrl &url)
+{
+    Q_UNUSED(url);
+    // TODO: Implement patching of the existing object instead of creating a new one.
+}
+
 void QQmlPreviewHandler::loadUrl(const QUrl &url)
 {
     QSharedPointer<QuitLockDisabler> disabler(new QuitLockDisabler);
@@ -177,6 +188,16 @@ void QQmlPreviewHandler::zoom(qreal newFactor)
 void QQmlPreviewHandler::setAnimationSpeed(qreal newFactor)
 {
     QUnifiedTimer::instance()->setSpeedModifier(newFactor);
+}
+
+void QQmlPreviewHandler::configure(const Settings &settings)
+{
+    if (m_settings.enableInPlaceUpdates && !settings.enableInPlaceUpdates) {
+        emit error(QLatin1String("Cannot disable in-place updates once enabled"));
+        return;
+    }
+    m_settings = settings;
+    emit confirmation(settings);
 }
 
 void QQmlPreviewHandler::doZoom()

@@ -23,16 +23,20 @@ using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
     QQmlDebugService(s_key, 1.0f, parent)
 {
-    connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::loadUrl);
+    connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::load);
     connect(this, &QQmlPreviewServiceImpl::drop, &m_handler, &QQmlPreviewHandler::dropCU);
     connect(this, &QQmlPreviewServiceImpl::rerun, &m_handler, &QQmlPreviewHandler::rerun);
     connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
     connect(this, &QQmlPreviewServiceImpl::animationSpeed,
             &m_handler, &QQmlPreviewHandler::setAnimationSpeed);
+    connect(this, &QQmlPreviewServiceImpl::settingsChanged,
+            &m_handler, &QQmlPreviewHandler::configure);
     connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
             Qt::DirectConnection);
     connect(&m_handler, &QQmlPreviewHandler::fps, this, &QQmlPreviewServiceImpl::forwardFps,
             Qt::DirectConnection);
+    connect(&m_handler, &QQmlPreviewHandler::confirmation,
+            this, &QQmlPreviewServiceImpl::forwardConfirmation, Qt::DirectConnection);
 }
 
 QQmlPreviewServiceImpl::~QQmlPreviewServiceImpl()
@@ -108,6 +112,14 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         emit animationSpeed(qreal(factor));
         break;
     }
+    case Configuration: {
+        bool enableInPlaceUpdates;
+        packet >> enableInPlaceUpdates;
+        QQmlPreviewHandler::Settings options;
+        options.enableInPlaceUpdates = enableInPlaceUpdates;
+        emit settingsChanged(options);
+        break;
+    }
     default:
         forwardError(QString::fromLatin1("Invalid command: %1").arg(command));
         break;
@@ -163,6 +175,14 @@ void QQmlPreviewServiceImpl::forwardFps(const QQmlPreviewHandler::FpsInfo &frame
     packet << static_cast<qint8>(Fps)
            << frames.numSyncs << frames.minSync << frames.maxSync << frames.totalSync
            << frames.numRenders << frames.minRender << frames.maxRender << frames.totalRender;
+    emit messageToClient(name(), packet.data());
+}
+
+void QQmlPreviewServiceImpl::forwardConfirmation(
+        const QQmlPreviewHandler::Settings &settings)
+{
+    QQmlDebugPacket packet;
+    packet << static_cast<qint8>(Confirmation) << settings.enableInPlaceUpdates;
     emit messageToClient(name(), packet.data());
 }
 

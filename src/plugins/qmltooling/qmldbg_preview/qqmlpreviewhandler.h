@@ -36,21 +36,9 @@ class QQmlPreviewHandler : public QObject
 {
     Q_OBJECT
 public:
-    explicit QQmlPreviewHandler(QObject *parent = nullptr);
-    ~QQmlPreviewHandler();
-
-    QQuickItem *currentRootItem();
-
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
-
-    void loadUrl(const QUrl &url);
-    void dropCU(const QUrl &url);
-    void rerun();
-    void zoom(qreal newFactor);
-    void setAnimationSpeed(qreal newFactor);
-
-    void clear();
+    struct Settings {
+        bool enableInPlaceUpdates = false;
+    };
 
     struct FpsInfo {
         quint16 numSyncs;
@@ -64,9 +52,29 @@ public:
         quint16 totalRender;
     };
 
+    explicit QQmlPreviewHandler(QObject *parent = nullptr);
+    ~QQmlPreviewHandler();
+
+    QQuickItem *currentRootItem();
+
+    void addEngine(QQmlEngine *engine);
+    void removeEngine(QQmlEngine *engine);
+
+    void loadUrl(const QUrl &url);
+    void loadPatch(const QUrl &url);
+    void load(const QUrl &url);
+    void dropCU(const QUrl &url);
+    void rerun();
+    void zoom(qreal newFactor);
+    void setAnimationSpeed(qreal newFactor);
+    void configure(const Settings &settings);
+
+    void clear();
+
 Q_SIGNALS:
     void error(const QString &message);
     void fps(const FpsInfo &info);
+    void confirmation(const Settings &settings);
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;
@@ -92,6 +100,7 @@ private:
     qreal m_zoomFactor = 1.0;
     bool m_supportsMultipleWindows;
     QQmlPreviewPosition m_lastPosition;
+    Settings m_settings;
 
     QTimer m_fpsTimer;
 

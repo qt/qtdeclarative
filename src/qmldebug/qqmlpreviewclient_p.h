@@ -39,6 +39,12 @@ public:
         Zoom,
         Fps,
         AnimationSpeed,
+        Configuration,
+        Confirmation,
+    };
+
+    struct Settings {
+        bool enableInPlaceUpdates = false;
     };
 
     struct FpsInfo {
@@ -59,6 +65,7 @@ public:
     void sendDirectory(const QString &path, const QStringList &entries);
     void sendFile(const QString &path, const QByteArray &contents);
     void sendError(const QString &path);
+    void sendConfiguration(const Settings &settings);
 
     void triggerLoad(const QUrl &url);
     void triggerRerun();
@@ -69,6 +76,7 @@ Q_SIGNALS:
     void request(const QString &path);
     void error(const QString &message);
     void fps(const FpsInfo &info);
+    void confirmation(const Settings &settings);
 };
 
 QT_END_NAMESPACE

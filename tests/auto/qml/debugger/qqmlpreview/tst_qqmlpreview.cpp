@@ -30,6 +30,7 @@ private:
     ConnectResult startQmlProcess(const QString &qmlFile, QStringList environmentVariables = QStringList());
     void serveRequest(const QString &path);
     void serveFile(const QString &path, const QByteArray &contents);
+    void enableInPlaceUpdates();
 
     QList<QQmlDebugClient *> createClients() override;
     void verifyProcessOutputContains(const QString &string) const;
@@ -44,6 +45,7 @@ private:
     QStringList m_directories;
     QStringList m_serviceErrors;
     QQmlPreviewClient::FpsInfo m_frameStats;
+    QQmlPreviewClient::Settings m_confirmedSettings;
 
 private slots:
     void cleanup() final;
@@ -64,6 +66,8 @@ private slots:
     void handleInput();
     void setAnimationSpeed();
     void createDirectory();
+    void configurationMessage();
+    void disableInPlaceUpdatesFails();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -118,6 +122,10 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
                      this, [this](const QQmlPreviewClient::FpsInfo &info) {
         m_frameStats = info;
     });
+    QObject::connect(m_client.data(), &QQmlPreviewClient::confirmation,
+                     this, [this](const QQmlPreviewClient::Settings &settings) {
+        m_confirmedSettings = settings;
+    });
 
     return QList<QQmlDebugClient *>({m_client, m_profiler, m_replay});
 }
@@ -151,6 +159,15 @@ void tst_QQmlPreview::cleanup()
     m_filesNotFound.clear();
     m_serviceErrors.clear();
     m_frameStats = QQmlPreviewClient::FpsInfo();
+    m_confirmedSettings = {};
+}
+
+void tst_QQmlPreview::enableInPlaceUpdates()
+{
+    QQmlPreviewClient::Settings settings;
+    settings.enableInPlaceUpdates = true;
+    m_client->sendConfiguration(settings);
+    QTRY_VERIFY_WITH_TIMEOUT(m_confirmedSettings.enableInPlaceUpdates, 15000);
 }
 
 void tst_QQmlPreview::connect()
@@ -565,6 +582,44 @@ void tst_QQmlPreview::createDirectory()
     QTRY_VERIFY(m_files.contains(testFile(file)));
 
     verifyProcessOutputContains("mkdir rmdir ok");
+}
+
+void tst_QQmlPreview::configurationMessage()
+{
+    const QString file("window.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    // Send configuration before any load — should not cause errors.
+    enableInPlaceUpdates();
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::disableInPlaceUpdatesFails()
+{
+    const QString file("window.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+
+    // Attempt to disable — should produce an error, not a confirmation.
+    QQmlPreviewClient::Settings settings;
+    settings.enableInPlaceUpdates = false;
+    m_client->sendConfiguration(settings);
+    QTRY_VERIFY(!m_serviceErrors.isEmpty());
+    QVERIFY(m_serviceErrors.first().contains("Cannot disable"));
+
+    // The setting should still be enabled (unchanged).
+    QVERIFY(m_confirmedSettings.enableInPlaceUpdates);
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
 }
 
 QTEST_MAIN(tst_QQmlPreview)
