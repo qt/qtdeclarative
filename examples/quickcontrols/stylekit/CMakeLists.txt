@@ -15,7 +15,6 @@ qt_standard_project_setup(REQUIRES 6.11)
 set(STYLES
     styles/Plain.qml
     styles/Haze.qml
-    styles/Experimental.qml
     styles/Vitrum.qml
     styles/CustomDelegates.qml
 )
