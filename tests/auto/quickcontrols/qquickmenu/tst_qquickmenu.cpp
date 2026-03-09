@@ -131,6 +131,7 @@ private slots:
     void dontDeleteDelegates();
     void loadMenuAsynchronously();
     void visibleTrue();
+    void resetContentItem();
 
 private:
     bool nativeMenuSupported = false;
@@ -3610,6 +3611,26 @@ void tst_QQuickMenu::visibleTrue()
 
     QTRY_VERIFY(menu->isOpened());
 
+    menu->close();
+}
+
+void tst_QQuickMenu::resetContentItem()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("removeContentItem.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    auto *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    QSignalSpy spy(menu, &QQuickMenu::contentItemChanged);
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QTRY_VERIFY(menu->isOpened());
+
+    QMetaObject::invokeMethod(window, "removeContentItem");
+    QCOMPARE(spy.count(), 1);
+    QMetaObject::invokeMethod(window, "restoreContentItem");
+    QCOMPARE(spy.count(), 2);
     menu->close();
 }
 

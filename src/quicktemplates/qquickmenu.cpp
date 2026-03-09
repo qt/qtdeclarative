@@ -2200,7 +2200,7 @@ void QQuickMenu::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 
     if (oldItem) {
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Children);
-        QQuickItemPrivate::get(newItem)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed);
+        QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Destroyed);
         QQuickItemPrivate::get(oldItem)->removeItemChangeListener(d, QQuickItemPrivate::Geometry);
     }
     if (newItem) {
