@@ -570,40 +570,78 @@ another object's definition without declaring it as a value for a particular
 property.
 
 Declaring a property with the optional \c default keyword marks it as the
-default property. For example, say there is a file MyLabel.qml with a default
-property \c someText:
+default property. For example, say there is a file Framer.qml with a default
+property \c focusItem:
 
 \qml
-// MyLabel.qml
+// Framer.qml
 import QtQuick
 
-Text {
-    default property var someText
-
-    text: `Hello, ${someText.text}`
+Row {
+    default property Item focusItem
+    property Item leftItem: Rectangle {
+        width: 10
+        height: parent.height
+        color: "red"
+    }
+    property Item rightItem: Rectangle {
+        width: 10
+        height: parent.height
+        color: "blue"
+    }
+    children: [leftItem, focusItem, rightItem]
 }
 \endqml
 
-The \c someText value could be assigned to in a \c MyLabel object definition,
-like this:
+The \c focusItem value could be assigned to in a \c Framer object
+definition, like this:
 
 \qml
-MyLabel {
-    Text { text: "world!" }
+Framer {
+    Text { text: "Hello, world!" }
 }
 \endqml
 
 This has exactly the same effect as the following:
 
 \qml
-MyLabel {
-    someText: Text { text: "world!" }
+Framer {
+    focusItem: Text { text: "Hello, world!" }
 }
 \endqml
 
-However, since the \c someText property has been marked as the default
+However, since the \c focusItem property has been marked as the default
 property, it is not necessary to explicitly assign the \l Text object
 to this property.
+
+While a property of any type can be marked as a \c default property,
+it is generally only helpful to mark properties of type \c var,  of \l{QML
+Object Types}{object type}, and their respective \l{QML Sequence
+Types}{sequence types}: As only object instances are
+assigned to the default property, there is no benefit in QML to having for
+example a \c default string property.
+
+Consider the following TextHolder type:
+
+\qml *
+// TextHolder.qml
+Item {
+    property default string mytext
+}
+\endqml
+By itself, this is fine. However, one cannot assign a string literal to
+\c mytext without explicitly mentioning the property name:
+\qml
+TextHolder {
+  /* The following would be a syntax error, and will not assign
+     to the mytext property:
+  "some text"
+
+  The line below is the only way to assign the value:
+  \1/
+  mytext: "some text"
+}
+\endqml
 
 You will notice that child objects can be added to any \l {Item}-based type
 without explicitly adding them to the \l {Item::children}{children} property.
