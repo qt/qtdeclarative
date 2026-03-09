@@ -1181,16 +1181,18 @@ void QQuickSearchField::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickSearchField);
 
     const auto key = event->key();
+    const bool hasModel = !d->suggestionModel.isNull();
+    const bool hasText = !d->text.isEmpty();
 
-    if (!d->suggestionModel.isNull() && !d->text.isEmpty()) {
-        switch (key) {
+    switch (key) {
         case Qt::Key_Escape:
         case Qt::Key_Back:
             if (d->isPopupVisible()) {
                 d->hidePopup(false);
                 event->accept();
-            } else {
+            } else if (hasText) {
                 setText(QString());
+                event->accept();
             }
             break;
         case Qt::Key_Return:
@@ -1202,27 +1204,32 @@ void QQuickSearchField::keyPressEvent(QKeyEvent *event)
             event->accept();
             break;
         case Qt::Key_Up:
-            d->decreaseCurrentIndex();
-            event->accept();
+            if (hasModel && hasText) {
+                d->decreaseCurrentIndex();
+                event->accept();
+            }
             break;
         case Qt::Key_Down:
-            d->increaseCurrentIndex();
-            event->accept();
+            if (hasModel && hasText) {
+                d->increaseCurrentIndex();
+                event->accept();
+            }
             break;
         case Qt::Key_Home:
-            if (d->isPopupVisible())
+            if (d->isPopupVisible()) {
                 d->setHighlightedIndex(0, Highlight);
-            event->accept();
+                event->accept();
+            }
             break;
         case Qt::Key_End:
-            if (d->isPopupVisible())
+            if (d->isPopupVisible()) {
                 d->setHighlightedIndex(suggestionCount() - 1, Highlight);
-            event->accept();
+                event->accept();
+            }
             break;
         default:
             QQuickControl::keyPressEvent(event);
             break;
-        }
     }
 }
 
