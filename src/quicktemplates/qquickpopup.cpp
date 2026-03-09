@@ -2308,7 +2308,8 @@ void QQuickPopup::setContentItem(QQuickItem *item)
     d->popupItem->setContentItem(item);
     if (d->complete) {
         QQuickItem *newContentItem = d->popupItem->d_func()->contentItem.data();
-        connect(newContentItem, &QQuickItem::childrenChanged, this, &QQuickPopup::contentChildrenChanged);
+        if (newContentItem)
+            connect(newContentItem, &QQuickItem::childrenChanged, this, &QQuickPopup::contentChildrenChanged);
         if (oldContentItem != newContentItem)
             emit contentChildrenChanged();
     }
