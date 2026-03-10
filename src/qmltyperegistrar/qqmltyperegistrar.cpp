@@ -539,6 +539,7 @@ bool QmlTypeRegistrar::generatePluginTypes(const QString &pluginTypesFile, bool 
 {
     QmlTypesCreator creator;
     creator.setOwnTypes(m_types);
+    creator.setOpaqueTypes(m_opaqueTypes);
     creator.setForeignTypes(m_foreignTypes);
     creator.setReferencedTypes(m_referencedTypes);
     creator.setUsingDeclarations(m_usingDeclarations);
@@ -568,10 +569,11 @@ void QmlTypeRegistrar::setIncludes(const QList<QString> &includes)
     m_includes = includes;
 }
 void QmlTypeRegistrar::setTypes(
-        const QList<MetaType> &types, const QList<MetaType> &foreignTypes)
+        const QList<MetaType> &types, const QList<MetaType> &foreignTypes, const QList<MetaType> &opaqueTypes)
 {
     m_types = types;
     m_foreignTypes = foreignTypes;
+    m_opaqueTypes = opaqueTypes;
 }
 void QmlTypeRegistrar::setReferencedTypes(const QList<QAnyStringView> &referencedTypes)
 {

@@ -382,6 +382,36 @@ void QmlTypesCreator::writeComponent(const QmlTypesClassDescription &collector)
     m_qml.writeEndObject();
 }
 
+void QmlTypesCreator::writeOpaqueComponent(const QmlTypesClassDescription &collector)
+{
+    m_qml.writeStartObject(S_COMPONENT);
+
+    // we always mark the type as opaque, even if we have some data
+    m_qml.writeBooleanBinding(S_IS_TYPE_OPAQUE, true);
+    // compare writeClassProperties
+    if (!collector.file.isEmpty()) {
+        m_qml.writeStringBinding(S_FILE, collector.file);
+        m_qml.writeNumberBinding(S_LINE_NUMBER, collector.lineNumber);
+    }
+    m_qml.writeStringBinding(S_NAME, collector.className);
+    m_qml.writeStringBinding(S_ACCESS_SEMANTICS, collector.accessSemantics); // restrict instead?
+    // there's no sensible use case for defaultProp and parentProp
+    // as the type is not creatable
+    if (!collector.superClass.isEmpty())
+        m_qml.writeStringBinding(S_PROTOTYPE, collector.superClass);
+    // can't be JSRoot or extension, basically an anonymous type
+
+    if (const MetaType &classDef = collector.resolvedClass; !classDef.isEmpty()) {
+        writeEnums(classDef.enums());
+        writeProperties(classDef.properties());
+        writeMethods(classDef.sigs(), S_SIGNAL);
+        writeMethods(classDef.methods(), S_METHOD);
+        writeMethods(classDef.constructors(), S_METHOD);
+    }
+
+    m_qml.writeEndObject();
+}
+
 void QmlTypesCreator::writeComponents()
 {
     for (const MetaType &component : std::as_const(m_ownTypes)) {
@@ -406,6 +436,13 @@ void QmlTypesCreator::writeComponents()
 
             writeComponent(collector);
         }
+    }
+    for (const MetaType &component : std::as_const(m_opaqueTypes)) {
+        QmlTypesClassDescription collector;
+        collector.collect(component, m_ownTypes, m_foreignTypes,
+                          QmlTypesClassDescription::TopLevel, m_version);
+
+        writeOpaqueComponent(collector);
     }
 }
 

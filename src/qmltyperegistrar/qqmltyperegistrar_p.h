@@ -35,6 +35,7 @@ class QmlTypeRegistrar
     bool m_followForeignVersioning = false;
     QList<MetaType> m_types;
     QList<MetaType> m_foreignTypes;
+    QList<MetaType> m_opaqueTypes;
     QList<QAnyStringView> m_referencedTypes;
     QList<UsingDeclaration> m_usingDeclarations;
 
@@ -48,7 +49,7 @@ public:
     void setModuleVersions(QTypeRevision moduleVersion, const QList<quint8> &pastMajorVersions,
                            bool followForeignVersioning);
     void setIncludes(const QList<QString> &includes);
-    void setTypes(const QList<MetaType> &types, const QList<MetaType> &foreignTypes);
+    void setTypes(const QList<MetaType> &types, const QList<MetaType> &foreignTypes, const QList<MetaType> &opaqueTypes);
     void setReferencedTypes(const QList<QAnyStringView> &referencedTypes);
     void setUsingDeclarations(const QList<UsingDeclaration> &usingDeclarations);
 

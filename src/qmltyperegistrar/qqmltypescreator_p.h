@@ -33,6 +33,7 @@ public:
     bool generate(const QString &outFileName);
 
     void setOwnTypes(QList<MetaType> ownTypes) { m_ownTypes = std::move(ownTypes); }
+    void setOpaqueTypes(QList<MetaType> opaqueTypes) { m_opaqueTypes = std::move(opaqueTypes); }
     void setForeignTypes(QList<MetaType> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
     void setReferencedTypes(QList<QAnyStringView> referencedTypes) { m_referencedTypes = std::move(referencedTypes); }
     void setModule(QByteArray module) { m_module = std::move(module); }
@@ -42,6 +43,7 @@ public:
 
 private:
     void writeComponent(const QmlTypesClassDescription &collector);
+    void writeOpaqueComponent(const QmlTypesClassDescription &collector);
     void writeClassProperties(const QmlTypesClassDescription &collector);
     void writeType(QAnyStringView type);
     void writeProperties(const Property::Container &properties);
@@ -53,6 +55,7 @@ private:
     QByteArray m_output;
     QQmlJSStreamWriter m_qml;
     QList<MetaType> m_ownTypes;
+    QList<MetaType> m_opaqueTypes;
     QList<MetaType> m_foreignTypes;
     QList<QAnyStringView> m_referencedTypes;
     QList<UsingDeclaration> m_usingDeclarations;

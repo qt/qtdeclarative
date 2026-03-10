@@ -2958,6 +2958,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("on binding in grouped property")
             << QStringLiteral("onBindingInGroupedProperty.qml") << defaultOptions;
     QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml") << defaultOptions;
+    QTest::newRow("OpaqueTest") << QStringLiteral("OpaqueTest.qml") << defaultOptions;
     QTest::newRow("optionalChainingCall")
             << QStringLiteral("optionalChainingCall.qml") << defaultOptions;
 #ifdef HAS_QC_BASIC

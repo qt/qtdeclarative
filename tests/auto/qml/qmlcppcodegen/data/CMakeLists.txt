@@ -25,6 +25,7 @@ set(cpp_sources
     listsingleton.h
     multiforeign.h
     objectwithmethod.h
+    opaque.h
     person.cpp person.h
     propertymap.h
     qmlusing.h
@@ -279,6 +280,7 @@ set(qml_files
     objectLookupOnListElement.qml
     objectWithStringListMethod.qml
     oldEnum.qml
+    opaque.qml
     optionalComparison.qml
     outOfBounds.qml
     overriddenMember.qml

@@ -1,6 +1,7 @@
 // Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
+#include "data/opaque.h"
 #include <data/birthdayparty.h>
 #include <data/cppbaseclass.h>
 #include <data/detachedreferences.h>
@@ -237,6 +238,7 @@ private slots:
     void objectWithStringListMethod();
     void oldEnum();
     void onAssignment();
+    void opaqueTypes();
     void optionalComparison();
     void outOfBoundsArray();
     void overriddenProperty();
@@ -4788,6 +4790,21 @@ void tst_QmlCppCodegen::onAssignment()
     object->metaObject()->invokeMethod(object.get(), "release");
     QCOMPARE(object->property("pressed").toBool(), false);
     QCOMPARE(object->property("scale").toDouble(), 1.0);
+}
+
+void tst_QmlCppCodegen::opaqueTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/TestTypes/opaque.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    std::unique_ptr<QObject> object(component.create());
+
+    Secretive *s1 = object->property("s").value<Secretive *>();
+    QVERIFY(s1);
+    int *value = s1->m_opaque_prop.get();
+    QCOMPARE(s1->takesOpaqueCallCount, 2);
+    QVERIFY(value);
+    QCOMPARE(*value, 42);
 }
 
 void tst_QmlCppCodegen::optionalComparison()

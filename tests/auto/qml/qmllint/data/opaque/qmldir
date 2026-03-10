@@ -1,0 +1,5 @@
+module opaque
+typeinfo appquicktest.qmltypes
+prefer :/qt/qml/opaque/
+depends QtQuick
+

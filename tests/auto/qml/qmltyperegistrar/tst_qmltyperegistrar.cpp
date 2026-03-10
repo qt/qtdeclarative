@@ -460,7 +460,8 @@ void tst_qmltyperegistrar::duplicateExportWarnings()
     processor.postProcessTypes();
     QList<MetaType> types = processor.types();
     QList<MetaType> typesforeign = processor.foreignTypes();
-    r.setTypes(types, typesforeign);
+    QList<MetaType> typesOpaque = processor.opaqueTypes();
+    r.setTypes(types, typesforeign, typesOpaque);
 
     const auto expectWarning = [](const char *message) {
         QTest::ignoreMessage(QtWarningMsg, message);
@@ -511,7 +512,8 @@ void tst_qmltyperegistrar::consistencyWarnings()
 
     QList<MetaType> types = processor.types();
     QList<MetaType> typesforeign = processor.foreignTypes();
-    r.setTypes(types, typesforeign);
+    QList<MetaType> typesOpaque = processor.opaqueTypes();
+    r.setTypes(types, typesforeign, typesOpaque);
 
     QString outputData;
     QTextStream output(&outputData, QIODeviceBase::ReadWrite);
@@ -547,8 +549,9 @@ void tst_qmltyperegistrar::deduplicateCleanPaths()
     QVERIFY(processor.processTypes({ ":/processTwice.json", ":/./processTwice.json" }));
     processor.postProcessTypes();
     processor.postProcessForeignTypes();
+    QList<MetaType> typesOpaque = processor.opaqueTypes();
 
-    r.setTypes(processor.types(), processor.foreignTypes());
+    r.setTypes(processor.types(), processor.foreignTypes(), typesOpaque);
 
     QString outputData;
     QTextStream output(&outputData, QIODeviceBase::ReadWrite);
@@ -589,7 +592,8 @@ void tst_qmltyperegistrar::enumWarnings()
 
     QList<MetaType> types = processor.types();
     QList<MetaType> typesforeign = processor.foreignTypes();
-    r.setTypes(types, typesforeign);
+    QList<MetaType> opaqueTypes = processor.opaqueTypes();
+    r.setTypes(types, typesforeign, opaqueTypes);
 
     QString outputData;
     QTextStream output(&outputData, QIODeviceBase::ReadWrite);
@@ -1346,8 +1350,15 @@ void tst_qmltyperegistrar::preserveVoidStarPropTypes()
 void tst_qmltyperegistrar::allReferencedTypesCollected()
 {
     // reproduce the issue from the comment in QTBUG-118112
-    // - and make sure we don't accidentally register a type we shouldn't.
-    QVERIFY(!qmltypesData.contains(R"(name: "SampleHeader")"));
+    // and make sure that the type is only listed as an opaque type
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "typereferencinganother.h"
+        lineNumber: 11
+        name: "SampleHeader"
+        accessSemantics: "reference"
+        prototype: "QObject"
+    })"));
 }
 
 void tst_qmltyperegistrar::inaccessibleBase()
@@ -1362,7 +1373,17 @@ void tst_qmltyperegistrar::inaccessibleBase()
         Property { name: "a"; type: "int"; index: 0; lineNumber: 12; isPropertyConstant: true }
     })"));
 
-    QVERIFY(!qmltypesData.contains(R"(name: "InaccessibleProperty")"));
+    // This shows up, but we won't include property.h, because the type is only marked as opaque
+    // Since we don't actually need the include, it compiles.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "property.h"
+        lineNumber: 9
+        name: "InaccessibleProperty"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "b"; type: "int"; index: 0; lineNumber: 12; isPropertyConstant: true }
+    })"));
 
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"

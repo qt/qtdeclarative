@@ -4604,6 +4604,12 @@ void tst_qmlls_utils::completions_data()
             << testFile("completions/idMethodMixup.qml") << 10 << 15
             << ExpectedCompletions{ { "myProperty"_L1, CompletionItemKind::Property } }
             << QStringList{ };
+
+    QTest::newRow("opaqueType")
+            << testFile("completions/opaqueUsage.qml") << 6 << 56
+            << ExpectedCompletions { {"x"_L1, CompletionItemKind::Property },
+                                     {"y"_L1, CompletionItemKind::Property } }
+            << QStringList {};
 }
 
 void tst_qmlls_utils::completions()

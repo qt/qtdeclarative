@@ -63,6 +63,7 @@ static constexpr QLatin1StringView S_IS_SINGLETON                 { "isSingleton
 static constexpr QLatin1StringView S_IS_STRUCTURED                { "isStructured" };
 static constexpr QLatin1StringView S_IS_TYPE_CONSTANT             { "isTypeConstant" };
 static constexpr QLatin1StringView S_IS_SELF_EXTENSION            { "isSelfExtension" };
+static constexpr QLatin1StringView S_IS_TYPE_OPAQUE               { "isTypeOpaque" };
 static constexpr QLatin1StringView S_LINE_NUMBER                  { "lineNumber" };
 static constexpr QLatin1StringView S_METHOD                       { "Method" };
 static constexpr QLatin1StringView S_MODULE                       { "Module" };

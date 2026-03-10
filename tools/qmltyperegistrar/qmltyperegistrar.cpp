@@ -186,7 +186,7 @@ int main(int argc, char **argv)
 
     typeRegistrar.setModuleVersions(moduleVersion, pastMajorVersions,
                                     parser.isSet(followForeignVersioningOption));
-    typeRegistrar.setTypes(processor.types(), processor.foreignTypes());
+    typeRegistrar.setTypes(processor.types(), processor.foreignTypes(), processor.opaqueTypes());
 
     if (!parser.isSet(jsroot)) {
         if (module.isEmpty()) {

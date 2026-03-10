@@ -263,6 +263,7 @@ public:
 
     QList<MetaType> types() const { return m_types; }
     QList<MetaType> foreignTypes() const { return m_foreignTypes; }
+    QList<MetaType> opaqueTypes() const { return m_opaqueTypes; }
     QList<QAnyStringView> referencedTypes() const { return m_referencedTypes; }
     QList<UsingDeclaration> usingDeclarations() const { return m_usingDeclarations; }
     QList<QString> includes() const { return m_includes; }
@@ -304,6 +305,7 @@ private:
     QList<UsingDeclaration> m_usingDeclarations;
     QList<MetaType> m_types;
     QList<MetaType> m_foreignTypes;
+    QList<MetaType> m_opaqueTypes;
     QDuplicateTracker<QString> m_seenMetaTypesFiles;
     bool m_privateIncludes = false;
 };

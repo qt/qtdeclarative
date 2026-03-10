@@ -105,4 +105,22 @@ QtObject {
     function writeToReadonly() { someNumber = 20 }
 
     property var silly: [,0]
+
+    // opaque types should be rejected
+    property Secretive sdummy1: Secretive {
+        id: s1
+        opaque_prop:  "" + "a" // type-mismatch with opaque should be rejected; needs "+" to have a script binding
+    }
+
+    property Secretive sdummy2: Secretive {
+        id: s2
+        opaque_prop: s1.opaque_prop // This should be implementable
+        property string s: s2.opaque_prop
+
+        function opaqueArgument_mismatch() : void {  s1.takesOpaque(42) }
+
+        function opaqueReturnToNonMatching() : void {
+            console.log(s2.returnsOpaque())
+        }
+    }
 }

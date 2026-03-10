@@ -110,6 +110,9 @@ QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 
 QString QQmlJSCodeGenerator::metaType(const QQmlJSScope::ConstPtr &type)
 {
+    if (type->isOpaqueType()) {
+        REJECT<QString>("Retrieving the metatype of an unregistered type"_L1);
+    }
     if (type->isComposite()) {
         const QString name = m_typeResolver->nameForType(type);
         if (name.isEmpty()) {
@@ -759,6 +762,8 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
 
     AccumulatorConverter registers(this);
 
+    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
+
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     if (m_state.accumulatorOut().scope().contains(m_typeResolver->jsGlobalObject())) {
         // This produces a QJSValue. The QQmlJSMetaProperty used to analyze it may have more details
@@ -783,7 +788,6 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     const bool isProperty = m_state.accumulatorOut().isProperty();
-    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
     if (isProperty) {
         const QString lookup = u"aotContext->loadScopeObjectPropertyLookup("_s
                 + indexString + u", "_s
@@ -3156,6 +3160,12 @@ QString QQmlJSCodeGenerator::getLookupPreparation(
 {
     if (content.contains(content.storedType()))
         return QString();
+
+    if (content.storedType()->isOpaqueType()) {
+        // Can't do meta-type lookups if the type is potentially unregistered,
+        // which can be the case for mehods
+        REJECT<QString>("Can't prepare lookup involving non-registered types"_L1);
+    }
 
     if (content.isStoredIn(m_typeResolver->varType())) {
         return var + u" = QVariant(aotContext->lookupResultMetaType("_s
