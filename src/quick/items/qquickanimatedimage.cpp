@@ -94,7 +94,8 @@ void QQuickAnimatedImagePrivate::handleLoopCompletion()
     \section1 Example Usage
 
     \beginfloatleft
-    \image animatedimageitem.gif
+    \image animatedimageitem.gif {Game controller bouncing animation
+           with playback frame indicator underneath}
     \endfloat
 
     The following QML shows how to display an animated image and obtain information

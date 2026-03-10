@@ -49,6 +49,8 @@ Q_STATIC_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
     \snippet pointerHandlers/pinchHandlerNullTarget.qml 0
 
     \image touchpoints-pinchhandler.png
+           {Touch points, target center, and pinch center during a two-finger
+           rotation and scaling}
 
     \note The pinch begins when the number of fingers pressed is between
     \l {MultiPointHandler::minimumPointCount}{minimumPointCount} and

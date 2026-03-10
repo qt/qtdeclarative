@@ -3688,7 +3688,8 @@ void QQuickWindow::endExternalCommands()
     Window { x: 100; y: 100; width: 100; height: 100 }
     \endqml
 
-    \image screen-and-window-dimensions.jpg
+    \image screen-and-window-dimensions.jpg {Diagram showing Window.x,
+           Window.y positions and Screen available dimensions}
  */
 
 /*!

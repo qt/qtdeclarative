@@ -34,6 +34,7 @@ Q_STATIC_LOGGING_CATEGORY(lcSafeArea, "qt.quick.safearea", QtWarningMsg)
     \row
       \li \snippet qml/safearea/basic.qml 0
       \li \inlineimage safearea-ios.webp
+                       {iPhone showing content respecting safe area margins}
     \endtable
 
     The SafeArea margins are relative to the item they attach to. If an
@@ -63,6 +64,7 @@ Q_STATIC_LOGGING_CATEGORY(lcSafeArea, "qt.quick.safearea", QtWarningMsg)
     \row
       \li \snippet qml/safearea/additional.qml 0
       \li \br \inlineimage safearea-ios-header.webp
+                           {iPhone with header adding additional safe area margin}
     \endtable
 
     In the example above, the header item is positioned at the top of

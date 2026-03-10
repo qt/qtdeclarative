@@ -228,6 +228,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \row
         \li \c TapHandler.DragThreshold
             \image pointerHandlers/tapHandlerOverlappingButtons.webp
+                   {Two overlapping Click Me buttons both responding to a single tap}
             Grab on press: \e passive
         \li (the default value) The \l eventPoint must not move significantly.
             If the mouse, finger or stylus moves past the system-wide drag
@@ -260,6 +261,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \row
         \li \c TapHandler.WithinBounds
             \image pointerHandlers/tapHandlerButtonWithinBounds.webp
+                   {Click Me button canceling tap when mouse moves outside}
             Grab on press: \e exclusive
         \li If the \l eventPoint leaves the bounds of the \c parent Item, the tap
             gesture is canceled. The TapHandler will take the
@@ -271,6 +273,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \row
         \li \c TapHandler.ReleaseWithinBounds
             \image pointerHandlers/tapHandlerButtonReleaseWithinBounds.webp
+                   {dragging outside a Click Me button and back inside before release}
             Grab on press: \e exclusive
         \li At the time of release (the mouse button is released or the finger
             is lifted), if the \l eventPoint is outside the bounds of the
@@ -286,6 +289,7 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
     \row
         \li \c TapHandler.DragWithinBounds
             \image pointerHandlers/dragReleaseMenu.webp
+                   {Long press showing context menu with top, middle, bottom options}
             Grab on press: \e exclusive
         \li On press, TapHandler takes the
             \l {QPointerEvent::setExclusiveGrabber}{exclusive grab}; after that,

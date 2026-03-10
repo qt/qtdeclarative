@@ -81,7 +81,8 @@ public:
 
     \snippet qml/flipable/flipable.qml 0
 
-    \image flipable.gif
+    \image flipable.gif {Qt logo flipping between front and back sides
+           with rotation animation}
 
     The \l Transition creates the animation that changes the angle over
     four seconds. When the item changes between its "back" and

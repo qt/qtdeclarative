@@ -85,7 +85,7 @@ QQuickImagePrivate::QQuickImagePrivate()
     \snippet qml/image.qml document
 
     \beginfloatleft
-    \image declarative-qtlogo.png
+    \image declarative-qtlogo.png {Qt logo displayed in an Image element}
     \endfloat
 
     \clearfloat
@@ -260,7 +260,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \table
 
     \row
-    \li \image declarative-qtlogo-stretch.png
+    \li \image declarative-qtlogo-stretch.png {Qt logo stretched to fill
+           the entire image area}
     \li Stretch (default)
     \qml
     Image {
@@ -270,7 +271,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \endqml
 
     \row
-    \li \image declarative-qtlogo-preserveaspectfit.png
+    \li \image declarative-qtlogo-preserveaspectfit.png {Qt logo scaled
+           uniformly to fit within the image area}
     \li PreserveAspectFit
     \qml
     Image {
@@ -281,7 +283,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \endqml
 
     \row
-    \li \image declarative-qtlogo-preserveaspectcrop.png
+    \li \image declarative-qtlogo-preserveaspectcrop.png {Qt logo scaled
+           uniformly to fill the area with edges cropped}
     \li PreserveAspectCrop
     \qml
     Image {
@@ -293,7 +296,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \endqml
 
     \row
-    \li \image declarative-qtlogo-tile.png
+    \li \image declarative-qtlogo-tile.png {Qt logo tiled horizontally
+           and vertically to fill the area}
     \li Tile
     \qml
     Image {
@@ -306,7 +310,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \endqml
 
     \row
-    \li \image declarative-qtlogo-tilevertically.png
+    \li \image declarative-qtlogo-tilevertically.png {Qt logo stretched
+           horizontally and tiled vertically}
     \li TileVertically
     \qml
     Image {
@@ -318,7 +323,8 @@ void QQuickImagePrivate::setPixmap(const QQuickPixmap &pixmap)
     \endqml
 
     \row
-    \li \image declarative-qtlogo-tilehorizontally.png
+    \li \image declarative-qtlogo-tilehorizontally.png {Qt logo stretched
+           vertically and tiled horizontally}
     \li TileHorizontally
     \qml
     Image {
