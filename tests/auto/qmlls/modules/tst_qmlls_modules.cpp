@@ -1850,7 +1850,7 @@ std::tuple<int, int, int, int> rangeAsTuple(const Range &range)
     return std::make_tuple(range.start.line, range.start.character, range.end.line,
                            range.end.character);
 }
-
+// TODO QTBUG-145439
 void tst_qmlls_modules::quickFixes()
 {
     QFETCH(QString, filePath);

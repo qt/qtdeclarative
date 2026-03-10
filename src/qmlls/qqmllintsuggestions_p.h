@@ -30,7 +30,7 @@ struct LastLintUpdate
     std::optional<std::chrono::steady_clock::time_point> invalidUpdatesSince;
 };
 
-class QmlLintSuggestions : public QLanguageServerModule
+class QmlLintSuggestions : public QObject
 {
     Q_OBJECT
 public:
@@ -38,8 +38,6 @@ public:
 
 public Q_SLOTS:
     void diagnose(const QByteArray &uri, UpdatePolicy policy);
-    void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
-    void setupCapabilities(QLspSpecification::ServerCapabilities &caps) override;
 
 private:
     struct VersionedDocument

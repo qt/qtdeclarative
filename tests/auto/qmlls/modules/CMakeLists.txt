@@ -9,6 +9,7 @@ endif()
 
 add_subdirectory(documentSymbolProvider)
 add_subdirectory(progressSupport)
+add_subdirectory(codeActionProvider)
 
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}

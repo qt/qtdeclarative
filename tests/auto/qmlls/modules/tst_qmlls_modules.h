@@ -74,6 +74,7 @@ private slots:
     void qmldirImports_data();
     void qmldirImports();
     void quickFixes_data();
+    // TODO QTBUG-145439
     void quickFixes();
     void automaticSemicolonInsertionForCompletions_data();
     void automaticSemicolonInsertionForCompletions();

@@ -47,6 +47,9 @@ qt_internal_add_module(QmlLSPrivate
 
         qqmlprogresssupport_p.h qqmlprogresssupport.cpp
 
+        codeActionSupport/qqmllscodeaction_p.h
+        codeActionSupport/qqmllscodeaction.cpp
+
     PUBLIC_LIBRARIES
         Qt::LanguageServerPrivate
         Qt::CorePrivate

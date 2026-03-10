@@ -68,6 +68,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
       m_renameSupport(&m_codeModelManager),
       m_rangeFormatting(&m_codeModelManager),
       m_hover(&m_codeModelManager),
+      m_codeActionSupport(&m_codeModelManager),
       m_highlightSupport(&m_codeModelManager),
       m_documentSymbolSupport(&m_codeModelManager),
       m_progressSupport(&m_codeModelManager),
@@ -77,7 +78,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
     QObject::connect(this, &QLanguageServer::exit, this, &QQmlLanguageServer::exit);
 
     registerModule(&m_textSynchronization);
-    registerModule(&m_lint);
+    registerModule(&m_codeActionSupport);
     registerModule(&m_workspace);
     registerModule(&m_completionSupport);
     registerModule(&m_navigationSupport);

@@ -32,6 +32,7 @@
 #include <private/qqmlhover_p.h>
 #include <private/qqmlhighlightsupport_p.h>
 #include <private/qqmlprogresssupport_p.h>
+#include <private/qqmllscodeaction_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -73,6 +74,7 @@ private:
     QQmlRenameSymbolSupport m_renameSupport;
     QQmlRangeFormatting m_rangeFormatting;
     QQmlHover m_hover;
+    QQmlCodeActionSupport m_codeActionSupport;
 
     // ==== Highlighting ====
     QQmlHighlightSupport m_highlightSupport;
