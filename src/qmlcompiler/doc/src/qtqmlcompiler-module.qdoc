@@ -3,7 +3,7 @@
 
 /*!
     \module QtQmlCompiler
-    \modulestate Technology Preview
+    \preliminary
     \title Qt Qml Compiler C++ Classes
     \qtcmakepackage QmlCompiler
 
