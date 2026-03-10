@@ -43,8 +43,6 @@ private slots:
     void quickControlsSanityPlugin_data();
 
 private:
-    QMap<QString, QString> sourceQmlFiles;
-    QMap<QString, QString> installedQmlFiles;
     QStringList m_importPaths;
 
     QQmlJSLinter m_linter;
@@ -86,44 +84,15 @@ tst_Sanity::tst_Sanity()
 void tst_Sanity::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    QQmlEngine engine;
-    QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Templates 2.%1; Control { }").arg(15).toUtf8(), QUrl());
-
-    const QStringList qmlTypeNames = QQmlMetaType::qmlTypeNames();
-
-    // Collect the files from each style in the source tree.
-    QDirIterator it(QQC2_IMPORT_PATH, QStringList() << "*.qml" << "*.js", QDir::Files, QDirIterator::Subdirectories);
-    while (it.hasNext()) {
-        it.next();
-        QFileInfo info = it.fileInfo();
-        if (qmlTypeNames.contains(QStringLiteral("QtQuick.Templates/") + info.baseName()))
-            sourceQmlFiles.insert(info.dir().dirName() + "/" + info.fileName(), info.filePath());
-    }
-
-    // Then, collect the files from each installed style directory.
-    const QList<std::pair<QString, QString>> styleRelativePaths = {
-        { "Basic", "QtQuick/Controls/Basic" },
-        { "Fusion", "QtQuick/Controls/Fusion" },
-        { "Material", "QtQuick/Controls/Material" },
-        { "Universal", "QtQuick/Controls/Universal" },
-        // TODO: add native styles: QTBUG-87108
-        { "iOS", "QtQuick/Controls/iOS" }
-    };
-    for (const auto &stylePathPair : styleRelativePaths) {
-        forEachControl(&engine, QQC2_IMPORT_PATH, stylePathPair.first, stylePathPair.second, QStringList(),
-                [&](const QString &, const QString &relativePath, const QUrl &absoluteUrl) {
-             installedQmlFiles.insert(relativePath, absoluteUrl.toLocalFile());
-        });
-    }
+    StyleInfo::instance()->initialize(QQC2_IMPORT_PATH);
 }
 
 void tst_Sanity::jsFiles()
 {
-    QMap<QString, QString>::const_iterator it;
-    for (it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it) {
-        if (QFileInfo(it.value()).suffix() == QStringLiteral("js"))
-            QFAIL(qPrintable(it.value() +  ": JS files are not allowed"));
+    const QList<StyleInfo::QmlFileData> sourceQmlFiles = StyleInfo::instance()->sourceQmlFiles();
+    for (auto it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it) {
+        if (QFileInfo(it->absolutePath).suffix() == QStringLiteral("js"))
+            QFAIL(qPrintable(it->absolutePath +  ": JS files are not allowed"));
     }
 }
 
@@ -145,9 +114,9 @@ void tst_Sanity::qmllint_data()
     QTest::addColumn<QString>("control");
     QTest::addColumn<QString>("filePath");
 
-    QMap<QString, QString>::const_iterator it;
-    for (it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it)
-        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
+    const QList<StyleInfo::QmlFileData> sourceQmlFiles = StyleInfo::instance()->sourceQmlFiles();
+    for (auto it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it)
+        QTest::newRow(qPrintable(it->relativePath)) << it->relativePath << it->absolutePath;
 }
 
 void tst_Sanity::quickControlsSanityPlugin()
