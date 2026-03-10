@@ -120,6 +120,7 @@ public:
         FileRootComponent = 0x8000,
         AssignedToUnknownProperty = 0x10000,
         IsSelfExtension = 0x20000,
+        IsOpaque = 0x40000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -339,6 +340,10 @@ public:
      */
     bool isJavaScriptBuiltin() const { return m_flags.testFlag(JavaScriptBuiltin); }
     void setIsJavaScriptBuiltin(bool v) { m_flags.setFlag(JavaScriptBuiltin, v); }
+
+    //!\internal True iff type was registered only because it appears in a property
+    bool isOpaqueType() const { return m_flags.testFlag(IsOpaque); }
+    void setIsTypeOpaque(bool v) { m_flags.setFlag(IsOpaque, v); }
 
     bool isScript() const { return m_flags.testFlag(Script); }
     void setIsScript(bool v) { m_flags.setFlag(Script, v); }

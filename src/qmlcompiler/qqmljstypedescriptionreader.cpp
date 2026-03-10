@@ -256,6 +256,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 readImmediateNames(script, scope);
             } else if (name == QLatin1String("isJavaScriptBuiltin")) {
                 scope->setIsJavaScriptBuiltin(readBoolBinding(script));
+            } else if (name == QLatin1String("isTypeOpaque")) {
+                scope->setIsTypeOpaque(readBoolBinding(script));
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only lineNumber, name, prototype, defaultProperty, "

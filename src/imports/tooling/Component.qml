@@ -33,4 +33,5 @@ QtObject {
     property string accessSemantics: "reference"
     property string defaultProperty
     property string parentProperty
+    property bool isTypeOpaque: false // implicitly registered by tooling because it's referenced in a property
 }
