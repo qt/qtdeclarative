@@ -3,7 +3,7 @@
 
 /*!
     \qmlmodule Qt.labs.StyleKit
-    \techpreview
+    \preliminary
     \title Qt Labs StyleKit QML Types
     \ingroup qmlmodules
     \brief Provides QML types for declarative styling of Qt Quick Controls.
