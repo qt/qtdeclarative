@@ -410,6 +410,9 @@ void TestQmlformat::qml_data()
                                    << "commentInEnum.formatted.qml";
     QTest::newRow("commentInQmlObject") << "commentInQmlObject.qml"
                                         << "commentInQmlObject.formatted.qml";
+    QTest::newRow("commentsOnArrayAndObjectPatterns")
+            << "commentsOnArrayAndObjectPatterns.qml"
+            << "commentsOnArrayAndObjectPatterns.formatted.qml";
 }
 void TestQmlformat::qml()
 {

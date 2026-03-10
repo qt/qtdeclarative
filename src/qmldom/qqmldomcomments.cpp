@@ -394,6 +394,27 @@ public:
         return true;
     }
 
+    bool visit(ArrayPattern *array) override
+    {
+        addSourceLocations(array, array->lbracketToken);
+        addSourceLocations(array, array->commaToken);
+        addSourceLocations(array, array->rbracketToken);
+        return true;
+    }
+
+    bool visit(ObjectPattern *object) override
+    {
+        addSourceLocations(object, object->lbraceToken);
+        addSourceLocations(object, object->rbraceToken);
+        return true;
+    }
+
+    bool visit(Elision *elision) override
+    {
+        addSourceLocations(elision, elision->commaToken);
+        return true;
+    }
+
     bool visit(CaseClause *caseClause) override
     {
         // special case: case clauses can have comments attached to their `:` token
