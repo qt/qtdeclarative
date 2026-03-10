@@ -101,7 +101,7 @@ QQuickItem *findItem(QObject *object)
 }
 
 tst_accessibility::tst_accessibility()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
 {
 }
 
@@ -255,6 +255,12 @@ void tst_accessibility::override_data()
 void tst_accessibility::override()
 {
     QFETCH(QAccessible::Role, role);
+
+    static const QStringList ignoredWarningTypes = { "Dialog", "Drawer", "Menu", "Popup", "ToolTip" };
+    if (ignoredWarningTypes.contains(QTest::currentDataTag())) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+            ".*Accessible attached property must be attached to an object deriving from Item or Action"));
+    }
 
     const QString name = QTest::currentDataTag();
     const QString fileBaseName = name.toLower();
