@@ -415,6 +415,8 @@ void TestQmlformat::qml_data()
             << "commentsOnArrayAndObjectPatterns.formatted.qml";
     QTest::newRow("commentsOnGenerator") << "commentsOnGenerator.qml"
                                          << "commentsOnGenerator.formatted.qml";
+    QTest::newRow("commentsOnTryCatchFinally") << "commentsOnTryCatchFinally.qml"
+                                               << "commentsOnTryCatchFinally.formatted.qml";
 }
 void TestQmlformat::qml()
 {

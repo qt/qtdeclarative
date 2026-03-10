@@ -512,6 +512,27 @@ public:
         return true;
     }
 
+    bool visit(TryStatement *tryStatement) override
+    {
+        addSourceLocations(tryStatement, tryStatement->tryToken);
+        return true;
+    }
+
+    bool visit(Catch *catchStatement) override
+    {
+        addSourceLocations(catchStatement, catchStatement->catchToken);
+        addSourceLocations(catchStatement, catchStatement->lparenToken);
+        addSourceLocations(catchStatement, catchStatement->identifierToken);
+        addSourceLocations(catchStatement, catchStatement->rparenToken);
+        return true;
+    }
+
+    bool visit(Finally *finallyStatement) override
+    {
+        addSourceLocations(finallyStatement, finallyStatement->finallyToken);
+        return true;
+    }
+
     QMap<qsizetype, ElementRef> starts;
     QMap<qsizetype, ElementRef> ends;
 

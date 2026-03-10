@@ -809,7 +809,7 @@ bool ScriptFormatter::visit(LabelledStatement *ast)
 
 bool ScriptFormatter::visit(TryStatement *ast)
 {
-    out("try"); // ast->tryToken
+    outWithComments(ast->tryToken, ast);
     ensureSpaceIfNoComment();
     accept(ast->statement);
     if (ast->catchExpression) {
@@ -825,11 +825,11 @@ bool ScriptFormatter::visit(TryStatement *ast)
 
 bool ScriptFormatter::visit(Catch *ast)
 {
-    out(ast->catchToken);
+    outWithComments(ast->catchToken, ast);
     ensureSpaceIfNoComment();
-    out(ast->lparenToken);
-    out(ast->identifierToken);
-    out(")"); // ast->rparenToken
+    outWithComments(ast->lparenToken, ast);
+    outWithComments(ast->identifierToken, ast);
+    outWithComments(ast->rparenToken, ast);
     ensureSpaceIfNoComment();
     accept(ast->statement);
     return false;
@@ -837,7 +837,7 @@ bool ScriptFormatter::visit(Catch *ast)
 
 bool ScriptFormatter::visit(Finally *ast)
 {
-    out("finally"); // ast->finallyToken
+    outWithComments(ast->finallyToken, ast);
     ensureSpaceIfNoComment();
     accept(ast->statement);
     return false;
