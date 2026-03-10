@@ -1963,7 +1963,10 @@ void MethodInfo::writeOut(const DomItem &self, OutWriter &ow) const
     if (methodType == MethodType::Signal) {
         ow.writeRegion(fLoc, SignalKeywordRegion).ensureSpace();
     } else {
-        ow.writeRegion(fLoc, FunctionKeywordRegion).ensureSpace();
+        ow.writeRegion(fLoc, FunctionKeywordRegion);
+        if (isGenerator)
+            ow.writeRegion(fLoc, StarTokenRegion);
+        ow.ensureSpace();
     }
     ow.writeRegion(fLoc, IdentifierRegion, name);
     writeOutArguments(self, ow);

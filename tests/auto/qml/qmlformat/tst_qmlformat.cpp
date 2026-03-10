@@ -413,6 +413,8 @@ void TestQmlformat::qml_data()
     QTest::newRow("commentsOnArrayAndObjectPatterns")
             << "commentsOnArrayAndObjectPatterns.qml"
             << "commentsOnArrayAndObjectPatterns.formatted.qml";
+    QTest::newRow("commentsOnGenerator") << "commentsOnGenerator.qml"
+                                         << "commentsOnGenerator.formatted.qml";
 }
 void TestQmlformat::qml()
 {

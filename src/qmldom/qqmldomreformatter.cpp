@@ -851,13 +851,10 @@ bool ScriptFormatter::visit(FunctionDeclaration *ast)
 bool ScriptFormatter::visit(FunctionExpression *ast)
 {
     if (!ast->isArrowFunction) {
-        if (ast->isGenerator) {
-            out("function*");
-            ensureSpaceIfNoComment();
-        } else {
-            out("function");
-            ensureSpaceIfNoComment();
-        }
+        outWithComments(ast->functionToken, ast);
+        if (ast->isGenerator)
+            outWithComments(ast->starToken, ast);
+        ensureSpaceIfNoComment();
         outWithComments(ast->identifierToken, ast);
     }
 

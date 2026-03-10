@@ -786,6 +786,7 @@ bool QQmlDomAstCreatorBase::visit(AST::FunctionDeclaration *fDef)
     }
     m.access = MethodInfo::Public;
     m.methodType = MethodInfo::Method;
+    m.isGenerator = fDef->isGenerator;
 
     SourceLocation bodyLoc = fDef->body ? combineLocations(fDef->body)
                                         : combineLocations(fDef->lbraceToken, fDef->rbraceToken);

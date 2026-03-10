@@ -458,6 +458,7 @@ public:
     bool visit(FunctionExpression *fExpr) override
     {
         addSourceLocations(fExpr, fExpr->identifierToken);
+        addSourceLocations(fExpr, fExpr->starToken);
         addSourceLocations(fExpr, fExpr->lparenToken);
         addSourceLocations(fExpr, fExpr->rparenToken);
         addSourceLocations(fExpr, fExpr->lbraceToken);

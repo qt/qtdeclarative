@@ -739,6 +739,7 @@ public:
     std::shared_ptr<ScriptExpression> body;
     std::shared_ptr<ScriptExpression> returnType;
     bool isConstructor = false;
+    bool isGenerator = false;
 
 private:
     void writeOutArguments(const DomItem &self, OutWriter &ow) const;
