@@ -88,6 +88,7 @@ QQuickPointerHandler::~QQuickPointerHandler()
      The default value is 0.
 
      \image pointerHandlerMargin.png
+            {Rectangle with surrounding margin area for extended touch detection}
 */
 qreal QQuickPointerHandler::margin() const
 {

@@ -165,7 +165,8 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
     \li QML code
     \li gridmesh.vert
     \row
-    \li \image declarative-gridmesh.png
+    \li \image declarative-gridmesh.png {Qt logo distorted by GridMesh
+               transformation}
     \li \qml
         import QtQuick 2.0
 
@@ -328,7 +329,8 @@ QSGGeometry *QQuickBorderImageMesh::updateGeometry(QSGGeometry *geometry, int at
     The 4 border lines (2 horizontal and 2 vertical) break the image into 9 sections,
     as shown below:
 
-    \image declarative-scalegrid.png
+    \image declarative-scalegrid.png {Red rounded rectangle divided into
+           9 numbered regions by dashed border lines}
 
     Each border line (left, right, top, and bottom) specifies an offset in pixels
     from the respective edge of the mesh. By default, each border line has

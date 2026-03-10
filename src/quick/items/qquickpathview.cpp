@@ -480,7 +480,8 @@ void QQuickPathViewPrivate::setDragging(bool d)
 
     \snippet qml/pathview/pathview.qml 0
 
-    \image pathview.gif
+    \image pathview.gif {Qt logos rotating along curved path with
+           names Jane Doe, Bill Jones, John Smith}
 
     (Note the above example uses PathAttribute to scale and modify the
     opacity of the items as they rotate. This additional code can be seen in the

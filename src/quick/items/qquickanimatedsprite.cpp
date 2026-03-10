@@ -36,11 +36,13 @@ QT_BEGIN_NAMESPACE
 
     Consider the following sprite sheet:
 
-    \image animatedsprite-loading.png
+    \image animatedsprite-loading.png {Sprite sheet with four frames
+           showing progressively appearing blue dots}
 
     It can be divided up into four frames:
 
-    \image animatedsprite-loading-frames.png
+    \image animatedsprite-loading-frames.png {Sprite sheet divided into
+           four frames with visible borders}
 
     To play each of these frames at a speed of 500 milliseconds per frame, the
     following code can be used:
@@ -61,7 +63,8 @@ QT_BEGIN_NAMESPACE
                 }
                 \endcode
             \li
-                \image animatedsprite-loading-interpolated.gif
+                \image animatedsprite-loading-interpolated.gif {Loading
+                       animation playing with frame interpolation}
     \endtable
 
     By default, the frames are interpolated (blended together) to make the
@@ -84,7 +87,8 @@ QT_BEGIN_NAMESPACE
                 }
                 \endcode
             \li
-                \image animatedsprite-loading.gif
+                \image animatedsprite-loading.gif {Loading animation
+                       playing without frame interpolation}
     \endtable
 
     To control how AnimatedSprite responds to being scaled, use the

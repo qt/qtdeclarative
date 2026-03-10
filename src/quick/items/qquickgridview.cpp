@@ -1153,6 +1153,7 @@ QQuickItemViewAttached *QQuickGridViewPrivate::getAttachedObject(const QObject *
 
     \div {class="float-right"}
     \inlineimage gridview-simple.png
+        {Grid of contacts with icons: Jim Williams, John Brown, Bill Smyth, Sam Wise}
     \enddiv
 
     This model can be referenced as \c ContactModel in other QML files. See \l{QML Modules}
@@ -1169,6 +1170,7 @@ QQuickItemViewAttached *QQuickGridViewPrivate::getAttachedObject(const QObject *
 
     \div {class="float-right"}
     \inlineimage gridview-highlight.png
+        {Contact grid with John Brown highlighted in blue}
     \enddiv
 
     The view will create a new delegate for each item in the model. Note that the delegate
@@ -1232,25 +1234,33 @@ QQuickItemViewAttached *QQuickGridViewPrivate::getAttachedObject(const QObject *
             \b GridViews with GridView.FlowLeftToRight flow
     \row
         \li \b (H) Left to right \b (V) Top to bottom
-            \image gridview-layout-lefttoright-ltr-ttb.png
+            \image gridview-layout-lefttoright-ltr-ttb.png {Grid with items
+                   0-11 flowing left to right, rows arranged top to bottom}
         \li \b (H) Right to left \b (V) Top to bottom
-            \image gridview-layout-lefttoright-rtl-ttb.png
+            \image gridview-layout-lefttoright-rtl-ttb.png {Grid with items
+                   0-11 flowing right to left, rows arranged top to bottom}
         \li \b (H) Left to right \b (V) Bottom to top
-            \image gridview-layout-lefttoright-ltr-btt.png
+            \image gridview-layout-lefttoright-ltr-btt.png {Grid with items
+                   0-11 flowing left to right, rows arranged bottom to top}
         \li \b (H) Right to left \b (V) Bottom to top
-            \image gridview-layout-lefttoright-rtl-btt.png
+            \image gridview-layout-lefttoright-rtl-btt.png {Grid with items
+                   0-11 flowing right to left, rows arranged bottom to top}
     \header
         \li {4, 1}
             \b GridViews with GridView.FlowTopToBottom flow
     \row
         \li \b (H) Left to right \b (V) Top to bottom
-            \image gridview-layout-toptobottom-ltr-ttb.png
+            \image gridview-layout-toptobottom-ltr-ttb.png {Grid with items
+                   0-11 flowing top to bottom, columns arranged left to right}
         \li \b (H) Right to left \b (V) Top to bottom
-            \image gridview-layout-toptobottom-rtl-ttb.png
+            \image gridview-layout-toptobottom-rtl-ttb.png {Grid with items
+                   0-11 flowing top to bottom, columns arranged right to left}
         \li \b (H) Left to right \b (V) Bottom to top
-            \image gridview-layout-toptobottom-ltr-btt.png
+            \image gridview-layout-toptobottom-ltr-btt.png {Grid with items
+                   0-11 flowing bottom to top, columns arranged left to right}
         \li \b (H) Right to left \b (V) Bottom to top
-            \image gridview-layout-toptobottom-rtl-btt.png
+            \image gridview-layout-toptobottom-rtl-btt.png {Grid with items
+                   0-11 flowing bottom to top, columns arranged right to left}
     \endtable
 
     \sa {QML Data Models}, ListView, PathView, {Qt Quick Examples - Views}

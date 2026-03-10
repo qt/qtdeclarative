@@ -35,7 +35,8 @@ QT_BEGIN_NAMESPACE
     A BorderImage breaks a source image, specified using the \l source property,
     into 9 regions, as shown below:
 
-    \image declarative-scalegrid.png
+    \image declarative-scalegrid.png {Red rounded rectangle divided into
+           9 numbered regions by dashed border lines}
 
     When the image is scaled, regions of the source image are scaled or tiled to
     create the displayed border image in the following way:
@@ -61,7 +62,8 @@ QT_BEGIN_NAMESPACE
     image as described above.
 
     \beginfloatleft
-    \image qml-borderimage-normal-image.png
+    \image qml-borderimage-normal-image.png {Decorative frame with ornate
+           corners and guide lines showing 9-region divisions}
     \endfloat
 
     For comparison, an unscaled image is displayed using a simple Image item.
@@ -71,7 +73,8 @@ QT_BEGIN_NAMESPACE
 
     \clearfloat
     \beginfloatleft
-    \image qml-borderimage-scaled.png
+    \image qml-borderimage-scaled.png {Decorative frame enlarged with
+           edge regions stretched, numbered 2, 4, 5, 6, 8}
     \endfloat
 
     But when a BorderImage is used to display the image, the \l border property is
@@ -88,7 +91,8 @@ QT_BEGIN_NAMESPACE
 
     \clearfloat
     \beginfloatleft
-    \image qml-borderimage-tiled.png
+    \image qml-borderimage-tiled.png {Decorative frame with edge regions
+           tiled using Repeat mode, numbered 2, 4, 5, 6, 8}
     \endfloat
 
     Again, a large BorderImage is used to display the image. With the
@@ -102,7 +106,8 @@ QT_BEGIN_NAMESPACE
 
     \clearfloat
     \beginfloatleft
-    \image qml-borderimage-rounded.png
+    \image qml-borderimage-rounded.png {Decorative frame with edge regions
+           tiled using Round mode, all 9 regions numbered}
     \endfloat
 
     In some situations, the width of regions 2 and 8 may not be an exact multiple of the width
@@ -311,7 +316,8 @@ void QQuickBorderImage::load()
     The 4 border lines (2 horizontal and 2 vertical) break the image into 9 sections,
     as shown below:
 
-    \image declarative-scalegrid.png
+    \image declarative-scalegrid.png {Red rounded rectangle divided into
+           9 numbered regions by dashed border lines}
 
     Each border line (left, right, top, and bottom) specifies an offset in pixels
     from the respective edge of the source image. By default, each border line has
