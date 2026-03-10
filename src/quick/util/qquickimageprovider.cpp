@@ -254,7 +254,8 @@ void QQuickImageResponse::cancel()
 
     Now the images can be successfully loaded in QML:
 
-    \image imageprovider.png
+    \image imageprovider.png {Rectangle with yellow top half and red
+           bottom half from an image provider}
 
     See the \l {imageprovider}{Image Provider Example} for the complete implementation.
     Note that the example registers the provider via a \l{QQmlEngineExtensionPlugin}{plugin}

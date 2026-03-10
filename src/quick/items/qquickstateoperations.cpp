@@ -133,7 +133,8 @@ void QQuickParentChangePrivate::doChange(QQuickItem *targetParent)
 
     \snippet qml/parentchange.qml 0
 
-    \image parentchange.png
+    \image parentchange.png {Blue square state change affecting parent
+           reassignment}
 
     You can specify at which point in a transition you want a ParentChange to occur by
     using a ParentAnimation.
@@ -545,7 +546,8 @@ void QQuickParentChange::rewind()
 
     \snippet qml/anchorchanges.qml 0
 
-    \image anchorchanges.png
+    \image anchorchanges.png {Red square changing anchor position
+           between two states}
 
     AnchorChanges can be animated using AnchorAnimation.
     \qml

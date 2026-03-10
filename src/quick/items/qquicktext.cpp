@@ -1460,7 +1460,8 @@ void QQuickTextPrivate::updateDocumentText()
       \endtabcontent
     \endif
 
-    \image declarative-text.png
+    \image declarative-text.png {Markdown styling to show Hello in bold
+           and World in italics}
 
     If height and width are not explicitly set, Text will try to determine how
     much room is needed and set it accordingly. Unless \l wrapMode is set, it
@@ -1963,7 +1964,8 @@ void QQuickText::setLinkColor(const QColor &color)
     }
     \endqml
 
-    \image declarative-textstyle.png
+    \image declarative-textstyle.png {Four text styles: Normal, Raised,
+           Outline with red border, and Sunken}
 */
 QQuickText::TextStyle QQuickText::style() const
 {
@@ -2301,7 +2303,8 @@ void QQuickText::resetMaximumLineCount()
     \row
     \li
     \snippet qml/text/textFormats.qml 0
-    \li \image declarative-textformat.png
+    \li \image declarative-textformat.png {Multiple text format display
+               examples: AutoText, HTML, plain, and Markdown}
     \endtable
 
     \c Text.RichText supports a larger subset of HTML 4, as described on the

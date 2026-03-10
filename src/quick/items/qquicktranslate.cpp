@@ -49,7 +49,8 @@ public:
     }
     \endqml
 
-    \image translate.png
+    \image translate.png {Blue and red rectangles, with red translated
+           20 pixels upward}
 */
 QQuickTranslate::QQuickTranslate(QObject *parent)
 : QQuickTransform(*new QQuickTranslatePrivate, parent)
@@ -296,7 +297,8 @@ public:
 
     \snippet qml/rotation.qml 0
 
-    \image axisrotation.png
+    \image axisrotation.png {Five Qt logos showing 3D rotations around
+           the vertical axis}
 
     \sa {customitems/dialcontrol}{Dial Control example}, {Qt Quick Demo - Clocks}
 */
@@ -363,7 +365,8 @@ void QQuickRotation::setAngle(qreal angle)
     For a typical 3D-like rotation you will usually specify both the origin
     and the axis.
 
-    \image 3d-rotation-axis.png
+    \image 3d-rotation-axis.png {3D coordinate system with purple
+           rectangle rotated around the y-axis in the XY plane}
 */
 QVector3D QQuickRotation::axis() const
 {
@@ -471,7 +474,8 @@ void QQuickRotation::applyTo(QMatrix4x4 *matrix) const
     distance to the \l{origin} multiplied with the \l{xFactor}). Setting the \l{yFactor} shears the
     item along the y-axis and proportionally to the horizontal distance.
 
-    \image x-shear.png
+    \image x-shear.png {Blue rectangle sheared along the x-axis into
+           a parallelogram}
 
     Since the default origin is at \c{(0, 0)}, the top of the item remains untransformed, whereas
     the bottom is displaced 100 pixels to the right (corresponding to the height of the item.)

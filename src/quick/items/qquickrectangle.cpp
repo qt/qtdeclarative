@@ -173,6 +173,7 @@ void QQuickGradientStop::updateGradient()
 
     \div {class="float-right"}
     \inlineimage qml-gradient.png
+                 {Vertical gradient from red to yellow to green}
     \enddiv
 
     The following example declares a \l Rectangle item with a gradient starting
@@ -310,6 +311,7 @@ void QQuickRectanglePrivate::maybeSetImplicitAntialiasing()
 
     \div {class="float-right"}
     \inlineimage declarative-rect.png
+                 {Red rectangle with rounded corners and black border}
     \enddiv
 
     The following example shows the effects of some of the common properties on a
@@ -390,6 +392,7 @@ QQuickPen *QQuickRectangle::border()
 
     \div {class="float-left"}
     \inlineimage declarative-rect_gradient.png
+                 {Four rectangles showing gradient variations}
     \enddiv
 
     \snippet qml/rectangle/rectangle-gradient.qml rectangles
@@ -733,6 +736,7 @@ void QQuickRectangle::resetBottomRightRadius()
 
     \div {class="float-right"}
     \inlineimage rect-color.png
+                 {Green and blue rectangles demonstrating color property}
     \enddiv
 
     The following example shows rectangles with colors specified

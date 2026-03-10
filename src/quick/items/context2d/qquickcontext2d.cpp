@@ -87,7 +87,8 @@ QT_BEGIN_NAMESPACE
     (0,0) is at the top left corner, as shown in the figure below. Coordinates
     increase along the \c{x} axis from left to right and along the \c{y} axis
     from top to bottom of the canvas.
-    \image qml-item-canvas-context.gif
+    \image qml-item-canvas-context.gif {Canvas coordinate system with
+           origin at top-left, x-axis right, y-axis down, 300x150 default size}
 */
 
 
@@ -1060,11 +1061,13 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_save(const QV4::FunctionOb
     ctx.rotate(Math.PI/2);
     \endcode
 
-    \image qml-item-canvas-rotate.png
+    \image qml-item-canvas-rotate.png {Canvas coordinate system before
+           and after rotating π/2 radians clockwise}
 
     The rotation transformation matrix is as follows:
 
-    \image qml-item-canvas-math-rotate.png
+    \image qml-item-canvas-math-rotate.png {Rotation transformation matrix
+           with cosine and sine of angle}
 
     where the \a angle of rotation is in radians.
 
@@ -1095,7 +1098,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_rotate(const QV4::Function
     ctx.scale(2.0, 0.5);
     \endcode
 
-    \image qml-item-canvas-scale.png
+    \image qml-item-canvas-scale.png {Circle transformed to ellipse
+           by scale(2, 0.5) showing doubled width and halved height}
 */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {
@@ -1122,21 +1126,22 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_scale(const QV4::FunctionO
     drawn. The \l{http://www.w3.org/TR/2dcontext/#transformations}{HTML Canvas 2D Context specification}
     defines the transformation matrix as:
 
-    \image qml-item-canvas-math.png
+    \image qml-item-canvas-math.png {3x3 transformation matrix with
+           elements a,c,e in first row, b,d,f in second row, 0,0,1 in third}
     where:
     \list
     \li \a{a} is the scale factor in the horizontal (x) direction
-    \image qml-item-canvas-scalex.png
+    \image qml-item-canvas-scalex.png {Square stretched horizontally}
     \li \a{c} is the skew factor in the x direction
-    \image qml-item-canvas-skewx.png
+    \image qml-item-canvas-skewx.png {Square skewed into parallelogram}
     \li \a{e} is the translation in the x direction
-    \image qml-item-canvas-translate.png
+    \image qml-item-canvas-translate.png {Square translated horizontally}
     \li \a{b} is the skew factor in the y (vertical) direction
-    \image qml-item-canvas-skewy.png
+    \image qml-item-canvas-skewy.png {Square skewed vertically}
     \li \a{d} is the scale factor in the y direction
-    \image qml-item-canvas-scaley.png
+    \image qml-item-canvas-scaley.png {Square stretched vertically}
     \li \a{f} is the translation in the y direction
-    \image qml-item-canvas-translatey.png
+    \image qml-item-canvas-translatey.png {Square translated vertically}
     \li the last row remains constant
     \endlist
 
@@ -2070,6 +2075,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_getLineDash(const QV4::Fun
     \table 100%
     \row
     \li \inlineimage qml-item-canvas-lineDash.png
+                     {Dashed line with varying segment lengths}
     \li
     \code
     var space = 4
@@ -2373,9 +2379,11 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeRect(const QV4::Func
 
     Both \a startAngle and \a endAngle are measured from the x-axis in radians.
 
-    \image qml-item-canvas-arc.png
+    \image qml-item-canvas-arc.png {Circle and arc showing center point
+           (x,y) and radius}
 
-    \image qml-item-canvas-startAngle.png
+    \image qml-item-canvas-startAngle.png {Four arcs showing different
+           endAngle values from π/2 to 2π, all starting at angle 0}
 
     The \a anticlockwise parameter is \c false for each arc in the figure above
     because they are all drawn in the clockwise direction.
@@ -2430,7 +2438,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_arc(const QV4::FunctionObj
         connects it to the previous subpath by a straight line.
     \endlist
 
-    \image qml-item-canvas-arcTo.png
+    \image qml-item-canvas-arcTo.png {Arc construction showing control
+           points (x1,y1), (x2,y2) and radius for tangent arc}
 
     \sa arc, {http://www.w3.org/TR/2dcontext/#dom-context-2d-arcto}{W3C's 2D
     Context Standard for arcTo()}
@@ -2492,7 +2501,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_beginPath(const QV4::Funct
   ctx.stroke();
   \endcode
 
-   \image qml-item-canvas-bezierCurveTo.png
+   \image qml-item-canvas-bezierCurveTo.png {Cubic bezier curve forming
+          a smooth downward arc}
 
   \sa {http://www.w3.org/TR/2dcontext/#dom-context-2d-beziercurveto}{W3C 2d context standard for bezierCurveTo}
   \sa {https://web.archive.org/web/20130505222636if_/http://www.openrise.com/lab/FlowerPower/}{The beautiful flower demo by using bezierCurveTo}
@@ -2536,7 +2546,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_bezierCurveTo(const QV4::F
     The new shape displays.  The following shows how a clipping path can
     modify how an image displays:
 
-    \image qml-item-canvas-clip-complex.png
+    \image qml-item-canvas-clip-complex.png {Image before and after
+           clipping to a star shape, showing only the clipped region}
     \sa beginPath()
     \sa closePath()
     \sa stroke()

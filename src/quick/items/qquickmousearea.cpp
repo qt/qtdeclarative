@@ -207,6 +207,7 @@ bool QQuickMouseAreaPrivate::propagateHelper(QQuickMouseEvent *ev, QQuickItem *i
 
     \div {class="float-right"}
     \inlineimage qml-mousearea-snippet.png
+                 {Red and green rectangles demonstrating click and hover states}
     \enddiv
 
     The following example uses a MouseArea in a \l Rectangle that changes

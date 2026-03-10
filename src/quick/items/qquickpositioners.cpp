@@ -731,7 +731,8 @@ void QQuickBasePositionerPrivate::setBottomPadding(qreal value, bool reset)
     }
     \endcode
 
-    \image positioner-example.png
+    \image positioner-example.png {Grid with 16 rectangles numbered 0-15,
+           first item yellow indicating Positioner.isFirstItem}
 */
 
 QQuickPositionerAttached::QQuickPositionerAttached(QObject *parent) : QObject(parent), m_index(-1), m_isFirstItem(false), m_isLastItem(false)
@@ -800,7 +801,8 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
 
     The Column automatically positions these items in a vertical formation, like this:
 
-    \image verticalpositioner_example.png
+    \image verticalpositioner_example.png {Three colored rectangles
+           stacked vertically in a Column}
 
     If an item within a Column is not \l {Item::}{visible}, or if it has a width or
     height of 0, the item will not be laid out and it will not be visible within the
@@ -831,7 +833,8 @@ void QQuickPositionerAttached::setIsLastItem(bool isLastItem)
     \l Rectangle is toggled. As it appears and disappears, the blue \l Rectangle moves within
     the Column, and the \l move transition is automatically applied to the blue \l Rectangle:
 
-    \image verticalpositioner_transition.gif
+    \image verticalpositioner_transition.gif {Blue rectangle animating
+           up and down as green rectangle toggles visibility}
 
     \sa Row, Grid, Flow, Positioner, ColumnLayout, {Qt Quick Examples - Positioners}
 */
@@ -996,7 +999,8 @@ void QQuickColumn::reportConflictingAnchors()
 
     The Row automatically positions these items in a horizontal formation, like this:
 
-    \image horizontalpositioner_example.png
+    \image horizontalpositioner_example.png {Three colored rectangles
+           arranged horizontally in a Row}
 
     If an item within a Row is not \l {Item::}{visible}, or if it has a width or
     height of 0, the item will not be laid out and it will not be visible within the
@@ -1279,7 +1283,8 @@ void QQuickRow::reportConflictingAnchors()
 
     The Grid automatically positions the child items in a grid formation:
 
-    \image gridLayout_example.png
+    \image gridLayout_example.png {Five colored rectangles arranged
+           in a grid formation}
 
     If an item within a Grid is not \l {Item::}{visible}, or if it has a width or
     height of 0, the item will not be laid out and it will not be visible within the
@@ -1373,7 +1378,9 @@ void QQuickRow::reportConflictingAnchors()
   a spacing of 6.
 
   \inlineimage qml-grid-no-spacing.png
+               {Four colored squares in a grid with no spacing}
   \inlineimage qml-grid-spacing.png
+               {Four colored squares in a grid with spacing between them}
 
   \sa rows, columns
 */
@@ -1613,8 +1620,11 @@ Qt::LayoutDirection QQuickGrid::effectiveLayoutDirection() const
     \row
         \li
         \li \inlineimage gridLayout_aligntopleft.png
+            {Colored rectangles aligned top-left in grid cells}
         \li \inlineimage gridLayout_aligntop.png
+            {Colored rectangles aligned top-center in grid cells}
         \li \inlineimage gridLayout_aligncenter.png
+            {Colored rectangles centered in grid cells}
     \row
         \li Horizontal alignment
         \li AlignLeft
@@ -1873,7 +1883,8 @@ void QQuickGrid::reportConflictingAnchors()
     The Flow item automatically positions the child \l Text items side by
     side, wrapping as necessary:
 
-    \image qml-flow-snippet.png
+    \image qml-flow-snippet.png {Text items wrapped like words on a page
+           within a Flow positioner}
 
     If an item within a Flow is not \l {Item::}{visible}, or if it has a width or
     height of 0, the item will not be laid out and it will not be visible within the

@@ -89,7 +89,8 @@ public:
 
     \table
     \row
-    \li \image declarative-shadereffectsource.png
+    \li \image declarative-shadereffectsource.png {Overlapping colored
+               rectangles rendered as shader effect source}
     \li \qml
         import QtQuick 2.0
 

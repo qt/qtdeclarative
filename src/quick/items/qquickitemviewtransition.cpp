@@ -645,7 +645,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
 
     If five items were inserted in succession at index 0, the effect would be this:
 
-    \image viewtransitions-basic.gif
+    \image viewtransitions-basic.gif {Five items inserted in succession
+           at top, pushing existing items downward with fade and scale}
 
     Notice that the NumberAnimation objects above do not need to specify a \c target to animate
     the appropriate item. Also, the NumberAnimation in the \c addTransition does not need to specify
@@ -727,7 +728,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     Each displaced item delays its animation by an additional 100 milliseconds, producing a subtle
     ripple-type effect when items are displaced by the add, like this:
 
-    \image viewtransitions-delayedbyindex.gif
+    \image viewtransitions-delayedbyindex.gif {Ripple effect with
+           displaced items moving down in staggered sequence}
 
 
     \section3 Animating Items to Intermediate Positions
@@ -747,7 +749,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     Now, a displaced item will first move to a position of (20, 50) relative to its starting
     position, and then to its final, correct position in the view:
 
-    \image viewtransitions-intermediatemove.gif
+    \image viewtransitions-intermediatemove.gif {Intermediate position
+           animation with items shifting right before moving down}
 
     Since the final NumberAnimation does not specify a \c to value, the view implicitly sets this
     value to the item's final position in the view, and so this last animation will move this item
@@ -764,7 +767,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     each item's final destination point, so that items inserted at different indexes start their
     paths from different positions:
 
-    \image viewtransitions-pathanim.gif
+    \image viewtransitions-pathanim.gif {Path animation with new items
+           following curved paths from right into the list}
 
 
     \section2 Handling Interrupted Animations
@@ -786,7 +790,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     If multiple items are added in rapid succession, without waiting for a previous transition
     to finish, this is the result:
 
-    \image viewtransitions-interruptedbad.gif
+    \image viewtransitions-interruptedbad.gif {Interrupted transition
+           leaving rapidly added items partially transparent}
 
     Each newly added item undergoes an \c add transition, but before the transition can finish,
     another item is added, displacing the previously added item. Because of this, the \c add
@@ -803,7 +808,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     Now, when an item's \c add transition is interrupted, its opacity and scale are animated to 1.0
     upon displacement, avoiding the erroneous visual effects from before:
 
-    \image viewtransitions-interruptedgood.gif
+    \image viewtransitions-interruptedgood.gif {Corrected interrupted
+           transition with items becoming fully opaque when displaced}
 
     The same principle applies to any combination of view transitions. An added item may be moved
     before its add transition finishes, or a moved item may be removed before its moved transition
@@ -830,7 +836,8 @@ QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
     animates it to its final position, then changes the item color back to "lightsteelblue" using a
     ScriptAction. However, when run, the transition does not produce the intended result:
 
-    \image viewtransitions-scriptactionbad.gif
+    \image viewtransitions-scriptactionbad.gif {ScriptAction timing issue
+           with moved items remaining yellow except the last}
 
     Only the last moved item is returned to the "lightsteelblue" color; the others remain yellow. This
     is because the ScriptAction is not run until after the transition has already been initialized, by

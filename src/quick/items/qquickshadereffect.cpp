@@ -153,7 +153,8 @@ QT_BEGIN_NAMESPACE
 
     \table 70%
     \row
-    \li \image declarative-shadereffectitem.png
+    \li \image declarative-shadereffectitem.png {Two Qt logos: original
+               colored and grayscale shader effect}
     \li \qml
         import QtQuick 2.0
 
@@ -250,7 +251,9 @@ QT_BEGIN_NAMESPACE
     \table
     \row
       \li \b {Layer with effect disabled} \inlineimage qml-shadereffect-nolayereffect.png
+          {Colorful pinwheel shape}
       \li \b {Layer with effect enabled} \inlineimage qml-shadereffect-layereffect.png
+          {Grayscale pinwheel shape}
     \row
       \li \qml
           Item {
@@ -284,6 +287,7 @@ QT_BEGIN_NAMESPACE
     \table
     \row
       \li \inlineimage qml-shadereffect-opacitymask.png
+          {Text reading Gradient Text with blue gradient fill}
     \row
       \li \qml
           Rectangle {

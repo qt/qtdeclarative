@@ -54,7 +54,8 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
     \codeline
     \snippet qml/repeaters/repeater.qml simple
 
-    \image repeater-simple.png
+    \image repeater-simple.png {Three yellow rectangles in a row created
+           by Repeater}
 
     A Repeater's \l model can be any of the supported \l {qml-data-models}{data models}.
     Additionally, like delegates for other views, a Repeater delegate can access
@@ -69,7 +70,8 @@ QQuickRepeaterPrivate::~QQuickRepeaterPrivate()
 
     \snippet qml/repeaters/repeater.qml layout
 
-    \image repeater.png
+    \image repeater.png {Row with red rectangle, ten green circles from
+           Repeater, and blue rectangle}
 
 
     \note A Repeater item owns all items it instantiates. Removing or dynamically destroying
@@ -258,7 +260,8 @@ void QQuickRepeater::setModel(const QVariant &m)
     \table
     \row
     \li \snippet qml/repeaters/repeater.qml index
-    \li \image repeater-index.png
+    \li \image repeater-index.png {Text items displaying "I'm item 0"
+               through "I'm item 9"}
     \endtable
 
     If the \l model is a \l{QStringList-based model}{string list} or
@@ -269,7 +272,8 @@ void QQuickRepeater::setModel(const QVariant &m)
     \table
     \row
     \li \snippet qml/repeaters/repeater.qml modeldata
-    \li \image repeater-modeldata.png
+    \li \image repeater-modeldata.png {Text items displaying "Data: apples",
+               "Data: oranges", "Data: pears"}
     \endtable
 
     If the \l model is a model object (such as a \l ListModel) the delegate

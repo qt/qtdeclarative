@@ -30,7 +30,8 @@ DEFINE_BOOL_CONFIG_OPTION(qmlMptaVisualTouchDebugging, QML_VISUAL_TOUCH_DEBUGGIN
     The TouchPoint type contains information about a touch point, such as the current
     position, pressure, and area.
 
-    \image touchpoint-metrics.png
+    \image touchpoint-metrics.png {Tablet showing touch points with
+           metrics: bounding box, rotation, and ellipse diameters}
 */
 
 /*!

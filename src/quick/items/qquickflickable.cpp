@@ -677,6 +677,7 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     \div {class="float-right"}
     \inlineimage flickable.gif
+                 {Animated view of an image being flicked and dragged}
     \enddiv
 
     The following example shows a small view onto a large image in which the
@@ -701,19 +702,24 @@ void QQuickFlickablePrivate::updateBeginningEnd()
 
     \table
         \row
-            \li \image flickable-contentXY-resting.png
+            \li \image flickable-contentXY-resting.png {Blue content square
+                   at rest within flickable bounds}
             \li The \c contentX and \c contentY are both \c 0.
         \row
-            \li \image flickable-contentXY-top-left.png
+            \li \image flickable-contentXY-top-left.png {Blue content square
+                   dragged toward top-left corner}
             \li The \c contentX and the \c contentY are both \c 50.
         \row
-            \li \image flickable-contentXY-top-right.png
+            \li \image flickable-contentXY-top-right.png {Blue content square
+                   dragged toward top-right corner}
             \li The \c contentX is \c -50 and the \c contentY is \c 50.
         \row
-            \li \image flickable-contentXY-bottom-right.png
+            \li \image flickable-contentXY-bottom-right.png {Blue content square
+                   dragged toward bottom-right corner}
             \li The \c contentX and the \c contentY are both \c -50.
         \row
-            \li \image flickable-contentXY-bottom-left.png
+            \li \image flickable-contentXY-bottom-left.png {Blue content square
+                   dragged toward bottom-left corner}
             \li The \c contentX is \c 50 and the \c contentY is \c -50.
     \endtable
 
@@ -2556,7 +2562,8 @@ void QQuickFlickable::setBoundsBehavior(BoundsBehavior b)
     When the above view is flicked beyond its bounds, it will return to its
     bounds using the transition specified:
 
-    \image flickable-rebound.gif
+    \image flickable-rebound.gif {Flickable content bouncing back
+           after being dragged beyond its bounds}
 
     If this property is not set, a default animation is applied.
   */

@@ -1440,7 +1440,8 @@ QQuickKeysAttached *QQuickKeysAttached::qmlAttachedProperties(QObject *obj)
 
     \snippet qml/layoutmirroring.qml 0
 
-    \image layoutmirroring.png
+    \image layoutmirroring.png {Row with items numbered 5 to 1 positioned
+           right-to-left demonstrating layout mirroring}
 
     Layout mirroring is useful when it is necessary to support both left-to-right and right-to-left
     layout versions of an application to target different language areas. The \l childrenInherit
@@ -2007,6 +2008,7 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
     \table
     \row
       \li \inlineimage qml-blending-nonlayered.png
+                       {Two overlapping rectangles showing non-layered opacity}
       \li \b {Non-layered Opacity} \snippet qml/layerblending.qml non-layered
     \endtable
 
@@ -2019,7 +2021,8 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 
     \table
     \row
-      \li \image qml-blending-layered.png
+      \li \image qml-blending-layered.png {Two overlapping white rectangles
+             rendered as a layer without alpha blending artifacts}
       \li \b {Layered Opacity} \snippet qml/layerblending.qml layered
     \endtable
 
@@ -3741,7 +3744,8 @@ void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
 
   \table
   \row
-  \li \image declarative-anchors_example.png
+  \li \image declarative-anchors_example.png {Text labeled 'label' anchored
+         horizontally centered below item labeled 'pic'}
   \li Text anchored to Image, horizontally centered and vertically below, with a margin.
   \qml
   Item {
@@ -3759,7 +3763,8 @@ void QQuickItemPrivate::_q_resourceObjectDeleted(QObject *object)
   }
   \endqml
   \row
-  \li \image declarative-anchors_example2.png
+  \li \image declarative-anchors_example2.png {Text labeled 'label' anchored
+         to the right of item labeled 'pic' with margin}
   \li
   Left of Text anchored to right of Image, with a margin. The y
   property of both defaults to 0.
@@ -6009,7 +6014,9 @@ QQuickItem *QQuickItem::viewportItem() const
     Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Item.Center.
 
-    \image declarative-transformorigin.png
+    \image declarative-transformorigin.png {Rectangle showing nine transform
+           origin points: TopLeft, Top, TopRight, Left, Center, Right,
+           BottomLeft, Bottom, BottomRight}
 
     This example rotates an image around its bottom-right corner.
     \qml
@@ -6030,7 +6037,9 @@ QQuickItem *QQuickItem::viewportItem() const
     Nine transform origins are available, as shown in the image below.
     The default transform origin is \c Item.Center.
 
-    \image declarative-transformorigin.png
+    \image declarative-transformorigin.png {Rectangle showing nine transform
+           origin points: TopLeft, Top, TopRight, Left, Center, Right,
+           BottomLeft, Bottom, BottomRight}
 */
 QQuickItem::TransformOrigin QQuickItem::transformOrigin() const
 {
@@ -6092,7 +6101,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
 
   \table
   \row
-  \li \image declarative-item_stacking1.png
+  \li \image declarative-item_stacking1.png {Blue rectangle above red,
+         later sibling stacked on top}
   \li Same \c z - later children above earlier children:
   \qml
   Item {
@@ -6107,7 +6117,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking2.png
+  \li \image declarative-item_stacking2.png {Red rectangle above blue,
+         higher z value stacked on top}
   \li Higher \c z on top:
   \qml
   Item {
@@ -6123,7 +6134,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking3.png
+  \li \image declarative-item_stacking3.png {Blue rectangle above red,
+         child stacked above parent}
   \li Same \c z - children above parents:
   \qml
   Item {
@@ -6138,7 +6150,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking4.png
+  \li \image declarative-item_stacking4.png {Red rectangle above blue,
+         negative z value stacked below parent}
   \li Lower \c z below:
   \qml
   Item {
@@ -6169,7 +6182,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
 
   \table
   \row
-  \li \image declarative-item_stacking1.png
+  \li \image declarative-item_stacking1.png {Blue rectangle above red,
+         later sibling stacked on top}
   \li Same \c z - later children above earlier children:
   \qml
   Item {
@@ -6184,7 +6198,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking2.png
+  \li \image declarative-item_stacking2.png {Red rectangle above blue,
+         higher z value stacked on top}
   \li Higher \c z on top:
   \qml
   Item {
@@ -6200,7 +6215,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking3.png
+  \li \image declarative-item_stacking3.png {Blue rectangle above red,
+         child stacked above parent}
   \li Same \c z - children above parents:
   \qml
   Item {
@@ -6215,7 +6231,8 @@ void QQuickItem::setTransformOriginPoint(const QPointF &point)
   }
   \endqml
   \row
-  \li \image declarative-item_stacking4.png
+  \li \image declarative-item_stacking4.png {Red rectangle above blue,
+         negative z value stacked below parent}
   \li Lower \c z below:
   \qml
   Item {
@@ -6269,7 +6286,8 @@ void QQuickItem::setZ(qreal v)
 
   \table
   \row
-  \li \image declarative-rotation.png
+  \li \image declarative-rotation.png {Red square rotated 30 degrees
+         inside a blue square}
   \li
   \qml
   Rectangle {
@@ -6295,7 +6313,8 @@ void QQuickItem::setZ(qreal v)
 
   \table
   \row
-  \li \image declarative-rotation.png
+  \li \image declarative-rotation.png {Red square rotated 30 degrees
+         inside a blue square}
   \li
   \qml
   Rectangle {
@@ -6347,7 +6366,8 @@ void QQuickItem::setRotation(qreal r)
 
   \table
   \row
-  \li \image declarative-scale.png
+  \li \image declarative-scale.png {Blue and red squares with specific
+         scaling and positioning}
   \li
   \qml
   import QtQuick 2.0
@@ -6387,7 +6407,8 @@ void QQuickItem::setRotation(qreal r)
 
   \table
   \row
-  \li \image declarative-scale.png
+  \li \image declarative-scale.png {Blue and red squares with specific
+         scaling and positioning}
   \li
   \qml
   import QtQuick 2.0
@@ -6448,7 +6469,8 @@ void QQuickItem::setScale(qreal s)
 
   \table
   \row
-  \li \image declarative-item_opacity1.png
+  \li \image declarative-item_opacity1.png {Red and blue rectangles
+         at full opacity}
   \li
   \qml
     Item {
@@ -6463,7 +6485,8 @@ void QQuickItem::setScale(qreal s)
     }
   \endqml
   \row
-  \li \image declarative-item_opacity2.png
+  \li \image declarative-item_opacity2.png {Red and blue rectangles
+         both semi-transparent from parent's 0.5 opacity}
   \li
   \qml
     Item {
@@ -6504,7 +6527,8 @@ void QQuickItem::setScale(qreal s)
 
   \table
   \row
-  \li \image declarative-item_opacity1.png
+  \li \image declarative-item_opacity1.png {Red and blue rectangles
+         at full opacity}
   \li
   \qml
     Item {
@@ -6519,7 +6543,8 @@ void QQuickItem::setScale(qreal s)
     }
   \endqml
   \row
-  \li \image declarative-item_opacity2.png
+  \li \image declarative-item_opacity2.png {Red and blue rectangles
+         both semi-transparent from parent's 0.5 opacity}
   \li
   \qml
     Item {
@@ -8931,7 +8956,8 @@ bool QQuickItem::contains(const QPointF &point) const
 
     \table
     \row
-    \li \image containmentMask-shape.gif
+    \li \image containmentMask-shape.gif {D-shaped containment mask
+           with cursor showing non-rectangular hit testing}
     \li \snippet qml/item/containmentMask-shape.qml 0
     \endtable
 
@@ -8941,7 +8967,8 @@ bool QQuickItem::contains(const QPointF &point) const
 
     \table
     \row
-    \li \image containmentMask-circle.gif
+    \li \image containmentMask-circle.gif {Circular containment mask
+           with cursor showing round hit testing region}
     \li \snippet qml/item/containmentMask-circle-js.qml 0
     \endtable
 

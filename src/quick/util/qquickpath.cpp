@@ -1215,7 +1215,9 @@ QDebug operator<<(QDebug debug, const QQuickCurve *curve)
 
     \table
     \row
-    \li \image declarative-pathattribute.png
+    \li \image declarative-pathattribute.png {PathView showing three Qt
+           logo items with names: John Smith and Jane Doe small and faded
+           at top, Bill Jones large and opaque at center}
     \li
     \snippet qml/pathview/pathattributes.qml 0
     (see the PathView documentation for the specification of ContactModel.qml
@@ -1443,7 +1445,8 @@ void QQuickPathMove::addToPath(QPainterPath &path, const QQuickPathData &data)
     The following QML produces the path shown below:
     \table
     \row
-    \li \image declarative-pathquad.png
+    \li \image declarative-pathquad.png {Quadratic bezier curve forming
+           a parabola}
     \li
     \qml
     Path {
@@ -1601,7 +1604,7 @@ void QQuickPathQuad::addToPath(QPainterPath &path, const QQuickPathData &data)
     The following QML produces the path shown below:
     \table
     \row
-    \li \image declarative-pathcubic.png
+    \li \image declarative-pathcubic.png {Cubic curve}
     \li
     \qml
     Path {
@@ -1830,7 +1833,8 @@ void QQuickPathCubic::addToPath(QPainterPath &path, const QQuickPathData &data)
     This example produces the following path (with the starting point and PathCurve points
     highlighted in red):
 
-    \image declarative-pathcurve.png
+    \image declarative-pathcurve.png {Catmull-Rom curve passing through
+           five red highlighted points forming a wave pattern}
 
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathSvg
 */
@@ -1974,7 +1978,8 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     The following QML produces the path shown below:
     \table
     \row
-    \li \image declarative-patharc.png
+    \li \image declarative-patharc.png {Nearly complete circular arc
+           drawn from start point to end point}
     \li \snippet qml/path/basicarc.qml 0
     \endtable
 
@@ -2018,7 +2023,8 @@ void QQuickPathCatmullRomCurve::addToPath(QPainterPath &path, const QQuickPathDa
     the shape of the arc:
     \table
     \row
-    \li \image declarative-arcradius.png
+    \li \image declarative-arcradius.png {Four arc varieties with different
+           radii arranged sequentially}
     \li \snippet qml/path/arcradius.qml 0
     \endtable
 */
@@ -2065,7 +2071,8 @@ void QQuickPathArc::setRadiusY(qreal radius)
 
     \table
     \row
-    \li \image declarative-largearc.png
+    \li \image declarative-largearc.png {Two arcs with same endpoints:
+           small arc when useLargeArc is false, large arc when true}
     \li \snippet qml/path/largearc.qml 0
     \endtable
 
@@ -2097,7 +2104,8 @@ void QQuickPathArc::setUseLargeArc(bool largeArc)
     by changing the value of direction.
     \table
     \row
-    \li \image declarative-arcdirection.png
+    \li \image declarative-arcdirection.png {Two arcs with same endpoints:
+           one curving clockwise, one curving counterclockwise}
     \li \snippet qml/path/arcdirection.qml 0
     \endtable
 
@@ -2135,7 +2143,8 @@ void QQuickPathArc::setDirection(ArcDirection direction)
     the shape of the arc:
     \table
     \row
-    \li \image declarative-arcrotation.png
+    \li \image declarative-arcrotation.png {Two elliptical arcs: one with
+           0 degree rotation, one rotated 45 degrees}
     \li \snippet qml/path/arcrotation.qml 0
     \endtable
 */
@@ -2355,7 +2364,8 @@ void QQuickPathAngleArc::addToPath(QPainterPath &path, const QQuickPathData &)
     The following QML produces the path shown below:
     \table
     \row
-    \li \image declarative-pathsvg.png
+    \li \image declarative-pathsvg.png {Triangle drawn using SVG path
+           commands}
     \li
     \qml
     Path {
@@ -2411,7 +2421,7 @@ void QQuickPathSvg::addToPath(QPainterPath &path, const QQuickPathData &)
     rounded or beveled corners. The API corresponds to that of the \l Rectangle
     item.
 
-    \image pathrectangle-bevel.png
+    \image pathrectangle-bevel.png {Rectangle with beveled corners}
 
     \snippet qml/pathrectangle/pathrectangle-bevel.qml shape
 
@@ -2777,7 +2787,8 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
     PathLine section of the path.
     \table
     \row
-    \li \image declarative-nopercent.png
+    \li \image declarative-nopercent.png {PathView with items evenly
+           distributed along an S-shaped path}
     \li
     \qml
     PathView {
@@ -2791,7 +2802,8 @@ void QQuickPathRectangle::addToPath(QPainterPath &path, const QQuickPathData &da
     }
     \endqml
     \row
-    \li \image declarative-percent.png
+    \li \image declarative-percent.png {PathView with 50% of items
+           bunched along the middle PathLine section}
     \li
     \qml
     PathView {
