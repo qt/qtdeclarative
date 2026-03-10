@@ -169,6 +169,7 @@ private slots:
     void fromModuleCtor();
     void loadFromModule_data();
     void loadFromModule();
+    void nonItem();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -1435,6 +1436,20 @@ void tst_qquickwidget::loadFromModule()
         QCOMPARE(widget.status(), QQuickWidget::Ready);
         QVERIFY(widget.source().toString().endsWith("SignalSpy.qml"));
     }
+}
+
+void tst_qquickwidget::nonItem()
+{
+    QQuickWidget widget;
+    QTest::ignoreMessage(QtDebugMsg, "Completed");
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(
+                    "QQuickWidget only supports loading of root objects "
+                    "that derive from QQuickItem"));
+    widget.setSource(testFileUrl("nonItem.qml"));
+    QCOMPARE(widget.status(), QQuickWidget::Error);
+    QCOMPARE(widget.rootObject(), nullptr);
 }
 
 QTEST_MAIN(tst_qquickwidget)
