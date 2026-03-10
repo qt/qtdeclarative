@@ -543,6 +543,7 @@ void QQuickShapeCurveRenderer::processPath(PathData *pathData)
                 pathData->strokeNodes = addTriangulatingStrokerNodes(strokePath, pen);
             else
                 pathData->strokeNodes = addCurveStrokeNodes(strokePath, pen);
+            dirtyFlags |= UniformsDirty;
         }
     }
 }
