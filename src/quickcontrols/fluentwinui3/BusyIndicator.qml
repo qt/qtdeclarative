@@ -22,6 +22,7 @@ T.BusyIndicator {
 
         property Shape ring: Shape {
             parent: control.contentItem
+            visible: control.running
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             implicitWidth: parent.implicitWidth
