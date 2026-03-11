@@ -116,6 +116,7 @@
     column depending on the screen orientation.
 
     \image scalability-gridlayout.png
+           {Portrait and landscape layouts showing Top or left and Bottom or right}
 
     The following code snippet uses
     the \c flow property to set the flow of the grid from left to right (as a

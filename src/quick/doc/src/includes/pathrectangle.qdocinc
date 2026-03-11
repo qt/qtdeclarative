@@ -29,7 +29,8 @@ In the following example, \l radius is set to \c 10, and \c topLeftRadius to \c 
 
 \snippet \2 \3
 
-\image pathrectangle.png
+\image pathrectangle.png {Rectangle outline with three rounded corners and
+one beveled corner}
 
 \sa radius
 //! [radius-properties]
@@ -72,7 +73,8 @@ In the following example, \c bottomRightBevel is set to true:
 
 \snippet \2 \3
 
-\image pathrectangle.png
+\image pathrectangle.png {Rectangle outline with three rounded corners and
+one beveled corner}
 
 \sa bevel
 //! [bevel-properties]

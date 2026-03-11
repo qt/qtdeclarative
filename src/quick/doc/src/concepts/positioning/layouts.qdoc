@@ -28,6 +28,7 @@ graphical types:
 
 \div {class="float-right"}
 \inlineimage qml-column.png
+             {Three rectangles stacked vertically labeled Books, Music, Movies}
 \enddiv
 
 \l Column items are used to vertically arrange items. The following example
@@ -44,6 +45,7 @@ must be added to a parent Rectangle, if desired.
 
 \div {class="float-right"}
 \inlineimage qml-row.png
+             {Three rounded rectangles arranged horizontally}
 \enddiv
 
 \l Row items are used to horizontally arrange items. The following example
@@ -60,6 +62,7 @@ left around the edges of the horizontally centered Row item.
 
 \div {class="float-right"}
 \inlineimage qml-grid-spacing.png
+             {Four colored rectangles in a 2-by-2 grid with spacing}
 \enddiv
 
 \l Grid items are used to place items in a grid or table arrangement.
@@ -80,7 +83,9 @@ at the appropriate places in the Grid definition.
 
 \div {class="float-right"}
 \inlineimage qml-flow-text1.png
+             {Text items wrapped in a narrow Flow container}
 \inlineimage qml-flow-text2.png
+             {Text items wrapped in a wider Flow container}
 \enddiv
 
 \l Flow items are used to place items like words on a page, with rows or

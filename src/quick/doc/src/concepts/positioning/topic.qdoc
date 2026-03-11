@@ -67,7 +67,7 @@ Thus, the following example will display two rectangles positioned manually:
         }
         \endqml
     \li
-        \image manual-layout.png
+        \image manual-layout.png {Green and yellow rectangles with manual positioning}
 \endtable
 
 \section1 Positioning With Bindings

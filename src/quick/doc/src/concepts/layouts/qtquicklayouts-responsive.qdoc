@@ -42,6 +42,8 @@
 
     \div {class="float-right"}
     \inlineimage simpleProxy.png
+                 {Narrow window with stacked layout and wide window with
+                 side-by-side layout}
     \enddiv
 
     Various levels of layouts and items can be nested but \l {Item}{Items} can only be moved within a their \l{Item::parent}{Item.parent}.
@@ -83,6 +85,7 @@
 
     \div {class="float-right"}
     \image qtquicklayouts-example-responsivelayouts.png
+           {Two windows showing numbered grid tiles in different arrangements}
     \enddiv
 
 
