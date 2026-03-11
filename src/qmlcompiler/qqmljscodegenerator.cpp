@@ -4439,8 +4439,11 @@ QString QQmlJSCodeGenerator::convertStored(
         if (isExtension) {
             // We typically use private inheritance for the foreign/extension trick.
             // Therefore we need to jump through some hoops to extract the actual value here.
-            return u"reinterpret_cast<%1 &&>(std::forward<%2>(%2(%3)))"_s.arg(
-                    to->internalName(), to->extensionType().scope->internalName(), argument);
+            return u"[](auto &&arg) { "
+                    "%1 wrapper(std::forward<decltype(arg)>(arg)); "
+                    "return %2(reinterpret_cast<%2 &>(wrapper)); "
+                    "}(%3)"_s.arg(
+                           to->extensionType().scope->internalName(), to->internalName(), argument);
         }
 
         return u"%1(%2)"_s.arg(to->internalName(), argument);
