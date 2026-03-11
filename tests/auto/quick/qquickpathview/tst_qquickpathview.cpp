@@ -2322,7 +2322,7 @@ void tst_QQuickPathView::nestedinFlickable()
 
     // no further moves after the initial move beyond threshold
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(73,219));
-    QTRY_COMPARE(movingSpy.size(), 2);
+    QTRY_COMPARE_WITH_TIMEOUT(movingSpy.size(), 2, 2s);
     QTRY_COMPARE(moveEndedSpy.size(), 1);
     QCOMPARE(moveStartedSpy.size(), 1);
     // Flickable should not handle this
