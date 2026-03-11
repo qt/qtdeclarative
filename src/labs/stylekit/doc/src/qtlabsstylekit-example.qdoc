@@ -39,4 +39,7 @@
     \sa {Qt Labs StyleKit}, Style, Theme
 
     \include examples-run.qdocinc
+
+    \note This example requires Qt Shader Tools, an optional library available
+        through the Qt Maintenance Tool.
 */
