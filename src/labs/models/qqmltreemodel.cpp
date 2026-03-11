@@ -473,6 +473,7 @@ QModelIndex QQmlTreeModel::index(int row, int column, const QModelIndex &parent)
     \table
 
     \row \li \inlineimage treemodel.svg
+                          {Tree diagram showing nodes A through F with index paths}
     \li \list
 
     \li The root of the tree is special, as it can be referenced by an invalid

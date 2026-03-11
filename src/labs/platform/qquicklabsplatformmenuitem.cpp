@@ -30,6 +30,7 @@ QT_BEGIN_NAMESPACE
     The MenuItem type provides a QML API for native platform menu items.
 
     \image qtlabsplatform-menu.png
+           {Native menu with Zoom In and Zoom Out items}
 
     A menu item consists of an \l icon, \l text, and \l shortcut.
 

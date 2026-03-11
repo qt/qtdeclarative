@@ -6,6 +6,8 @@
     \examplecategory {Data Processing & I/O}
     \brief A collection of QML local storage examples.
     \borderedimage qml-localstorage-example.png
+               {Activity tracker with trip entries showing dates,
+               descriptions, and distances}
 
     \e{Local Storage} is a collection of small QML examples relating to
     Qt Quick's \l{local storage} functionality.

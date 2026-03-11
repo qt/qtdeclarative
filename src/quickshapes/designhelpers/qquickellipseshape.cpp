@@ -577,7 +577,7 @@ void QQuickEllipseShapePrivate::updatePath()
 
     \snippet ellipseshape.qml ellipseShape
 
-    \image path-ellipseshape.png
+    \image path-ellipseshape.png {Ellipse with a pie slice cut out}
 */
 QQuickEllipseShape::QQuickEllipseShape(QQuickItem *parent)
     : QQuickShape(*(new QQuickEllipseShapePrivate), parent)

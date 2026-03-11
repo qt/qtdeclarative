@@ -9,6 +9,7 @@
     \ingroup qtquickcontrols-examples
 
     \image qtlabsstylekit-example.webp
+           {StyleKit demo showing buttons, checkboxes, sliders, and settings}
 
     This example shows how to style applications with \l {Qt Labs StyleKit}{StyleKit}.
     It includes several styles that each demonstrate different aspects of styling:

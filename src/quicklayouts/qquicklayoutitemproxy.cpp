@@ -64,6 +64,8 @@ QT_BEGIN_NAMESPACE
 
     \div {class="float-right"}
     \inlineimage simpleProxy.png
+                 {Narrow window with stacked layout and wide window with
+                 side-by-side layout}
     \enddiv
 
     The LayoutItemProxy can also be used without layouts, e.g. by anchoring it

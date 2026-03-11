@@ -26,6 +26,7 @@ QT_BEGIN_NAMESPACE
     \table 70%
     \row
     \li \image rectangularshadow-example-1.png
+               {Rounded rectangle with soft shadow offset to upper left}
     \li \qml
     import QtQuick
     import QtQuick.Effects
@@ -96,23 +97,31 @@ QT_BEGIN_NAMESPACE
     \li offset: (0, 0) \br
         blur: 20 \br
         spread: 0 \br
-    \li \image rectangularshadow-css-1.png
-    \li \image rectangularshadow-item-1.png
+    \li \image rectangularshadow-css-1.png {CSS box-shadow with blur 20}
+    \li \image rectangularshadow-item-1.png {RectangularShadow with blur 20}
     \li \image rectangularshadow-itemblur-1.png
+               {RectangularShadow with blur 24 for closer CSS match}
     \row
     \li offset: (-10, -20) \br
         blur: 40 \br
         spread: 0 \br
     \li \image rectangularshadow-css-2.png
+               {CSS box-shadow with offset and blur 40}
     \li \image rectangularshadow-item-2.png
+               {RectangularShadow with offset and blur 40}
     \li \image rectangularshadow-itemblur-2.png
+               {RectangularShadow with blur 48 for closer CSS match}
     \row
     \li offset: (-10, -20) \br
         blur: 40 \br
         spread: 10 \br
     \li \image rectangularshadow-css-3.png
+               {CSS box-shadow with offset, blur 40, and spread 10}
     \li \image rectangularshadow-item-3.png
+               {RectangularShadow with offset, blur 40, and spread 10}
     \li \image rectangularshadow-itemblur-3.png
+               {RectangularShadow with blur 48 and spread 10 for closer CSS
+               match}
     \endtable
 
 

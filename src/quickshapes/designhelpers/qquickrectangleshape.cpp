@@ -416,7 +416,7 @@ void QQuickRectangleShapePrivate::calculateIndependentRadii()
 
     \snippet rectangleshape-bevel.qml rectangleShape
 
-    \image pathrectangle-bevel.png
+    \image pathrectangle-bevel.png {Green rectangle with beveled corners}
 */
 
 QQuickRectangleShape::QQuickRectangleShape(QQuickItem *parent)

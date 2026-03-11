@@ -67,6 +67,7 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \table 70%
     \row
     \li \image multieffect-example1.png
+               {Qt logo in grayscale showing full desaturation effect}
     \li \qml
         import QtQuick
         import QtQuick.Effects
@@ -97,6 +98,7 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \table 70%
     \row
     \li \image multieffect-example1.png
+               {Qt logo in grayscale showing full desaturation effect}
     \li \qml
         import QtQuick
         import QtQuick.Effects
@@ -120,6 +122,8 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \table 70%
     \row
     \li \image multieffect-example2.png
+               {Qt logo with green glow showing brightness, saturation, and
+               blur effects combined}
     \li \qml
         import QtQuick
         import QtQuick.Effects
@@ -145,6 +149,8 @@ Q_STATIC_LOGGING_CATEGORY(lcQuickEffect, "qt.quick.effects")
     \table 70%
     \row
     \li \image multieffect-example3.png
+               {Four stages of Qt logo fading with mask and colorization,
+               from visible green to dissolved pink particles}
     \li \qml
         import QtQuick
         import QtQuick.Effects
@@ -250,6 +256,8 @@ void QQuickMultiEffect::setSource(QQuickItem *item)
     Note that \l paddingRect is always added to the size.
 
     \image multieffect-example4.png
+           {Blurred images comparing autoPaddingEnabled true with extra
+           space versus false with clipped edges}
 
     \sa paddingRect
 
@@ -282,6 +290,8 @@ void QQuickMultiEffect::setAutoPaddingEnabled(bool enabled)
     false so that the shadow fits inside the MultiEffect item.
 
     \image multieffect-example5.png
+           {Two Qt logos with shadows comparing paddingRect values, showing
+           clipped shadow at zero versus full shadow with padding}
 
     \sa autoPaddingEnabled
 

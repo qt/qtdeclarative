@@ -1959,6 +1959,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
     \div {class="float-right"}
     \inlineimage listmodel.png
+                 {List showing Apple, Orange, and Banana with prices}
     \enddiv
 
     \snippet qml/listmodel/listmodel.qml 0
@@ -1983,6 +1984,7 @@ void DynamicRoleModelNodeMetaObject::propertyWritten(int index)
 
     \div {class="float-right"}
     \inlineimage listmodel-nested.png
+                 {List showing fruits with nested attribute data}
     \enddiv
 
     \snippet qml/listmodel/listmodel-nested.qml delegate

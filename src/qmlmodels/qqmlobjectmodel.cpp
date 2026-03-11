@@ -256,6 +256,7 @@ quint64 QQmlObjectModelPrivate::_q_createJSWrapper(QQmlV4ExecutionEnginePtr engi
     \endcode
 
     \image objectmodel.png
+           {Three colored rectangles stacked in a ListView}
 
     \sa {Qt Quick Examples - Views}
 */

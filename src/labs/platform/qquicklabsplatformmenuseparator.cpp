@@ -18,6 +18,7 @@ QT_BEGIN_NAMESPACE
     that has the \l {MenuItem::}{separator} property set to \c true by default.
 
     \image qtlabsplatform-menubar.png
+           {Native menubar with Edit menu showing Cut, Copy, and Paste}
 
     \labs
 

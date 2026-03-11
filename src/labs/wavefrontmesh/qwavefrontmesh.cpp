@@ -94,6 +94,7 @@ public:
     \table
     \row
     \li \image qtlabs-wavefrontmesh.png
+              {Torus shape with gradient texture coordinates}
     \li \qml
         import QtQuick 2.\1
         import Qt.labs.wavefrontmesh 1.\1

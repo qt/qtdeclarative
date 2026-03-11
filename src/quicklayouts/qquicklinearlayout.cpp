@@ -29,7 +29,7 @@
     \input layout.qdocinc attached-properties
     \endlist
 
-    \image rowlayout.png
+    \image rowlayout.png {Two rectangles side by side showing their dimensions}
 
     \code
     RowLayout {
@@ -89,7 +89,7 @@
     \input layout.qdocinc attached-properties
     \endlist
 
-    \image columnlayout.png
+    \image columnlayout.png {Three rectangles stacked vertically: red, green, blue}
 
     \code
     ColumnLayout{
@@ -154,7 +154,7 @@
     columns the layout can have, before the auto-positioning wraps back to the beginning of the
     next row. The \l columns property is only used when \l flow is  \c GridLayout.LeftToRight.
 
-    \image gridlayout.png
+    \image gridlayout.png {Text arranged in grid: Three, words, in, a, row}
 
     \code
     GridLayout {
