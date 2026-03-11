@@ -798,7 +798,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintModule(
     m_logger->setCode(u""_s);
     m_logger->setSilent(silent || json);
 
-    const QQmlJSImporter::ImportedTypes types = m_importer.importModule(module);
+    const QQmlJSImporter::ImportedTypes types =
+            m_importer.importModule(module, QQmlJS::PrecedenceValues::Default);
 
     QList<QQmlJS::DiagnosticMessage> importWarnings =
             m_importer.takeGlobalWarnings() + types.warnings();

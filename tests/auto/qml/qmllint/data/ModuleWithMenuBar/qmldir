@@ -1,0 +1,3 @@
+module ModuleWithMenuBar
+MenuBar 1.0 MenuBar.qml
+

@@ -538,7 +538,8 @@ void QQmlJSImportVisitor::importBaseModules()
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
     if (!m_logger->filePath().endsWith(u".qmltypes"_s)) {
-        m_rootScopeImports.add(m_importer->importDirectory(m_implicitImportDirectory));
+        m_rootScopeImports.add(m_importer->importDirectory(
+                m_implicitImportDirectory, QQmlJS::PrecedenceValues::ImplicitImport));
 
         // Import all possible resource directories the file may belong to.
         // This is somewhat fuzzy, but if you're mapping the same file to multiple resource
@@ -550,7 +551,8 @@ void QQmlJSImportVisitor::importBaseModules()
                 const qsizetype lastSlash = path.lastIndexOf(QLatin1Char('/'));
                 if (lastSlash == -1)
                     continue;
-                m_rootScopeImports.add(m_importer->importDirectory(path.first(lastSlash)));
+                m_rootScopeImports.add(m_importer->importDirectory(
+                        path.first(lastSlash), QQmlJS::PrecedenceValues::ImplicitImport));
             }
         }
     }
@@ -564,7 +566,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
     // if the current file  is a QML file, make it available, too
     if (auto elementName = QFileInfo(m_logger->filePath()).baseName();
         !elementName.isEmpty() && elementName[0].isUpper()) {
-        m_rootScopeImports.setType(elementName, { m_exportedRootScope, QTypeRevision {} });
+        m_rootScopeImports.setType(elementName,
+                                   { m_exportedRootScope, QTypeRevision{ },
+                                     QQmlJS::PrecedenceValues::ImplicitImport });
     }
 
     return true;
@@ -1877,7 +1881,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             m_currentScope->setIsInlineComponent(true);
             m_currentScope->setInlineComponentName(name);
             m_currentScope->setOwnModuleName(m_exportedRootScope->moduleName());
-            m_rootScopeImports.setType(name, { m_currentScope, revision });
+            m_rootScopeImports.setType(
+                    name, { m_currentScope, revision, QQmlJS::PrecedenceValues::InlineComponent });
             m_nextIsInlineComponent = false;
         }
 
@@ -2733,13 +2738,14 @@ QList<QQmlJS::DiagnosticMessage> QQmlJSImportVisitor::importFromHost(
     if (fileInfo.isFile()) {
         const auto scope = m_importer->importFile(path);
         const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
-        m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
+        m_rootScopeImports.setType(actualPrefix,
+                                   { scope, QTypeRevision(), QQmlJS::PrecedenceValues::Default });
         addImportWithLocation(actualPrefix, location, false);
         return {};
     }
 
     if (fileInfo.isDir()) {
-        auto scopes = m_importer->importDirectory(path, prefix);
+        auto scopes = m_importer->importDirectory(path, QQmlJS::PrecedenceValues::Default, prefix);
         const auto types = scopes.types();
         const auto warnings = scopes.warnings();
         m_rootScopeImports.add(std::move(scopes));
@@ -2770,12 +2776,13 @@ QList<QQmlJS::DiagnosticMessage> QQmlJSImportVisitor::importFromQrc(
         const auto scope = m_importer->importFile(entry.filePath);
         const QString actualPrefix =
                 prefix.isEmpty() ? QFileInfo(entry.resourcePath).baseName() : prefix;
-        m_rootScopeImports.setType(actualPrefix, { scope, QTypeRevision() });
+        m_rootScopeImports.setType(actualPrefix,
+                                   { scope, QTypeRevision(), QQmlJS::PrecedenceValues::Default });
         addImportWithLocation(actualPrefix, location, false);
         return {};
     }
 
-    auto scopes = m_importer->importDirectory(path, prefix);
+    auto scopes = m_importer->importDirectory(path, QQmlJS::PrecedenceValues::Default, prefix);
     const auto types = scopes.types();
     const auto warnings = scopes.warnings();
     m_rootScopeImports.add(std::move(scopes));
@@ -2832,8 +2839,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     QStringList staticModulesProvided;
 
     auto imported = m_importer->importModule(
-            path, prefix, import->version ? import->version->version : QTypeRevision(),
-            &staticModulesProvided);
+            path, QQmlJS::PrecedenceValues::Default, prefix,
+            import->version ? import->version->version : QTypeRevision(), &staticModulesProvided);
     const auto types = imported.types();
     const auto warnings = imported.warnings();
     m_rootScopeImports.add(std::move(imported));

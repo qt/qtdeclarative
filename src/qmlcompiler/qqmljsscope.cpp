@@ -713,7 +713,8 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
         listType->setFilePath(self->filePath());
     }
 
-    const QQmlJSImportedScope element = {self, QTypeRevision()};
+    const QQmlJS::ContextualType element = { self, QTypeRevision(),
+                                             QQmlJS::PrecedenceValues::Default };
     const QQmlJSImportedScope array = {arrayType, QTypeRevision()};
     QQmlJS::ContextualTypes contextualTypes(
             QQmlJS::ContextualTypes::INTERNAL,

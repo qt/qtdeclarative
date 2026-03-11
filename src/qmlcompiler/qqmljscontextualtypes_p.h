@@ -22,6 +22,29 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
+
+// note: like QQmlImportInstance::Precedence, except that inline components are 0 and
+// "Precedence::Highest" is 1 instead of 0.
+enum PrecedenceValues : quint8 {
+    InlineComponent = 0,
+    Default = 1,
+    ImplicitImport = std::numeric_limits<quint8>::max() >> 1
+};
+
+struct ContextualType : public ImportedScope<QQmlJSScope::ConstPtr>
+{
+    ContextualType() : m_precedence(std::numeric_limits<quint8>::max()) { }
+    ContextualType(const ImportedScope<QQmlJSScope::ConstPtr> &type, quint8 precedence)
+        : ImportedScope<QQmlJSScope::ConstPtr>(type), m_precedence(precedence)
+    {
+    }
+    ContextualType(const QQmlJSScope::ConstPtr &type, QTypeRevision revision, quint8 precedence)
+        : ImportedScope<QQmlJSScope::ConstPtr>({ type, revision }), m_precedence(precedence)
+    {
+    }
+    quint8 m_precedence;
+};
+
 /*! \internal
  *  Maps type names to types and the compile context of the types. The context can be
  *  INTERNAL (for c++ and synthetic jsrootgen types) or QML (for qml types).
@@ -32,7 +55,7 @@ struct ContextualTypes
 
     ContextualTypes(
             CompileContext context,
-            const QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> &types,
+            const QHash<QString, ContextualType> &types,
             const QMultiHash<QQmlJSScope::ConstPtr, QString> &names,
             const QQmlJSScope::ConstPtr &arrayType)
         : m_types(types)
@@ -46,15 +69,10 @@ struct ContextualTypes
 
     bool hasType(const QString &name) const { return m_types.contains(name); }
 
-    ImportedScope<QQmlJSScope::ConstPtr> type(const QString &name) const { return m_types[name]; }
+    ContextualType type(const QString &name) const { return m_types[name]; }
     QString name(const QQmlJSScope::ConstPtr &type) const { return m_names[type]; }
 
-    void setType(const QString &name, const ImportedScope<QQmlJSScope::ConstPtr> &type)
-    {
-        if (!name.startsWith(u'$'))
-            m_names.insert(type.scope, name);
-        m_types.insert(name, type);
-    }
+    void setType(const QString &name, const ContextualType type);
     void clearType(const QString &name)
     {
         auto &scope = m_types[name].scope;
@@ -70,21 +88,15 @@ struct ContextualTypes
         return it != m_types.constEnd() && it->scope.isNull();
     }
 
-    void addTypes(ContextualTypes &&types)
-    {
-        Q_ASSERT(types.m_context == m_context);
-        insertNames(types);
-        m_types.insert(std::move(types.m_types));
-    }
-
     void addTypes(const ContextualTypes &types)
     {
         Q_ASSERT(types.m_context == m_context);
-        insertNames(types);
-        m_types.insert(types.m_types);
+        for (auto it = types.m_types.cbegin(), end = types.m_types.cend(); it != end; ++it) {
+            setType(it.key(), it.value());
+        }
     }
 
-    const QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> &types() const { return m_types; }
+    const QHash<QString, ContextualType> &types() const { return m_types; }
     const auto &names() const { return m_names; }
 
     void clearTypes()
@@ -94,16 +106,7 @@ struct ContextualTypes
     }
 
 private:
-    void insertNames(const ContextualTypes &types) {
-        for (auto it = types.m_types.constBegin(), end = types.m_types.constEnd();
-             it != end; ++it) {
-            const QString &name = it.key();
-            if (!name.startsWith(u'$'))
-                m_names.insert(it->scope, name);
-        }
-    }
-
-    QHash<QString, ImportedScope<QQmlJSScope::ConstPtr>> m_types;
+    QHash<QString, ContextualType> m_types;
     QMultiHash<QQmlJSScope::ConstPtr, QString> m_names;
     CompileContext m_context;
 

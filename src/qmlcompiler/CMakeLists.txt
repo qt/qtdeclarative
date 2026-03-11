@@ -18,7 +18,7 @@ qt_internal_add_module(QmlCompiler
         qqmljscompiler.cpp qqmljscompiler_p.h
         qqmljscompilerstats.cpp qqmljscompilerstats_p.h
         qqmljscompilerstatsreporter.cpp qqmljscompilerstatsreporter_p.h
-        qqmljscontextualtypes_p.h
+        qqmljscontextualtypes_p.h qqmljscontextualtypes.cpp
         qqmljsfunctioninitializer.cpp qqmljsfunctioninitializer_p.h
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
