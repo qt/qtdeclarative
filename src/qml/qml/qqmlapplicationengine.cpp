@@ -223,9 +223,9 @@ void QQmlApplicationEnginePrivate::updateTranslationDirectory(const QUrl &url)
   }
   \endcode
 
-  Unlike QQuickView, QQmlApplicationEngine does not automatically create a root
-  window. If you are using visual items from Qt Quick, you will need to place
-  them inside of a \l [QML] {Window}.
+  \note Unlike QQuickView, QQmlApplicationEngine does not automatically create a
+  root window. If you are using visual items from Qt Quick, you will need to
+  place them inside a \l [QML] {Window}.
 
   You can also use QCoreApplication with QQmlApplicationEngine, if you are not using any QML modules which require a QGuiApplication (such as \c QtQuick).
 
