@@ -16,6 +16,7 @@ Each item can be thought of as having a set of 7 invisible "anchor lines":
 and \l {Item::anchors.bottom}{bottom}.
 
 \image edges_qml.png
+       {Rectangle showing six anchor lines: left, right, top, bottom, and centers}
 
 The baseline (not pictured above) corresponds to the imaginary line on which
 text would sit. For items with no text it is the same as \e top.
@@ -29,7 +30,7 @@ Rectangle { id: rect2; anchors.left: rect1.right; ... }
 
 In this case, the left edge of \e rect2 is bound to the right edge of \e rect1, producing the following:
 
-\image edge1.png
+\image edge1.png {rect1 and rect2 side by side with left edge anchored to right}
 
 
 You can specify multiple anchors. For example:
@@ -39,7 +40,7 @@ Rectangle { id: rect1; ... }
 Rectangle { id: rect2; anchors.left: rect1.right; anchors.top: rect1.bottom; ... }
 \endcode
 
-\image edge3.png
+\image edge3.png {rect2 positioned below and to the right of rect1}
 
 By specifying multiple horizontal or vertical anchors you can control the size of an item. Below,
 \e rect2 is anchored to the right of \e rect1 and the left of \e rect3. If either of the blue
@@ -51,7 +52,7 @@ Rectangle { id: rect2; anchors.left: rect1.right; anchors.right: rect3.left; ...
 Rectangle { id: rect3; x: 150; ... }
 \endcode
 
-\image edge4.png
+\image edge4.png {rect2 stretched between rect1 on left and rect3 on right}
 
 There are also some convenience anchors. \c anchors.fill is a convenience that
 is the same as setting the left, right, top, and bottom anchors to the
@@ -74,6 +75,7 @@ specify the same margin value for all four edges. Anchor offsets are specified u
 \l {Item::anchors.baselineOffset}{baselineOffset}.
 
 \image margins_qml.png
+       {Rectangle with labeled margin areas: top, bottom, left, right}
 
 The following example specifies a left margin:
 
@@ -84,7 +86,7 @@ Rectangle { id: rect2; anchors.left: rect1.right; anchors.leftMargin: 5; ... }
 
 In this case, a margin of 5 pixels is reserved to the left of \e rect2, producing the following:
 
-\image edge2.png
+\image edge2.png {rect1 and rect2 side by side with margin gap between them}
 
 \note Anchor margins only apply to anchors; they are \e not a generic means of applying margins to an \l Item.
 If an anchor margin is specified for an edge but the item is not anchored to any item on that
@@ -133,6 +135,7 @@ carefully ordered, or they may produce unexpected outcomes. The following exampl
     \endcode
 \li
     \image anchor_ordering_bad.png
+           {Three steps showing rect1 stretching unexpectedly when reanchoring}
 \endtable
 
 
@@ -159,6 +162,7 @@ as shown below:
     \endqml
 \li
     \image anchor_ordering.png
+           {Three steps showing rect1 correctly moving from left to right anchor}
 \endtable
 
 Because the evaluation order of bindings is not defined, it is not recommended to change anchors via

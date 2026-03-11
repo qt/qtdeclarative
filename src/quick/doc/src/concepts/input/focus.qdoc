@@ -57,7 +57,7 @@ pressing the \c A, \c B, or \c C keys modifies the text appropriately.
 
 \snippet qml/focus/basicwidget.qml focus true
 
-\image declarative-qmlfocus1.png
+\image declarative-qmlfocus1.png {Blue rounded widget showing Key C was pressed}
 
 However, were the above example to be used as a reusable or imported component,
 this simple use of the \c focus property is no longer sufficient.
@@ -78,6 +78,7 @@ We want the first \c MyWidget object to have the focus, so we set its
 the second widget receives the focus.
 
 \image declarative-qmlfocus2.png
+       {Two stacked widgets with second green one showing Key A was pressed}
 
 Looking at both \c MyWidget and \c window code, the problem is evident - there
 are three types that set the \c focus property to \c true. The two
@@ -102,6 +103,7 @@ visual result shown.
 \snippet qml/focus/myfocusscopewidget.qml widget in focusscope
 
 \image declarative-qmlfocus3.png
+       {Two stacked widgets with first blue one showing Key B was pressed}
 
 
 Conceptually \e {focus scopes} are quite simple.
@@ -137,6 +139,7 @@ The MyClickableWidget code:
 \snippet qml/focus/MyClickableWidget.qml clickable in focusscope
 
 \image declarative-qmlfocus4.png
+       {Two clickable widgets each displaying their last pressed key}
 
 When a QML \l Item explicitly relinquishes focus (by setting its
 \c focus property to \c false while it has active focus), the
@@ -163,7 +166,7 @@ print the name of the current list item.
 
 \snippet qml/focus/advancedFocus.qml FocusScope delegate
 
-\image declarative-qmlfocus5.png
+\image declarative-qmlfocus5.png {List with three editable names: Bob, John, Michael}
 
 While the example is simple, there is a lot going on behind the scenes. Whenever
 the current item changes, the \l ListView sets the delegate's \c {Item::focus}

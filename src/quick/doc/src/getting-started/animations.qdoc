@@ -54,6 +54,7 @@ inside the animation. Here are some examples of different ways to do this:
 \snippet qmlapp/usecases/animations.qml constant
 \snippet qmlapp/usecases/animations.qml scripted
 \image qmlapp/qml-uses-animation.png
+       {Red, green, blue, and yellow squares in staggered positions}
 
 More information about animations can be found on the
 \l{Important Concepts in Qt Quick - States, Transitions and Animations} page.

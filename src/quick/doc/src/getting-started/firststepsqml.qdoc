@@ -112,6 +112,8 @@ Inserting the \l[QtQuickControls2]{ApplicationWindow} type is a good starting
 point for creating applications. An application UI has this basic layout:
 
 \image applicationwindow.png
+       {ApplicationWindow layout with menu bar, tool bar, content area,
+       and status bar}
 
 Within each area, different \e controls may be added and connected to form
 an application. For example, the following snippet is a basic application that
@@ -338,6 +340,7 @@ That type may now be re-used multiple times in the application, as follows:
 \row
 \li \snippet qmlapp/qml-extending-types/components/application.qml 0
 \li \borderedimage qmlapp/qml-extending-types.gif
+                   {MessageLabel components showing debug, warning, and critical messages}
 \endtable
 
 

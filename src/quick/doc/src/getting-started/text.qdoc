@@ -39,6 +39,7 @@ Text can be positioned like any other Item.
 \section1 Example Code
 \snippet qmlapp/usecases/text.qml 0
 \image qmlapp/qml-uses-text.png
+       {Text displayed in various styles including title, body, and italic}
 
 \section1 Internationalization and scalability
 

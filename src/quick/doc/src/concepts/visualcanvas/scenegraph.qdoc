@@ -175,6 +175,7 @@ threaded render loop and OpenGL. The steps are the same with other graphics
 APIs as well, apart from the OpenGL context specifics.
 
 \image sg-renderloop-threaded.png
+       {Flowchart showing GUI and Render thread synchronization}
 
 \list 1
 
@@ -270,6 +271,7 @@ The following is a simplified illustration of the frame rendering sequence in
 the non-threaded renderer.
 
 \image sg-renderloop-singlethreaded.png
+       {Flowchart showing single-threaded render loop sequence}
 
 
 \section2 Driving Animations
@@ -714,6 +716,7 @@ with multiple windows.
   Consider the following use case:
 
   \image visualcanvas_list.png
+         {Three list items with icons showing John Doe and Jane Doe entries}
 
   The simplest way of drawing this list is on a cell-by-cell basis. First,
   the background is drawn. This is a rectangle of a specific color. In
@@ -785,6 +788,7 @@ with multiple windows.
   batched and which can not.
 
   \image visualcanvas_overlap.png
+         {Batchable items side by side versus non-batchable overlapping items}
 
   In the left-most case, the blue backgrounds can be drawn in one call
   and the two text elements in another call, as the texts only overlap
@@ -1179,6 +1183,7 @@ with multiple windows.
   is usually visualized.
 
   \image visualize-clip.png
+         {Items with clipping areas highlighted in red}
   \c QSG_VISUALIZE=clip
 
   \section2 Visualizing Changes

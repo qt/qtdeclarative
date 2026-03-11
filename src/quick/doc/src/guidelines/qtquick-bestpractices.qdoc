@@ -455,6 +455,7 @@ With this in place, your application's UI should scale depending
 on the display resolution on offer.
 
 \image qtquickcontrols-gallery-welcome.png
+       {Gallery example welcome screen with Qt logo}
 
 \section2 Related Information
 

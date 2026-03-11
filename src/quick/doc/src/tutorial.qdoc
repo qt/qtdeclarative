@@ -36,7 +36,7 @@ Tutorial chapters:
 This first program is a very simple "Hello world" example that introduces some basic QML concepts.
 The picture below is a screenshot of this program.
 
-\image declarative-tutorial1.png
+\image declarative-tutorial1.png {Hello world! in black text on gray background}
 
 Here is the QML code for the application:
 
@@ -95,6 +95,7 @@ qml tutorials/helloworld/tutorial1.qml
 This chapter adds a color picker to change the color of the text.
 
 \image declarative-tutorial2.png
+       {Green Hello world! text with six colored cells below}
 
 Our color picker is made of six cells with different colors.
 To avoid writing the same code multiple times for each cell, we create a new \c Cell component.
@@ -167,6 +168,7 @@ In this chapter, we make this example a little bit more dynamic by introducing s
 We want our text to move to the bottom of the screen, rotate and become red when clicked.
 
 \image declarative-tutorial3_animation.gif
+       {Animated text moving, rotating, and changing color when clicked}
 
 Here is the QML code:
 

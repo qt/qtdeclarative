@@ -49,6 +49,7 @@ Rectangle {
 \endcode
 
 \image visual-coordinates-example.png
+       {Red rectangle with nested blue and green rectangles showing coordinate positions}
 
 In this image the black dot is positioned at (0,0) within the item coordinates of the red rectangle. If the red
 rectangle was the root item of the scene, then the black dot would also be positioned at (0,0) in scene coordinates.

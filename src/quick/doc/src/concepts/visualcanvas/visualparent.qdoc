@@ -95,6 +95,7 @@ So in the following example, the blue rectangle will be drawn on top of the gree
 
 \snippet qml/visualparent.qml 0
 \image visual-parent-example.png
+       {Green rectangle with blue rectangle overlapping, blue drawn on top}
 
 Because the algorithm recurses through the visual item hierarchy, any children of the green rectangle will also be drawn beneath
 the blue rectangle and beneath any of the blue rectangle's children.
@@ -108,6 +109,7 @@ hierarchy.
 
 \snippet qml/visualparent2.qml 0
 \image visual-parent-example2.png
+       {Green, red, and blue rectangles with red beneath blue despite high z value}
 
 In the above example, the red rectangle has a high z value, but is still stacked below the blue rectangle. This is
 because it is a child of the green rectangle, and the green rectangle is a sibling of the blue rectangle. The z value

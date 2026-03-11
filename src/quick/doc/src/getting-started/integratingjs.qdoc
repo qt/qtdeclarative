@@ -45,6 +45,7 @@ the example QML file below.
 \snippet qmlapp/usecases/integratingjs.qml 0
 
 \image qmlapp/qml-uses-integratingjs.png
+       {Green square rotated by JavaScript-calculated angle}
 
 For further details on the JavaScript engine used by QML, as well as the
 difference from browser JS, see the full documentation on \l {JavaScript
