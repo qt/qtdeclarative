@@ -109,7 +109,7 @@ public:
         return m_imports.hasType(name) && !m_imports.type(name).scope;
     }
 
-    const QHash<QString, QQmlJS::ImportedScope<QQmlJSScope::ConstPtr>> &importedTypes() const
+    const QHash<QString, QQmlJS::ContextualType> &importedTypes() const
     {
         return m_imports.types();
     }

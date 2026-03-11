@@ -1741,6 +1741,17 @@ void TestQmllint::cleanQmlSnippet_data()
                                        "    }\n"
                                        "}"_s << defaultOptions;
     QTest::newRow("lowerCaseId") << u"id: root"_s << defaultOptions;
+    QTest::newRow("importPrecedence") << uR"(import QtQuick
+                                         import ModuleWithMenuBar
+                                         import QtQuick.Controls
+
+                                         Item {
+                                           width: comp1.custWidth
+                                           MenuBar {
+                                             id: comp1
+                                           }
+                                         })"_s
+                                      << defaultOptions;
     QTest::newRow("preferNonVarProperties_nonReadOnly")
             << u"property var i: 1     \n"_s
                u"property var r: 1.0   \n"_s
@@ -2365,6 +2376,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedPropertyBinding") << QStringLiteral("groupedPropertyBinding.qml");
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
     QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
+    QTest::newRow("ImportPrecedence") << QStringLiteral("Connections.qml");
     QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
     QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
