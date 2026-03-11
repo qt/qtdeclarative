@@ -72,6 +72,14 @@ class QQmlJSImportVisitor;
 class QQmlJSLogger;
 class Q_QMLCOMPILER_EXPORT QQmlJSImporter
 {
+    // In the list of QML types we prefix unresolvable QML names with $anonymous$, and C++
+    // names with $internal$. This is to avoid clashes between them.
+    // In the list of C++ types we insert types that don't have a C++ name as their
+    // QML name prefixed with $anonymous$.
+    static inline constexpr QLatin1String anonPrefix = QLatin1String("$anonymous$");
+    static inline constexpr QLatin1String internalPrefix = QLatin1String("$internal$");
+    static inline constexpr QLatin1String modulePrefix = QLatin1String("$module$");
+
 public:
     struct ImportedTypes {
         ImportedTypes(QQmlJS::ContextualTypes &&types, QList<QQmlJS::DiagnosticMessage> &&warnings)
@@ -246,6 +254,12 @@ private:
                       bool isDependency = false, bool isFile = false);
     void processImport(
             const QQmlJS::Import &importDescription, const Import &import, AvailableTypes *types);
+    static void insertAliases(const QQmlJSScope::ConstPtr &scope, QTypeRevision revision,
+                              QQmlJSImporter::AvailableTypes *types);
+    void insertExports(const QQmlJS::Import &importDescription, const QQmlJSExportedScope &val,
+                       const QString &cppName,
+                       QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                       QQmlJSImporter::AvailableTypes *types);
     void importDependencies(
             const Import &import, AvailableTypes *types, const QString &prefix = QString(),
             QTypeRevision version = QTypeRevision(), bool isDependency = false);
