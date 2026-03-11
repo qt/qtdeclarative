@@ -15,6 +15,7 @@ of the data in a delegate allows the developer to dictate how to present or
 handle the data.
 
 \image modelview-overview.png
+       {Diagram showing Data flowing to Model, View, and Delegate components}
 \list
 \li \b Model - contains the data and its structure. There are several QML
 types for creating models.
@@ -73,6 +74,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     \snippet qml/listview-decorations.qml decorations
     \image listview-decorations.png
+           {List with highlighted Club Members header above Alice, Bob, Jane, Harry, Wendy}
 
     \section2 Mouse and Touch Handling
 
@@ -106,6 +108,7 @@ To visualize data, bind the view's \c model property to a model and the
     \l {qml-view-delegate}{delegate} property.
     \snippet qml/listview-sections.qml section
     \image listview-section.png
+           {List grouped by team: Crypto with Alice and Bob, QA with Jane and Victor, Graphics with Wendy}
 
 \target qml-view-delegate
 \section1 View Delegates
@@ -115,7 +118,7 @@ To visualize data, bind the view's \c model property to a model and the
     Items in a model are accessible through the \c index property as well as the
     item's properties.
     \snippet qml/listview.qml delegate
-    \image listview-setup.png
+    \image listview-setup.png {List showing Cat (default), Dog, Mouse, Rabbit, Horse}
 
     \section2 Positioning of View Delegates
 
@@ -451,7 +454,7 @@ To visualize data, bind the view's \c model property to a model and the
 \section1 Repeaters
 
 \div {class="float-right"}
-\inlineimage repeater-index.png
+\inlineimage repeater-index.png {Text items showing I'm item 0 through I'm item 9}
 \enddiv
 
 Repeaters create items from a template for use with positioners, using data
@@ -483,7 +486,7 @@ read-only \c modelData property that holds the string. For example:
 \table
    \row
    \li \snippet qml/repeaters/repeater.qml modeldata
-   \li \image repeater-modeldata.png
+   \li \image repeater-modeldata.png {Text showing Data: apples, Data: oranges, Data: pears}
 \endtable
 
 It is also possible to use a delegate as the template for the items created

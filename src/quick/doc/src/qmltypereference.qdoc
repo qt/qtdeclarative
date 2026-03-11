@@ -84,6 +84,7 @@ available when you import \c QtQuick.
 
     \div{float-right}
     \inlineimage declarative-colors.png
+                 {Color swatches showing various color formats}
     \enddiv
     \snippet qml/colors.qml colors
 

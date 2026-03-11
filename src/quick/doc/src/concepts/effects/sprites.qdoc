@@ -26,6 +26,8 @@ state transitions using the fewest number of intervening sprites (but ignoring r
 This allows you to easily insert a transitional animation between two different sprites.
 
 \image spriteenginegraph.png
+       {State diagram showing sprite transitions between standing, waiting,
+       walking, and jumping states}
 
 As an example, consider the above diagram which illustrates the sprites for a hypothetical 2D
 platform game character. The character starts by displaying the \e standing state. From this state,
@@ -58,6 +60,7 @@ edge of the file to a lower row starting from the left edge of the file (and whi
 previous row).
 
 \image spritecutting.png
+       {Grid showing frame numbering order in a sprite sheet}
 
 As an example, take the above image. For now, just consider the black numbers, and assume the squares are 40x40 pixels.
 Normally, the image is read from the top-left corner. If you specified the frame size as 40x40 pixels, and a frame count

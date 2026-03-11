@@ -71,8 +71,10 @@
     \table
         \row
             \li \image how-to-time-picker-light.png
+                       {Time picker dialog with circular selector in light theme}
                 \caption TimePickerDialog in its light theme.
             \li \image how-to-time-picker-dark.png
+                       {Time picker dialog with circular selector in dark theme}
                 \caption TimePickerDialog in its dark theme.
     \endtable
 
@@ -119,4 +121,5 @@
     \snippet how-tos/how-to-cpp-gauge/Main.qml file
 
     \image how-to-gauge.png
+           {Vertical gauge with value set to 75 on a 0 to 100 scale}
 */

@@ -34,6 +34,7 @@
     includes QML content and can only be built for Android.
 
     \image qtquick-for-android-comparisson.drawio.svg
+           {Comparison of Qt for Android and Qt Quick for Android workflows}
 
     The main objective of the Qt for Android approach is to let Qt handle most of the work
     of the architecture and boilerplate code of the app and let you focus on the
@@ -57,6 +58,7 @@
     you to insert QML content as an \l{Android: View}{Android View} in your project.
 
     \image qtquick-for-android-architecture.drawio.svg
+           {Architecture diagram showing Qt Quick embedded in an Android app}
 
     \section1 APIs
     \target Android Classes

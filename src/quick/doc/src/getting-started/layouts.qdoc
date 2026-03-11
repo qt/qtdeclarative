@@ -25,6 +25,7 @@ accomplished by setting the x and y coordinates to the appropriate bindings.
 \snippet qmlapp/usecases/layouts.qml direct
 
 \image qmlapp/qml-uses-layouts-direct.png
+       {Red square positioned using direct x and y coordinates}
 
 
 \section1 Anchors
@@ -42,6 +43,7 @@ For full details, see \l {Positioning with Anchors} and the documentation of the
 \snippet qmlapp/usecases/layouts.qml anchors
 
 \image qmlapp/qml-uses-layouts-anchors.png
+       {Green and orange rectangles positioned using anchors}
 
 
 \section1 Positioners
@@ -56,6 +58,7 @@ For full details see \l {Item Positioners}.
 \snippet qmlapp/usecases/layouts.qml positioners
 
 \image qmlapp/qml-uses-layouts-positioners.png
+       {Red, green, and blue squares arranged in a row using positioners}
 
 \section1 Layout Types
 
