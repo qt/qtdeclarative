@@ -37,72 +37,102 @@ T.ProgressBar {
         palette: control.palette
     }
 
-    contentItem: IndicatorDelegate {
-        quickControl: control
-        indicatorStyle: styleReader.indicator
-        secondProgress: control.visualPosition
+    StyleKitLayout {
+        id: progressBarLayout
+        container: control.contentItem
+        layoutItems: [
+            StyleKitLayoutItem {
+                id: indicatorItem
+                item: indicator
+                margins {
+                    left: styleReader.indicator.leftMargin
+                    right: styleReader.indicator.rightMargin
+                    top: styleReader.indicator.topMargin
+                    bottom: styleReader.indicator.bottomMargin
+                }
+                alignment: styleReader.indicator.alignment
+                fillWidth: styleReader.indicator.implicitWidth === Style.Stretch
+                fillHeight: styleReader.indicator.implicitHeight === Style.Stretch
+            }
+        ]
+    }
 
-        Connections {
-            target: control
-            function onIndeterminateChanged() {
-                if (indeterminate) {
-                    control.contentItem.firstProgress = 0
-                    control.contentItem.secondProgress = 0
-                    control.contentItem.indeterminateAnim.restart()
-                } else {
-                    control.contentItem.indeterminateAnim.stop()
-                    control.contentItem.firstProgress = 0
-                    control.contentItem.secondProgress = Qt.binding(()=>{ return control.visualPosition })
+    contentItem: Item {
+        implicitWidth: Math.max(indicator.implicitWidth, progressBarLayout.implicitWidth)
+        implicitHeight: Math.max(indicator.implicitHeight, progressBarLayout.implicitHeight)
+
+        IndicatorDelegate {
+            id: indicator
+            quickControl: control
+            indicatorStyle: styleReader.indicator
+            secondProgress: control.visualPosition
+            x: indicatorItem.x
+            y: indicatorItem.y
+            width: indicatorItem.width
+            height: indicatorItem.height
+
+            Connections {
+                target: control
+                function onIndeterminateChanged() {
+                    if (indeterminate) {
+                        control.contentItem.firstProgress = 0
+                        control.contentItem.secondProgress = 0
+                        control.contentItem.indeterminateAnim.restart()
+                    } else {
+                        control.contentItem.indeterminateAnim.stop()
+                        control.contentItem.firstProgress = 0
+                        control.contentItem.secondProgress = Qt.binding(()=>{ return control.visualPosition })
+                    }
                 }
             }
-        }
 
-        Behavior on firstProgress {
-            enabled: !control.indeterminate && !control.contentItem.indeterminateAnim.running
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.Linear
+            Behavior on firstProgress {
+                enabled: !control.indeterminate && !indicator.indeterminateAnim.running
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.Linear
+                }
             }
-        }
 
-        Behavior on secondProgress {
-            enabled: !control.indeterminate && !control.contentItem.indeterminateAnim.running
-            NumberAnimation {
-                duration: 100
-                easing.type: Easing.Linear
+            Behavior on secondProgress {
+                enabled: !control.indeterminate && !indicator.indeterminateAnim.running
+                NumberAnimation {
+                    duration: 100
+                    easing.type: Easing.Linear
+                }
             }
-        }
 
-        property Animation indeterminateAnim: SequentialAnimation {
-            running: control.indeterminate
-            loops: Animation.Infinite
-            NumberAnimation {
-                target: control.contentItem
-                property: "secondProgress"
-                to: 1
-                duration: 300
-                easing.type: Easing.Linear
-            }
-            NumberAnimation {
-                target: control.contentItem
-                property: "firstProgress"
-                to: 0.95
-                duration: 600
-                easing.type: Easing.OutExpo
-            }
-            NumberAnimation {
-                target: control.contentItem
-                property: "firstProgress"
-                to: 0
-                duration: 300
-                easing.type: Easing.Linear
-            }
-            NumberAnimation {
-                target: control.contentItem
-                property: "secondProgress"
-                to: 0.05
-                duration: 600
-                easing.type: Easing.OutExpo
+            property Animation indeterminateAnim: SequentialAnimation {
+                running: control.indeterminate
+                loops: Animation.Infinite
+                NumberAnimation {
+                    target: indicator
+                    property: "secondProgress"
+                    to: 1
+                    duration: 300
+                    easing.type: Easing.Linear
+                }
+                NumberAnimation {
+                    target: indicator
+                    property: "firstProgress"
+                    to: 0.95
+                    duration: 600
+                    easing.type: Easing.OutExpo
+                }
+                NumberAnimation {
+                    target: indicator
+                    property: "firstProgress"
+                    to: 0
+                    duration: 300
+                    easing.type: Easing.Linear
+                }
+                NumberAnimation {
+                    target: indicator
+                    property: "secondProgress"
+                    to: 0.05
+                    duration: 600
+                    easing.type: Easing.OutExpo
+                }
             }
         }
     }
