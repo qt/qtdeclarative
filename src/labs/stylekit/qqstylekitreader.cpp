@@ -27,7 +27,8 @@ QT_BEGIN_NAMESPACE
     \l {ControlStyleProperties::text}{text},
     \l {ControlStyleProperties::padding}{padding},
     and more — that a control, and its delegates, should bind to.
-    All built-in StyleKit controls use a StyleReader internally for this purpose.
+    All built-in \c StyleKit controls use a StyleReader
+    internally for this purpose.
 
     The state properties — \l hovered, \l pressed, \l focused, \l checked,
     \l highlighted, etc. — tell StyleReader which state the control is in.
@@ -202,7 +203,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty ControlProperties StyleReader::global
+    \qmlproperty ControlStyleProperties StyleReader::global
     \readonly
 
     Provides direct access to the style properties, bypassing any ongoing
