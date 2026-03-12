@@ -68,13 +68,12 @@ void QQuickItemGroup::itemChange(ItemChange change, const ItemChangeData &data)
 
 void QQuickItemGroup::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
-
     if (newGeometry.size() != oldGeometry.size()) {
         const auto children = childItems();
         for (QQuickItem *child : children)
             child->setSize(newGeometry.size());
     }
+    QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickItemGroup::itemImplicitWidthChanged(QQuickItem *)

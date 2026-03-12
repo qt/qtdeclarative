@@ -27,6 +27,7 @@ private slots:
     void fractionalFontSize();
     void resizeBackgroundKeepsBindings();
     void hoverInMouseArea();
+    void backgroundAlignment();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -135,6 +136,19 @@ void tst_QQuickControl::hoverInMouseArea()
     QVERIFY(textField);
     pointLerper.move(mapCenterToWindow(textField));
     QVERIFY(textField->isHovered());
+}
+
+void tst_QQuickControl::backgroundAlignment()
+{
+    QQuickApplicationHelper helper(this, QStringLiteral("backgroundAlignment.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    auto ctxt = qmlContext(window);
+    QVERIFY(ctxt);
+    auto image = window->grabWindow();
+    // If the top inset is applied, the top 6 pixels will appear white.
+    QCOMPARE(image.pixelColor(0, 0), QColor(255,255,255));
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickControl)
