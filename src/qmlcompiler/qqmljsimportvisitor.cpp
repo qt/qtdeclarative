@@ -2909,6 +2909,10 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
                 m_scopesById.setValueTypesAreAddressable(true);
             } else if (value == u"Inaddressable") {
                 m_scopesById.setValueTypesAreAddressable(false);
+            } else if (value == u"Assertable") {
+                m_scopesById.setValueTypesAreAssertable(true);
+            } else if (value == u"Inassertable") {
+                m_scopesById.setValueTypesAreAssertable(false);
             } else {
                 m_logger->log(u"Unknown argument \"%1\" to pragma ValueTypeBehavior"_s.arg(value),
                               qmlSyntax, pragma->firstSourceLocation());
