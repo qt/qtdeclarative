@@ -239,6 +239,7 @@ set(qml_files
     listAsArgument.qml
     listConversion.qml
     listIndices.qml
+    listOfInlineComponent.qml
     listOfInvisible.qml
     listPropertyAsModel.qml
     listToString.qml
