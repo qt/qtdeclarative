@@ -78,6 +78,9 @@ public:
     void setValueTypesAreAddressable(bool addressable) { m_valueTypesAreAddressable = addressable; }
     bool valueTypesAreAddressable() const { return m_valueTypesAreAddressable; }
 
+    void setValueTypesAreAssertable(bool assertable) { m_valueTypesAreAssertable = assertable; }
+    bool valueTypesAreAssertable() const { return m_valueTypesAreAssertable; }
+
     /*!
         \internal
         Find the possible IDs for \a scope as seen by \a referrer. There can be at most one
@@ -315,6 +318,7 @@ private:
     bool m_componentsAreBound = false;
     bool m_signaturesAreEnforced = true;
     bool m_valueTypesAreAddressable = false;
+    bool m_valueTypesAreAssertable = false;
 };
 
 QT_END_NAMESPACE

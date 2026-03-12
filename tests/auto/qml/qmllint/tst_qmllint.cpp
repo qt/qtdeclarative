@@ -2193,6 +2193,8 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("aliasToRequiredPropertyIsNotRequiredItself.qml");
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
+    QTest::newRow("asCast") << QStringLiteral("asCast.qml");
+    QTest::newRow("asValueTypeGood") << QStringLiteral("asValueTypeGood.qml");
     QTest::newRow("attached") << QStringLiteral("attached.qml");
     QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
     QTest::newRow("attachedPropertyAssignments")
