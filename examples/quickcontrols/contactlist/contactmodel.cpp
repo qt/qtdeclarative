@@ -53,23 +53,20 @@ QVariantMap ContactModel::get(int row) const
     return { {"fullName", contact.fullName}, {"address", contact.address}, {"city", contact.city}, {"number", contact.number} };
 }
 
-void ContactModel::append(const QString &fullName, const QString &address, const QString &city, const QString &number)
+void ContactModel::add(const QString &fullName, const QString &address, const QString &city, const QString &number)
 {
     int row = 0;
-    while (row < m_contacts.count() && fullName > m_contacts.at(row).fullName)
+    while (row < m_contacts.count() && (fullName.compare(m_contacts.at(row).fullName, Qt::CaseInsensitive) > 0))
         ++row;
     beginInsertRows(QModelIndex(), row, row);
     m_contacts.insert(row, {fullName, address, city, number});
     endInsertRows();
 }
 
-void ContactModel::set(int row, const QString &fullName, const QString &address, const QString &city, const QString &number)
+void ContactModel::edit(int row, const QString &fullName, const QString &address, const QString &city, const QString &number)
 {
-    if (row < 0 || row >= m_contacts.count())
-        return;
-
-    m_contacts.replace(row, { fullName, address, city, number });
-    dataChanged(index(row, 0), index(row, 0), { FullNameRole, AddressRole, CityRole, NumberRole });
+    remove(row);
+    add(fullName, address, city, number);
 }
 
 void ContactModel::remove(int row)
