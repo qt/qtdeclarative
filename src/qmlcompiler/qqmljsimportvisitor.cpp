@@ -825,7 +825,7 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
         if (const auto propertyType = QQmlJSScope::findType(
                 property.typeName(), m_rootScopeImports.contextualTypes()).scope) {
-            property.setType(propertyType);
+            property.setType(property.isList() ? propertyType->listType() : propertyType);
             type.scope->addOwnProperty(property);
         } else {
             QString msg = property.typeName() + ' '_L1 + wasNotFound + ' '_L1 + didYouAddAllImports;
