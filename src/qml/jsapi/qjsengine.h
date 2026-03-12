@@ -115,6 +115,10 @@ public:
     template <typename T>
     inline T fromVariant(const QVariant &value)
     {
+        // MSVC doesn't like the constexpr chains and complains about "unreachable code"
+        QT_WARNING_PUSH
+        QT_WARNING_DISABLE_MSVC(4702)
+
         if constexpr (std::is_same_v<T, QVariant>)
             return value;
 
@@ -192,6 +196,8 @@ public:
             QMetaType::convert(value.metaType(), value.constData(), targetType, &t);
             return t;
         }();
+
+        QT_WARNING_POP
     }
 
     template<typename From, typename To>
