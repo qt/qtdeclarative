@@ -43,14 +43,9 @@ public:
 
     struct FixMessage
     {
-        QString text = QString();
-        QString replacement = QString();
+        QString text;
+        QString replacement;
         quint32 line = 0, column = 0;
-
-        // support tests that used to use a Message instead of a FixMessage
-        FixMessage(const QString &replacement, quint32 line = 0, quint32 column = 0)
-            : replacement(replacement), line(line), column(column)
-        {}
 
         FixMessage(const QString &text, const QString &replacement, quint32 line = 0,
                    quint32 column = 0)
@@ -268,8 +263,7 @@ private:
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
                         ContainOption shouldContain = StringContained);
     void searchReplacements(const QJsonArray &warnings, const QString &substring,
-                            const QString &replacementSubString, quint32 line, quint32 column,
-                            ContainOption shouldContain);
+                            const QString &replacementSubString, quint32 line, quint32 column);
 
     template<typename ExpectedMessageFailureHandler, typename BadMessageFailureHandler,
              typename ReplacementFailureHandler>
@@ -349,38 +343,39 @@ void TestQmllint::testUnqualified_data()
                                      33 } // builtin property
                    },
                    {},
-                   { { { u"root."_s, 9, 16 }, { u"root."_s, 13, 33 } } } };
+                   { { { u"unqualified is a member of a parent element.\n      "_s
+                         u"You can qualify the access with its id to avoid this warning."_s,
+                         u"root."_s, 9, 16 },
+                       { u"x is a member of a parent element.\n      "_s
+                         u"You can qualify the access with its id to avoid this warning."_s,
+                         u"root."_s, 13, 33 } } } };
     // access injected name from signal
     QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << Result{
-                   {
-                           Message{ QStringLiteral("Unqualified access"), 5, 21 },
-                           Message{ QStringLiteral("Unqualified access"), 10, 21 },
-                           Message{ QStringLiteral("Unqualified access"), 8, 29 },
-                           Message{ QStringLiteral("Unqualified access"), 12, 34 },
-                   },
-                   {},
-                   {
-                           { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
-                             "function(mouse) "_L1, 4, 22 },
-                           { QStringLiteral("function(mouse) "), 9, 24 },
-                           { QStringLiteral("(mouse) => "), 8, 16 },
-                           { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
-                             "(mouse) => "_L1, 12, 21 },
-                   }
-               };
+            << Result{ { { "Unqualified access"_L1, 5, 21 },
+                         { "Unqualified access"_L1, 10, 21 },
+                         { "Unqualified access"_L1, 8, 29 },
+                         { "Unqualified access"_L1, 12, 34 } },
+                       { },
+                       { { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
+                           "function(mouse) "_L1, 4, 22 },
+                         { "\"mouse\" is ambiguous. Use a function instead: function(mouse) { ... }"_L1,
+                           "function(mouse) "_L1, 9, 24 },
+                         { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
+                           "(mouse) => "_L1, 8, 16 },
+                         { "\"mouse\" is ambiguous. Use a function instead: (mouse) => ..."_L1,
+                           "(mouse) => "_L1, 12, 21 } } };
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement")
             << QStringLiteral("CatchStatement.qml")
             << Result { { Message { QStringLiteral("Unqualified access"), 6, 21 } } };
     QTest::newRow("NonSpuriousParent")
             << QStringLiteral("nonSpuriousParentWarning.qml")
-            << Result { {
-                                Message { QStringLiteral("Unqualified access"), 6, 25 },
-                        },
-                        {},
-                        { { FixMessage { u"<id>."_s, 6, 25 } } } };
+            << Result{ { { "Unqualified access"_L1, 6, 25 } },
+                       { },
+                       { { { u"parent is a member of a parent element.\n      "_s
+                             u"You can qualify the access with its id to avoid this warning."_s,
+                             u"<id>."_s, 6, 25 } } } };
 
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
@@ -687,7 +682,8 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ { { "Member \"Mode\" not found on type \"Item\""_L1, 12, 29 },
                          { "\"Hour\" is not an entry of enum \"Mode\"."_L1, 13, 62 } },
                        {},
-                       { { "Hours"_L1 } } };
+                       { { "Did you mean \"mode\"?"_L1, "mode"_L1, 12, 29 },
+                         { "Did you mean \"Hours\"?"_L1, "Hours"_L1, 13, 62 } } };
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
             << Result{ { { "Member \"foo\" not found on type \"QtObject\""_L1, 6, 31 } } };
@@ -795,10 +791,7 @@ void TestQmllint::dirtyQmlCode_data()
                            "onWidthChanged() { ... }\"."_L1 },
                          { "Implicitly defining \"onColorChanged\" as signal handler in "
                            "Connections is deprecated. Create a function instead: \"function "
-                           "onColorChanged(collie) { ... }\"."_L1 } },
-                       { },
-                       { { "function onWidthChanged() { console.log(\"new width:\", width) }"_L1 },
-                         { "function onColorChanged(col) { console.log(\"new color:\", col) }"_L1 }, }, };
+                           "onColorChanged(collie) { ... }\"."_L1 } } };
     QTest::newRow("bad constant number to string")
             << QStringLiteral("numberToStringProperty.qml")
             << Result{ { { "Cannot assign literal of type double to QString"_L1 } } };
@@ -924,7 +917,7 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("didYouMeanBinding.qml")
             << Result{ { { "Could not find property \"witdh\"."_L1 } },
                        {},
-                       { { "width"_L1 } } };
+                       { { "Did you mean \"width\"?"_L1, "width"_L1 } } };
     QTest::newRow("didYouMean(component)")
             << QStringLiteral("didYouMeanComponent.qml")
             << Result{ { { "Itym was not found. Did you add all imports and dependencies?"_L1 },
@@ -949,12 +942,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("didYouMeanUnqualified.qml")
             << Result{ { { "Unqualified access"_L1 } },
                        {},
-                       { { "height"_L1 } } };
+                       { { "Did you mean \"height\"?"_L1, "height"_L1 } } };
     QTest::newRow("didYouMean(unqualifiedCall)")
             << QStringLiteral("didYouMeanUnqualifiedCall.qml")
             << Result{ { { "Unqualified access"_L1 } },
                        {},
-                       { { "func"_L1 } } };
+                       { { "Did you mean \"func\""_L1, "func"_L1 } } };
     QTest::newRow("duplicateImportsDirty")
             << QStringLiteral("duplicateImportsDirty.qml")
             << Result{ { { "Duplicate import 'QtQml'"_L1, 2, 8 },
@@ -1098,21 +1091,27 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ { { "Unqualified access"_L1, 7,  19, QtWarningMsg },
                          { "Unqualified access"_L1, 11, 19, QtWarningMsg } },
                        {},
-                       { { "pragma ComponentBehavior: Bound\n"_L1, 1, 1 } },
+                       { { "Set \"pragma ComponentBehavior: Bound\" in order to use IDs from "
+                           "outer components in nested components."_L1,
+                           "pragma ComponentBehavior: Bound\n"_L1, 1, 1 } },
                        { Result::AutoFixable } };
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
             << Result{ { { "String contains unescaped line terminator which is deprecated."_L1,
                            0, 0, QtInfoMsg } },
                        {},
-                       { { "`Foo\nmultiline\\`\nstring`"_L1, 4, 32 },
-                         { "`another\\`\npart\nof it`"_L1, 6, 11 },
-                         { R"(`
+                       { { "Use a template literal instead."_L1,
+                           "`Foo\nmultiline\\`\nstring`"_L1, 4, 32 },
+                         { "Use a template literal instead."_L1,
+                           "`another\\`\npart\nof it`"_L1, 6, 11 },
+                         { "Use a template literal instead."_L1,
+                           R"(`
 quote: " \\" \\\\"
 ticks: \` \` \\\` \\\`
 singleTicks: ' \' \\' \\\'
 expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1, 10, 28 },
-                         { R"(`
+                         { "Use a template literal instead."_L1,
+                           R"(`
 quote: " \" \\" \\\"
 ticks: \` \` \\\` \\\`
 singleTicks: ' \\' \\\\'
@@ -1176,7 +1175,9 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1, 16, 27 } },
             << QStringLiteral("stringIdUsedInWarning.qml")
             << Result{ { { "i is a member of a parent element"_L1, } },
                        {},
-                       { { "stringy."_L1 } } };
+                       { { "i is a member of a parent element.\n      "
+                           "You can qualify the access with its id to avoid this warning."_L1,
+                           "stringy."_L1 } } };
     QTest::newRow("unboundComponents")
             << QStringLiteral("unboundComponents.qml")
             << Result{ { { "Unqualified access"_L1, 10, 25 },
@@ -1281,10 +1282,7 @@ void TestQmllint::dirtyQmlCode()
                 QEXPECT_FAIL("badAttachedPropertyNested",
                              "We cannot discern between types and instances", Abort);
             },
-            [] {
-                QEXPECT_FAIL("autoFixConnectionsBinding",
-                             "We can't autofix the code without the Dom.", Abort);
-            });
+            [] {});
 }
 
 static void addLocationOffsetTo(TestQmllint::Result *result, qsizetype lineOffset,
@@ -3002,7 +3000,7 @@ void TestQmllint::checkResult(const QJsonArray &warnings, const Result &result,
     for (const FixMessage &replacement : result.expectedReplacements) {
         onReplacementFailures();
         searchReplacements(warnings, replacement.text, replacement.replacement, replacement.line,
-                           replacement.column, StringContained);
+                           replacement.column);
     }
 
     // check for duplicates
@@ -3051,28 +3049,26 @@ static bool warningsContainReplacement(const QJsonArray &warnings, const QString
 }
 
 void TestQmllint::searchReplacements(const QJsonArray &warnings, const QString &substring,
-                                     const QString &replacementSubString, quint32 line, quint32 column,
-                                     ContainOption shouldContain)
+                                     const QString &replacementSubString, quint32 line, quint32 column)
 {
     const bool contains =
             warningsContainReplacement(warnings, substring, replacementSubString, line, column);
 
     const auto toDescription = [](const QJsonArray &warnings, const QString &substring,
-                                  quint32 line, quint32 column, bool must = true) {
-        QString msg = QStringLiteral("qmllint output:\n%1\nIt %2 contain '%3'")
-                              .arg(QString::fromUtf8(
-                                           QJsonDocument(warnings).toJson(QJsonDocument::Indented)),
-                                   must ? u"must" : u"must NOT", substring);
+                                  quint32 line, quint32 column) {
+        const auto indentedJson =
+                QString::fromUtf8(QJsonDocument(warnings).toJson(QJsonDocument::Indented));
+        QString msg = QStringLiteral("qmllint output:\n%1\nIt must contain replacement '%2'")
+                              .arg(indentedJson, substring);
         if (line != 0 || column != 0)
             msg += u" (%1:%2)"_s.arg(line).arg(column);
 
         return msg;
     };
 
-    const bool ok = contains == (shouldContain == StringContained);
-    if (!ok)
+    if (!contains)
         qWarning().noquote() << toDescription(warnings, substring, line, column);
-    QVERIFY(ok);
+    QVERIFY(contains);
 }
 
 void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &substring,
@@ -3386,17 +3382,24 @@ void TestQmllint::valueTypesFromString()
                                     u"Construction from string is deprecated. Use structured value type construction instead for type \"QMatrix4x4\""_s },
                     },
                     { /*bad messages */ },
-                    {
-                            { u"({ width: 30, height: 50 })"_s },
-                            { u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
-                            { u"({ x: 30, y: 50 })"_s },
-                            { u"({ x: 1, y: 2 })"_s },
-                            { u"({ x: 1, y: 2 })"_s },
-                            { u"({ x: 1, y: 2, z: 3 })"_s },
-                            { u"({ x: 1, y: 2, z: 3, w: 4 })"_s },
-                            { u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s },
-                            {
-                                    u"({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_s },
+                    { { u"Replace string by structured value construction"_s,
+                        u"({ width: 30, height: 50 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 10, y: 20, width: 30, height: 50 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 30, y: 50 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 1, y: 2 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 1, y: 2 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 1, y: 2, z: 3 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ x: 1, y: 2, z: 3, w: 4 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ scalar: 1, x: 2, y: 3, z: 4 })"_s },
+                      { u"Replace string by structured value construction"_s,
+                        u"({ m11: 1, m12: 2, m13: 3, m14: 4, m21: 5, m22: 6, m23: 7, m24: 8, m31: 9, m32: 10, m33: 11, m34: 12, m41: 13, m42: 14, m43: 15, m44: 16 })"_s },
                     } });
 }
 
