@@ -28,8 +28,8 @@ public:
     QHash<int, QByteArray> roleNames() const;
 
     Q_INVOKABLE QVariantMap get(int row) const;
-    Q_INVOKABLE void append(const QString &fullName, const QString &address, const QString  &city, const QString &number);
-    Q_INVOKABLE void set(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void add(const QString &fullName, const QString &address, const QString  &city, const QString &number);
+    Q_INVOKABLE void edit(int row, const QString &fullName, const QString &address, const QString  &city, const QString &number);
     Q_INVOKABLE void remove(int row);
 
 private:

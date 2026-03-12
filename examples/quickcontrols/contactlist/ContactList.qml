@@ -18,9 +18,9 @@ ApplicationWindow {
         id: contactDialog
         onFinished: function(fullName, address, city, number) {
             if (window.currentContact === -1)
-                contactView.model.append(fullName, address, city, number)
+                contactView.model.add(fullName, address, city, number)
             else
-                contactView.model.set(window.currentContact, fullName, address, city, number)
+                contactView.model.edit(window.currentContact, fullName, address, city, number)
         }
     }
 
