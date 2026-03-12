@@ -46,6 +46,7 @@ void QQmlRoleFilter::setRoleName(const QString& roleName)
     if (d->m_roleName == roleName)
         return;
     d->m_roleName = roleName;
+    d->m_roleNameValidated = false;
     emit roleNameChanged();
     // Invalidate the model
     invalidate();
@@ -60,6 +61,12 @@ int QQmlRoleFilter::itemRole(const QQmlSortFilterProxyModel *proxyModel) const
     if (!d->m_roleName.isNull())
         return proxyModel->itemRoleForName(d->m_roleName);
     return -1;
+}
+
+void QQmlRoleFilter::update(const QQmlSortFilterProxyModel *)
+{
+    Q_D(QQmlRoleFilter);
+    d->m_roleNameValidated = false;
 }
 
 QT_END_NAMESPACE

@@ -39,6 +39,7 @@ public:
     void setRoleName(const QString& roleName);
 
     QPartialOrdering compare(const QModelIndex& sourceLeft, const QModelIndex& sourceRight, const QQmlSortFilterProxyModel *proxyModel) const override;
+    virtual void update(const QQmlSortFilterProxyModel *) override;
 
 Q_SIGNALS:
     void roleNameChanged();
@@ -53,6 +54,7 @@ class QQmlRoleSorterPrivate : public QQmlSorterBasePrivate
 
 public:
     QString m_roleName = QString::fromUtf8("display");
+    mutable bool m_roleNameValidated = false;
 };
 
 QT_END_NAMESPACE

@@ -38,6 +38,7 @@ public:
 
     const QString& roleName() const;
     void setRoleName(const QString& roleName);
+    virtual void update(const QQmlSortFilterProxyModel *) override;
 
 Q_SIGNALS:
     void roleNameChanged();
@@ -55,6 +56,7 @@ class QQmlRoleFilterPrivate : public QQmlFilterBasePrivate
 
 public:
     QString m_roleName = QString::fromUtf8("display");
+    mutable bool m_roleNameValidated = false;
 };
 
 QT_END_NAMESPACE
