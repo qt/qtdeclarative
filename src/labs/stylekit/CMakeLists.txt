@@ -81,3 +81,14 @@ qt_internal_add_docs(LabsStyleKit
 
 # impl links to QuickStyleKit, so it must be built after it
 add_subdirectory(impl)
+
+if(TARGET Qt::Widgets)
+    qt_internal_extend_target(LabsStyleKit
+        SOURCES
+            widgets/qstylekitstyle.h widgets/qstylekitstyle_p.h widgets/qstylekitstyle.cpp
+        LIBRARIES
+            Qt::Widgets
+            Qt::WidgetsPrivate
+    )
+    add_subdirectory(widgets/plugin)
+endif()

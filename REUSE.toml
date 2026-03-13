@@ -16,7 +16,8 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only"
 
 [[annotations]]
 path = ["src/plugins/qmltooling/**.json",
-        "src/plugins/scenegraph/openvg/openvg.json"]
+        "src/plugins/scenegraph/openvg/openvg.json",
+        "src/labs/stylekit/widgets/plugin/stylekitstyle.json"]
 comment = "controls and dialogs."
 precedence = "closest"
 SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
