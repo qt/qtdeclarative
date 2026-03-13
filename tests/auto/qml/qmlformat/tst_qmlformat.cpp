@@ -445,26 +445,30 @@ void TestQmlformat::qmlSnippet_data()
 {
     QTest::addColumn<QString>("unformatted");
     QTest::addColumn<QString>("expectedResult");
+    QTest::addColumn<LineWriterOptions>("opts");
+
+    LineWriterOptions defaultOptions ;
+    defaultOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    // the expected snippets use unix newlines, also on windows
+    defaultOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
 
     QTest::addRow("QmlObjectComment")
             << u"EIUMAPQTE.ResourceMapHistoryControls { // qmllint disable required\n}"_s
-            << u"EIUMAPQTE.ResourceMapHistoryControls { // qmllint disable required\n}\n"_s;
+            << u"EIUMAPQTE.ResourceMapHistoryControls { // qmllint disable required\n}\n"_s
+            << defaultOptions;
 }
 
 void TestQmlformat::qmlSnippet()
 {
     QFETCH(QString, unformatted);
     QFETCH(QString, expectedResult);
+    QFETCH(LineWriterOptions, opts);
 
     constexpr QLatin1String snippetTemplate = R"(import QtQuick
 
 %1)"_L1;
 
     bool wasSuccessful;
-    LineWriterOptions opts;
-    opts.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
-    // the expected snippets use unix newlines, also on windows
-    opts.lineEndings = LineWriterOptions::LineEndings::Unix;
     QString output = formatSnippetInMemory(snippetTemplate.arg(unformatted), &wasSuccessful, opts);
     QVERIFY(wasSuccessful && !output.isEmpty());
     QCOMPARE(output, snippetTemplate.arg(expectedResult));
