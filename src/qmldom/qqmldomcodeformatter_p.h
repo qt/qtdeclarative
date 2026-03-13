@@ -71,6 +71,7 @@ public:
         SignalMaybeArglist, // after identifier
         SignalArglistOpen, // after '('
 
+        LambdaStart, // after '=>'
         FunctionStart, // after 'function'
         FunctionArglistOpen, // after '(' starting function argument list
         FunctionArglistClosed, // after ')' in argument list, expecting '{'

@@ -5,4 +5,11 @@ Item {
     arrow4: x => {
         return x > 3 ? x * x : x;
     }
+    arrow5: () => {
+        return x > 3 ? x * x : x;
+    }
+
+    Component.onCompleted: () => {
+        console.log("asdf");
+    }
 }

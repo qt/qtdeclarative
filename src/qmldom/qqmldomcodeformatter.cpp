@@ -126,6 +126,9 @@ bool FormatPartialStatus::tryInsideExpression(bool alsoExpression)
     case QQmlJSGrammar::T_FUNCTION:
         newState = StateType::FunctionStart;
         break;
+    case QQmlJSGrammar::T_ARROW:
+        newState = StateType::LambdaStart;
+        break;
     case QQmlJSGrammar::T_QUESTION:
         newState = StateType::TernaryOp;
         break;
@@ -621,6 +624,16 @@ void FormatPartialStatus::handleTokens()
             default:
                 leave(true);
                 continue; // error recovery
+            }
+            break;
+
+        case StateType::LambdaStart:
+            switch (kind) {
+            case QQmlJSGrammar::T_LBRACE:
+                turnInto(StateType::JsblockOpen);
+                break;
+            default:
+                turnInto(StateType::Expression);
             }
             break;
 
@@ -1293,6 +1306,7 @@ void FormatPartialStatus::defaultOnEnter(StateType newState, int *indentDepth,
         }
         break;
 
+    case StateType::LambdaStart:
     case StateType::FunctionStart:
         // align to the beginning of the line
         *savedIndentDepth = *indentDepth = column(tokenAt(0).begin());

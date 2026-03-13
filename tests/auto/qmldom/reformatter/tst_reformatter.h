@@ -130,6 +130,9 @@ private slots:
             QTest::newRow("linebreakBinaryOp")
                     << QStringLiteral(u"linebreakBinaryOp.qml")
                     << QStringLiteral(u"linebreakBinaryOpReformattedWidth60.qml") << lwOptions;
+            QTest::newRow("linebreakArrowFunctions")
+                    << QStringLiteral(u"arrowFunctions.qml")
+                    << QStringLiteral(u"arrowFunctionsReformatted.qml") << lwOptions;
         }
         QTest::newRow("nonInitializedPropertyInComponent")
                 << "nonInitializedPropertyInComponent.qml"

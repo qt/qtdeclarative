@@ -452,6 +452,24 @@ void TestQmlformat::qmlSnippet_data()
     // the expected snippets use unix newlines, also on windows
     defaultOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
 
+    {
+        LineWriterOptions maxColumnWidth = defaultOptions;
+        maxColumnWidth.maxLineLength = 80;
+        QTest::addRow("LambdaMaxColumnWidth")
+                << uR"(Item { Component.onCompleted: () => { console.info("a"); A.b.c = rs => { let x = 3; return x; }; }})"_s
+                << uR"(Item {
+    Component.onCompleted: () => {
+        console.info("a");
+        A.b.c = rs => {
+            let x = 3;
+            return x;
+        };
+    }
+}
+)"_s
+                << maxColumnWidth;
+    }
+
     QTest::addRow("QmlObjectComment")
             << u"EIUMAPQTE.ResourceMapHistoryControls { // qmllint disable required\n}"_s
             << u"EIUMAPQTE.ResourceMapHistoryControls { // qmllint disable required\n}\n"_s
