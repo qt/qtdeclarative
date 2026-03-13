@@ -37,6 +37,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols-spinbox.qml 1
 
+    For floating point values, use \l DoubleSpinBox.
+
     \section2 Custom Values
 
     \image qtquickcontrols-spinbox-textual.png
@@ -53,7 +55,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols-spinbox-prefix.qml 1
 
-    \sa Tumbler, {Customizing SpinBox}, {Focus Management in Qt Quick Controls}
+    \sa Tumbler, {Customizing SpinBox}, {Focus Management in Qt Quick Controls},
+        {DoubleSpinBox}
 */
 
 /*!
