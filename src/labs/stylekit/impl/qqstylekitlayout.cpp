@@ -58,15 +58,12 @@ static qreal vAlignY(QQStyleKitLayoutItem *li, qreal containerY, qreal container
     const auto itemHeight = height(li, containerHeight);
     const auto vAlign = li->alignment() & Qt::AlignVertical_Mask;
     const auto margins = li->margins();
-    switch (vAlign) {
-    case Qt::AlignTop:
+    if (vAlign & Qt::AlignTop)
         return containerY + margins.top();
-    case Qt::AlignBottom:
+    if (vAlign & Qt::AlignBottom)
         return containerY + containerHeight - itemHeight - margins.bottom();
-    default: // AlignVCenter
-        return containerY + margins.top()
-            + (containerHeight - margins.top() - margins.bottom() - itemHeight) / 2.0;
-    }
+    return containerY + margins.top()
+        + (containerHeight - margins.top() - margins.bottom() - itemHeight) / 2.0;
 }
 
 QQStyleKitLayoutItem::QQStyleKitLayoutItem(QObject *parent)
