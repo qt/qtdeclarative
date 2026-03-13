@@ -44,6 +44,9 @@ private Q_SLOTS:
     void qml_data();
     void qml();
 
+    void qmlSnippet_data();
+    void qmlSnippet();
+
     void semicolonRule_data();
     void semicolonRule();
 
@@ -55,6 +58,11 @@ private:
                            LineWriterOptions options = LineWriterOptions(),
                            WriteOutChecks extraChecks = WriteOutCheck::ReparseCompare,
                            WriteOutChecks largeChecks = WriteOutCheck::None);
+    QString formatSnippetInMemory(const QString &snippet, bool *didSucceed,
+                                  LineWriterOptions options);
+    QString formatInMemoryImpl(bool *didSucceed, LineWriterOptions options,
+                               WriteOutChecks extraChecks, WriteOutChecks largeChecks,
+                               std::shared_ptr<DomEnvironment> &&env, FileToLoad &&fileToLoad);
 };
 
 // Don't fail on warnings because we read a lot of QML files that might intentionally be malformed.
@@ -245,8 +253,18 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
             QStringList(), // as we load no dependencies we do not need any paths
             QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
                     | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+    return formatInMemoryImpl(didSucceed, options, extraChecks, largeChecks, std::move(env),
+                              FileToLoad::fromFileSystem(env, fileToFormat));
+}
+
+QString TestQmlformat::formatInMemoryImpl(bool *didSucceed, LineWriterOptions options,
+                                          WriteOutChecks extraChecks, WriteOutChecks largeChecks,
+                                          std::shared_ptr<DomEnvironment> &&env,
+                                          FileToLoad &&fileToLoad)
+{
     DomItem tFile;
-    env->loadFile(FileToLoad::fromFileSystem(env, fileToFormat),
+    env->loadFile(fileToLoad,
                   [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; });
     env->loadPendingDependencies();
     MutableDomItem myFile = tFile.field(Fields::currentItem);
@@ -272,6 +290,19 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
     if (didSucceed)
         *didSucceed = writtenOut;
     return resultStr;
+}
+
+QString TestQmlformat::formatSnippetInMemory(const QString &snippet, bool *didSucceed,
+                                             LineWriterOptions options)
+{
+    auto env = DomEnvironment::create(
+            QStringList(), // as we load no dependencies we do not need any paths
+            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                    | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+    return formatInMemoryImpl(didSucceed, options, WriteOutCheck::None, WriteOutCheck::None,
+                              std::move(env),
+                              FileToLoad::fromMemory(env, testFile("file.qml"), snippet));
 }
 
 void TestQmlformat::qml_data()
@@ -398,6 +429,34 @@ void TestQmlformat::qml()
     QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_parameters",
                  "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Abort);
     QCOMPARE(output, exp);
+}
+
+void TestQmlformat::qmlSnippet_data()
+{
+    QTest::addColumn<QString>("unformatted");
+    QTest::addColumn<QString>("expectedResult");
+    QTest::addColumn<LineWriterOptions>("opts");
+
+    LineWriterOptions defaultOptions ;
+    defaultOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    // the expected snippets use unix newlines, also on windows
+    defaultOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
+}
+
+void TestQmlformat::qmlSnippet()
+{
+    QFETCH(QString, unformatted);
+    QFETCH(QString, expectedResult);
+    QFETCH(LineWriterOptions, opts);
+
+    constexpr QLatin1String snippetTemplate = R"(import QtQuick
+
+%1)"_L1;
+
+    bool wasSuccessful;
+    QString output = formatSnippetInMemory(snippetTemplate.arg(unformatted), &wasSuccessful, opts);
+    QVERIFY(wasSuccessful && !output.isEmpty());
+    QCOMPARE(output, snippetTemplate.arg(expectedResult));
 }
 
 void TestQmlformat::semicolonRule_data()
