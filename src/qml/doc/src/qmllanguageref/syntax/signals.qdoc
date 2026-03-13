@@ -226,7 +226,7 @@ provided by the signal.
 
 Usage of the \c arguments special object should generally be avoided
 in favor of the usage of named parameters, which are more explicit and
-work consistently indepedently of the usage of an arrow or a non-arrow
+work consistently independently of the usage of an arrow or a non-arrow
 function.
 
 \section2 Using the Connections type

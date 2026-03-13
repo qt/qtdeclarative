@@ -10,7 +10,7 @@
 \brief A tool for verifying the syntax of QML files and warning about
 anti-patterns.
 
-\e qmllint is a tool shipped with Qt, that verifies the syntatic validity of
+\e qmllint is a tool shipped with Qt, that verifies the syntactic validity of
 QML files. You can \l{Using qmllint with CMake}{integrate qmllint into your build system}
 for ease of use. It also warns about some QML anti-patterns. See
 \{Configuring qmllint warnings} for how to disable a specific warning type.

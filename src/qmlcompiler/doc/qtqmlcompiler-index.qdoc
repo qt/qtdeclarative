@@ -35,9 +35,9 @@
     holds the passes and can be called to analyze an element and its children.
     A pass is a check for a certain rule or condition evaluated on elements or
     properties. If the condition is met, the pass can warn the user of an
-    indentified issue in the code and maybe even suggest a fix. It is called a
+    identified issue in the code and maybe even suggest a fix. It is called a
     pass because the analysis performed on elements and properties happens by
-    running a collection of passes on them in succesion. Each pass should be
+    running a collection of passes on them in succession. Each pass should be
     responsible for identifying one specific issue only. Combining a set of
     passes can perform more complex analysis and, together, form a plugin.
     Element passes are defined by two main components, namely \c shouldRun()

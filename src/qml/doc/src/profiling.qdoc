@@ -10,7 +10,7 @@
 \section1 QML Profiler
 
 With the \l{\QC: Profiling QML Applications}{QML Profiler} you can analyze
-your QML code for performance performance issues. The profiler is part of
+your QML code for performance issues. The profiler is part of
 both \QC and \QDS. The best way to use it is to utilize \{QC}'s or \{QDS}'s
 defaults for build and run settings.
 

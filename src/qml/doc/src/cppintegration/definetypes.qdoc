@@ -296,7 +296,7 @@ are instantiable from QML.
 not instantiable from QML, and you cannot declare QML properties with it. Using
 C++ properties of this type from QML will do the expected interface casts,
 though.
-\li QML_UNCREATABLE(reason) combined with with QML_ELEMENT or QML_NAMED_ELEMENT
+\li QML_UNCREATABLE(reason) combined with QML_ELEMENT or QML_NAMED_ELEMENT
 registers a named C++ type that is not instantiable but should be identifiable
 as a type to the QML type system. This is useful if a type's enums or attached
 properties should be accessible from QML but the type itself should not be

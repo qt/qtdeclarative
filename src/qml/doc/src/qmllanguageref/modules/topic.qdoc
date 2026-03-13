@@ -108,7 +108,7 @@ QML extension module developer may wish to implement some types in a C++ plugin
 (as opposed to defining them via QML documents) to achieve better performance
 or for greater flexibility.
 
-Every C++ plugin for QML has an initialiatization function which is called by
+Every C++ plugin for QML has an initialization function which is called by
 the QML engine when it loads the plugin.  This initialization function must
 register any types that the plugin provides, but must not do anything else
 (for example, instantiating QObjects is not allowed).

@@ -69,7 +69,7 @@ approaches:
     \endqml
 \li If changing the function signature is undesirable for API reasons, consider
     replacing the function with a Q_PROPERTY instead, so that change
-    notifications for it can be emitted when the depenency is modified in C++:
+    notifications for it can be emitted when the dependency is modified in C++:
     \code
     void Config::setFontSize(int fontSize) {
        if (m_fontSize == fontSize)

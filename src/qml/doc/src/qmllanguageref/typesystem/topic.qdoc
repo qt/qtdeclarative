@@ -56,7 +56,7 @@ for in-depth information about sequence types.
 
 Enumerations are treated as special properties of types in QML.
 
-See the the documentation about \l{QML Enumerations} for in-depth
+See the documentation about \l{QML Enumerations} for in-depth
 information about enumerations.
 
 \section1 Singleton Types

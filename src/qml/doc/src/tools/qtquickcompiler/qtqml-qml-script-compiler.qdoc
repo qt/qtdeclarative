@@ -86,7 +86,7 @@ To enable direct mode, you should consider the followings:
     )
 \endcode
 
-    \li Link all the relavant private Qt modules instead of their public counterparts.
+    \li Link all the relevant private Qt modules instead of their public counterparts.
 \badcode
     find_package(Qt6 COMPONENTS QmlPrivate QuickPrivate)
 
@@ -129,13 +129,13 @@ showing these results per binding or function, the statistics are also
 summarized per file, per module, and at the project level. This can give a
 quick overview of how well a project is being compiled.
 
-To show statistics, invoke the \e{all_aotstats} cmake target.
+To show statistics, invoke the \e{all_aotstats} CMake target.
 
 The collection of compilation statistics is enabled by default. In order to
 disable it, set the \l{QT_QML_GENERATE_AOTSTATS} CMake variable to OFF before
 the first call to \l{qt_add_qml_module}.
 
 \note These statistics are only available for modules registered through the
-\l{qt_add_qml_module} cmake API
+\l{qt_add_qml_module} CMake API
 
 */

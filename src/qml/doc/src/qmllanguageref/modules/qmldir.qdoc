@@ -320,7 +320,7 @@ A module can offer multiple major versions but the clients have access
 to one major version only at a time. For example, importing
 \c{MyExampleModule 2.0} provides access to that major version only and not
 the previous major version. Although you can organize the artifacts that belong
-to different major versions under a sigle directory and a \c qmldir file, it is
+to different major versions under a single directory and a \c qmldir file, it is
 recommended to use different directories for each major version. If you
 choose to go with the earlier approach (one directory and a \c qmldir file),
 try to use the version suffix for the file names. For example, artifacts

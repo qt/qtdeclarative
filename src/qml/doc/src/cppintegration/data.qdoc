@@ -261,7 +261,7 @@ its \l {QDateTime::}{date()} method, using the local time form of the
 date unless the UTC form of it coincides with the start of the next
 day, in which case the UTC form is used.
 
-This slighly eccentric arrangement is a work-around for the fact that
+This slightly eccentric arrangement is a work-around for the fact that
 JavaScript's construction of a \c Date object from a date-only string
 uses the UTC start of the day, but \c{new Date(y, m, d)} uses the
 local time start of the indicated date, as discussed in a note at the
@@ -401,8 +401,8 @@ Enum classes are registered in QML as scoped and unscoped properties.
 The \c Ready value will be registered as \c Message.Status.Ready and \c Message.Ready .
 
 When using enum classes, there can be multiple enums using the same identifiers.
-The unscoped registration will be overwriten by the last registered enum. For classes
-that contain such name conficts it is possible to disable the unscoped registration by
+The unscoped registration will be overwritten by the last registered enum. For classes
+that contain such name conflicts it is possible to disable the unscoped registration by
 annotating your class with a special Q_CLASSINFO macro.
 Use the name \c RegisterEnumClassesUnscoped with the value \c false to prevent scoped
 enums from being merged into the same name space.

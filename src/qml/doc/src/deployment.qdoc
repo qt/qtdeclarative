@@ -231,7 +231,7 @@ only be used from C++ code to refer to resource files.
 
 \note When using qmake, you need to manually place your files in the resource
 system. See the \l{qmake Manual} and the \l{The Qt Resource System}{general
-documentation} on the resouce system for how to do this. It's advisable to
+documentation} on the resource system for how to do this. It's advisable to
 still follow the path naming convention outlined above.
 
 \section1 Related Information
