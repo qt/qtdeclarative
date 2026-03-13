@@ -11,6 +11,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomlinewriter_p.h>
+#include <QtQmlDom/private/qqmldomlinewriterfactory_p.h>
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
@@ -259,12 +260,13 @@ QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucc
             checks = largeChecks;
 
         QTextStream res(&resultStr);
-        LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"), options);
-        OutWriter ow(lw);
+        auto lw = QQmlJS::Dom::createLineWriter([&res](QStringView s) { res << s; },
+                QLatin1String("*testStream*"), options);
+        OutWriter ow(*lw);
         ow.indentNextlines = true;
         DomItem qmlFile = tFile.field(Fields::currentItem);
         writtenOut = qmlFile.writeOutForFile(ow, checks);
-        lw.eof();
+        lw->eof();
         res.flush();
     }
     if (didSucceed)
