@@ -59,4 +59,36 @@ private:
     InnerWithLength v;
 };
 
+struct LocalWithLength
+{
+    Q_GADGET
+    Q_PROPERTY(int length READ length CONSTANT)
+public:
+
+    LocalWithLength() = default;
+    LocalWithLength(int length) : m_length(length) {}
+
+    int length() const { return m_length; }
+
+private:
+    int m_length = 20;
+
+};
+
+struct ForeignWithLength: private LocalWithLength
+{
+    Q_GADGET
+    QML_VALUE_TYPE(foreignWithLength)
+    QML_FOREIGN(LocalWithLength)
+    QML_EXTENDED(ForeignWithLength)
+    QML_CONSTRUCTIBLE_VALUE
+
+public:
+    Q_INVOKABLE ForeignWithLength() = default;
+    Q_INVOKABLE ForeignWithLength(int length) : LocalWithLength(length) {}
+    Q_INVOKABLE ForeignWithLength(const LocalWithLength &withLength)
+        : LocalWithLength(withLength)
+    {}
+};
+
 #endif // WITHLENGTH_H

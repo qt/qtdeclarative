@@ -149,6 +149,7 @@ set(qml_files
     convertPrimitiveToVar.qml
     convertQJSPrimitiveValueToIntegral.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml
+    ctorArgumentConversion.qml
     curlygrouped.qml
     cycleHead.qml
     dateConstruction.qml
