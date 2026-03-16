@@ -1506,9 +1506,11 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (from == m_variantListType)
         return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
-    // We can convert anything that fits into QJSPrimitiveValue
-    if (canConvertFromTo(from, m_jsPrimitiveType) && canConvertFromTo(m_jsPrimitiveType, to))
+    // We can convert anything that fits natively into QJSPrimitiveValue
+    if (canPrimitivelyConvertFromTo(from, m_jsPrimitiveType)
+            && canPrimitivelyConvertFromTo(m_jsPrimitiveType, to)) {
         return true;
+    }
 
     // We can convert everything to bool.
     if (to == m_boolType)
