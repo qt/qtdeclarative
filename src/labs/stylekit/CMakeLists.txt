@@ -10,6 +10,7 @@ qt_internal_add_qml_module(LabsStyleKit
     IMPORTS QtQuick.Controls.Basic
     SOURCES
         qqstylekit_p.h qqstylekit.cpp
+        qqstylekitanimation.cpp
         qqstylekitcontrol_p.h qqstylekitcontrol.cpp
         qqstylekitcontrols_p.h qqstylekitcontrols.cpp
         qqstylekitcontrolstate_p.h qqstylekitcontrolstate.cpp

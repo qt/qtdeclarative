@@ -1,17 +1,8 @@
-// Copyright (C) 2025 The Qt Company Ltd.
+// Copyright (C) 2026 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant reason:default
 
 import QtQuick
-
-/*!
-    \qmltype StyleAnimation
-    \inqmlmodule Qt.labs.StyleKit
-    \inherits ParallelAnimation
-    \brief Animates style property changes during state transitions.
-
-    \labs
-*/
 
 ParallelAnimation {
     id: root
@@ -45,7 +36,6 @@ ParallelAnimation {
     readonly property string __geometryProps:
         "$.implicitWidth, $.implicitHeight, "
         + "$.margins, $.leftMargin, $.rightMargin, $.topMargin, $.bottomMargin, "
-        + "$.leftPadding, $.rightPadding, $.topPadding, $.bottomPadding, "
         + "$.minimumWidth, "
     readonly property string __colorProps:
         "$.color, $.border.color, $.image.color, $.shadow.color, "
@@ -56,7 +46,6 @@ ParallelAnimation {
     readonly property string __shadowProps:
         "$.shadow.verticalOffset, $.shadow.horizontalOffset, "
         + "$.shadow.scale, $.shadow.blur, "
-
 
     function __animateIndicators(doAnimate, anim, props) {
         if (!doAnimate)
