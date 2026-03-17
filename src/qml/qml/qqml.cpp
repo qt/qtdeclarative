@@ -303,10 +303,12 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 
   Clears all stored type registrations, such as those produced with \l qmlRegisterType().
 
+  \warning
   Do not call this function while a QQmlEngine exists or behavior will be undefined.
-  Any existing QQmlEngines must be deleted before calling this function.  This function
-  only affects the application global cache. Delete the QQmlEngine to clear all cached
-  data relating to that engine.
+  Any existing QQmlEngines must be deleted before calling this function.
+
+  This function only affects the application global cache. Delete the QQmlEngine to clear
+  all cached data relating to that engine.
 */
 void qmlClearTypeRegistrations() // Declared in qqml.h
 {
