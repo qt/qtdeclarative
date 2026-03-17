@@ -31,6 +31,7 @@ class tst_qquickvaluetypes : public QObject
 private slots:
     void colorFromString();
     void colorFromColor();
+    void colorTransformations();
     void vector2dFromVector2d();
     void vector3dFromVector3d();
     void vector4dFromVector4d();
@@ -54,6 +55,38 @@ void tst_qquickvaluetypes::colorFromColor()
     const QColor input(64, 128, 192, 255);
     const QColor result = valueTypeTransform<QColor, QQuickColorValueType>(input);
     QCOMPARE(result, input);
+}
+
+void tst_qquickvaluetypes::colorTransformations()
+{
+    const QColor color(64, 128, 192, 255);
+    QQuickColorValueType input(color);
+    QTest::ignoreMessage(QtWarningMsg, "QColor::setAlphaF: invalid value nan");
+    QCOMPARE(input.alpha(qQNaN()), QColor(64, 128, 192, 0));
+    QTest::ignoreMessage(QtWarningMsg, "NaN given as argument to color.darker()");
+    QCOMPARE(input.darker(qQNaN()), QColor());
+    QTest::ignoreMessage(QtWarningMsg, "NaN given as argument to color.lighter()");
+    QCOMPARE(input.lighter(qQNaN()), QColor());
+
+    QCOMPARE(input.alpha(0.5), [&](){
+        QColor changed = color;
+        changed.setAlphaF(0.5);
+        return changed;
+    }());
+
+    QTest::ignoreMessage(QtWarningMsg, "QColor::setAlphaF: invalid value -1");
+    QCOMPARE(input.alpha(-1), [&](){
+        QColor changed = color;
+        changed.setAlphaF(0);
+        return changed;
+    }());
+
+    QTest::ignoreMessage(QtWarningMsg, "QColor::setAlphaF: invalid value 200");
+    QCOMPARE(input.alpha(200), [&](){
+        QColor changed = color;
+        changed.setAlphaF(1);
+        return changed;
+    }());
 }
 
 void tst_qquickvaluetypes::vector2dFromVector2d()

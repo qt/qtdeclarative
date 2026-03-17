@@ -111,6 +111,11 @@ QColor QQuickColor::transparent(const QColor &color, qreal opacity) const
  */
 QColor QQuickColor::blend(const QColor &a, const QColor &b, qreal factor) const
 {
+    if (std::isnan(factor)) {
+        qWarning("NaN given as argument to Color.blend()");
+        return QColor();
+    }
+
     if (factor <= 0.0)
         return a;
     if (factor >= 1.0)

@@ -29,11 +29,21 @@ QString QQuickColorValueType::toString() const
 
 QColor QQuickColorValueType::lighter(qreal factor) const
 {
+    if (std::isnan(factor)) {
+        qWarning("NaN given as argument to color.lighter()");
+        return QColor();
+    }
+
     return QColor::lighter(int(qRound(factor*100.)));
 }
 
 QColor QQuickColorValueType::darker(qreal factor) const
 {
+    if (std::isnan(factor)) {
+        qWarning("NaN given as argument to color.darker()");
+        return QColor();
+    }
+
     return QColor::darker(int(qRound(factor*100.)));
 }
 
