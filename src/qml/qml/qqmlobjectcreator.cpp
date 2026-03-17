@@ -1517,6 +1517,32 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     return ok ? instance : nullptr;
 }
 
+/*!
+ * \internal
+ * Create a single object at \a objectIndex within an already-existing \a existingContext.
+ * Unlike create(), this does not allocate a new context — the object is registered as an
+ * OrdinaryObject in \a existingContext.
+ */
+QObject *QQmlObjectCreator::createObjectInContext(
+        int objectIndex, QObject *parent,
+        const QQmlRefPointer<QQmlContextData> &existingContext)
+{
+    Q_ASSERT(phase == Startup);
+    phase = CreatingObjects;
+
+    context = existingContext;
+    if (!sharedState->rootContext)
+        sharedState->rootContext = context;
+
+    QV4::Scope scope(v4);
+    if (topLevelCreator)
+        sharedState->allJavaScriptObjects = ObjectInCreationGCAnchorList(scope);
+
+    QObject *rv = createInstance(objectIndex, parent, /*isContextObject=*/false);
+    phase = ObjectsCreated;
+    return rv;
+}
+
 bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 {
     Q_ASSERT(phase == ObjectsCreated || phase == Finalizing);
