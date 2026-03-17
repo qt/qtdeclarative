@@ -238,7 +238,6 @@ Despite covering many common QML features, \QMLLS is still in development with s
 yet to be supported:
 \list
     \li Suggesting autocompletions on invalid QML files.
-    \li Navigating to definitions of objects defined in C++.
     \li Autocompleting context properties
 \endlist
 
