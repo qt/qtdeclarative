@@ -197,8 +197,7 @@ private:
     QQSK::Delegates m_trackedDelegates = QQSK::Delegate::NoDelegate;
 
     QPointer<QQStyleKitReader> m_parentReader;
-    QList<QPointer<QQStyleKitVariation>> m_effectiveInAppVariations;
-    QList<QPointer<QQStyleKitVariation>> m_effectiveInStyleVariations;
+    QList<QPointer<QQStyleKitVariation>> m_effectiveVariations;
 
     QQStyleKitControlProperties m_global;
 

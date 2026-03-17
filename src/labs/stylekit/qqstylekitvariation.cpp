@@ -191,7 +191,7 @@ void QQStyleKitVariationAttached::setVariations(const QStringList &variations)
     emit variationsChanged();
 }
 
-QQStyleKitExtendableControlType QQStyleKitVariationAttached::controlType()
+QQStyleKitExtendableControlType QQStyleKitVariationAttached::controlType() const
 {
     return m_controlType;
 }

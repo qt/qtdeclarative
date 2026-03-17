@@ -46,7 +46,11 @@ private:
     QQStyleKitFont m_fonts;
     QQStyleKitPalette m_palettes;
 
+    bool m_hasVariationsThatAffectExistingStyleReaders = false;
+
     Q_DISABLE_COPY(QQStyleKitStyleAndThemeBase)
+
+    friend class QQStyleKitPropertyResolver;
 };
 
 QT_END_NAMESPACE

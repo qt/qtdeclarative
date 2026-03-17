@@ -22,6 +22,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQStyleKitVariationAttached;
+class QQStyleKitStyleAndThemeBase;
 
 class QQStyleKitVariation : public QQStyleKitControls
 {
@@ -45,6 +46,7 @@ private:
     Q_DISABLE_COPY(QQStyleKitVariation)
 
     QString m_name;
+    QPointer<const QQStyleKitStyleAndThemeBase> m_owner;
 
     static int s_typeVariationCount;
 
@@ -63,7 +65,7 @@ public:
      QStringList variations() const;
      void setVariations(const QStringList &variations);
 
-     QQStyleKitExtendableControlType controlType();
+     QQStyleKitExtendableControlType controlType() const;
      void setControlType(QQStyleKitExtendableControlType type);
 
  signals:

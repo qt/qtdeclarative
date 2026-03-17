@@ -25,9 +25,15 @@ QT_BEGIN_NAMESPACE
 class QQStyleKitControl;
 class QQStyleKitControls;
 class QQStyleKitStyle;
+class QQStyleKitStyleAndThemeBase;
 class QQStyleKitReader;
 class QQStyleKitPropertyGroup;
+class QQStyleKitVariation;
+class QQStyleKitVariationAttached;
 
+// The stack-allocated capacity should be large enough to cover the maximum expected
+// nesting depth of controls in the application, to avoid heap allocation.
+using AttachedVariationList = QVarLengthArray<const QQStyleKitVariationAttached *, 20>;
 class QQStyleKitPropertyResolver
 {
     Q_GADGET
@@ -89,29 +95,36 @@ private:
         const QQStyleKitExtendableControlType exactType,
         const QList<QQStyleKitExtendableControlType> baseTypes);
 
-    static QVariant readPropertyInStyle(
+    static QVariant readPropertyInVariations(
+        const QList<QPointer<QQStyleKitVariation>> &variations,
+        const QQStyleKitStyleAndThemeBase *styleOrTheme,
         const PropertyPathIds &ids,
         const QQStyleKitExtendableControlType exactType,
-        const QList<QQStyleKitExtendableControlType> baseTypes,
-        const QQStyleKitStyle *style);
+        const QList<QQStyleKitExtendableControlType> baseTypes);
 
-    static QVariant readProperty(
+    static QVariant readPropertyInStyle(
+        QQStyleKitStyle *style,
         const PropertyPathIds &ids,
-        QQStyleKitReader *styleReader,
-        QQStyleKitStyle *style);
+        QQStyleKitReader *styleReader);
 
     static void cacheReaderState(QQSK::State state);
+
+    static inline void addVariationToReader(
+        QQStyleKitReader *styleReader,
+        QQStyleKitStyleAndThemeBase *styleOrTheme,
+        QQStyleKitVariation *variation);
+
     static void addInstanceVariationsToReader(
         QQStyleKitReader *styleReader,
-        const QStringList &inAppVariationNames,
-        const QVarLengthArray<const QQStyleKitControls *, 6> &stylesAndThemes);
+        QQStyleKitStyleAndThemeBase *styleOrTheme,
+        const AttachedVariationList &attachedVariations);
+
     static void addTypeVariationsToReader(
         QQStyleKitReader *styleReader,
-        const QQStyleKitExtendableControlType parentType,
-        const QQStyleKitStyle *style);
-    static void rebuildVariationsForReader(
-        QQStyleKitReader *styleReader,
-        const QQStyleKitStyle *style);
+        QQStyleKitStyleAndThemeBase *styleOrTheme,
+        const AttachedVariationList &attachedVariations);
+
+    static void rebuildVariationsForReader(QQStyleKitReader *styleReader, QQStyleKitStyle *style);
 };
 
 QT_END_NAMESPACE

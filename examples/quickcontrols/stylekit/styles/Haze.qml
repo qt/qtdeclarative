@@ -256,15 +256,6 @@ Style {
         }
     }
 
-    StyleVariation {
-        name: "alert"
-        abstractButton.background {
-            color: "orchid"
-            border.color: "orchid"
-            shadow.color: "orchid"
-        }
-    }
-
     /* You can also set one or more StyleVariations on a control type. Unlike Instance
      * variations—which apply only to specific control instances—type variations are applied
      * to *all* instances of a control type without requiring the application to use attached
@@ -413,6 +404,15 @@ Style {
             }
         }
 
+        StyleVariation {
+            name: "alert"
+            abstractButton.background {
+                color: "orchid"
+                border.color: "orchid"
+                shadow.color: "orchid"
+            }
+        }
+
         CustomControl {
             controlType: fancyButton
             background {
@@ -532,6 +532,15 @@ Style {
             background.color: Qt.lighter("#544e52", 1.3)
             background.border.color: "#3d373b"
             background.shadow.visible: false
+        }
+
+        StyleVariation {
+            name: "alert"
+            abstractButton.background {
+                color: "orchid"
+                border.color: "orchid"
+                shadow.color: "orchid"
+            }
         }
 
         CustomControl {
