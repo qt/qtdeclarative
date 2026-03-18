@@ -8,7 +8,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 
-void ContextualTypes::setType(const QString &name, const ContextualType type)
+void ContextualTypes::setType(const QString &name, const ContextualType &type)
 {
     auto insertName = [this, &name, &type]() {
         if (!name.startsWith(u'$')) {
