@@ -34,16 +34,21 @@ Dialog {
 
     focus: true
     modal: true
-    title: qsTr("Add Contact")
     standardButtons: Dialog.Ok | Dialog.Cancel
 
     contentItem: ContactForm {
         id: form
+        Binding {
+            target: dialog.standardButton(Dialog.Ok)
+            property: "enabled"
+            value: form.fullName.text
+                   && form.address.text
+                   && form.city.text
+                   && form.number.text
+        }
     }
 
     onAccepted: {
-        if (form.fullName.text && form.address.text && form.city.text && form.number.text) {
-            finished(form.fullName.text, form.address.text, form.city.text, form.number.text);
-        }
+        finished(form.fullName.text, form.address.text, form.city.text, form.number.text);
     }
 }
