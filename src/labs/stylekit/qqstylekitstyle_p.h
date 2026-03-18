@@ -124,6 +124,7 @@ private:
     friend class QQStyleKitAttached;
     friend class QQStyleKitPropertyGroup;
     friend class QQStyleKitPropertyResolver;
+    friend class QQStyleKitDebug;
 };
 
 QT_END_NAMESPACE

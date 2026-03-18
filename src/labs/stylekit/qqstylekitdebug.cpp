@@ -6,6 +6,7 @@
 #include "qqstylekitcontrols_p.h"
 #include "qqstylekitstyle_p.h"
 #include "qqstylekittheme_p.h"
+#include "qqstylekitvariation_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -27,17 +28,18 @@ QT_BEGIN_NAMESPACE
     To start tracing, assign the \l{The id Attribute}{id} of a \l Control to the \l control property:
 
     \code
-    StyleKit.debug.control = myButton
+    StyleKit.debug.control: myButton
     \endcode
 
     Each resolved property is printed as a single line showing where the value
     came from and what it resolved to:
 
     \code
-    [read] StyleReader[Normal].button.background.color -> button[Normal] = #ff0000
+    [read] StyleReader[Hovered].button.background.color -> MyStyle.Theme(Dark).button[Hovered] = #ff0000
     \endcode
 
-    Use \l filter to limit the output to properties of interest.
+    Tracing the property reads of a StyleReader can produce a large amount of output. Use \l filter to
+    limit the output to properties of interest.
 
     \labs
 
@@ -47,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlproperty Item StyleKitDebug::control
 
-    The \l{The id Attribute}{id} of the \l Control to trace.
+    The \l{The id Attribute}{id} of the \l Control or \l StyleReader to trace.
 
     When set, StyleKit logs all style property reads
     for this item to the debug output. Set to \c null to stop tracing.
@@ -61,10 +63,21 @@ QT_BEGIN_NAMESPACE
     A regular expression used to filter the debug output. Only lines matching
     the pattern are printed. By default, all output is shown.
 
-    For example, to show only reads of the background color:
+    For example, to only trace the background color:
 
     \code
-    StyleKit.debug.filter = "background.color"
+    StyleKit.debug.filter: "background.color"
+    \endcode
+
+    To trace all background colors, including properties
+    such as \l {DelegateStyle::color}{background.color},
+    \l {BorderStyle::color}{background.border.color},
+    \l {ImageStyle::color}{background.image.color},
+    and \l {ShadowStyle::color}{background.shadow.color},
+    use a regular expression:
+
+    \code
+    StyleKit.debug.filter: "background.*color"
     \endcode
 
     \sa control
@@ -85,6 +98,9 @@ QString QQStyleKitDebug::enumToString(EnumType enumValue)
 }
 
 QString QQStyleKitDebug::objectName(const QObject *obj) {
+    if (!obj->objectName().isEmpty())
+        return obj->objectName();
+
     QString str = QString::fromLatin1(obj->metaObject()->className());
     int idx = str.indexOf("_QMLTYPE"_L1);
     if (idx != -1)
@@ -94,9 +110,7 @@ QString QQStyleKitDebug::objectName(const QObject *obj) {
         if (str.startsWith(prefix))
             str = str.mid(prefix.length());
     }
-    const QString name = obj->objectName();
-    if (!name.isEmpty())
-        str = str + "("_L1 + name + ")"_L1;
+
     return str;
 }
 
@@ -123,16 +137,19 @@ QString QQStyleKitDebug::propertyPath(const QQStyleKitPropertyGroup *group, cons
 
 QString QQStyleKitDebug::controlToString(const QQStyleKitControlProperties *control)
 {
+    if (!control->objectName().isEmpty())
+        return control->objectName();
+
     const QObject *parentObj = control->parent();
     if (!parentObj)
         return "<no parent>"_L1;
-    auto *controls = qobject_cast<const QQStyleKitControls *>(parentObj);
-    if (!controls) {
-        return "<"_L1 + QString::fromUtf8(parentObj->metaObject()->className()) + ">"_L1;
-    }
 
-    const int startIndex = QQStyleKitControlProperties::staticMetaObject.propertyOffset();
-    const int endIndex = QQStyleKitControlProperties::staticMetaObject.propertyCount();
+    auto *controls = qobject_cast<const QQStyleKitControls *>(parentObj);
+    if (!controls)
+        return "<"_L1 + QString::fromUtf8(parentObj->metaObject()->className()) + ">"_L1;
+
+    const int startIndex = QQStyleKitControls::staticMetaObject.propertyOffset();
+    const int endIndex = QQStyleKitControls::staticMetaObject.propertyCount();
 
     const QMetaObject* parentMeta = parentObj->metaObject();
     for (int i = startIndex; i < endIndex; ++i) {
@@ -145,7 +162,8 @@ QString QQStyleKitDebug::controlToString(const QQStyleKitControlProperties *cont
         if (propObj == control)
             return QString::fromUtf8(prop.name());
     }
-    return "<unknown control: no property found>"_L1;
+
+    return "<unknown control>"_L1;
 }
 
 QString QQStyleKitDebug::objectPath(const QQStyleKitControlProperties *properties, QObject *from)
@@ -161,10 +179,9 @@ QString QQStyleKitDebug::objectPath(const QQStyleKitControlProperties *propertie
             path.prepend(theme->name() + kDot);
         } else if (auto *theme = qobject_cast<const QQStyleKitTheme *>(obj)) {
             // Note: only one theme is instantiated at a time
-            if (auto style = theme->style())
-                path.prepend(style->themeName());
-            else
-                path.prepend(objectName(obj));
+            path.prepend("Theme("_L1 + theme->style()->m_effectiveThemeName + ")"_L1);
+        } else if (auto *variation = qobject_cast<const QQStyleKitVariation *>(obj)) {
+            path.prepend("StyleVariation("_L1 + variation->name() + ")"_L1);
         } else if (auto *control = qobject_cast<const QQStyleKitControl *>(obj)) {
             path.prepend(controlToString(control));
         } else if (auto *reader = qobject_cast<const QQStyleKitReader *>(obj)) {
@@ -210,7 +227,7 @@ void QQStyleKitDebug::notifyPropertyRead(
     QString storagePath;
     if (storage->subclass() == QQSK::Subclass::QQStyleKitReader) {
         /* We read an interpolated value stored directly in the reader itself. While this
-         * can be interesting to print out whe debugging the styling engine itself, it
+         * can be interesting to print out when debugging the styling engine itself, it
          * comes across as noise when inspecting control-to-style mappings. Ignore. */
 #if 0
         storagePath = "[local storage] "_L1;

@@ -389,6 +389,7 @@ void QQStyleKitStyle::recreateTheme()
         m_theme = nullptr;
     }
 
+    m_effectiveThemeName = effectiveThemeName;
     m_currentThemeComponent = effectiveThemeComponent;
 
     if (effectiveThemeComponent) {
