@@ -72,7 +72,7 @@ struct ContextualTypes
     ContextualType type(const QString &name) const { return m_types[name]; }
     QString name(const QQmlJSScope::ConstPtr &type) const { return m_names[type]; }
 
-    void setType(const QString &name, const ContextualType type);
+    void setType(const QString &name, const ContextualType &type);
     void clearType(const QString &name)
     {
         auto &scope = m_types[name].scope;
