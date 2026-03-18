@@ -939,13 +939,17 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
 {
     QmlLsp::QQmlCodeModelManager manager;
     const QByteArray rootUrl{ testFileUrl("rootA").toEncoded() };
+    const QByteArray fallbackUrl;
+
+    static constexpr QLatin1String fallbackImportPath = "/path/to/importPath"_L1;
+    manager.setImportPaths({ fallbackImportPath });
 
     QTemporaryDir temporaryDir;
     QVERIFY(temporaryDir.isValid());
     manager.addRootUrls({ rootUrl });
 
     manager.setBuildPathsForRootUrl(rootUrl, { temporaryDir.path() });
-    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ temporaryDir.path() });
+    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ fallbackImportPath });
 
     QDir dir(temporaryDir.path());
     dir.mkdir(".qt"_L1);
@@ -960,7 +964,10 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
 
     manager.onBuildFinished(rootUrl);
 
-    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ testFile("test"_L1) });
+    const QStringList expectedImportPathsForRoot =
+            QStringList{ testFile("test"_L1), fallbackImportPath };
+    QCOMPARE(manager.importPathsForUrl(rootUrl), expectedImportPathsForRoot);
+    QCOMPARE(manager.importPathsForUrl(fallbackUrl), QStringList{ fallbackImportPath });
 
     {
         QFile file(temporaryDir.filePath(".qt/.qmlls.build.ini"_L1));
@@ -972,7 +979,10 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
 
     manager.onBuildFinished(rootUrl);
 
-    QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ testFile("test2"_L1) });
+    const QStringList expectedImportPathsForRoot2 =
+            QStringList{ testFile("test2"_L1), fallbackImportPath };
+    QCOMPARE(manager.importPathsForUrl(rootUrl), expectedImportPathsForRoot2);
+    QCOMPARE(manager.importPathsForUrl(fallbackUrl), QStringList{ fallbackImportPath });
 }
 
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)
