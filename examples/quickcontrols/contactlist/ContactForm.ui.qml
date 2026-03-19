@@ -68,5 +68,6 @@ GridLayout {
         Layout.minimumWidth: grid.minimumInputSize
         Layout.alignment: Qt.AlignLeft | Qt.AlignBaseline
         placeholderText: grid.placeholderText
+        inputMethodHints: Qt.ImhDigitsOnly
     }
 }
