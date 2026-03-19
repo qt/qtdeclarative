@@ -3,7 +3,6 @@
 
 #include "qqstylekitcontrols_p.h"
 #include "qqstylekitcontrol_p.h"
-#include "qqstylekitvariation_p.h"
 #include "qqstylekitcustomcontrol_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -405,17 +404,6 @@ QQStyleKitControl* QQStyleKitControls::getControl(QQStyleKitExtendableControlTyp
     if (!m_controls.contains(controlType))
         return nullptr;
     return m_controls[controlType];
-}
-
-
-QList<QQStyleKitVariation *> QQStyleKitControls::variations() const
-{
-    QList<QQStyleKitVariation *> list;
-    for (auto *obj : children()) {
-        if (auto *variation = qobject_cast<QQStyleKitVariation *>(obj))
-            list.append(variation);
-    }
-    return list;
 }
 
 #define IMPLEMENT_ACCESSORS(NAME, TYPE) \

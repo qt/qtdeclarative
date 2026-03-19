@@ -109,8 +109,6 @@ public:
 
     Q_INVOKABLE QQStyleKitControl *getControl(QQStyleKitExtendableControlType controlType) const;
 
-    QList<QQStyleKitVariation *> variations() const;
-
     QQmlListProperty<QObject> data();
     const QList<QObject *> children() const;
 

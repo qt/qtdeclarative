@@ -148,7 +148,7 @@ signals:
 
 // ************* QQStyleKitBorderProperties ****************
 
-class QQStyleKitBorderProperties : public QQStyleKitPropertyGroup
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitBorderProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
     Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
@@ -546,7 +546,7 @@ signals:
  * only be read), and if so, offer a storage for storing those values. That storage is typically
  * a map that stores _only_ the properties that are written to, and nothing else.
  */
-class QQStyleKitControlProperties : public QQStyleKitPropertyGroup
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitControlProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
     Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing NOTIFY spacingChanged FINAL)

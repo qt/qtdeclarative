@@ -4,6 +4,7 @@
 #include "qqstylekit_p.h"
 #include "qqstylekitstyle_p.h"
 #include "qqstylekittheme_p.h"
+#include "qqstylekitvariation_p.h"
 #include "qqstylekitcustomtheme_p.h"
 #include "qqstylekitcontrolproperties_p.h"
 #include "qqstylekitpropertyresolver_p.h"
@@ -422,9 +423,11 @@ void QQStyleKitStyle::recreateTheme()
         m_theme->fonts()->setFallbackFont(fonts());
     if (m_theme->palettes())
         m_theme->palettes()->setFallbackPalette(palettes());
+
     if (this == current()) {
         m_theme->updateThemePalettes();
         m_theme->updateThemeFonts();
+        QQStyleKitVariation::resetVariationsForStyle(this);
         QQStyleKitReader::resetAll();
     }
 

@@ -118,9 +118,19 @@ void QQStyleKitPropertyResolver::addVariationToReader(
     QQStyleKitStyleAndThemeBase *styleOrTheme,
     QQStyleKitVariation *variation)
 {
-    styleReader->m_effectiveVariations.append(variation);
-    variation->m_owner = styleOrTheme;
-    styleOrTheme->m_hasVariationsThatAffectExistingStyleReaders = true;
+    /* Add the variation to the StyleReader's list of effective variations.
+     * A variation may appear more than once in a type variation list or in
+     * an instance variation list, but it only needs to be added once - the
+     * first in the list will shadow the other ones anyway. */
+    if (!styleReader->m_effectiveVariations.contains(variation))
+        styleReader->m_effectiveVariations.append(variation);
+
+    /* We also record in which Style or Theme the variation was found, so that
+     * it only takes effect for that specific Style or Theme during property
+     * propagation. Note that the same type variation can be used from both the
+     * Style and the Theme (its ID can be added to several variation lists). */
+    if (!variation->m_usageContext.contains(styleOrTheme))
+        variation->m_usageContext.append(styleOrTheme);
 }
 
 void QQStyleKitPropertyResolver::addTypeVariationsToReader(
@@ -193,7 +203,7 @@ void QQStyleKitPropertyResolver::addInstanceVariationsToReader(
 
     for (const QQStyleKitVariationAttached *attached : attachedVariations) {
         for (const QString &instanceVariationName : attached->variations()) {
-            for (QQStyleKitVariation *variation : styleOrTheme->variations())  {
+            for (QQStyleKitVariation *variation : styleOrTheme->m_styleVariations)  {
                 if (variation->name() != instanceVariationName)
                     continue;
 
@@ -228,38 +238,30 @@ void QQStyleKitPropertyResolver::rebuildVariationsForReader(
     styleReader->m_effectiveVariationsDirty = false;
     styleReader->m_effectiveVariations.clear();
 
-    const bool hasInstanceVariations = QQStyleKitVariationAttached::s_instanceVariationCount > 0;
-    const bool hasTypeVariations = QQStyleKitVariation::s_typeVariationCount > 0;
-    if (!hasTypeVariations && !hasInstanceVariations) {
-        /* No variations are defined in the current style or theme. In that case
-         * it doesn't matter if the application has variations set - they
-         * will anyway not map to any variations in the style. */
+    if (!style->m_hasVariations)
         return;
-    }
 
     /* Walk up the parent chain and collect all attached StyleVariation objects that
      * may affect this StyleReader. Their variation lists affect instance variations,
      * and their control type may affect type variations. */
     AttachedVariationList attachedVariations;
-    QObject *parentObj = styleReader;
-    while (parentObj) {
-        const QObject *attachedObject = qmlAttachedPropertiesObject<QQStyleKitVariation>(parentObj, false);
-        if (attachedObject) {
+    for (QObject *current = styleReader; current; current = current->parent()) {
+        if (const QObject *attachedObject = qmlAttachedPropertiesObject<QQStyleKitVariation>(current, false)) {
             const auto *attached = static_cast<const QQStyleKitVariationAttached *>(attachedObject);
             attachedVariations.append(attached);
         }
-        parentObj = parentObj->parent();
     }
 
-    QQStyleKitStyle *currentStyle = style;
-    while (currentStyle) {
-        if (QQStyleKitTheme *theme = currentStyle->theme()) {
+    if (attachedVariations.isEmpty())
+        return;
+
+    for (QQStyleKitStyle *current = style; current; current = current->fallbackStyle()) {
+        if (QQStyleKitTheme *theme = current->theme()) {
             addInstanceVariationsToReader(styleReader, theme, attachedVariations);
             addTypeVariationsToReader(styleReader, theme, attachedVariations);
         }
-        addInstanceVariationsToReader(styleReader, currentStyle, attachedVariations);
-        addTypeVariationsToReader(styleReader, currentStyle, attachedVariations);
-        currentStyle = currentStyle->fallbackStyle();
+        addInstanceVariationsToReader(styleReader, current, attachedVariations);
+        addTypeVariationsToReader(styleReader, current, attachedVariations);
     }
 }
 
@@ -457,21 +459,20 @@ QVariant QQStyleKitPropertyResolver::readPropertyInVariations(
     const QQStyleKitExtendableControlType exactType,
     const QList<QQStyleKitExtendableControlType> baseTypes)
 {
-    if (!styleOrTheme->m_hasVariationsThatAffectExistingStyleReaders)
-        return {};
-
     bool foundAtLeastOneVariation = false;
     for (const QPointer<QQStyleKitVariation> &variation : variations) {
         if (!variation)
             continue;
-        if (variation->m_owner != styleOrTheme) {
+        if (!variation->m_usageContext.contains(styleOrTheme)) {
             if (foundAtLeastOneVariation) {
-                /* We have already found at least one effective variation in the list, and the current
-                 * one has a different owner than the style or theme that we're searching inside. This
-                 * means that the remaining variations will also have a different owner, since they belong
-                 * to a style or theme on a lower level. So we can end the iteration. */
+                /* Optimization: We have found at least one effective variation in the list, but this
+                 * one has a different usage context. This means that the remaining variations will also
+                 * have a different usage context, since the variations were added to the list sorted on context.
+                 * So we can end the iteration. */
                 break;
             }
+            /* The variations list is sorted on usage context. And the first variation in the list with
+             * the correct usage context has yet to be found. So continue to the next variation. */
             continue;
         }
         foundAtLeastOneVariation = true;

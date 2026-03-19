@@ -29,7 +29,7 @@ class QQuickPalette;
 class QQStyleKitVariation;
 class QQStyleKitPropertyResolver;
 
-class QQStyleKitReader : public QQStyleKitControlProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitReader : public QQStyleKitControlProperties
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitExtendableControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)

@@ -23,6 +23,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQStyleKitVariation;
+
 class QQStyleKitStyleAndThemeBase : public QQStyleKitControls
 {
     Q_OBJECT
@@ -41,16 +43,17 @@ signals:
     void fontsChanged();
     void palettesChanged();
 
-private:
+protected:
+    QList<QQStyleKitVariation *> m_styleVariations;
 
+private:
     QQStyleKitFont m_fonts;
     QQStyleKitPalette m_palettes;
-
-    bool m_hasVariationsThatAffectExistingStyleReaders = false;
 
     Q_DISABLE_COPY(QQStyleKitStyleAndThemeBase)
 
     friend class QQStyleKitPropertyResolver;
+    friend class QQStyleKitVariation;
 };
 
 QT_END_NAMESPACE
