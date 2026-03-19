@@ -1395,7 +1395,7 @@ Element GenericPass::resolveIdToElement(QAnyStringView id, const Element &contex
     Q_D(const GenericPass);
     QQmlJSScopesById::MostLikelyCallback<QQmlJSScope::ConstPtr> result;
     PassManagerPrivate::visitor(*d->m_manager)->addressableScopes().possibleScopes(
-            id.toString(), QQmlJSScope::scope(context), Default, result);
+            id.toString(), QQmlJSScope::scope(context), QQmlJSScopesByIdOption::Default, result);
     return QQmlJSScope::createQQmlSAElement(result.result);
 }
 
@@ -1407,7 +1407,7 @@ QString GenericPass::resolveElementToId(const Element &element, const Element &c
     Q_D(const GenericPass);
     QQmlJSScopesById::MostLikelyCallback<QString> result;
     PassManagerPrivate::visitor(*d->m_manager)->addressableScopes().possibleIds(
-            QQmlJSScope::scope(element), QQmlJSScope::scope(context), Default, result);
+            QQmlJSScope::scope(element), QQmlJSScope::scope(context), QQmlJSScopesByIdOption::Default, result);
     return result.result;
 }
 
