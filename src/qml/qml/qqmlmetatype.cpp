@@ -308,10 +308,8 @@ void QQmlMetaType::qmlRemoveModuleRegistration(const QString &uri)
     if (!data.isValid())
         return; // shutdown/deletion race. Not a problem.
 
-    if (!data->moduleTypeRegistrationFunctions.contains(uri))
+    if (!data->moduleTypeRegistrationFunctions.remove(uri))
         qFatal("Cannot remove multiple registrations for %s", qPrintable(uri));
-    else
-        data->moduleTypeRegistrationFunctions.remove(uri);
 }
 
 bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri)
