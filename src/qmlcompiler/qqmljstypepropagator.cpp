@@ -385,7 +385,8 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
         for (QQmlJSScope::ConstPtr scope = qmlScope; !scope.isNull(); scope = scope->parentScope()) {
             if (scope->hasProperty(name)) {
                 QQmlJSScopesById::MostLikelyCallback<QString> id;
-                m_function->addressableScopes.possibleIds(scope, qmlScope, Default, id);
+                m_function->addressableScopes.possibleIds(scope, qmlScope,
+                                                          QQmlJSScopesByIdOption::Default, id);
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;
