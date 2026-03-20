@@ -73,6 +73,15 @@ void QQuickFlexboxLayoutEngine::collectItemSizeHints(QQuickFlexboxLayoutItem *fl
     if (!info)
         return;
 
+    // remove margins from the size added by the helper
+    auto m = info->qMargins();
+    const QSizeF margins{m.left() + m.right(), m.top() + m.bottom()};
+    flexItem->cachedItemSizeHints().margins = margins; // save margins for later use
+
+    QSizeF noMarginsHints[Qt::NSizeHints];
+    for (int i = 0; i < Qt::NSizeHints; ++i)
+        noMarginsHints[i] = sizeHints[i] - margins;
+
     // Set layout margins to the flex item (Layout.margins)
     if (info->isMarginsSet())
         flexItem->setFlexMargin(QQuickFlexboxLayout::EdgeAll, info->margins());
@@ -103,8 +112,8 @@ void QQuickFlexboxLayoutEngine::collectItemSizeHints(QQuickFlexboxLayoutItem *fl
                 // If the Layout.fillHeight not been set, the preferred height
                 // will be set as height
                 if (!info->fillHeight())
-                    flexItem->setHeight(sizeHints[Qt::PreferredSize].height());
-                flexItem->setFlexBasis(sizeHints[Qt::PreferredSize].width(), !info->fillWidth());
+                    flexItem->setHeight(noMarginsHints[Qt::PreferredSize].height());
+                flexItem->setFlexBasis(noMarginsHints[Qt::PreferredSize].width(), !info->fillWidth());
                 // Set child item to grow on main-axis (i.e. the flex
                 // direction)
                 flexItem->setItemGrowAlongMainAxis(info->fillWidth() ? 1.0f : 0.0f);
@@ -116,8 +125,8 @@ void QQuickFlexboxLayoutEngine::collectItemSizeHints(QQuickFlexboxLayoutItem *fl
                 // If the Layout.fillWidth not been set, the preferred width
                 // will be set as width
                 if (!info->fillWidth())
-                    flexItem->setWidth(sizeHints[Qt::PreferredSize].width());
-                flexItem->setFlexBasis(sizeHints[Qt::PreferredSize].height(), !info->fillHeight());
+                    flexItem->setWidth(noMarginsHints[Qt::PreferredSize].width());
+                flexItem->setFlexBasis(noMarginsHints[Qt::PreferredSize].height(), !info->fillHeight());
                 // Set child item to grow on main-axis (i.e. the flex
                 // direction)
                 flexItem->setItemGrowAlongMainAxis(info->fillHeight() ? 1.0f : 0.0f);
@@ -175,8 +184,13 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
         const int count = itemCount();
         for (int i = 0; i < count; ++i) {
             SizeHints &hints = cachedItemSizeHints(i);
+
+            QSizeF noMarginsHints[Qt::NSizeHints];
+            for (int i = 0; i < Qt::NSizeHints; ++i)
+                noMarginsHints[i] = hints.array[i] - hints.margins;
+
             auto &flexLayoutItem = m_flexLayoutItems.at(i);
-            flexLayoutItem->setMinSize(hints.min());
+            flexLayoutItem->setMinSize(noMarginsHints[Qt::MinimumSize]);
             if (flexLayoutItem->isFlexBasisUndefined()) {
                 // If flex basis is undefined and item is still stretched, it
                 // meant the flex child item has a const width or height but
@@ -191,16 +205,16 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
                         flexLayoutItem->resetSize();
                         if (qFlexLayout->direction() == QQuickFlexboxLayout::Row ||
                             qFlexLayout->direction() == QQuickFlexboxLayout::RowReverse) {
-                            flexLayoutItem->setWidth(hints.pref().width());
+                            flexLayoutItem->setWidth(noMarginsHints[Qt::PreferredSize].width());
                         } else {
-                            flexLayoutItem->setHeight(hints.pref().height());
+                            flexLayoutItem->setHeight(noMarginsHints[Qt::PreferredSize].height());
                         }
                     }
                 } else {
-                    flexLayoutItem->setSize(hints.pref());
+                    flexLayoutItem->setSize(noMarginsHints[Qt::PreferredSize]);
                 }
             }
-            flexLayoutItem->setMaxSize(hints.max());
+            flexLayoutItem->setMaxSize(noMarginsHints[Qt::MaximumSize]);
             // The preferred size, minimum and maximum size of the parent item
             // will be calculated as follows
             // If no wrap enabled in the flex layout:
@@ -312,6 +326,7 @@ void QQuickFlexboxLayoutEngine::invalidateItemSizeHint(QQuickItem *item)
         hints.min() = QSizeF();
         hints.pref() = QSizeF();
         hints.max() = QSizeF();
+        hints.margins = {0,0};
     }
 }
 

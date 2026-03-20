@@ -911,5 +911,57 @@ Item {
             compare(flexboxLayout.Layout.maximumWidth, 300 + 5)
             compare(flexboxLayout.Layout.maximumHeight, 300 + 5)
         }
+
+        function test_margins() {
+            let flexboxLayout = createTemporaryObject(dynamicFlexboxLayoutComponent, container)
+            waitForItemPolished(flexboxLayout)
+
+            compare(flexboxLayout.implicitWidth, 0)
+            compare(flexboxLayout.implicitHeight, 0)
+            compare(flexboxLayout.Layout.minimumWidth, 0)
+            compare(flexboxLayout.Layout.minimumHeight, 0)
+
+            let item1 = flexItem.createObject(flexboxLayout)
+            waitForItemPolished(flexboxLayout)
+            compare(item1.width, 20)
+            compare(item1.height, 20)
+            // item2 has no margins
+            compare(flexboxLayout.implicitWidth, 20)
+            compare(flexboxLayout.implicitHeight, 20)
+            compare(flexboxLayout.Layout.minimumWidth, 0)
+            compare(flexboxLayout.Layout.minimumHeight, 0)
+            // add margins
+            item1.Layout.margins = 7
+            waitForItemPolished(flexboxLayout)
+            compare(item1.width, 20)
+            compare(item1.height, 20)
+            // margins affect the implicit size of the layout itself
+            // item1 (20 + 2 * item1.Layout.margins)
+            compare(flexboxLayout.implicitWidth, 34)
+            compare(flexboxLayout.implicitHeight, 34)
+            compare(flexboxLayout.Layout.minimumWidth, 14)
+            compare(flexboxLayout.Layout.minimumHeight, 14)
+
+
+            let item2 = flexItem.createObject(flexboxLayout)
+            waitForItemPolished(flexboxLayout)
+            compare(item2.width, 20)
+            compare(item2.height, 20)
+            // item2 has no margins
+            compare(flexboxLayout.implicitWidth, 54)
+            compare(flexboxLayout.implicitHeight, 34)
+            compare(flexboxLayout.Layout.minimumWidth, 14)
+            compare(flexboxLayout.Layout.minimumHeight, 14)
+            // add margins
+            item2.Layout.leftMargin = 17
+            waitForItemPolished(flexboxLayout)
+            compare(item2.width, 20)
+            compare(item2.height, 20)
+            // item1 (34) + item2 (17 + 20 = 37)
+            compare(flexboxLayout.implicitWidth, 71)
+            compare(flexboxLayout.implicitHeight, 34)
+            compare(flexboxLayout.Layout.minimumWidth, 31)
+            compare(flexboxLayout.Layout.minimumHeight, 14)
+        }
     }
 }
