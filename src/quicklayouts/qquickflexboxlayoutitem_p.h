@@ -27,6 +27,7 @@ struct SizeHints {
     inline QSizeF &pref() { return array[Qt::PreferredSize]; }
     inline QSizeF &max() { return array[Qt::MaximumSize]; }
     QSizeF array[Qt::NSizeHints];
+    QSizeF margins{0,0};
 };
 
 class QQuickFlexboxLayoutItem
