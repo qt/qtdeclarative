@@ -70,7 +70,7 @@ void QQmlTreeModelToTableModel::setModel(QAbstractItemModel *arg)
 {
     if (m_model != arg) {
         if (m_model) {
-            for (const auto &c : m_connections)
+            for (auto &c : m_connections)
                 QObject::disconnect(c);
             m_connections.fill({});
         }
