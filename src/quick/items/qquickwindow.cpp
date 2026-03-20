@@ -1263,7 +1263,7 @@ QQuickWindow::~QQuickWindow()
     // loaded into memory.
     QQuickPixmap::purgeCache();
 
-    for (const QMetaObject::Connection &connection : d->connections)
+    for (QMetaObject::Connection &connection : d->connections)
         disconnect(connection);
 }
 
