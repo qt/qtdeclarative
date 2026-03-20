@@ -284,6 +284,12 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when a decrease action is received from an assistive tool such as a screen-reader.
 */
 /*!
+    \qmlsignal QtQuick::Accessible::showOnScreenAction()
+
+    This signal is emitted when an assistive tool such as a screen-reader detects a partially visible element
+    and requests it to be fully visible.
+*/
+/*!
     \qmlsignal QtQuick::Accessible::scrollUpAction()
 
     This signal is emitted when a scroll up action is received from an assistive tool such as a screen-reader.
@@ -318,6 +324,7 @@ QMetaMethod QQuickAccessibleAttached::sigPress;
 QMetaMethod QQuickAccessibleAttached::sigToggle;
 QMetaMethod QQuickAccessibleAttached::sigIncrease;
 QMetaMethod QQuickAccessibleAttached::sigDecrease;
+QMetaMethod QQuickAccessibleAttached::sigShowOnScreen;
 QMetaMethod QQuickAccessibleAttached::sigScrollUp;
 QMetaMethod QQuickAccessibleAttached::sigScrollDown;
 QMetaMethod QQuickAccessibleAttached::sigScrollLeft;
@@ -385,6 +392,7 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
         sigToggle = QMetaMethod::fromSignal(&QQuickAccessibleAttached::toggleAction);
         sigIncrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::increaseAction);
         sigDecrease = QMetaMethod::fromSignal(&QQuickAccessibleAttached::decreaseAction);
+        sigShowOnScreen = QMetaMethod::fromSignal(&QQuickAccessibleAttached::showOnScreenAction);
         sigScrollUp = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollUpAction);
         sigScrollDown = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollDownAction);
         sigScrollLeft = QMetaMethod::fromSignal(&QQuickAccessibleAttached::scrollLeftAction);
@@ -498,6 +506,8 @@ bool QQuickAccessibleAttached::doAction(const QString &actionName)
         sig = &sigIncrease;
     else if (actionName == QAccessibleActionInterface::decreaseAction())
         sig = &sigDecrease;
+    else if (actionName == QAccessibleActionInterface::showOnScreenAction())
+        sig = &sigShowOnScreen;
     else if (actionName == QAccessibleActionInterface::scrollUpAction())
         sig = &sigScrollUp;
     else if (actionName == QAccessibleActionInterface::scrollDownAction())
@@ -531,6 +541,8 @@ void QQuickAccessibleAttached::availableActions(QStringList *actions) const
         actions->append(QAccessibleActionInterface::increaseAction());
     if (isSignalConnected(sigDecrease))
         actions->append(QAccessibleActionInterface::decreaseAction());
+    if (isSignalConnected(sigShowOnScreen))
+        actions->append(QAccessibleActionInterface::showOnScreenAction());
     if (isSignalConnected(sigScrollUp))
         actions->append(QAccessibleActionInterface::scrollUpAction());
     if (isSignalConnected(sigScrollDown))

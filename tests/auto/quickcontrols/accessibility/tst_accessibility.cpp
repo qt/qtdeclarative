@@ -15,6 +15,7 @@
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
+#include <QtTest/qsignalspy.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/private/qguiapplication_p.h>
@@ -55,6 +56,7 @@ private slots:
 
     void defaultButton();
     void noTransparentText();
+    void showOnScreenTest();
 
 private:
     /*
@@ -747,6 +749,37 @@ void tst_accessibility::noTransparentText()
             "color property of the item (%1) to use for %2 %3 is transparent")
             .arg(textItemExpression, it->styleName, it->typeName)));
     }
+}
+
+void tst_accessibility::showOnScreenTest()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("defaults/textfield.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickItem *item = findItem(object.data());
+    QVERIFY(item);
+
+#if QT_CONFIG(accessibility)
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
+    if (QAccessible::isActive()) {
+        QVERIFY(attached);
+    } else {
+        QVERIFY(!attached);
+        QPlatformAccessibility *accessibility = platformAccessibility();
+        if (!accessibility)
+            QSKIP("No QPlatformAccessibility available.");
+        accessibility->setActive(true);
+        attached = QQuickAccessibleAttached::attachedProperties(item);
+    }
+    QVERIFY(attached);
+    QSignalSpy spy(attached, SIGNAL(showOnScreenAction()));
+    attached->doAction(QAccessibleActionInterface::showOnScreenAction());
+    QCOMPARE(spy.count(), 1);
+#endif
 }
 
 QTEST_MAIN(tst_accessibility)
