@@ -34,7 +34,7 @@ class Q_QUICKPARTICLES_EXPORT QQuickParticleEmitter : public QQuickItem
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
     Q_PROPERTY(QString group READ group WRITE setGroup NOTIFY groupChanged)
     Q_PROPERTY(QQuickParticleExtruder* shape READ extruder WRITE setExtruder NOTIFY extruderChanged)
-    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
+    Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged OVERRIDE)
     Q_PROPERTY(int startTime READ startTime WRITE setStartTime NOTIFY startTimeChanged)
 
     Q_PROPERTY(qreal emitRate READ particlesPerSecond WRITE setParticlesPerSecond NOTIFY particlesPerSecondChanged)

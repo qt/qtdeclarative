@@ -170,7 +170,7 @@ class Q_QUICKPARTICLES_EXPORT QQuickImageParticle : public QQuickParticlePainter
     Q_PROPERTY(qreal alpha READ alpha WRITE setAlpha NOTIFY alphaChanged RESET resetColor)
     Q_PROPERTY(qreal alphaVariation READ alphaVariation WRITE setAlphaVariation NOTIFY alphaVariationChanged RESET resetColor)
 
-    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged RESET resetRotation)
+    Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged RESET resetRotation OVERRIDE)
     Q_PROPERTY(qreal rotationVariation READ rotationVariation WRITE setRotationVariation NOTIFY rotationVariationChanged RESET resetRotation)
     Q_PROPERTY(qreal rotationVelocity READ rotationVelocity WRITE setRotationVelocity NOTIFY rotationVelocityChanged RESET resetRotation)
     Q_PROPERTY(qreal rotationVelocityVariation READ rotationVelocityVariation WRITE setRotationVelocityVariation NOTIFY rotationVelocityVariationChanged RESET resetRotation)
