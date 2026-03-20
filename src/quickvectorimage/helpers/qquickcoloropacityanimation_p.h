@@ -25,8 +25,8 @@ class Q_QUICKVECTORIMAGEHELPERS_EXPORT QQuickColorOpacityAnimation : public QQui
     Q_OBJECT
 
     Q_DECLARE_PRIVATE(QQuickPropertyAnimation)
-    Q_PROPERTY(qreal from READ from WRITE setFrom)
-    Q_PROPERTY(qreal to READ to WRITE setTo)
+    Q_PROPERTY(qreal from READ from WRITE setFrom OVERRIDE)
+    Q_PROPERTY(qreal to READ to WRITE setTo OVERRIDE)
     QML_NAMED_ELEMENT(ColorOpacityAnimation)
 
 public:
