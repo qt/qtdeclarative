@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet ControlsSnippets.qml abstractButton
 
-    \sa {qtlabsstylekit-controls.html}{Control Types}
+    \sa {Qt Labs StyleKit}{Control Types}
 */
 
 /*!

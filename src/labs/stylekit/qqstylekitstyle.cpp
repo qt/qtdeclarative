@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
     \labs
 
     \sa Theme, CustomTheme, StyleVariation, ControlStyle, DelegateStyle,
-    CustomControl, {qtlabsstylekit-property-resolution.html}{Property Resolution}
+        CustomControl
 */
 
 /*!
@@ -91,7 +91,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet StyleSnippets.qml dark
 
-    \sa light, themeName, {qtlabsstylekit-theme.html}{Theme}
+    \sa light, themeName
 */
 
 /*!
@@ -110,8 +110,6 @@ QT_BEGIN_NAMESPACE
     you to set many more properties than otherwise needed. A
     reference implementation of a fallback style can be found
     \l {qtlabsstylekit-fallbackstyle.html}{here.}
-
-    \sa {qtlabsstylekit-property-resolution.html}{Property Resolution}
 */
 
 /*!
@@ -123,7 +121,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet StyleSnippets.qml light
 
-    \sa dark, themeName, {qtlabsstylekit-theme.html}{Theme}
+    \sa dark, themeName
 */
 
 /*!

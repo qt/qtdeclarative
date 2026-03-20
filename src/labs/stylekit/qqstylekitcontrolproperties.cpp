@@ -139,7 +139,8 @@ QT_BEGIN_NAMESPACE
     \qmlproperty Transition ControlStyleProperties::transition
 
     A \l [QtQuick]{Transition} used to animate style properties when the
-    control enters a new state, such as \l hovered or \l pressed. If set
+    control enters a new state, such as \l {ControlStateStyle::}{hovered}
+    or \l {ControlStateStyle::}{pressed}. If set
     to \c null (the default), property changes are applied immediately
     without animation.
 

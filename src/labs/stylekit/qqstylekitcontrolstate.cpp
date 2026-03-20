@@ -66,7 +66,8 @@ QT_BEGIN_NAMESPACE
 
     Style overrides applied when the control is \l {StyleReader::}{pressed}.
 
-    \sa hovered, highlighted, focused, checked, vertical, disabled, {StyleReader::pressed}{StyleReader.pressed}.
+    \sa hovered, highlighted, focused, checked, vertical, disabled,
+        {StyleReader::pressed}{StyleReader.pressed}
 */
 
 /*!
@@ -74,7 +75,8 @@ QT_BEGIN_NAMESPACE
 
     Style overrides applied when the control is \l {StyleReader::}{hovered}.
 
-    \sa pressed, highlighted, focused, checked, vertical, disabled, {StyleReader::hovered}{StyleReader.hovered}.
+    \sa pressed, highlighted, focused, checked, vertical, disabled,
+        {StyleReader::hovered}{StyleReader.hovered}
 */
 
 /*!
@@ -82,7 +84,8 @@ QT_BEGIN_NAMESPACE
 
     Style overrides applied when the control is \l {StyleReader::}{highlighted}.
 
-    \sa pressed, hovered, focused, checked, vertical, disabled, {StyleReader::highlighted}{StyleReader.highlighted}.
+    \sa pressed, hovered, focused, checked, vertical, disabled,
+        {StyleReader::highlighted}{StyleReader.highlighted}
 */
 
 /*!
@@ -90,7 +93,8 @@ QT_BEGIN_NAMESPACE
 
     Style overrides applied when the control is \l {StyleReader::}{focused}.
 
-    \sa pressed, hovered, highlighted, checked, vertical, disabled, {StyleReader::focused}{StyleReader.focused}.
+    \sa pressed, hovered, highlighted, checked, vertical, disabled,
+        {StyleReader::focused}{StyleReader.focused}
 */
 
 /*!
@@ -98,16 +102,18 @@ QT_BEGIN_NAMESPACE
 
     Style overrides applied when the control is \l {StyleReader::}{checked}.
 
-    \sa pressed, hovered, highlighted, focused, vertical, disabled, {StyleReader::checked}{StyleReader.checked}.
+    \sa pressed, hovered, highlighted, focused, vertical, disabled,
+        {StyleReader::checked}{StyleReader.checked}
 */
 
 /*!
     \qmlproperty ControlStateStyle ControlStateStyle::vertical
 
     Style overrides applied when the control is \l {StyleReader::}{vertical}
-    (e.g. a vertical \l Slider or \l ScrollBar).
+    (for example, a vertical \l Slider or \l ScrollBar).
 
-    \sa pressed, hovered, highlighted, focused, checked, disabled, {StyleReader::vertical}{StyleReader.vertical}.
+    \sa pressed, hovered, highlighted, focused, checked, disabled,
+        {StyleReader::vertical}{StyleReader.vertical}
 */
 
 /*!
@@ -119,7 +125,8 @@ QT_BEGIN_NAMESPACE
     \l hovered, \l highlighted, and \l focused will not be applied
     at the same time as disabled.
 
-    \sa pressed, hovered, highlighted, focused, checked, vertical, {StyleReader::disabled}{StyleReader.disabled}.
+    \sa pressed, hovered, highlighted, focused, checked, vertical,
+        {StyleReader::enabled}{StyleReader.enabled}
 */
 
 QQStyleKitControlState::QQStyleKitControlState(QObject *parent)

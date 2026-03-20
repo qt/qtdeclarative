@@ -18,5 +18,5 @@
 
     \snippet ReferenceFallbackStyle.qml 1
 
-    \sa {Style::fallbackStyle}{Style.fallbackStyle}, {qtlabsstylekit-property-resolution.html}{Property Resolution}
+    \sa {Style::fallbackStyle}{Style.fallbackStyle}
 */

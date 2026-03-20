@@ -101,7 +101,7 @@ QT_BEGIN_NAMESPACE
 
     The default value is \c true.
 
-    \sa {ControlStyleState::enabled}{ControlStyleState.disabled}
+    \sa {ControlStateStyle::disabled}{ControlStateStyle.disabled}
 */
 
 /*!
