@@ -1445,8 +1445,8 @@ void QQuickShaderEffectPrivate::updateShaderVars(Shader shaderType)
                 // disconnect instead.
                 if (!m_destroyedConnections.contains(source))
                     m_destroyedConnections.insert(source,
-                        QObject::connect(source, &QObject::destroyed, source,
-                                         [this](QObject *obj) { sourceDestroyed(obj); }));
+                        connect(source, &QObject::destroyed,
+                                this, &QQuickShaderEffectPrivate::sourceDestroyed));
             }
         }
     }
@@ -1523,8 +1523,8 @@ void QQuickShaderEffectPrivate::propertyChanged(int mappedId)
                 QQuickItemPrivate::get(source)->refWindow(q->window());
             if (!m_destroyedConnections.contains(source))
                 m_destroyedConnections.insert(source,
-                    QObject::connect(source, &QObject::destroyed,
-                                     source, [this](QObject *obj) { sourceDestroyed(obj); }));
+                    connect(source, &QObject::destroyed,
+                            this, &QQuickShaderEffectPrivate::sourceDestroyed));
         }
 
         m_dirty |= QSGShaderEffectNode::DirtyShaderTexture;
