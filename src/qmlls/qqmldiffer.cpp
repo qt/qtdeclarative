@@ -16,6 +16,9 @@ publication by Neil Fraser: http://neil.fraser.name/writing/diff/
 
 #include <QStringList>
 
+#include <algorithm>
+#include <vector>
+
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
