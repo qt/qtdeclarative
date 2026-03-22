@@ -1444,13 +1444,13 @@ void QQuickSearchField::keyPressEvent(QKeyEvent *event)
             event->accept();
             break;
         case Qt::Key_Up:
-            if (hasModel && hasText) {
+            if (hasModel) {
                 d->decreaseCurrentIndex();
                 event->accept();
             }
             break;
         case Qt::Key_Down:
-            if (hasModel && hasText) {
+            if (hasModel) {
                 d->increaseCurrentIndex();
                 event->accept();
             }

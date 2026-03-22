@@ -344,12 +344,55 @@ TestCase {
         compare(control.currentIndex, 1)
         compare(acceptedSpy.count, 1)
         compare(searchTriggeredSpy.count, 2)
+        compare(control.popup.visible, false)
 
         keyClick(Qt.Key_Back)
+        compare(control.text, "")
         compare(control.popup.visible, false)
 
         keyClick(Qt.Key_Escape)
         compare(control.text, "")
+        compare(control.popup.visible, false)
+
+        control.currentIndex = -1
+        activatedSpy.clear()
+        acceptedSpy.clear()
+        searchTriggeredSpy.clear()
+
+        // Can navigate between the suggestions even if no input text was given by the user.
+
+        control.popup.open()
+        compare(control.popup.visible, true)
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, -1)
+        compare(control.highlightedIndex, 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 1)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Down)
+        compare(control.currentIndex, -1)
+        compare(control.highlightedIndex, 2)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 2)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Up)
+        compare(control.currentIndex, -1)
+        compare(control.highlightedIndex, 1)
+        compare(activatedSpy.count, 0)
+        compare(highlightedSpy.count, 1)
+        compare(highlightedSpy.signalArguments[0][0], 1)
+        highlightedSpy.clear()
+
+        keyClick(Qt.Key_Enter)
+        compare(control.text, "Cherry")
+        compare(control.currentIndex, 1)
+        compare(acceptedSpy.count, 1)
+        compare(searchTriggeredSpy.count, 1)
     }
 
     Component {
