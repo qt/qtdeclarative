@@ -598,6 +598,7 @@ void QSGRenderThread::teardownGraphics()
     if (ownRhi)
         QSGRhiSupport::instance()->destroyRhi(rhi, {});
     rhi = nullptr;
+    wd->rhi = nullptr;
 }
 
 void QSGRenderThread::handleDeviceLoss()
