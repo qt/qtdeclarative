@@ -309,9 +309,9 @@ QQuickStateGroup *QQStyleKitReader::stateGroup()
 
 QQmlComponent *QQStyleKitReader::createControlChangesComponent() const
 {
-    static const QLatin1String propertyName("control"_L1);
-    if (s_propertyChangesComponents.contains(propertyName))
-        return s_propertyChangesComponents.value(propertyName);
+    const auto key = u"control"_s;
+    if (auto r = s_propertyChangesComponents.value(key, nullptr))
+        return r;
 
     const QString qmlControlCode = QString::fromUtf8(R"(
     import QtQuick
@@ -339,14 +339,14 @@ QQmlComponent *QQStyleKitReader::createControlChangesComponent() const
     QQmlComponent *component = new QQmlComponent(qmlEngine(style()));
     component->setData(qmlControlCode.toUtf8(), QUrl());
     Q_ASSERT_X(!component->isError(), __FUNCTION__, component->errorString().toUtf8().constData());
-    s_propertyChangesComponents.insert(propertyName, component);
+    s_propertyChangesComponents.insert(key, component);
     return component;
 }
 
 QQmlComponent *QQStyleKitReader::createDelegateChangesComponent(const QString &delegateName) const
 {
-    if (s_propertyChangesComponents.contains(delegateName))
-        return s_propertyChangesComponents.value(delegateName);
+    if (auto r = s_propertyChangesComponents.value(delegateName, nullptr))
+        return r;
 
     static const QString qmlTemplateCode = QString::fromUtf8(R"(
     import QtQuick
