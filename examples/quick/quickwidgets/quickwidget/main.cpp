@@ -108,7 +108,8 @@ void MainWindow::createQuickWidgetsInTabs(QMdiArea *mdiArea)
         widget->setSource(QUrl("qrc:quickwidget/rotatingsquare.qml"));
         widget->setWindowTitle(QString::asprintf("Tab %d", i + 1));
         QPushButton *btn = new QPushButton(msgToTopLevel, widget);
-        connect(btn, &QPushButton::clicked, widget, [=] {
+        connect(btn, &QPushButton::clicked,
+                widget, [this, widget, btn, tabWidget, msgFromTopLevel, msgToTopLevel] {
             if (widget->parent()) {
                 widget->setAttribute(Qt::WA_DeleteOnClose, true);
                 widget->setParent(nullptr);
