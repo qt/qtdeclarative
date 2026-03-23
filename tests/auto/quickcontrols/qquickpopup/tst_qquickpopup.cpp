@@ -1057,6 +1057,7 @@ void tst_QQuickPopup::activeFocusAfterExitNonModal()
     QTRY_VERIFY_ACTIVE_FOCUS(popup);
     inner->forceActiveFocus();
     popup->close();
+    // TODO: Find out why this takes ~5 seconds on macOS: QTBUG-145131
     closedSpy.wait();
     QTRY_VERIFY(!popup->hasActiveFocus());
     QTRY_VERIFY_ACTIVE_FOCUS(inner);
@@ -1068,6 +1069,7 @@ void tst_QQuickPopup::activeFocusAfterExitNonModal()
     popup->open();
     QTRY_VERIFY(popup->isVisible());
     popup->close();
+    // TODO: Find out why this takes ~5 seconds on macOS: QTBUG-145131
     closedSpy.wait();
     QTRY_VERIFY(!popup->hasActiveFocus());
     QTRY_VERIFY_ACTIVE_FOCUS(root);
