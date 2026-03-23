@@ -231,8 +231,9 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
             "width"_L1, "-1"_L1);
     parser.addOption(columnWidthOption);
     parser.addOption(QCommandLineOption({ "n"_L1, "normalize"_L1 },
-                                        QStringLiteral("Reorders the attributes of the objects "
-                                                       "according to the QML Coding Guidelines.")));
+                                        QStringLiteral("Reorders and sorts the attributes of the objects "
+                                                       "according to the QML Coding Guidelines. "
+                                                       "Incompatible with --group-attributes-together.")));
 
 
     parser.addOption(QCommandLineOption(
@@ -250,9 +251,9 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
 
     parser.addOption(
             QCommandLineOption(QStringList() << "group-attributes-together"_L1,
-                               QStringLiteral("Reorders and groups the attributes of the objects "
+                               QStringLiteral("Reorders but does not sort the attributes of the objects "
                                               "according to the QML Coding Guidelines. "
-                                              "Implies --normalize.")));
+                                              "Incompatible with --normalize.")));
 
     parser.addOption(
             QCommandLineOption({ "S"_L1, "sort-imports"_L1 },
