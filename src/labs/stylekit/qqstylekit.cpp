@@ -104,7 +104,7 @@ QQStyleKitAttached::QQStyleKitAttached(QObject *parent)
     : QObject(parent)
 {
     connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, [this](){
-        if (m_style)
+        if (m_style && QString::compare(m_style->themeName(), "System"_L1, Qt::CaseInsensitive) == 0)
             m_style->recreateTheme();
     });
 }
