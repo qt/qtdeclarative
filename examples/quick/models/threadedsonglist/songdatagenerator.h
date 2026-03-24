@@ -5,7 +5,6 @@
 #define SONGDATAGENERATOR_H
 #include "mediaelement.h"
 
-#include <QPair>
 #include <QStringList>
 
 class SongDataGenerator
