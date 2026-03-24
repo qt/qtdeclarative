@@ -19,6 +19,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static QString sanitizeString(const QString &input)
 {
     QString s = input;
@@ -1678,13 +1680,13 @@ qsizetype QQuickQmlGenerator::generateFilterStep(const FilterNodeInfo &info,
         const int maxNodeCount = 8;
 
         // Find all nodes for this merge
-        QList<QPair<FilterNodeInfo::FilterInput, QString> > inputs;
+        QList<std::pair<FilterNodeInfo::FilterInput, QString> > inputs;
         for (; stepIndex < info.steps.size(); ++stepIndex) {
             const FilterNodeInfo::FilterStep &nodeStep = info.steps.at(stepIndex);
             if (nodeStep.filterType != FilterNodeInfo::Type::MergeNode)
                 break;
 
-            inputs.append(qMakePair(nodeStep.input1, nodeStep.namedInput1));
+            inputs.emplace_back(nodeStep.input1, nodeStep.namedInput1);
         }
 
         if (inputs.size() > maxNodeCount) {
@@ -1711,7 +1713,7 @@ qsizetype QQuickQmlGenerator::generateFilterStep(const FilterNodeInfo &info,
         for (int i = 0; i < maxNodeCount; ++i) {
             auto input = i < inputs.size()
                 ? inputs.at(i)
-                : qMakePair(FilterNodeInfo::FilterInput::None, QStringLiteral("null"));
+                : std::pair(FilterNodeInfo::FilterInput::None, u"null"_s);
 
             QString inputId = input.first != FilterNodeInfo::FilterInput::SourceColor
                                   ? input.second
