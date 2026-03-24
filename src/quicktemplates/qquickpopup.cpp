@@ -698,8 +698,8 @@ QMarginsF QQuickPopupPrivate::windowInsets() const
 
     return {
         q->leftInset() < 0 ? -q->leftInset() : 0,
-        q->rightInset() < 0 ? -q->rightInset() : 0,
         q->topInset() < 0 ? -q->topInset() : 0,
+        q->rightInset() < 0 ? -q->rightInset() : 0,
         q->bottomInset() < 0 ? -q->bottomInset() : 0
     };
 }
