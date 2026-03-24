@@ -12,7 +12,6 @@ qt_internal_add_module(QuickWidgets
         qquickwidget.cpp qquickwidget.h qquickwidget_p.h
         qtquickwidgetsglobal.h
     DEFINES
-        QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
         QT_NO_URL_CAST_FROM_STRING
     LIBRARIES

@@ -18,7 +18,6 @@ qt_internal_add_qml_module(QmlModels
         qqmlmodelsmodule.cpp qqmlmodelsmodule_p.h
         qtqmlmodelsglobal.h qtqmlmodelsglobal_p.h
     DEFINES
-        QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
         QT_NO_URL_CAST_FROM_STRING
     LIBRARIES

@@ -25,7 +25,6 @@ qt_internal_add_qml_module(QmlWorkerScript
         ENABLE_JIT_CONSTANT_BLINDING=0
         ENABLE_LLINT=0
         JS_EXPORT_PRIVATE= # special case
-        QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
         QT_NO_URL_CAST_FROM_STRING
         WTFInvokeCrashHook=qmlWTFInvokeCrashHook
