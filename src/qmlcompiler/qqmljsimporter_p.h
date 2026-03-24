@@ -261,6 +261,11 @@ private:
                        quint8 precedence, AvailableTypes *types);
     static void insertAliases(const QQmlJS::ContextualType &type,
                               QQmlJSImporter::AvailableTypes *types);
+    QQmlJSScope::Export
+    resolveConflictingExports(const QQmlJS::Import &importDescription,
+                              const QQmlJSExportedScope &val, quint8 precedence,
+                              QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                              QQmlJSImporter::AvailableTypes *types);
     void insertExports(const QQmlJS::Import &importDescription, const QQmlJSExportedScope &val,
                        const QString &cppName, quint8 precedence,
                        QHash<QString, QList<QQmlJSScope::Export>> *seenExports,

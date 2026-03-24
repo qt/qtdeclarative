@@ -449,15 +449,14 @@ void QQmlJSImporter::insertAliases(const QQmlJS::ContextualType &type,
         types->cppNames.setType(alias, type);
 };
 
-void QQmlJSImporter::insertExports(const QQmlJS::Import &importDescription,
-                                   const QQmlJSExportedScope &val, const QString &cppName,
-                                   quint8 precedence,
-                                   QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
-                                   QQmlJSImporter::AvailableTypes *types)
+QQmlJSScope::Export
+QQmlJSImporter::resolveConflictingExports(const QQmlJS::Import &importDescription,
+                                          const QQmlJSExportedScope &val, quint8 precedence,
+                                          QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                                          QQmlJSImporter::AvailableTypes *types)
 {
     QQmlJSScope::Export bestExport;
 
-    // Resolve conflicting qmlNames within an import
     for (const auto &valExport : val.exports) {
         const QString qmlName = prefixedName(importDescription.prefix(), valExport.type());
         if (!isVersionAllowed(valExport, importDescription))
@@ -544,7 +543,17 @@ void QQmlJSImporter::insertExports(const QQmlJS::Import &importDescription,
         types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
         (*seenExports)[qmlName].append(valExport);
     }
+    return bestExport;
+}
 
+void QQmlJSImporter::insertExports(const QQmlJS::Import &importDescription,
+                                   const QQmlJSExportedScope &val, const QString &cppName,
+                                   quint8 precedence,
+                                   QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                                   QQmlJSImporter::AvailableTypes *types)
+{
+    const QQmlJSScope::Export bestExport =
+            resolveConflictingExports(importDescription, val, precedence, seenExports, types);
     const QTypeRevision bestRevision =
             bestExport.isValid() ? bestExport.revision() : QTypeRevision::zero();
     const QQmlJS::ContextualType contextualType{ val.scope, bestRevision, precedence };
