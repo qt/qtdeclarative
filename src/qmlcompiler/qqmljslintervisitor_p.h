@@ -59,6 +59,8 @@ protected:
     bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
     bool visit(QQmlJS::AST::UiPublicMember *publicMember) override;
 
+    void endVisit(QQmlJS::AST::UiProgram *ast) override;
+
 private:
     struct SeenImport
     {
@@ -101,6 +103,7 @@ private:
             const QQmlJS::AST::UiPublicMember *associatedPropertyDefinition = nullptr) override;
     void handleLiteralBinding(const QQmlJSMetaPropertyBinding &binding,
                               const AST::UiPublicMember *associatedPropertyDefinition) override;
+    void checkFileSelections();
 };
 
 } // namespace QQmlJS

@@ -1,6 +1,10 @@
 module FileSelector3
 App 254.0 +Material/App.qml
+Bad 254.0 +Material/Bad.qml
 Circle 254.0 +Material/Circle.qml
+SubCircle 254.0 +Material/SubCircle.qml
 App 254.0 App.qml
+Bad 254.0 Bad.qml
 Circle 254.0 Circle.qml
+SubCircle 254.0 SubCircle.qml
 

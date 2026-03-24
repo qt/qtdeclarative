@@ -386,5 +386,18 @@ QString QQmlJSUtils::getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScop
     return scope->baseTypeName();
 }
 
+QString QQmlJSUtils::fileSelectorFor(const QQmlJSScope::ConstPtr &scope)
+{
+    if (!scope)
+        return { };
+    const auto factory = scope.factory();
+    const QString filePath = factory ? factory->filePath() : scope->filePath();
+    QString dir = QFileInfo(filePath).dir().dirName();
+    if (dir.startsWith("+"_L1)) {
+        dir.slice(1);
+        return dir;
+    }
+    return { };
+}
 
 QT_END_NAMESPACE

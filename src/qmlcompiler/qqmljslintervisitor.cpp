@@ -546,6 +546,12 @@ void LinterVisitor::handleLiteralBinding(const QQmlJSMetaPropertyBinding &bindin
     }
 }
 
+void LinterVisitor::endVisit(UiProgram *ast)
+{
+    QQmlJSImportVisitor::endVisit(ast);
+    checkFileSelections();
+}
+
 static constexpr QLatin1String s_method = "method"_L1;
 static constexpr QLatin1String s_signal = "signal"_L1;
 static constexpr QLatin1String s_property = "property"_L1;
@@ -683,6 +689,63 @@ bool LinterVisitor::visit(FunctionDeclaration *fdecl)
                           WithoutOverride, m_logger);
     }
     return QQmlJSImportVisitor::visit(fdecl);
+}
+
+/* This is a _rough_ heuristic; only meant for qmllint to avoid warnings about common constructs.
+   We might want to improve it in the future if it causes issues
+*/
+static bool compatibilityHeuristicForFileSelector(const QQmlJSScope::ConstPtr &scope1,
+                                                  const QQmlJSScope::ConstPtr &scope2)
+{
+    for (const auto &[propertyName, prop] : scope1->properties().asKeyValueRange())
+        if (!scope2->hasProperty(propertyName))
+            return false;
+    for (const auto &[methodName, method] : scope1->methods().asKeyValueRange())
+        if (!scope2->hasMethod(methodName))
+            return false;
+    return true;
+}
+
+// heuristic to check file selected files for "compability" to the unselected file.
+void LinterVisitor::checkFileSelections()
+{
+    const QQmlJS::FileSelectorInfo info =
+            m_rootScopeImports.contextualTypes().fileSelectorInfoFor(m_exportedRootScope);
+
+    if (info.fileSelectedTypes.isEmpty() || info.mainType.isNull())
+        return;
+
+    const QString name = m_rootScopeImports.name(m_exportedRootScope);
+
+    if (info.mainType == m_exportedRootScope) {
+        // current has fileselectors -> check all fileselectors for compatiblity
+        for (const auto &fileSelected : info.fileSelectedTypes) {
+            if (compatibilityHeuristicForFileSelector(m_exportedRootScope,
+                                                      fileSelected.type.scope)) {
+                m_logger->log(
+                        "Type %1 is ambiguous due to file selector usage, ignoring %2."_L1.arg(
+                                name, fileSelected.type.scope->filePath()),
+                        qmlImportFileSelector, m_exportedRootScope->sourceLocation());
+                continue;
+            }
+            m_logger->log("Type %1 has a potentially incompatible file-selected variant %2."_L1.arg(
+                                  name, fileSelected.type.scope->filePath()),
+                          qmlImport, m_exportedRootScope->sourceLocation());
+        }
+        return;
+    }
+
+    // current is fileselected -> only check against "main" type for compatibility
+    if (compatibilityHeuristicForFileSelector(info.mainType, m_exportedRootScope)) {
+        m_logger->log(
+                "File-selected type %1 is ambiguous due to file selector usage, this file will be ignored in favour of %2."_L1
+                        .arg(name, info.mainType->filePath()),
+                qmlImportFileSelector, m_exportedRootScope->sourceLocation());
+        return;
+    }
+    m_logger->log("File-selected type %1 is potentially incompatible with %2."_L1.arg(
+                          name, info.mainType->filePath()),
+                  qmlImport, m_exportedRootScope->sourceLocation());
 }
 
 } // namespace QQmlJS

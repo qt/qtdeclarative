@@ -403,6 +403,7 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSUtils
                                               const QString &pathInBuildFolder);
 
     static QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type);
+    static QString fileSelectorFor(const QQmlJSScope::ConstPtr &scope1);
 };
 
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(

@@ -664,27 +664,89 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
             << Result{ { { "Cannot assign multiple objects to a default non-list property"_L1 } } }
             << defaultOptions;
+    CallQmllintOptions withFileSelectorResourceFile = defaultOptions;
+    withFileSelectorResourceFile.resources.append(testFile("FileSelector3/resources.qrc"));
+    QTest::newRow("fileSelectorIncompatibleType")
+            << QStringLiteral("FileSelector3/Bad.qml")
+            << Result{ {
+                               { "Type Bad has a potentially incompatible file-selected variant %1."_L1
+                                         .arg(testFile("FileSelector3/+Material/Bad.qml")),
+                                 3, 1 },
+                       },
+                       {
+                               { "Ambiguous"_L1 },
+                       } }
+                       .withFlags(Result::UseSettings)
+            << withFileSelectorResourceFile;
+    QTest::newRow("fileSelectorIncompatibleType2")
+            << QStringLiteral("FileSelector3/SubCircle.qml")
+            << Result{ {
+                               { "Type SubCircle is ambiguous due to file selector usage, ignoring %1."_L1
+                                         .arg(testFile("FileSelector3/+Material/SubCircle.qml")),
+                                 3, 1 },
+                       },
+                       {
+                               { "potentially incompatible"_L1 },
+                       } }
+                       .withFlags(Result::UseSettings)
+            << withFileSelectorResourceFile;
+    QTest::newRow("fileSelectorIncompatibleFileSelectedType")
+            << QStringLiteral("FileSelector3/+Material/Bad.qml")
+            << Result{ {
+                       { "File-selected type Bad is potentially incompatible with %1."_L1.arg(
+                                 testFile("FileSelector3/Bad.qml")),
+                         3, 1 },
+               } }
+            << withFileSelectorResourceFile;
+    QTest::newRow("fileSelectorIncompatibleFileSelectedType2")
+            << QStringLiteral("FileSelector3/+Material/SubCircle.qml")
+            << Result{ {
+                               { "File-selected type SubCircle is ambiguous due to file selector usage, this file will be ignored in favour of %1."_L1
+                                         .arg(testFile("FileSelector3/SubCircle.qml")),
+                                 3, 1 },
+                       },
+                       {
+                               { "potentially incompatible"_L1 },
+                       } }
+                       .withFlags(Result::UseSettings)
+            << withFileSelectorResourceFile;
+    QTest::newRow(("ImportModuleWithFileSelector"))
+            << QStringLiteral("FileSelector/main.qml") << Result::cleanWithSettings()
+            << defaultOptions;
+
     QTest::newRow(("ImportFileSelector"))
-            << QStringLiteral("FileSelector/main.qml")
+            << QStringLiteral("FileSelector/ToolBar.qml")
             << Result{ { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
                                    .arg(testFile("FileSelector/+Material/ToolBar.qml")),
-                           1, 1, QtMsgType::QtInfoMsg } } }
+                           3, 1, QtInfoMsg } } }
                        .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
             << defaultOptions;
-    QTest::newRow(("ImportFileSelector2"))
-            << QStringLiteral("FileSelector2/main.qml")
+    QTest::newRow(("ImportFileSelector2ToolBar"))
+            << QStringLiteral("FileSelector2/ToolBar.qml")
             << Result{ {
                                { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
                                          .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                                 1, 1, QtMsgType::QtInfoMsg },
-                               { "Ambiguous type detected. Broken 1.0 is defined multiple times."_L1,
-                                 1, 1, QtMsgType::QtWarningMsg },
+                                 3, 1, QtMsgType::QtInfoMsg },
                        },
                        { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
                                    .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
-                           1, 1, QtMsgType::QtWarningMsg },
-                         { "Item was not found."_L1 } } }
-                       .withFlags(Result::Flags(Result::UseSettings))
+                           3, 1, QtMsgType::QtWarningMsg },
+                         { "Item was not found."_L1 },
+                         { "Broken"_L1 } } }
+                       .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
+            << defaultOptions;
+    QTest::newRow(("ImportFileSelector2Broken"))
+            << QStringLiteral("FileSelector2/ToolBar.qml")
+            << Result{ {
+                               { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                                         .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                                 3, 1, QtMsgType::QtInfoMsg },
+                       },
+                       { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1
+                                   .arg(testFile("FileSelector2/+Material/ToolBar.qml")),
+                           3, 1, QtMsgType::QtWarningMsg },
+                         { "ToolBar"_L1 } } }
+                       .withFlags(Result::Flags(Result::UseSettings | Result::ExitsNormally))
             << defaultOptions;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
@@ -2632,10 +2694,14 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("externalEnumProperty.qml") << defaultOptions;
     QTest::newRow("fileSelectorDuplciateImport")
             << QStringLiteral("FileSelector/main.qml") << defaultOptions;
+
+    CallQmllintOptions withResourceFiles = defaultOptions;
+    withResourceFiles.resources.append(testFile("FileSelector3/resources.qrc"));
     QTest::newRow("fileSelectorCmopatibleType")
-            << QStringLiteral("FileSelector3/App.qml") << defaultOptions;
+            << QStringLiteral("FileSelector3/App.qml") << withResourceFiles;
     QTest::newRow("fileSelectorCompatibleFileSelectedType")
-            << QStringLiteral("FileSelector3/+Material/App.qml") << defaultOptions;
+            << QStringLiteral("FileSelector3/+Material/App.qml") << withResourceFiles;
+
     QTest::newRow("forLoop") << QStringLiteral("forLoop.qml") << defaultOptions;
     QTest::newRow("goodAlias") << QStringLiteral("goodAlias.qml") << defaultOptions;
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml") << defaultOptions;
@@ -3542,6 +3608,19 @@ void TestQmllint::lintModule_data()
                                testFile("hidden/moduleWithQrc_raw_qml_0.qrc")
                            })
             << Result::clean();
+    QTest::newRow(("ImportFileSelector"))
+            << QStringLiteral("FileSelector") << QStringList() << QStringList()
+            << Result{
+                   { { "Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1 } }
+               }.withFlags(Result::Flags(Result::UseSettings));
+    QTest::newRow(("ImportFileSelector2"))
+            << QStringLiteral("FileSelector2") << QStringList() << QStringList()
+            << Result{
+                   { { "Ambiguous type detected. ToolBar 1.0 is defined multiple times."_L1 },
+                     { "Ambiguous type detected. Broken 1.0 is defined multiple times."_L1 } },
+                   { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1.arg(
+                           testFile("FileSelector2/+Material/ToolBar.qml")) } }
+               }.withFlags(Result::Flags(Result::UseSettings));
 }
 
 void TestQmllint::lintModule()

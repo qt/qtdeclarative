@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/qt/qml/FileSelector3">
+        <file>App.qml</file>
+        <file>Bad.qml</file>
+        <file>Circle.qml</file>
+        <file>+Material/App.qml</file>
+        <file>+Material/Bad.qml</file>
+        <file>+Material/Circle.qml</file>
+        <file>qmldir</file>
+        <file>+Material/qmldir</file>
+        <file>SubCircle.qml</file>
+        <file>+Material/SubCircle.qml</file>
+    </qresource>
+</RCC>

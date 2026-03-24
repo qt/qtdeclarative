@@ -81,6 +81,8 @@ class Q_QMLCOMPILER_EXPORT QQmlJSImporter
     static inline constexpr QLatin1String modulePrefix = QLatin1String("$module$");
 
 public:
+    static inline constexpr QLatin1String s_inProcessMarker = QLatin1String("$InProcess$");
+
     struct ImportedTypes {
         ImportedTypes(QQmlJS::ContextualTypes &&types, QList<QQmlJS::DiagnosticMessage> &&warnings)
             : m_types(std::move(types)), m_warnings(std::move(warnings))
@@ -211,6 +213,8 @@ public:
                                              const ImportVisitorPrerequisites &prerequisites)>;
 
     void setImportVisitor(ImportVisitor visitor) { m_importVisitor = visitor; }
+    void setFlags(const QQmlJSImporterFlags &flags) { m_flags = flags; }
+    QQmlJSImporterFlags flags() const { return m_flags; }
 
 private:
     friend class QDeferredFactory<QQmlJSScope>;
@@ -261,6 +265,10 @@ private:
                        quint8 precedence, AvailableTypes *types);
     static void insertAliases(const QQmlJS::ContextualType &type,
                               QQmlJSImporter::AvailableTypes *types);
+    void insertExport(const QQmlJS::ContextualType &type, const QQmlJS::Export &valExport,
+                      const QString &qmlName,
+                      QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                      QQmlJSImporter::AvailableTypes *types) const;
     QQmlJSScope::Export
     resolveConflictingExports(const QQmlJS::Import &importDescription,
                               const QQmlJSExportedScope &val, quint8 precedence,

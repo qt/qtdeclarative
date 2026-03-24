@@ -428,24 +428,6 @@ static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
             || exportVersion.minorVersion() <= importVersion.minorVersion();
 }
 
-static constexpr QLatin1String s_inProcessMarker = "$InProcess$"_L1;
-
-/* This is a _rough_ heuristic; only meant for qmllint to avoid warnings about commonconstructs.
-   We might want to improve it in the future if it causes issues
-*/
-static bool fileSelectedScopesAreCompatibleHeuristic(const QQmlJSScope::ConstPtr &scope1, const QQmlJSScope::ConstPtr &scope2) {
-    if (scope1->baseTypeName() == s_inProcessMarker || scope2->baseTypeName() == s_inProcessMarker)
-        return true;
-
-    for (const auto &[propertyName, prop]: scope1->properties().asKeyValueRange())
-        if (!scope2->hasProperty(propertyName))
-            return false;
-    for (const auto &[methodName, method]: scope1->methods().asKeyValueRange())
-        if (!scope2->hasMethod(methodName))
-            return false;
-    return true;
-}
-
 void QQmlJSImporter::insertAliases(const QQmlJS::ContextualType &type,
                                    QQmlJSImporter::AvailableTypes *types)
 {
@@ -453,6 +435,22 @@ void QQmlJSImporter::insertAliases(const QQmlJS::ContextualType &type,
     for (const QString &alias : cppAliases)
         types->cppNames.setType(alias, type);
 };
+
+void QQmlJSImporter::insertExport(const QQmlJS::ContextualType &type,
+                                  const QQmlJS::Export &valExport, const QString &qmlName,
+                                  QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                                  QQmlJSImporter::AvailableTypes *types) const
+{
+    if (m_flags.testFlag(TolerateFileSelectors)) {
+        if (const QString fileSelector = QQmlJSUtils::fileSelectorFor(type.scope);
+            !fileSelector.isEmpty()) {
+            types->qmlNames.setFileSelectedType(fileSelector, qmlName, type);
+            return;
+        }
+    }
+    types->qmlNames.setType(qmlName, type);
+    (*seenExports)[qmlName].append(valExport);
+}
 
 QQmlJSScope::Export
 QQmlJSImporter::resolveConflictingExports(const QQmlJS::Import &importDescription,
@@ -472,26 +470,35 @@ QQmlJSImporter::resolveConflictingExports(const QQmlJS::Import &importDescriptio
         if (!bestExport.isValid() || valExport.version() > bestExport.version())
             bestExport = valExport;
 
-        const auto it = types->qmlNames.types().find(qmlName);
-        if (it == types->qmlNames.types().end()) {
-            types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
-            (*seenExports)[qmlName].append(valExport);
+        auto insertExportWithConflict = [&](const QQmlJSImportedScope &conflicting) {
+            // The same set of exports can declare the same name multiple times for different
+            // versions. That's the common thing and we would just continue here when we hit
+            // it again after having inserted successfully once.
+            // However, it can also declare *different* names. Then we need to do the whole
+            // thing again.
+            if (conflicting.scope == val.scope && conflicting.revision == valExport.version())
+                return;
+
+            const SeenVersion seenVersion = computeSeenVersion(
+                    importDescription, seenExports->value(qmlName), valExport.version());
+
+            insertExportWithConflictingVersion(val, precedence, qmlName, valExport,
+                                               conflicting.scope, seenExports, types, seenVersion);
+        };
+
+        if (const auto it = types->qmlNames.types().find(qmlName);
+            it != types->qmlNames.types().end()) {
+            insertExportWithConflict(*it);
             continue;
         }
 
-        // The same set of exports can declare the same name multiple times for different
-        // versions. That's the common thing and we would just continue here when we hit
-        // it again after having inserted successfully once.
-        // However, it can also declare *different* names. Then we need to do the whole
-        // thing again.
-        if (it->scope == val.scope && it->revision == valExport.version())
+        const auto [it, end] = types->qmlNames.fileSelectionsEqualRange(qmlName);
+        if (it == end) {
+            insertExport({ val.scope, valExport.version(), precedence }, valExport, qmlName,
+                         seenExports, types);
             continue;
-
-        const SeenVersion seenVersion = computeSeenVersion(
-                importDescription, seenExports->value(qmlName), valExport.version());
-
-        insertExportWithConflictingVersion(val, precedence, qmlName, valExport, it->scope,
-                                           seenExports, types, seenVersion);
+        }
+        insertExportWithConflict(it->type);
     }
     return bestExport;
 }
@@ -523,10 +530,6 @@ void QQmlJSImporter::insertExportWithConflictingVersion(
         QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
         QQmlJSImporter::AvailableTypes *types, SeenVersion seenVersion) const
 {
-    auto insertExport = [&]() {
-        types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
-        (*seenExports)[qmlName].append(valExport);
-    };
     auto onDuplicateImport = [&]() {
         types->warnings.append({ QStringLiteral("Ambiguous type detected. "
                                                 "%1 %2.%3 is defined multiple times.")
@@ -540,36 +543,25 @@ void QQmlJSImporter::insertExportWithConflictingVersion(
     };
     switch (seenVersion) {
     case LowerVersion:
-        insertExport();
+        insertExport({ val.scope, valExport.version(), precedence }, valExport, qmlName,
+                     seenExports, types);
         return;
     case SameVersion: {
         if (!m_flags.testAnyFlag(QQmlJSImporterFlag::TolerateFileSelectors) || !scope) {
             onDuplicateImport();
             return;
         }
-        auto isFileSelected = [](const QQmlJSScope::ConstPtr &scope) -> bool {
-            return scope->filePath().contains(u"+");
-        };
-        auto warnAboutFileSelector = [&](const QString &path) {
-            types->warnings.append({ QStringLiteral("Type %1 is ambiguous due to file "
-                                                    "selector usage, ignoring %2.")
-                                             .arg(qmlName, path),
-                                     QtInfoMsg, QQmlJS::SourceLocation() });
-        };
-        if (isFileSelected(val.scope)) {
-            // new entry is file selected, skip if it looks compatible
-            if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
-                warnAboutFileSelector(val.scope->filePath());
-                return;
-            }
-        } else if (isFileSelected(scope)) {
-            // the first scope we saw is file selected. If they are compatible
-            // we update to the new one without file selector
-            if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
-                warnAboutFileSelector(scope->filePath());
-                insertExport();
-                return;
-            }
+        if (const QString fileSelector = QQmlJSUtils::fileSelectorFor(val.scope);
+            !fileSelector.isEmpty()) {
+            types->qmlNames.setFileSelectedType(fileSelector, qmlName,
+                                                { val.scope, valExport.version(), precedence });
+            return;
+        }
+        if (!QQmlJSUtils::fileSelectorFor(scope).isEmpty()) {
+            // the first scope we saw is file selected, update to the new one without file selector
+            types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
+            (*seenExports)[qmlName].append(valExport);
+            return;
         }
         onDuplicateImport();
         return;
