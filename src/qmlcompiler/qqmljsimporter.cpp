@@ -468,23 +468,9 @@ QQmlJSImporter::resolveConflictingExports(const QQmlJS::Import &importDescriptio
             bestExport = valExport;
 
         const auto it = types->qmlNames.types().find(qmlName);
-        auto insertExport = [&]() {
+        if (it == types->qmlNames.types().end()) {
             types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
             (*seenExports)[qmlName].append(valExport);
-        };
-        auto onDuplicateImport = [&]() {
-            types->warnings.append({ QStringLiteral("Ambiguous type detected. "
-                                                    "%1 %2.%3 is defined multiple times.")
-                                             .arg(qmlName)
-                                             .arg(valExport.version().majorVersion())
-                                             .arg(valExport.version().minorVersion()),
-                                     QtCriticalMsg, QQmlJS::SourceLocation() });
-
-            // Invalidate the type. We don't know which one to use.
-            types->qmlNames.clearType(qmlName);
-        };
-        if (it == types->qmlNames.types().end()) {
-            insertExport();
             continue;
         }
 
@@ -496,62 +482,96 @@ QQmlJSImporter::resolveConflictingExports(const QQmlJS::Import &importDescriptio
         if (it->scope == val.scope && it->revision == valExport.version())
             continue;
 
-        const auto existingExports = seenExports->value(qmlName);
-        enum { LowerVersion, SameVersion, HigherVersion } seenVersion = LowerVersion;
-        for (const QQmlJSScope::Export &entry : existingExports) {
-            if (!isVersionAllowed(entry, importDescription))
-                continue;
+        const SeenVersion seenVersion = computeSeenVersion(
+                importDescription, seenExports->value(qmlName), valExport.version());
 
-            if (valExport.version() < entry.version()) {
-                seenVersion = HigherVersion;
-                break;
-            }
+        insertExportWithConflictingVersion(val, precedence, qmlName, valExport, it->scope,
+                                           seenExports, types, seenVersion);
+    }
+    return bestExport;
+}
 
-            if (seenVersion == LowerVersion && valExport.version() == entry.version())
-                seenVersion = SameVersion;
+QQmlJSImporter::SeenVersion
+QQmlJSImporter::computeSeenVersion(const QQmlJS::Import &importDescription,
+                                   const QList<QQmlJS::Export> &existingExports,
+                                   QTypeRevision valExportVersion) const
+{
+    QQmlJSImporter::SeenVersion seenVersion = LowerVersion;
+    for (const QQmlJSScope::Export &entry : existingExports) {
+        if (!isVersionAllowed(entry, importDescription))
+            continue;
+
+        if (valExportVersion < entry.version()) {
+            seenVersion = HigherVersion;
+            break;
         }
 
-        switch (seenVersion) {
-        case LowerVersion:
-            insertExport();
-            continue;
-        case SameVersion: {
-            if (m_flags & QQmlJSImporterFlag::TolerateFileSelectors) {
-                auto isFileSelected = [](const QQmlJSScope::ConstPtr &scope) -> bool {
-                    return scope->filePath().contains(u"+");
-                };
-                auto warnAboutFileSelector = [&](const QString &path) {
-                    types->warnings.append({ QStringLiteral("Type %1 is ambiguous due to file "
-                                                            "selector usage, ignoring %2.")
-                                                     .arg(qmlName, path),
-                                             QtInfoMsg, QQmlJS::SourceLocation() });
-                };
-                if (it->scope) {
-                    if (isFileSelected(val.scope)) {
-                        // new entry is file selected, skip if it looks compatible
-                        if (fileSelectedScopesAreCompatibleHeuristic(it->scope, val.scope)) {
-                            warnAboutFileSelector(val.scope->filePath());
-                            continue;
-                        }
-                    } else if (isFileSelected(it->scope)) {
-                        // the first scope we saw is file selected. If they are compatible
-                        // we update to the new one without file selector
-                        if (fileSelectedScopesAreCompatibleHeuristic(it->scope, val.scope)) {
-                            warnAboutFileSelector(it->scope->filePath());
-                            insertExport();
-                            continue;
-                        }
+        if (seenVersion == LowerVersion && valExportVersion == entry.version())
+            seenVersion = SameVersion;
+    }
+    return seenVersion;
+}
+
+void QQmlJSImporter::insertExportWithConflictingVersion(
+        const QQmlJSExportedScope &val, quint8 precedence, const QString &qmlName,
+        const QQmlJSScope::Export &valExport, const QQmlJSScope::ConstPtr &scope,
+        QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+        QQmlJSImporter::AvailableTypes *types, SeenVersion seenVersion) const
+{
+    auto insertExport = [&]() {
+        types->qmlNames.setType(qmlName, { val.scope, valExport.version(), precedence });
+        (*seenExports)[qmlName].append(valExport);
+    };
+    auto onDuplicateImport = [&]() {
+        types->warnings.append({ QStringLiteral("Ambiguous type detected. "
+                                                "%1 %2.%3 is defined multiple times.")
+                                         .arg(qmlName)
+                                         .arg(valExport.version().majorVersion())
+                                         .arg(valExport.version().minorVersion()),
+                                 QtCriticalMsg, QQmlJS::SourceLocation() });
+
+        // Invalidate the type. We don't know which one to use.
+        types->qmlNames.clearType(qmlName);
+    };
+    switch (seenVersion) {
+    case LowerVersion:
+        insertExport();
+        return;
+    case SameVersion: {
+        if (m_flags & QQmlJSImporterFlag::TolerateFileSelectors) {
+            auto isFileSelected = [](const QQmlJSScope::ConstPtr &scope) -> bool {
+                return scope->filePath().contains(u"+");
+            };
+            auto warnAboutFileSelector = [&](const QString &path) {
+                types->warnings.append({ QStringLiteral("Type %1 is ambiguous due to file "
+                                                        "selector usage, ignoring %2.")
+                                                 .arg(qmlName, path),
+                                         QtInfoMsg, QQmlJS::SourceLocation() });
+            };
+            if (scope) {
+                if (isFileSelected(val.scope)) {
+                    // new entry is file selected, skip if it looks compatible
+                    if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
+                        warnAboutFileSelector(val.scope->filePath());
+                        return;
+                    }
+                } else if (isFileSelected(scope)) {
+                    // the first scope we saw is file selected. If they are compatible
+                    // we update to the new one without file selector
+                    if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
+                        warnAboutFileSelector(scope->filePath());
+                        insertExport();
+                        return;
                     }
                 }
             }
-            onDuplicateImport();
-            continue;
         }
-        case HigherVersion:
-            continue;
-        }
+        onDuplicateImport();
+        return;
     }
-    return bestExport;
+    case HigherVersion:
+        return;
+    }
 }
 
 void QQmlJSImporter::insertExports(const QQmlJS::Import &importDescription,

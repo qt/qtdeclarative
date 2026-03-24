@@ -266,6 +266,17 @@ private:
                               const QQmlJSExportedScope &val, quint8 precedence,
                               QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
                               QQmlJSImporter::AvailableTypes *types);
+    enum SeenVersion { LowerVersion, SameVersion, HigherVersion };
+    void insertExportWithConflictingVersion(const QQmlJSExportedScope &val, quint8 precedence,
+                                            const QString &qmlName,
+                                            const QQmlJSScope::Export &valExport,
+                                            const QQmlJSScope::ConstPtr &scope,
+                                            QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
+                                            QQmlJSImporter::AvailableTypes *types,
+                                            SeenVersion seenVersion) const;
+    SeenVersion computeSeenVersion(const QQmlJS::Import &importDescription,
+                                   const QList<QQmlJS::Export> &existingExports,
+                                   QTypeRevision valExportVersion) const;
     void insertExports(const QQmlJS::Import &importDescription, const QQmlJSExportedScope &val,
                        const QString &cppName, quint8 precedence,
                        QHash<QString, QList<QQmlJSScope::Export>> *seenExports,
