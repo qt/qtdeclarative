@@ -428,10 +428,15 @@ static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
             || exportVersion.minorVersion() <= importVersion.minorVersion();
 }
 
+static constexpr QLatin1String s_inProcessMarker = "$InProcess$"_L1;
+
 /* This is a _rough_ heuristic; only meant for qmllint to avoid warnings about commonconstructs.
    We might want to improve it in the future if it causes issues
 */
 static bool fileSelectedScopesAreCompatibleHeuristic(const QQmlJSScope::ConstPtr &scope1, const QQmlJSScope::ConstPtr &scope2) {
+    if (scope1->baseTypeName() == s_inProcessMarker || scope2->baseTypeName() == s_inProcessMarker)
+        return true;
+
     for (const auto &[propertyName, prop]: scope1->properties().asKeyValueRange())
         if (!scope2->hasProperty(propertyName))
             return false;
@@ -538,32 +543,32 @@ void QQmlJSImporter::insertExportWithConflictingVersion(
         insertExport();
         return;
     case SameVersion: {
-        if (m_flags & QQmlJSImporterFlag::TolerateFileSelectors) {
-            auto isFileSelected = [](const QQmlJSScope::ConstPtr &scope) -> bool {
-                return scope->filePath().contains(u"+");
-            };
-            auto warnAboutFileSelector = [&](const QString &path) {
-                types->warnings.append({ QStringLiteral("Type %1 is ambiguous due to file "
-                                                        "selector usage, ignoring %2.")
-                                                 .arg(qmlName, path),
-                                         QtInfoMsg, QQmlJS::SourceLocation() });
-            };
-            if (scope) {
-                if (isFileSelected(val.scope)) {
-                    // new entry is file selected, skip if it looks compatible
-                    if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
-                        warnAboutFileSelector(val.scope->filePath());
-                        return;
-                    }
-                } else if (isFileSelected(scope)) {
-                    // the first scope we saw is file selected. If they are compatible
-                    // we update to the new one without file selector
-                    if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
-                        warnAboutFileSelector(scope->filePath());
-                        insertExport();
-                        return;
-                    }
-                }
+        if (!m_flags.testAnyFlag(QQmlJSImporterFlag::TolerateFileSelectors) || !scope) {
+            onDuplicateImport();
+            return;
+        }
+        auto isFileSelected = [](const QQmlJSScope::ConstPtr &scope) -> bool {
+            return scope->filePath().contains(u"+");
+        };
+        auto warnAboutFileSelector = [&](const QString &path) {
+            types->warnings.append({ QStringLiteral("Type %1 is ambiguous due to file "
+                                                    "selector usage, ignoring %2.")
+                                             .arg(qmlName, path),
+                                     QtInfoMsg, QQmlJS::SourceLocation() });
+        };
+        if (isFileSelected(val.scope)) {
+            // new entry is file selected, skip if it looks compatible
+            if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
+                warnAboutFileSelector(val.scope->filePath());
+                return;
+            }
+        } else if (isFileSelected(scope)) {
+            // the first scope we saw is file selected. If they are compatible
+            // we update to the new one without file selector
+            if (fileSelectedScopesAreCompatibleHeuristic(scope, val.scope)) {
+                warnAboutFileSelector(scope->filePath());
+                insertExport();
+                return;
             }
         }
         onDuplicateImport();
@@ -686,7 +691,7 @@ void QQmlJSImporter::processImport(const QQmlJS::Import &importDescription,
 
             // ignore the scope currently analyzed by QQmlJSImportVisitor, as its only populated
             // after importing the implicit directory.
-            if (val.scope->baseTypeName() == "$InProcess$"_L1)
+            if (val.scope->baseTypeName() == s_inProcessMarker)
                 continue;
 
             // Composite types use QML names, and we should have resolved those already.

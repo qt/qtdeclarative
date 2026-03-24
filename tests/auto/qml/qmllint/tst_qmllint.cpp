@@ -2456,6 +2456,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
     QTest::newRow("externalEnumProperty") << QStringLiteral("externalEnumProperty.qml");
     QTest::newRow("fileSelectorDuplciateImport") << QStringLiteral("FileSelector/main.qml");
+    QTest::newRow("fileSelectorCmopatibleType") << QStringLiteral("FileSelector3/App.qml");
+    QTest::newRow("fileSelectorCompatibleFileSelectedType")
+            << QStringLiteral("FileSelector3/+Material/App.qml");
     QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
     QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");

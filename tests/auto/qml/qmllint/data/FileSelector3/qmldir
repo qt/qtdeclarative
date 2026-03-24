@@ -1,0 +1,6 @@
+module FileSelector3
+App 254.0 +Material/App.qml
+Circle 254.0 +Material/Circle.qml
+App 254.0 App.qml
+Circle 254.0 Circle.qml
+
