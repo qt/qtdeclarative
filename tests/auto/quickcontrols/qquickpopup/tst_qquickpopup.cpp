@@ -169,6 +169,7 @@ private slots:
     void blockEventsBehindModal_data();
     void blockEventsBehindModal();
     void spacingAndInsetsAreRevaluatedWhenChanged();
+    void windowInsetsOrder();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -3951,6 +3952,37 @@ void tst_QQuickPopup::spacingAndInsetsAreRevaluatedWhenChanged()
     popup->setBottomInset(initialBottomInset + offset);
     QCOMPARE(bottomInsetSpy.count(), 1);
     QCOMPARE(popup->bottomInset(), initialBottomInset + offset);
+}
+
+void tst_QQuickPopup::windowInsetsOrder()
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickApplicationHelper helper(this, "simplepopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+
+    popup->setPopupType(QQuickPopup::Window);
+    // Use distinct values per side so any swap is immediately visible.
+    popup->setLeftInset(-5);
+    popup->setTopInset(-10);
+    popup->setRightInset(-15);
+    popup->setBottomInset(-20);
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+
+    const QMarginsF insets = QQuickPopupPrivate::get(popup)->windowInsets();
+    QCOMPARE(insets.left(), 5);
+    QCOMPARE(insets.top(), 10);
+    QCOMPARE(insets.right(), 15);
+    QCOMPARE(insets.bottom(), 20);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
