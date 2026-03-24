@@ -34,7 +34,6 @@ qt_internal_add_qml_module(QuickTest
         TestSchedule.qml
         testlogger.js
     DEFINES
-        QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
         QT_BUILD_QMLTEST_LIB
     LIBRARIES

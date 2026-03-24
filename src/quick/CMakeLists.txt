@@ -229,7 +229,6 @@ qt_internal_add_qml_module(Quick
         util/qquickvalidator.cpp # expl. spec. of 'QMetaTypeId<QValidator *>' after inst.
         quick_qmltyperegistrations.cpp # qquickvalidator_p.h: error: explicit specialization of 'QMetaTypeId<QValidator *>' after instantiation
     DEFINES
-        QT_NO_FOREACH
         QT_NO_INTEGER_EVENT_COORDINATES
         QT_NO_URL_CAST_FROM_STRING
     INCLUDE_DIRECTORIES
