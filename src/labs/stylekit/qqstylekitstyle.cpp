@@ -375,12 +375,8 @@ void QQStyleKitStyle::recreateTheme()
             qmlWarning(this) << "Custom theme '" << effectiveThemeName << "' has no theme component set";
     }
 
-    if (m_effectiveThemeName == effectiveThemeName) {
-        // Switching theme name from e.g "System" to "Light" might not
-        // actually change the currently effective theme.
-        emit themeNameChanged();
+    if (m_effectiveThemeName == effectiveThemeName)
         return;
-    }
 
     if (m_theme) {
         m_theme->deleteLater();
@@ -509,4 +505,3 @@ void QQStyleKitStyle::componentComplete()
 QT_END_NAMESPACE
 
 #include "moc_qqstylekitstyle_p.cpp"
-
