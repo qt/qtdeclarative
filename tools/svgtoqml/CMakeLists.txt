@@ -26,6 +26,11 @@ qt_internal_add_tool(${target_name}
 )
 qt_internal_return_unless_building_tools()
 
+qt_internal_add_plugin_dependencies(${target_name}
+    SKIP_MISSING_PLUGIN_TARGETS
+    PLUGIN_TARGETS Qt::QMinimalIntegrationPlugin
+)
+
 set(resource_files
     "main.qml"
 )
