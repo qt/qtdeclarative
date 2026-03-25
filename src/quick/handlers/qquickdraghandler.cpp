@@ -188,10 +188,15 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
     QQuickMultiPointHandler::handlePointerEventImpl(event);
     event->accept(); // just the event, not the points
 
+    const auto mapFromScene = [this](const auto &scenePos) {
+        return target() ? target()->mapFromScene(scenePos) : scenePos;
+    };
+
     if (active()) {
         // Calculate drag delta, taking into account the axis enabled constraint
         // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
-        QVector2D accumulatedDragDelta = QVector2D(centroid().scenePosition() - centroid().scenePressPosition());
+        QVector2D accumulatedDragDelta(mapFromScene(centroid().scenePosition())
+                                       - mapFromScene(centroid().scenePressPosition()));
         if (!m_xAxis.enabled())
             accumulatedDragDelta.setX(0);
         if (!m_yAxis.enabled())
@@ -220,9 +225,6 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
             setPassiveGrab(event, *point);
             // Calculate drag delta, taking into account the axis enabled constraint
             // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
-            auto const mapFromScene = [this](auto const &scenePos) {
-                return target() ? target()->mapFromScene(scenePos) : scenePos;
-            };
             QVector2D accumulatedDragDelta = QVector2D(mapFromScene(point->scenePosition())
                                                        - mapFromScene(point->scenePressPosition()));
             if (!m_xAxis.enabled()) {

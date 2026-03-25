@@ -1276,15 +1276,16 @@ void tst_DragHandler::touchDragSceneRotated_data()
     QTest::addColumn<QString>("objectName");
     QTest::addColumn<QPoint>("movePoint");
     QTest::addColumn<bool>("moveExpected");
+    QTest::addColumn<QVector2D>("expectedTranslation");
 
     QTest::newRow("Drag X on rotated scene when Axis Y is disabled")
-            << "ballX" << QPoint{ 50, 0 } << false;
+            << "ballX" << QPoint{ 50, 0 } << false << QVector2D{ 0, 0 };
     QTest::newRow("Drag Y on rotated scene when Axis Y is disabled")
-            << "ballX" << QPoint{ 0, 50 } << true;
+            << "ballX" << QPoint{ 0, 50 } << true << QVector2D{ 50, 0 };
     QTest::newRow("Drag X on rotated scene when Axis X is disabled")
-            << "ballY" << QPoint{ 50, 0 } << true;
+            << "ballY" << QPoint{ 50, 0 } << true << QVector2D{ 0, -50 };
     QTest::newRow("Drag Y on rotated scene when Axis X is disabled")
-            << "ballY" << QPoint{ 0, 50 } << false;
+            << "ballY" << QPoint{ 0, 50 } << false << QVector2D{ 0, 0 };
 }
 
 void tst_DragHandler::touchDragSceneRotated()
@@ -1292,6 +1293,7 @@ void tst_DragHandler::touchDragSceneRotated()
     QFETCH(QString, objectName);
     QFETCH(QPoint, movePoint);
     QFETCH(bool, moveExpected);
+    QFETCH(QVector2D, expectedTranslation);
 
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragSceneRotated.qml");
@@ -1308,10 +1310,15 @@ void tst_DragHandler::touchDragSceneRotated()
     QTest::touchEvent(window, touchscreen.get()).press(1, p1, window);
     QQuickTouchUtils::flush(window);
 
-    p1 += movePoint;
+    // We need at least 2 moves to update activeTranslation (QTBUG-148395)
+    p1 += movePoint/2;
+    QTest::touchEvent(window, touchscreen.get()).move(1, p1, window);
+    QQuickTouchUtils::flush(window);
+    p1 += movePoint/2;
     QTest::touchEvent(window, touchscreen.get()).move(1, p1, window);
     QQuickTouchUtils::flush(window);
     QCOMPARE(dragHandler->active(), moveExpected);
+    QCOMPARE(dragHandler->activeTranslation(), expectedTranslation); // Test for QTBUG-142051
 
     QTest::touchEvent(window, touchscreen.get()).release(1, p1, window);
     QQuickTouchUtils::flush(window);
