@@ -966,8 +966,10 @@ TestCase {
         if(control.popup.popupType === Popup.Item) {
             compare(control.popup.contentItem.parent.x, -control.width / 2 + leftLayoutMargin)
         } else if (control.popup.popupType === Popup.Window) {
-            const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
-            compare(x - prevX, -control.width / 2 + leftLayoutMargin)
+            if (control.popup.leftInset >= 0) {
+                const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
+                compare(x - prevX, -control.width / 2 + leftLayoutMargin)
+            }
         }
 
         control.x = testCase.width - control.width / 2
@@ -976,8 +978,10 @@ TestCase {
         if (control.popup.popupType === Popup.Item) {
             compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2 + leftLayoutMargin)
         } else if (control.popup.popupType === Popup.Window) {
-            const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
-            compare(x - prevX, testCase.width - control.width / 2 + leftLayoutMargin)
+            if (control.popup.leftInset >= 0) {
+                const x = control.popup.contentItem.parent.mapToGlobal(0, 0).x
+                compare(x - prevX, testCase.width - control.width / 2 + leftLayoutMargin)
+            }
         }
 
         // close the popup when hidden (QTBUG-67684)
@@ -1008,6 +1012,7 @@ TestCase {
         let control = createTemporaryObject(reopenCombo, testCase)
         verify(control)
         let y = 0;
+        control.innerCombo.popup.popupType = Popup.Item
         for (let i = 0; i < 2; ++i) {
             tryCompare(control.innerCombo.popup, "visible", false)
             control.innerCombo.y = control.height - (control.innerCombo.popup.contentItem.height * 0.99)
@@ -1108,6 +1113,8 @@ TestCase {
 
         let highlightedSpy = signalSpy.createObject(control, {target: control, signalName: "highlighted"})
         verify(highlightedSpy.valid)
+
+        control.popup.popupType = Popup.Item
 
         touch.press(0, control).commit()
         touch.release(0, control).commit()
@@ -1218,6 +1225,8 @@ TestCase {
 
         let closedSpy = signalSpy.createObject(control, {target: control.popup, signalName: "closed"})
         verify(openedSpy.valid)
+
+        control.popup.popupType = Popup.Item
 
         // click - gain focus - show popup
         mouseClick(control)
