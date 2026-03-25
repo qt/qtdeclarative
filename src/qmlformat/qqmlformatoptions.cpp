@@ -243,11 +243,11 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
 
     parser.addOption(QCommandLineOption(
             QStringList() << "objects-spacing"_L1,
-            QStringLiteral("Ensure spaces between objects (only works with normalize option).")));
+            QStringLiteral("Ensure spaces between objects (only works with normalize or group-attributes-together option).")));
 
     parser.addOption(QCommandLineOption(
             QStringList() << "functions-spacing"_L1,
-            QStringLiteral("Ensure spaces between functions (only works with normalize option).")));
+            QStringLiteral("Ensure spaces between functions (only works with normalize or group-attributes-together option).")));
 
     parser.addOption(
             QCommandLineOption(QStringList() << "group-attributes-together"_L1,
@@ -263,7 +263,7 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
 
     parser.addOption(QCommandLineOption(
             QStringList() << "single-line-empty-objects"_L1,
-            QStringLiteral("Write empty objects on a single line (only works with normalize option).")));
+            QStringLiteral("Write empty objects on a single line (only works with normalize or group-attributes-together option).")));
 
     QCommandLineOption semicolonRuleOption(
             QStringList() << "semicolon-rule"_L1,
