@@ -1186,17 +1186,19 @@ bool QQmlJSScope::Export::isValid() const
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }
 
-QDeferredFactory<QQmlJSScope>::QDeferredFactory(QQmlJSImporter *importer, const QString &filePath,
-                                                const TypeReader &typeReader)
-    : m_filePath(filePath),
-      m_importer(importer),
+QDeferredFactory<QQmlJSScope>::QDeferredFactory(QQmlJSImporter *importer, const TypeReader &typeReader,
+                                                const QString &filePath, const QString &moduleName, bool isSingleton)
+    : m_importer(importer),
       m_typeReader(typeReader ? typeReader
                               : [](QQmlJSImporter *importer, const QString &filePath,
                                    const QSharedPointer<QQmlJSScope> &scopeToPopulate) {
                                     QQmlJSTypeReader defaultTypeReader(importer, filePath);
                                     defaultTypeReader(scopeToPopulate);
                                     return defaultTypeReader.errors();
-                                })
+                                }),
+      m_filePath(filePath),
+      m_moduleName(moduleName),
+      m_isSingleton(isSingleton)
 {
 }
 

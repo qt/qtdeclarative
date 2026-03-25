@@ -957,7 +957,7 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2QQmlJSScope(const QString &filePath)
             sourceFolderFile,
             { QQmlJSScope::create(),
               QSharedPointer<QDeferredFactory<QQmlJSScope>>(new QDeferredFactory<QQmlJSScope>(
-                      this, sourceFolderFile)) });
+                      this, {}, sourceFolderFile, QString(), false)) });
 }
 
 /*!

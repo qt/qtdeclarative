@@ -654,8 +654,8 @@ public:
             const QSharedPointer<QQmlJSScope> &scopeToPopulate)>;
     QDeferredFactory() = default;
 
-    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath,
-                     const TypeReader &typeReader = {});
+    QDeferredFactory(QQmlJSImporter *importer, const TypeReader &typeReader,
+                     const QString &filePath, const QString &moduleName, bool isSingleton);
 
     bool isValid() const
     {
@@ -670,6 +670,8 @@ public:
     QString filePath() const { return m_filePath; }
 
     QQmlJSImporter* importer() const { return m_importer; }
+    QString moduleName() const { return m_moduleName; }
+    bool isSingleton() const { return m_isSingleton; }
 
     void setIsSingleton(bool isSingleton)
     {
@@ -687,11 +689,11 @@ private:
     // Should only be called when lazy-loading the type in a deferred pointer.
     void populate(const QSharedPointer<QQmlJSScope> &scope) const;
 
-    QString m_filePath;
     QQmlJSImporter *m_importer = nullptr;
-    bool m_isSingleton = false;
-    QString m_moduleName;
     TypeReader m_typeReader;
+    QString m_filePath;
+    QString m_moduleName;
+    bool m_isSingleton = false;
 };
 
 using QQmlJSExportedScope = QQmlJSScope::ExportedScope<QQmlJSScope::Ptr>;
@@ -711,6 +713,28 @@ constexpr inline bool isFunctionScope(ScopeType type)
 }
 
 }
+
+template <typename T>
+static void resetFactory(QDeferredSharedPointer<T> &pointer,
+                        QQmlJSImporter *importer,
+                        const typename QDeferredFactory<std::remove_const_t<T>>::TypeReader &typeReader,
+                        const QString &filePath)
+{
+    const auto &factory = pointer.factory();
+    QDeferredFactory<std::remove_const_t<T>> newFactory(importer,
+                                                        typeReader, filePath,
+                                                        factory ? factory->moduleName() : QString(),
+                                                        factory ? factory->isSingleton() : false);
+    return resetFactoryImpl(pointer, std::move(newFactory));
+}
+
+template<typename T, typename U>
+void resetFactoryImpl(QDeferredSharedPointer<T> &pointer, U&& factory)
+{
+    pointer.m_data.reset();
+    *pointer.m_factory = std::forward<U>(factory);
+}
+
 
 QT_END_NAMESPACE
 

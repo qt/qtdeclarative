@@ -737,6 +737,9 @@ void tst_qmlls_highlighting::highlights_data()
         QTest::addRow("globalVarMath") << fileItem
                                        << HighlightToken(QQmlJS::SourceLocation(337, 4, 12, 20),
                                                 QmlHighlightKind::JsGlobalVar, QmlHighlightModifier::None);
+        QTest::addRow("singleton") << fileItem
+                                         << HighlightToken(QQmlJS::SourceLocation(370, 11, 15, 12),
+                                                  QmlHighlightKind::QmlType, QmlHighlightModifier::None);
     }
     { // property chains
         const auto filePath = m_highlightingDataDir + "/propertyChains.qml";

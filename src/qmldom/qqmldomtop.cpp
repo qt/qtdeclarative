@@ -1938,11 +1938,9 @@ void DomEnvironment::addQmlFile(const std::shared_ptr<QmlFile> &file, AddOption 
                 semanticAnalysis().m_importer->importFile(file->canonicalFilePath());
 
         // force reset the outdated qqmljsscope in case it was already populated
-        QDeferredFactory<QQmlJSScope> newFactory(semanticAnalysis().m_importer.get(),
-                                                 file->canonicalFilePath(),
-                                                 TypeReader{ weak_from_this(), m_loadPaths });
         file->setHandleForPopulation(handle);
-        handle.resetFactory(std::move(newFactory));
+        resetFactory(handle, semanticAnalysis().m_importer.get(),
+                     TypeReader{ weak_from_this(), m_loadPaths }, file->canonicalFilePath());
     }
 }
 
@@ -2112,10 +2110,8 @@ bool DomEnvironment::commitToBase(
         if (!oldFactory)
             continue;
 
-        const QDeferredFactory<QQmlJSScope> newFactory(
-                oldFactory->importer(), oldFactory->filePath(),
-                TypeReader{ newBaseForPopulation, m_loadPaths });
-        handle.resetFactory(newFactory);
+        resetFactory(handle, oldFactory->importer(),
+                     TypeReader{ newBaseForPopulation, m_loadPaths }, oldFactory->filePath());
     }
     return true;
 }

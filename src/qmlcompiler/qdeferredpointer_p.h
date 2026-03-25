@@ -28,6 +28,9 @@ class QDeferredSharedPointer;
 template<typename T>
 class QDeferredWeakPointer;
 
+template<typename U, typename F>
+void resetFactoryImpl(QDeferredSharedPointer<U>&, F&&);
+
 template<typename T>
 class QDeferredFactory
 {
@@ -156,14 +159,10 @@ public:
         return (m_factory && m_factory->isValid()) ? m_factory.data() : nullptr;
     }
 
-    void resetFactory(const Factory& newFactory)
-    {
-        m_data.reset();
-        *m_factory = newFactory;
-    }
-
 private:
     friend class QDeferredWeakPointer<T>;
+    template<typename U, typename F>
+    friend void resetFactoryImpl(QDeferredSharedPointer<U>&, F&&);
 
     void lazyLoad() const
     {

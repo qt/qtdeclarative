@@ -11,4 +11,6 @@ Item {
         const aa = Array.prototype.push(1)
         const KK = Math.random();
     }
+
+    color: MySingleton.windowColor
 }
