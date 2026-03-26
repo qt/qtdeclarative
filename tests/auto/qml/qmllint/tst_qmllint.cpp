@@ -661,7 +661,8 @@ void TestQmllint::dirtyQmlCode_data()
                    },
                    { { "Type ToolBar is ambiguous due to file selector usage, ignoring %1"_L1.arg(
                                testFile("FileSelector2/+Material/ToolBar.qml")),
-                       1, 1, QtMsgType::QtWarningMsg } }
+                       1, 1, QtMsgType::QtWarningMsg },
+                     { "Item was not found."_L1 } }
                }.withFlags(Result::Flags(Result::UseSettings));
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
