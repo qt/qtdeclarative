@@ -20,6 +20,8 @@
 #include <private/qqmltype_p.h>
 #include <private/qstringhash_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 //
 //  W A R N I N G
 //  -------------
@@ -38,7 +40,6 @@ class QDir;
 class QQmlImportNamespace;
 class QQmlTypeLoader;
 class QQmlTypeLoaderQmldirContent;
-class QTypeRevision;
 class QQmlTypeLoader;
 
 const QLoggingCategory &lcQmlImport();
