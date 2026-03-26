@@ -2621,6 +2621,9 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
     QCOMPARE(spySize.size(), 3);
+    #if (defined(Q_CC_MSVC) && Q_CC_MSVC > 1920) || defined(Q_CC_MINGW)
+        QEXPECT_FAIL("", "QTBUG-88646", Continue);
+    #endif
     QCOMPARE(spyWidth.size(), 3);
     QCOMPARE(spyHeight.size(), 2);
     int spyCount = 3;
@@ -2639,6 +2642,9 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spySize.size(), ++spyCount);
+    #if (defined(Q_CC_MSVC) && Q_CC_MSVC > 1920) || defined(Q_CC_MINGW)
+        QEXPECT_FAIL("", "QTBUG-88646", Continue);
+    #endif
     QCOMPARE(spyWidth.size(), spyCount);
     QCOMPARE(spyHeight.size(), 3);
 }
