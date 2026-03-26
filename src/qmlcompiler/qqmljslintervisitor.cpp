@@ -392,9 +392,9 @@ void LinterVisitor::checkCaseFallthrough(StatementList *statements, SourceLocati
 
     for (; it != end; ++it) {
         const QString &commentText = m_engine->code().mid(it->offset, it->length);
-        if (commentText.contains("fall through"_L1)
-            || commentText.contains("fall-through"_L1)
-            || commentText.contains("fallthrough"_L1)) {
+        if (commentText.contains("fall through"_L1, Qt::CaseInsensitive)
+            || commentText.contains("fall-through"_L1, Qt::CaseInsensitive)
+            || commentText.contains("fallthrough"_L1, Qt::CaseInsensitive)) {
             return;
         }
     }

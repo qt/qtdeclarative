@@ -2224,7 +2224,10 @@ void TestQmllint::dirtyJsSnippet_data()
                 case 3:                 // ok: comment
                     4 + 4
                     // fallthrough
-                case 4:                 // ok: nothing to fall through to ...
+                case 4:                 // ok: comment (case insensitive)
+                    5 + 5
+                    // FaLlThRoUgH
+                case 5:                 // ok: nothing to fall through to ...
                     1 + 2
                 })"_s
             << Result{ { { "Unterminated non-empty case block"_L1, 6, 17 },
