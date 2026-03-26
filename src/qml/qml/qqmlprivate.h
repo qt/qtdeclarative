@@ -30,8 +30,11 @@
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qpointer.h>
 #include <QtCore/qurl.h>
+#include <QtCore/qtyperevision.h>
 #include <QtCore/qvariant.h>
+#if !defined(QT_LEAN_HEADERS) || QT_LEAN_HEADERS < 3
 #include <QtCore/qversionnumber.h>
+#endif
 
 #include <functional>
 #include <limits>

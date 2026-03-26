@@ -12,7 +12,10 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qmetasequence.h>
+#include <QtCore/qtyperevision.h>
+#if !defined(QT_LEAN_HEADERS) || QT_LEAN_HEADERS < 3
 #include <QtCore/qversionnumber.h>
+#endif
 
 #define QML_VERSION     0x020000
 #define QML_VERSION_STR "2.0"
