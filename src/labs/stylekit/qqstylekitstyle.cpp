@@ -335,7 +335,8 @@ void QQStyleKitStyle::setThemeName(const QString &themeName)
         return;
 
     m_themeName = themeName;
-    recreateTheme();
+    if (m_completed)
+        recreateTheme();
 
     emit themeNameChanged();
 }
