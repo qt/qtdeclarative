@@ -22,7 +22,7 @@
 #include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qtaggedpointer.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 #include <type_traits>
 

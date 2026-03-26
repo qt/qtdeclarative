@@ -17,7 +17,7 @@
 //
 
 #include <QtCore/qcbormap.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 #include <cstdlib>
 

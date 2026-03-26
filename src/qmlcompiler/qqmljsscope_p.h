@@ -29,8 +29,10 @@
 #include <QtCore/qhash.h>
 #include <QtCore/qset.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qversionnumber.h>
+
 #include "qqmlsaconstants.h"
+
+#include <QtCore/qtyperevision.h>
 
 #include <optional>
 

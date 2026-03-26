@@ -25,7 +25,7 @@
 #include <QtQml/qjsvalue.h>
 
 #include <QtCore/qobject.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 

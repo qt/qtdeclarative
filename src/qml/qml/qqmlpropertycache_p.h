@@ -25,7 +25,7 @@
 
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 #include <QtCore/qxpfunctional.h>
 #include <QtCore/qloggingcategory.h>
 

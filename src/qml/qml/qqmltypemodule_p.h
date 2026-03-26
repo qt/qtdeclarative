@@ -21,7 +21,7 @@
 #include <QtQml/private/qqmltype_p.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 #include <functional>
 

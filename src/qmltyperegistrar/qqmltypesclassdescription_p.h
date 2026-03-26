@@ -22,7 +22,7 @@
 #include <QtCore/qcbormap.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qset.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 

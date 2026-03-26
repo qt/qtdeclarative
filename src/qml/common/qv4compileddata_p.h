@@ -26,7 +26,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qvector.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 #if QT_CONFIG(temporaryfile)
 #include <QtCore/qsavefile.h>

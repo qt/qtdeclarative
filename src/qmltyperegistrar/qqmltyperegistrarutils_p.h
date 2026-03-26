@@ -18,7 +18,7 @@
 
 #include "qmetatypesjsonprocessor_p.h"
 
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 

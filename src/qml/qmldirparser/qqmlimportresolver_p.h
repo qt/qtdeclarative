@@ -20,7 +20,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 
