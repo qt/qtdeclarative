@@ -21,6 +21,7 @@
 QT_REQUIRE_CONFIG(quick_animatedimage);
 
 #include "qquickimage_p_p.h"
+#include "qquickanimatedimage_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -42,6 +43,7 @@ public:
     QQuickPixmap *infoForCurrentFrame(QQmlEngine *engine);
     void setMovie(QMovie *movie);
     void clearCache();
+    void handleLoopCompletion();
 
     qreal speed = 1;
     QMovie *movie = nullptr;
@@ -55,6 +57,11 @@ public:
     bool playing : 1;
     bool paused : 1;
     bool oldPlaying : 1;
+
+    QQuickAnimatedImage::FinishBehavior finishBehavior = QQuickAnimatedImage::FinishAtInitialFrame;
+    int loops = QQuickAnimatedImage::Infinite;
+    int currentLoop = 0;
+    int lastFrameNumber = 0;
 };
 
 QT_END_NAMESPACE

@@ -39,6 +39,26 @@ class tst_qquickanimatedimage : public QQmlDataTest
 public:
     tst_qquickanimatedimage() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
+private:
+    // Helper: create an AnimatedImage loading the given image file
+    QQuickAnimatedImage *createAnimatedImage(QQmlComponent &component, const QString &imageFile)
+    {
+        component.setData(QByteArray("import QtQuick\nAnimatedImage { source: \"")
+                                  + imageFile.toUtf8() + "\" }",
+                          testFileUrl(""));
+        return qobject_cast<QQuickAnimatedImage *>(component.create());
+    }
+
+    // Common data rows for tests that should run with both GIF loop types
+    static void loopsTestData()
+    {
+        QTest::addColumn<QString>("imageFile");
+        // colors.gif: NETSCAPE loop=0 (infinite internal looping)
+        QTest::newRow("infinite-gif") << "colors.gif";
+        // colors_once.gif: NETSCAPE loop=1 (finite internal looping)
+        QTest::newRow("finite-gif") << "colors_once.gif";
+    }
+
 private slots:
     void cleanup();
     void play();
@@ -63,6 +83,21 @@ private slots:
     void sourceChangesOnFrameChanged();
     void currentFrame();
     void qtbug_120555();
+    void loopsProperties();
+    void loopsFinished_data();
+    void loopsFinished();
+    void loopsInfinite_data();
+    void loopsInfinite();
+    void loopsFinishBehavior_data();
+    void loopsFinishBehavior();
+    void loopsStopAndRestart_data();
+    void loopsStopAndRestart();
+    void loopsExternalInterference_data();
+    void loopsExternalInterference();
+    void loopsChangeWhilePlaying_data();
+    void loopsChangeWhilePlaying();
+    void loopsZeroDoesNotPlay_data();
+    void loopsZeroDoesNotPlay();
 };
 
 void tst_qquickanimatedimage::cleanup()
@@ -675,6 +710,374 @@ void tst_qquickanimatedimage::qtbug_120555()
     QTRY_COMPARE(anim->status(), QQuickImage::Ready);
 
     delete anim;
+}
+
+void tst_qquickanimatedimage::loopsProperties()
+{
+    // Default values
+    QQuickAnimatedImage image;
+    QCOMPARE(image.loops(), -1);
+    QCOMPARE(static_cast<int>(QQuickAnimatedImage::Infinite), -1);
+    QCOMPARE(image.finishBehavior(), QQuickAnimatedImage::FinishAtInitialFrame);
+
+    // loops setter/getter
+    QSignalSpy loopsSpy(&image, &QQuickAnimatedImage::loopsChanged);
+    image.setLoops(3);
+    QCOMPARE(image.loops(), 3);
+    QCOMPARE(loopsSpy.size(), 1);
+
+    // Same value does not emit
+    image.setLoops(3);
+    QCOMPARE(loopsSpy.size(), 1);
+
+    // Invalid values normalize to Infinite
+    image.setLoops(-5);
+    QCOMPARE(image.loops(), -1);
+
+    // Zero means "do not play"
+    image.setLoops(0);
+    QCOMPARE(image.loops(), 0);
+
+    // finishBehavior setter/getter
+    QSignalSpy fbSpy(&image, &QQuickAnimatedImage::finishBehaviorChanged);
+    image.setFinishBehavior(QQuickAnimatedImage::FinishAtFinalFrame);
+    QCOMPARE(image.finishBehavior(), QQuickAnimatedImage::FinishAtFinalFrame);
+    QCOMPARE(fbSpy.size(), 1);
+
+    // Same value does not emit
+    image.setFinishBehavior(QQuickAnimatedImage::FinishAtFinalFrame);
+    QCOMPARE(fbSpy.size(), 1);
+
+    // QML-level access
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, "stickman.gif"));
+    QVERIFY(anim);
+    anim->setLoops(2);
+    QCOMPARE(anim->loops(), 2);
+    QCOMPARE(evaluate<int>(anim.data(), "AnimatedImage.Infinite"), -1);
+    QCOMPARE(evaluate<int>(anim.data(), "AnimatedImage.FinishAtInitialFrame"), 0);
+    QCOMPARE(evaluate<int>(anim.data(), "AnimatedImage.FinishAtFinalFrame"), 1);
+}
+
+void tst_qquickanimatedimage::loopsFinished_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsFinished()
+{
+    QFETCH(QString, imageFile);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+
+    anim->setLoops(3);
+    QVERIFY(anim->isPlaying());
+
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+    QSignalSpy frameSpy(anim.data(), &QQuickAnimatedImage::frameChanged);
+
+    QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+    QCOMPARE(finishedSpy.size(), 1);
+
+    // 3 frames per cycle * 3 loops = 9, minus 1 because the initial
+    // frame at startup does not emit frameChanged.
+    QVERIFY2(frameSpy.size() >= 8,
+             qPrintable(QString("Expected >= 8 frame changes for 3 loops, got %1")
+                                .arg(frameSpy.size())));
+}
+
+void tst_qquickanimatedimage::loopsInfinite_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsInfinite()
+{
+    QFETCH(QString, imageFile);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+    QCOMPARE(anim->loops(), -1);
+    QVERIFY(anim->isPlaying());
+
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+    const int previousFrame = anim->currentFrame();
+    QTRY_VERIFY(anim->currentFrame() != previousFrame);
+    QCOMPARE(finishedSpy.size(), 0);
+    QVERIFY(anim->isPlaying());
+}
+
+void tst_qquickanimatedimage::loopsFinishBehavior_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsFinishBehavior()
+{
+    QFETCH(QString, imageFile);
+
+    // Helper: sample the center pixel color from a window grab
+    auto samplePixelColor = [](QQuickView &window) -> QColor {
+        QImage img = window.grabWindow();
+        return img.isNull() ? QColor() : img.pixelColor(1, 1);
+    };
+
+    // FinishAtInitialFrame (default) — stops at frame 0 and renders it
+    {
+        QQuickView window;
+        QQmlComponent component(window.engine());
+        QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+        QVERIFY(anim);
+        anim->setParentItem(window.contentItem());
+        window.resize(anim->width(), anim->height());
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+        // Capture the reference color for frame 0
+        anim->setPlaying(false);
+        anim->setCurrentFrame(0);
+        const QColor refInitialColor = samplePixelColor(window);
+        QVERIFY(refInitialColor.isValid());
+
+        // Also capture the last frame color — must differ from frame 0
+        anim->setCurrentFrame(anim->frameCount() - 1);
+        const QColor refFinalColor = samplePixelColor(window);
+        QVERIFY(refInitialColor != refFinalColor);
+
+        anim->setLoops(1);
+        anim->setPlaying(true);
+        QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+        QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+        QCOMPARE(finishedSpy.size(), 1);
+        QCOMPARE(anim->currentFrame(), 0);
+
+        // Verify the actually rendered pixel matches the initial frame
+        const QColor actualColor = samplePixelColor(window);
+        QCOMPARE(actualColor, refInitialColor);
+    }
+
+    // FinishAtFinalFrame — stops at last frame and renders it
+    {
+        QQuickView window;
+        QQmlComponent component(window.engine());
+        QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+        QVERIFY(anim);
+        anim->setParentItem(window.contentItem());
+        window.resize(anim->width(), anim->height());
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+        const int lastFrame = anim->frameCount() - 1;
+
+        // Capture reference colors for both the initial and final frames
+        anim->setPlaying(false);
+        anim->setCurrentFrame(0);
+        const QColor refInitialColor = samplePixelColor(window);
+
+        anim->setCurrentFrame(lastFrame);
+        const QColor refFinalColor = samplePixelColor(window);
+        QVERIFY(refInitialColor != refFinalColor);
+
+        anim->setLoops(1);
+        anim->setFinishBehavior(QQuickAnimatedImage::FinishAtFinalFrame);
+        anim->setPlaying(true);
+        QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+        QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+        QCOMPARE(finishedSpy.size(), 1);
+        QCOMPARE(anim->currentFrame(), lastFrame);
+
+        // Verify the actually rendered pixel matches the final frame
+        const QColor actualColor = samplePixelColor(window);
+        QCOMPARE(actualColor, refFinalColor);
+        QVERIFY(actualColor != refInitialColor);
+    }
+}
+
+void tst_qquickanimatedimage::loopsStopAndRestart_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsStopAndRestart()
+{
+    QFETCH(QString, imageFile);
+
+    QQuickView window;
+    QQmlComponent component(window.engine());
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+    anim->setParentItem(window.contentItem());
+    window.resize(anim->width(), anim->height());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    auto samplePixelColor = [](QQuickView &w) -> QColor {
+        QImage img = w.grabWindow();
+        return img.isNull() ? QColor() : img.pixelColor(1, 1);
+    };
+
+    // Capture reference color for frame 0
+    anim->setPlaying(false);
+    anim->setCurrentFrame(0);
+    const QColor refInitialColor = samplePixelColor(window);
+
+    anim->setLoops(1);
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+    // Manual stop should not emit finished()
+    anim->setPlaying(false);
+    QVERIFY(!anim->isPlaying());
+    QCOMPARE(finishedSpy.size(), 0);
+
+    // Restart — should play the full loop count and emit finished()
+    anim->setPlaying(true);
+    QVERIFY(anim->isPlaying());
+
+    QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+    QCOMPARE(finishedSpy.size(), 1);
+    QCOMPARE(samplePixelColor(window), refInitialColor);
+
+    // Second restart — should work again and render correctly
+    anim->setPlaying(true);
+    QVERIFY(anim->isPlaying());
+
+    QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+    QCOMPARE(finishedSpy.size(), 2);
+    QCOMPARE(samplePixelColor(window), refInitialColor);
+}
+
+/*
+    External interference (setCurrentFrame, pause/resume) during playback
+    should not corrupt loop counting.
+*/
+void tst_qquickanimatedimage::loopsExternalInterference_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsExternalInterference()
+{
+    QFETCH(QString, imageFile);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+
+    anim->setLoops(3);
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+    // setCurrentFrame() back to 0 should not trigger false wrap-around
+    QTRY_VERIFY(anim->currentFrame() > 0);
+    anim->setCurrentFrame(0);
+    QTRY_VERIFY(anim->currentFrame() > 0);
+    anim->setCurrentFrame(0);
+
+    // Pause and resume should not interfere with counting
+    QTRY_VERIFY(anim->currentFrame() > 0);
+    anim->setPaused(true);
+    QVERIFY(anim->isPaused());
+    QCOMPARE(finishedSpy.size(), 0);
+    anim->setPaused(false);
+
+    // Should still complete all 3 loops normally
+    QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+    QCOMPARE(finishedSpy.size(), 1);
+}
+
+/*
+    Changing loops while the animation is playing should take effect.
+*/
+void tst_qquickanimatedimage::loopsChangeWhilePlaying_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsChangeWhilePlaying()
+{
+    QFETCH(QString, imageFile);
+
+    // Increase loops — animation continues and finishes with new count
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+        QVERIFY(anim);
+
+        anim->setLoops(2);
+        QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+        QTRY_VERIFY(anim->currentFrame() > 0);
+        anim->setLoops(5);
+        QVERIFY(anim->isPlaying());
+
+        QTRY_VERIFY_WITH_TIMEOUT(!anim->isPlaying(), 30000);
+        QCOMPARE(finishedSpy.size(), 1);
+    }
+
+    // Switch to Infinite — animation never stops on its own
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+        QVERIFY(anim);
+
+        anim->setLoops(2);
+        QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+
+        QTRY_VERIFY(anim->currentFrame() > 0);
+        anim->setLoops(QQuickAnimatedImage::Infinite);
+
+        const int frame = anim->currentFrame();
+        QTRY_VERIFY(anim->currentFrame() != frame);
+        QVERIFY(anim->isPlaying());
+        QCOMPARE(finishedSpy.size(), 0);
+
+        anim->setPlaying(false);
+    }
+}
+
+void tst_qquickanimatedimage::loopsZeroDoesNotPlay_data()
+{
+    loopsTestData();
+}
+
+void tst_qquickanimatedimage::loopsZeroDoesNotPlay()
+{
+    QFETCH(QString, imageFile);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QScopedPointer<QQuickAnimatedImage> anim(createAnimatedImage(component, imageFile));
+    QVERIFY(anim);
+
+    anim->setLoops(0);
+    QCOMPARE(anim->loops(), 0);
+
+    // The animation should not be running
+    QVERIFY(!anim->isPlaying());
+
+    QSignalSpy finishedSpy(anim.data(), &QQuickAnimatedImage::finished);
+    QSignalSpy frameSpy(anim.data(), &QQuickAnimatedImage::frameChanged);
+
+    // Explicitly trying to play should have no effect
+    anim->setPlaying(true);
+    QVERIFY(!anim->isPlaying());
+
+    // Wait a bit to confirm nothing happens
+    QTest::qWait(500);
+    QVERIFY(!anim->isPlaying());
+    QCOMPARE(finishedSpy.size(), 0);
+    QCOMPARE(frameSpy.size(), 0);
 }
 
 QTEST_MAIN(tst_qquickanimatedimage)

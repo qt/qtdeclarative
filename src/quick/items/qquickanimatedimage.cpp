@@ -54,6 +54,19 @@ void QQuickAnimatedImagePrivate::clearCache()
     frameMap.clear();
 }
 
+void QQuickAnimatedImagePrivate::handleLoopCompletion()
+{
+    Q_Q(QQuickAnimatedImage);
+    const int targetFrame = (finishBehavior == QQuickAnimatedImage::FinishAtInitialFrame)
+                            ? 0
+                            : qMax(movie->frameCount() - 1, 0);
+    lastFrameNumber = targetFrame;
+    movie->stop();
+    movie->jumpToFrame(targetFrame);
+    // playing = false will be set via playingStatusChanged()
+    emit q->finished();
+}
+
 /*!
     \qmltype AnimatedImage
     \nativetype QQuickAnimatedImage
@@ -72,6 +85,11 @@ void QQuickAnimatedImagePrivate::clearCache()
     and \l paused properties.
 
     The full list of supported formats can be determined with QMovie::supportedFormats().
+
+    The number of times the animation plays can be controlled using the
+    \l loops property. By default, the animation loops indefinitely.
+    The \l finished signal is emitted when the animation finishes playing
+    the specified number of loops.
 
     \section1 Example Usage
 
@@ -212,10 +230,15 @@ void QQuickAnimatedImage::setPlaying(bool play)
         emit playingChanged();
         return;
     }
-    if (play)
+    if (play) {
+        if (d->loops == 0)
+            return;
+        d->currentLoop = 0;
+        d->lastFrameNumber = 0;
         d->movie->start();
-    else
+    } else {
         d->movie->stop();
+    }
 }
 
 /*!
@@ -243,6 +266,10 @@ void QQuickAnimatedImage::setCurrentFrame(int frame)
         d->presetCurrentFrame = frame;
         return;
     }
+    // Update lastFrameNumber before jumpToFrame so that the synchronous
+    // frameChanged signal from QMovie does not trigger false wrap-around
+    // detection in movieUpdate()
+    d->lastFrameNumber = frame;
     d->movie->jumpToFrame(frame);
 }
 
@@ -280,11 +307,91 @@ void QQuickAnimatedImage::setSpeed(qreal speed)
     }
 }
 
+/*!
+    \qmlproperty int QtQuick::AnimatedImage::loops
+    \since 6.12
+
+    This property holds the number of times the animation will play.
+
+    After playing the animation this many times, the animation will
+    automatically stop and the \l finished signal will be emitted.
+
+    If this is set to \c AnimatedImage.Infinite (the default), the
+    animation will not stop playing on its own.
+
+    Setting \c loops to \c 0 means the animation will not play.
+
+    Negative values are invalid.
+*/
+int QQuickAnimatedImage::loops() const
+{
+    Q_D(const QQuickAnimatedImage);
+    return d->loops;
+}
+
+void QQuickAnimatedImage::setLoops(int loops)
+{
+    Q_D(QQuickAnimatedImage);
+    if (loops < 0 && loops != Infinite) {
+        qmlWarning(this) << "Loops must be AnimatedImage.Infinite, 0, or a positive integer, got"
+                         << loops;
+        loops = Infinite;
+    }
+    if (d->loops == loops)
+        return;
+    d->loops = loops;
+    emit loopsChanged();
+    if (loops == 0 && d->movie && d->movie->state() != QMovie::NotRunning)
+        d->movie->stop();
+}
+
+/*!
+    \qmlenum QtQuick::AnimatedImage::FinishBehavior
+    \since 6.12
+
+    This enum describes the behavior when the animation finishes
+    on its own.
+
+    \value FinishAtInitialFrame
+        When the animation finishes it returns to the initial frame.
+        This is the default behavior.
+
+    \value FinishAtFinalFrame
+        When the animation finishes it stays on the final frame.
+*/
+
+/*!
+    \qmlproperty enumeration QtQuick::AnimatedImage::finishBehavior
+    \since 6.12
+
+    This property holds the behavior when the animation finishes
+    on its own. The default value is \l {FinishBehavior}.{FinishAtInitialFrame}.
+
+    \sa {FinishBehavior}
+*/
+QQuickAnimatedImage::FinishBehavior QQuickAnimatedImage::finishBehavior() const
+{
+    Q_D(const QQuickAnimatedImage);
+    return d->finishBehavior;
+}
+
+void QQuickAnimatedImage::setFinishBehavior(FinishBehavior behavior)
+{
+    Q_D(QQuickAnimatedImage);
+    if (d->finishBehavior == behavior)
+        return;
+    d->finishBehavior = behavior;
+    emit finishBehaviorChanged();
+}
+
 void QQuickAnimatedImage::setSource(const QUrl &url)
 {
     Q_D(QQuickAnimatedImage);
     if (url == d->url)
         return;
+
+    d->currentLoop = 0;
+    d->lastFrameNumber = 0;
 
 #if QT_CONFIG(qml_network)
     if (d->reply) {
@@ -392,6 +499,7 @@ void QQuickAnimatedImage::movieRequestFinished()
 
     connect(d->movie, &QMovie::stateChanged, this, &QQuickAnimatedImage::playingStatusChanged);
     connect(d->movie, &QMovie::frameChanged, this, &QQuickAnimatedImage::movieUpdate);
+    connect(d->movie, &QMovie::finished, this, &QQuickAnimatedImage::onMovieFinished);
     if (d->cache)
         d->movie->setCacheMode(QMovie::CacheAll);
     d->movie->setSpeed(qRound(d->speed * 100.0));
@@ -399,11 +507,11 @@ void QQuickAnimatedImage::movieRequestFinished()
     d->setProgress(1);
 
     bool pausedAtStart = d->paused;
-    if (d->movie && d->playing)
+    if (d->movie && d->playing && d->loops != 0)
         d->movie->start();
     if (d->movie && pausedAtStart)
         d->movie->setPaused(true);
-    if (d->movie && (d->paused || !d->playing)) {
+    if (d->movie && (d->paused || !d->playing || d->loops == 0)) {
         d->movie->jumpToFrame(d->presetCurrentFrame);
         d->presetCurrentFrame = 0;
     }
@@ -431,6 +539,19 @@ void QQuickAnimatedImage::movieUpdate()
         d->clearCache();
 
     if (d->movie) {
+        int currentFrame = d->movie->currentFrameNumber();
+        // Detect wrap-around: current frame < previous frame
+        if (currentFrame < d->lastFrameNumber && d->lastFrameNumber > 0) {
+            d->currentLoop++;
+            if (d->loops != Infinite && d->currentLoop >= d->loops) {
+                d->handleLoopCompletion();
+                // handleLoopCompletion() stops the movie and may jump to a
+                // different frame.  Re-read the frame number and fall
+                // through to setPixmap() so the display is updated.
+                currentFrame = d->movie->currentFrameNumber();
+            }
+        }
+        d->lastFrameNumber = currentFrame;
         d->setPixmap(*d->infoForCurrentFrame(qmlEngine(this)));
         emit QQuickImageBase::currentFrameChanged();
     }
@@ -447,6 +568,33 @@ void QQuickAnimatedImage::playingStatusChanged()
     if ((d->movie->state() == QMovie::Paused) != d->paused) {
         d->paused = (d->movie->state() == QMovie::Paused);
         emit pausedChanged();
+    }
+}
+
+/*!
+    \qmlsignal QtQuick::AnimatedImage::finished()
+    \since 6.12
+
+    This signal is emitted when the animation has finished playing
+    the number of times specified by \l loops.
+
+    It is not emitted when \l playing is set to \c false manually,
+    nor for animations whose \l loops property is set to
+    \c AnimatedImage.Infinite.
+*/
+
+void QQuickAnimatedImage::onMovieFinished()
+{
+    Q_D(QQuickAnimatedImage);
+    // Ignore single-frame images — restarting them would loop forever.
+    if (d->movie->frameCount() <= 1)
+        return;
+    if (d->loops == Infinite || d->currentLoop < d->loops) {
+        // Avoid false wrap-around detection on restart.
+        d->lastFrameNumber = 0;
+        d->movie->start();
+    } else {
+        d->handleLoopCompletion();
     }
 }
 
