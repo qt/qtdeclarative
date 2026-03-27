@@ -20,6 +20,7 @@
 #include <QList>
 
 #include <variant>
+#include <private/qduplicatetracker_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsscope_p.h>
@@ -57,6 +58,10 @@ public:
     {
         m_typeResolver = std::move(typeResolver);
     }
+    void setKnownUnresolvedTypes(QDuplicateTracker<QQmlJSScope::ConstPtr> *tracker)
+    {
+        m_knownUnresolvedTypes = tracker;
+    }
 
     QQmlJSTypeResolver *typeResolver() { return &m_typeResolver; }
 
@@ -70,6 +75,7 @@ private:
     void analyzeFunction(const QV4::Compiler::Context *context,
                          QQmlJSCompilePass::Function *function);
     ContextPropertyInfo m_contextPropertyInfo;
+    QDuplicateTracker<QQmlJSScope::ConstPtr> *m_knownUnresolvedTypes = nullptr;
 };
 
 QT_END_NAMESPACE

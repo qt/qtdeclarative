@@ -99,11 +99,11 @@ void QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
             QQmlJSBasicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger)
                     .run(function, ValidateBasicBlocks, dummy);
 
-    blocksAndAnnotations =
-            QQmlJSTypePropagator(m_unitGenerator, &m_typeResolver, m_logger,
-                                 blocksAndAnnotations.basicBlocks, blocksAndAnnotations.annotations,
-                                 m_passManager, m_contextPropertyInfo)
-                    .run(function);
+    QQmlJSTypePropagator lintTypePropgator(
+            m_unitGenerator, &m_typeResolver, m_logger, blocksAndAnnotations.basicBlocks,
+            blocksAndAnnotations.annotations, m_passManager, m_contextPropertyInfo);
+    lintTypePropgator.setKnownUnresolvedTypes(m_knownUnresolvedTypes);
+    blocksAndAnnotations = lintTypePropgator.run(function);
 
     if (m_logger->isCategoryIgnored(qmlCompiler))
         return;

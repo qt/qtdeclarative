@@ -1082,8 +1082,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("incompleteQmltypes2")
             << QStringLiteral("incompleteQmltypes2.qml")
-            << Result{ { { "Member \"weDontKnowIt\" not found on type \"CustomPalette\""_L1, 5,
-                           35 } } }
+            << Result{ { { "Type CustomPalette is used but it is not resolved"_L1, 5, 35 } } }
             << defaultOptions;
     QTest::newRow("incompleteQmltypes3")
             << QStringLiteral("incompleteQmltypes3.qml")
@@ -1244,7 +1243,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
             << Result{ { { "Nested inline components are not supported"_L1 } } } << defaultOptions;
     QTest::newRow("nonNullStored")
             << QStringLiteral("nonNullStored.qml")
-            << Result{ { { "Member \"objectName\" not found on type \"Foozle\""_L1 } },
+            << Result{ { { "Type Foozle is used but it is not resolved"_L1 } },
                        { { "Unqualified access"_L1 } } }
             << defaultOptions;
     QTest::newRow("notQmlRootMethods")
@@ -1680,6 +1679,21 @@ void TestQmllint::dirtyQmlSnippet_data()
                            1, 11 } } }
             << defaultOptions;
 
+    QTest::newRow("missingTypeAccessMethod")
+            << u"MyThing { id: bad } Component.onCompleted: console.log(bad.asdf())"_s
+            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+    QTest::newRow("missingTypeAccessProperty")
+            << u"MyThing { id: bad } Component.onCompleted: console.log(bad.asdf)"_s
+            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+    QTest::newRow("missingTypeBinding")
+            << u"MyThing { asdf: 123 }"_s
+            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
+    QTest::newRow("missingTypeDefaultBinding")
+            << u"MyThing { Item{} }"_s
+            << Result{ { { "MyThing was not found"_L1 } }, { { "default"_L1 } } } << defaultOptions;
+    QTest::newRow("missingTypeObjectBinding")
+            << u"MyThing { asdf: Item{} }"_s
+            << Result{ { { "MyThing was not found"_L1 } }, { { "asdf"_L1 } } } << defaultOptions;
     QTest::newRow("nonRootEnum1")
             << u"Item { enum E { A, B, C } }"_s
             << Result{ { { "Enum declared outside the root element. It won't be accessible."_L1,
@@ -4456,9 +4470,9 @@ void TestQmllint::crashes()
 
     checkResult(
             warnings,
-            Result{ { Message{
-                              u"FooBar was not found. Did you add all imports and dependencies?"_s },
-                      Message{ u"Cannot assign to non-existent default property"_s } } });
+            Result{ {
+                    Message{ u"FooBar was not found. Did you add all imports and dependencies?"_s },
+            } });
 }
 
 QTEST_GUILESS_MAIN(TestQmllint)

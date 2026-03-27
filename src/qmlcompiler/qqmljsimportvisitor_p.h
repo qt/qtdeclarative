@@ -67,6 +67,7 @@ public:
 
     QQmlJSImporter::ImportedTypes imports() const { return m_rootScopeImports; }
     QQmlJSScopesById addressableScopes() const { return m_scopesById; }
+    QDuplicateTracker<QQmlJSScope::ConstPtr> *knownUnresolvedTypes() { return &m_unresolvedTypes; }
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> signalHandlers() const
     {
         return m_signalHandlers;

@@ -1454,8 +1454,6 @@ void tst_qmlls_modules::warnings_data()
                 "your project? [import]"_L1);
         missingWorkspaceB.warnings.append(
                 "MyItem was not found. Did you add all imports and dependencies?: Did you mean \"Item\"? [import]"_L1);
-        missingWorkspaceB.warnings.append(
-                "Could not find property \"fromImportPathB\". [missing-property]"_L1);
 
         QTest::addRow("MissingWorkspaceB")
                 << u"workspaces/twoWorkspaces/WorkspaceB/UseImportPathB.qml"_s << missingWorkspaceB;
@@ -1485,8 +1483,6 @@ void tst_qmlls_modules::warnings_data()
                 "your project? [import]"_L1);
         nestedWorkspaces.warnings.append(
                 "MyItem was not found. Did you add all imports and dependencies?: Did you mean \"Item\"? [import]"_L1);
-        nestedWorkspaces.warnings.append(
-                "Could not find property \"fromImportPathA\". [missing-property]"_L1);
 
         // use import paths from twoWorkspaces and not from WorkspaceA, expect warnings
         QTest::addRow("NestedWorkspaces2")

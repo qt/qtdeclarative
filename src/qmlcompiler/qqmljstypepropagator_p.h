@@ -15,6 +15,7 @@
 //
 // We mean it.
 
+#include <private/qduplicatetracker_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsscope_p.h>
 #include <private/qqmljscompilepass_p.h>
@@ -184,6 +185,10 @@ struct Q_QMLCOMPILER_EXPORT QQmlJSTypePropagator : public QQmlJSCompilePass
 
     Verdict startInstruction(QV4::Moth::Instr::Type instr) override;
     void endInstruction(QV4::Moth::Instr::Type instr) override;
+    void setKnownUnresolvedTypes(QDuplicateTracker<QQmlJSScope::ConstPtr> *knownUnresolvedTypes)
+    {
+        m_knownUnresolvedTypes = knownUnresolvedTypes;
+    }
 
 private:
     struct ExpectedRegisterState
@@ -305,6 +310,7 @@ private:
         m_state.instructionHasError = true;
     }
     void warnAboutTypeCoercion(int lhs);
+    bool checkTypeResolved(const QQmlJSScope::ConstPtr &type);
 
     QQmlJSRegisterContent m_returnType;
     QQmlSA::PassManager *m_passManager = nullptr;
@@ -315,6 +321,7 @@ private:
     InstructionAnnotations m_prevStateAnnotations;
     PassState m_state;
     ContextPropertyInfo m_contextPropertyInfo;
+    QDuplicateTracker<QQmlJSScope::ConstPtr> *m_knownUnresolvedTypes = nullptr;
 };
 
 QT_END_NAMESPACE

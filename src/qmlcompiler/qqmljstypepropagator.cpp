@@ -890,6 +890,20 @@ bool QQmlJSTypePropagator::handleImportNamespaceLookup(const QString &propertyNa
     return false;
 }
 
+bool QQmlJSTypePropagator::checkTypeResolved(const QQmlJSScope::ConstPtr &type)
+{
+    if (type->isFullyResolved() || type->isScript())
+        return true;
+
+    if (!m_knownUnresolvedTypes || !m_knownUnresolvedTypes->hasSeen(type)) {
+        m_logger->log(QStringLiteral("Type %1 is used but it is not resolved")
+                              .arg(QQmlJSUtils::getScopeName(type, type->scopeType())),
+                      qmlUnresolvedType, currentSourceLocation());
+    }
+
+    return false;
+}
+
 void QQmlJSTypePropagator::handleLookupError(const QString &propertyName)
 {
     const QQmlJSRegisterContent accumulatorIn = m_state.accumulatorIn();
@@ -945,8 +959,10 @@ void QQmlJSTypePropagator::handleLookupError(const QString &propertyName)
         }
     }
 
-    m_logger->log(u"Member \"%1\" not found on type \"%2\""_s.arg(propertyName).arg(typeName),
-                  qmlMissingProperty, currentSourceLocation(), true, true, fixSuggestion);
+    if (checkTypeResolved(baseType)) {
+        m_logger->log(u"Member \"%1\" not found on type \"%2\""_s.arg(propertyName).arg(typeName),
+                      qmlMissingProperty, currentSourceLocation(), true, true, fixSuggestion);
+    }
 }
 
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName, int lookupIndex)
@@ -1394,9 +1410,11 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
             fixSuggestion = suggestion;
         }
 
-        m_logger->log(u"Member \"%1\" not found on type \"%2\""_s.arg(
-                              propertyName, callBase.containedTypeName()),
-                      qmlMissingProperty, currentSourceLocation(), true, true, fixSuggestion);
+        if (baseType->isFullyResolved() || baseType->isScript()) {
+            m_logger->log(u"Member \"%1\" not found on type \"%2\""_s.arg(
+                                  propertyName, callBase.containedTypeName()),
+                          qmlMissingProperty, currentSourceLocation(), true, true, fixSuggestion);
+        }
         return;
     }
 
