@@ -274,7 +274,8 @@ QT_BEGIN_NAMESPACE
     \l {Qt Quick Controls}{Qt Quick Control}.
 
     The default value is \c null, in which case \l StyledItem is used
-    for rendering instead.
+    for rendering instead. If you want to hide the delegate altogether
+    (and prevent if from being created), set \l visible to \c false.
 
     The delegate needs to define the following required properties:
     \qml
@@ -298,7 +299,7 @@ QT_BEGIN_NAMESPACE
     \note If a DelegateStyle has a \l {shadow}{drop shadow} defined, it will be
     drawn separately by a \l {ShadowStyle::delegate}{shadow delegate.}
 
-    \sa data, StyledItem
+    \sa data, visible, StyledItem
 */
 
 /*!
@@ -447,6 +448,9 @@ QT_BEGIN_NAMESPACE
     values) sets \c {background.visible} to \c false for controls that typically
     should not draw a background, such as \l [QtQuickControls]{CheckBox},
     \l [QtQuickControls]{RadioButton}, and \l [QtQuickControls]{Slider}.
+
+    When \c visible is \c false, the \l delegate will not be created. If you need
+    a hidden delegate to be created, consider setting \l opacity to \c 0 instead.
 
     \sa opacity
 */
