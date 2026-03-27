@@ -980,12 +980,19 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                         if (eos != -1)  // There's an abbreviated string available
                             break;
 
-                        const QTextLine nextLine = layout.createLine();
+                        QTextLine nextLine = layout.createLine();
                         elideText = wrappedLine
                                 ? elidedText(line.width(), line, &nextLine)
                                 : elidedText(line.width(), line);
                         elideStart = line.textStart();
                         // elideEnd isn't required for right eliding.
+
+                        // nextLine starts beyond maximumLineCount and is only
+                        // needed for the elide calculation above. Finalize it
+                        // at zero width so endLayout() won't give it QFIXED_MAX
+                        // width, which would inflate maximumWidth().
+                        if (nextLine.isValid())
+                            nextLine.setLineWidth(0);
                     } else {
                         br = unelidedRect;
                         height = naturalHeight;
@@ -1024,9 +1031,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                         : layoutText.size();
                 if (eol < layoutText.size() && layoutText.at(eol) != QChar::LineSeparator)
                     line = layout.createLine();
-                for (; line.isValid() && unwrappedLineCount <= maxLineCount; ++unwrappedLineCount)
+                for (; line.isValid() && unwrappedLineCount < maxLineCount; ++unwrappedLineCount)
                     line = layout.createLine();
             }
+
             layout.endLayout();
 
             const qreal naturalWidth = layout.maximumWidth();

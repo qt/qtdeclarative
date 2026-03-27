@@ -102,6 +102,7 @@ private slots:
     void implicitSize();
     void implicitSizeChangeRewrap();
     void implicitSizeMaxLineCount();
+    void implicitWidthAfterWidthChange();
     void dependentImplicitSizes();
     void contentSize();
     void implicitSizeBinding_data();
@@ -2485,6 +2486,44 @@ void tst_qquicktext::implicitSizeMaxLineCount()
 
     textObject->setMaximumLineCount(1);
     QCOMPARE_EQ(textObject->implicitWidth(), referenceWidth);
+}
+
+// implicitWidth should not grow after width is constrained and then released
+void tst_qquicktext::implicitWidthAfterWidthChange()
+{
+    // Test that implicitWidth remains stable when the item width is constrained
+    // and then released, for StyledText with <br> tags, maximumLineCount, wrap, and elide.
+    QScopedPointer<QQuickText> textObject(new QQuickText);
+    textObject->setTextFormat(QQuickText::StyledText);
+    textObject->setText(QStringLiteral("First line<br>Second line<br>"
+                                       "11111111111111111111111111111111111111111111111111111111111"
+                                       "11111111111111111111111111111111111111111"));
+    textObject->setMaximumLineCount(2);
+    textObject->setWrapMode(QQuickText::Wrap);
+    textObject->setElideMode(QQuickText::ElideRight);
+    textObject->componentComplete();
+
+    // Get the unconstrained implicitWidth
+    const qreal originalImplicitWidth = textObject->implicitWidth();
+    QVERIFY(originalImplicitWidth > 0);
+
+    // Constrain the width to something narrow enough to trigger wrapping
+    const qreal narrowWidth = originalImplicitWidth * 0.3;
+    textObject->setWidth(narrowWidth);
+
+    // The implicitWidth should not change just because we constrained the width
+    const qreal constrainedImplicitWidth = textObject->implicitWidth();
+    QCOMPARE_EQ(constrainedImplicitWidth, originalImplicitWidth);
+
+    // Now widen the width back
+    textObject->setWidth(originalImplicitWidth * 2);
+    const qreal widenedImplicitWidth = textObject->implicitWidth();
+    QCOMPARE_EQ(widenedImplicitWidth, originalImplicitWidth);
+
+    // Release the width constraint entirely
+    textObject->resetWidth();
+    const qreal afterImplicitWidth = textObject->implicitWidth();
+    QCOMPARE_EQ(afterImplicitWidth, originalImplicitWidth);
 }
 
 void tst_qquicktext::dependentImplicitSizes()
