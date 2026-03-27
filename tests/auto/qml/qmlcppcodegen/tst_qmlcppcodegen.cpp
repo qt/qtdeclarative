@@ -2161,6 +2161,10 @@ void tst_QmlCppCodegen::enumProblems()
     QQmlEngine engine;
     QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/enumProblems.qml"_s));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "Enum value 0x007fffffffffffff of LargeEnum::Flag "
+            "cannot be represented exactly as JavaScript Number; precision loss!");
     std::unique_ptr<QObject> outer(c.create());
     QVERIFY(outer);
     QObject *inner = outer->property("o").value<QObject *>();
@@ -2178,6 +2182,30 @@ void tst_QmlCppCodegen::enumProblems()
     QCOMPARE(outer->property("b").toInt(), FooFactory::C);
     QCOMPARE(outer->property("c").toInt(), FooFactory::D);
     QCOMPARE(outer->property("d").toInt(), FooFactory::E);
+
+    QCOMPARE(outer->property("safe32").value<LargeEnum::Flag>(), LargeEnum::Flag::Safe32);
+    QCOMPARE(outer->property("safe53").value<LargeEnum::Flag>(), LargeEnum::Flag::Safe53);
+
+    // 2^63 is exactly representable as double, but QVariant cannot convert
+    // doubles >= INT64_MAX back to quint64 (the enum's underlying type).
+    // Compare as double to verify the encoding is exact.
+    QCOMPARE(outer->property("safe63").toDouble(),
+             double(quint64(LargeEnum::Flag::Safe63)));
+
+    QEXPECT_FAIL("", "Cannot represent >53bit integers in JavaScript", Continue);
+    QCOMPARE(outer->property("broken").value<LargeEnum::Flag>(), LargeEnum::Flag::Broken);
+
+    QCOMPARE(outer->property("safe32FromProperty").value<LargeEnum::Flag>(),
+             LargeEnum::Flag::Safe32);
+    QCOMPARE(outer->property("safe53FromProperty").value<LargeEnum::Flag>(),
+             LargeEnum::Flag::Safe53);
+
+    QCOMPARE(outer->property("safe63FromProperty").toDouble(),
+             double(quint64(LargeEnum::Flag::Safe63)));
+
+    QEXPECT_FAIL("", "Cannot represent >53bit integers in JavaScript", Continue);
+    QCOMPARE(outer->property("brokenFromProperty").value<LargeEnum::Flag>(),
+             LargeEnum::Flag::Broken);
 }
 
 void tst_QmlCppCodegen::enumScope()

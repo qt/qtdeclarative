@@ -507,10 +507,15 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
     return true;
 }
 
-bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringView, int enumValue, bool)
+bool QQmlEnumTypeResolver::assignEnumToBinding(
+        QmlIR::Binding *binding, QStringView, const QV4::Value &enumValue, bool)
 {
     binding->setType(QV4::CompiledData::Binding::Type_Number);
-    binding->value.constantValueIndex = compiler->registerConstant(QV4::Encode((double)enumValue));
+
+    // We re-encode since constants are expected to be doubles but most enums fit into int.
+    binding->value.constantValueIndex
+            = compiler->registerConstant(QV4::Encode(enumValue.asDouble()));
+
 //    binding->setNumberValueInternal((double)enumValue);
     binding->setFlag(QV4::CompiledData::Binding::IsResolvedEnum);
     return true;
@@ -562,15 +567,18 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
     const bool isQtObject = (typeName == QLatin1String("Qt"));
     const QStringView scopedEnumName = (dot2 != -1 ? QStringView{string}.mid(dot + 1, dot2 - dot - 1) : QStringView());
     // ### consider supporting scoped enums in Qt namespace
-    const QStringView enumValue = QStringView{string}.mid(!isQtObject && dot2 != -1 ? dot2 + 1 : dot + 1);
+    const QStringView enumKey = QStringView{string}.mid(!isQtObject && dot2 != -1 ? dot2 + 1 : dot + 1);
 
     if (isIntProp) { // ### C++11 allows enums to be other integral types. Should we support other integral types here?
         // Allow enum assignment to ints.
         bool ok;
-        int enumval = evaluateEnum(typeName.toString(), scopedEnumName, enumValue, &ok);
+        const QV4::ReturnedValue enumval
+                = evaluateEnum(typeName.toString(), scopedEnumName, enumKey, &ok);
         if (ok) {
-            if (!assignEnumToBinding(binding, enumValue, enumval, isQtObject))
+            if (!assignEnumToBinding(
+                        binding, enumKey, QV4::Value::fromReturnedValue(enumval), isQtObject)) {
                 return false;
+            }
         }
         return true;
     }
@@ -580,7 +588,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
     if (!type.isValid() && !isQtObject)
         return true;
 
-    int value = 0;
+    QV4::StaticValue value = QV4::StaticValue::undefinedValue();
     bool ok = false;
 
     auto *tr = resolvedType(obj->inheritedTypeNameIndex);
@@ -598,41 +606,47 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
             useFastPath = false;;
     }
     if (useFastPath) {
-        QByteArray enumName = enumValue.toUtf8();
+        QByteArray enumName = enumKey.toUtf8();
         if (menum.isScoped() && !scopedEnumName.isEmpty() && enumName != scopedEnumName.toUtf8())
             return true;
 
-        if (mprop.isFlagType()) {
-            value = menum.keysToValue(enumName.constData(), &ok);
-        } else {
-            value = menum.keyToValue(enumName.constData(), &ok);
-        }
+        const QMetaEnum resolved = QQmlType::resolveEnum(menum);
+        const auto enumValue = mprop.isFlagType()
+                ? resolved.keysToValue64(enumName.constData())
+                : resolved.keyToValue64(enumName.constData());
+
+        if (ok = enumValue.has_value(); ok)
+            value = QQmlType::encodeEnumValue(enumValue.value(), resolved);
+    } else if (type.isValid()) {
+        // Search the whole type
+        value = scopedEnumName.isEmpty()
+                ? type.enumValue(compiler->typeLoader(), QHashedStringRef(enumKey), &ok)
+                : type.scopedEnumValue(compiler->typeLoader(), scopedEnumName, enumKey, &ok);
     } else {
-        // Otherwise we have to search the whole type
-        if (type.isValid()) {
-            if (!scopedEnumName.isEmpty()) {
-                value = type.scopedEnumValue(
-                        compiler->typeLoader(), scopedEnumName, enumValue, &ok);
-            } else {
-                value = type.enumValue(compiler->typeLoader(), QHashedStringRef(enumValue), &ok);
-            }
-        } else {
-            QByteArray enumName = enumValue.toUtf8();
-            const QMetaObject *metaObject = &Qt::staticMetaObject;
-            for (int ii = metaObject->enumeratorCount() - 1; !ok && ii >= 0; --ii) {
-                QMetaEnum e = metaObject->enumerator(ii);
-                value = e.keyToValue(enumName.constData(), &ok);
-            }
+        // Search the Qt namespace backwards ...
+        // TODO: Why the Qt namespace?? And why backwards?
+        const QByteArray enumName = enumKey.toUtf8();
+        const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
+        for (int ii = qtMetaObject->enumeratorCount() - 1; ii >= 0; --ii) {
+            const QMetaEnum e = QQmlType::resolveEnum(qtMetaObject->enumerator(ii));
+            const auto enumValue = e.keyToValue64(enumName.constData());
+            ok = enumValue.has_value();
+            if (!ok)
+                continue;
+
+            value = QQmlType::encodeEnumValue(enumValue.value(), e);
+            break;
         }
     }
 
     if (!ok)
         return true;
 
-    return assignEnumToBinding(binding, enumValue, value, isQtObject);
+    return assignEnumToBinding(binding, enumKey, QV4::Value::fromStaticValue(value), isQtObject);
 }
 
-int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const
+QV4::ReturnedValue QQmlEnumTypeResolver::evaluateEnum(
+        const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const
 {
     Q_ASSERT_X(ok, "QQmlEnumTypeResolver::evaluateEnum", "ok must not be a null pointer");
     *ok = false;
@@ -641,7 +655,7 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumNam
         QQmlType type;
         imports->resolveType(compiler->typeLoader(), scope, &type, nullptr, nullptr);
         if (!type.isValid())
-            return -1;
+            return QV4::Encode::undefined();
         if (!enumName.isEmpty())
             return type.scopedEnumValue(compiler->typeLoader(), enumName, enumValue, ok);
         return type.enumValue(
@@ -653,11 +667,12 @@ int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumNam
     int i = mo->enumeratorCount();
     const QByteArray ba = enumValue.toUtf8();
     while (i--) {
-        int v = mo->enumerator(i).keyToValue(ba.constData(), ok);
-        if (*ok)
-            return v;
+        const QMetaEnum me = QQmlType::resolveEnum(mo->enumerator(i));
+        const auto v = me.keyToValue64(ba.constData());
+        if (*ok = v.has_value(); *ok)
+            return QQmlType::encodeEnumValue(v.value(), me).asReturnedValue();
     }
-    return -1;
+    return QV4::Encode::undefined();
 }
 
 QQmlCustomParserScriptIndexer::QQmlCustomParserScriptIndexer(QQmlTypeCompiler *typeCompiler)

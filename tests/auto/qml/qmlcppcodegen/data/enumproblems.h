@@ -159,4 +159,29 @@ private:
     Foos m_foos = None;
 };
 
+class LargeEnum : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    Q_PROPERTY(LargeEnum::Flag safe32 READ safe32 CONSTANT)
+    Q_PROPERTY(LargeEnum::Flag safe53 READ safe53 CONSTANT)
+    Q_PROPERTY(LargeEnum::Flag safe63 READ safe63 CONSTANT)
+    Q_PROPERTY(LargeEnum::Flag broken READ broken CONSTANT)
+public:
+    enum class Flag : quint64 {
+        Safe32      = (1ull << 32) - 1, // exercise sign bit
+        Safe53      = (1ull << 53) - 1, // exercise conversion to double
+        Safe63      = 1ull << 63,       // exact power of 2, representable as double
+        Broken      = (1ull << 55) - 1, // not representable in JavaScript Number
+    };
+    Q_ENUM(Flag)
+
+    LargeEnum::Flag safe32() const { return Flag::Safe32; }
+    LargeEnum::Flag safe53() const { return Flag::Safe53; }
+    LargeEnum::Flag safe63() const { return Flag::Safe63; }
+    LargeEnum::Flag broken() const { return Flag::Broken; }
+};
+
 #endif // ENUMPROBLEMS_H

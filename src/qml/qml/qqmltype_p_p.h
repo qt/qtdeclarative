@@ -58,11 +58,11 @@ public:
             qDeleteAll(unscopedEnums);
         }
 
-        QStringHash<int> enums;
+        QStringHash<QV4::StaticValue> enums;
         QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums
         QStringHash<int> unscopedEnumIndex; // maps from enum name to index in unscopedEnums
-        QList<QStringHash<int> *> scopedEnums;
-        QList<QStringHash<int> *> unscopedEnums;
+        QList<QStringHash<QV4::StaticValue> *> scopedEnums;
+        QList<QStringHash<QV4::StaticValue> *> unscopedEnums;
     };
 
     QQmlTypePrivate(QQmlType::RegistrationType type);
@@ -169,15 +169,15 @@ public:
     void setName(const QString &uri, const QString &element);
 
     template<typename String>
-    static int enumValue(
+    static QV4::ReturnedValue enumValue(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader,
             const String &name, bool *ok)
     {
-        const auto *rv = doGetEnumOp<const int *>(
+        const auto *rv = doGetEnumOp<const QV4::StaticValue *>(
                 d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
             return enums->enums.value(name);
-        }, [](const int *p) { return !!p; }, ok);
-        return rv ? *rv : -1;
+        }, [](const QV4::StaticValue *p) { return !!p; }, ok);
+        return rv ? rv->asReturnedValue() : QV4::Encode::undefined();
     }
 
     template<Enums::Scoping scoping, typename String>
@@ -196,11 +196,11 @@ public:
     }
 
     template<Enums::Scoping scoping, typename String>
-    static int enumValue(
+    static QV4::ReturnedValue enumValue(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader, int index,
             const String &name, bool *ok)
     {
-        const auto *rv = doGetEnumOp<const int *>(
+        const auto *rv = doGetEnumOp<const QV4::StaticValue *>(
                 d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
             if constexpr (scoping == Enums::Scoped) {
                 Q_ASSERT(index > -1 && index < enums->scopedEnums.size());
@@ -209,19 +209,19 @@ public:
                 Q_ASSERT(index > -1 && index < enums->unscopedEnums.size());
                 return enums->unscopedEnums.at(index)->value(name);
             }
-        }, [](const int *p) { return !!p; }, ok);
-        return rv ? *rv : -1;
+        }, [](const QV4::StaticValue *p) { return !!p; }, ok);
+        return rv ? rv->asReturnedValue() : QV4::Encode::undefined();
     }
 
     template<Enums::Scoping scoping, typename String1, typename String2>
-    static int enumValue(
+    static QV4::ReturnedValue enumValue(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader,
             const String1 &scopedEnumName, const String2 &name, bool *ok)
     {
-        const auto *rv = doGetEnumOp<const int *>(
+        const auto *rv = doGetEnumOp<const QV4::StaticValue *>(
                 d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
             const QStringHash<int> *enumIndex;
-            const QList<QStringHash<int> *> *_enums;
+            const QList<QStringHash<QV4::StaticValue> *> *_enums;
             if constexpr (scoping == Enums::Scoped) {
                 enumIndex = &enums->scopedEnumIndex;
                 _enums = &enums->scopedEnums;
@@ -232,22 +232,22 @@ public:
 
             const int *rv = enumIndex->value(scopedEnumName);
             if (!rv)
-                return static_cast<int *>(nullptr);
+                return static_cast<QV4::StaticValue *>(nullptr);
 
             const int index = *rv;
             Q_ASSERT(index > -1 && index < _enums->size());
             return _enums->at(index)->value(name);
-        }, [](const int *p) { return !!p; }, ok);
-        return rv ? *rv : -1;
+        }, [](const QV4::StaticValue *p) { return !!p; }, ok);
+        return rv ? rv->asReturnedValue() : QV4::Encode::undefined();
     }
 
     template<Enums::Scoping scoping>
     static QString enumKey(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader,
-            int index, int value, bool *ok)
+            int index, const QV4::Value &value, bool *ok)
     {
         return doGetEnumOp<QString>(d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
-            const QList<QStringHash<int> *> *_enums;
+            const QList<QStringHash<QV4::StaticValue> *> *_enums;
             if constexpr (scoping == Enums::Scoped)
                 _enums = &enums->scopedEnums;
             else
@@ -256,7 +256,7 @@ public:
             Q_ASSERT(index > -1 && index < _enums->size());
             const auto hash = _enums->at(index);
             for (auto it = hash->constBegin(), end = hash->constEnd(); it != end; ++it) {
-                if (it.value() == value)
+                if (value.sameValueZero(QV4::Value::fromStaticValue(it.value())))
                     return QString(it.key());
             }
             return QString();
@@ -266,10 +266,10 @@ public:
     template<Enums::Scoping scoping>
     static QStringList enumKeys(
             const QQmlRefPointer<const QQmlTypePrivate> &d, QQmlTypeLoader *typeLoader,
-            int index, int value, bool *ok)
+            int index, const QV4::Value &value, bool *ok)
     {
         return doGetEnumOp<QStringList>(d, typeLoader, [&](const QQmlTypePrivate::Enums *enums) {
-            const QList<QStringHash<int> *> *_enums;
+            const QList<QStringHash<QV4::StaticValue> *> *_enums;
             if constexpr (scoping == Enums::Scoped)
                 _enums = &enums->scopedEnums;
             else
@@ -279,7 +279,7 @@ public:
             QStringList keys;
             const auto hash = _enums->at(index);
             for (auto it = hash->constBegin(), end = hash->constEnd(); it != end; ++it) {
-                if (it.value() == value)
+                if (value.sameValueZero(QV4::Value::fromStaticValue(it.value())))
                     keys.append(QString(it.key()));
             }
             std::reverse(keys.begin(), keys.end());

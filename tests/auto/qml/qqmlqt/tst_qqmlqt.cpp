@@ -1438,6 +1438,21 @@ void tst_qqmlqt::later()
     }
 }
 
+struct EffectiveEnumInfo
+{
+    EffectiveEnumInfo(QMetaType metaType, bool isUnsigned)
+        : isReal(metaType.sizeOf() > 4 || (metaType.sizeOf() == 4 && isUnsigned))
+        , isUnsigned(isUnsigned)
+    {}
+
+    EffectiveEnumInfo(QMetaType metaType)
+        : EffectiveEnumInfo(metaType, metaType.flags() & QMetaType::IsUnsignedEnumeration)
+    {}
+
+    bool isReal = false;
+    bool isUnsigned = false;
+};
+
 void tst_qqmlqt::qtObjectContents()
 {
     QByteArray qml =
@@ -1447,6 +1462,34 @@ void tst_qqmlqt::qtObjectContents()
             "    property int vLoadingModeSynchronous: Qt.Synchronous\n";
 
     const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
+
+    // Determine the effective metatype and signedness for an enumerator,
+    // matching the QML engine's encoding behavior (see encodeEnumValue()
+    // and isUnsignedEnum() in qqmltype_p.h).
+    //
+    // For flags, the QFlags metatype doesn't reliably reflect the underlying
+    // enum's signedness (QTBUG-145454) or size. If the underlying enum is
+    // separately registered as a non-flag enumerator, we can use its metatype.
+    // Otherwise the enum is only visible through the flag, and the QML engine
+    // treats all flags as unsigned (isUnsignedEnum() returns true for any flag).
+    const auto effectiveEnumInfo = [qtMetaObject](const QMetaEnum &e) -> EffectiveEnumInfo {
+        if (!e.isFlag())
+            EffectiveEnumInfo(e.metaType());
+
+        // Try to resolve the flag to its underlying non-flag enum,
+        // mirroring QQmlType::resolveEnum().
+        const int idx = qtMetaObject->indexOfEnumerator(e.enumName());
+        if (idx >= 0) {
+            const QMetaEnum resolved = qtMetaObject->enumerator(idx);
+            if (!resolved.isFlag())
+                return EffectiveEnumInfo(resolved.metaType());
+        }
+
+        // Underlying enum not separately registered; flag semantics apply.
+        // The QML engine always treats flags as unsigned.
+        return EffectiveEnumInfo(QMetaType::fromName("Qt::"_ba + e.enumName()), true);
+    };
+
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         const QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
@@ -1458,7 +1501,10 @@ void tst_qqmlqt::qtObjectContents()
             if (QChar::fromLatin1(key.front()).isLower())
                 continue;
 
-            qml += QByteArray("    property int v") + enumerator.name() + key
+            const auto [isReal, isUnsigned] = effectiveEnumInfo(enumerator);
+            const QByteArray type = isReal ? "real" : "int";
+
+            qml += QByteArray("    property ") + type + " v" + enumerator.name() + key
                     + QByteArray(": Qt.") + key + '\n';
         }
     }
@@ -1474,15 +1520,26 @@ void tst_qqmlqt::qtObjectContents()
     bool ok = false;
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
         const QMetaEnum enumerator = qtMetaObject->enumerator(ii);
+
+        const auto [isReal, isUnsigned] = effectiveEnumInfo(enumerator);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
             const QByteArray key = enumerator.key(jj);
 
             if (QChar::fromLatin1(key.front()).isLower())
                 continue;
 
-            QCOMPARE(object->property(QByteArray("v") + enumerator.name() + key).toInt(&ok),
-                     enumerator.value(jj));
-            QVERIFY(ok);
+            const QByteArray name = QByteArray("v") + enumerator.name() + key;
+            if (isReal) {
+                const auto val64 = enumerator.value64(jj);
+                QVERIFY(val64.has_value());
+                const double expected = isUnsigned
+                        ? double(val64.value())
+                        : double(qint64(val64.value()));
+                QCOMPARE(object->property(name).toDouble(), expected);
+            } else {
+                QCOMPARE(object->property(name).toInt(&ok), enumerator.value(jj));
+                QVERIFY(ok);
+            }
         }
     }
 

@@ -16,17 +16,19 @@
 // We mean it.
 //
 
+#include <private/qglobal_p.h>
+#include <private/qv4value_p.h>
+
 #include <QtCore/qstring.h>
-#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QQmlEnumValue
 {
     QQmlEnumValue() {}
-    QQmlEnumValue(const QString &n, int v) : namedValue(n), value(v) {}
+    QQmlEnumValue(const QString &n, const QV4::Value &v) : namedValue(n), value(v) {}
     QString namedValue;
-    int value = -1;
+    QV4::StaticValue value;
 };
 
 QT_END_NAMESPACE

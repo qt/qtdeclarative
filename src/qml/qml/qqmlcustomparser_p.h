@@ -60,7 +60,7 @@ protected:
     { error(object->location, description); }
     void error(const QV4::CompiledData::Location &location, const QString& description);
 
-    int evaluateEnum(const QString &, bool *ok) const;
+    QV4::ReturnedValue evaluateEnum(const QString &, bool *ok) const;
 
     const QMetaObject *resolveType(const QString&) const;
     QQmlTypeLoader *typeLoader() const;
