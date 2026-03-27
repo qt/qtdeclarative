@@ -175,6 +175,11 @@ ApplicationWindow {
                 color: "white"
                 border.width: 0
             }
+            variations: StyleVariation {
+                toolBar.background.color: "cornflowerblue"
+                toolButton.background.color: "skyblue"
+                toolButton.background.border.color: "aliceblue"
+            }
         }
         //! [page]
 
@@ -632,6 +637,14 @@ ApplicationWindow {
             TextField {
                 width: 200
                 text: "TextField"
+            }
+
+            Page {
+                header: ToolBar {
+                    ToolButton {
+                        text: "<"
+                    }
+                }
             }
         }
     }

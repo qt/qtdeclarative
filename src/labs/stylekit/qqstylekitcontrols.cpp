@@ -173,6 +173,13 @@ QT_BEGIN_NAMESPACE
 
     Unset properties fall back to \l pane.
 
+    Note that the \l [QtQuickControls]{Page::header}{header} and
+    \l [QtQuickControls]{Page::footer}{footer} of a \l [QtQuickControls]{Page} are
+    typically set by the application to a \l [QtQuickControls]{ToolBar} or
+    \l [QtQuickControls]{TabBar}, and those controls are styled separately.
+    To give a \l [QtQuickControls]{ToolBar} alternative styling when used inside
+    a \l [QtQuickControls]{Page}, use a \l StyleVariation:
+
     \snippet ControlsSnippets.qml page
 */
 
