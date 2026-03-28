@@ -96,6 +96,8 @@ private slots:
     void linkInteraction_data();
     void linkInteraction();
 
+    void styledTextLinkInColumnLayout();
+
     void implicitSize_data();
     void implicitSize();
     void implicitSizeChangeRewrap();
@@ -2173,6 +2175,35 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(test.hoveredLink, QString());
     QCOMPARE(textObject->hoveredLink(), QString());
     QCOMPARE(textObject->linkAt(-1, -1), QString());
+}
+
+// QTBUG-131441: styled text link detection is incorrect when Text
+// is in ColumnLayout with Layout.fillWidth and non-left alignment
+void tst_qquicktext::styledTextLinkInColumnLayout()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("styledTextLinkInColumnLayout.qml")));
+
+    QQuickText *textItem = view.rootObject()->findChild<QQuickText *>("styledTextLink");
+    QVERIFY(textItem);
+    QVERIFY(textItem->width() > textItem->contentWidth());
+
+    const QString plainText("this text has a link in it");
+    const TextMetrics metrics(plainText);
+    const QSizeF bounds(textItem->width(), textItem->height());
+    const int linkCharPos = plainText.indexOf("link") + 2; // middle of "link"
+    const QRectF linkRect = metrics.characterRectangle(linkCharPos, Qt::AlignHCenter, Qt::AlignTop, bounds);
+    const QString expectedLink = "http://qt-project.org/test";
+
+    QCOMPARE(textItem->linkAt(linkRect.center().x(), linkRect.center().y()), expectedLink);
+    QCOMPARE(textItem->linkAt(textItem->width() - 10, linkRect.center().y()), QString());
+
+    // Verify that onLinkHovered actually fires by hovering over the link
+    QQuickText *hoveredLinkText = view.rootObject()->findChild<QQuickText *>("hoveredLink");
+    QVERIFY(hoveredLinkText);
+    const QPoint linkCenter = textItem->mapToScene(linkRect.center()).toPoint();
+    QTest::mouseMove(&view, linkCenter);
+    QTRY_COMPARE(hoveredLinkText->text(), expectedLink);
 }
 
 void tst_qquicktext::baseUrl()

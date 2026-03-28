@@ -2937,6 +2937,7 @@ QString QQuickTextPrivate::anchorAt(const QPointF &mousePos) const
     translatedMousePos.rx() -= q->leftPadding();
     translatedMousePos.ry() -= q->topPadding() + QQuickTextUtil::alignedY(layedOutTextRect.height() + lineHeightOffset(), availableHeight(), vAlign);
     if (styledText) {
+        translatedMousePos.rx() -= QQuickTextUtil::alignedX(lineWidth, availableWidth(), q->effectiveHAlign());
         QString link = anchorAt(&layout, translatedMousePos);
         if (link.isEmpty() && elideLayout)
             link = anchorAt(elideLayout.get(), translatedMousePos);
