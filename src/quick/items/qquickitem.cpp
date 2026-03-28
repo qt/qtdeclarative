@@ -8447,7 +8447,7 @@ void QQuickItemPrivate::setHasCursorInChild(bool hc)
     // if we're asked to turn it off (because of an unsetcursor call, or a node
     // removal) then we should make sure it's really ok to turn it off.
     if (!hc && subtreeCursorEnabled) {
-        if (hasCursor)
+        if (hasCursor || hasCursorHandler)
             return; // nope! sorry, I have a cursor myself
         for (QQuickItem *otherChild : std::as_const(childItems)) {
             QQuickItemPrivate *otherChildPrivate = QQuickItemPrivate::get(otherChild);

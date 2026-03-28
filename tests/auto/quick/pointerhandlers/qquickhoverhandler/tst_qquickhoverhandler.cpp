@@ -58,6 +58,7 @@ private slots:
     void effectivelyClips_data();
     void effectivelyClips();
     void grandChildOutOfBounds();
+    void cursorShapeAfterDeletion();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -1076,6 +1077,38 @@ void tst_HoverHandler::grandChildOutOfBounds()
 #if QT_CONFIG(cursor)
     if (canSetCursorPos)
         QTRY_COMPARE(window.cursor().shape(), Qt::ForbiddenCursor);
+#endif
+}
+
+void tst_HoverHandler::cursorShapeAfterDeletion()
+{
+    // QTBUG-141870: parent HoverHandler's cursorShape must survive child deletion
+    if (isPlatformWayland())
+        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("cursorShapeAfterDeletion.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+
+    QQuickItem *innerRect = root->findChild<QQuickItem *>("innerRect");
+    QVERIFY(innerRect);
+
+    // Move mouse in and verify inner handler's cursor wins
+    QTest::mouseMove(&window, QPoint(200, 200));
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window.cursor().shape(), Qt::PointingHandCursor);
+#endif
+
+    // Delete the inner item
+    delete innerRect;
+
+    // Nudge the mouse to trigger cursor update
+    QTest::mouseMove(&window, QPoint(201, 201));
+
+#if QT_CONFIG(cursor)
+    // Root handler's cursor must still work
+    QTRY_COMPARE(window.cursor().shape(), Qt::OpenHandCursor);
 #endif
 }
 
