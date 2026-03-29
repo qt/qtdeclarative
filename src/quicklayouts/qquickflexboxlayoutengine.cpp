@@ -160,7 +160,17 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
 
         minS = QSizeF(0,0);
         prefS = QSizeF(0,0);
-        maxS = QSizeF(std::numeric_limits<qreal>::infinity(), std::numeric_limits<qreal>::infinity());
+        maxS = QSizeF(0,0);
+
+        qreal flexColumnGap = 0;
+        qreal flexRowGap = 0;
+        bool wrap = false;
+        auto *qFlexLayout = qobject_cast<QQuickFlexboxLayout *>(m_flexboxParentItem->quickItem());
+        if (qFlexLayout) {
+            flexColumnGap = qFlexLayout->columnGap();
+            flexRowGap = qFlexLayout->rowGap();
+            wrap = qFlexLayout->wrap() != QQuickFlexboxLayout::NoWrap;
+        }
 
         const int count = itemCount();
         for (int i = 0; i < count; ++i) {
@@ -172,15 +182,15 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
                 // meant the flex child item has a const width or height but
                 // want to stretch vertically or horizontally
                 if (flexLayoutItem->isItemStreched()) {
-                    if (auto *parentLayoutItem = qobject_cast<QQuickFlexboxLayout *>(m_flexboxParentItem->quickItem())) {
+                    if (qFlexLayout) {
                         // Reset the size of the child item if the parent sets
                         // its property 'align-item' to strecth
                         // Note: The child item can also override the parent
                         // align-item property through align-self
                         // (this is FlexboxLayout.alignItem for quick items)
                         flexLayoutItem->resetSize();
-                        if (parentLayoutItem->direction() == QQuickFlexboxLayout::Row ||
-                            parentLayoutItem->direction() == QQuickFlexboxLayout::RowReverse) {
+                        if (qFlexLayout->direction() == QQuickFlexboxLayout::Row ||
+                            qFlexLayout->direction() == QQuickFlexboxLayout::RowReverse) {
                             flexLayoutItem->setWidth(hints.pref().width());
                         } else {
                             flexLayoutItem->setHeight(hints.pref().height());
@@ -215,10 +225,27 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
             //              Parent pref, min, max width/height:
             //                  Sum of the pref, min and max width/height of
             //                  the child items
-            if (auto *qFlexLayout = qobject_cast<QQuickFlexboxLayout *>(m_flexboxParentItem->quickItem())) {
-                if (qFlexLayout->wrap() == QQuickFlexboxLayout::NoWrap) {
-                    if (qFlexLayout->direction() == QQuickFlexboxLayout::Row ||
-                        qFlexLayout->direction() == QQuickFlexboxLayout::RowReverse) {
+            if (qFlexLayout) {
+                const bool last = (i == count - 1);
+                if (qFlexLayout->direction() == QQuickFlexboxLayout::Row ||
+                    qFlexLayout->direction() == QQuickFlexboxLayout::RowReverse) {
+                    if (wrap) {
+                        // Minimum size
+                        minS.setWidth(qMax(minS.width(), hints.min().width()));
+                        minS.setHeight(qMax(minS.height(), hints.min().height()));
+                        // Preferred size. Same as no-wrap preferred size
+                        prefS.setWidth(prefS.width() + hints.pref().width());
+                        prefS.setHeight(qMax(prefS.height(), hints.pref().height()));
+                        // Maximum size
+                        maxS.setWidth(maxS.width() + hints.max().width());
+                        maxS.setHeight(maxS.height() + hints.max().height());
+
+                        if (!last) {
+                            prefS.rwidth() += flexColumnGap;
+                            maxS.rwidth() += flexColumnGap;
+                            maxS.rheight() += flexRowGap;
+                        }
+                    } else {
                         // Minimum size
                         minS.setWidth(minS.width() + hints.min().width());
                         minS.setHeight(qMax(minS.height(), hints.min().height()));
@@ -228,8 +255,33 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
                         // Maximum size
                         maxS.setWidth(maxS.width() + hints.max().width());
                         maxS.setHeight(qMax(maxS.height(), hints.max().height()));
-                    } else if (qFlexLayout->direction() == QQuickFlexboxLayout::Column ||
-                               qFlexLayout->direction() == QQuickFlexboxLayout::ColumnReverse) {
+
+                        if (!last) {
+                            minS.rwidth() += flexColumnGap;
+                            prefS.rwidth() += flexColumnGap;
+                            maxS.rwidth() += flexColumnGap;
+                        }
+                    }
+
+                } else if (qFlexLayout->direction() == QQuickFlexboxLayout::Column ||
+                            qFlexLayout->direction() == QQuickFlexboxLayout::ColumnReverse) {
+                    if (wrap) {
+                        // Minimum size
+                        minS.setWidth(qMax(minS.width(), hints.min().width()));
+                        minS.setHeight(qMax(minS.height(), hints.min().height()));
+                        // Preferred size. Same as no-wrap preferred size
+                        prefS.setWidth(qMax(prefS.width(), hints.pref().width()));
+                        prefS.setHeight(prefS.height() + hints.pref().height());
+                        // Maximum size
+                        maxS.setWidth(maxS.width() + hints.max().width());
+                        maxS.setHeight(maxS.height() + hints.max().height());
+
+                        if (!last) {
+                            prefS.rheight() += flexRowGap;
+                            maxS.rwidth() += flexColumnGap;
+                            maxS.rheight() += flexRowGap;
+                        }
+                    } else {
                         // Minimum size
                         minS.setWidth(qMax(minS.width(), hints.min().width()));
                         minS.setHeight(minS.height() + hints.min().height());
@@ -239,12 +291,13 @@ QSizeF QQuickFlexboxLayoutEngine::sizeHint(Qt::SizeHint whichSizeHint) const
                         // Maximum size
                         maxS.setWidth(qMax(maxS.width(), hints.max().width()));
                         maxS.setHeight(maxS.height() + hints.max().height());
+
+                        if (!last) {
+                            minS.rheight() += flexRowGap;
+                            prefS.rheight() += flexRowGap;
+                            maxS.rheight() += flexRowGap;
+                        }
                     }
-                } else if (qFlexLayout->wrap() == QQuickFlexboxLayout::Wrap ||
-                           qFlexLayout->wrap() == QQuickFlexboxLayout::WrapReverse) {
-                    minS += hints.min();
-                    prefS += hints.pref();
-                    maxS += hints.max();
                 }
             }
         }

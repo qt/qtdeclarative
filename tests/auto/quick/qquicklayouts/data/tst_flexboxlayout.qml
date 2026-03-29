@@ -807,5 +807,109 @@ Item {
             compare(rectItem2.width, 20)
             compare(rectItem2.height, 100)
         }
+
+        Component {
+            id: flexboxWithSizeHintsLayoutComponent
+            FlexboxLayout {
+                gap: 0
+                Rectangle {
+                    Layout.minimumWidth: 1
+                    Layout.minimumHeight: 1
+                    implicitWidth: 10
+                    implicitHeight: 10
+                    Layout.maximumWidth: 100
+                    Layout.maximumHeight: 100
+                }
+                Rectangle {
+                    Layout.minimumWidth: 2
+                    Layout.minimumHeight: 2
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    Layout.maximumWidth: 200
+                    Layout.maximumHeight: 200
+                }
+            }
+        }
+
+        function test_sizeHints() {
+            let flexboxLayout = createTemporaryObject(flexboxWithSizeHintsLayoutComponent, container)
+            waitForItemPolished(flexboxLayout)
+            // Test size hints of main axis. Since nothing has Layout.fillWidth: true, no items will flex
+            // It is therefore considered as a fixed-width layout
+            expectFailContinue("", "Layout.minimumWidth is 2."
+                + " FlexboxLayout should take fillWidth/sizePolicy into consideration when normalizing size hints")
+            compare(flexboxLayout.Layout.minimumWidth, 30)
+            compare(flexboxLayout.implicitWidth, 30)
+            expectFailContinue("", "Layout.maximumWidth is ∞."
+                + " FlexboxLayout should take fillWidth/sizePolicy into consideration when normalizing size hints")
+            compare(flexboxLayout.Layout.maximumWidth, 30)
+
+            // Make first item flexible
+            let item0 = flexboxLayout.children[0]
+            item0.Layout.fillWidth = true
+            waitForItemPolished(flexboxLayout)
+            compare(flexboxLayout.Layout.minimumWidth, 3)
+            compare(flexboxLayout.implicitWidth, 30)
+
+            // The semantic of the implicit value of Layout.maximumWidth is unclear. Currently it is infinite.
+            // But this is inconsistent with RowLayout:
+            // RowLayout will have its maximumWidth be the sum of all the childrens *effective* maximum widths (+spacings)
+            // (effective maximum width is just: (Layout.fillWidth ? Layout.maximumWidth : implicitWidth), but this is
+            // beside the point here)
+
+            // If the FlexboxLayout have the RowLayout semantic, and it is a child of another layout, the parent layout
+            // will respect its  maximumWidth (so FlexboxLayout.justifyContent will be pointless)
+
+            // However, if the FlexboxLayout is anchored to a parent Item with anchors.fill, the FlexboxLayout can become
+            // wider than its maximumWidth. In that scenario, FlexboxLayout.justifyContent has a purpose
+            compare(flexboxLayout.Layout.maximumWidth, 300)
+
+            // restore back to no flexing
+            item0.Layout.fillWidth = false
+            waitForItemPolished(flexboxLayout)
+
+            // Test size hints of cross-axis
+            compare(flexboxLayout.Layout.minimumHeight, 2)
+            compare(flexboxLayout.implicitHeight, 20)
+             // actually semantic of this is unclear as described for Layout.maximumWidth above
+            compare(flexboxLayout.Layout.maximumHeight, 200)
+
+            // ----- gap: 5 -----
+            // Now add a gap, test if size hints are adjusted accordingly
+            flexboxLayout.gap = 5
+            waitForItemPolished(flexboxLayout)
+            compare(flexboxLayout.Layout.minimumWidth, 8)
+            compare(flexboxLayout.implicitWidth, 35)
+            compare(flexboxLayout.Layout.maximumWidth, 305)
+
+            // If the FlexboxLayout is not wrapping, gap shouldn't change the cross-axis size hint
+            // Test size hints of cross-axis
+            compare(flexboxLayout.Layout.minimumHeight, 2)
+            compare(flexboxLayout.implicitHeight, 20)
+             // actually semantic of this is unclear as described for Layout.maximumWidth above
+            compare(flexboxLayout.Layout.maximumHeight, 200)
+
+
+            // flex-wrap: wrap
+            /*
+            if (wrap)
+                minimumWidth: width of the largest minimumwidth
+                minimumHeight: height of the largest minimumHeight
+
+                implicitWidth: width for being close to the golden ratio    (+ gaps)
+                implicitWidth: height for being close to the golden ratio.  (+ gaps)
+
+                maximumWidth: sum of all maximumWidths                      (+ gaps)
+                maximumHeight: sum of all maximumHeights                    (+ gaps)
+            */
+            flexboxLayout.wrap = FlexboxLayout.Wrap
+            waitForItemPolished(flexboxLayout)
+            compare(flexboxLayout.Layout.minimumWidth, 2)
+            compare(flexboxLayout.Layout.minimumHeight, 2)
+            compare(flexboxLayout.implicitWidth, 30 + 5)
+            compare(flexboxLayout.implicitHeight, 20)
+            compare(flexboxLayout.Layout.maximumWidth, 300 + 5)
+            compare(flexboxLayout.Layout.maximumHeight, 300 + 5)
+        }
     }
 }
