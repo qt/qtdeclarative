@@ -258,6 +258,9 @@ Item {
             flexboxLayout.destroy()
         }
 
+        function itemRect(item) {
+            return [item.x, item.y, item.width, item.height]
+        }
         // alignItem affects flexbox layout container cross-axis
         function test_flexAlignItems() {
             let flexboxLayout = createTemporaryObject(dynamicFlexboxLayoutComponent, container)
@@ -326,6 +329,17 @@ Item {
             compare(rectItem1.y, 0)
             compare(rectItem2.x, 0)
             compare(rectItem2.y, rectItem1.implicitHeight)
+
+            // QTBUG-142021: item with fillX misaligns along the primary axis
+            flexboxLayout.alignItems = FlexboxLayout.AlignCenter
+            flexboxLayout.wrap = FlexboxLayout.NoWrap
+            rectItem1.Layout.fillHeight = true
+            rectItem2.Layout.preferredWidth = 10
+            rectItem2.Layout.preferredHeight = 30
+            rectItem2.Layout.fillWidth = true
+            waitForItemPolished(flexboxLayout)
+            compare(itemRect(rectItem1), [ 0,  0, 20, 40])
+            compare(itemRect(rectItem2), [20,  5, 40, 30])
 
             rectItem1.destroy()
             rectItem2.destroy()
