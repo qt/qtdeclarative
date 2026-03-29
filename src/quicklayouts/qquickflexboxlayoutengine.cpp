@@ -97,8 +97,9 @@ void QQuickFlexboxLayoutEngine::collectItemSizeHints(QQuickFlexboxLayoutItem *fl
     if (info->isFillWidthSet() || info->isFillHeightSet()) {
         // Set stretch to child item both width and height
         if (auto *parentLayoutItem = qobject_cast<QQuickFlexboxLayout *>(m_flexboxParentItem->quickItem())) {
-            if (parentLayoutItem->direction() == QQuickFlexboxLayout::Row ||
-                parentLayoutItem->direction() == QQuickFlexboxLayout::RowReverse) {
+            const bool horz = parentLayoutItem->direction() == QQuickFlexboxLayout::Row ||
+                              parentLayoutItem->direction() == QQuickFlexboxLayout::RowReverse;
+            if (horz) {
                 // If the Layout.fillHeight not been set, the preferred height
                 // will be set as height
                 if (!info->fillHeight())
@@ -124,17 +125,17 @@ void QQuickFlexboxLayoutEngine::collectItemSizeHints(QQuickFlexboxLayoutItem *fl
                 // direction)
                 flexItem->setItemShrinkAlongMainAxis(info->fillHeight() ? 1.0f : 0.0f);
             }
-        }
-        // If the Layout.fillHeight not been set, the preferred height will be
-        // set as height in the previous condition. Otherwise (for
-        // Layout.fillHeight been set as true), make flex item to AlignStretch.
-        // Thus it can also grow vertically.
-        // Note: The same applies for Layout.fillWidth to grow horizontally.
-        if ((qt_is_nan(flexItem->size().width()) && info->fillWidth()) ||
-            (qt_is_nan(flexItem->size().height()) && info->fillHeight())) {
-            flexItem->setItemStretchAlongCrossSection();
-        } else {
-            flexItem->inheritItemStretchAlongCrossSection();
+            // If the Layout.fillHeight not been set, the preferred height will be
+            // set as height in the previous condition. Otherwise (for
+            // Layout.fillHeight been set as true), make flex item to AlignStretch.
+            // Thus it can also grow vertically.
+            // Note: The same applies for Layout.fillWidth to grow horizontally.
+            if ((horz && (qt_is_nan(flexItem->size().height()) && info->fillHeight()))
+                || (!horz && (qt_is_nan(flexItem->size().width()) && info->fillWidth()))) {
+                flexItem->setItemStretchAlongCrossSection();
+            } else {
+                flexItem->inheritItemStretchAlongCrossSection();
+            }
         }
     }
 }
