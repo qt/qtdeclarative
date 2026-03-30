@@ -1,0 +1,206 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtlabsstylekit-overview-features.html
+    \title StyleKit Features Overview
+    \brief An introduction to the main features of StyleKit.
+
+    This page gives a brief introduction to the main features of StyleKit.
+    For a complete reference of all available types and properties, see the
+    \l {Qt Labs StyleKit QML Types}{QML Types} page.
+
+    \section1 Creating a Style
+
+    A \l Style is a QML object that describes the visual appearance of all
+    \l {Qt Quick Controls} in your application — \l {AbstractStylableControls::}{button},
+    \l {AbstractStylableControls::}{slider}, \l {AbstractStylableControls::}{checkBox}, and
+    so on. Each has its own group in the style where you can set properties such as
+    colors, sizes, radii, and shadows for the visual parts that make up the control.
+
+    The \l {AbstractStylableControls::control}{control group} is special, since it acts as
+    a fallback for all the other control groups. If you leave out some of the properties
+    for a \c slider, for example, they will be read from \c control instead.
+    Properties not set in \c slider or \c control fall back further to the
+    \l {Style::fallbackStyle}{fallback style} which is a complete style similar to
+    the \l {Basic Style}.
+    This means you don't necessarily need to style all the available controls, only
+    the ones you want to customize — the fallback system takes care of styling the rest:
+
+    \snippet Overview_style.qml Plain Style
+
+    \section2 Activating a Style
+
+    To activate the style, assign it to \l {StyleKit::style}{StyleKit.style} on
+    the root \l ApplicationWindow. All controls in the application then pick it up
+    automatically:
+
+    \snippet PlainStyleMain.qml 1
+
+    \section1 Control States
+
+    Controls change appearance depending on user interaction — a button looks
+    different when hovered, pressed, or disabled. \c StyleKit lets you express
+    this in the style by placing the \l {ControlStateStyle}{state} name in front of
+    the affected properties, to give them alternative values when the control is
+    in that state.
+
+    States can be nested, and a more specific combination (e.g.
+    \c hovered.checked) takes precedence over its individual components:
+
+    \snippet Overview_states.qml States
+
+    \section2 State Transitions
+
+    State changes can be animated by setting the
+    \l {ControlStyle::transition}{transition} property on a control style.
+    A \l StyleAnimation provides a convenient way to animate groups of
+    related style properties, such as all background or indicator colors, but
+    you can use standard QML animations such as \l {ColorAnimation} and
+    \l {NumberAnimation} as well:
+
+    \snippet StyleAnimationSnippets.qml transition
+
+    \section1 Theming
+
+    \c StyleKit has built-in support for light and dark themes through the
+    \l {Style::light}{light} and \l {Style::dark}{dark} properties on a \l Style.
+    Similar to a \l Style, a \l Theme lets you define the style each control
+    should have when that theme is active. Properties that are not set in a
+    theme will fall back to be read from the style:
+
+    \snippet Overview_theme.qml themes
+
+    \section2 Custom Themes
+
+    Beyond light and dark, you can define any number of additional themes using
+    \l CustomTheme. Each \c CustomTheme has a \l {CustomTheme::name}{name} and
+    holds a \l Theme object with the same structure as the built-in themes:
+
+    \snippet CustomThemeSnippets.qml custom themes
+
+    To switch themes at runtime, set \l {Style::themeName}{Style.themeName} from
+    a QML file in your application to the name of the desired theme. The
+    \l {Style::themeNames}{Style.themeNames} property lists all available theme
+    names, which makes it straightforward to populate a selector control:
+
+    \snippet CustomThemeSnippets.qml change theme
+
+    To activate a theme at application start-up, set
+    \l {Style::themeName}{themeName} when assigning the style:
+
+    \snippet CustomThemeSnippets.qml custom theme at start-up
+
+    \section1 Style Variations
+
+    A \l StyleVariation lets you define alternative styling for parts of the
+    application. This is useful when you need to style controls differently when
+    they are children of, for example, a ToolBar or a GroupBox, or if you want
+    to implement style hints that the application can optionally apply to some
+    of the controls.
+
+    There are two types of style variations: type variations and instance variations.
+
+    \section2 Type Variations
+
+    A type variation contains alternative styling for controls that are children
+    (or descendants) of another control type. This means that if a StyleVariation
+    contains styling for a button, and it's added to the \l {ControlStyle::variations}{variations}
+    property of a frame, \c StyleKit will style all \l [QtQuickControls]{Button}{Buttons} that
+    are children of \l [QtQuickControls]{Frame}{Frames} in the application accordingly:
+
+    \snippet TypeVariationSnippets.qml frame with variation
+
+    \section2 Instance Variations
+
+    Named \l {StyleVariation}{StyleVariations} can be applied to individual controls
+    in the application using the \l {StyleVariation::variations}{StyleVariation.variations}
+    attached property. When applied, the control itself, and all its descendants, will
+    receive the alternative styling. This is different from a type variation, which
+    affects all controls of a certain type, such as all \l [QtQuickControls]{Frame}{Frames}.
+    Instance variations will only affect the control instance (and the descendants) on which
+    they're attached:
+
+    \snippet InstanceVariationSnippets.qml instance variations in style
+
+    Apply them to controls in your application:
+
+    \snippet InstanceVariationSnippets.qml apply instance variation
+
+    \section1 Custom Controls
+
+    If your application includes custom controls that are not part of
+    \l {Qt Quick Controls}, you can still integrate them with \c StyleKit.
+    Just add a \l CustomControl for each of them and style them the same
+    way you style the \l {AbstractStylableControls}{built-in controls}:
+
+    \snippet CustomControlSnippets.qml custom control style
+
+    In the control's implementation, use a \l StyleReader with the matching
+    \l {StyleReader::controlType}{controlType} to read back the style properties.
+    The correct property values are resolved by taking \l {Theme}{Themes},
+    \l {StyleVariation}{StyleVariations}, \l {AbstractStylableControls}{fallback types},
+    and property propagation into account.
+    For a style reader to do this, it needs to know the state of your control.
+    Therefore bind your control's state to the relevant \l StyleReader
+    properties such as \l {StyleReader::hovered}{hovered} and
+    \l {StyleReader::pressed}{pressed}. Each time there is a state change, any
+    affected style properties will be updated, causing your control to repaint:
+
+    \snippet CustomControlSnippets.qml custom control
+
+    \section1 Custom Delegates
+
+    Each visual part of a control —
+    \l {ControlStyleProperties::background}{background},
+    \l {ControlStyleProperties::handle}{handle},
+    \l {ControlStyleProperties::indicator}{indicator}, etc — is rendered by a
+    \l {DelegateStyle::delegate}{delegate}. By default \c StyleKit uses
+    \l StyledItem for rendering, but you can replace it entirely with you own
+    QML component.
+
+    The component needs to define two \l {Required Properties}{required properties}
+    that \c StyleKit populates automatically:
+
+    \list
+    \li \c delegateStyle — the \l DelegateStyle that carries the resolved style
+        properties (color, radius, implicit size, etc.)
+    \li \c control — the \l {Qt Quick Controls}{Qt Quick Control} the delegate belongs to
+    \endlist
+
+    You then assign the component to the \l {DelegateStyle::delegate}{delegate} property
+    of the visual part that you want to affect:
+
+    \snippet DelegateStyle_delegates.qml delegate
+
+    \section2 Overlay and Underlay
+
+    If you only want to \e augment the default rendering rather than replace it
+    completely, use \l StyledItem as the root of your delegate. Any children you
+    add to \l StyledItem are drawn on top of (overlay) the default rendering:
+
+    \snippet StyledItemOverlay.qml overlay
+
+    To draw something \e underneath the default rendering instead, make your
+    delegate an \l Item, place the extra content first, and embed a \l StyledItem
+    as a child to render the default appearance on top:
+
+    \snippet StyledItemUnderlay.qml underlay
+
+    \section2 Custom Data
+
+    Custom delegates sometimes need additional styling properties that go beyond the
+    \l {DelegateProperties}{built-in ones} — for example to style child items
+    that \c StyleKit knows nothing about. The \l {DelegateStyle::data}{data}
+    property makes this possible. It can hold any \l QtObject, so it can carry
+    whatever information your delegate needs.
+
+    Like all the other style properties, \c data participates in style property
+    resolution — the delegate always receives the object that matches the current
+    control state, active theme, and style variations. Unlike the built-in
+    properties, \c data is propagated as a whole — individual properties \e inside
+    the object do not propagate separately:
+
+    \snippet DelegateStyle_delegates.qml data
+
+*/
