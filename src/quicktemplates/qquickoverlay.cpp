@@ -14,6 +14,7 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -72,6 +73,69 @@ void QQuickOverlayPrivate::itemRotationChanged(QQuickItem *)
 {
     updateGeometry();
 }
+
+// Wheel and tablet events are not routed through the delivery agent like mouse
+// and touch events, so modal popup blocking must be handled explicitly here.
+// Returns true if event is consumed by a modal popup blocking its top-most target.
+#if QT_CONFIG(tabletevent) || QT_CONFIG(wheelevent)
+bool QQuickOverlayPrivate::eatEventIfBlockedByModal(QPointerEvent *event)
+{
+    Q_Q(QQuickOverlay);
+    const QList<QQuickItem *> targetItems = deliveryAgentPrivate()->pointerTargets(
+            window->contentItem(), event, event->point(0), false, false);
+    if (targetItems.isEmpty())
+        return false;
+
+    QQuickItem *const topItem = targetItems.first();
+    QQuickItem *const dimmerItem = q->property("_q_dimmerItem").value<QQuickItem *>();
+    // Find the QQuickPopupItem that contains topItem, if any.
+    QQuickItem *item = qobject_cast<QQuickPopupItem *>(topItem) ? topItem : nullptr;
+
+    if (!item) {
+        item = topItem;
+        while ((item = item->parentItem())) {
+            if (qobject_cast<QQuickPopupItem *>(item))
+                break;
+        }
+    }
+
+    // topItem may be a QQuickShaderEffectSource created for a popup's drop shadow layer.
+    // It is a direct child of the overlay (not of the popup item), so the parent walk above
+    // misses it. Resolve it to the popup item it renders so the loop below handles it correctly.
+    if (!item && dimmerItem != topItem && q->isAncestorOf(topItem)) {
+        if (auto *shaderEffect = qobject_cast<QQuickShaderEffectSource *>(topItem)) {
+            if (auto *pi = qobject_cast<QQuickPopupItem *>(shaderEffect->sourceItem()))
+                item = pi;
+        }
+        if (!item)
+            return false;
+    }
+
+    // Eat the event if receiver topItem is not a child of a popup before
+    // the first modal popup.
+    for (const auto &popup : stackingOrderPopups()) {
+        const QQuickItem *popupItem = popup->popupItem();
+        if (!popupItem)
+            continue;
+        // item belongs to this popup — check shader effect source case, then stop searching
+        if (popupItem == item) {
+            // topItem is the popup's shader effect source (drop shadow), not the popup item
+            // itself — the event landed in the shadow area outside the popup's bounds.
+            // Eat it for modal popups to prevent it reaching items behind the shadow.
+            if (topItem != item && popup->isModal()
+                && !item->contains(item->mapFromScene(event->point(0).scenePosition()))) {
+                event->accept();
+                return true;
+            }
+            break;
+        }
+        // if topItem is below this modal popup in stacking order — eat the event
+        if (popup->overlayEvent(topItem, event))
+            return true;
+    }
+    return false;
+}
+#endif
 
 bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
 {
@@ -613,46 +677,15 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         break;
     }
 #if QT_CONFIG(wheelevent)
-    case QEvent::Wheel: {
-        // If the top item in the drawing-order is blocked by a modal popup, then
-        // eat the event. There is no scenario where the top most item is blocked
-        // by a popup, but an item further down in the drawing order is not.
-        QWheelEvent *we = static_cast<QWheelEvent *>(event);
-        const QList<QQuickItem *> targetItems = d->deliveryAgentPrivate()->pointerTargets(
-                                    d->window->contentItem(), we, we->point(0), false, false);
-        if (targetItems.isEmpty())
-            break;
-
-        QQuickItem * const dimmerItem = property("_q_dimmerItem").value<QQuickItem *>();
-        QQuickItem * const topItem = targetItems.first();
-
-        QQuickItem *item = topItem;
-        while ((item = item->parentItem())) {
-            if (qobject_cast<QQuickPopupItem *>(item))
-                break;
-        }
-
-        if (!item && dimmerItem != topItem && isAncestorOf(topItem))
-            break;
-
-        const auto popups = d->stackingOrderPopups();
-        // Eat the event if receiver topItem is not a child of a popup before
-        // the first modal popup.
-        for (const auto &popup : popups) {
-            const QQuickItem *popupItem = popup->popupItem();
-            if (!popupItem)
-                continue;
-            // if current popup item matches with any popup in stack, deliver the event
-            if (popupItem == item)
-                break;
-            // if the popup doesn't contain the item but is modal, eat the event
-            if (popup->overlayEvent(topItem, we))
-                return true;
-        }
-        break;
-    }
+    case QEvent::Wheel:
+        return d->eatEventIfBlockedByModal(static_cast<QWheelEvent *>(event));
 #endif
-
+#if QT_CONFIG(tabletevent)
+    case QEvent::TabletMove:
+    case QEvent::TabletPress:
+    case QEvent::TabletRelease:
+        return d->eatEventIfBlockedByModal(static_cast<QTabletEvent *>(event));
+#endif
     default:
         break;
     }

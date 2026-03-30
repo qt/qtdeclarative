@@ -3255,7 +3255,7 @@ static QQuickItem *findRootOfOverlaySubtree(QQuickItem *source, const QQuickOver
 /*!
     \internal
 
-    Called whenever the window receives a Wheel/Hover/Mouse/Touch event,
+    Called whenever the window receives a Wheel/Hover/Mouse/Touch/Tablet event,
     and has an active popup (with popupType: Popup.Item) in its scene.
 
     The purpose is to close popups when the press/release event happened outside of it,
@@ -3287,7 +3287,14 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
         if (d->modal)
             event->accept();
         return d->modal;
-
+#if QT_CONFIG(tabletevent)
+    case QEvent::TabletPress:
+    case QEvent::TabletMove:
+    case QEvent::TabletRelease:
+        if (d->modal)
+            event->accept();
+        return d->modal;
+#endif
 #if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:

@@ -37,7 +37,9 @@ public:
     {
         return overlay->d_func();
     }
-
+#if QT_CONFIG(tabletevent) || QT_CONFIG(wheelevent)
+    bool eatEventIfBlockedByModal(QPointerEvent *event);
+#endif
     bool startDrag(QEvent *event, const QPointF &pos);
     bool handlePress(QQuickItem *source, QEvent *event, QQuickPopup *target);
     bool handleMove(QQuickItem *source, QEvent *event, QQuickPopup *target);

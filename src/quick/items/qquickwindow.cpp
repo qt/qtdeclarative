@@ -1613,6 +1613,20 @@ bool QQuickWindow::event(QEvent *event)
             d->maybeSynthesizeContextMenuEvent(static_cast<QMouseEvent *>(pe));
         }
 
+#if QT_CONFIG(tabletevent)
+        // QGuiApplication::processTabletEvent() uses forwardToPopup() to send
+        // tablet events to popup windows so they can handle them or block
+        // further delivery. Prevent fall-through to any window behind a popup
+        // by accepting any tablet event that landed outside the popup's bounds.
+        // QTabletEvent.accepted is false by default (unlike mouse events), so
+        // we need to stop delivery by accepting explicitly.
+        if (type() == Qt::Popup && QQuickDeliveryAgentPrivate::isTabletEvent(pe) &&
+             !QRect(QPoint(), size()).contains(pe->points().first().scenePosition().toPoint())) {
+            pe->accept();
+            return true;
+        }
+#endif
+
         if (ret)
             return true;
     } else if (event->isInputEvent()) {
