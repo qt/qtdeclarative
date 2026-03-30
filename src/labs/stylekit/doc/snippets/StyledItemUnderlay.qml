@@ -36,7 +36,10 @@ ApplicationWindow {
         }
 
         slider.handle.delegate: Item {
+            // Since the root item is not a StyledItem, the following
+            // required properties must be defined explicitly:
             required property DelegateStyle delegateStyle
+            required property QtObject control
 
             implicitWidth: delegateStyle.implicitWidth
             implicitHeight: delegateStyle.implicitHeight
@@ -55,6 +58,8 @@ ApplicationWindow {
             }
 
             StyledItem {
+                // Forward delegateStyle into StyledItem. StyledItem doesn't
+                // use 'control' for anything, so it can be omitted.
                 delegateStyle: parent.delegateStyle
             }
         }

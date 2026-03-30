@@ -40,7 +40,7 @@ ApplicationWindow {
             hovered: hoverHandler.hovered
             pressed: tapHandler.pressed
             palette: app.palette
-         }
+        }
 
         HoverHandler { id: hoverHandler }
         TapHandler { id: tapHandler }
