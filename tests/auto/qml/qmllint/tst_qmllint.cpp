@@ -2481,206 +2481,275 @@ void TestQmllint::contextPropertiesFromHeuristicLint()
 void TestQmllint::cleanQmlCode_data()
 {
     QTest::addColumn<QString>("filename");
+    QTest::addColumn<CallQmllintOptions>("options");
 
-    QTest::newRow("2Behavior") << QStringLiteral("2behavior.qml");
-    QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
-    QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml");
-    QTest::newRow("AttachedProps")             << QStringLiteral("AttachedProps.qml");
-    QTest::newRow("AttachedType") << QStringLiteral("AttachedType.qml");
-    QTest::newRow("BindingBeforeDeclaration") << QStringLiteral("bindingBeforeDeclaration.qml");
-    QTest::newRow("BindingTypeMismatch") << QStringLiteral("bindingTypeMismatch.qml");
-    QTest::newRow("BindingTypeMismatchFunction") << QStringLiteral("bindingTypeMismatchFunction.qml");
+    const CallQmllintOptions defaultOptions;
+
+    QTest::newRow("2Behavior") << QStringLiteral("2behavior.qml") << defaultOptions;
+    QTest::newRow("Accessible") << QStringLiteral("accessible.qml") << defaultOptions;
+    QTest::newRow("AddressableValue") << QStringLiteral("addressableValue.qml") << defaultOptions;
+    QTest::newRow("AttachedProps") << QStringLiteral("AttachedProps.qml") << defaultOptions;
+    QTest::newRow("AttachedType") << QStringLiteral("AttachedType.qml") << defaultOptions;
+    QTest::newRow("BindingBeforeDeclaration")
+            << QStringLiteral("bindingBeforeDeclaration.qml") << defaultOptions;
+    QTest::newRow("BindingTypeMismatch")
+            << QStringLiteral("bindingTypeMismatch.qml") << defaultOptions;
+    QTest::newRow("BindingTypeMismatchFunction")
+            << QStringLiteral("bindingTypeMismatchFunction.qml") << defaultOptions;
     QTest::newRow("BindingsOnGroupAndAttachedProperties")
-            << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
+            << QStringLiteral("goodBindingsOnGroupAndAttached.qml") << defaultOptions;
     QTest::newRow("CustomParserSignalHandler")
-            << QStringLiteral("customParserSignalHandler.qml");
+            << QStringLiteral("customParserSignalHandler.qml") << defaultOptions;
     QTest::newRow("CustomParserUnqualifiedAccess")
-            << QStringLiteral("customParserUnqualifiedAccess.qml");
-    QTest::newRow("duplicateImportsClean") << QStringLiteral("duplicateImportsClean.qml");
-    QTest::newRow("EnumAccess1") << QStringLiteral("EnumAccess1.qml");
-    QTest::newRow("EnumAccess2") << QStringLiteral("EnumAccess2.qml");
-    QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml");
-    QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
-    QTest::newRow("groupedPropertyBinding") << QStringLiteral("groupedPropertyBinding.qml");
-    QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
-    QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
-    QTest::newRow("ImportPrecedence") << QStringLiteral("Connections.qml");
-    QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml");
-    QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
-    QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
-    QTest::newRow("InlineComponentsChained") << QStringLiteral("inlineComponentsChained.qml");
-    QTest::newRow("JS_with_pragma_and_import") << QStringLiteral("QTBUG-45916.js");
-    QTest::newRow("ListProperty") << QStringLiteral("ListProperty.qml");
-    QTest::newRow("ParentEnum") << QStringLiteral("parentEnum.qml");
-    QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml");
-    QTest::newRow("QML_importing_JS")          << QStringLiteral("importing_js.qml");
-    QTest::newRow("QObject.hasOwnProperty") << QStringLiteral("qobjectHasOwnProperty.qml");
-    QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
-    QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml");
-    QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
-    QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml");
-    QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml");
-    QTest::newRow("Signals") << QStringLiteral("Signal.qml");
-    QTest::newRow("Simple_QML")                << QStringLiteral("Simple.qml");
-    QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml");
-    QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");
-    QTest::newRow("Unused static module") << QStringLiteral("unused_static.qml");
+            << QStringLiteral("customParserUnqualifiedAccess.qml") << defaultOptions;
+    QTest::newRow("duplicateImportsClean")
+            << QStringLiteral("duplicateImportsClean.qml") << defaultOptions;
+    QTest::newRow("EnumAccess1") << QStringLiteral("EnumAccess1.qml") << defaultOptions;
+    QTest::newRow("EnumAccess2") << QStringLiteral("EnumAccess2.qml") << defaultOptions;
+    QTest::newRow("EnumAccessCpp") << QStringLiteral("EnumAccessCpp.qml") << defaultOptions;
+    QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml") << defaultOptions;
+    QTest::newRow("groupedPropertyBinding")
+            << QStringLiteral("groupedPropertyBinding.qml") << defaultOptions;
+    QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml") << defaultOptions;
+    QTest::newRow("ImportDirectoryQmldir")
+            << QStringLiteral("Things/LintDirectly.qml") << defaultOptions;
+    QTest::newRow("ImportPrecedence") << QStringLiteral("Connections.qml") << defaultOptions;
+    QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml") << defaultOptions;
+    QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml") << defaultOptions;
+    QTest::newRow("InlineComponentWithComponents")
+            << QStringLiteral("inlineComponentWithComponents.qml") << defaultOptions;
+    QTest::newRow("InlineComponentsChained")
+            << QStringLiteral("inlineComponentsChained.qml") << defaultOptions;
+    QTest::newRow("JS_with_pragma_and_import")
+            << QStringLiteral("QTBUG-45916.js") << defaultOptions;
+    QTest::newRow("ListProperty") << QStringLiteral("ListProperty.qml") << defaultOptions;
+    QTest::newRow("ParentEnum") << QStringLiteral("parentEnum.qml") << defaultOptions;
+    QTest::newRow("QEventPoint") << QStringLiteral("qEventPoint.qml") << defaultOptions;
+    QTest::newRow("QML_importing_JS") << QStringLiteral("importing_js.qml") << defaultOptions;
+    QTest::newRow("QObject.hasOwnProperty")
+            << QStringLiteral("qobjectHasOwnProperty.qml") << defaultOptions;
+    QTest::newRow("QQmlEasingEnums::Type")
+            << QStringLiteral("animationEasing.qml") << defaultOptions;
+    QTest::newRow("QQmlScriptString") << QStringLiteral("scriptstring.qml") << defaultOptions;
+    QTest::newRow("QVariant") << QStringLiteral("qvariant.qml") << defaultOptions;
+    QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml") << defaultOptions;
+    QTest::newRow("ScriptInTemplate") << QStringLiteral("scriptInTemplate.qml") << defaultOptions;
+    QTest::newRow("Signals") << QStringLiteral("Signal.qml") << defaultOptions;
+    QTest::newRow("Simple_QML") << QStringLiteral("Simple.qml") << defaultOptions;
+    QTest::newRow("StringToDateTime") << QStringLiteral("stringToDateTime.qml") << defaultOptions;
+    QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml") << defaultOptions;
+    QTest::newRow("Unused static module") << QStringLiteral("unused_static.qml") << defaultOptions;
     QTest::newRow("Unversioned change signal without arguments")
-            << QStringLiteral("unversionChangedSignalSansArguments.qml");
-    QTest::newRow("Used imports") << QStringLiteral("used.qml");
-    QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
-    QTest::addRow("ValidTranslations") << u"translations/qsTranslateTranslation.qml"_s;
-    QTest::addRow("ValidTranslations2") << u"translations/qsTrTranslation.qml"_s;
-    QTest::addRow("ValidTranslations3") << u"translations/qsTrIdTranslation.qml"_s;
-    QTest::addRow("ValidTranslations4") << u"translations/Good.qml"_s;
-    QTest::newRow("VariantMapGetPropertyLookup") << QStringLiteral("variantMapLookup.qml");
-    QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml");
-    QTest::newRow("aliasGroup") << QStringLiteral("aliasGroup.qml");
-    QTest::newRow("aliasToList") << QStringLiteral("aliasToList.qml");
+            << QStringLiteral("unversionChangedSignalSansArguments.qml") << defaultOptions;
+    QTest::newRow("Used imports") << QStringLiteral("used.qml") << defaultOptions;
+    QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml") << defaultOptions;
+    QTest::addRow("ValidTranslations")
+            << u"translations/qsTranslateTranslation.qml"_s << defaultOptions;
+    QTest::addRow("ValidTranslations2") << u"translations/qsTrTranslation.qml"_s << defaultOptions;
+    QTest::addRow("ValidTranslations3")
+            << u"translations/qsTrIdTranslation.qml"_s << defaultOptions;
+    QTest::addRow("ValidTranslations4") << u"translations/Good.qml"_s << defaultOptions;
+    QTest::newRow("VariantMapGetPropertyLookup")
+            << QStringLiteral("variantMapLookup.qml") << defaultOptions;
+    QTest::newRow("WriteListProperty") << QStringLiteral("writeListProperty.qml") << defaultOptions;
+    QTest::newRow("aliasGroup") << QStringLiteral("aliasGroup.qml") << defaultOptions;
+    QTest::newRow("aliasToList") << QStringLiteral("aliasToList.qml") << defaultOptions;
     QTest::newRow("aliasToRequiredProperty")
-            << QStringLiteral("aliasToRequiredPropertyIsNotRequiredItself.qml");
-    QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
-    QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
-    QTest::newRow("asCast") << QStringLiteral("asCast.qml");
-    QTest::newRow("asValueTypeGood") << QStringLiteral("asValueTypeGood.qml");
-    QTest::newRow("attached") << QStringLiteral("attached.qml");
-    QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml");
+            << QStringLiteral("aliasToRequiredPropertyIsNotRequiredItself.qml") << defaultOptions;
+    QTest::newRow("anchors1") << QStringLiteral("anchors1.qml") << defaultOptions;
+    QTest::newRow("anchors2") << QStringLiteral("anchors2.qml") << defaultOptions;
+    QTest::newRow("asCast") << QStringLiteral("asCast.qml") << defaultOptions;
+    QTest::newRow("asValueTypeGood") << QStringLiteral("asValueTypeGood.qml") << defaultOptions;
+    QTest::newRow("attached") << QStringLiteral("attached.qml") << defaultOptions;
+    QTest::newRow("attachedImportUse") << QStringLiteral("attachedImportUse.qml") << defaultOptions;
     QTest::newRow("attachedPropertyAssignments")
-            << QStringLiteral("attachedPropertyAssignments.qml");
-    QTest::newRow("attachedTypeIndirect") << QStringLiteral("attachedTypeIndirect.qml");
-    QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml");
-    QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
-    QTest::newRow("callBase") << QStringLiteral("callBase.qml");
-    QTest::newRow("callLater") << QStringLiteral("callLater.qml");
-    QTest::newRow("catchIdentifier")           << QStringLiteral("catchIdentifierNoWarning.qml");
-    QTest::newRow("compositeSingleton") << QStringLiteral("compositesingleton.qml");
-    QTest::newRow("confusingImport")           << QStringLiteral("Dialog.qml");
-    QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
-    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
-    QTest::newRow("constructorProperty") << QStringLiteral("constructorProperty.qml");
+            << QStringLiteral("attachedPropertyAssignments.qml") << defaultOptions;
+    QTest::newRow("attachedTypeIndirect")
+            << QStringLiteral("attachedTypeIndirect.qml") << defaultOptions;
+    QTest::newRow("boundComponents") << QStringLiteral("boundComponents.qml") << defaultOptions;
+    QTest::newRow("bytearray") << QStringLiteral("bytearray.qml") << defaultOptions;
+    QTest::newRow("callBase") << QStringLiteral("callBase.qml") << defaultOptions;
+    QTest::newRow("callLater") << QStringLiteral("callLater.qml") << defaultOptions;
+    QTest::newRow("catchIdentifier")
+            << QStringLiteral("catchIdentifierNoWarning.qml") << defaultOptions;
+    QTest::newRow("compositeSingleton")
+            << QStringLiteral("compositesingleton.qml") << defaultOptions;
+    QTest::newRow("confusingImport") << QStringLiteral("Dialog.qml") << defaultOptions;
+    QTest::newRow("connectionNoParent")
+            << QStringLiteral("connectionNoParent.qml") << defaultOptions; // QTBUG-97600
+    QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml") << defaultOptions;
+    QTest::newRow("constructorProperty")
+            << QStringLiteral("constructorProperty.qml") << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers")
-            << QStringLiteral("goodCppPropertyChangeHandlers.qml");
-    QTest::newRow("customParser") << QStringLiteral("customParser.qml");
-    QTest::newRow("customParser.recursive") << QStringLiteral("customParser.recursive.qml");
-    QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s;
-    QTest::newRow("declared property of JS object") << QStringLiteral("bareQt.qml");
-    QTest::newRow("defaultImport") << QStringLiteral("defaultImport.qml");
-    QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml");
-    QTest::newRow("defaultPropertyComponent") << QStringLiteral("defaultPropertyComponent.qml");
-    QTest::newRow("defaultPropertyComponent2") << QStringLiteral("defaultPropertyComponent.2.qml");
-    QTest::newRow("defaultPropertyList") << QStringLiteral("defaultPropertyList.qml");
-    QTest::newRow("defaultPropertyListModel") << QStringLiteral("defaultPropertyListModel.qml");
-    QTest::newRow("defaultPropertyVar") << QStringLiteral("defaultPropertyVar.qml");
-    QTest::newRow("dependsOnDuplicateType") << QStringLiteral("dependsOnDuplicateType.qml");
-    QTest::newRow("deprecatedFunctionOverride") << QStringLiteral("deprecatedFunctionOverride.qml");
-    QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml");
-    QTest::newRow("dontConfuseMemberPrintWithGlobalPrint") << QStringLiteral("findMemberPrint.qml");
-    QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
-    QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
-    QTest::newRow("enumList") << QStringLiteral("enumListTest.qml");
-    QTest::newRow("enumProperty") << QStringLiteral("enumProperty.qml");
-    QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml");
-    QTest::newRow("esmodule")                  << QStringLiteral("esmodule.mjs");
-    QTest::newRow("externalEnumProperty") << QStringLiteral("externalEnumProperty.qml");
-    QTest::newRow("fileSelectorDuplciateImport") << QStringLiteral("FileSelector/main.qml");
-    QTest::newRow("fileSelectorCmopatibleType") << QStringLiteral("FileSelector3/App.qml");
+            << QStringLiteral("goodCppPropertyChangeHandlers.qml") << defaultOptions;
+    QTest::newRow("customParser") << QStringLiteral("customParser.qml") << defaultOptions;
+    QTest::newRow("customParser.recursive")
+            << QStringLiteral("customParser.recursive.qml") << defaultOptions;
+    QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s << defaultOptions;
+    QTest::newRow("declared property of JS object")
+            << QStringLiteral("bareQt.qml") << defaultOptions;
+    QTest::newRow("defaultImport") << QStringLiteral("defaultImport.qml") << defaultOptions;
+    QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml") << defaultOptions;
+    QTest::newRow("defaultPropertyComponent")
+            << QStringLiteral("defaultPropertyComponent.qml") << defaultOptions;
+    QTest::newRow("defaultPropertyComponent2")
+            << QStringLiteral("defaultPropertyComponent.2.qml") << defaultOptions;
+    QTest::newRow("defaultPropertyList")
+            << QStringLiteral("defaultPropertyList.qml") << defaultOptions;
+    QTest::newRow("defaultPropertyListModel")
+            << QStringLiteral("defaultPropertyListModel.qml") << defaultOptions;
+    QTest::newRow("defaultPropertyVar")
+            << QStringLiteral("defaultPropertyVar.qml") << defaultOptions;
+    QTest::newRow("dependsOnDuplicateType")
+            << QStringLiteral("dependsOnDuplicateType.qml") << defaultOptions;
+    QTest::newRow("deprecatedFunctionOverride")
+            << QStringLiteral("deprecatedFunctionOverride.qml") << defaultOptions;
+    QTest::newRow("dontCheckJSTypes") << QStringLiteral("dontCheckJSTypes.qml") << defaultOptions;
+    QTest::newRow("dontConfuseMemberPrintWithGlobalPrint")
+            << QStringLiteral("findMemberPrint.qml") << defaultOptions;
+    QTest::newRow("duplicateQmldirImport")
+            << QStringLiteral("qmldirImport/duplicate.qml") << defaultOptions;
+    QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml") << defaultOptions;
+    QTest::newRow("enumList") << QStringLiteral("enumListTest.qml") << defaultOptions;
+    QTest::newRow("enumProperty") << QStringLiteral("enumProperty.qml") << defaultOptions;
+    QTest::newRow("enumsOfScrollBar") << QStringLiteral("enumsOfScrollBar.qml") << defaultOptions;
+    QTest::newRow("esmodule") << QStringLiteral("esmodule.mjs") << defaultOptions;
+    QTest::newRow("externalEnumProperty")
+            << QStringLiteral("externalEnumProperty.qml") << defaultOptions;
+    QTest::newRow("fileSelectorDuplciateImport")
+            << QStringLiteral("FileSelector/main.qml") << defaultOptions;
+    QTest::newRow("fileSelectorCmopatibleType")
+            << QStringLiteral("FileSelector3/App.qml") << defaultOptions;
     QTest::newRow("fileSelectorCompatibleFileSelectedType")
-            << QStringLiteral("FileSelector3/+Material/App.qml");
-    QTest::newRow("forLoop")                   << QStringLiteral("forLoop.qml");
-    QTest::newRow("goodAlias")                 << QStringLiteral("goodAlias.qml");
-    QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
-    QTest::newRow("goodAttachedProperty") << QStringLiteral("goodAttachedProperty.qml");
-    QTest::newRow("goodGeneralizedGroup") << QStringLiteral("goodGeneralizedGroup.qml");
-    QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
-    QTest::newRow("goodTypeAssertion")         << QStringLiteral("goodTypeAssertion.qml");
-    QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
-    QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
+            << QStringLiteral("FileSelector3/+Material/App.qml") << defaultOptions;
+    QTest::newRow("forLoop") << QStringLiteral("forLoop.qml") << defaultOptions;
+    QTest::newRow("goodAlias") << QStringLiteral("goodAlias.qml") << defaultOptions;
+    QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml") << defaultOptions;
+    QTest::newRow("goodAttachedProperty")
+            << QStringLiteral("goodAttachedProperty.qml") << defaultOptions;
+    QTest::newRow("goodGeneralizedGroup")
+            << QStringLiteral("goodGeneralizedGroup.qml") << defaultOptions;
+    QTest::newRow("goodParent") << QStringLiteral("goodParent.qml") << defaultOptions;
+    QTest::newRow("goodTypeAssertion") << QStringLiteral("goodTypeAssertion.qml") << defaultOptions;
+    QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml") << defaultOptions;
+    QTest::newRow("groupedAttachedLayout")
+            << QStringLiteral("groupedAttachedLayout.qml") << defaultOptions;
     QTest::newRow("groupedProperty (valueSource+interceptor)")
-            << QStringLiteral("groupedProperty_valueSource_interceptor.qml");
-    QTest::newRow("groupedPropertyAssignments") << QStringLiteral("groupedPropertyAssignments.qml");
-    QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml");
-    QTest::newRow("importWithPrefix")          << QStringLiteral("ImportWithPrefix.qml");
-    QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
-    QTest::newRow("interceptor") << QStringLiteral("interceptor.qml");
-    QTest::newRow("interceptor+valueSource") << QStringLiteral("interceptor_valueSource.qml");
-    QTest::newRow("nonConflictingDuplicateBinding.qml") << QStringLiteral("nonConflictingDuplicateBinding.qml");
-    QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml");
+            << QStringLiteral("groupedProperty_valueSource_interceptor.qml") << defaultOptions;
+    QTest::newRow("groupedPropertyAssignments")
+            << QStringLiteral("groupedPropertyAssignments.qml") << defaultOptions;
+    QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml") << defaultOptions;
+    QTest::newRow("importWithPrefix") << QStringLiteral("ImportWithPrefix.qml") << defaultOptions;
+    QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml") << defaultOptions;
+    QTest::newRow("interceptor") << QStringLiteral("interceptor.qml") << defaultOptions;
+    QTest::newRow("interceptor+valueSource")
+            << QStringLiteral("interceptor_valueSource.qml") << defaultOptions;
+    QTest::newRow("nonConflictingDuplicateBinding.qml")
+            << QStringLiteral("nonConflictingDuplicateBinding.qml") << defaultOptions;
+    QTest::newRow("itemviewattached") << QStringLiteral("itemViewAttached.qml") << defaultOptions;
     QTest::newRow("javascriptMethodsInModule")
-            << QStringLiteral("javascriptMethodsInModuleGood.qml");
-    QTest::newRow("jsLibrary") << QStringLiteral("jsLibrary.qml");
-    QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml");
-    QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
-    QTest::newRow("jsonArrayIsRecognized") << QStringLiteral("jsonArrayIsRecognized.qml");
-    QTest::newRow("jsonObjectIsRecognized") << QStringLiteral("jsonObjectIsRecognized.qml");
-    QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");
-    QTest::newRow("listPropertyMethods") << QStringLiteral("listPropertyMethods.qml");
-    QTest::newRow("locale") << QStringLiteral("locale.qml");
-    QTest::newRow("matchByName") << QStringLiteral("matchByName.qml");
-    QTest::newRow("methodInScope")             << QStringLiteral("MethodInScope.qml");
-    QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
-    QTest::newRow("multiDefaultProperty") << QStringLiteral("multiDefaultPropertyOk.qml");
-    QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
-    QTest::newRow("multilineStringEscaped") << QStringLiteral("multilineStringEscaped.qml");
-    QTest::newRow("noMissingNotify") << QStringLiteral("noMissingNotify.qml");
-    QTest::newRow("noWarningBindableOnly") << QStringLiteral("noWarningBindableOnly.qml");
-    QTest::newRow("nullBindingFunction") << QStringLiteral("nullBindingFunction.qml");
-    QTest::newRow("objectArray") << QStringLiteral("objectArray.qml");
-    QTest::newRow("objectBindingOnVarProperty") << QStringLiteral("objectBoundToVar.qml");
-    QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
-    QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml");
-    QTest::newRow("optionalChainingCall") << QStringLiteral("optionalChainingCall.qml");
+            << QStringLiteral("javascriptMethodsInModuleGood.qml") << defaultOptions;
+    QTest::newRow("jsLibrary") << QStringLiteral("jsLibrary.qml") << defaultOptions;
+    QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml") << defaultOptions;
+    QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml") << defaultOptions;
+    QTest::newRow("jsonArrayIsRecognized")
+            << QStringLiteral("jsonArrayIsRecognized.qml") << defaultOptions;
+    QTest::newRow("jsonObjectIsRecognized")
+            << QStringLiteral("jsonObjectIsRecognized.qml") << defaultOptions;
+    QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml") << defaultOptions;
+    QTest::newRow("listPropertyMethods")
+            << QStringLiteral("listPropertyMethods.qml") << defaultOptions;
+    QTest::newRow("locale") << QStringLiteral("locale.qml") << defaultOptions;
+    QTest::newRow("matchByName") << QStringLiteral("matchByName.qml") << defaultOptions;
+    QTest::newRow("methodInScope") << QStringLiteral("MethodInScope.qml") << defaultOptions;
+    QTest::newRow("methodsInJavascript")
+            << QStringLiteral("javascriptMethods.qml") << defaultOptions;
+    QTest::newRow("multiDefaultProperty")
+            << QStringLiteral("multiDefaultPropertyOk.qml") << defaultOptions;
+    QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml") << defaultOptions;
+    QTest::newRow("multilineStringEscaped")
+            << QStringLiteral("multilineStringEscaped.qml") << defaultOptions;
+    QTest::newRow("noMissingNotify") << QStringLiteral("noMissingNotify.qml") << defaultOptions;
+    QTest::newRow("noWarningBindableOnly")
+            << QStringLiteral("noWarningBindableOnly.qml") << defaultOptions;
+    QTest::newRow("nullBindingFunction")
+            << QStringLiteral("nullBindingFunction.qml") << defaultOptions;
+    QTest::newRow("objectArray") << QStringLiteral("objectArray.qml") << defaultOptions;
+    QTest::newRow("objectBindingOnVarProperty")
+            << QStringLiteral("objectBoundToVar.qml") << defaultOptions;
+    QTest::newRow("on binding in grouped property")
+            << QStringLiteral("onBindingInGroupedProperty.qml") << defaultOptions;
+    QTest::newRow("onlyMajorVersion") << QStringLiteral("onlyMajorVersion.qml") << defaultOptions;
+    QTest::newRow("optionalChainingCall")
+            << QStringLiteral("optionalChainingCall.qml") << defaultOptions;
 #ifdef HAS_QC_BASIC
-    QTest::newRow("overlay") << QStringLiteral("overlayFromControls.qml");
+    QTest::newRow("overlay") << QStringLiteral("overlayFromControls.qml") << defaultOptions;
 #endif
-    QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");
-    QTest::newRow("prefixedAttachedProperty") << QStringLiteral("prefixedAttachedProperty.qml");
-    QTest::newRow("propertyBindingValue") << QStringLiteral("propertyBindingValue.qml");
-    QTest::newRow("propertyDelegate") << QStringLiteral("propertyDelegate.qml");
-    QTest::newRow("propertyMapUsage") << QStringLiteral("propertyMapUsage.qml");
-    QTest::newRow("propertyOverride") << QStringLiteral("propertyOverride.qml");
-    QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml");
-    QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
-    QTest::newRow("qmlRootMethods") << QStringLiteral("qmlRootMethods.qml");
-    QTest::newRow("qmldirAndQmltypes")         << QStringLiteral("qmldirAndQmltypes.qml");
-    QTest::newRow("qmldirImportAndDepend") << QStringLiteral("qmldirImportAndDepend/good.qml");
-    QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
-    QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml");
-    QTest::newRow("qualifiedAttached")         << QStringLiteral("Drawer.qml");
-    QTest::addRow("regExp") << u"regExp.qml"_s;
-    QTest::newRow("requiredPropertyInGroupedPropertyScope") << QStringLiteral("requiredPropertyInGroupedPropertyScope.qml");
-    QTest::newRow("requiredPropertySetViaOnBinding") << QStringLiteral("requiredPropertySetViaOnBinding.qml");
-    QTest::newRow("RequiredPropertyBaseWithAlias") << QStringLiteral("RequiredPropertyBaseWithAlias.qml");
-    QTest::newRow("requiredWithRootLevelAlias") << QStringLiteral("RequiredWithRootLevelAlias.qml");
-    QTest::newRow("required_property_in_Component") << QStringLiteral("requiredPropertyInComponent.qml");
-    QTest::newRow("retrieveFunction") << QStringLiteral("retrieveFunction.qml");
-    QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
-    QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
-    QTest::newRow("selfReferential") << QStringLiteral("SelfReferential.qml");
-    QTest::newRow("setRequiredTroughAlias") << QStringLiteral("setRequiredPropertyThroughAlias.qml");
+    QTest::newRow("overridescript") << QStringLiteral("overridescript.qml") << defaultOptions;
+    QTest::newRow("prefixedAttachedProperty")
+            << QStringLiteral("prefixedAttachedProperty.qml") << defaultOptions;
+    QTest::newRow("propertyBindingValue")
+            << QStringLiteral("propertyBindingValue.qml") << defaultOptions;
+    QTest::newRow("propertyDelegate") << QStringLiteral("propertyDelegate.qml") << defaultOptions;
+    QTest::newRow("propertyMapUsage") << QStringLiteral("propertyMapUsage.qml") << defaultOptions;
+    QTest::newRow("propertyOverride") << QStringLiteral("propertyOverride.qml") << defaultOptions;
+    QTest::newRow("propertyWithOn") << QStringLiteral("switcher.qml") << defaultOptions;
+    QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml") << defaultOptions;
+    QTest::newRow("qmlRootMethods") << QStringLiteral("qmlRootMethods.qml") << defaultOptions;
+    QTest::newRow("qmldirAndQmltypes") << QStringLiteral("qmldirAndQmltypes.qml") << defaultOptions;
+    QTest::newRow("qmldirImportAndDepend")
+            << QStringLiteral("qmldirImportAndDepend/good.qml") << defaultOptions;
+    QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml") << defaultOptions;
+    QTest::newRow("qtquickdialog") << QStringLiteral("qtquickdialog.qml") << defaultOptions;
+    QTest::newRow("qualifiedAttached") << QStringLiteral("Drawer.qml") << defaultOptions;
+    QTest::addRow("regExp") << u"regExp.qml"_s << defaultOptions;
+    QTest::newRow("requiredPropertyInGroupedPropertyScope")
+            << QStringLiteral("requiredPropertyInGroupedPropertyScope.qml") << defaultOptions;
+    QTest::newRow("requiredPropertySetViaOnBinding")
+            << QStringLiteral("requiredPropertySetViaOnBinding.qml") << defaultOptions;
+    QTest::newRow("RequiredPropertyBaseWithAlias")
+            << QStringLiteral("RequiredPropertyBaseWithAlias.qml") << defaultOptions;
+    QTest::newRow("requiredWithRootLevelAlias")
+            << QStringLiteral("RequiredWithRootLevelAlias.qml") << defaultOptions;
+    QTest::newRow("required_property_in_Component")
+            << QStringLiteral("requiredPropertyInComponent.qml") << defaultOptions;
+    QTest::newRow("retrieveFunction") << QStringLiteral("retrieveFunction.qml") << defaultOptions;
+    QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml") << defaultOptions;
+    QTest::newRow("segFault") << QStringLiteral("SegFault.qml") << defaultOptions;
+    QTest::newRow("selfReferential") << QStringLiteral("SelfReferential.qml") << defaultOptions;
+    QTest::newRow("setRequiredTroughAlias")
+            << QStringLiteral("setRequiredPropertyThroughAlias.qml") << defaultOptions;
     QTest::newRow("setRequiredTroughAliasOfAlias")
-            << QStringLiteral("setRequiredPropertyThroughAliasOfAlias.qml");
-    QTest::newRow("shapes") << QStringLiteral("shapes.qml");
-    QTest::newRow("singleElementAssignedToList") << QStringLiteral("singleElementAssignedToList.qml");
-    QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
-    QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml");
-    QTest::newRow("stringLength3") << QStringLiteral("stringLength3.qml");
-    QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml");
-    QTest::newRow("template literal (substitution)") << QStringLiteral("templateStringSubstitution.qml");
-    QTest::newRow("thisObject") << QStringLiteral("thisObject.qml");
-    QTest::newRow("uiQml")                     << QStringLiteral("FormUser.qml");
-    QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml");
-    QTest::newRow("unknownBuiltinFont")        << QStringLiteral("ButtonLoader.qml");
-    QTest::newRow("unknownPropertyDuplicateBinding.qml") << QStringLiteral("unknownPropertyDuplicateBinding.qml");
-    QTest::newRow("unnotifiableReadOutsideBinding")        << QStringLiteral("unnotifiableReadOutsideBinding.qml");
-    QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml");
-    QTest::newRow("valueSource") << QStringLiteral("valueSource.qml");
-    QTest::newRow("var") << QStringLiteral("var.qml");
+            << QStringLiteral("setRequiredPropertyThroughAliasOfAlias.qml") << defaultOptions;
+    QTest::newRow("shapes") << QStringLiteral("shapes.qml") << defaultOptions;
+    QTest::newRow("singleElementAssignedToList")
+            << QStringLiteral("singleElementAssignedToList.qml") << defaultOptions;
+    QTest::newRow("stringLength") << QStringLiteral("stringLength.qml") << defaultOptions;
+    QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml") << defaultOptions;
+    QTest::newRow("stringLength3") << QStringLiteral("stringLength3.qml") << defaultOptions;
+    QTest::newRow("stringToByteArray") << QStringLiteral("stringToByteArray.qml") << defaultOptions;
+    QTest::newRow("template literal (substitution)")
+            << QStringLiteral("templateStringSubstitution.qml") << defaultOptions;
+    QTest::newRow("thisObject") << QStringLiteral("thisObject.qml") << defaultOptions;
+    QTest::newRow("uiQml") << QStringLiteral("FormUser.qml") << defaultOptions;
+    QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml") << defaultOptions;
+    QTest::newRow("unknownBuiltinFont") << QStringLiteral("ButtonLoader.qml") << defaultOptions;
+    QTest::newRow("unknownPropertyDuplicateBinding.qml")
+            << QStringLiteral("unknownPropertyDuplicateBinding.qml") << defaultOptions;
+    QTest::newRow("unnotifiableReadOutsideBinding")
+            << QStringLiteral("unnotifiableReadOutsideBinding.qml") << defaultOptions;
+    QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml") << defaultOptions;
+    QTest::newRow("valueSource") << QStringLiteral("valueSource.qml") << defaultOptions;
+    QTest::newRow("var") << QStringLiteral("var.qml") << defaultOptions;
 }
 
 void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
-    runTest(filename, Result::clean());
+    QFETCH(CallQmllintOptions, options);
+
+    const QJsonArray warnings = callQmllint(filename, options);
+    checkResult(warnings, Result::clean());
 }
 
 void TestQmllint::compilerWarnings_data()
