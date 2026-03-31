@@ -314,6 +314,8 @@ private:
     friend class QQuickFlickableReboundTransition;
 };
 
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickFlickable::PositionMode)
+
 QT_END_NAMESPACE
 
 #endif // QQUICKFLICKABLE_P_H

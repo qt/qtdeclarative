@@ -179,10 +179,10 @@ public:
     void setDelegateModelAccess(QQmlDelegateModel::DelegateModelAccess delegateModelAccess);
 
     Q_INVOKABLE void forceLayout();
-    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, QQuickTableView::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
-    Q_INVOKABLE void positionViewAtIndex(const QModelIndex &index, QQuickTableView::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
-    Q_INVOKABLE void positionViewAtRow(int row, QQuickTableView::PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
-    Q_INVOKABLE void positionViewAtColumn(int column, QQuickTableView::PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, QQuickFlickable::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtIndex(const QModelIndex &index, QQuickFlickable::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtRow(int row, QQuickFlickable::PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtColumn(int column, QQuickFlickable::PositionMode mode, qreal offset = 0, const QRectF &subRect = QRectF());
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
 
     Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(const QPointF &position, bool includeSpacing = false) const;
@@ -226,7 +226,7 @@ public:
     QT_DEPRECATED_VERSION_X_6_5("Use itemAtIndex(index(row, column)) instead")
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
     QT_DEPRECATED_VERSION_X_6_5("Use positionViewAtIndex(index(row, column)) instead")
-    Q_INVOKABLE void positionViewAtCell(int column, int row, QQuickTableView::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
+    Q_INVOKABLE void positionViewAtCell(int column, int row, QQuickFlickable::PositionMode mode, const QPointF &offset = QPointF(), const QRectF &subRect = QRectF());
 #endif
 
     Q_REVISION(6, 8) Q_INVOKABLE void moveColumn(int source, int destination);
@@ -330,7 +330,6 @@ private:
     friend class QQuickTableViewPrivate;
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::PositionMode)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::EditTriggers)
 
 QT_END_NAMESPACE
