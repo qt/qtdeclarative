@@ -471,10 +471,11 @@ void QQuickAction::setCheckable(bool checkable)
 /*!
     \qmlproperty keysequence QtQuick.Controls::Action::shortcut
 
-    This property holds the action's shortcut. The key sequence can be set
-    to one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts},
-    or it can be described with a string containing a sequence of up to four
-    key presses that are needed to trigger the shortcut.
+    This property holds the action's shortcut. The key sequence can be set to
+    one of the \l{QKeySequence::StandardKey}{standard keyboard shortcuts}, (for
+    example, \c StandardKey.Copy), or it can be described with a string
+    containing a sequence of up to four key presses that are needed to trigger
+    the shortcut.
 
     \code
     Action {
