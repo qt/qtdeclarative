@@ -60,7 +60,7 @@ private slots:
     void doNotRetainQmlTypeAcrossEngines();
     void loadLocalTypesAfterRemoteFails();
     void populateDirectoryCache();
-    void replaceCachedCompilationUnit();
+    void removeFromCache();
     void addImportPathDuringAsyncLoad();
     void addImportPathFromStatusChanged();
 
@@ -1006,10 +1006,13 @@ void tst_QQMLTypeLoader::populateDirectoryCache()
     QVERIFY(typeLoader->fileExists(dataDirectory() + '/', "doesExist.qml"));
 }
 
-void tst_QQMLTypeLoader::replaceCachedCompilationUnit()
+void tst_QQMLTypeLoader::removeFromCache()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+
+    const QUrl url = testFileUrl("Simple.qml");
+
+    QQmlComponent component(&engine, url);
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj);
@@ -1018,13 +1021,11 @@ void tst_QQMLTypeLoader::replaceCachedCompilationUnit()
     QVERIFY(ddata);
     QVERIFY(ddata->compilationUnit);
 
-    auto originalCU = ddata->compilationUnit->baseCompilationUnit();
+    QQmlTypeLoader *typeLoader = QQmlTypeLoader::get(&engine);
 
-    // Replace with itself – verifies API works without crashing.
-    QQmlTypeLoader::get(&engine)->replaceCachedCompilationUnit(
-            testFileUrl("Simple.qml"), originalCU);
-
-    QVERIFY(QQmlTypeLoader::get(&engine)->isTypeLoaded(testFileUrl("Simple.qml")));
+    QVERIFY(typeLoader->isTypeLoaded(url));
+    typeLoader->removeFromCache(url);
+    QVERIFY(!typeLoader->isTypeLoaded(url));
 }
 
 // Regression test for QTBUG-146210: calling addImportPath() while an async

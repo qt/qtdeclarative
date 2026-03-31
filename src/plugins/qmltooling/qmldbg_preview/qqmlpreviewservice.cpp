@@ -3,6 +3,8 @@
 // Qt-Security score:significant
 
 #include "qqmlpreviewservice.h"
+#include "qqmlclassicpreviewhandler.h"
+#include "qqmlinplacepreviewhandler.h"
 
 #include <QtCore/qpointer.h>
 #include <QtQml/qqmlengine.h>
@@ -21,28 +23,30 @@ const QString QQmlPreviewServiceImpl::s_key = QStringLiteral("QmlPreview");
 using QQmlDebugPacket = QVersionedPacket<QQmlDebugConnector>;
 
 QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
-    QQmlDebugService(s_key, 1.0f, parent)
+    QQmlDebugService(s_key, 1.0f, parent),
+    m_handler(std::make_unique<QQmlClassicPreviewHandler>())
 {
-    connect(this, &QQmlPreviewServiceImpl::load, &m_handler, &QQmlPreviewHandler::load);
-    connect(this, &QQmlPreviewServiceImpl::drop, &m_handler, &QQmlPreviewHandler::dropCU);
-    connect(this, &QQmlPreviewServiceImpl::rerun, &m_handler, &QQmlPreviewHandler::rerun);
-    connect(this, &QQmlPreviewServiceImpl::zoom, &m_handler, &QQmlPreviewHandler::zoom);
-    connect(this, &QQmlPreviewServiceImpl::animationSpeed,
-            &m_handler, &QQmlPreviewHandler::setAnimationSpeed);
-    connect(this, &QQmlPreviewServiceImpl::settingsChanged,
-            &m_handler, &QQmlPreviewHandler::configure);
-    connect(&m_handler, &QQmlPreviewHandler::error, this, &QQmlPreviewServiceImpl::forwardError,
-            Qt::DirectConnection);
-    connect(&m_handler, &QQmlPreviewHandler::fps, this, &QQmlPreviewServiceImpl::forwardFps,
-            Qt::DirectConnection);
-    connect(&m_handler, &QQmlPreviewHandler::confirmation,
-            this, &QQmlPreviewServiceImpl::forwardConfirmation, Qt::DirectConnection);
-    connect(&m_handler, &QQmlPreviewHandler::hotReloadFailure, this,
-            &QQmlPreviewServiceImpl::forwardHotReloadFailure, Qt::DirectConnection);
+    m_handler->connectToService(this);
 }
 
 QQmlPreviewServiceImpl::~QQmlPreviewServiceImpl()
 {
+}
+
+void QQmlPreviewServiceImpl::switchToInPlaceHandler()
+{
+    // Transfer engines from the old handler to the new one
+    const auto engineList = m_handler->engines();
+    m_handler = std::make_unique<QQmlInPlacePreviewHandler>();
+    m_handler->connectToService(this);
+    for (QQmlEngine *engine : engineList)
+        m_handler->addEngine(engine);
+
+    // Send confirmation back to the client
+    QQmlDebugPacket response;
+    const bool enableInPlaceUpdates = true;
+    response << static_cast<qint8>(Confirmation) << enableInPlaceUpdates;
+    emit messageToClient(name(), response.data());
 }
 
 void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
@@ -64,13 +68,15 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         emit drop(url);
         emit file(path, contents);
 
-        // Replace the whole scene with the first file successfully loaded over the debug
-        // connection. This is an OK approximation of the root component, and if the client wants
-        // something specific, it will send an explicit Load anyway.
-        if (m_currentUrl.isEmpty() && path.endsWith(".qml")) {
+        // Remember the first .qml file as the current URL, so that a Load command
+        // without an explicit URL can fall back to it.
+        if (m_currentUrl.isEmpty() && path.endsWith(".qml"))
             m_currentUrl = url;
-            emit load(m_currentUrl);
-        }
+
+        // Never auto-load here. The client must send an explicit Load command
+        // to trigger loading. Auto-loading based on File responses is racy
+        // (the Configuration message may not have arrived yet) and creates
+        // duplicate objects when the host process has already loaded the scene.
         break;
     }
     case Directory: {
@@ -115,12 +121,22 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
         break;
     }
     case Configuration: {
-        bool enableInPlaceUpdates;
-        packet >> enableInPlaceUpdates;
-        QQmlPreviewHandler::Settings options;
-        options.enableInPlaceUpdates = enableInPlaceUpdates;
-        emit settingsChanged(options);
-        break;
+        if (qEnvironmentVariableIsSet("QMLPREVIEW_HOTRELOAD")) {
+            bool enableInPlaceUpdates;
+            packet >> enableInPlaceUpdates;
+            if (enableInPlaceUpdates
+                    && !qobject_cast<QQmlInPlacePreviewHandler *>(m_handler.get())) {
+                // Schedule this to the main thread where the handler lives
+                // We're on the debug server thread here.
+                QMetaObject::invokeMethod(this, &QQmlPreviewServiceImpl::switchToInPlaceHandler);
+            } else if (!enableInPlaceUpdates
+                       && qobject_cast<QQmlInPlacePreviewHandler *>(m_handler.get())) {
+                forwardError(QLatin1String("Cannot disable in-place updates once enabled"));
+            }
+            break;
+        } else {
+            Q_FALLTHROUGH();
+        }
     }
     default:
         forwardError(QString::fromLatin1("Invalid command: %1").arg(command));
@@ -131,14 +147,14 @@ void QQmlPreviewServiceImpl::messageReceived(const QByteArray &data)
 void QQmlPreviewServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine))
-        m_handler.addEngine(qmlEngine);
+        m_handler->addEngine(qmlEngine);
     emit attachedToEngine(engine);
 }
 
 void QQmlPreviewServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
 {
     if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine))
-        m_handler.removeEngine(qmlEngine);
+        m_handler->removeEngine(qmlEngine);
     emit detachedFromEngine(engine);
 }
 
@@ -180,14 +196,6 @@ void QQmlPreviewServiceImpl::forwardFps(const QQmlPreviewHandler::FpsInfo &frame
     emit messageToClient(name(), packet.data());
 }
 
-void QQmlPreviewServiceImpl::forwardConfirmation(
-        const QQmlPreviewHandler::Settings &settings)
-{
-    QQmlDebugPacket packet;
-    packet << static_cast<qint8>(Confirmation) << settings.enableInPlaceUpdates;
-    emit messageToClient(name(), packet.data());
-}
-
 void QQmlPreviewServiceImpl::forwardHotReloadFailure(const QString &reason)
 {
     QQmlDebugPacket packet;
@@ -197,7 +205,7 @@ void QQmlPreviewServiceImpl::forwardHotReloadFailure(const QString &reason)
 
 QQuickItem *QQmlPreviewServiceImpl::currentRootItem()
 {
-    return m_handler.currentRootItem();
+    return m_handler->currentRootItem();
 }
 
 QT_END_NAMESPACE
