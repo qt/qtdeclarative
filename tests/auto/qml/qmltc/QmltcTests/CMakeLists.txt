@@ -146,6 +146,8 @@ set(qml_sources
     attachedNamespacedProperty.qml
 
     newLineTranslation.qml
+
+    typedMethodCallOnIdLookup.qml
 )
 
 set(js_sources

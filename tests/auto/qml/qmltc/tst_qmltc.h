@@ -119,4 +119,6 @@ private slots:
     void newLineTranslation();
 
     void nestedWithId();
+
+    void typedMethodCallOnIdLookup();
 };

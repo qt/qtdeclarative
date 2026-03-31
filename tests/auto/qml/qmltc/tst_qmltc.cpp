@@ -105,6 +105,7 @@
 
 #include "newlinetranslation.h"
 #include "mymatryoshkaitems.h"
+#include "typedmethodcallonidlookup.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -220,6 +221,7 @@ void tst_qmltc::initTestCase()
         QUrl(u"qrc:/qt/qml/QmltcTests/valueTypeListProperty.qml"_s),
         QUrl(u"qrc:/qt/qml/QmltcTests/appendToQQmlListProperty.qml"_s),
         QUrl(u"qrc:/qt/qml/QmltcTests/requiredProperties.qml"_s),
+        QUrl(u"qrc:/qt/qml/QmltcTests/typedMethodCallOnIdLookup.qml"_s),
     };
 
     QQmlEngine e;
@@ -3476,6 +3478,13 @@ void tst_qmltc::nestedWithId()
     QVERIFY(inner != &createdByQmltc);
     QVERIFY(qobject_cast<QmltcTests::MyBaseItem *>(inner));
     QVERIFY(!qobject_cast<QmltcTests::MyDerivedItem *>(inner));
+}
+
+void tst_qmltc::typedMethodCallOnIdLookup()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(typedMethodCallOnIdLookup) created(&e);
+    QCOMPARE(created.property("result").toString(), u"[Hello]"_s);
 }
 
 QTEST_MAIN(tst_qmltc)
