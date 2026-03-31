@@ -73,6 +73,7 @@ public:
     void ensureBackingScene();
     void initOffscreenWindow();
     void ensureEngine() const;
+    void handleWindowAboutToChange();
     void handleWindowChange();
     void invalidateRenderControl();
 

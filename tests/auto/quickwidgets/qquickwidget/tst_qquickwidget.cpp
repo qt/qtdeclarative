@@ -133,6 +133,7 @@ private slots:
     void renderingSignals();
     void grab();
     void grabBeforeShow();
+    void grabBeforeShowAndThenShow();
     void reparentToNewWindow();
     void nullEngine();
     void keyEvents();
@@ -489,6 +490,22 @@ void tst_qquickwidget::grab()
 void tst_qquickwidget::grabBeforeShow()
 {
     QQuickWidget widget;
+    QVERIFY(!widget.grab().isNull());
+}
+
+void tst_qquickwidget::grabBeforeShowAndThenShow()
+{
+    QQuickWidget widget;
+    QVERIFY(!widget.grab().isNull());
+
+    // QTBUG-145383: Without the corresponding patch, this behaves incorrectly
+    // due to never picking up the QRhi from QWidgetPrivate::rhi() and not
+    // switching over to it from the QQuickWidget's own offscreen QRhi; and so
+    // it shows "Texture ... belongs to QRhi ..., but client code attempted to
+    // use it with QRhi ..." warnings, and potentially crashes.
+
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
     QVERIFY(!widget.grab().isNull());
 }
 

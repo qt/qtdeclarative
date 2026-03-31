@@ -252,6 +252,17 @@ void QQuickWidgetPrivate::invalidateRenderControl()
     renderControl->invalidate();
 }
 
+void QQuickWidgetPrivate::handleWindowAboutToChange()
+{
+    Q_Q(QQuickWidget);
+    if (rhi)
+        rhi->removeCleanupCallback(q);
+
+    invalidateRenderControl();
+    deviceLost = true;
+    rhi = nullptr;
+}
+
 void QQuickWidgetPrivate::handleWindowChange()
 {
     Q_Q(QQuickWidget);
@@ -1102,8 +1113,17 @@ void QQuickWidgetPrivate::initializeWithRhi()
     // when reparenting, the rhi may suddenly be different
     if (rhi) {
         QRhi *backingStoreRhi = QWidgetPrivate::rhi();
-        if (backingStoreRhi && rhi != backingStoreRhi)
-            rhi = nullptr;
+        if (backingStoreRhi && rhi != backingStoreRhi) {
+            // Can get here not just when reparenting to a new top-level window,
+            // but also when switching over from the offscreen infrastructure.
+            // Do the same that the Window[AboutTo]ChangeInternal events would do.
+            if (rhi == offscreenRenderer.rhi()) {
+                handleWindowAboutToChange();
+                handleWindowChange();
+            } else {
+                rhi = nullptr;
+            }
+        }
     }
 
     // On hide-show we may invalidate() (when !isPersistentSceneGraph) but our
@@ -1826,11 +1846,7 @@ bool QQuickWidget::event(QEvent *e)
         }
 
     case QEvent::WindowAboutToChangeInternal:
-        if (d->rhi)
-            d->rhi->removeCleanupCallback(this);
-        d->invalidateRenderControl();
-        d->deviceLost = true;
-        d->rhi = nullptr;
+        d->handleWindowAboutToChange();
         break;
 
     case QEvent::WindowChangeInternal:
