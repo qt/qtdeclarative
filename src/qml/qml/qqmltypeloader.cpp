@@ -1859,16 +1859,13 @@ void QQmlTypeLoader::clearCache()
     system (e.g., QQmlTypePrivate::compositePropertyCache()) ask for the type
     data of a patched component.
 */
-void QQmlTypeLoader::replaceCachedCompilationUnit(
-        const QUrl &url,
-        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
+void QQmlTypeLoader::removeFromCache(const QUrl &url)
 {
     const QUrl normalized = QQmlMetaType::normalizedUrl(url);
     const QQmlTypeLoaderSharedDataPtr data(&m_data);
-    auto it = data->typeCache.find(normalized);
-    if (it == data->typeCache.end())
-        return;
-    (*it)->m_compiledData = unit;
+    data->typeCache.remove(normalized);
+    data->scriptCache.remove(normalized);
+    data->qmldirCache.remove(normalized);
 }
 
 void QQmlTypeLoader::trimCache()

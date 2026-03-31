@@ -3,6 +3,7 @@
 // Qt-Security score:significant
 
 #include "qqmlpreviewhandler.h"
+#include "qqmlpreviewservice.h"
 
 #include <QtCore/qtimer.h>
 #include <QtCore/qsettings.h>
@@ -12,78 +13,28 @@
 #include <QtGui/qguiapplication.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickitem.h>
-#include <QtQml/qqmlcomponent.h>
 
 #include <private/qabstractanimation_p.h>
 #include <private/qhighdpiscaling_p.h>
-#include <private/qqmlmetatype_p.h>
-#include <private/qquickpixmap_p.h>
-#include <private/qquickview_p.h>
-#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QuitLockDisabler
-{
-    const bool quitLockEnabled;
-
-    Q_NODISCARD_CTOR QuitLockDisabler()
-        : quitLockEnabled(QCoreApplication::isQuitLockEnabled())
-    {
-        QCoreApplication::setQuitLockEnabled(false);
-    }
-
-    ~QuitLockDisabler()
-    {
-        QCoreApplication::setQuitLockEnabled(quitLockEnabled);
-    }
-};
-
 QQmlPreviewHandler::QQmlPreviewHandler(QObject *parent) : QObject(parent)
 {
-    m_dummyItem.reset(new QQuickItem);
-
-    // TODO: Is there a better way to determine this? We want to keep the window alive when possible
-    //       as otherwise it will reappear in a different place when (re)loading a file. However,
-    //       the file we load might create another window, in which case the eglfs plugin (and
-    //       others?) will do a qFatal as it only supports a single window.
-    const QString platformName = QGuiApplication::platformName();
-    m_supportsMultipleWindows = (platformName == QStringLiteral("windows")
-                                 || platformName == QStringLiteral("cocoa")
-                                 || platformName == QStringLiteral("xcb")
-                                 || platformName == QStringLiteral("wayland"));
-
-    QCoreApplication::instance()->installEventFilter(this);
-
     m_fpsTimer.setInterval(1000);
     connect(&m_fpsTimer, &QTimer::timeout, this, &QQmlPreviewHandler::fpsTimerHit);
 }
 
-QQmlPreviewHandler::~QQmlPreviewHandler()
-{
-    clear();
-}
+QQmlPreviewHandler::~QQmlPreviewHandler() = default;
 
-static void closeAllWindows()
-{
-    const QWindowList windows = QGuiApplication::allWindows();
-    for (QWindow *window : windows)
-        window->close();
-}
-
-bool QQmlPreviewHandler::eventFilter(QObject *obj, QEvent *event)
-{
-    if (m_currentWindow && (event->type() == QEvent::Move) &&
-            qobject_cast<QQuickWindow*>(obj) == m_currentWindow) {
-        m_lastPosition.takePosition(m_currentWindow);
-    }
-
-    return QObject::eventFilter(obj, event);
-}
-
-QQuickItem *QQmlPreviewHandler::currentRootItem()
+QQuickItem *QQmlPreviewHandler::currentRootItem() const
 {
     return m_currentRootItem;
+}
+
+void QQmlPreviewHandler::setCurrentRootItem(QQuickItem *item)
+{
+    m_currentRootItem = item;
 }
 
 void QQmlPreviewHandler::addEngine(QQmlEngine *qmlEngine)
@@ -93,97 +44,7 @@ void QQmlPreviewHandler::addEngine(QQmlEngine *qmlEngine)
 
 void QQmlPreviewHandler::removeEngine(QQmlEngine *qmlEngine)
 {
-    const bool found = m_engines.removeOne(qmlEngine);
-    Q_ASSERT(found);
-    for (QObject *obj : m_createdObjects)
-    if (obj && ::qmlEngine(obj) == qmlEngine)
-      delete obj;
-    m_createdObjects.removeAll(nullptr);
-}
-
-void QQmlPreviewHandler::load(const QUrl &url)
-{
-    return m_settings.enableInPlaceUpdates ? loadPatch(url) : loadUrl(url);
-}
-
-void QQmlPreviewHandler::loadPatch(const QUrl &url)
-{
-    Q_UNUSED(url);
-    // TODO: Implement patching of the existing object instead of creating a new one.
-    emit hotReloadFailure(QLatin1String("In-place reload is not yet implemented"));
-}
-
-void QQmlPreviewHandler::loadUrl(const QUrl &url)
-{
-    QSharedPointer<QuitLockDisabler> disabler(new QuitLockDisabler);
-
-    clear();
-    m_component.reset(nullptr);
-    QQuickPixmap::purgeCache();
-
-    const int numEngines = m_engines.size();
-    if (numEngines > 1) {
-        emit error(QString::fromLatin1("%1 QML engines available. We cannot decide which one "
-                                       "should load the component.").arg(numEngines));
-        return;
-    } else if (numEngines == 0) {
-        emit error(QLatin1String("No QML engines found."));
-        return;
-    }
-    m_lastPosition.loadWindowPositionSettings(url);
-
-    QQmlEngine *engine = m_engines.front();
-    engine->clearSingletons();
-    engine->clearComponentCache();
-    m_component.reset(new QQmlComponent(engine, url, this));
-
-    auto onStatusChanged = [disabler, this](QQmlComponent::Status status) {
-        switch (status) {
-        case QQmlComponent::Null:
-        case QQmlComponent::Loading:
-            return true; // try again later
-        case QQmlComponent::Ready:
-            tryCreateObject();
-            break;
-        case QQmlComponent::Error:
-            emit error(m_component->errorString());
-            break;
-        default:
-            Q_UNREACHABLE();
-            break;
-        }
-
-        disconnect(m_component.data(), &QQmlComponent::statusChanged, this, nullptr);
-        return false; // we're done
-    };
-
-    if (onStatusChanged(m_component->status()))
-        connect(m_component.data(), &QQmlComponent::statusChanged, this, onStatusChanged);
-}
-
-void QQmlPreviewHandler::dropCU(const QUrl &url)
-{
-    // Drop any existing compilation units for this URL from the type registry.
-    // There can be multiple, one for each engine.
-    while (const auto cu = QQmlMetaType::obtainCompilationUnit(url))
-        QQmlMetaType::unregisterInternalCompositeType(cu);
-}
-
-void QQmlPreviewHandler::rerun()
-{
-    if (m_component.isNull() || !m_component->isReady())
-        emit error(QLatin1String("Component is not ready."));
-
-    QuitLockDisabler disabler;
-    Q_UNUSED(disabler);
-    clear();
-    tryCreateObject();
-}
-
-void QQmlPreviewHandler::zoom(qreal newFactor)
-{
-    m_zoomFactor = newFactor;
-    QTimer::singleShot(0, this, &QQmlPreviewHandler::doZoom);
+    m_engines.removeOne(qmlEngine);
 }
 
 void QQmlPreviewHandler::setAnimationSpeed(qreal newFactor)
@@ -191,158 +52,75 @@ void QQmlPreviewHandler::setAnimationSpeed(qreal newFactor)
     QUnifiedTimer::instance()->setSpeedModifier(newFactor);
 }
 
-void QQmlPreviewHandler::configure(const Settings &settings)
+void QQmlPreviewHandler::zoomWindow(QQuickWindow *window, qreal zoomFactor,
+                                    QQmlPreviewPosition *position)
 {
-    if (m_settings.enableInPlaceUpdates && !settings.enableInPlaceUpdates) {
-        emit error(QLatin1String("Cannot disable in-place updates once enabled"));
+    if (!window)
         return;
-    }
-    m_settings = settings;
-    emit confirmation(settings);
-}
-
-void QQmlPreviewHandler::doZoom()
-{
-    if (!m_currentWindow)
-        return;
-    if (qFuzzyIsNull(m_zoomFactor)) {
-        emit error(QString::fromLatin1("Zooming with factor: %1 will result in nothing " \
-                                       "so it will be ignored.").arg(m_zoomFactor));
+    if (qFuzzyIsNull(zoomFactor)) {
+        emit error(QString::fromLatin1("Zooming with factor: %1 will result in nothing "
+                                       "so it will be ignored.")
+                           .arg(zoomFactor));
         return;
     }
 
     bool resetZoom = false;
-    if (m_zoomFactor < 0) {
+    if (zoomFactor < 0) {
         resetZoom = true;
-        m_zoomFactor = 1.0;
+        zoomFactor = 1.0;
     }
 
-    m_currentWindow->setGeometry(m_currentWindow->geometry());
+    window->setGeometry(window->geometry());
 
-    m_lastPosition.takePosition(m_currentWindow, QQmlPreviewPosition::InitializePosition);
-    m_currentWindow->destroy();
+    position->takePosition(window, QQmlPreviewPosition::InitializePosition);
+    window->destroy();
 
     for (QScreen *screen : QGuiApplication::screens())
-        QHighDpiScaling::setScreenFactor(screen, m_zoomFactor);
+        QHighDpiScaling::setScreenFactor(screen, zoomFactor);
     if (resetZoom)
         QHighDpiScaling::updateHighDpiScaling();
 
-    m_currentWindow->show();
-    m_lastPosition.initLastSavedWindowPosition(m_currentWindow);
+    window->show();
+    position->initLastSavedWindowPosition(window);
 }
 
-void QQmlPreviewHandler::clear()
+void QQmlPreviewHandler::disconnectWindow(QQuickWindow *window)
 {
-    qDeleteAll(m_createdObjects);
-    m_createdObjects.clear();
-    setCurrentWindow(nullptr);
+    disconnect(window, &QQuickWindow::beforeSynchronizing,
+               this, &QQmlPreviewHandler::beforeSynchronizing);
+    disconnect(window, &QQuickWindow::afterSynchronizing,
+               this, &QQmlPreviewHandler::afterSynchronizing);
+    disconnect(window, &QQuickWindow::beforeRendering,
+               this, &QQmlPreviewHandler::beforeRendering);
+    disconnect(window, &QQuickWindow::frameSwapped,
+               this, &QQmlPreviewHandler::frameSwapped);
+    m_fpsTimer.stop();
+    m_rendering = FrameTime();
+    m_synchronizing = FrameTime();
 }
 
-Qt::WindowFlags fixFlags(Qt::WindowFlags flags)
+void QQmlPreviewHandler::connectWindow(QQuickWindow *window)
 {
-    // If only the type flag is given, some other window flags are automatically assumed. When we
-    // add a flag, we need to make those explicit.
-    switch (flags) {
-    case Qt::Window:
-        return flags | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint
-                | Qt::WindowMinimizeButtonHint | Qt::WindowMaximizeButtonHint;
-    case Qt::Dialog:
-    case Qt::Tool:
-        return flags | Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
-    default:
-        return flags;
-    }
+    connect(window, &QQuickWindow::beforeSynchronizing,
+            this, &QQmlPreviewHandler::beforeSynchronizing, Qt::DirectConnection);
+    connect(window, &QQuickWindow::afterSynchronizing,
+            this, &QQmlPreviewHandler::afterSynchronizing, Qt::DirectConnection);
+    connect(window, &QQuickWindow::beforeRendering,
+            this, &QQmlPreviewHandler::beforeRendering, Qt::DirectConnection);
+    connect(window, &QQuickWindow::frameSwapped,
+            this, &QQmlPreviewHandler::frameSwapped, Qt::DirectConnection);
+    m_fpsTimer.start();
 }
 
-void QQmlPreviewHandler::showObject(QObject *object)
+void QQmlPreviewHandler::connectToService(QQmlPreviewServiceImpl *service)
 {
-    if (QWindow *window = qobject_cast<QWindow *>(object)) {
-        setCurrentWindow(qobject_cast<QQuickWindow *>(window));
-        for (QWindow *otherWindow : QGuiApplication::allWindows()) {
-            if (QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(otherWindow)) {
-                if (quickWindow == m_currentWindow)
-                    continue;
-                quickWindow->setVisible(false);
-                quickWindow->setFlags(quickWindow->flags() & ~Qt::WindowStaysOnTopHint);
-            }
-        }
-    } else if (QQuickItem *item = qobject_cast<QQuickItem *>(object)) {
-        setCurrentWindow(nullptr);
-        for (QWindow *window : QGuiApplication::allWindows()) {
-            if (QQuickWindow *quickWindow = qobject_cast<QQuickWindow *>(window)) {
-                if (m_currentWindow != nullptr) {
-                    emit error(QLatin1String("Multiple QQuickWindows available. We cannot "
-                                             "decide which one to use."));
-                    return;
-                }
-                setCurrentWindow(quickWindow);
-            } else {
-                window->setVisible(false);
-                window->setFlag(Qt::WindowStaysOnTopHint, false);
-            }
-        }
-
-        if (m_currentWindow == nullptr) {
-            setCurrentWindow(new QQuickWindow);
-            m_createdObjects.append(m_currentWindow.data());
-        }
-
-        for (QQuickItem *oldItem : m_currentWindow->contentItem()->childItems())
-            oldItem->setParentItem(m_dummyItem.data());
-
-        // Special case for QQuickView, as that keeps a "root" pointer around, and uses it to
-        // automatically resize the window or the item.
-        if (QQuickView *view = qobject_cast<QQuickView *>(m_currentWindow))
-            QQuickViewPrivate::get(view)->setRootObject(item);
-        else
-            item->setParentItem(m_currentWindow->contentItem());
-
-        m_currentWindow->resize(item->size().toSize());
-        // used by debug translation service to get the states
-        m_currentRootItem = item;
-    } else {
-        emit error(QLatin1String("Created object is neither a QWindow nor a QQuickItem."));
-    }
-
-    if (m_currentWindow) {
-        m_lastPosition.initLastSavedWindowPosition(m_currentWindow);
-        m_currentWindow->setFlags(fixFlags(m_currentWindow->flags()) | Qt::WindowStaysOnTopHint);
-        m_currentWindow->setVisible(true);
-    }
-}
-
-void QQmlPreviewHandler::setCurrentWindow(QQuickWindow *window)
-{
-    if (window == m_currentWindow.data())
-        return;
-
-    if (m_currentWindow) {
-        disconnect(m_currentWindow.data(), &QQuickWindow::beforeSynchronizing,
-                   this, &QQmlPreviewHandler::beforeSynchronizing);
-        disconnect(m_currentWindow.data(), &QQuickWindow::afterSynchronizing,
-                   this, &QQmlPreviewHandler::afterSynchronizing);
-        disconnect(m_currentWindow.data(), &QQuickWindow::beforeRendering,
-                   this, &QQmlPreviewHandler::beforeRendering);
-        disconnect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
-                   this, &QQmlPreviewHandler::frameSwapped);
-        m_fpsTimer.stop();
-        m_rendering = FrameTime();
-        m_synchronizing = FrameTime();
-    }
-
-    m_currentWindow = window;
-
-    if (m_currentWindow) {
-        connect(m_currentWindow.data(), &QQuickWindow::beforeSynchronizing,
-                this, &QQmlPreviewHandler::beforeSynchronizing, Qt::DirectConnection);
-        connect(m_currentWindow.data(), &QQuickWindow::afterSynchronizing,
-                this, &QQmlPreviewHandler::afterSynchronizing, Qt::DirectConnection);
-        connect(m_currentWindow.data(), &QQuickWindow::beforeRendering,
-                this, &QQmlPreviewHandler::beforeRendering, Qt::DirectConnection);
-        connect(m_currentWindow.data(), &QQuickWindow::frameSwapped,
-                this, &QQmlPreviewHandler::frameSwapped, Qt::DirectConnection);
-        m_fpsTimer.start();
-    }
+    connect(service, &QQmlPreviewServiceImpl::load, this, &QQmlPreviewHandler::load);
+    connect(service, &QQmlPreviewServiceImpl::animationSpeed,
+            this, &QQmlPreviewHandler::setAnimationSpeed);
+    connect(this, &QQmlPreviewHandler::error,
+            service, &QQmlPreviewServiceImpl::forwardError, Qt::DirectConnection);
+    connect(this, &QQmlPreviewHandler::fps,
+            service, &QQmlPreviewServiceImpl::forwardFps, Qt::DirectConnection);
 }
 
 void QQmlPreviewHandler::beforeSynchronizing()
@@ -419,14 +197,25 @@ void QQmlPreviewHandler::fpsTimerHit()
     m_synchronizing.reset();
 }
 
-void QQmlPreviewHandler::tryCreateObject()
+QQuickWindow *QQmlPreviewHandler::currentWindow() const
 {
-    if (!m_supportsMultipleWindows)
-        closeAllWindows();
-    QObject *object = m_component->create();
-    m_createdObjects.append(object);
-    showObject(object);
+    return m_currentWindow.data();
 }
+
+void QQmlPreviewHandler::setCurrentWindow(QQuickWindow *window)
+{
+    if (window == m_currentWindow.data())
+        return;
+
+    if (m_currentWindow)
+        disconnectWindow(m_currentWindow.data());
+
+    m_currentWindow = window;
+
+    if (m_currentWindow)
+        connectWindow(m_currentWindow.data());
+}
+
 
 QT_END_NAMESPACE
 

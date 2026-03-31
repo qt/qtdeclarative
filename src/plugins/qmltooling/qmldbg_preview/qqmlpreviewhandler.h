@@ -29,17 +29,13 @@ QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
 class QQuickItem;
-class QQmlPreviewUrlInterceptor;
 class QQuickWindow;
+class QQmlPreviewServiceImpl;
 
 class QQmlPreviewHandler : public QObject
 {
     Q_OBJECT
 public:
-    struct Settings {
-        bool enableInPlaceUpdates = false;
-    };
-
     struct FpsInfo {
         quint16 numSyncs;
         quint16 minSync;
@@ -55,56 +51,26 @@ public:
     explicit QQmlPreviewHandler(QObject *parent = nullptr);
     ~QQmlPreviewHandler();
 
-    QQuickItem *currentRootItem();
+    QQuickItem *currentRootItem() const;
+    void setCurrentRootItem(QQuickItem *item);
 
-    void addEngine(QQmlEngine *engine);
-    void removeEngine(QQmlEngine *engine);
+    QQuickWindow *currentWindow() const;
+    void setCurrentWindow(QQuickWindow *window);
 
-    void loadUrl(const QUrl &url);
-    void loadPatch(const QUrl &url);
-    void load(const QUrl &url);
-    void dropCU(const QUrl &url);
-    void rerun();
-    void zoom(qreal newFactor);
+    virtual void connectToService(QQmlPreviewServiceImpl *service);
+    virtual void addEngine(QQmlEngine *engine);
+    virtual void removeEngine(QQmlEngine *engine);
+
+    virtual void load(const QUrl &url) = 0;
     void setAnimationSpeed(qreal newFactor);
-    void configure(const Settings &settings);
 
-    void clear();
+    QList<QQmlEngine *> engines() const { return m_engines; }
 
 Q_SIGNALS:
     void error(const QString &message);
-    void fps(const FpsInfo &info);
-    void confirmation(const Settings &settings);
-    void hotReloadFailure(const QString &reason);
+    void fps(const QQmlPreviewHandler::FpsInfo &info);
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
-private:
-    void doZoom();
-    void tryCreateObject();
-    void showObject(QObject *object);
-    void setCurrentWindow(QQuickWindow *window);
-
-    void beforeSynchronizing();
-    void afterSynchronizing();
-    void beforeRendering();
-    void frameSwapped();
-
-    void fpsTimerHit();
-
-    QScopedPointer<QQuickItem> m_dummyItem;
-    QList<QQmlEngine *> m_engines;
-    QPointer<QQuickItem> m_currentRootItem;
-    QList<QPointer<QObject>> m_createdObjects;
-    QScopedPointer<QQmlComponent> m_component;
-    QPointer<QQuickWindow> m_currentWindow;
-    qreal m_zoomFactor = 1.0;
-    bool m_supportsMultipleWindows;
-    QQmlPreviewPosition m_lastPosition;
-    Settings m_settings;
-
-    QTimer m_fpsTimer;
-
     struct FrameTime {
         void beginFrame();
         void recordFrame();
@@ -119,6 +85,24 @@ private:
         quint16 number = 0;
     };
 
+    void connectWindow(QQuickWindow *window);
+    void disconnectWindow(QQuickWindow *window);
+    void zoomWindow(QQuickWindow *window, qreal zoomFactor, QQmlPreviewPosition *position);
+
+private:
+    void beforeSynchronizing();
+    void afterSynchronizing();
+    void beforeRendering();
+    void frameSwapped();
+
+    void fpsTimerHit();
+
+    QList<QQmlEngine *> m_engines;
+
+    QPointer<QQuickItem> m_currentRootItem;
+    QPointer<QQuickWindow> m_currentWindow;
+
+    QTimer m_fpsTimer;
     FrameTime m_rendering;
     FrameTime m_synchronizing;
 };

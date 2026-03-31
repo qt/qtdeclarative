@@ -14,12 +14,10 @@ if(NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
 endif()
 
 # Collect test data
-list(APPEND test_data "data/window.qml")
-list(APPEND test_data "data/qtquick2.qml")
-list(APPEND test_data "data/window2.qml")
-list(APPEND test_data "data/window1.qml")
-list(APPEND test_data "data/broken.qml")
-list(APPEND test_data "data/zoom.qml")
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlpreview
     SOURCES
