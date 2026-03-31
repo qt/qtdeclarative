@@ -6,35 +6,222 @@
 \title Tying it all together with CMake
 \brief Building QML modules with CMake
 
-When creating QML modules, CMake provides the infrastructure to properly register
-QML types, generate necessary metadata, and ensure your module is correctly packaged
-and deployable. This page outlines the recommended workflow.
+The \l{qt_add_qml_module} CMake command is the recommended way to define QML
+modules. It automates type registration, resource embedding, plugin creation,
+and tooling integration. This page explains the concepts behind
+\c{qt_add_qml_module} and walks through common usage patterns.
 
-\section1 Using qt_add_qml_module
+For the full reference of all options, see \l{qt_add_qml_module}.
 
-The \l{qt_add_qml_module} command is the standard and recommended way to create QML modules.
-It handles all the complex details of QML module creation:
+\section1 Key Concepts
 
-\code
-qt_add_qml_module(my_qml_module
-    URI MyModule
+Before looking at examples, it helps to understand what \c{qt_add_qml_module}
+actually creates:
+
+\list
+\li A \e{backing target} — a library (or executable) containing the module's
+    C++ code, compiled QML files, and resources. This is the first argument to
+    \c{qt_add_qml_module} and is the target you link against. It can either
+    be an existing target (created earlier with \c{qt_add_executable} or
+    \c{qt_add_library}) or \c{qt_add_qml_module} will create it for you.
+\li A \e{plugin target} — a small library that allows the QML engine to load
+    the module dynamically at run time. It is created automatically and is
+    separate from the backing target. When an executable links directly to the
+    backing target, the plugin is not loaded at run time. The plugin can be
+    omitted entirely using \l{qt_add_qml_module}{NO_PLUGIN}.
+\li A \e{qmldir file} — a module metadata file that tells the QML engine what
+    types the module provides and where to find them. It is generated
+    automatically.
+\li A \e{typeinfo file} (\c{.qmltypes}) — machine-readable type information
+    used by QML tooling (\l{qmlcachegen}, \l{qmllint}, \l{\QMLLS}{qmlls},
+    Qt Creator). Also generated automatically.
+\endlist
+
+\section1 Directory Structure
+
+The source directory structure should mirror the module's URI. The URI is
+converted to a path by replacing dots with forward slashes. For example, a
+module with URI \c{MyCompany.Controls} should live in:
+
+\badcode
+src/MyCompany/Controls/CMakeLists.txt
+src/MyCompany/Controls/Button.qml
+src/MyCompany/Controls/mywidget.cpp
+src/MyCompany/Controls/mywidget.h
+\endcode
+
+This convention allows the QML engine and tooling to find modules without
+additional configuration. If your directory structure doesn't match the URI,
+you'll need to set \l{OUTPUT_DIRECTORY} so that the build output lands in a
+path matching the URI, and \l{IMPORT_PATH} so that the QML engine and tooling
+can locate the module.
+
+\section1 Common Patterns
+
+\section2 QML-only Application
+
+The simplest case: an executable with only QML files and no C++ types.
+
+\badcode
+cmake_minimum_required(VERSION 3.16)
+project(myapp LANGUAGES CXX)
+
+find_package(Qt6 REQUIRED COMPONENTS Quick)
+qt_standard_project_setup(REQUIRES 6.8)
+
+qt_add_executable(myapp)
+qt_add_qml_module(myapp
+    URI MyApp
     QML_FILES
-        MyType.qml
-        AnotherType.qml
+        Main.qml
+        Button.qml
+    RESOURCES
+        images/logo.png
+)
+
+target_link_libraries(myapp PRIVATE Qt6::Quick)
+\endcode
+
+Because the backing target is an executable, no plugin is created. The QML
+files are compiled and embedded as resources. The \c{RESOURCES} keyword adds
+non-QML files (images, fonts, etc.) to the same resource hierarchy.
+
+\section2 Application with C++ Types
+
+An application that exposes C++ types to QML:
+
+\badcode
+qt_add_executable(myapp)
+qt_add_qml_module(myapp
+    URI MyApp
+    QML_FILES
+        Main.qml
     SOURCES
-        mytype.cpp mytype.h
+        backend.cpp backend.h
 )
 \endcode
 
-This single command:
-\list
-\li Creates the module target
-\li Registers QML types from C++ and QML files
-\li Generates a qmldir file
-\li Handles type registration
-\li Sets up proper import paths
-\li Enables QML tooling support (\l{qmllint}, \l{\QMLLS}{qmlls}, etc.)
-\endlist
+The C++ types in \c{backend.h} must be annotated with \l{QML_ELEMENT} (or
+similar macros like \l{QML_NAMED_ELEMENT}) and must use the \l{Q_OBJECT}
+or \l{Q_GADGET} macro. Type registration happens automatically via
+\c{AUTOMOC}. See \l{Registering C++ Types with the QML Type System} for
+a full overview of the available registration macros.
+
+\section2 Reusable Library Module
+
+A QML module packaged as a library that other projects or modules can import:
+
+\badcode
+# In src/MyCompany/Controls/CMakeLists.txt
+qt_add_qml_module(mycontrols
+    URI MyCompany.Controls
+    QML_FILES
+        Button.qml
+        Slider.qml
+    SOURCES
+        theme.cpp theme.h
+)
+\endcode
+
+This creates two targets: \c{mycontrols} (the backing library) and
+\c{mycontrolsplugin} (the plugin). Other modules import it with
+\c{import MyCompany.Controls} in QML. Applications that link to
+\c{mycontrols} directly don't need to load the plugin at run time.
+
+\section2 Application Using a Library Module
+
+Using the \c{mycontrols} module from the \l{Reusable Library Module} example
+above:
+
+\badcode
+# In the application's CMakeLists.txt
+qt_add_executable(myapp)
+qt_add_qml_module(myapp
+    URI MyApp
+    QML_FILES Main.qml
+    DEPENDENCIES TARGET mycontrols
+)
+
+target_link_libraries(myapp PRIVATE mycontrols)
+\endcode
+
+The \l{qt_add_qml_module}{DEPENDENCIES} line ensures that QML tooling
+(\l{qmlcachegen}, \l{qmllint}, \l{\QMLLS}{qmlls}) can find the types provided by
+\c{MyCompany.Controls}.
+
+\badcode
+// In Main.qml
+import MyCompany.Controls
+
+Button { text: "Click me" }
+\endcode
+
+\section2 Module with Singletons
+
+QML files providing singleton types need a source file property set
+\e{before} the \c{qt_add_qml_module} call:
+
+\badcode
+set_source_files_properties(Theme.qml PROPERTIES QT_QML_SINGLETON_TYPE TRUE)
+
+qt_add_qml_module(mymodule
+    URI MyModule
+    QML_FILES
+        Theme.qml
+        Main.qml
+)
+\endcode
+
+The QML file must also contain \c{pragma Singleton}. Both the CMake property
+and the QML pragma are required.
+
+\section2 Module with Custom Plugin
+
+When you need to perform custom initialization (for example, registering an
+image provider), you can provide your own \l{QQmlEngineExtensionPlugin}
+subclass.
+
+\badcode
+# In CMakeLists.txt
+qt_add_qml_module(mymodule
+    URI MyModule
+    NO_GENERATE_PLUGIN_SOURCE
+    NO_PLUGIN_OPTIONAL
+    CLASS_NAME MyModulePlugin
+    QML_FILES
+        Main.qml
+    SOURCES
+        myimageprovider.cpp myimageprovider.h
+)
+
+# Add the custom plugin source to the plugin target
+target_sources(mymoduleplugin PRIVATE plugin.cpp)
+\endcode
+
+\badcode
+// In plugin.cpp
+#include <QtQml/QQmlEngineExtensionPlugin>
+#include "myimageprovider.h"
+
+class MyModulePlugin : public QQmlEngineExtensionPlugin
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
+public:
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
+    {
+        engine->addImageProvider("myprovider", new MyImageProvider);
+    }
+};
+
+#include "plugin.moc"
+\endcode
+
+\l{qt_add_qml_module}{NO_GENERATE_PLUGIN_SOURCE} tells the build system not to
+generate the default plugin source. \l{qt_add_qml_module}{CLASS_NAME} must
+match the class name in your implementation.
+\l{qt_add_qml_module}{NO_PLUGIN_OPTIONAL} ensures the plugin is always loaded,
+since it contains initialization logic that would be skipped otherwise.
 
 \section1 Adding Further QML Files
 
@@ -48,12 +235,13 @@ qt_target_qml_sources(my_qml_module
 )
 \endcode
 
-This can be done based on platform, configuration or other factors.
+This is useful for conditionally including files based on platform or
+configuration.
 
 \section1 Detailed CMake Reference
 
 For complete details on all CMake commands, properties, variables, and policies,
 see \l{CMake Integration for QML}.
 
-\sa {QML Modules}, {qt_add_qml_module}
+\sa {QML Modules}, {qt_add_qml_module}, {Writing QML Modules}
 */
