@@ -767,7 +767,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("IsNotAnEntryOfEnum")
             << QStringLiteral("IsNotAnEntryOfEnum.qml")
-            << Result{ { { "Member \"Mode\" not found on type \"Item\""_L1, 12, 29 },
+            << Result{ { { "Member \"Mode\" not found on type \"IsNotAnEntryOfEnum\""_L1, 12, 29 },
                          { "\"Hour\" is not an entry of enum \"Mode\"."_L1, 13, 62 } },
                        { },
                        { { "Did you mean \"mode\"?"_L1, "mode"_L1, 12, 29 },
@@ -775,7 +775,7 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
-            << Result{ { { "Member \"foo\" not found on type \"QtObject\""_L1, 6, 31 } } }
+            << Result{ { { "Member \"foo\" not found on type \"memberNotFound\""_L1, 6, 31 } } }
             << defaultOptions;
     QTest::newRow("MissingDefaultProperty")
             << QStringLiteral("defaultPropertyWithoutKeyword.qml")
@@ -961,8 +961,8 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badGeneralizedGroup2.qml")
             << Result{ { { "unknown grouped property scope aself"_L1 } } } << defaultOptions;
     QTest::newRow("badParent") << QStringLiteral("badParent.qml")
-                               << Result{ { { "Member \"rrr\" not found on type \"Item\""_L1, 5,
-                                              34 } } }
+                               << Result{ { { "Member \"rrr\" not found on type \"badParent\""_L1,
+                                              5, 34 } } }
                                << defaultOptions;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
@@ -1152,8 +1152,8 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("inheritanceCycle")
             << QStringLiteral("Cycle1.qml")
-            << Result{ { { "Cycle1 is part of an inheritance cycle: Cycle2 -> Cycle3 -> "
-                           "Cycle1 -> Cycle2"_L1,
+            << Result{ { { "Cycle1 is part of an inheritance cycle: Cycle1 -> Cycle2 -> "
+                           "Cycle3 -> Cycle1"_L1,
                            2, 1 } } }
             << defaultOptions;
     QTest::newRow("inlineComponentNoComponent")
@@ -1310,8 +1310,8 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)"_L1,
             << defaultOptions;
     QTest::newRow("notQmlRootMethods")
             << QStringLiteral("notQmlRootMethods.qml")
-            << Result{ { { "Member \"deleteLater\" not found on type \"QtObject\""_L1 },
-                         { "Member \"destroyed\" not found on type \"QtObject\""_L1 } } }
+            << Result{ { { "Member \"deleteLater\" not found on type \"notQmlRootMethods\""_L1 },
+                         { "Member \"destroyed\" not found on type \"notQmlRootMethods\""_L1 } } }
             << defaultOptions;
     QTest::newRow("nullBinding")
             << QStringLiteral("nullBinding.qml")
@@ -2887,8 +2887,7 @@ void TestQmllint::compilerWarnings_data()
     QTest::newRow("returnTypeAnnotation-component")
             << QStringLiteral("returnTypeAnnotation_component.qml")
             << Result{ { { "Could not compile function comp: function without return type "
-                           "annotation returns (component in" },
-                         { "returnTypeAnnotation_component.qml)::c with type Comp. "
+                           "annotation returns returnTypeAnnotation_component::c with type Comp. "
                            "This may prevent proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-enum")
@@ -2900,15 +2899,14 @@ void TestQmllint::compilerWarnings_data()
     QTest::newRow("returnTypeAnnotation-method")
             << QStringLiteral("returnTypeAnnotation_method.qml")
             << Result{ { { "Could not compile function method: function without return type "
-                           "annotation returns (component in " }, // Don't check the build folder path
-                         { "returnTypeAnnotation_method.qml)::f(...). This may "
+                           "annotation returns returnTypeAnnotation_method::f(...). This may "
                            "prevent proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-property")
             << QStringLiteral("returnTypeAnnotation_property.qml")
             << Result{ { { "Could not compile function prop: function without return type "
-                           "annotation returns (component in " }, // Don't check the build folder path
-                         { "returnTypeAnnotation_property.qml)::i with type int. This may prevent "
+                           "annotation returns returnTypeAnnotation_property::i with type int. "
+                           "This may prevent "
                            "proper compilation to Cpp." } } }
             << true;
     QTest::newRow("returnTypeAnnotation-type")

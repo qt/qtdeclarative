@@ -30,7 +30,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
     using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
 
 public:
-    QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
+    QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory,
                  const QStringList &qmldirFiles = QStringList());
 

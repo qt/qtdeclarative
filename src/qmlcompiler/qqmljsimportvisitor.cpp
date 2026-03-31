@@ -41,8 +41,6 @@ static const QLatin1StringView wasNotFound
 static const QLatin1StringView didYouAddAllImports
         = "Did you add all imports and dependencies?"_L1;
 
-Q_STATIC_LOGGING_CATEGORY(lcImportVisitor, "qt.qml.importVisitor", QtWarningMsg);
-
 /*!
     \internal
     Returns if assigning \a assignedType to \a property would require an
@@ -158,48 +156,26 @@ QString buildName(const Node *node)
     return result;
 }
 
-/*!
-   \internal
-   Make sure that the importer does not recreate the target scope when trying to import it via
-   implicit directory import.
-*/
-void QQmlJSImportVisitor::registerTargetIntoImporter(const QQmlJSScope::Ptr &target)
-{
-    target->setScopeType(QQmlSA::ScopeType::QMLScope);
-    target->setBaseTypeName(QQmlJSImporter::s_inProcessMarker);
-    target->setFilePath(m_logger->filePath());
-    target->setIsComposite(true);
-    if (!m_importer->registerScope(target)) {
-        qCDebug(lcImportVisitor)
-                << "Couldn't register scope into importer: scope will be created multiple times.";
-    }
-}
-
-static void prepareTargetForVisit(const QQmlJSScope::Ptr &target)
-{
-    // rootScopeIsValid() assumes target to be a scope that only contains an internal name and a
-    // moduleName
-    target->resetForReparse();
-}
-
-QQmlJSImportVisitor::QQmlJSImportVisitor(
-        const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
-        const QString &implicitImportDirectory, const QStringList &qmldirFiles)
+QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+                                         const QString &implicitImportDirectory,
+                                         const QStringList &qmldirFiles)
     : m_implicitImportDirectory(implicitImportDirectory),
       m_qmldirFiles(qmldirFiles),
-      m_exportedRootScope(target),
+      m_exportedRootScope(QQmlJSScope::resetForReparse(importer->importFile(logger->filePath()))),
       m_importer(importer),
       m_logger(logger),
-      m_rootScopeImports(
-              QQmlJS::ContextualTypes(
-                      QQmlJS::ContextualTypes::QML, {}, {},
-                      importer->builtinInternalNames().contextualTypes().arrayType()),
-              {})
+      m_rootScopeImports(QQmlJS::ContextualTypes(
+                                 QQmlJS::ContextualTypes::QML, { }, { },
+                                 importer->builtinInternalNames().contextualTypes().arrayType()),
+                         { })
 {
     Q_ASSERT(logger); // must be valid
+    Q_ASSERT(importer); // must be valid
 
-    prepareTargetForVisit(target);
-    registerTargetIntoImporter(target);
+    m_exportedRootScope->setScopeType(QQmlSA::ScopeType::QMLScope);
+    m_exportedRootScope->setBaseTypeName(QQmlJSImporter::s_inProcessMarker);
+    m_exportedRootScope->setFilePath(m_logger->filePath());
+    m_exportedRootScope->setIsComposite(true);
 
     /* FIXME:
        we create a "local global object" – this prevents any modification of the actual global object;
@@ -1567,7 +1543,7 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
             inheritenceCycle.append(scopes.first()->baseTypeName());
 
             const QString message = QStringLiteral("%1 is part of an inheritance cycle: %2")
-                                            .arg(scope->internalName(), inheritenceCycle);
+                                            .arg(originalScope->baseTypeName(), inheritenceCycle);
             m_logger->log(message, qmlInheritanceCycle, scope->sourceLocation());
             originalScope->clearBaseType();
             originalScope->setBaseTypeError(message);

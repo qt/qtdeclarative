@@ -71,10 +71,9 @@ static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
     return false;
 }
 
-QmltcVisitor::QmltcVisitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer,
-                           QQmlJSLogger *logger, const QString &implicitImportDirectory,
-                           const QStringList &qmldirFiles)
-    : QQmlJSImportVisitor(target, importer, logger, implicitImportDirectory, qmldirFiles)
+QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+                           const QString &implicitImportDirectory, const QStringList &qmldirFiles)
+    : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmldirFiles)
 {
     m_qmlTypeNames.append(QFileInfo(logger->filePath()).baseName()); // put document root
 }

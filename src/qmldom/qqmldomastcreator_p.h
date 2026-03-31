@@ -622,8 +622,8 @@ class QQmlDomAstCreator final : public QQmlDomAstCreatorBase
 class QQmlDomAstCreatorWithQQmlJSScope : public AST::Visitor
 {
 public:
-    QQmlDomAstCreatorWithQQmlJSScope(const QQmlJSScope::Ptr &current, MutableDomItem &qmlFile,
-                                     QQmlJSLogger *logger, QQmlJSImporter *importer);
+    QQmlDomAstCreatorWithQQmlJSScope(MutableDomItem &qmlFile, QQmlJSLogger *logger,
+                                     QQmlJSImporter *importer);
 
 #define X(name)                       \
     bool visit(AST::name *) override; \
@@ -747,7 +747,6 @@ private:
         m_scopeCreator.endVisit(t);
     }
 
-    QQmlJSScope::Ptr m_root;
     QQmlJSLogger *m_logger = nullptr;
     QQmlJSImporter *m_importer = nullptr;
     QString m_implicitImportDirectory;

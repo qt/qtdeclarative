@@ -155,18 +155,12 @@ public:
 
     static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
+    static QQmlJSScope::Ptr resetForReparse(QQmlJSScope::Ptr &&scope);
 
     static void cloneInto(QQmlJSScope::Ptr &origin,
                           const QQmlJSScope::Ptr &target)
     {
         *target = std::move(*clone(origin));
-    }
-
-    //! \internal This should probably restricted, only needed in prepareTargetForVisit
-    void resetForReparse() {
-        const QString moduleName = this->moduleName();
-        *this = QQmlJSScope { this->internalName() };
-        setOwnModuleName(moduleName);
     }
 
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);

@@ -264,8 +264,8 @@ int main(int argc, char **argv)
     QQmlJSImporter importer { importPaths, &mapper };
     importer.setMetaDataMapper(&metaDataMapper);
     auto qmltcVisitor = [](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
-                                 const QQmlJSImporter::ImportVisitorPrerequisites &p) {
-        QmltcVisitor v(p.m_target, self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles);
+                           const QQmlJSImporter::ImportVisitorPrerequisites &p) {
+        QmltcVisitor v(self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles);
         QQmlJS::AST::Node::accept(rootNode, &v);
     };
     importer.setImportVisitor(qmltcVisitor);
@@ -275,11 +275,14 @@ int main(int argc, char **argv)
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    auto currentScope = QQmlJSScope::create();
-    if (parser.isSet(moduleOption))
-        currentScope->setOwnModuleName(parser.value(moduleOption));
-
-    QmltcVisitor visitor(currentScope, &importer, &logger,
+    auto currentScope = importer.importFile(url);
+    if (parser.isSet(moduleOption)) {
+        if (auto factory = currentScope.factory())
+            factory->setModuleName(parser.value(moduleOption));
+        else
+            currentScope->setOwnModuleName(parser.value(moduleOption));
+    }
+    QmltcVisitor visitor(&importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     visitor.setMode(QmltcVisitor::Compile);
     QmltcTypeResolver typeResolver { &importer };

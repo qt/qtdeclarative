@@ -176,7 +176,7 @@ QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFil
       m_importVisitor([](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
                          const ImportVisitorPrerequisites &p) {
           auto visitor = std::unique_ptr<QQmlJS::AST::BaseVisitor>(new QQmlJSImportVisitor(
-                  p.m_target, self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles));
+                  self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles));
           QQmlJS::AST::Node::accept(rootNode, visitor.get());
       })
 {
@@ -975,25 +975,6 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2QQmlJSScope(const QString &filePath)
             { QQmlJSScope::create(),
               QSharedPointer<QDeferredFactory<QQmlJSScope>>(new QDeferredFactory<QQmlJSScope>(
                       this, {}, sourceFolderFile, QString(), false)) });
-}
-
-/*!
-\internal
-Add scopes manually created and QQmlJSImportVisited to QQmlJSImporter.
-This allows theses scopes to not get loaded twice during linting, for example.
-
-Returns false if the importer contains a scope different than \a scope for the same
-QQmlJSScope::filePath.
-*/
-bool QQmlJSImporter::registerScope(const QQmlJSScope::Ptr &scope)
-{
-    Q_ASSERT(!scope.factory());
-
-    QQmlJSScope::Ptr &existing = m_importedFiles[scope->filePath()];
-    if (existing)
-        return existing == scope;
-    existing = scope;
-    return true;
 }
 
 QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)

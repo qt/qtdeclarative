@@ -73,9 +73,8 @@ class tst_qqmljsscope : public QQmlDataTest
         logger.setCategoryIgnored(qmlShadow, true);
         logger.setCategoryIgnored(qmlPropertyOverride, true);
         logger.setSilent(expectErrorsOrWarnings);
-        QQmlJSScope::Ptr target = QQmlJSScope::create();
-        target->setOwnModuleName(u"HelloModule"_s);
-        QQmlJSImportVisitor visitor(target, &m_importer, &logger, dataDirectory());
+        QQmlJSScope::Ptr target = m_importer.importFile(logger.filePath());
+        QQmlJSImportVisitor visitor(&m_importer, &logger, QDir::cleanPath(resolvedFile + "/.."_L1));
         QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document->program);
         if (!expectErrorsOrWarnings) {
@@ -791,7 +790,7 @@ void tst_qqmljsscope::hasOwnEnumerationKeys()
 void tst_qqmljsscope::ownModuleName()
 {
     const QString moduleName = u"HelloModule"_s;
-    QQmlJSScope::ConstPtr root = run(u"ownModuleName.qml"_s);
+    QQmlJSScope::ConstPtr root = run(u"HelloModule/ownModuleName.qml"_s);
     QVERIFY(root);
     QCOMPARE(root->moduleName(), moduleName);
     QCOMPARE(root->ownModuleName(), moduleName);

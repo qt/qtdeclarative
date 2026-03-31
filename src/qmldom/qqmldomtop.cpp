@@ -2293,9 +2293,8 @@ void DomEnvironment::populateFromQmlFile(MutableDomItem &&qmlFile)
 
         if (m_domCreationOption == DomCreationOption::Extended) {
             SemanticAnalysis analysis = semanticAnalysis();
-            auto scope = analysis.m_importer->importFile(qmlFile.canonicalFilePath());
-            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(
-                    scope, qmlFile, logger.get(), analysis.m_importer.get());
+            auto v = std::make_unique<QQmlDomAstCreatorWithQQmlJSScope>(qmlFile, logger.get(),
+                                                                        analysis.m_importer.get());
             v->enableLoadFileLazily(true);
             v->enableScriptExpressions(true);
 
