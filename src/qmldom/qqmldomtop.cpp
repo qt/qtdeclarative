@@ -1969,9 +1969,8 @@ void DomEnvironment::addGlobalScope(const std::shared_ptr<GlobalScope> &scope, A
     addExternalItem(scope, scope->name(), options);
 }
 
-QList<QQmlJS::DiagnosticMessage>
-DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QString &filePath,
-                                       const QSharedPointer<QQmlJSScope> &scopeToPopulate)
+void DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QString &filePath,
+                                            const QSharedPointer<QQmlJSScope> &scopeToPopulate)
 {
     Q_UNUSED(importer);
     Q_UNUSED(scopeToPopulate);
@@ -1989,7 +1988,7 @@ DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QString &
         qCDebug(domLog) << "Import visitor tried to lazily load file \"" << filePath
                         << "\", but that file was not found in the DomEnvironment. Was this "
                            "file not discovered by the Dom's dependency loading mechanism?";
-        return { };
+        return;
     }
     const DomItem qmlFile = it.value()->currentItem(DomItem(envPtr));
 
@@ -1999,7 +1998,6 @@ DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QString &
     envPtr->setLoadPaths(m_importPaths);
     envPtr->populateFromQmlFile(MutableDomItem(qmlFile));
     envPtr->setLoadPaths(oldImportPaths);
-    return {};
 }
 
 

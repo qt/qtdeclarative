@@ -16,10 +16,12 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
+namespace QQmlJS {
+void defaultTypeReader(QQmlJSImporter *importer, const QString &filePath,
+                       const QSharedPointer<QQmlJSScope> &scope)
 {
     using namespace QQmlJS::AST;
-    const QFileInfo info { m_file };
+    const QFileInfo info{ filePath };
     const QString baseName = info.baseName();
     scope->setInternalName(baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3)
                                                                     : baseName);
@@ -31,10 +33,9 @@ bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
     const bool isESModule = lowerSuffix == QLatin1String("mjs");
     const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
 
-
-    QFile file(m_file);
+    QFile file(filePath);
     if (!file.open(QFile::ReadOnly))
-        return false;
+        return;
 
     QString code = QString::fromUtf8(file.readAll());
     file.close();
@@ -42,25 +43,23 @@ bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
     lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
     QQmlJS::Parser parser(&engine);
 
-    const bool success = isJavaScript ? (isESModule ? parser.parseModule()
-                                                    : parser.parseProgram())
-                                      : parser.parse();
+    isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram()) : parser.parse();
 
     QQmlJS::AST::Node *rootNode = parser.rootNode();
 
     QQmlJSLogger logger;
-    logger.setFilePath(m_file);
+    logger.setFilePath(filePath);
     logger.setCode(code);
     logger.setSilent(true);
     logger.setIsDisabled(true);
 
-    m_importer->runImportVisitor(rootNode,
-                                 { scope,
-                                   &logger,
-                                   QQmlJSImportVisitor::implicitImportDirectory(
-                                           m_file, m_importer->resourceFileMapper()),
-                                   {} });
-    return success && rootNode;
+    importer->runImportVisitor(rootNode,
+                               { scope,
+                                 &logger,
+                                 QQmlJSImportVisitor::implicitImportDirectory(
+                                         filePath, importer->resourceFileMapper()),
+                                 { } });
 }
+} // namespace QQmlJS
 
 QT_END_NAMESPACE

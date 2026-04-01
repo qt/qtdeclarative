@@ -218,8 +218,6 @@ public:
     QQmlJSImporterFlags flags() const { return m_flags; }
 
 private:
-    friend class QDeferredFactory<QQmlJSScope>;
-
     struct AvailableTypes
     {
         AvailableTypes(QQmlJS::ContextualTypes builtins)

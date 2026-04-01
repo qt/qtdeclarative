@@ -733,9 +733,8 @@ private:
         std::weak_ptr<DomEnvironment> m_env;
         QStringList m_importPaths;
 
-        QList<QQmlJS::DiagnosticMessage>
-        operator()(QQmlJSImporter *importer, const QString &filePath,
-                   const QSharedPointer<QQmlJSScope> &scopeToPopulate);
+        void operator()(QQmlJSImporter *importer, const QString &filePath,
+                        const QSharedPointer<QQmlJSScope> &scopeToPopulate);
     };
 
 public:

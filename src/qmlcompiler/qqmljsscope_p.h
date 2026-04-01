@@ -20,6 +20,7 @@
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
 #include "qqmljsannotation_p.h"
+#include "qqmljstypereader_p.h"
 #include "qqmlsaconstants.h"
 #include "qqmlsa_p.h"
 
@@ -645,12 +646,9 @@ template<>
 class Q_QMLCOMPILER_EXPORT QDeferredFactory<QQmlJSScope>
 {
 public:
-    using TypeReader = std::function<QList<QQmlJS::DiagnosticMessage>(
-            QQmlJSImporter *importer, const QString &filePath,
-            const QSharedPointer<QQmlJSScope> &scopeToPopulate)>;
     QDeferredFactory() = default;
 
-    QDeferredFactory(QQmlJSImporter *importer, const TypeReader &typeReader,
+    QDeferredFactory(QQmlJSImporter *importer, const QQmlJS::TypeReader &typeReader,
                      const QString &filePath, const QString &moduleName, bool isSingleton);
 
     bool isValid() const
@@ -686,7 +684,7 @@ private:
     void populate(const QSharedPointer<QQmlJSScope> &scope) const;
 
     QQmlJSImporter *m_importer = nullptr;
-    TypeReader m_typeReader;
+    QQmlJS::TypeReader m_typeReader;
     QString m_filePath;
     QString m_moduleName;
     bool m_isSingleton = false;
@@ -711,10 +709,8 @@ constexpr inline bool isFunctionScope(ScopeType type)
 }
 
 template <typename T>
-static void resetFactory(QDeferredSharedPointer<T> &pointer,
-                        QQmlJSImporter *importer,
-                        const typename QDeferredFactory<std::remove_const_t<T>>::TypeReader &typeReader,
-                        const QString &filePath)
+static void resetFactory(QDeferredSharedPointer<T> &pointer, QQmlJSImporter *importer,
+                         const QQmlJS::TypeReader &typeReader, const QString &filePath)
 {
     const auto &factory = pointer.factory();
     QDeferredFactory<std::remove_const_t<T>> newFactory(importer,

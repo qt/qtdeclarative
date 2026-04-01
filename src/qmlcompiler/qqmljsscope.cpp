@@ -1191,16 +1191,12 @@ bool QQmlJSScope::Export::isValid() const
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }
 
-QDeferredFactory<QQmlJSScope>::QDeferredFactory(QQmlJSImporter *importer, const TypeReader &typeReader,
-                                                const QString &filePath, const QString &moduleName, bool isSingleton)
+QDeferredFactory<QQmlJSScope>::QDeferredFactory(QQmlJSImporter *importer,
+                                                const QQmlJS::TypeReader &typeReader,
+                                                const QString &filePath, const QString &moduleName,
+                                                bool isSingleton)
     : m_importer(importer),
-      m_typeReader(typeReader ? typeReader
-                              : [](QQmlJSImporter *importer, const QString &filePath,
-                                   const QSharedPointer<QQmlJSScope> &scopeToPopulate) {
-                                    QQmlJSTypeReader defaultTypeReader(importer, filePath);
-                                    defaultTypeReader(scopeToPopulate);
-                                    return defaultTypeReader.errors();
-                                }),
+      m_typeReader(typeReader ? typeReader : QQmlJS::TypeReader{ QQmlJS::defaultTypeReader }),
       m_filePath(filePath),
       m_moduleName(moduleName),
       m_isSingleton(isSingleton)
@@ -1212,8 +1208,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     scope->setOwnModuleName(m_moduleName);
     scope->setIsSingleton(m_isSingleton);
 
-    QList<QQmlJS::DiagnosticMessage> errors = m_typeReader(m_importer, m_filePath, scope);
-    m_importer->m_globalWarnings.append(errors);
+    m_typeReader(m_importer, m_filePath, scope);
 }
 
 /*!
