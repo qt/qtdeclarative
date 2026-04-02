@@ -12,7 +12,8 @@ class tst_qmlls_code_action : public QObject
 {
     Q_OBJECT
 private slots:
-    void tst();
+    void wrapComponentInLoader_data();
+    void wrapComponentInLoader();
 };
 
 QT_END_NAMESPACE

@@ -129,6 +129,9 @@ struct QQmlBaseModule : public QLanguageServerModule
     std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
     itemsForRequest(const RequestPointer &request);
 
+    std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+    itemsForRequest(const RequestPointer &request, const QLspSpecification::Position &position);
+
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
 
@@ -228,9 +231,19 @@ void QQmlBaseModule<RequestType>::updatedSnapshot(const QByteArray &url)
     }
 }
 
-template<typename RequestType>
+// TODO use q23::expected instead of a variant
+template <typename RequestType>
 std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
 QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
+{
+    return itemsForRequest(request, request->m_parameters.position);
+}
+
+// TODO use q23::expected instead of a variant
+template <typename RequestType>
+std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request,
+                                             const QLspSpecification::Position &position)
 {
 
     QmlLsp::OpenDocument doc = m_codeModelManager->openDocumentByUrl(
@@ -253,8 +266,7 @@ QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
         };
     }
 
-    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, request->m_parameters.position.line,
-                                                         request->m_parameters.position.character);
+    auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, position.line, position.character);
 
     if (itemsFound.isEmpty()) {
         return QQmlLSUtils::ErrorMessage{

@@ -6,14 +6,45 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_STATIC_LOGGING_CATEGORY(lsCodeActionSupport, "qt.languageserver.codeactionsupport")
+
+struct Tr
+{
+    Q_DECLARE_TR_FUNCTIONS(QQmlCodeActions)
+};
+
 using namespace Qt::StringLiterals;
 using namespace QLspSpecification;
+using namespace QQmlJS::Dom;
 
-static QList<std::variant<Command, CodeAction>> provideCodeActions(const CodeActionParams &params)
+using CodeActions = QList<std::variant<Command, CodeAction>>;
+using TextEdits = decltype(std::declval<TextDocumentEdit>().edits);
+
+static QList<std::pair<QString, QQmlJS::SourceLocation>>
+collectNestedIds(const QQmlLSUtils::ItemLocation &item)
 {
-    QList<std::variant<Command, CodeAction>> responseData;
+    const auto filePtr =
+            item.domItem.goToFile(item.domItem.canonicalFilePath()).ownerAs<QQmlJS::Dom::QmlFile>();
+    const QString code = filePtr ? filePtr->code() : QString();
 
-    for (const Diagnostic &diagnostic : params.context.diagnostics) {
+    QList<std::pair<QString, QQmlJS::SourceLocation>> innerIds;
+    FileLocations::visitTree(
+            item.fileLocation,
+            [&code, &innerIds](const auto &, const FileLocations::Tree &t) -> bool {
+                const auto idNameLoc = t->info().regions[FileLocationRegion::IdNameRegion];
+                if (idNameLoc.isValid()) {
+                    innerIds.append({ code.mid(idNameLoc.begin(), idNameLoc.length), idNameLoc });
+                }
+                return true;
+            });
+    return innerIds;
+}
+
+static CodeActions quickfixes(const QList<Diagnostic> &diagnostics)
+{
+    CodeActions codeActions;
+
+    for (const Diagnostic &diagnostic : diagnostics) {
         if (!diagnostic.data.has_value())
             continue;
 
@@ -55,9 +86,159 @@ static QList<std::variant<Command, CodeAction>> provideCodeActions(const CodeAct
         action.edit = edit;
         action.title = message.toUtf8();
 
-        responseData.append(action);
+        codeActions.append(action);
     }
-    return responseData;
+    return codeActions;
+}
+
+static TextEdit todoComment(const Position &pos, const QString &loaderId, const QString &maybeId,
+                            const QList<std::pair<QString, QQmlJS::SourceLocation>> &nestedIds)
+{
+    QString comment = Tr::tr("// TODO: Move position bindings from the component to the Loader.\n"
+                             "//       Check all uses of 'parent' inside the root element of the "
+                             "component.\n");
+
+    if (!maybeId.isEmpty()) {
+        comment += Tr::tr("//       Rename all outer uses of the id \"%1\" to \"%2.item\".\n")
+                           .arg(maybeId, loaderId);
+    }
+    for (const auto &id : nestedIds) {
+        comment += Tr::tr("//       Rename all outer uses of the id \"%1\" to \"%2.item.%1\".\n")
+                           .arg(id.first, loaderId);
+    }
+
+    return { { pos, pos }, comment.toUtf8() };
+}
+
+static TextEdits wrapIntoComponent(const Range &itemRange, const QString &componentId)
+{
+    const QString componentOpen = QString::fromLatin1("Component {\n"
+                                                      "    id: %1\n")
+                                          .arg(componentId);
+    const QString componentClose = QString::fromLatin1("\n}\n");
+    return { TextEdit{ { itemRange.start, itemRange.start }, componentOpen.toUtf8() },
+             TextEdit{ { itemRange.end, itemRange.end }, componentClose.toUtf8() } };
+}
+
+static TextEdit addLoader(const Position &pos, const QString &loaderId, const QString &componentId)
+{
+    const QString loader = QString::fromLatin1("Loader {\n"
+                                               "    id: %2\n"
+                                               "    sourceComponent: %1\n"
+                                               "}\n")
+                                   .arg(componentId, loaderId);
+
+    return { { pos, pos }, loader.toUtf8() };
+}
+
+static TextEdits exposeNestedIds(const QQmlJS::SourceLocation &openingBrace,
+                                 const QList<std::pair<QString, QQmlJS::SourceLocation>> &nestedIds)
+{
+    const QLatin1StringView nestedIdPrefix("inner_");
+    QString idAliases = QString::fromLatin1("\n");
+    for (auto &id : nestedIds) {
+        idAliases += QString::fromLatin1("property alias %1: %2%1\n").arg(id.first, nestedIdPrefix);
+    }
+
+    TextEdits edits;
+
+    const auto posAfterLBrace =
+            Position{ static_cast<unsigned int>(static_cast<int>(openingBrace.startLine - 1)),
+                      static_cast<unsigned int>(
+                              static_cast<int>(openingBrace.startColumn)) /* after { */ };
+    // edit introducing property aliases
+    edits.append(TextEdit{ { posAfterLBrace, posAfterLBrace }, idAliases.toUtf8() });
+
+    // edits appending prefix "inner_" to each nested id
+    for (auto &id : nestedIds) {
+        const auto idPos =
+                Position{ static_cast<unsigned int>(static_cast<int>(id.second.startLine - 1)),
+                          static_cast<unsigned int>(static_cast<int>(id.second.startColumn - 1)) };
+        edits.append(TextEdit{ { idPos, idPos }, nestedIdPrefix.toUtf8() });
+    }
+    return edits;
+}
+
+static TextEdits wrapInLoaderTextEdits(const QQmlLSUtils::ItemLocation &item)
+{
+    const auto generateId = [&item](const QString &base) -> QString {
+        const auto ids = item.domItem.component().field(Fields::ids).keys();
+        if (!ids.contains(base)) {
+            return base;
+        };
+        int extraNumber = 1;
+        for (; extraNumber < ids.size(); ++extraNumber) {
+            QString id = base + QString::number(extraNumber);
+            if (!ids.contains(id)) {
+                return id;
+            }
+        }
+        return base + QString::number(extraNumber);
+    };
+
+    const auto objId = item.domItem.idStr();
+    const auto objName = objId.isEmpty() ? item.domItem.name() : objId;
+    const QString componentId = generateId(QLatin1StringView("component_") + objName);
+    const QString loaderId = generateId(QLatin1StringView("loader_") + objName);
+
+    const auto itemRange = QQmlLSUtils::qmlLocationToLspLocation(
+            QQmlLSUtils::Location::tryFrom(item.domItem.canonicalFilePath(),
+                                           item.fileLocation->info().fullRegion, item.domItem)
+                    .value_or(QQmlLSUtils::Location{}));
+
+    QList<std::pair<QString, QQmlJS::SourceLocation>> nestedIds = collectNestedIds(item);
+    if (!objId.isEmpty()) {
+        // We expect the first found nested Id to be an object id.
+        // Watch out for collectNestedIds changes
+        Q_ASSERT(nestedIds.front().first == objId);
+        nestedIds.removeFirst();
+    }
+
+    TextEdits edits;
+    edits << todoComment(itemRange.start, loaderId, objId, nestedIds)
+          << exposeNestedIds(item.fileLocation->info().regions[FileLocationRegion::LeftBraceRegion],
+                             nestedIds)
+          << wrapIntoComponent(itemRange, componentId)
+          << addLoader(itemRange.end, loaderId, componentId);
+    return edits;
+}
+
+static CodeActions wrapComponentInLoader(const TextDocumentIdentifier &textDocument,
+                                         const QQmlLSUtils::ItemLocation &item)
+{
+    if (item.domItem.internalKind() != DomType::QmlObject) {
+        // applicable only to objects
+        return {};
+    }
+    if (item.domItem == item.domItem.component().field(Fields::objects).index(0)) {
+        // not applicable for a root object
+        return {};
+    }
+    if (item.domItem.canonicalPath().last() == Path::fromField(Fields::value)) {
+        // not supported for the binding value, i.e. p: Item{}
+        return {};
+    }
+
+    TextDocumentEdit textDocEdit;
+    textDocEdit.textDocument = { textDocument, {} };
+    textDocEdit.edits = wrapInLoaderTextEdits(item);
+
+    WorkspaceEdit edit;
+    edit.documentChanges = { textDocEdit };
+
+    CodeAction action;
+    action.kind = CodeActionKind::RefactorRewrite;
+    action.title = "Wrap Component in Loader";
+    action.edit = edit;
+    return { action };
+}
+
+static CodeActions refactorings(const TextDocumentIdentifier &textDocument,
+                                const QQmlLSUtils::ItemLocation &item)
+{
+    CodeActions codeActions;
+    codeActions.append(wrapComponentInLoader(textDocument, item));
+    return codeActions;
 }
 
 QQmlCodeActionSupport::QQmlCodeActionSupport(QmlLsp::QQmlCodeModelManager *model) : BaseT(model) { }
@@ -74,8 +255,23 @@ void QQmlCodeActionSupport::registerHandlers(QLanguageServer *, QLanguageServerP
 
 void QQmlCodeActionSupport::process(QQmlCodeActionSupport::RequestPointerArgument request)
 {
-    QList<std::variant<Command, CodeAction>> results = provideCodeActions(request->m_parameters);
-    request->m_response.sendResponse(results);
+    CodeActions codeActions;
+    codeActions.append(quickfixes(request->m_parameters.context.diagnostics));
+
+    // QmlObject has the same start location as UiQualifiedId
+    // Therefore in order to get codeActions relevant to QmlObject it's more reliable
+    // to use range.end instead of range.start
+    auto itemsFound = itemsForRequest(request, request->m_parameters.range.end);
+    if (std::holds_alternative<QQmlLSUtils::ErrorMessage>(itemsFound)) {
+        qCWarning(lsCodeActionSupport) << std::get<QQmlLSUtils::ErrorMessage>(itemsFound).message;
+    } else if (std::holds_alternative<QList<QQmlLSUtils::ItemLocation>>(itemsFound)) {
+        QQmlLSUtils::ItemLocation &item =
+                std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
+
+        codeActions.append(refactorings(request->m_parameters.textDocument, item));
+    }
+
+    request->m_response.sendResponse(codeActions);
 }
 
 QT_END_NAMESPACE
