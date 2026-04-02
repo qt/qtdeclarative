@@ -50,7 +50,7 @@ public:
     ScriptCache scriptCache;
     TypeCache typeCache;
     QmldirCache qmldirCache;
-    ImportDirCache importDirCache;
+    mutable ImportDirCache importDirCache;
 
     int typeCacheTrimThreshold = MinimumTypeCacheTrimThreshold;
 };

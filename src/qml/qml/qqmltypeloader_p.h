@@ -195,9 +195,9 @@ public:
     QQmlRefPointer<QQmlScriptBlob> getScript(const QUrl &unNormalizedUrl, const QUrl &relativeUrl);
     QQmlRefPointer<QQmlQmldirData> getQmldir(const QUrl &);
 
-    QString absoluteFilePath(const QString &path);
+    QString absoluteFilePath(const QString &path) const;
 
-    bool fileExists(const QString &filePath)
+    bool fileExists(const QString &filePath) const
     {
         Q_ASSERT(!filePath.endsWith(QLatin1Char('/')));
         const qsizetype pastLastSlash = filePath.lastIndexOf(QLatin1Char('/')) + 1;
@@ -206,7 +206,7 @@ public:
                 filePath.mid(pastLastSlash, filePath.size() - pastLastSlash));
     }
 
-    bool fileExists(const QString &dirPath, const QString &file);
+    bool fileExists(const QString &dirPath, const QString &file) const;
     bool directoryExists(const QString &path);
 
     const QQmlTypeLoaderQmldirContent qmldirContent(const QString &filePath);

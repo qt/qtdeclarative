@@ -1515,7 +1515,7 @@ invalid directories.  By caching whether a directory exists
 we avoid many stats.  We also cache the files' existence in the
 directory, for the same reason.
 */
-QString QQmlTypeLoader::absoluteFilePath(const QString &path)
+QString QQmlTypeLoader::absoluteFilePath(const QString &path) const
 {
     // Can be called from either thread.
 
@@ -1587,7 +1587,7 @@ static QString stripTrailingSlashes(const QString &path)
     return QString();
 }
 
-bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file)
+bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file) const
 {
     // Can be called from either thread.
 
@@ -1604,7 +1604,7 @@ bool QQmlTypeLoader::fileExists(const QString &dirPath, const QString &file)
         return false;
 
 
-    QQmlTypeLoaderSharedDataPtr data(&m_data);
+    QQmlTypeLoaderSharedDataConstPtr data(&m_data);
     QCache<QString, bool> *fileSet = data->importDirCache.object(path);
     if (fileSet) {
         if (const bool *exists = fileSet->object(file))
