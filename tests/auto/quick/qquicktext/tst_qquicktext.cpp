@@ -42,6 +42,8 @@ Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 QT_BEGIN_NAMESPACE
 extern void qt_setQtEnableTestFont(bool value);
 
+using namespace Qt::StringLiterals;
+
 class tst_qquicktext : public QQmlDataTest
 {
     Q_OBJECT
@@ -127,6 +129,14 @@ private slots:
     void imgTagsAlign();
     void imgTagsMultipleImages();
     void imgTagsElide();
+    void imgTagsElideMode_data();
+    void imgTagsElideMode();
+    void imgTagsWrapElide_data();
+    void imgTagsWrapElide();
+    void imgTagsWrapAnywhere();
+    void imgTagsSpacing();
+    void imgTagsLetterSpacing();
+    void imgTagsLineLaidOut();
     void imgTagsUpdates();
     void imgTagsError();
     void imgSize_data();
@@ -198,6 +208,10 @@ private:
 
     QQuickView *createView(const QString &filename);
     int numberOfNonWhitePixels(int fromX, int toX, const QImage &image);
+
+    QQuickText *createStyledText(const QString &text);
+
+    static constexpr QStringView testImgTag = u"<img src='images/face-sad.png' width='18' height='18'>";
 };
 
 void tst_qquicktext::cleanup()
@@ -266,6 +280,14 @@ QQuickView *tst_qquicktext::createView(const QString &filename)
 
     window->setSource(QUrl::fromLocalFile(filename));
     return window;
+}
+
+QQuickText *tst_qquicktext::createStyledText(const QString &text)
+{
+    QString qml = u"import QtQuick\nText { textFormat: Text.StyledText; text: \"%1\" }"_s.arg(text);
+    QQmlComponent comp(&engine);
+    comp.setData(qml.toLatin1(), testFileUrl("."));
+    return qobject_cast<QQuickText *>(comp.create());
 }
 
 void tst_qquicktext::text()
@@ -3522,6 +3544,158 @@ void tst_qquicktext::imgTagsElide()
     QTRY_COMPARE(textPrivate->extra->visibleImgTags.size(), 1);
 }
 
+void tst_qquicktext::imgTagsElideMode_data()
+{
+    QTest::addColumn<QQuickText::TextElideMode>("elideMode");
+
+    QTest::newRow("ElideRight") << QQuickText::ElideRight;
+    QTest::newRow("ElideLeft") << QQuickText::ElideLeft;
+    QTest::newRow("ElideMiddle") << QQuickText::ElideMiddle;
+}
+
+void tst_qquicktext::imgTagsElideMode()
+{
+    QFETCH(QQuickText::TextElideMode, elideMode);
+
+    QScopedPointer<QQuickText> myText(createStyledText(
+        u"AB%1CD%2EF"_s.arg(testImgTag, testImgTag)));
+    QVERIFY(myText);
+    myText->setWidth(50);
+    myText->setElideMode(elideMode);
+
+    QTRY_VERIFY(myText->truncated());
+    QCOMPARE_LE(myText->contentWidth(), myText->width());
+
+    // The text has 2 images but is too wide — at least one must be elided.
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText.data());
+    QVERIFY(textPrivate->extra.isAllocated());
+    QCOMPARE_LT(textPrivate->extra->visibleImgTags.size(), 2);
+
+    // Any remaining visible image must be positioned within bounds.
+    for (const auto *img : std::as_const(textPrivate->extra->visibleImgTags)) {
+        QCOMPARE_GE(img->pos.x(), 0);
+        QCOMPARE_LT(img->pos.x(), myText->width());
+    }
+}
+
+// QTBUG-97536, QTBUG-36163: wrap + elide with inline images
+void tst_qquicktext::imgTagsWrapElide_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<qreal>("width");
+    QTest::addColumn<int>("visibleImages");
+
+    QString imagesOnly;
+    for (int i = 0; i < 11; ++i)
+        imagesOnly += testImgTag;
+
+    // 11 images × 20px each, width=80: line 1 = 4 imgs, line 2 = 3 imgs + "…" = 7 visible.
+    QTest::newRow("images only") << imagesOnly << qreal(80) << 7;
+    QTest::newRow("text + image")
+            << u"Some text before %1 and more text after that wraps and eventually gets elided"_s.arg(testImgTag)
+            << qreal(150) << 1;
+}
+
+void tst_qquicktext::imgTagsWrapElide()
+{
+    QFETCH(QString, text);
+    QFETCH(qreal, width);
+    QFETCH(int, visibleImages);
+
+    QScopedPointer<QQuickText> myText(createStyledText(text));
+    QVERIFY(myText);
+    myText->setWidth(width);
+    myText->setElideMode(QQuickText::ElideRight);
+    myText->setMaximumLineCount(2);
+    myText->setWrapMode(QQuickText::Wrap);
+
+    QTRY_VERIFY(myText->truncated());
+    QCOMPARE(myText->lineCount(), 2);
+    QCOMPARE_LE(myText->contentWidth(), myText->width());
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText.data());
+    QVERIFY(textPrivate->extra.isAllocated());
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), visibleImages);
+    for (const auto *img : std::as_const(textPrivate->extra->visibleImgTags)) {
+        QCOMPARE_GE(img->pos.x(), 0);
+        QCOMPARE_LT(img->pos.x(), myText->width());
+    }
+}
+
+// QTBUG-113829: WrapAnywhere with inline image
+void tst_qquicktext::imgTagsWrapAnywhere()
+{
+    QScopedPointer<QQuickText> myText(createStyledText(
+        u"ABCDEF%1GHIJKL"_s.arg(testImgTag)));
+    QVERIFY(myText);
+    myText->setWidth(80);
+    myText->setWrapMode(QQuickText::WrapAnywhere);
+
+    QCOMPARE_GT(myText->lineCount(), 1);
+    QCOMPARE_LE(myText->contentWidth(), myText->width());
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(myText.data());
+    QVERIFY(textPrivate->extra.isAllocated());
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), 1);
+    const auto *img = textPrivate->extra->visibleImgTags.first();
+    QCOMPARE_LE(img->pos.x() + img->size.width(), myText->width());
+}
+
+// QTBUG-115285: space before/after img tag is preserved
+void tst_qquicktext::imgTagsSpacing()
+{
+    QScopedPointer<QQuickText> withSpaces(createStyledText(u"A %1 B"_s.arg(testImgTag)));
+    QScopedPointer<QQuickText> noSpaces(createStyledText(u"A%1B"_s.arg(testImgTag)));
+    QScopedPointer<QQuickText> spaceBefore(createStyledText(u"A %1B"_s.arg(testImgTag)));
+    QScopedPointer<QQuickText> spaceAfter(createStyledText(u"A%1 B"_s.arg(testImgTag)));
+    QVERIFY(withSpaces && noSpaces && spaceBefore && spaceAfter);
+
+    // "A <img> B" should be wider than "A<img>B" because of the spaces
+    QCOMPARE_GT(withSpaces->contentWidth(), noSpaces->contentWidth());
+    // Space before and space after should contribute equally
+    QCOMPARE(spaceBefore->contentWidth(), spaceAfter->contentWidth());
+}
+
+// QTBUG-133284: letter spacing should not break inline image positioning
+void tst_qquicktext::imgTagsLetterSpacing()
+{
+    const QString text = u"A%1B"_s.arg(testImgTag);
+
+    QScopedPointer<QQuickText> normal(createStyledText(text));
+    QScopedPointer<QQuickText> spaced(createStyledText(text));
+    QVERIFY(normal && spaced);
+
+    QFont f = spaced->font();
+    f.setLetterSpacing(QFont::AbsoluteSpacing, 10);
+    spaced->setFont(f);
+
+    // With letter spacing the text should be wider (spacing on A and B),
+    // but the image width itself should not be affected by letter spacing.
+    const qreal diff = spaced->contentWidth() - normal->contentWidth();
+    QCOMPARE_GT(diff, 0);
+    QCOMPARE_LT(diff, 30); // 2 chars * 10px spacing + tolerance; old bug gave ~60+
+}
+
+// QTBUG-39107 / QTBUG-43820: images must be visible when onLineLaidOut is connected
+void tst_qquicktext::imgTagsLineLaidOut()
+{
+    QScopedPointer<QQuickText> text(createStyledText(
+        u"Hello %1 World"_s.arg(testImgTag)));
+    QVERIFY(text);
+    text->setWidth(200);
+
+    // Connecting to lineLaidOut activates the customLayout path.
+    connect(text.data(), &QQuickText::lineLaidOut, text.data(), []{});
+
+    // Force re-layout after connecting.
+    text->setText(text->text());
+
+    QQuickTextPrivate *textPrivate = QQuickTextPrivate::get(text.data());
+    QVERIFY(textPrivate->extra.isAllocated());
+    QCOMPARE(textPrivate->extra->visibleImgTags.size(), 1);
+    QCOMPARE_GT(textPrivate->extra->visibleImgTags.first()->pos.x(), 0);
+}
+
 void tst_qquicktext::imgTagsUpdates()
 {
     QScopedPointer<QQuickView> window(createView(testFile("imgTagsUpdates.qml")));
@@ -4347,11 +4521,9 @@ static qreal expectedBaselineBold(QQuickText *item)
 static qreal expectedBaselineImage(QQuickText *item)
 {
     QFontMetricsF fm(item->font());
-    // The line is positioned so the bottom of the line is aligned with the bottom of the image,
-    // or image height - line height and the baseline is line position + ascent.  Because
-    // QTextLine's height is rounded up this can give slightly different results to image height
-    // - descent.
-    return 181 - qCeil(fm.height()) + fm.ascent() + item->topPadding();
+    // With AlignBaseline, the inline object's ascent = imageHeight - descent,
+    // so line.ascent() = imageHeight - fm.descent() and baseline = line.ascent().
+    return 181 - fm.descent() + item->topPadding();
 }
 
 static qreal expectedBaselineCustom(QQuickText *item)

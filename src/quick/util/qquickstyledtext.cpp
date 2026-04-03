@@ -270,6 +270,27 @@ void QQuickStyledTextPrivate::parse()
         }
     }
 
+    // Add QTextImageFormat ranges for each inline image so that
+    // QTextEngine sizes the ObjectReplacementCharacter correctly.
+    if (imgTags) {
+        for (int i = 0; i < imgTags->size(); ++i) {
+            const QQuickStyledTextImgTag *image = imgTags->at(i);
+            QTextLayout::FormatRange range;
+            QTextImageFormat imgFmt;
+            if (image->size.isValid()) {
+                imgFmt.setWidth(image->size.width() + QQuickStyledTextImgTag::HMargin * 2);
+                imgFmt.setHeight(image->size.height());
+            }
+            // Ensures line.height() equals the image height, not inflated by font descent.
+            imgFmt.setVerticalAlignment(QTextCharFormat::AlignBaseline);
+            imgFmt.setObjectIndex(i); // index into imgTags, used by image positioning in QQuickText
+            range.format = imgFmt;
+            range.start = image->position;
+            range.length = 1;
+            ranges.append(range);
+        }
+    }
+
     layout.setText(drawText);
     layout.setFormats(ranges);
 }
@@ -650,14 +671,9 @@ bool QQuickStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QStr
 
 void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut)
 {
-    qreal imgWidth = 0.0;
-    QFontMetricsF fm(layout.font());
-    const qreal spaceWidth = fm.horizontalAdvance(QChar::Nbsp);
-    const bool trailingSpace = textOut.endsWith(space);
-
     if (!updateImagePositions) {
         QQuickStyledTextImgTag *image = new QQuickStyledTextImgTag;
-        image->position = textOut.size() + (trailingSpace ? 0 : 1);
+        image->position = textOut.size();
 
         std::pair<QStringView,QStringView> attr;
         do {
@@ -706,18 +722,15 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         if (!image->url.isValid()) {
             delete image;
             qCWarning(lcStyledText) << "StyledText - Invalid base url in img tag";
-        } else {
-            imgWidth = image->size.width();
-            image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
-            imgTags->append(image);
+            return;
         }
+
+        imgTags->append(image);
     } else {
         // if we already have a list of img tags for this text
         // we only want to update the positions of these tags.
         QQuickStyledTextImgTag *image = imgTags->value(nbImages);
-        image->position = textOut.size() + (trailingSpace ? 0 : 1);
-        imgWidth = image->size.width();
-        image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
+        image->position = textOut.size();
         std::pair<QStringView,QStringView> attr;
         do {
             attr = parseAttribute(ch, textIn);
@@ -725,10 +738,8 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         nbImages++;
     }
 
-    QString padding(qFloor(imgWidth / spaceWidth), QChar::Nbsp);
-    if (!trailingSpace)
-        textOut += QLatin1Char(' ');
-    textOut += padding + QLatin1Char(' ');
+    textOut += QChar::ObjectReplacementCharacter;
+    hasSpace = false;
 }
 
 std::pair<QStringView,QStringView> QQuickStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)

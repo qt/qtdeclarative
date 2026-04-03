@@ -47,6 +47,7 @@ public:
     void mirrorChange() override;
     bool isLineLaidOutConnected();
     void setLineGeometry(QTextLine &line, qreal lineWidth, qreal &height);
+    void positionInlineImages(const QTextLine &line, const QList<QTextLayout::FormatRange> &formats);
 
     int lineHeightOffset() const;
     QString elidedText(qreal lineWidth, const QTextLine &line, const QTextLine *nextLine = nullptr) const;

@@ -42,11 +42,14 @@ public:
         Top
     };
 
+    // Horizontal margin (in pixels) added on each side of an inline image
+    // to provide visual spacing between the image and adjacent text/images.
+    static constexpr qreal HMargin = 1.0;
+
     QUrl url;
     QPointF pos;
     QSize size;
     int position = 0;
-    qreal offset = 0.0; // this offset allows us to compensate for flooring reserved space
     Align align = QQuickStyledTextImgTag::Bottom;
     QScopedPointer<QQuickPixmap> pix;
 };
