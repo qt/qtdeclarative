@@ -34,7 +34,7 @@ SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-
 
 [[annotations]]
 path = ["**.prf", "**Info.plist", "**cmake.in", "src/**.in", "**/ci_config_linux.json", "**CMakeLists.txt", "**.cmake",
-        ".cmake.conf", "**.yaml", "**.gradle", "src/quick/items/syncexcludes",
+        ".cmake.conf", "**.yaml", "src/quick/items/syncexcludes",
         "**.cfg", "**.pro", "**.conf", ".tag"]
 comment = "build system"
 precedence = "closest"
@@ -118,6 +118,15 @@ path = ["**.toml", "licenseRule.json"]
 precedence = "override"
 SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
 SPDX-License-Identifier = "LicenseRef-Qt-Commercial OR BSD-3-Clause"
+
+[[annotations]]
+path = ["src/**/build.gradle", "src/**/settings.gradle",
+        "src/**/gradle.properties", "src/**/libs.versions.toml"]
+precedence = "override"
+comment = "build system"
+SPDX-FileCopyrightText = "Copyright (C) The Qt Company Ltd."
+SPDX-License-Identifier = "BSD-3-Clause"
+
 
 [[annotations]]
 path = ["**/qt_attribution.json"]

@@ -376,3 +376,15 @@ CMakeLists.txt.user
 # Clangd related
 .cache/*
 compile_commands.json
+
+# CLion generated files
+.idea
+
+# Gradle generated files
+.gradle/
+local.properties
+
+# JDTLS generated files
+.project
+.classpath
+.settings/

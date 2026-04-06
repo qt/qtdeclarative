@@ -1,7 +1,5 @@
 qt_internal_add_jar(Qt${QtDeclarative_VERSION_MAJOR}AndroidQuick
-    INCLUDE_JARS
-        ${QT_ANDROID_JAR}
-        ${QT6_INSTALL_PREFIX}/jar/Qt${QtDeclarative_VERSION_MAJOR}Android.jar
+    INCLUDE_JARS ${QT6_INSTALL_PREFIX}/jar/Qt${QtDeclarative_VERSION_MAJOR}Android.jar
     SOURCES
         src/org/qtproject/qt/android/QtQuickView.java
         src/org/qtproject/qt/android/QtQmlStatus.java
