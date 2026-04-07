@@ -4901,8 +4901,9 @@ void QQuickTableViewPrivate::dataChangedCallback(const QModelIndex &topLeft, con
     if (!chooser)
         return;
 
-    if (topLeft.column() > rightColumn() || bottomRight.column() < leftColumn() || topLeft.row() > bottomRow()
-        || bottomRight.row() < topRow()) {
+    if (loadedItems.isEmpty()
+        || topLeft.column() > rightColumn() || bottomRight.column() < leftColumn()
+        || topLeft.row() > bottomRow() || bottomRight.row() < topRow()) {
         return;
     }
 
