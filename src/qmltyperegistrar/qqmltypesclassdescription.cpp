@@ -215,11 +215,6 @@ void QmlTypesClassDescription::collect(
         const MetaType &classDef, const QList<MetaType> &types,
         const QList<MetaType> &foreign, CollectMode mode, QTypeRevision defaultRevision)
 {
-    if (file.isEmpty()) {
-        file = classDef.inputFile();
-        lineNumber = classDef.lineNumber();
-    }
-
     const QAnyStringView classDefName = classDef.className();
     const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
 
@@ -382,6 +377,13 @@ void QmlTypesClassDescription::collect(
             className = foreignTypeName;
             resolved = MetaType();
         }
+    }
+
+    // note: use the filename and line number of the actual type, not of the foreign declaration
+    if (file.isEmpty()) {
+        const MetaType &target = !resolved.isEmpty() ? resolved : classDef;
+        file = target.inputFile();
+        lineNumber = target.lineNumber();
     }
 
     if (!resolved.isEmpty()) {

@@ -9,7 +9,7 @@
 #include "inaccessible/base.h"
 #include "inaccessible/property.h"
 #include "inaccessible/invisible.h"
-
+#include "mytype.h"
 #include <QtQmlTypeRegistrar/private/qqmltyperegistrar_p.h>
 
 #ifdef QT_QUICK_LIB
@@ -935,6 +935,13 @@ class WithOverride : public WithVirtual
     QString virtualP;
 };
 
+class ForeignFromAnotherFileForeign
+{
+    Q_GADGET
+    QML_NAMED_ELEMENT(ForeignFromAnotherFile);
+    QML_FOREIGN(MyType);
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -1027,6 +1034,7 @@ private slots:
     void namespacedExtracted();
     void derivedFromInvisible();
     void foreignNamespacedWithEnum();
+    void foreignFileAndLinePointsToNonForeign();
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
