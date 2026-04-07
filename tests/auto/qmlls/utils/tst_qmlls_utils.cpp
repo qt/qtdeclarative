@@ -2425,6 +2425,21 @@ void tst_qmlls_utils::resolveExpressionType_data()
                 << file << 26 << 18 << ResolveOwnerType << myHeader << noLine
                 << SignalHandlerIdentifier << u"onMySomeTypeChanged"_s;
     }
+    {
+        const QString file = testFile(u"resolveExpressionType/identifiers.qml"_s);
+        QTest::addRow("identifierJSVariableFirst")
+                << file << 12 << 26 << ResolveActualTypeForFieldMemberExpression << noFile << noLine
+                << JavaScriptIdentifier << u"colliding"_s;
+        QTest::addRow("identifierIdSecond")
+                << file << 15 << 22 << ResolveActualTypeForFieldMemberExpression << file << 5
+                << QmlObjectIdIdentifier << u"colliding"_s;
+        QTest::addRow("identifierPropertyThird") << file << 23 << 22 << ResolveOwnerType << file
+                                                 << 18 << PropertyIdentifier << u"colliding"_s;
+        QTest::addRow("identifierPropertyThird2") << file << 31 << 22 << ResolveOwnerType << file
+                                                  << 26 << PropertyIdentifier << u"colliding"_s;
+        QTest::addRow("identifierMethodFourth") << file << 38 << 22 << ResolveOwnerType << file
+                                                << 34 << MethodIdentifier << u"colliding"_s;
+    }
 }
 
 void tst_qmlls_utils::resolveExpressionType()
@@ -4585,6 +4600,10 @@ void tst_qmlls_utils::completions_data()
     QTest::newRow("attachedSignalHandler")
             << testFile("completions/attachedSignalHandler.qml") << 5 << 9
             << ExpectedCompletions{ { "event", CompletionItemKind::Variable } } << QStringList{};
+    QTest::newRow("idMethodMixup")
+            << testFile("completions/idMethodMixup.qml") << 10 << 15
+            << ExpectedCompletions{ { "myProperty"_L1, CompletionItemKind::Property } }
+            << QStringList{ };
 }
 
 void tst_qmlls_utils::completions()

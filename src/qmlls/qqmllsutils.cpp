@@ -1138,7 +1138,7 @@ propertyFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, const QStr
             switch (options) {
             case ResolveOwnerType:
                 return ExpressionType{ propertyName,
-                                       findDefiningScopeForProperty(current, propertyName),
+                                       findDefiningScopeForProperty(current, resolved->name),
                                        resolved->type };
             case ResolveActualTypeForFieldMemberExpression:
                 return ExpressionType{ propertyName, property.type(), resolved->type };
@@ -1491,6 +1491,15 @@ resolveSignalHandlerParameterType(const DomItem &parameterDefinition, const QStr
     }
 }
 
+/*!
+\internal
+resolve an identifier in the same order the QML engine would, that is:
+* first check for local JS variables (`let x = ...`)
+* then check for ids
+* then check for properties
+* then check for methods
+* then check for properties and methods of the global object
+ */
 static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomItem &item,
                                                                      ResolveOptions options)
 {
@@ -1522,10 +1531,6 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     if (!referrerScope)
         return {};
 
-    // check if its a method
-    if (auto scope = methodFromReferrerScope(referrerScope, name, options))
-        return scope;
-
     const auto qmlFile = item.containingFile().ownerAs<QmlFile>();
     if (!qmlFile)
         return {};
@@ -1533,6 +1538,12 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     const auto resolver = qmlFile->typeResolver();
     if (!resolver)
         return {};
+
+    // check if its an id
+    if (const QQmlJSScope::ConstPtr fromId =
+                resolver->typeForId(referrerScope, name, AssumeComponentsAreBound)) {
+        return ExpressionType{ name, fromId, QmlObjectIdIdentifier };
+    }
 
     // check if its found as a property binding
     if (const auto scope = propertyBindingFromReferrerScope(
@@ -1544,18 +1555,18 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
     if (const auto scope = propertyFromReferrerScope(referrerScope, name, options))
         return *scope;
 
+    // check if its a method
+    if (auto scope = methodFromReferrerScope(referrerScope, name, options))
+        return scope;
+
     if (resolver->seenModuleQualifiers().contains(name))
         return ExpressionType{ name, {}, QualifiedModuleIdentifier };
 
     if (const auto scope = resolveTypeName(resolver, name, item, options))
         return scope;
 
-    // check if its an id
-    if (const QQmlJSScope::ConstPtr fromId
-            = resolver->typeForId(referrerScope, name, AssumeComponentsAreBound)) {
-        return ExpressionType{ name, fromId, QmlObjectIdIdentifier };
-    }
-
+    // the global object doesn't have properties and methods with the same name, therefore the
+    // order in which we resolve methods and properties on the global object doesn't matter
     const QQmlJSScope::ConstPtr jsGlobal = resolver->jsGlobalObject();
     // check if its a JS global method
     if (auto scope = methodFromReferrerScope(jsGlobal, name, options)) {
