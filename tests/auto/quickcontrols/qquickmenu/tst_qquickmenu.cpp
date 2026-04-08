@@ -3439,23 +3439,26 @@ void tst_QQuickMenu::resetCurrentIndexUponPopup()
 
 void tst_QQuickMenu::mousePropagationWithinPopup()
 {
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+
     QQuickControlsApplicationHelper helper(this, QLatin1String("mousePropagationWithinPopup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     popup->open();
-    QTRY_VERIFY(popup->isOpened());
+    TRY_VERIFY_POPUP_OPENED(popup);
 
     QQuickMenu *nestedMenu = window->property("nestedMenu").value<QQuickMenu*>();
     QVERIFY(nestedMenu);
     nestedMenu->open();
-    QTRY_VERIFY(nestedMenu->isOpened());
+    TRY_VERIFY_POPUP_OPENED(nestedMenu);
 
     QQuickMouseArea *mouseArea = window->property("mouseArea").value<QQuickMouseArea *>();
     QVERIFY(mouseArea);
