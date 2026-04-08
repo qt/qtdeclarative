@@ -44,6 +44,16 @@ using namespace Qt::StringLiterals;
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
 
+static bool isPlatformWayland()
+{
+    return QGuiApplication::platformName().startsWith(QStringLiteral("wayland"));
+}
+
+static bool isPlatformUbuntu()
+{
+    return qEnvironmentVariable("XDG_SESSION_DESKTOP") == QStringLiteral("ubuntu");
+}
+
 class tst_QQuickPopup : public QQmlDataTest
 {
     Q_OBJECT
@@ -147,10 +157,18 @@ private slots:
     void popupWindowPositionerRespectingScreenBounds_data();
     void popupWindowPositionerRespectingScreenBounds();
     void propagateTouchEvents();
+    void blockEventsBehindModal_data();
+    void blockEventsBehindModal();
     void spacingAndInsetsAreRevaluatedWhenChanged();
 
 private:
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
+#if QT_CONFIG(tabletevent)
+    std::unique_ptr<const QPointingDevice> tabletStylusDevice{
+        QPointingDevicePrivate::tabletDevice(QInputDevice::DeviceType::Stylus,
+                                             QPointingDevice::PointerType::Pen,
+                                             QPointingDeviceUniqueId::fromNumericId(1234567890))};
+#endif
 };
 
 tst_QQuickPopup::tst_QQuickPopup()
@@ -3694,6 +3712,102 @@ void tst_QQuickPopup::propagateTouchEvents()
     QCOMPARE(tapSpy.count(), 1);
 
     QTRY_VERIFY(!popup->isOpened());
+}
+
+void tst_QQuickPopup::blockEventsBehindModal_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::addColumn<const QPointingDevice *>("device");
+
+    // QTest::newRow("window: primary") // TODO QTBUG-131786 QTBUG-145585 QTBUG-141362 etc.
+    //         << QQuickPopup::Window
+    //         << QPointingDevice::primaryPointingDevice();
+    QTest::newRow("item: primary")
+            << QQuickPopup::Item
+            << QPointingDevice::primaryPointingDevice();
+    QTest::newRow("item: touch")
+            << QQuickPopup::Item
+            << static_cast<const QPointingDevice*>(touchScreen.get());
+    QTest::newRow("window: touch")
+            << QQuickPopup::Window
+            << static_cast<const QPointingDevice*>(touchScreen.get());
+#if QT_CONFIG(tabletevent) && !defined(Q_OS_QNX)
+    QTest::newRow("window: stylus")     // QTBUG-135879
+            << QQuickPopup::Window
+            << tabletStylusDevice.get();
+    QTest::newRow("item: stylus")
+            << QQuickPopup::Item
+            << tabletStylusDevice.get();
+#endif
+}
+
+void tst_QQuickPopup::blockEventsBehindModal()
+{
+    if (isPlatformUbuntu() && isPlatformWayland())
+        QSKIP("Ubuntu Wayland: sidebar tends to overlay the test window and interfere");
+
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QFETCH(const QPointingDevice *, device);
+
+    QQuickApplicationHelper helper(this, "windowWithInteractiveItemsAndPopup.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    helper.window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *extraButton = window->findChild<QQuickAbstractButton *>("extra button");
+    QVERIFY(extraButton);
+    QSignalSpy buttonPressedChangedSpy(extraButton, &QQuickAbstractButton::pressedChanged);
+    QPoint buttonP = extraButton->mapToScene(extraButton->boundingRect().center()).toPoint();
+
+    auto *tapHandler = window->findChild<QQuickTapHandler *>();
+    QVERIFY(tapHandler);
+    QSignalSpy thPressedChangedSpy(tapHandler, &QQuickTapHandler::pressedChanged);
+    QPoint tapHandlerP = tapHandler->parentItem()->mapToScene(tapHandler->parentItem()->boundingRect().center()).toPoint();
+
+    auto *popup = window->findChild<QQuickPopup *>();
+    QVERIFY(popup);
+    popup->setPopupType(popupType);
+    auto *popupCloseButton = popup->findChild<QQuickButton *>();
+    QVERIFY(popupCloseButton);
+    QSignalSpy closeButtonPressedChangedSpy(popupCloseButton, &QQuickAbstractButton::pressedChanged);
+
+    auto pointerClick = [device](const QPoint &p, QQuickWindow *window) {
+        QQuickTest::pointerPress(device, window, 1, p);
+        QQuickTest::pointerRelease(device, window, 1, p);
+    };
+
+    // the popup is not shown yet: we can click anything with any device
+    QCOMPARE(buttonPressedChangedSpy.count(), 0);
+    QCOMPARE(thPressedChangedSpy.count(), 0);
+    pointerClick(buttonP, window);
+    QTRY_COMPARE(buttonPressedChangedSpy.count(), 2);
+    pointerClick(tapHandlerP, window);
+    QTRY_COMPARE(thPressedChangedSpy.count(), 2);
+
+    // show the modal popup: then we cannot click anything behind it
+    popup->open();
+    QTRY_VERIFY(popup->isOpened()); // wait for it to fully open
+    QQuickWindow *windowOfPopup = popupCloseButton->window(); // main window or native popup window
+    QVERIFY(QTest::qWaitForWindowExposed(windowOfPopup));
+    pointerClick(buttonP, window);
+    QCOMPARE(buttonPressedChangedSpy.count(), 2);
+    pointerClick(tapHandlerP, window);
+    QCOMPARE(thPressedChangedSpy.count(), 2);
+
+    // click the close button on the popup
+    QPoint popupCloseButtonP = popupCloseButton->mapToScene(popupCloseButton->boundingRect().center()).toPoint();
+    pointerClick(popupCloseButtonP, windowOfPopup);
+    QTRY_COMPARE(closeButtonPressedChangedSpy.count(), 2);
+
+    // wait for it to close, then click stuff in the main window again
+    QTRY_COMPARE(popup->isVisible(), false);
+    buttonPressedChangedSpy.clear();
+    thPressedChangedSpy.clear();
+    pointerClick(buttonP, window);
+    QTRY_COMPARE(buttonPressedChangedSpy.count(), 2);
+    pointerClick(tapHandlerP, window);
+    QTRY_COMPARE(thPressedChangedSpy.count(), 2);
 }
 
 void tst_QQuickPopup::spacingAndInsetsAreRevaluatedWhenChanged()
