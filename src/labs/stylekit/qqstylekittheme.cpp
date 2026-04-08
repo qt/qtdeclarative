@@ -133,13 +133,14 @@ void QQStyleKitTheme::updateThemePalettes()
         // Apply from farthest fallback -> local
         for (int i = fbChain.size() - 1; i >= 0; --i) {
             const QQStyleKitPalette *fb = fbChain[i];
-            if (fb->isSet(scope)) {
-                if (auto *p = (fb->*getter)())
-                    result = p->toQPalette().resolve(result);
-            }
+            // Apply system palette first as a base, and override with scope-specific palette
             if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
                 if (auto *sys = fb->system())
                     result = sys->toQPalette().resolve(result);
+            }
+            if (fb->isSet(scope)) {
+                if (auto *p = (fb->*getter)())
+                    result = p->toQPalette().resolve(result);
             }
         }
 
@@ -185,11 +186,12 @@ void QQStyleKitTheme::updateThemeFonts()
         // Apply from farthest fallback -> local
         for (int i = fbChain.size() - 1; i >= 0; --i) {
             const QQStyleKitFont *fb = fbChain[i];
-            if (fb->isSet(scope)) {
-                result = fb->fontForScope(scope).resolve(result);
-            }
+            // Apply system font first as a base, and override with scope-specific font
             if (scope != QQuickTheme::System && fb->isSet(QQuickTheme::System)) {
                 result = fb->fontForScope(QQuickTheme::System).resolve(result);
+            }
+            if (fb->isSet(scope)) {
+                result = fb->fontForScope(scope).resolve(result);
             }
         }
 
