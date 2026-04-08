@@ -270,7 +270,7 @@ void QQuickControlsTestUtils::StyleInfo::initialize(const QString &controlsImpor
         if (qmlTypeNames.contains(QLatin1String("QtQuick.Templates/") + info.baseName())) {
             const auto dirName = info.dir().dirName();
             const auto typeName = info.fileName();
-            m_sourceQmlFiles.append({dirName, typeName, dirName + "/" + typeName, info.filePath() });
+            m_sourceQmlFiles.append({dirName, typeName, dirName + u"/" + typeName, info.filePath() });
         }
     }
 
