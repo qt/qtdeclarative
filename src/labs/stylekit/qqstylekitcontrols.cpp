@@ -235,8 +235,8 @@ QT_BEGIN_NAMESPACE
     \qmlproperty ControlStyle AbstractStylableControls::scrollBar
 
     Grouped property for styling \l [QtQuickControls]{ScrollBar}.
-    For a scroll bar, the groove is styled through the indicator, while the handle is
-    styled through the indicator's foreground.
+    The groove is styled through \l {ControlStyleProperties::}{background}, and the
+    handle through \l {ControlStyleProperties::}{indicator}.
 
     Unset properties fall back to \l control.
 
@@ -247,6 +247,8 @@ QT_BEGIN_NAMESPACE
     \qmlproperty ControlStyle AbstractStylableControls::scrollIndicator
 
     Grouped property for styling \l [QtQuickControls]{ScrollIndicator}.
+    The groove is styled through \l {ControlStyleProperties::}{background}, and the
+    handle through \l {ControlStyleProperties::}{indicator}.
 
     Unset properties fall back to \l control.
 

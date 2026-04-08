@@ -204,7 +204,6 @@ BaseStyle {
         padding: 0
         background {
             implicitHeight: 10
-            visible: false
         }
         indicator {
             implicitHeight: 10

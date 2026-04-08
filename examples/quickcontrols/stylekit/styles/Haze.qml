@@ -513,7 +513,6 @@ Style {
         }
 
         scrollBar {
-            background.color: "#8e848a"
             indicator.foreground.color: "white"
         }
 
@@ -699,8 +698,6 @@ Style {
                 background.implicitHeight: 15
                 indicator.implicitWidth: 15
                 indicator.implicitHeight: 15
-                background.color: "#8e848a"
-                background.border.width: 1
                 indicator.border.width: 3
                 indicator.foreground.margins: 3
                 indicator.foreground.color: "lightgray"

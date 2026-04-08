@@ -234,6 +234,7 @@ Style {
     scrollBar {
         padding: 2
         background.implicitHeight: 20
+        background.visible: false
         indicator.implicitHeight: 20
         vertical {
             background.implicitWidth: 20
