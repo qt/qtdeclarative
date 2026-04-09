@@ -466,7 +466,7 @@ void QQuickTextNodeEngine::addTextObject(const QTextBlock &block, const QPointF 
             ascent = size.height() - line.descent();
             break;
         case QTextCharFormat::AlignBaseline: {
-            QFontMetrics m(format.font());
+            QFontMetricsF m(format.font());
             ascent = size.height() - m.descent();
             break;
         }
