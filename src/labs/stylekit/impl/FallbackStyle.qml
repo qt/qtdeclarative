@@ -113,7 +113,7 @@ BaseStyle {
     }
 
     comboBox {
-        text.alignment: Qt.AlignVCenter
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
         background.implicitWidth: 150
         indicator {
             color: __transparent
