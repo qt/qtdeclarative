@@ -7236,10 +7236,12 @@ void tst_qquicktextedit::textObjectBaselineAlignment()
     QVERIFY2(bottomY >= 0, "AlignBottom object not found in grab");
     QVERIFY2(topY >= 0, "AlignTop object not found in grab");
 
-    // The fix: AlignBaseline should render at the same position as AlignBottom
-    // With a single font size, font descent == line descent,
-    // so AlignBaseline and AlignBottom produce the same position
-    QCOMPARE(baselineY, bottomY);
+    // With a single font size, AlignBaseline and AlignBottom produce
+    // approximately the same position. They may differ by 1px due to
+    // QFontMetrics (integer) vs QFixed rounding in line descent.
+    QVERIFY2(qAbs(baselineY - bottomY) <= 1,
+             qPrintable(QString("AlignBaseline (%1) and AlignBottom (%2) should be within 1px")
+                        .arg(baselineY).arg(bottomY)));
 
     // Sanity check: AlignTop should differ from AlignBottom/AlignBaseline
     QVERIFY2(topY != bottomY, "AlignTop should differ from AlignBottom");
