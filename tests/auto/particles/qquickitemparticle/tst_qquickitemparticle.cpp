@@ -23,6 +23,7 @@ private slots:
     void test_takeGive();
     void test_noCrashOnReset();
     void test_noLeakWhenDeleted();
+    void test_disabledParent();
 };
 
 void tst_qquickitemparticle::initTestCase()
@@ -132,6 +133,27 @@ void tst_qquickitemparticle::test_noLeakWhenDeleted()
     QTest::qWait(1); //Process events to make sure the loader is properly unloaded
     QVERIFY(firstParticleDelegate.isNull()); //Delegates should be deleted
 
+    delete view;
+}
+
+void tst_qquickitemparticle::test_disabledParent()
+{
+    // QTBUG-136580: ItemParticle should work even when contained in
+    // a parent item with enabled: false. The enabled property controls
+    // user interaction, not rendering or particle animation.
+    QQuickView* view = createView(testFileUrl("disabledparent.qml"), 600);
+    QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    ensureAnimTime(600, system->m_animation);
+
+    QVERIFY(extremelyFuzzyCompare(system->groupData[0]->size(), 500, 10));
+    int delegateCount = 0;
+    for (QQuickParticleData *d : std::as_const(system->groupData[0]->data)) {
+        if (d->t == -1)
+            continue;
+        if (d->delegate)
+            delegateCount++;
+    }
+    QVERIFY2(delegateCount > 0, "ItemParticle delegates should be created even with disabled parent");
     delete view;
 }
 
