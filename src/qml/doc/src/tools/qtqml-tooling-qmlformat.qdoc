@@ -188,8 +188,99 @@ qmlformat writes the formatted version of the file to stdout.
 If you wish to have your file updated in-place specify the \c{-i} flag.
 
 \section3 Grouping Properties, Functions, and Signals Together
-With \c{-n} or \c{--normalize} flag, \e qmlformat groups all properties, functions,
-and signals together, instead of retaining the order you specified.
+With \c{-n} or \c{--normalize} flag, \e qmlformat groups and sorts all properties, functions,
+and signals by name, instead of retaining the existing order.
+For example:
+\qml
+import QtQuick
+
+QtObject {
+    signal s2()
+    property int h
+    function z() {}
+    property int w
+    function y() {}
+    id: asdf
+    signal s1()
+
+    property Item myItem2: Item {
+        TextEdit {}
+        Rectangle {}
+    }
+    property Item myItem: Item {
+        Rectangle {}
+        TextEdit {}
+    }
+}
+\endqml
+
+will be formatted to:
+\qml
+import QtQuick
+
+QtObject {
+    id: asdf
+
+    property int h
+    property Item myItem: Item {
+        Rectangle {
+        }
+        TextEdit {
+        }
+    }
+    property Item myItem2: Item {
+        TextEdit {
+        }
+        Rectangle {
+        }
+    }
+    property int w
+
+    signal s1
+    signal s2
+
+    function y() {
+    }
+    function z() {
+    }
+}
+\enqml
+
+To group the attributes without sorting by name, use \c{--group-attributes-together} instead.
+This formats the previous snippet into:
+\qml
+import QtQuick
+
+QtObject {
+    id: asdf
+
+    property int h
+    property int w
+    property Item myItem2: Item {
+        TextEdit {
+        }
+        Rectangle {
+        }
+    }
+    property Item myItem: Item {
+        Rectangle {
+        }
+        TextEdit {
+        }
+    }
+
+    signal s2
+    signal s1
+
+    function z() {
+    }
+    function y() {
+    }
+}
+\endqml
+
+Note that this option takes precedence over \c{--normalize}.
+
 
 \section3 Settings File
 You can configure \e qmlformat by including a settings file \c{.qmlformat.ini} in your

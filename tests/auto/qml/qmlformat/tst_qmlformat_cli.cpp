@@ -205,7 +205,7 @@ void TestQmlformatCli::testFormat_data()
     QTest::newRow("normalize + keep attributes order")
             << "normalizedGroupAttributesTogether.qml"
             << "normalizedGroupAttributesTogether.formatted.qml"
-            << QStringList{ "-n", "--group-attributes-together" } << RunOption::OnCopy;
+            << QStringList{ "--group-attributes-together" } << RunOption::OnCopy;
 
     QTest::newRow("indentEquals2")
             << "threeFunctionsOneLine.js"

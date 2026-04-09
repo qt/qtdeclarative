@@ -365,6 +365,8 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
     // Needs to be set after normalize since it can set NormalizeOrder to true.
     if (parser.isSet("group-attributes-together"_L1)) {
         options.mark(Settings::GroupAttributesTogether);
+        // group attributes together implies Normalize, so don't let (default) settings change the normalization option.
+        options.mark(Settings::NormalizeOrder);
         options.setGroupAttributesTogether(true);
     }
     if (parser.isSet("sort-imports"_L1)) {
