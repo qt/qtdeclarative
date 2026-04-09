@@ -551,6 +551,12 @@
     are not suitable for customizing.
     \include customizing-native-styles.qdocinc
 
+    \note When modifying the size of controls, the actual content size will
+    typically remain the same. For example, some styles may make their Button
+    fill the bounds of the control, but horizontally and/or vertically center
+    the check indicator and text of a CheckBox. If the default resizing
+    behaviour is not desired, override the respective delegate(s).
+
     \section2 Customizing ApplicationWindow
 
         ApplicationWindow consists of one visual item:
