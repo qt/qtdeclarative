@@ -156,6 +156,7 @@ private slots:
     void popupWindowWithPaddingFromSafeArea();
     void popupWindowPositionerRespectingScreenBounds_data();
     void popupWindowPositionerRespectingScreenBounds();
+    void popupWindowRepositionOnImplicitSizeChange();
     void propagateTouchEvents();
     void blockEventsBehindModal_data();
     void blockEventsBehindModal();
@@ -3684,6 +3685,74 @@ void tst_QQuickPopup::popupWindowPositionerRespectingScreenBounds()
                             .arg((*abf)().bottom() - popup->height()).arg(window->contentItem()->mapToGlobal(popup->x(), popup->y()).y())));
 
     popup->close();
+}
+
+// QTBUG-142700: Verify that when a popup window's implicit size changes
+// (e.g. ToolTip text gets longer), the popup window is repositioned to
+// reflect the new size. Previously, reposition() was not called after
+// resizing, so the popup appeared in the wrong location.
+void tst_QQuickPopup::popupWindowRepositionOnImplicitSizeChange()
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickControlsApplicationHelper helper(this, "popupWindowImplicitSizeChange.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    centerOnScreen(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    auto *button = window->property("button").value<QQuickButton *>();
+    QVERIFY(button);
+
+    // Get the ToolTip attached to the button
+    auto *toolTipAttached = qobject_cast<QQuickToolTipAttached *>(
+        qmlAttachedPropertiesObject<QQuickToolTip>(button, false));
+    QVERIFY(toolTipAttached);
+    QQuickPopup *toolTip = toolTipAttached->toolTip();
+    QVERIFY(toolTip);
+
+    toolTip->setPopupType(QQuickPopup::Window);
+
+    // Set negative insets to simulate a style with drop-shadow (like FluentWinUI3).
+    toolTip->setLeftInset(-10);
+    toolTip->setRightInset(-10);
+    toolTip->setTopInset(-10);
+    toolTip->setBottomInset(-10);
+
+    // Hover the button to show the tooltip. Start from the bottom of the
+    // window to ensure a proper hover-enter transition on the button.
+    const QPointF buttonCenter = button->mapToItem(window->contentItem(),
+        QPointF(button->width() / 2, button->height() / 2));
+    PointLerper lerper(window, QPoint(buttonCenter.x(), window->height() - 1));
+    lerper.move(buttonCenter.toPoint());
+    QTRY_VERIFY(toolTip->isOpened());
+
+    auto *popupPrivate = QQuickPopupPrivate::get(toolTip);
+    TRY_VERIFY_POPUP_OPENED(toolTip);
+    auto *popupWindow = popupPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+
+    const int initialY = popupWindow->y();
+
+    const int initialWidth = popupWindow->width();
+
+    // Change the text to something much longer, triggering implicit size change.
+    // Without the fix, the popup window is resized but not repositioned,
+    // causing the y position to drift.
+    window->setProperty("toolTipText", "Flinstone, Fred - a much longer tooltip text");
+
+    // Wait for the popup window to finish resizing before checking position.
+    QTRY_VERIFY(popupWindow->width() > initialWidth);
+
+    // The tooltip should remain at the same y position.
+    // Without the fix (missing reposition()), y shifts incorrectly.
+    QCOMPARE(popupWindow->y(), initialY);
 }
 
 void tst_QQuickPopup::propagateTouchEvents()

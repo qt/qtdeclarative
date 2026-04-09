@@ -424,16 +424,31 @@ void QQuickPopupWindow::handlePopupPositionChangeFromWindowSystem(const QPoint &
 
 void QQuickPopupWindow::implicitWidthChanged()
 {
-    Q_D(const QQuickPopupWindow);
-    if (auto popup = d->m_popup)
-        setWidth(popup->implicitWidth());
+    Q_D(QQuickPopupWindow);
+    if (auto popup = d->m_popup) {
+        auto *popupPrivate = QQuickPopupPrivate::get(popup);
+        // Include window insets so that it works for styles like FluentWinUI3
+        // that have insets.
+        // Use qCeil to avoid sub-pixel truncation that causes text wrapping
+        // (see QTBUG-130683). This matches the initial sizing logic in
+        // QQuickPopupPrivate::adjustPopupItemParentAndWindow().
+        const QMarginsF insets = popupPrivate->windowInsets();
+        setWidth(qCeil(popup->implicitWidth() + insets.left() + insets.right()));
+        d->m_popupItem->setWidth(popup->implicitWidth());
+        popupPrivate->reposition();
+    }
 }
 
 void QQuickPopupWindow::implicitHeightChanged()
 {
-    Q_D(const QQuickPopupWindow);
-    if (auto popup = d->m_popup)
-        setHeight(popup->implicitHeight());
+    Q_D(QQuickPopupWindow);
+    if (auto popup = d->m_popup) {
+        auto *popupPrivate = QQuickPopupPrivate::get(popup);
+        const QMarginsF insets = popupPrivate->windowInsets();
+        setHeight(qCeil(popup->implicitHeight() + insets.top() + insets.bottom()));
+        d->m_popupItem->setHeight(popup->implicitHeight());
+        popupPrivate->reposition();
+    }
 }
 
 #if QT_CONFIG(wayland)
