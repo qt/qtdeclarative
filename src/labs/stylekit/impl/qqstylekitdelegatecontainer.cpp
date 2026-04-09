@@ -73,8 +73,24 @@ bool QQStyleKitDelegateContainer::usingDefaultDelegate() const
 
 void QQStyleKitDelegateContainer::updateImplicitSize()
 {
-    setImplicitWidth(m_delegateInstance ? m_delegateInstance->implicitWidth() : 0);
-    setImplicitHeight(m_delegateInstance ? m_delegateInstance->implicitHeight() : 0);
+    qreal implicitWidth = 0;
+    qreal implicitHeight = 0;
+
+    if (m_delegateInstance) {
+        /* The delegate instance is expected to bind its implicit size to the
+         * value from the style, but may override it if needed. */
+        implicitWidth = m_delegateInstance->implicitWidth();
+        implicitHeight = m_delegateInstance->implicitHeight();
+    } else if (m_delegateProperties) {
+        /* The delegate instance may not exist yet (e.g. because it is hidden),
+         * but the container should still report the style's implicit size so
+         * that it reserves the correct space in a layout. */
+        implicitWidth = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->implicitWidth());
+        implicitHeight = m_delegateProperties->implicitHeight();
+    }
+
+    setImplicitWidth(implicitWidth);
+    setImplicitHeight(implicitHeight);
 }
 
 void QQStyleKitDelegateContainer::maybeCreateDelegate()
@@ -244,6 +260,8 @@ void QQStyleKitDelegateContainer::componentComplete()
             maybeCreateShadow();
         }
     });
+
+    updateImplicitSize();
 }
 
 QT_END_NAMESPACE
