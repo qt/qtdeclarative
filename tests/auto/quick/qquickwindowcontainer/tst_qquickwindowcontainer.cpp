@@ -45,6 +45,8 @@ private slots:
     void windowComponent();
 #endif
 
+    void invisibleChildWindowFocus();
+
     void updateStackingOrderPerformance();
 
 private:
@@ -237,6 +239,39 @@ void tst_QQuickWindowContainer::windowComponent()
     QCOMPARE(qobject_cast<QQuickWindow *>(window_window_parent)->parent(), windowParent);
 }
 #endif // TEST_WINDOW_PARENT
+
+void tst_QQuickWindowContainer::invisibleChildWindowFocus()
+{
+    // QTBUG-141450: Test that an invisible child window doesn't steal focus when
+    // the stacking order is updated.
+    QQuickWindow quickWindow;
+    QWindow childWindow;
+    QQuickWindowContainer container;
+
+    // Start invisible so childWindow is never shown and never grabs focus.
+    container.setVisible(false);
+    container.setParentItem(quickWindow.contentItem());
+    container.setContainedWindow(&childWindow);
+
+    quickWindow.show();
+    QVERIFY(QQuickTest::qWaitForPolish(&quickWindow));
+    // Child is parented but not visible
+    QCOMPARE(childWindow.parent(), &quickWindow);
+    QVERIFY(!childWindow.isVisible());
+
+    if (!QTest::qWaitForWindowActive(&quickWindow))
+        QSKIP("Window failed to activate, skipping test");
+
+    // With childWindow invisible, quickWindow must be the focus window
+    QTRY_COMPARE(QGuiApplication::focusWindow(), &quickWindow);
+
+    // Trigger a stacking order update. This should not affect which window
+    // has focus.
+    auto *windowPrivate = QQuickWindowPrivate::get(&quickWindow);
+    windowPrivate->updateChildWindowStackingOrder();
+    QCoreApplication::processEvents();
+    QCOMPARE(QGuiApplication::focusWindow(), &quickWindow);
+}
 
 void tst_QQuickWindowContainer::updateStackingOrderPerformance()
 {
