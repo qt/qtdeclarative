@@ -3287,6 +3287,15 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
         if (d->modal)
             event->accept();
         return d->modal;
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+    case QEvent::DragLeave:
+    case QEvent::Drop:
+        // ignore() so that the OS sees Qt::IgnoreAction and renders the "not allowed" cursor
+        // within the drag image. accept() would only change the window cursor after the drag ends: too late.
+        if (d->modal)
+            event->ignore();
+        return d->modal;
 #if QT_CONFIG(tabletevent)
     case QEvent::TabletPress:
     case QEvent::TabletMove:
@@ -3333,6 +3342,28 @@ void QQuickPopup::touchUngrabEvent()
 void QQuickPopup::wheelEvent(QWheelEvent *event)
 {
     event->accept();
+}
+#endif
+
+#if QT_CONFIG(quick_draganddrop)
+void QQuickPopup::dragMoveEvent(QDragMoveEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::dropEvent(QDropEvent *event)
+{
+    event->accept();
+}
+
+void QQuickPopup::dragEnterEvent(QDragEnterEvent *event)
+{
+    event->ignore(); // OS shows "forbidden" cursor as part of drag image
 }
 #endif
 

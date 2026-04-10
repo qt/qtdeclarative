@@ -235,6 +235,31 @@ void QQuickPopupItem::wheelEvent(QWheelEvent *event)
 }
 #endif
 
+#if QT_CONFIG(quick_draganddrop)
+void QQuickPopupItem::dragEnterEvent(QDragEnterEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    d->popup->dragEnterEvent(event);
+}
+
+void QQuickPopupItem::dragMoveEvent(QDragMoveEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    d->popup->dragMoveEvent(event);
+}
+void QQuickPopupItem::dragLeaveEvent(QDragLeaveEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    d->popup->dragLeaveEvent(event);
+}
+void QQuickPopupItem::dropEvent(QDropEvent *event)
+{
+    Q_D(QQuickPopupItem);
+    d->popup->dropEvent(event);
+}
+
+#endif
+
 void QQuickPopupItem::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 {
     Q_D(QQuickPopupItem);

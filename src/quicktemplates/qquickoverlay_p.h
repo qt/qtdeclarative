@@ -69,6 +69,13 @@ protected:
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
 #endif
+#if QT_CONFIG(quick_draganddrop)
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dragLeaveEvent(QDragLeaveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+#endif
+    void handleWheelAndDnDEvents(QEvent *event);
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
     bool eventFilter(QObject *object, QEvent *event) override;
 

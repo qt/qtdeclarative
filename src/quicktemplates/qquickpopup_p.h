@@ -421,6 +421,12 @@ protected:
 #if QT_CONFIG(wheelevent)
     virtual void wheelEvent(QWheelEvent *event);
 #endif
+#if QT_CONFIG(quick_draganddrop)
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dragMoveEvent(QDragMoveEvent *event);
+    virtual void dragLeaveEvent(QDragLeaveEvent *event);
+    virtual void dropEvent(QDropEvent *event);
+#endif
 
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize);
