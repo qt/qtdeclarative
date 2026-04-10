@@ -9,8 +9,14 @@
 #include <private/qqmlengine_p.h>
 #include <private/qv4compileddata_p.h>
 
+#include <QByteArray>
+
 #include <atomic>
 #include <cstdio>
+
+#ifdef Q_OS_WIN
+#include <qt_windows.h>
+#endif
 
 QT_REQUIRE_CONFIG(qml_debug);
 
@@ -58,7 +64,18 @@ Q_CONSTINIT static std::atomic_flag s_printedWarning = Q_ATOMIC_FLAG_INIT;
 void QQmlDebuggingEnabler::enableDebugging(bool printWarning)
 {
     if (printWarning && !s_printedWarning.test_and_set(std::memory_order_relaxed)) {
-        fprintf(stderr, "QML debugging is enabled. Only use this in a safe environment.\n");
+        QByteArray warning("QML debugging is enabled. Only use this in a safe environment.\n");
+        if (qEnvironmentVariableIsSet("CLICOLOR_FORCE") || qEnvironmentVariableIsSet("QTC_RUN")
+            || qEnvironmentVariableIsSet("VSCODE_CLI")) {
+            warning = QByteArray("\033[38;2;255;0;0m") + warning + "\033[0m";
+        }
+#ifdef Q_OS_WIN
+        // Debuggers on Windows (except vscode) do not display the stderr output
+        if (!qEnvironmentVariableIsSet("VSCODE_CLI"))
+            OutputDebugStringA(warning);
+#endif
+
+        fprintf(stderr, "%s", warning.constData());
         fflush(stderr); // We really want to print this warning, even if stderr is buffered
     }
     QQmlEnginePrivate::qml_debugging_enabled.store(true, std::memory_order_relaxed);
