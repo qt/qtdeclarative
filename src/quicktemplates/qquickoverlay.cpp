@@ -74,8 +74,8 @@ void QQuickOverlayPrivate::itemRotationChanged(QQuickItem *)
     updateGeometry();
 }
 
-// Wheel and tablet events are not routed through the delivery agent like mouse
-// and touch events, so modal popup blocking must be handled explicitly here.
+// Wheel and tablet events are not subject to modal popup blocking in delivery agent,
+// so modal popup blocking must be handled explicitly here.
 // Returns true if event is consumed by a modal popup blocking its top-most target.
 #if QT_CONFIG(tabletevent) || QT_CONFIG(wheelevent)
 bool QQuickOverlayPrivate::eatEventIfBlockedByModal(QPointerEvent *event)
@@ -111,25 +111,34 @@ bool QQuickOverlayPrivate::eatEventIfBlockedByModal(QPointerEvent *event)
             return false;
     }
 
-    // Eat the event if receiver topItem is not a child of a popup before
-    // the first modal popup.
+    // Iterate popups front-to-back. Block the event if topItem is not inside a popup
+    // that sits above the first modal popup in stacking order.
     for (const auto &popup : stackingOrderPopups()) {
         const QQuickItem *popupItem = popup->popupItem();
         if (!popupItem)
             continue;
-        // item belongs to this popup — check shader effect source case, then stop searching
         if (popupItem == item) {
-            // topItem is the popup's shader effect source (drop shadow), not the popup item
-            // itself — the event landed in the shadow area outside the popup's bounds.
-            // Eat it for modal popups to prevent it reaching items behind the shadow.
             if (topItem != item && popup->isModal()
                 && !item->contains(item->mapFromScene(event->point(0).scenePosition()))) {
+                // topItem is the popup's shader effect source (drop shadow), not the popup item
+                // itself — the event landed in the shadow area outside the popup's bounds.
+                // Eat it for modal popups to prevent it reaching items behind the shadow.
                 event->accept();
                 return true;
             }
+            // The event landed inside the popup. Tablet events must be filtered here
+            // because, unlike wheel and mouse events, no standard item
+            // accepts tablet events — so the delivery agent would otherwise continue
+            // past the popup to a TapHandler behind it.
+            // Intentionally not calling event->accept() so Qt synthesizes a mouse event,
+            // which the overlay's mouse press handler delivers to popup content normally.
+#if QT_CONFIG(tabletevent)
+            if (QQuickDeliveryAgentPrivate::isTabletEvent(event))
+                return true;
+#endif
             break;
         }
-        // if topItem is below this modal popup in stacking order — eat the event
+        // topItem is outside this popup — let the popup decide whether to block.
         if (popup->overlayEvent(topItem, event))
             return true;
     }
