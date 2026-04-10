@@ -7,6 +7,7 @@ import QtQuick.Layouts
 
 Control {
     padding: 8
+    width: 320; height: 240
     contentItem: ColumnLayout {
         component DragAndDropArea: Rectangle {
             id: item
