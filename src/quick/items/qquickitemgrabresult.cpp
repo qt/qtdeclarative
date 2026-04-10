@@ -75,6 +75,9 @@ public:
     QSizeF itemSize;
     QSize textureSize;
     qreal devicePixelRatio;
+
+    QMetaObject::Connection setupConnection;
+    QMetaObject::Connection renderConnection;
 };
 
 /*!
@@ -236,12 +239,16 @@ bool QQuickItemGrabResult::event(QEvent *e)
     return QObject::event(e);
 }
 
+/*!
+    \internal
+    This method is called from QSGRenderThread
+*/
 void QQuickItemGrabResult::setup()
 {
     Q_D(QQuickItemGrabResult);
     if (!d->item) {
-        disconnect(d->window.data(), &QQuickWindow::beforeSynchronizing, this, &QQuickItemGrabResult::setup);
-        disconnect(d->window.data(), &QQuickWindow::afterRendering, this, &QQuickItemGrabResult::render);
+        disconnect(d->setupConnection);
+        disconnect(d->renderConnection);
         QCoreApplication::postEvent(this, new QEvent(Event_Grab_Completed));
         return;
     }
@@ -254,6 +261,10 @@ void QQuickItemGrabResult::setup()
     d->itemSize = QSizeF(d->item->width(), d->item->height());
 }
 
+/*!
+    \internal
+    This method is called from QSGRenderThread
+*/
 void QQuickItemGrabResult::render()
 {
     Q_D(QQuickItemGrabResult);
@@ -287,8 +298,8 @@ void QQuickItemGrabResult::render()
     delete d->texture;
     d->texture = nullptr;
 
-    disconnect(d->window.data(), &QQuickWindow::beforeSynchronizing, this, &QQuickItemGrabResult::setup);
-    disconnect(d->window.data(), &QQuickWindow::afterRendering, this, &QQuickItemGrabResult::render);
+    disconnect(d->setupConnection);
+    disconnect(d->renderConnection);
     QCoreApplication::postEvent(this, new QEvent(Event_Grab_Completed));
 }
 
@@ -355,10 +366,23 @@ QSharedPointer<QQuickItemGrabResult> QQuickItem::grabToImage(const QSize &target
     if (!result)
         return QSharedPointer<QQuickItemGrabResult>();
 
-    connect(window(), &QQuickWindow::beforeSynchronizing, result, &QQuickItemGrabResult::setup, Qt::DirectConnection);
-    connect(window(), &QQuickWindow::afterRendering, result, &QQuickItemGrabResult::render, Qt::DirectConnection);
+    QQuickItemGrabResultPrivate *d = result->d_func();
+    auto sharedResult = QSharedPointer<QQuickItemGrabResult>(result);
+    result->setParent(nullptr); // the smart pointer now manages the lifetime
 
-    return QSharedPointer<QQuickItemGrabResult>(result);
+    auto weakResult = QWeakPointer(sharedResult);
+    d->setupConnection = connect(window(), &QQuickWindow::beforeSynchronizing,
+                                 result, [weakResult] {
+                                     if (auto strong = weakResult.toStrongRef(); strong)
+                                         strong->setup();
+                                 }, Qt::DirectConnection);
+    d->renderConnection = connect(window(), &QQuickWindow::afterRendering,
+                                  result, [weakResult] {
+                                      if (auto strong = weakResult.toStrongRef(); strong)
+                                          strong->render();
+                                  }, Qt::DirectConnection);
+
+    return sharedResult;
 }
 
 /*!
@@ -426,10 +450,13 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
     if (!result)
         return false;
 
-    connect(window(), &QQuickWindow::beforeSynchronizing, result, &QQuickItemGrabResult::setup, Qt::DirectConnection);
-    connect(window(), &QQuickWindow::afterRendering, result, &QQuickItemGrabResult::render, Qt::DirectConnection);
-
     QQuickItemGrabResultPrivate *d = result->d_func();
+
+    d->setupConnection = connect(window(), &QQuickWindow::beforeSynchronizing,
+                                 result, &QQuickItemGrabResult::setup, Qt::DirectConnection);
+    d->renderConnection = connect(window(), &QQuickWindow::afterRendering,
+                                  result, &QQuickItemGrabResult::render, Qt::DirectConnection);
+
     d->qmlEngine = engine;
     d->callback = callback;
     return true;
