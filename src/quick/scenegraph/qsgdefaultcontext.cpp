@@ -153,18 +153,24 @@ QSGInternalTextNode *QSGDefaultContext::createInternalTextNode(QSGRenderContext 
     return new QSGRhiInternalTextNode(renderContext);
 }
 
+QSGTextNode::RenderType QSGDefaultContext::processTextRenderType(QSGTextNode::RenderType renderType)
+{
+    if (renderType == QSGTextNode::QtRendering && m_distanceFieldDisabled)
+        return QSGTextNode::NativeRendering;
+    else
+        return renderType;
+}
+
 QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc,
-                                                 QSGTextNode::RenderType renderType,
-                                                 int renderTypeQuality)
+                                                 QSGTextNode::RenderType renderType)
 {
     if (renderType == QSGTextNode::CurveRendering) {
         return new QSGCurveGlyphNode(rc);
-    } else if (m_distanceFieldDisabled || renderType == QSGTextNode::NativeRendering) {
+    } else if (renderType == QSGTextNode::NativeRendering) {
         return new QSGDefaultGlyphNode(rc);
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(rc);
         node->setPreferredAntialiasingMode(m_distanceFieldAntialiasing);
-        node->setRenderTypeQuality(renderTypeQuality);
         return node;
     }
 }

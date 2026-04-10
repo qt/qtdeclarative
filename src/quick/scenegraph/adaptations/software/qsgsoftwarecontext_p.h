@@ -48,7 +48,7 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;
@@ -58,6 +58,8 @@ public:
 #if QT_CONFIG(quick_sprite)
     QSGSpriteNode *createSpriteNode() override;
 #endif
+
+    QSGTextNode::RenderType processTextRenderType(QSGTextNode::RenderType renderType) override;
 
     GraphicsApi graphicsApi() const override;
     ShaderType shaderType() const override;

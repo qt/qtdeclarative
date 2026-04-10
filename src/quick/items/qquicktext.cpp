@@ -2625,7 +2625,9 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     node->setTextStyle(QSGTextNode::TextStyle(d->style));
     node->setRenderType(QSGTextNode::RenderType(d->renderType));
     node->setRenderTypeQuality(d->renderTypeQuality());
-    node->clear();
+
+    QSGInternalTextNode::RecycleBin recycleBin;
+    node->recycle(&recycleBin);
     node->setMatrix(QMatrix4x4());
 
     node->setColor(QColor::fromRgba(d->color));
@@ -2638,7 +2640,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         node->setViewport(clipRect());
         const qreal dx = QQuickTextUtil::alignedX(d->layedOutTextRect.width(), d->availableWidth(), effectiveHAlign()) + leftPadding();
         d->ensureDoc();
-        node->addTextDocument(QPointF(dx, dy), d->extra->doc);
+        node->addTextDocument(QPointF(dx, dy), d->extra->doc, &recycleBin);
     } else if (d->layedOutTextRect.width() > 0) {
         if (flags().testFlag(ItemObservesViewport))
             node->setViewport(clipRect());
@@ -2649,15 +2651,21 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         if (d->elideLayout)
             unelidedLineCount -= 1;
         if (unelidedLineCount > 0)
-            node->addTextLayout(QPointF(dx, dy), &d->layout, -1, -1,0, unelidedLineCount);
+            node->addTextLayout(QPointF(dx, dy), &d->layout, &recycleBin, -1, -1,0, unelidedLineCount);
 
         if (d->elideLayout)
-            node->addTextLayout(QPointF(dx, dy), d->elideLayout.get());
+            node->addTextLayout(QPointF(dx, dy), d->elideLayout.get(), &recycleBin);
 
         if (d->extra.isAllocated()) {
             for (QQuickStyledTextImgTag *img : std::as_const(d->extra->visibleImgTags)) {
-                if (img->pix && img->pix->isReady())
-                    node->addImage(QRectF(img->pos.x() + dx, img->pos.y() + dy, img->size.width(), img->size.height()), img->pix->image());
+                if (img->pix && img->pix->isReady()) {
+                    node->addImage(QRectF(img->pos.x() + dx,
+                                          img->pos.y() + dy,
+                                          img->size.width(),
+                                          img->size.height()),
+                                   img->pix->image(),
+                                   &recycleBin);
+                }
             }
         }
     }
@@ -2667,6 +2675,8 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
     // The font caches have now been initialized on the render thread, so they have to be
     // invalidated before we can use them from the main thread again.
     invalidateFontCaches();
+
+    node->discardUnusedNodes(&recycleBin);
 
     return node;
 }

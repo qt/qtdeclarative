@@ -120,9 +120,12 @@ static void strokePathToNode(QSGNode *parent, const QQuadPath &path, const QColo
     parent->appendChildNode(node);
 }
 
-void QSGRhiInternalTextNode::addDecorationNode(const QRectF &rect, const QColor &color,
-                                               QTextCharFormat::UnderlineStyle style)
+void QSGRhiInternalTextNode::addDecorationNode(const QRectF &rect,
+                                               const QColor &color,
+                                               QTextCharFormat::UnderlineStyle style,
+                                               RecycleBin *recycleBin)
 {
+    Q_UNUSED(recycleBin);
     if (rect.width() <= 0)
         return;
 

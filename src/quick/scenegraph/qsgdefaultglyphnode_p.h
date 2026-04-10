@@ -35,7 +35,11 @@ public:
     void setPreferredAntialiasingMode(AntialiasingMode) override;
     void updateGeometry();
 
+    void recycle() override;
+
 private:
+    void cleanup();
+
     enum DefaultGlyphNodeType {
         RootGlyphNode,
         SubGlyphNode

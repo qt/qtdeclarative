@@ -104,7 +104,7 @@ public:
     virtual QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) = 0;
     virtual QSGInternalTextNode *createInternalTextNode(QSGRenderContext *renderContext);
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) = 0;
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext);
@@ -124,6 +124,8 @@ public:
     virtual QSGRectangleNode *createRectangleNode() = 0;
     virtual QSGImageNode *createImageNode() = 0;
     virtual QSGNinePatchNode *createNinePatchNode() = 0;
+
+    virtual QSGTextNode::RenderType processTextRenderType(QSGTextNode::RenderType renderType) = 0;
 
     static QSGContext *createDefaultContext();
     static QQuickTextureFactory *createTextureFactoryFromImage(const QImage &image);

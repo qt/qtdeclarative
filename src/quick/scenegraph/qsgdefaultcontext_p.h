@@ -34,7 +34,7 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType) override;
     QSGInternalTextNode *createInternalTextNode(QSGRenderContext *renderContext) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
@@ -50,6 +50,8 @@ public:
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;
+
+    QSGTextNode::RenderType processTextRenderType(QSGTextNode::RenderType renderType) override;
 
     GraphicsApi graphicsApi() const override;
     void *getResource(QQuickWindow *window, Resource resource) const override;

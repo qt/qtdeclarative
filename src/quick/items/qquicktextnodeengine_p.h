@@ -168,6 +168,7 @@ public:
     void mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
                              QList<BinaryTreeNode *> *imageNodes);
     void addToSceneGraph(QSGInternalTextNode *parent,
+                         QSGInternalTextNode::RecycleBin *recycleBin,
                          QQuickText::TextStyle style = QQuickText::Normal,
                          const QColor &styleColor = QColor());
 

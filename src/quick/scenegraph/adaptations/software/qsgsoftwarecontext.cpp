@@ -53,12 +53,17 @@ QSGPainterNode *QSGSoftwareContext::createPainterNode(QQuickPaintedItem *item)
     return new QSGSoftwarePainterNode(item);
 }
 
-QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType, int renderTypeQuality)
+QSGGlyphNode *QSGSoftwareContext::createGlyphNode(QSGRenderContext *rc, QSGTextNode::RenderType renderType)
 {
     Q_UNUSED(rc);
     Q_UNUSED(renderType);
-    Q_UNUSED(renderTypeQuality);
     return new QSGSoftwareGlyphNode();
+}
+
+QSGTextNode::RenderType QSGSoftwareContext::processTextRenderType(QSGTextNode::RenderType renderType)
+{
+    Q_UNUSED(renderType);
+    return QSGTextNode::NativeRendering;
 }
 
 QSGLayer *QSGSoftwareContext::createLayer(QSGRenderContext *renderContext)

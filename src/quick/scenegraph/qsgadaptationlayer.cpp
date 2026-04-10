@@ -432,6 +432,16 @@ QSGShaderEffectNode::~QSGShaderEffectNode()
 QSGGlyphNode::~QSGGlyphNode()
     = default;
 
+void QSGGlyphNode::recycle()
+{
+    m_bounding_rect = QRectF{};
+
+    setRenderOrder(0);
+    setInheritedOpacity(1);
+    setRendererMatrix(nullptr);
+    setRendererClipList(nullptr);
+}
+
 QSGDistanceFieldGlyphConsumer::~QSGDistanceFieldGlyphConsumer()
     = default;
 
