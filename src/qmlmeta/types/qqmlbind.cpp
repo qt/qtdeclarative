@@ -1154,6 +1154,26 @@ void QQmlBindPrivate::decodeBinding(
         setVariant(QV4::PersistentValue(compilationUnit->engine, QV4::Encode::null()));
         break;
     case QV4::CompiledData::Binding::Type_Object:
+    {
+        // skip creation/binding logic if we are not actually dealing with a deferred property
+        if (!immediateState)
+            return;
+        auto v4 = compilationUnit->engine;
+        // we are handling someId.someProp: SomeObject {}
+        // Via entry.prop, we get  the QQmlProperty for someProp, notably including its object (not Binding)
+        const QQmlProperty &property = entry.prop;
+        QObject *bindingTargetObject = property.object();
+
+        // via bindign.value.objectIndex, we get the object id of SomeObject
+        int objectToBeCreated = binding->value.objectIndex;
+        // we want to create that object in the context of the bindingTargetObject
+        auto context = qmlContext(bindingTargetObject);
+        auto contextData = QQmlContextData::get(context);
+        initCreator(deferredData, contextData, immediateState);
+        QObject *newObject = immediateState->creator()->createObjectInContext(objectToBeCreated, bindingTargetObject, contextData);
+        setVariant(QV4::PersistentValue(v4, QV4::QObjectWrapper::wrap(v4, newObject)));
+        break;
+    }
     case QV4::CompiledData::Binding::Type_Invalid:
         break;
     }

@@ -57,6 +57,7 @@ private slots:
     void restoreNotConfusedByTypeConversion();
     void deleteStashedObject();
     void multiValueTypeBinding();
+    void objectBindingToId();
 
 private:
     QQmlEngine engine;
@@ -968,6 +969,26 @@ void tst_qqmlbinding::multiValueTypeBinding()
     QCOMPARE(rect.x(), 12);
     QCOMPARE(rect.y(), 24);
     QCOMPARE(rect.width(), 9);
+}
+
+void tst_qqmlbinding::objectBindingToId()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("objectBindingToId.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+
+    // initially: binding not active
+    QCOMPARE(root->property("background").value<QObject *>(), nullptr);
+
+    root->setProperty("bindingActive", true);
+    QCOMPARE_NE(root->property("background").value<QObject *>(), nullptr);
+
+    root->setProperty("bindingActive", false);
+    QCOMPARE(root->property("background").value<QObject *>(), nullptr);
+
+    root->setProperty("bindingActive", true);
+    QCOMPARE_NE(root->property("background").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_qqmlbinding)
