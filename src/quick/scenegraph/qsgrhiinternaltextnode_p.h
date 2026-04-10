@@ -24,8 +24,10 @@ class QSGRhiInternalTextNode : public QSGInternalTextNode
 {
 public:
     QSGRhiInternalTextNode(QSGRenderContext *renderContext);
-    void addDecorationNode(const QRectF &rect, const QColor &color,
-                           QTextCharFormat::UnderlineStyle style) override;
+    void addDecorationNode(const QRectF &rect,
+                           const QColor &color,
+                           QTextCharFormat::UnderlineStyle style,
+                           RecycleBin *recycleBin) override;
 };
 
 QT_END_NAMESPACE

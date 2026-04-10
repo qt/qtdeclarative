@@ -19,6 +19,9 @@
 #endif
 
 #include <QtGui/qrawfont.h>
+#include <QtGui/qtextdocument.h>
+
+#include <QtQuick/qsgtextnode.h>
 
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
@@ -110,6 +113,11 @@ private slots:
 #ifdef QT_BUILD_INTERNAL
     void mutabilityGroups();
 #endif
+
+    void sgTextNode_data();
+    void sgTextNode();
+    void sgInternalTextNodeRecycle_data();
+    void sgInternalTextNodeRecycle();
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -1123,6 +1131,289 @@ void tst_SceneGraph::mutabilityGroups()
     }
 }
 #endif // QT_BUILD_INTERNAL
+
+class CustomTextItem : public QQuickItem {
+public:
+    CustomTextItem(const QUrl &imgUrl)
+        : m_imgUrl(imgUrl)
+    {
+        setFlag(ItemHasContents);
+    }
+
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+    {
+        Q_D(QQuickItem);
+        delete oldNode;
+
+        QSGTextNode *node = window()->createTextNode();
+
+        if (!m_imgUrl.isEmpty()) {
+            QTextDocument textDocument;
+            textDocument.setHtml(QStringLiteral("<html><body>Text هناك<u>Underline</u><img src=\"%1\" width=20 height=20 />").arg(m_imgUrl.toString()));
+
+            node->addTextDocument(QPointF(0, 0), &textDocument, 0, 3);
+        } else {
+            QTextLayout textLayout;
+            textLayout.setText(QStringLiteral("Text هناك"));
+            textLayout.beginLayout();
+            textLayout.createLine();
+            textLayout.endLayout();
+
+            node->addTextLayout(QPointF(0, 0), &textLayout, 0, 3);
+        }
+
+        return node;
+    }
+
+private:
+    Q_DECLARE_PRIVATE(QQuickItem)
+
+    QUrl m_imgUrl;
+};
+
+class ChildNodeRegister : public QSGNodeVisitorEx
+{
+public:
+    ChildNodeRegister()
+    {
+    }
+
+    bool visit(QSGTransformNode *node) override
+    {
+        Q_UNREACHABLE();
+        return false;
+    }
+
+    void endVisit(QSGTransformNode *) override
+    {
+    }
+
+    bool visit(QSGClipNode *node) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGClipNode *) override
+    {
+    }
+
+    bool visit(QSGGeometryNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGGeometryNode *) override
+    {
+    }
+
+    bool visit(QSGOpacityNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGOpacityNode *) override
+    {
+    }
+
+    bool visit(QSGInternalImageNode *) override
+    {
+        hasImageNode = true;
+        return false;
+    }
+
+    void endVisit(QSGInternalImageNode *) override
+    {
+    }
+
+    bool visit(QSGPainterNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGPainterNode *) override
+    {
+    }
+
+    bool visit(QSGInternalRectangleNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGInternalRectangleNode *) override
+    {
+    }
+
+    bool visit(QSGGlyphNode *) override
+    {
+        hasGlyphNode = true;
+        return false;
+    }
+
+    void endVisit(QSGGlyphNode *) override
+    {
+    }
+
+    bool visit(QSGRootNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGRootNode *) override
+    {
+    }
+
+#if QT_CONFIG(quick_sprite)
+    bool visit(QSGSpriteNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGSpriteNode *) override
+    {
+    }
+#endif
+    bool visit(QSGRenderNode *) override
+    {
+        return false;
+    }
+
+    void endVisit(QSGRenderNode *) override
+    {
+    }
+
+    bool hasImageNode = false;
+    bool hasGlyphNode = false;
+};
+
+
+void tst_SceneGraph::sgTextNode_data()
+{
+    QTest::addColumn<QUrl>("imgUrl");
+
+    QTest::newRow("text layout") << QUrl{};
+    QTest::newRow("text document") << testFileUrl(QLatin1String("blacknwhite.png"));
+}
+
+void tst_SceneGraph::sgTextNode()
+{
+    QFETCH(QUrl, imgUrl);
+
+    QQuickView view;
+    view.setSource(testFileUrl("simple.qml"));
+    view.setResizeMode(QQuickView::SizeViewToRootObject);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    CustomTextItem *item = new CustomTextItem(imgUrl);
+    item->setParentItem(view.rootObject());
+    item->setParent(view.rootObject());
+
+    view.grabWindow(); // Create nodes
+
+    QQuickItemPrivate *d = QQuickItemPrivate::get(item);
+    QVERIFY(d);
+    QVERIFY(d->paintNode);
+    QVERIFY(d->paintNode->childCount());
+
+    ChildNodeRegister reg;
+    QSGNode *node = d->paintNode->firstChild();
+    while (node != nullptr) {
+        if (node->flags().testFlag(QSGNode::IsVisitableNode)) {
+            QSGVisitableNode *visitableNode = static_cast<QSGVisitableNode *>(node);
+            visitableNode->accept(&reg);
+        }
+
+        node = node->nextSibling();
+    }
+
+    QVERIFY(reg.hasGlyphNode);
+    QCOMPARE(reg.hasImageNode, !imgUrl.isEmpty());
+}
+
+void tst_SceneGraph::sgInternalTextNodeRecycle_data()
+{
+    QTest::addColumn<QUrl>("imgUrl");
+
+    QTest::newRow("text layout") << QUrl{};
+    QTest::newRow("text document") << testFileUrl(QLatin1String("blacknwhite.png"));
+}
+
+void tst_SceneGraph::sgInternalTextNodeRecycle()
+{
+    QFETCH(QUrl, imgUrl);
+
+    QQuickView view;
+    view.setSource(testFileUrl("simple.qml"));
+    view.setResizeMode(QQuickView::SizeViewToRootObject);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickText *textItem = view.rootObject()->findChild<QQuickText *>();
+    QVERIFY(textItem);
+    view.grabWindow(); // Create nodes
+
+    QQuickItemPrivate *d = QQuickItemPrivate::get(textItem);
+    QVERIFY(d);
+
+    {
+        QVERIFY(d->paintNode);
+    }
+
+    if (imgUrl.isEmpty()) {
+        textItem->setText(QStringLiteral("<u>Tex</u>t هناك"));
+    } else {
+        textItem->setTextFormat(QQuickText::RichText);
+        textItem->setText(QStringLiteral("<html><body>Text هناك<u>Underline</u><img src=\"%1\" width=20 height=20 />").arg(imgUrl.toString()));
+    }
+
+    view.grabWindow();
+
+    // Did we successfully make some nodes?
+    {
+        ChildNodeRegister reg;
+        QSGNode *node = d->paintNode->firstChild();
+        while (node != nullptr) {
+            if (node->flags().testFlag(QSGNode::IsVisitableNode)) {
+                QSGVisitableNode *visitableNode = static_cast<QSGVisitableNode *>(node);
+                visitableNode->accept(&reg);
+            }
+
+            node = node->nextSibling();
+        }
+
+        QVERIFY(reg.hasGlyphNode);
+        QCOMPARE(reg.hasImageNode, !imgUrl.isEmpty());
+    }
+
+    // Replace with a single glyph and check that everything else was cleared out
+    textItem->setText(QStringLiteral("a"));
+    view.grabWindow();
+
+    QSGNode *childNode = nullptr;
+    {
+        QVERIFY(d->paintNode);
+        QCOMPARE(d->paintNode->childCount(), 1);
+        childNode = d->paintNode->childAtIndex(0);
+    }
+
+    // Replace single glyph with single glyph and verify that glyph node is reused
+    textItem->setText(QStringLiteral("b"));
+    view.grabWindow();
+
+    {
+        QVERIFY(d->paintNode);
+        QCOMPARE(d->paintNode->childCount(), 1);
+        QCOMPARE(d->paintNode->childAtIndex(0), childNode);
+    }
+
+    textItem->setText(QString{});
+    view.grabWindow();
+
+    {
+        QVERIFY(!d->paintNode);
+    }
+
+}
 
 #include "tst_scenegraph.moc"
 

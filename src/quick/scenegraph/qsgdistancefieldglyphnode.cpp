@@ -14,7 +14,8 @@ Q_LOGGING_CATEGORY(lcSgText, "qt.scenegraph.text")
 static std::atomic<qint64> s_totalAllocation = 0;
 
 QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
-    : m_glyphNodeType(RootGlyphNode)
+    : QSGGlyphNode(QSGTextNode::QtRendering)
+    , m_glyphNodeType(RootGlyphNode)
     , m_context(context)
     , m_material(nullptr)
     , m_glyph_cache(nullptr)
@@ -35,7 +36,14 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
 
 QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
 {
+    cleanup();
+}
+
+void QSGDistanceFieldGlyphNode::cleanup()
+{
     delete m_material;
+    m_material = nullptr;
+    m_texture = nullptr;
 
     if (m_glyphNodeType == SubGlyphNode)
         return;
@@ -43,7 +51,27 @@ QSGDistanceFieldGlyphNode::~QSGDistanceFieldGlyphNode()
     if (m_glyph_cache) {
         m_glyph_cache->release(m_glyphs.glyphIndexes());
         m_glyph_cache->unregisterGlyphNode(this);
+        m_glyph_cache = nullptr;
     }
+}
+
+void QSGDistanceFieldGlyphNode::recycle()
+{
+    QSGGlyphNode::recycle();
+
+    cleanup();
+    m_color = QColor{};
+    m_baseLine = QPointF{};
+    m_originalPosition = QPointF{};
+    m_position = QPointF{};
+    m_glyphs = QGlyphRun{};
+    m_geometry.allocate(0, 0); // Shrink
+    m_style = QQuickText::Normal;
+    m_antialiasingMode = GrayAntialiasing;
+    m_boundingRect = QRectF{};
+    m_renderTypeQuality = -1;
+    m_dirtyGeometry = true;
+    m_dirtyMaterial = true;
 }
 
 void QSGDistanceFieldGlyphNode::setColor(const QColor &color)

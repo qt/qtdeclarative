@@ -830,8 +830,9 @@ void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularN
 }
 
 void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
-                                            QQuickText::TextStyle style,
-                                            const QColor &styleColor)
+                                           QSGInternalTextNode::RecycleBin *recycleBin,
+                                           QQuickText::TextStyle style,
+                                           const QColor &styleColor)
 {
     if (m_currentLine.isValid())
         processCurrentLine();
@@ -844,26 +845,26 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
         const QRectF &rect = m_backgrounds.at(i).first;
         const QColor &color = m_backgrounds.at(i).second;
         if (color.alpha() != 0)
-            parentNode->addRectangleNode(rect, color);
+            parentNode->addRectangleNode(rect, color, recycleBin);
     }
 
     // Add all text with unselected color first
     for (int i = 0; i < nodes.size(); ++i) {
         const BinaryTreeNode *node = nodes.at(i);
-        parentNode->addGlyphs(node->position, node->glyphRun, node->color, style, styleColor, nullptr);
+        parentNode->addGlyphs(node->position, node->glyphRun, node->color, recycleBin, style, styleColor, nullptr);
     }
 
     for (int i = 0; i < imageNodes.size(); ++i) {
         const BinaryTreeNode *node = imageNodes.at(i);
         if (node->selectionState == Unselected)
-            parentNode->addImage(node->boundingRect, node->image);
+            parentNode->addImage(node->boundingRect, node->image, recycleBin);
     }
 
     // Then, prepend all selection rectangles to the tree
     for (int i = 0; i < m_selectionRects.size(); ++i) {
         const QRectF &rect = m_selectionRects.at(i);
         if (m_selectionColor.alpha() != 0)
-            parentNode->addRectangleNode(rect, m_selectionColor);
+            parentNode->addRectangleNode(rect, m_selectionColor, recycleBin);
     }
 
     // Add decorations for each node to the tree.
@@ -874,8 +875,10 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                 ? m_selectedTextColor
                 : textDecoration.color;
 
-        parentNode->addDecorationNode(textDecoration.rect, color,
-                                      resolveUnderlineStyle(textDecoration.underlineStyle));
+        parentNode->addDecorationNode(textDecoration.rect,
+                                      color,
+                                      resolveUnderlineStyle(textDecoration.underlineStyle),
+                                      recycleBin);
     }
 
     // Finally add the selected text on top of everything
@@ -896,10 +899,10 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
             const BinaryTreeNode *nextNode = nextNodeIndex == nodes.size() ? 0 : nodes.at(nextNodeIndex);
 
             if (previousNode != nullptr && previousNode->selectionState == Unselected)
-                parentNode->addGlyphs(previousNode->position, previousNode->glyphRun, color, style, styleColor, clipNode);
+                parentNode->addGlyphs(previousNode->position, previousNode->glyphRun, color, recycleBin, style, styleColor, clipNode);
 
             if (nextNode != nullptr && nextNode->selectionState == Unselected)
-                parentNode->addGlyphs(nextNode->position, nextNode->glyphRun, color, style, styleColor, clipNode);
+                parentNode->addGlyphs(nextNode->position, nextNode->glyphRun, color, recycleBin, style, styleColor, clipNode);
 
             // If the previous or next node completely overlaps this one, then we have already drawn the glyphs of
             // this node
@@ -946,18 +949,18 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
             }
 
             if (drawCurrent)
-                parentNode->addGlyphs(node->position, node->glyphRun, color, style, styleColor, clipNode);
+                parentNode->addGlyphs(node->position, node->glyphRun, color, recycleBin, style, styleColor, clipNode);
         }
     }
 
     for (int i = 0; i < imageNodes.size(); ++i) {
         const BinaryTreeNode *node = imageNodes.at(i);
         if (node->selectionState == Selected) {
-            parentNode->addImage(node->boundingRect, node->image);
+            parentNode->addImage(node->boundingRect, node->image, recycleBin);
             if (node->selectionState == Selected) {
                 QColor color = m_selectionColor;
                 color.setAlpha(128);
-                parentNode->addRectangleNode(node->boundingRect, color);
+                parentNode->addRectangleNode(node->boundingRect, color, recycleBin);
             }
         }
     }

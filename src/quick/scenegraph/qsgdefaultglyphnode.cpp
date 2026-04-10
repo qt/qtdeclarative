@@ -10,7 +10,8 @@
 QT_BEGIN_NAMESPACE
 
 QSGDefaultGlyphNode::QSGDefaultGlyphNode(QSGRenderContext *context)
-    : m_context(context)
+    : QSGGlyphNode(QSGTextNode::NativeRendering)
+    , m_context(context)
     , m_glyphNodeType(RootGlyphNode)
     , m_dirtyGeometry(false)
     , m_preferredAntialiasingMode(DefaultAntialiasing)
@@ -25,11 +26,35 @@ QSGDefaultGlyphNode::QSGDefaultGlyphNode(QSGRenderContext *context)
 
 QSGDefaultGlyphNode::~QSGDefaultGlyphNode()
 {
+    cleanup();
+}
+
+void QSGDefaultGlyphNode::cleanup()
+{
+    setMaterial(nullptr);
+
     if (m_glyphNodeType == SubGlyphNode)
         return;
 
     qDeleteAll(m_nodesToDelete);
     m_nodesToDelete.clear();
+}
+
+void QSGDefaultGlyphNode::recycle()
+{
+    QSGGlyphNode::recycle();
+
+    cleanup();
+
+    m_glyphs = QGlyphRun{};
+    m_position = QPointF{};
+    m_color = QColor{};
+    m_style = QQuickText::Normal;
+    m_baseLine = QPointF{};
+    m_geometry.allocate(0, 0);
+
+    m_dirtyGeometry = true;
+    m_preferredAntialiasingMode = DefaultAntialiasing;
 }
 
 void QSGDefaultGlyphNode::setColor(const QColor &color)

@@ -41,7 +41,11 @@ public:
     void setStyleColor(const QColor &color) override;
     QPointF baseLine() const override { return m_baseLine; }
 
+    void recycle() override;
+
 private:
+    void cleanup();
+
     QSGRenderContext *m_context;
     QSGGeometry m_geometry;
     QColor m_color = Qt::black;
@@ -54,7 +58,7 @@ private:
     uint m_dirtyGeometry: 1;
     qreal m_fontSize = 0.0f;
     QGlyphRun m_glyphs;
-    QQuickText::TextStyle m_style;
+    QQuickText::TextStyle m_style = QQuickText::Normal;
     QColor m_styleColor;
     QPointF m_baseLine;
     QPointF m_position;

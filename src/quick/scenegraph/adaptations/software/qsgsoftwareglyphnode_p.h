@@ -35,6 +35,8 @@ public:
 
     void paint(QPainter *painter);
 
+    void recycle() override;
+
 private:
     void recalculateBoundingRect();
     QPointF m_position;
@@ -43,6 +45,7 @@ private:
     QSGGeometry m_geometry;
     QQuickText::TextStyle m_style;
     QColor m_styleColor;
+    bool m_recycled = false;
 };
 
 QT_END_NAMESPACE

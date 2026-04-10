@@ -51,12 +51,15 @@ public:
 
     void updateGeometry();
 
+    void recycle() override;
+
 private:
     enum DistanceFieldGlyphNodeType {
         RootGlyphNode,
         SubGlyphNode
     };
 
+    void cleanup();
     void setGlyphNodeType(DistanceFieldGlyphNodeType type) { m_glyphNodeType = type; }
     void updateMaterial();
 

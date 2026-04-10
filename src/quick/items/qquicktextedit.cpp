@@ -2658,7 +2658,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                     d->addCurrentTextNodeToRoot(&engine, rootNode, node, nodeIterator, nodeStart);
             }
         }
-        frameDecorationsEngine.addToSceneGraph(rootNode->frameDecorationsNode, QQuickText::Normal, QColor());
+        frameDecorationsEngine.addToSceneGraph(rootNode->frameDecorationsNode, nullptr, QQuickText::Normal, QColor());
         // Now prepend the frame decorations since we want them rendered first, with the text nodes and cursor in front.
         rootNode->prependChildNode(rootNode->frameDecorationsNode);
 
@@ -3313,7 +3313,7 @@ void QQuickTextEditPrivate::handleFocusEvent(QFocusEvent *event)
 
 void QQuickTextEditPrivate::addCurrentTextNodeToRoot(QQuickTextNodeEngine *engine, QSGTransformNode *root, QSGInternalTextNode *node, TextNodeIterator &it, int startPos)
 {
-    engine->addToSceneGraph(node, QQuickText::Normal, QColor());
+    engine->addToSceneGraph(node, nullptr, QQuickText::Normal, QColor());
     it = textNodeMap.insert(it, TextNode(startPos, node));
     ++it;
     root->appendChildNode(node);

@@ -33,6 +33,7 @@
 #include <private/qdistancefield_p.h>
 #include <private/qintrusivelist_p.h>
 #include <rhi/qshader.h>
+#include <QtQuick/qsgtextnode.h>
 
 // ### remove
 #include <QtQuick/private/qquicktext_p.h>
@@ -376,7 +377,7 @@ public:
         HighQualitySubPixelAntialiasing
     };
 
-    QSGGlyphNode() {}
+    QSGGlyphNode(QSGTextNode::RenderType renderType) : m_renderType(renderType) {}
     ~QSGGlyphNode() override;
 
     virtual void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) = 0;
@@ -391,11 +392,16 @@ public:
     virtual void setPreferredAntialiasingMode(AntialiasingMode) = 0;
     virtual void setRenderTypeQuality(int renderTypeQuality) { Q_UNUSED(renderTypeQuality) }
 
+    QSGTextNode::RenderType renderType() const { return m_renderType; }
+
+    virtual void recycle();
+
     virtual void update() = 0;
 
-    void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+    void accept(QSGNodeVisitorEx *visitor) override { visitor->visit(this); visitor->endVisit(this); }
 protected:
     QRectF m_bounding_rect;
+    QSGTextNode::RenderType m_renderType;
 };
 
 class Q_QUICK_EXPORT QSGDistanceFieldGlyphConsumer

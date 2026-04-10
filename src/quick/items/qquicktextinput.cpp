@@ -1960,12 +1960,14 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
 
     if (!d->textLayoutDirty && oldNode != nullptr) {
         if (showCursor)
-            node->setCursor(cursorRectangle(), d->color);
+            node->setCursor(cursorRectangle(), d->color, nullptr);
         else
             node->clearCursor();
     } else {
         node->setRenderType(QSGTextNode::RenderType(d->renderType));
-        node->clear();
+
+        QSGInternalTextNode::RecycleBin recycleBin;
+        node->recycle(&recycleBin);
         node->setMatrix(QMatrix4x4());
         node->setTextStyle(QSGInternalTextNode::Normal);
         node->setColor(d->color);
@@ -1986,14 +1988,17 @@ QSGNode *QQuickTextInput::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
                 || !d->m_textLayout.preeditAreaText().isEmpty()
 #endif
                 ) {
-            node->addTextLayout(offset, &d->m_textLayout,
+            node->addTextLayout(offset,
+                                &d->m_textLayout,
+                                &recycleBin,
                                 d->selectionStart(),
                                 d->selectionEnd() - 1); // selectionEnd() returns first char after
                                                         // selection
         }
 
         if (showCursor)
-            node->setCursor(cursorRectangle(), d->color);
+            node->setCursor(cursorRectangle(), d->color, &recycleBin);
+        node->discardUnusedNodes(&recycleBin);
 
         d->textLayoutDirty = false;
     }
