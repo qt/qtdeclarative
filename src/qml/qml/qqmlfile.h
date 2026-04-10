@@ -107,7 +107,7 @@ private:
 #if QT_DEPRECATED_SINCE(6, 11)
     QQmlFilePrivate *d;
 #else
-    void *d = nullptr;
+    Q_DECL_UNUSED_MEMBER void *d = nullptr;
 #endif
 };
 
