@@ -8,6 +8,8 @@ Window {
 
     property bool finishedSuccessfuly: false
     property var itemGrabResult: null
+    property url grabbedUrl
+    property var grabbedImage
 
     Item {
         id: child
@@ -17,9 +19,11 @@ Window {
         height: 50
 
         Component.onCompleted: {
-            const grabbed = child.grabToImage(function(itemGrabResult) {
-                finishedSuccessfuly = true
-                root.itemGrabResult = itemGrabResult
+            const grabbed = child.grabToImage(function(result) {
+                root.itemGrabResult = result
+                root.grabbedUrl = result.url
+                root.grabbedImage = result.image
+                root.finishedSuccessfuly = true
             })
         }
     }

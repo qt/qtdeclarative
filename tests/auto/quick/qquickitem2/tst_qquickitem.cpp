@@ -3945,6 +3945,20 @@ void tst_QQuickItem::grab()
         QCOMPARE(image.pixel(bottomRight), qRgb(0, 0, 255));
     }
 #endif
+    {
+        // Make sure that we do not deadlock when calling getters in the
+        // slot connected to the ready() signal.
+        QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
+        QImage capturedImage;
+        QUrl capturedUrl;
+        connect(result.data(), &QQuickItemGrabResult::ready, result.data(),
+                [result, &capturedImage, &capturedUrl]() {
+                    capturedImage = result->image();
+                    capturedUrl = result->url();
+                });
+        QTRY_VERIFY(!capturedImage.isNull());
+        QVERIFY(!capturedUrl.isEmpty());
+    }
 }
 
 void tst_QQuickItem::isAncestorOf()

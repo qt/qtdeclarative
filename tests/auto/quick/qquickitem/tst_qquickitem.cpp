@@ -11,6 +11,7 @@
 #include "private/qquickfocusscope_p.h"
 #include "private/qquickrectangle_p.h"
 #include "private/qquickitem_p.h"
+#include <QtGui/qimage.h>
 #include <QtGui/private/qevent_p.h>
 #include <qpa/qwindowsysteminterface.h>
 #ifdef Q_OS_WIN
@@ -2697,6 +2698,8 @@ void tst_qquickitem::grabImage()
     QTRY_VERIFY(window->property("finishedSuccessfuly").toBool());
     QQuickItemGrabResult *result = window->property("itemGrabResult").value<QQuickItemGrabResult*>();
     QVERIFY(result);
+    QVERIFY(!window->property("grabbedUrl").toUrl().isEmpty());
+    QVERIFY(!window->property("grabbedImage").value<QImage>().isNull());
 }
 
 void tst_qquickitem::invisibleItemCursorShape()

@@ -20,6 +20,7 @@
 #include <private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 
+#include <QtCore/qmutex.h>
 #include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
@@ -47,8 +48,10 @@ public:
         delete cacheEntry;
     }
 
+    // Should be called under a locked mutex!
     bool hasCallback() const { return qmlEngine && callback.isCallable(); }
 
+    // Should be called under a locked mutex!
     void ensureImageInCache() const {
         if (url.isEmpty() && !image.isNull()) {
             url.setScheme(QQuickPixmap::itemGrabberScheme);
@@ -60,6 +63,8 @@ public:
     }
 
     static QQuickItemGrabResult *create(QQuickItem *item, const QSize &size);
+
+    mutable QBasicMutex mutex;
 
     QImage image;
 
@@ -174,6 +179,7 @@ bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
     Q_D(const QQuickItemGrabResult);
     if (fileName.startsWith(QLatin1String("file:/")))
         return saveToFile(QUrl(fileName));
+    QMutexLocker locker(&d->mutex);
     return d->image.save(fileName);
 }
 
@@ -191,6 +197,7 @@ bool QQuickItemGrabResult::saveToFile(const QUrl &filePath) const
         qWarning() << "saveToFile can only save to a file on the local filesystem";
         return false;
     }
+    QMutexLocker locker(&d->mutex);
     return d->image.save(filePath.toLocalFile());
 }
 
@@ -210,6 +217,7 @@ bool QQuickItemGrabResult::saveToFile(const QString &fileName)
 QUrl QQuickItemGrabResult::url() const
 {
     Q_D(const QQuickItemGrabResult);
+    QMutexLocker locker(&d->mutex);
     d->ensureImageInCache();
     return d->url;
 }
@@ -217,6 +225,7 @@ QUrl QQuickItemGrabResult::url() const
 QImage QQuickItemGrabResult::image() const
 {
     Q_D(const QQuickItemGrabResult);
+    QMutexLocker locker(&d->mutex);
     return d->image;
 }
 
@@ -227,9 +236,17 @@ bool QQuickItemGrabResult::event(QEvent *e)
 {
     Q_D(QQuickItemGrabResult);
     if (e->type() == Event_Grab_Completed) {
-        if (d->hasCallback()) {
-        // JS callback
-            d->callback.call(QJSValueList() << d->qmlEngine->newQObject(this));
+        // We cannot hold the mutex while emitting the signal or calling the
+        // callback, because they can immediately call various getters.
+        QJSValue callback;
+        QQmlEngine *engine = nullptr;
+        if (QMutexLocker locker(&d->mutex); d->hasCallback()) {
+            callback = d->callback;
+            engine = d->qmlEngine;
+        }
+        if (engine) {
+            // JS callback
+            callback.call(QJSValueList() << engine->newQObject(this));
             QQmlEngine::setObjectOwnership(this, QQmlEngine::JavaScriptOwnership);
         } else {
             Q_EMIT ready();
@@ -246,6 +263,7 @@ bool QQuickItemGrabResult::event(QEvent *e)
 void QQuickItemGrabResult::setup()
 {
     Q_D(QQuickItemGrabResult);
+    QMutexLocker locker(&d->mutex);
     if (!d->item) {
         disconnect(d->setupConnection);
         disconnect(d->renderConnection);
@@ -268,6 +286,7 @@ void QQuickItemGrabResult::setup()
 void QQuickItemGrabResult::render()
 {
     Q_D(QQuickItemGrabResult);
+    QMutexLocker locker(&d->mutex);
     if (!d->texture)
         return;
 
@@ -330,6 +349,8 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
 
     QQuickItemGrabResult *result = new QQuickItemGrabResult();
     QQuickItemGrabResultPrivate *d = result->d_func();
+    // no need to lock here, since we didn't do the connection yet, so it cannot be
+    // accessed from multiple threads
     d->item = item;
     d->window = item->window();
     d->textureSize = size;
@@ -371,6 +392,7 @@ QSharedPointer<QQuickItemGrabResult> QQuickItem::grabToImage(const QSize &target
     result->setParent(nullptr); // the smart pointer now manages the lifetime
 
     auto weakResult = QWeakPointer(sharedResult);
+    QMutexLocker locker(&d->mutex);
     d->setupConnection = connect(window(), &QQuickWindow::beforeSynchronizing,
                                  result, [weakResult] {
                                      if (auto strong = weakResult.toStrongRef(); strong)
@@ -452,13 +474,15 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
 
     QQuickItemGrabResultPrivate *d = result->d_func();
 
+    QMutexLocker locker(&d->mutex);
+    d->qmlEngine = engine;
+    d->callback = callback;
+
     d->setupConnection = connect(window(), &QQuickWindow::beforeSynchronizing,
                                  result, &QQuickItemGrabResult::setup, Qt::DirectConnection);
     d->renderConnection = connect(window(), &QQuickWindow::afterRendering,
                                   result, &QQuickItemGrabResult::render, Qt::DirectConnection);
 
-    d->qmlEngine = engine;
-    d->callback = callback;
     return true;
 }
 
