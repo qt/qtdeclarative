@@ -58,8 +58,10 @@ DialogsQuickImpl.FolderBreadcrumbBar {
         x: control.leftPadding
         y: control.topPadding
         icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/up-icon-round.png"
+        icon.color: control.palette.buttonText
         icon.width: 16
         icon.height: 16
+        height: control.contentItem.height
         width: height
         focusPolicy: Qt.TabFocus
     }
