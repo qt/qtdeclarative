@@ -793,7 +793,7 @@ QSGTextureProvider *QQuickCanvasItem::textureProvider() const
 }
 
 /*!
-    \qmlmethod object QtQuick::Canvas::getContext(string contextId, ... args)
+    \qmlmethod Context2D QtQuick::Canvas::getContext(string contextId, ... args)
 
     Returns a drawing context, or \c null if no context is available.
 

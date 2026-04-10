@@ -354,7 +354,7 @@ QQmlObjectModelAttached *QQmlObjectModel::qmlAttachedProperties(QObject *obj)
 }
 
 /*!
-    \qmlmethod object QtQml.Models::ObjectModel::get(int index)
+    \qmlmethod QtObject QtQml.Models::ObjectModel::get(int index)
     \since 5.6
 
     Returns the item at \a index in the model. This allows the item

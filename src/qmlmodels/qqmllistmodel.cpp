@@ -2663,7 +2663,7 @@ void QQmlListModel::append(QQmlV4FunctionPtr args)
 }
 
 /*!
-    \qmlmethod object ListModel::get(int index)
+    \qmlmethod var ListModel::get(int index)
 
     Returns the item at \a index in the list model. This allows the item
     data to be accessed or modified from JavaScript:

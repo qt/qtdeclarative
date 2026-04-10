@@ -1758,7 +1758,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 }
 
 /*!
-    \qmlmethod QtObject Component::createObject(QtObject parent, object properties)
+    \qmlmethod QtObject Component::createObject(QtObject parent, var properties)
 
     Creates and returns an object instance of this component that will have
     the given \a parent and \a properties. The \a properties argument is optional.
@@ -1985,7 +1985,7 @@ QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &propert
 }
 
 /*!
-    \qmlmethod object Component::incubateObject(QtObject parent, object properties, enumeration mode)
+    \qmlmethod var Component::incubateObject(QtObject parent, var properties, enumeration mode)
 
     Creates an incubator for an instance of this component. Incubators allow new component
     instances to be instantiated asynchronously and do not cause freezes in the UI.

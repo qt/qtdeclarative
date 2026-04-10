@@ -699,7 +699,7 @@ Item {
 
     /*!
         \since 5.9
-        \qmlmethod object TestCase::createTemporaryQmlObject(string qml, object parent, string filePath)
+        \qmlmethod QtObject TestCase::createTemporaryQmlObject(string qml, QtObject parent, string filePath)
 
         This function dynamically creates a QML object from the given \a qml
         string with the specified \a parent. The returned object will be
@@ -745,7 +745,7 @@ Item {
 
     /*!
         \since 5.9
-        \qmlmethod object TestCase::createTemporaryObject(Component component, object parent, object properties)
+        \qmlmethod QtObject TestCase::createTemporaryObject(Component component, QtObject parent, var properties)
 
         This function dynamically creates a QML object from the given
         \a component with the specified optional \a parent and \a properties.
@@ -1017,7 +1017,7 @@ Item {
     }
 
     /*!
-        \qmlmethod object TestCase::grabImage(item)
+        \qmlmethod QtObject TestCase::grabImage(Item item)
 
         Returns a snapshot image object of the given \a item.
 

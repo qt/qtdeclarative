@@ -142,7 +142,7 @@ The following functions are also on the Qt object.
 */
 
 /*!
-    \qmlproperty object Qt::platform
+    \qmlproperty var Qt::platform
     \since 5.1
 
     The \c platform object provides info about the underlying platform.
@@ -217,7 +217,7 @@ The following functions are also on the Qt object.
 */
 
 /*!
-    \qmlproperty object Qt::styleHints
+    \qmlproperty QtObject Qt::styleHints
     \since 5.5
 
     The \c styleHints object provides platform-specific style hints and settings.
@@ -231,7 +231,7 @@ The following functions are also on the Qt object.
 */
 
 /*!
-\qmlmethod object Qt::include(string url, jsobject callback)
+\qmlmethod var Qt::include(string url, jsobject callback)
 \deprecated
 
 This method should not be used. Use ECMAScript modules, and the native
@@ -455,7 +455,7 @@ QSizeF QtObject::size(double w, double h) const
 }
 
 /*!
-    \qmlmethod font Qt::font(object fontSpecifier)
+    \qmlmethod font Qt::font(var fontSpecifier)
 
     Returns a font with the properties specified in the \a fontSpecifier object
     or the nearest matching font.  The \a fontSpecifier object should contain
@@ -1418,7 +1418,7 @@ void QtObject::exit(int retCode) const
 }
 
 /*!
-\qmlmethod object Qt::createQmlObject(string qml, object parent, url url)
+\qmlmethod QtObject Qt::createQmlObject(string qml, QtObject parent, url url)
 
 Compiles the given \a qml string into a component and then returns a new object created from
 that component. The new object will have the specified \a parent. Returns \c null if there was

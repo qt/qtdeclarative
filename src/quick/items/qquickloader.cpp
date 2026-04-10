@@ -488,7 +488,7 @@ QUrl QQuickLoader::setSourceUrlHelper(const QUrl &unresolvedUrl)
 }
 
 /*!
-    \qmlmethod object QtQuick::Loader::setSource(url source, object properties)
+    \qmlmethod void QtQuick::Loader::setSource(url source, var properties)
 
     Creates an object instance of the given \a source component that will have
     the given \a properties. The \a properties argument is optional.  The instance
