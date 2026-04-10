@@ -6,6 +6,7 @@ import QtTest
 import QtQuick.Controls
 import QtQuick.Templates as T
 import Qt.test.controls
+import QtQuick.Layouts
 
 TestCase {
     id: testCase
@@ -65,12 +66,17 @@ TestCase {
     Component {
         id: flickableLabel
         ScrollView {
+            width: 200
+            height: 200
+            visible: true
             Flickable {
+                clip: true
                 contentWidth: label.implicitWidth
                 contentHeight: label.implicitHeight
                 Label {
                     id: label
                     text: "ABC"
+                    color: "red"
                     font.pixelSize: 512
                 }
             }
@@ -225,8 +231,8 @@ TestCase {
         let label = flickable.contentItem.children[0]
         compare(label.text, "ABC")
 
-        compare(control.implicitWidth, label.implicitWidth)
-        compare(control.implicitHeight, label.implicitHeight)
+        compare(control.implicitWidth, label.implicitWidth + control.leftPadding + control.rightPadding)
+        compare(control.implicitHeight, label.implicitHeight + control.topPadding + control.bottomPadding)
 
         compare(control.contentWidth, label.implicitWidth)
         compare(control.contentHeight, label.implicitHeight)
@@ -235,12 +241,12 @@ TestCase {
         compare(flickable.contentHeight, label.implicitHeight)
 
         control.contentWidth = 200
-        compare(control.implicitWidth, 200)
+        compare(control.implicitWidth, 200 + control.leftPadding + control.rightPadding)
         compare(control.contentWidth, 200)
         compare(flickable.contentWidth, 200)
 
         control.contentHeight = 100
-        compare(control.implicitHeight, 100)
+        compare(control.implicitHeight, 100 + control.topPadding + control.bottomPadding)
         compare(control.contentHeight, 100)
         compare(flickable.contentHeight, 100)
     }
@@ -833,5 +839,40 @@ TestCase {
         verify(scrollview)
         verify(scrollview.rightPadding >= scrollview.padding)
         verify(scrollview.bottomPadding >= scrollview.padding)
+    }
+
+    // Verify that binding contentWidth to availableWidth doesn't cause a binding loop
+    // (QTBUG-145226). The RowLayout resizes the ScrollView via Layout.fillWidth, which
+    // was the scenario that triggered the bug in styles where visible scroll bars
+    // reduce availableWidth (e.g. macOS, Windows, StyleKit).
+    Component {
+        id: scrollViewContentWidthBindingComp
+        RowLayout {
+            spacing: 20
+            anchors.fill: parent
+            anchors.margins: 20
+            ScrollView {
+                id: scrollViewInLayout
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                contentWidth: availableWidth
+                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
+                ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                Rectangle {
+                    width: 50
+                    height: 1000
+                }
+            }
+        }
+    }
+
+    function test_contentWidthBindingNoLoop() {
+        let root = createTemporaryObject(scrollViewContentWidthBindingComp, testCase)
+        verify(root)
+        let scrollview = root.children[0]
+        verify(scrollview)
+        waitForRendering(scrollview)
+        // If there is a binding loop, it's caught by failOnWarning()
+        compare(scrollview.contentWidth, scrollview.availableWidth)
     }
 }

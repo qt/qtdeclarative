@@ -138,6 +138,7 @@ public:
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
     void updateScrollBarWidth();
     void updateScrollBarHeight();
@@ -240,10 +241,12 @@ void QQuickScrollViewPrivate::disconnectScrollBarSignals(QQuickScrollBarAttached
     if (scrollBar->vertical) {
         QObjectPrivate::disconnect(scrollBar->vertical, &QQuickScrollBar::policyChanged, this, &QQuickScrollViewPrivate::updateScrollBarWidth);
         QObjectPrivate::disconnect(scrollBar->vertical, &QQuickScrollBar::visibleChanged, this, &QQuickScrollViewPrivate::updateScrollBarWidth);
+        QQuickItemPrivate::get(scrollBar->vertical)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
     if (scrollBar->horizontal) {
         QObjectPrivate::disconnect(scrollBar->horizontal, &QQuickScrollBar::policyChanged, this, &QQuickScrollViewPrivate::updateScrollBarHeight);
         QObjectPrivate::disconnect(scrollBar->horizontal, &QQuickScrollBar::visibleChanged, this, &QQuickScrollViewPrivate::updateScrollBarHeight);
+        QQuickItemPrivate::get(scrollBar->horizontal)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     }
 }
 
@@ -290,10 +293,12 @@ bool QQuickScrollViewPrivate::setFlickable(QQuickFlickable *item, ContentItemFla
             if (scrollBar->vertical) {
                 QObjectPrivate::connect(scrollBar->vertical, &QQuickScrollBar::policyChanged, this, &QQuickScrollViewPrivate::updateScrollBarWidth);
                 QObjectPrivate::connect(scrollBar->vertical, &QQuickScrollBar::visibleChanged, this, &QQuickScrollViewPrivate::updateScrollBarWidth);
+                QQuickItemPrivate::get(scrollBar->vertical)->addItemChangeListener(this, QQuickItemPrivate::Geometry);
             }
             if (scrollBar->horizontal) {
                 QObjectPrivate::connect(scrollBar->horizontal, &QQuickScrollBar::policyChanged, this, &QQuickScrollViewPrivate::updateScrollBarHeight);
                 QObjectPrivate::connect(scrollBar->horizontal, &QQuickScrollBar::visibleChanged, this, &QQuickScrollViewPrivate::updateScrollBarHeight);
+                QQuickItemPrivate::get(scrollBar->horizontal)->addItemChangeListener(this, QQuickItemPrivate::Geometry);
             }
         }
 
@@ -489,6 +494,15 @@ void QQuickScrollViewPrivate::itemImplicitWidthChanged(QQuickItem *item)
         return;
 
     QQuickPanePrivate::itemImplicitWidthChanged(item);
+}
+
+void QQuickScrollViewPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
+{
+    QQuickPanePrivate::itemGeometryChanged(item, change, diff);
+    if (change.widthChange() && item == verticalScrollBar())
+        updateScrollBarWidth();
+    else if (change.heightChange() && item == horizontalScrollBar())
+        updateScrollBarHeight();
 }
 
 QQuickScrollView::QQuickScrollView(QQuickItem *parent)
