@@ -249,6 +249,7 @@ private slots:
 
     void textObjectBaselineAlignment();
     void textObjectBaselineVsBottomAlignment();
+    void selectedTextColorOrderedList();
 
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
@@ -7316,6 +7317,39 @@ void tst_qquicktextedit::textObjectBaselineVsBottomAlignment()
     QVERIFY2(bottomY > baselineY,
              qPrintable(QString("AlignBottom (%1) should be below AlignBaseline (%2)")
                         .arg(bottomY).arg(baselineY)));
+}
+
+void tst_qquicktextedit::selectedTextColorOrderedList()
+{
+    SKIP_IF_NO_WINDOW_GRAB;
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("selectedTextColorOrderedList.qml")));
+    QQuickTextEdit *textEdit = window.rootObject()->findChild<QQuickTextEdit *>("textEdit");
+    QVERIFY(textEdit);
+
+    // Select "ab" (partial selection within first list item)
+    textEdit->select(0, 2);
+
+    QImage img = window.grabWindow();
+    QCOMPARE(img.isNull(), false);
+
+    // Scan the entire first line of the TextEdit for red pixels.
+    // The selected text "ab" should be rendered in red (selectedTextColor).
+    const QRectF cursorRect = textEdit->positionToRectangle(1);
+    const QPointF offset = textEdit->mapToScene(QPointF(0, 0));
+    const int lineY = int(offset.y() + cursorRect.center().y());
+
+    bool foundRed = false;
+    for (int x = 0; x < img.width() && !foundRed; ++x) {
+        QColor c = img.pixelColor(x, lineY);
+        if (c.red() > 200 && c.green() < 80 && c.blue() < 80)
+            foundRed = true;
+    }
+    QVERIFY2(foundRed,
+             qPrintable(QString("No red pixels found on line y=%1; "
+                                "selectedTextColor was not applied to selected list text")
+                                .arg(lineY)));
 }
 
 QT_END_NAMESPACE

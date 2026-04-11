@@ -845,7 +845,11 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                     const std::pair<int, int> &range = node->ranges.at(i);
 
                     int rangeLength = range.second - range.first + 1;
-                    if (previousNode != nullptr) {
+                    // Only check overlap with nodes from the same text position.
+                    // Nodes from different positions (e.g. list bullets from a
+                    // separate QTextLayout) have coincidental range overlaps that
+                    // don't represent actual glyph coverage.
+                    if (previousNode != nullptr && previousNode->position == node->position) {
                         for (int j = 0; j < previousNode->ranges.size(); ++j) {
                             const std::pair<int, int> &otherRange = previousNode->ranges.at(j);
 
@@ -859,7 +863,8 @@ void QQuickTextNodeEngine::addToSceneGraph(QSGInternalTextNode *parentNode,
                         }
                     }
 
-                    if (nextNode != nullptr && rangeLength > 0) {
+                    if (nextNode != nullptr && nextNode->position == node->position
+                        && rangeLength > 0) {
                         for (int j = 0; j < nextNode->ranges.size(); ++j) {
                             const std::pair<int, int> &otherRange = nextNode->ranges.at(j);
 
