@@ -167,6 +167,15 @@ void QuickRenderer::ensureTexture()
     qreal dpr = m_quickWindow->devicePixelRatio();
     QSize textureSize = m_quickWindow->size() * dpr;
     QOpenGLFunctions *f = m_context->functions();
+
+    if (m_textureId && m_textureSize != textureSize) {
+        f->glDeleteTextures(1, &m_textureId);
+        m_textureId = 0;
+    }
+
+    if (m_textureId)
+        return;
+
     f->glGenTextures(1, &m_textureId);
     f->glBindTexture(GL_TEXTURE_2D, m_textureId);
     f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -174,6 +183,7 @@ void QuickRenderer::ensureTexture()
     f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureSize.width(), textureSize.height(), 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
     m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(m_textureId, textureSize));
+    m_textureSize = textureSize;
 }
 
 void QuickRenderer::render(QMutexLocker<QMutex> *lock)

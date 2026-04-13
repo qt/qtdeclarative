@@ -62,6 +62,7 @@ private:
     QQuickRenderControl *m_renderControl;
     QRhi *m_rhi;
     uint m_textureId;
+    QSize m_textureSize;
     CubeRenderer *m_cubeRenderer;
     QMutex m_quitMutex;
     bool m_quit;
