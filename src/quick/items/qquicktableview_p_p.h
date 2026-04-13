@@ -40,6 +40,8 @@
 #include <QtQuick/private/qquickdroparea_p.h>
 #endif
 
+#include <vector>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
@@ -478,8 +480,19 @@ public:
         int prevIndex = -1;
     };
 
-    QList<SectionData> visualIndices[Qt::Vertical];
-    QList<SectionData> logicalIndices[Qt::Vertical];
+    std::vector<SectionData> horizontalVisualIndices;
+    std::vector<SectionData> verticalVisualIndices;
+    std::vector<SectionData> horizontalLogicalIndices;
+    std::vector<SectionData> verticalLogicalIndices;
+
+    std::vector<SectionData> &visualIndicesForOrientation(Qt::Orientation orientation)
+    {
+        return orientation == Qt::Horizontal ? horizontalVisualIndices : verticalVisualIndices;
+    }
+    std::vector<SectionData> &logicalIndicesForOrientation(Qt::Orientation orientation)
+    {
+        return orientation == Qt::Horizontal ? horizontalLogicalIndices : verticalLogicalIndices;
+    }
 
     SectionState m_sectionState = SectionState::Idle;
 
@@ -690,10 +703,10 @@ public:
     inline void setActivePointerHandler(QQuickTableViewPointerHandler *handler) { activePtrHandler = handler; }
     inline QQuickTableViewPointerHandler* activePointerHandler() const { return activePtrHandler; }
     // Row/Column reordering
-    void moveSection(int source , int destination, Qt::Orientations orientation);
+    void moveSection(int source , int destination, Qt::Orientation orientation);
     void initializeIndexMapping();
     void clearIndexMapping();
-    void clearSection(Qt::Orientations orientation);
+    void clearSection(Qt::Orientation orientation);
     virtual int logicalRowIndex(const int visualIndex) const;
     virtual int logicalColumnIndex(const int visualIndex) const;
     virtual int visualRowIndex(const int logicalIndex) const;

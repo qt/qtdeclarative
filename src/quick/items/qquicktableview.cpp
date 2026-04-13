@@ -6328,7 +6328,7 @@ void QQuickTableView::moveRow(int source, int destination)
     d->moveSection(source, destination, Qt::Vertical);
 }
 
-void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orientations orientation)
+void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orientation orientation)
 {
     Q_Q(QQuickTableView);
 
@@ -6344,53 +6344,45 @@ void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orient
 
     if (m_sectionState != SectionState::Moving) {
         m_sectionState = SectionState::Moving;
-        if (syncView)
+        if (syncView) {
             syncView->d_func()->moveSection(source, destination, orientation);
-        else {
+        } else {
             // Initialize the visual and logical index mapping
             initializeIndexMapping();
 
             // Set current index mapping according to moving rows or columns
-            SectionData *visualIndex = nullptr;
-            SectionData *logicalIndex =  nullptr;
+            auto &visualIndices = visualIndicesForOrientation(orientation);
+            auto &logicalIndices =  logicalIndicesForOrientation(orientation);
 
-            if (orientation == Qt::Horizontal) {
-                visualIndex = visualIndices[0].data();
-                logicalIndex = logicalIndices[0].data();
-            } else if (orientation == Qt::Vertical) {
-                visualIndex = visualIndices[1].data();
-                logicalIndex = logicalIndices[1].data();
-            }
-
-            const int logical = logicalIndex[source].index;
+            const int logical = logicalIndices.at(source).index;
             int visual = source;
 
             if (destination > source) {
                 while (visual < destination) {
-                    SectionData &visualData = visualIndex[logicalIndex[visual + 1].index];
-                    SectionData &logicalData = logicalIndex[visual];
+                    SectionData &visualData = visualIndices[logicalIndices[visual + 1].index];
+                    SectionData &logicalData = logicalIndices[visual];
                     visualData.prevIndex = visualData.index;
                     visualData.index = visual;
                     logicalData.prevIndex = logicalData.index;
-                    logicalData.index = logicalIndex[visual + 1].index;
+                    logicalData.index = logicalIndices[visual + 1].index;
                     ++visual;
                 }
             } else {
                 while (visual > destination) {
-                    SectionData &visualData = visualIndex[logicalIndex[visual - 1].index];
-                    SectionData &logicalData = logicalIndex[visual];
+                    SectionData &visualData = visualIndices[logicalIndices[visual - 1].index];
+                    SectionData &logicalData = logicalIndices[visual];
                     visualData.prevIndex = visualData.index;
                     visualData.index = visual;
                     logicalData.prevIndex = logicalData.index;
-                    logicalData.index = logicalIndex[visual - 1].index;
+                    logicalData.index = logicalIndices[visual - 1].index;
                     --visual;
                 }
             }
 
-            visualIndex[logical].prevIndex = visualIndex[logical].index;
-            visualIndex[logical].index = destination;
-            logicalIndex[destination].prevIndex = logicalIndex[destination].index;
-            logicalIndex[destination].index = logical;
+            visualIndices[logical].prevIndex = visualIndices[logical].index;
+            visualIndices[logical].index = destination;
+            logicalIndices[destination].prevIndex = logicalIndices[destination].index;
+            logicalIndices[destination].index = logical;
 
             // Trigger section move for horizontal and vertical child views
             // Used in a case where moveSection() triggered for table view
@@ -6410,10 +6402,13 @@ void QQuickTableViewPrivate::moveSection(int source, int destination, Qt::Orient
         // Emit section moved signal for the sections moved in the view
         const int startIndex = (source > destination) ? destination : source;
         const int endIndex = (source > destination) ? source : destination;
-        const int mapIndex = static_cast<int>(orientation) - 1;
+        const auto &logicalDataIndices = syncView
+                                       ? syncView->d_func()->logicalIndicesForOrientation(orientation)
+                                       : logicalIndicesForOrientation(orientation);
+        const auto &visualDataIndices = syncView
+                                      ? syncView->d_func()->visualIndicesForOrientation(orientation)
+                                      : visualIndicesForOrientation(orientation);
         for (int index = startIndex; index <= endIndex; index++) {
-            const SectionData *logicalDataIndices = (syncView ? syncView->d_func()->logicalIndices[mapIndex].constData() : logicalIndices[mapIndex].constData());
-            const SectionData *visualDataIndices = syncView ? syncView->d_func()->visualIndices[mapIndex].constData() : visualIndices[mapIndex].constData();
             const int prevLogicalIndex = logicalDataIndices[index].prevIndex;
             if (orientation == Qt::Horizontal)
                 emit q->columnMoved(prevLogicalIndex, visualDataIndices[prevLogicalIndex].prevIndex, visualDataIndices[prevLogicalIndex].index);
@@ -6435,27 +6430,30 @@ void QQuickTableView::clearRowReordering()
     d->clearSection(Qt::Vertical);
 }
 
-void QQuickTableViewPrivate::clearSection(Qt::Orientations orientation)
+void QQuickTableViewPrivate::clearSection(Qt::Orientation orientation)
 {
     Q_Q(QQuickTableView);
 
-    const int mapIndex = static_cast<int>(orientation) - 1;
-    const QList<SectionData> oldLogicalIndices = syncView ? syncView->d_func()->logicalIndices[mapIndex] : logicalIndices[mapIndex];
-    const QList<SectionData> oldVisualIndices = syncView ? syncView->d_func()->visualIndices[mapIndex] : visualIndices[mapIndex];;
+    const auto &oldLogicalIndices = syncView
+                                  ? syncView->d_func()->logicalIndicesForOrientation(orientation)
+                                  : logicalIndicesForOrientation(orientation);
+    const auto &oldVisualIndices = syncView
+                                 ? syncView->d_func()->visualIndicesForOrientation(orientation)
+                                 : visualIndicesForOrientation(orientation);
 
-    if (syncView)
+    if (syncView) {
         syncView->d_func()->clearSection(orientation);
-    else {
+    } else {
         // Clear the index mapping and rebuild the table
-        logicalIndices[mapIndex].clear();
-        visualIndices[mapIndex].clear();
+        logicalIndicesForOrientation(orientation).clear();
+        visualIndicesForOrientation(orientation).clear();
         scheduleRebuildTable(RebuildOption::ViewportOnly);
     }
 
     // Emit section moved signal for the sections moved in the view
-    for (int index = 0; index < oldLogicalIndices.size(); index++) {
-        const SectionData *logicalDataIndices = oldLogicalIndices.constData();
-        const SectionData *visualDataIndices = oldVisualIndices.constData();
+    for (int index = 0; index < int(oldLogicalIndices.size()); index++) {
+        const auto &logicalDataIndices = oldLogicalIndices;
+        const auto &visualDataIndices = oldVisualIndices;
         if (logicalDataIndices[index].index != index) {
             const int currentIndex = logicalDataIndices[index].index;
             if (orientation == Qt::Horizontal)
@@ -7617,58 +7615,58 @@ void QQuickTableViewPrivate::initializeIndexMapping()
             visualIndex[index].index = logicalIndex[index].index = index;
     };
 
-    if (visualIndices[0].size() != tableSize.width()
-        || logicalIndices[0].size() != tableSize.width())
-        initIndices(visualIndices[0], logicalIndices[0], tableSize.width());
+    if (horizontalVisualIndices.size() != size_t(tableSize.width())
+        || horizontalLogicalIndices.size() != size_t(tableSize.width()))
+        initIndices(horizontalVisualIndices, horizontalLogicalIndices, tableSize.width());
 
-    if (visualIndices[1].size() != tableSize.height()
-        || logicalIndices[1].size() != tableSize.height())
-        initIndices(visualIndices[1], logicalIndices[1], tableSize.height());
+    if (verticalVisualIndices.size() != size_t(tableSize.height())
+        || verticalLogicalIndices.size() != size_t(tableSize.height()))
+        initIndices(verticalVisualIndices, verticalLogicalIndices, tableSize.height());
 }
 
 void QQuickTableViewPrivate::clearIndexMapping()
 {
-    logicalIndices[0].clear();
-    visualIndices[0].clear();
+    horizontalLogicalIndices.clear();
+    horizontalVisualIndices.clear();
 
-    logicalIndices[1].clear();
-    visualIndices[1].clear();
+    verticalLogicalIndices.clear();
+    verticalVisualIndices.clear();
 }
 
 int QQuickTableViewPrivate::logicalRowIndex(const int visualIndex) const
 {
     if (syncView)
         return syncView->d_func()->logicalRowIndex(visualIndex);
-    if (logicalIndices[1].isEmpty() || visualIndex < 0)
+    if (verticalLogicalIndices.empty() || visualIndex < 0)
         return visualIndex;
-    return logicalIndices[1].constData()[visualIndex].index;
+    return verticalLogicalIndices.at(visualIndex).index;
 }
 
 int QQuickTableViewPrivate::logicalColumnIndex(const int visualIndex) const
 {
     if (syncView)
         return syncView->d_func()->logicalColumnIndex(visualIndex);
-    if (logicalIndices[0].isEmpty() || visualIndex < 0)
+    if (horizontalLogicalIndices.empty() || visualIndex < 0)
         return visualIndex;
-    return logicalIndices[0].constData()[visualIndex].index;
+    return horizontalLogicalIndices.at(visualIndex).index;
 }
 
 int QQuickTableViewPrivate::visualRowIndex(const int logicalIndex) const
 {
     if (syncView)
         return syncView->d_func()->visualRowIndex(logicalIndex);
-    if (visualIndices[1].isEmpty() || logicalIndex < 0)
+    if (verticalVisualIndices.empty() || logicalIndex < 0)
         return logicalIndex;
-    return visualIndices[1].constData()[logicalIndex].index;
+    return verticalVisualIndices.at(logicalIndex).index;
 }
 
 int QQuickTableViewPrivate::visualColumnIndex(const int logicalIndex) const
 {
     if (syncView)
         return syncView->d_func()->visualColumnIndex(logicalIndex);
-    if (visualIndices[0].isEmpty() || logicalIndex < 0)
+    if (horizontalVisualIndices.empty() || logicalIndex < 0)
         return logicalIndex;
-    return visualIndices[0].constData()[logicalIndex].index;
+    return horizontalVisualIndices.at(logicalIndex).index;
 }
 
 int QQuickTableViewPrivate::getEditCellIndex(const QModelIndex &index) const
