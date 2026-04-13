@@ -191,7 +191,9 @@ static QString serializeSourceLocation(const SourceLocation &location)
 }
 #endif
 
+#if QT_CONFIG(qmlcontextpropertydump)
 static constexpr auto cachedHeuristicListKey = "cachedHeuristicList"_L1;
+#endif
 
 HeuristicContextProperties HeuristicContextProperties::collectFrom(QSettings *settings)
 {
