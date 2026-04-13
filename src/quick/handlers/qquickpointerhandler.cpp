@@ -225,8 +225,21 @@ void QQuickPointerHandler::resetCursorShape()
     d->cursorSet = false;
     if (auto *parent = parentItem()) {
         QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
-        itemPriv->hasCursorHandler = false;
-        itemPriv->setHasCursorInChild(itemPriv->hasCursor);
+        // Only clear hasCursorHandler if no other handler on this item still has cursorShape set.
+        // Multiple handlers with cursorShape are valid (e.g. two HoverHandlers for different devices).
+        bool otherHandlerHasCursor = false;
+        if (itemPriv->hasPointerHandlers()) {
+            for (QQuickPointerHandler *h : itemPriv->extra->pointerHandlers) {
+                if (h != this && h->isCursorShapeExplicitlySet()) {
+                    otherHandlerHasCursor = true;
+                    break;
+                }
+            }
+        }
+        if (!otherHandlerHasCursor) {
+            itemPriv->hasCursorHandler = false;
+            itemPriv->setHasCursorInChild(itemPriv->hasCursor);
+        }
     }
     emit cursorShapeChanged();
 }

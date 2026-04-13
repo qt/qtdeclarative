@@ -59,6 +59,7 @@ private slots:
     void effectivelyClips();
     void grandChildOutOfBounds();
     void cursorShapeAfterDeletion();
+    void twoHandlersCursorShapeReset();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -1109,6 +1110,53 @@ void tst_HoverHandler::cursorShapeAfterDeletion()
 #if QT_CONFIG(cursor)
     // Root handler's cursor must still work
     QTRY_COMPARE(window.cursor().shape(), Qt::OpenHandCursor);
+#endif
+}
+
+void tst_HoverHandler::twoHandlersCursorShapeReset()
+{
+    // Resetting one handler's cursorShape must not break the other handler on the same item.
+    // Two HoverHandlers with cursorShape on the same item is a supported pattern (e.g. to show
+    // different cursors for mouse vs. stylus via acceptedDevices). When one handler's
+    // cursorShape binding is cleared, hasCursorHandler on the parent item must stay true as
+    // long as any other handler on that item still has cursorShape set.
+    if (isPlatformWayland())
+        QSKIP("Wayland: QCursor::setPos() doesn't work.");
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("twoHoverHandlersCursorShape.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+
+    QQuickPointerHandler *handler1 = root->findChild<QQuickPointerHandler *>("handler1");
+    QQuickPointerHandler *handler2 = root->findChild<QQuickPointerHandler *>("handler2");
+    QVERIFY(handler1);
+    QVERIFY(handler2);
+
+    QVERIFY(handler1->isCursorShapeExplicitlySet());
+    QVERIFY(handler2->isCursorShapeExplicitlySet());
+
+    // Both handlers have cursorShape set, so hasCursorHandler must be true
+    QQuickItemPrivate *rootPriv = QQuickItemPrivate::get(root);
+    QVERIFY(rootPriv->hasCursorHandler);
+
+    // Move the mouse over the item; handler1 was created last, so it wins among same-device handlers.
+    // (Of course, users should not depend on such an implementation detail:
+    // usually the only reason to have two handlers setting the cursor is if only one of
+    // them reacts at any given time to a specific pointing device, modifier or whatever.)
+    QTest::mouseMove(&window, QPoint(200, 200));
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window.cursor().shape(), Qt::CrossCursor);
+#endif
+
+    // Reset handler1's cursorShape: handler2 should take over setting the cursor
+    handler1->resetCursorShape();
+    QVERIFY(!handler1->isCursorShapeExplicitlySet());
+    QVERIFY(handler2->isCursorShapeExplicitlySet());
+    QVERIFY(rootPriv->hasCursorHandler);
+    QTest::mouseMove(&window, QPoint(201, 201));
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window.cursor().shape(), Qt::PointingHandCursor);
 #endif
 }
 
