@@ -1975,54 +1975,63 @@ QPoint QQuickTableViewPrivate::clampedCellAtPos(const QPointF &pos) const
 
 void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QRect &newSelection)
 {
+    if (oldSelection == newSelection)
+        return;
+
     const QAbstractItemModel *qaim = selectionModel->model();
     const QRect oldRect = oldSelection.normalized();
     const QRect newRect = newSelection.normalized();
 
+    const auto &columnMapping = syncView ? syncView->d_func()->horizontalLogicalIndices
+                                         : horizontalLogicalIndices;
+    const auto &rowMapping = syncView ? syncView->d_func()->verticalLogicalIndices
+                                      : verticalLogicalIndices;
+    const bool hasMapping = !columnMapping.empty() || !rowMapping.empty();
+
     QItemSelection select;
     QItemSelection deselect;
+
+    const auto mergeInto =
+        [this, qaim, hasMapping](QItemSelection &selection,
+                                 const QModelIndex &startIndex, const QModelIndex &endIndex)
+    {
+        if (hasMapping) {
+            for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
+                const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()),
+                                                                   logicalColumnIndex(modelIndex.column()));
+                selection.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
+            }
+        } else {
+            selection.merge(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+        }
+    };
 
     // Select cells inside the new selection rect
     {
         const QModelIndex startIndex = qaim->index(newRect.y(), newRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() + newRect.height(), newRect.x() + newRect.width());
-        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
-            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
-            select.append(QItemSelection(logicalModelIndex, logicalModelIndex));
-        }
+        mergeInto(select, startIndex, endIndex);
     }
 
     // Unselect cells in the new minus old rects
     if (oldRect.x() < newRect.x()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), newRect.x() - 1);
-        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
-            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
-            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
-        }
+        mergeInto(deselect, startIndex, endIndex);
     } else if (oldRect.x() + oldRect.width() > newRect.x() + newRect.width()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), newRect.x() + newRect.width() + 1);
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        for (auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
-            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
-            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
-        }
+        mergeInto(deselect, startIndex, endIndex);
     }
 
     if (oldRect.y() < newRect.y()) {
         const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
         const QModelIndex endIndex = qaim->index(newRect.y() - 1, oldRect.x() + oldRect.width());
-        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
-            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
-            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
-        }
+        mergeInto(deselect, startIndex, endIndex);
     } else if (oldRect.y() + oldRect.height() > newRect.y() + newRect.height()) {
         const QModelIndex startIndex = qaim->index(newRect.y() + newRect.height() + 1, oldRect.x());
         const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
-        for (const auto &modelIndex : QItemSelection(startIndex, endIndex).indexes()) {
-            const QModelIndex &logicalModelIndex = qaim->index(logicalRowIndex(modelIndex.row()), logicalColumnIndex(modelIndex.column()));
-            deselect.merge(QItemSelection(logicalModelIndex, logicalModelIndex), QItemSelectionModel::Select);
-        }
+        mergeInto(deselect, startIndex, endIndex);
     }
 
     if (selectionFlag == QItemSelectionModel::Select) {
