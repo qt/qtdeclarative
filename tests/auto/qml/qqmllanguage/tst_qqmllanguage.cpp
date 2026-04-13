@@ -455,6 +455,7 @@ private slots:
     void objectInQmlListAndGc();
     void asCastToInlineComponent();
     void deepAliasOnICOrReadonly();
+    void deepAliasWithPropertyObject();
 
     void optionalChainCallOnNullProperty();
 
@@ -8929,6 +8930,16 @@ void tst_qqmllanguage::deepAliasOnICOrReadonly()
     QVERIFY(c2.errorString().contains(
             QLatin1String(
                     "Invalid property assignment: \"readonlyRectX\" is a read-only property")));
+}
+
+void tst_qqmllanguage::deepAliasWithPropertyObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("deepAliasWithPropertyObject.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("deepValue").toInt(), 42);
 }
 
 void tst_qqmllanguage::optionalChainCallOnNullProperty()

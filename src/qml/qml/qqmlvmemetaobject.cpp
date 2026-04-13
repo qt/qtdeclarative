@@ -244,6 +244,8 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
                         = QQmlMetaType::propertyCacheForType(pd->propType());
                 void *argv[1] = { &target };
                 QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
+                if (!target)
+                    return;
                 Q_ASSERT(newPropertyCache);
                 pd = newPropertyCache->property(valueTypeIndex);
             }
