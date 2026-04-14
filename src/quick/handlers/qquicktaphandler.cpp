@@ -141,9 +141,31 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
     QQuickSinglePointHandler::handleEventPoint(event, point);
 
     // If TapHandler only needs a passive grab, it should not block other items and handlers from reacting.
-    // If the point is accepted, QQuickItemPrivate::localizedTouchEvent() would skip it.
-    if (isTouch && m_gesturePolicy == DragThreshold)
-        point.setAccepted(false);
+    // For touch, if the point is accepted, QQuickItemPrivate::localizedTouchEvent() would skip it.
+    // For mouse, if the point is accepted, deliverPressOrReleaseEvent() sets handlersOnly=true and
+    // skips delivering the press to items like Flickable (QTBUG-126812).
+    // However, if this TapHandler is inside a Flickable (or other filtering ancestor), we must NOT
+    // reset accepted for mouse events: the Flickable gets mouse events via childMouseEventFilter
+    // regardless, and resetting accepted here would cause Flickable to grab at press time (before
+    // drag threshold), which would prevent DragHandler from stealing and break passive grab delivery.
+    if (m_gesturePolicy == DragThreshold) {
+        bool shouldReset = isTouch;
+        if (!shouldReset) {
+            // For mouse: only reset if there's no filtering ancestor (e.g. Flickable).
+            // If inside a Flickable, it sees events via childMouseEventFilter anyway,
+            // so we must keep accepted=true to ensure handlersOnly=true in deliverPressOrReleaseEvent.
+            bool hasFilteringAncestor = false;
+            for (QQuickItem *anc = parentItem(); anc; anc = anc->parentItem()) {
+                if (anc->filtersChildMouseEvents()) {
+                    hasFilteringAncestor = true;
+                    break;
+                }
+            }
+            shouldReset = !hasFilteringAncestor;
+        }
+        if (shouldReset)
+            point.setAccepted(false);
+    }
 }
 
 /*!
