@@ -361,15 +361,16 @@ void tst_QQuickMenu::pressAndHold()
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
 
-    QPoint windowCenter = QRect(QPoint(0, 0), window->size()).center();
+    const QMargins safeMargins = window->safeAreaMargins();
+    QPoint safeTopLeft = QPoint(safeMargins.left() + 1, safeMargins.top() + 1);
 
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, safeTopLeft);
     QTRY_VERIFY(menu->isVisible());
 
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, safeTopLeft);
     QVERIFY(menu->isVisible());
 
-    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, windowCenter);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, safeTopLeft);
     QTRY_VERIFY(!menu->isVisible());
 }
 
