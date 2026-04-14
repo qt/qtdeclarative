@@ -3,13 +3,10 @@ plugins {
     id 'org.qtproject.qt.gradleplugin' version '1.4'
 }
 
-def home = System.properties['user.home']
-def ndkPath = System.getenv('ANDROID_NDK_ROOT')
 QtBuild {
-    qtPath = file(home + '/work/install')
+    qtPath = file(qtAndroidDir).parentFile.parentFile.parentFile
     projectPath = file('qml/')
-    qtKitDir = file(home + '/work/install/target')
-    extraCMakeArguments = ['-DANDROID_NDK_ROOT=' + ndkPath]
+    extraCMakeArguments = ['-DANDROID_NDK_ROOT=' + System.getenv('ANDROID_NDK_ROOT')]
 }
 
 android {
