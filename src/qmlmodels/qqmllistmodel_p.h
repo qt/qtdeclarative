@@ -110,6 +110,7 @@ private:
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     bool m_mainThread;
     bool m_primary;
+    bool m_ownAgent = false;
 
     bool m_dynamicRoles;
 

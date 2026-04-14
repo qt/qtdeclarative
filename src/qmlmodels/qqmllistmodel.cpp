@@ -2094,7 +2094,7 @@ QQmlListModel::~QQmlListModel()
             m_agent->modelDestroyed();
     }
 
-    if (m_mainThread && m_agent)
+    if (m_agent && m_ownAgent)
         m_agent->release();
 
     m_listModel = nullptr;
@@ -2111,9 +2111,6 @@ QQmlListModel *QQmlListModel::createWithOwner(QQmlListModel *newOwner)
     model->m_engine = newOwner->m_engine;
     model->m_agent = newOwner->m_agent;
     model->m_dynamicRoles = newOwner->m_dynamicRoles;
-
-    if (model->m_mainThread && model->m_agent)
-        model->m_agent->addref();
 
     QQmlEngine::setContextForObject(model, QQmlEngine::contextForObject(newOwner));
 
@@ -2260,6 +2257,7 @@ QQmlListModelWorkerAgent *QQmlListModel::agent()
         return m_agent;
 
     m_agent = new QQmlListModelWorkerAgent(this);
+    m_ownAgent = true;
     return m_agent;
 }
 

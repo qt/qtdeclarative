@@ -53,6 +53,13 @@ class tst_qqmllistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    static void initMain()
+    {
+        // Some tests may require a window to fully emulate the behavior of certain things like a
+        // ListView. Use the offscreen platform to avoid showing windows which might cause issues.
+        qputenv("QT_QPA_PLATFORM", "offscreen");
+    }
+
     tst_qqmllistmodel()
         : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
@@ -126,6 +133,7 @@ private slots:
     void valuesOfInnerList();
     void arrayLikes();
     void functionInNested();
+    void properWorkerAgentLifecycle();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -2209,6 +2217,23 @@ void tst_qqmllistmodel::functionInNested()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllistmodel::properWorkerAgentLifecycle()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("properWorkerAgentLifecycle.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "worker modifying & syncing model");
+    QTest::ignoreMessage(QtDebugMsg, "worker modifying & syncing model");
+    QTest::ignoreMessage(QtDebugMsg, "worker modifying & syncing model");
+    QTest::ignoreMessage(QtDebugMsg, "worker modifying & syncing model");
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QTRY_COMPARE(o->property("received"), 4);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
