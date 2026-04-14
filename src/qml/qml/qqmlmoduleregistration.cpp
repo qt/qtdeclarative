@@ -4,7 +4,6 @@
 
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlmoduleregistration.h>
-#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
