@@ -2826,11 +2826,20 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
     Q_Q(QQuickTableView);
 
     bool ownItem = false;
+    QObject* object = nullptr;
+    const QAbstractItemModel *aim = model->abstractItemModel();
+    const int modelRow = isTransposed ? logicalColumnIndex(cell.y()) : logicalRowIndex(cell.y());
+    const int modelColumn = isTransposed ? logicalRowIndex(cell.x()) : logicalColumnIndex(cell.x());
+    const int modelIndex = modelIndexAtCell(QPoint(modelColumn, modelRow));
 
-    int modelIndex = modelIndexAtCell(isTransposed ? QPoint(logicalRowIndex(cell.x()), logicalColumnIndex(cell.y())) :
-                                              QPoint(logicalColumnIndex(cell.x()), logicalRowIndex(cell.y())));
+    if (tableModel && aim) {
+        // Prefer loading via QModelIndex so that QQmlTableInstanceModel can also
+        // match recently released items by model index, not just by delegate type.
+        object = tableModel->object(aim->index(modelRow, modelColumn), incubationMode);
+    } else {
+        object = model->object(modelIndex, incubationMode);
+    }
 
-    QObject* object = model->object(modelIndex, incubationMode);
     if (!object) {
         if (model->incubationStatus(modelIndex) == QQmlIncubator::Loading) {
             // Item is incubating. Return nullptr for now, and let the table call this
@@ -2940,6 +2949,8 @@ void QQuickTableViewPrivate::unloadItem(const QPoint &cell)
     const int modelIndex = modelIndexAtCell(cell);
     Q_TABLEVIEW_ASSERT(loadedItems.contains(modelIndex), modelIndex << cell);
     releaseItem(loadedItems.take(modelIndex), reusableFlag);
+    if (tableModel)
+        tableModel->commitReleasedItems();
 }
 
 bool QQuickTableViewPrivate::canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const
@@ -3680,6 +3691,10 @@ void QQuickTableViewPrivate::processRebuildTable()
         if (editIndex.isValid())
             updateEditItem();
         updateCurrentRowAndColumn();
+
+        // Move released items that was not reused during the rebuild to the reuse pool
+        if (tableModel)
+            tableModel->commitReleasedItems();
 
         emit q->layoutChanged();
 
@@ -4457,9 +4472,25 @@ void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
     updatePolish();
 }
 
-void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
+void QQuickTableViewPrivate::updateItemProperties(int flatIndex, QObject *object, bool init)
 {
     Q_Q(QQuickTableView);
+    const QPoint cell = cellAtModelIndex(flatIndex);
+    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
+    const bool current = currentInSelectionModel(visualCell);
+    const bool selected = selectedInSelectionModel(visualCell);
+
+    setRequiredProperty(kRequiredProperty_tableView, QVariant::fromValue(q), flatIndex, object, init);
+    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), flatIndex, object, init);
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), flatIndex, object, init);
+    setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), flatIndex, object, init);
+    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), flatIndex, object, init);
+}
+
+void QQuickTableViewPrivate::initItemCallback(int flatIndex, QObject *object)
+{
+    Q_Q(QQuickTableView);
+    Q_UNUSED(flatIndex);
 
     auto item = qobject_cast<QQuickItem*>(object);
     if (!item)
@@ -4470,17 +4501,6 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 
     if (auto attached = getAttachedObject(item))
         attached->setView(q);
-
-    const QPoint cell = cellAtModelIndex(modelIndex);
-    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
-    const bool current = currentInSelectionModel(visualCell);
-    const bool selected = selectedInSelectionModel(visualCell);
-
-    setRequiredProperty(kRequiredProperty_tableView, QVariant::fromValue(q), modelIndex, item, true);
-    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
-    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
-    setRequiredProperty(kRequiredProperty_editing, QVariant::fromValue(false), modelIndex, item, true);
-    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, item, true);
 }
 
 void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
@@ -4491,20 +4511,9 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
         emit attached->pooled();
 }
 
-void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
+void QQuickTableViewPrivate::itemReusedCallback(int flatIndex, QObject *object)
 {
-    Q_Q(QQuickTableView);
-
-    const QPoint cell = cellAtModelIndex(modelIndex);
-    const QPoint visualCell = QPoint(visualColumnIndex(cell.x()), visualRowIndex(cell.y()));
-    const bool current = currentInSelectionModel(visualCell);
-    const bool selected = selectedInSelectionModel(visualCell);
-
-    setRequiredProperty(kRequiredProperty_tableView, QVariant::fromValue(q), modelIndex, object, false);
-    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
-    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
-    // Note: the edit item will never be reused, so no reason to set kRequiredProperty_editing
-    setRequiredProperty(kRequiredProperty_containsDrag, QVariant::fromValue(false), modelIndex, object, false);
+    Q_UNUSED(flatIndex);
 
     if (auto item = qobject_cast<QQuickItem*>(object))
         QQuickItemPrivate::get(item)->setCulled(false);
@@ -4744,8 +4753,9 @@ void QQuickTableViewPrivate::connectToModel()
 
     QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::connect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
-    QObjectPrivate::connect(model, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-    QObjectPrivate::connect(model, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    QObjectPrivate::connect(model, &QQmlInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+    QObjectPrivate::connect(model, &QQmlInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    QObjectPrivate::connect(model, &QQmlInstanceModel::updateItemProperties, this, &QQuickTableViewPrivate::updateItemProperties);
 
     // Connect atYEndChanged to a function that fetches data if more is available
     QObjectPrivate::connect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
@@ -4782,8 +4792,9 @@ void QQuickTableViewPrivate::disconnectFromModel()
 
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
-    QObjectPrivate::disconnect(model, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-    QObjectPrivate::disconnect(model, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    QObjectPrivate::disconnect(model, &QQmlInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+    QObjectPrivate::disconnect(model, &QQmlInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
+    QObjectPrivate::disconnect(model, &QQmlInstanceModel::updateItemProperties, this, &QQuickTableViewPrivate::updateItemProperties);
 
     QObjectPrivate::disconnect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
 
@@ -6843,7 +6854,7 @@ void QQuickTableView::edit(const QModelIndex &index)
         d->editModel->useImportVersion(d->resolveImportVersion());
         QObject::connect(d->editModel, &QQmlInstanceModel::initItem, this,
                          [this, d] (int serializedModelIndex, QObject *object) {
-            // initItemCallback will call setRequiredProperty for each required property in the
+            // updateItemProperties() will call setRequiredProperty for each required property in the
             // delegate, both for this class, but also also for any subclasses. setRequiredProperty
             // is currently dependent of the QQmlTableInstanceModel that was used to create the object
             // in order to initialize required properties, so we need to set the editItem variable
@@ -6854,7 +6865,8 @@ void QQuickTableView::edit(const QModelIndex &index)
             if (!d->editItem)
                 return;
             // Initialize required properties
-            d->initItemCallback(serializedModelIndex, object);
+            const bool init = true;
+            d->updateItemProperties(serializedModelIndex, object, init);
             const auto cellItem = itemAtCell(cellAtIndex(d->editIndex));
             Q_ASSERT(cellItem);
             d->editItem->setParentItem(cellItem);

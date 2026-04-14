@@ -609,6 +609,7 @@ public:
     virtual void itemPooledCallback(int modelIndex, QObject *object);
     virtual void itemReusedCallback(int modelIndex, QObject *object);
     virtual void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
+    virtual void updateItemProperties(int flatIndex, QObject *object, bool init);
 
     virtual void syncWithPendingChanges();
     virtual void syncDelegate();

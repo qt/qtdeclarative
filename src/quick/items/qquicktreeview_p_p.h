@@ -36,13 +36,11 @@ public:
     QVariant modelImpl() const override;
     void setModelImpl(const QVariant &newModel) override;
 
-    void initItemCallback(int serializedModelIndex, QObject *object) override;
-    void itemReusedCallback(int serializedModelIndex, QObject *object) override;
     void dataChangedCallback(const QModelIndex &topLeft,
                              const QModelIndex &bottomRight,
                              const QList<int> &roles);
 
-    void updateRequiredProperties(int serializedModelIndex, QObject *object, bool init);
+    void updateItemProperties(int flatIndex, QObject *object, bool init) override;
     void updateSelection(const QRect &oldSelection, const QRect &newSelection) override;
 
 public:

@@ -161,6 +161,7 @@ private slots:
     void checkIfDelegatesAreReused_data();
     void checkIfDelegatesAreReused();
     void checkIfDelegatesAreReusedAsymmetricTableSize();
+    void verifyThatOnlyRemovedRowsArePooled();
     void checkContextProperties_data();
     void checkContextProperties();
     void checkContextPropertiesQQmlListProperyModel_data();
@@ -2653,37 +2654,53 @@ void tst_QQuickTableView::checkRowAndColumnChangedButNotIndex()
 
 void tst_QQuickTableView::checkThatWeAlwaysEmitChangedUponItemReused()
 {
-    // Check that we always emit changes to index when we reuse an item, even
-    // if it doesn't change. This is needed since the model can have changed
-    // row or column count while the item was in the pool, which means that
-    // any data referred to by the index property inside the delegate
-    // will change too. So we need to refresh any bindings to index.
-    // QTBUG-79209
+    // Verify that index, row and column are always re-emitted when an item is
+    // reused, even if the flat index value hasn't changed. This matters because
+    // the model may reset with swapped row and column counts while the item sits
+    // in the pool: the same flat index then maps to a different (row, column) pair,
+    // so all bindings that depend on those properties must be refreshed. QTBUG-79209
     LOAD_TABLEVIEW("checkalwaysemit.qml");
 
-    TestModel model(1, 1);
+    TestModel model(1, 2);
     tableView->setModel(QVariant::fromValue(&model));
-    model.setModelData(QPoint(0, 0), QSize(1, 1), "old value");
+
+    const QPoint modifiedCell{1, 0};
+    const QString text = "Lorem Ipsum"_L1;
+
+    model.setModelData(modifiedCell, QSize(1, 1), text);
 
     WAIT_UNTIL_POLISHED;
 
-    const auto reuseItem = tableViewPrivate->loadedTableItem(QPoint(0, 0))->item;
-    const auto context = qmlContext(reuseItem.data());
+    {
+        // Check that the context properties of the modified cell are as expected
+        const auto item = tableViewPrivate->loadedTableItem(modifiedCell)->item;
+        const auto context = qmlContext(item.data());
+        const int flatIndex = modifiedCell.x() * model.rowCount() + modifiedCell.y();
+        QCOMPARE(flatIndex, 1);
+        QCOMPARE(context->contextProperty("index").toInt(), flatIndex);
+        QCOMPARE(context->contextProperty("row").toInt(), modifiedCell.y());
+        QCOMPARE(context->contextProperty("column").toInt(), modifiedCell.x());
+        QCOMPARE(context->contextProperty("modelDataFromIndex").toString(), text);
+    }
 
-    // Remove the cell/row that has "old value" as model data, and
-    // add a new one right after. The new cell will have the same
-    // index, but with no model data assigned.
-    // This change will not be detected by items in the pool. But since
-    // we emit indexChanged when the item is reused, it will be updated then.
-    model.removeRow(0);
-    model.insertRow(0);
+    // Add a new row at the bottom, below the modified cell. This shouldn't affect
+    // its row and column position, nor the model data fetched from the
+    // modelDataFromIndex() binding. But since the new row changes row and column
+    // count, its flat index changes.
+    model.insertRow(1);
 
     WAIT_UNTIL_POLISHED;
 
-    QCOMPARE(context->contextProperty("index").toInt(), 0);
-    QCOMPARE(context->contextProperty("row").toInt(), 0);
-    QCOMPARE(context->contextProperty("column").toInt(), 0);
-    QCOMPARE(context->contextProperty("modelDataFromIndex").toString(), "");
+    {
+        const auto item = tableViewPrivate->loadedTableItem(modifiedCell)->item;
+        const auto context = qmlContext(item.data());
+        const int flatIndex = modifiedCell.x() * model.rowCount() + modifiedCell.y();
+        QCOMPARE(flatIndex, 2);
+        QCOMPARE(context->contextProperty("index").toInt(), flatIndex);
+        QCOMPARE(context->contextProperty("row").toInt(), modifiedCell.y());
+        QCOMPARE(context->contextProperty("column").toInt(), modifiedCell.x());
+        QCOMPARE(context->contextProperty("modelDataFromIndex").toString(), text);
+    }
 }
 
 void tst_QQuickTableView::checkChangingModelFromDelegate()
@@ -8772,6 +8789,82 @@ void tst_QQuickTableView::delegateChooserDataChange()
     QCOMPARE(model.choice_delegates_count()[1], rows * columns);
 
     tableView->setModel({ });
+}
+
+void tst_QQuickTableView::verifyThatOnlyRemovedRowsArePooled()
+{
+    // Check that we don't put delegate items above or below a removed or inserted row
+    // into the reuse pool. Instead those items should be unaffected by the model changes
+    // (other than changes to the flat index, row and column).
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    TestModel model(3, 2);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    QList<QPointer<QQuickItem>> initialItems;
+    QList<QObject *> pooledObjects;
+    QList<QObject *> reusedObjects;
+
+    // Create a few helper functions that we can use further down in the test.
+    // getItems() returns a list of loaded delegate items that corresponds to
+    // the cells given as argument.
+    auto getItems = [&](const QList<QPoint> &cells) {
+        QList<QPointer<QQuickItem>> result;
+        for (const auto &cell : cells)
+            result.append(tableViewPrivate->loadedTableItem(cell)->item);
+        return result;
+    };
+
+    // Create a function that tracks which objects get pooled or reused, so we
+    // can verify that none of the unrelated cells are affected by the model changes.
+    auto verifyInitialItemsNotPooled = [&]() {
+        for (const auto &item : initialItems) {
+            QVERIFY(!pooledObjects.contains(item.data()));
+            QVERIFY(!reusedObjects.contains(item.data()));
+        }
+    };
+    connect(tableViewPrivate->tableModel, &QQmlInstanceModel::itemPooled,
+            this, [&](int, QObject *obj) { pooledObjects.append(obj); });
+    connect(tableViewPrivate->tableModel, &QQmlInstanceModel::itemReused,
+            this, [&](int, QObject *obj) { reusedObjects.append(obj); });
+
+    // Create a function that verifies that index, row and column context properties on
+    // each initial item reflect the expected values. The row that is below the removed
+    // row will have those updated. The serialized index uses (col * numRows) + row.
+    using Props = std::tuple<int, int, int>; // {index, row, column}
+    auto verifyContextProperties = [&](const QList<Props> &expected) {
+        for (int i = 0; i < initialItems.size(); ++i) {
+            const auto [expIndex, expRow, expColumn] = expected[i];
+            const auto ctx = qmlContext(initialItems[i].data());
+            QCOMPARE(ctx->contextProperty("index").toInt(), expIndex);
+            QCOMPARE(ctx->contextProperty("row").toInt(), expRow);
+            QCOMPARE(ctx->contextProperty("column").toInt(), expColumn);
+        }
+    };
+
+    // Store the items in the rows above and below the row that is about
+    // to be removed. Those items should never be deleted or reused.
+    initialItems = getItems({{0,0}, {1,0}, {0,2}, {1,2}});
+
+    // Remove the row in the center, and verify that the rows
+    // above and below didn't change delegate items.
+    model.removeRow(1);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(getItems({{0,0}, {1,0}, {0,1}, {1,1}}), initialItems);
+    verifyContextProperties({{0,0,0}, {2,0,1}, {1,1,0}, {3,1,1}});
+    verifyInitialItemsNotPooled();
+
+    // Insert a row in the center, and then verify that the rows
+    // above and below didn't change delegate items.
+    model.insertRow(1);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(getItems({{0,0}, {1,0}, {0,2}, {1,2}}), initialItems);
+    verifyContextProperties({{0,0,0}, {3,0,1}, {2,2,0}, {5,2,1}});
+    verifyInitialItemsNotPooled();
 }
 
 QTEST_MAIN(tst_QQuickTableView)

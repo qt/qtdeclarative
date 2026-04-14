@@ -34,7 +34,7 @@ Item {
             color: "lightgray"
             border.width: 1
 
-            property string modelDataFromIndex: tableView.model.dataFromSerializedIndex(index)
+            property string modelDataFromIndex: tableView.model.dataFromFlatIndex(index)
             property string modelDataBinding: modelData
 
             Text {

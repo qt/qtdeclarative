@@ -69,6 +69,7 @@ Q_SIGNALS:
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
     void createdItem(int index, QObject *object);
     void initItem(int index, QObject *object);
+    void updateItemProperties(int index, QObject *object, bool init);
     void destroyingItem(QObject *object);
     Q_REVISION(2, 15) void itemPooled(int index, QObject *object);
     Q_REVISION(2, 15) void itemReused(int index, QObject *object);
