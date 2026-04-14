@@ -91,7 +91,9 @@ void tst_qquickninepatchimage::ninePatch()
     ninePatchImage->setSource(testFileUrl("foo.9.png"));
     ninePatchImage->setSize(size);
 
-    const QImage ninePatchImageGrab = grabItemToImage(ninePatchImage).scaled(size * dpr);
+    QImage ninePatchImageGrab = grabItemToImage(ninePatchImage).scaled(size * dpr);
+    // grabItemToImage() may have device's DPR as metadata, override it to setGlobalFactor()'s DPR.
+    ninePatchImageGrab.setDevicePixelRatio(dpr);
 
     // Generate an image to compare against the actual 9-patch image.
     QImage generatedImage(size * dpr, ninePatchImageGrab.format());
