@@ -576,10 +576,13 @@ void tst_QQuickDrawer::rotateTouchOpen()
     // Swipe down from the window's top edge
     const int hCenter = window->width()/2;
     const int vCenter = window->height()/2;
-    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(hCenter, 0));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(hCenter, vCenter/2));
-    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(hCenter, vCenter));
-    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(hCenter, vCenter));
+    const int topSafeMargin = window->safeAreaMargins().top();
+    // Extend drag margin to cover the safe area so the press is recognized.
+    drawer_LR->setDragMargin(qMax(drawer_LR->dragMargin(), static_cast<qreal>(topSafeMargin + 1)));
+    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(hCenter, topSafeMargin));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(hCenter, topSafeMargin + vCenter/2));
+    QTest::touchEvent(window, touchDevice.data()).move(0, QPoint(hCenter, topSafeMargin + vCenter));
+    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(hCenter, topSafeMargin + vCenter));
 
     QTRY_COMPARE(drawer_LR->position(), 1.0); // "Left Drawer" is at the window's top edge
     QTRY_COMPARE(drawer_TB->position(), 0.0); // "Top Drawer" is at the window's right edge
