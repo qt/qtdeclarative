@@ -38,6 +38,9 @@ has to have QML debugging enabled. \l {details}{More...}
 \row
     \li -v, --version
     \li Displays version information.
+\row
+    \li --resource <qrc file>
+    \li Pass a .qrc file to help qmlpreview resolve resource paths to file system paths.
 \endtable
 
 \section2 Arguments

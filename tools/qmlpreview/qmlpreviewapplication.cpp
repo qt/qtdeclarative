@@ -80,6 +80,11 @@ void QmlPreviewApplication::parseArguments()
     parser.addHelpOption();
     parser.addVersionOption();
 
+    QCommandLineOption resources(QLatin1String("resource"),
+                                 tr("Qt resource file to map qrc: paths to file system paths"),
+                                 QLatin1String("resource-file-name"));
+    parser.addOption(resources);
+
     parser.addPositionalArgument(QLatin1String("executable"),
                                  tr("The executable to be started and previewed."),
                                  QLatin1String("[executable]"));
@@ -104,6 +109,8 @@ void QmlPreviewApplication::parseArguments()
         logError(tr("You have to specify an executable to start."));
         parser.showHelp(2);
     }
+
+    m_resourceFileMapper.reset(new QQmlJSResourceFileMapper(parser.values(resources)));
 }
 
 int QmlPreviewApplication::exec()
@@ -182,41 +189,106 @@ void QmlPreviewApplication::logStatus(const QString &status)
     err << status << Qt::endl;
 }
 
+void QmlPreviewApplication::serveFileRequest(const QString &remotePath, const QString &localPath)
+{
+    QFile file(localPath);
+    if (file.open(QIODevice::ReadOnly)) {
+        m_qmlPreviewClient->sendFile(remotePath, file.readAll());
+        m_watcher.addFile(localPath);
+        return;
+    }
+
+    logStatus(QString("Could not open file %1 for reading: %2")
+                      .arg(localPath, file.errorString()));
+    m_qmlPreviewClient->sendError(remotePath);
+}
+
+void QmlPreviewApplication::serveResourceRequest(const QString &path)
+{
+    const auto success = [&](const QString &localPath) {
+        logStatus(QString("Resolved resource path %1 to %2").arg(path, localPath));
+        m_localToResourcePath.insert(localPath, path);
+        return localPath;
+    };
+
+    const auto failure = [&]() {
+        logStatus(QString("Cannot resolve resource path %1").arg(path));
+        m_qmlPreviewClient->sendError(path);
+    };
+
+    const QString resourcePath = path.mid(1);
+
+    // Try to resolve as a resource file
+    const QStringList filePaths = m_resourceFileMapper->filePaths(
+            QQmlJSResourceFileMapper::resourceFileFilter(resourcePath));
+
+    // Exactly one local file for the resource path: Return it.
+    if (filePaths.length() == 1) {
+        serveFileRequest(path, success(filePaths.first()));
+        return;
+    }
+
+    // Multiple local files for the same resource path: We don't know what to do.
+    if (!filePaths.isEmpty()) {
+        failure();
+        return;
+    }
+
+    // Resolve as a resource directory
+    const QList<QQmlJSResourceFileMapper::Entry> entries = m_resourceFileMapper->filter({
+        resourcePath,
+        {},
+        QQmlJSResourceFileMapper::Directory | QQmlJSResourceFileMapper::Resource
+    });
+
+    if (entries.isEmpty()) {
+        failure();
+        return;
+    }
+
+    // Send the resource directory contents
+    // We can't watch this because there is no local directory to watch here.
+    const qsizetype prefixLength = resourcePath.length() + (resourcePath.endsWith(u'/') ? 0 : 1);
+    QStringList directory;
+    for (const auto &entry : entries)
+        directory.append(entry.resourcePath.mid(prefixLength));
+    m_qmlPreviewClient->sendDirectory(path, directory);
+}
+
 void QmlPreviewApplication::serveRequest(const QString &path)
 {
-    QFileInfo info(path);
+    if (path.startsWith(QLatin1String(":/"))) {
+        serveResourceRequest(path);
+        return;
+    }
 
+    const QFileInfo info(path);
     if (info.isDir()) {
         m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList());
         m_watcher.addDirectory(path);
     } else {
-        QFile file(path);
-        if (file.open(QIODevice::ReadOnly)) {
-            m_qmlPreviewClient->sendFile(path, file.readAll());
-            m_watcher.addFile(path);
-        } else {
-            logStatus(QString("Could not open file %1 for reading: %2").arg(path)
-                      .arg(file.errorString()));
-            m_qmlPreviewClient->sendError(path);
-        }
+        serveFileRequest(path, path);
     }
 }
 
 bool QmlPreviewApplication::sendFile(const QString &path)
 {
+    const QString effectivePath = m_localToResourcePath.value(path, path);
+
     QFile file(path);
     if (file.open(QIODevice::ReadOnly)) {
-        m_qmlPreviewClient->sendFile(path, file.readAll());
+        m_qmlPreviewClient->sendFile(effectivePath, file.readAll());
         // Defer the Load, because files tend to change multiple times in a row.
         m_loadTimer.start();
         return true;
     }
-    logStatus(QString("Could not open file %1 for reading: %2").arg(path).arg(file.errorString()));
+    logStatus(QString("Could not open file %1 for reading: %2").arg(path, file.errorString()));
     return false;
 }
 
 void QmlPreviewApplication::sendDirectory(const QString &path)
 {
-    m_qmlPreviewClient->sendDirectory(path, QDir(path).entryList());
+    const QString effectivePath = m_localToResourcePath.value(path, path);
+    m_qmlPreviewClient->sendDirectory(effectivePath, QDir(path).entryList());
     m_loadTimer.start();
 }

@@ -1,0 +1,6 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="/test">
+        <file>Main.qml</file>
+    </qresource>
+</RCC>

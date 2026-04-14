@@ -24,6 +24,9 @@ private slots:
     void basicLaunch();
     void verboseOutput();
     void fileUpdate();
+    void resourceMapping();
+    void resourceFileUpdate();
+    void resourceVerboseOutput();
 
 private:
     QString m_qmlPreviewPath;
@@ -38,6 +41,18 @@ private:
     void readProcessOutput();
     bool waitForOutput(const QString &needle, int timeout = 30000);
 };
+
+
+static QString findTestHelper()
+{
+    const QLatin1String self("qmlpreviewtool");
+    const QLatin1String helper("qmlpreviewtesthelper");
+    QString appPath = QCoreApplication::applicationDirPath();
+    const qsizetype pos = appPath.lastIndexOf(self);
+    if (pos != -1)
+        appPath.replace(pos, self.size(), helper);
+    return appPath + QLatin1Char('/') + helper;
+}
 
 static bool writeFile(const QString &path, const QByteArray &content)
 {
@@ -61,11 +76,22 @@ static QByteArray makeQmlContent(const QString &marker)
         })").arg(marker).toUtf8();
 }
 
+static bool writeQrcFile(const QString &path, const QString &prefix, const QStringList &files)
+{
+    QByteArray content = "<!DOCTYPE RCC>\n<RCC version=\"1.0\">\n";
+    content += "    <qresource prefix=\"" + prefix.toUtf8() + "\">\n";
+    for (const QString &file : files)
+        content += "        <file>" + file.toUtf8() + "</file>\n";
+    content += "    </qresource>\n</RCC>\n";
+    return writeFile(path, content);
+}
+
 void tst_QmlPreviewTool::initTestCase()
 {
     const QString binDir = QLibraryInfo::path(QLibraryInfo::BinariesPath);
     m_qmlPreviewPath = binDir + QLatin1String("/qmlpreview");
     m_qmlRuntimePath = binDir + QLatin1String("/qml");
+    m_testHelperPath = findTestHelper();
 }
 
 void tst_QmlPreviewTool::cleanup()
@@ -183,6 +209,77 @@ void tst_QmlPreviewTool::fileUpdate()
 
     QVERIFY2(waitForOutput(QLatin1String("FILE_UPDATE_MODIFIED")),
              qPrintable(QLatin1String("File update not detected. Output:\n") + m_output));
+}
+
+void tst_QmlPreviewTool::resourceMapping()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("Main.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("RESOURCE_MAP_OK"))));
+
+    const QString qrcFile = m_tempDir->filePath(QLatin1String("test.qrc"));
+    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/test"),
+                         {QLatin1String("Main.qml")}));
+
+    startPreview({QLatin1String("--verbose"),
+                  QLatin1String("--resource"), qrcFile,
+                  m_testHelperPath});
+
+    QVERIFY2(waitForOutput(QLatin1String("RESOURCE_MAP_OK")),
+             qPrintable(QLatin1String("Resource mapping failed. Output:\n") + m_output));
+}
+
+void tst_QmlPreviewTool::resourceFileUpdate()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("Main.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("RES_UPDATE_INITIAL"))));
+
+    const QString qrcFile = m_tempDir->filePath(QLatin1String("test.qrc"));
+    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/test"),
+                         {QLatin1String("Main.qml")}));
+
+    startPreview({QLatin1String("--verbose"),
+                  QLatin1String("--resource"), qrcFile,
+                  m_testHelperPath});
+
+    QVERIFY2(waitForOutput(QLatin1String("RES_UPDATE_INITIAL")),
+             qPrintable(QLatin1String("Initial load failed. Output:\n") + m_output));
+
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("RES_UPDATE_MODIFIED"))));
+
+    QVERIFY2(waitForOutput(QLatin1String("RES_UPDATE_MODIFIED")),
+             qPrintable(QLatin1String("Resource file update not detected. Output:\n")
+                        + m_output));
+}
+
+void tst_QmlPreviewTool::resourceVerboseOutput()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("Main.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("RES_VERBOSE_OK"))));
+
+    const QString qrcFile = m_tempDir->filePath(QLatin1String("test.qrc"));
+    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/test"),
+                         {QLatin1String("Main.qml")}));
+
+    startPreview({QLatin1String("--verbose"),
+                  QLatin1String("--resource"), qrcFile,
+                  m_testHelperPath});
+
+    QVERIFY2(waitForOutput(QLatin1String("Resolved resource path")),
+             qPrintable(QLatin1String("Resource resolution log missing. Output:\n")
+                        + m_output));
+
+    QVERIFY2(m_output.contains(QLatin1String(":/test/Main.qml")),
+             qPrintable(QLatin1String("Resource path not in output. Output:\n")
+                        + m_output));
 }
 
 QTEST_MAIN(tst_QmlPreviewTool)

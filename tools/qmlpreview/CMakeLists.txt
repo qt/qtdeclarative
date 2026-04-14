@@ -16,6 +16,7 @@ qt_internal_add_app(qmlpreview
     LIBRARIES
         Qt::Network
         Qt::QmlDebugPrivate
+        Qt::QmlCompilerPrivate
 )
 qt_internal_return_unless_building_tools()
 

@@ -6,6 +6,7 @@
 
 #include "qmlpreviewfilesystemwatcher.h"
 
+#include <private/qqmljsresourcefilemapper_p.h>
 #include <private/qqmlpreviewclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 
@@ -30,6 +31,8 @@ private:
     void tryToConnect();
     void processHasOutput();
     void processFinished();
+    void serveResourceRequest(const QString &path);
+    void serveFileRequest(const QString &remotePath, const QString &localPath);
 
     void logError(const QString &error);
     void logStatus(const QString &status);
@@ -45,6 +48,8 @@ private:
 
     QString m_socketFile;
 
+    QScopedPointer<QQmlJSResourceFileMapper> m_resourceFileMapper;
+    QHash<QString, QString> m_localToResourcePath;
     QScopedPointer<QQmlDebugConnection> m_connection;
     QScopedPointer<QQmlPreviewClient> m_qmlPreviewClient;
     QmlPreviewFileSystemWatcher m_watcher;
