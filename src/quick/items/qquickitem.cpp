@@ -2665,9 +2665,9 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
             }
             current = parent;
         } else if (hasChildren) {
-            if (!wrap) {
+            if (!wrap && !isTabFence) {
                 qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain:"
-                                 << "Focus chain about to wrap but wrapping was set to false."
+                                 << "Focus chain about to wrap but we're outside a tab fence and wrapping was set to false."
                                  << "Returning.";
                 return nullptr;
             }
