@@ -623,7 +623,8 @@ void tst_palette::comboBoxPopupWithThemeDefault_data()
     QTest::addColumn<QString>("style");
     QTest::addColumn<QColor>("expectedComboBoxPopupBackgroundColor");
 
-    QTest::newRow("Basic") << "Basic" << QColor::fromRgb(0xFFFFFF);
+    const bool isDark = qApp->styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+    QTest::newRow("Basic") << "Basic" << QColor::fromRgb(isDark ? 0x000000 : 0xFFFFFF);
 
     // We can't test Fusion because it uses the default application palette,
     // which is the default-constructed QPalette, so the test would always pass.
