@@ -126,6 +126,8 @@ private slots:
     void removeSectionsOnNonvisibleItems();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
+    void positionViewAtBeginningWithSections_data();
+    void positionViewAtBeginningWithSections();
     void positionViewAtIndex();
     void positionViewAtIndex_data();
     void resetModel();
@@ -3380,6 +3382,59 @@ void tst_QQuickListView::positionViewAtBeginningEnd()
     QTRY_COMPARE(listview->contentY(), -30.);
     QVERIFY(listview->highlightItem());
     QCOMPARE(listview->highlightItem()->y(), 20.);
+}
+
+void tst_QQuickListView::positionViewAtBeginningWithSections_data()
+{
+    QTest::addColumn<QString>("qmlFile");
+
+    QTest::newRow("listview-sections.qml") << "listview-sections.qml";
+    QTest::newRow("listview-sections-2.qml") << "listview-sections-2.qml";;
+}
+
+void tst_QQuickListView::positionViewAtBeginningWithSections()
+{
+    // Verify that positionViewAtBeginning() positions at the beginning,
+    // also if the list has section headers (which may throw off positionAt()
+    // position calculations)
+
+    QFETCH(QString, qmlFile);
+
+    QScopedPointer<QQuickView> window(createView());
+
+    QaimModel model;
+    for (int i = 0; i < 40; i++)
+        model.addItem("Item" + QString::number(i), QString::number(i / 5));
+
+    window->rootContext()->setContextProperty("testModel", &model);
+    window->setSource(testFileUrl(qmlFile));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    // Scroll to the end so item 0 is well outside the cache buffer
+    listview->positionViewAtEnd();
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QTRY_VERIFY(listview->isAtYEnd());
+
+    listview->positionViewAtBeginning();
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QTRY_VERIFY(listview->isAtYBeginning());
+    QCOMPARE(listview->contentY(), 0.);
+
+    // Also verify positionViewAtIndex(0, Beginning) — equivalent call but passes
+    // index=0 rather than -1 internally; the same estimation fix must apply.
+    listview->positionViewAtEnd();
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QTRY_VERIFY(listview->isAtYEnd());
+
+    listview->positionViewAtIndex(0, QQuickListView::Beginning);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+    QTRY_VERIFY(listview->isAtYBeginning());
+    QCOMPARE(listview->contentY(), 0.);
 }
 
 void tst_QQuickListView::positionViewAtIndex()
