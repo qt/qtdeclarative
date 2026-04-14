@@ -16,6 +16,8 @@ qt_add_executable(textexample
     main.cpp
 )
 
+set_target_properties(textexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(textexample PRIVATE
     Qt6::Core
     Qt6::Gui

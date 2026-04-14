@@ -16,6 +16,8 @@ qt_add_executable(draganddropexample
     main.cpp
 )
 
+set_target_properties(draganddropexample PROPERTIES FOLDER "qtc_runnable")
+
 qt_add_qml_module(draganddropexample
     URI draganddrop
     QML_FILES

@@ -16,6 +16,8 @@ qt_add_executable(animationexample
     main.cpp
 )
 
+set_target_properties(animationexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(animationexample PRIVATE
     Qt6::Core
     Qt6::Gui

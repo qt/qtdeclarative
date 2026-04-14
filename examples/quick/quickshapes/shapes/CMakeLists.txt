@@ -16,6 +16,8 @@ qt_add_executable(shapesexample
     main.cpp
 )
 
+set_target_properties(shapesexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(shapesexample PRIVATE
     Qt6::Core
     Qt6::Gui

@@ -14,6 +14,8 @@ qt_add_executable(testbedexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(testbedexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(testbedexample PRIVATE
     Qt6::Core
     Qt6::Gui

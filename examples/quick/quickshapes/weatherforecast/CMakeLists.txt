@@ -16,6 +16,8 @@ qt_add_executable(weatherforecastexample
     main.cpp
 )
 
+set_target_properties(weatherforecastexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(weatherforecastexample PRIVATE
     Qt6::Core
     Qt6::Gui

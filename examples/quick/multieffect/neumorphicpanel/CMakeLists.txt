@@ -14,6 +14,8 @@ qt_add_executable(neumorphicpanelexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(neumorphicpanelexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(neumorphicpanelexample PRIVATE
     Qt6::Core
     Qt6::Gui

@@ -14,6 +14,8 @@ qt_add_executable(emittersexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(emittersexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(emittersexample PRIVATE
     Qt6::Core
     Qt6::Gui

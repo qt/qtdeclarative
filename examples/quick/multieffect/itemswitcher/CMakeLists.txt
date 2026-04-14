@@ -14,6 +14,8 @@ qt_add_executable(itemswitcherexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(itemswitcherexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(itemswitcherexample PRIVATE
     Qt6::Core
     Qt6::Gui

@@ -12,6 +12,8 @@ add_subdirectory("../shared" "shared")
 
 qt_add_executable(pointerhandlersexample WIN32 MACOSX_BUNDLE main.cpp)
 
+set_target_properties(pointerhandlersexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(pointerhandlersexample PRIVATE
     Qt6::Core
     Qt6::Gui

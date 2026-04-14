@@ -18,6 +18,8 @@ qt_add_executable(viewsexample
     main.cpp
 )
 
+set_target_properties(viewsexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(viewsexample PRIVATE
     Qt6::Core
     Qt6::Gui

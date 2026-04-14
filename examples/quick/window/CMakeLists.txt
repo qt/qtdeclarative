@@ -16,6 +16,8 @@ qt_add_executable(windowexample
     main.cpp
 )
 
+set_target_properties(windowexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(windowexample PRIVATE
     Qt6::Core
     Qt6::Gui

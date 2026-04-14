@@ -14,6 +14,8 @@ qt_add_executable(systemexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(systemexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(systemexample PRIVATE
     Qt6::Core
     Qt6::Gui

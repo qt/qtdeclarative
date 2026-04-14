@@ -14,6 +14,8 @@ qt_add_executable(affectorsexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
 
+set_target_properties(affectorsexample PROPERTIES FOLDER "qtc_runnable")
+
 target_link_libraries(affectorsexample PRIVATE
     Qt6::Core
     Qt6::Gui
