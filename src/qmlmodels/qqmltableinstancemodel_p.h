@@ -86,6 +86,10 @@ public:
     const QAbstractItemModel *abstractItemModel() const override;
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
+    QObject *object(const QModelIndex &index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
+    QObject *incubateModelItemIfNeeded(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode);
+    void restoreFromReleasedItemsCache(QQmlDelegateModelItem *item, int newFlatIndex);
+    void commitReleasedItems();
     ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
     void dispose(QObject *object);
     void cancel(int) override;
@@ -123,13 +127,14 @@ private:
 
     QHash<int, QQmlDelegateModelItem *> m_modelItems;
     QQmlReusableDelegateModelItemsPool m_reusableItemsPool;
+    QList<QQmlDelegateModelItem *> m_releasedItems;
     QList<QQmlIncubator *> m_finishedIncubationTasks;
 
     void incubateModelItem(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode);
     void incubatorStatusChanged(QQmlTableInstanceModelIncubationTask *dmIncubationTask, QQmlIncubator::Status status);
     void deleteIncubationTaskLater(QQmlIncubator *incubationTask);
     void deleteAllFinishedIncubationTasks();
-    QQmlDelegateModelItem *resolveModelItem(int index);
+    QQmlDelegateModelItem *resolveModelItem(int flatIndex, const QModelIndex &modelIndex);
     void destroyModelItem(QQmlDelegateModelItem *modelItem, DestructionMode mode);
 
     void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QList<int> &roles);

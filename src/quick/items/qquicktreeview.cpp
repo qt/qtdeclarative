@@ -327,18 +327,6 @@ void QQuickTreeViewPrivate::setModelImpl(const QVariant &newModel)
     emit q->modelChanged();
 }
 
-void QQuickTreeViewPrivate::initItemCallback(int serializedModelIndex, QObject *object)
-{
-    updateRequiredProperties(serializedModelIndex, object, true);
-    QQuickTableViewPrivate::initItemCallback(serializedModelIndex, object);
-}
-
-void QQuickTreeViewPrivate::itemReusedCallback(int serializedModelIndex, QObject *object)
-{
-    updateRequiredProperties(serializedModelIndex, object, false);
-    QQuickTableViewPrivate::itemReusedCallback(serializedModelIndex, object);
-}
-
 void QQuickTreeViewPrivate::dataChangedCallback(
         const QModelIndex &topLeft, const QModelIndex &bottomRight, const QList<int> &roles)
 {
@@ -352,24 +340,28 @@ void QQuickTreeViewPrivate::dataChangedCallback(
             if (!item)
                 continue;
 
-            const int serializedModelIndex = modelIndexAtCell(QPoint(column, row));
-            updateRequiredProperties(serializedModelIndex, item, false);
+            const int flatIndex = column * m_treeModelToTableModel.rowCount() + row;
+            updateItemProperties(flatIndex, item, false);
         }
     }
 }
 
-void QQuickTreeViewPrivate::updateRequiredProperties(int serializedModelIndex, QObject *object, bool init)
+void QQuickTreeViewPrivate::updateItemProperties(int flatIndex, QObject *object, bool init)
 {
     Q_Q(QQuickTreeView);
-    const QPoint cell = cellAtModelIndex(serializedModelIndex);
-    const int row = cell.y();
-    const int column = cell.x();
+    QQuickTableViewPrivate::updateItemProperties(flatIndex, object, init);
 
-    setRequiredProperty("treeView", QVariant::fromValue(q), serializedModelIndex, object, init);
-    setRequiredProperty("isTreeNode", column == kTreeColumn, serializedModelIndex, object, init);
-    setRequiredProperty("hasChildren", m_treeModelToTableModel.hasChildren(row), serializedModelIndex, object, init);
-    setRequiredProperty("expanded", q->isExpanded(row), serializedModelIndex, object, init);
-    setRequiredProperty("depth", m_treeModelToTableModel.depthAtRow(row), serializedModelIndex, object, init);
+    // Use the model's row count rather than cellAtModelIndex(), since a pending rebuild
+    // can leave the table size in TableView stale relative to m_treeModelToTableModel.
+    const int availableRows = m_treeModelToTableModel.rowCount();
+    const int column = flatIndex / availableRows;
+    const int row = flatIndex % availableRows;
+
+    setRequiredProperty("treeView", QVariant::fromValue(q), flatIndex, object, init);
+    setRequiredProperty("isTreeNode", column == kTreeColumn, flatIndex, object, init);
+    setRequiredProperty("hasChildren", m_treeModelToTableModel.hasChildren(row), flatIndex, object, init);
+    setRequiredProperty("expanded", q->isExpanded(row), flatIndex, object, init);
+    setRequiredProperty("depth", m_treeModelToTableModel.depthAtRow(row), flatIndex, object, init);
 }
 
 void QQuickTreeViewPrivate::updateSelection(const QRect &oldSelection, const QRect &newSelection)

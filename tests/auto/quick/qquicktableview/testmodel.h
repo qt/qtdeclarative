@@ -46,9 +46,9 @@ public:
             ret = 42;
             break;
         case Qt::DisplayRole: {
-            int serializedIndex = index.row() + (index.column() * m_columns);
-            if (modelData.contains(serializedIndex))
-                ret = modelData.value(serializedIndex);
+            const QPoint cell(index.column(), index.row());
+            if (modelData.contains(cell))
+                ret = modelData.value(cell);
             else
                 ret = QStringLiteral("%1").arg(index.row()); }
             break;
@@ -59,11 +59,11 @@ public:
         return ret;
     }
 
-    Q_INVOKABLE QVariant dataFromSerializedIndex(int index) const
+    Q_INVOKABLE QVariant dataFromFlatIndex(int flatIndex) const
     {
-        if (modelData.contains(index))
-            return modelData.value(index);
-        return QString();
+        const int row = flatIndex % m_rows;
+        const int column = flatIndex / m_rows;
+        return modelData.value(QPoint(column, row));
     }
 
     QHash<int, QByteArray> roleNames() const override
@@ -86,8 +86,7 @@ public:
             for (int r = 0; r < span.height(); ++r) {
                 const int changedRow = cell.y() + r;
                 const int changedColumn = cell.x() + c;
-                const int serializedIndex = changedRow + (changedColumn * m_rows);
-                modelData.insert(serializedIndex, string);
+                modelData.insert(QPoint(changedColumn, changedRow), string);
             }
         }
 
@@ -103,6 +102,7 @@ public:
 
         beginInsertRows(parent, row, row + count - 1);
         m_rows += count;
+        shiftModelDataRows(row, count);
         endInsertRows();
         return true;
     }
@@ -114,12 +114,7 @@ public:
 
         beginRemoveRows(parent, row, row + count - 1);
         m_rows -= count;
-        for (int c = 0; c < m_columns; ++c) {
-            for (int r = 0; r < count; ++r) {
-                const int serializedIndex = (row + r) + (c * m_rows);
-                modelData.remove(serializedIndex);
-            }
-        }
+        shiftModelDataRows(row + count, -count);
         endRemoveRows();
         return true;
     }
@@ -131,6 +126,7 @@ public:
 
         beginInsertColumns(parent, column, column + count - 1);
         m_columns += count;
+        shiftModelDataColumns(column, count);
         endInsertColumns();
         return true;
     }
@@ -142,6 +138,7 @@ public:
 
         beginRemoveColumns(parent, column, column + count - 1);
         m_columns -= count;
+        shiftModelDataColumns(column + count, -count);
         endRemoveColumns();
         return true;
     }
@@ -155,11 +152,38 @@ public:
     void swapRows(int row1, int row2)
     {
         layoutAboutToBeChanged();
-        Q_ASSERT(modelData.contains(row1));
-        Q_ASSERT(modelData.contains(row2));
-        const QString tmp = modelData[row1];
-        modelData[row1] = modelData[row2];
-        modelData[row2] = tmp;
+        for (int c = 0; c < m_columns; ++c) {
+            const QPoint cell1(c, row1);
+            const QPoint cell2(c, row2);
+            const QString cell1Data = modelData.value(cell1);
+
+            // Do the data swap, but since modelData is not supposed to contain
+            // cells with empty strings, we need to check for this.
+            if (modelData.contains(cell2))
+                modelData[cell1] = modelData[cell2];
+            else
+                modelData.remove(cell1);
+
+            if (!cell1Data.isEmpty())
+                modelData[cell2] = cell1Data;
+            else
+                modelData.remove(cell2);
+        }
+
+        // Since this is a row reorder and not just a data update, we must
+        // remap any persistent model indexes pointing into the swapped rows.
+        // This is required by the layoutAboutToBeChanged/layoutChanged contract.
+        QModelIndexList from, to;
+        for (const QModelIndex &idx : persistentIndexList()) {
+            if (idx.row() == row1) {
+                from << idx;
+                to << createIndex(row2, idx.column());
+            } else if (idx.row() == row2) {
+                from << idx;
+                to << createIndex(row1, idx.column());
+            }
+        }
+        changePersistentIndexList(from, to);
         layoutChanged();
     }
 
@@ -203,11 +227,50 @@ signals:
     void columnCountChanged();
 
 private:
+
+    void shiftModelDataRows(int firstRow, int delta)
+    {
+        // Shift all modelData entries whose row >= firstRow by delta
+        // (positive delta = insert, negative delta = remove).
+        QHash<QPoint, QString> updated;
+        for (auto it = modelData.begin(); it != modelData.end(); ++it) {
+            const int row = it.key().y();
+            if (delta < 0) {
+                const int removedCount = -delta;
+                if (row < firstRow && row >= firstRow - removedCount)
+                    continue; // row was removed
+            }
+            const int newRow = row < firstRow ? row : row + delta;
+            updated.insert(QPoint(it.key().x(), newRow), it.value());
+        }
+        modelData = std::move(updated);
+    }
+
+    void shiftModelDataColumns(int firstColumn, int delta)
+    {
+        // Shift all modelData entries whose column >= firstColumn by delta.
+        // (positive delta = insert, negative delta = remove).
+        QHash<QPoint, QString> updated;
+        for (auto it = modelData.begin(); it != modelData.end(); ++it) {
+            const int column = it.key().x();
+            if (delta < 0) {
+                const int removedCount = -delta;
+                if (column < firstColumn && column >= firstColumn - removedCount)
+                    continue; // column was removed
+            }
+            const int newColumn = column < firstColumn ? column : column + delta;
+            updated.insert(QPoint(newColumn, it.key().y()), it.value());
+        }
+        modelData = std::move(updated);
+    }
+
+private:
+
     int m_rows = 0;
     int m_columns = 0;
     bool m_dataCanBeFetched = false;
     bool m_useCustomRoleNames = false;
-    QHash<int, QString> modelData;
+    QHash<QPoint, QString> modelData;
     Qt::ItemFlags m_flags = Qt::ItemIsSelectable | Qt::ItemIsEnabled | Qt::ItemIsEditable;
 };
 

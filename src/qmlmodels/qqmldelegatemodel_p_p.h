@@ -197,6 +197,8 @@ public:
     int modelIndex() const { return m_index; }
     bool hasValidModelIndex() const { return m_index >= 0; }
     virtual void setModelIndex(int idx, int newRow, int newColumn, bool alwaysEmit = false);
+    void setPersistentModelIndex(const QPersistentModelIndex &index) { m_persistentIndex = index; }
+    QPersistentModelIndex persistentModelIndex() const { return m_persistentIndex; }
 
     bool usesStructuredModelData() const { return m_useStructuredModelData; }
 
@@ -322,6 +324,7 @@ private:
     quint16 m_scriptRef = 0;
 
     bool m_useStructuredModelData = true;
+    QPersistentModelIndex m_persistentIndex;
 };
 
 namespace QV4 {

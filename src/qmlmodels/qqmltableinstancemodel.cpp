@@ -74,6 +74,11 @@ QQmlTableInstanceModel::~QQmlTableInstanceModel()
     deleteAllFinishedIncubationTasks();
     qDeleteAll(m_modelItems);
     drainReusableItemsPool(0);
+
+    // We don't expect there to be any released items at this point.
+    // The view must explicitly call commitReleasedItems() after each
+    // rebuild of the viewport, and long before the model is destructed.
+    Q_ASSERT(m_releasedItems.isEmpty());
 }
 
 QQmlComponent *QQmlTableInstanceModel::resolveDelegate(int index)
@@ -93,50 +98,102 @@ QQmlComponent *QQmlTableInstanceModel::resolveDelegate(int index)
     return m_delegate;
 }
 
-QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
+QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int flatIndex, const QModelIndex &modelIndex)
 {
+    Q_ASSERT(flatIndex >= 0 && flatIndex < m_adaptorModel.count());
+
     // Check if an item for the given index is already loaded and ready
-    QQmlDelegateModelItem *modelItem = m_modelItems.value(index, nullptr);
-    if (modelItem)
+    if (QQmlDelegateModelItem *modelItem = m_modelItems.value(flatIndex, nullptr))
         return modelItem;
 
-    QQmlComponent *delegate = resolveDelegate(index);
+    QQmlComponent *delegate = resolveDelegate(flatIndex);
     if (!delegate)
         return nullptr;
 
-    // Check if the pool contains an item that can be reused
-    modelItem = m_reusableItemsPool.takeItem(delegate, index);
-    if (modelItem) {
-        reuseItem(modelItem, index);
-        m_modelItems.insert(index, modelItem);
+    // Check if the temporary release cache contains the requested item
+    if (modelIndex.isValid()) {
+        const auto it = std::find_if(m_releasedItems.cbegin(), m_releasedItems.cend(),
+            [&modelIndex](const QQmlDelegateModelItem *item) {
+                return item->persistentModelIndex() == modelIndex;
+            });
+
+        if (it != m_releasedItems.cend()) {
+            QQmlDelegateModelItem *modelItem = *it;
+            // Note: a rebuild can change which delegate a DelegateChooser assigns to a cell, so the
+            // released item may no longer use the right delegate, even if it has the correct index.
+            if (modelItem->delegate() == delegate) {
+                m_releasedItems.erase(it);
+                restoreFromReleasedItemsCache(modelItem, flatIndex);
+                return modelItem;
+            }
+        }
+    }
+
+    // Check if the pool contains an item with the same delegate that can be reused
+    if (QQmlDelegateModelItem *modelItem = m_reusableItemsPool.takeItem(delegate, flatIndex)) {
+        m_modelItems.insert(flatIndex, modelItem);
+        reuseItem(modelItem, flatIndex);
         return modelItem;
     }
 
     // Create a new item from scratch
-    modelItem = m_adaptorModel.createItem(m_metaType.data(), index);
-    if (modelItem) {
+    if (QQmlDelegateModelItem *modelItem = m_adaptorModel.createItem(m_metaType.data(), flatIndex)) {
         modelItem->setDelegate(delegate);
-        m_modelItems.insert(index, modelItem);
+        m_modelItems.insert(flatIndex, modelItem);
         return modelItem;
     }
 
-    qWarning() << Q_FUNC_INFO << "failed creating a model item for index: " << index;
+    qWarning() << Q_FUNC_INFO << "failed creating a model item for index: " << flatIndex << modelIndex;
     return nullptr;
+}
+
+void QQmlTableInstanceModel::commitReleasedItems()
+{
+    // Transfer all released items from the temporary cache to the reuse pool. From
+    // now on, they can only be reused based on delegate type and not model index.
+    for (auto *item : std::as_const(m_releasedItems)) {
+        item->setPersistentModelIndex(QModelIndex());
+        if (m_reusableItemsPool.insertItem(item))
+            emit itemPooled(item->modelIndex(), item->object());
+        else
+            destroyModelItem(item, Deferred);
+    }
+    m_releasedItems.clear();
 }
 
 QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode incubationMode)
 {
     Q_ASSERT(m_delegate);
-    Q_ASSERT(index >= 0 && index < m_adaptorModel.count());
 
-    QQmlDelegateModelItem *modelItem = resolveModelItem(index);
+    QQmlDelegateModelItem *modelItem = resolveModelItem(index, QModelIndex());
     if (!modelItem)
         return nullptr;
 
-    // The model item has already been incubated. So
-    // just bump the ref-count and return it.
-    if (modelItem->object())
+    // Return the incubated object, or start an async incubation task and return nullptr for now
+    return incubateModelItemIfNeeded(modelItem, incubationMode);
+}
+
+QObject *QQmlTableInstanceModel::object(const QModelIndex &modelIndex, QQmlIncubator::IncubationMode incubationMode)
+{
+    Q_ASSERT(m_delegate);
+    Q_ASSERT(m_adaptorModel.adaptsAim());
+
+    const int flatIndex = m_adaptorModel.indexAt(modelIndex.row(), modelIndex.column());
+    QQmlDelegateModelItem *modelItem = resolveModelItem(flatIndex, modelIndex);
+    if (!modelItem)
+        return nullptr;
+
+    // Return the incubated object, or start an async incubation task and return nullptr for now
+    return incubateModelItemIfNeeded(modelItem, incubationMode);
+}
+
+QObject *QQmlTableInstanceModel::incubateModelItemIfNeeded(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode)
+{
+    if (modelItem->object()) {
+        // The model item has already been incubated. So
+        // just bump the ref-count and return it.
         return modelItem->referenceObjectWeak();
+    }
 
     // The object is not ready, and needs to be incubated
     incubateModelItem(modelItem, incubationMode);
@@ -186,8 +243,15 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object,
     // The item is not referenced by anyone
     m_modelItems.remove(modelItem->modelIndex());
 
-    if (reusable == Reusable && m_reusableItemsPool.insertItem(modelItem)) {
-        emit itemPooled(modelItem->modelIndex(), modelItem->object());
+    if (reusable == Reusable) {
+        // Stage the item in a temporary cache rather than moving it directly to the reuse pool.
+        // The view calls commitReleasedItems() once the rebuild is done, which transfers the cache
+        // to the pool. Keeping a temporary cache lets resolveModelItem() match a staged item by
+        // persistent model index first, during viewport builds, and hand back the exact same
+        // delegate item that was showing that cell. That way we can avoid the otherwise full
+        // reuse of an item, which includes emitting pooled signals etc. This also preserves
+        // ongoing visual state such as animations.
+        m_releasedItems.append(modelItem);
         return QQmlInstanceModel::Pooled;
     }
 
@@ -255,6 +319,21 @@ void QQmlTableInstanceModel::drainReusableItemsPool(int maxPoolTime)
     });
 }
 
+void QQmlTableInstanceModel::restoreFromReleasedItemsCache(QQmlDelegateModelItem *item, int newFlatIndex)
+{
+    // Row/column shifts elsewhere in the table may have changed this item's
+    // position, so update its index before handing it back from the released
+    // items cache. Also notify the view so it can refresh any index-dependent
+    // required properties (such as 'expanded' and 'hasChildren').
+    m_modelItems.insert(newFlatIndex, item);
+    const bool alwaysEmit = true;
+    const bool init = false;
+    const int row = m_adaptorModel.rowAt(newFlatIndex);
+    const int column = m_adaptorModel.columnAt(newFlatIndex);
+    item->setModelIndex(newFlatIndex, row, column, alwaysEmit);
+    emit updateItemProperties(newFlatIndex, item->object(), init);
+}
+
 void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModelIndex)
 {
     // Update the context properties index, row and column on
@@ -266,6 +345,8 @@ void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModel
     const int newRow = m_adaptorModel.rowAt(newModelIndex);
     const int newColumn = m_adaptorModel.columnAt(newModelIndex);
     item->setModelIndex(newModelIndex, newRow, newColumn, alwaysEmit);
+    if (auto *qaim = abstractItemModel())
+        item->setPersistentModelIndex(qaim->index(newRow, newColumn));
 
     // Notify the application that all 'dynamic'/role-based context data has
     // changed as well (their getter function will use the updated index).
@@ -275,6 +356,8 @@ void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModel
 
     // Inform the view that the item is recycled. This will typically result
     // in the view updating its own attached delegate item properties.
+    const bool init = false;
+    emit updateItemProperties(newModelIndex, item->object(), init);
     emit itemReused(newModelIndex, item->object());
 }
 
@@ -348,6 +431,13 @@ void QQmlTableInstanceModel::incubatorStatusChanged(QQmlTableInstanceModelIncuba
     if (status == QQmlIncubator::Ready) {
         QObject *object = modelItem->object();
         Q_ASSERT(object);
+
+        if (auto *qaim = abstractItemModel()) {
+            // Optimization: store a persistent model index so that resolveModelItem(QModelIndex)
+            // can match this item by index after a rebuild, even if its flat index has shifted
+            // due to row or column insertions/removals.
+            modelItem->setPersistentModelIndex(qaim->index(modelItem->modelRow(), modelItem->modelColumn()));
+        }
 
         // Tag the incubated object with the model item for easy retrieval upon release etc.
         object->setProperty(kModelItemTag, QVariant::fromValue(modelItem));
@@ -540,7 +630,11 @@ void QQmlTableInstanceModelIncubationTask::setInitialState(QObject *object)
     initializeRequiredProperties(
             modelItemToIncubate, object, tableInstanceModel->delegateModelAccess());
     modelItemToIncubate->setObject(object);
-    emit tableInstanceModel->initItem(modelItemToIncubate->modelIndex(), object);
+
+    const bool init = true;
+    const int flatIndex = modelItemToIncubate->modelIndex();
+    emit tableInstanceModel->initItem(flatIndex, object);
+    emit tableInstanceModel->updateItemProperties(flatIndex, object, init);
 
     if (!QQmlIncubatorPrivate::get(this)->requiredProperties()->empty())
         modelItemToIncubate->destroyObjectLater();
