@@ -19,7 +19,7 @@ ApplicationWindow {
     Drawer {
         id: leftDrawer
         width: 300
-        height: 400
+        height: parent.height
         z: 1
 
         contentItem: Button {
@@ -37,7 +37,7 @@ ApplicationWindow {
     Drawer {
         id: rightDrawer
         width: 300
-        height: 400
+        height: parent.height
         edge: Qt.RightEdge
 
         contentItem: Button {
