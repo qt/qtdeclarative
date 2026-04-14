@@ -453,34 +453,45 @@ void tst_QQuickDrawer::reposition()
     QVERIFY(dimmer);
 
     QCOMPARE(geometry(dimmer), QRectF(0, 0, window->width(), window->height()));
-    QTRY_COMPARE(geometry(popupItem), QRectF(0, 0, window->width() / 2., window->height()));
+    QTRY_COMPARE(geometry(popupItem), QRectF(0, 0, drawer->width(), window->height()));
 
-    drawer->setY(100);
-    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height() - 100));
-    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2., window->height() - 100));
+    const qreal drawerY = 100;
+    drawer->setY(drawerY);
+    QCOMPARE(geometry(dimmer), QRectF(0, drawerY, window->width(), window->height() - drawerY));
+    QCOMPARE(geometry(popupItem), QRectF(0, drawerY, drawer->width(), window->height() - drawerY));
 
     drawer->setHeight(window->height());
-    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height()));
-    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2., window->height()));
+    QCOMPARE(geometry(dimmer), QRectF(0, drawerY, window->width(), window->height()));
+    QCOMPARE(geometry(popupItem), QRectF(0, drawerY, drawer->width(), window->height()));
 
     drawer->resetHeight();
-    QCOMPARE(geometry(dimmer), QRectF(0, 100, window->width(), window->height() - 100));
-    QCOMPARE(geometry(popupItem), QRectF(0, 100, window->width() / 2., window->height() - 100));
+    QCOMPARE(geometry(dimmer), QRectF(0, drawerY, window->width(), window->height() - drawerY));
+    QCOMPARE(geometry(popupItem), QRectF(0, drawerY, drawer->width(), window->height() - drawerY));
+
+    // The drawer's top is the sum of contentItem()->y() (which accounts for both
+    // safe margins and the header in ApplicationWindow) plus the drawer->y().
+    const qreal drawerTop = window->contentItem()->y() + drawer->y();
+    const auto dimmerRect = [&] {
+        return QRectF(0, drawerTop, window->width(), window->height() - drawerTop);
+    };
+    const auto popupRect = [&](qreal x) {
+        return QRectF(x, drawerTop, drawer->width(), window->height() - drawerTop);
+    };
 
     drawer->setParentItem(window->contentItem());
-    QCOMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
-    QCOMPARE(geometry(popupItem), QRectF(0, 150, window->width() / 2., window->height() - 150));
+    QCOMPARE(geometry(dimmer), dimmerRect());
+    QCOMPARE(geometry(popupItem), popupRect(0));
 
     drawer->setEdge(Qt::RightEdge);
-    QCOMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
-    QTRY_COMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2., window->height() - 150));
+    QCOMPARE(geometry(dimmer), dimmerRect());
+    QTRY_COMPARE(geometry(popupItem), popupRect(window->width() - drawer->width()));
 
     window->setWidth(window->width() + 100);
-    QTRY_COMPARE(geometry(dimmer), QRectF(0, 150, window->width(), window->height() - 150));
-    QTRY_COMPARE(geometry(popupItem), QRectF(window->width() - drawer->width(), 150, window->width() / 2., window->height() - 150));
+    QTRY_COMPARE(geometry(dimmer), dimmerRect());
+    QTRY_COMPARE(geometry(popupItem), popupRect(window->width() - drawer->width()));
 
     drawer->close();
-    QTRY_COMPARE(geometry(popupItem), QRectF(window->width(), 150, window->width() / 2., window->height() - 150));
+    QTRY_COMPARE(geometry(popupItem), popupRect(window->width()));
 
     QQuickDrawer *drawer2 = window->property("drawer2").value<QQuickDrawer *>();
     QVERIFY(drawer2);
