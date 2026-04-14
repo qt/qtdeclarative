@@ -3916,6 +3916,9 @@ void tst_QQuickItem::grab()
     QVERIFY(root);
     QQuickItem *item = root->findChild<QQuickItem *>("myItem");
     QVERIFY(item);
+
+    // The actual grabbed item size can be different, depending on DPR.
+    const auto dpr = view.screen()->devicePixelRatio();
 #if QT_CONFIG(opengl)
     { // Default size (item is 100x100)
         QSharedPointer<QQuickItemGrabResult> result = item->grabToImage();
@@ -3924,7 +3927,9 @@ void tst_QQuickItem::grab()
         QVERIFY(!result->url().isEmpty());
         QImage image = result->image();
         QCOMPARE(image.pixel(0, 0), qRgb(255, 0, 0));
-        QCOMPARE(image.pixel(99, 99), qRgb(0, 0, 255));
+        // Take DPR into account
+        const QPoint bottomRight = QPoint(99, 99) * dpr;
+        QCOMPARE(image.pixel(bottomRight), qRgb(0, 0, 255));
     }
 
     { // Smaller size
@@ -3935,7 +3940,9 @@ void tst_QQuickItem::grab()
         QVERIFY(!result->url().isEmpty());
         QImage image = result->image();
         QCOMPARE(image.pixel(0, 0), qRgb(255, 0, 0));
-        QCOMPARE(image.pixel(49, 49), qRgb(0, 0, 255));
+        // Take DPR into account
+        const QPoint bottomRight = QPoint(49, 49) * dpr;
+        QCOMPARE(image.pixel(bottomRight), qRgb(0, 0, 255));
     }
 #endif
 }
