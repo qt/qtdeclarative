@@ -14,7 +14,38 @@
 #include <QtCore/QCommandLineParser>
 #include <QtCore/QTemporaryFile>
 #include <QtCore/QUrl>
+#include <QtCore/QFile>
 #include <QtCore/QLibraryInfo>
+
+bool QmlPreviewApplication::argumentsFromCommandLineAndFile(
+        QStringList &allArguments, const QStringList &arguments)
+{
+    allArguments.reserve(arguments.size());
+    for (const QString &argument : arguments) {
+        // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
+        if (argument.startsWith(u'@')) {
+            QString optionsFile = argument;
+            optionsFile.remove(0, 1);
+            if (optionsFile.isEmpty()) {
+                logError("The @ option requires an input file");
+                return false;
+            }
+            QFile f(optionsFile);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                logError("Cannot open options file specified with @");
+                return false;
+            }
+            while (!f.atEnd()) {
+                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                if (!line.isEmpty())
+                    allArguments << line;
+            }
+        } else {
+            allArguments << argument;
+        }
+    }
+    return true;
+}
 
 QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
     QCoreApplication(argc, argv),
@@ -92,7 +123,10 @@ void QmlPreviewApplication::parseArguments()
                                  tr("Parameters for the executable to be started."),
                                  QLatin1String("[parameters...]"));
 
-    parser.process(*this);
+    QStringList expandedArguments;
+    if (!argumentsFromCommandLineAndFile(expandedArguments, arguments()))
+        ::exit(1);
+    parser.process(expandedArguments);
 
     QTemporaryFile file;
     if (file.open())

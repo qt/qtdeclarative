@@ -36,6 +36,7 @@ private:
 
     void logError(const QString &error);
     void logStatus(const QString &status);
+    bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QStringList &arguments);
 
     void serveRequest(const QString &request);
     bool sendFile(const QString &path);

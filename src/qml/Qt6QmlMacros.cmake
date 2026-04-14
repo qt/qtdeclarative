@@ -1651,6 +1651,16 @@ function(_qt_internal_assign_to_qmllint_targets_folder target)
     set_property(TARGET ${target} PROPERTY FOLDER "${folder_name}")
 endfunction()
 
+function(_qt_internal_assign_to_qmlpreview_targets_folder target)
+    get_property(folder_name GLOBAL PROPERTY QT_QMLPREVIEW_TARGETS_FOLDER)
+    if("${folder_name}" STREQUAL "")
+        get_property(__qt_qt_targets_folder GLOBAL PROPERTY QT_TARGETS_FOLDER)
+        set(folder_name "${__qt_qt_targets_folder}/QmlPreview")
+        set_property(GLOBAL PROPERTY QT_QMLPREVIEW_TARGETS_FOLDER ${folder_name})
+    endif()
+    set_property(TARGET ${target} PROPERTY FOLDER "${folder_name}")
+endfunction()
+
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
     set(lint_target_json ${target}_qmllint_json)
@@ -1863,6 +1873,72 @@ function(_qt_internal_add_all_qmllint_target_deferred target)
     endforeach()
     add_custom_target(${target} ${target_commands})
     _qt_internal_assign_to_qmllint_targets_folder(${target})
+endfunction()
+
+function(_qt_internal_target_enable_qmlpreview target)
+    set(preview_target ${target}_qmlpreview)
+    if(TARGET ${preview_target})
+        return()
+    endif()
+
+    # qmlpreview launches the target as a subprocess, so it only works for executables.
+    get_target_property(target_type ${target} TYPE)
+    if(NOT target_type STREQUAL "EXECUTABLE")
+        return()
+    endif()
+
+    _qt_internal_collect_tool_paths(qt_bin_paths)
+
+    # First look for the qmlpreview in the target Qt bin dir.
+    find_program(QT_INTERNAL_QML_PREVIEW_PATH
+        NAMES qmlpreview qmlpreview.exe
+        PATHS ${qt_bin_paths}
+        NO_DEFAULT_PATH
+    )
+
+    if (QT_INTERNAL_QML_PREVIEW_PATH)
+        set(qmlpreview_executable ${QT_INTERNAL_QML_PREVIEW_PATH})
+    elseif(TARGET "${QT_CMAKE_EXPORT_NAMESPACE}::qmlpreview")
+        # If we don't find it in the paths, fallback to using target names.
+        set(qmlpreview_executable ${QT_CMAKE_EXPORT_NAMESPACE}::qmlpreview)
+    elseif(TARGET qmlpreview)
+        set(qmlpreview_executable qmlpreview)
+    else()
+        # No qmlpreview found means Qt was built without. Silently omit the target.
+        return()
+    endif()
+
+    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
+        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
+
+    set(preview_args
+        ${qrc_args}
+        $<TARGET_FILE:${target}>
+    )
+
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+    set(preview_dir ${target_binary_dir}/.rcc/qmlpreview)
+    set(preview_rsp_path ${preview_dir}/$<CONFIG>/${target}.rsp)
+
+    file(GENERATE
+        OUTPUT "${preview_rsp_path}"
+        CONTENT "$<JOIN:${preview_args},\n>\n"
+    )
+
+    set(cmd
+        ${qmlpreview_executable}
+        @${preview_rsp_path}
+    )
+
+    add_custom_target(${preview_target}
+        COMMAND ${cmd}
+        COMMAND_EXPAND_LISTS
+        DEPENDS ${target} ${preview_rsp_path}
+        WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},BINARY_DIR>"
+        USES_TERMINAL # qmlpreview terminates when stdin is closed
+    )
+    _qt_internal_assign_to_qmlpreview_targets_folder(${preview_target})
 endfunction()
 
 function(_qt_internal_target_enable_qmlcachegen target qmlcachegen)
@@ -3395,6 +3471,9 @@ function(qt6_target_qml_sources target)
         if(NOT arg_NO_LINT AND NOT no_lint)
             _qt_internal_target_enable_qmllint(${target})
         endif()
+        if(NOT CMAKE_CROSSCOMPILING)
+            _qt_internal_target_enable_qmlpreview(${target})
+        endif()
 
         if(arg_OUTPUT_TARGETS)
             set(${arg_OUTPUT_TARGETS} "" PARENT_SCOPE)
@@ -3693,6 +3772,8 @@ function(qt6_target_qml_sources target)
             _qt_internal_target_enable_qmllint(${target})
             set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${file_absolute})
         endif()
+
+        _qt_internal_target_enable_qmlpreview(${target})
 
         # Add qml file's type to qmldir
         get_source_file_property(skip_qmldir ${qml_file_src} QT_QML_SKIP_QMLDIR_ENTRY)
