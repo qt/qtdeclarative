@@ -24,6 +24,7 @@
 #include <private/qsgrendernode_p.h>
 #include <private/qdatabuffer_p.h>
 #include <private/qsgtexture_p.h>
+#include <private/qsgnode_p.h>
 
 #include <QtCore/QBitArray>
 #include <QtCore/QElapsedTimer>
@@ -278,12 +279,14 @@ struct Element {
         , orphaned(false)
         , isRenderNode(false)
         , isMaterialBlended(false)
+        , mutabilityGroup(0)
     {
     }
 
     void setNode(QSGGeometryNode *n) {
         node = n;
         isMaterialBlended = hasMaterialWithBlending(n);
+        mutabilityGroup = QSGNodePrivate::mutabilityGroup(n);
     }
 
     inline void ensureBoundsValid() {
@@ -311,6 +314,7 @@ struct Element {
     uint orphaned : 1;
     uint isRenderNode : 1;
     uint isMaterialBlended : 1;
+    uint mutabilityGroup : 4;
 };
 
 struct RenderNodeElement : public Element {

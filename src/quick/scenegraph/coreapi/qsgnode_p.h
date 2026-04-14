@@ -22,11 +22,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGNodePrivate
+class Q_AUTOTEST_EXPORT QSGNodePrivate
 {
 public:
-    QSGNodePrivate() {}
+    QSGNodePrivate() : m_mutabilityGroup(0) {}
     virtual ~QSGNodePrivate() {}
+
+    static quint8 mutabilityGroup(const QSGNode *node);
+    static void setMutabilityGroupOfSubtree(QSGNode *node, quint8 mutabilityGroup);
 
 #ifdef QSG_RUNTIME_DESCRIPTION
     static void setDescription(QSGNode *node, const QString &description) {
@@ -37,8 +40,11 @@ public:
     }
     QString descr;
 #endif
-};
 
+    quint8 m_mutabilityGroup : 4;
+
+    // Reserved: 4 bits
+};
 
 class QSGBasicGeometryNodePrivate : public QSGNodePrivate
 {

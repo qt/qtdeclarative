@@ -480,7 +480,10 @@ public:
         uint origin:5; // QQuickItem::TransformOrigin
         uint transparentForPositioner : 1;
 
-        // 26 bits padding
+        uint mutabilityGroup : 4;
+        uint mutabilityGroupSet : 1;
+
+        // 21 bits padding
     };
 
     enum ExtraDataTag {

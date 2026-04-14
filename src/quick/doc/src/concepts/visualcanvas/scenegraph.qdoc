@@ -1088,6 +1088,63 @@ with multiple windows.
   {QSG_RENDER_TIMING=1} will output a number of useful timing
   parameters which can be useful in pinpointing where a problem lies.
 
+  \section2 Mutability groups
+
+  Sometimes, analysis will uncover that the renderer batches regularly updated content together with
+  static content. In such cases, it will be better to split the geometry into two separate batches
+  rather than upload a larger batch of mostly unchanged content on every update.
+
+  Take the following example:
+  \code
+  Column {
+      Timer {
+          interval: 1000
+          running: true
+          repeat: true
+          onTriggered: dynamicText.counter++
+      }
+
+      Text {
+          id: dynamicText
+          property int counter: 0
+          text: counter
+          mutabilityGroup: Item.DynamicMutabilityGroup
+      }
+
+      Text {
+          id: staticText1
+          text: "Static label"
+      }
+
+      Text {
+          id: staticText2
+          text: "Static label"
+      }
+  }
+  \endcode
+
+  This application consists of a \c dynamicText label which updates every second. In addition,
+  it has two static text labels which are never updated.
+
+  If no explicit mutability group were set in this example, the geometry of the static text labels
+  would be batched together with the dynamic label. This is because they are all using the same
+  material and basic properties, and the scene graph batch renderer will try to minimize the
+  number of draw calls needed to display all the text in the scene (up to a certain limit.) As
+  a result, the 88 vertices representing the static text in the scene will be reuploaded whenever
+  the dynamic text changes.
+
+  By setting the \l{Item.mutabilityGroup}{mutabilityGroup} of the \c dynamicText to
+  \c{Item.DynamicMutabilityGroup}, we provide the renderer with a hint that the label will be
+  updated often. As a result, it will never be batched together with the remaining content, which
+  belongs to the default mutability group. If there are multiple items updating at the same pace,
+  they still can be batched together by assigning them to the same group.
+
+  There are a total of 16 mutability groups available, including the default group \c{0}.
+
+  For the large majority of items in the UI, the default mutability group should be used. It should
+  primarily be overridden in cases where analysis uncovers a bottleneck caused by reuploads of
+  large, static geometries.
+
   \section1 Visualizing
 
   To visualize the various aspects of the scene graph's default renderer, the

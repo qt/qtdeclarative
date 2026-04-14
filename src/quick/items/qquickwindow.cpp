@@ -17,6 +17,7 @@
 #include <QtQuick/private/qquickpointerhandler_p.h>
 #include <QtQuick/private/qquickpointerhandler_p_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
+#include <QtQuick/private/qsgnode_p.h>
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
 #include <private/qquickrendercontrol_p.h>
@@ -2410,15 +2411,26 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                      itemPriv->paintNode->parent() == nullptr ||
                      itemPriv->paintNode->parent() == itemPriv->childContainerNode());
 
-            if (itemPriv->paintNode && itemPriv->paintNode->parent() == nullptr) {
-                QSGNode *before = qquickitem_before_paintNode(itemPriv);
-                if (before && before->parent()) {
-                    Q_ASSERT(before->parent() == itemPriv->childContainerNode());
-                    itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, before);
-                } else {
-                    itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
+            if (itemPriv->paintNode) {
+                if (itemPriv->paintNode->parent() == nullptr) {
+                    QSGNode *before = qquickitem_before_paintNode(itemPriv);
+                    if (before && before->parent()) {
+                        Q_ASSERT(before->parent() == itemPriv->childContainerNode());
+                        itemPriv->childContainerNode()->insertChildNodeAfter(itemPriv->paintNode, before);
+                    } else {
+                        itemPriv->childContainerNode()->prependChildNode(itemPriv->paintNode);
+                    }
+                }
+
+                // Ensure paint node subtree has same mutability group as item, but only if
+                // the mutability group has been explicitly set (avoiding this extra pass for
+                // the majority of items which never touch this property)
+                if (itemPriv->extra.isAllocated() && itemPriv->extra->mutabilityGroupSet) {
+                    QSGNodePrivate::setMutabilityGroupOfSubtree(itemPriv->paintNode,
+                                                                itemPriv->extra->mutabilityGroup);
                 }
             }
+
         } else if (itemPriv->paintNode) {
             delete itemPriv->paintNode;
             itemPriv->paintNode = nullptr;

@@ -116,6 +116,8 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged VIRTUAL)
     Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11))
 
+    Q_PROPERTY(int mutabilityGroup READ mutabilityGroup WRITE setMutabilityGroup NOTIFY mutabilityGroupChanged REVISION(6, 12))
+
 #if QT_CONFIG(quick_shadereffect)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 #endif
@@ -158,6 +160,15 @@ public:
         ItemTransformHasChanged,   // value.item
     };
     Q_ENUM(ItemChange)
+
+    enum MutabilityGroup : quint8 {
+        AutoMutabilityGroup     = 0x0,
+        StaticMutabilityGroup   = 0x1,
+        ModerateMutabilityGroup = 0x8,
+        DynamicMutabilityGroup  = 0xf,
+        // Maximum 4 bits
+    };
+    Q_ENUM(MutabilityGroup)
 
     union ItemChangeData {
         ItemChangeData(QQuickItem *v) : item(v) {}
@@ -381,6 +392,9 @@ public:
     virtual bool isTextureProvider() const;
     virtual QSGTextureProvider *textureProvider() const;
 
+    void setMutabilityGroup(int mutabilityGroup);
+    int mutabilityGroup() const;
+
 public Q_SLOTS:
     void update();
 
@@ -418,6 +432,8 @@ Q_SIGNALS:
 
     Q_REVISION(6, 0) void paletteChanged();
     Q_REVISION(6, 0) void paletteCreated();
+
+    Q_REVISION(6, 12) void mutabilityGroupChanged();
 
 protected:
     bool event(QEvent *) override;

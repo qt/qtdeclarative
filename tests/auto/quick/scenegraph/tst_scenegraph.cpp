@@ -11,6 +11,8 @@
 
 #include <QtQuick>
 #include <QtQml>
+#include <QtQuick/private/qquickrectangle_p.h>
+#include <QtTest/QSignalSpy>
 
 #if QT_CONFIG(opengl)
 #include <private/qopenglcontext_p.h>
@@ -22,6 +24,8 @@
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
 #include <private/qsgplaintexture_p.h>
+#include <private/qsgnode_p.h>
+#include <private/qquickitem_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -102,6 +106,10 @@ private slots:
     void textureNativeInterface();
     void distanceFieldCacheInvalidation();
     void unexposeDuringPolish();
+
+#ifdef QT_BUILD_INTERNAL
+    void mutabilityGroups();
+#endif
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -374,6 +382,7 @@ void tst_SceneGraph::render_data()
         u"render_OpacityThroughBatchRoot.qml"_s,
         u"render_Mipmap.qml"_s,
         u"render_AlphaOverlapRebuild.qml"_s,
+        u"render_MutabilityGroups.qml"_s,
     };
 
     QRegularExpression sampleCount("#samples: *(\\d+)");
@@ -958,6 +967,162 @@ void tst_SceneGraph::unexposeDuringPolish()
     QVERIFY(!view.isExposed());
     QVERIFY(!view.isVisible());
 }
+
+#ifdef QT_BUILD_INTERNAL
+void tst_SceneGraph::mutabilityGroups()
+{
+    QQuickView view;
+    view.setSource(testFileUrl(QLatin1String("simple.qml")));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *rootItem = view.rootObject();
+    QVERIFY(rootItem);
+
+    // Default mutability group
+    QQuickRectangle *rect1 = new QQuickRectangle(rootItem);
+    rect1->setWidth(100);
+    rect1->setHeight(100);
+    rect1->setColor(Qt::red);
+    QCOMPARE(rect1->mutabilityGroup(), int(QQuickItem::AutoMutabilityGroup));
+
+    view.grabWindow(); // Force a frame to create nodes
+
+    QQuickItemPrivate *rect1Private = QQuickItemPrivate::get(rect1);
+
+    {
+        QSGNode *node1 = rect1Private->paintNode;
+        QVERIFY(node1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(node1), quint8(QQuickItem::AutoMutabilityGroup));
+    }
+
+    // Change mutability group
+    QSignalSpy spy(rect1, &QQuickItem::mutabilityGroupChanged);
+    rect1->setMutabilityGroup(QQuickItem::StaticMutabilityGroup);
+    QCOMPARE(rect1->mutabilityGroup(), int(QQuickItem::StaticMutabilityGroup));
+    QCOMPARE(spy.count(), 1);
+
+    view.grabWindow();
+
+    {
+        QSGNode *node1 = rect1Private->paintNode;
+        QVERIFY(node1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(node1), quint8(QQuickItem::StaticMutabilityGroup));
+    }
+
+    // Set mutability group to Dynamic updates
+    rect1->setMutabilityGroup(QQuickItem::DynamicMutabilityGroup);
+    QCOMPARE(rect1->mutabilityGroup(), int(QQuickItem::DynamicMutabilityGroup));
+    QCOMPARE(spy.count(), 2);
+
+    view.grabWindow();
+    {
+        QSGNode *node1 = rect1Private->paintNode;
+        QVERIFY(node1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(node1), quint8(QQuickItem::DynamicMutabilityGroup));
+    }
+
+    // Setting identical value for group does not re-emit
+    rect1->setMutabilityGroup(QQuickItem::DynamicMutabilityGroup);
+    QCOMPARE(spy.count(), 2);
+
+    // Test value clamping
+    rect1->setMutabilityGroup(255);
+    QCOMPARE(rect1->mutabilityGroup(), quint8(15));
+
+    // Parent-child relationships
+    QQuickRectangle *parent = new QQuickRectangle(rootItem);
+    parent->setWidth(200);
+    parent->setHeight(200);
+    parent->setMutabilityGroup(QQuickItem::StaticMutabilityGroup);
+
+    QQuickRectangle *child1 = new QQuickRectangle(parent);
+    child1->setWidth(50);
+    child1->setHeight(50);
+    QCOMPARE(child1->mutabilityGroup(), int(QQuickItem::AutoMutabilityGroup));
+
+    QQuickRectangle *child2 = new QQuickRectangle(parent);
+    child2->setWidth(50);
+    child2->setHeight(50);
+    child2->setMutabilityGroup(QQuickItem::ModerateMutabilityGroup);
+    QCOMPARE(child2->mutabilityGroup(), int(QQuickItem::ModerateMutabilityGroup));
+
+    view.grabWindow();
+
+    QQuickItemPrivate *parentPrivate = QQuickItemPrivate::get(parent);
+    QVERIFY(parentPrivate);
+
+    QQuickItemPrivate *childPrivate1 = QQuickItemPrivate::get(child1);
+    QVERIFY(childPrivate1);
+
+    QQuickItemPrivate *childPrivate2 = QQuickItemPrivate::get(child2);
+    QVERIFY(childPrivate2);
+
+    // Parent should have its mutability group
+    {
+        QSGNode *parentNode = parentPrivate->paintNode;
+        QVERIFY(parentNode);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(parentNode), quint8(QQuickItem::StaticMutabilityGroup));
+    }
+
+    // Child should not inherit parent's mutability group in the scene graph
+    {
+        QSGNode *childNode1 = childPrivate1->paintNode;
+        QVERIFY(childNode1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode1), quint8(QQuickItem::AutoMutabilityGroup));
+    }
+
+    {
+        QSGNode *childNode2 = childPrivate2->paintNode;
+        QVERIFY(childNode2);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode2), quint8(QQuickItem::ModerateMutabilityGroup));
+    }
+
+    // Changing parent's mutability group should not propagate to children
+    parent->setMutabilityGroup(QQuickItem::DynamicMutabilityGroup);
+    view.grabWindow();
+
+    {
+        QSGNode *parentNode = parentPrivate->paintNode;
+        QVERIFY(parentNode);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(parentNode), quint8(QQuickItem::DynamicMutabilityGroup));
+    }
+
+    {
+        QSGNode *childNode1 = childPrivate1->paintNode;
+        QVERIFY(childNode1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode1), quint8(QQuickItem::AutoMutabilityGroup));
+    }
+
+    {
+        QSGNode *childNode2 = childPrivate2->paintNode;
+        QVERIFY(childNode2);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode2), quint8(QQuickItem::ModerateMutabilityGroup));
+    }
+
+    // Updating child mutability group
+    child1->setMutabilityGroup(QQuickItem::StaticMutabilityGroup);
+    view.grabWindow();
+
+    {
+        QSGNode *parentNode = parentPrivate->paintNode;
+        QVERIFY(parentNode);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(parentNode), quint8(QQuickItem::DynamicMutabilityGroup));
+    }
+
+    {
+        QSGNode *childNode1 = childPrivate1->paintNode;
+        QVERIFY(childNode1);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode1), quint8(QQuickItem::StaticMutabilityGroup));
+    }
+
+    {
+        QSGNode *childNode2 = childPrivate2->paintNode;
+        QVERIFY(childNode2);
+        QCOMPARE(QSGNodePrivate::mutabilityGroup(childNode2), quint8(QQuickItem::ModerateMutabilityGroup));
+    }
+}
+#endif // QT_BUILD_INTERNAL
 
 #include "tst_scenegraph.moc"
 

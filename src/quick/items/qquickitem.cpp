@@ -2359,6 +2359,11 @@ bool QQuickItemPrivate::setLastFocusChangeReason(Qt::FocusReason reason)
 */
 
 /*!
+    \fn void QQuickItem::mutabilityGroupChanged()
+    \internal
+*/
+
+/*!
     \fn QQuickItem::QQuickItem(QQuickItem *parent)
 
     Constructs a QQuickItem with the given \a parent.
@@ -9245,6 +9250,103 @@ QRectF QQuickItem::mapRectFromScene(const QRectF &rect) const
 }
 
 /*!
+    \qmlproperty int QtQuick::Item::mutabilityGroup
+    \since 6.12
+
+    This is an advanced property which can be used for low-level optimizations. It serves as a hint
+    for the renderer about how often an item will be updated. In typical use cases, leaving this
+    property as its default (\c Item.AutoMutabilityGroup (\c{0})) will suffice.
+
+    However, in certain cases an analysis of performance may uncover bottlenecks that the
+    default behavior of the Qt Quick scenegraph renderer has been unable to optimize. Typically this
+    can happen if rapidly updated geometry is batched together with static geometry. To avoid this,
+    you may for instance try assigning the rapidly updated components to
+    Item.DynamicMutabilityGroup. Geometry from different mutability groups will not be batched
+    together.
+
+    The mutability group only applies to the item itself. It does not propagate to children.
+
+    See \l{Qt Quick Scene Graph Default Renderer} for more information about the inner workings of
+    the Qt Quick Scene Graph Renderer and geometry batching.
+
+    Predefined values:
+    \value Item.AutoMutabilityGroup     The default mutability group.
+    \value Item.StaticMutabilityGroup   Indicates that the item is rarely or never updated.
+    \value Item.ModerateMutabilityGroup Indicates that the item is updated moderately often.
+    \value Item.DynamicMutabilityGroup  Indicates that the item is updated often / every frame.
+
+    \note The valid numerical range of mutability groups is [0 .. 15]. The property will be clamped
+    to this range. By convention, frequency is expected to increase with the numerical value of the
+    group.
+*/
+/*!
+    \property QQuickItem::mutabilityGroup
+    \since 6.12
+    \brief Hints renderer on frequency of changes to item
+
+    This is an advanced property which can be used for low-level optimizations. It serves as a hint
+    for the renderer about how often an item will be updated. In typical use cases, leaving this
+    property as its default (\c QQuickItem::AutoMutabilityGroup (\c{0})) will suffice.
+
+    However, in certain cases an analysis of performance may uncover bottlenecks that the
+    default behavior of the Qt Quick scenegraph renderer has been unable to optimize. Typically this
+    can happen if rapidly updated geometry is batched together with static geometry. To avoid this,
+    you may for instance try assigning the rapidly updated components to
+    QQuickItem::DynamicMutabilityGroup. Geometry from different mutability groups will not be
+    batched together.
+
+    The mutability group only applies to the item itself. It does not propagate to children.
+
+    See \l{Qt Quick Scene Graph Default Renderer} for more information about the inner workings of
+    the Qt Quick Scene Graph Renderer and geometry batching.
+
+    \note The valid numerical range of mutability groups is [0 .. 15]. The property will be clamped
+    to this range. By convention, frequency is expected to increase with the numerical value of the
+    group.
+*/
+/*!
+    \enum QQuickItem::MutabilityGroup
+    \since 6.12
+
+    This enum provides predefined values that may be used for the \l{mutabilityGroup} property.
+
+    \value AutoMutabilityGroup      The default mutability group.
+    \value StaticMutabilityGroup    Indicates that the item is rarely or never updated.
+    \value ModerateMutabilityGroup  Indicates that the item is updated moderately often.
+    \value DynamicMutabilityGroup   Indicates that the item is updated often / every frame.
+*/
+int QQuickItem::mutabilityGroup() const
+{
+    Q_D(const QQuickItem);
+    if (d->extra.isAllocated())
+        return d->extra->mutabilityGroup;
+    return int(QQuickItem::AutoMutabilityGroup);
+}
+
+void QQuickItem::setMutabilityGroup(int mutabilityGroup)
+{
+    Q_D(QQuickItem);
+
+    const int clampedGroup = qBound(int(AutoMutabilityGroup),
+                                    mutabilityGroup,
+                                    int(DynamicMutabilityGroup));
+    if (Q_UNLIKELY(clampedGroup != mutabilityGroup)) {
+        qCDebug(QSG_LOG_RENDERLOOP) << "QQuickItem::setMutabilityGroup: Invalid group"
+                                    << mutabilityGroup
+                                    << ", clamping to"
+                                    << clampedGroup;
+    }
+
+    if (clampedGroup == this->mutabilityGroup())
+        return;
+
+    d->extra.value().mutabilityGroup = clampedGroup;
+    d->extra.value().mutabilityGroupSet = true;
+    d->dirty(QQuickItemPrivate::Content); // Trigger updating paint node
+    emit mutabilityGroupChanged();
+}
+
+/*!
   \property QQuickItem::anchors
   \internal
 */
@@ -10303,7 +10405,9 @@ QQuickItemPrivate::ExtraData::ExtraData()
   recursiveEffectRefCount(0),
   opacityNode(nullptr), clipNode(nullptr), rootNode(nullptr),
   origin(QQuickItem::Center),
-  transparentForPositioner(false)
+  transparentForPositioner(false),
+  mutabilityGroup(uint(QQuickItem::AutoMutabilityGroup)),
+  mutabilityGroupSet(false)
 {
 #ifdef QT_BUILD_INTERNAL
     ++QQuickItemPrivate::itemExtra_counter;

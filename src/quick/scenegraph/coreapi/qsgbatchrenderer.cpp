@@ -18,6 +18,8 @@
 
 #include "qsgrhivisualizer_p.h"
 
+#include <QtQuick/private/qsgnode_p.h>
+
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -1449,7 +1451,14 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     if (state & QSGNode::DirtyGeometry && node->type() == QSGNode::GeometryNodeType) {
         QSGGeometryNode *gn = static_cast<QSGGeometryNode *>(node);
         Element *e = shadowNode->element();
+
         if (e) {
+            const quint8 nodeMutabilityGroup = QSGNodePrivate::mutabilityGroup(gn);
+            if (nodeMutabilityGroup != e->mutabilityGroup) {
+                m_rebuild |= Renderer::FullRebuild;
+                e->mutabilityGroup = nodeMutabilityGroup;
+            }
+
             e->boundsComputed = false;
             Batch *b = e->batch;
             if (b) {
@@ -1798,7 +1807,8 @@ void Renderer::prepareOpaqueBatches()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gniMaterial->type() == gnjMaterial->type()
                     && gniMaterial->viewCount() == gnjMaterial->viewCount()
-                    && gniMaterial->compare(gnjMaterial) == 0)
+                    && gniMaterial->compare(gnjMaterial) == 0
+                    && ei->mutabilityGroup == ej->mutabilityGroup)
             {
                 ej->batch = batch;
                 next->nextInBatch = ej;
@@ -1916,7 +1926,8 @@ void Renderer::prepareAlphaBatches()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gniMaterial->type() == gnjMaterial->type()
                     && gniMaterial->viewCount() == gnjMaterial->viewCount()
-                    && gniMaterial->compare(gnjMaterial) == 0)
+                    && gniMaterial->compare(gnjMaterial) == 0
+                    && ei->mutabilityGroup == ej->mutabilityGroup)
             {
                 if (!overlapBounds.intersects(ej->bounds) || !checkOverlap(i+1, j - 1, ej->bounds)) {
                     ej->batch = batch;
@@ -3206,7 +3217,8 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
               << " Nodes:" << QString::fromLatin1("%1").arg(qsg_countNodesInBatch(batch), 4).toLatin1().constData()
               << " Vertices:" << QString::fromLatin1("%1").arg(batch->vertexCount, 5).toLatin1().constData()
               << " Indices:" << QString::fromLatin1("%1").arg(batch->indexCount, 5).toLatin1().constData()
-              << " root:" << batch->root;
+              << " root:" << batch->root
+              << " mutability group: " << e->mutabilityGroup;
         if (batch->drawSets.size() > 1)
             debug << "sets:" << batch->drawSets.size();
         if (!batch->isOpaque)
@@ -3394,7 +3406,9 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
                  << " Nodes:" << QString::fromLatin1("%1").arg(qsg_countNodesInBatch(batch), 4).toLatin1().constData()
                  << " Vertices:" << QString::fromLatin1("%1").arg(batch->vertexCount, 5).toLatin1().constData()
                  << " Indices:" << QString::fromLatin1("%1").arg(batch->indexCount, 5).toLatin1().constData()
-                 << " root:" << batch->root;
+                 << " root:" << batch->root
+                 << " mutability group: " << e->mutabilityGroup;
+
 
         batch->uploadedThisFrame = false;
     }
