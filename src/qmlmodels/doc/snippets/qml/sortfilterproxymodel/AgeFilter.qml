@@ -6,9 +6,8 @@ import QtQml.Models
 
 //! [age-filter]
 FunctionFilter {
-   component RoleData: QtObject { property int age }
-   function filter(data: RoleData) : bool {
-      return data.age > 30
+   function filter(age: int) : bool {
+      return age > 30
    }
 }
 //! [age-filter]

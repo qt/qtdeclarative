@@ -38,6 +38,8 @@ public:
 
     bool filterAcceptsRowInternal(int row, const QModelIndex& sourceIndex, const QQmlSortFilterProxyModel *) const override;
 
+    void update(const QQmlSortFilterProxyModel *proxyModel) override;
+
 private:
     void classBegin() override {};
     void componentComplete() override;
@@ -51,8 +53,17 @@ class QQmlFunctionFilterPrivate : public QQmlFilterBasePrivate
     Q_DECLARE_PUBLIC (QQmlFunctionFilter)
 
 public:
-    QMetaMethod m_method;
-    mutable QVariant m_parameterData;
+    QMetaMethod method;
+    struct ParameterInfo {
+        int roleId;
+        QVariant value;
+        QMetaType expectedType;
+    };
+    struct ParameterCache {
+        QVector<ParameterInfo> paramsInfo;
+        QVector<void *> dataArgs;
+    };
+    mutable std::optional<ParameterCache> parameterCache;
 };
 
 QT_END_NAMESPACE

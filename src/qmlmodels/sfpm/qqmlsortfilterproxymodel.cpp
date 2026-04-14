@@ -58,9 +58,8 @@ Q_LOGGING_CATEGORY (lcSortFilterProxyModel, "qt.qml.sortfilterproxymodel")
         ]
         filters: [
             FunctionFilter {
-                component RoleData: QtObject { property qreal cpuUsage }
-                function filter(data: RoleData) : bool {
-                    return (data.cpuUsage > 90)
+                function filter(cpuUsage: real) : bool {
+                    return (cpuUsage > 90)
                 }
             }
         ]

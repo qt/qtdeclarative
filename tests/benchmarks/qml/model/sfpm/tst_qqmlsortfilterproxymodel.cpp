@@ -218,9 +218,8 @@ void tst_qqmlsortfilterproxymodel::tst_functionFilter_data()
             import QtQuick;
             import QtQml.Models;
             FunctionFilter {
-                component FilterRoleData: QtObject { property int age }
-                function filter(data: FilterRoleData): bool {
-                    return (data.age === 50)
+                function filter(age: int): bool {
+                    return (age === 50)
                 }
             }
         )";
@@ -230,9 +229,8 @@ void tst_qqmlsortfilterproxymodel::tst_functionFilter_data()
             import QtQml.Models;
             FunctionFilter {
                 property int count: 0
-                component FilterRoleData: QtObject { property string department }
-                function filter(data: FilterRoleData): bool {
-                    return (/^Department_[3-7]$/.exec(data.department) !== null)
+                function filter(department: string): bool {
+                    return (/^Department_[3-7]$/.exec(department) !== null)
                 }
             }
         )";

@@ -251,7 +251,7 @@ void tst_QQmlSortFilterProxyModel::validateFilters()
         resetFilters();
         auto *functionFilter = object->property("functionFilter1").value<QQmlFunctionFilter *>();
         QVERIFY(functionFilter);
-        functionFilter->setProperty("expression", "data.column1 === \"Data01\"");
+        functionFilter->setProperty("expression", "Data01");
 
         sfpmModel->filters().append(&filters, functionFilter);
         QCOMPARE(sfpmModel->rowCount(), 1);
@@ -279,7 +279,7 @@ void tst_QQmlSortFilterProxyModel::multipleFilters()
     sfpmModel->setSourceModel(&tableModel);
     auto *functionFilter = object->property("functionFilter0").value<QQmlFunctionFilter *>();
     QVERIFY(functionFilter);
-    functionFilter->setProperty("expression", "true");
+    functionFilter->setProperty("expression", "Data00");
 
     auto *valueFilter = object->property("valueFilter").value<QQmlValueFilter *>();
     QVERIFY(valueFilter);
@@ -317,7 +317,8 @@ void tst_QQmlSortFilterProxyModel::filterAbility()
     auto *functionFilter = object->property("functionFilter0").value<QQmlFunctionFilter *>();
     QVERIFY(functionFilter);
     // Filter first two rows of data through regex
-    functionFilter->setProperty("expression", "/Data[0-1]{2}/.exec(data.column0) !== null");
+    functionFilter->setProperty("useRegularExpression", true);
+    functionFilter->setProperty("expression", "Data[0-1]{2}");
 
     auto *valueFilter = object->property("valueFilter").value<QQmlValueFilter *>();
     QVERIFY(valueFilter);
@@ -452,13 +453,14 @@ void tst_QQmlSortFilterProxyModel::validateFunctionFilterProperties()
 
     auto *functionFilter = object->property("functionFilter1").value<QQmlFunctionFilter *>();
     QVERIFY(functionFilter);
-    functionFilter->setProperty("expression", "true");
+    functionFilter->setProperty("useRegularExpression", true);
+    functionFilter->setProperty("expression", ".*");
 
     filters.append(&filters, functionFilter);
     QCOMPARE(sfpmModel->rowCount(), CustomTableModel::s_rowCount);
     QCOMPARE(sfpmModel->columnCount(), CustomTableModel::s_columnCount);
 
-    functionFilter->setProperty("expression", "data.column1 === \"Data01\"");
+    functionFilter->setProperty("expression", "Data01");
     // Need to reset here because the model does not see the change in the filter's expression.
     filters.clear(&filters);
     filters.append(&filters, functionFilter);
@@ -490,7 +492,7 @@ void tst_QQmlSortFilterProxyModel::verifyDynamicSortFilterProperty()
     QCOMPARE(filters.count(&filters), 0);
 
     auto *functionFilter = object->property("functionFilter1").value<QQmlFunctionFilter *>();
-    functionFilter->setProperty("expression", "data.column1 === \"Data01\"");
+    functionFilter->setProperty("expression", "Data01");
     QVERIFY(functionFilter);
     filters.append(&filters, functionFilter);
     QCOMPARE(filters.count(&filters), 1);

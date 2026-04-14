@@ -87,14 +87,13 @@ TestCase {
                 sorters: RoleSorter { roleName: "text" }
 
                 filters: FunctionFilter {
-                    component CustomData: QtObject { property string text }
                     property var regExp: sfpmSearchField.text.length > 0
                                          ? new RegExp(sfpmSearchField.text, "i")
                                          : null
                     onRegExpChanged: invalidate()
 
-                    function filter(data: CustomData): bool {
-                        return regExp ? regExp.test(data.text) : false
+                    function filter(text: string): bool {
+                        return regExp ? regExp.test(text) : false
                     }
                 }
             }

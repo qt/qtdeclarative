@@ -109,11 +109,10 @@ QT_BEGIN_NAMESPACE
         ]
         filters: [
             FunctionFilter {
-                component CustomData: QtObject { property string name }
                 property var regExp: new RegExp(fruitSearch.text, "i")
                 onRegExpChanged: invalidate()
-                function filter(data: CustomData): bool {
-                    return regExp.test(data.name);
+                function filter(name: string): bool {
+                    return regExp.test(name);
                 }
             }
         ]

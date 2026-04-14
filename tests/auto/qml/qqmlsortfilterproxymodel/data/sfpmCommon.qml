@@ -9,21 +9,29 @@ QtObject {
    }
 
    component SorterRoleData: QtObject { property string display }
-   component FilterRoleData0: QtObject { property string column0 }
-   component FilterRoleData1: QtObject { property string column1 }
 
    // Filters
    property ValueFilter valueFilter: ValueFilter {}
    property FunctionFilter functionFilter0: FunctionFilter {
       property string expression: ""
-      function filter(data: FilterRoleData0) : bool {
-         return eval(expression)
+      property bool useRegularExpression: false
+      function filter(column0: string) : bool {
+         if (useRegularExpression) {
+            var regex = new RegExp(expression)
+            return regex.test(column0)
+         }
+         return column0 === expression
       }
    }
    property FunctionFilter functionFilter1: FunctionFilter {
       property string expression: ""
-      function filter(data: FilterRoleData1) : bool {
-         return eval(expression)
+      property bool useRegularExpression: false
+      function filter(column1: string) : bool {
+         if (useRegularExpression) {
+            var regex = new RegExp(expression)
+            return regex.test(column1)
+         }
+         return column1 === expression
       }
    }
 

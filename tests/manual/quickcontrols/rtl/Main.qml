@@ -37,12 +37,11 @@ ApplicationWindow {
         sorters: RoleSorter { roleName: "text" }
 
         filters: FunctionFilter {
-            component CustomData: QtObject { property string text }
             property var regExp: new RegExp(searchField.text, "i")
             onRegExpChanged: invalidate()
 
-            function filter(data: CustomData): bool {
-                return regExp.test(data.text)
+            function filter(text: string): bool {
+                return regExp.test(text)
             }
         }
     }
