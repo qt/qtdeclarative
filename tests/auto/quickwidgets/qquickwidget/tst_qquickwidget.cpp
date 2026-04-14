@@ -170,6 +170,7 @@ private slots:
     void loadFromModule_data();
     void loadFromModule();
     void nonItem();
+    void focusTabFence();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -1450,6 +1451,35 @@ void tst_qquickwidget::nonItem()
     widget.setSource(testFileUrl("nonItem.qml"));
     QCOMPARE(widget.status(), QQuickWidget::Error);
     QCOMPARE(widget.rootObject(), nullptr);
+}
+
+void tst_qquickwidget::focusTabFence()
+{
+    QWidget widget;
+    auto *quickWidget = new QQuickWidget;
+    quickWidget->setSource(testFileUrl("itemWithPopupInside.qml"));
+    quickWidget->setParent(&widget);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(widget.windowHandle()));
+
+    auto *textField1 = quickWidget->rootObject()->findChild<QQuickItem *>("textField1");
+    QVERIFY(textField1);
+    auto *textField2 = quickWidget->rootObject()->findChild<QQuickItem *>("textField2");
+    QVERIFY(textField2);
+
+    widget.setFocus();
+    QTRY_VERIFY(widget.hasFocus());
+    textField1->forceActiveFocus();
+    QTRY_COMPARE(quickWidget->quickWindow()->activeFocusItem(), textField1);
+
+    QTest::keyClick(quickWidget, Qt::Key_Tab);
+    QTRY_COMPARE(quickWidget->quickWindow()->activeFocusItem(), textField2);
+    QTest::keyClick(quickWidget, Qt::Key_Tab);
+    QTRY_COMPARE(quickWidget->quickWindow()->activeFocusItem(), textField1);
+    QTest::keyClick(quickWidget, Qt::Key_Tab);
+    QTRY_COMPARE(quickWidget->quickWindow()->activeFocusItem(), textField2);
+    QTest::keyClick(quickWidget, Qt::Key_Tab);
+    QTRY_COMPARE(quickWidget->quickWindow()->activeFocusItem(), textField1);
 }
 
 QTEST_MAIN(tst_qquickwidget)
