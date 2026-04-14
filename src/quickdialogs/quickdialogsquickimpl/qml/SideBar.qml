@@ -3,7 +3,7 @@
 // Qt-Security score:significant reason:default
 
 import QtQuick
-import QtQuick.Controls.Basic
+import QtQuick.Controls
 import QtQuick.Controls.impl
 import QtQuick.Dialogs.quickimpl as DialogsQuickImpl
 
