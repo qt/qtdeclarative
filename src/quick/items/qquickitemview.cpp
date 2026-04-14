@@ -866,12 +866,32 @@ void QQuickItemViewPrivate::positionViewAtIndex(int index, int mode)
     FxViewItem *item = visibleItem(idx);
     qreal maxExtent = calculatedMaxExtent();
     if (!item) {
-        qreal itemPos = positionAt(idx);
+        // Determine the position. Use contentStartOffset() when positioning item 0 at
+        // the beginning to avoid positionAt() estimation errors when the list includes
+        // section headers and item 0 is outside the cache buffer.
+        qreal itemPos = (mode == QQuickItemView::Beginning && idx == 0)
+            ? contentStartOffset()
+            : positionAt(idx);
         changedVisibleIndex(idx);
+
         // save the currently visible items in case any of them end up visible again
         const QList<FxViewItem *> oldVisible = visibleItems;
         visibleItems.clear();
+
+        if (mode == QQuickItemView::Beginning && idx == 0) {
+            // Re-sync visiblePos after visibleItems has been cleared.
+            changedVisibleIndex(idx);
+            // Invalidate the extent cache. With visibleItems cleared,
+            // originPosition() returns 0, so a fresh minYExtent() is
+            // correct.
+            // Without this, a stale minYExtent() causes setViewportY()
+            // to clamp the position when boundsMovement == StopAtBounds,
+            // and causes fixupPosition() to shift contentY away from 0.
+            markExtentsDirty();
+        }
+
         setPosition(qMin(itemPos, maxExtent));
+
         // now release the reference to all the old visible items.
         for (FxViewItem *item : oldVisible)
             releaseItem(item, reusableFlag);
