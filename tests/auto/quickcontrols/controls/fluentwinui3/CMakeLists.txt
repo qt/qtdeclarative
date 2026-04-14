@@ -10,7 +10,7 @@ endif()
 # Collect test data
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/../data/tst_*)
+    ${CMAKE_CURRENT_SOURCE_DIR}/../data/*)
 list(APPEND test_data ${test_data_glob})
 
 set(controls_data ${CMAKE_CURRENT_SOURCE_DIR}/../data)
