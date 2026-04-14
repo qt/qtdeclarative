@@ -53,6 +53,7 @@ static const int kEdgeIndexAtEnd = -3;
 
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
+class QTypeRevision;
 
 /*! \internal
  *  TableView uses QQuickTableViewHoverHandler to track where the pointer is

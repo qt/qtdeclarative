@@ -30,6 +30,7 @@ class QQmlEnginePrivate;
 class QQmlError;
 class QQmlTypeData;
 class QQmlImports;
+class QTypeRevision;
 
 namespace QmlIR {
 struct Document;

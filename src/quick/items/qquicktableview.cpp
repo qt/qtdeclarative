@@ -20,6 +20,8 @@
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 /*!
     \qmltype TableView
     \inqmlmodule QtQuick

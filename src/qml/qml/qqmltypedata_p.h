@@ -21,6 +21,8 @@
 #include <private/qqmltypeloader_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcCycle)

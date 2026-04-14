@@ -27,6 +27,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlTableInstanceModel;
 class QQmlAbstractDelegateComponent;
+class QTypeRevision;
 
 class QQmlTableInstanceModelIncubationTask : public QQDMIncubationTask
 {

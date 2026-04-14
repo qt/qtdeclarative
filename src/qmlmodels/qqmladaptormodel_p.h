@@ -26,6 +26,8 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qtqmlmodelsglobal_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE

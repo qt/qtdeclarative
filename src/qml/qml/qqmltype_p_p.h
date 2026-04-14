@@ -29,6 +29,7 @@
 #include <private/qv4resolvedtypereference_p.h>
 
 #include <QAtomicInteger>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 

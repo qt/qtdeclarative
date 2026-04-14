@@ -11,6 +11,8 @@
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 const char* kModelItemTag = "_tableinstancemodel_modelItem";

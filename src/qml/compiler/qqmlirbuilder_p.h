@@ -33,6 +33,7 @@ class QQmlPropertyCache;
 class QQmlContextData;
 class QQmlTypeNameCache;
 struct QQmlIRLoader;
+class QTypeRevision;
 
 namespace QmlIR {
 

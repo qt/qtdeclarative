@@ -27,6 +27,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedvaluerollback.h>
+#include <QtCore/qtyperevision.h>
 
 #if QT_CONFIG(regularexpression)
 #include <QtCore/qregularexpression.h>

@@ -36,6 +36,7 @@
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qstorageinfo.h>
 #include <QtCore/qthread.h>
+#include <QtCore/qtyperevision.h>
 
 #if QT_CONFIG(qml_network)
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>

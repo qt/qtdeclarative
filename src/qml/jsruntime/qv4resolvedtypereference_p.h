@@ -22,6 +22,8 @@
 #include <QtQml/private/qqmltype_p.h>
 #include <QtQml/private/qv4compileddata_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 class QCryptographicHash;

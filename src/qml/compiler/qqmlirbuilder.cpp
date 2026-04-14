@@ -11,6 +11,8 @@
 #include <private/qv4compilerscanfunctions_p.h>
 #include <QCoreApplication>
 #include <QCryptographicHash>
+#include <QtCore/qtyperevision.h>
+
 #include <cmath>
 
 QT_USE_NAMESPACE

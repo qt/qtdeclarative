@@ -27,6 +27,8 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/qqmlerror.h>
 
+#include <QtCore/qtyperevision.h>
+
 #include <memory>
 
 QT_BEGIN_NAMESPACE

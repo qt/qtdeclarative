@@ -12,6 +12,8 @@
 #include <private/qqmlcomponentandaliasresolver_p.h>
 #include <private/qqmlsignalnames_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 #define COMPILE_EXCEPTION(token, desc) \
     { \
         recordError((token)->location, desc); \
