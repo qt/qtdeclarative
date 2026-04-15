@@ -21,6 +21,7 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 
