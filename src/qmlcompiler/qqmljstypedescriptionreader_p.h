@@ -26,6 +26,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QTypeRevision;
+
 class Q_QMLCOMPILER_EXPORT QQmlJSTypeDescriptionReader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlJSTypeDescriptionReader)
