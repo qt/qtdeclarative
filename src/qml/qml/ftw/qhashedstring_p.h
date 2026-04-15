@@ -52,6 +52,9 @@ private:
     friend class QHashedStringRef;
     friend class QStringHashNode;
 
+    friend size_t qHash(const QHashedString &key, size_t seed = 0)
+    { return size_t{key.hash()} ^ seed; }
+
     inline void computeHash() const;
     mutable quint32 m_hash = 0;
 };
@@ -100,6 +103,9 @@ public:
 private:
     friend class QHashedString;
 
+    friend size_t qHash(const QHashedStringRef &key, size_t seed = 0)
+    { return size_t{key.hash()} ^ seed; }
+
     inline void computeHash() const;
 
     const QChar *m_data = nullptr;
@@ -133,16 +139,6 @@ private:
     int m_length = 0;
     mutable quint32 m_hash = 0;
 };
-
-inline size_t qHash(const QHashedString &string)
-{
-    return uint(string.hash());
-}
-
-inline size_t qHash(const QHashedStringRef &string)
-{
-    return uint(string.hash());
-}
 
 QHashedString::QHashedString()
 : QString()
