@@ -13,6 +13,7 @@
 #include <private/qduplicatetracker_p.h>
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qtyperevision.h>
 
 QT_BEGIN_NAMESPACE
 
