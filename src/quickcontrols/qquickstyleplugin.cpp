@@ -15,6 +15,8 @@
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 Q_STATIC_LOGGING_CATEGORY(lcStylePlugin, "qt.quick.controls.styleplugin")
