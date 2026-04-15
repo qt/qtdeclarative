@@ -19,6 +19,8 @@
 
 #include <private/qqmljsengine_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
