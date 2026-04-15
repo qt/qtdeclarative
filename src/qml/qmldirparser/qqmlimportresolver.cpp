@@ -4,6 +4,9 @@
 
 #include "qqmlimportresolver_p.h"
 
+#include <QtCore/qstringlist.h>
+#include <QtCore/qstringview.h>
+
 QT_BEGIN_NAMESPACE
 
 enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
