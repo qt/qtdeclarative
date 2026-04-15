@@ -27,11 +27,13 @@ private slots:
     void resourceMapping();
     void resourceFileUpdate();
     void resourceVerboseOutput();
+    void loadFromModuleFileUpdate();
 
 private:
     QString m_qmlPreviewPath;
     QString m_qmlRuntimePath;
     QString m_testHelperPath;
+    QString m_testHelperModulePath;
 
     QString m_output;
     QProcess m_process;
@@ -47,6 +49,17 @@ static QString findTestHelper()
 {
     const QLatin1String self("qmlpreviewtool");
     const QLatin1String helper("qmlpreviewtesthelper");
+    QString appPath = QCoreApplication::applicationDirPath();
+    const qsizetype pos = appPath.lastIndexOf(self);
+    if (pos != -1)
+        appPath.replace(pos, self.size(), helper);
+    return appPath + QLatin1Char('/') + helper;
+}
+
+static QString findTestHelperModule()
+{
+    const QLatin1String self("qmlpreviewtool");
+    const QLatin1String helper("qmlpreviewtesthelpermodule");
     QString appPath = QCoreApplication::applicationDirPath();
     const qsizetype pos = appPath.lastIndexOf(self);
     if (pos != -1)
@@ -92,6 +105,7 @@ void tst_QmlPreviewTool::initTestCase()
     m_qmlPreviewPath = binDir + QLatin1String("/qmlpreview");
     m_qmlRuntimePath = binDir + QLatin1String("/qml");
     m_testHelperPath = findTestHelper();
+    m_testHelperModulePath = findTestHelperModule();
 }
 
 void tst_QmlPreviewTool::cleanup()
@@ -280,6 +294,35 @@ void tst_QmlPreviewTool::resourceVerboseOutput()
     QVERIFY2(m_output.contains(QLatin1String(":/test/Main.qml")),
              qPrintable(QLatin1String("Resource path not in output. Output:\n")
                         + m_output));
+}
+
+void tst_QmlPreviewTool::loadFromModuleFileUpdate()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("Main.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("MODULE_UPDATE_INITIAL"))));
+
+    const QString qrcFile = m_tempDir->filePath(QLatin1String("test.qrc"));
+    QVERIFY(writeQrcFile(qrcFile, QLatin1String("/test"),
+                         {QLatin1String("Main.qml")}));
+
+    startPreview({QLatin1String("--verbose"),
+                  QLatin1String("--resource"), qrcFile,
+                  m_testHelperModulePath});
+
+    QVERIFY2(waitForOutput(QLatin1String("MODULE_UPDATE_INITIAL")),
+             qPrintable(QLatin1String("Initial module load failed. Output:\n") + m_output));
+
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("MODULE_UPDATE_MODIFIED"))));
+
+    QVERIFY2(waitForOutput(QLatin1String("MODULE_UPDATE_MODIFIED")),
+             qPrintable(QLatin1String("Module file update not detected. Output:\n")
+                        + m_output));
+
+    // The test application has never seen its own file.
+    QVERIFY(!m_output.contains(QLatin1String("HELPER_MODULE_RESOURCE")));
 }
 
 QTEST_MAIN(tst_QmlPreviewTool)

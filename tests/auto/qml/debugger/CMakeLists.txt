@@ -5,6 +5,7 @@
 
 add_subdirectory(qqmldebugjsserver)
 add_subdirectory(qmlpreviewtesthelper)
+add_subdirectory(qmlpreviewtesthelpermodule)
 add_subdirectory(qqmldebugtranslationservice)
 add_subdirectory(qpacketprotocol)
 add_subdirectory(qqmlnativeconnector)
