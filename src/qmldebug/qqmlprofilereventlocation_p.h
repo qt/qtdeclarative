@@ -50,6 +50,9 @@ private:
     friend QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventLocation &location);
     friend QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventLocation &location);
 
+    friend size_t qHash(const QQmlProfilerEventLocation &key, size_t seed = 0) noexcept
+    { return qHashMulti(seed, key.m_filename, key.m_line, key.m_column); }
+
     QString m_filename;
     int m_line;
     int m_column;
@@ -67,14 +70,6 @@ inline bool operator!=(const QQmlProfilerEventLocation &location1,
                        const QQmlProfilerEventLocation &location2)
 {
     return !(location1 == location2);
-}
-
-inline size_t qHash(const QQmlProfilerEventLocation &location)
-{
-    return qHash(location.filename())
-            ^ ((location.line() & 0xfff)                   // 12 bits of line number
-               | ((location.column() << 16) & 0xff0000));  // 8 bits of column
-
 }
 
 QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventLocation &location);
