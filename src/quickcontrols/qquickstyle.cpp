@@ -24,6 +24,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 
+#include <QtCore/qtyperevision.h>
+
 #include <functional>
 
 QT_BEGIN_NAMESPACE
