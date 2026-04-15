@@ -19,6 +19,8 @@
 //#include <QtWidgets/private/qtwidgetsglobal_p.h>
 #include "qquickwindowsxpstyle_p.h"
 #include "qquickwindowsstyle_p_p.h"
+
+#include <QtCore/qhash.h>
 #include <QtCore/qmap.h>
 #include <qt_windows.h>
 
@@ -117,10 +119,11 @@ struct ThemeMapKey {
         : theme(data.theme), partId(data.partId), stateId(data.stateId),
         noBorder(data.noBorder), noContent(data.noContent) {}
 
-};
+private:
+    friend size_t qHash(const ThemeMapKey &key, size_t seed = 0) noexcept
+    { return qHashMulti(seed, key.theme, key.partId, key.stateId); }
 
-inline size_t qHash(const ThemeMapKey &key)
-{ return key.theme ^ key.partId ^ key.stateId; }
+};
 
 inline bool operator==(const ThemeMapKey &k1, const ThemeMapKey &k2)
 {
