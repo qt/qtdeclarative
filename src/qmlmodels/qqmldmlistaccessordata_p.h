@@ -156,7 +156,8 @@ public:
             return QString::fromUtf8(string);
         else if constexpr (std::is_same_v<String, const char *>)
             return QString::fromUtf8(string);
-        Q_UNREACHABLE_RETURN(QString());
+        else
+            static_assert(QtPrivate::type_dependent_false<String>::value, "unsupported string type");
     }
 
     template<typename String>
@@ -168,7 +169,8 @@ public:
             return string;
         else if constexpr (std::is_same_v<String, const char *>)
             return QByteArray::fromRawData(string, qstrlen(string));
-        Q_UNREACHABLE_RETURN(QByteArray());
+        else
+            static_assert(QtPrivate::type_dependent_false<String>::value, "unsupported string type");
     }
 
     template<typename String>
