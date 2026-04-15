@@ -10,6 +10,9 @@
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qdir.h>
 #include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
+
+#include <QtCore/qtyperevision.h>
+
 #include <optional>
 
 QT_BEGIN_NAMESPACE
