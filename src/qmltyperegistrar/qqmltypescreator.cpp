@@ -13,7 +13,6 @@
 #include <QtCore/qcbormap.h>
 #include <QtCore/qsavefile.h>
 #include <QtCore/qfile.h>
-#include <QtCore/qversionnumber.h>
 
 #include <QtCore/private/qstringalgorithms_p.h>
 
