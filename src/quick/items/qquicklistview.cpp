@@ -155,6 +155,8 @@ public:
     bool inFlickCorrection : 1;
     bool wantedMousePress : 1;
 
+    int snapResizeTargetIndex = -1;
+
     QQuickListViewPrivate()
         : orient(QQuickListView::Vertical)
         , visiblePos(0)
@@ -1647,6 +1649,7 @@ void QQuickListViewPrivate::fixupPosition()
         fixupY();
     else
         fixupX();
+    snapResizeTargetIndex = -1;
 }
 
 void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExtent)
@@ -1741,8 +1744,16 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         if (strictHighlightRange)
             updateHighlight();
 
-        FxViewItem *topItem = snapItemAt(tempPosition + snapOffset + highlightRangeStart);
-        FxViewItem *bottomItem = snapItemAt(tempPosition + snapOffset + highlightRangeEnd);
+        FxViewItem *topItem = nullptr;
+        FxViewItem *bottomItem = nullptr;
+        if (snapResizeTargetIndex >= 0) {
+            topItem = visibleItem(snapResizeTargetIndex);
+            bottomItem = topItem;
+        }
+        if (!topItem)
+            topItem = snapItemAt(tempPosition + snapOffset + highlightRangeStart);
+        if (!bottomItem)
+            bottomItem = snapItemAt(tempPosition + snapOffset + highlightRangeEnd);
         if (strictHighlightRange && currentItem) {
             // StrictlyEnforceRange always keeps an item in range
             if (!topItem || (topItem->index != currentIndex && fixupMode == Immediate))
@@ -3675,6 +3686,26 @@ void QQuickListView::geometryChange(const QRectF &newGeometry, const QRectF &old
         qreal dy = newGeometry.height() - oldGeometry.height();
         setContentY(contentY() - dy);
     }
+
+    // When view-relative delegates resize, the content position becomes
+    // stale and fixup() snaps to the wrong item. Record the current snap
+    // target here; fixup() will use it instead of snapItemAt().
+    // StrictlyEnforceRange is excluded — its fixup() path already forces
+    // currentItem as the snap target.
+    const bool vertical = (d->orient == QQuickListView::Vertical);
+    const qreal oldSize = vertical ? oldGeometry.height() : oldGeometry.width();
+    const qreal newSize = vertical ? newGeometry.height() : newGeometry.width();
+
+    if (d->snapMode == QQuickListView::SnapOneItem
+        && !(d->haveHighlightRange && d->highlightRange == QQuickListView::StrictlyEnforceRange)
+        && !d->visibleItems.isEmpty() && !qFuzzyCompare(oldSize, newSize) && oldSize > 0) {
+        qreal viewPos = d->isContentFlowReversed() ? -d->position() - d->size() : d->position();
+        if (FxViewItem *snapped = d->snapItemAt(viewPos)) {
+            if (snapped->index >= 0)
+                d->snapResizeTargetIndex = snapped->index;
+        }
+    }
+
     QQuickItemView::geometryChange(newGeometry, oldGeometry);
 }
 
