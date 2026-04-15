@@ -51,6 +51,9 @@ private:
     friend QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventType &type);
     friend QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventType &type);
 
+    friend size_t qHash(const QQmlProfilerEventType &key, size_t seed = 0) noexcept
+    { return qHashMulti(seed, key.m_location, key.m_message, key.m_rangeType, key.m_detailType); }
+
     QString m_displayName;
     QString m_data;
     QQmlProfilerEventLocation m_location;
@@ -61,14 +64,6 @@ private:
 
 QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventType &type);
 QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventType &type);
-
-inline size_t qHash(const QQmlProfilerEventType &type)
-{
-    return qHash(type.location())
-            ^ (((type.message() << 12) & 0xf000)                               // 4 bits message
-               | ((type.rangeType() << 24) & 0xf000000)                        // 4 bits rangeType
-               | ((static_cast<uint>(type.detailType()) << 28) & 0xf0000000)); // 4 bits detailType
-}
 
 inline bool operator==(const QQmlProfilerEventType &type1, const QQmlProfilerEventType &type2)
 {
