@@ -86,6 +86,9 @@ private slots:
 
     void fastMouseWheel();
 
+    void snapOneItemResize_data();
+    void snapOneItemResize();
+
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
     std::unique_ptr<QPointingDevice> touchscreen{QTest::createTouchDevice()};
@@ -1580,6 +1583,127 @@ void tst_QQuickListView2::fastMouseWheel()
     QTRY_VERIFY(listview->isMoving() == false);
     sendWheelEvent(window.data(), QPoint(0, -240), 194);
     QTRY_VERIFY(listview->isMoving() == false);
+}
+
+void tst_QQuickListView2::snapOneItemResize_data()
+{
+    QTest::addColumn<int>("orientation");
+    QTest::addColumn<int>("layoutDirection");
+    QTest::addColumn<int>("verticalLayoutDirection");
+    QTest::addColumn<int>("initialIndex");
+    QTest::addColumn<QSize>("initialSize");
+    QTest::addColumn<QSize>("resizedSize");
+    QTest::addColumn<bool>("restoreSize");
+
+    // Vertical, top-to-bottom
+    QTest::newRow("vertical-index-0")
+            << int(QQuickListView::Vertical) << int(Qt::LeftToRight)
+            << int(QQuickItemView::TopToBottom) << 0 << QSize(320, 200) << QSize(320, 400) << false;
+    QTest::newRow("vertical") << int(QQuickListView::Vertical) << int(Qt::LeftToRight)
+                              << int(QQuickItemView::TopToBottom) << 1 << QSize(320, 200)
+                              << QSize(320, 400) << false;
+    QTest::newRow("vertical-index-3-restore")
+            << int(QQuickListView::Vertical) << int(Qt::LeftToRight)
+            << int(QQuickItemView::TopToBottom) << 3 << QSize(320, 100) << QSize(320, 400) << true;
+
+    // Vertical, bottom-to-top
+    QTest::newRow("vertical-bottom-to-top")
+            << int(QQuickListView::Vertical) << int(Qt::LeftToRight)
+            << int(QQuickItemView::BottomToTop) << 1 << QSize(320, 200) << QSize(320, 400) << false;
+
+    // Horizontal, left-to-right
+    QTest::newRow("horizontal") << int(QQuickListView::Horizontal) << int(Qt::LeftToRight)
+                                << int(QQuickItemView::TopToBottom) << 1 << QSize(200, 320)
+                                << QSize(400, 320) << false;
+    QTest::newRow("horizontal-index-5")
+            << int(QQuickListView::Horizontal) << int(Qt::LeftToRight)
+            << int(QQuickItemView::TopToBottom) << 5 << QSize(320, 320) << QSize(640, 320) << false;
+
+    // Horizontal, right-to-left
+    QTest::newRow("horizontal-rtl")
+            << int(QQuickListView::Horizontal) << int(Qt::RightToLeft)
+            << int(QQuickItemView::TopToBottom) << 1 << QSize(200, 320) << QSize(400, 320) << false;
+    QTest::newRow("horizontal-rtl-restore")
+            << int(QQuickListView::Horizontal) << int(Qt::RightToLeft)
+            << int(QQuickItemView::TopToBottom) << 2 << QSize(200, 320) << QSize(400, 320) << true;
+}
+
+void tst_QQuickListView2::snapOneItemResize()
+{
+    QFETCH(int, orientation);
+    QFETCH(int, layoutDirection);
+    QFETCH(int, verticalLayoutDirection);
+    QFETCH(int, initialIndex);
+    QFETCH(QSize, initialSize);
+    QFETCH(QSize, resizedSize);
+    QFETCH(bool, restoreSize);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->resize(initialSize);
+    window->setResizeMode(QQuickView::SizeRootObjectToView);
+    QQuickVisualTestUtils::moveMouseAway(window.data());
+
+    window->setSource(testFileUrl("snapPositioningOnResize.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = qobject_cast<QQuickListView *>(window->rootObject());
+    QTRY_VERIFY(listview != nullptr);
+    QCOMPARE(listview->snapMode(), QQuickListView::SnapOneItem);
+
+    listview->setOrientation(static_cast<QQuickListView::Orientation>(orientation));
+    listview->setLayoutDirection(static_cast<Qt::LayoutDirection>(layoutDirection));
+    listview->setVerticalLayoutDirection(
+            static_cast<QQuickItemView::VerticalLayoutDirection>(verticalLayoutDirection));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    const bool isHorizontal = orientation == QQuickListView::Horizontal;
+
+    listview->positionViewAtIndex(initialIndex, QQuickListView::Beginning);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    const qreal contentBefore = isHorizontal ? listview->contentX() : listview->contentY();
+
+    // --- Resize ---
+    window->resize(resizedSize);
+    if (isHorizontal)
+        QTRY_COMPARE(qRound(listview->width()), resizedSize.width());
+    else
+        QTRY_COMPARE(qRound(listview->height()), resizedSize.height());
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    {
+        const qreal contentAfter = isHorizontal ? listview->contentX() : listview->contentY();
+        if (initialIndex > 0) {
+            // The visible item must not jump back to origin
+            QVERIFY2(qAbs(contentAfter) > 1,
+                     qPrintable(QString("content position jumped to %1 after resize (was %2)")
+                                        .arg(contentAfter)
+                                        .arg(contentBefore)));
+        } else {
+            QVERIFY2(qAbs(contentAfter) < 1,
+                     qPrintable(QString("index-0 content position drifted to %1 after resize")
+                                        .arg(contentAfter)));
+        }
+    }
+
+    // --- Restore ---
+    if (restoreSize) {
+        window->resize(initialSize);
+        if (isHorizontal)
+            QTRY_COMPARE(qRound(listview->width()), initialSize.width());
+        else
+            QTRY_COMPARE(qRound(listview->height()), initialSize.height());
+        QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+        const qreal contentRestored = isHorizontal ? listview->contentX() : listview->contentY();
+        if (initialIndex > 0) {
+            QVERIFY2(qAbs(contentRestored) > 1,
+                     qPrintable(QString("content position jumped to %1 after restore (was %2)")
+                                        .arg(contentRestored)
+                                        .arg(contentBefore)));
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView2)
