@@ -23,6 +23,8 @@
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
+#include <QtCore/qtyperevision.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
