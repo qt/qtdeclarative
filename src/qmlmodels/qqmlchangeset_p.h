@@ -21,6 +21,8 @@
 #include <QtCore/qvector.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 
+#include <QtCore/qhashfunctions.h>
+
 QT_BEGIN_NAMESPACE
 
 class Q_QMLMODELS_EXPORT QQmlChangeSet
@@ -34,6 +36,10 @@ public:
         MoveKey(int moveId, int offset) : moveId(moveId), offset(offset) {}
         int moveId = -1;
         int offset = 0;
+
+    private:
+        friend size_t qHash(MoveKey key, size_t seed = 0) noexcept
+        { return qHashMulti(seed, key.moveId, key.offset); }
     };
 
     // The storrage for Change (below). This struct is trivial, which it has to be in order to store
@@ -117,7 +123,6 @@ private:
 Q_DECLARE_TYPEINFO(QQmlChangeSet::Change, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
 
-inline size_t qHash(const QQmlChangeSet::MoveKey &key) { return qHash(std::make_pair(key.moveId, key.offset)); }
 inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 
