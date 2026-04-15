@@ -3743,8 +3743,8 @@ void tst_QQuickPopup::blockEventsBehindModal_data()
 
 void tst_QQuickPopup::blockEventsBehindModal()
 {
-    if (isPlatformUbuntu() && isPlatformWayland())
-        QSKIP("Ubuntu Wayland: sidebar tends to overlay the test window and interfere");
+    if (isPlatformUbuntu())
+        QSKIP("Ubuntu: sidebar tends to overlay the test window and interfere");
 
     QFETCH(QQuickPopup::PopupType, popupType);
     QFETCH(const QPointingDevice *, device);
