@@ -23,6 +23,8 @@
 #include "qqmljsloggingutils.h"
 #include "qqmlsaconstants.h"
 
+#include <QtCore/qtyperevision.h>
+
 #include <algorithm>
 #include <limits>
 #include <optional>
