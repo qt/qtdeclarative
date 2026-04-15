@@ -18,7 +18,6 @@
 
 #include <QtQml/qqml.h>
 #include <QtCore/private/qglobal_p.h>
-#include <QtCore/qversionnumber.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmltype_p.h>
 
