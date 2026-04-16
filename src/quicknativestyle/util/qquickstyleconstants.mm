@@ -16,7 +16,7 @@ using namespace Qt::StringLiterals;
 
 QQuickStyleConstants::QQuickStyleConstants()
 {
-    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, [=]{
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, [this] {
         emit secondarySystemFillColorChanged();
         emit tertiarySystemFillColorChanged();
     });
