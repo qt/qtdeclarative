@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 // Qt-Security score:significant
 
+#include "ftw/qhashedstring_p.h"
 #include "qqmlmetatype_p.h"
 
 #include <private/qqmlextensionplugin_p.h>
@@ -1288,7 +1289,7 @@ QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedString
 
     const QHashedString key(QString::fromRawData(name.constData(), name.length()), name.hash());
     QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(key);
-    while (it != data->nameToType.cend() && it.key() == name) {
+    while (it != data->nameToType.cend() && QHashedStringRef(it.key()) == name) {
         QQmlType t(*it);
         if (module.isEmpty() || t.availableInVersion(module, version))
             return t;

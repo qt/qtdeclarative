@@ -46,7 +46,7 @@ struct QQmlMetaTypeData
     typedef QHash<int, QQmlTypePrivate *> Ids;
     Ids idToType;
 
-    using Names = QMultiHash<QHashedString, const QQmlTypePrivate *>;
+    using Names = QMultiHash<QString, const QQmlTypePrivate *>;
     Names nameToType;
 
     typedef QHash<QUrl, const QQmlTypePrivate *> Files; //For file imported composite types only
