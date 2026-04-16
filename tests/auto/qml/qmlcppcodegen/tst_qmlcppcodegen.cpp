@@ -95,7 +95,7 @@ private slots:
     void conversionInDeadCode();
     void conversions();
     void convertPrimitiveToVar();
-    void convertQJSPrimitiveValueToIntegral();
+    void convertQJSPrimitiveValueToNumeric();
     void convertToOriginalReadAcumulatorForUnaryOperators();
     void cppMethodListReturnType();
     void cppValueTypeList();
@@ -1622,10 +1622,10 @@ void tst_QmlCppCodegen::convertPrimitiveToVar()
     QCOMPARE(o->property("offsetValue").toInt(), 41);
 }
 
-void tst_QmlCppCodegen::convertQJSPrimitiveValueToIntegral()
+void tst_QmlCppCodegen::convertQJSPrimitiveValueToNumeric()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertQJSPrimitiveValueToIntegral.qml"_s));
+    QQmlComponent c(&engine, QUrl(u"qrc:/qt/qml/TestTypes/convertQJSPrimitiveValueToNumeric.qml"_s));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());

@@ -4286,14 +4286,14 @@ QString QQmlJSCodeGenerator::convertStored(
 
 
     if (from == jsPrimitiveType) {
-        if (to == m_typeResolver->realType())
-            return variable + u".toDouble()"_s;
         if (to == boolType)
             return variable + u".toBoolean()"_s;
         if (to == m_typeResolver->int64Type() || to == m_typeResolver->uint64Type())
             return u"%1(%2.toDouble())"_s.arg(to->internalName(), variable);
         if (m_typeResolver->isIntegral(to))
             return u"%1(%2.toInteger())"_s.arg(to->internalName(), variable);
+        if (m_typeResolver->isNumeric(to))
+            return u"%1(%2.toDouble())"_s.arg(to->internalName(), variable);
         if (to == m_typeResolver->stringType())
             return variable + u".toString()"_s;
         if (to == jsValueType)

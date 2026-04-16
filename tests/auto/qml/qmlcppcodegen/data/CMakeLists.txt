@@ -8,7 +8,7 @@ set(cpp_sources
     ambiguous.h
     birthdayparty.cpp birthdayparty.h
     collector.h
-    convertQJSPrimitiveValueToIntegral.h
+    convertQJSPrimitiveValueToNumeric.h
     cppbaseclass.h
     cppobj.h
     detachedreferences.h
@@ -147,7 +147,7 @@ set(qml_files
     conversions.qml
     conversions2.qml
     convertPrimitiveToVar.qml
-    convertQJSPrimitiveValueToIntegral.qml
+    convertQJSPrimitiveValueToNumeric.qml
     convertToOriginalReadAcumulatorForUnaryOperators.qml
     ctorArgumentConversion.qml
     curlygrouped.qml
