@@ -290,12 +290,14 @@ void QQuickLayoutItemProxy::setTarget(QQuickItem *newTarget)
             // proxy.implicitWidth: target.implicitWidth
             auto fnBindImplW = [newTarget, this](){ this->setImplicitWidth(newTarget->implicitWidth()); };
             fnBindImplW();
-            connect(newTarget, &QQuickItem::implicitWidthChanged, fnBindImplW);
+            connect(newTarget, &QQuickItem::implicitWidthChanged,
+                    this, std::move(fnBindImplW));
 
             // proxy.implicitHeight: target.implicitHeight
             auto fnBindImplH = [newTarget, this](){ this->setImplicitHeight(newTarget->implicitHeight()); };
             fnBindImplH();
-            connect(newTarget, &QQuickItem::implicitHeightChanged, fnBindImplH);
+            connect(newTarget, &QQuickItem::implicitHeightChanged,
+                    this, std::move(fnBindImplH));
         }
     }
 
