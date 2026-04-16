@@ -129,6 +129,10 @@ public:
         QMarginsF titleMargins() const;
 
         bool getCocoaButtonTypeAndBezelStyle(NSButtonType *buttonType, NSBezelStyle *bezelStyle) const;
+
+    private:
+        friend size_t qHash(const CocoaControl &key, size_t seed = 0) noexcept
+        { return qHashMulti(seed, key.type, key.size); }
     };
 
     typedef void (^DrawRectBlock)(CGContextRef, const CGRect &);
