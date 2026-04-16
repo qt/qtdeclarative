@@ -22,8 +22,11 @@ Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me);
 Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QQmlError &error);
 Q_QML_EXPORT QQmlInfo qmlInfo(const QObject *me, const QList<QQmlError> &errors);
 
+Q_DECL_COLD_FUNCTION
 Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me);
+Q_DECL_COLD_FUNCTION
 Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me, const QQmlError &error);
+Q_DECL_COLD_FUNCTION
 Q_QML_EXPORT QQmlInfo qmlWarning(const QObject *me, const QList<QQmlError> &errors);
 
 class QQmlInfoPrivate;
