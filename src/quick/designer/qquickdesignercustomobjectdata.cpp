@@ -32,9 +32,8 @@ QQuickDesignerCustomObjectData::QQuickDesignerCustomObjectData(QObject *object)
         populateResetHashes();
         s_designerObjectToDataHash()->insert(object, this);
 
-        HandleDestroyedFunctor functor;
-        functor.data = this;
-        QObject::connect(object, &QObject::destroyed, functor);
+        QObject::connect(object, &QObject::destroyed,
+                         object, HandleDestroyedFunctor{this});
     }
 }
 
