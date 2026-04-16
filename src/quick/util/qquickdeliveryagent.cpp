@@ -1651,7 +1651,7 @@ QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputD
         return static_cast<QQuickPointingDeviceExtra *>(devPriv->qqExtra);
     auto extra = new QQuickPointingDeviceExtra;
     devPriv->qqExtra = extra;
-    QObject::connect(device, &QObject::destroyed, [devPriv]() {
+    QObject::connect(device, &QObject::destroyed, device, [devPriv]() {
         delete static_cast<QQuickPointingDeviceExtra *>(devPriv->qqExtra);
         devPriv->qqExtra = nullptr;
     });
