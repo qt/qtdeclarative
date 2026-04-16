@@ -197,7 +197,7 @@ bool QQuickEllipseShapePrivate::roundOuter(QVector2D center, QVector2D ellipseRa
 
         // constrain by sweep
         const qreal sweep = std::fabs(arcAngle2 - arcAngle1) * 0.5;
-        const qreal degMax = std::min(sweep, 45.0);
+        const qreal degMax = std::min(sweep, qreal(45.0));
 
         const QVector2D C = A + AC.normalized() * edgeOffset;
 
@@ -287,7 +287,7 @@ bool QQuickEllipseShapePrivate::roundInner(QVector2D center, QVector2D ellipseRa
 
         // constrain by sweep
         const qreal sweep = std::fabs(arcAngle2 - arcAngle1) * 0.5;
-        const qreal degMax = std::min(sweep, 45.0);
+        const qreal degMax = std::min(sweep, qreal(45.0));
 
         const QVector2D C = A + AC.normalized() * edgeOffset;
 
@@ -415,7 +415,7 @@ void QQuickEllipseShapePrivate::drawOuterArc(QVector2D center, QVector2D ellipse
     const qreal beginAngle = arc_angle(startAngle);
     const qreal endAngle = arc_angle(startAngle + sweepAngle);
 
-    const qreal alpha = std::clamp(std::fabs(sweepAngle), 0.0, 359.9);
+    const qreal alpha = std::clamp(std::fabs(sweepAngle), qreal(0.0), qreal(359.9));
     bool isFull = (alpha <= 0.0f || alpha >= 359.0f);
 
     // QQuickPathArc has some weird behavior when it starts and ends at the same point
@@ -495,7 +495,7 @@ void QQuickEllipseShapePrivate::updatePath()
 
     QQuickPathPrivate::get(path)->clearPathElements(QQuickPathPrivate::DeleteElementPolicy::Delete);
 
-    const qreal alpha = std::clamp(std::fabs(sweepAngle), 0.0, 359.9);
+    const qreal alpha = std::clamp(std::fabs(sweepAngle), qreal(0.0), qreal(359.9));
     const bool isFull = alpha >= 359.0;
 
     if (qFuzzyCompare(alpha, 0))

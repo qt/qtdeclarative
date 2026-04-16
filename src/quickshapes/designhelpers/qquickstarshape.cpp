@@ -53,7 +53,7 @@ void QQuickStarShapePrivate::updatePoints()
 
     const QVector2D center(rectWidth * 0.5, rectHeight * 0.5);
     const QVector2D radius(rectWidth * 0.5, rectHeight * 0.5);
-    const QVector2D inner_radius = radius * std::min(std::max(ratio, 0.001), 1.0);
+    const QVector2D inner_radius = radius * std::min(std::max(ratio, qreal(0.001)), qreal(1.0));
 
     const int numPoints = pointCount * 2;
     const qreal sliceAngle = (360.0f / numPoints);
@@ -150,7 +150,7 @@ void QQuickStarShapePrivate::updatePath()
 
     updatePoints();
 
-    if (qFuzzyCompare(cornerRadius, 0.0))
+    if (qFuzzyCompare(cornerRadius, qreal(0.0)))
         constructPolygonPath();
     else
         constructRoundedPolygonPath();

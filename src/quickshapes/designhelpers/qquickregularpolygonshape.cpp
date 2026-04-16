@@ -179,7 +179,7 @@ void QQuickRegularPolygonShapePrivate::updatePath()
 
     updatePoints();
 
-    if (qFuzzyCompare(cornerRadius, 0.0))
+    if (qFuzzyCompare(cornerRadius, qreal(0.0)))
         constructPolygonPath();
     else
         constructRoundedPolygonPath();
