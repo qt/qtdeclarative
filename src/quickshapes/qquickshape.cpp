@@ -172,7 +172,7 @@ QQuickShapePath::QQuickShapePath(QObject *parent)
     // to the difference in semantics and the need to act (see dirty flag
     // below) differently on QQuickPath-related changes.
 
-    connect(this, &QQuickPath::changed, [this]() {
+    connect(this, &QQuickPath::changed, this, [this]() {
         Q_D(QQuickShapePath);
         d->dirty |= QQuickShapePathPrivate::DirtyPath;
         emit shapePathChanged();
