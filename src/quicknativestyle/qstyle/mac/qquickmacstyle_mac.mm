@@ -1066,11 +1066,6 @@ QStyleHelper::WidgetSizePolicy QMacStylePrivate::aquaSizeConstrain(const QStyleO
 
 }
 
-uint qHash(const QMacStylePrivate::CocoaControl &cw, uint seed = 0)
-{
-    return ((cw.type << 2) | cw.size) ^ seed;
-}
-
 QMacStylePrivate::CocoaControl::CocoaControl()
   : type(NoControl), size(QStyleHelper::SizeDefault)
 {
