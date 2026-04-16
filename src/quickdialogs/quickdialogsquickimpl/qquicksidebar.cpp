@@ -41,7 +41,7 @@ QQuickSideBar::QQuickSideBar(QQuickItem *parent)
     Q_D(QQuickSideBar);
     d->folderPaths = s_defaultPaths;
 
-    QObject::connect(this, &QQuickContainer::currentIndexChanged, [d](){
+    QObject::connect(this, &QQuickContainer::currentIndexChanged, this, [d] {
         d->currentButtonClickedUrl.clear();
     });
 
