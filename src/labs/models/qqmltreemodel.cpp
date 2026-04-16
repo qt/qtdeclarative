@@ -85,7 +85,7 @@ static const QString ROWS_PROPERTY_NAME = u"rows"_s;
     \snippet setRowsViaJSON.qml assignment
 
     \warning Ensure that the JSON data comes from a trusted source. Since the
-    model dinamically populates its rows based on the input, malformed or
+    model dynamically populates its rows based on the input, malformed or
     untrusted JSON can lead to unexpected behavior or performance issues.
 
     See \l TableModel for an another example where a JSON object is parsed

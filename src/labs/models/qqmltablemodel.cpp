@@ -152,7 +152,7 @@ Q_STATIC_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
     module. See the documentation for \l TreeModel for an example on how to do this.
 
     \warning Ensure that the JSON data comes from a trusted source. Since the
-    model dinamically populates its rows based on the input, malformed or
+    model dynamically populates its rows based on the input, malformed or
     untrusted JSON can lead to unexpected behavior or performance issues.
 
     \sa TableModelColumn, TableView, QAbstractTableModel
