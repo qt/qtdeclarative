@@ -6,6 +6,9 @@
 #include <QString>
 #include <wtf/ASCIICType.h>
 #include <wtf/unicode/Unicode.h>
+
+#include <QtCore/qhashfunctions.h>
+
 #include <memory>
 
 namespace WTF {
@@ -27,6 +30,15 @@ public:
     bool operator!() const { return isEmpty(); }
 
     void dump(PrintStream &) const {}
+
+private:
+    friend size_t qHash(const String &key, size_t seed = 0) noexcept
+    {
+        // delegate to qHash(QString)
+        const QString &s = key;
+        using QT_PREPEND_NAMESPACE(qHash);
+        return qHash(s, seed);
+    }
 };
 
 template <>
