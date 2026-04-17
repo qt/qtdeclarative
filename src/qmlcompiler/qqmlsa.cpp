@@ -1215,8 +1215,8 @@ bool Element::operatorEqualsImpl(const Element &lhs, const Element &rhs)
 }
 
 /*!
-    \fn friend inline qsizetype Element::qHash(const Element &key, qsizetype seed) noexcept
-    Returns the hash for \a key using \a seed to seed the calculation.
+    \fn size_t Element::qHash(const Element &key, size_t seed)
+    \qhash{Element}
 */
 
 qsizetype Element::qHashImpl(const Element &key, qsizetype seed) noexcept
