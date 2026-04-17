@@ -28,16 +28,19 @@ Rectangle {
             font.pixelSize: screen.pixelSize
             color: screen.textColor
             text: screen.text
+            renderType: Text.CurveRendering
         }
         Text {
             font.pixelSize: screen.pixelSize
             color: screen.textColor
             text: screen.text
+            renderType: Text.CurveRendering
         }
         Text {
             font.pixelSize: screen.pixelSize
             color: screen.textColor
             text: screen.text
+            renderType: Text.CurveRendering
         }
     }
 }
