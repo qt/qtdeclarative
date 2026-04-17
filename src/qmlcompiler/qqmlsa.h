@@ -257,13 +257,19 @@ public:
     }
     friend inline bool operator!=(const Element &lhs, const Element &rhs) { return !(lhs == rhs); }
 
-    friend inline qsizetype qHash(const Element &key, qsizetype seed = 0) noexcept
+    friend size_t qHash(const Element &key, size_t seed = 0) noexcept
     {
-        return qHashImpl(key, seed);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+        // this used the 1-to-2-arg adapter before:
+        return Element::qHashImpl(key, 0) ^ seed;
+#else
+        return Element::qHashImpl(key, seed);
+#endif
     }
 
 private:
     static bool operatorEqualsImpl(const Element &, const Element &);
+    // ### Qt 6.12: change member to size_t
     static qsizetype qHashImpl(const Element &key, qsizetype seed) noexcept;
 
     static constexpr qsizetype sizeofElement = 2 * sizeof(QSharedPointer<int>);
