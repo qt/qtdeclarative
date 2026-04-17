@@ -1219,9 +1219,9 @@ bool Element::operatorEqualsImpl(const Element &lhs, const Element &rhs)
     \qhash{Element}
 */
 
-qsizetype Element::qHashImpl(const Element &key, qsizetype seed) noexcept
+size_t Element::hash(size_t seed) const noexcept
 {
-    return qHash(QQmlJSScope::scope(key), seed);
+    return qHash(QQmlJSScope::scope(*this), seed);
 }
 
 /*!

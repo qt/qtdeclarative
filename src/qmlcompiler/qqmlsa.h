@@ -260,18 +260,12 @@ public:
 
     friend size_t qHash(const Element &key, size_t seed = 0) noexcept
     {
-#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
-        // this used the 1-to-2-arg adapter before:
-        return Element::qHashImpl(key, 0) ^ seed;
-#else
-        return Element::qHashImpl(key, seed);
-#endif
+        return key.hash(seed);
     }
 
 private:
     static bool operatorEqualsImpl(const Element &, const Element &);
-    // ### Qt 6.12: change member to size_t
-    static qsizetype qHashImpl(const Element &key, qsizetype seed) noexcept;
+    Q_DECL_PURE_FUNCTION size_t hash(size_t seed) const noexcept;
 
     static constexpr qsizetype sizeofElement = 2 * sizeof(QSharedPointer<int>);
     alignas(QSharedPointer<int>) char m_data[sizeofElement];
