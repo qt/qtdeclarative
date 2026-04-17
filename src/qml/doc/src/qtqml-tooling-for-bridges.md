@@ -121,7 +121,8 @@ version=2
 where `/path/to/qt/` is the path to the Qt installation.
 
 Starting with Qt 6.12, the `[workspace]` section has a list of workspaces in QSettings's list style.
-Each entry in the list contains a source folder, the import paths and the resource files, for example:
+Each entry in the list contains a source folder, the import paths and the resource files. The first entry starts at 1, not 0.
+Here is an example:
 
 ```
 [General]
@@ -131,13 +132,13 @@ version=2
 [workspaces]
 size=2
 
-0\sourcePath="/path/to/folder1"
-0\importPaths="/path/to/qt/qml"
-0\resourceFiles="/path/to/resource1.qrc"
-
-1\sourcePath="/path/to/folder2"
+1\sourcePath="/path/to/folder1"
 1\importPaths="/path/to/qt/qml"
-1\resourceFiles="/path/to/resource2.qrc"
+1\resourceFiles="/path/to/resource1.qrc"
+
+2\sourcePath="/path/to/folder2"
+2\importPaths="/path/to/qt/qml"
+2\resourceFiles="/path/to/resource2.qrc"
 ```
 
 where:
