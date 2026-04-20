@@ -942,6 +942,15 @@ class ForeignFromAnotherFileForeign
     QML_FOREIGN(MyType);
 };
 
+class FakeQtObject : public QObject
+{
+    Q_OBJECT
+
+    QML_NAMED_ELEMENT(FakeQt)
+    QML_SINGLETON
+    QML_EXTENDED_NAMESPACE(Qt)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -1035,6 +1044,7 @@ private slots:
     void derivedFromInvisible();
     void foreignNamespacedWithEnum();
     void foreignFileAndLinePointsToNonForeign();
+    void extendedDoesNotPolluteFile();
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
