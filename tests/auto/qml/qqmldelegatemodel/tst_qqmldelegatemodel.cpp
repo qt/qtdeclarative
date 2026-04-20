@@ -514,13 +514,17 @@ void tst_QQmlDelegateModel::typedModelData()
 
     for (int i = 0; i < 4; ++i) {
         if (i == 0) {
-            for (int j = 0; j < 3; ++j) {
+            for (int j = 0; j < 2; ++j) {
                 QTest::ignoreMessage(
                     QtWarningMsg,
                     "Could not find any constructor for value type QQmlPointFValueType "
                     "to call with value QVariant(double, 11)");
             }
 
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                "Could not find any constructor for value type QQmlPointFValueType "
+                "to call with value 11");
             QTest::ignoreMessage(
                 QtWarningMsg,
                 qPrintable(url.toString() + ":62:9: Unable to assign double to QPointF"));
@@ -693,13 +697,27 @@ void tst_QQmlDelegateModel::overriddenModelData()
         QObject *delegate = delegateModel->object(0);
         QVERIFY(delegate);
 
-        if (i == 1 || i == 2) {
-            // You can actually not override if the model is a QObject or a JavaScript array.
-            // Someone is certainly relying on this.
-            // We need to find a migration mechanism to fix it.
-            QCOMPARE(delegate->objectName(), QLatin1String(" 0 0  e 0"));
-        } else {
+        // You can actually not override if the model is a QObject or a JavaScript array.
+        // Someone is certainly relying on this.
+        // We need to find a migration mechanism to fix it.
+        switch (i) {
+        case 1: {
+            static const QRegularExpression expectation(
+                    "\\[object V4ReferenceObject\\] 0 0 "
+                    "QQmlDMListAccessorData\\(0x[0-9a-f]+\\) e 0");
+            QVERIFY(expectation.match(delegate->objectName()).hasMatch());
+            break;
+        }
+        case 2: {
+            static const QRegularExpression expectation(
+                    "QObject_QML_[0-9]+\\(0x[0-9a-f]+\\) 0 0 "
+                    "QQmlDMObjectData\\(0x[0-9a-f]+\\) e 0");
+            QVERIFY(expectation.match(delegate->objectName()).hasMatch());
+            break;
+        }
+        default:
             QCOMPARE(delegate->objectName(), QLatin1String("a b c d e f"));
+            break;
         }
     }
 }

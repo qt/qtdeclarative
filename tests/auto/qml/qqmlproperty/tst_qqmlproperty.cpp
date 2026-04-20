@@ -3,6 +3,7 @@
 
 #include "interfaces.h"
 #include <qtest.h>
+#include <QSignalSpy>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
@@ -10,6 +11,8 @@
 #include <QtQml/private/qqmlproperty_p.h>
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
+#include <private/qqmlanybinding_p.h>
+#include <private/qqmlpropertytopropertybinding_p.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #if QT_CONFIG(regularexpression)
@@ -152,6 +155,52 @@ private:
 };
 
 
+class VariantSourceObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
+public:
+    explicit VariantSourceObject(QObject *parent = nullptr) : QObject(parent) {}
+
+    QVariant value() const { return m_value; }
+    void setValue(const QVariant &v)
+    {
+        if (m_value != v) {
+            m_value = v;
+            emit valueChanged();
+        }
+    }
+
+signals:
+    void valueChanged();
+
+private:
+    QVariant m_value;
+};
+
+class StringTargetObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString value READ value WRITE setValue NOTIFY valueChanged)
+public:
+    explicit StringTargetObject(QObject *parent = nullptr) : QObject(parent) {}
+
+    QString value() const { return m_value; }
+    void setValue(const QString &v)
+    {
+        if (m_value != v) {
+            m_value = v;
+            emit valueChanged();
+        }
+    }
+
+signals:
+    void valueChanged();
+
+private:
+    QString m_value;
+};
+
 class tst_qqmlproperty : public QQmlDataTest
 {
     Q_OBJECT
@@ -235,6 +284,8 @@ private slots:
 
     void convertToWriteTargetType_data();
     void convertToWriteTargetType();
+
+    void writeInvalidVariantToTypedProperty();
 
 private:
     QQmlEngine engine;
@@ -2777,6 +2828,39 @@ void tst_qqmlproperty::convertToWriteTargetType()
     QCOMPARE(result.isValid(), canConvert);
     if (canConvert)
         QCOMPARE(result, targetValue);
+}
+
+// QTBUG-145016: verify that property-to-property bindings perform JavaScript coercion
+// when the source value is an invalid QVariant (representing "undefined").
+void tst_qqmlproperty::writeInvalidVariantToTypedProperty()
+{
+    VariantSourceObject source;
+    StringTargetObject target;
+
+    QQmlProperty sourceProp(&source, u"value"_s);
+    QQmlProperty targetProp(&target, u"value"_s);
+
+    QVERIFY(sourceProp.isValid());
+    QVERIFY(targetProp.isValid());
+
+    QQmlAnyBinding binding = QQmlPropertyToPropertyBinding::create(&engine, sourceProp, targetProp);
+    binding.installOn(targetProp);
+
+    // Write a valid string - should propagate
+    source.setValue(QVariant(QStringLiteral("Foo")));
+    QCOMPARE(target.value(), u"Foo"_s);
+
+    // Write an invalid QVariant (represents "undefined" in JS).
+    // The binding must still update the target property so that subsequent
+    // valid writes trigger the change signal.
+    source.setValue(QVariant());
+    QCOMPARE(target.value(), u"undefined"_s);
+
+    // Write a valid string again - must trigger a change
+    QSignalSpy spy(&target, &StringTargetObject::valueChanged);
+    source.setValue(QVariant(QStringLiteral("Foo")));
+    QCOMPARE(target.value(), u"Foo"_s);
+    QCOMPARE(spy.size(), 1);
 }
 
 QTEST_MAIN(tst_qqmlproperty)
