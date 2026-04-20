@@ -5690,9 +5690,12 @@ JSON.stringify([], v3);
 void tst_QJSEngine::typedArraySet()
 {
     QJSEngine engine;
+    // The length need only be large enough that offset + length overflows
+    // a uint32; keep it small so the two Int8Array allocations fit on
+    // memory-constrained targets such as the QNX QEMU CI.
     const auto value = engine.evaluate(
         "(function() {"
-        "   var length = 0xfffffe0;"
+        "   var length = 0x1000;"
         "   var offset = 0xfffffff0;"
         "   var e1;"
         "   var e2;"
