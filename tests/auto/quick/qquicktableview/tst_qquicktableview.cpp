@@ -8198,13 +8198,17 @@ void tst_QQuickTableView::typedModelData()
 
     for (int i = 0; i < 4; ++i) {
         if (i == 0) {
-            for (int j = 0; j < 3; ++j) {
+            for (int j = 0; j < 2; ++j) {
                 QTest::ignoreMessage(
                     QtWarningMsg,
                     "Could not find any constructor for value type QQmlPointFValueType "
                     "to call with value QVariant(double, 11)");
             }
 
+            QTest::ignoreMessage(
+                QtWarningMsg,
+                "Could not find any constructor for value type QQmlPointFValueType "
+                "to call with value 11");
             QTest::ignoreMessage(
                 QtWarningMsg,
                 qPrintable(url.toString() + ":60:9: Unable to assign double to QPointF"));
