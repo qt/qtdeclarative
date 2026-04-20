@@ -301,6 +301,7 @@ private slots:
     void editWarning_nonEditableModelItem();
     void attachedPropertiesOnEditDelegate();
     void requiredPropertiesOnEditDelegate();
+    void editWithBuddy();
     void resettingRolesRespected();
     void checkScroll_data();
     void checkScroll();
@@ -7975,6 +7976,38 @@ void tst_QQuickTableView::requiredPropertiesOnEditDelegate()
     QCOMPARE(textInput->property("current").toBool(), false);
 }
 
+void tst_QQuickTableView::editWithBuddy()
+{
+    // Check that if the model returns a buddy for the index being edited,
+    // the buddy index is what gets edited rather than the requested index.
+    LOAD_TABLEVIEW("editdelegate.qml");
+
+    struct BuddyModel : TestModel {
+        using TestModel::TestModel;
+        QModelIndex buddy(const QModelIndex &index) const override {
+            // Map cell (1, 1) to its buddy at cell (2, 2)
+            if (index.row() == 1 && index.column() == 1)
+                return createIndex(2, 2);
+            return index;
+        }
+    };
+
+    BuddyModel model(4, 4);
+    tableView->setModel(QVariant::fromValue(&model));
+
+    WAIT_UNTIL_POLISHED;
+
+    const QModelIndex requestedIndex = tableView->index(1, 1);
+    const QModelIndex buddyIndex = tableView->index(2, 2);
+
+    tableView->edit(requestedIndex);
+
+    // The edit delegate should have opened on the buddy index, not the requested index
+    QVERIFY(tableViewPrivate->editItem);
+    QCOMPARE(tableViewPrivate->editIndex, buddyIndex);
+    tableView->closeEditor();
+}
+
 void tst_QQuickTableView::resettingRolesRespected()
 {
     LOAD_TABLEVIEW("resetModelData.qml");
@@ -8675,8 +8708,9 @@ void tst_QQuickTableView::checkCellModelIdxAfterReorder()
 void tst_QQuickTableView::checkEditAfterReorder()
 {
     LOAD_TABLEVIEW("editdelegate.qml"); // gives us 'tableView' variable
-    auto model = TestModelAsVariant(3, 3);
-    tableView->setModel(model);
+
+    TestModel model(3, 3);
+    tableView->setModel(QVariant::fromValue(&model));
 
     WAIT_UNTIL_POLISHED;
 
@@ -8693,11 +8727,10 @@ void tst_QQuickTableView::checkEditAfterReorder()
     QCOMPARE(rowMovedSpy.size(), 2);
 
     // Edit model index (0, 0)
-    const QSharedPointer<TestModel> testModel = model.value<QSharedPointer<TestModel>>();
     const auto cellItem1 = tableView->itemAtCell(QPoint(0, 0));
     QCOMPARE(cellItem1->property("editing").toBool(), false);
 
-    tableView->edit(testModel->index(1, 1));
+    tableView->edit(model.index(1, 1));
     QCOMPARE(cellItem1->property("editing").toBool(), true);
 
     // Close the editor

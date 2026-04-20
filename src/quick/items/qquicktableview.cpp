@@ -5260,15 +5260,25 @@ bool QQuickTableViewPrivate::canEdit(const QModelIndex tappedIndex, bool warn)
         return false;
     }
 
-    if (auto const sourceModel = qaim(modelImpl())) {
-        if (!(sourceModel->flags(tappedIndex) & Qt::ItemIsEditable)) {
-            if (warn)
-                qmlWarning(q) << "cannot edit: QAbstractItemModel::flags(index) doesn't contain Qt::ItemIsEditable";
-            return false;
-        }
+    auto const sourceModel = qaim(modelImpl());
+    if (!sourceModel) {
+        if (warn)
+            qmlWarning(q) << "cannot edit: TableView.model does not inherit QAbstractItemModel!";
+        return false;
     }
 
-    const QPoint cell = q->cellAtIndex(tappedIndex);
+    const QModelIndex buddyIndex = sourceModel->buddy(tappedIndex);
+    if (!(sourceModel->flags(buddyIndex) & Qt::ItemIsEditable)) {
+        if (warn) {
+            if (buddyIndex != tappedIndex)
+                qmlWarning(q) << "cannot edit: the buddy index flags don't include Qt::ItemIsEditable.";
+            else
+                qmlWarning(q) << "cannot edit: the index flags don't include Qt::ItemIsEditable";
+        }
+        return false;
+    }
+
+    const QPoint cell = q->cellAtIndex(buddyIndex);
     const QQuickItem *cellItem = q->itemAtCell(cell);
     if (!cellItem) {
         if (warn)
@@ -6836,12 +6846,20 @@ void QQuickTableView::forceLayout()
     d_func()->forceLayout(true);
 }
 
-void QQuickTableView::edit(const QModelIndex &index)
+void QQuickTableView::edit(const QModelIndex &requestedIndex)
 {
     Q_D(QQuickTableView);
 
-    if (!d->canEdit(index, true))
+    // Note: canEdit() takes QAIM::buddy() into account
+    if (!d->canEdit(requestedIndex, true))
         return;
+
+    const auto *aim = d->qaim(d->modelImpl());
+    Q_ASSERT(aim); // tested by canEdit()
+
+    // QAbstractItemModel::buddy() returns the index that should be used for editing.
+    // If the model doesn't override it, it returns the original index unchanged.
+    const QModelIndex index = aim->buddy(requestedIndex);
 
     if (d->editIndex == index)
         return;
