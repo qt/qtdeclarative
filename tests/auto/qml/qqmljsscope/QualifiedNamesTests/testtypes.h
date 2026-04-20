@@ -38,4 +38,16 @@ class D : public QObject
 
     QML_ELEMENT
 };
+
+
+class CppEnumHolder : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum CppEnum { H, I, J };
+    Q_ENUM(CppEnum);
+};
+
 #endif // TESTTYPES_H

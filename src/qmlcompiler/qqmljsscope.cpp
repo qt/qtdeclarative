@@ -862,6 +862,14 @@ QQmlJSScope::AnnotatedScope QQmlJSScope::ownerOfMethod(const QQmlJSScope::ConstP
     });
 }
 
+QQmlJSScope::AnnotatedScope QQmlJSScope::ownerOfEnum(const QQmlJSScope::ConstPtr &self,
+                                                     const QString &name)
+{
+    return searchOwner(self, [&name](const QQmlJSScope::ConstPtr &scope) {
+        return scope->hasOwnEnumeration(name);
+    });
+}
+
 void QQmlJSScope::setPropertyLocallyRequired(const QString &name, bool isRequired)
 {
     if (!isRequired)

@@ -127,6 +127,7 @@ private Q_SLOTS:
     void isRoot();
     void idLocation();
     void lineNumber();
+    void ownerOfEnum();
 
 public:
     tst_qqmljsscope()
@@ -1152,6 +1153,21 @@ void tst_qqmljsscope::lineNumber()
     QCOMPARE(baseFromCpp->enumeration("MyEnum").lineNumber(), 28);
     QCOMPARE(baseFromCpp->methods("aChanged").front().sourceLocation().startLine, 32);
     QCOMPARE(baseFromCpp->methods("mySlot").front().sourceLocation().startLine, 34);
+}
+
+void tst_qqmljsscope::ownerOfEnum()
+{
+    const auto root = run("OwnerOfEnum.qml");
+
+    const auto qmlEnum1Owner = QQmlJSScope::ownerOfEnum(root, "QmlEnum1"_L1);
+    QVERIFY(qmlEnum1Owner.scope->filePath().endsWith("OwnerOfEnum.qml"_L1));
+
+    const auto qmlEnum2Owner = QQmlJSScope::ownerOfEnum(root, "QmlEnum2"_L1);
+    QVERIFY(qmlEnum2Owner.scope->filePath().endsWith("OwnerOfEnumBase.qml"_L1));
+
+    const auto cppEnumOwner = QQmlJSScope::ownerOfEnum(root, "CppEnum"_L1);
+    QCOMPARE(cppEnumOwner.scope->internalName(), "CppEnumHolder"_L1);
+    QVERIFY(cppEnumOwner.scope->filePath().endsWith("testtypes.h"_L1));
 }
 
 QTEST_MAIN(tst_qqmljsscope)
