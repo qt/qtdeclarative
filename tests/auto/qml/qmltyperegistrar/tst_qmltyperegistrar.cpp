@@ -1060,6 +1060,7 @@ void tst_qmltyperegistrar::valueTypeSelfReference()
         name: "QPersistentModelIndex"
         accessSemantics: "value"
         extension: "QPersistentModelIndexValueType"
+        isSelfExtension: true
     })"));
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"

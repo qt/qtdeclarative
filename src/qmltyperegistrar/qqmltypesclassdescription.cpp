@@ -290,6 +290,8 @@ void QmlTypesClassDescription::collect(
                 javaScriptExtensionType = extension.javaScript.qualifiedClassName();
                 nativeExtensionType = extension.native.qualifiedClassName();
             }
+            if (value == classDefName)
+                isSelfExtension = true;
         } else if (name == S_EXTENSION_IS_JAVA_SCRIPT) {
             if (value == S_TRUE)
                 extensionIsJavaScript = true;

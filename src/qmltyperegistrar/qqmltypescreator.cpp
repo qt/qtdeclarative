@@ -93,6 +93,8 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
                 << "Extension namespace for" << collector.className << "does not exist";
         m_qml.writeBooleanBinding(S_EXTENSION_IS_NAMESPACE, true);
     }
+    if (collector.isSelfExtension)
+        m_qml.writeBooleanBinding(S_IS_SELF_EXTENSION, true);
 
     if (!collector.implementsInterfaces.isEmpty())
         m_qml.writeStringListBinding(S_INTERFACES, collector.implementsInterfaces);

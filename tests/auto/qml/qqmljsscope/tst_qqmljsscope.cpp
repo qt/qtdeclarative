@@ -759,6 +759,9 @@ void tst_qqmljsscope::extensions()
         QCOMPARE(ownerKind, QQmlJSScope::ExtensionType);
         QCOMPARE(owner, childScopes[4]->baseType()->extensionType().scope);
     }
+
+    QVERIFY(root->property("se").type()->isSelfExtension());
+    QVERIFY(!childScopes[4]->isSelfExtension());
 }
 
 void tst_qqmljsscope::emptyBlockBinding()

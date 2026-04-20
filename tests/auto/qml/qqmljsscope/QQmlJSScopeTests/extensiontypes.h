@@ -171,4 +171,11 @@ class NonNamespaceExtended : public QObject
     QML_EXTENDED(ExtensionNamespace)
 };
 
+class SelfExtension
+{
+    Q_GADGET
+    QML_VALUE_TYPE(selfExtension)
+    QML_EXTENDED(SelfExtension)
+};
+
 #endif // EXTENSIONTYPES_H

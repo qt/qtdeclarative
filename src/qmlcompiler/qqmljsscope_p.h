@@ -119,6 +119,7 @@ public:
         EnforcesScopedEnums = 0x4000,
         FileRootComponent = 0x8000,
         AssignedToUnknownProperty = 0x10000,
+        IsSelfExtension = 0x20000,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -380,6 +381,16 @@ public:
 
     bool isFileRootComponent() const { return m_flags.testFlag(FileRootComponent); }
     void setIsRootFileComponentFlag(bool v) { m_flags.setFlag(FileRootComponent, v); }
+
+    // Self-extension happens when a type declares itself as its own extension type using the
+    // QML_EXTENDED macro. Internally, we use the self-extension + QML_FOREIGN trick to indicate
+    // the type to be used in the generated code is the declared foreign type instead of the type
+    // itself, but that the metaObject to be used is that of the extension. This is used for example
+    // with value types for types that don't have a metaObject, such as QQmlRectValueType: The
+    // generated C++ code needs to use QRect but all the properties are defined on
+    // QQmlRectValueType.
+    bool isSelfExtension() const { return m_flags.testFlag(IsSelfExtension); }
+    void setIsSelfExtension(bool v) { m_flags.setFlag(IsSelfExtension, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }

@@ -8,4 +8,6 @@ Item {
 
     NamespaceExtended { }
     NonNamespaceExtended { }
+
+    property selfExtension se
 }

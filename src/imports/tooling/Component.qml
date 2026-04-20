@@ -25,6 +25,7 @@ QtObject {
     property bool isStructured: false
     property bool isComposite: false
     property bool isJavaScriptBuiltin: false
+    property bool isSelfExtension: false
     property bool hasCustomParser: false
     property bool extensionIsJavaScript: false
     property bool extensionIsNamespace: false

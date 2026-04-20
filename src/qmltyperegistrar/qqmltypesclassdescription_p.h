@@ -75,6 +75,7 @@ struct QmlTypesClassDescription
     bool isSingleton = false;
     bool hasCustomParser = false;
     bool isRootClass = false;
+    bool isSelfExtension = false;
     bool extensionIsJavaScript = false;
     bool extensionIsNamespace = false;
     bool enforcesScopedEnums = false;
