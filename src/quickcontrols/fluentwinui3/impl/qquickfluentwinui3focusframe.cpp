@@ -24,8 +24,7 @@ QQuickFluentWinUI3FocusFrame::QQuickFluentWinUI3FocusFrame()
     connect(qGuiApp, &QGuiApplication::focusObjectChanged, this, [this](QObject *focusObject){
         if (QQuickControl *control = qobject_cast<QQuickControl *>(focusObject);
             control && (control->focusReason() == Qt::FocusReason::TabFocusReason
-                    || control->focusReason() == Qt::FocusReason::BacktabFocusReason
-                    || control->focusReason() == Qt::FocusReason::OtherFocusReason)) {
+                    || control->focusReason() == Qt::FocusReason::BacktabFocusReason)) {
                         moveToItem(control);
         } else {
             moveToItem(nullptr);
