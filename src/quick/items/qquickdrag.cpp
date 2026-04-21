@@ -221,16 +221,26 @@ void QQuickDragAttached::setActive(bool active)
     if (d->active != active) {
         if (d->inEvent)
             qmlWarning(this) << "active cannot be changed from within a drag event handler";
-        else if (active) {
+        else if (d->executingNativeDrag) {
+            // QDrag::exec() is blocking in a nested event loop. Pointer release events
+            // processed there may deactivate the DragHandler and re-trigger this setter.
+            // Suppress: startDrag() already handles cleanup when exec() returns.
+        } else if (active) {
             if (d->dragType == QQuickDrag::Internal) {
                 d->start(d->supportedActions);
             } else {
                 d->active = true;
                 emit activeChanged();
                 if (d->dragType == QQuickDrag::Automatic) {
-                    // There are different semantics than start() since startDrag()
-                    // may be called after an internal drag is already started.
-                    d->startDrag(d->supportedActions);
+                    // QDrag::exec() enters a nested event loop; calling it directly
+                    // from a QML binding or JS expression would block the engine mid-
+                    // evaluation. Defer to a queued call so the current JS frame
+                    // unwinds completely before exec() runs from the event loop.
+                    QMetaObject::invokeMethod(this, [this]() {
+                        Q_D(QQuickDragAttached);
+                        if (d->active)
+                            d->startDrag(d->supportedActions);
+                    }, Qt::QueuedConnection);
                 }
             }
         }
@@ -849,7 +859,9 @@ Qt::DropAction QQuickDragAttachedPrivate::startDrag(Qt::DropActions supportedAct
     drag->setHotSpot(hotSpot.toPoint());
     emit q->dragStarted();
 
+    executingNativeDrag = true;
     Qt::DropAction dropAction = drag->exec(supportedActions);
+    executingNativeDrag = false;
 
     if (!QGuiApplicationPrivate::platformIntegration()->drag()->ownsDragObject())
         drag->deleteLater();
