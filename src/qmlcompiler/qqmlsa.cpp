@@ -2137,22 +2137,22 @@ QString DocumentEdit::replacement() const
 
 
 DocumentEditPrivate::DocumentEditPrivate(
-        DocumentEdit *interface, const QString &filename, const SourceLocation &location,
+        DocumentEdit *iface, const QString &filename, const SourceLocation &location,
         const QString &replacement)
     : m_documentEdit{ filename, SourceLocationPrivate::sourceLocation(location), replacement }
-    , q_ptr{ interface }
+    , q_ptr{ iface }
 {
 }
 
 DocumentEditPrivate::DocumentEditPrivate(
-        DocumentEdit *interface, const DocumentEditPrivate &other)
-    : m_documentEdit{ other.m_documentEdit }, q_ptr{ interface }
+        DocumentEdit *iface, const DocumentEditPrivate &other)
+    : m_documentEdit{ other.m_documentEdit }, q_ptr{ iface }
 {
 }
 
 DocumentEditPrivate::DocumentEditPrivate(
-        DocumentEdit *interface, DocumentEditPrivate &&other)
-    : m_documentEdit{ std::move(other.m_documentEdit) }, q_ptr{ interface }
+        DocumentEdit *iface, DocumentEditPrivate &&other)
+    : m_documentEdit{ std::move(other.m_documentEdit) }, q_ptr{ iface }
 {
 }
 
