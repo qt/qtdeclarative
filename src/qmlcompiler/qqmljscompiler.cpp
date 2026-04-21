@@ -372,7 +372,8 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                 | QV4::CompiledData::Unit::PendingTypeCompilation;
         QV4::CompiledData::SaveableUnitPointer saveable(
                 irDocument.javaScriptCompilationUnit->unitData(), saveFlags);
-        if (!saveFunction(saveable, aotFunctionsByIndex, &error->message))
+        LookupSignatures sigs = aotCompiler ? aotCompiler->lookupSignatures() : LookupSignatures();
+        if (!saveFunction(saveable, aotFunctionsByIndex, sigs, &error->message))
             return false;
     }
     return true;
@@ -466,9 +467,10 @@ bool qCompileJSFile(
         }
     }
 
-    QQmlJSAotFunctionMap empty;
+    QQmlJSAotFunctionMap funcs;
+    LookupSignatures sigs;
     return saveFunction(
-            QV4::CompiledData::SaveableUnitPointer(unit->unitData()), empty, &error->message);
+            QV4::CompiledData::SaveableUnitPointer(unit->unitData()), funcs, sigs, &error->message);
 }
 
 static const char *funcHeaderCode = R"(
@@ -477,8 +479,13 @@ Q_UNUSED(aotContext)
 Q_UNUSED(argv)
 )";
 
-bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName, const QV4::CompiledData::SaveableUnitPointer &unit, const QQmlJSAotFunctionMap &aotFunctions, QString *errorString)
+bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
+                         const QV4::CompiledData::SaveableUnitPointer &unit,
+                         const QQmlJSAotFunctionMap &aotFunctions,
+                         const LookupSignatures &lookupSignatures, QString *errorString)
 {
+    Q_UNUSED(lookupSignatures); // TODO
+
 #if QT_CONFIG(temporaryfile)
     QSaveFile f(outputFileName);
 #else
@@ -785,12 +792,13 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     if (m_logger->currentFunctionHasErrorOrSkip())
         return QQmlJSAotFunction();
 
-    QQmlJSCodeGenerator codegen(
-            context, m_unitGenerator, &m_typeResolver, m_logger, blocks, annotations);
+    QQmlJSCodeGenerator codegen(context, m_unitGenerator, &m_typeResolver, m_logger, blocks,
+                                annotations);
     QQmlJSAotFunction result = codegen.run(function, basicBlocksValidationFailed);
     if (m_logger->currentFunctionHasErrorOrSkip())
         return QQmlJSAotFunction();
 
+    m_lookupSignatures.insert(codegen.lookupSignatures());
     return result;
 }
 

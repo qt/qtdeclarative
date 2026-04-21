@@ -722,7 +722,9 @@ QQmlJSLinter::lintFileImpl(const QString &filename, const QString *fileContents,
     codegen.setPassManager(passMan.get());
 
     QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
-                                         const QQmlJSAotFunctionMap &, QString *) { return true; };
+                                         const QQmlJSAotFunctionMap &,
+                                         const LookupSignatures &,
+                                         const QString *) { return true; };
 
     QQmlJSCompileError error;
 

@@ -531,6 +531,12 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::originalContainedType(
     return original(container).containedType();
 }
 
+QQmlJSRegisterContent QQmlJSTypeResolver::shadowed(QQmlJSRegisterContent type) const
+{
+    QQmlJSRegisterContent result = type.shadowed();
+    return result.isNull() ? type : result;
+}
+
 bool QQmlJSTypeResolver::adjustTrackedType(
         QQmlJSRegisterContent tracked, const QQmlJSScope::ConstPtr &conversion) const
 {

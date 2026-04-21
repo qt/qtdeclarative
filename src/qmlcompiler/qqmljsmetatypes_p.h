@@ -327,6 +327,18 @@ public:
         return m_relativeFunctionIndex;
     }
 
+    void setOtherMethodIndex(RelativeFunctionIndex index)
+    {
+        Q_ASSERT(!m_isConstructor);
+        m_otherFunctionIndex = index;
+    }
+
+    RelativeFunctionIndex otherMethodIndex() const
+    {
+        Q_ASSERT(!m_isConstructor);
+        return m_otherFunctionIndex;
+    }
+
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
         return a.m_name == b.m_name && a.m_sourceLocation == b.m_sourceLocation
@@ -334,6 +346,7 @@ public:
                 && a.m_annotations == b.m_annotations && a.m_methodType == b.m_methodType
                 && a.m_methodAccess == b.m_methodAccess && a.m_revision == b.m_revision
                 && a.m_relativeFunctionIndex == b.m_relativeFunctionIndex
+                && a.m_otherFunctionIndex == b.m_otherFunctionIndex
                 && a.m_isCloned == b.m_isCloned && a.m_isConstructor == b.m_isConstructor
                 && a.m_isJavaScriptFunction == b.m_isJavaScriptFunction
                 && a.m_isImplicitQmlPropertyChangeSignal == b.m_isImplicitQmlPropertyChangeSignal
@@ -358,6 +371,7 @@ public:
         seed = combine(seed, method.m_methodAccess);
         seed = combine(seed, method.m_revision);
         seed = combine(seed, method.m_relativeFunctionIndex);
+        seed = combine(seed, method.m_otherFunctionIndex);
         seed = combine(seed, method.m_isCloned);
         seed = combine(seed, method.m_isConstructor);
         seed = combine(seed, method.m_isJavaScriptFunction);
@@ -380,6 +394,7 @@ private:
     Access m_methodAccess = Public;
     int m_revision = 0;
     RelativeFunctionIndex m_relativeFunctionIndex = RelativeFunctionIndex::Invalid;
+    RelativeFunctionIndex m_otherFunctionIndex = RelativeFunctionIndex::Invalid; // TODO remove QTBUG-147141
     bool m_isCloned = false;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;

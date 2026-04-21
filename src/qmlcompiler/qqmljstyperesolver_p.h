@@ -203,6 +203,8 @@ public:
     QQmlJSRegisterContent original(QQmlJSRegisterContent type) const;
     QQmlJSScope::ConstPtr originalContainedType(QQmlJSRegisterContent container) const;
 
+    QQmlJSRegisterContent shadowed(QQmlJSRegisterContent type) const;
+
     QQmlJSScope::ConstPtr merge(
             const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
 

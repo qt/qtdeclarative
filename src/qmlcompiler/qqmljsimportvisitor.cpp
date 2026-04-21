@@ -1917,6 +1917,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodName(signalName);
         method.setSourceLocation(combine(publicMember->firstSourceLocation(),
                                          publicMember->lastSourceLocation()));
+        method.setOtherMethodIndex(
+                QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
         while (param) {
             method.addParameter(
                     QQmlJSMetaParameter(
@@ -2003,6 +2005,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                 QQmlSignalNames::propertyNameToChangedSignalName(propertyName), u"void"_s);
         method.setMethodType(QQmlJSMetaMethodType::Signal);
         method.setIsImplicitQmlPropertyChangeSignal(true);
+        method.setOtherMethodIndex(
+                QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
         m_currentScope->addOwnMethod(method);
 
         if (publicMember->isRequired())
@@ -2127,6 +2131,8 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
             m_pendingMethodTypeAnnotations << pending;
 
         method.setJsFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
+        method.setOtherMethodIndex(
+                QQmlJSMetaMethod::RelativeFunctionIndex(m_currentScope->ownMethods().size()));
 
         if (m_currentScope->scopeType() != QQmlSA::ScopeType::QMLScope) {
             // note: lambda methods have no identifier token

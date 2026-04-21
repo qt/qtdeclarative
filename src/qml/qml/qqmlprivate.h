@@ -1302,6 +1302,79 @@ namespace QQmlPrivate
     Q_QML_EXPORT QMetaType compositeListMetaType(
             QV4::ExecutableCompilationUnit *unit, const QString &elementName);
 
+namespace AOTLookupValidation {
+    // TODO they are used...
+    [[maybe_unused]] static constexpr QLatin1StringView s_thisCuModule("##THIS_CU_MODULE##");
+    [[maybe_unused]] static constexpr QLatin1StringView s_thisCuType("##THIS_CU_TYPE##");
+
+    enum struct IsComposite : bool { Yes, No };
+    enum struct IsIC : bool { Yes, No };
+    enum struct IsFlag : bool { Yes, No };
+    enum struct IsSignal : bool { Yes, No };
+
+    struct Type
+    {
+        QString module;
+        QString name;
+        QString icNameOrExtensionTypeName; // composite ? icName : extensionTypeName
+        IsComposite isComposite = IsComposite::No;
+        IsIC isInlineComponent = IsIC::No;
+
+        friend bool comparesEqual(const Type &lhs, const Type &rhs) noexcept
+        {
+            return lhs.module == rhs.module && lhs.name == rhs.name
+                    && lhs.icNameOrExtensionTypeName == rhs.icNameOrExtensionTypeName
+                    && lhs.isComposite == rhs.isComposite
+                    && lhs.isInlineComponent == rhs.isInlineComponent;
+        }
+        Q_DECLARE_EQUALITY_COMPARABLE(Type)
+        friend size_t qHash(const Type &type, size_t seed = 0)
+        {
+            return qHashMulti(seed, type.module, type.name, type.icNameOrExtensionTypeName);
+        }
+    };
+
+    struct Lookup
+    {
+        Type base;
+        QString member;
+        QString enumName;
+
+        friend bool comparesEqual(const Lookup &lhs, const Lookup &rhs) noexcept
+        {
+            return lhs.base == rhs.base && lhs.member == rhs.member && lhs.enumName == rhs.enumName;
+        }
+        Q_DECLARE_EQUALITY_COMPARABLE(Lookup)
+        friend size_t qHash(const Lookup &lookup, size_t seed = 0)
+        {
+            return qHashMulti(seed, lookup.base, lookup.member, lookup.enumName);
+        }
+    };
+
+    struct PropertySignature
+    {
+        Type type;
+        int relativeIndex = -1;
+    };
+
+    struct EnumKeySignature
+    {
+        quint64 value = 0;
+        IsFlag isFlag = IsFlag::No;
+    };
+
+    struct MethodSignature
+    {
+        std::vector<QString> paramNames;
+        std::vector<Type> types; // return then parameter types
+        int relativeIndex = -1;
+        IsSignal isSignal = IsSignal::No;
+    };
+
+    using Signature = std::variant<PropertySignature, EnumKeySignature, MethodSignature>;
+    using LookupSignatures = QHash<Lookup, Signature>;
+} // namespace AOTLookupValidation
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE

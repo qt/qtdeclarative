@@ -16,6 +16,7 @@
 // We mean it.
 
 #include <private/qqmljscompiler_p.h>
+#include <private/qqmljslookupsignatures_p.h>
 #include <private/qqmljstypepropagator_p.h>
 #include <private/qqmljstyperesolver_p.h>
 
@@ -29,14 +30,15 @@ QT_BEGIN_NAMESPACE
 class Q_QMLCOMPILER_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
 {
 public:
-    QQmlJSCodeGenerator(
-            const QV4::Compiler::Context *compilerContext,
-            const QV4::Compiler::JSUnitGenerator *unitGenerator,
-            const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-            const BasicBlocks &basicBlocks, const InstructionAnnotations &annotations);
+    QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
+                        const QV4::Compiler::JSUnitGenerator *unitGenerator,
+                        const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                        const BasicBlocks &basicBlocks, const InstructionAnnotations &annotations);
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, bool basicBlocksValidationFailed);
+
+    LookupSignatures lookupSignatures() const { return m_lookupSignaturesRecorder.signatures(); }
 
 protected:
     struct CodegenState : public State
@@ -295,6 +297,11 @@ protected:
     QQmlJSRegisterContent lookupType(int lookupIndex) const;
     bool shouldMoveRegister(int index) const;
 
+    void recordPropertyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaProperty &prop);
+    void recordMethodLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaMethod &method);
+    void recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base, const QQmlJSMetaEnum &metaEnum,
+                             const QString &keyName);
+
     QString m_body;
     CodegenState m_state;
 
@@ -388,6 +395,20 @@ private:
                 restored, m_typeResolver->original(tracked.storage()).containedType());
     }
 
+    QQmlJSMetaProperty originalProperty(const QQmlJSRegisterContent &reg) const
+    {
+        auto r = m_typeResolver->original(reg);
+        r = m_typeResolver->shadowed(r);
+        return r.property();
+    }
+
+    QQmlJSMetaMethod originalMethod(const QQmlJSRegisterContent &reg) const
+    {
+        auto r = m_typeResolver->original(reg);
+        r = m_typeResolver->shadowed(r);
+        return r.methodCall();
+    }
+
     QQmlJSRegisterContent literalType(const QQmlJSScope::ConstPtr &contained)
     {
         return m_pool->storedIn(m_typeResolver->literalType(contained), contained);
@@ -413,6 +434,8 @@ private:
     };
 
     QHash<QQmlJSRegisterContent, RegisterVariablesValue> m_registerVariables;
+
+    QQmlJSLookupSignaturesRecorder m_lookupSignaturesRecorder;
 };
 
 QT_END_NAMESPACE

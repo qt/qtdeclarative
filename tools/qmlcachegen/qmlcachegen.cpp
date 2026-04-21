@@ -232,15 +232,18 @@ int main(int argc, char **argv)
         saveFunction = [inputResourcePath, outputFileName](
                                const QV4::CompiledData::SaveableUnitPointer &unit,
                                const QQmlJSAotFunctionMap &aotFunctions,
-                               QString *errorString) {
-            return qSaveQmlJSUnitAsCpp(inputResourcePath, outputFileName, unit, aotFunctions, errorString);
+                               const LookupSignatures &lookupSignatures, QString *errorString) {
+            return qSaveQmlJSUnitAsCpp(inputResourcePath, outputFileName, unit, aotFunctions,
+                                       lookupSignatures, errorString);
         };
 
     } else {
         saveFunction = [outputFileName](const QV4::CompiledData::SaveableUnitPointer &unit,
                                         const QQmlJSAotFunctionMap &aotFunctions,
+                                        const LookupSignatures &lookupSignatures,
                                         QString *errorString) {
             Q_UNUSED(aotFunctions);
+            Q_UNUSED(lookupSignatures);
             return unit.saveToDisk<char>(
                     [&outputFileName, errorString](const char *data, quint32 size) {
                         return QV4::CompiledData::SaveableUnitPointer::writeDataToFile(
