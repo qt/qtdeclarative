@@ -296,6 +296,8 @@ public:
     bool readCacheFile();
     bool isDebugging();
 
+    QStringList urlsForModule(const QString &module) const;
+
 private:
     friend struct PlainLoader;
     friend struct CachedLoader;

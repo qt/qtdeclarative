@@ -58,6 +58,8 @@ struct MarkStack;
 class ExecutableCompilationUnit;
 namespace CompiledData {
 struct Unit;
+struct CompilationUnit;
+using LookupValidationFn = bool (*)(QQmlEngine *engine, CompilationUnit *cu);
 }
 }
 namespace QmlIR {
@@ -866,7 +868,7 @@ namespace QQmlPrivate
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
         const AOTCompiledFunction *aotCompiledFunctions;
-        void *unused2;
+        QV4::CompiledData::LookupValidationFn validateLookupSignatures = nullptr;
     };
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);
@@ -1373,6 +1375,10 @@ namespace AOTLookupValidation {
 
     using Signature = std::variant<PropertySignature, EnumKeySignature, MethodSignature>;
     using LookupSignatures = QHash<Lookup, Signature>;
+
+    Q_QML_EXPORT
+    bool validateLookupSignature(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu,
+                                 const Lookup &lookup, const Signature &signature);
 } // namespace AOTLookupValidation
 
 } // namespace QQmlPrivate

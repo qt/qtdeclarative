@@ -803,7 +803,7 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
     loader.load();
     m_document->javaScriptCompilationUnit
             = QQmlRefPointer<QV4::CompiledData::CompilationUnit>(
-                new QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions),
+                new QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions, unit->validateLookupSignatures),
                 QQmlRefPointer<QV4::CompiledData::CompilationUnit>::Adopt);
     continueLoadFromIR();
 }

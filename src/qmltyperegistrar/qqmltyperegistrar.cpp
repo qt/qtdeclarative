@@ -425,6 +425,10 @@ void QmlTypeRegistrar::write(QTextStream &output, QAnyStringView outFileName) co
                 output << uR"(
     qmlRegisterTypesAndRevisions<%1>("%2", %3);)"_s.arg(className, m_module).arg(majorVersion);
 
+                // TODO it seems that we don't actually need to register the pointer version for gadgets (QTBUG-147142)
+                if (classDef.kind() == MetaType::Kind::Gadget)
+                    output << u"\n    QMetaType::fromType<%1 *>().id();"_s.arg(className);
+
                 const BaseType::Container superClasses = classDef.superClasses();
 
                 for (const BaseType &object : classDef.superClasses()) {

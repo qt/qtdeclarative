@@ -19,7 +19,7 @@ QT_BEGIN_NAMESPACE
 // If you update the data structures in qv4compileddata_p.h, then you also need to
 // update the comparison functions below. Only after making sure the comparisons
 // are fine, bump the version in the static_assert.
-static_assert(QV4_DATA_STRUCTURE_VERSION == 0x4c);
+static_assert(QV4_DATA_STRUCTURE_VERSION == 0x4d);
 
 namespace QV4::CompiledData {
 

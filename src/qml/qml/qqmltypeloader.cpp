@@ -1955,6 +1955,31 @@ bool QQmlTypeLoader::isScriptLoaded(const QUrl &url) const
     return data->scriptCache.contains(url);
 }
 
+static QString pathToUrl(const QString &path)
+{
+    const auto dir = path.left(path.lastIndexOf(u"/") + 1);
+    if (dir.at(0) == u':')
+        return QStringLiteral("qrc") + dir;
+    else
+        return QUrl::fromLocalFile(dir).toString();
+};
+
+QStringList QQmlTypeLoader::urlsForModule(const QString &module) const
+{
+    const auto &importPaths = importPathList();
+    const auto completedImportPaths = QQmlImports::completeQmldirPaths(module, importPaths, {});
+    QStringList urls;
+    for (const auto &importPath : completedImportPaths) {
+        const auto absolutePath = absoluteFilePath(importPath);
+        if (absolutePath.isEmpty())
+            continue;
+        if (const std::optional<QString> url = pathToUrl(absolutePath))
+            urls.append(url.value());
+    }
+
+    return urls;
+};
+
 /*!
 \internal
 
@@ -2043,15 +2068,9 @@ QQmlTypeLoader::LocalQmldirResult QQmlTypeLoader::locateLocalQmldir(
 
         qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
         if (!qmldirAbsoluteFilePath.isEmpty()) {
-            QString url;
-            const QString absolutePath = qmldirAbsoluteFilePath.left(
-                    qmldirAbsoluteFilePath.lastIndexOf(u'/') + 1);
-            if (absolutePath.at(0) == u':') {
-                url = QStringLiteral("qrc") + absolutePath;
-            } else {
-                url = QUrl::fromLocalFile(absolutePath).toString();
+            QString url = pathToUrl(qmldirAbsoluteFilePath);
+            if (url.startsWith(QStringLiteral("file:")))
                 sanitizeUNCPath(&qmldirAbsoluteFilePath);
-            }
 
             QQmlTypeLoaderThreadData::QmldirInfo *cache = new QQmlTypeLoaderThreadData::QmldirInfo;
             cache->version = import->version;

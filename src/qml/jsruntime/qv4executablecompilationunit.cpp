@@ -29,6 +29,9 @@
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(qv4FailOnInvalidAot, QV4_FAIL_ON_INVALID_AOT)
+DEFINE_BOOL_CONFIG_OPTION(qv4SkipAotValidation, QV4_SKIP_AOT_VALIDATION)
+
 namespace QV4 {
 
 ExecutableCompilationUnit::ExecutableCompilationUnit() = default;
@@ -147,10 +150,31 @@ void ExecutableCompilationUnit::populate()
         }
     }
 
+    const auto validateCULookupSignatures = [&]() -> bool {
+        if (qv4SkipAotValidation())
+            return true;
+        if (!m_compilationUnit->aotCompiledFunctions)
+            return true; // Non-existent code can't be invalid
+
+        Q_ASSERT(data->version >= 0x4d); // Otherwise validateLookupSignatures is uninitialized
+        const CompiledData::LookupValidationFn v = m_compilationUnit->validateLookupSignatures;
+        bool valid = v && v(engine->qmlEngine(), m_compilationUnit.data());
+
+        if (!valid && qv4FailOnInvalidAot()) {
+            // The compile time and run time AOT lookup signatures don't match. A rebuild is needed.
+            qFatal("AOT lookup signatures validation failed for file %s. A rebuild is needed. %s",
+                   fileName().toUtf8().constData(), "[QV4_FAIL_ON_INVALID_AOT]");
+        }
+        return valid;
+    };
+
     runtimeFunctions.resize(data->functionTableSize);
-    static bool ignoreAotCompiledFunctions
+    static const bool staticIgnoreAotCompiledFunctions
             = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER")
             || !(engine->diskCacheOptions() & ExecutionEngine::DiskCache::AotNative);
+
+    bool ignoreAotCompiledFunctions = staticIgnoreAotCompiledFunctions
+            || !validateCULookupSignatures();
 
     const QQmlPrivate::AOTCompiledFunction *aotFunction
             = ignoreAotCompiledFunctions ? nullptr : m_compilationUnit->aotCompiledFunctions;

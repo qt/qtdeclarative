@@ -563,6 +563,31 @@ static bool generateAotValidationCode(
     if (!writeStr("    };\n}\n"))
         return false;
 
+    const QString validateLookupSignatures = uR"(
+bool validateLookupSignatures(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu)
+{
+    enum ValidationState { Pending, Failed, Succeeded };
+    static ValidationState state = Pending;
+    if (state == Failed)
+        return false;
+    if (state == Succeeded)
+        return true;
+    const auto &expectedSignatures = expectedLookupSignatures();
+    for (const auto &[lookup, expectedSignature] : expectedSignatures.asKeyValueRange()) {
+        if (!QQmlPrivate::AOTLookupValidation::validateLookupSignature(engine, cu, lookup, expectedSignature)) {
+            state = Failed;
+            return false;
+        }
+    }
+    state = Succeeded;
+    return true;
+}
+
+)"_s;
+
+    if (!writeStr(validateLookupSignatures.toUtf8()))
+        return false;
+
     return true;
 }
 

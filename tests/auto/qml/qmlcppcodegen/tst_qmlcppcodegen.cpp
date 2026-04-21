@@ -557,6 +557,7 @@ void tst_QmlCppCodegen::initTestCase()
 #ifdef QT_TEST_FORCE_INTERPRETER
     qputenv("QV4_FORCE_INTERPRETER", "1");
 #endif
+    qputenv("QV4_FAIL_ON_INVALID_AOT", "1");
 }
 
 void tst_QmlCppCodegen::cleanupTestCase()

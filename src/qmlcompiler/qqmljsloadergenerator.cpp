@@ -108,23 +108,23 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
             const QString compiledFile = compiledFiles.at(i);
             const QString ns = qQmlJSSymbolNamespaceForPath(compiledFile);
             stream << "namespace " << ns << " { \n";
+            stream << "    extern bool validateLookupSignatures(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu);\n";
             stream << "    extern const unsigned char qmlData[];\n";
             stream << "    extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[];\n";
             stream << "    const QQmlPrivate::CachedQmlUnit unit = {\n";
-            stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0]\n";
+            stream << "        reinterpret_cast<const QV4::CompiledData::Unit*>(&qmlData), &aotBuiltFunctions[0], &validateLookupSignatures\n";
             stream << "    };\n";
             stream << "}\n";
         }
 
-        stream << "}\n\n";
+        stream << "\n}\n";
         stream << "namespace {\n";
 
         stream << "struct Registry {\n";
         stream << "    Registry();\n";
         stream << "    ~Registry();\n";
-        stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "    QHash<QString, const QQmlPrivate::CachedQmlUnit*> resourcePathToCachedUnit;\n";
-        stream << "    bool validateLookupSignatures(QQmlEngine *engine);\n";
+        stream << "    static const QQmlPrivate::CachedQmlUnit *lookupCachedUnit(const QUrl &url);\n";
         stream << "};\n\n";
         stream << "Q_GLOBAL_STATIC(Registry, unitRegistry)\n";
         stream << "\n\n";
@@ -137,7 +137,6 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
             stream << "    resourcePathToCachedUnit.insert(QStringLiteral(\"" << qrcFile << "\"), &QmlCacheGeneratedCode::" << ns << "::unit);\n";
         }
 
-        stream << "\n";
         stream << "    QQmlPrivate::RegisterQmlUnitCacheHook registration;\n";
         stream << "    registration.structVersion = 0;\n";
         stream << "    registration.lookupCachedQmlUnit = &lookupCachedUnit;\n";
@@ -157,7 +156,8 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
         stream << "    if (!resourcePath.startsWith(QLatin1Char('/')))\n";
         stream << "        resourcePath.prepend(QLatin1Char('/'));\n";
         stream << "    return unitRegistry()->resourcePathToCachedUnit.value(resourcePath, nullptr);\n";
-        stream << "}\n}\n\n";
+        stream << "}\n";
+        stream << "}\n";
 
         for (const QString &mapping: resourceFileMappings) {
             QString originalResourceFile = mapping;

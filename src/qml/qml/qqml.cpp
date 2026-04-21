@@ -7,6 +7,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmldirdata_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlfinalizer_p.h>
 #include <private/qqmlloggingcategorybase_p.h>
@@ -3199,6 +3200,258 @@ void AOTCompiledContext::setObjectImplicitDestructible(QObject *object) const
     QQmlData::get(object, true)->setImplicitDestructible();
     QV4::QObjectWrapper::ensureWrapper(engine->handle(), object);
 }
+
+namespace AOTLookupValidation {
+
+class Validator
+{
+public:
+    Validator(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu);
+
+    bool validateLookup(const Lookup &lookup, const Signature &signature);
+
+private:
+    bool validatePropertyLookup(const QMetaObject *mo, const QString &member,
+                                const PropertySignature &expected) const;
+    bool validateEnumKeyLookup(const QMetaObject *mo, const QString &member,
+                               const QString &enumName, const EnumKeySignature &expected) const;
+    bool validateMethodLookup(const QMetaObject *mo, const QString &member,
+                              const MethodSignature &expected) const;
+    bool methodMatchesSignature(const QMetaMethod &method, const QString &member,
+                                const MethodSignature &expected) const;
+
+    bool typesMatch(const QMetaType &actual, const Type &expected) const;
+    const QMetaObject *metaObjectForType(const Type &type) const;
+    QQmlRefPointer<QQmlTypeData> getTypeFromModule(const QString &moduleName,
+                                                   const QString &typeName) const;
+    QString qrcUrlForModule(const QString &moduleName) const;
+    const QMetaObject *baseMOAtDepth(const QMetaObject *mo, int depth) const;
+
+    QQmlEngine *m_engine = nullptr;
+    QV4::CompiledData::CompilationUnit *m_compilationUnit = nullptr;
+    QQmlTypeLoader *m_loader = nullptr;
+};
+
+Validator::Validator(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu)
+    : m_engine(engine), m_compilationUnit(cu), m_loader(QQmlTypeLoader::get(engine))
+{
+    Q_ASSERT(m_engine);
+    Q_ASSERT(m_compilationUnit);
+    Q_ASSERT(m_loader);
+}
+
+bool Validator::validateLookup(const Lookup &lookup, const Signature &signature)
+{
+    if (!m_engine || !m_compilationUnit || !m_loader)
+        return false;
+
+    const auto *mo = metaObjectForType(lookup.base);
+    if (!mo)
+        return false;
+
+    if (const auto *sig = std::get_if<PropertySignature>(&signature)) {
+        return validatePropertyLookup(mo, lookup.member, *sig);
+    } else if (const auto *sig = std::get_if<EnumKeySignature>(&signature)) {
+        return validateEnumKeyLookup(mo, lookup.enumName, lookup.member, *sig);
+    } else if (const auto *sig = std::get_if<MethodSignature>(&signature)) {
+        return validateMethodLookup(mo, lookup.member, *sig);
+    }
+
+    Q_UNREACHABLE_RETURN(false);
+}
+
+bool Validator::validatePropertyLookup(const QMetaObject *mo, const QString &member,
+                                       const PropertySignature &expected) const
+{
+    const int index = mo->indexOfProperty(member.toUtf8());
+    if (index == -1)
+        return false;
+
+    const auto prop = mo->property(index);
+    if (!prop.isValid())
+        return false;
+
+    if (prop.relativePropertyIndex() != expected.relativeIndex)
+        return false;
+
+    return typesMatch(prop.metaType(), expected.type);
+}
+
+bool Validator::validateEnumKeyLookup(const QMetaObject *mo, const QString &enumName,
+                                      const QString &member, const EnumKeySignature &expected) const
+{
+    const int index = mo->indexOfEnumerator(enumName.toUtf8());
+    if (index == -1)
+        return false;
+
+    const auto enumerator = mo->enumerator(index);
+    if (!enumerator.isValid())
+        return false;
+
+    if (enumerator.isFlag() != (expected.isFlag == IsFlag::Yes))
+        return false;
+
+    const auto actualValue = enumerator.keyToValue64(member.toUtf8());
+    return actualValue.has_value() && expected.value == *actualValue;
+}
+
+bool Validator::methodMatchesSignature(const QMetaMethod &method, const QString &member,
+                                       const MethodSignature &expected) const
+{
+    if (method.nameView() != member.toUtf8())
+        return false;
+
+    if (method.relativeMethodIndex() != expected.relativeIndex)
+        return false;
+
+    if ((method.methodType() == QMetaMethod::Signal) != (expected.isSignal == IsSignal::Yes))
+        return false;
+
+    if (!typesMatch(method.returnMetaType(), expected.types[0]))
+        return false;
+
+    const int paramCount = method.parameterCount();
+    const auto &expectedParamNames = expected.paramNames;
+    if (paramCount != int(expectedParamNames.size()))
+        return false;
+
+    const auto actualParameterNames = method.parameterNames();
+    for (int i = 0; i < paramCount; ++i) {
+        if (actualParameterNames[i] != expectedParamNames[i].toUtf8())
+            return false;
+    }
+
+    const auto &expectedParamTypes = expected.types;
+    for (int i = 0; i < paramCount; ++i) {
+        if (!typesMatch(method.parameterMetaType(i), expectedParamTypes[i + 1]))
+            return false;
+    }
+    return true;
+}
+
+bool Validator::validateMethodLookup(const QMetaObject *mo, const QString &member,
+                                     const MethodSignature &expected) const
+{
+    // Iterate in reverse to match method resolution
+    for (int i = mo->methodCount() - 1; i >= 0; --i) {
+        if (methodMatchesSignature(mo->method(i), member, expected))
+            return true;
+    }
+
+    return false;
+}
+
+static QByteArrayView trimConstPointer(QByteArrayView typeName)
+{
+    QByteArrayView noConst = typeName.trimmed();
+    const QByteArrayView c = "const";
+    if (noConst.startsWith(c))
+        noConst.slice(c.length());
+    QByteArrayView res = noConst.trimmed();
+    for (auto it = typeName.crbegin(); it != typeName.crend(); ++it) {
+        if (*it == ' ' || *it == '*')
+            res = res.chopped(1);
+        else
+            break;
+    }
+    return res;
+}
+
+bool Validator::typesMatch(const QMetaType &actual, const Type &expected) const
+{
+    if (expected.isComposite == IsComposite::No) {
+        // TODO this just checks the T, not the indirection level (QTBUG-147142)
+        const QByteArray actualStar = trimConstPointer(actual.name()) + '*';
+        const QByteArray expectedStar = trimConstPointer(expected.name.toLatin1()) + '*';
+        return QMetaType::fromName(actualStar) == QMetaType::fromName(expectedStar);
+    }
+
+    const auto *actualMo = actual.metaObject();
+    if (!actualMo)
+        return false;
+
+    const auto *expectedMO = metaObjectForType(expected);
+    if (!expectedMO)
+        return false;
+
+    return actualMo == expectedMO;
+}
+
+const QMetaObject *Validator::metaObjectForType(const Type &type) const
+{
+    if (type.isComposite == IsComposite::No) {
+        const QString &extensionTypeName = type.icNameOrExtensionTypeName;
+        const QString &typeName = extensionTypeName.isEmpty() ? type.name : extensionTypeName;
+        const QString typeNameStar = typeName + u'*';
+        const QMetaType mt = QMetaType::fromName(typeNameStar.toUtf8());
+        return mt.metaObject();
+    }
+
+    if (type.module.isEmpty() || type.name.isEmpty())
+        return nullptr;
+
+    const auto typeData = getTypeFromModule(type.module, type.name);
+    if (typeData.isNull())
+        return nullptr;
+
+    if (type.isInlineComponent == IsIC::Yes)
+        return typeData->qmlType(type.icNameOrExtensionTypeName).typeId().metaObject();
+
+    const auto *cu = typeData->compilationUnit();
+    if (!cu)
+        return nullptr;
+
+    return cu->metaType().metaObject();
+}
+
+QQmlRefPointer<QQmlTypeData> Validator::getTypeFromModule(const QString &moduleName,
+                                                          const QString &typeName) const
+{
+    QString typeUrl;
+    if (moduleName == s_thisCuModule && typeName == s_thisCuType) {
+        typeUrl = m_compilationUnit->finalUrlString();
+    } else {
+        Q_ASSERT(moduleName != s_thisCuModule);
+        Q_ASSERT(typeName != s_thisCuType);
+
+        QString moduleUrl = qrcUrlForModule(moduleName);
+        if (moduleUrl.isEmpty())
+            return {};
+
+        QQmlDirParser parser; // TODO avoid reparsing?
+        const QUrl qmldirUrl(moduleUrl + QStringLiteral("qmldir"));
+        const auto *data = m_loader->getQmldir(qmldirUrl).data();
+        if (!parser.parse(data->content()))
+            return {};
+
+        const auto &components = parser.components();
+        const auto it = components.constFind(typeName);
+        if (it == components.constEnd())
+            return {};
+
+        typeUrl = moduleUrl + it->fileName;
+    }
+
+    return m_loader->getType(QUrl(typeUrl), QQmlTypeLoader::Synchronous);
+};
+
+QString Validator::qrcUrlForModule(const QString &moduleName) const
+{
+    for (const auto &url : m_loader->urlsForModule(moduleName)) {
+        if (url.startsWith(QStringLiteral("qrc")))
+            return url;
+    }
+    return QString();
+}
+
+bool validateLookupSignature(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu,
+                             const Lookup &lookup, const Signature &signature)
+{
+    Validator validator(engine, cu);
+    return validator.validateLookup(lookup, signature);
+}
+
+} // namespace AOTLookupValidation
 
 } // namespace QQmlPrivate
 

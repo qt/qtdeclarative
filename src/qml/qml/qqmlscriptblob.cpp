@@ -121,7 +121,8 @@ void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *
 {
     assertTypeLoaderThread();
     initializeFromCompilationUnit(QQml::makeRefPointer<QV4::CompiledData::CompilationUnit>(
-            cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, urlString(), finalUrlString()));
+            cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
+            cachedUnit->validateLookupSignatures, urlString(), finalUrlString()));
 }
 
 void QQmlScriptBlob::done()

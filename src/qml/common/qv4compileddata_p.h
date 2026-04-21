@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
 // Also update the comparison functions in qqmlpreviewdiff.cpp when you change the data structures.
-#define QV4_DATA_STRUCTURE_VERSION 0x4c // Dropped enum value location
+#define QV4_DATA_STRUCTURE_VERSION 0x4d // Added AOT lookup validation
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -1464,6 +1464,7 @@ struct CompilationUnit final : public QQmlRefCounted<CompilationUnit>
     const QmlUnit *qmlData = nullptr;
     QStringList dynamicStrings;
     const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions = nullptr;
+    LookupValidationFn validateLookupSignatures = nullptr;
 
     // pointers either to data->constants() or little-endian memory copy.
     const StaticValue *constants = nullptr;
@@ -1503,11 +1504,15 @@ public:
         bool contains(int) { return false; }
     };
 
-    explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
-                             const QString &fileName = QString(), const QString &finalUrlString = QString())
+    explicit CompilationUnit(const Unit *unitData,
+                             const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
+                             LookupValidationFn validateLookupSignatures,
+                             const QString &fileName = QString(),
+                             const QString &finalUrlString = QString())
         : CompilationUnit(unitData, fileName, finalUrlString)
     {
         this->aotCompiledFunctions = aotCompiledFunctions;
+        this->validateLookupSignatures = validateLookupSignatures;
     }
 
     Q_QML_EXPORT CompilationUnit(
