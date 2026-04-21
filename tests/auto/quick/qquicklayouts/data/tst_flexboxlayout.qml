@@ -374,17 +374,44 @@ Item {
             rectItem3.Layout.preferredHeight = 40
             waitForItemPolished(flexboxLayout)
 
-            // alignContent: FlexboxLayout.AlignStart
-            compare(flexboxLayout.alignContent, FlexboxLayout.AlignStart)
+            // alignContent: FlexboxLayout.AlignStretch
+            compare(flexboxLayout.alignContent, FlexboxLayout.AlignStretch)
             compare(rectItem1.x, 0)
             compare(rectItem1.y, 0)
             compare(rectItem2.x, rectItem1.implicitWidth)
             compare(rectItem2.y, 0)
             compare(rectItem3.x, 0)
-            compare(rectItem3.y, Math.max(rectItem1.height, rectItem2.height))
+            compare(rectItem3.y, flexboxLayout.height/2)
+
+            // make the two lines different in height
+            rectItem3.Layout.preferredHeight = 30
+            waitForItemPolished(flexboxLayout)
+
+            /*
+            With AlignStretch+wrap, each line is distributed as following:
+
+                [20x20] - [20,40]   // 1st line height is 40  (WRAPS HERE)
+                [30x30]             // 2nd line height is 30
+                Layout is 100 tall, this means there is 100 - 40 - 30 = 30 pixels in surplus to distribute
+                These are distributed evenly to each line, so the effective line
+                will have 15 pixels extra height to each line:
+                    1st line height 40+15 = 55  (WRAPS HERE)
+                    2nd line height 30+15 = 45
+            */
+            let surplus = flexboxLayout.height - 40 - 30
+            compare(rectItem3.y, 40 + surplus/2)
+
+            // Test with gaps along the cross-axis
+            flexboxLayout.rowGap = 8
+            waitForItemPolished(flexboxLayout)
+            surplus = flexboxLayout.height - 40 - 8 - 30
+            compare(rectItem3.y, 40 + surplus/2 + 8)
+
 
             // alignContent: FlexboxLayout.AlignCenter
             flexboxLayout.alignContent = FlexboxLayout.AlignCenter
+            flexboxLayout.rowGap = 0
+            rectItem3.Layout.preferredHeight = 40
             waitForItemPolished(flexboxLayout)
             compare(flexboxLayout.alignContent, FlexboxLayout.AlignCenter)
             const yCenterPos = flexboxLayout.height / 2 - (Math.max(rectItem1.height, rectItem2.height) + rectItem3.height) / 2
@@ -469,6 +496,7 @@ Item {
             // direction: FlexboxLayout.Column
             // wrap: FlexboxLayout.Wrap
             flexboxLayout.direction = FlexboxLayout.Column
+            flexboxLayout.alignContent = FlexboxLayout.AlignStart
             waitForItemPolished(flexboxLayout)
             compare(flexboxLayout.direction, FlexboxLayout.Column)
             flexboxLayout.wrap = FlexboxLayout.Wrap
@@ -616,6 +644,7 @@ Item {
             let flexboxLayout = createTemporaryObject(flexboxLayoutComponent1, container)
             flexboxLayout.width = 60
             flexboxLayout.height = 100
+            flexboxLayout.alignContent = FlexboxLayout.AlignStart
             waitForItemPolished(flexboxLayout)
             compare(flexboxLayout.width, 60)
             compare(flexboxLayout.height, 100)

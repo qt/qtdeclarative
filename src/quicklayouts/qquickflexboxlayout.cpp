@@ -94,7 +94,7 @@ private:
     QQuickFlexboxLayout::FlexboxAlignment m_alignItems = QQuickFlexboxLayout::AlignStart;
     // Align items within the layout in the multi-line containter (i.e. with
     // wrap enabled) and its aligned to the cross axis of the flexbox layout
-    QQuickFlexboxLayout::FlexboxAlignment m_alignContent = QQuickFlexboxLayout::AlignStart;
+    QQuickFlexboxLayout::FlexboxAlignment m_alignContent = QQuickFlexboxLayout::AlignStretch;
     // Align content item in the multi-line containter and its aligned to the
     // main axis of the flexbox layout
     QQuickFlexboxLayout::FlexboxJustify m_justifyContent = QQuickFlexboxLayout::JustifyStart;
@@ -255,15 +255,15 @@ void QQuickFlexboxLayout::setAlignItems(QQuickFlexboxLayout::FlexboxAlignment al
 
     Possible values:
 
-    \value FlexboxLayout.AlignStart         (default) Flex lines are aligned to
+    \value FlexboxLayout.AlignStart         Flex lines are aligned to
                                             the start of the flex box layout.
     \value FlexboxLayout.AlignCenter        Flex lines are aligned along the
                                             center of the flex box layout.
     \value FlexboxLayout.AlignEnd           Flex lines are aligned to the end
                                             of the flex box layout.
-    \value FlexboxLayout.AlignStretch       Flex lines are stretched according
-                                            to the height of the flex box
-                                            layout.
+    \value FlexboxLayout.AlignStretch       (default) Flex lines are stretched
+                                            according to the height of the flex
+                                            box layout.
     \value FlexboxLayout.AlignSpaceBetween  The spaces are evenly distributed
                                             between the lines and no space
                                             along the edge of the flex box
