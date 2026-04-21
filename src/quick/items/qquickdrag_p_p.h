@@ -49,6 +49,7 @@ public:
         , active(false)
         , listening(false)
         , inEvent(false)
+        , executingNativeDrag(false)
         , dragRestarted(false)
         , itemMoved(false)
         , eventQueued(false)
@@ -83,6 +84,7 @@ public:
     bool active : 1;
     bool listening : 1;
     bool inEvent : 1;
+    bool executingNativeDrag : 1;
     bool dragRestarted : 1;
     bool itemMoved : 1;
     bool eventQueued : 1;
