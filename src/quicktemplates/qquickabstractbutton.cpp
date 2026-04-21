@@ -32,7 +32,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_STATIC_LOGGING_CATEGORY(lcAction, "qt.quick.controls.abstractbutton.action")
+Q_STATIC_LOGGING_CATEGORY(lcButtonAction, "qt.quick.controls.abstractbutton.action")
 
 /*!
     \qmltype AbstractButton
@@ -936,7 +936,7 @@ QQuickAction *QQuickAbstractButton::action() const
 void QQuickAbstractButton::setAction(QQuickAction *action)
 {
     Q_D(QQuickAbstractButton);
-    qCDebug(lcAction) << this << "setAction called with" << action;
+    qCDebug(lcButtonAction) << this << "setAction called with" << action;
     if (d->action == action)
         return;
 
