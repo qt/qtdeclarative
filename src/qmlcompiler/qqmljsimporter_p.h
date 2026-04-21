@@ -243,9 +243,12 @@ private:
     };
 
     struct Import {
+        enum Type : bool { Directory, Qmldir };
+
         QString name;
         bool isStaticModule = false;
         bool isSystemModule = false;
+        Type type = Directory;
 
         QList<QQmlJSExportedScope> objects;
         QHash<QString, QQmlJSExportedScope> scripts;
@@ -303,7 +306,7 @@ private:
 
     QHash<std::pair<QString, QTypeRevision>, QString> m_seenImports;
     QHash<QQmlJS::Import, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
-    QHash<QString, Import> m_seenQmldirFiles;
+    QHash<QString, Import> m_seenQmldirFilesAndDirectories;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_globalWarnings;

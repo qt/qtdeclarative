@@ -44,6 +44,16 @@ static const QString prefixedName(const QString &prefix, const QString &name)
     return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
 }
 
+template <typename T>
+static QString ensureSlashQmldir(T &&path)
+{
+    if (path.endsWith(SlashQmldir))
+        return path;
+    if (path.endsWith(u'/'))
+        return path + "qmldir"_L1;
+    return path + SlashQmldir;
+}
+
 QQmlDirParser QQmlJSImporter::createQmldirParserForFile(const QString &filename, Import *import)
 {
     Q_ASSERT(import);
@@ -200,7 +210,7 @@ static QString resolvePreferredPath(
 
         Q_ASSERT(prefer.endsWith(u'/'));
         const auto entry = mapper->entry(
-                QQmlJSResourceFileMapper::resourceFileFilter(prefer.mid(1) + SlashQmldir.mid(1)));
+                QQmlJSResourceFileMapper::resourceFileFilter(ensureSlashQmldir(prefer.mid(1))));
 
         // This can be empty if the .qrc files does not belong to this module.
         // In that case we trust the given qmldir file.
@@ -210,7 +220,7 @@ static QString resolvePreferredPath(
     }
 
     // Host file system path. This should be rare. We don't generate it.
-    const QFileInfo f(prefer + SlashQmldir);
+    const QFileInfo f(ensureSlashQmldir(prefer));
     const QString canonical = f.canonicalFilePath();
     if (canonical.isEmpty()) {
         qWarning() << "No qmldir at" << prefer;
@@ -222,7 +232,7 @@ static QString resolvePreferredPath(
 QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
 {
     Import result;
-    const QString moduleQmldirPath = modulePath + SlashQmldir;
+    const QString moduleQmldirPath = ensureSlashQmldir(modulePath);
     auto reader = createQmldirParserForFile(moduleQmldirPath, &result);
 
     const QString resolvedQmldirPath
@@ -238,6 +248,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
 
     result.isStaticModule = reader.isStaticModule();
     result.isSystemModule = reader.isSystemModule();
+    result.type = Import::Qmldir;
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
 
@@ -325,6 +336,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &modulePath)
 QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
 {
     Import import;
+    import.type = Import::Directory;
     if (directory.startsWith(u':')) {
         if (m_mapper) {
             const auto resources = m_mapper->filter(
@@ -782,7 +794,7 @@ QList<QQmlJS::DiagnosticMessage> QQmlJSImporter::importQmldirs(const QStringList
         }
 
         warnings.append(result.warnings);
-        m_seenQmldirFiles.insert(qmldirName, result);
+        m_seenQmldirFilesAndDirectories.insert(qmldirName, result);
 
         for (const auto &object : std::as_const(result.objects)) {
             for (const auto &ex : object.exports) {
@@ -870,8 +882,8 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
         if (it->isEmpty())
             return false;
 
-        Q_ASSERT(m_seenQmldirFiles.contains(*it));
-        const QQmlJSImporter::Import import = m_seenQmldirFiles.value(*it);
+        Q_ASSERT(m_seenQmldirFilesAndDirectories.contains(*it));
+        const QQmlJSImporter::Import import = m_seenQmldirFilesAndDirectories.value(*it);
 
         importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
         processImport(cacheKey, import, precedence, cacheTypes.get());
@@ -884,7 +896,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
     QStringList modulePaths;
     if (isFile) {
         const auto import = readDirectory(module);
-        m_seenQmldirFiles.insert(module, import);
+        m_seenQmldirFilesAndDirectories.insert(module, import);
         m_seenImports.insert(importId, module);
         importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
         processImport(cacheKey, import, precedence, cacheTypes.get());
@@ -901,14 +913,12 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
     }
 
     for (auto const &modulePath : std::as_const(modulePaths)) {
-        QString qmldirPath = modulePath + SlashQmldir;
+        QString qmldirPath = ensureSlashQmldir(modulePath);
         if (modulePath.startsWith(u':')) {
             if (module == "QML"_L1) {
                 // Do not try to map the builtins' resource path.
             } else if (m_mapper) {
-                const QString resourcePath = modulePath.mid(
-                            1, modulePath.endsWith(u'/') ? modulePath.size() - 2 : -1)
-                        + SlashQmldir;
+                const QString resourcePath = ensureSlashQmldir(modulePath.mid(1));
                 const auto entry = m_mapper->entry(
                             QQmlJSResourceFileMapper::resourceFileFilter(resourcePath));
                 qmldirPath = entry.filePath;
@@ -919,33 +929,31 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
             }
         }
 
-        const auto it = m_seenQmldirFiles.constFind(qmldirPath);
-        if (it != m_seenQmldirFiles.constEnd()) {
-            const QQmlJSImporter::Import import = *it;
+        const auto setupImport = [&](const QQmlJSImporter::Import &import) {
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
+            // Potentially merges with the result of readDirectory() above.
             processImport(cacheKey, import, precedence, cacheTypes.get());
-
             const bool typesFromCache = getTypesFromCache();
             Q_ASSERT(typesFromCache);
             return typesFromCache;
-        }
+        };
+
+        // Check whether we need to import again below, reading the qmldir this time.
+        const auto it = m_seenQmldirFilesAndDirectories.constFind(qmldirPath);
+        if (it != m_seenQmldirFilesAndDirectories.constEnd() && it->type == Import::Qmldir)
+            return setupImport(*it);
 
         const QFileInfo file(qmldirPath);
         if (file.exists()) {
             const auto import = readQmldir(file.canonicalPath());
             setQualifiedNamesOn(import);
-            m_seenQmldirFiles.insert(qmldirPath, import);
-            m_seenImports.insert(importId, qmldirPath);
-            importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
-
-            // Potentially merges with the result of readDirectory() above.
-            processImport(cacheKey, import, precedence, cacheTypes.get());
-
-            const bool typesFromCache = getTypesFromCache();
-            Q_ASSERT(typesFromCache);
-            return typesFromCache;
+            m_seenQmldirFilesAndDirectories.insert(qmldirPath, import);
+            return setupImport(import);
         }
+
+        if (it != m_seenQmldirFilesAndDirectories.constEnd())
+            return setupImport(*it);
     }
 
     if (isFile) {
@@ -1009,7 +1017,7 @@ void QQmlJSImporter::clearCache()
 {
     m_seenImports.clear();
     m_cachedImportTypes.clear();
-    m_seenQmldirFiles.clear();
+    m_seenQmldirFilesAndDirectories.clear();
     m_importedFiles.clear();
     m_builtins.reset();
 }
