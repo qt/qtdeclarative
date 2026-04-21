@@ -2081,8 +2081,8 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     const QGradient *strokeGradient = m_styleResolver->currentStrokeGradient();
     auto strokeStyle = node->style().stroke;
     bool hasStrokePattern = strokeStyle
-                            && strokeStyle->style()
-                            && strokeStyle->style()->type() == QSvgStyleProperty::PATTERN;
+                            && strokeStyle->paintServer()
+                            && strokeStyle->paintServer()->type() == QSvgPaintServer::Type::Pattern;
 
     info.path.setDefaultValue(QVariant::fromValue(path));
     info.fillColor.setDefaultValue(m_styleResolver->currentFillColor());
@@ -2101,15 +2101,16 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
     if (fillStyle) {
         info.fillRule = fillStyle->fillRule();
 
-        if (fillStyle->style() && fillStyle->style()->type() == QSvgStyleProperty::PATTERN) {
-            QSvgPatternStyle *patternStyle = static_cast<QSvgPatternStyle *>(fillStyle->style());
-            info.patternId = findOrCreateId(patternStyle->patternNode()->nodeId());
+        if (fillStyle->paintServer()
+            && fillStyle->paintServer()->type() == QSvgPaintServer::Type::Pattern) {
+            QSvgPatternPaint *paintServer = static_cast<QSvgPatternPaint *>(fillStyle->paintServer());
+            info.patternId = findOrCreateId(paintServer->patternNode()->nodeId());
 
             // The fill transform in the style resolver is a calculated transform which contains
             // the inverse of the QPainter's world transform at the given time to negate any other
             // transform set. We avoid this by generating the pattern definition in isolation and
             // ignore its transform, so we just use the raw pattern transform from the input here.
-            info.fillTransform = patternStyle->patternNode()->transform();
+            info.fillTransform = paintServer->patternNode()->transform();
         }
     }
 
@@ -2121,9 +2122,9 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
         PathNodeInfo strokeInfo;
         fillCommonNodeInfo(node, strokeInfo, QStringLiteral("_stroke"));
 
-        QSvgPatternStyle *patternStyle = static_cast<QSvgPatternStyle *>(strokeStyle->style());
-        strokeInfo.patternId = findOrCreateId(patternStyle->patternNode()->nodeId());
-        strokeInfo.fillTransform = patternStyle->patternNode()->transform();
+        QSvgPatternPaint *paintServer = static_cast<QSvgPatternPaint *>(strokeStyle->paintServer());
+        strokeInfo.patternId = findOrCreateId(paintServer->patternNode()->nodeId());
+        strokeInfo.fillTransform = paintServer->patternNode()->transform();
 
         QPainterPathStroker stroker(m_styleResolver->currentStroke());
         strokeInfo.path.setDefaultValue(QVariant::fromValue(stroker.createStroke(path)));
