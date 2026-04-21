@@ -479,13 +479,98 @@ Q_UNUSED(aotContext)
 Q_UNUSED(argv)
 )";
 
+static QString wrapString(const QString &s)
+{
+    return "u\"%1\"_s"_L1.arg(s);
+}
+
+static QString typeToString(const QQmlPrivate::AOTLookupValidation::Type &type)
+{
+    bool isComposite = type.isComposite == QQmlPrivate::AOTLookupValidation::IsComposite::Yes;
+    bool isIC = type.isInlineComponent == QQmlPrivate::AOTLookupValidation::IsIC::Yes;
+    return u"Type{ %1, %2, %3, %4, %5 }"_s
+            .arg(wrapString(type.module), wrapString(type.name),
+                 wrapString(type.icNameOrExtensionTypeName),
+                 isComposite ? "IsComposite::Yes"_L1 : "IsComposite::No"_L1,
+                 isIC ? "IsIC::Yes"_L1 : "IsIC::No"_L1);
+};
+
+static QString lookupToString(const QQmlPrivate::AOTLookupValidation::Lookup &lookup)
+{
+    return "Lookup{ %1, %2, %3 }"_L1.arg(typeToString(lookup.base), wrapString(lookup.member),
+                                         wrapString(lookup.enumName));
+};
+
+static QString signatureToString(const QQmlPrivate::AOTLookupValidation::Signature &signature)
+{
+    if (const auto *p = std::get_if<QQmlPrivate::AOTLookupValidation::PropertySignature>(&signature)) {
+        return u"PropertySignature{ %1, %2 }"_s
+                .arg(typeToString(p->type), QString::number(p->relativeIndex));
+    } else if (const auto *e = std::get_if<QQmlPrivate::AOTLookupValidation::EnumKeySignature>(&signature)) {
+        bool isFlag = e->isFlag == QQmlPrivate::AOTLookupValidation::IsFlag::Yes;
+        return u"EnumKeySignature{ %1, %2 }"_s
+                .arg(QString::number(e->value), isFlag ? "IsFlag::Yes"_L1 : "IsFlag::No"_L1);
+    } else if (const auto *m = std::get_if<QQmlPrivate::AOTLookupValidation::MethodSignature>(&signature)) {
+        QString paramNames = "{ "_L1;
+        for (const auto &paramName : m->paramNames)
+            paramNames += wrapString(paramName) + ", "_L1;
+        paramNames += u'}';
+
+        QString types = "{ "_L1;
+        for (const auto &paramType : m->types)
+            types += typeToString(paramType) + ", "_L1;
+        types += u'}';
+
+        bool isSignal = m->isSignal == QQmlPrivate::AOTLookupValidation::IsSignal::Yes;
+        return u"MethodSignature{ %1, %2, %3, %4 }"_s
+                .arg(paramNames, types, QString::number(m->relativeIndex),
+                     isSignal ? "IsSignal::Yes"_L1 : "IsSignal::No"_L1);
+    }
+    Q_UNREACHABLE_RETURN(QString());
+};
+
+template <typename WriteStr>
+static bool generateAotValidationCode(
+        const WriteStr &writeStr, const LookupSignatures &lookupSignatures)
+{
+    using namespace QQmlPrivate::AOTLookupValidation;
+    if (!writeStr("QQmlPrivate::AOTLookupValidation::LookupSignatures expectedLookupSignatures()\n"
+                  "{\n"
+                  "    using namespace Qt::StringLiterals;\n"
+                  "    using namespace QQmlPrivate::AOTLookupValidation;\n"
+                  "    return {\n")) {
+        return false;
+    }
+
+    const auto &signatures = lookupSignatures.asKeyValueRange();
+    QList<std::pair<Lookup, Signature>> sorted{ signatures.begin(), signatures.end() };
+    std::stable_sort(sorted.begin(), sorted.end(), [&](const auto &lhs, const auto &rhs) {
+        const auto &lTypeString = typeToString(lhs.first.base);
+        const auto &rTypeString = typeToString(rhs.first.base);
+        if (lTypeString == rTypeString)
+            return lhs.first.member < rhs.first.member;
+        return lTypeString < rTypeString;
+    });
+
+    for (const auto &[memberlookup, signature] : sorted) {
+        if (!writeStr("        { %1, %2 },\n"_L1
+                              .arg(lookupToString(memberlookup), signatureToString(signature))
+                              .toLatin1())) {
+            return false;
+        }
+    }
+
+    if (!writeStr("    };\n}\n"))
+        return false;
+
+    return true;
+}
+
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
                          const QV4::CompiledData::SaveableUnitPointer &unit,
                          const QQmlJSAotFunctionMap &aotFunctions,
                          const LookupSignatures &lookupSignatures, QString *errorString)
 {
-    Q_UNUSED(lookupSignatures); // TODO
-
 #if QT_CONFIG(temporaryfile)
     QSaveFile f(outputFileName);
 #else
@@ -516,6 +601,9 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (!writeStr("#include <QtQml/qqmlprivate.h>\n"))
         return false;
 
+    if (!writeStr("#include <QtCore/qhash.h>\n"))
+        return false;
+
     if (!aotFunctions.isEmpty()) {
         QStringList includes;
 
@@ -530,13 +618,19 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         }
     }
 
-    if (!writeStr(QByteArrayLiteral("namespace QmlCacheGeneratedCode {\nnamespace ")))
+    if (!writeStr(QByteArrayLiteral("\nnamespace QmlCacheGeneratedCode {\nnamespace ")))
         return false;
 
     if (!writeStr(qQmlJSSymbolNamespaceForPath(inputFileName).toUtf8()))
         return false;
 
-    if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [];\n"
+    if (!writeStr(" {\n"))
+        return false;
+
+    if (!generateAotValidationCode(writeStr, lookupSignatures))
+        return false;
+
+    if (!writeStr(QByteArrayLiteral("extern const unsigned char qmlData alignas(16) [];\n"
                                     "extern const unsigned char qmlData alignas(16) [] = {\n")))
         return false;
 
