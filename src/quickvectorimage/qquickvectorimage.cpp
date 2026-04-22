@@ -4,23 +4,15 @@
 #include <QtCore/qurl.h>
 #include "qquickvectorimage_p.h"
 #include "qquickvectorimage_p_p.h"
+#include "qquickvectorimageincubator_p.h"
 #include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
-#include <QtQuickVectorImageGenerator/private/qquickvectorimageplugin_p.h>
 #include <QtCore/qloggingcategory.h>
 
 #include <private/qquicktranslate_p.h>
 #include <private/qquickanimation_p.h>
 
-#include <private/qfactoryloader_p.h>
-
 QT_BEGIN_NAMESPACE
-
-Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, vectorImagePluginLoader,
-                          (QQuickVectorImageFormatsPluginFactory_iid,
-                           QLatin1String("/vectorimageformats"),
-                           Qt::CaseInsensitive))
-
 
 /*!
     \qmlmodule QtQuick.VectorImage
@@ -67,7 +59,8 @@ void QQuickVectorImagePrivate::loadFile()
     if (!q->isComponentComplete())
         return;
 
-    QUrl resolvedUrl = qmlContext(q)->resolvedUrl(sourceFile);
+    QQmlContext *ctx = qmlContext(q);
+    QUrl resolvedUrl = ctx->resolvedUrl(sourceFile);
     QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
 
     if (localFile.isEmpty())
@@ -75,6 +68,27 @@ void QQuickVectorImagePrivate::loadFile()
 
     if (rootItem)
         rootItem->deleteLater();
+
+    if (incubator != nullptr) {
+        // If the incubator is still alive, it means it was interrupted before we could add the
+        // object to the parent item.
+        QObject *obj = incubator->object();
+        delete obj;
+
+        incubator->disconnect(q);
+        incubator->deleteLater();
+    }
+
+    QQmlIncubator::IncubationMode mode = asynchronous
+                                             ? QQmlIncubator::Asynchronous
+                                             : QQmlIncubator::Synchronous;
+
+    if (!context || context->engine() != qmlContext(q)->engine())
+        context.reset(new QQmlContext(qmlContext(q)->engine()));
+
+    incubator = new QQuickVectorImageIncubator(mode, context.get(), q);
+    QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::statusChanged);
+    QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::updateItem);
 
     rootItem = new QQuickItem(q);
     rootItem->setParentItem(q);
@@ -86,46 +100,60 @@ void QQuickVectorImagePrivate::loadFile()
         flags.setFlag(QQuickVectorImageGenerator::AssumeTrustedSource);
     if (m_asyncShapes)
         flags.setFlag(QQuickVectorImageGenerator::AsyncShapes);
+    if (asynchronous)
+        flags.setFlag(QQuickVectorImageGenerator::AsynchronousLoading);
 
-    if (!m_qmlContext || m_qmlContext->engine() != qmlContext(q)->engine())
-        m_qmlContext.reset(new QQmlContext(qmlContext(q)->engine()));
+    incubator->start(localFile, flags);
+}
 
-    QQuickItemGenerator generator(localFile, flags, rootItem, m_qmlContext.get());
-
-    // If we assume trusted source, we try plugins first
-    bool generatedWithPlugin = false;
-    if (assumeTrustedSource) {
-        QFactoryLoader *loader = vectorImagePluginLoader();
-
-        const qsizetype count = loader->keyMap().size();
-        for (qsizetype i = 0; i <= count && !generatedWithPlugin; ++i) {
-            QQuickVectorImagePlugin *plugin = qobject_cast<QQuickVectorImagePlugin *>(loader->instance(i));
-            if (plugin != nullptr)
-                generatedWithPlugin = plugin->generate(localFile, &generator);
-        }
+void QQuickVectorImage::updateItem()
+{
+    Q_D(QQuickVectorImage);
+    if (d->incubator == nullptr
+        || d->incubator->object() == nullptr
+        || !d->incubator->isReady()
+        || d->rootItem == nullptr) {
+        return;
     }
 
-    if (!generatedWithPlugin)
-        generator.generate();
+    QQuickItem *item = qobject_cast<QQuickItem *>(d->incubator->object());
+    if (item == nullptr) {
+        qCWarning(lcQuickVectorImage) << "QQuickItemGenerator::generateRootItem: Root item not a QQuickItem:"
+                                      << d->incubator->errors();
+        return;
+    }
 
-    q->setImplicitWidth(rootItem->width());
-    q->setImplicitHeight(rootItem->height());
+    if (item->width() == 0 || item->height() == 0)
+        return;
+
+    d->rootItem->setImplicitWidth(item->width());
+    d->rootItem->setImplicitHeight(item->height());
+
+    item->setParent(d->rootItem);
+    item->setParentItem(d->rootItem);
+
+    setImplicitWidth(d->rootItem->width());
+    setImplicitHeight(d->rootItem->height());
+
+    updateAnimationProperties();
+    updateRootItemScale();
+    update();
 
     static int freezeTime = qEnvironmentVariableIntValue("QT_QUICKVECTORIMAGE_FREEZE");
     if (freezeTime != 0) {
         if (freezeTime < 0)
             freezeTime = 400; // TBD: calculate better default, e.g. midtime of total anim duration
-        q->animations()->setPaused(true);
-        const QList<QQuickAbstractAnimation *> anims = rootItem->findChildren<QQuickAbstractAnimation *>();
+        animations()->setPaused(true);
+        const QList<QQuickAbstractAnimation *> anims = d->rootItem->findChildren<QQuickAbstractAnimation *>();
         for (QQuickAbstractAnimation *anim : anims) {
             if (anim->group() == nullptr)
                 anim->setCurrentTime(freezeTime);
         }
     }
 
-    q->updateAnimationProperties();
-    q->updateRootItemScale();
-    q->update();
+    d->incubator->disconnect(this);
+    d->incubator->deleteLater();
+    d->incubator = nullptr;
 }
 
 /*!
@@ -156,6 +184,14 @@ QQuickVectorImage::QQuickVectorImage(QQuickItem *parent)
     QObject::connect(this, &QQuickItem::widthChanged, this, &QQuickVectorImage::updateRootItemScale);
     QObject::connect(this, &QQuickItem::heightChanged, this, &QQuickVectorImage::updateRootItemScale);
     QObject::connect(this, &QQuickVectorImage::fillModeChanged, this, &QQuickVectorImage::updateRootItemScale);
+}
+
+QQuickVectorImage::~QQuickVectorImage()
+{
+    Q_D(QQuickVectorImage);
+    // This may have a running thread, so we need to delete it before we start deleting children
+    delete d->incubator;
+    d->incubator = nullptr;
 }
 
 /*!
@@ -327,6 +363,8 @@ void QQuickVectorImage::setPreferredRendererType(RendererType newPreferredRender
     responsiveness.
 
     By default this property is \c false.
+
+    \sa asynchronous
 */
 
 bool QQuickVectorImage::asynchronousShapes() const
@@ -342,6 +380,62 @@ void QQuickVectorImage::setAsynchronousShapes(bool asynchronous)
         return;
     d->m_asyncShapes = asynchronous;
     emit asynchronousShapesChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.VectorImage::VectorImage::asynchronous
+    \since 6.12
+
+    This property holds whether the image will be loaded asynchronously. When set to to \c true,
+    the UI will remain reactive while the image is loading. The \l status property can be used
+    to check the current progress.
+
+    By default this property is \c false.
+
+    \sa asynchronousShapes, status
+*/
+
+bool QQuickVectorImage::asynchronous() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->asynchronous;
+}
+
+void QQuickVectorImage::setAsynchronous(bool asynchronous)
+{
+    Q_D(QQuickVectorImage);
+    if (d->asynchronous == asynchronous)
+        return;
+    d->asynchronous = asynchronous;
+    emit asynchronousChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.VectorImage::VectorImage::status
+    \since 6.12
+*/
+QQuickVectorImage::Status QQuickVectorImage::status() const
+{
+    Q_D(const QQuickVectorImage);
+    if (d->incubator == nullptr) {
+        if (d->rootItem == nullptr)
+            return Status::Null;
+        else
+            return Status::Ready;
+    }
+
+    switch (d->incubator->status()) {
+    case QQmlIncubator::Null:
+        return Status::Null;
+    case QQmlIncubator::Loading:
+        return Status::Loading;
+    case QQmlIncubator::Error:
+        return Status::Error;
+    case QQmlIncubator::Ready:
+        return Status::Ready;
+    };
+
+    return Status::Error;
 }
 
 /*!

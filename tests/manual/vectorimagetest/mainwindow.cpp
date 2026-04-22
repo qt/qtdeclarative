@@ -14,6 +14,8 @@
 #include <QSlider>
 #include <QCheckBox>
 
+#include <QQuickView>
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
@@ -40,9 +42,13 @@ MainWindow::MainWindow(QWidget *parent)
     m_lottieAnimationWidget->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
     ui->saLottieAnimation->setWidget(m_lottieAnimationWidget);
 
-    m_vectorImageWidget = new QQuickWidget;
-    m_vectorImageWidget->setSource(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/VectorImage.qml")));
-    m_vectorImageWidget->setResizeMode(QQuickWidget::SizeViewToRootObject);
+    m_vectorImageView = new QQuickView(windowHandle());
+    connect(m_vectorImageView, &QWindow::widthChanged, this, &MainWindow::vectorImageSizeUpdated);
+    connect(m_vectorImageView, &QWindow::heightChanged, this, &MainWindow::vectorImageSizeUpdated);
+    m_vectorImageView->setSource(QUrl(QStringLiteral("qrc:/qt/qml/VectorImageTest/VectorImage.qml")));
+    m_vectorImageView->setResizeMode(QQuickView::SizeViewToRootObject);
+
+    m_vectorImageWidget = QWidget::createWindowContainer(m_vectorImageView);
     m_vectorImageWidget->setSizePolicy(QSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed));
     ui->saVectorImage->setWidget(m_vectorImageWidget);
 
@@ -71,6 +77,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->tbNext->setShortcut(QKeySequence(QKeySequence::MoveToNextChar));
     ui->tbPrev->setShortcut(QKeySequence(QKeySequence::MoveToPreviousChar));
+}
+
+void MainWindow::vectorImageSizeUpdated()
+{
+    if (m_vectorImageView && m_vectorImageWidget) {
+        m_vectorImageWidget->setMinimumSize(m_vectorImageView->size());
+    }
 }
 
 void MainWindow::loadDirectory(const QString &newDir)

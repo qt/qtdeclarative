@@ -96,6 +96,11 @@ public:
         return !m_urlPrefix.isEmpty();
     }
 
+    QByteArray result() const
+    {
+        return m_result.data();
+    }
+
 protected:
     QString generateNodeBase(const NodeInfo &info, const QString &idSuffix = QString{}) override;
     void generateNodeEnd(const NodeInfo &info);
@@ -178,6 +183,7 @@ protected:
 
 private:
     int m_indentLevel = 0;
+    int m_textNodeCounter = 0;
     QStack<int> m_oldIndentLevels;
     QTextStream m_stream;
     QString outputFileName;
@@ -193,6 +199,7 @@ private:
     QMap<std::array<qreal, 4>, QString> m_easings;
     quint32 m_nodeCounter = 0;
     QString m_defsSuffix;
+    QString m_indentString;
 };
 
 QT_END_NAMESPACE

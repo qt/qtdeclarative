@@ -5,10 +5,10 @@
 
 QT_BEGIN_NAMESPACE
 
-QQuickVectorImagePlugin::QQuickVectorImagePlugin()
-{}
+QQuickVectorImagePluginGenerator::~QQuickVectorImagePluginGenerator() = default;
 
-QQuickVectorImagePlugin::~QQuickVectorImagePlugin()
-{}
+QQuickVectorImagePlugin::QQuickVectorImagePlugin() = default;
+
+QQuickVectorImagePlugin::~QQuickVectorImagePlugin() = default;
 
 QT_END_NAMESPACE

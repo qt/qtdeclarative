@@ -1241,19 +1241,18 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
     if (Q_UNLIKELY(errorState() || !isNodeVisible(info)))
         return;
 
-    static int counter = 0;
     stream() << "Item {";
     m_indentLevel++;
     generateNodeBase(info);
 
     if (!info.isTextArea)
-        stream() << "Item { id: textAlignItem_" << counter << "; x: " << info.position.x() << "; y: " << info.position.y() << "}";
+        stream() << "Item { id: textAlignItem_" << m_textNodeCounter << "; x: " << info.position.x() << "; y: " << info.position.y() << "}";
 
     stream() << "Text {";
 
     m_indentLevel++;
 
-    const QString textItemId = QStringLiteral("_qt_textItem_%1").arg(counter);
+    const QString textItemId = QStringLiteral("_qt_textItem_%1").arg(m_textNodeCounter);
     stream() << "id: " << textItemId;
 
     generatePropertyAnimation(info.fillColor, textItemId, QStringLiteral("color"));
@@ -1272,7 +1271,7 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
         stream() << "clip: true"; //### Not exactly correct: should clip on the text level, not the pixel level
     } else {
         QString hAlign = QStringLiteral("left");
-        stream() << "anchors.baseline: textAlignItem_" << counter << ".top";
+        stream() << "anchors.baseline: textAlignItem_" << m_textNodeCounter << ".top";
         switch (info.alignment) {
         case Qt::AlignHCenter:
             hAlign = QStringLiteral("horizontalCenter");
@@ -1286,9 +1285,9 @@ void QQuickQmlGenerator::generateTextNode(const TextNodeInfo &info)
         case Qt::AlignLeft:
             break;
         }
-        stream() << "anchors." << hAlign << ": textAlignItem_" << counter << ".left";
+        stream() << "anchors." << hAlign << ": textAlignItem_" << m_textNodeCounter << ".left";
     }
-    counter++;
+    m_textNodeCounter++;
 
     stream() << "color: \"" << info.fillColor.defaultValue().value<QColor>().name(QColor::HexArgb) << "\"";
     stream() << "textFormat:" << (info.needsRichText ? "Text.RichText" : "Text.StyledText");
@@ -2635,11 +2634,10 @@ void QQuickQmlGenerator::endDefsSuffixBlock()
 
 QStringView QQuickQmlGenerator::indent()
 {
-    static QString indentString;
     int indentWidth = m_indentLevel * 4;
-    if (indentWidth > indentString.size())
-        indentString.fill(QLatin1Char(' '), indentWidth * 2);
-    return QStringView(indentString).first(indentWidth);
+    if (indentWidth > m_indentString.size())
+        m_indentString.fill(QLatin1Char(' '), indentWidth * 2);
+    return QStringView(m_indentString).first(indentWidth);
 }
 
 QTextStream &QQuickQmlGenerator::stream(int flags)

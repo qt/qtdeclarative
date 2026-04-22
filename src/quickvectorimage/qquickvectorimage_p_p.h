@@ -22,12 +22,13 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQuickVectorImageIncubator;
+
 class QQuickVectorImagePrivate : public QQuickItemPrivate
 {
     Q_DECLARE_PUBLIC(QQuickVectorImage)
 public:
     QQuickVectorImagePrivate() = default;
-    virtual ~QQuickVectorImagePrivate() = default;
 
     void setSource(const QUrl &source);
     void loadFile();
@@ -41,10 +42,12 @@ public:
     QQuickItem *rootItem = nullptr;
     QQuickVectorImage::FillMode fillMode = QQuickVectorImage::Stretch;
     QQuickVectorImage::RendererType preferredRendererType = QQuickVectorImage::GeometryRenderer;
-    QQuickVectorImageAnimations *animations = nullptr;
     bool assumeTrustedSource = false;
     bool m_asyncShapes = false;
-    std::unique_ptr<QQmlContext> m_qmlContext;
+    bool asynchronous = false;
+    std::unique_ptr<QQmlContext> context;
+    QQuickVectorImageAnimations *animations = nullptr;
+    QQuickVectorImageIncubator *incubator = nullptr;
 };
 
 QT_END_NAMESPACE

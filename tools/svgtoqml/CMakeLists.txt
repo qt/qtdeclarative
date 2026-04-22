@@ -21,6 +21,7 @@ qt_internal_add_tool(${target_name}
         Qt::GuiPrivate
         Qt::Qml
         Qt::Quick
+        Qt::QuickVectorImagePrivate
         Qt::QuickVectorImageGeneratorPrivate
 )
 qt_internal_return_unless_building_tools()

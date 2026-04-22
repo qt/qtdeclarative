@@ -78,6 +78,11 @@ public:
     void optimizePaths(const PathNodeInfo &info, const QRectF &overrideBoundingRect);
     bool isNodeVisible(const NodeInfo &info);
 
+    QString fileName() const
+    {
+        return m_fileName;
+    }
+
 protected:
     void checkSanityLimit_helper(quint64 limit, QLatin1StringView limitObject);
     bool checkSanityLimit(quint64 value, quint64 limit, QLatin1StringView limitObject)

@@ -25,26 +25,14 @@ QT_BEGIN_NAMESPACE
 class QQuickMatrix4x4;
 class QQuickAnimatedProperty;
 class QQmlContext;
+class QQmlIncubator;
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickQmlGenerator
 {
 public:
     QQuickItemGenerator(const QString fileName,
-                        QQuickVectorImageGenerator::GeneratorFlags flags,
-                        QQuickItem *parentItem,
-                        QQmlContext *ctx);
+                        QQuickVectorImageGenerator::GeneratorFlags flags);
     ~QQuickItemGenerator();
-
-    QQuickItem *parentItem() const
-    {
-        return m_parentItem;
-    }
-
-protected:
-    bool generateRootNode(const StructureNodeInfo &info) override;
-
-    QQuickItem *m_parentItem = nullptr;
-    QQmlContext *m_qmlContext = nullptr;
 };
 
 QT_END_NAMESPACE

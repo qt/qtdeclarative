@@ -34,7 +34,8 @@ namespace QQuickVectorImageGenerator
         OutlineStrokeMode = 0x04,
         AssumeTrustedSource = 0x08,
         AsyncShapes = 0x10,
-        TimelineAnimation = 0x20
+        TimelineAnimation = 0x20,
+        AsynchronousLoading = 0x40,
     };
 
     Q_DECLARE_FLAGS(GeneratorFlags, GeneratorFlag);

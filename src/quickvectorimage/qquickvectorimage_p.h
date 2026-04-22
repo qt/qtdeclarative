@@ -34,6 +34,8 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_PROPERTY(QQuickVectorImageAnimations *animations READ animations CONSTANT REVISION(6, 10) FINAL)
     Q_PROPERTY(bool assumeTrustedSource READ assumeTrustedSource WRITE setAssumeTrustedSource NOTIFY assumeTrustedSourceChanged FINAL)
     Q_PROPERTY(bool asynchronousShapes READ asynchronousShapes WRITE setAsynchronousShapes NOTIFY asynchronousShapesChanged REVISION(6, 11) FINAL)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 12) FINAL)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 12) FINAL)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
@@ -51,7 +53,11 @@ public:
     };
     Q_ENUM(RendererType)
 
+    enum class Status : quint8 { Null, Ready, Loading, Error };
+    Q_ENUM(Status)
+
     QQuickVectorImage(QQuickItem *parent = nullptr);
+    ~QQuickVectorImage();
 
     QUrl source() const;
     void setSource(const QUrl &source);
@@ -64,6 +70,11 @@ public:
 
     bool asynchronousShapes() const;
     void setAsynchronousShapes(bool asynchronous);
+
+    bool asynchronous() const;
+    void setAsynchronous(bool asynchronous);
+
+    Status status() const;
 
     QQuickVectorImageAnimations *animations();
 
@@ -80,9 +91,13 @@ signals:
     void asynchronousShapesChanged();
     void assumeTrustedSourceChanged();
 
+    Q_REVISION(6, 12) void asynchronousChanged();
+    Q_REVISION(6, 12) void statusChanged();
+
 private slots:
     void updateRootItemScale();
     void updateAnimationProperties();
+    void updateItem();
 
 private:
     Q_DISABLE_COPY(QQuickVectorImage)

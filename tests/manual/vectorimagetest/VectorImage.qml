@@ -3,13 +3,13 @@
 
 import QtQuick
 import QtQuick.VectorImage
+import QtQuick.Controls
 
 Item {
-    width: vectorImage.implicitWidth * (VectorImageManager.scale / 10.0)
-    height: vectorImage.implicitHeight * (VectorImageManager.scale / 10.0)
-    scale: VectorImageManager.scale / 10.0
+    width: vectorImage.visible ? vectorImage.implicitWidth * (VectorImageManager.scale / 10.0) : 500
+    height: vectorImage.visible ? vectorImage.implicitHeight * (VectorImageManager.scale / 10.0) : 500
+    scale: vectorImage.visible ? (VectorImageManager.scale / 10.0) : 1
     transformOrigin: Item.TopLeft
-
 
     Image {
         source: "background.png"
@@ -20,6 +20,7 @@ Item {
         width: parent.width
         height: parent.height
         transformOrigin: Item.TopLeft
+        visible: vectorImage.visible
     }
 
     VectorImage {
@@ -28,5 +29,13 @@ Item {
         preferredRendererType: VectorImage.CurveRenderer
         assumeTrustedSource: true
         animations.loops: VectorImageManager.looping ? Animation.Infinite : 1
+        asynchronous: true
+        visible: status === VectorImage.Ready
+    }
+
+    BusyIndicator {
+        anchors.centerIn: parent
+        visible: running
+        running: vectorImage.status === VectorImage.Loading
     }
 }
