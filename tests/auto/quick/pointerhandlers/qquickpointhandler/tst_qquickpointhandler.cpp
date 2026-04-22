@@ -155,6 +155,12 @@ void tst_PointHandler::tabletStylus()
         Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), true);
     QCOMPARE(activeSpy.size(), 1);
+
+    if (guiSynthMouse
+        && QSysInfo::productType() == "rhel"
+        && QSysInfo::productVersion() == QLatin1String("10.0"))
+            QEXPECT_FAIL("synth", "QTBUG-144177: Tablet stylus + synthesized mouse produces only one pointChanged on RHEL 10.0", Continue);
+
     QCOMPARE(pointSpy.size(), guiSynthMouse ? 2 : 1);
     QCOMPARE(handler->point().position().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI);

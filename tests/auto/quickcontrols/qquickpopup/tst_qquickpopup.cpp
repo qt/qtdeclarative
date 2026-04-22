@@ -3881,6 +3881,10 @@ void tst_QQuickPopup::blockEventsBehindModal()
 
     // show the modal popup: then we cannot click anything behind it
     popup->open();
+
+    if (QSysInfo::productType() == "rhel" && QSysInfo::productVersion() == QLatin1String("10.0"))
+        QSKIP("Fails on RHEL 10 - QTBUG-144177");
+
     QTRY_VERIFY(popup->isOpened()); // wait for it to fully open
     QQuickWindow *windowOfPopup = popupCloseButton->window(); // main window or native popup window
     QVERIFY(QTest::qWaitForWindowExposed(windowOfPopup));

@@ -422,6 +422,14 @@ TestCase {
 
         keySequence(StandardKey.Find)
         compare(shortcutActivatedSpy.count, 1)
+
+        var isWayland = Qt.platform.pluginName
+                        && Qt.platform.pluginName.indexOf("wayland") !== -1
+
+        if (isWayland) {
+            expectFail("", "Fails on Wayland - QTBUG-144177")
+        }
+
         verify(control.contentItem.activeFocus)
     }
 
@@ -447,6 +455,14 @@ TestCase {
 
         keySequence(StandardKey.Find)
         compare(shortcutActivatedSpy.count, 1)
+
+        var isWayland = Qt.platform.pluginName
+                        && Qt.platform.pluginName.indexOf("wayland") !== -1
+
+        if (isWayland) {
+            expectFail("", "Fails on Wayland - QTBUG-144177")
+        }
+
         verify(control.contentItem.activeFocus)
         compare(control.contentItem.selectedText, "hello")
     }

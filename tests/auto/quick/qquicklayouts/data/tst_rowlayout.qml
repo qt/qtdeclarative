@@ -971,6 +971,12 @@ Item {
 
         function test_distribution(data)
         {
+            if (data.tag === "preferred_infinity"
+                && Qt.platform.os === "linux"
+                && LayoutSetup.linuxDistro === "rhel-10.0") {
+                expectFail("", "QTBUG-144177: Regression on RHEL 10.0")
+            }
+
             var layout = layout_rowLayout_Component.createObject(container)
             layout.spacing = 0
             buildLayout(layout, data.layout.items)

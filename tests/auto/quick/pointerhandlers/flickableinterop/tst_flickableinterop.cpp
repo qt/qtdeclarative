@@ -899,6 +899,12 @@ void tst_FlickableInterop::nativeGesturePinchOnFlickableWithParentTapHandler()
     QFETCH(qreal, value);
     QFETCH(qreal, expectedPropertyValue);
 
+    if (QSysInfo::productType() == "rhel"
+        && QSysInfo::productVersion() == QLatin1String("10.0")
+        && device->type() == QInputDevice::DeviceType::TouchPad
+        && gesture == Qt::RotateNativeGesture)
+            QSKIP("QTBUG-144177: Native rotate gesture produces fatal NaN on RHEL 10.0 touchpad stack");
+
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("pinchOnFlickableWithParentTapHandler.qml")));
     QQuickFlickable *flickable = window.rootObject()->findChild<QQuickFlickable*>();

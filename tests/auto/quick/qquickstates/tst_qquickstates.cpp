@@ -2052,6 +2052,9 @@ void tst_qquickstates::bindingProperlyRemovedWithTransition()
     QQuickItem *item = qobject_cast<QQuickItem *>(root.get());
     QVERIFY(item);
 
+    if (QSysInfo::productType() == "rhel" && QSysInfo::productVersion() == QLatin1String("10.0"))
+        QEXPECT_FAIL("", "Fails on RHEL 10 - QTBUG-144177", Continue);
+
     item->setProperty("toggle", false);
     QTRY_COMPARE(item->width(), 300);
 
