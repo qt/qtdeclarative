@@ -276,6 +276,39 @@ QQStyleKitReader::~QQStyleKitReader()
     s_allReaders.removeOne(this);
 }
 
+void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags)
+{
+    // Apply type and states in one shot to avoid calling
+    // populateLocalStorage() + updateControl() once per individual setter
+    const bool typeChanged = m_type != controlType;
+    const QQSK::State stateChanged = m_state ^ flags;
+
+    if (!typeChanged && !stateChanged)
+        return;
+
+    populateLocalStorage();
+
+    m_type = controlType;
+    m_state = flags;
+
+    if (typeChanged)
+        emit controlTypeChanged();
+
+    auto emitChanged = [this, &stateChanged](QQSK::StateFlag flag, void (QQStyleKitReader::*signal)()) {
+        if (stateChanged.testFlag(flag))
+            (this->*signal)();
+    };
+    emitChanged(QQSK::StateFlag::Hovered, &QQStyleKitReader::hoveredChanged);
+    emitChanged(QQSK::StateFlag::Disabled, &QQStyleKitReader::enabledChanged);
+    emitChanged(QQSK::StateFlag::Focused, &QQStyleKitReader::focusedChanged);
+    emitChanged(QQSK::StateFlag::Checked, &QQStyleKitReader::checkedChanged);
+    emitChanged(QQSK::StateFlag::Pressed, &QQStyleKitReader::pressedChanged);
+    emitChanged(QQSK::StateFlag::Vertical, &QQStyleKitReader::verticalChanged);
+    emitChanged(QQSK::StateFlag::Highlighted, &QQStyleKitReader::highlightedChanged);
+
+    updateControl();
+}
+
 QQuickStateGroup *QQStyleKitReader::stateGroup()
 {
     if (m_stateGroup)

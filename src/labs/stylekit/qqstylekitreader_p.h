@@ -140,6 +140,8 @@ public:
 
     QQSK::State controlState() const;
 
+    void setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags);
+
     static void setTransitionEnabled(bool enabled);
     static bool transitionEnabled();
     static void resetReadersForStyle(const QQStyleKitStyle *style);
