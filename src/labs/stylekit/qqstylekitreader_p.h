@@ -142,6 +142,9 @@ public:
 
     void setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags);
 
+    QObject *target() const;
+    void setTarget(QObject *target);
+
     static void setTransitionEnabled(bool enabled);
     static bool transitionEnabled();
     static void resetReadersForStyle(const QQStyleKitStyle *style);
@@ -203,6 +206,7 @@ private:
     QQuickStateGroup *m_stateGroup = nullptr;
     QQSK::Delegates m_trackedDelegates = QQSK::Delegate::NoDelegate;
 
+    QPointer<QObject> m_target;
     QPointer<QQStyleKitStyle> m_explicitStyle;
     QPointer<QQStyleKitReader> m_parentReader;
     QList<QPointer<QQStyleKitVariation>> m_effectiveVariations;

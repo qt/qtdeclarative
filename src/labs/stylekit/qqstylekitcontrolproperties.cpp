@@ -1,6 +1,5 @@
 // Copyright (C) 2025 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
-
 #include "qqstylekitcontrol_p.h"
 #include "qqstylekitstyle_p.h"
 #include "qqstylekittheme_p.h"
@@ -1037,8 +1036,18 @@ void QQStyleKitPropertyGroup::handleStylePropertiesChanged(CHANGED_SIGNALS... ch
          * syncing it's own local storage with old values before starting a transition), we
          * emit the signal like normal. This will cause the control to repaint (perhaps
          * using a transition). */
-        if (shouldEmitLocally())
-            ((group->*changedSignals)(), ...);
+        if (shouldEmitLocally()) {
+            QQStyleKitReader *reader = controlProperties()->asQQStyleKitReader();
+            /* Readers notify their consumer in two different ways depending on who is
+             * consuming them. A QML control binds to the reader's change signals, so we
+             * emit those directly. A widget consumer (m_target set) doesn't listen on
+             * signals; it repaints in response to a QEvent::StyleAnimationUpdate posted
+             * to the widget, and only while a transition is actually running. */
+            if (!reader->m_target)
+                ((group->*changedSignals)(), ...);
+            else
+                QCoreApplication::postEvent(reader->m_target, new QEvent(QEvent::StyleAnimationUpdate));
+        }
         return;
     }
 

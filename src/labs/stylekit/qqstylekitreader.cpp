@@ -276,39 +276,6 @@ QQStyleKitReader::~QQStyleKitReader()
     s_allReaders.removeOne(this);
 }
 
-void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags)
-{
-    // Apply type and states in one shot to avoid calling
-    // populateLocalStorage() + updateControl() once per individual setter
-    const bool typeChanged = m_type != controlType;
-    const QQSK::State stateChanged = m_state ^ flags;
-
-    if (!typeChanged && !stateChanged)
-        return;
-
-    populateLocalStorage();
-
-    m_type = controlType;
-    m_state = flags;
-
-    if (typeChanged)
-        emit controlTypeChanged();
-
-    auto emitChanged = [this, &stateChanged](QQSK::StateFlag flag, void (QQStyleKitReader::*signal)()) {
-        if (stateChanged.testFlag(flag))
-            (this->*signal)();
-    };
-    emitChanged(QQSK::StateFlag::Hovered, &QQStyleKitReader::hoveredChanged);
-    emitChanged(QQSK::StateFlag::Disabled, &QQStyleKitReader::enabledChanged);
-    emitChanged(QQSK::StateFlag::Focused, &QQStyleKitReader::focusedChanged);
-    emitChanged(QQSK::StateFlag::Checked, &QQStyleKitReader::checkedChanged);
-    emitChanged(QQSK::StateFlag::Pressed, &QQStyleKitReader::pressedChanged);
-    emitChanged(QQSK::StateFlag::Vertical, &QQStyleKitReader::verticalChanged);
-    emitChanged(QQSK::StateFlag::Highlighted, &QQStyleKitReader::highlightedChanged);
-
-    updateControl();
-}
-
 QQuickStateGroup *QQStyleKitReader::stateGroup()
 {
     if (m_stateGroup)
@@ -762,6 +729,54 @@ void QQStyleKitReader::setHighlighted(bool highlighted)
     m_state.setFlag(QQSK::StateFlag::Highlighted, highlighted);
     emit highlightedChanged();
     updateControl();
+}
+
+void QQStyleKitReader::setControlTypeAndState(QQStyleKitExtendableControlType controlType, QQSK::State flags)
+{
+    // Apply type and states in one shot to avoid calling
+    // populateLocalStorage() + updateControl() once per individual setter
+    const bool typeChanged = m_type != controlType;
+    const QQSK::State stateChanged = m_state ^ flags;
+
+    if (!typeChanged && !stateChanged)
+        return;
+
+    populateLocalStorage();
+
+    m_type = controlType;
+    m_state = flags;
+
+    if (typeChanged)
+        emit controlTypeChanged();
+
+    auto emitChanged = [this, &stateChanged](QQSK::StateFlag flag, void (QQStyleKitReader::*signal)()) {
+        if (stateChanged.testFlag(flag))
+            (this->*signal)();
+    };
+    emitChanged(QQSK::StateFlag::Hovered, &QQStyleKitReader::hoveredChanged);
+    emitChanged(QQSK::StateFlag::Disabled, &QQStyleKitReader::enabledChanged);
+    emitChanged(QQSK::StateFlag::Focused, &QQStyleKitReader::focusedChanged);
+    emitChanged(QQSK::StateFlag::Checked, &QQStyleKitReader::checkedChanged);
+    emitChanged(QQSK::StateFlag::Pressed, &QQStyleKitReader::pressedChanged);
+    emitChanged(QQSK::StateFlag::Vertical, &QQStyleKitReader::verticalChanged);
+    emitChanged(QQSK::StateFlag::Highlighted, &QQStyleKitReader::highlightedChanged);
+
+    updateControl();
+}
+
+QObject *QQStyleKitReader::target() const
+{
+    return m_target.data();
+}
+
+void QQStyleKitReader::setTarget(QObject *target)
+{
+    /* A reader can optionally set a target object which represents
+    the current object that is being styled, ie: using this StyleReader
+    to read properties from the style. It is needed so that the widget style using
+    the StyleReader is able to post StyleAnimationUpdate events to the correct
+    target during a transition. */
+    m_target = target;
 }
 
 QQStyleKitStyle *QQStyleKitReader::explicitStyle() const
