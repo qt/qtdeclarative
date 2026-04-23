@@ -62,7 +62,6 @@
             \li \l {Models and Views in Qt Quick}
             \li \l {Using C++ Models with Qt Quick Views}
             \li \l {Using SQL databases with Qt Quick Views}
-            \li \l {Qt Labs FolderListModel QML Types}
             \li \l {Qt Quick Local Storage QML Types}
         \endlist
     \li \l {Important Concepts In Qt Quick - Graphical Effects}{Particles and graphical effects}

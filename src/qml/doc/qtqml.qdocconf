@@ -35,6 +35,7 @@ tagfile                 = ../../../doc/qtqml/qtqml.tags
 depends += \
     qtcore \
     qtnetwork \
+    qtqmlcore \
     qtqmlmodels \
     qtqmlworkerscript \
     qtgui \
@@ -47,10 +48,17 @@ depends += \
     qtcmake \
     qtlinguist
 
-headerdirs  += ..
+headerdirs  += .. \
+                ../../labs/synchronizer \
+               ../../labs/folderlistmodel \
+               ../../labs/settings
+
 
 sourcedirs  += .. \
-               ../../qmlmeta
+               ../../qmlmeta \
+               ../../labs/synchronizer \
+               ../../labs/folderlistmodel \
+               ../../labs/settings
 
 exampledirs += ../../../examples/qml \
                ../ \

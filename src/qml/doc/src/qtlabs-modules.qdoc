@@ -1,0 +1,28 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+\page qtlabs-modules.html
+\title Qt.labs experimental modules
+\brief Lists the modules in the Qt.labs namespace.
+
+Qt provides a set of experimental modules in the \c {Qt.labs} namespace.
+These modules are intended for testing new features and APIs before they are
+stabilized and moved to the main Qt namespace.
+
+\c {Qt.labs} modules are experimental and may be removed in future releases. They
+are not subject to any compatibility guarantee, and their API may change without
+deprecation. Use them at your own risk.
+
+\list
+\li \l {Qt Labs FolderListModel QML Types}{Qt.labs.folderlistmodel} -
+    Provides a model of the contents of a file system folder.
+\li \l {Qt Labs Synchronizer QML Types}{Qt.labs.synchronizer} -
+    Synchronizes values between two or more properties.
+\li \l {Qt Qml Models experimental QML Types}{Qt.labs.qmlmodels} -
+    Provides experimental QML types related to data models.
+\li \e Deprecated \l {Qt Labs Settings QML Types}{Qt.labs.settings} -
+    Provides a way to store and retrieve application settings.
+\endlist
+
+*/

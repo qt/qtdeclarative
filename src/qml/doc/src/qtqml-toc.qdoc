@@ -123,7 +123,11 @@
         \li \l{Configuring the JavaScript Engine}
         \li \l{Memory Management in the JavaScript Engine}
         \endlist
-
+    \li \l{Qt.labs experimental modules}
+        \list
+        \li \l {Qt Labs FolderListModel QML Types}{FolderListModel QML Types}
+        \li \l {Qt Labs Synchronizer QML Types}{Synchronizer QML Types}
+        \endlist
     \li \l{Changes to Qt Qml}{Upgrade from Qt 5}
     \endlist
 

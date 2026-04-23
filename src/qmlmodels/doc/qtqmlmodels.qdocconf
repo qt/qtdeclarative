@@ -20,12 +20,12 @@ qhp.QtQmlModels.subprojects.manual.indexTitle     = QModelIndex and related Clas
 qhp.QtQmlModels.subprojects.manual.selectors      = group:none
 
 qhp.QtQmlModels.subprojects.qmltypes.title          = QML Types
-qhp.QtQmlModels.subprojects.qmltypes.indexTitle     = Qt QML Models QML Types
+qhp.QtQmlModels.subprojects.qmltypes.indexTitle     = Qt Qml Models QML Types
 qhp.QtQmlModels.subprojects.qmltypes.selectors      = qmlmodule:QtQml.Models
 qhp.QtQmlModels.subprojects.qmltypes.sortPages      = true
 
 qhp.QtQmlModels.subprojects.qmllabtypes.title      = Experimental QML Types
-qhp.QtQmlModels.subprojects.qmllabtypes.indexTitle = Qt QML Models experimental QML Types
+qhp.QtQmlModels.subprojects.qmllabtypes.indexTitle = Qt Qml Models experimental QML Types
 qhp.QtQmlModels.subprojects.qmllabtypes.selectors  = qmlmodule:Qt.labs.qmlmodels
 qhp.QtQmlModels.subprojects.qmllabtypes.sortPages  = true
 

@@ -77,21 +77,19 @@ depends += \
     ../../quickwidgets \
     ../../qmllocalstorage \
     ../../quicklayouts \
-    ../../labs \
+    ../../labs/animation \
+    ../../labs/sharedimage \
+    ../../labs/wavefrontmesh \
     ../../quick/platform/android/jar/src/org/qtproject/qt/android \
     ../../../examples/platforms \
     ../../quickcontrols/doc/src/includes/ \
     ../../qmlmodels/doc/src/includes/
 
 # the following projects have their own documentation project
-excludedirs += \
-    ../../labs/platform \
-    ../../labs/models \
-    ../../labs/stylekit
+# excludedirs += \
 
 exampledirs += \
     ../../../examples/quick \
-    ../../qmlmodels/doc/snippets \
     ../../quickcontrols/doc/snippets \
     snippets \
     ../../quickshapes/designhelpers/doc/snippets \
