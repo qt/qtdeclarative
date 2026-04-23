@@ -2585,12 +2585,17 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
         }
 
         if (usingTimelineAnimation() && info.timelineInfo) {
+            stream() << "property real startFrame: " << info.timelineInfo->startFrame;
+            stream() << "property real endFrame: " << info.timelineInfo->endFrame;
+            stream() << "property real frameRate: " << info.timelineInfo->frameRate;
             stream() << "property real frameCounter: " << info.timelineInfo->startFrame;
             stream() << "NumberAnimation on frameCounter {";
             m_indentLevel++;
-            stream() << "from: " << info.timelineInfo->startFrame;
-            stream() << "to: " << info.timelineInfo->endFrame - 0.01;
-            stream() << "duration: " << processAnimationTime(info.timelineInfo->duration);
+            stream() << "objectName: \"_qt_frameCounterAnimation\"";
+            stream() << "from: " << m_topLevelIdString << ".startFrame";
+            stream() << "to: " << m_topLevelIdString << ".endFrame";
+            stream() << "duration: " << processAnimationTime(1000) << " * Math.abs(to - from) / "
+                     << "Math.max(" << m_topLevelIdString << ".frameRate, 1)";
             generateAnimationBindings();
             m_indentLevel--;
             stream() << "}";

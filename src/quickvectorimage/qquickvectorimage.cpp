@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <QtCore/qurl.h>
+#include <QtCore/QScopeGuard>
 #include "qquickvectorimage_p.h"
 #include "qquickvectorimage_p_p.h"
 #include "qquickvectorimageincubator_p.h"
@@ -69,6 +70,7 @@ void QQuickVectorImagePrivate::loadFile()
     if (rootItem && !retainWhileLoading) {
         rootItem->deleteLater();
         rootItem = nullptr;
+        emit q->generatedItemChanged();
     }
 
     if (incubator != nullptr) {
@@ -119,6 +121,7 @@ void QQuickVectorImage::updateItem()
 
     d->rootItem = new QQuickItem(this);
     d->rootItem->setParentItem(this);
+    auto emitter = qScopeGuard([&] { emit generatedItemChanged(); }); // emit at any function exit
 
     QQuickItem *item = qobject_cast<QQuickItem *>(d->incubator->object());
     if (item == nullptr) {
@@ -503,6 +506,21 @@ void QQuickVectorImage::setAssumeTrustedSource(bool assumeTrustedSource)
     d->assumeTrustedSource = assumeTrustedSource;
     d->loadFile();
     emit assumeTrustedSourceChanged();
+}
+
+/*!
+    \qmlproperty Item QtQuick.VectorImage::VectorImage::generatedItem
+    \since 6.12
+    \readonly
+
+    When a vector image file is loaded, this property holds the top level Item of the generated Qt
+    Quick scene. When no file is loaded, this property is \c null.
+*/
+
+QQuickItem *QQuickVectorImage::generatedItem() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->rootItem ? d->rootItem->childItems().value(0) : nullptr;
 }
 
 void QQuickVectorImage::componentComplete()

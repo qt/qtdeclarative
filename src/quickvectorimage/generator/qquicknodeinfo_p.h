@@ -154,7 +154,7 @@ struct UseNodeInfo : NodeInfo
 struct TimelineInfo {
     int startFrame = 0;
     int endFrame = 0;
-    int duration = 0;
+    int frameRate = 0;
     qreal frameCounterOffset = 0;
     qreal frameCounterMultiplier = 0;
     QQuickAnimatedProperty frameCounterMapper = QQuickAnimatedProperty(QVariant(qreal(0)));

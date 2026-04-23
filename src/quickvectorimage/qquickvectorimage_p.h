@@ -37,6 +37,7 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 12) FINAL)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 12) FINAL)
     Q_PROPERTY(bool retainWhileLoading READ retainWhileLoading WRITE setRetainWhileLoading NOTIFY retainWhileLoadingChanged REVISION(6, 12) FINAL)
+    Q_PROPERTY(QQuickItem *generatedItem READ generatedItem NOTIFY generatedItemChanged REVISION(6, 12) FINAL)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
@@ -87,6 +88,8 @@ public:
 
     void componentComplete() override;
 
+    QQuickItem *generatedItem() const;
+
 signals:
     void sourceChanged();
     void fillModeChanged();
@@ -98,6 +101,7 @@ signals:
     Q_REVISION(6, 12) void asynchronousChanged();
     Q_REVISION(6, 12) void statusChanged();
     Q_REVISION(6, 12) void retainWhileLoadingChanged();
+    Q_REVISION(6, 12) void generatedItemChanged();
 
 private slots:
     void updateRootItemScale();
