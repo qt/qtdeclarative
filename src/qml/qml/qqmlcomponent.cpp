@@ -719,14 +719,19 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit 
 }
 
 /*!
+    \since 6.12
+
     Sets the QQmlComponent to use the given QML \a data. If \a url
     is provided, it is used to set the component name and to provide
     a base path for items resolved by this component.
 
+    If \a compilationMode is \l Asynchronous, the component will be loaded and compiled
+    asynchronously.
+
     \warning The new component will shadow any existing component of
     the same URL. You should not pass a URL of an existing component.
 */
-void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
+void QQmlComponent::setData(const QByteArray &data, const QUrl &url, CompilationMode compilationMode)
 {
     Q_D(QQmlComponent);
 
@@ -740,17 +745,38 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 
     d->m_url = url;
 
-    QQmlRefPointer<QQmlTypeData> typeData = QQmlTypeLoader::get(d->m_engine)->getType(data, url);
+    QQmlTypeLoader::Mode mode = compilationMode == Asynchronous
+                                    ? QQmlTypeLoader::Asynchronous
+                                    : QQmlTypeLoader::PreferSynchronous;
+    QQmlRefPointer<QQmlTypeData> typeData = QQmlTypeLoader::get(d->m_engine)->getType(data, url, mode);
 
     if (typeData->isCompleteOrError()) {
         d->fromTypeData(typeData);
+        d->setProgress(1.0);
     } else {
         d->m_typeData = typeData;
         d->m_typeData->registerCallback(d);
+        d->setProgress(typeData->progress());
     }
 
-    d->setProgress(1.0);
     emit statusChanged(status());
+}
+
+/*!
+    Sets the QQmlComponent to use the given QML \a data. If \a url
+    is provided, it is used to set the component name and to provide
+    a base path for items resolved by this component.
+
+    This is equivalent to calling \c{setData(data, url, QQmlComponent::PreferSynchronous)}.
+
+    \warning The new component will shadow any existing component of
+    the same URL. You should not pass a URL of an existing component.
+
+    \overload
+*/
+void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
+{
+    setData(data, url, PreferSynchronous);
 }
 
 /*!

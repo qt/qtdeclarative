@@ -165,6 +165,8 @@ private slots:
     void invalidBaseUrl();
     void uselessGroupProperty();
     void componentCompilationUnitSetter();
+    void setDataSynchronous();
+    void setDataAsynchronous();
 
 private:
     QQmlEngine engine;
@@ -1979,6 +1981,47 @@ void tst_qqmlcomponent::componentCompilationUnitSetter()
     // Round-trip.
     priv->setCompilationUnit(origCU);
     QCOMPARE(priv->compilationUnit().data(), origCU.data());
+}
+
+void tst_qqmlcomponent::setDataSynchronous()
+{
+    QByteArray code = "import QtQuick\n"
+                      "Rectangle { width: 123; height: 345 }";
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(code, QUrl{});
+    QCOMPARE(component.progress(), 1.0);
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+
+    std::unique_ptr<QQuickRectangle> rectangle(qobject_cast<QQuickRectangle *>(component.create(engine.rootContext())));
+    QVERIFY(rectangle != nullptr);
+
+    QCOMPARE(rectangle->width(), 123);
+    QCOMPARE(rectangle->height(), 345);
+}
+
+void tst_qqmlcomponent::setDataAsynchronous()
+{
+    QByteArray code = "import QtQuick\n"
+                      "Rectangle { width: 123; height: 345 }";
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    QCOMPARE(component.progress(), 0.0);
+
+    QSignalSpy progressSpy(&component, &QQmlComponent::progressChanged);
+
+    component.setData(code, QUrl{}, QQmlComponent::Asynchronous);
+    QTRY_VERIFY(!progressSpy.isEmpty());
+    QTRY_COMPARE(progressSpy.last().at(0).toDouble(), 1.0);
+
+    QCOMPARE(component.progress(), 1.0);
+    QCOMPARE(component.status(), QQmlComponent::Ready);
+
+    std::unique_ptr<QQuickRectangle> rectangle(qobject_cast<QQuickRectangle *>(component.create(engine.rootContext())));
+    QVERIFY(rectangle != nullptr);
+
+    QCOMPARE(rectangle->width(), 123);
+    QCOMPARE(rectangle->height(), 345);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
