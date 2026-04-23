@@ -11,13 +11,13 @@ This section covers the core language features and syntax.
 
 \section1 Core Concepts
 
-\section2 QML Basics
+\section2 Syntax
 
-\l{QML Basics} introduces the fundamentals of QML, including object declarations,
+\l{QML Syntax Basics} introduces the fundamentals of QML, including object declarations,
 property assignments, and hierarchical object structures. Understanding these basics is essential
 for writing any QML code.
 
-\section2 QML Documents
+\section2 Documents
 
 \l{QML Documents} explains how QML code is organized into files and the structure of a QML document.
 Each document can define reusable types and includes imports, object declarations, and property
