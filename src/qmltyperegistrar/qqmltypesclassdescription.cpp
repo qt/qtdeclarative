@@ -380,7 +380,7 @@ void QmlTypesClassDescription::collect(
     }
 
     // note: use the filename and line number of the actual type, not of the foreign declaration
-    if (mode == TopLevel && file.isEmpty()) {
+    if (file.isEmpty()) {
         const MetaType &target = !resolved.isEmpty() ? resolved : classDef;
         file = target.inputFile();
         lineNumber = target.lineNumber();

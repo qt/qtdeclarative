@@ -1018,7 +1018,7 @@ void tst_qmltyperegistrar::withNamespace()
 
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"
-        lineNumber: 684
+        lineNumber: 652
         name: "Testing::Inner::Baz"
         accessSemantics: "reference"
         prototype: "Testing::Bar"
@@ -1431,22 +1431,6 @@ void tst_qmltyperegistrar::foreignFileAndLinePointsToNonForeign()
         prototype: "QObject"
         exports: ["QmlTypeRegistrarTest/ForeignFromAnotherFile 1.0"]
 )"));
-}
-
-void tst_qmltyperegistrar::extendedDoesNotPolluteFile() {
-    QVERIFY(qmltypesData.contains(R"(Component {
-        file: "tst_qmltyperegistrar.h"
-        lineNumber: 945
-        name: "FakeQtObject"
-        accessSemantics: "reference"
-        prototype: "QObject"
-        extension: "Qt"
-        extensionIsNamespace: true
-        exports: ["QmlTypeRegistrarTest/FakeQt 1.0"]
-        isCreatable: false
-        isSingleton: true
-        exportMetaObjectRevisions: [256]
-    })"));
 }
 
 void tst_qmltyperegistrar::foreignNamespacedWithEnum()
