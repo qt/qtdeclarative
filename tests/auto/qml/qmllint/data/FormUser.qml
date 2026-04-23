@@ -1,3 +1,5 @@
+import QtQml
+
 Form {
     x: 12
     y: 13

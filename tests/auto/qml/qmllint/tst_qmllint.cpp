@@ -3686,7 +3686,8 @@ void TestQmllint::additionalImplicitImport()
 {
     // We're polluting the resource file system here, so let's clean up afterwards.
     const auto guard = qScopeGuard([this]() {m_linter.clearCache(); });
-    runTest("additionalImplicitImport.qml", Result::clean(), {}, {},
+    runTest("additionalImplicitImport.qml",
+            Result{ { { "QML files must contain import statements" } } }, {}, {},
             { testFile("implicitImportResource.qrc") });
 }
 

@@ -271,7 +271,7 @@ public:
     ~Parser();
 
     // parse a UI program
-    bool parse() { ++functionNestingLevel; bool r = parse(T_FEED_UI_PROGRAM); --functionNestingLevel; return r; }
+    bool parse();
     bool parseStatement() { return parse(T_FEED_JS_STATEMENT); }
     bool parseExpression() { return parse(T_FEED_JS_EXPRESSION); }
     bool parseUiObjectMember() { ++functionNestingLevel; bool r = parse(T_FEED_UI_OBJECT_MEMBER); --functionNestingLevel; return r; }
@@ -593,6 +593,23 @@ bool Parser::ensureNoFunctionTypeAnnotations(AST::TypeAnnotation *returnValueAnn
 }
 
 //#define PARSER_DEBUG
+
+bool Parser::parse()
+{
+    ++functionNestingLevel;
+    bool r = parse(T_FEED_UI_PROGRAM);
+    --functionNestingLevel;
+
+    if (r && program && !QQmlJS::AST::cast<QQmlJS::AST::UiProgram *>(program)->hasImports()) {
+        DiagnosticMessage warning;
+        warning.loc = program->firstSourceLocation();
+        warning.message = QStringLiteral("QML files must contain import statements");
+        warning.type = QtWarningMsg;
+        diagnostic_messages.append(warning);
+    }
+
+    return r;
+}
 
 bool Parser::parse(int startToken)
 {
