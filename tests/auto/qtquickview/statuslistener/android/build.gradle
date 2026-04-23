@@ -1,3 +1,6 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: BSD-3-Clause
+
 plugins {
     id 'com.android.application' version '9.0.0'
     id 'org.qtproject.qt.gradleplugin' version '1.4'
