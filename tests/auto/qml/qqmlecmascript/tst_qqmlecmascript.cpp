@@ -448,6 +448,7 @@ private slots:
     void anonymousFunctionReturnTypeAnnotationIsPreserved();
     void namedFunctionExpressionReturnTypeIsPreserved();
     void cuObjectIndex();
+    void vmeMetaObjectAccessors();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -10887,6 +10888,30 @@ void tst_qqmlecmascript::cuObjectIndex()
 
     // The root object of a component should have cuObjectIndex >= 0.
     QVERIFY(ddata->cuObjectIndex >= 0);
+}
+
+void tst_qqmlecmascript::vmeMetaObjectAccessors()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlVMEMetaObject *vme = QQmlVMEMetaObject::get(obj.data());
+    QVERIFY(vme);
+
+    // qmlObjectId() should return a non-negative index for the root object.
+    QVERIFY(vme->qmlObjectId() >= 0);
+
+    // setCompilationUnit round-trip.
+    auto cu = vme->compilationUnit();
+    QVERIFY(cu);
+    vme->setCompilationUnit(cu);
+    QCOMPARE(vme->compilationUnit().data(), cu.data());
+
+    // Verify parentVMEMetaObject accessor is available.
+    vme->parentVMEMetaObject();
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

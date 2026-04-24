@@ -266,6 +266,7 @@ public:
     QVariant readPropertyAsVariant(int) const;
 
     inline QQmlVMEMetaObject *parentVMEMetaObject() const;
+    inline void setParentVMEMetaObject(QQmlVMEMetaObject *newParent);
 
     void activate(QObject *, int, void **);
 
@@ -277,6 +278,13 @@ public:
     {
         return m_compilationUnit;
     }
+
+    void setCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+    {
+        m_compilationUnit = compilationUnit;
+    }
+
+    int qmlObjectId() const { return m_qmlObjectId; }
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
@@ -379,6 +387,12 @@ QQmlVMEMetaObject *QQmlVMEMetaObject::parentVMEMetaObject() const
         return static_cast<QQmlVMEMetaObject *>(parent.asT1());
 
     return nullptr;
+}
+
+inline void QQmlVMEMetaObject::setParentVMEMetaObject(QQmlVMEMetaObject *newParent)
+{
+    parent = newParent;
+    parent.setFlag();
 }
 
 QT_END_NAMESPACE
