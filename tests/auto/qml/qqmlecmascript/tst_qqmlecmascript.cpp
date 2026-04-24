@@ -30,6 +30,7 @@
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qqmlabstractbinding_p.h>
+#include <private/qqmldata_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <private/qqmltimer_p.h>
 #include <QtCore/private/qproperty_p.h>
@@ -446,6 +447,7 @@ private slots:
 
     void anonymousFunctionReturnTypeAnnotationIsPreserved();
     void namedFunctionExpressionReturnTypeIsPreserved();
+    void cuObjectIndex();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -10870,6 +10872,21 @@ void tst_qqmlecmascript::namedFunctionExpressionReturnTypeIsPreserved() {
 
     QVERIFY(!signature.empty());
     QCOMPARE(signature.first(), QQmlMetaType::qmlType(QMetaType::fromType<int>()));
+}
+
+void tst_qqmlecmascript::cuObjectIndex()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+
+    // The root object of a component should have cuObjectIndex >= 0.
+    QVERIFY(ddata->cuObjectIndex >= 0);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

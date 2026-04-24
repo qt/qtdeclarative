@@ -197,6 +197,10 @@ public:
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
     QList<DeferredData *> deferredData;
 
+    // The compiled-object index within compilationUnit for this object.
+    // Set for all QML-created objects, including those without a VMEMetaObject.
+    int cuObjectIndex = -1;
+
     void deferData(int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &,
                    const QQmlRefPointer<QQmlContextData> &, const QString &inlineComponentName);
     void releaseDeferredData();
