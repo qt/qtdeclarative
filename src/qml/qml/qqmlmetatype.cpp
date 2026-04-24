@@ -2215,6 +2215,15 @@ void QQmlMetaType::unregisterInternalCompositeType(
     }
 }
 
+void QQmlMetaType::deepClearCompositeType(
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &oldUnit)
+{
+    unregisterInternalCompositeType(oldUnit);
+    unregisterType(oldUnit->qmlType.index());
+    for (const auto &icData : std::as_const(oldUnit->inlineComponentData))
+        unregisterType(icData.qmlType.index());
+}
+
 int QQmlMetaType::countInternalCompositeTypeSelfReferences(
         const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit)
 {

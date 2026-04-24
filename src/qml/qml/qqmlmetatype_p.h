@@ -291,6 +291,8 @@ public:
             const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
     static void unregisterInternalCompositeType(
             const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
+    static void deepClearCompositeType(
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &oldUnit);
     static int countInternalCompositeTypeSelfReferences(
             const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit);
     static QQmlRefPointer<QV4::CompiledData::CompilationUnit> obtainCompilationUnit(

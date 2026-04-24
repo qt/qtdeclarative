@@ -13,6 +13,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmlanybinding_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <private/qqmldata_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
 using namespace Qt::StringLiterals;
@@ -65,6 +66,7 @@ private slots:
     void findOrCreateSpeculativeInlineComponentType_baseTypeNotRegistered();
     void findOrCreateSpeculativeInlineComponentType_noCompilationUnit();
     void findOrCreateSpeculativeInlineComponentType_icNotFound();
+    void deepClearCompositeType();
 };
 
 class TestType : public QObject
@@ -1060,6 +1062,30 @@ void tst_qqmlmetatype::findOrCreateSpeculativeInlineComponentType_icNotFound()
     const QQmlType type = QQmlMetaType::findOrCreateSpeculativeInlineComponentType(icUrl);
     // Should return invalid type since IC doesn't exist in the registered CU
     QVERIFY(!type.isValid());
+}
+
+void tst_qqmlmetatype::deepClearCompositeType()
+{
+    // Use a separate engine so we don't pollute the shared one.
+    QQmlEngine localEngine;
+    QQmlComponent component(&localEngine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+    QVERIFY(ddata->compilationUnit);
+
+    const auto cu = ddata->compilationUnit->baseCompilationUnit();
+    const QQmlType originalType = cu->qmlType;
+    QVERIFY(originalType.isValid());
+
+    QQmlMetaType::deepClearCompositeType(cu);
+
+    // After deep clear, the type index should no longer resolve via QQmlMetaType.
+    const QQmlType looked = QQmlMetaType::qmlTypeById(originalType.index());
+    QVERIFY(!looked.isValid());
 }
 
 QTEST_MAIN(tst_qqmlmetatype)
