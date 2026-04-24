@@ -104,6 +104,7 @@ public:
     }
 
     QV4::Function *function() const { return m_v4Function; }
+    void setFunction(QV4::Function *f);
 
     virtual void refresh();
 

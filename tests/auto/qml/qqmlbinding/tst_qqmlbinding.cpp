@@ -6,7 +6,9 @@
 #include <private/qmlutils_p.h>
 #include <private/qqmlanybinding_p.h>
 #include <private/qqmlbind_p.h>
+#include <private/qqmlbinding_p.h>
 #include <private/qqmlcomponentattached_p.h>
+#include <private/qqmlcontextdata_p.h>
 #include <private/qqmlinstantiator_p.h>
 #include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qquickrectangle_p.h>
@@ -58,6 +60,7 @@ private slots:
     void deleteStashedObject();
     void multiValueTypeBinding();
     void objectBindingToId();
+    void setFunction();
 
 private:
     QQmlEngine engine;
@@ -989,6 +992,38 @@ void tst_qqmlbinding::objectBindingToId()
 
     root->setProperty("bindingActive", true);
     QCOMPARE_NE(root->property("background").value<QObject *>(), nullptr);
+}
+
+void tst_qqmlbinding::setFunction()
+{
+    QObject obj;
+
+    QQmlAbstractBinding::Ptr guard1(QQmlBinding::create(
+            nullptr, QStringLiteral("42"), &obj,
+            QQmlContextData::get(engine.rootContext())));
+    QQmlBinding *binding1 = static_cast<QQmlBinding *>(guard1.data());
+    QVERIFY(binding1);
+    QV4::Function *function1 = binding1->function();
+    QVERIFY(function1);
+
+    const QVariant forty2 = binding1->evaluate();
+    QCOMPARE(forty2.toInt(), 42);
+
+    binding1->setFunction(nullptr);
+    QVERIFY(!binding1->function());
+
+    QQmlAbstractBinding::Ptr guard2(QQmlBinding::create(
+            nullptr, QStringLiteral("43"), &obj,
+            QQmlContextData::get(engine.rootContext())));
+
+    QQmlBinding *binding2 = static_cast<QQmlBinding *>(guard2.data());
+    QVERIFY(binding2);
+    QV4::Function *function2 = binding2->function();
+    QVERIFY(function2);
+    binding1->setFunction(function2);
+
+    const QVariant forty3 = binding1->evaluate();
+    QCOMPARE(forty3.toInt(), 43);
 }
 
 QTEST_MAIN(tst_qqmlbinding)
