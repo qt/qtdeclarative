@@ -88,7 +88,7 @@ struct ClientAndServer
 
         bool initializedOk = false;
         InitializeParams initializeParams;
-        initializeParams.capabilities.window.emplace().insert("workDoneProgress", true);
+        initializeParams.capabilities.window.emplace().workDoneProgress = true;
         result.client->requestInitialize(
                 initializeParams,
                 [&initializedOk](const InitializeResult &) { initializedOk = true; });

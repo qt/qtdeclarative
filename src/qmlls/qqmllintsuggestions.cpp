@@ -68,10 +68,14 @@ static void codeActionHandler(
             TextDocumentEdit textDocEdit;
             for (const auto &documentEdit : documentEdits) {
                 TextEdit textEdit;
-                textEdit.range = { Position{ documentEdit[u"lspBeginLine"].toInt(),
-                                             documentEdit[u"lspBeginCharacter"].toInt() },
-                                   Position{ documentEdit[u"lspEndLine"].toInt(),
-                                             documentEdit[u"lspEndCharacter"].toInt() } };
+                textEdit.range = {
+                    Position{
+                            static_cast<unsigned>(documentEdit[u"lspBeginLine"].toDouble()),
+                            static_cast<unsigned>(documentEdit[u"lspBeginCharacter"].toDouble()) },
+                    Position{ static_cast<unsigned>(documentEdit[u"lspEndLine"].toDouble()),
+                              static_cast<unsigned>(documentEdit[u"lspEndCharacter"].toDouble()) }
+                };
+
                 textEdit.newText = documentEdit[u"replacement"_s].toString().toUtf8();
                 QString filename = documentEdit[u"filename"_s].toString();
                 textDocEdit.textDocument = { { filename.toUtf8() }, version };
@@ -85,7 +89,7 @@ static void codeActionHandler(
 
         CodeAction action;
         // VS Code and QtC ignore everything that is not a 'quickfix'.
-        action.kind = u"quickfix"_s.toUtf8();
+        action.kind = CodeActionKind::QuickFix;
         action.edit = edit;
         action.title = message.toUtf8();
 
@@ -156,15 +160,15 @@ using AdvanceFunc = qxp::function_ref<void(const QQmlJS::SourceLocation &, Posit
 QJsonArray suggestionToJson(AdvanceFunc advancePositionPastLocation, const Message &message)
 {
     const auto addLocationToJsonObject = [&](const auto &location, QJsonObject &object) {
-        const int line = location.isValid() ? location.startLine - 1 : 0;
-        const int column = location.isValid() ? location.startColumn - 1 : 0;
+        const unsigned line = location.isValid() ? location.startLine - 1 : 0;
+        const unsigned column = location.isValid() ? location.startColumn - 1 : 0;
         Position end = { line, column };
         if (location.isValid())
             advancePositionPastLocation(location, end);
-        object["lspBeginLine"_L1] = line;
-        object["lspBeginCharacter"_L1] = column;
-        object["lspEndLine"_L1] = end.line;
-        object["lspEndCharacter"_L1] = end.character;
+        object["lspBeginLine"_L1] = double(line);
+        object["lspBeginCharacter"_L1] = double(column);
+        object["lspEndLine"_L1] = double(end.line);
+        object["lspEndCharacter"_L1] = double(end.character);
     };
 
     if (!message.fixSuggestion.has_value())
@@ -177,8 +181,8 @@ QJsonArray suggestionToJson(AdvanceFunc advancePositionPastLocation, const Messa
         // We need to interject the information about where the fix suggestions end
         // here since we don't have access to the textDocument to calculate it later.
         const QQmlJS::SourceLocation cut = suggestion.location();
-        const int line = cut.isValid() ? cut.startLine - 1 : 0;
-        const int column = cut.isValid() ? cut.startColumn - 1 : 0;
+        const unsigned line = cut.isValid() ? cut.startLine - 1 : 0;
+        const unsigned column = cut.isValid() ? cut.startColumn - 1 : 0;
 
         Position end = { line, column };
         if (cut.isValid())

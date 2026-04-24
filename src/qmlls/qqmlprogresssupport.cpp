@@ -26,7 +26,7 @@ void QQmlProgressSupport::registerHandlers(QLanguageServer *server,
 void QQmlProgressSupport::clientInitialized(QLanguageServer *server)
 {
     if (auto window = server->clientInfo().capabilities.window;
-        !window || !window->value("workDoneProgress"_L1).toBool(false)) {
+        !window || !window->workDoneProgress.value_or(false)) {
         return;
     }
 

@@ -945,21 +945,22 @@ Utils::sourceLocationsFromMultiLineToken(QStringView stringLiteral,
     return result;
 }
 
-QList<int> Utils::encodeSemanticTokens(const HighlightsContainer &highlights, HighlightingMode mode)
+QList<unsigned> Utils::encodeSemanticTokens(const HighlightsContainer &highlights,
+                                            HighlightingMode mode)
 {
-    QList<int> result;
+    QList<unsigned> result;
     constexpr auto tokenEncodingLength = 5;
     result.reserve(tokenEncodingLength * highlights.size());
 
-    int prevLine = 0;
-    int prevColumn = 0;
+    unsigned prevLine = 0;
+    unsigned prevColumn = 0;
     const auto m_mapToProtocol = mode == HighlightingMode::Default
                                      ? mapToProtocolDefault
                                      : mapToProtocolForQtCreator;
     std::for_each(highlights.constBegin(), highlights.constEnd(), [&](const auto &token) {
-        int length = token.loc.length;
-        int line = token.loc.startLine - 1; // protocol is 0-based
-        int col = token.loc.startColumn - 1; // protocol is 0-based
+        unsigned length = token.loc.length;
+        unsigned line = token.loc.startLine - 1u; // protocol is 0-based
+        unsigned col = token.loc.startColumn - 1u; // protocol is 0-based
         Q_ASSERT(line >= prevLine);
         if (line != prevLine)
             prevColumn = 0;
@@ -1028,7 +1029,8 @@ A utility method that computes the difference of two list. The first argument is
 of the file before edited. The second argument is the encoded token data after the file is edited. Returns
 a list of SemanticTokensEdit as expected by the protocol.
 */
-QList<SemanticTokensEdit> Utils::computeDiff(const QList<int> &oldData, const QList<int> &newData)
+QList<SemanticTokensEdit> Utils::computeDiff(const QList<unsigned> &oldData,
+                                             const QList<unsigned> &newData)
 {
     // Find the iterators pointing the first mismatch, from the start
     const auto [oldStart, newStart] =

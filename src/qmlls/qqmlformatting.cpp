@@ -84,8 +84,9 @@ void QQmlDocumentFormatting::process(RequestPointerArgument request)
     const auto [endLine, endColumn] = QQmlLSUtils::textRowAndColumnFrom(code, code.length());
 
     Q_UNUSED(endColumn);
-    formattedText.range = QLspSpecification::Range{ QLspSpecification::Position{ 0, 0 },
-                                                    QLspSpecification::Position{ endLine + 1, 0 } };
+    formattedText.range =
+            QLspSpecification::Range{ QLspSpecification::Position{ 0u, 0u },
+                                      QLspSpecification::Position{ endLine + 1u, 0u } };
 
     result.append(formattedText);
 }

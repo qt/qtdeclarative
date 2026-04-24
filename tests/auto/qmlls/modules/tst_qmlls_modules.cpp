@@ -222,7 +222,8 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
             cParams,
             [clean, uri, expected, notExpected](auto res) {
                 QScopeGuard cleanup(clean);
-                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
+                QVERIFY(res);
+                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
 
                 if (!cItems) {
                     return;
@@ -236,16 +237,16 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                 QDuplicateTracker<QByteArray> propertiesTracker;
 
                 for (const CompletionItem &c : *cItems) {
-                    if (c.kind->toInt() == int(CompletionItemKind::Module)) {
+                    if (c.kind == CompletionItemKind::Module) {
                         QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
-                    } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
+                    } else if (c.kind == CompletionItemKind::Keyword) {
                         QVERIFY2(!keywordsTracker.hasSeen(c.label),
                                  "Duplicate keyword: " + c.label);
-                    } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
+                    } else if (c.kind == CompletionItemKind::Class) {
                         QVERIFY2(!classesTracker.hasSeen(c.label), "Duplicate class: " + c.label);
-                    } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
+                    } else if (c.kind == CompletionItemKind::Field) {
                         QVERIFY2(!fieldsTracker.hasSeen(c.label), "Duplicate field: " + c.label);
-                    } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
+                    } else if (c.kind == CompletionItemKind::Property) {
                         QVERIFY2(!propertiesTracker.hasSeen(c.label),
                                  "Duplicate property: " + c.label);
                     }
@@ -260,7 +261,7 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                                      .toUtf8());
                     if (labels.contains(exp.first)) {
                         for (const CompletionItem &c : *cItems) {
-                            const auto kind = static_cast<CompletionItemKind>(c.kind->toInt());
+                            const auto kind = c.kind;
 
                             bool foundEntry = false;
                             bool hasCorrectKind = false;
@@ -281,7 +282,7 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
                                                      "Completion item '%1' has wrong kind '%2'")
                                                      .arg(c.label)
                                                      .arg(QMetaEnum::fromType<CompletionItemKind>()
-                                                                  .valueToKey(int(kind)))));
+                                                                  .valueToKey(int(*kind)))));
                         }
                     }
                 }
@@ -342,7 +343,8 @@ void tst_qmlls_modules::function_documentations()
     m_protocol->requestCompletion(
             cParams,
             [clean, uri, expectedDocs](auto res) {
-                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
+                QVERIFY(res);
+                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
 
                 if (!cItems) {
                     return;
@@ -352,7 +354,7 @@ void tst_qmlls_modules::function_documentations()
                     bool hasFoundExpected = false;
                     const auto expectedLabel = std::get<0>(exp);
                     for (const CompletionItem &c : *cItems) {
-                        if (c.kind->toInt() != int(CompletionItemKind::Method)) {
+                        if (c.kind != CompletionItemKind::Method) {
                             // Only check functions.
                             continue;
                         }
@@ -368,7 +370,7 @@ void tst_qmlls_modules::function_documentations()
                 }
 
                 for (const CompletionItem &c : *cItems) {
-                    if (c.kind->toInt() != int(CompletionItemKind::Function)) {
+                    if (c.kind != CompletionItemKind::Function) {
                         // Only check functions.
                         continue;
                     }
@@ -443,7 +445,7 @@ void tst_qmlls_modules::buildDir()
 
     // change the file content to force qqml— to recreate a new DomItem
     // if it reuses the old DomItem then it will not know about the added build directory
-    TextDocumentContentChangeEvent change;
+    TextDocumentContentChangeEventVariant1 change;
     change.range = Range{ Position{ 4, 0 }, Position{ 4, 0 } };
     change.text = "\n";
 
@@ -467,7 +469,7 @@ void tst_qmlls_modules::inMemoryEnumCompletion()
     QVERIFY(uri);
 
     // add in memory enum that does not exist on disk
-    TextDocumentContentChangeEvent change;
+    TextDocumentContentChangeEventVariant1 change;
     change.range = Range{ Position{ 3, 0 }, Position{ 3, 0 } };
     change.text = "enum HelloEnum { Hello, World, Kitty, Qt }\nproperty var myP: SimpleItem.H";
 
@@ -588,9 +590,8 @@ void tst_qmlls_modules::goToTypeDefinition()
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
-                auto *result = std::get_if<QList<Location>>(&res);
-
-                QVERIFY(result);
+                QVERIFY(res);
+                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&*res));
 
                 QCOMPARE(result->size(), 1);
 
@@ -670,7 +671,8 @@ void tst_qmlls_modules::goToDefinition()
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
-                auto *result = std::get_if<QList<Location>>(&res);
+                QVERIFY(res);
+                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&*res));
                 const QByteArray noResultExpected;
 
                 QVERIFY(result);
@@ -806,9 +808,9 @@ void tst_qmlls_modules::findUsages()
     auto clean = [didFinish]() { *didFinish = true; };
     m_protocol->requestReference(
             params,
-            [&](auto res) {
+            [&](auto result) {
                 QScopeGuard cleanup(clean);
-                auto *result = std::get_if<QList<Location>>(&res);
+                QVERIFY(result);
 
                 QVERIFY(result);
                 if constexpr (enable_debug_output) {
@@ -925,30 +927,27 @@ void tst_qmlls_modules::documentFormatting()
     auto clean = [didFinish]() { *didFinish = true; };
     auto &&responseHandler = [&](auto response) {
         QScopeGuard cleanup(clean);
-        if (std::holds_alternative<QList<TextEdit>>(response)) {
-            const auto results = std::get<QList<TextEdit>>(response);
-            QVERIFY(results.size() == 1);
-            QFile file(expectedFile);
-            if (!file.open(QIODevice::ReadOnly)) {
-                qWarning() << "Error while opening the file " << expectedFile;
-                return;
-            }
-
-            const auto &textEdit = results.first();
-            QCOMPARE(textEdit.range.start.line, 0);
-            QCOMPARE(textEdit.range.start.character, 0);
-            QCOMPARE(textEdit.range.end.line, lineCount(originalFile));
-            QCOMPARE(textEdit.range.end.character, 0);
-
-            QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_id.qml",
-                         "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
-                         Continue);
-            QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_parameters.qml",
-                         "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)",
-                         Continue);
-
-            QCOMPARE(textEdit.newText, file.readAll());
+        QVERIFY(response);
+        const auto results = *response;
+        QVERIFY(results.size() == 1);
+        QFile file(expectedFile);
+        if (!file.open(QIODevice::ReadOnly)) {
+            qWarning() << "Error while opening the file " << expectedFile;
+            return;
         }
+
+        const auto &textEdit = results.first();
+        QCOMPARE(textEdit.range.start.line, 0);
+        QCOMPARE(textEdit.range.start.character, 0);
+        QCOMPARE(textEdit.range.end.line, lineCount(originalFile));
+        QCOMPARE(textEdit.range.end.character, 0);
+
+        QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_id.qml",
+                     "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Continue);
+        QEXPECT_FAIL("noSuperfluousSpaceInsertions.fail_parameters.qml",
+                     "Not all cases have been covered yet (QTBUG-133315, QTBUG-123386)", Continue);
+
+        QCOMPARE(textEdit.newText, file.readAll());
     };
 
     auto &&errorHandler = [&clean](const ResponseError &err) {
@@ -1040,15 +1039,14 @@ void tst_qmlls_modules::renameUsages_data()
 
         const QLspSpecification::WorkspaceEdit qmlComponentRename{
             std::nullopt,
-            QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
-                    TextDocumentEdit{
-                            OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
-                            {
-                                    TextEdit{ rangeFrom(renamingContent, 4, 5,
-                                                        static_cast<quint32>(strlen("RenameMe"))),
-                                              "HelloWorld" },
-                            } },
-                    RenameFile{ "rename", renameMeUri, newFileUri } }
+            { { TextDocumentEdit{
+                        OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
+                        {
+                                TextEdit{ rangeFrom(renamingContent, 4, 5,
+                                                    static_cast<quint32>(strlen("RenameMe"))),
+                                          "HelloWorld" },
+                        } },
+                RenameFile{ { }, renameMeUri, newFileUri } } }
         };
 
         QTest::addRow("renameQmlComponent")
@@ -1058,15 +1056,14 @@ void tst_qmlls_modules::renameUsages_data()
     {
         QLspSpecification::WorkspaceEdit qmlComponentRename{
             std::nullopt,
-            QList<QLspSpecification::WorkspaceEdit::DocumentChange>{
-                    TextDocumentEdit{
-                            OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
-                            {
-                                    TextEdit{ rangeFrom(renamingContent, 5, 5,
-                                                        static_cast<quint32>(strlen("RenameMe2"))),
-                                              "HelloWorld" },
-                            } },
-                    RenameFile{ "rename", renameMe2Uri, newFileUri2 } }
+            { { TextDocumentEdit{
+                        OptionalVersionedTextDocumentIdentifier{ { renameUsagesUri } },
+                        {
+                                TextEdit{ rangeFrom(renamingContent, 5, 5,
+                                                    static_cast<quint32>(strlen("RenameMe2"))),
+                                          "HelloWorld" },
+                        } },
+                RenameFile{ { }, renameMe2Uri, newFileUri2 } } }
         };
 
         QTest::addRow("renameUiQmlComponent")
@@ -1132,10 +1129,8 @@ void tst_qmlls_modules::renameUsages()
     auto clean = [didFinish]() { *didFinish = true; };
     m_protocol->requestRename(
             params,
-            [&](auto &&res) {
+            [&](auto &&result) {
                 QScopeGuard cleanup(clean);
-                auto *result = std::get_if<QLspSpecification::WorkspaceEdit>(&res);
-
                 QVERIFY(result);
                 QCOMPARE(result->changes.has_value(), expectedEdit.changes.has_value());
                 QCOMPARE(result->changeAnnotations.has_value(),
@@ -1204,7 +1199,7 @@ struct EditingRecorder
     before starting qmlls. It will print the differences between the different versions, and helps
     when some indices are off.
     */
-    void changeText(int startLine, int startCharacter, int endLine, int endCharacter,
+    void changeText(unsigned startLine, unsigned startCharacter, unsigned endLine, unsigned endCharacter,
                     QString newText)
     {
         // The LSP starts at 0
@@ -1220,7 +1215,7 @@ struct EditingRecorder
 
         DidChangeTextDocumentParams params;
         params.textDocument = VersionedTextDocumentIdentifier{ { lastFileUri }, ++version };
-        params.contentChanges.append({
+        params.contentChanges.append(TextDocumentContentChangeEventVariant1{
                 Range{ Position{ startLine, startCharacter }, Position{ endLine, endCharacter } },
                 std::nullopt, // deprecated range length
                 newText.toUtf8(),
@@ -1623,10 +1618,8 @@ void tst_qmlls_modules::rangeFormatting()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto clean = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto res) {
-        Q_UNUSED(res);
+    auto &&responseHandler = [&](auto result) {
         QScopeGuard cleanup(clean);
-        auto result = std::get_if<QList<TextEdit>>(&res);
         QVERIFY(result);
 
         QFile file(testFile(expectedAfterFormat));
@@ -1708,9 +1701,8 @@ void tst_qmlls_modules::hover()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto clean = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto res) {
+    auto &&responseHandler = [&](auto result) {
         QScopeGuard cleanup(clean);
-        const auto *const result = std::get_if<QLspSpecification::Hover>(&res);
         QVERIFY(result);
 
         const auto *const markupContent =
@@ -1801,7 +1793,8 @@ void tst_qmlls_modules::qmldirImports()
     cParams.textDocument.uri = *uri;
 
     m_protocol->requestCompletion(cParams, [&completionOk, &expectedCompletion](auto res) {
-        const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
+        QVERIFY(res);
+        const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
 
         QSet<QString> labels;
         for (const CompletionItem &c : *cItems) {
@@ -1904,20 +1897,17 @@ void tst_qmlls_modules::quickFixes()
 
     codeActionParams.context.diagnostics = diagnostics;
 
-    using InnerT = QList<std::variant<Command, CodeAction>>;
-    using T = std::variant<InnerT, std::nullptr_t>;
-
     bool codeActionOk = false;
 
     // request a quickfix with the obtained diagnostic
-    m_protocol->requestCodeAction(codeActionParams, [&](const T &result) {
-        QVERIFY(std::holds_alternative<InnerT>(result));
-        InnerT inner = std::get<InnerT>(result);
-        QCOMPARE(inner.size(), 1);
-        QVERIFY(std::holds_alternative<CodeAction>(inner.front()));
-        CodeAction codeAction = std::get<CodeAction>(inner.front());
+    m_protocol->requestCodeAction(codeActionParams, [&](const auto &result) {
+        QVERIFY(result);
+        QCOMPARE(result->size(), 1);
+        QVERIFY(std::holds_alternative<CodeAction>(result->front()));
+        CodeAction codeAction = std::get<CodeAction>(result->front());
 
-        QCOMPARE(codeAction.kind, "quickfix"); // everything else is ignored by QtC, VS Code, ...
+        QCOMPARE(codeAction.kind,
+                 CodeActionKind::QuickFix); // everything else is ignored by QtC, VS Code, ...
 
         QVERIFY(codeAction.edit);
         QVERIFY(codeAction.edit->documentChanges);
@@ -1981,11 +1971,10 @@ void tst_qmlls_modules::semanticHighlightingFull()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto cleanup = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto res) {
+    auto &&responseHandler = [&](auto result) {
         QScopeGuard callAtExit(cleanup);
-        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
         QVERIFY(result);
-        QList<int> data = result->data;
+        QList<unsigned> data = result->data;
         QCOMPARE(data.size(), expectedData.size());
         QCOMPARE(data, expectedData);
     };
@@ -2031,11 +2020,11 @@ void tst_qmlls_modules::semanticHighlightingRange()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto cleanup = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto res) {
+    auto &&responseHandler = [&](auto result) {
+        ;
         QScopeGuard callAtExit(cleanup);
-        const auto *const result = std::get_if<QLspSpecification::SemanticTokens>(&res);
         QVERIFY(result);
-        QList<int> data = result->data;
+        QList<unsigned> data = result->data;
         QCOMPARE(data.size(), expectedData.size());
         QCOMPARE(data, expectedData);
     };
@@ -2096,10 +2085,9 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     m_protocol->requestSemanticTokens(fullParams,
     [&](auto res) {
         QScopeGuard callAtExit(cleanup);
-        if (auto r = std::get_if<QLspSpecification::SemanticTokens>(&res)) {
-            params.previousResultId = r->resultId.value();
-            fullDocumentSemanticTokensData = r->data;
-        }
+        QVERIFY(res);
+        params.previousResultId = res->resultId.value();
+        fullDocumentSemanticTokensData = res->data;
     }, errorHandler);
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 
@@ -2108,7 +2096,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     didChange.textDocument.uri = *uri;
     didChange.textDocument.version = 2;
 
-    TextDocumentContentChangeEvent change;
+    TextDocumentContentChangeEventVariant1 change;
     change.range = Range{ Position{ 8, 4 }, Position{ 8, 4 } };
     change.text = "const Patron = 42";
 
@@ -2124,7 +2112,8 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     }, std::move(errorHandler));
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 
-    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&result)) {
+    QVERIFY(result);
+    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&*result)) {
         QVERIFY(delta);
         const auto data = delta->edits.front().data;
         const auto start = delta->edits.front().start;
@@ -2133,7 +2122,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
         QCOMPARE(deleteCount, expectedEdits.front().deleteCount);
         QCOMPARE(data, expectedEdits.front().data);
     } else {
-        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&result);
+        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&*result);
         QVERIFY(full);
         QCOMPARE(full->data, expectedEdits.front().data);
     }
@@ -2351,7 +2340,7 @@ void tst_qmlls_modules::documentSymbols()
 
     auto &&responseHandler = [&](auto res) {
         QScopeGuard callAtExit(cleanup);
-        const auto result = std::get_if<QList<DocumentSymbol>>(&res);
+        const auto result = std::get_if<QList<DocumentSymbol>>(&*res);
         QVERIFY(result);
         auto expectedResult = documentSymbolsExpectedResult();
         compareDocumentSymbolsLists(*result, expectedResult);

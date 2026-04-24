@@ -115,8 +115,6 @@ State::State()
     QCOMPARE(requestStatus, RequestStatus::Failure);
 
     InitializeParams clientInfo;
-    clientInfo.rootUri = nullptr;
-    clientInfo.processId = nullptr;
     requestStatus = RequestStatus::NoResponse;
     protocol.requestInitialize(
             clientInfo,

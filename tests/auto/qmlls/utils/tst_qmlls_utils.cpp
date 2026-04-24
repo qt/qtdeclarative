@@ -4673,20 +4673,20 @@ void tst_qmlls_utils::completions()
         QVERIFY(!c.label.contains("$module$."));
         QVERIFY(!c.label.contains("$anonymous$."));
 
-        if (c.kind->toInt() == int(CompletionItemKind::Module)) {
+        if (c.kind == CompletionItemKind::Module) {
             QVERIFY2(!modulesTracker.hasSeen(c.label), "Duplicate module: " + c.label);
-        } else if (c.kind->toInt() == int(CompletionItemKind::Keyword)) {
+        } else if (c.kind == CompletionItemKind::Keyword) {
             QVERIFY2(!keywordsTracker.hasSeen(c.label), "Duplicate keyword: " + c.label);
-        } else if (c.kind->toInt() == int(CompletionItemKind::Class)) {
+        } else if (c.kind == CompletionItemKind::Class) {
             QVERIFY2(!classesTracker.hasSeen(c.label), "Duplicate class: " + c.label);
-        } else if (c.kind->toInt() == int(CompletionItemKind::Field)) {
+        } else if (c.kind == CompletionItemKind::Field) {
             QVERIFY2(!fieldsTracker.hasSeen(c.label), "Duplicate field: " + c.label);
-        } else if (c.kind->toInt() == int(CompletionItemKind::Snippet)) {
+        } else if (c.kind == CompletionItemKind::Snippet) {
             QVERIFY2(!snippetTracker.hasSeen(c.label), "Duplicate field: " + c.label);
             if (c.insertText->contains('\n') || c.insertText->contains('\r')) {
                 QCOMPARE(c.insertTextMode, InsertTextMode::AdjustIndentation);
             }
-        } else if (c.kind->toInt() == int(CompletionItemKind::Property)) {
+        } else if (c.kind == CompletionItemKind::Property) {
             QVERIFY2(!propertiesTracker.hasSeen(c.label), "Duplicate property: " + c.label);
             QCOMPARE(c.insertText, std::nullopt);
         }
@@ -4707,7 +4707,7 @@ void tst_qmlls_utils::completions()
             CompletionItemKind foundKind;
             for (const CompletionItem &c : completions) {
                 if (c.label == exp.label) {
-                    foundKind = static_cast<CompletionItemKind>(c.kind->toInt());
+                    foundKind = *c.kind;
                     foundEntry = true;
                     if (foundKind == exp.kind) {
                         hasCorrectKind = true;

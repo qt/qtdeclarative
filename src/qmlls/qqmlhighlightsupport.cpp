@@ -42,10 +42,10 @@ QList<QByteArray> extendedTokenTypesList()
     return enumToByteArray<SemanticTokenProtocolTypes>();
 }
 
-static QList<int> generateHighlights(QmlLsp::RegisteredSemanticTokens &cached,
-                                     const QmlLsp::OpenDocument &doc,
-                                     const std::optional<HighlightsRange> &range,
-                                     HighlightingMode mode)
+static QList<unsigned> generateHighlights(QmlLsp::RegisteredSemanticTokens &cached,
+                                          const QmlLsp::OpenDocument &doc,
+                                          const std::optional<HighlightsRange> &range,
+                                          HighlightingMode mode)
 {
     DomItem file = doc.snapshot.doc.fileObject(GoTo::MostLikely);
     const auto fileObject = file.ownerAs<QmlFile>();
@@ -98,7 +98,6 @@ void SemanticTokenFullHandler::process(
     auto encoded = generateHighlights(cached, doc, std::nullopt, m_mode);
 
     if (encoded.isEmpty()) {
-        result = nullptr;
         return;
     } else {
         result = SemanticTokens{cached.resultId, std::move(encoded)};
@@ -190,7 +189,6 @@ void SemanticTokenRangeHandler::process(
             QmlHighlighting::HighlightsRange{ startOffset, endOffset },
             m_mode);
     if (encodedTokens.isEmpty()) {
-        result = nullptr;
     } else {
         result = SemanticTokens{ cached.resultId, std::move(encodedTokens) };
     }

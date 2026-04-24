@@ -56,7 +56,7 @@ CompletionItem QQmlLSCompletion::makeSnippet(QUtf8StringView qualifier, QUtf8Str
     } else {
         res.insertText = insertText.data();
     }
-    res.kind = int(CompletionItemKind::Snippet);
+    res.kind = CompletionItemKind::Snippet;
     res.insertTextMode = InsertTextMode::AdjustIndentation;
     return res;
 }
@@ -180,7 +180,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
     if (effectiveLength < 2) {
         CompletionItem comp;
         comp.label = "import";
-        comp.kind = int(CompletionItemKind::Keyword);
+        comp.kind = CompletionItemKind::Keyword;
         it = comp;
     }
     if (linePieces.isEmpty() || linePieces.first() != u"import")
@@ -193,7 +193,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
             // the cursor is after the module, possibly in a partial version token (or partial as)
             CompletionItem comp;
             comp.label = "as";
-            comp.kind = int(CompletionItemKind::Keyword);
+            comp.kind = CompletionItemKind::Keyword;
             it = comp;
             importCompletionType = ImportCompletionType::Version;
         }
@@ -216,7 +216,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                     if (!modulesSeen.hasSeen(label)) {
                         CompletionItem comp;
                         comp.label = label.toUtf8();
-                        comp.kind = int(CompletionItemKind::Module);
+                        comp.kind = CompletionItemKind::Module;
                         it = comp;
                     }
                 }
@@ -229,7 +229,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                      envPtr->moduleIndexMajorVersions(env, linePieces.at(1).toString())) {
                     CompletionItem comp;
                     comp.label = QString::number(majorV).toUtf8();
-                    comp.kind = int(CompletionItemKind::Constant);
+                    comp.kind = CompletionItemKind::Constant;
                     it = comp;
                 }
             } else {
@@ -244,7 +244,7 @@ void QQmlLSCompletion::insideImportCompletionHelper(const DomItem &file,
                     for (int minorV : mIndex->minorVersions()) {
                         CompletionItem comp;
                         comp.label = QString::number(minorV).toUtf8();
-                        comp.kind = int(CompletionItemKind::Constant);
+                        comp.kind = CompletionItemKind::Constant;
                         it = comp;
                     }
                 }
@@ -260,7 +260,7 @@ void QQmlLSCompletion::idsCompletions(const DomItem &component, BackInsertIterat
     for (const QString &k : component.field(Fields::ids).keys()) {
         CompletionItem comp;
         comp.label = k.toUtf8();
-        comp.kind = int(CompletionItemKind::Value);
+        comp.kind = CompletionItemKind::Value;
         it = comp;
     }
 }
@@ -318,7 +318,7 @@ void QQmlLSCompletion::suggestReachableTypes(const DomItem &el, LocalSymbolsType
 
         CompletionItem completion;
         completion.label = QStringView(type.first).sliced(requiredQualifiers.size()).toUtf8();
-        completion.kind = int(kind);
+        completion.kind = kind;
         it = completion;
     }
 }
@@ -333,7 +333,7 @@ void QQmlLSCompletion::jsIdentifierCompletion(const QQmlJSScope::ConstPtr &scope
             continue;
         }
         completion.label = name.toUtf8();
-        completion.kind = int(CompletionItemKind::Variable);
+        completion.kind = CompletionItemKind::Variable;
         QString detail = u"has type "_s;
         if (jsIdentifier.typeName) {
             if (jsIdentifier.isConst) {
@@ -361,7 +361,7 @@ void QQmlLSCompletion::methodCompletion(const QQmlJSScope::ConstPtr &scope,
         }
         CompletionItem completion;
         completion.label = name.toUtf8();
-        completion.kind = int(CompletionItemKind::Method);
+        completion.kind = CompletionItemKind::Method;
         it = completion;
         // TODO: QQmlLSUtils::reachableSymbols seems to be able to do documentation and detail
         // and co, it should also be done here if possible.
@@ -378,7 +378,7 @@ void QQmlLSCompletion::propertyCompletion(const QQmlJSScope::ConstPtr &scope,
         }
         CompletionItem completion;
         completion.label = name.toUtf8();
-        completion.kind = int(CompletionItemKind::Property);
+        completion.kind = CompletionItemKind::Property;
         QString detail{ u"has type "_s };
         if (!property.isWritable())
             detail.append(u"readonly "_s);
@@ -398,7 +398,7 @@ void QQmlLSCompletion::enumerationCompletion(const QQmlJSScope::ConstPtr &scope,
         }
         CompletionItem completion;
         completion.label = enumerator.name().toUtf8();
-        completion.kind = static_cast<int>(CompletionItemKind::Enum);
+        completion.kind = CompletionItemKind::Enum;
         it = completion;
     }
 }
@@ -409,7 +409,7 @@ void QQmlLSCompletion::enumerationValueCompletionHelper(const QStringList &enume
     for (const QString &enumeratorKey : enumeratorKeys) {
         CompletionItem completion;
         completion.label = enumeratorKey.toUtf8();
-        completion.kind = static_cast<int>(CompletionItemKind::EnumMember);
+        completion.kind = CompletionItemKind::EnumMember;
         it = completion;
     }
 }
@@ -543,7 +543,7 @@ void QQmlLSCompletion::suggestJSExpressionCompletion(const DomItem &scriptIdenti
         for (QUtf8StringView view : std::array<QUtf8StringView, 3>{ "null", "false", "true" }) {
             CompletionItem completion;
             completion.label = view.data();
-            completion.kind = int(CompletionItemKind::Value);
+            completion.kind = CompletionItemKind::Value;
             result = completion;
         }
         idsCompletions(scriptIdentifier.component(), result);
@@ -696,7 +696,7 @@ void QQmlLSCompletion::insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
         for (const auto &value : *values) {
             CompletionItem comp;
             comp.label = value.toUtf8();
-            comp.kind = static_cast<int>(CompletionItemKind::Value);
+            comp.kind = CompletionItemKind::Value;
             result = comp;
         }
         return;
@@ -708,7 +708,7 @@ void QQmlLSCompletion::insidePragmaCompletion(QQmlJS::Dom::DomItem currentItem,
         if (!pragma.second.isEmpty()) {
             comp.insertText = QString(pragma.first).append(u": ").toUtf8();
         }
-        comp.kind = static_cast<int>(CompletionItemKind::Value);
+        comp.kind = CompletionItemKind::Value;
         result = comp;
     }
 }
@@ -847,7 +847,7 @@ void QQmlLSCompletion::insidePropertyDefinitionCompletion(
         auto addCompletionKeyword = [&result](QUtf8StringView view) {
             CompletionItem item;
             item.label = view.data();
-            item.kind = int(CompletionItemKind::Keyword);
+            item.kind = CompletionItemKind::Keyword;
             result = item;
         };
 
@@ -970,7 +970,7 @@ void QQmlLSCompletion::insideQmlFileCompletion(const DomItem &currentItem,
             for (const QStringView &s : std::array<QStringView, 2>({ u"pragma", u"import" })) {
                 CompletionItem comp;
                 comp.label = s.toUtf8();
-                comp.kind = int(CompletionItemKind::Keyword);
+                comp.kind = CompletionItemKind::Keyword;
                 result = comp;
             }
         }
@@ -1042,14 +1042,14 @@ void QQmlLSCompletion::suggestContinueAndBreakStatementIfNeeded(const DomItem &i
         case DomType::ScriptDoWhileStatement: {
             CompletionItem continueKeyword;
             continueKeyword.label = "continue";
-            continueKeyword.kind = int(CompletionItemKind::Keyword);
+            continueKeyword.kind = CompletionItemKind::Keyword;
             result = continueKeyword;
 
             // do not add break twice
             if (!alreadyInSwitch && !alreadyInLabel) {
                 CompletionItem breakKeyword;
                 breakKeyword.label = "break";
-                breakKeyword.kind = int(CompletionItemKind::Keyword);
+                breakKeyword.kind = CompletionItemKind::Keyword;
                 result = breakKeyword;
             }
             // early exit: cannot suggest more completions
@@ -1063,7 +1063,7 @@ void QQmlLSCompletion::suggestContinueAndBreakStatementIfNeeded(const DomItem &i
 
             CompletionItem breakKeyword;
             breakKeyword.label = "break";
-            breakKeyword.kind = int(CompletionItemKind::Keyword);
+            breakKeyword.kind = CompletionItemKind::Keyword;
             result = breakKeyword;
             break;
         }
@@ -1075,7 +1075,7 @@ void QQmlLSCompletion::suggestContinueAndBreakStatementIfNeeded(const DomItem &i
 
             CompletionItem breakKeyword;
             breakKeyword.label = "break";
-            breakKeyword.kind = int(CompletionItemKind::Keyword);
+            breakKeyword.kind = CompletionItemKind::Keyword;
             result = breakKeyword;
             break;
         }
@@ -1151,7 +1151,7 @@ void QQmlLSCompletion::suggestJSStatementCompletion(const DomItem &itemAtPositio
     for (const QByteArray &view : { "return"_ba, "throw"_ba }) {
         CompletionItem item;
         item.label = view;
-        item.kind = int(CompletionItemKind::Keyword);
+        item.kind = CompletionItemKind::Keyword;
         result = item;
     }
 
@@ -1596,7 +1596,7 @@ static void collectLabels(const DomItem &context, QQmlLSCompletion::BackInsertIt
                 continue;
             CompletionItem item;
             item.label = label.toUtf8();
-            item.kind = int(CompletionItemKind::Value); // variable?
+            item.kind = CompletionItemKind::Value; // variable?
             // TODO: more stuff here?
             result = item;
         } else if (current.internalKind() == DomType::ScriptExpression) {
@@ -1754,7 +1754,7 @@ void QQmlLSCompletion::signalHandlerCompletion(const QQmlJSScope::ConstPtr &scop
 
         CompletionItem completion;
         completion.label = QQmlSignalNames::signalNameToHandlerName(name).toUtf8();
-        completion.kind = int(CompletionItemKind::Method);
+        completion.kind = CompletionItemKind::Method;
         result = completion;
     }
 }

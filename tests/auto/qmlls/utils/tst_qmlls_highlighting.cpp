@@ -27,7 +27,7 @@ tst_qmlls_highlighting::tst_qmlls_highlighting()
 void tst_qmlls_highlighting::encodeSemanticTokens_data()
 {
     QTest::addColumn<HighlightsContainer>("highlights");
-    QTest::addColumn<QList<int>>("expectedMemoryLayout");
+    QTest::addColumn<QList<unsigned>>("expectedMemoryLayout");
 
     // The magic numbers below are used for semantic token encoding:
     // Each token is represented by 5 integers:
@@ -42,13 +42,13 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
         HighlightsContainer c;
         HighlightToken t(QQmlJS::SourceLocation(0, 0, 1, 1), QmlHighlightKind::Unknown, QmlHighlightModifier::None);
         c.insert(t.loc.offset, t);
-        QTest::addRow("empty-token-single") << c << QList {0, 0, 0, 25, 0};
+        QTest::addRow("empty-token-single") << c << QList<unsigned>{ 0, 0, 0, 25, 0 };
     }
     {
         HighlightsContainer c;
         HighlightToken t(QQmlJS::SourceLocation(0, 1, 1, 1), QmlHighlightKind::Unknown, QmlHighlightModifier::None);
         c.insert(t.loc.offset, t);
-        QTest::addRow("single-token") << c << QList {0, 0, 1, 25, 0};
+        QTest::addRow("single-token") << c << QList<unsigned>{ 0, 0, 1, 25, 0 };
     }
     {
         HighlightsContainer c;
@@ -56,7 +56,7 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
         HighlightToken t2(QQmlJS::SourceLocation(1, 1, 3, 3), QmlHighlightKind::Unknown, QmlHighlightModifier::None);
         c.insert(t1.loc.offset, t1);
         c.insert(t2.loc.offset, t2);
-        QTest::addRow("different-lines") << c << QList {0, 0, 1, 25, 0, 2, 2, 1, 25, 0};
+        QTest::addRow("different-lines") << c << QList<unsigned>{ 0, 0, 1, 25, 0, 2, 2, 1, 25, 0 };
     }
     {
         HighlightsContainer c;
@@ -68,7 +68,8 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
         t2.kind = QmlHighlightKind::Unknown;
         c.insert(t1.loc.offset, t1);
         c.insert(t2.loc.offset, t2);
-        QTest::addRow("same-line-different-column") << c << QList {0, 0, 1, 25, 0, 0, 2, 1, 25, 0};
+        QTest::addRow("same-line-different-column")
+                << c << QList<unsigned>{ 0, 0, 1, 25, 0, 0, 2, 1, 25, 0 };
     }
     {
         HighlightsContainer c;
@@ -76,7 +77,7 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
         t1.loc = QQmlJS::SourceLocation(0, 1, 1, 1);
         t1.kind = QmlHighlightKind::QmlType;
         c.insert(t1.loc.offset, t1);
-        QTest::addRow("token-type") << c << QList {0, 0, 1, 1, 0};
+        QTest::addRow("token-type") << c << QList<unsigned>{ 0, 0, 1, 1, 0 };
     }
     {
         HighlightsContainer c;
@@ -85,14 +86,14 @@ void tst_qmlls_highlighting::encodeSemanticTokens_data()
         t1.kind = QmlHighlightKind::QmlType;
         t1.modifiers = QmlHighlightModifier::QmlPropertyDefinition;
         c.insert(t1.loc.offset, t1);
-        QTest::addRow("token-modifier") << c << QList {0, 0, 1, 1, 2};
+        QTest::addRow("token-modifier") << c << QList<unsigned>{ 0, 0, 1, 1, 2 };
     }
 }
 
 void tst_qmlls_highlighting::encodeSemanticTokens()
 {
     QFETCH(HighlightsContainer, highlights);
-    QFETCH(QList<int>, expectedMemoryLayout);
+    QFETCH(QList<unsigned>, expectedMemoryLayout);
 
     const auto encoded = Utils::encodeSemanticTokens(highlights);
     [&]() {
@@ -937,31 +938,31 @@ void tst_qmlls_highlighting::updateResultID()
 
 void tst_qmlls_highlighting::computeDiff_data()
 {
-    QTest::addColumn<QList<int>>("oldData");
-    QTest::addColumn<QList<int>>("newData");
+    QTest::addColumn<QList<unsigned>>("oldData");
+    QTest::addColumn<QList<unsigned>>("newData");
     QTest::addColumn<QList<SemanticTokensEdit>>("expected");
 
     {
-        QList<int> oldData { 2,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
-        QList<int> newData {  3,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
+        QList<unsigned> oldData { 2,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
+        QList<unsigned> newData {  3,5,3,0,3, 0,5,4,1,0, 3,2,7,2,0};
         SemanticTokensEdit expected;
         expected.start = 0;
         expected.deleteCount = 1;
-        expected.data = QList{3};
+        expected.data = QList{ 3u };
         QTest::addRow("simple") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 0, 0, 5, 5, 0};
-        QList<int> newData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
+        QList<unsigned> oldData { 0, 0, 5, 5, 0};
+        QList<unsigned> newData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 0;
         expected.deleteCount = 0;
-        expected.data = QList{3, 3, 3, 3, 3};
+        expected.data = {3, 3, 3, 3, 3};
         QTest::addRow("prepend") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
-        QList<int> newData { 0, 0, 5, 5, 0};
+        QList<unsigned> oldData { 3, 3, 3, 3, 3, 0, 0, 5, 5, 0};
+        QList<unsigned> newData { 0, 0, 5, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 0;
         expected.deleteCount = 5;
@@ -969,17 +970,17 @@ void tst_qmlls_highlighting::computeDiff_data()
         QTest::addRow("remove-front") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 0, 0, 5, 5, 0};
-        QList<int> newData {  0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<unsigned> oldData { 0, 0, 5, 5, 0};
+        QList<unsigned> newData {  0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 5;
         expected.deleteCount = 0;
-        expected.data = QList{1, 0, 23, 5, 0};
+        expected.data = {1, 0, 23, 5, 0};
         QTest::addRow("append") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
-        QList<int> newData { 0, 0, 5, 5, 0};
+        QList<unsigned> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<unsigned> newData { 0, 0, 5, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 5;
         expected.deleteCount = 5;
@@ -987,17 +988,17 @@ void tst_qmlls_highlighting::computeDiff_data()
         QTest::addRow("remove-back") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
-        QList<int> newData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
+        QList<unsigned> oldData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<unsigned> newData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 5;
         expected.deleteCount = 0;
-        expected.data = QList{3, 3, 3, 3, 3};
+        expected.data = {3, 3, 3, 3, 3};
         QTest::addRow("insert-middle") << oldData << newData << QList{expected};
     }
     {
-        QList<int> oldData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
-        QList<int> newData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
+        QList<unsigned> oldData { 0, 0, 5, 5, 0, 3, 3, 3, 3, 3, 1, 0, 23, 5, 0};
+        QList<unsigned> newData { 0, 0, 5, 5, 0, 1, 0, 23, 5, 0};
         SemanticTokensEdit expected;
         expected.start = 5;
         expected.deleteCount = 5;
@@ -1008,8 +1009,8 @@ void tst_qmlls_highlighting::computeDiff_data()
 
 void tst_qmlls_highlighting::computeDiff()
 {
-    QFETCH(QList<int>, oldData);
-    QFETCH(QList<int>, newData);
+    QFETCH(QList<unsigned>, oldData);
+    QFETCH(QList<unsigned>, newData);
     QFETCH(QList<SemanticTokensEdit>, expected);
 
     const auto edits = Utils::computeDiff(oldData, newData);

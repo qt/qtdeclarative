@@ -154,13 +154,15 @@ struct HighlightsRange
 
 namespace Utils
 {
-QList<int> encodeSemanticTokens(const HighlightsContainer &highlights, HighlightingMode mode = HighlightingMode::Default);
+QList<unsigned> encodeSemanticTokens(const HighlightsContainer &highlights,
+                                     HighlightingMode mode = HighlightingMode::Default);
 QList<QQmlJS::SourceLocation>
 sourceLocationsFromMultiLineToken(QStringView code,
                                     const QQmlJS::SourceLocation &tokenLocation);
 void addModifier(QLspSpecification::SemanticTokenModifiers modifier, int *baseModifier);
 bool rangeOverlapsWithSourceLocation(const QQmlJS::SourceLocation &loc, const HighlightsRange &r);
-QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<int> &, const QList<int> &);
+QList<QLspSpecification::SemanticTokensEdit> computeDiff(const QList<unsigned> &,
+                                                         const QList<unsigned> &);
 void updateResultID(QByteArray &resultID);
 HighlightsContainer visitTokens(const QQmlJS::Dom::DomItem &item,
                                 const std::optional<HighlightsRange> &range);

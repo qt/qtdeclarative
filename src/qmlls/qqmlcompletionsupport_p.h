@@ -24,13 +24,8 @@
 #include <QtQmlLS/private/qqmllscompletion_p.h>
 
 QT_BEGIN_NAMESPACE
-struct CompletionRequest
-    : BaseRequest<QLspSpecification::CompletionParams,
-                  QLspSpecification::LSPPartialResponse<
-                          std::variant<QList<QLspSpecification::CompletionItem>,
-                                       QLspSpecification::CompletionList, std::nullptr_t>,
-                          std::variant<QLspSpecification::CompletionList,
-                                       QList<QLspSpecification::CompletionItem>>>>
+struct CompletionRequest : BaseRequest<QLspSpecification::CompletionParams,
+                                       QLspSpecification::Responses::CompletionResponseType>
 {
     QString code;
 
