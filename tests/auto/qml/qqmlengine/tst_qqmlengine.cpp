@@ -90,6 +90,7 @@ private slots:
     void multiLoadedJavaScriptModule();
     void metaObjectOfScriptCU();
     void registerModule();
+    void invalidModuleImport();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -2083,6 +2084,12 @@ void tst_qqmlengine::registerModule()
     // Make sure that registerModule() doesn't crash when invoked via QQmlEngine
     QQmlEngine engine;
     QVERIFY(engine.registerModule("magic", QJSValue(63)));
+}
+
+void tst_qqmlengine::invalidModuleImport() {
+    QQmlEngine engine;
+    const QJSValue imported = engine.importModule(testFile("invalid.mjs"));
+    QVERIFY(imported.isError());
 }
 
 QTEST_MAIN(tst_qqmlengine)
