@@ -63,6 +63,8 @@ private:
     const QObject *m_target;
 };
 
+namespace QQmlPreview { class BindingPatchContext; }
+
 class Q_QML_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint
 {
 public:
@@ -81,6 +83,7 @@ private:
     friend class QQmlPropertyPrivate;
     friend class QQmlData;
     friend class QQmlEngineDebugService;
+    friend class QQmlPreview::BindingPatchContext;
 
     void addToObject(QObject *owner);
 
