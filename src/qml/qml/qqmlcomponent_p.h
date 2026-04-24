@@ -205,6 +205,13 @@ public:
     {
         return m_compilationUnit;
     }
+    void setCompilationUnit(
+            const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit)
+    {
+        m_compilationUnit = unit;
+        if (unit)
+            m_url = unit->finalUrl();
+    }
 
 private:
     ConstructionState m_state;

@@ -10,6 +10,7 @@
 #include <QQmlExpression>
 #include <private/qqmlcontext_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
+#include <private/qqmldata_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4object_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -55,6 +56,7 @@ private slots:
     void gcDeletesContextObject();
 
     void childContexts();
+    void contextDataCompilationUnitSetter();
 
 private:
     QQmlEngine engine;
@@ -1034,6 +1036,34 @@ void tst_qqmlcontext::childContexts()
 
     QVERIFY(context->findObjectRecursively("inner") != nullptr);
     QCOMPARE(context->findObjectsRecursively("inner").size(), 25);
+}
+
+void tst_qqmlcontext::contextDataCompilationUnitSetter()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+    auto context = ddata->outerContext;
+    QVERIFY(context);
+
+    auto origCU = context->typeCompilationUnit();
+
+    // Round-trip.
+    context->setTypeCompilationUnit(origCU);
+    QCOMPARE(context->typeCompilationUnit().data(), origCU.data());
+
+    // Set to nullptr.
+    context->setTypeCompilationUnit(nullptr);
+    QVERIFY(!context->typeCompilationUnit());
+
+    // Restore.
+    context->setTypeCompilationUnit(origCU);
+    QCOMPARE(context->typeCompilationUnit().data(), origCU.data());
 }
 
 QTEST_MAIN(tst_qqmlcontext)

@@ -58,6 +58,11 @@ public:
     {
         return m_typeCompilationUnit;
     }
+    void setTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit)
+    {
+        m_typeCompilationUnit = unit;
+    }
+
     void initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                                      int subComponentIndex);
 

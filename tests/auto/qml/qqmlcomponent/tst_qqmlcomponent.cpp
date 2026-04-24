@@ -164,6 +164,7 @@ private slots:
     void setInitialPropertyInteraction();
     void invalidBaseUrl();
     void uselessGroupProperty();
+    void componentCompilationUnitSetter();
 
 private:
     QQmlEngine engine;
@@ -1962,6 +1963,22 @@ void tst_qqmlcomponent::uselessGroupProperty()
     QVERIFY(!object);
     QVERIFY(component.errorString().contains(
             "Using grouped property syntax on restoreMode which has no properties"));
+}
+
+void tst_qqmlcomponent::componentCompilationUnitSetter()
+{
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    auto *priv = QQmlComponentPrivate::get(&component);
+    QVERIFY(priv);
+
+    auto origCU = priv->compilationUnit();
+    QVERIFY(origCU);
+
+    // Round-trip.
+    priv->setCompilationUnit(origCU);
+    QCOMPARE(priv->compilationUnit().data(), origCU.data());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
