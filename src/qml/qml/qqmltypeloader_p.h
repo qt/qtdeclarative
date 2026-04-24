@@ -214,6 +214,9 @@ public:
 
     void clearCache();
     void trimCache();
+    void replaceCachedCompilationUnit(
+            const QUrl &url,
+            const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;

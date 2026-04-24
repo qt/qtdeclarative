@@ -19,6 +19,8 @@
 #include <QtQml/private/qqmlirloader_p.h>
 #include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
+#include <QtQml/private/qqmldata_p.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QQmlComponent>
@@ -58,6 +60,7 @@ private slots:
     void doNotRetainQmlTypeAcrossEngines();
     void loadLocalTypesAfterRemoteFails();
     void populateDirectoryCache();
+    void replaceCachedCompilationUnit();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -999,6 +1002,27 @@ void tst_QQMLTypeLoader::populateDirectoryCache()
 
     // One slash used to be required.
     QVERIFY(typeLoader->fileExists(dataDirectory() + '/', "doesExist.qml"));
+}
+
+void tst_QQMLTypeLoader::replaceCachedCompilationUnit()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+    QVERIFY(ddata->compilationUnit);
+
+    auto originalCU = ddata->compilationUnit->baseCompilationUnit();
+
+    // Replace with itself – verifies API works without crashing.
+    QQmlTypeLoader::get(&engine)->replaceCachedCompilationUnit(
+            testFileUrl("Simple.qml"), originalCU);
+
+    QVERIFY(QQmlTypeLoader::get(&engine)->isTypeLoaded(testFileUrl("Simple.qml")));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

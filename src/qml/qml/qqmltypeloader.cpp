@@ -1844,6 +1844,27 @@ void QQmlTypeLoader::clearCache()
     // The thread will auto-restart next time we need it.
 }
 
+/*!
+    \internal
+    Replace the compilation unit cached for \a url with \a unit.
+
+    This is used by the QML preview object patcher (Pass 3) to make the type
+    loader return the updated compilation unit when other parts of the type
+    system (e.g., QQmlTypePrivate::compositePropertyCache()) ask for the type
+    data of a patched component.
+*/
+void QQmlTypeLoader::replaceCachedCompilationUnit(
+        const QUrl &url,
+        const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &unit)
+{
+    const QUrl normalized = QQmlMetaType::normalizedUrl(url);
+    const QQmlTypeLoaderSharedDataPtr data(&m_data);
+    auto it = data->typeCache.find(normalized);
+    if (it == data->typeCache.end())
+        return;
+    (*it)->m_compiledData = unit;
+}
+
 void QQmlTypeLoader::trimCache()
 {
     const QQmlTypeLoaderSharedDataPtr data(&m_data);
