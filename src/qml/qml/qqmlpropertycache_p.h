@@ -295,6 +295,8 @@ public:
     QTypeRevision allowedRevision(int index) const { return allowedRevisionCache[index]; }
     void setAllowedRevision(int index, QTypeRevision allowed) { allowedRevisionCache[index] = allowed; }
 
+    bool isComposite() const { return _metaObject.isShared(); }
+
 private:
     friend class QQmlEnginePrivate;
     friend class QQmlCompiler;

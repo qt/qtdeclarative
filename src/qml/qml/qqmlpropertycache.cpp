@@ -1436,7 +1436,7 @@ QByteArray QQmlPropertyCache::checksum(QHash<quintptr, QByteArray> *checksums, b
     }
 
     // Generate a checksum on the meta-object data only on C++ types.
-    if (_metaObject.isShared()) {
+    if (isComposite()) {
         *ok = false;
         return QByteArray();
     }

@@ -8,6 +8,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlcontextdata_p.h>
+#include <private/qqmldata_p.h>
 #include <private/qqmlpropertycachecreator_p.h>
 #include <QCryptographicHash>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -54,6 +55,7 @@ private slots:
 
     void append_propertyAttr_data();
     void append_propertyAttr();
+    void isComposite();
 
 private:
     QQmlEngine engine;
@@ -1147,6 +1149,24 @@ void tst_qqmlpropertycache::append_propertyAttr()
     } else {
         QVERIFY(!addedProperty);
     }
+}
+
+void tst_qqmlpropertycache::isComposite()
+{
+    // A property cache from a C++ QMetaObject should not be composite.
+    QQmlPropertyCache::Ptr cppCache(
+            QQmlPropertyCache::createStandalone(&QObject::staticMetaObject));
+    QVERIFY(!cppCache->isComposite());
+
+    // A property cache from a QML component should be composite.
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+    QVERIFY(ddata->propertyCache);
+    QVERIFY(ddata->propertyCache->isComposite());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
