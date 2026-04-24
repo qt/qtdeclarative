@@ -1127,7 +1127,7 @@
     \section1 Styling Controls using StyleKit
 
     The \l{Qt Labs StyleKit} module provides a set of QML types for styling
-    Qt Quick Controls, built on top of \l{Qt Quick Templates}.
+    Qt Quick Controls, built on top of \l{Qt Quick Templates 2}.
     It lets you define a complete visual style for
     all your controls from a single Style object, including support for
     themes, state-based styling, and transitions. StyleKit handles the

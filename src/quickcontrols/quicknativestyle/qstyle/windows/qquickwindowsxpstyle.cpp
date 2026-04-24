@@ -1008,7 +1008,6 @@ bool QWindowsXPStylePrivate::drawBackgroundThruNativeBuffer(XPThemeData &themeDa
     drawControlMask(), drawPrimitive(), proxy()->subControlRect(), and
     sizeFromContents(), are documented here.
 
-    \image qwindowsxpstyle.png
     \sa QMacStyle, QWindowsStyle, QFusionStyle
 */
 
