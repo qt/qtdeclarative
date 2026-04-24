@@ -322,6 +322,51 @@ QQmlPropertyCache::Ptr QQmlPropertyCache::copy() const
     return copy(_metaObject, 0);
 }
 
+QQmlPropertyCache::Ptr QQmlPropertyCache::rebased(const ConstPtr &parent) const
+{
+    QQmlPropertyCache::Ptr cache = QQmlPropertyCache::Ptr(
+            new QQmlPropertyCache(parent->_metaObject, _handleOverride),
+            QQmlPropertyCache::Ptr::Adopt);
+
+    cache->_parent = parent;
+
+    cache->propertyIndexCacheStart = propertyIndexCacheStart;
+    cache->propertyIndexCache = propertyIndexCache;
+
+    cache->methodIndexCacheStart = methodIndexCacheStart;
+    cache->methodIndexCache = methodIndexCache;
+
+    cache->signalHandlerIndexCacheStart = signalHandlerIndexCacheStart;
+    cache->signalHandlerIndexCache = signalHandlerIndexCache;
+
+    cache->enumCache = enumCache;
+
+    cache->stringCache.linkAndReserve(
+            parent->stringCache, ownPropertyCount() + ownMethodCount() + ownSignalCount());
+
+    for (auto it = stringCache.begin(), end = stringCache.end(); it != end; ++it) {
+        const QQmlPropertyData *myData = it.value().second;
+        const int index = it.value().first;
+
+        QQmlPropertyData *copyData = nullptr;
+        if (myData->isSignalHandler())
+            copyData = cache->signalHandlerIndexCache.data() + (index - signalOffset());
+        else if (myData->isFunction())
+            copyData = cache->methodIndexCache.data() + (index - methodOffset());
+        else
+            copyData = cache->propertyIndexCache.data() + (index - propertyOffset());
+
+        cache->stringCache.insert(it.key(), std::make_pair(index, copyData));
+    }
+
+    cache->allowedRevisionCache = allowedRevisionCache;
+    cache->_dynamicStringData = _dynamicStringData;
+    cache->_dynamicClassName = _dynamicClassName;
+    cache->_defaultPropertyName = _defaultPropertyName;
+    cache->_listPropertyAssignBehavior = _listPropertyAssignBehavior;
+    return cache;
+}
+
 QQmlPropertyCache::Ptr QQmlPropertyCache::copyAndReserve(
         int propertyCount, int methodCount, int signalCount, int enumCount) const
 {

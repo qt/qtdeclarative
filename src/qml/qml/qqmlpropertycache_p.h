@@ -214,6 +214,7 @@ public:
     void invalidate(const QMetaObject *);
 
     QQmlPropertyCache::Ptr copy() const;
+    QQmlPropertyCache::Ptr rebased(const QQmlPropertyCache::ConstPtr &parent) const;
 
     QQmlPropertyCache::Ptr copyAndAppend(
                 const QMetaObject *, QTypeRevision typeVersion,

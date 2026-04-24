@@ -56,6 +56,7 @@ private slots:
     void append_propertyAttr_data();
     void append_propertyAttr();
     void isComposite();
+    void rebase();
 
 private:
     QQmlEngine engine;
@@ -1167,6 +1168,35 @@ void tst_qqmlpropertycache::isComposite()
     QVERIFY(ddata);
     QVERIFY(ddata->propertyCache);
     QVERIFY(ddata->propertyCache->isComposite());
+}
+
+void tst_qqmlpropertycache::rebase()
+{
+    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QQmlData *ddata = QQmlData::get(obj.data());
+    QVERIFY(ddata);
+    QVERIFY(ddata->propertyCache);
+
+    const QQmlPropertyCache::ConstPtr original = ddata->propertyCache;
+    QVERIFY(original->parent());
+
+    // Rebase onto the same parent – property counts should match.
+    const QQmlPropertyCache::Ptr rebased = original->rebased(original->parent());
+
+    QCOMPARE(rebased->propertyCount(), original->propertyCount());
+    QCOMPARE(rebased->methodCount(), original->methodCount());
+    QCOMPARE(rebased->signalCount(), original->signalCount());
+    QVERIFY(rebased->parent().data() == original->parent().data());
+
+    // Verify that the custom property "testProp" is still reachable.
+    const QQmlPropertyData *prop = rebased->property(
+            QLatin1String("testProp"), /*object=*/nullptr, /*context=*/nullptr);
+    QVERIFY(prop);
+    QVERIFY(prop->propType() == QMetaType::fromType<int>());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
