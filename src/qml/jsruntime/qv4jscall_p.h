@@ -157,6 +157,7 @@ ReturnedValue convertAndCall(
         ConvertReturnValue &&convertReturnValue = defaultConvertReturnValue,
         ConversionErrorHandler &&errorHandler = defaultConversionErrorHandler)
 {
+    Q_ALLOCA_INIT();
     Q_ALLOCA_VAR(void *, values, numTypes * sizeof(void *));
 
     for (qsizetype i = 1; i < numTypes; ++i) {
@@ -514,6 +515,7 @@ void coerceAndCall(
         ExecutionEngine *engine, const TypedFunction *typedFunction,
         void **argv, const QMetaType *types, int argc, Callable call)
 {
+    Q_ALLOCA_INIT();
     const qsizetype numFunctionArguments = typedFunction->parameterCount();
 
     Q_ALLOCA_DECLARE(void *, transformedArguments);

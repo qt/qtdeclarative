@@ -141,6 +141,7 @@ QString RegExpObject::toString() const
 
 ReturnedValue RegExpObject::builtinExec(ExecutionEngine *engine, const String *str)
 {
+    Q_ALLOCA_INIT();
     QString s = str->toQString();
 
     Scope scope(engine);
@@ -372,6 +373,7 @@ void RegExpPrototype::init(ExecutionEngine *engine, Object *constructor)
 /* used by String.match */
 ReturnedValue RegExpPrototype::execFirstMatch(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    Q_ALLOCA_INIT();
     Scope scope(b);
     Scoped<RegExpObject> r(scope, thisObject->as<RegExpObject>());
     Q_ASSERT(r && r->global());

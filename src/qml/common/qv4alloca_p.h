@@ -33,32 +33,29 @@
 
 // Define Q_ALLOCA_VAR macro to be used instead of #ifdeffing
 // the occurrences of alloca() in case it's not supported.
-// Q_ALLOCA_DECLARE and Q_ALLOCA_ASSIGN macros separate
-// memory allocation from the declaration and RAII.
+//  * Q_ALLOCA_INIT belongs in the functions root scope and does RAII.
+//  * Q_ALLOCA_DECLARE declares the pointer and assigns it nullptr.
+//  * Q_ALLOCA_ASSIGN does the actual memory allocation.
 #define Q_ALLOCA_VAR(type, name, size) \
     Q_ALLOCA_DECLARE(type, name); \
     Q_ALLOCA_ASSIGN(type, name, size)
 
 #ifdef alloca
 
-#define Q_ALLOCA_DECLARE(type, name) \
-    type *name = 0
-
-#define Q_ALLOCA_ASSIGN(type, name, size) \
-    name = static_cast<type*>(alloca(size))
+#  define Q_ALLOCA_INIT()
+#  define Q_ALLOCA_DECLARE(type, name) type *name = nullptr
+#  define Q_ALLOCA_ASSIGN(type, name, size) name = static_cast<type *>(alloca(size))
 
 #else
 #  include <memory>
+#  include <qvarlengtharray.h>
 
-#define Q_ALLOCA_DECLARE(type, name) \
-    std::unique_ptr<char[]> _qt_alloca_##name; \
-    type *name = nullptr
+#  define Q_ALLOCA_INIT() QVarLengthArray<std::unique_ptr<char[]>, 1> _qt_alloca
 
-#define Q_ALLOCA_ASSIGN(type, name, size) \
-    do { \
-        _qt_alloca_##name.reset(new char[size]); \
-        name = reinterpret_cast<type*>(_qt_alloca_##name.get()); \
-    } while (false)
+#  define Q_ALLOCA_DECLARE(type, name) type *name = nullptr
+
+#  define Q_ALLOCA_ASSIGN(type, name, size) \
+      name = reinterpret_cast<type *>(_qt_alloca.emplace_back(new char[size]).get())
 
 #endif
 

@@ -251,6 +251,7 @@ int QV4::Compiler::JSUnitGenerator::registerTranslation(const QV4::CompiledData:
 
 QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorOption option)
 {
+    Q_ALLOCA_INIT();
     const auto registerTypeStrings = [this](QQmlJS::AST::Type *type) {
         if (!type)
             return;

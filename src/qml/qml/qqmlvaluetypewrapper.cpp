@@ -536,6 +536,7 @@ QMetaType QQmlValueTypeWrapper::type() const
 
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const
 {
+    Q_ALLOCA_INIT();
     bool destructGadgetOnExit = false;
     auto cleanup = qScopeGuard([&]() {
         if (destructGadgetOnExit) {
