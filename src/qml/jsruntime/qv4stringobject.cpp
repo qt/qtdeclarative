@@ -867,6 +867,7 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
 
 ReturnedValue StringPrototype::method_search(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    Q_ALLOCA_INIT();
     Scope scope(b);
     QString string = getThisString(scope.engine, thisObject);
     if (scope.hasException())
@@ -923,6 +924,7 @@ ReturnedValue StringPrototype::method_slice(const FunctionObject *b, const Value
 
 ReturnedValue StringPrototype::method_split(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    Q_ALLOCA_INIT();
     ExecutionEngine *v4 = b->engine();
     QString text = getThisString(v4, thisObject);
     if (v4->hasException)

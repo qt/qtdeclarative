@@ -251,6 +251,7 @@ bool compareAndAssign(void *dataPtr, const void *result)
 template <QMetaType::Type type>
 bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
 {
+    Q_ALLOCA_INIT();
     const auto ctxt = jsExpression()->context();
     QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
     if (!engine) {

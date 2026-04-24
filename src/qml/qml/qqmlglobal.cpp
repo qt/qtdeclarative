@@ -195,6 +195,7 @@ static void *createVariantData(QMetaType type, QVariant *variant)
 static void callConstructor(
         const QMetaObject *targetMetaObject, int i, void **args, int argc, void *target)
 {
+    Q_ALLOCA_INIT();
     Q_ALLOCA_VAR(void *, p, (argc + 1) * sizeof(void *));
     p[0] = target;
     memcpy(p + 1, args, argc * sizeof(void *));

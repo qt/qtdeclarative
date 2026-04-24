@@ -114,6 +114,7 @@ ReturnedValue convertAndCall(
         ExecutionEngine *engine, const Function::AOTCompiledFunction *aotFunction,
         const Value *thisObject, const Value *argv, int argc, Callable call)
 {
+    Q_ALLOCA_INIT();
     const qsizetype numFunctionArguments = aotFunction->types.length() - 1;
     Q_ALLOCA_VAR(void *, values, (numFunctionArguments + 1) * sizeof(void *));
     Q_ALLOCA_VAR(QMetaType, types, (numFunctionArguments + 1) * sizeof(QMetaType));
@@ -484,6 +485,7 @@ void coerceAndCall(
         ExecutionEngine *engine, const TypedFunction *typedFunction,
         void **argv, const QMetaType *types, int argc, Callable call)
 {
+    Q_ALLOCA_INIT();
     const qsizetype numFunctionArguments = typedFunction->parameterCount();
 
     Q_ALLOCA_DECLARE(void *, transformedArguments);
