@@ -675,7 +675,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     QQuickItemPrivate *d = static_cast<QQuickItemPrivate *>(QObjectPrivate::get(this));
     const float dpr = d->effectiveDevicePixelRatio();
     QSize textureSize = m_textureSize.isEmpty()
-            ? QSize(qCeil(qAbs(sourceRect.width())), qCeil(qAbs(sourceRect.height()))) * dpr
+            ? QSize(qCeil(qAbs(sourceRect.width()) * dpr), qCeil(qAbs(sourceRect.height()) * dpr))
             : m_textureSize;
     Q_ASSERT(!textureSize.isEmpty());
 
