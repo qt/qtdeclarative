@@ -38,7 +38,7 @@ bool QQmlFilterBase::enabled() const
     return d->m_enabled;
 }
 
-void QQmlFilterBase::setEnabled(const bool enabled)
+void QQmlFilterBase::setEnabled(bool enabled)
 {
     Q_D(QQmlFilterBase);
     if (d->m_enabled == enabled)
@@ -62,7 +62,7 @@ bool QQmlFilterBase::isInverted() const
     return d->m_inverted;
 }
 
-void QQmlFilterBase::setInverted(const bool invert)
+void QQmlFilterBase::setInverted(bool invert)
 {
     Q_D(QQmlFilterBase);
     if (d->m_inverted == invert)
@@ -87,7 +87,7 @@ int QQmlFilterBase::column() const
     return d->m_filterColumn;
 }
 
-void QQmlFilterBase::setColumn(const int column)
+void QQmlFilterBase::setColumn(int column)
 {
     Q_D(QQmlFilterBase);
     if (d->m_filterColumn == column)

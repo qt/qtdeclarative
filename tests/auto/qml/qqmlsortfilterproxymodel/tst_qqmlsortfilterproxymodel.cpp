@@ -7,9 +7,12 @@
 #include <QQmlExpression>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQmlModels/private/qqmlsortfilterproxymodel_p.h>
 #include <QtQmlModels/private/qqmlvaluefilter_p.h>
 #include <QtQmlModels/private/qqmlfunctionfilter_p.h>
+#include <QtQmlModels/private/qqmlanyoffilter_p.h>
+#include <QtQmlModels/private/qqmlalloffilter_p.h>
 #include <QtQmlModels/private/qqmlstringsorter_p.h>
 #include <QtQmlModels/private/qqmlfunctionsorter_p.h>
 
@@ -49,6 +52,15 @@ private slots:
 
     void primarySorter_data();
     void primarySorter();
+
+    void anyOfFilter();
+    void allOfFilter();
+    void anyOfFilterInverted();
+    void anyOfFilterEnabled();
+    void nestedCompositeFilters();
+    void invalidateParentWhenChildFilterEnabledOrDisabled();
+    void invalidateChildWhenParentFilterEnabledOrDisabled();
+    void compositeFiltersInQml();
 };
 
 class CustomTableModel : public QAbstractTableModel
@@ -1028,6 +1040,384 @@ void tst_QQmlSortFilterProxyModel::primarySorter()
         for (const auto &data: columnData)
             QCOMPARE(sfpmModel->data(sfpmModel->index(row++, column, QModelIndex()), Qt::DisplayRole), data);
     }
+}
+
+void tst_QQmlSortFilterProxyModel::anyOfFilter()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *childFilter1 = object->property("anyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(childFilter1);
+    auto *childFilter2 = object->property("anyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(childFilter2);
+    auto *anyOfFilter  = object->property("anyOfFilter").value<QQmlAnyOfFilter *>();
+    QVERIFY(anyOfFilter);
+
+    // child1 matches row 0, child2 matches row 1
+    childFilter1->setRoleName("column0");
+    childFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole)); // "Data00"
+    childFilter2->setRoleName("column0");
+    childFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole)); // "Data10"
+
+    auto childFilters = anyOfFilter->filtersListProperty();
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter1);
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter2);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, anyOfFilter);
+
+    // OR logic, 2 rows should be visible
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->columnCount(), CustomTableModel::s_columnCount);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(0, 0, QModelIndex()), Qt::UserRole));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(1, 0, QModelIndex()), Qt::UserRole));
+}
+
+void tst_QQmlSortFilterProxyModel::allOfFilter()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *childFilter1 = object->property("allOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(childFilter1);
+    auto *childFilter2 = object->property("allOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(childFilter2);
+    auto *allOfFilter  = object->property("allOfFilter").value<QQmlAllOfFilter *>();
+    QVERIFY(allOfFilter);
+
+    // child1 matches row 0 via column0, child2 matches row 0 via column1
+    // Only row 0 satisfies both conditions
+    childFilter1->setRoleName("column0");
+    childFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole)); // "Data00"
+    childFilter2->setRoleName("column1");
+    childFilter2->setValue(tableModel.data(tableModel.index(0, 1), Qt::UserRole + 1)); // "Data01"
+
+    auto childFilters = allOfFilter->filtersListProperty();
+    allOfFilter->filtersListProperty().append(&childFilters, childFilter1);
+    allOfFilter->filtersListProperty().append(&childFilters, childFilter2);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, allOfFilter);
+
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->columnCount(), CustomTableModel::s_columnCount);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(0, 0), Qt::UserRole));
+}
+
+void tst_QQmlSortFilterProxyModel::anyOfFilterInverted()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *childFilter1 = object->property("anyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(childFilter1);
+    auto *childFilter2 = object->property("anyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(childFilter2);
+    auto *anyOfFilter = object->property("anyOfFilter").value<QQmlAnyOfFilter *>();
+    QVERIFY(anyOfFilter);
+
+    childFilter1->setRoleName("column0");
+    childFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole)); // "Data00"
+    childFilter2->setRoleName("column0");
+    childFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole)); // "Data10"
+
+    auto childFilters = anyOfFilter->filtersListProperty();
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter1);
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter2);
+    anyOfFilter->setInverted(true);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, anyOfFilter);
+
+    QCOMPARE(sfpmModel->rowCount(), 3);
+}
+
+void tst_QQmlSortFilterProxyModel::anyOfFilterEnabled()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *childFilter1 = object->property("anyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(childFilter1);
+    auto *childFilter2 = object->property("anyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(childFilter2);
+    auto *anyOfFilter  = object->property("anyOfFilter").value<QQmlAnyOfFilter *>();
+    QVERIFY(anyOfFilter);
+
+    childFilter1->setRoleName("column0");
+    childFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole));
+    childFilter2->setRoleName("column0");
+    childFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole));
+
+    auto childFilters = anyOfFilter->filtersListProperty();
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter1);
+    anyOfFilter->filtersListProperty().append(&childFilters, childFilter2);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, anyOfFilter);
+
+    QCOMPARE(sfpmModel->rowCount(), 2);
+
+    // Disabling the composite skips the entire group — all rows visible
+    anyOfFilter->setEnabled(false);
+    QCOMPARE(sfpmModel->rowCount(), CustomTableModel::s_rowCount);
+
+    // Re-enabling restores the filter
+    anyOfFilter->setEnabled(true);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+}
+
+void tst_QQmlSortFilterProxyModel::nestedCompositeFilters()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *anyChildFilter1  = object->property("nestedAnyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(anyChildFilter1);
+    auto *anyChildFilter2  = object->property("nestedAnyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(anyChildFilter2);
+    auto *allChildFilter   = object->property("nestedAllOfChild").value<QQmlValueFilter *>();
+    QVERIFY(allChildFilter);
+    auto *nestedAnyOfFilter = object->property("nestedAnyOf").value<QQmlAnyOfFilter *>();
+    QVERIFY(nestedAnyOfFilter);
+    auto *nestedAllOfFilter = object->property("nestedAllOf").value<QQmlAllOfFilter *>();
+    QVERIFY(nestedAllOfFilter);
+
+    // AnyOf matches rows 0 and 1
+    anyChildFilter1->setRoleName("column0");
+    anyChildFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole)); // "Data00"
+    anyChildFilter2->setRoleName("column0");
+    anyChildFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole)); // "Data10"
+
+    // AllOf's own ValueFilter matches only row 0 (column1 = "Data01")
+    allChildFilter->setRoleName("column1");
+    allChildFilter->setValue(tableModel.data(tableModel.index(0, 1), Qt::UserRole + 1)); // "Data01"
+
+    auto anyChildFilters = nestedAnyOfFilter->filtersListProperty();
+    nestedAnyOfFilter->filtersListProperty().append(&anyChildFilters, anyChildFilter1);
+    nestedAnyOfFilter->filtersListProperty().append(&anyChildFilters, anyChildFilter2);
+
+    // AllOf contains: AnyOf (rows 0|1) AND ValueFilter (row 0 only) → row 0
+    auto allChildFilters = nestedAllOfFilter->filtersListProperty();
+    nestedAllOfFilter->filtersListProperty().append(&allChildFilters, nestedAnyOfFilter);
+    nestedAllOfFilter->filtersListProperty().append(&allChildFilters, allChildFilter);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, nestedAllOfFilter);
+
+    // AllOf { AnyOf { row0, row1 }, ValueFilter { row0 } } → only row 0
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(0, 0), Qt::UserRole));
+}
+
+void tst_QQmlSortFilterProxyModel::invalidateParentWhenChildFilterEnabledOrDisabled()
+{
+    // Filter configuration: AllOf { AnyOf { VF1{}, VF2{} } }
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *valueFilter1 = object->property("nestedAnyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(valueFilter1);
+    auto *valueFilter2 = object->property("nestedAnyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(valueFilter2);
+    auto *innerAnyOfFilter = object->property("nestedAnyOf").value<QQmlAnyOfFilter *>();
+    QVERIFY(innerAnyOfFilter);
+    auto *outerAllOfFiltler = object->property("nestedAllOf").value<QQmlAllOfFilter *>();
+    QVERIFY(outerAllOfFiltler);
+
+    valueFilter1->setRoleName("column0");
+    valueFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole));   // "Data00" → row 0
+    valueFilter2->setRoleName("column0");
+    valueFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole));   // "Data10" → row 1
+
+    auto anyFilters = innerAnyOfFilter->filtersListProperty();
+    innerAnyOfFilter->filtersListProperty().append(&anyFilters, valueFilter1);
+    innerAnyOfFilter->filtersListProperty().append(&anyFilters, valueFilter2);
+
+    auto allFilters = outerAllOfFiltler->filtersListProperty();
+    outerAllOfFiltler->filtersListProperty().append(&allFilters, innerAnyOfFilter);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, outerAllOfFiltler);
+
+    QCOMPARE(sfpmModel->rowCount(), 2);
+
+    // Disable one of the value filter and check for the filtered data
+    // "Data00" should be filtered out
+    valueFilter1->setEnabled(false);
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(1, 0), Qt::UserRole)); // row 1 ("Data10")
+
+    // Reenable the same value filter and check for the filtered data
+    valueFilter1->setEnabled(true);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(0, 0), Qt::UserRole)); // row 1 ("Dat00")
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0, QModelIndex()), Qt::UserRole),
+             tableModel.data(tableModel.index(1, 0), Qt::UserRole)); // row 2 ("Data10")
+}
+
+
+void tst_QQmlSortFilterProxyModel::invalidateChildWhenParentFilterEnabledOrDisabled()
+{
+    // Filter configuration: AllOf { AnyOf { VF1{}, VF2{} } }
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    CustomTableModel tableModel;
+    sfpmModel->setSourceModel(&tableModel);
+
+    auto *valueFilter1 = object->property("nestedAnyOfChild1").value<QQmlValueFilter *>();
+    QVERIFY(valueFilter1);
+    auto *valueFilter2 = object->property("nestedAnyOfChild2").value<QQmlValueFilter *>();
+    QVERIFY(valueFilter2);
+    auto *innerAnyOfFilter = object->property("nestedAnyOf").value<QQmlAnyOfFilter *>();
+    QVERIFY(innerAnyOfFilter);
+    auto *outerAllOfFiltler = object->property("nestedAllOf").value<QQmlAllOfFilter *>();
+    QVERIFY(outerAllOfFiltler);
+
+    valueFilter1->setRoleName("column0");
+    valueFilter1->setValue(tableModel.data(tableModel.index(0, 0), Qt::UserRole));   // "Data00" → row 0
+    valueFilter2->setRoleName("column0");
+    valueFilter2->setValue(tableModel.data(tableModel.index(1, 0), Qt::UserRole));   // "Data10" → row 1
+
+    auto anyFilters = innerAnyOfFilter->filtersListProperty();
+    innerAnyOfFilter->filtersListProperty().append(&anyFilters, valueFilter1);
+    innerAnyOfFilter->filtersListProperty().append(&anyFilters, valueFilter2);
+
+    auto allFilters = outerAllOfFiltler->filtersListProperty();
+    outerAllOfFiltler->filtersListProperty().append(&allFilters, innerAnyOfFilter);
+
+    auto sfpmFilters = sfpmModel->property("filters").value<QQmlListProperty<QQmlFilterBase>>();
+    sfpmModel->filters().append(&sfpmFilters, outerAllOfFiltler);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+
+    // Disabling the outer filter make the complete subtree to be disabled
+    outerAllOfFiltler->setEnabled(false);
+    QCOMPARE(sfpmModel->rowCount(), tableModel.rowCount());
+
+    outerAllOfFiltler->setEnabled(true);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+}
+
+void tst_QQmlSortFilterProxyModel::compositeFiltersInQml()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmCompositeFilters.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *colorListModel = object->property("colorList").value<QQmlListModel *>();
+    QVERIFY(colorListModel);
+    const int nameRole = colorListModel->roleNames().key("name", -1);
+    QVERIFY(nameRole >= 0);
+
+    auto getNames = [&](QQmlSortFilterProxyModel *model) -> QStringList {
+        QStringList names;
+        for (int i = 0; i < model->rowCount(); ++i)
+            names << model->data(model->index(i, 0, QModelIndex()), nameRole).toString();
+        return names;
+    };
+
+    // AnyOfFilter: color = "red" OR "blue"
+    auto *redOrBlueModel = object->property("redOrBlueModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(redOrBlueModel);
+    QCOMPARE(getNames(redOrBlueModel), QStringList({"red1", "red2", "blue1", "blue2"}));
+
+    // AllOfFilter: color = "red" AND active = true (1 row)
+    auto *activeRedModel = object->property("activeRedModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(activeRedModel);
+    QCOMPARE(getNames(activeRedModel), QStringList({"red1"}));
+
+    // AllOf { AnyOf { red, blue }, active = true } (3 rows)
+    auto *activeRedOrBlueModel = object->property("activeRedOrBlueModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(activeRedOrBlueModel);
+    QCOMPARE(getNames(activeRedOrBlueModel), QStringList({"red1", "blue1"}));
+
+    // AllOf { AnyOf (disabled) { red, blue }, active = true } (3 rows)
+    auto *activeDisabledRedOrBlueModel = object->property("activeDisabledRedOrBlueModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(activeDisabledRedOrBlueModel);
+    QCOMPARE(getNames(activeDisabledRedOrBlueModel), QStringList({"red1", "blue1", "green1"}));
+
+    // AllOf { AllOf (inverted) { red, active = true }, active = false } (3 rows)
+    auto *invertedAllOfRedAndBlueModel = object->property("invertedAllOfRedAndBlueModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(invertedAllOfRedAndBlueModel);
+    QCOMPARE(getNames(invertedAllOfRedAndBlueModel), QStringList({"red2", "blue2", "green2"}));
+
+    // AllOf (inverted) { AnyOf (inverted) { red, blue }, active = false } (5 rows)
+    auto *invertedAnyOfAllOfRedOrBlueModel = object->property("invertedAnyOfAllOfRedOrBlueModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(invertedAnyOfAllOfRedOrBlueModel);
+    QCOMPARE(getNames(invertedAnyOfAllOfRedOrBlueModel), QStringList({"red1", "red2", "blue1", "blue2", "green1"}));
+
+    // AnyOf { AnyOf { }, active = true } (3 rows)
+    auto *nestedEmptyAnyOf = object->property("nestedEmptyAnyOf").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(nestedEmptyAnyOf);
+    QCOMPARE(getNames(nestedEmptyAnyOf), QStringList({"red1", "blue1", "green1"}));
 }
 
 QTEST_MAIN(tst_QQmlSortFilterProxyModel)

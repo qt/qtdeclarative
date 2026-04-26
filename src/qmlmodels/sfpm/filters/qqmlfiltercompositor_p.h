@@ -23,15 +23,14 @@ QT_BEGIN_NAMESPACE
 class QQmlSortFilterProxyModel;
 class QQmlFilterCompositorPrivate;
 
-class QQmlFilterCompositor: public QQmlFilterBase
+class Q_QMLMODELS_EXPORT QQmlFilterCompositor: public QQmlFilterBase
 {
     Q_OBJECT
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(6, 10)
 
 public:
-    explicit QQmlFilterCompositor(QObject *parent = nullptr);
-    ~QQmlFilterCompositor() override;
+    explicit QQmlFilterCompositor(QObject *parent);
 
     QList<QQmlFilterBase *> filters();
     QQmlListProperty<QQmlFilterBase> filtersListProperty();
@@ -51,8 +50,9 @@ private:
     QQmlFilterBase* at(qsizetype);
     void clear();
 
-public slots:
-    void updateCache();
+protected:
+    QQmlFilterCompositor(QQmlFilterBasePrivate *priv, QObject *parent);
+    virtual void refreshCache();
 
 private:
     Q_DECLARE_PRIVATE(QQmlFilterCompositor)

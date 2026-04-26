@@ -78,6 +78,9 @@ qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_sfpm_model AND QT_F
         # sfpm filter specific source files
         sfpm/filters/qqmlfilterbase_p.h sfpm/filters/qqmlfilterbase.cpp
         sfpm/filters/qqmlfiltercompositor_p.h sfpm/filters/qqmlfiltercompositor.cpp
+        sfpm/filters/qqmlcompositefilterbase_p.h sfpm/filters/qqmlcompositefilterbase.cpp
+        sfpm/filters/qqmlanyoffilter_p.h sfpm/filters/qqmlanyoffilter.cpp
+        sfpm/filters/qqmlalloffilter_p.h sfpm/filters/qqmlalloffilter.cpp
         sfpm/filters/qqmlrolefilter_p.h sfpm/filters/qqmlrolefilter.cpp
         sfpm/filters/qqmlvaluefilter_p.h sfpm/filters/qqmlvaluefilter.cpp
         sfpm/filters/qqmlfunctionfilter_p.h sfpm/filters/qqmlfunctionfilter.cpp

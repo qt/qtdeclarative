@@ -20,11 +20,13 @@ QQmlFilterCompositor::QQmlFilterCompositor(QObject *parent)
     // the filter can be enabled or disabled in effective filter list
     // such as the configured role name in the filter doesn't match
     // with any role name in the model
-    connect(d->m_sfpmModel, &QQmlSortFilterProxyModel::modelReset,
-            this, &QQmlFilterCompositor::updateFilters);
+    if (d->m_sfpmModel)
+        connect(d->m_sfpmModel, &QQmlSortFilterProxyModel::modelReset,
+                this, &QQmlFilterCompositor::updateFilters);
 }
 
-QQmlFilterCompositor::~QQmlFilterCompositor()
+QQmlFilterCompositor::QQmlFilterCompositor(QQmlFilterBasePrivate *priv, QObject *parent)
+    : QQmlFilterBase(priv, parent)
 {
 
 }
@@ -66,22 +68,25 @@ void QQmlFilterCompositor::append(QQmlFilterBase *filter)
 
     Q_D(QQmlFilterCompositor);
     d->m_filters.append(filter);
-    // Connect the filter to the corresponding slot to invalidate the model
-    // and the filter cache
-    QObject::connect(filter, &QQmlFilterBase::invalidateModel,
-                     d->m_sfpmModel, &QQmlSortFilterProxyModel::invalidate);
     // This is needed as its required to update cache when there is any
     // change in the filter itself (for instance, a change in the priority of
     // the filter)
     QObject::connect(filter, &QQmlFilterBase::invalidateCache,
-                     this, &QQmlFilterCompositor::updateCache);
-    // Validate the filter for any precondition which can be compared with
-    // sfpm and update the filter cache accordingly
-    filter->update(d->m_sfpmModel);
-    updateCache();
-    // Since we added new filter to the list, emit the filter changed signal
-    // for the filters that have been appended to the list
-    emit d->m_sfpmModel->filtersChanged();
+                     this, &QQmlFilterCompositor::refreshCache);
+
+    if (d->m_sfpmModel) {
+        // Connect the filter to the corresponding slot to invalidate the model
+        // and the filter cache
+        QObject::connect(filter, &QQmlFilterBase::invalidateModel,
+                         d->m_sfpmModel, &QQmlSortFilterProxyModel::invalidate);
+        // Validate the filter for any precondition which can be compared with
+        // sfpm and update the filter cache accordingly
+        filter->update(d->m_sfpmModel);
+        refreshCache();
+        // Since we added new filter to the list, emit the filter changed signal
+        // for the filters that have been appended to the list
+        emit d->m_sfpmModel->filtersChanged();
+    }
 }
 
 qsizetype QQmlFilterCompositor::count()
@@ -102,7 +107,8 @@ void QQmlFilterCompositor::clear()
     d->m_effectiveFilters.clear();
     d->m_filters.clear();
     // Emit the filter changed signal as we cleared the filter list
-    emit d->m_sfpmModel->filtersChanged();
+    if (d->m_sfpmModel)
+        emit d->m_sfpmModel->filtersChanged();
 }
 
 QList<QQmlFilterBase *> QQmlFilterCompositor::filters()
@@ -128,19 +134,19 @@ void QQmlFilterCompositor::updateFilters()
     for (auto &filter: d->m_filters)
         filter->update(d->m_sfpmModel);
     // Update the cache
-    updateCache();
+    refreshCache();
 }
 
-void QQmlFilterCompositor::updateCache()
+void QQmlFilterCompositor::refreshCache()
 {
     Q_D(QQmlFilterCompositor);
     // Clear the existing cache
     d->m_effectiveFilters.clear();
     if (d->m_sfpmModel && d->m_sfpmModel->sourceModel()) {
-        QList<QQmlFilterBase *> filters = d->m_filters;
-        // Cache only the filters that need to be evaluated (in order)
-        std::copy_if(filters.begin(), filters.end(), std::back_inserter(d->m_effectiveFilters),
-                     [](QQmlFilterBase *filter){ return filter->enabled(); });
+        for (auto &filter: d->m_filters) {
+            if (filter->isActive())
+                d->m_effectiveFilters.append(filter);
+        }
     }
 }
 
@@ -152,7 +158,7 @@ bool QQmlFilterCompositor::filterAcceptsRowInternal(int row, const QModelIndex& 
     return std::all_of(d->m_effectiveFilters.begin(), d->m_effectiveFilters.end(),
             [row, &sourceParent, proxyModel](const QQmlFilterBase *filter) {
                 const bool filterStatus = filter->filterAcceptsRowInternal(row, sourceParent, proxyModel);
-                return !(filter->isInverted()) ? filterStatus : !filterStatus;
+                return filter->isInverted() != filterStatus;
             });
 }
 
@@ -163,7 +169,10 @@ bool QQmlFilterCompositor::filterAcceptsColumnInternal(int column, const QModelI
     // dont filter the data
     return std::all_of(d->m_effectiveFilters.begin(), d->m_effectiveFilters.end(),
             [column, &sourceParent, proxyModel](const QQmlFilterBase *filter) {
-                return filter->filterAcceptsColumnInternal(column, sourceParent, proxyModel);
+                if (!filter->supportColumnFiltering())
+                    return true;
+                const bool filterStatus = filter->filterAcceptsColumnInternal(column, sourceParent, proxyModel);
+                return filter->isInverted() != filterStatus;
             });
 }
 
