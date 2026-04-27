@@ -670,9 +670,12 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
 
         if (accumulator.isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2")
-                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
-                    .arg(accumulator.toQStringNoThrow());
+            const QString message =
+                    QStringLiteral("Cannot read property '%1' of %2")
+                            .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                         ->runtimeStrings[l->nameIndex]
+                                         ->toQString(),
+                                 accumulator.toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
@@ -790,9 +793,12 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         Lookup *l = function->executableCompilationUnit()->runtimeLookups + lookupIndex;
 
         if (STACK_VALUE(base).isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot call method '%1' of %2")
-                    .arg(engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString())
-                    .arg(STACK_VALUE(base).toQStringNoThrow());
+            const QString message =
+                    QStringLiteral("Cannot call method '%1' of %2")
+                            .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                         ->runtimeStrings[l->nameIndex]
+                                         ->toQString(),
+                                 STACK_VALUE(base).toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
@@ -805,10 +811,12 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         } else if (QmlSignalHandler *handler = f.as<QmlSignalHandler>()) {
             acc = handler->call(stack + base, stack + argv, argc);
         } else {
-            const QString message = QStringLiteral("Property '%1' of object %2 is not a function")
-                    .arg(engine->currentStackFrame->v4Function->compilationUnit
-                                                   ->runtimeStrings[l->nameIndex]->toQString())
-                    .arg(STACK_VALUE(base).toQStringNoThrow());
+            const QString message =
+                    QStringLiteral("Property '%1' of object %2 is not a function")
+                            .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                         ->runtimeStrings[l->nameIndex]
+                                         ->toQString(),
+                                 STACK_VALUE(base).toQStringNoThrow());
             acc = engine->throwTypeError(message);
             goto handleUnwind;
         }
