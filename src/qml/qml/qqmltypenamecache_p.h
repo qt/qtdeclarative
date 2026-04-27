@@ -163,8 +163,7 @@ private:
         Q_ASSERT(importNamespace && importNamespace->scriptIndex == -1);
 
         if constexpr (queryNamespaced == QueryNamespaced::Yes) {
-            QMap<const QQmlImportRef *, QStringHash<QQmlImportRef> >::const_iterator it
-                    = m_namespacedImports.constFind(importNamespace);
+            const auto it = m_namespacedImports.constFind(importNamespace);
             if (it != m_namespacedImports.constEnd()) {
                 Result r = doQuery(*it, name);
                 if (r.isValid())
@@ -235,7 +234,7 @@ private:
     }
 
     QStringHash<QQmlImportRef> m_namedImports;
-    QMap<const QQmlImportRef *, QStringHash<QQmlImportRef> > m_namespacedImports;
+    QHash<const QQmlImportRef *, QStringHash<QQmlImportRef>> m_namespacedImports;
     QList<QQmlTypeModuleVersion> m_anonymousImports;
     QStringHash<QUrl> m_anonymousCompositeSingletons;
     QQmlRefPointer<QQmlImports> m_imports;
