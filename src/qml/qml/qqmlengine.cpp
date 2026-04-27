@@ -532,7 +532,7 @@ QQmlContext *QQmlEngine::rootContext() const
 */
 QQmlAbstractUrlInterceptor *QQmlEngine::urlInterceptor() const
 {
-    return QQmlTypeLoader::get(this)->urlInterceptors().last();
+    return QQmlTypeLoader::get(this)->urlInterceptors().constLast();
 }
 #endif
 
