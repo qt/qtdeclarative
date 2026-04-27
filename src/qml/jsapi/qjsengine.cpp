@@ -538,13 +538,14 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
         QV4::StackTrace trace;
         result = v4->catchException(&trace);
         if (exceptionStackTrace) {
-            for (auto &&frame: trace)
+            for (auto &&frame: std::as_const(trace)) {
                 exceptionStackTrace->push_back(QLatin1StringView("%1:%2:%3:%4").arg(
                                           frame.function,
                                           QString::number(qAbs(frame.line)),
                                           QString::number(frame.column),
                                           frame.source)
                                       );
+            }
         }
     }
     if (v4->isInterrupted.loadRelaxed())

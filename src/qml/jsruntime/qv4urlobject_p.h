@@ -267,7 +267,7 @@ struct UrlSearchParamsObject : Object
     void initializeParams(ScopedObject& params);
 
     QList<QStringList> params() const;
-    void setParams(QList<QStringList> params);
+    void setParams(const QList<QStringList> &params);
     Heap::UrlObject *urlObject() const;
     void setUrlObject(const UrlObject *url);
 

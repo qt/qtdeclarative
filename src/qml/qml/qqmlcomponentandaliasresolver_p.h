@@ -508,7 +508,7 @@ void QQmlComponentAndAliasResolver<ObjectContainer>::resolveGeneralizedGroupProp
         int componentIndex)
 {
     const auto &component = *m_compiler->objectAt(componentIndex);
-    for (CompiledBinding *binding : m_generalizedGroupProperties)
+    for (CompiledBinding *binding : std::as_const(m_generalizedGroupProperties))
         resolveGeneralizedGroupProperty(component, binding);
 }
 

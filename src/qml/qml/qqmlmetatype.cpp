@@ -1722,7 +1722,7 @@ static int doCountInternalCompositeTypeSelfReferences(
     };
 
     doCheck(compilationUnit->metaType().iface());
-    for (auto &&inlineData: compilationUnit->inlineComponentData)
+    for (const auto &inlineData : std::as_const(compilationUnit->inlineComponentData))
         doCheck(inlineData.qmlType.typeId().iface());
 
     return result;
@@ -2139,7 +2139,7 @@ void QQmlMetaType::registerInternalCompositeType(
     };
 
     doInsert(compilationUnit->metaType().iface());
-    for (auto &&inlineData: compilationUnit->inlineComponentData)
+    for (const auto &inlineData : std::as_const(compilationUnit->inlineComponentData))
         doInsert(inlineData.qmlType.typeId().iface());
 
     // Prune any speculative inline component types that were created before this CU
@@ -2198,7 +2198,7 @@ void QQmlMetaType::unregisterInternalCompositeType(
     };
 
     doRemove(compilationUnit->metaType().iface());
-    for (auto &&inlineData: compilationUnit->inlineComponentData)
+    for (const auto &inlineData : std::as_const(compilationUnit->inlineComponentData))
         doRemove(inlineData.qmlType.typeId().iface());
 
     const QUrl baseUrl = compilationUnit->finalUrl();

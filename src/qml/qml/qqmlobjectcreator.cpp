@@ -1774,7 +1774,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         }
     }
 
-    for (QQmlFinalizerHook *hook: sharedState->finalizeHooks) {
+    for (QQmlFinalizerHook *hook: std::as_const(sharedState->finalizeHooks)) {
         hook->componentFinalized();
         if (watcher.hasRecursed())
             return false;

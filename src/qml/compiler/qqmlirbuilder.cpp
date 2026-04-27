@@ -952,7 +952,7 @@ private:
         Q_UNREACHABLE_RETURN(nullptr);
     }
 
-    static bool isUnique(IRBuilder *builder)
+    static bool isUnique(const IRBuilder *builder)
     {
         for (const Pragma *prev : builder->_pragmas) {
             if (prev->type == type())

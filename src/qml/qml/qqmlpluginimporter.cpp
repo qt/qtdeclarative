@@ -161,9 +161,9 @@ static QList<StaticPluginMapping> staticQmlPlugins()
 
     for (const auto &plugin : staticPlugins) {
         // Filter out static plugins which are not Qml plugins
-        for (const QJsonValueConstRef &pluginURI : tryExtractQmlPluginURIs(plugin)) {
+        const QJsonArray pluginURIs = tryExtractQmlPluginURIs(plugin);
+        for (const QJsonValueConstRef &pluginURI : pluginURIs)
             qmlPlugins.append({ plugin, pluginURI.toString() });
-        }
     }
     return qmlPlugins;
 }
