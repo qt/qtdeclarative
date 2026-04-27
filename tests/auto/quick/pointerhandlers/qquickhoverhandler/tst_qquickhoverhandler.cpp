@@ -771,6 +771,10 @@ void tst_HoverHandler::touchDrag()
     QVERIFY(handler);
 
     // polishAndSync() calls flushFrameSynchronousEvents() before emitting afterAnimating()
+    // Set frame-sync hover interval to 0 so hover is delivered every frame.
+    // This avoids any delayed setting of the hover state due to the default
+    // 100ms interval.
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverInterval = 0;
     QSignalSpy frameSyncSpy(&window, &QQuickWindow::afterAnimating);
 
     const QPoint out(root->width() - 1, root->height() / 2);
@@ -797,9 +801,6 @@ void tst_HoverHandler::touchDrag()
     QTest::touchEvent(&window, touchscreen.get()).move(0, out, &window);
     QQuickTouchUtils::flush(&window);
     QTRY_COMPARE_GE(frameSyncSpy.size(), 2);
-#ifdef Q_OS_QNX
-    QEXPECT_FAIL("", "Currently failing on QNX", Continue);
-#endif
     QTRY_COMPARE(handler->isHovered(), false);
 
     QTest::touchEvent(&window, touchscreen.get()).release(0, out, &window);
