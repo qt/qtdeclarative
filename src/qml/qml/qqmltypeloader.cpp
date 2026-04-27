@@ -795,13 +795,13 @@ static void addDependencyImportError(
     if (reason.size() > 512)
         reason = reason.first(252) + QLatin1String("... ...") + reason.last(252);
     if (import->version.hasMajorVersion()) {
-        error.setDescription(QQmlImports::tr(
-                                     "module \"%1\" version %2.%3 cannot be imported because:\n%4")
-                                     .arg(import->uri).arg(import->version.majorVersion())
-                                     .arg(import->version.hasMinorVersion()
-                                                  ? QString::number(import->version.minorVersion())
-                                                  : QLatin1String("x"))
-                                     .arg(reason));
+        error.setDescription(
+                QQmlImports::tr("module \"%1\" version %2.%3 cannot be imported because:\n%4")
+                        .arg(import->uri, QString::number(import->version.majorVersion()),
+                             import->version.hasMinorVersion()
+                                     ? QString::number(import->version.minorVersion())
+                                     : QLatin1String("x"),
+                             reason));
     } else {
         error.setDescription(QQmlImports::tr("module \"%1\" cannot be imported because:\n%2")
                                      .arg(import->uri, reason));

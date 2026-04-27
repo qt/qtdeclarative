@@ -748,7 +748,9 @@ static Q_NEVER_INLINE ReturnedValue getElementFallback(ExecutionEngine *engine, 
     ScopedObject o(scope, object);
     if (!o) {
         if (object.isNullOrUndefined()) {
-            QString message = QStringLiteral("Cannot read property '%1' of %2").arg(index.toQStringNoThrow()).arg(object.toQStringNoThrow());
+            const QString message =
+                    QStringLiteral("Cannot read property '%1' of %2")
+                            .arg(index.toQStringNoThrow(), object.toQStringNoThrow());
             return engine->throwTypeError(message);
         }
 
@@ -1066,7 +1068,8 @@ ReturnedValue Runtime::LoadProperty::call(ExecutionEngine *engine, const Value &
         return o->get(name);
 
     if (object.isNullOrUndefined()) {
-        QString message = QStringLiteral("Cannot read property '%1' of %2").arg(name->toQString()).arg(object.toQStringNoThrow());
+        const QString message = QStringLiteral("Cannot read property '%1' of %2")
+                                        .arg(name->toQString(), object.toQStringNoThrow());
         return engine->throwTypeError(message);
     }
 
@@ -1566,9 +1569,10 @@ ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const V
         return checkedResult(engine, handler->call(&base, argv, argc));
 
     const QString message = QStringLiteral("Property '%1' of object %2 is not a function")
-                                  .arg(engine->currentStackFrame->v4Function->compilationUnit
-                                               ->runtimeStrings[l->nameIndex]->toQString())
-                                  .arg(base.toQStringNoThrow());
+                                    .arg(engine->currentStackFrame->v4Function->compilationUnit
+                                                 ->runtimeStrings[l->nameIndex]
+                                                 ->toQString(),
+                                         base.toQStringNoThrow());
     return engine->throwTypeError(message);
 }
 

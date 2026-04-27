@@ -1250,8 +1250,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             if (!QMetaObject::checkConnectArgs(signalMethod, method)) {
                 recordError(binding->valueLocation,
                             tr("Cannot connect mismatched signal/slot %1 vs %2")
-                            .arg(QString::fromUtf8(method.methodSignature()))
-                            .arg(QString::fromUtf8(signalMethod.methodSignature())));
+                                    .arg(QString::fromUtf8(method.methodSignature()),
+                                         QString::fromUtf8(signalMethod.methodSignature())));
                 return false;
             }
 
