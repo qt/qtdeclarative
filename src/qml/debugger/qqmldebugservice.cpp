@@ -135,15 +135,14 @@ int QQmlDebugService::idForObject(QObject *object)
         return -1;
 
     ObjectReferenceHash *hash = objectReferenceHash();
-    auto iter = hash->objects.constFind(object);
+    if (auto iter = hash->objects.constFind(object); iter != hash->objects.cend())
+        return iter.value();
 
-    if (iter == hash->objects.cend()) {
-        int id = hash->nextId++;
-        hash->ids.insert(id, object);
-        iter = hash->objects.insert(object, id);
-        connect(object, &QObject::destroyed, hash, &ObjectReferenceHash::remove);
-    }
-    return iter.value();
+    connect(object, &QObject::destroyed, hash, &ObjectReferenceHash::remove);
+    const int id = hash->nextId++;
+    hash->ids.insert(id, object);
+    hash->objects.insert(object, id);
+    return id;
 }
 
 /*!
