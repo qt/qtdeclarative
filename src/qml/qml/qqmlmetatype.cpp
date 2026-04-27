@@ -1739,8 +1739,8 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
     bool droppedAtLeastOneComposite;
     do {
         droppedAtLeastOneComposite = false;
-        auto it = data->compositeTypes.cbegin();
-        while (it != data->compositeTypes.cend()) {
+        auto it = data->compositeTypes.begin();
+        while (it != data->compositeTypes.end()) {
             const auto &cu = *it;
             if (cu->count() <= doCountInternalCompositeTypeSelfReferences(data, cu)) {
                 QQmlMetaTypeData::clearCompositeType(cu);
