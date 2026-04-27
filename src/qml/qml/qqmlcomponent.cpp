@@ -1874,7 +1874,7 @@ QQmlError QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(const RequiredP
     }
     default:
         description += QLatin1String("\nIt can be set via one of the following alias properties:");
-        for (auto aliasInfo: unsetRequiredProperty.aliasesToRequired) {
+        for (const auto &aliasInfo: unsetRequiredProperty.aliasesToRequired) {
             description += QLatin1String("\n- %1 (%2)").arg(aliasInfo.propertyName, aliasInfo.fileUrl.toString());
         }
         description += QLatin1Char('\n');

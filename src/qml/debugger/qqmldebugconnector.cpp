@@ -113,7 +113,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
             for (const QPluginParsedMetaData &md : metaData) {
                 const auto keys = md.value(QtPluginMetaDataKeys::MetaData).toMap()
                         .value(QLatin1String("Keys")).toArray();
-                for (const QCborValue key : keys) {
+                for (const QCborValue &key : keys) {
                     QString keyString = key.toString();
                     if (params->services.isEmpty() || params->services.contains(keyString))
                         loadQQmlDebugService(keyString);
