@@ -411,7 +411,6 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
     b->setScopeObject(obj);
 
 #if QT_CONFIG(translation) && QT_CONFIG(qml_debug)
-    QString originString;
     if (QQmlDebugTranslationService *service =
                 QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
         service->foundTranslationBinding({ unit, b->scopeObject(), ctxt,
