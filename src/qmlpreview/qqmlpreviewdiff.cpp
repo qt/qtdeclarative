@@ -352,6 +352,10 @@ struct UnitDiffer
         for (quint32 i = 0; i < oldObj.nFunctions; ++i) {
             if (oldFuncs[i] != newFuncs[i])
                 return false;
+            if (!functionContentEqual(*oldUnit->functionAt(oldFuncs[i]),
+                                      *newUnit->functionAt(newFuncs[i]))) {
+                return false;
+            }
         }
 
         return stringsEqual(oldObj.inheritedTypeNameIndex, newObj.inheritedTypeNameIndex)
