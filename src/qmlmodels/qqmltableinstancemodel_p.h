@@ -86,7 +86,6 @@ public:
     const QAbstractItemModel *abstractItemModel() const override;
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
-    QObject *object(const QModelIndex &index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
     QObject *incubateModelItemIfNeeded(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode);
     void restoreFromReleasedItemsCache(QQmlDelegateModelItem *item, int newFlatIndex);
     void commitReleasedItems();
