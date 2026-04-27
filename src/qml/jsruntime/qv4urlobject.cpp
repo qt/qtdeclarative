@@ -810,7 +810,7 @@ void UrlSearchParamsObject::initializeParams(ScopedObject& params)
     }
 }
 
-void UrlSearchParamsObject::setParams(QList<QStringList> params)
+void UrlSearchParamsObject::setParams(const QList<QStringList> &params)
 {
     auto *arrayObject = engine()->newArrayObject(0);
     auto *keys = engine()->newArrayObject(0);
@@ -1082,7 +1082,7 @@ ReturnedValue UrlSearchParamsPrototype::method_toString(
     if (!checkSearchParamsType(v4, o))
         return Encode::undefined();
 
-    auto params = o->params();
+    const auto params = o->params();
 
     QString value;
 

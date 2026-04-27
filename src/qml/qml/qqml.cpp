@@ -633,7 +633,10 @@ static void uniqueRevisions(QList<QTypeRevision> *revisions, QTypeRevision defau
                             QTypeRevision added)
 {
     bool revisionsHaveMajorVersions = false;
-    for (QTypeRevision revision : QList<QTypeRevision>(*revisions)) { // yes, copy
+
+    // copy because we modify revisions in the loop
+    const QList<QTypeRevision> origRevisions = *revisions;
+    for (QTypeRevision revision : origRevisions) {
         // allow any minor version for each explicitly specified past major one
         if (revision.hasMajorVersion()) {
             revisionsHaveMajorVersions = true;

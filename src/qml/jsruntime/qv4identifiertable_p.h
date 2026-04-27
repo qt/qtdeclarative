@@ -65,7 +65,7 @@ public:
     Heap::String *stringForId(PropertyKey i) const;
     Heap::Symbol *symbolForId(PropertyKey i) const;
 
-    void markObjects(MarkStack *markStack);
+    void markObjects(MarkStack *markStack) const;
     void sweep();
 
     void addIdentifierHash(IdentifierHashData *h) {

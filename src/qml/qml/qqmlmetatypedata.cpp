@@ -240,9 +240,10 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCacheForPotentialInlineCom
         QMetaType t, const QQmlMetaTypeData::CompositeTypes::const_iterator &iter) {
     if (t != (*iter)->metaType()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
-        for (auto &&icDatum: (*iter)->inlineComponentData)
+        for (const auto &icDatum : std::as_const((*iter)->inlineComponentData)) {
             if (icDatum.qmlType.typeId() == t)
                 return (*iter)->propertyCaches.at(icDatum.objectIndex);
+        }
     }
     return (*iter)->rootPropertyCache();
 }

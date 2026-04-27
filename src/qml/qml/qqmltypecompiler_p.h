@@ -70,7 +70,7 @@ public:
     QV4::CompiledData::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
     ListPropertyAssignBehavior listPropertyAssignBehavior() const
     {
-        for (const QmlIR::Pragma *pragma: document->pragmas) {
+        for (const QmlIR::Pragma *pragma : std::as_const(document->pragmas)) {
             if (pragma->type == QmlIR::Pragma::ListPropertyAssignBehavior)
                 return pragma->listPropertyAssignBehavior;
         }

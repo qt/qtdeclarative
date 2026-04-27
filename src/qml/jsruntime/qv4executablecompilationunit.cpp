@@ -413,9 +413,10 @@ const Value *ExecutableCompilationUnit::resolveExportRecursively(
     if (!module())
         return nullptr;
 
-    for (const auto &entry: *resolveSet)
+    for (const auto &entry: std::as_const(*resolveSet)) {
         if (entry.module == this && entry.exportName->isEqualTo(exportName))
             return nullptr;
+    }
 
     (*resolveSet) << ResolveSetEntry(this, exportName);
 

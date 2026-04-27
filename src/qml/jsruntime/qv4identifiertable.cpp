@@ -210,7 +210,7 @@ Heap::Symbol *IdentifierTable::symbolForId(PropertyKey i) const
     return static_cast<Heap::Symbol *>(s);
 }
 
-void IdentifierTable::markObjects(MarkStack *markStack)
+void IdentifierTable::markObjects(MarkStack *markStack) const
 {
     for (const auto &h : idHashes)
         h->markObjects(markStack);

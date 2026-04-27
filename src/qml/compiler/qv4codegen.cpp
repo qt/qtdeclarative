@@ -229,7 +229,7 @@ void Codegen::generateFromModule(const QString &sourceCode, ESModule *node, Modu
 
     {
         Compiler::Context *moduleContext = _module->contextMap.value(node);
-        for (const auto &entry: moduleContext->exportEntries) {
+        for (const auto &entry: std::as_const(moduleContext->exportEntries)) {
             if (entry.moduleRequest.isEmpty()) {
                 // ### check against imported bound names
                 _module->localExportEntries << entry;

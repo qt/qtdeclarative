@@ -94,7 +94,7 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
         }
     }
 
-    auto lines = processedOutput.split('\n');
+    const auto lines = processedOutput.split('\n');
     for (const auto &line : lines)
         qCDebug(lcAsm, "%s", line.constData());
 }
