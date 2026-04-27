@@ -2826,19 +2826,11 @@ FxTableItem *QQuickTableViewPrivate::createFxTableItem(const QPoint &cell, QQmlI
     Q_Q(QQuickTableView);
 
     bool ownItem = false;
-    QObject* object = nullptr;
-    const QAbstractItemModel *aim = model->abstractItemModel();
     const int modelRow = isTransposed ? logicalColumnIndex(cell.y()) : logicalRowIndex(cell.y());
     const int modelColumn = isTransposed ? logicalRowIndex(cell.x()) : logicalColumnIndex(cell.x());
     const int modelIndex = modelIndexAtCell(QPoint(modelColumn, modelRow));
 
-    if (tableModel && aim) {
-        // Prefer loading via QModelIndex so that QQmlTableInstanceModel can also
-        // match recently released items by model index, not just by delegate type.
-        object = tableModel->object(aim->index(modelRow, modelColumn), incubationMode);
-    } else {
-        object = model->object(modelIndex, incubationMode);
-    }
+    QObject *object = model->object(modelIndex, incubationMode);
 
     if (!object) {
         if (model->incubationStatus(modelIndex) == QQmlIncubator::Loading) {

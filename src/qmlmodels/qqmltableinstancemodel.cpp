@@ -165,26 +165,21 @@ QObject *QQmlTableInstanceModel::object(int index, QQmlIncubator::IncubationMode
 {
     Q_ASSERT(m_delegate);
 
-    QQmlDelegateModelItem *modelItem = resolveModelItem(index, QModelIndex());
-    if (!modelItem)
-        return nullptr;
+    QModelIndex modelIndex;
+    if (const QAbstractItemModel *aim = abstractItemModel()) {
+        // A valid QModelIndex is needed for resolveModelItem() to match
+        // items in the release cache rather than just delegate type alone.
+        const int row = m_adaptorModel.rowAt(index);
+        const int column = m_adaptorModel.columnAt(index);
+        modelIndex = aim->index(row, column);
+    }
 
-    // Return the incubated object, or start an async incubation task and return nullptr for now
-    return incubateModelItemIfNeeded(modelItem, incubationMode);
-}
+    if (QQmlDelegateModelItem *modelItem = resolveModelItem(index, modelIndex)) {
+        // Return the incubated object, or start an async incubation task and return nullptr for now
+        return incubateModelItemIfNeeded(modelItem, incubationMode);
+    }
 
-QObject *QQmlTableInstanceModel::object(const QModelIndex &modelIndex, QQmlIncubator::IncubationMode incubationMode)
-{
-    Q_ASSERT(m_delegate);
-    Q_ASSERT(m_adaptorModel.adaptsAim());
-
-    const int flatIndex = m_adaptorModel.indexAt(modelIndex.row(), modelIndex.column());
-    QQmlDelegateModelItem *modelItem = resolveModelItem(flatIndex, modelIndex);
-    if (!modelItem)
-        return nullptr;
-
-    // Return the incubated object, or start an async incubation task and return nullptr for now
-    return incubateModelItemIfNeeded(modelItem, incubationMode);
+    return nullptr;
 }
 
 QObject *QQmlTableInstanceModel::incubateModelItemIfNeeded(QQmlDelegateModelItem *modelItem, QQmlIncubator::IncubationMode incubationMode)
