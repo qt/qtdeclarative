@@ -36,6 +36,7 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_PROPERTY(bool asynchronousShapes READ asynchronousShapes WRITE setAsynchronousShapes NOTIFY asynchronousShapesChanged REVISION(6, 11) FINAL)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 12) FINAL)
     Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 12) FINAL)
+    Q_PROPERTY(bool retainWhileLoading READ retainWhileLoading WRITE setRetainWhileLoading NOTIFY retainWhileLoadingChanged REVISION(6, 12) FINAL)
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
@@ -74,6 +75,9 @@ public:
     bool asynchronous() const;
     void setAsynchronous(bool asynchronous);
 
+    bool retainWhileLoading() const;
+    void setRetainWhileLoading(bool retainWhileLoading);
+
     Status status() const;
 
     QQuickVectorImageAnimations *animations();
@@ -93,6 +97,7 @@ signals:
 
     Q_REVISION(6, 12) void asynchronousChanged();
     Q_REVISION(6, 12) void statusChanged();
+    Q_REVISION(6, 12) void retainWhileLoadingChanged();
 
 private slots:
     void updateRootItemScale();

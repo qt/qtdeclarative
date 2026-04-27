@@ -45,6 +45,7 @@ public:
     bool assumeTrustedSource = false;
     bool m_asyncShapes = false;
     bool asynchronous = false;
+    bool retainWhileLoading = false;
     std::unique_ptr<QQmlContext> context;
     QQuickVectorImageAnimations *animations = nullptr;
     QQuickVectorImageIncubator *incubator = nullptr;

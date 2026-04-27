@@ -66,8 +66,10 @@ void QQuickVectorImagePrivate::loadFile()
     if (localFile.isEmpty())
         return;
 
-    if (rootItem)
+    if (rootItem && !retainWhileLoading) {
         rootItem->deleteLater();
+        rootItem = nullptr;
+    }
 
     if (incubator != nullptr) {
         // If the incubator is still alive, it means it was interrupted before we could add the
@@ -90,9 +92,6 @@ void QQuickVectorImagePrivate::loadFile()
     QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::statusChanged);
     QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::updateItem);
 
-    rootItem = new QQuickItem(q);
-    rootItem->setParentItem(q);
-
     QQuickVectorImageGenerator::GeneratorFlags flags;
     if (preferredRendererType == QQuickVectorImage::CurveRenderer)
         flags.setFlag(QQuickVectorImageGenerator::CurveRenderer);
@@ -111,10 +110,15 @@ void QQuickVectorImage::updateItem()
     Q_D(QQuickVectorImage);
     if (d->incubator == nullptr
         || d->incubator->object() == nullptr
-        || !d->incubator->isReady()
-        || d->rootItem == nullptr) {
+        || !d->incubator->isReady()) {
         return;
     }
+
+    if (d->rootItem != nullptr)
+        d->rootItem->deleteLater();
+
+    d->rootItem = new QQuickItem(this);
+    d->rootItem->setParentItem(this);
 
     QQuickItem *item = qobject_cast<QQuickItem *>(d->incubator->object());
     if (item == nullptr) {
@@ -408,6 +412,37 @@ void QQuickVectorImage::setAsynchronous(bool asynchronous)
         return;
     d->asynchronous = asynchronous;
     emit asynchronousChanged();
+}
+
+/*!
+    \qmlproperty bool QtQuick.VectorImage::VectorImage::retainWhileLoading
+    \since 6.12
+
+    This property defines the behavior when the \l source property is changed and loading happens
+    asynchronously. This is the case when the \l asynchronous property is set to \c true.
+
+    If \c retainWhileLoading is \c false (the default), the old image is discarded immediately, and
+    the component is cleared while the new image is being loaded. If set to \c true, the old image
+    is retained and remains visible until the new one is ready.
+
+    Enabling this property can avoid flickering in cases where loading the new image takes a long
+    time. It comes at the cost of some extra memory use while the new image is being loaded.
+
+    \sa asynchronous
+*/
+bool QQuickVectorImage::retainWhileLoading() const
+{
+    Q_D(const QQuickVectorImage);
+    return d->retainWhileLoading;
+}
+
+void QQuickVectorImage::setRetainWhileLoading(bool retainWhileLoading)
+{
+    Q_D(QQuickVectorImage);
+    if (d->retainWhileLoading == retainWhileLoading)
+        return;
+    d->retainWhileLoading = retainWhileLoading;
+    emit retainWhileLoadingChanged();
 }
 
 /*!

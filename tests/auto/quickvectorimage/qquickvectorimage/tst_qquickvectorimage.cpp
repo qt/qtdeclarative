@@ -10,6 +10,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
+#include <QtQuickVectorImage/private/qquickvectorimage_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -58,7 +59,7 @@ void tst_QQuickVectorImage::parseFiles()
     engine.rootContext()->setContextProperty(QStringLiteral("fileName"), QStringLiteral("qrc:/svgs/%1").arg(fileName));
 
     QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem *>(c.create());
+    QQuickVectorImage *item = qobject_cast<QQuickVectorImage *>(c.create());
     auto cleanup = qScopeGuard([&item] {
         delete item;
         item = nullptr;
@@ -67,6 +68,7 @@ void tst_QQuickVectorImage::parseFiles()
     QVERIFY(item != nullptr);
     QVERIFY(!item->childItems().isEmpty());
     QVERIFY(!item->childItems().first()->size().isNull());
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Ready);
 }
 
 void tst_QQuickVectorImage::parseBrokenFile()
@@ -75,15 +77,16 @@ void tst_QQuickVectorImage::parseBrokenFile()
     engine.rootContext()->setContextProperty(QStringLiteral("fileName"), testFileUrl("svg/broken.svg"));
 
     QQmlComponent c(&engine, testFileUrl("vectorimage.qml"));
-    QQuickItem *item = qobject_cast<QQuickItem *>(c.create());
+    QQuickVectorImage *item = qobject_cast<QQuickVectorImage *>(c.create());
     auto cleanup = qScopeGuard([&item] {
         delete item;
         item = nullptr;
     });
 
     QVERIFY(item != nullptr);
-    QVERIFY(!item->childItems().isEmpty());
-    QVERIFY(item->childItems().first()->size().isNull());
+    QVERIFY(item->childItems().isEmpty());
+
+    QCOMPARE(item->status(), QQuickVectorImage::Status::Error);
 }
 
 void tst_QQuickVectorImage::asyncShapes_data()
