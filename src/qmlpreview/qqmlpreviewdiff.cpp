@@ -959,7 +959,7 @@ static Severity classifyChange(const Change &change)
 
 static void sortChanges(QSpan<Change> changes)
 {
-    std::sort(changes.begin(), changes.end(), [](const Change &a, const Change &b) {
+    std::stable_sort(changes.begin(), changes.end(), [](const Change &a, const Change &b) {
         return quint8(classifyChange(a)) < quint8(classifyChange(b));
     });
 }
