@@ -14,7 +14,9 @@
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlproperty.h>
 #include <QtQml/qqmlcomponent.h>
+#if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
+#endif
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE
@@ -99,6 +101,7 @@ bool QQuickOverlayPrivate::eatEventIfBlockedByModal(QPointerEvent *event)
         }
     }
 
+#if QT_CONFIG(quick_shadereffect)
     // topItem may be a QQuickShaderEffectSource created for a popup's drop shadow layer.
     // It is a direct child of the overlay (not of the popup item), so the parent walk above
     // misses it. Resolve it to the popup item it renders so the loop below handles it correctly.
@@ -110,6 +113,7 @@ bool QQuickOverlayPrivate::eatEventIfBlockedByModal(QPointerEvent *event)
         if (!item)
             return false;
     }
+#endif
 
     // Iterate popups front-to-back. Block the event if topItem is not inside a popup
     // that sits above the first modal popup in stacking order.
