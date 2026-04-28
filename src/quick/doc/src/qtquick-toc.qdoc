@@ -84,6 +84,7 @@
     \li \l {Qt Quick for Android}
         \list
             \li \l {Qt Quick Android Classes}
+            \li \l {Android Fragments with Qt Quick for Android}
             \li \l {Qt Quick for Android Studio Projects}
             \li \l {Using QtAbstractItemModel in Android Studio Projects}
             \li \l {Exposing QtAbstractListModel to QML}
