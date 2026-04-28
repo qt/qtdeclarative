@@ -346,6 +346,14 @@ QString QQmlContextData::findObjectId(const QObject *obj) const
     return QString();
 }
 
+void QQmlContextData::setTypeCompilationUnit(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit)
+{
+    m_propertyNameCache = QV4::IdentifierHash();
+    delete[] std::exchange(m_idValues, nullptr);
+    initFromTypeCompilationUnit(unit, m_componentObjectIndex);
+}
+
 void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int subComponentIndex)
 {
     m_typeCompilationUnit = unit;

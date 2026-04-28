@@ -1041,29 +1041,54 @@ void tst_qqmlcontext::childContexts()
 void tst_qqmlcontext::contextDataCompilationUnitSetter()
 {
     QQmlEngine engine;
-    QQmlComponent component(&engine, testFileUrl("Simple.qml"));
-    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-    QScopedPointer<QObject> obj(component.create());
-    QVERIFY(obj);
+    QQmlComponent component1(&engine, testFileUrl("Simple.qml"));
+    QVERIFY2(component1.isReady(), qPrintable(component1.errorString()));
+    QScopedPointer<QObject> obj1(component1.create());
+    QVERIFY(obj1);
 
-    QQmlData *ddata = QQmlData::get(obj.data());
-    QVERIFY(ddata);
-    auto context = ddata->outerContext;
-    QVERIFY(context);
+    QQmlComponent component2(&engine, testFileUrl("Simple2.qml"));
+    QVERIFY2(component2.isReady(), qPrintable(component2.errorString()));
+    QScopedPointer<QObject> obj2(component2.create());
+    QVERIFY(obj2);
 
-    auto origCU = context->typeCompilationUnit();
+    QQmlData *ddata1 = QQmlData::get(obj1.data());
+    QVERIFY(ddata1);
+    auto contextData1 = ddata1->outerContext;
+    auto context1 = contextData1->asQQmlContext();
 
-    // Round-trip.
-    context->setTypeCompilationUnit(origCU);
-    QCOMPARE(context->typeCompilationUnit().data(), origCU.data());
+    QVERIFY(context1);
 
-    // Set to nullptr.
-    context->setTypeCompilationUnit(nullptr);
-    QVERIFY(!context->typeCompilationUnit());
+    QQmlData *ddata2 = QQmlData::get(obj2.data());
+    QVERIFY(ddata2);
+    auto contextData2 = ddata2->outerContext;
+    auto context2 = contextData2->asQQmlContext();
+    QVERIFY(context2);
 
-    // Restore.
-    context->setTypeCompilationUnit(origCU);
-    QCOMPARE(context->typeCompilationUnit().data(), origCU.data());
+    QCOMPARE(context1->contextProperty("self"), QVariant::fromValue(obj1.data()));
+    QCOMPARE(context1->contextProperty("self2"), QVariant());
+
+    QCOMPARE(context2->contextProperty("self2"), QVariant::fromValue(obj2.data()));
+    QCOMPARE(context2->contextProperty("self"), QVariant());
+
+    auto cu1 = contextData1->typeCompilationUnit();
+    QVERIFY(cu1);
+    auto cu2 = contextData2->typeCompilationUnit();
+    QVERIFY(cu2);
+
+    contextData1->setTypeCompilationUnit(cu2);
+    QCOMPARE(contextData1->typeCompilationUnit(), cu2);
+
+    contextData2->setTypeCompilationUnit(cu1);
+    QCOMPARE(contextData2->typeCompilationUnit(), cu1);
+
+    // We don't automatically get the ID values set because the context doesn't
+    // know how the old unit's ID values map to the new unit's ID values. The
+    // ID values need to be re-added separately.
+
+    QCOMPARE(context1->contextProperty("self").value<QObject *>(), nullptr);
+    QCOMPARE(context1->contextProperty("self2").value<QObject *>(), nullptr);
+    QCOMPARE(context2->contextProperty("self").value<QObject *>(), nullptr);
+    QCOMPARE(context2->contextProperty("self2").value<QObject *>(), nullptr);
 }
 
 QTEST_MAIN(tst_qqmlcontext)
