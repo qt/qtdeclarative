@@ -6,7 +6,7 @@ project(qmlimageproviderplugin LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
 
-set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/examples/quick/imageprovider)
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 

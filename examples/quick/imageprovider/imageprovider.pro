@@ -1,7 +1,9 @@
 TEMPLATE = lib
-CONFIG += plugin
+CONFIG += plugin qmltypes
 QT += qml quick
 
+QML_IMPORT_NAME = ImageProviderCore
+QML_IMPORT_MAJOR_VERSION = 1
 DESTDIR = ImageProviderCore
 TARGET  = qmlimageproviderplugin
 

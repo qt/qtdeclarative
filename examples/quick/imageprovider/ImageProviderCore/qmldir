@@ -1,2 +1,4 @@
+module ImageProviderCore
 plugin qmlimageproviderplugin
+classname ImageProviderExtensionPlugin
 

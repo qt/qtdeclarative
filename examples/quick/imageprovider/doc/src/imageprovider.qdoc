@@ -7,9 +7,20 @@
     \example imageprovider
     \examplecategory {Graphics}
 
-    This examples shows how to use QQuickImageProvider to serve images
-    to QML image elements.
+    This example shows how to use QQuickImageProvider to serve images
+    to QML \l Image items, and how to package it into a \l QQmlEngineExtensionPlugin
+    which is detected and loaded at runtime. The plugin is then a reusable component
+    that can be installed into a system-wide location for use by multiple applications.
 
     \image qml-imageprovider-example.png
-*/
 
+    It can be built and tested like this:
+    \code
+    $ qt-cmake .
+    $ cmake --build .
+    $ qml -I . imageprovider-example.qml
+    \endcode
+
+    Alternatively, a QQuickImageProvider intended for use in only one application
+    can simply be instantiated in \c main.cpp as documented.
+*/
