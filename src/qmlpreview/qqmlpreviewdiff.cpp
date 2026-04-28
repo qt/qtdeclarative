@@ -484,7 +484,10 @@ struct UnitDiffer
         case Binding::Type_Object:
         case Binding::Type_AttachedProperty:
         case Binding::Type_GroupProperty:
-            return oldBinding.value.objectIndex == newBinding.value.objectIndex;
+            return oldBinding.value.objectIndex == newBinding.value.objectIndex
+                    && objectContentEqual(
+                            *oldUnit->qmlUnit()->objectAt(oldBinding.value.objectIndex),
+                            *newUnit->qmlUnit()->objectAt(newBinding.value.objectIndex));
         }
 
         return false;

@@ -53,6 +53,7 @@ private slots:
     void objectRemoval();
     void baseTypeChange();
     void nestedObjectChange();
+    void innerBaseTypeChange();
     void mixedChanges();
 
     // Location vs content change tests
@@ -494,6 +495,17 @@ void tst_QQmlPreviewDiff::nestedObjectChange()
     // (string at the stringIndex position changed from "Hello" to "World")
     // With position-based comparison, binding structure doesn't change if indices are same
     QVERIFY(countByType(diff, ChangeType::StringDataChanged) >= 1);
+}
+
+void tst_QQmlPreviewDiff::innerBaseTypeChange()
+{
+    const auto diff = diffFiles("InnerBaseTypeOld.qml", "InnerBaseTypeNew.qml");
+    QVERIFY(diff.success);
+
+    // The change in base type for the inner object triggers a change in the object
+    // binding for the outer object.
+    QCOMPARE(countByType(diff, ChangeType::ObjectChanged), 1);
+    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 1);
 }
 
 void tst_QQmlPreviewDiff::mixedChanges()
