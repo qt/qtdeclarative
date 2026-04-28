@@ -41,9 +41,9 @@ issues in the library user's code.
 \note When using the CMake \l qt_add_qml_module API, a plugin will be generated
 automatically for you. It will take care of type registration.
 You only need to write a custom plugin if you have special
-requirements, such as registering custom image
-providers. In that case, pass
-\l{NO_GENERATE_PLUGIN_SOURCE} to the \c qt_add_qml_module
+requirements, such as
+\l {C++ Extensions: Image Provider Example}{registering custom image providers}.
+In that case, pass \l{NO_GENERATE_PLUGIN_SOURCE} to the \c qt_add_qml_module
 call to disable the generation of the default plugin.
 
 The linker might erroneously remove the generated type registration
