@@ -158,12 +158,6 @@ public:
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
     static QQmlJSScope::Ptr resetForReparse(QQmlJSScope::Ptr &&scope);
 
-    static void cloneInto(QQmlJSScope::Ptr &origin,
-                          const QQmlJSScope::Ptr &target)
-    {
-        *target = std::move(*clone(origin));
-    }
-
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
     QQmlJSScope::Ptr parentScope();
