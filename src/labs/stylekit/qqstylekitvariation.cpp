@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
     \labs
 
     \sa Style, Theme, {ControlStyle::variations}{ControlStyle.variations},
-        {StyleVariation::variations}{StyleVariation.variations}
+        {StyleVariation::variations}{StyleVariation.variations, {StyleKit Property Resolution}}
 */
 
 /*!

@@ -15,7 +15,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule Qt.labs.StyleKit
     \brief Traces how style properties are resolved for a control.
 
-    StyleKitDebug is a diagnostic tool that logs style property reads to the
+    StyleKitDebug is a diagnostic in-app tool that logs style property reads to the
     debug output. It is useful for understanding why a control ends up with a
     particular appearance, especially in complex styles that involve multiple
     \l {Theme}{themes} or \l {StyleVariation}{style variations}.
@@ -25,25 +25,26 @@ QT_BEGIN_NAMESPACE
     \note This tool is experimental. Enabling it will severely degrade performance and should only
     be used for debugging. The output format may change in future versions.
 
-    To start tracing, assign the \l{The id Attribute}{id} of a \l Control to the \l control property:
+    To start tracing, assign the control you want to introspect to the \l control property:
 
-    \code
-    StyleKit.debug.control: myButton
-    \endcode
+    \snippet StyleKitDebug.qml trace
 
     Each resolved property is printed as a single line showing where the value
     came from and what it resolved to:
 
     \code
-    [read] StyleReader[Hovered].button.background.color -> MyStyle.Theme(Dark).button[Hovered] = #ff0000
+    [read] StyleReader[Hovered].button.background.color -> Style.Theme(Dark).button[Hovered] = #add8e6
     \endcode
+
+    The \c StyleReader in the output refers to the \l StyleReader that the \l Button
+    uses internally to read its style property values.
 
     Tracing the property reads of a StyleReader can produce a large amount of output. Use \l filter to
     limit the output to properties of interest.
 
     \labs
 
-    \sa StyleKit::debug
+    \sa StyleKit::debug, {StyleKit Property Resolution}
 */
 
 /*!

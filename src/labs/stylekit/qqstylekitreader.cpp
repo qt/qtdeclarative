@@ -50,7 +50,8 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa CustomControl, Style, {StyleVariation::controlType}{StyleVariation.controlType}
+    \sa CustomControl, Style, {StyleVariation::controlType}{StyleVariation.controlType},
+        {StyleKit Property Resolution}
 */
 
 /*!
