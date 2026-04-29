@@ -708,7 +708,9 @@ void QQmlJSScope::resolveEnums(
         resolveList(enumScope, contextualTypes.arrayType());
         if (QString alias = it->alias(); !alias.isEmpty()
             && self->m_enumerations.constFind(alias) == self->m_enumerations.constEnd()) {
-            auto aliasScope = QQmlJSScope::clone(enumScope);
+            auto aliasScope = QQmlJSScope::create();
+            *aliasScope = *enumScope;
+            reparent(self, aliasScope);
             aliasScope->m_internalName = self->internalName() + QStringLiteral("::") + alias;
             QQmlJSMetaEnum cpy(*it);
             cpy.setType(QQmlJSScope::ConstPtr(aliasScope));
