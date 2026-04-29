@@ -1,0 +1,173 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \page qtlabsstylekit-propagation.html
+    \title StyleKit Property Resolution
+    \brief How StyleKit resolves style property values.
+
+    A style property — such as \l {DelegateStyle::color}{background.color} — can have
+    many different values depending on the control's \l {StyleReader}{state}, the active \l Theme, and
+    effective \l {StyleVariation}{style variations}.
+    For example, it can differ between the \l {ControlStateStyle::}{pressed} and
+    \l {ControlStateStyle::}{hovered} states, or between the \l {Style::light}{light}
+    and \l {Style::dark}{dark} themes.
+    This document details how \c StyleKit resolves the value a property will get when
+    used for styling a particular \l [QtQuickControls]{Control}.
+
+    \section1 Control States
+
+    Controls change appearance depending on interaction —
+    \l {ControlStateStyle::}{hovered}, \l {ControlStateStyle::}{pressed},
+    \l {ControlStateStyle::}{checked}, \l {ControlStateStyle::}{focused},
+    \l {ControlStateStyle::}{disabled}, and so on. When resolving a property, \c StyleKit exhausts all
+    state-specific values first, before checking the normal state.
+
+    For example, if a \l [QtQuickControls]{Button} is \l {ControlStateStyle::}{hovered},
+    \c {hovered.button.background.color} is checked before \c {button.background.color}.
+    And if it's also \l {ControlStateStyle::}{pressed}, \c {pressed.button.background.color}
+    is checked before them both. The order of precedence between states is documented in
+    the \l {ControlStateStyle}{ControlStateStyle documentation}.
+
+    States can also be nested. A combination such as \c {pressed.hovered.button.background.color}
+    is more specific than either \c {pressed.button.background.color} or \c {hovered.button.background.color}
+    alone, and takes precedence over both.
+
+    \section1 Fallback Properties
+
+    Some style properties can be set more than one way. For example, the top-left radius
+    on the background can be set either directly using
+    \l {DelegateStyle::topLeftRadius}{background.topLeftRadius}, or
+    indirectly using \l {DelegateStyle::radius}{background.radius} (which sets all corners
+    to the same radius). For such properties, \c StyleKit checks the specific property
+    first, then the fallback, and exhausts both within the current state before moving to
+    a less specific state. For example, \c {button.hovered.background.radius} takes
+    precedence over \c {button.background.topLeftRadius}, if the control is hovered.
+    And of course, \c {button.hovered.background.topLeftRadius} takes precedence over both.
+
+    \section1 Control Type Hierarchy
+
+    \l {AbstractStylableControls}{The controls} form a hierarchy. A \l {AbstractStylableControls::button}{button}
+    falls back to \l {AbstractStylableControls::abstractButton}{abstractButton}, which
+    falls back to \l {AbstractStylableControls::control}{control}.
+    A \l {AbstractStylableControls::groupBox}{groupBox} falls back to
+    \l {AbstractStylableControls::frame}{frame}, which falls back to
+    \l {AbstractStylableControls::pane}{pane}, which falls back to
+    \l {AbstractStylableControls::control}{control}, and so on.
+    \c control is the root type in the hierarchy, mirroring the type
+    hierarchy of \l {Qt Quick Controls}. Refer to the \l {AbstractStylableControls}{documentation}
+    for each control type to see its direct fallback type.
+
+    When all states and fallback properties have been exhausted for a specific control type,
+    \c StyleKit walks up the hierarchy to check whether it is set in a base type.
+    For example, if \c {button.background.color} is not set, \c StyleKit will check
+    \c {abstractButton.background.color} instead, and so on.
+    This motivates the designer to factor the property values that are common across multiple
+    controls into a common base type, to maximize reuse and minimize duplication. For example, you
+    can put all the property values common to buttons, checkboxes, and radio buttons in
+    \c abstractButton, and only set the properties that differ in the specific subtypes.
+
+    Note that any state (including the normal state) in a more specific type takes precedence over
+    any state in a base type. For example, \c {button.background.color} takes
+    precedence over \c {hovered.abstractButton.background.color}, even if the control is hovered.
+    And of course, \c {hovered.button.background.color} takes precedence over both.
+
+    \section1 Style And Theme
+
+    The \l {Control Type Hierarchy} is repeated inside both a \l Style and a \l Theme.
+    When resolving a property, \c StyleKit first looks through the control type hierarchy in
+    the active \l Theme, then in the active \l Style.
+    This means that properties set in the active theme take precedence over those set in the style.
+    As a consequence, a base type in the theme also overrides a more specific type in the style. For
+    example, \c {theme.control.background.color} takes precedence over \c {style.button.background.color}.
+
+    \section1 Style Variations
+
+    The \l {Control Type Hierarchy} is repeated inside a \l StyleVariation.
+    Style variations can be defined both in a style and in a theme, and a style variation in a theme
+    takes precedence over the theme itself. Since a theme takes precedence over a style, the style
+    properties in the current theme will also take precedence over style variations in the style.
+    For example, \c {theme.button.background.color} takes precedence over
+    \c {style.variation.button.background.color}.
+
+    \section1 Fallback Style
+
+    Every \l Style has a \l {Style::fallbackStyle}{fallback style} — a complete style
+    that acts as a last resort when a property cannot be resolved within the active style.
+    If the full resolution process (across control types, states, the active theme, and any
+    style variations) fails to find a value, \c StyleKit repeats the entire process in the
+    fallback style. The default fallback style looks similar to the \l {Basic Style}, so even
+    an empty style will still produce fully styled controls.
+
+    The fallback style can itself have a fallback style, and \c StyleKit follows this chain
+    recursively until it either finds a value or exhausts the chain. If no value is found, a
+    default value is used.
+
+    \section1 Putting It All Together
+
+    As an example, let's say \c StyleKit needs to resolve \c {background.color} for a
+    \l {ControlStateStyle::}{hovered} \l [QtQuickControls]{Button}. The style has a theme, and both
+    the style and the theme have an active variation. \c StyleKit then checks the following locations
+    in order, using the first value it finds:
+
+    \list
+        \li \c {theme.variation.hovered.button.background.color}
+        \li \c {theme.variation.button.background.color}
+        \li \c {theme.variation.hovered.abstractButton.background.color}
+        \li \c {theme.variation.abstractButton.background.color}
+        \li \c {theme.variation.hovered.control.background.color}
+        \li \c {theme.variation.control.background.color}
+        \li \c {theme.hovered.button.background.color}
+        \li \c {theme.button.background.color}
+        \li \c {theme.hovered.abstractButton.background.color}
+        \li \c {theme.abstractButton.background.color}
+        \li \c {theme.hovered.control.background.color}
+        \li \c {theme.control.background.color}
+        \li \c {style.variation.hovered.button.background.color}
+        \li \c {style.variation.button.background.color}
+        \li \c {style.variation.hovered.abstractButton.background.color}
+        \li \c {style.variation.abstractButton.background.color}
+        \li \c {style.variation.hovered.control.background.color}
+        \li \c {style.variation.control.background.color}
+        \li \c {style.hovered.button.background.color}
+        \li \c {style.button.background.color}
+        \li \c {style.hovered.abstractButton.background.color}
+        \li \c {style.abstractButton.background.color}
+        \li \c {style.hovered.control.background.color}
+        \li \c {style.control.background.color}
+    \endlist
+
+    If all these locations are exhausted without finding a value, the same process is
+    repeated in the fallback style (recursively, if the fallback style also has a fallback
+    style). If still not found, a default value is used.
+
+    \section1 Debugging Property Resolution
+
+    With multiple control types, themes, variations, and fallback styles all
+    contributing to the final value of a property, it can sometimes be hard to
+    tell why a particular control ends up with a particular appearance.
+    \l StyleKitDebug is a diagnostic in-app tool that logs each style property
+    read to the debug output, showing exactly which layer and control type a
+    property was resolved from.
+
+    To start tracing, assign the control you want to introspect to the
+    \l {StyleKitDebug::control}{StyleKit.debug.control} property:
+
+    \snippet StyleKitDebug.qml trace
+
+    Each resolved property is printed as a single line, for example:
+
+    \code
+    [read] StyleReader[Hovered].button.background.color -> Style.Theme(Dark).button[Hovered] = #add8e6
+    \endcode
+
+    The \c StyleReader in the output refers to the \l StyleReader that the \l Button
+    uses internally to read its style property values.
+
+    Use the \l {StyleKitDebug::filter}{filter} property to limit the output to properties of interest.
+
+    \note Enabling \l StyleKitDebug will severely degrade performance. Use it
+    only during debugging.
+
+    \sa Style, Theme, StyleVariation, StyleKitDebug, {StyleKit Features Overview}
+*/

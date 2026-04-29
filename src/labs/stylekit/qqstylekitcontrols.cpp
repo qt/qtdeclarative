@@ -30,6 +30,8 @@ QT_BEGIN_NAMESPACE
     might not actually affect its appearance, since it will just be read from the
     fallback style instead.
 
+    \sa {StyleKit Property Resolution}
+
     \labs
 */
 

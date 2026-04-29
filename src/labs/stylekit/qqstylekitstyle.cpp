@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \labs
 
     \sa Theme, CustomTheme, StyleVariation, ControlStyle, DelegateStyle,
-        CustomControl
+        CustomControl, {StyleKit Property Resolution}
 */
 
 /*!

@@ -61,6 +61,7 @@
 
     \list
         \li \l{StyleKit Features Overview} - A brief introduction to the available styling features
+        \li \l{StyleKit Property Resolution} - How StyleKit resolves style property values
         \li \l {Reference Fallback Style}
     \endlist
 

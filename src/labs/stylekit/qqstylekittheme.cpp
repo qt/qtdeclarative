@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
     \labs
 
-    \sa Style, CustomTheme
+    \sa Style, CustomTheme, {StyleKit Property Resolution}
 */
 
 static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
