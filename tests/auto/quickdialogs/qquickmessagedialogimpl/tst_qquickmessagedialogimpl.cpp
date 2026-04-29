@@ -29,9 +29,18 @@ class tst_QQuickMessageDialogImpl : public QQmlDataTest
 
 public:
     tst_QQuickMessageDialogImpl();
+    static void initMain()
+    {
+        // We need to set this attribute.
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        // We don't want to run this test for every style, as each one will have
+        // different ways of implementing the dialogs.
+        // For now we only test one style.
+        // TODO: use Basic
+        QQuickStyle::setStyle("Fusion");
+    }
 
 private slots:
-    void initTestCase() override;
     void changeText_data();
     void changeText();
     void changeInformativeText_data();
@@ -50,12 +59,6 @@ private slots:
 tst_QQuickMessageDialogImpl::tst_QQuickMessageDialogImpl()
     : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
-}
-
-void tst_QQuickMessageDialogImpl::initTestCase()
-{
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
-    QQmlDataTest::initTestCase();
 }
 
 void tst_QQuickMessageDialogImpl::changeText_data()
@@ -447,6 +450,6 @@ void tst_QQuickMessageDialogImpl::checkFrameless()
     QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
 
-QTEST_QUICKDIALOGS_MAIN(tst_QQuickMessageDialogImpl)
+QTEST_MAIN(tst_QQuickMessageDialogImpl)
 
 #include "tst_qquickmessagedialogimpl.moc"

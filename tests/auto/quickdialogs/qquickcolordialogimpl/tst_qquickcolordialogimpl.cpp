@@ -36,17 +36,17 @@ class tst_QQuickColorDialogImpl : public QQmlDataTest
     Q_OBJECT
 
 public:
-
-    tst_QQuickColorDialogImpl();
-    static void initMain()
+    tst_QQuickColorDialogImpl();    static void initMain()
     {
-        // TODO: enable testing on all remaining styles.
+        // We need to set this attribute.
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        // We don't want to run this test for every style, as each one will have
+        // different ways of implementing the dialogs.
+        // For now we only test one style.
         QQuickStyle::setStyle("Basic");
     }
 
-
 private slots:
-    void initTestCase() override;
     void defaults();
     void moveColorPickerHandle();
     void alphaChannel_data();
@@ -105,12 +105,6 @@ private:
     QVERIFY2(qAbs(ACTUAL - EXPECTED) < TOLERANCE, ERRORMSG)
 
 tst_QQuickColorDialogImpl::tst_QQuickColorDialogImpl() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
-
-void tst_QQuickColorDialogImpl::initTestCase()
-{
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
-    QQmlDataTest::initTestCase();
-}
 
 void tst_QQuickColorDialogImpl::defaults()
 {
@@ -291,9 +285,7 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
                 .arg(cyanHue)
                 .arg(floatComparisonThresholdForHueSlider)));
 
-    const int eightBitColorThreshold = 4 + hueSliderCenterPosition.x() % 2;
-
-    FUZZYCOMPARE(colorPicker->color().red(), QColorConstants::Cyan.red(), eightBitColorThreshold,
+    FUZZYCOMPARE(colorPicker->color().red(), QColorConstants::Cyan.red(), 3,
                 qPrintable(colorComparisonErrorString.arg("red")
                 .arg(QColorConstants::Cyan.red())
                 .arg(colorPicker->color().red())));
@@ -301,11 +293,11 @@ void tst_QQuickColorDialogImpl::moveColorPickerHandle()
     if (QSysInfo::productType() == "opensuse-leap" && QSysInfo::productVersion() == QLatin1String("16.0"))
         QEXPECT_FAIL("", "QTBUG-142386: opensuse-leap 16.0 fails", Continue);
 
-    FUZZYCOMPARE(colorPicker->color().green(), QColorConstants::Cyan.green(), eightBitColorThreshold,
+    FUZZYCOMPARE(colorPicker->color().green(), QColorConstants::Cyan.green(), 3,
                 qPrintable(colorComparisonErrorString.arg("green")
                 .arg(QColorConstants::Cyan.green())
                 .arg(colorPicker->color().green())));
-    FUZZYCOMPARE(colorPicker->color().blue(), QColorConstants::Cyan.blue(), eightBitColorThreshold,
+    FUZZYCOMPARE(colorPicker->color().blue(), QColorConstants::Cyan.blue(), 3,
                 qPrintable(colorComparisonErrorString
                 .arg("blue")
                 .arg(QColorConstants::Cyan.blue())
@@ -739,6 +731,7 @@ void tst_QQuickColorDialogImpl::checkFrameless()
 
     QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
+
 
 QTEST_MAIN(tst_QQuickColorDialogImpl)
 

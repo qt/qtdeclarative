@@ -14,6 +14,6 @@ ApplicationWindow {
     FolderDialog {
         id: dialog
         objectName: "FolderDialog"
-        flags: Qt.Dialog | Qt.FramelessWindowHint
+        flags: Qt.Window | Qt.FramelessWindowHint
     }
 }

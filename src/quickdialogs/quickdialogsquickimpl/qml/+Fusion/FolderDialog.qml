@@ -92,7 +92,7 @@ FolderDialogImpl {
 
         ListView {
             id: folderDialogListView
-            objectName: "folderDialogListView"
+            objectName: "fileDialogListView"
             anchors.fill: parent
             clip: true
             focus: true

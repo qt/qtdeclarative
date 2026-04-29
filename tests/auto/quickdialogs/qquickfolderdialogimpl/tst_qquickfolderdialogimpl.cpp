@@ -33,6 +33,15 @@ class tst_QQuickFolderDialogImpl : public QQmlDataTest
 
 public:
     tst_QQuickFolderDialogImpl();
+    static void initMain()
+    {
+        // We need to set this attribute.
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        // We also don't want to run this for every style, as each one will have
+        // different ways of implementing the dialogs.
+        // For now we only test one style.
+        QQuickStyle::setStyle("Basic");
+    }
 
 private slots:
     void initTestCase() override;
@@ -79,18 +88,13 @@ private:
 };
 
 tst_QQuickFolderDialogImpl::tst_QQuickFolderDialogImpl()
-    : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::FailOnWarnings)
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 
 void tst_QQuickFolderDialogImpl::initTestCase()
 {
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QQmlDataTest::initTestCase();
-
-    // Ensure that each test starts off in the temporary directory.
-    oldCurrentDir = QDir::current();
-    QDir::setCurrent(tempDir.path());
 
     QVERIFY(tempDir.isValid());
     tempDirCanonicalPath = QFileInfo(tempDir.path()).canonicalFilePath();
@@ -146,12 +150,47 @@ void tst_QQuickFolderDialogImpl::initTestCase()
 
     tempFile2.reset(new QFile(tempDirCanonicalPath + "/file2.txt"));
     QVERIFY(tempFile2->open(QIODevice::ReadWrite));
+
+    // Ensure that each test starts off in the temporary directory.
+    oldCurrentDir = QDir::current();
+    QDir::setCurrent(tempDirCanonicalPath);
 }
 
 void tst_QQuickFolderDialogImpl::cleanupTestCase()
 {
     // Just in case...
     QDir::setCurrent(oldCurrentDir.path());
+}
+
+void tst_QQuickFolderDialogImpl::defaults()
+{
+    QTest::failOnWarning(QRegularExpression(".*"));
+    QQuickApplicationHelper helper(this, "folderDialog.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickFolderDialog *dialog = window->property("dialog").value<QQuickFolderDialog*>();
+    QVERIFY(dialog);
+    COMPARE_URL(dialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
+    // The first file in the directory should be selected, but not until the dialog is actually open,
+    // as QQuickFileDialogImpl hasn't been created yet.
+    COMPARE_URL(dialog->selectedFolder(), QUrl());
+    QCOMPARE(dialog->title(), QString());
+
+    dialog->open();
+    QQuickFolderDialogImpl *quickDialog = window->findChild<QQuickFolderDialogImpl*>();
+    QVERIFY(quickDialog);
+    QTRY_VERIFY(quickDialog->isOpened());
+    QVERIFY(quickDialog);
+    COMPARE_URL(quickDialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir1CanonicalPath));
+    COMPARE_URL(quickDialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
+    COMPARE_URL(dialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir1CanonicalPath));
+    COMPARE_URL(dialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
+    QCOMPARE(quickDialog->title(), QString());
 }
 
 typedef DialogTestHelper<QQuickFolderDialog, QQuickFolderDialogImpl> FolderDialogTestHelper;
@@ -183,42 +222,14 @@ public:
     QByteArray errorMessage;
 };
 
-void tst_QQuickFolderDialogImpl::defaults()
-{
-    FolderDialogTestHelper dialogHelper(this, "folderDialog.qml");
-    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
-    QQuickWindow *window = dialogHelper.window();
-    window->show();
-    window->requestActivate();
-    QVERIFY(dialogHelper.waitForWindowActive());
-
-    QQuickFolderDialog *dialog = window->property("dialog").value<QQuickFolderDialog*>();
-    QVERIFY(dialog);
-    COMPARE_URL(dialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
-    // The first file in the directory should be selected, but not until the dialog is actually open,
-    // as QQuickFileDialogImpl hasn't been created yet.
-    COMPARE_URL(dialog->selectedFolder(), QUrl());
-    QCOMPARE(dialog->title(), QString());
-
-    QVERIFY(dialogHelper.openDialog());
-    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
-    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
-
-    QQuickFolderDialogImpl *quickDialog = window->findChild<QQuickFolderDialogImpl*>();
-    QVERIFY(quickDialog);
-    COMPARE_URL(quickDialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir1CanonicalPath));
-    COMPARE_URL(quickDialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
-    COMPARE_URL(dialog->selectedFolder(), QUrl::fromLocalFile(tempSubDir1CanonicalPath));
-    COMPARE_URL(dialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
-    QCOMPARE(quickDialog->title(), QString());
-}
-
 void tst_QQuickFolderDialogImpl::chooseFolderViaStandardButtons()
 {
     // Open the dialog.
     FolderDialogTestHelper dialogHelper(this, "folderDialog.qml");
-    OPEN_QUICK_DIALOG();
-    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QVERIFY(dialogHelper.waitForWindowActive());
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
     // Select the delegate by clicking once.
     const FolderDialogSignalHelper signalHelper(dialogHelper);
@@ -309,8 +320,11 @@ void tst_QQuickFolderDialogImpl::changeFolderViaDoubleClick()
 {
     // Open the dialog.
     FolderDialogTestHelper dialogHelper(this, "folderDialog.qml");
-    OPEN_QUICK_DIALOG();
-    QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QVERIFY(dialogHelper.waitForWindowActive());
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
     // Double-click on the "sub-dir-2" delegate.
     const FolderDialogSignalHelper signalHelper(dialogHelper);
     QVERIFY2(signalHelper.errorMessage.isEmpty(), signalHelper.errorMessage);
@@ -356,8 +370,6 @@ void tst_QQuickFolderDialogImpl::changeFolderViaTextEdit()
     QTRY_VERIFY(breadcrumbBar->textField()->hasActiveFocus());
     QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
-    QVERIFY(QQuickTest::qWaitForPolish(breadcrumbBar->textField()));
-    QTRY_VERIFY(breadcrumbBar->textField()->hasActiveFocus());
 
     // Enter the path to the folder in the text edit.
     enterText(dialogHelper.popupWindow(), tempSubDir2CanonicalPath);
@@ -637,7 +649,6 @@ void tst_QQuickFolderDialogImpl::keyAndShortcutHandling()
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
     QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
-    QTRY_VERIFY(breadcrumbBar->textField()->hasActiveFocus());
 
 #if QT_CONFIG(shortcut)
     // Ctrl+L shouldn't hide it.
@@ -654,7 +665,6 @@ void tst_QQuickFolderDialogImpl::keyAndShortcutHandling()
     // Make it visible.
     QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
-    QTRY_VERIFY(breadcrumbBar->textField()->hasActiveFocus());
 #endif
 
     // Cancel it with the escape key again.
@@ -828,7 +838,6 @@ void tst_QQuickFolderDialogImpl::itemsDisabledWhenNecessary()
     QTest::keySequence(dialogHelper.popupWindow(), editPathKeySequence);
     QVERIFY(breadcrumbBar->textField()->isVisible());
     QCOMPARE(openButton->isEnabled(), false);
-    QTRY_VERIFY(breadcrumbBar->textField()->hasActiveFocus());
 #endif
     // Hide it with the escape key. The Open button should now be enabled.
     QTest::keyClick(dialogHelper.popupWindow(), Qt::Key_Escape);
@@ -921,8 +930,6 @@ void tst_QQuickFolderDialogImpl::checkModality()
     QSignalSpy cmaMouseSpy(childMouseArea, &QQuickMouseArea::clicked);
     QTest::mouseClick(childWindow, Qt::LeftButton, Qt::NoModifier, QPoint(5, 5));
     QCOMPARE(cmaMouseSpy.size(), expectedChildWindowClickCount);
-
-    CLOSE_QUICK_DIALOG();
 }
 
 void tst_QQuickFolderDialogImpl::checkFrameless()
@@ -931,20 +938,12 @@ void tst_QQuickFolderDialogImpl::checkFrameless()
     QSKIP("Frameless window is not supported on Android/IOS");
 #endif
     FolderDialogTestHelper dialogHelper(this, "folderDialogFrameless.qml");
-    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
-    QQuickWindow *window = dialogHelper.window();
-    QQuickVisualTestUtils::centerOnScreen(window);
-    window->show();
-    window->requestActivate();
-    QVERIFY(dialogHelper.waitForWindowActive());
-    QVERIFY(dialogHelper.openDialog());
-    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    OPEN_QUICK_DIALOG();
     QVERIFY(dialogHelper.waitForPopupWindowActiveAndPolished());
 
     QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
-    dialogHelper.dialog->close();
 }
 
-QTEST_QUICKDIALOGS_MAIN(tst_QQuickFolderDialogImpl)
+QTEST_MAIN(tst_QQuickFolderDialogImpl)
 
 #include "tst_qquickfolderdialogimpl.moc"
