@@ -46,17 +46,6 @@ void QQmlJSScope::reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScop
     childScope->m_parentScope = parentScope;
 }
 
-QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
-{
-    if (origin.isNull())
-        return QQmlJSScope::Ptr();
-    QQmlJSScope::Ptr cloned = create();
-    *cloned = *origin;
-    if (QQmlJSScope::Ptr parent = cloned->parentScope())
-        parent->m_childScopes.append(cloned);
-    return cloned;
-}
-
 /*!
 \internal
 Prepares the scope to be used by QQmlJSImportVisitor: we don't want to have "left-overs" from a
