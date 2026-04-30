@@ -9957,6 +9957,12 @@ void tst_qqmllanguage::aliasesAndDefaultProperty()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->property("label"), "should not change"_L1);
+
+    // similar test, should not complain about assigning read-only property
+    c.loadUrl(testFileUrl("aliasesAndDefaultProperty2.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    o.reset(c.create());
+    QVERIFY(!o.isNull());
 }
 
 void tst_qqmllanguage::removeBindingFromAliasToObject()
