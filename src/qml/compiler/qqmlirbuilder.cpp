@@ -14,6 +14,7 @@
 #include <QtCore/qtyperevision.h>
 
 #include <cmath>
+#include <iterator>
 
 QT_USE_NAMESPACE
 
@@ -146,14 +147,14 @@ void Object::sortAliasDependencies(const Document *doc, QList<QQmlJS::Diagnostic
 
     // Apply the sorted order to the alias list.
     setFirstAlias(ordered[0]);
-    if (ordered[0] == defaultPropertyAlias)
-        indexOfDefaultPropertyOrAlias = 0;
-    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i) {
+
+    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i)
         ordered[i]->next = ordered[i + 1];
-        if (ordered[i] == defaultPropertyAlias)
-            indexOfDefaultPropertyOrAlias = i;
-    }
     ordered.last()->next = nullptr;
+    if (defaultPropertyAlias) {
+        auto it = std::find(ordered.constBegin(), ordered.constEnd(), defaultPropertyAlias);
+        indexOfDefaultPropertyOrAlias = std::distance(ordered.constBegin(), it);
+    }
 }
 
 bool Parameter::initType(
