@@ -745,6 +745,11 @@ void QQmlComponent::setData(const QByteArray &data, const QUrl &url, Compilation
 
     d->m_url = url;
 
+    // trim existing components with same URL; they would bloat the cache
+    // While the warning tries to discourage it, using an empty URL for the
+    // creation of a one-off component is a somewhat common use-case
+    d->m_engine->handle()->trimCompilationUnitsForUrl(url);
+
     QQmlTypeLoader::Mode mode = compilationMode == Asynchronous
                                     ? QQmlTypeLoader::Asynchronous
                                     : QQmlTypeLoader::PreferSynchronous;
