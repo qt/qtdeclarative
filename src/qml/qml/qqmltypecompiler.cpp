@@ -920,14 +920,13 @@ static bool sortAliasDependencies(
 
     // Apply the ordering in the IR
     obj->setFirstAlias(ordered[0]);
-    if (ordered[0] == defaultPropertyAlias)
-        obj->indexOfDefaultPropertyOrAlias = 0;
-    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i) {
+    for (qsizetype i = 0, end = ordered.size() - 1; i < end; ++i)
         ordered[i]->next = ordered[i + 1];
-        if (ordered[i] == defaultPropertyAlias)
-            obj->indexOfDefaultPropertyOrAlias = i;
-    }
     ordered.last()->next = nullptr;
+    if (defaultPropertyAlias) {
+        auto it = std::find(ordered.constBegin(), ordered.constEnd(), defaultPropertyAlias);
+        obj->indexOfDefaultPropertyOrAlias = std::distance(ordered.constBegin(), it);
+    }
 
     return true;
 }
