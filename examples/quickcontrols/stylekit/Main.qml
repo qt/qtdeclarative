@@ -22,6 +22,7 @@ ApplicationWindow {
     Vitrum { id: vitrumStyle }
     CustomDelegates { id: delegateStyle }
     Plain { id: plainStyle }
+    Fusion { id: fusionStyle }
 
     property real spacing: 10
     StyleKit.transitionsEnabled: transitionsEnabled.checked
@@ -287,7 +288,8 @@ ApplicationWindow {
                         { value: hazeStyle, text: "Haze" },
                         { value: plainStyle, text: "Plain" },
                         { value: vitrumStyle, text: "Vitrum" },
-                        { value: delegateStyle, text: "CustomDelegates" }
+                        { value: delegateStyle, text: "CustomDelegates" },
+                        { value: fusionStyle, text: "Fusion" }
                     ]
                     onCurrentTextChanged: {
                         StyleKit.style = model[currentIndex].value;
