@@ -17,6 +17,7 @@ set(STYLES
     styles/Haze.qml
     styles/Vitrum.qml
     styles/CustomDelegates.qml
+    styles/Fusion.qml
 )
 
 qt_add_executable(${PROJECT_NAME} WIN32 MACOSX_BUNDLE
