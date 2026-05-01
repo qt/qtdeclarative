@@ -33,13 +33,20 @@ T.SearchField {
                              : (control.__clearIndicatorVisible ? control.clearIndicator.indicator.width + spacing : 0))
 
     delegate: MenuItem {
+        id: delegate
+
         width: ListView.view.width
-        text: model[control.textRole]
-        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex === index
         hoverEnabled: control.hoverEnabled
 
         Material.foreground: control.currentIndex === index ? ListView.view.contentItem.Material.accent : ListView.view.contentItem.Material.foreground
+
+        contentItem: Text {
+            text: delegate.model[control.textRole]
+            color: delegate.enabled ? delegate.Material.foreground : delegate.Material.hintTextColor
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
 
         required property var model
         required property int index
@@ -143,6 +150,10 @@ T.SearchField {
         topMargin: 10
         bottomMargin: 10
         verticalPadding: 10
+
+        Material.theme: control.Material.theme
+        Material.accent: control.Material.accent
+        Material.primary: control.Material.primary
 
         contentItem: ListView {
             clip: true

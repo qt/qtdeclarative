@@ -29,13 +29,18 @@ T.SearchField {
     Universal.theme: activeFocus ? Universal.Light : undefined
 
     delegate: ItemDelegate {
+        id: delegate
+
         width: ListView.view.width
-        text: model[control.textRole]
-        palette.text: control.palette.text
-        palette.highlightedText: control.palette.highlightedText
-        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex === index
         hoverEnabled: control.hoverEnabled
+
+        contentItem: Text {
+            text: delegate.model[control.textRole]
+            font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
 
         required property var model
         required property int index

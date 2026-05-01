@@ -27,11 +27,19 @@ T.SearchField {
                              : (!clearIndicator.indicator || !clearIndicator.indicator.visible ? 0 : clearIndicator.indicator.width + spacing))
 
     delegate: MenuItem {
+        id: delegate
+
         width: ListView.view.width
-        text: model[control.textRole]
-        font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
         highlighted: control.highlightedIndex === index
         hoverEnabled: control.hoverEnabled
+
+        contentItem: Text {
+            text: delegate.model[control.textRole]
+            font.weight: control.currentIndex === index ? Font.DemiBold : Font.Normal
+            color: delegate.highlighted ? palette.highlightedText : palette.windowText
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
 
         required property var model
         required property int index
