@@ -84,7 +84,7 @@ public:
     Q_INVOKABLE QModelIndex mapFromSource(const QModelIndex& sourceIndex) const override;
 
     // Reimplemented methods
-    QModelIndex index(int row, int column, const QModelIndex &parent) const override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &child) const override;
     QModelIndex sibling(int row, int column, const QModelIndex &idx) const override;
 

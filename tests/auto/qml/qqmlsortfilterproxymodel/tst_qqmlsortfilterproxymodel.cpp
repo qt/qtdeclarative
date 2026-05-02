@@ -15,6 +15,7 @@
 #include <QtQmlModels/private/qqmlalloffilter_p.h>
 #include <QtQmlModels/private/qqmlstringsorter_p.h>
 #include <QtQmlModels/private/qqmlfunctionsorter_p.h>
+#include <QtQmlModels/private/qqmlregexpfilter_p.h>
 
 class tst_QQmlSortFilterProxyModel : public QQmlDataTest
 {
@@ -61,6 +62,15 @@ private slots:
     void invalidateParentWhenChildFilterEnabledOrDisabled();
     void invalidateChildWhenParentFilterEnabledOrDisabled();
     void compositeFiltersInQml();
+
+    void validateRegExpFilterProperties();
+    void regExpFilterInverted();
+    void regExpFilterEnabled();
+    void regExpFilterRegularExpression();
+    void regExpFilterEmptyPattern();
+    void regExpFilterInvalidPattern();
+    void regExpFilterUnicode();
+    void regExpFilterQmlPatterns();
 };
 
 class CustomTableModel : public QAbstractTableModel
@@ -1418,6 +1428,278 @@ void tst_QQmlSortFilterProxyModel::compositeFiltersInQml()
     auto *nestedEmptyAnyOf = object->property("nestedEmptyAnyOf").value<QQmlSortFilterProxyModel *>();
     QVERIFY(nestedEmptyAnyOf);
     QCOMPARE(getNames(nestedEmptyAnyOf), QStringList({"red1", "blue1", "green1"}));
+}
+
+void tst_QQmlSortFilterProxyModel::validateRegExpFilterProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    // Verify defaults
+    QVERIFY(filter->regExp().pattern().isEmpty());
+    QCOMPARE(sfpmModel->rowCount(), 6);
+
+    QSignalSpy regExpSpy(filter, &QQmlRegExpFilter::regExpChanged);
+    QVERIFY(regExpSpy.isValid());
+
+    // Set regular expression via JS expression — emits regExpChanged
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr = QQmlExpression(ctx, filter, QStringLiteral("regExp = /test/"));
+    expr.evaluate();
+    QCOMPARE(regExpSpy.count(), 1);
+    QCOMPARE(filter->regExp().pattern(), QStringLiteral("test"));
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterInverted()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    const int labelRole = sfpmModel->roleNames().key("label", -1);
+    QVERIFY(labelRole != -1);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr = QQmlExpression(ctx, filter, QStringLiteral("regExp = /berry/i"));
+    expr.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("blueberry"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("cranberry"));
+
+    filter->setInverted(true);
+    QCOMPARE(sfpmModel->rowCount(), 4);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("apple"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("Apricot"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), labelRole).toString(), QStringLiteral("banana"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(3, 0), labelRole).toString(), QStringLiteral("Cherry"));
+
+    filter->setInverted(false);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterEnabled()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    const int labelRole = sfpmModel->roleNames().key("label", -1);
+    QVERIFY(labelRole != -1);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr = QQmlExpression(ctx, filter, QStringLiteral("regExp = /^b/"));
+    expr.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("banana"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("blueberry"));
+
+    filter->setEnabled(false);
+    QVERIFY(!filter->enabled());
+    QCOMPARE(sfpmModel->rowCount(), 6);
+
+    filter->setEnabled(true);
+    QVERIFY(filter->enabled());
+    QCOMPARE(sfpmModel->rowCount(), 2);
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterRegularExpression()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    const int labelRole = sfpmModel->roleNames().key("label", -1);
+    QVERIFY(labelRole != -1);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr1 =QQmlExpression(ctx, filter, QStringLiteral("regExp = /apple|banana/"));
+    expr1.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("apple"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("banana"));
+
+    QQmlExpression expr2 = QQmlExpression(ctx, filter, QStringLiteral("regExp = /^[ab]/i"));
+    expr2.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 4);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("apple"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("Apricot"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), labelRole).toString(), QStringLiteral("banana"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(3, 0), labelRole).toString(), QStringLiteral("blueberry"));
+
+    QQmlExpression expr3 = QQmlExpression(ctx, filter, QStringLiteral("regExp = /^[a-z]+$/"));
+    expr3.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 4);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("apple"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(), QStringLiteral("banana"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), labelRole).toString(), QStringLiteral("blueberry"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(3, 0), labelRole).toString(), QStringLiteral("cranberry"));
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterEmptyPattern()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    QVERIFY(filter->regExp().pattern().isEmpty());
+    QCOMPARE(sfpmModel->rowCount(), 6);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr1 = QQmlExpression(ctx, filter, QStringLiteral("regExp = /berry/i"));
+    expr1.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 2);
+
+    QQmlExpression expr2 = QQmlExpression(ctx, filter, QStringLiteral("regExp = new RegExp()"));
+    expr2.evaluate();
+    QVERIFY(filter->regExp().pattern().isEmpty());
+    QCOMPARE(sfpmModel->rowCount(), 6);
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterInvalidPattern()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr1 = QQmlExpression(ctx, filter, QStringLiteral("regExp = /apple/"));
+    expr1.evaluate();
+    QVERIFY(filter->regExp().isValid());
+    QCOMPARE(sfpmModel->rowCount(), 1);
+
+    filter->setRegExp(QRegularExpression(QStringLiteral("[invalid")));
+    QVERIFY(!filter->regExp().isValid());
+    QCOMPARE(sfpmModel->rowCount(), 6);
+
+    QQmlExpression expr2 = QQmlExpression(ctx, filter, QStringLiteral("regExp = /apple/"));
+    expr2.evaluate();
+    QVERIFY(filter->regExp().isValid());
+    QCOMPARE(sfpmModel->rowCount(), 1);
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterUnicode()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *exactModel = object->property("unicodeExactModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(exactModel);
+    const int labelRole = exactModel->roleNames().key("label", -1);
+    QVERIFY(labelRole != -1);
+
+    QCOMPARE(exactModel->rowCount(), 1);
+    QCOMPARE(exactModel->data(exactModel->index(0, 0), labelRole).toString(),
+             QString::fromUtf8(u8"blåbær"));
+
+    auto *endsWithModel = object->property("unicodeEndsWithModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(endsWithModel);
+    QCOMPARE(endsWithModel->rowCount(), 3);
+    QCOMPARE(endsWithModel->data(endsWithModel->index(0, 0), labelRole).toString(),
+             QString::fromUtf8(u8"blåbær"));
+    QCOMPARE(endsWithModel->data(endsWithModel->index(1, 0), labelRole).toString(),
+             QString::fromUtf8(u8"Bringebær"));
+    QCOMPARE(endsWithModel->data(endsWithModel->index(2, 0), labelRole).toString(),
+             QString::fromUtf8(u8"jordbær"));
+
+    auto *containsModel = object->property("unicodeContainsModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(containsModel);
+    QCOMPARE(containsModel->rowCount(), 1);
+    QCOMPARE(containsModel->data(containsModel->index(0, 0), labelRole).toString(),
+             QString::fromUtf8(u8"blåbær"));
+
+    auto *sfpmModel = object->property("sfpmUnicodeProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("regExpFilter").value<QQmlRegExpFilter *>();
+    QVERIFY(filter);
+
+    QQmlContext *ctx = QQmlEngine::contextForObject(filter);
+    QQmlExpression expr = QQmlExpression(ctx, filter, QStringLiteral("regExp = /^[A-Z]/"));
+    expr.evaluate();
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), labelRole).toString(), QStringLiteral("Apricot"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), labelRole).toString(),
+             QString::fromUtf8(u8"Bringebær"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), labelRole).toString(), QStringLiteral("Cherry"));
+}
+
+void tst_QQmlSortFilterProxyModel::regExpFilterQmlPatterns()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRegExpFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *berryModel = object->property("berryModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(berryModel);
+    const int labelRole = berryModel->roleNames().key("label", -1);
+    QVERIFY(labelRole != -1);
+
+    QCOMPARE(berryModel->rowCount(), 2);
+    QCOMPARE(berryModel->data(berryModel->index(0, 0), labelRole).toString(), QStringLiteral("blueberry"));
+    QCOMPARE(berryModel->data(berryModel->index(1, 0), labelRole).toString(), QStringLiteral("cranberry"));
+
+    auto *startsWithBModel = object->property("startsWithBModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(startsWithBModel);
+    QCOMPARE(startsWithBModel->rowCount(), 2);
+    QCOMPARE(startsWithBModel->data(startsWithBModel->index(0, 0), labelRole).toString(),
+             QStringLiteral("banana"));
+    QCOMPARE(startsWithBModel->data(startsWithBModel->index(1, 0), labelRole).toString(),
+             QStringLiteral("blueberry"));
+
+    auto *regExpWithOrModel = object->property("regExpWithOrModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(regExpWithOrModel);
+    QCOMPARE(regExpWithOrModel->rowCount(), 2);
+    QCOMPARE(regExpWithOrModel->data(regExpWithOrModel->index(0, 0), labelRole).toString(),
+             QStringLiteral("apple"));
+    QCOMPARE(regExpWithOrModel->data(regExpWithOrModel->index(1, 0), labelRole).toString(),
+             QStringLiteral("banana"));
 }
 
 QTEST_MAIN(tst_QQmlSortFilterProxyModel)
