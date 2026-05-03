@@ -16,6 +16,7 @@
 #include <QtQmlModels/private/qqmlstringsorter_p.h>
 #include <QtQmlModels/private/qqmlfunctionsorter_p.h>
 #include <QtQmlModels/private/qqmlregexpfilter_p.h>
+#include <QtQmlModels/private/qqmlrangefilter_p.h>
 
 class tst_QQmlSortFilterProxyModel : public QQmlDataTest
 {
@@ -71,6 +72,16 @@ private slots:
     void regExpFilterInvalidPattern();
     void regExpFilterUnicode();
     void regExpFilterQmlPatterns();
+
+    void validateRangeFilterProperties();
+    void rangeFilterMinimumOnly();
+    void rangeFilterMaximumOnly();
+    void rangeFilterBothBounds();
+    void rangeFilterExclusiveBounds();
+    void rangeFilterDate();
+    void rangeFilterDateTime();
+    void rangeFilterString();
+    void rangeFilterQmlBounds();
 };
 
 class CustomTableModel : public QAbstractTableModel
@@ -1700,6 +1711,395 @@ void tst_QQmlSortFilterProxyModel::regExpFilterQmlPatterns()
              QStringLiteral("apple"));
     QCOMPARE(regExpWithOrModel->data(regExpWithOrModel->index(1, 0), labelRole).toString(),
              QStringLiteral("banana"));
+}
+
+void tst_QQmlSortFilterProxyModel::validateRangeFilterProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    // Defaults
+    QVERIFY(!filter->minimum().isValid());
+    QVERIFY(!filter->maximum().isValid());
+    QCOMPARE(sfpmModel->rowCount(), 5);
+
+    QSignalSpy minSpy(filter, &QQmlRangeFilter::minimumChanged);
+    QSignalSpy maxSpy(filter, &QQmlRangeFilter::maximumChanged);
+    QVERIFY(minSpy.isValid());
+    QVERIFY(maxSpy.isValid());
+
+    filter->setMinimum(QVariant(20));
+    QCOMPARE(minSpy.count(), 1);
+    QCOMPARE(filter->minimum().toInt(), 20);
+
+    filter->setMaximum(QVariant(40));
+    QCOMPARE(maxSpy.count(), 1);
+    QCOMPARE(filter->maximum().toInt(), 40);
+
+    // Make maximum exclusive: emits maximumChanged
+    filter->setMaximum(QQmlRangeFilter::exclusive(QVariant(40)));
+    QCOMPARE(maxSpy.count(), 2);
+
+    // Check enabled property: [20, 40] inclusive: (20, 30, 40)
+    filter->setMaximum(QVariant(40));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    filter->setEnabled(false);
+    QCOMPARE(sfpmModel->rowCount(), 5);
+    filter->setEnabled(true);
+    QCOMPARE(sfpmModel->rowCount(), 3);
+
+    // Check inverted property
+    filter->setInverted(true);
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    const int priceRole = sfpmModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 10);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 50);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterMinimumOnly()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    const int priceRole = sfpmModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+
+    // min=30 inclusive (30, 40, 50)
+    filter->setMinimum(QVariant(30));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 30);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 40);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), priceRole).toInt(), 50);
+
+    // min=30 exclusive (40, 50)
+    filter->setMinimum(QQmlRangeFilter::exclusive(QVariant(30)));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 40);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 50);
+
+    // Reset minimum — all rows pass
+    filter->resetMinimum();
+    QCOMPARE(sfpmModel->rowCount(), 5);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterMaximumOnly()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    const int priceRole = sfpmModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+
+    // max=30 inclusive (10, 20, 30)
+    filter->setMaximum(QVariant(30));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 10);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 20);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), priceRole).toInt(), 30);
+
+    // max=30 exclusive (10, 20)
+    filter->setMaximum(QQmlRangeFilter::exclusive(QVariant(30)));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 10);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 20);
+
+    // Reset maximum — all rows pass
+    filter->resetMaximum();
+    QCOMPARE(sfpmModel->rowCount(), 5);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterBothBounds()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    const int priceRole = sfpmModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+
+    // Both inclusive by default (20, 30, 40)
+    filter->setMinimum(QVariant(20));
+    filter->setMaximum(QVariant(40));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 30);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), priceRole).toInt(), 40);
+
+    // Narrow maximum to 30 (20, 30)
+    filter->setMaximum(QVariant(30));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 30);
+
+    // Reset maximum — rows from minimum upward (20, 30, 40, 50)
+    filter->resetMaximum();
+    QCOMPARE(sfpmModel->rowCount(), 4);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterExclusiveBounds()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    const int priceRole = sfpmModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+
+    filter->setMinimum(QVariant(20));
+    filter->setMaximum(QVariant(40));
+
+    // Both inclusive (20, 30, 40)
+    QCOMPARE(sfpmModel->rowCount(), 3);
+
+    // Minimum exclusive (30, 40)
+    filter->setMinimum(QQmlRangeFilter::exclusive(QVariant(20)));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 30);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 40);
+
+    // Maximum exclusive too (30 only)
+    filter->setMaximum(QQmlRangeFilter::exclusive(QVariant(40)));
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 30);
+
+    // Restore minimum inclusive (20, 30)
+    filter->setMinimum(QVariant(20));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), priceRole).toInt(), 30);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterDate()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    // QML ListModel has no native date type — use QStandardItemModel
+    // so that roles carry actual QDate values for type-aware comparison.
+    QStandardItemModel dateModel(5, 1);
+    const QList<QDate> dates = {
+        QDate(2024,  1, 15),   // January
+        QDate(2024,  3, 20),   // March
+        QDate(2024,  6,  1),   // June
+        QDate(2024,  9, 10),   // September
+        QDate(2024, 12, 25)    // December
+    };
+    for (int i = 0; i < dates.size(); ++i)
+        dateModel.setData(dateModel.index(i, 0), dates[i], Qt::DisplayRole);
+
+    sfpmModel->setSourceModel(&dateModel);
+    filter->setRoleName(QString::fromLatin1("display"));
+    QCOMPARE(sfpmModel->rowCount(), 5); // no bounds — all rows pass
+
+    // Minimum >= 2024-03-01 (March, June, September, December)
+    filter->setMinimum(QVariant(QDate(2024, 3, 1)));
+    QCOMPARE(sfpmModel->rowCount(), 4);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDate(), QDate(2024,  3, 20));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(3, 0), Qt::DisplayRole).toDate(), QDate(2024, 12, 25));
+
+    // Add maximum: [2024-03-01, 2024-09-30] (March, June, September)
+    filter->setMaximum(QVariant(QDate(2024, 9, 30)));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDate(), QDate(2024, 3, 20));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), Qt::DisplayRole).toDate(), QDate(2024, 6,  1));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), Qt::DisplayRole).toDate(), QDate(2024, 9, 10));
+
+    // Exclusive minimum [2024-03-20, 2024-09-30] (June, September)
+    filter->setMinimum(QQmlRangeFilter::exclusive(QVariant(QDate(2024, 3, 20))));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDate(), QDate(2024, 6,  1));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), Qt::DisplayRole).toDate(), QDate(2024, 9, 10));
+
+    // Exclusive maximum (2024-03-20, 2024-09-10) (June)
+    filter->setMaximum(QQmlRangeFilter::exclusive(QVariant(QDate(2024, 9, 10))));
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDate(), QDate(2024, 6, 1));
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterDateTime()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    QStandardItemModel dateTimeModel(5, 1);
+    const QDate day(2024, 6, 1);
+    const QList<QDateTime> dateTimes = {
+        QDateTime(day, QTime( 8,  0)),
+        QDateTime(day, QTime(10, 30)),
+        QDateTime(day, QTime(12,  0)),
+        QDateTime(day, QTime(14, 30)),
+        QDateTime(day, QTime(16,  0))
+    };
+    for (int i = 0; i < dateTimes.size(); ++i)
+        dateTimeModel.setData(dateTimeModel.index(i, 0), dateTimes[i], Qt::DisplayRole);
+
+    sfpmModel->setSourceModel(&dateTimeModel);
+    filter->setRoleName(QString::fromLatin1("display"));
+    QCOMPARE(sfpmModel->rowCount(), 5);
+
+    // Minimum >= 10:00 (10:30, 12:00, 14:30, 16:00)
+    filter->setMinimum(QVariant(QDateTime(day, QTime(10, 0))));
+    QCOMPARE(sfpmModel->rowCount(), 4);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDateTime(),
+             QDateTime(day, QTime(10, 30)));
+
+    // Add maximum: [10:00, 14:00] (10:30, 12:00)
+    filter->setMaximum(QVariant(QDateTime(day, QTime(14, 0))));
+    QCOMPARE(sfpmModel->rowCount(), 2);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDateTime(),
+             QDateTime(day, QTime(10, 30)));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), Qt::DisplayRole).toDateTime(),
+             QDateTime(day, QTime(12,  0)));
+
+    // Exact boundary inclusive: min == max == 12:00 (12:00)
+    filter->setMinimum(QVariant(QDateTime(day, QTime(12, 0))));
+    filter->setMaximum(QVariant(QDateTime(day, QTime(12, 0))));
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), Qt::DisplayRole).toDateTime(),
+             QDateTime(day, QTime(12, 0)));
+
+    // Exact boundary exclusive minimum: [12:00, 12:00]
+    filter->setMinimum(QQmlRangeFilter::exclusive(QVariant(QDateTime(day, QTime(12, 0)))));
+    QCOMPARE(sfpmModel->rowCount(), 0);
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterString()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    auto *filter = object->property("rangeFilter").value<QQmlRangeFilter *>();
+    QVERIFY(filter);
+
+    const int nameRole = sfpmModel->roleNames().key("name", -1);
+    QVERIFY(nameRole != -1);
+
+    filter->setRoleName(QString::fromLatin1("name"));
+
+    // ["L", "T"] inclusive (Luxury, Premium, Standard)
+    filter->setMinimum(QString::fromLatin1("L"));
+    filter->setMaximum(QString::fromLatin1("T"));
+    QCOMPARE(sfpmModel->rowCount(), 3);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0), nameRole).toString(),
+             QString::fromLatin1("Standard"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(1, 0), nameRole).toString(),
+             QString::fromLatin1("Premium"));
+    QCOMPARE(sfpmModel->data(sfpmModel->index(2, 0), nameRole).toString(),
+             QString::fromLatin1("Luxury"));
+}
+
+void tst_QQmlSortFilterProxyModel::rangeFilterQmlBounds()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmRangeFilter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    auto *minimumInclusiveModel = object->property("minimumInclusiveModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(minimumInclusiveModel);
+    const int priceRole = minimumInclusiveModel->roleNames().key("price", -1);
+    QVERIFY(priceRole != -1);
+
+    // minimum=20 inclusive (20, 30, 40, 50)
+    QCOMPARE(minimumInclusiveModel->rowCount(), 4);
+    QCOMPARE(minimumInclusiveModel->data(minimumInclusiveModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(minimumInclusiveModel->data(minimumInclusiveModel->index(3, 0), priceRole).toInt(), 50);
+
+    // maximum=30 inclusive (10, 20, 30)
+    auto *maximumInclusiveModel = object->property("maximumInclusiveModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(maximumInclusiveModel);
+    QCOMPARE(maximumInclusiveModel->rowCount(), 3);
+    QCOMPARE(maximumInclusiveModel->data(maximumInclusiveModel->index(0, 0), priceRole).toInt(), 10);
+    QCOMPARE(maximumInclusiveModel->data(maximumInclusiveModel->index(2, 0), priceRole).toInt(), 30);
+
+    // minimum=20, maximum=40, both inclusive (20, 30, 40)
+    auto *bothInclusiveModel = object->property("bothInclusiveModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(bothInclusiveModel);
+    QCOMPARE(bothInclusiveModel->rowCount(), 3);
+    QCOMPARE(bothInclusiveModel->data(bothInclusiveModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(bothInclusiveModel->data(bothInclusiveModel->index(1, 0), priceRole).toInt(), 30);
+    QCOMPARE(bothInclusiveModel->data(bothInclusiveModel->index(2, 0), priceRole).toInt(), 40);
+
+    // minimum=exclusive(20), maximum=40 (30, 40)
+    auto *exclusiveMinimumModel = object->property("exclusiveMinimumModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(exclusiveMinimumModel);
+    QCOMPARE(exclusiveMinimumModel->rowCount(), 2);
+    QCOMPARE(exclusiveMinimumModel->data(exclusiveMinimumModel->index(0, 0), priceRole).toInt(), 30);
+    QCOMPARE(exclusiveMinimumModel->data(exclusiveMinimumModel->index(1, 0), priceRole).toInt(), 40);
+
+    // minimum=20, maximum=exclusive(40) (20, 30)
+    auto *exclusiveMaximumModel = object->property("exclusiveMaximumModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(exclusiveMaximumModel);
+    QCOMPARE(exclusiveMaximumModel->rowCount(), 2);
+    QCOMPARE(exclusiveMaximumModel->data(exclusiveMaximumModel->index(0, 0), priceRole).toInt(), 20);
+    QCOMPARE(exclusiveMaximumModel->data(exclusiveMaximumModel->index(1, 0), priceRole).toInt(), 30);
+
+    // minimum=exclusive(20), maximum=exclusive(40) — only 30
+    auto *bothExclusiveModel = object->property("bothExclusiveModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(bothExclusiveModel);
+    QCOMPARE(bothExclusiveModel->rowCount(), 1);
+    QCOMPARE(bothExclusiveModel->data(bothExclusiveModel->index(0, 0), priceRole).toInt(), 30);
 }
 
 QTEST_MAIN(tst_QQmlSortFilterProxyModel)

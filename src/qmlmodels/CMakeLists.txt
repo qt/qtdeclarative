@@ -85,6 +85,7 @@ qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_sfpm_model AND QT_F
         sfpm/filters/qqmlvaluefilter_p.h sfpm/filters/qqmlvaluefilter.cpp
         sfpm/filters/qqmlregexpfilter_p.h sfpm/filters/qqmlregexpfilter.cpp
         sfpm/filters/qqmlfunctionfilter_p.h sfpm/filters/qqmlfunctionfilter.cpp
+        sfpm/filters/qqmlrangefilter_p.h sfpm/filters/qqmlrangefilter.cpp
         # sfpm sorter specific source files
         sfpm/sorters/qqmlsorterbase_p.h sfpm/sorters/qqmlsorterbase.cpp
         sfpm/sorters/qqmlsortercompositor_p.h sfpm/sorters/qqmlsortercompositor.cpp
