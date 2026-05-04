@@ -106,6 +106,8 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
 qt_internal_extend_target(qtquickcontrols2iosstyleplugin CONDITION APPLE AND IOS
     LIBRARIES
         ${FWUIKit}
+    LINK_OPTIONS
+        "-fobjc-link-runtime"
 )
 
 file(GLOB resource_glob RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.png")
