@@ -212,8 +212,11 @@ Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                            const quint16 *parameter = nullptr) {
         const quint32 type = param.typeNameIndexOrCommonType();
         if (param.indexIsCommonType()) {
-            return QQmlMetaType::qmlType(QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(
-                QV4::CompiledData::CommonType(type)));
+            std::optional<QMetaType>  metaType =
+                    QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::CommonType(type));
+            if (!metaType.has_value())
+                metaType = QMetaType::fromType<QVariant>();
+            return QQmlMetaType::qmlType(*metaType);
         }
 
         if (type == 0 || !typeLoader)

@@ -78,7 +78,7 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt Q_AUTOTEST_EXPORT classIndexCounter;
 
-    static QMetaType metaTypeForPropertyType(QV4::CompiledData::CommonType type)
+    static std::optional<QMetaType> metaTypeForPropertyType(QV4::CompiledData::CommonType type)
     {
         switch (type) {
         case QV4::CompiledData::CommonType::Void:     return QMetaType();
@@ -94,17 +94,17 @@ public:
 #if QT_CONFIG(regularexpression)
         case QV4::CompiledData::CommonType::RegExp:   return QMetaType::fromType<QRegularExpression>();
 #else
-        case QV4::CompiledData::CommonType::RegExp:   return QMetaType();
+        case QV4::CompiledData::CommonType::RegExp:   return {};
 #endif
         case QV4::CompiledData::CommonType::Rect:     return QMetaType::fromType<QRectF>();
         case QV4::CompiledData::CommonType::Point:    return QMetaType::fromType<QPointF>();
         case QV4::CompiledData::CommonType::Size:     return QMetaType::fromType<QSizeF>();
         case QV4::CompiledData::CommonType::Invalid:  break;
         };
-        return QMetaType {};
+        return {};
     }
 
-    static QMetaType listTypeForPropertyType(QV4::CompiledData::CommonType type)
+    static std::optional<QMetaType> listTypeForPropertyType(QV4::CompiledData::CommonType type)
     {
         switch (type) {
         case QV4::CompiledData::CommonType::Void:     return QMetaType();
@@ -120,14 +120,14 @@ public:
 #if QT_CONFIG(regularexpression)
         case QV4::CompiledData::CommonType::RegExp:   return QMetaType::fromType<QList<QRegularExpression>>();
 #else
-        case QV4::CompiledData::CommonType::RegExp:   return QMetaType();
+        case QV4::CompiledData::CommonType::RegExp:   return {};
 #endif
         case QV4::CompiledData::CommonType::Rect:     return QMetaType::fromType<QList<QRectF>>();
         case QV4::CompiledData::CommonType::Point:    return QMetaType::fromType<QList<QPointF>>();
         case QV4::CompiledData::CommonType::Size:     return QMetaType::fromType<QList<QSizeF>>();
         case QV4::CompiledData::CommonType::Invalid:  break;
         };
-        return QMetaType {};
+        return {};
     }
 
     static QV4::CompiledData::CommonType propertyTypeForMetaType(QMetaType metaType) {
@@ -265,8 +265,8 @@ protected:
     QQmlPropertyCache::ConstPtr propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
     QQmlError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &baseTypeCache);
 
-    QMetaType metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
-                                   QString *customTypeName = nullptr) const;
+    std::optional<QMetaType> metaTypeForParameter(const QV4::CompiledData::ParameterType &param,
+                                                  QString *customTypeName = nullptr) const;
 
     QString stringAt(int index) const { return objectContainer->stringAt(index); }
 
@@ -494,14 +494,14 @@ QQmlPropertyCacheCreator<ObjectContainer>::tryDeriveCacheFrom(
                 names.append(stringAt(param->nameIndex).toUtf8());
 
                 QString customTypeName;
-                QMetaType type = metaTypeForParameter(param->type, &customTypeName);
-                if (!type.isValid())
+                std::optional<QMetaType> type = metaTypeForParameter(param->type, &customTypeName);
+                if (!type.has_value())
                     return q23::make_unexpected(qQmlCompileError(
                             s->location,
                             QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1")
                                     .arg(customTypeName)));
 
-                paramTypes[i] = type;
+                paramTypes[i] = *type;
             }
         }
 
@@ -568,17 +568,17 @@ QQmlPropertyCacheCreator<ObjectContainer>::tryDeriveCacheFrom(
         for (; formal != end; ++formal) {
             flags.setHasArguments(true);
             parameterNames << stringAt(formal->nameIndex).toUtf8();
-            QMetaType type = metaTypeForParameter(formal->type);
-            if (!type.isValid())
+            std::optional<QMetaType> type = metaTypeForParameter(formal->type);
+            if (!type.has_value())
                 type = QMetaType::fromType<QVariant>();
-            parameterTypes << type;
+            parameterTypes << *type;
         }
 
-        QMetaType returnType = metaTypeForParameter(function->returnType);
-        if (!returnType.isValid())
+        std::optional<QMetaType> returnType = metaTypeForParameter(function->returnType);
+        if (!returnType.has_value())
             returnType = QMetaType::fromType<QVariant>();
 
-        cache->appendMethod(slotName, flags, effectiveMethodIndex++, returnType, parameterNames,
+        cache->appendMethod(slotName, flags, effectiveMethodIndex++, *returnType, parameterNames,
                             parameterTypes);
     }
 
@@ -826,7 +826,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
 }
 
 template <typename ObjectContainer>
-inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(
+inline std::optional<QMetaType> QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(
         const QV4::CompiledData::ParameterType &param, QString *customTypeName) const
 {
     const quint32 typeId = param.typeNameIndexOrCommonType();
@@ -846,7 +846,7 @@ inline QMetaType QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter
     if (!imports->resolveType(
                 typeLoader, typeName, &qmltype, nullptr, nullptr, nullptr,
                 QQmlType::AnyRegistrationType, &selfReference))
-        return QMetaType();
+        return {};
 
     if (!qmltype.isComposite()) {
         const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
@@ -876,10 +876,14 @@ inline auto QQmlPropertyCacheCreator<ObjectContainer>::tryResolvePropertyType(
     propertyType.commonType = propertyIR.commonType();
 
     if (propertyType.commonType != QV4::CompiledData::CommonType::Invalid) {
-        // common type
-        propertyType.metaType = propertyIR.isList()
+        std::optional<QMetaType> metaType = propertyIR.isList()
                 ? listTypeForPropertyType(propertyType.commonType)
                 : metaTypeForPropertyType(propertyType.commonType);
+        if (!metaType.has_value())
+            metaType = QMetaType::fromType<QVariant>();
+
+        // common type
+        propertyType.metaType = *metaType;
         return propertyType;
     }
 
