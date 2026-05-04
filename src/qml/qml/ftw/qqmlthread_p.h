@@ -63,7 +63,9 @@ public:
     void discardMessages();
 
     void startup();
+    void restart();
     void shutdown();
+    bool isRunning() const;
 
 protected:
     QThread *thread() const;

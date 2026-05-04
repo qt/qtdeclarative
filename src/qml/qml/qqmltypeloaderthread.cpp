@@ -33,9 +33,11 @@ QNetworkAccessManager *QQmlTypeLoaderThread::networkAccessManager() const
     Q_ASSERT(isThisThread());
     if (!m_networkAccessManager) {
         m_networkAccessManager = m_loader->createNetworkAccessManager(nullptr);
-        QObject::connect(thread(), &QThread::finished, m_networkAccessManager, &QObject::deleteLater);
+        QObject::connect(thread(), &QThread::finished, m_networkAccessManager,
+                         [this]() { std::exchange(m_networkAccessManager, nullptr)->deleteLater(); });
         m_networkReplyProxy = new QQmlTypeLoaderNetworkReplyProxy(m_loader, threadObject());
-        QObject::connect(thread(), &QThread::finished, m_networkReplyProxy, &QObject::deleteLater);
+        QObject::connect(thread(), &QThread::finished, m_networkReplyProxy,
+                         [this]() { std::exchange(m_networkReplyProxy, nullptr)->deleteLater(); });
     }
 
     return m_networkAccessManager;

@@ -244,7 +244,7 @@ public:
         Q_ASSERT(data);
 
         // You have to either be on the type loader thread or shut it down before accessing this.
-        Q_ASSERT(!data->thread() || data->thread()->isThisThread());
+        Q_ASSERT(!data->thread() || data->thread()->isThisThread() || !data->thread()->isRunning());
     }
 
     Data &operator*() const { return data->m_threadData; }
@@ -273,8 +273,22 @@ public:
         if constexpr (!std::is_const_v<Data>) {
             // const access is generally fine
             // For mutable access we first need to make sure the thread is shut down.
-            if (data->thread())
-                data->deleteThread();
+            if (QQmlThread *thread = data->thread(); thread && thread->isRunning()) {
+                thread->shutdown();
+                wasShutDown = true;
+            }
+        }
+    }
+
+    ~QQmlTypeLoaderConfiguredDataPtrBase()
+    {
+        if constexpr (!std::is_const_v<Data>) {
+            // After we're done modifying the configuration, we need to restart the thread.
+            if (wasShutDown) {
+                Q_ASSERT(data->thread());
+                Q_ASSERT(!data->thread()->isRunning());
+                data->thread()->restart();
+            }
         }
     }
 
@@ -284,6 +298,7 @@ public:
 
 private:
     LockedData *data = nullptr;
+    bool wasShutDown = false;
 };
 
 using QQmlTypeLoaderConfiguredDataPtr

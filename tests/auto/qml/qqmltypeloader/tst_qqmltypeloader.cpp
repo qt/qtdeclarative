@@ -58,6 +58,8 @@ private slots:
     void doNotRetainQmlTypeAcrossEngines();
     void loadLocalTypesAfterRemoteFails();
     void populateDirectoryCache();
+    void addImportPathDuringAsyncLoad();
+    void addImportPathFromStatusChanged();
 
 private:
     void checkSingleton(const QString & dataDirectory);
@@ -998,6 +1000,46 @@ void tst_QQMLTypeLoader::populateDirectoryCache()
 
     // One slash used to be required.
     QVERIFY(typeLoader->fileExists(dataDirectory() + '/', "doesExist.qml"));
+}
+
+// Regression test for QTBUG-146210: calling addImportPath() while an async
+// QQmlComponent is loading must not prevent the component from becoming Ready.
+void tst_QQMLTypeLoader::addImportPathDuringAsyncLoad()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("A.qml"), QQmlComponent::Asynchronous);
+    QCOMPARE(comp.status(), QQmlComponent::Loading);
+
+    // Calling addImportPath() while loading must not stall the async load.
+    engine.addImportPath(QDir::tempPath());
+
+    QTRY_COMPARE(comp.status(), QQmlComponent::Ready);
+}
+
+void tst_QQMLTypeLoader::addImportPathFromStatusChanged()
+{
+    QQmlEngine engine;
+    const QStringList originalPaths = engine.importPathList();
+    const QString extraPath = QLatin1String("qrc:/extra_import_path");
+    QVERIFY(!originalPaths.contains(extraPath));
+
+    QQmlComponent comp(&engine, testFileUrl("A.qml"), QQmlComponent::Asynchronous);
+    QCOMPARE(comp.status(), QQmlComponent::Loading);
+
+    // Call addImportPath() from within the statusChanged callback.
+    // This exercises the drain loop: the completion callback itself triggers
+    // a new configuration change which drains again (a no-op at that point).
+    bool callbackInvoked = false;
+    QObject::connect(&comp, &QQmlComponent::statusChanged, &engine, [&](QQmlComponent::Status status) {
+        if (status == QQmlComponent::Ready) {
+            engine.addImportPath(extraPath);
+            callbackInvoked = true;
+        }
+    });
+
+    QTRY_VERIFY(callbackInvoked);
+    QCOMPARE(comp.status(), QQmlComponent::Ready);
+    QVERIFY(engine.importPathList().contains(extraPath));
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
