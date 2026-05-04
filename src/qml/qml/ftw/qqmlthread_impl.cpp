@@ -185,6 +185,24 @@ void QQmlThread::startup()
     d->m_threadObject.moveToThread(d);
 }
 
+void QQmlThread::restart()
+{
+    startup();
+
+    lock();
+
+    // Send a trigger event even though we are on the main thread.
+    // We don't want to process messages from inside e.g. addImportPath().
+    // This can lead to strange recursion behavior.
+    if (!d->mainList.isEmpty() || d->mainSync)
+        QCoreApplication::postEvent(d, new QEvent(QEvent::User));
+
+    if (!d->threadList.isEmpty())
+        d->triggerThreadEvent();
+
+    unlock();
+}
+
 void QQmlThread::shutdown()
 {
     d->lock();
@@ -204,6 +222,11 @@ void QQmlThread::shutdown()
     d->QThread::wait();
 
     d->m_shutdown = false;
+}
+
+bool QQmlThread::isRunning() const
+{
+    return d->isRunning();
 }
 
 void QQmlThread::lock()

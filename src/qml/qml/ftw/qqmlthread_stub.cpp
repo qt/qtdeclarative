@@ -44,13 +44,21 @@ public:
     QQmlThread *q = nullptr;
 
     bool m_processing = false; // Set when processing messages
+    bool m_isRunning = false;
 };
 
 QQmlThread::QQmlThread() : d(new QQmlThreadPrivate(this)) {}
 QQmlThread::~QQmlThread() { delete d; }
 
-void QQmlThread::startup() {}
-void QQmlThread::shutdown() {}
+void QQmlThread::startup() { d->m_isRunning = true; }
+void QQmlThread::restart()
+{
+    startup();
+    if (!d->m_messages.isEmpty())
+        QCoreApplication::postEvent(d, new QEvent(QEvent::User));
+}
+void QQmlThread::shutdown() { d->m_isRunning = false; }
+bool QQmlThread::isRunning() const { return d->m_isRunning; }
 
 void QQmlThread::lock() {}
 void QQmlThread::unlock() {}
