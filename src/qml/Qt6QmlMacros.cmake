@@ -478,29 +478,6 @@ function(qt6_add_qml_module target)
                 )
         endif()
 
-        # With CMake 3.17 and earlier, a source file's generated property isn't
-        # visible outside of the directory scope in which it is set. That can
-        # lead to build errors for things like type registration due to CMake
-        # thinking nothing will create a missing file on the first run. With
-        # CMake 3.18 or later, we can force that visibility. Policy CMP0118
-        # added in CMake 3.20 should have made this unnecessary, but we can't
-        # rely on that because the user project controls what it is set to at
-        # the point where it matters, which is the end of the target's
-        # directory scope (hence we can't even test for it here).
-        get_target_property(source_dir ${target} SOURCE_DIR)
-        if(NOT source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR AND
-           CMAKE_VERSION VERSION_LESS "3.18")
-            message(WARNING
-                "qt6_add_qml_module() is being called in a different "
-                "directory scope to the one in which the target \"${target}\" "
-                "was created. CMake 3.18 or later is required to generate a "
-                "project robustly for this scenario, but you are using "
-                "CMake ${CMAKE_VERSION}. Ideally, qt6_add_qml_module() should "
-                "only be called from the same scope as the one the target was "
-                "created in to avoid dependency and visibility problems."
-            )
-        endif()
-
         get_target_property(backing_target_type ${target} TYPE)
         get_target_property(android_type "${target}" _qt_android_target_type)
         if (backing_target_type STREQUAL "EXECUTABLE" OR android_type STREQUAL "APPLICATION")
@@ -2005,15 +1982,10 @@ function(_qt_internal_target_enable_qmlcachegen target qmlcachegen)
             $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
         VERBATIM
     )
-    # We can't rely on policy CMP0118 since user project controls it
-    set(scope_args)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-        set(scope_args TARGET_DIRECTORY ${target})
-    endif()
 
     _qt_internal_set_source_file_generated(
         SOURCES ${qmlcache_loader_cpp}
-        ${scope_args}
+        TARGET_DIRECTORY ${target}
         SKIP_AUTOGEN
     )
     get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -2470,18 +2442,13 @@ function(_qt_internal_target_enable_qmltc target)
     # run MOC manually for the generated files
     qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target} OPTIONS ${extra_moc_options})
 
-    # We can't rely on policy CMP0118 since user project controls it
-    set(scope_args)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-        set(scope_args TARGET_DIRECTORY ${target})
-    endif()
     _qt_internal_set_source_file_generated(
         SOURCES ${generated_sources_other_scope} ${compiled_moc_files}
-        ${scope_args}
+        TARGET_DIRECTORY ${target}
         SKIP_AUTOGEN
     )
     set_source_files_properties(${compiled_moc_files}
-        ${scope_args}
+        TARGET_DIRECTORY ${target}
         PROPERTIES
             SKIP_UNITY_BUILD_INCLUSION ON
     )
@@ -3081,17 +3048,13 @@ function(qt6_add_qml_plugin target)
                  INPUT "${generated_cpp_file_in}"
             )
 
-            # We can't rely on policy CMP0118 since user project controls it
-            set(scope_args)
-            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-                set(scope_args TARGET_DIRECTORY ${target})
-            endif()
             _qt_internal_set_source_file_generated(
                 SOURCES "${generated_cpp_file}"
-                ${scope_args}
+                TARGET_DIRECTORY ${target}
             )
             if(WIN32)
-                set_source_files_properties("${generated_cpp_file}" ${scope_args}
+                set_source_files_properties("${generated_cpp_file}"
+                    TARGET_DIRECTORY ${target}
                     PROPERTIES SKIP_UNITY_BUILD_INCLUSION TRUE
                 )
             endif()
@@ -3631,11 +3594,7 @@ function(qt6_target_qml_sources target)
 
     # We want to set source file properties in the target's own scope if we can.
     # That's the canonical place the properties will be read from.
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-        set(scope_option TARGET_DIRECTORY ${target})
-    else()
-        set(scope_option "")
-    endif()
+    set(scope_option TARGET_DIRECTORY ${target})
 
     set(set_should_create_tooling_target FALSE)
 
@@ -3942,14 +3901,9 @@ function(qt6_target_qml_sources target)
             )
 
             target_sources(${target} PRIVATE ${compiled_file})
-            # We can't rely on policy CMP0118 since user project controls it
-            set(scope_args)
-            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-                set(scope_args TARGET_DIRECTORY ${target})
-            endif()
             _qt_internal_set_source_file_generated(
                 SOURCES ${compiled_file}
-                ${scope_args}
+                TARGET_DIRECTORY ${target}
                 SKIP_AUTOGEN
             )
             get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -4421,20 +4375,15 @@ function(_qt_internal_qml_type_registration target)
         set(additional_source_files_properties "COMPILE_OPTIONS" "/bigobj")
     endif()
 
-    # We can't rely on policy CMP0118 since user project controls it
-    set(scope_args)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
-        set(scope_args TARGET_DIRECTORY ${target})
-    endif()
     _qt_internal_set_source_file_generated(
         SOURCES ${type_registration_cpp_file}
-        ${scope_args}
+        TARGET_DIRECTORY ${target}
         SKIP_AUTOGEN
     )
     if(additional_source_files_properties)
         set_source_files_properties(
             ${type_registration_cpp_file}
-            ${scope_args}
+            TARGET_DIRECTORY ${target}
             PROPERTIES
             ${additional_source_files_properties}
         )
@@ -5416,22 +5365,7 @@ function(qt6_query_qml_module target)
     endif()
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-        set(scope_option TARGET_DIRECTORY ${target})
-    else()
-        set(scope_option "")
-        if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR AND
-           (arg_QML_FILES_DEPLOY_PATHS OR arg_RESOURCES_DEPLOY_PATHS))
-            # This isn't a fatal error because it will only be a problem if any
-            # qml or resource files actually have source file properties set.
-            message(WARNING
-                "Calling qt6_query_qml_module() from a different directory scope "
-                "to the one in which target \"${target}\" was created. "
-                "This requires CMake 3.18 or later to be robust, but you are using "
-                "CMake ${CMAKE_VERSION}. Deployment paths may not be correct."
-            )
-        endif()
-    endif()
+    set(scope_option TARGET_DIRECTORY ${target})
 
     # Because of how CMake lists work, in particular appending empty strings,
     # we have to use a placeholder to represent empty values and then replace
