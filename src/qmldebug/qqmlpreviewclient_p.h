@@ -41,6 +41,7 @@ public:
         AnimationSpeed,
         Configuration,
         Confirmation,
+        HotReloadFailure,
     };
 
     struct Settings {
@@ -77,6 +78,7 @@ Q_SIGNALS:
     void error(const QString &message);
     void fps(const FpsInfo &info);
     void confirmation(const Settings &settings);
+    void hotReloadFailure(const QString &reason);
 };
 
 QT_END_NAMESPACE

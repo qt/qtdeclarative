@@ -42,6 +42,7 @@ public:
         AnimationSpeed,
         Configuration,
         Confirmation,
+        HotReloadFailure,
     };
 
     static const QString s_key;
@@ -58,6 +59,7 @@ public:
     void forwardError(const QString &error);
     void forwardFps(const QQmlPreviewHandler::FpsInfo &frames);
     void forwardConfirmation(const QQmlPreviewHandler::Settings &settings);
+    void forwardHotReloadFailure(const QString &reason);
 
     QQuickItem *currentRootItem();
 

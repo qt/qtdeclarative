@@ -52,6 +52,12 @@ void QQmlPreviewClient::messageReceived(const QByteArray &message)
         emit confirmation(settings);
         break;
     }
+    case HotReloadFailure: {
+        QString reason;
+        packet >> reason;
+        emit hotReloadFailure(reason);
+        break;
+    }
     default:
         emit error(QString::fromLatin1("Unknown command received: %1").arg(command));
         break;

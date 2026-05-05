@@ -110,6 +110,7 @@ void QQmlPreviewHandler::loadPatch(const QUrl &url)
 {
     Q_UNUSED(url);
     // TODO: Implement patching of the existing object instead of creating a new one.
+    emit hotReloadFailure(QLatin1String("In-place reload is not yet implemented"));
 }
 
 void QQmlPreviewHandler::loadUrl(const QUrl &url)

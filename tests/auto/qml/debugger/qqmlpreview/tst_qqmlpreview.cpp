@@ -46,6 +46,7 @@ private:
     QStringList m_serviceErrors;
     QQmlPreviewClient::FpsInfo m_frameStats;
     QQmlPreviewClient::Settings m_confirmedSettings;
+    QStringList m_hotReloadFailureReasons;
 
 private slots:
     void cleanup() final;
@@ -68,6 +69,7 @@ private slots:
     void createDirectory();
     void configurationMessage();
     void disableInPlaceUpdatesFails();
+    void hotReloadFailureMessage();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -126,6 +128,10 @@ QList<QQmlDebugClient *> tst_QQmlPreview::createClients()
                      this, [this](const QQmlPreviewClient::Settings &settings) {
         m_confirmedSettings = settings;
     });
+    QObject::connect(m_client.data(), &QQmlPreviewClient::hotReloadFailure,
+                     this, [this](const QString &reason) {
+        m_hotReloadFailureReasons.append(reason);
+    });
 
     return QList<QQmlDebugClient *>({m_client, m_profiler, m_replay});
 }
@@ -160,6 +166,7 @@ void tst_QQmlPreview::cleanup()
     m_serviceErrors.clear();
     m_frameStats = QQmlPreviewClient::FpsInfo();
     m_confirmedSettings = {};
+    m_hotReloadFailureReasons.clear();
 }
 
 void tst_QQmlPreview::enableInPlaceUpdates()
@@ -617,6 +624,25 @@ void tst_QQmlPreview::disableInPlaceUpdatesFails()
 
     // The setting should still be enabled (unchanged).
     QVERIFY(m_confirmedSettings.enableInPlaceUpdates);
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+void tst_QQmlPreview::hotReloadFailureMessage()
+{
+    const QString file("window.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+
+    // With in-place updates enabled, triggering a Load request causes a HotReloadFailure
+    // because in-place patching is not yet implemented.
+    m_client->triggerLoad(testFileUrl(file));
+    QTRY_VERIFY_WITH_TIMEOUT(!m_hotReloadFailureReasons.isEmpty(), 15000);
+    QVERIFY(m_hotReloadFailureReasons.first().contains("not yet implemented"));
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);

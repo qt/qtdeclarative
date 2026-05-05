@@ -37,6 +37,8 @@ QQmlPreviewServiceImpl::QQmlPreviewServiceImpl(QObject *parent) :
             Qt::DirectConnection);
     connect(&m_handler, &QQmlPreviewHandler::confirmation,
             this, &QQmlPreviewServiceImpl::forwardConfirmation, Qt::DirectConnection);
+    connect(&m_handler, &QQmlPreviewHandler::hotReloadFailure, this,
+            &QQmlPreviewServiceImpl::forwardHotReloadFailure, Qt::DirectConnection);
 }
 
 QQmlPreviewServiceImpl::~QQmlPreviewServiceImpl()
@@ -183,6 +185,13 @@ void QQmlPreviewServiceImpl::forwardConfirmation(
 {
     QQmlDebugPacket packet;
     packet << static_cast<qint8>(Confirmation) << settings.enableInPlaceUpdates;
+    emit messageToClient(name(), packet.data());
+}
+
+void QQmlPreviewServiceImpl::forwardHotReloadFailure(const QString &reason)
+{
+    QQmlDebugPacket packet;
+    packet << static_cast<qint8>(HotReloadFailure) << reason;
     emit messageToClient(name(), packet.data());
 }
 
