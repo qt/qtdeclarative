@@ -103,7 +103,7 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 
     QSize size = factory->textureData()->size();
     if (size.width() < m_atlas_size_limit && size.height() < m_atlas_size_limit) {
-        QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.find(format);
+        QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::const_iterator i = m_atlases.constFind(format);
         if (i == m_atlases.cend()) {
             auto newAtlas = new QSGCompressedAtlasTexture::Atlas(m_rc, m_atlas_size, format);
             i = m_atlases.insert(format, newAtlas);
@@ -144,7 +144,7 @@ void AtlasBase::commitTextureOperations(QRhiResourceUpdateBatch *resourceUpdates
         }
     }
 
-    for (TextureBase *t : m_pending_uploads)
+    for (TextureBase *t : std::as_const(m_pending_uploads))
         enqueueTextureUpload(t, resourceUpdates);
 
     m_pending_uploads.clear();

@@ -492,7 +492,7 @@ void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
     if (textItem != nullptr)
         textItem->invalidate();
 
-    QList<QQuickItem *> children = item->childItems();
+    const QList<QQuickItem *> children = item->childItems();
     for (QQuickItem *child : children)
         invalidateFontData(child);
 }
@@ -770,7 +770,8 @@ void QQuickWindowPrivate::updateChildrenPalettes(const QPalette &parentPalette)
 {
     Q_Q(QQuickWindow);
     if (auto root = q->contentItem()) {
-        for (auto &&child: root->childItems()) {
+        const auto children = root->childItems();
+        for (auto *child : children) {
             QQuickItemPrivate::get(child)->inheritPalette(parentPalette);
         }
     }
@@ -1545,7 +1546,7 @@ bool QQuickWindow::event(QEvent *event)
                             foundAgent = true;
                         }
                     }
-                    for (auto pgda : epd->passiveGrabbersContext) {
+                    for (const auto &pgda : std::as_const(epd->passiveGrabbersContext)) {
                         if (auto ptda = qobject_cast<QQuickDeliveryAgent *>(pgda.data())) {
                             insert(ptda, pt);
                             qCDebug(lcPtr) << pe->type() << "point" << pt.id() << pt.state()
@@ -2120,7 +2121,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown()
     Q_Q(QQuickWindow);
     cleanupNodes();
     cleanupNodesOnShutdown(contentItem);
-    for (QSet<QQuickItem *>::const_iterator it = parentlessItems.begin(), cend = parentlessItems.end(); it != cend; ++it)
+    for (QSet<QQuickItem *>::const_iterator it = parentlessItems.cbegin(), cend = parentlessItems.cend(); it != cend; ++it)
         cleanupNodesOnShutdown(*it);
     animationController->windowNodesDestroyed();
     q->cleanupSceneGraph();

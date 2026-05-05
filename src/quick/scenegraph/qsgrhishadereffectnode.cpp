@@ -599,7 +599,7 @@ QSGMaterialShader *QSGRhiShaderEffectMaterial::createShader(QSGRendererInterface
 void QSGRhiShaderEffectMaterial::updateTextureProviders(bool layoutChange)
 {
     if (layoutChange) {
-        for (QSGTextureProvider *tp : m_textureProviders) {
+        for (QSGTextureProvider *tp : std::as_const(m_textureProviders)) {
             if (tp) {
                 QObject::disconnect(tp, SIGNAL(textureChanged()), m_node,
                                     SLOT(handleTextureChange()));
@@ -897,7 +897,7 @@ void QSGRhiShaderEffectNode::handleTextureProviderDestroyed(QObject *object)
 
 void QSGRhiShaderEffectNode::preprocess()
 {
-    for (QSGTextureProvider *tp : m_material.m_textureProviders) {
+    for (QSGTextureProvider *tp : std::as_const(m_material.m_textureProviders)) {
         if (tp) {
             if (QSGDynamicTexture *texture = qobject_cast<QSGDynamicTexture *>(tp->texture()))
                 texture->updateTexture();
