@@ -1906,9 +1906,29 @@ void QSGCurveProcessor::processStroke(const QQuadPath &strokePath,
     }
 }
 
-// 2x variant of qHash(float)
-inline size_t qHash(QVector2D key, size_t seed = 0) noexcept
+namespace {
+// QVector2D is not hashable; we don't own the type, so we mustn't add a
+// qHash() (ODR violations), so use a small wrapper we _do_ own:
+template <typename T>
+struct HashWrap
 {
+    T wrapped;
+
+    Q_IMPLICIT HashWrap(T &&t) : wrapped(std::move(t)) {}
+    Q_IMPLICIT HashWrap(const T &t) : wrapped(t) {}
+
+    Q_IMPLICIT operator T() const noexcept { return wrapped; }
+
+    friend bool operator==(const HashWrap &lhs, const HashWrap &rhs) noexcept
+    { return lhs.wrapped == rhs.wrapped; }
+    friend bool operator!=(const HashWrap &lhs, const HashWrap &rhs) noexcept
+    { return lhs.wrapped != rhs.wrapped; }
+};
+
+// 2x variant of qHash(float)
+inline size_t qHash(HashWrap<QVector2D> wrap, size_t seed = 0) noexcept
+{
+    auto &key = wrap.wrapped;
     Q_STATIC_ASSERT(sizeof(QVector2D) == sizeof(quint64));
     // ensure -0 gets mapped to 0
     key[0] += 0.0f;
@@ -1917,6 +1937,7 @@ inline size_t qHash(QVector2D key, size_t seed = 0) noexcept
     memcpy(&k, &key, sizeof(QVector2D));
     return QHashPrivate::hash(k, seed);
 }
+} // unnamed namespace
 
 void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
                                     Qt::FillRule fillRule,
@@ -1925,7 +1946,7 @@ void QSGCurveProcessor::processFill(const QQuadPath &fillPath,
     QPainterPath internalHull;
     internalHull.setFillRule(fillRule);
 
-    QMultiHash<QVector2D, int> pointHash;
+    QMultiHash<HashWrap<QVector2D>, int> pointHash;
 
     auto roundVec2D = [](const QVector2D &p) -> QVector2D {
         return { qRound64(p.x() * 32.0f) / 32.0f, qRound64(p.y() * 32.0f) / 32.0f };
