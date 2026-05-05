@@ -167,7 +167,6 @@ public:
 
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
     QHash<QString, JavaScriptIdentifier> ownJSIdentifiers() const;
-    void insertPropertyIdentifier(const QQmlJSMetaProperty &prop);
 
     ScopeType scopeType() const { return m_scopeType; }
     void setScopeType(ScopeType type) { m_scopeType = type; }

@@ -110,16 +110,6 @@ void QQmlJSScope::setLineNumberInResolvedFile(quint32 lineNumber)
     m_lineNumberInResolvedFile = lineNumber;
 }
 
-void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
-{
-    addOwnProperty(property);
-    QQmlJSMetaMethod method(
-            QQmlSignalNames::propertyNameToChangedSignalName(property.propertyName()), u"void"_s);
-    method.setMethodType(QQmlJSMetaMethodType::Signal);
-    method.setIsImplicitQmlPropertyChangeSignal(true);
-    addOwnMethod(method);
-}
-
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
     return QQmlJSUtils::searchBaseAndExtensionTypes(

@@ -1995,9 +1995,16 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
         if (publicMember->isDefaultMember())
-            m_currentScope->setOwnDefaultPropertyName(prop.propertyName());
+            m_currentScope->setOwnDefaultPropertyName(propertyName);
         prop.setIndex(m_currentScope->ownProperties().size());
-        m_currentScope->insertPropertyIdentifier(prop);
+        m_currentScope->addOwnProperty(prop);
+
+        QQmlJSMetaMethod method(
+                QQmlSignalNames::propertyNameToChangedSignalName(propertyName), u"void"_s);
+        method.setMethodType(QQmlJSMetaMethodType::Signal);
+        method.setIsImplicitQmlPropertyChangeSignal(true);
+        m_currentScope->addOwnMethod(method);
+
         if (publicMember->isRequired())
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
