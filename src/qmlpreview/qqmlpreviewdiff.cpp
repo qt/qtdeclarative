@@ -334,6 +334,8 @@ struct UnitDiffer
 
     bool objectContentEqual(const Object &oldObj, const Object &newObj) const
     {
+        // Keep in sync with the Object struct in qv4compileddata_p.h
+        static_assert(sizeof(Object) == 84, "Update objectContentEqual when Object layout changes");
         if (oldObj.nNamedObjectsInComponent != newObj.nNamedObjectsInComponent)
             return false;
 
@@ -368,6 +370,8 @@ struct UnitDiffer
 
     bool propertyContentEqual(const Property &oldProp, const Property &newProp) const
     {
+        // Keep in sync with the Property struct in qv4compileddata_p.h
+        static_assert(sizeof(Property) == 12, "Update propertyContentEqual when Property layout changes");
         return stringsEqual(oldProp.nameIndex(), newProp.nameIndex())
                 && (oldProp.isCommonType() == newProp.isCommonType()
                     && (oldProp.isCommonType()
@@ -386,6 +390,8 @@ struct UnitDiffer
     // nameIndex may be the same while the string at that index changed (property rename).
     bool aliasContentEqual(const Alias &oldAlias, const Alias &newAlias) const
     {
+        // Keep in sync with the Alias struct in qv4compileddata_p.h
+        static_assert(sizeof(Alias) == 20, "Update aliasContentEqual when Alias layout changes");
         return stringsEqual(oldAlias.idIndex(), newAlias.idIndex())
                 && stringsEqual(oldAlias.nameIndex(), newAlias.nameIndex())
                 && stringsEqual(oldAlias.propertyNameIndex(), newAlias.propertyNameIndex())
@@ -394,6 +400,9 @@ struct UnitDiffer
 
     bool enumContentEqual(const Enum &oldEnum, const Enum &newEnum) const
     {
+        // Keep in sync with the Enum and EnumValue structs in qv4compileddata_p.h
+        static_assert(sizeof(Enum) == 12, "Update enumContentEqual when Enum layout changes");
+        static_assert(sizeof(EnumValue) == 8, "Update enumContentEqual when EnumValue layout changes");
         if (!stringsEqual(oldEnum.nameIndex, newEnum.nameIndex)
             || oldEnum.nEnumValues != newEnum.nEnumValues) {
             return false;
@@ -413,6 +422,9 @@ struct UnitDiffer
 
     bool signalContentEqual(const Signal &oldSig, const Signal &newSig) const
     {
+        // Keep in sync with the Signal and Parameter structs in qv4compileddata_p.h
+        static_assert(sizeof(Signal) == 12, "Update signalContentEqual when Signal layout changes");
+        static_assert(sizeof(Parameter) == 8, "Update signalContentEqual when Parameter layout changes");
         if (!stringsEqual(oldSig.nameIndex, newSig.nameIndex))
             return false;
         if (oldSig.nParameters != newSig.nParameters)
@@ -430,6 +442,9 @@ struct UnitDiffer
 
     bool bindingContentEqual(const Binding &oldBinding, const Binding &newBinding) const
     {
+        // Keep in sync with the Binding and TranslationData structs in qv4compileddata_p.h
+        static_assert(sizeof(Binding) == 24, "Update bindingContentEqual when Binding layout changes");
+        static_assert(sizeof(TranslationData) == 16, "Update bindingContentEqual when TranslationData layout changes");
         if (oldBinding.type() != newBinding.type() || oldBinding.flags() != newBinding.flags())
             return false;
 
@@ -495,6 +510,8 @@ struct UnitDiffer
 
     bool parameterTypeContentEqual(const ParameterType &oldType, const ParameterType &newType) const
     {
+        // Keep in sync with the ParameterType struct in qv4compileddata_p.h
+        static_assert(sizeof(ParameterType) == 4, "Update parameterTypeContentEqual when ParameterType layout changes");
         const bool indexIsCommonType = oldType.indexIsCommonType();
         if (newType.indexIsCommonType() != indexIsCommonType
             || oldType.isList() != newType.isList()) {
@@ -509,6 +526,8 @@ struct UnitDiffer
 
     bool functionContentEqual(const Function &oldFunc, const Function &newFunc) const
     {
+        // Keep in sync with the Function struct in qv4compileddata_p.h
+        static_assert(sizeof(Function) == 56, "Update functionContentEqual when Function layout changes");
         if (oldFunc.nestedFunctionIndex != newFunc.nestedFunctionIndex
             || !stringsEqual(oldFunc.nameIndex, newFunc.nameIndex) || oldFunc.flags != newFunc.flags
             || oldFunc.nFormals != newFunc.nFormals || oldFunc.codeSize != newFunc.codeSize
@@ -531,6 +550,8 @@ struct UnitDiffer
     bool translationContentEqual(const TranslationData &oldTrans,
                                  const TranslationData &newTrans) const
     {
+        // Keep in sync with the TranslationData struct in qv4compileddata_p.h
+        static_assert(sizeof(TranslationData) == 16, "Update translationContentEqual when TranslationData layout changes");
         if (oldTrans.contextIndex != newTrans.contextIndex)
             return false;
         if (oldTrans.contextIndex != TranslationData::NoContextIndex
@@ -544,6 +565,9 @@ struct UnitDiffer
 
     bool classContentEqual(const Class &oldCls, const Class &newCls) const
     {
+        // Keep in sync with the Class and Method structs in qv4compileddata_p.h
+        static_assert(sizeof(Class) == 24, "Update classContentEqual when Class layout changes");
+        static_assert(sizeof(Method) == 12, "Update classContentEqual when Method layout changes");
         if (!stringsEqual(oldCls.nameIndex, newCls.nameIndex)
             || oldCls.scopeIndex != newCls.scopeIndex
             || oldCls.constructorFunction != newCls.constructorFunction
@@ -565,6 +589,8 @@ struct UnitDiffer
 
     bool templateObjectContentEqual(const TemplateObject &oldTO, const TemplateObject &newTO) const
     {
+        // Keep in sync with the TemplateObject struct in qv4compileddata_p.h
+        static_assert(sizeof(TemplateObject) == 4, "Update templateObjectContentEqual when TemplateObject layout changes");
         if (oldTO.size != newTO.size)
             return false;
         const quint32_le *oldStrings = reinterpret_cast<const quint32_le *>(&oldTO + 1);
@@ -578,6 +604,9 @@ struct UnitDiffer
 
     bool jsClassContentEqual(const JSClass &oldJC, const JSClass &newJC) const
     {
+        // Keep in sync with the JSClass and JSClassMember structs in qv4compileddata_p.h
+        static_assert(sizeof(JSClass) == 4, "Update jsClassContentEqual when JSClass layout changes");
+        static_assert(sizeof(JSClassMember) == 4, "Update jsClassContentEqual when JSClassMember layout changes");
         if (oldJC.nMembers != newJC.nMembers)
             return false;
         const JSClassMember *oldMembers = reinterpret_cast<const JSClassMember *>(&oldJC + 1);
@@ -593,6 +622,8 @@ struct UnitDiffer
 
     bool blockContentEqual(const Block &oldBlock, const Block &newBlock) const
     {
+        // Keep in sync with the Block struct in qv4compileddata_p.h
+        static_assert(sizeof(Block) == 12, "Update blockContentEqual when Block layout changes");
         if (oldBlock.nLocals != newBlock.nLocals
             || oldBlock.sizeOfLocalTemporalDeadZone != newBlock.sizeOfLocalTemporalDeadZone) {
             return false;
