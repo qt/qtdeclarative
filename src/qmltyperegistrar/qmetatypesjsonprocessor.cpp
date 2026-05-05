@@ -865,4 +865,20 @@ MetaType::MetaType(const QCborMap &cbor, const QString &inputFile)
     : d(s_pool.emplace_back(std::make_unique<MetaTypePrivate>(cbor, inputFile)).get())
 {}
 
+/* metatype for a type about which we don't know anything
+   Caller is expected to track duplicates, as we otherwise end up with two opaque types
+   of the same name
+ */
+MetaType MetaType::createOpaqueType(QAnyStringView typeName)
+{
+    auto priv = s_pool.emplace_back(std::make_unique<MetaTypePrivate>()).get();
+    priv->className = typeName;
+    priv->qualifiedClassName = typeName;
+    priv->kind = MetaType::Kind::Gadget;
+
+    MetaType type;
+    type.d = priv;
+    return type;
+}
+
 QT_END_NAMESPACE

@@ -208,6 +208,8 @@ public:
 
     Kind kind() const { return d->kind; }
 
+    static MetaType createOpaqueType(QAnyStringView typeName);
+
 private:
     friend bool operator==(const MetaType &a, const MetaType &b) noexcept
     {
