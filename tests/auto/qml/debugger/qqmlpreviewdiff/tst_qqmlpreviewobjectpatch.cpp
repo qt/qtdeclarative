@@ -216,6 +216,11 @@ private slots:
     void singletonPropertyAddition();
     void singletonConsumerBindingRefresh();
 
+    // Child ordering: binding index shifts (e.g., from property addition)
+    // must not reorder or lose children from the visual tree.
+    void childOrderBindingShift_data();
+    void childOrderBindingShift();
+
 private:
     QQmlEngine engine;
 };
@@ -3469,6 +3474,70 @@ void tst_QQmlPreviewObjectPatch::singletonConsumerBindingRefresh()
 
     QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#ffffff"));
     QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#121111"));
+}
+
+// When a property is added or removed, the implicit default-property bindings
+// (Type_Object) shift in the binding table. Verify that after patching:
+//  (a) all children remain in the visual parent's "data" list, and
+//  (b) they appear in the correct order.
+void tst_QQmlPreviewObjectPatch::childOrderBindingShift_data()
+{
+    QTest::addColumn<QString>("oldFile");
+    QTest::addColumn<QString>("newFile");
+    QTest::addColumn<QStringList>("expectedOrder");
+
+    // Adding a property shifts child bindings to the right.
+    QTest::newRow("addProperty") << "ChildOrderShiftOld.qml" << "ChildOrderShiftNew.qml"
+                                 << QStringList{ "alpha", "beta" };
+
+    // Removing a property shifts child bindings to the left.
+    QTest::newRow("removeProperty") << "ChildOrderShiftNew.qml" << "ChildOrderShiftOld.qml"
+                                    << QStringList{ "alpha", "beta" };
+
+    // Inserting a child between existing ones (ObjectChanged + ObjectAdded).
+    QTest::newRow("insertChild") << "ChildOrderInsertOld.qml" << "ChildOrderInsertNew.qml"
+                                 << QStringList{ "alpha", "beta", "gamma" };
+
+    // Removing a child from the middle (ObjectChanged + ObjectRemoved).
+    QTest::newRow("removeChild") << "ChildOrderInsertNew.qml" << "ChildOrderInsertOld.qml"
+                                 << QStringList{ "alpha", "gamma" };
+}
+
+void tst_QQmlPreviewObjectPatch::childOrderBindingShift()
+{
+    QFETCH(QString, oldFile);
+    QFETCH(QString, newFile);
+    QFETCH(QStringList, expectedOrder);
+
+    QQmlEngine engine;
+    QQmlComponent oldComp(&engine, testFileUrl(oldFile));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    QQmlComponent newComp(&engine, testFileUrl(newFile));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // Verify child count and order via the "data" list property.
+    QQmlListReference dataList(object.data(), "data");
+    QCOMPARE(dataList.count(), expectedOrder.size());
+    for (qsizetype i = 0; i < expectedOrder.size(); ++i) {
+        QObject *child = dataList.at(i);
+        QVERIFY2(
+                child,
+                qPrintable(
+                        QString("data[%1] is null, expected \"%2\"").arg(i).arg(expectedOrder[i])));
+        QCOMPARE(child->objectName(), expectedOrder[i]);
+    }
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
