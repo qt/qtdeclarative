@@ -1,6 +1,5 @@
 plugins {
     id("com.android.application")
-    id("org.jetbrains.kotlin.android")
     id("org.qtproject.qt.gradleplugin") version "1.+"
 }
 
