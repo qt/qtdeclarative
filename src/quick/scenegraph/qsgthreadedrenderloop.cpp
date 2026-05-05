@@ -1481,7 +1481,7 @@ void QSGThreadedRenderLoop::update(QQuickWindow *window)
             // due to the animator triggering a sync, but just in case we
             // schedule an update request on the main thread explicitly.
             qCDebug(QSG_LOG_RENDERLOOP) << "window is resizing. update on window" << w->window;
-            QTimer::singleShot(0, window, [=]{ window->requestUpdate(); });
+            QTimer::singleShot(0, window, &QWindow::requestUpdate);
             return;
         }
     }
