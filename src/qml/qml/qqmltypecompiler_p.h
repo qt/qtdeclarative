@@ -198,20 +198,15 @@ public:
     bool resolveEnumBindings();
 
 private:
-    bool assignEnumToBinding(
-            QmlIR::Binding *binding, QStringView enumName, const QV4::Value &enumValue,
-            bool isQtObject);
-    bool assignEnumToBinding(
-            QmlIR::Binding *binding, const QString &enumName, const QV4::Value &enumValue,
-            bool isQtObject)
+    bool assignEnumToBinding(QmlIR::Binding *binding, QStringView enumName, int enumValue, bool isQtObject);
+    bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
     {
         return assignEnumToBinding(binding, QStringView(enumName), enumValue, isQtObject);
     }
     bool tryQualifiedEnumAssignment(
             const QmlIR::Object *obj, const QQmlPropertyCache::ConstPtr &propertyCache,
             const QQmlPropertyData *prop, QmlIR::Binding *binding);
-    QV4::ReturnedValue evaluateEnum(
-            const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const;
+    int evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const;
 
 
     const QList<QmlIR::Object*> &qmlObjects;

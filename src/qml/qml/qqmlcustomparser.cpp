@@ -83,7 +83,7 @@ void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const 
 
     A valid \a ok must be provided, or the function will assert.
 */
-QV4::ReturnedValue QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
+int QQmlCustomParser::evaluateEnum(const QString &script, bool *ok) const
 {
     Q_ASSERT_X(ok, "QQmlCustomParser::evaluateEnum", "ok must not be a null pointer");
     *ok = false;
@@ -103,85 +103,98 @@ QV4::ReturnedValue QQmlCustomParser::evaluateEnum(const QString &script, bool *o
 
     const QString scope = script.left(dot);
 
-    if (imports.isNull())
-        return -1;
-
-    QQmlTypeLoader *loader = typeLoader();
-    if (!loader)
-        return -1;
-
-    QQmlType type;
-    if (imports.isT1()) {
-        QQmlImportNamespace *ns = nullptr;
-
-        // Pass &recursionDetected to resolveType because that implicitly allows recursion.
-        // This way we can find the QQmlType of the document we're currently validating.
-        bool recursionDetected = false;
-
-        if (!imports.asT1()->resolveType(
-                    loader, scope, &type, nullptr, &ns, nullptr,
-                    QQmlType::AnyRegistrationType, &recursionDetected)) {
+    if (scope != QLatin1String("Qt")) {
+        if (imports.isNull())
             return -1;
-        }
 
-        if (!type.isValid() && ns != nullptr) {
-            dot = nextDot(dot);
-            if (dot == -1 || !imports.asT1()->resolveType(
-                        loader, script.left(dot), &type, nullptr, nullptr, nullptr,
+        QQmlTypeLoader *loader = typeLoader();
+        if (!loader)
+            return -1;
+
+        QQmlType type;
+        if (imports.isT1()) {
+            QQmlImportNamespace *ns = nullptr;
+
+            // Pass &recursionDetected to resolveType because that implicitly allows recursion.
+            // This way we can find the QQmlType of the document we're currently validating.
+            bool recursionDetected = false;
+
+            if (!imports.asT1()->resolveType(
+                        loader, scope, &type, nullptr, &ns, nullptr,
                         QQmlType::AnyRegistrationType, &recursionDetected)) {
                 return -1;
             }
-        }
-    } else {
-        // Allow recursion so that we can find enums from the same document.
-        const QQmlTypeNameCache::Result result
-                = imports.asT2()->query<QQmlImport::AllowRecursion>(scope, loader);
-        if (result.type.isValid()) {
-            type = result.type;
-        } else if (result.importNamespace) {
-            dot = nextDot(dot);
-            if (dot != -1) {
-                type = imports.asT2()->query<QQmlImport::AllowRecursion>(
-                                             script.left(dot), loader).type;
+
+            if (!type.isValid() && ns != nullptr) {
+                dot = nextDot(dot);
+                if (dot == -1 || !imports.asT1()->resolveType(
+                            loader, script.left(dot), &type, nullptr, nullptr, nullptr,
+                            QQmlType::AnyRegistrationType, &recursionDetected)) {
+                    return -1;
+                }
             }
-        }
-    }
-
-    if (!type.isValid())
-        return -1;
-
-    const int dot2 = nextDot(dot);
-    const bool dot2Valid = (dot2 != -1);
-    const QString enumValue = script.mid(dot2Valid ? dot2 + 1 : dot + 1);
-    const QString scopedEnumName = dot2Valid ? script.mid(dot + 1, dot2 - dot - 1) : QString();
-
-    // If we're currently validating the same document, we won't be able to find its enums using
-    // the QQmlType. However, we do have the property cache already, and that one contains the
-    // enums.
-    const QUrl documentUrl = validator ? validator->documentSourceUrl() : QUrl();
-    if (documentUrl.isValid() && documentUrl == type.sourceUrl()) {
-        Q_ASSERT(validator);
-        const QQmlPropertyCache::ConstPtr rootCache = validator->rootPropertyCache();
-        const int count = rootCache->ownEnumCount();
-        for (int ii = 0; ii < count; ++ii) {
-            const QQmlEnumData *enumData = rootCache->qmlEnum(ii);
-            if (!scopedEnumName.isEmpty() && scopedEnumName != enumData->name)
-                continue;
-
-            for (int jj = 0; jj < enumData->values.size(); ++jj) {
-                const QQmlEnumValue value = enumData->values.at(jj);
-                if (value.namedValue == enumValue) {
-                    *ok = true;
-                    return value.value.asReturnedValue();
+        } else {
+            // Allow recursion so that we can find enums from the same document.
+            const QQmlTypeNameCache::Result result
+                    = imports.asT2()->query<QQmlImport::AllowRecursion>(scope, loader);
+            if (result.type.isValid()) {
+                type = result.type;
+            } else if (result.importNamespace) {
+                dot = nextDot(dot);
+                if (dot != -1) {
+                    type = imports.asT2()->query<QQmlImport::AllowRecursion>(
+                                                 script.left(dot), loader).type;
                 }
             }
         }
-        return -1;
+
+        if (!type.isValid())
+            return -1;
+
+        const int dot2 = nextDot(dot);
+        const bool dot2Valid = (dot2 != -1);
+        const QString enumValue = script.mid(dot2Valid ? dot2 + 1 : dot + 1);
+        const QString scopedEnumName = dot2Valid ? script.mid(dot + 1, dot2 - dot - 1) : QString();
+
+        // If we're currently validating the same document, we won't be able to find its enums using
+        // the QQmlType. However, we do have the property cache already, and that one contains the
+        // enums.
+        const QUrl documentUrl = validator ? validator->documentSourceUrl() : QUrl();
+        if (documentUrl.isValid() && documentUrl == type.sourceUrl()) {
+            Q_ASSERT(validator);
+            const QQmlPropertyCache::ConstPtr rootCache = validator->rootPropertyCache();
+            const int count = rootCache->ownEnumCount();
+            for (int ii = 0; ii < count; ++ii) {
+                const QQmlEnumData *enumData = rootCache->qmlEnum(ii);
+                if (!scopedEnumName.isEmpty() && scopedEnumName != enumData->name)
+                    continue;
+
+                for (int jj = 0; jj < enumData->values.size(); ++jj) {
+                    const QQmlEnumValue value = enumData->values.at(jj);
+                    if (value.namedValue == enumValue) {
+                        *ok = true;
+                        return value.value;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        if (!scopedEnumName.isEmpty())
+            return type.scopedEnumValue(loader, scopedEnumName, enumValue, ok);
+        else
+            return type.enumValue(loader, enumValue, ok);
     }
 
-    return scopedEnumName.isEmpty()
-            ? type.enumValue(loader, enumValue, ok)
-            : type.scopedEnumValue(loader, scopedEnumName, enumValue, ok);
+    const QString enumValue = script.mid(dot + 1);
+    const QMetaObject *mo = &Qt::staticMetaObject;
+    int i = mo->enumeratorCount();
+    while (i--) {
+        int v = mo->enumerator(i).keyToValue(enumValue.toUtf8().constData(), ok);
+        if (*ok)
+            return v;
+    }
+    return -1;
 }
 
 /*!

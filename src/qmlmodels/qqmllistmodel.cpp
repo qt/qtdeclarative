@@ -2958,8 +2958,7 @@ bool QQmlListModelParser::applyProperty(
                 value.setValue(v);
             } else {
                 bool ok;
-                value = compilationUnit->engine->toVariant(
-                        QV4::Value::fromReturnedValue(evaluateEnum(scriptStr, &ok)), {});
+                value = evaluateEnum(scriptStr, &ok);
             }
         } else {
             Q_UNREACHABLE();

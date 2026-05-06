@@ -17,8 +17,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQmlEnumValue, "qt.qml.enum.value", QtWarningMsg)
-
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     : regType(type)
 {
@@ -320,17 +318,11 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
         return true;
     };
 
-    // Add any enum values defined by this class, overwriting any inherited values.
-    // For flag enumerators, use resolveEnum() to look up values through the
-    // underlying enum type, avoiding inconsistencies between keyToValue64() and
-    // metaType() for flags (QTBUG-145454). When both the enum and the flag are
-    // registered, they produce identical values, so the disambiguation logic
-    // below suppresses any warnings.
+    // Add any enum values defined by this class, overwriting any inherited values
     for (int ii = 0; ii < metaObject->enumeratorCount(); ++ii) {
         QMetaEnum me = metaObject->enumerator(ii);
-        const QMetaEnum valueEnum = QQmlType::resolveEnum(me);
         const bool isScoped = me.isScoped();
-        QStringHash<QV4::StaticValue> *e = new QStringHash<QV4::StaticValue>();
+        QStringHash<int> *e = new QStringHash<int>();
 
     // We allow enums in sub-classes to overwrite enums from base-classes, such as
     // ListView.Center (from enum PositionMode) overwriting Item.Center (from enum TransformOrigin).
@@ -349,21 +341,11 @@ void QQmlTypePrivate::insertEnums(Enums *enums, const QMetaObject *metaObject) c
 
         for (int jj = 0; jj < me.keyCount(); ++jj) {
             const QString key = QString::fromUtf8(me.key(jj));
-            QV4::Value value;
-            const auto value64 = valueEnum.value64(jj);
-            if (value64.has_value()) {
-                value = QV4::Value::fromStaticValue(
-                        QQmlType::encodeEnumValue(value64.value(), valueEnum));
-            } else {
-                value = QV4::Value::undefinedValue();
-            }
-
+            const int value = me.value(jj);
             if (shouldRegisterUnscoped) {
                 if (localEnums.contains(key)) {
                     auto existingEntry = enums->enums.find(key);
-                    if (existingEntry != enums->enums.end()
-                            && !value.sameValueZero(
-                                QV4::Value::fromStaticValue(existingEntry.value()))) {
+                    if (existingEntry != enums->enums.end() && existingEntry.value() != value) {
                         qWarning("Previously registered enum will be overwritten due to name clash: %s.%s", metaObject->className(), key.toUtf8().constData());
                         createEnumConflictReport(metaObject, key);
                     }
@@ -449,7 +431,7 @@ void QQmlTypePrivate::insertEnumsFromPropertyCache(
 
         int count = currentCache->ownEnumCount();
         for (int ii = 0; ii < count; ++ii) {
-            QStringHash<QV4::StaticValue> *scoped = new QStringHash<QV4::StaticValue>();
+            QStringHash<int> *scoped = new QStringHash<int>();
             QQmlEnumData *enumData = currentCache->qmlEnum(ii);
 
             for (int jj = 0; jj < enumData->values.size(); ++jj) {
@@ -792,26 +774,22 @@ QUrl QQmlType::sourceUrl() const
     return d ? d->sourceUrl() : QUrl();
 }
 
-QV4::ReturnedValue QQmlType::enumValue(
-        QQmlTypeLoader *typeLoader, const QHashedStringRef &name, bool *ok) const
+int QQmlType::enumValue(QQmlTypeLoader *typeLoader, const QHashedStringRef &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue(d, typeLoader, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::enumValue(
-        QQmlTypeLoader *typeLoader, const QHashedCStringRef &name, bool *ok) const
+int QQmlType::enumValue(QQmlTypeLoader *typeLoader, const QHashedCStringRef &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue(d, typeLoader, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::enumValue(
-        QQmlTypeLoader *typeLoader, const QV4::String *name, bool *ok) const
+int QQmlType::enumValue(QQmlTypeLoader *typeLoader, const QV4::String *name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue(d, typeLoader, name, ok);
 }
 
-int QQmlType::scopedEnumIndex(
-        QQmlTypeLoader *typeLoader, const QV4::String *name, bool *ok) const
+int QQmlType::scopedEnumIndex(QQmlTypeLoader *typeLoader, const QV4::String *name, bool *ok) const
 {
     return QQmlTypePrivate::enumIndex<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, name, ok);
@@ -835,73 +813,62 @@ int QQmlType::unscopedEnumIndex(QQmlTypeLoader *typeLoader, const QString &name,
             d, typeLoader, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::scopedEnumValue(
-        QQmlTypeLoader *typeLoader, int index, const QV4::String *name, bool *ok) const
+int QQmlType::scopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QV4::String *name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, index, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::scopedEnumValue(
-        QQmlTypeLoader *typeLoader, int index, const QString &name, bool *ok) const
+int QQmlType::scopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QString &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, index, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::scopedEnumValue(
-        QQmlTypeLoader *typeLoader, const QHashedStringRef &scopedEnumName,
-        const QHashedStringRef &name, bool *ok) const
+int QQmlType::scopedEnumValue(QQmlTypeLoader *typeLoader, const QHashedStringRef &scopedEnumName, const QHashedStringRef &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, scopedEnumName, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::unscopedEnumValue(
-        QQmlTypeLoader *typeLoader, int index, const QV4::String *name, bool *ok) const
+int QQmlType::unscopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QV4::String *name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Unscoped>(
             d, typeLoader, index, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::unscopedEnumValue(
-        QQmlTypeLoader *typeLoader, int index, const QString &name, bool *ok) const
+int QQmlType::unscopedEnumValue(QQmlTypeLoader *typeLoader, int index, const QString &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Unscoped>(
             d, typeLoader, index, name, ok);
 }
 
-QV4::ReturnedValue QQmlType::unscopedEnumValue(
-        QQmlTypeLoader *typeLoader, const QHashedStringRef &scopedEnumName,
-        const QHashedStringRef &name, bool *ok) const
+int QQmlType::unscopedEnumValue(QQmlTypeLoader *typeLoader, const QHashedStringRef &scopedEnumName, const QHashedStringRef &name, bool *ok) const
 {
     return QQmlTypePrivate::enumValue<QQmlTypePrivate::Enums::Unscoped>(
             d, typeLoader, scopedEnumName, name, ok);
 }
 
-QString QQmlType::scopedEnumKey(
-        QQmlTypeLoader *typeLoader, int index, const QV4::Value &value, bool *ok) const
+QString QQmlType::scopedEnumKey(QQmlTypeLoader *typeLoader, int index, int value, bool *ok) const
 {
     return QQmlTypePrivate::enumKey<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, index, value, ok);
 }
 
-QStringList QQmlType::scopedEnumKeys(
-        QQmlTypeLoader *typeLoader, int index, const QV4::Value &value, bool *ok) const
+QStringList QQmlType::scopedEnumKeys(QQmlTypeLoader *typeLoader, int index, int value, bool *ok) const
 {
     return QQmlTypePrivate::enumKeys<QQmlTypePrivate::Enums::Scoped>(
             d, typeLoader, index, value, ok);
 }
 
-QString QQmlType::unscopedEnumKey(
-        QQmlTypeLoader *typeLoader, int index, const QV4::Value &value, bool *ok) const
+QString QQmlType::unscopedEnumKey(QQmlTypeLoader *typeLoader, int index, int value, bool *ok) const
 {
     return QQmlTypePrivate::enumKey<QQmlTypePrivate::Enums::Unscoped>(
             d, typeLoader, index, value, ok);
 }
 
-QStringList QQmlType::unscopedEnumKeys(
-        QQmlTypeLoader *typeLoader, int index, const QV4::Value &value, bool *ok) const
+QStringList QQmlType::unscopedEnumKeys(QQmlTypeLoader *typeLoader, int index, int value,
+                                       bool *ok) const
 {
     return QQmlTypePrivate::enumKeys<QQmlTypePrivate::Enums::Unscoped>(
             d, typeLoader, index, value, ok);

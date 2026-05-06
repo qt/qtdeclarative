@@ -27,7 +27,6 @@
 
 #include <QtCore/qmutex.h>
 #include <QtCore/qmetasequence.h>
-#include <QtCore/private/qnumeric_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -2931,45 +2930,33 @@ bool AOTCompiledContext::getEnumLookup(uint index, void *target) const
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     if (lookup->call != QV4::Lookup::Call::GetterEnumValue)
         return false;
-    const QV4::StaticValue value = QV4::StaticValue::fromReturnedValue(
-            lookup->qmlEnumValueLookup.encodedEnumValue);
-
-    // The encoding already captures signedness:
-    // - Values in int32 range are stored as int32 (for both signed and unsigned enums)
-    // - Values outside int32 range are stored as double
-    // For sub-int-sized types (1, 2 bytes) both branches produce the same truncation.
+    const bool isUnsigned
+            = lookup->qmlEnumValueLookup.metaType->flags & QMetaType::IsUnsignedEnumeration;
+    const QV4::ReturnedValue encoded = lookup->qmlEnumValueLookup.encodedEnumValue;
     switch (lookup->qmlEnumValueLookup.metaType->size) {
     case 1:
-        *static_cast<quint8 *>(target) = value.integerValue();
+        if (isUnsigned)
+            *static_cast<quint8 *>(target) = encoded;
+        else
+            *static_cast<qint8 *>(target) = encoded;
         return true;
     case 2:
-        *static_cast<quint16 *>(target) = value.integerValue();
+        if (isUnsigned)
+            *static_cast<quint16 *>(target) = encoded;
+        else
+            *static_cast<qint16 *>(target) = encoded;
         return true;
     case 4:
-        if (value.isInteger())
-            *static_cast<quint32 *>(target) = quint32(value.int_32());
+        if (isUnsigned)
+            *static_cast<quint32 *>(target) = encoded;
         else
-            *static_cast<quint32 *>(target) = quint32(value.doubleValue());
+            *static_cast<qint32 *>(target) = encoded;
         return true;
     case 8:
-        if (value.isInteger()) {
-            // Sign-extend from int32 — correct for both signed and unsigned
-            // enums whose values fit in int32.
-            *static_cast<qint64 *>(target) = qint64(value.int_32());
-        } else {
-            // Use convertDoubleTo to avoid UB on out-of-range conversions.
-            // Values >= 2^63 must go through unsigned conversion.
-            const double d = value.doubleValue();
-            if (d >= 0) {
-                quint64 result;
-                convertDoubleTo(d, &result);
-                *static_cast<quint64 *>(target) = result;
-            } else {
-                qint64 result;
-                convertDoubleTo(d, &result);
-                *static_cast<qint64 *>(target) = result;
-            }
-        }
+        if (isUnsigned)
+            *static_cast<quint64 *>(target) = encoded;
+        else
+            *static_cast<qint64 *>(target) = encoded;
         return true;
     default:
         break;
@@ -2980,24 +2967,19 @@ bool AOTCompiledContext::getEnumLookup(uint index, void *target) const
 
 void AOTCompiledContext::initGetEnumLookup(
         uint index, const QMetaObject *metaObject,
-        const char *enumerator, const char *enumKey) const
+        const char *enumerator, const char *enumValue) const
 {
     Q_ASSERT(!engine->hasError());
     QV4::Lookup *lookup = compilationUnit->runtimeLookups + index;
     if (!metaObject) {
         engine->handle()->throwTypeError(
                     QStringLiteral("Cannot read property '%1' of undefined")
-                    .arg(QString::fromUtf8(enumKey)));
+                    .arg(QString::fromUtf8(enumValue)));
         return;
     }
-
-    const QMetaEnum metaEnum
-            = QQmlType::resolveEnum(
-                metaObject->enumerator(metaObject->indexOfEnumerator(enumerator)));
-    const auto value = metaEnum.keyToValue64(enumKey);
-    Q_ASSERT(value.has_value());
-    lookup->qmlEnumValueLookup.encodedEnumValue
-            = QQmlType::encodeEnumValue(*value, metaEnum).asReturnedValue();
+    const int enumIndex = metaObject->indexOfEnumerator(enumerator);
+    const QMetaEnum metaEnum = metaObject->enumerator(enumIndex);
+    lookup->qmlEnumValueLookup.encodedEnumValue = metaEnum.keyToValue(enumValue);
     lookup->qmlEnumValueLookup.metaType = metaEnum.metaType().iface();
     lookup->call = QV4::Lookup::Call::GetterEnumValue;
 }

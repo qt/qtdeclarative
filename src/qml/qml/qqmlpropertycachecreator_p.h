@@ -470,9 +470,7 @@ QQmlPropertyCacheCreator<ObjectContainer>::tryDeriveCacheFrom(
         auto enumValue = e->enumValuesBegin();
         auto end = e->enumValuesEnd();
         for (; enumValue != end; ++enumValue)
-            values.append(QQmlEnumValue(
-                    stringAt(enumValue->nameIndex),
-                    QV4::Value::fromInt32(enumValue->value)));
+            values.append(QQmlEnumValue(stringAt(enumValue->nameIndex), enumValue->value));
 
         cache->appendEnum(stringAt(e->nameIndex), values);
     }

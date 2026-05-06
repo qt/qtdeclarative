@@ -1283,13 +1283,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder) const
         enumeration.setIsScoped(true);
         for (int jj = 0; jj < enumData.values.size(); ++jj) {
             const QQmlEnumValue &value = enumData.values.at(jj);
-            const QByteArray name = value.namedValue.toUtf8();
-            if (value.value.isInteger())
-                enumeration.addKey(name, value.value.integerValue());
-            else if (value.value.isDouble())
-                enumeration.addKey(name, quint64(value.value.doubleValue()));
-            else
-                enumeration.addKey(name, -1);
+            enumeration.addKey(value.namedValue.toUtf8(), value.value);
         }
     }
 

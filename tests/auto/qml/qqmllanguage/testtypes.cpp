@@ -288,7 +288,7 @@ void EnumSupportingCustomParser::verifyBindings(
     }
     QByteArray script = compilationUnit->stringAt(binding->stringIndex).toUtf8();
     bool ok;
-    int v = QV4::StaticValue::fromReturnedValue(evaluateEnum(script, &ok)).toInt32();
+    int v = evaluateEnum(script, &ok);
     if (!ok) {
         error(binding, QStringLiteral("Custom parser invoked with the wrong property value. Script did not evaluate to enum"));
         return;

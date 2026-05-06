@@ -808,9 +808,8 @@ namespace QQmlPrivate
 #if QT_QML_REMOVED_SINCE(6, 6)
         bool getEnumLookup(uint index, int *target) const;
 #endif
-        void initGetEnumLookup(
-                uint index, const QMetaObject *metaObject, const char *enumerator,
-                const char *enumKey) const;
+        void initGetEnumLookup(uint index, const QMetaObject *metaObject,
+                               const char *enumerator, const char *enumValue) const;
 
         bool setObjectLookup(uint index, QObject *object, void *value) const;
         void initSetObjectLookup(uint index, QObject *object) const;

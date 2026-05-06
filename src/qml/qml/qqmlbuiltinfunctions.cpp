@@ -1911,15 +1911,13 @@ void QtObject::callLater(QQmlV4FunctionPtr args)
  */
 double QtObject::enumStringToValue(const QJSManagedValue &enumType, const QString &string)
 {
-    const QV4::StaticValue value
-            = QV4::StaticValue::fromReturnedValue(retrieveFromEnum<QV4::ReturnedValue>(
-                enumType,
-                [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                    return type.scopedEnumValue(typeLoader, enumIndex, string, ok);
-                }, [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                    return type.unscopedEnumValue(typeLoader, enumIndex, string, ok);
-                }, m_engine));
-    return value.isNumber() ? value.asDouble() : -1;
+    return retrieveFromEnum<double>(
+            enumType,
+            [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
+                return type.scopedEnumValue(typeLoader, enumIndex, string, ok);
+            }, [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
+                return type.unscopedEnumValue(typeLoader, enumIndex, string, ok);
+            }, m_engine);
 }
 
 /*!
@@ -1945,13 +1943,9 @@ QString QtObject::enumValueToString(const QJSManagedValue &enumType, double valu
     return retrieveFromEnum<QString>(
             enumType,
             [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                return type.scopedEnumKey(
-                        typeLoader, enumIndex,
-                        QV4::Value::fromDouble(QJSNumberCoercion::roundTowards0(value)), ok);
+                return type.scopedEnumKey(typeLoader, enumIndex, QtPrivate::qSaturateRound(value), ok);
             }, [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                return type.unscopedEnumKey(
-                        typeLoader, enumIndex,
-                        QV4::Value::fromDouble(QJSNumberCoercion::roundTowards0(value)), ok);
+                return type.unscopedEnumKey(typeLoader, enumIndex, QtPrivate::qSaturateRound(value), ok);
             }, m_engine);
 }
 
@@ -1974,13 +1968,9 @@ QStringList QtObject::enumValueToStrings(const QJSManagedValue &enumType, double
     return retrieveFromEnum<QStringList>(
             enumType,
             [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                return type.scopedEnumKeys(
-                        typeLoader, enumIndex,
-                        QV4::Value::fromDouble(QJSNumberCoercion::roundTowards0(value)), ok);
+                return type.scopedEnumKeys(typeLoader, enumIndex, QtPrivate::qSaturateRound(value), ok);
             }, [&](const QQmlType &type, QQmlTypeLoader *typeLoader, int enumIndex, bool *ok) {
-                return type.unscopedEnumKeys(
-                        typeLoader, enumIndex,
-                        QV4::Value::fromDouble(QJSNumberCoercion::roundTowards0(value)), ok);
+                return type.unscopedEnumKeys(typeLoader, enumIndex, QtPrivate::qSaturateRound(value), ok);
             }, m_engine);
 }
 
