@@ -145,8 +145,9 @@ public:
     QObject *target() const;
     void setTarget(QObject *target);
 
-    static void setTransitionEnabled(bool enabled);
-    static bool transitionEnabled();
+    bool transitionsEnabled() const;
+    void setTransitionsEnabled(bool enabled);
+
     static void resetReadersForStyle(const QQStyleKitStyle *style);
 
     static QList<QQStyleKitReader *> s_allReaders;
@@ -194,6 +195,7 @@ private:
 
     bool m_dontEmitChangedSignals: 1;
     bool m_effectiveVariationsDirty: 1;
+    bool m_transitionsEnabled: 1;
 
     QPointer<QQuickPalette> m_palette;
     QPalette m_effectivePalette;

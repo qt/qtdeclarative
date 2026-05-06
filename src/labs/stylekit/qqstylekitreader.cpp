@@ -266,6 +266,7 @@ QQStyleKitReader::QQStyleKitReader(QObject *parent)
     : QQStyleKitControlProperties(QQSK::PropertyGroup::Control, parent)
     , m_dontEmitChangedSignals(false)
     , m_effectiveVariationsDirty(true)
+    , m_transitionsEnabled(true)
     , m_global(QQStyleKitControlProperties(QQSK::PropertyGroup::GlobalFlag, this))
 {
     s_allReaders.append(this);
@@ -479,7 +480,7 @@ void QQStyleKitReader::updateControl()
 
     auto transitionProp = stateGroup()->transitionsProperty();
     const int transitionCountInStateGroup = transitionProp.count(&transitionProp);
-    const bool enabled = QQStyleKit::qmlAttachedProperties()->transitionsEnabled();
+    const bool enabled = m_transitionsEnabled && QQStyleKit::qmlAttachedProperties()->transitionsEnabled();
     QQuickTransition *transitionInStyle = enabled ? transition() : nullptr;
     QQuickTransition *transitionInStateGroup =
         transitionCountInStateGroup > 0 ? transitionProp.at(&transitionProp, 0) : nullptr;
@@ -777,6 +778,18 @@ void QQStyleKitReader::setTarget(QObject *target)
     the StyleReader is able to post StyleAnimationUpdate events to the correct
     target during a transition. */
     m_target = target;
+}
+
+bool QQStyleKitReader::transitionsEnabled() const
+{
+    return m_transitionsEnabled;
+}
+
+void QQStyleKitReader::setTransitionsEnabled(bool enabled)
+{
+    if (m_transitionsEnabled == enabled)
+        return;
+    m_transitionsEnabled = enabled;
 }
 
 QQStyleKitStyle *QQStyleKitReader::explicitStyle() const
