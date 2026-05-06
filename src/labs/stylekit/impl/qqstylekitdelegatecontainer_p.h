@@ -53,6 +53,7 @@ signals:
 
 protected:
     void componentComplete() override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 private:
     void updateImplicitSize();
@@ -68,6 +69,8 @@ private:
 
     QPointer<QQmlComponent> m_delegateComponent;
     QPointer<QQmlComponent> m_shadowComponent;
+
+    bool m_inGeometryChange = false;
 
     static QQmlComponent *s_defaultDelegateComponent;
     static QQmlComponent *s_defaultShadowComponent;
