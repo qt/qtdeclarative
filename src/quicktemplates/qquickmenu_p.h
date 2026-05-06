@@ -44,8 +44,11 @@ class Q_QUICKTEMPLATES2_EXPORT QQuickMenu : public QQuickPopup
     Q_PROPERTY(qreal overlap READ overlap WRITE setOverlap NOTIFY overlapChanged FINAL REVISION(2, 3))
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL REVISION(2, 3))
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL REVISION(2, 3))
-    // 6.5 (Qt 6.5)
+
     Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(6, 5))
+    Q_PROPERTY(bool separatorsCollapsible READ separatorsCollapsible WRITE setSeparatorsCollapsible
+                       NOTIFY separatorsCollapsibleChanged FINAL REVISION(6, 12))
+
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(Menu)
     QML_ADDED_IN_VERSION(2, 0)
@@ -68,6 +71,9 @@ public:
 
     QQuickIcon icon() const;
     void setIcon(const QQuickIcon &icon);
+
+    bool separatorsCollapsible() const;
+    void setSeparatorsCollapsible(bool collapsible);
 
     bool cascade() const;
     void setCascade(bool cascade);
@@ -125,8 +131,9 @@ Q_SIGNALS:
     Q_REVISION(2, 3) void overlapChanged();
     Q_REVISION(2, 3) void delegateChanged();
     Q_REVISION(2, 3) void currentIndexChanged();
-    // 6.5 (Qt 6.5)
+
     Q_REVISION(6, 5) void iconChanged(const QQuickIcon &icon);
+    Q_REVISION(6, 12) void separatorsCollapsibleChanged();
 
 protected:
     void timerEvent(QTimerEvent *event) override;

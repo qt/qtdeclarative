@@ -18,6 +18,7 @@
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qset.h>
 
 #include <QtGui/qpa/qplatformmenu.h>
 
@@ -105,7 +106,9 @@ public:
     void onItemHovered();
     void onItemTriggered();
     void onItemActiveFocusChanged();
+    void onItemVisibleChanged();
     void updateTextPadding();
+    void updateCollapsedSeparators();
 
     QQuickMenu *currentSubMenu() const;
     void setParentMenu(QQuickMenu *parent);
@@ -135,6 +138,8 @@ public:
     void resetContentItem();
 
     bool cascade = false;
+    bool collapsibleSeparators = false;
+    bool updatingCollapsedSeparators = false;
     bool triedToCreateNativeMenu = false;
     int hoverTimer = 0;
     int currentIndex = -1;
@@ -152,6 +157,7 @@ public:
     // For native menu support.
     std::unique_ptr<QPlatformMenu> handle = nullptr;
     QList<QQuickNativeMenuItem *> nativeItems;
+    QSet<QQuickItem *> collapsedSeparators;
     QPointer<QQuickMenuBar> menuBar;
     qreal lastDevicePixelRatio = 0;
 };

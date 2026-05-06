@@ -9,8 +9,8 @@ import QtQuick.Dialogs
 
 ApplicationWindow {
     id: window
-    width: 800
-    height: 600
+    width: 1000
+    height: 800
     visible: true
     title: qsTr("Menus - style: %1").arg(currentStyle)
 
@@ -135,170 +135,365 @@ ApplicationWindow {
         }
     }
 
-    ColumnLayout {
+    ScrollView {
+        id: scrollView
         anchors.fill: parent
 
-        Label {
-            text: qsTr("Right click on the window background to open a context menu. "
-               + "Right click on the TextArea to access its edit context menu.\n\n"
-               + "Things to check:\n\n"
-               + "- Do the menu items trigger their actions (check console for output)?\n"
-               + "- Do checkable menu items work?\n"
-               + "- Do the Edit menu items (in the MenuBar menu and edit context menu)"
-               + " work as expected with the TextArea?\n"
-               + "  - Are they enabled/disabled as expected?\n"
-               + "  - Does the TextArea keep focus after interacting with the Edit menu items?\n"
-               + "- Does adding and removing menu items work?\n"
-               + "- Do the menus in the MenuBar work?\n"
-               + "- Can you add and remove menus from the MenuBar?\n"
-               + "- Do shortcuts work?")
-            verticalAlignment: Text.AlignVCenter
-            wrapMode: Text.Wrap
+        ColumnLayout {
+            width: scrollView.width
 
-            Layout.alignment: Qt.AlignHCenter
-            Layout.preferredWidth: window.width * 0.5
-            Layout.fillHeight: true
-        }
+            GroupBox {
+                title: qsTr("Context menu")
 
-        GroupBox {
-            title: qsTr("Context menu")
+                Layout.fillWidth: true
 
-            Layout.fillWidth: true
+                ColumnLayout {
+                    anchors.fill: parent
 
-            ColumnLayout {
-                anchors.fill: parent
-
-                RowLayout {
                     Label {
-                        text: qsTr("Popup type")
+                        text: qsTr("Right click on the window background to open a context menu. "
+                           + "Right click on the TextArea to access its edit context menu. Things to check:\n\n"
+                           + "- Do the menu items trigger their actions (check console for output)?\n"
+                           + "- Do checkable menu items work?\n"
+                           + "- Do the Edit menu items (in the MenuBar menu and edit context menu)"
+                           + " work as expected with the TextArea?\n"
+                           + "  - Are they enabled/disabled as expected?\n"
+                           + "  - Does the TextArea keep focus after interacting with the Edit menu items?\n"
+                           + "- Does adding and removing menu items work?\n"
+                           + "- Do the menus in the MenuBar work?\n"
+                           + "- Can you add and remove menus from the MenuBar?\n"
+                           + "- Do shortcuts work?")
+                        verticalAlignment: Text.AlignVCenter
+                        wrapMode: Text.Wrap
+
+                        Layout.fillHeight: true
                     }
 
-                    ComboBox {
-                        id: popupTypeCombo
-                        model: ["Item", "Window", "Native"]
-                        onCurrentIndexChanged: CppSettings.popupType = currentIndex
-                        currentIndex: CppSettings.popupType
+                    RowLayout {
+                        Label {
+                            text: qsTr("Popup type")
+                        }
 
-                        function popupType() {
-                            if (currentText === "Window")
-                                return Popup.Window
-                            else if (currentText === "Native")
-                                return Popup.Native
-                            else
-                                return Popup.Item
+                        ComboBox {
+                            id: popupTypeCombo
+                            model: ["Item", "Window", "Native"]
+                            onCurrentIndexChanged: CppSettings.popupType = currentIndex
+                            currentIndex: CppSettings.popupType
+
+                            function popupType() {
+                                if (currentText === "Window")
+                                    return Popup.Window
+                                else if (currentText === "Native")
+                                    return Popup.Native
+                                else
+                                    return Popup.Item
+                            }
                         }
                     }
-                }
 
-                Row {
-                    Button {
-                        text: qsTr("Add action")
-                        onClicked: backgroundContextMenu.appendAction()
-                    }
-                    Button {
-                        text: qsTr("Remove action")
-                        onClicked: backgroundContextMenu.removeLastAction()
-                    }
+                    Row {
+                        Button {
+                            text: qsTr("Add action")
+                            onClicked: backgroundContextMenu.appendAction()
+                        }
+                        Button {
+                            text: qsTr("Remove action")
+                            onClicked: backgroundContextMenu.removeLastAction()
+                        }
 
-                    Button {
-                        text: qsTr("Add sub-menu action")
-                        onClicked: subMenu.appendAction()
+                        Button {
+                            text: qsTr("Add sub-menu action")
+                            onClicked: subMenu.appendAction()
+                        }
+                        Button {
+                            text: qsTr("Remove sub-menu action")
+                            onClicked: subMenu.removeLastAction()
+                        }
                     }
-                    Button {
-                        text: qsTr("Remove sub-menu action")
-                        onClicked: subMenu.removeLastAction()
-                    }
-                }
-                Row {
-                    Switch {
-                        text: qsTr("Don't use native menu windows")
-                        checked: CppSettings.dontUseNativeMenuWindows
-                        onClicked: CppSettings.dontUseNativeMenuWindows = checked
+                    Row {
+                        Switch {
+                            text: qsTr("Don't use native menu windows")
+                            checked: CppSettings.dontUseNativeMenuWindows
+                            onClicked: CppSettings.dontUseNativeMenuWindows = checked
+                        }
                     }
                 }
             }
-        }
 
-        TextArea {
-            id: textArea
-            text: qsTr("Dummy TextArea to test disabled menu items")
+            TextArea {
+                id: textArea
+                text: qsTr("Dummy TextArea to test disabled menu items")
 
-            Layout.fillWidth: true
-            Layout.minimumHeight: 100
-        }
-
-        Component {
-            id: menuBarItemComp
-            MenuBarItem {
+                Layout.fillWidth: true
             }
-        }
 
-        MessageDialog {
-            id: restartNeededDialog
-            buttons: MessageDialog.Ok
-            text: "Your current changes requires a restart to take effect!"
-        }
+            Component {
+                id: menuBarItemComp
+                MenuBarItem {
+                }
+            }
 
-        GroupBox {
-            title: qsTr("MenuBar")
+            MessageDialog {
+                id: restartNeededDialog
+                buttons: MessageDialog.Ok
+                text: "Your current changes requires a restart to take effect!"
+            }
 
-            Layout.fillWidth: true
+            GroupBox {
+                title: qsTr("MenuBar")
 
-            ColumnLayout {
-                anchors.fill: parent
+                Layout.fillWidth: true
 
-                Row {
-                    Switch {
-                        text: qsTr("Don't use native menu bar")
-                        checked: CppSettings.dontUseNativeMenuBar
+                ColumnLayout {
+                    anchors.fill: parent
 
-                        onClicked: {
-                            CppSettings.dontUseNativeMenuBar = checked
-                            restartNeededDialog.open()
+                    Row {
+                        Switch {
+                            text: qsTr("Don't use native menu bar")
+                            checked: CppSettings.dontUseNativeMenuBar
+
+                            onClicked: {
+                                CppSettings.dontUseNativeMenuBar = checked
+                                restartNeededDialog.open()
+                            }
+                        }
+                        Switch {
+                            id: menuBarVisibleSwitch
+                            text: qsTr("MenuBar visible")
+                            checked: true
                         }
                     }
-                    Switch {
-                        id: menuBarVisibleSwitch
-                        text: qsTr("MenuBar visible")
-                        checked: true
+                    Row {
+                        Button {
+                            text: "Append menu"
+                            onClicked: {
+                                let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
+                                menuBar.addMenu(menu)
+                            }
+                        }
+                        Button {
+                            text: "Prepend menu"
+                            onClicked: {
+                                let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
+                                menuBar.insertMenu(0, menu)
+                            }
+                        }
+                        Button {
+                            text: qsTr("Add file menu")
+                            onClicked: menuBar.addMenu(fileMenu)
+                        }
+                        Button {
+                            text: "Change labels"
+                            onClicked: {
+                                fileMenu.title = "File changed"
+                                cutAction.text = "Cut changed"
+                            }
+                        }
+                        Button {
+                            text: "toggle delegate"
+                            onClicked: menuBar.delegate = menuBar.delegate ? null : menuBarItemComp
+                        }
+                        Switch {
+                            text: "MenuBarItem visible"
+                            checked: true
+                            onCheckedChanged: explicitMenuBarItem.visible = checked
+                        }
                     }
                 }
-                Row {
-                    Button {
-                        text: "Append menu"
-                        onClicked: {
-                            let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
-                            menuBar.addMenu(menu)
+            }
+
+            GroupBox {
+                title: "Collapsible separators"
+
+                Layout.fillWidth: true
+
+                ColumnLayout {
+                    anchors.fill: parent
+
+                    Label {
+                        text: "Toggle visibility below, then click 'Open Menu' to see the result. "
+                            + "Things to check:\n\n"
+                            + "- Does the collapsible logic hide orphaned separators?\n"
+                            + "- Do user-hidden separators stay hidden even when separatorsCollapsible is toggled off?\n"
+                        Layout.fillWidth: true
+                        wrapMode: Text.Wrap
+                    }
+
+                    RowLayout {
+                        GroupBox {
+                            title: "Menu Items"
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            GridLayout {
+                                columns: 3
+                                columnSpacing: 20
+
+                                CheckBox {
+                                    id: chk1
+                                    text: "Item 1"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chk2
+                                    text: "Item 2"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chk3
+                                    text: "Item 3"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chk4
+                                    text: "Item 4"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chk5
+                                    text: "Item 5"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chk6
+                                    text: "Item 6"
+                                    checked: true
+                                }
+                            }
+                        }
+
+                        GroupBox {
+                            title: "Separators (user-controlled visibility)"
+                            Layout.fillWidth: true
+                            Layout.fillHeight: true
+
+                            RowLayout {
+                                CheckBox {
+                                    id: chkSepLeading
+                                    text: "Leading"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chkSep1
+                                    text: "Separator 1"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chkSep2
+                                    text: "Separator 2"
+                                    checked: true
+                                }
+                                CheckBox {
+                                    id: chkSepTrailing
+                                    text: "Trailing"
+                                    checked: true
+                                }
+                            }
                         }
                     }
-                    Button {
-                        text: "Prepend menu"
-                        onClicked: {
-                            let menu = extraMenuComp.createObject(menuBar, { title: "Extra " + menuBar.count })
-                            menuBar.insertMenu(0, menu)
+
+                    RowLayout {
+                        Switch {
+                            id: collapsibleSwitch
+                            text: "separatorsCollapsible"
+                            checked: false
                         }
-                    }
-                    Button {
-                        text: qsTr("Add file menu")
-                        onClicked: menuBar.addMenu(fileMenu)
-                    }
-                    Button {
-                        text: "Change labels"
-                        onClicked: {
-                            fileMenu.title = "File changed"
-                            cutAction.text = "Cut changed"
+                        Switch {
+                            id: nativeSwitch
+                            text: "Popup.Native"
+                            checked: false
                         }
-                    }
-                    Button {
-                        text: "toggle delegate"
-                        onClicked: menuBar.delegate = menuBar.delegate ? null : menuBarItemComp
-                    }
-                    Switch {
-                        text: "MenuBarItem visible"
-                        checked: true
-                        onCheckedChanged: explicitMenuBarItem.visible = checked
+
+                        Row {
+                            spacing: 10
+                            Button {
+                                text: "Open Menu"
+                                onClicked: collapsibleSeparatorsMenu.popup()
+                            }
+                            Button {
+                                text: "Hide group 2 (items 3,4)"
+                                onClicked: {
+                                    chk3.checked = false
+                                    chk4.checked = false
+                                }
+                            }
+                            Button {
+                                text: "Show all"
+                                onClicked: {
+                                    chk1.checked = true
+                                    chk2.checked = true
+                                    chk3.checked = true
+                                    chk4.checked = true
+                                    chk5.checked = true
+                                    chk6.checked = true
+                                    chkSepLeading.checked = true
+                                    chkSep1.checked = true
+                                    chkSep2.checked = true
+                                    chkSepTrailing.checked = true
+                                }
+                            }
+                        }
                     }
                 }
+
+                Menu {
+                    id: collapsibleSeparatorsMenu
+                    separatorsCollapsible: collapsibleSwitch.checked
+                    popupType: nativeSwitch.checked ? Popup.Native : Popup.Item
+
+                    MenuSeparator {
+                        visible: chkSepLeading.checked
+                    }
+
+                    MenuItem {
+                        text: "Item 1"
+                        visible: chk1.checked
+                        height: visible ? implicitHeight : 0
+                    }
+                    MenuItem {
+                        text: "Item 2"
+                        visible: chk2.checked
+                        height: visible ? implicitHeight : 0
+                    }
+
+                    MenuSeparator {
+                        visible: chkSep1.checked
+                    }
+
+                    MenuItem {
+                        text: "Item 3"
+                        visible: chk3.checked
+                        height: visible ? implicitHeight : 0
+                    }
+                    MenuItem {
+                        text: "Item 4"
+                        visible: chk4.checked
+                        height: visible ? implicitHeight : 0
+                    }
+
+                    MenuSeparator {
+                        visible: chkSep2.checked
+                    }
+
+                    MenuItem {
+                        text: "Item 5"
+                        visible: chk5.checked
+                        height: visible ? implicitHeight : 0
+                    }
+                    MenuItem {
+                        text: "Item 6"
+                        visible: chk6.checked
+                        height: visible ? implicitHeight : 0
+                    }
+
+                    MenuSeparator {
+                        visible: chkSepTrailing.checked
+                    }
+                }
+            }
+
+            Item {
+                Layout.fillHeight: true
             }
         }
     }
