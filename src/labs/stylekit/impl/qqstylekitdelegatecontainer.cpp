@@ -73,12 +73,22 @@ bool QQStyleKitDelegateContainer::usingDefaultDelegate() const
 
 void QQStyleKitDelegateContainer::updateImplicitSize()
 {
+    if (m_inGeometryChange) {
+        /* The delegate instance is expected (but not restricted) to bind its size to the parent
+         * container since the final size of the control (and its delegates) is set from the
+         * application. However, some delegates also change their implicit size when resized.
+         * Shape, for example, recomputes its implicit size from the bounding rect of its
+         * ShapePaths, which may in turn depend on the Shape's own size. And a change to the
+         * implicit size can cause the layout that the control is in to relayout (and resize)
+         * the control once more, which causes a binding loop. To prevent this, we ignore changes
+         * to the delegate's implicit size while we're resizing it. */
+        return;
+    }
+
     qreal implicitWidth = 0;
     qreal implicitHeight = 0;
 
     if (m_delegateInstance) {
-        /* The delegate instance is expected to bind its implicit size to the
-         * value from the style, but may override it if needed. */
         implicitWidth = m_delegateInstance->implicitWidth();
         implicitHeight = m_delegateInstance->implicitHeight();
     } else if (m_delegateProperties) {
@@ -262,6 +272,12 @@ void QQStyleKitDelegateContainer::componentComplete()
     });
 
     updateImplicitSize();
+}
+
+void QQStyleKitDelegateContainer::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    QScopedValueRollback implicitSizeUpdateGuard(m_inGeometryChange, true);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 QT_END_NAMESPACE
