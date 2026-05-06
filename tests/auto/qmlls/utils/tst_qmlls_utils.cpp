@@ -2091,18 +2091,81 @@ void tst_qmlls_utils::findDefinitionFromLocation()
     // if expectedFilePath is empty, we probably just want to make sure that it does
     // not crash
     if (expectedFilePath == noResultExpected) {
-        QVERIFY(!definition);
+        QCOMPARE(definition.size(), 0);
         return;
     }
 
-    QVERIFY(definition);
+    QCOMPARE(definition.size(), 1);
 
     // don't work with absolute paths, and only compare the end of the file path
-    QCOMPARE(QStringView(definition->filename()).last(expectedFilePath.size()), expectedFilePath);
+    QCOMPARE(QStringView(definition.front().filename()).last(expectedFilePath.size()),
+             expectedFilePath);
 
-    QCOMPARE(definition->sourceLocation().startLine, quint32(expectedLine));
-    QCOMPARE(definition->sourceLocation().startColumn, quint32(expectedCharacter));
-    QCOMPARE(definition->sourceLocation().length, quint32(expectedLength));
+    QCOMPARE(definition.front().sourceLocation().startLine, quint32(expectedLine));
+    QCOMPARE(definition.front().sourceLocation().startColumn, quint32(expectedCharacter));
+    QCOMPARE(definition.front().sourceLocation().length, quint32(expectedLength));
+}
+
+struct ExpectedDefinition
+{
+    QString filePath;
+    int line;
+    int character;
+    size_t length;
+};
+
+void tst_qmlls_utils::findMultipleDefinitionsFromLocation_data()
+{
+    QTest::addColumn<QString>("filePath");
+    // keep in mind that line and character are starting at 1!
+    QTest::addColumn<int>("line");
+    QTest::addColumn<int>("character");
+
+    QTest::addColumn<QList<ExpectedDefinition>>("expected");
+    QTest::addColumn<QStringList>("extraBuildDirs");
+
+    QTest::addRow("componentFromCpp")
+            << testFile("findDefinition/UseMyCppComponent.qml"_L1) << 17 << 29
+            << QList<ExpectedDefinition>{
+                { testFile("findDefinition/SomeIncludeFolder/mytype.h"), 222, 1, strlen(""), },
+                { testFile("findDefinition/SomeIncludeFolder/mytypeforeign.h"), 111, 1, strlen(""), },
+           } << QStringList{ testFile("findDefinition"_L1) };
+}
+
+void tst_qmlls_utils::findMultipleDefinitionsFromLocation()
+{
+    QFETCH(QString, filePath);
+    QFETCH(int, line);
+    QFETCH(int, character);
+    QFETCH(QList<ExpectedDefinition>, expected);
+    QFETCH(QStringList, extraBuildDirs);
+
+    // they all start at 1.
+    Q_ASSERT(line > 0);
+    Q_ASSERT(character > 0);
+
+    auto [env, file] = createEnvironmentAndLoadFile(filePath, extraBuildDirs);
+
+    auto locations = QQmlLSUtils::itemsFromTextLocation(
+            file.field(QQmlJS::Dom::Fields::currentItem), line - 1, character - 1);
+
+    QCOMPARE(locations.size(), 1);
+
+    auto definitions = QQmlLSUtils::findDefinitionOf(locations.front().domItem, extraBuildDirs);
+
+    QCOMPARE(definitions.size(), expected.size());
+
+    for (int i = 0; i < definitions.size(); ++i) {
+        Q_ASSERT(expected[i].line > 0);
+        Q_ASSERT(expected[i].character > 0);
+        // don't work with absolute paths, and only compare the end of the file path
+        QCOMPARE(QStringView(definitions[i].filename()).last(expected[i].filePath.size()),
+                 expected[i].filePath);
+
+        QCOMPARE(definitions[i].sourceLocation().startLine, quint32(expected[i].line));
+        QCOMPARE(definitions[i].sourceLocation().startColumn, quint32(expected[i].character));
+        QCOMPARE(definitions[i].sourceLocation().length, quint32(expected[i].length));
+    }
 }
 
 void tst_qmlls_utils::findDefinitionFromAbsoluteLocation()
@@ -2137,13 +2200,13 @@ void tst_qmlls_utils::findDefinitionFromAbsoluteLocation()
     QCOMPARE(locations.size(), 1);
 
     auto definition = QQmlLSUtils::findDefinitionOf(locations.front().domItem, { build.path() });
-    QVERIFY(definition);
+    QCOMPARE(definition.size(), 1);
 
-    QCOMPARE(definition->filename(), expectedFilePath);
+    QCOMPARE(definition.front().filename(), expectedFilePath);
 
-    QCOMPARE(definition->sourceLocation().startLine, quint32(42));
-    QCOMPARE(definition->sourceLocation().startColumn, quint32(1));
-    QCOMPARE(definition->sourceLocation().length, quint32(0));
+    QCOMPARE(definition.front().sourceLocation().startLine, quint32(42));
+    QCOMPARE(definition.front().sourceLocation().startColumn, quint32(1));
+    QCOMPARE(definition.front().sourceLocation().length, quint32(0));
 }
 
 void tst_qmlls_utils::resolveExpressionType_data()

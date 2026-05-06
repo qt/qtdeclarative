@@ -9,6 +9,8 @@ QtObject {
 
     property string file
     property int lineNumber
+    property string resolvedFile
+    property int lineNumberInResolvedFile
     required property string name
     property list<string> aliases: []
     property string prototype

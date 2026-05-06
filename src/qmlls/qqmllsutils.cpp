@@ -2002,38 +2002,64 @@ static QQmlJS::SourceLocation sourceLocationOrDefault(const QQmlJS::SourceLocati
     return location.startLine == 0 ? QQmlJS::SourceLocation{ 0, 0, 1, 1 } : location;
 }
 
-static std::optional<Location> createCppTypeLocation(const QQmlJSScope::ConstPtr &type,
+static std::optional<Location> createCppTypeLocation(const QString &fileName,
                                                      const QStringList &headerLocations,
                                                      const QQmlJS::SourceLocation &location)
 {
     const TextPosition endPosition{ static_cast<int>(location.startLine) + 1, 1 };
-    const QFileInfo filePathInfo(type->filePath());
+    const QFileInfo filePathInfo(fileName);
     if (filePathInfo.isAbsolute() && filePathInfo.exists())
-        return Location{ type->filePath(), location, endPosition };
+        return Location{ fileName, location, endPosition };
 
-    const QString filePath = findFilePathFromFileName(headerLocations, type->filePath(), {});
+    const QString filePath = findFilePathFromFileName(headerLocations, fileName, { });
     if (filePath.isEmpty()) {
-        qCWarning(QQmlLSUtilsLog) << "Couldn't find the C++ file '%1'."_L1.arg(type->filePath());
+        qCWarning(QQmlLSUtilsLog) << "Couldn't find file '%1'."_L1.arg(fileName);
         return {};
     }
 
     return Location{ filePath, location, endPosition };
 }
 
-static std::optional<Location> findDefinitionOfType(const QQmlJSScope::ConstPtr &scope,
-                                                    const DomItem &item,
-                                                    const QStringList &headerDirectories)
+/*!
+\internal
+Note that C++ types with foreign can have 2 locations for the definition: one where the
+QML(_NAMED|)_ELEMENT macro is used and the second is the type targeted by QML_FOREIGN.
+*/
+static QList<Location> findDefinitionOfType(const QQmlJSScope::ConstPtr &scope, const DomItem &item,
+                                            const QStringList &headerDirectories)
 {
     if (!scope)
         return {};
-    if (scope->isComposite())
-        if (const auto result = Location::tryFrom(scope->filePath(), scope->sourceLocation(), item))
-            return result;
-    return createCppTypeLocation(scope, headerDirectories,
-                                 sourceLocationOrDefault(scope->sourceLocation()));
+    if (scope->isComposite()) {
+        if (const auto result =
+                    Location::tryFrom(scope->filePath(), scope->sourceLocation(), item)) {
+            return { *result };
+        }
+    }
+    QList<Location> result;
+    auto locationOfTypeOrForeign = createCppTypeLocation(
+            scope->filePath(), headerDirectories, sourceLocationOrDefault(scope->sourceLocation()));
+    if (locationOfTypeOrForeign)
+        result << *locationOfTypeOrForeign;
+
+    auto resolvedTypeLocation = createCppTypeLocation(
+            scope->resolvedFilePath(), headerDirectories,
+            QQmlJS::SourceLocation{ 0u, 0u, scope->lineNumberInResolvedFile(), 1u });
+    if (resolvedTypeLocation)
+        result << *resolvedTypeLocation;
+
+    return result;
 }
 
-std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList &headerDirectories)
+template <typename T>
+QList<T> optionalToList(std::optional<T> &&optional)
+{
+    if (optional)
+        return { *optional };
+    return { };
+}
+
+QList<Location> findDefinitionOf(const DomItem &item, const QStringList &headerDirectories)
 {
     auto resolvedExpression = resolveExpressionType(item, ResolveOptions::ResolveOwnerType);
 
@@ -2051,22 +2077,23 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
         if (!jsIdentifier)
             return {};
 
-        return Location::tryFrom(resolvedExpression->semanticScope->filePath(),
-                                 jsIdentifier->location, item);
+        return optionalToList(Location::tryFrom(resolvedExpression->semanticScope->filePath(),
+                                                jsIdentifier->location, item));
     }
 
     case GroupedPropertyIdentifier:
     case PropertyIdentifier: {
         if (!resolvedExpression->semanticScope->isComposite()) {
-            return createCppTypeLocation(
-                    resolvedExpression->semanticScope, headerDirectories,
+            return optionalToList(createCppTypeLocation(
+                    resolvedExpression->semanticScope->filePath(), headerDirectories,
                     resolvedExpression->semanticScope->property(*resolvedExpression->name)
-                            .sourceLocation());
+                            .sourceLocation()));
         }
         const DomItem ownerFile = item.goToFile(resolvedExpression->semanticScope->filePath());
         const QQmlJS::SourceLocation ownerLocation =
                 resolvedExpression->semanticScope->sourceLocation();
-        return findPropertyDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name);
+        return optionalToList(
+                findPropertyDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name));
     }
     case PropertyChangedSignalIdentifier:
     case PropertyChangedHandlerIdentifier:
@@ -2078,13 +2105,15 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
                     resolvedExpression->semanticScope->methods(*resolvedExpression->name);
             if (methods.isEmpty())
                 return {};
-            return createCppTypeLocation(resolvedExpression->semanticScope, headerDirectories,
-                                         methods.front().sourceLocation());
+            return optionalToList(
+                    createCppTypeLocation(resolvedExpression->semanticScope->filePath(),
+                                          headerDirectories, methods.front().sourceLocation()));
         }
         const DomItem ownerFile = item.goToFile(resolvedExpression->semanticScope->filePath());
         const QQmlJS::SourceLocation ownerLocation =
                 resolvedExpression->semanticScope->sourceLocation();
-        return findMethodDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name);
+        return optionalToList(
+                findMethodDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name));
     }
     case QmlObjectIdIdentifier: {
         DomItem qmlObject = QQmlLSUtils::sourceLocationToDomItem(
@@ -2101,8 +2130,8 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
             return {};
         }
 
-        return Location::tryFrom(domId.canonicalFilePath(),
-                                 FileLocations::treeOf(domId)->info().fullRegion, domId);
+        return optionalToList(Location::tryFrom(
+                domId.canonicalFilePath(), FileLocations::treeOf(domId)->info().fullRegion, domId));
     }
     case AttachedTypeIdentifier:
         return findDefinitionOfType(resolvedExpression->semanticScope->attachedType(), item,
@@ -2121,7 +2150,9 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
                 if (!fileLocations)
                     continue;
 
-                return Location::tryFrom(item.canonicalFilePath(), fileLocations->info().regions[IdNameRegion], item);
+                return optionalToList(Location::tryFrom(item.canonicalFilePath(),
+                                                        fileLocations->info().regions[IdNameRegion],
+                                                        item));
             }
         }
         return {};
@@ -2133,10 +2164,10 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
             for (const auto &enumeration : enumerations) {
                 if (enumeration.hasKey(*resolvedExpression->name)
                     || enumeration.name() == *resolvedExpression->name) {
-                    return createCppTypeLocation(
-                            resolvedExpression->semanticScope, headerDirectories,
+                    return optionalToList(createCppTypeLocation(
+                            resolvedExpression->semanticScope->filePath(), headerDirectories,
                             sourceLocationOrDefault(QQmlJS::SourceLocation::fromQSizeType(
-                                    0, 0, enumeration.lineNumber(), 1)));
+                                    0, 0, enumeration.lineNumber(), 1))));
                 }
             }
             return {};
@@ -2144,7 +2175,8 @@ std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList 
         const DomItem ownerFile = item.goToFile(resolvedExpression->semanticScope->filePath());
         const QQmlJS::SourceLocation ownerLocation =
                 resolvedExpression->semanticScope->sourceLocation();
-        return findEnumDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name);
+        return optionalToList(
+                findEnumDefinitionOf(ownerFile, ownerLocation, *resolvedExpression->name));
     }
 
     case LambdaMethodIdentifier:

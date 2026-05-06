@@ -56,6 +56,7 @@ struct QmlTypesClassDescription
 
     MetaType resolvedClass;
     QAnyStringView file;
+    QAnyStringView resolvedFile;
     QAnyStringView className;
     QList<QAnyStringView> primitiveAliases;
     QList<QAnyStringView> elementNames;
@@ -82,6 +83,7 @@ struct QmlTypesClassDescription
     QList<QAnyStringView> deferredNames;
     QList<QAnyStringView> immediateNames;
     int lineNumber = 0;
+    int lineNumberInResolvedFile = 0;
 
     enum CollectMode {
         TopLevel,

@@ -93,4 +93,17 @@ Module {
         }
         Signal { name: "myPropertyChanged" }
     }
+    Component {
+        file: "mytype.h"
+        lineNumber: 222
+        resolvedFile: "mytypeforeign.h"
+        lineNumberInResolvedFile: 111
+        name: "MyType"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["ModuleWithComponent/MyType 254.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "myProperty"; type: "int"; notify: "myPropertyChanged"; index: 0; lineNumber: 13 }
+        Signal { name: "myPropertyChanged"; lineNumber: 16 }
+    }
 }

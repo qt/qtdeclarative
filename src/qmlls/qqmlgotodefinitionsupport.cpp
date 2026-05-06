@@ -57,14 +57,11 @@ void QmlGoToDefinitionSupport::process(RequestPointerArgument request)
             ? QStringList{}
             : QStringList{ QUrl::fromEncoded(shortestRootUrl).toLocalFile() };
 
-    const auto location = QQmlLSUtils::findDefinitionOf(front.domItem, headerDirectories);
-    if (!location)
-        return;
+    const auto locations = QQmlLSUtils::findDefinitionOf(front.domItem, headerDirectories);
 
-    QLspSpecification::Location l;
-    l.uri = QUrl::fromLocalFile(location->filename()).toEncoded();
-    l.range = QQmlLSUtils::qmlLocationToLspLocation(*location);
-
-    results.append(l);
+    for (const QQmlLSUtils::Location &location : locations) {
+        results.append({ QUrl::fromLocalFile(location.filename()).toEncoded(),
+                         QQmlLSUtils::qmlLocationToLspLocation(location) });
+    }
 }
 QT_END_NAMESPACE
