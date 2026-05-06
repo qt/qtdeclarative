@@ -267,7 +267,7 @@ QByteArray qmlUrlToLspUri(const QByteArray &url);
 QLspSpecification::Range qmlLocationToLspLocation(Location qmlLocation);
 DomItem baseObject(const DomItem &qmlObject);
 std::optional<Location> findTypeDefinitionOf(const DomItem &item);
-std::optional<Location> findDefinitionOf(const DomItem &item, const QStringList &headerDirectories);
+QList<Location> findDefinitionOf(const DomItem &item, const QStringList &headerDirectories);
 Usages findUsagesOf(const DomItem &item);
 
 std::optional<ErrorMessage>

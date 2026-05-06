@@ -65,6 +65,7 @@ static constexpr QLatin1StringView S_IS_TYPE_CONSTANT             { "isTypeConst
 static constexpr QLatin1StringView S_IS_SELF_EXTENSION            { "isSelfExtension" };
 static constexpr QLatin1StringView S_IS_TYPE_OPAQUE               { "isTypeOpaque" };
 static constexpr QLatin1StringView S_LINE_NUMBER                  { "lineNumber" };
+static constexpr QLatin1StringView S_LINE_NUMBER_IN_RESOLVED_FILE { "lineNumberInResolvedFile" };
 static constexpr QLatin1StringView S_METHOD                       { "Method" };
 static constexpr QLatin1StringView S_MODULE                       { "Module" };
 static constexpr QLatin1StringView S_NAME                         { "name" };
@@ -79,6 +80,7 @@ static constexpr QLatin1StringView S_PROTOTYPE                    { "prototype" 
 static constexpr QLatin1StringView S_READ                         { "read" };
 static constexpr QLatin1StringView S_REFERENCE                    { "reference" };
 static constexpr QLatin1StringView S_RESET                        { "reset" };
+static constexpr QLatin1StringView S_RESOLVED_FILE                { "resolvedFile" };
 static constexpr QLatin1StringView S_REVISION                     { "revision" };
 static constexpr QLatin1StringView S_SEQUENCE                     { "sequence" };
 static constexpr QLatin1StringView S_SIGNAL                       { "Signal" };

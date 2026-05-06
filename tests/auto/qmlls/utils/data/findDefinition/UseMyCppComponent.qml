@@ -14,4 +14,5 @@ MyComponentFromCpp {
     property int someEnum2: UseMyCppComponent.ByeEnumFromQml
     property int someScopedEnum2: UseMyCppComponent.EnumFromQml.ByeEnumFromQml
     property var notFromCpp: MyComponentFromNonCpp {}
+    property var foreign: MyType {}
 }

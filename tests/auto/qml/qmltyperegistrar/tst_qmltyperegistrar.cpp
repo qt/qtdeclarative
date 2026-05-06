@@ -1455,11 +1455,27 @@ void tst_qmltyperegistrar::derivedFromInvisible()
     })"));
 }
 
+void tst_qmltyperegistrar::foreignFileAndLinePointsToNonForeign()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        lineNumber: 938
+        resolvedFile: "mytype.h"
+        lineNumberInResolvedFile: 10
+        name: "MyType"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/ForeignFromAnotherFile 1.0"]
+)"));
+}
+
 void tst_qmltyperegistrar::foreignNamespacedWithEnum()
 {
     QVERIFY(qmltypesData.contains(R"(Component {
         file: "tst_qmltyperegistrar.h"
         lineNumber: 910
+        resolvedFile: "tst_qmltyperegistrar.h"
+        lineNumberInResolvedFile: 900
         name: "F::ForeignQObject"
         accessSemantics: "reference"
         prototype: "QObject"

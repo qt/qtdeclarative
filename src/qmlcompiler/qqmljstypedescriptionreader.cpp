@@ -196,6 +196,10 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setFilePath(readStringBinding(script));
             } else if (name == QLatin1String("lineNumber")) {
                 scope->setLineNumber(readNumericBinding(script));
+            } else if (name == QLatin1String("resolvedFile")) {
+                scope->setResolvedFilePath(readStringBinding(script));
+            } else if (name == QLatin1String("lineNumberInResolvedFile")) {
+                scope->setLineNumberInResolvedFile(readNumericBinding(script));
             } else if (name == QLatin1String("name")) {
                 scope->setInternalName(readStringBinding(script));
             } else if (name == QLatin1String("prototype")) {

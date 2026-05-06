@@ -105,6 +105,11 @@ void QQmlJSScope::setLineNumber(quint32 lineNumber)
     m_sourceLocation.startColumn = 1;
 }
 
+void QQmlJSScope::setLineNumberInResolvedFile(quint32 lineNumber)
+{
+    m_lineNumberInResolvedFile = lineNumber;
+}
+
 void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 {
     addOwnProperty(property);

@@ -206,6 +206,12 @@ public:
     quint32 lineNumber() const { return m_sourceLocation.startLine; }
     void setLineNumber(quint32 lineNumber);
 
+    QString resolvedFilePath() const { return m_resolvedFilePath; }
+    void setResolvedFilePath(const QString &file) { m_resolvedFilePath = file; }
+
+    quint32 lineNumberInResolvedFile() const { return m_lineNumberInResolvedFile; }
+    void setLineNumberInResolvedFile(quint32 lineNumber);
+
     // The name the type uses to refer to itself. Either C++ class name or base name of
     // QML file. isComposite tells us if this is a C++ or a QML name.
     QString internalName() const { return m_internalName; }
@@ -518,6 +524,7 @@ private:
     QQmlJSScope::WeakPtr m_parentScope;
 
     QString m_filePath;
+    QString m_resolvedFilePath;
     QString m_internalName;
     QString m_baseTypeNameOrError;
 
@@ -568,6 +575,8 @@ private:
     QString m_moduleName;
 
     std::optional<QString> m_inlineComponentName;
+
+    quint32 m_lineNumberInResolvedFile = 0;
 };
 
 inline QQmlJSScope::Ptr QQmlJSScope::parentScope()

@@ -38,6 +38,11 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeStringBinding(S_FILE, collector.file);
         m_qml.writeNumberBinding(S_LINE_NUMBER, collector.lineNumber);
     }
+    if (!collector.resolvedFile.isEmpty()) {
+        m_qml.writeStringBinding(S_RESOLVED_FILE, collector.resolvedFile);
+        m_qml.writeNumberBinding(S_LINE_NUMBER_IN_RESOLVED_FILE,
+                                 collector.lineNumberInResolvedFile);
+    }
     m_qml.writeStringBinding(S_NAME, collector.className);
 
     if (!collector.primitiveAliases.isEmpty())

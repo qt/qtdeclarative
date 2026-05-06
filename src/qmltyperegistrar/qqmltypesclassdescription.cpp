@@ -380,6 +380,10 @@ void QmlTypesClassDescription::collect(
                     }
                 }
             }
+            if (mode == TopLevel) {
+                resolvedFile = resolved.inputFile();
+                lineNumberInResolvedFile = resolved.lineNumber();
+            }
         } else {
             className = foreignTypeName;
             resolved = MetaType();
