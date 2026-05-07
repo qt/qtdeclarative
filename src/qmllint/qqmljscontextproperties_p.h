@@ -67,18 +67,6 @@ public:
     Q_DECLARE_EQUALITY_COMPARABLE(HeuristicContextProperties);
 
 private:
-    struct Entry
-    {
-        QString name;
-        QList<HeuristicContextProperty> definitions;
-
-        friend bool comparesEqual(const Entry &a, const Entry &b) noexcept
-        {
-            return a.name == b.name && a.definitions == b.definitions;
-        }
-        Q_DECLARE_EQUALITY_COMPARABLE(Entry);
-    };
-
     void collectFromDirs(const QList<QString> &dirs);
     void collectFromFile(const QString &file);
     void grepFallback(const QList<QString> &rootUrls);
