@@ -276,8 +276,15 @@ void QQuickTextNodeEngine::processCurrentLine()
                 decorationRect.setY(m_position.y() + m_currentLine.y());
                 decorationRect.setHeight(m_currentLine.height());
 
-                if (node != nullptr)
-                    decorationRect.setRight(node->boundingRect.left());
+                // Extend decoration rect to the next node only if the next node continues the
+                // same decoration, or if it is directly adjacent. Don't extend across gaps
+                // (e.g. tab characters) to a node that does not share the same decoration, as
+                // that would draw the decoration through invisible content.
+                if (node != nullptr) {
+                    const bool continuesDecoration = node->decorations & currentDecorations;
+                    if (continuesDecoration || node->boundingRect.left() < decorationRect.right())
+                        decorationRect.setRight(node->boundingRect.left());
+                }
 
                 TextDecoration textDecoration(currentSelectionState, decorationRect, lastColor);
                 if (lastDecorationColor.isValid() &&
