@@ -5,6 +5,7 @@
 #include <QtQmlModels/private/qqmlfunctionsorter_p.h>
 #include <QtQmlModels/private/qqmlsortfilterproxymodel_p.h>
 #include <QtQml/private/qqmlobjectcreator_p.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -15,9 +16,9 @@ QT_BEGIN_NAMESPACE
     \since 6.10
     \preliminary
     \brief Sorts data in a \l SortFilterProxyModel based on the evaluation of
-    the designated 'sort' method.
+    the designated 'compare' method.
 
-    FunctionSorter allows user to define the designated 'sort' method and it
+    FunctionSorter allows user to define the designated 'compare' method and it
     will be evaluated to sort the data. The method takes two arguments
     (lhs and rhs) of the specified parameter type and the data can
     be accessed as below for evaluation,
@@ -31,7 +32,7 @@ QT_BEGIN_NAMESPACE
                 component RoleData: QtObject {
                     property real age
                 }
-                function sort(lhsData: RoleData, rhsData: RoleData) : int {
+                function compare(lhsData: RoleData, rhsData: RoleData) : int {
                     return (lhsData.age < rhsData.age) ? -1 : ((lhsData === rhsData.age) ? 0 : 1)
                 }
             }
@@ -39,9 +40,11 @@ QT_BEGIN_NAMESPACE
     }
     \endqml
 
+    \note \deprecated [6.12] The \c sort method is deprecated. Rename it to \c compare.
+
     \note The user needs to explicitly invoke
     \l{SortFilterProxyModel::invalidateSorter} whenever any external qml
-    property used within the designated 'sort' method changes. This behaviour
+    property used within the designated 'compare' method changes. This behaviour
     is subject to change in the future, like implicit invalidation and thus the
     user doesn't need to explicitly invoke
     \l{SortFilterProxyModel::invalidateSorter}.
@@ -68,7 +71,11 @@ void QQmlFunctionSorter::componentComplete()
     for (int idx = metaObj->methodOffset(); idx < metaObj->methodCount(); idx++) {
         // Once we find the method signature, break the loop
         QMetaMethod method = metaObj->method(idx);
-        if (method.nameView() == "sort") {
+        if (method.nameView() == "compare") {
+            d->m_method = method;
+            break;
+        } else if (method.nameView() == "sort") {
+            qmlWarning(this) << "The 'sort' method is deprecated and will be removed in a future version. Rename it to 'compare'.";
             d->m_method = method;
             break;
         }
@@ -78,19 +85,19 @@ void QQmlFunctionSorter::componentComplete()
         return;
 
     if (d->m_method.parameterCount() != 2) {
-        qWarning("sort method requires two parameters");
+        qmlWarning(this) << d->m_method.name() << " requires two parameters.";
         return;
     }
 
     QQmlData *data = QQmlData::get(this);
     if (!data || !data->outerContext) {
-        qWarning("sort requires a QML context");
+        qmlWarning(this) << d->m_method.name() << " requires a QML context.";
         return;
     }
 
     const QMetaType parameterType = d->m_method.parameterMetaType(0);
     if (parameterType != d->m_method.parameterMetaType(1)) {
-        qWarning("sort parameters have to be equal");
+        qmlWarning(this) << d->m_method.name() << " parameters need to have matching types.";
         return;
     }
 
@@ -102,7 +109,7 @@ void QQmlFunctionSorter::componentComplete()
 
     // The code below creates an instance of the inline component, composite,
     // or specific C++ QObject types. The created instance, along with the
-    // data, are passed as an arguments to the 'sort' method, which is invoked
+    // data, are passed as an arguments to the 'compare' method, which is invoked
     // during the call to QQmlFunctionSorter::compare.
     // To create an instance of required component types (be it inline or
     // composite), an executable compilation unit is required, and this can be

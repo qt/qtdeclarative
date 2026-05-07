@@ -32,7 +32,7 @@ QtObject {
    property StringSorter stringSorter: StringSorter {}
    property FunctionSorter functionSorter: FunctionSorter {
       property string expression: ""
-      function sort(lhsData: SorterRoleData, rhsData: SorterRoleData) : int {
+      function compare(lhsData: SorterRoleData, rhsData: SorterRoleData) : int {
          return eval(expression)
       }
    }
