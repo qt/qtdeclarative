@@ -416,7 +416,7 @@ bool QQmlDirParser::parse(const QString &source)
         firstLine = false;
     }
 
-    return hasError();
+    return !hasError();
 }
 
 /* removes all file selector occurrences in path
