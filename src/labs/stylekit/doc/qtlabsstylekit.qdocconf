@@ -64,4 +64,4 @@ macro.labs = "\\note \\e{Types in Qt.labs modules are not guaranteed to remain c
 # When building in isolation, qdoc warns about missing dependency index
 # files (qtcore, qtgui, etc.) and unresolvable navigation links to
 # index.html. These resolve in a full Qt documentation build.
-warninglimit = 24
+warninglimit = 0
