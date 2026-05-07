@@ -1781,7 +1781,7 @@ const QQmlTypeLoaderQmldirContent QQmlTypeLoader::qmldirContent(const QString &f
 
 #undef ERROR
 #undef NOT_READABLE_ERROR
-#undef CASE_MISMATCH_ERROR
+#undef NOT_FOUND_ERROR
 
     data->importQmlDirCache.insert(filePath, qmldir);
     return *qmldir;
