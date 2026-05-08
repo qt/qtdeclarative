@@ -221,7 +221,6 @@ void tst_qquickanimatedimage::mirror_notRunning()
     anim->setProperty("mirror", true);
     screenshot = window.grabWindow();
 
-    screenshot.save("screen.png");
     if (window.devicePixelRatio() != 1.0 && window.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
         QSKIP("QTBUG-53823");
     QCOMPARE(screenshot, expected);
