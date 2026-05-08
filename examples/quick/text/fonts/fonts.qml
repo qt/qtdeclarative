@@ -20,7 +20,7 @@ Rectangle {
 //! [fontloaderremote]
     FontLoader {
         id: webFont
-        source: "http://www.princexml.com/fonts/steffmann/Starburst.ttf"
+        source: "https://www.princexml.com/fonts/steffmann/Starburst.ttf"
     }
 //! [fontloaderremote]
 
