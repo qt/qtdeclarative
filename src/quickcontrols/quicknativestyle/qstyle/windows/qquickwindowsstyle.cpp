@@ -12,6 +12,7 @@
 #include <private/qqc2qdrawutil_p.h>
 #include <private/qqc2qstylehelper_p.h>
 #include <private/qqc2qstyleoption_p.h>
+#include <private/qquickstyleitem_p.h>
 #include <private/qquicktheme_p.h>
 
 #include <qpa/qplatformintegration.h>
@@ -29,14 +30,14 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qwindow.h>
 
+#include <QtQuick/qquickwindow.h>
+
+#include <QtCore/qchronotimer.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qmath.h>
+#include <QtCore/qpointer.h>
 #include <QtCore/qtextstream.h>
-
-#if 0 && QT_CONFIG(animation)
-//#include <private/qstyleanimation_p.h>
-#endif
 
 #include <algorithm>
 
@@ -62,6 +63,71 @@ QT_BEGIN_INCLUDE_NAMESPACE
 QT_END_INCLUDE_NAMESPACE
 
 namespace QQC2 {
+
+#if QT_CONFIG(animation)
+// Ticks the indeterminate ProgressBar by invalidating the style item's cached
+// image so each paint advances the chunks.
+class QQuickWindowsProgressBarAnimation : public QChronoTimer
+{
+    Q_OBJECT
+
+    // Matches QCommonStylePrivate::animationFps default in QtWidgets.
+    static constexpr int AnimationFps = 30;
+
+public:
+    explicit QQuickWindowsProgressBarAnimation(QQuickItem *control)
+        : QChronoTimer(std::chrono::milliseconds(1000 / AnimationFps), control)
+        , m_control(control)
+    {
+        connect(this, &QChronoTimer::timeout, this, &QQuickWindowsProgressBarAnimation::onTick);
+        connect(control, SIGNAL(backgroundChanged()), this, SLOT(syncStyleItem()));
+        connect(control, SIGNAL(indeterminateChanged()), this, SLOT(syncIndeterminate()));
+        syncStyleItem();
+        syncIndeterminate();
+    }
+
+    int step() const { return m_step; }
+
+private Q_SLOTS:
+    void syncStyleItem()
+    {
+        m_styleItem = qobject_cast<QQuickStyleItem *>(
+            qvariant_cast<QQuickItem *>(m_control->property("background")));
+    }
+
+    void syncIndeterminate()
+    {
+        m_indeterminate = m_control->property("indeterminate").toBool();
+    }
+
+private:
+    void onTick()
+    {
+        if (!shouldRun()) {
+            stop();
+            return;
+        }
+        ++m_step;
+        if (m_styleItem)
+            m_styleItem->markImageDirty();
+    }
+
+    bool shouldRun() const
+    {
+        if (!m_indeterminate)
+            return false;
+        if (!m_control->isVisible())
+            return false;
+        const QQuickWindow *win = m_control->window();
+        return win && win->isVisible();
+    }
+
+    QQuickItem *m_control;
+    QPointer<QQuickStyleItem> m_styleItem;
+    bool m_indeterminate = false;
+    int m_step = 0;
+};
+#endif // QT_CONFIG(animation)
 
 enum QSliderDirection { SlUp, SlDown, SlLeft, SlRight };
 
@@ -1619,7 +1685,6 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
             if (inverted)
                 reverse = !reverse;
             int w = rect.width();
-            Q_D(const QWindowsStyle);
             if (pb->minimum == 0 && pb->maximum == 0) {
                 const int unit_width = proxy()->pixelMetric(PM_ProgressBarChunkWidth, pb);
                 QStyleOptionProgressBar pbBits = *pb;
@@ -1630,13 +1695,15 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
 
                 int step = 0;
                 int chunkCount = w / unit_width + 1;
-#if 0 && QT_CONFIG(animation)
-                if (QProgressStyleAnimation *animation = qobject_cast<QProgressStyleAnimation*>(d->animation(opt->styleObject)))
-                    step = (animation->animationStep() / 3) % chunkCount;
-                else
-                    d->startAnimation(new QProgressStyleAnimation(d->animationFps, opt->styleObject));
-#else
-                Q_UNUSED(d);
+#if QT_CONFIG(animation)
+                if (QQuickItem *control = opt->control) {
+                    auto *anim = control->findChild<QQuickWindowsProgressBarAnimation *>(Qt::FindDirectChildrenOnly);
+                    if (!anim)
+                        anim = new QQuickWindowsProgressBarAnimation(control);
+                    if (!anim->isActive())
+                        anim->start();
+                    step = (anim->step() / 3) % chunkCount;
+                }
 #endif
                 int chunksInRow = 5;
                 int myY = pbBits.rect.y();
@@ -1671,9 +1738,6 @@ void QWindowsStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPai
                 p->restore(); //restore state
             }
             else {
-#if 0 && QT_CONFIG(animation)
-                d->stopAnimation(opt->styleObject);
-#endif
                 QCommonStyle::drawControl(ce, opt, p);
             }
         }
@@ -2346,4 +2410,7 @@ QIcon QWindowsStyle::standardIcon(StandardPixmap standardIcon, const QStyleOptio
 
 QT_END_NAMESPACE
 
+#if QT_CONFIG(animation)
+#include "qquickwindowsstyle.moc"
+#endif
 #include "moc_qquickwindowsstyle_p.cpp"

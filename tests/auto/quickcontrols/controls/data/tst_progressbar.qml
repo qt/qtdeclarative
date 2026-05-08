@@ -155,4 +155,21 @@ TestCase {
         // Shouldn't crash...
         control.indeterminate = false
     }
+
+    function test_indeterminateAnimation() {
+        if (Qt.platform.os !== "windows")
+            skip("Indeterminate ProgressBar animation is only driven by the Windows native style.")
+
+        let control = createTemporaryObject(progressBar, testCase, {
+            width: 200, height: 20, indeterminate: true
+        })
+        verify(control)
+
+        waitForRendering(control)
+        let firstFrame = grabImage(control)
+        verify(firstFrame)
+
+        tryVerify(() => !grabImage(control).equals(firstFrame), 2000,
+                  "Indeterminate ProgressBar did not animate")
+    }
 }
