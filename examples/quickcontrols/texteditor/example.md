@@ -46,7 +46,7 @@ John MacFarlane writes:
 > > as readable as possible. The idea is that a Markdown-formatted document should
 > > be publishable as-is, as plain text, without looking like it's been marked up
 > > with tags or formatting instructions. (
-> > [http://daringfireball.net/projects/markdown/](http://daringfireball.net/projects/markdown/))
+> > [https://daringfireball.net/projects/markdown/](https://daringfireball.net/projects/markdown/))
 
 > The point can be illustrated by comparing a sample of AsciiDoc with an
 > equivalent sample of Markdown. Here is a sample of AsciiDoc from the AsciiDoc
@@ -71,7 +71,7 @@ John MacFarlane writes:
 ## Hyperlinks
 
 Hyperlinks can be written with the link text first, and the URL immediately
-following: [Qt Assistant](http://doc.qt.io/qt-6/qtassistant-index.html)
+following: [Qt Assistant](https://doc.qt.io/qt-6/qtassistant-index.html)
 
 A plain url is automatically recognized: https://doc.qt.io/qt-6/qml-qtquick-text.html
 
