@@ -14,13 +14,15 @@ QT_BEGIN_NAMESPACE
 
 static qreal qt_scoreQuadratic(const QBezier &b, QPointF qcp)
 {
-    static bool init = false;
-    const int numSteps = 21;
-    Q_STATIC_ASSERT(numSteps % 2 == 1); // numTries must be odd
-    static qreal t2s[numSteps];
-    static qreal tmts[numSteps];
-    if (!init) {
+    // constexpr auto [t2s, tmts] = [] { // not allowed by C++ :(
+    constexpr auto precomputed = [] {
         // Precompute bezier factors
+        constexpr int numSteps = 21;
+        static_assert(numSteps % 2 == 1, "numSteps must be odd");
+        struct R {
+            std::array<qreal, numSteps> t2s, tmts;
+        } r = {};
+        auto &[t2s, tmts] = r;
         qreal t = 0.20;
         const qreal step = (1 - (2 * t)) / (numSteps - 1);
         for (int i = 0; i < numSteps; i++) {
@@ -28,8 +30,11 @@ static qreal qt_scoreQuadratic(const QBezier &b, QPointF qcp)
             tmts[i] = 2 * t * (1 - t);
             t += step;
         }
-        init = true;
-    }
+        return r;
+    }();
+    constexpr auto t2s = precomputed.t2s;
+    constexpr auto tmts = precomputed.tmts;
+    constexpr auto numSteps = t2s.size();
 
     const QPointF midPoint = b.midPoint();
     auto distForIndex = [&](int i) -> qreal {
