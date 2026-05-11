@@ -164,6 +164,7 @@ private slots:
     void setInitialPropertyInteraction();
     void invalidBaseUrl();
     void uselessGroupProperty();
+    void createWithInitialPropertiesRequiredAlias();
 
 private:
     QQmlEngine engine;
@@ -1968,6 +1969,86 @@ void tst_qqmlcomponent::uselessGroupProperty()
     QVERIFY(!object);
     QVERIFY(component.errorString().contains(
             "Using grouped property syntax on restoreMode which has no properties"));
+}
+
+void tst_qqmlcomponent::createWithInitialPropertiesRequiredAlias()
+{
+    // QTBUG-123771
+    // Rules:
+    //   - A required alias is satisfied only by setting that alias or an alias to it
+    //     (not the underlying property).
+    //   - A required property is satisfied by setting the property itself OR any alias to it.
+
+    // Case 1: required alias satisfied by setting the alias → OK
+    {
+        QQmlEngine eng;
+        QQmlComponent comp(&eng);
+        comp.setData(R"(
+            import QtQml
+            QtObject {
+                id: self
+                property int foo
+                property alias aliasToFoo: self.foo
+                required aliasToFoo
+            }
+        )", QUrl());
+        QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
+        QScopedPointer<QObject> obj(comp.createWithInitialProperties({{ u"aliasToFoo"_s, 42 }}));
+        QVERIFY2(!obj.isNull(), qPrintable(comp.errorString()));
+    }
+
+    // Case 2: required alias NOT satisfied by setting the underlying property directly → fail
+    {
+        QQmlEngine eng;
+        QQmlComponent comp(&eng);
+        comp.setData(R"(
+            import QtQml
+            QtObject {
+                id: self
+                property int foo
+                property alias aliasToFoo: self.foo
+                required aliasToFoo
+            }
+        )", QUrl());
+        QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
+        QScopedPointer<QObject> obj(comp.createWithInitialProperties({{ u"foo"_s, 42 }}));
+        QVERIFY(obj.isNull()); // required aliasToFoo was not satisfied
+        QVERIFY(comp.errorString().contains(u"aliasToFoo"_s));
+    }
+
+    // Case 3: required property satisfied by setting the property directly → OK
+    {
+        QQmlEngine eng;
+        QQmlComponent comp(&eng);
+        comp.setData(R"(
+            import QtQml
+            QtObject {
+                id: self
+                required property int foo
+                property alias aliasToFoo: self.foo
+            }
+        )", QUrl());
+        QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
+        QScopedPointer<QObject> obj(comp.createWithInitialProperties({{ u"foo"_s, 42 }}));
+        QVERIFY2(!obj.isNull(), qPrintable(comp.errorString()));
+    }
+
+    // Case 4: required property satisfied by setting an alias to it → OK
+    {
+        QQmlEngine eng;
+        QQmlComponent comp(&eng);
+        comp.setData(R"(
+            import QtQml
+            QtObject {
+                id: self
+                required property int foo
+                property alias aliasToFoo: self.foo
+            }
+        )", QUrl());
+        QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
+        QScopedPointer<QObject> obj(comp.createWithInitialProperties({{ u"aliasToFoo"_s, 42 }}));
+        QVERIFY2(!obj.isNull(), qPrintable(comp.errorString()));
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

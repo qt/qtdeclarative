@@ -1256,41 +1256,51 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
     setInitialProperties.
  */
 QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
-        QObject *createdComponent, const QString &name,
-        RequiredProperties *requiredProperties, QQmlEngine *engine,
-        bool *wasInRequiredProperties)
+        QObject *target, const QString &name, RequiredProperties *requiredProperties,
+        QQmlEngine *engine, bool *wasInRequiredProperties)
 {
     Q_ASSERT(requiredProperties);
-    QQmlProperty prop(createdComponent, name, engine);
-    auto privProp = QQmlPropertyPrivate::get(prop);
-    if (prop.isValid()) {
-        // resolve outstanding required properties
-        const QQmlPropertyData *targetProp = &privProp->core;
-        if (targetProp->isAlias()) {
-            auto target = createdComponent;
-            QQmlPropertyIndex originalIndex(targetProp->coreIndex());
-            QQmlPropertyIndex propIndex;
-            QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
-            QQmlData *data = QQmlData::get(target);
-            Q_ASSERT(data && data->propertyCache);
-            targetProp = data->propertyCache->property(propIndex.coreIndex());
-        } else {
-            // we need to get the pointer from the property cache instead of directly using
-            // targetProp else the lookup will fail
-            QQmlData *data = QQmlData::get(createdComponent);
-            Q_ASSERT(data && data->propertyCache);
-            targetProp = data->propertyCache->property(targetProp->coreIndex());
-        }
-        auto it = requiredProperties->constFind({createdComponent, targetProp});
-        if (it != requiredProperties->cend()) {
-            if (wasInRequiredProperties)
-                *wasInRequiredProperties = true;
-            requiredProperties->erase(it);
-        } else {
-            if (wasInRequiredProperties)
-                *wasInRequiredProperties = false;
-        }
+
+    const QQmlProperty prop(target, name, engine);
+    if (!prop.isValid()) {
+        if (wasInRequiredProperties)
+            *wasInRequiredProperties = false;
+        return prop;
     }
+
+    const QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
+    bool found = false;
+
+    // resolve outstanding required properties
+    const QQmlPropertyData *targetProp = &privProp->core;
+    QQmlData *data = QQmlData::get(target);
+    Q_ASSERT(data && data->propertyCache);
+
+    if (targetProp->isAlias()) {
+        if (requiredProperties->remove(
+                    { target, data->propertyCache->property(targetProp->coreIndex()) })) {
+            found = true;
+        }
+
+        QQmlPropertyIndex originalIndex(targetProp->coreIndex());
+        QQmlPropertyIndex propIndex;
+        QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
+        data = QQmlData::get(target);
+        Q_ASSERT(data && data->propertyCache);
+        targetProp = data->propertyCache->property(propIndex.coreIndex());
+    } else {
+        // we need to get the pointer from the property cache instead of directly using
+        // targetProp, or else the lookup will fail
+        targetProp = data->propertyCache->property(targetProp->coreIndex());
+    }
+
+    // Check if the resolved target property itself is required.
+    if (requiredProperties->remove({target, targetProp}))
+        found = true;
+
+    if (wasInRequiredProperties)
+        *wasInRequiredProperties = found;
+
     return prop;
 }
 
