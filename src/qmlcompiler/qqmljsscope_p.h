@@ -196,7 +196,7 @@ public:
     QQmlJSMetaEnum enumeration(const QString &name) const;
     QHash<QString, QQmlJSMetaEnum> enumerations() const;
 
-    void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
+    void setAnnotations(const QList<QQmlJSAnnotation> &annotations) { m_annotations = annotations; }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
 
     QString filePath() const { return m_filePath; }
