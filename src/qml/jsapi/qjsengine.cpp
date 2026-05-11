@@ -628,6 +628,8 @@ QJSValue QJSEngine::importModule(const QString &fileName)
         return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
 
     module->evaluate();
+    if (m_v4Engine->hasException)
+        return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
     if (m_v4Engine->isInterrupted.loadRelaxed()) {
         return QJSValuePrivate::fromReturnedValue(
                 m_v4Engine->newErrorObject(QStringLiteral("Interrupted"))->asReturnedValue());

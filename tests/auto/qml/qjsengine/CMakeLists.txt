@@ -58,6 +58,8 @@ set(qmake_immediate_resource_files
     "exporterror1.mjs"
     "importerror1.mjs"
     "modulewithlexicals.mjs"
+    "modulereferenceerror.mjs"
+    "modulethrowerror.mjs"
     "testmodule.mjs"
     "testregister.mjs"
     "testregister2.mjs"

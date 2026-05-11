@@ -267,6 +267,7 @@ private slots:
     void importModuleRelative();
     void importModuleWithLexicallyScopedVars();
     void importExportErrors();
+    void importModuleRuntimeError();
 
     void registerModule();
     void registerModuleQObject();
@@ -5276,6 +5277,28 @@ void tst_QJSEngine::importExportErrors()
         QJSValue result = engine.importModule(QStringLiteral(":/exporterror1.mjs"));
         QVERIFY(result.isError());
         QCOMPARE(result.property("lineNumber").toInt(), 2);
+    }
+}
+
+// QTBUG-146158: importModule must return an error QJSValue when the module
+// throws at runtime (explicit throw or implicit ReferenceError), matching the
+// documented contract that the return value has isError() == true on failure.
+void tst_QJSEngine::importModuleRuntimeError()
+{
+    // Explicit throw inside a module
+    {
+        QJSEngine engine;
+        QJSValue result = engine.importModule(QStringLiteral(":/modulethrowerror.mjs"));
+        QVERIFY2(result.isError(), "importModule should return an error when the module throws");
+        QCOMPARE(result.property("message").toString(), QLatin1String("Module error"));
+    }
+    // Implicit ReferenceError from accessing an undefined variable
+    {
+        QJSEngine engine;
+        QJSValue result = engine.importModule(QStringLiteral(":/modulereferenceerror.mjs"));
+        QVERIFY2(result.isError(),
+                 "importModule should return an error when the module has a ReferenceError");
+        QCOMPARE(result.property("name").toString(), QLatin1String("ReferenceError"));
     }
 }
 
