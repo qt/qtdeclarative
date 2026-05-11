@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="qmldir">../../MyModuleWithSingleton/qmldir</file>
+  </qresource>
+</RCC>

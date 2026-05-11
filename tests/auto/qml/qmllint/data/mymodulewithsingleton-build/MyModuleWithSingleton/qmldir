@@ -1,0 +1,2 @@
+module MyModuleWithSingleton
+singleton Singleton 254.0 Singleton.qml
