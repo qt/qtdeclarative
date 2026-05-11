@@ -159,7 +159,7 @@ public:
 
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
     static QQmlProperty removePropertyFromRequired(
-            QObject *createdComponent, const QString &name,
+            QObject *target, const QString &name,
             RequiredProperties *requiredProperties, QQmlEngine *engine,
             bool *wasInRequiredProperties = nullptr);
 
