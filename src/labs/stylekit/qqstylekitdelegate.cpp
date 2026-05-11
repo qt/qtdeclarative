@@ -37,7 +37,7 @@ QT_BEGIN_NAMESPACE
     \labs
 
     For more examples of overlays, underlays and shader effects, see the
-    \l{StyleKit Example}.
+    \l{StyleKit Quick Controls Example}.
 
     \sa DelegateStyle, {DelegateStyle::delegate}{delegate}, {DelegateStyle::data}{data}
 */

@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
     \snippet ThemeSnippets.qml themes
 
     For a complete example showing themes in action, see the
-    \l {StyleKit Example}.
+    \l {StyleKit Quick Controls Example}.
 
     \labs
 

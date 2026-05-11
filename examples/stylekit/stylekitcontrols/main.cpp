@@ -9,6 +9,6 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
-    engine.loadFromModule("StyleKitExampleModule", "Main");
+    engine.loadFromModule("StyleKitControlsExampleModule", "Main");
     return app.exec();
 }

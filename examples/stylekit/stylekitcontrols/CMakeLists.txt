@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.16)
-project(StyleKitExample VERSION 1.0 LANGUAGES CXX)
+project(StyleKitControlsExample VERSION 1.0 LANGUAGES CXX)
 
 find_package(Qt6 6.11 REQUIRED Core Gui Qml Quick QuickControls2)
 find_program(QSB_EXECUTABLE qsb HINTS "${QT_HOST_PATH}/bin")

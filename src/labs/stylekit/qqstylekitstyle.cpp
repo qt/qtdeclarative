@@ -47,7 +47,7 @@ QT_BEGIN_NAMESPACE
 
     \snippet PlainStyle.qml 1
 
-    For a more complete example, see the \l{StyleKit Example}.
+    For a more complete example, see the \l{StyleKit Quick Controls Example}.
 
     \labs
 
