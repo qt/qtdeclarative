@@ -3319,15 +3319,6 @@ public:
         return SourceLocation();
     }
 
-    bool hasImports() const
-    {
-        for (const auto *header = headers; header; header = header->next) {
-            if (cast<UiImport *>(header->headerItem))
-                return true;
-        }
-        return false;
-    }
-
 // attributes
     UiHeaderItemList *headers;
     UiObjectMemberList *members;

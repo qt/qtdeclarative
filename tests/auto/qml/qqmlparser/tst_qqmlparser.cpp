@@ -60,8 +60,6 @@ private slots:
 
     void trailingCommaInUiArray();
 
-    void noImports();
-
 private:
     // TODO move to some utils?
     enum SyntaxKind {
@@ -1211,24 +1209,6 @@ void tst_qqmlparser::trailingCommaInUiArray()
     lexer.setCode(file.readAll(), 1);
     QQmlJS::Parser parser(&engine);
     QVERIFY(parser.parse());
-}
-
-void tst_qqmlparser::noImports()
-{
-    QFile file(testFile("noImports.qml"));
-    QVERIFY(file.open(QIODevice::ReadOnly));
-
-    QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-    lexer.setCode(file.readAll(), 1);
-    QQmlJS::Parser parser(&engine);
-    QVERIFY(parser.parse());
-
-    const auto warning = QStringLiteral("QML files must contain import statements");
-    const auto messages = parser.diagnosticMessages();
-    const auto it = std::find_if(messages.cbegin(), messages.cend(),
-                                 [&](const auto &m) { return m.message == warning; });
-    QVERIFY(it != messages.cend());
 }
 
 QTEST_MAIN(tst_qqmlparser)
