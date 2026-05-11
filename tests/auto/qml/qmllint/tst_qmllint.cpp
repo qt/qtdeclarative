@@ -2824,6 +2824,15 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("v4SequenceMethods") << QStringLiteral("v4SequenceMethods.qml") << defaultOptions;
     QTest::newRow("valueSource") << QStringLiteral("valueSource.qml") << defaultOptions;
     QTest::newRow("var") << QStringLiteral("var.qml") << defaultOptions;
+    {
+        CallQmllintOptions options = defaultOptions;
+        options.resources << testFile("mymodulewithsingleton-build/.qt/rcc/app_raw_qml_0.qrc")
+                          << testFile("mymodulewithsingleton-build/.qt/rcc/qmake_app.qrc");
+        QTest::newRow("singletonWithEmptyPrefix")
+                << u"mymodulewithsingleton-source/MyModuleWithSingleton/Singleton.qml"_s << options;
+        QTest::newRow("singletonWithEmptyPrefix2")
+                << u"mymodulewithsingleton-build/MyModuleWithSingleton/Singleton.qml"_s << options;
+    }
 }
 
 void TestQmllint::cleanQmlCode()
