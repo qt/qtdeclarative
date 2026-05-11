@@ -42,7 +42,7 @@ class QQStyleKitAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQStyleKitStyle *style READ style WRITE setStyle NOTIFY styleChanged FINAL)
-    Q_PROPERTY(QString styleUrl READ styleUrl WRITE setStyleUrl NOTIFY styleUrlChanged FINAL)
+    Q_PROPERTY(QUrl styleUrl READ styleUrl WRITE setStyleUrl NOTIFY styleUrlChanged FINAL)
     Q_PROPERTY(bool transitionsEnabled READ transitionsEnabled WRITE setTransitionsEnabled NOTIFY transitionsEnabledChanged FINAL)
     Q_PROPERTY(QQStyleKitDebug *debug READ debug FINAL)
 
@@ -53,8 +53,8 @@ public:
     QQStyleKitStyle *style() const;
     void setStyle(QQStyleKitStyle *style);
 
-    QString styleUrl() const;
-    void setStyleUrl(const QString &styleUrl);
+    QUrl styleUrl() const;
+    void setStyleUrl(const QUrl &styleUrl);
 
     bool transitionsEnabled() const;
     void setTransitionsEnabled(bool enabled);
@@ -70,7 +70,7 @@ signals:
 
 private:
     bool m_ownsStyle = false;
-    QString m_styleUrl;
+    QUrl m_styleUrl;
     QPointer<QQmlEngine> m_engine;
     QPointer<QQStyleKitStyle> m_style;
     QQStyleKitDebug m_debug;

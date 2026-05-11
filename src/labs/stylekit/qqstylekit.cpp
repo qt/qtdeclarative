@@ -45,7 +45,7 @@ bool QQStyleKitAttached::s_transitionsEnabled = true;
 */
 
 /*!
-    \qmlproperty string StyleKit::styleUrl
+    \qmlproperty url StyleKit::styleUrl
 
     An alternative to \l style that loads a \l Style from a URL.
 
@@ -143,12 +143,12 @@ void QQStyleKitAttached::setStyle(QQStyleKitStyle *style)
     emit styleChanged();
 }
 
-QString QQStyleKitAttached::styleUrl() const
+QUrl QQStyleKitAttached::styleUrl() const
 {
     return m_styleUrl;
 }
 
-void QQStyleKitAttached::setStyleUrl(const QString &styleUrl)
+void QQStyleKitAttached::setStyleUrl(const QUrl &styleUrl)
 {
     if (m_styleUrl == styleUrl)
         return;
@@ -156,7 +156,7 @@ void QQStyleKitAttached::setStyleUrl(const QString &styleUrl)
     m_styleUrl = styleUrl;
 
     Q_ASSERT(m_engine);
-    QQmlComponent comp(m_engine, QUrl(styleUrl), this);
+    QQmlComponent comp(m_engine, styleUrl, this);
     if (!comp.errors().isEmpty()) {
         qmlWarning(this) << "Could not create a StyleKit style: " << comp.errorString();
         return;
