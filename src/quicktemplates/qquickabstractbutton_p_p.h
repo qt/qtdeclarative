@@ -52,6 +52,7 @@ public:
 
     virtual bool acceptKeyClick(Qt::Key key) const;
     virtual void accessiblePressAction();
+    virtual void accessibleToggleAction();
 
     bool isPressAndHoldConnected();
     bool isDoubleClickConnected();
