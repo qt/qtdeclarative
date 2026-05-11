@@ -157,6 +157,20 @@ QT_BEGIN_NAMESPACE
     By default this property is \c false.
     \sa checkable
 */
+/*! \qmlproperty bool QtQuick::Accessible::expandable
+    \brief This property holds whether this item is expandable.
+
+    \since 6.12
+    By default this property is \c false.
+    \sa expanded
+*/
+/*! \qmlproperty bool QtQuick::Accessible::expanded
+    \brief This property holds whether this item is currently expanded.
+
+    \since 6.12
+    By default this property is \c false.
+    \sa expandable
+*/
 /*! \qmlproperty bool QtQuick::Accessible::editable
     \brief This property holds whether this item has editable text.
 

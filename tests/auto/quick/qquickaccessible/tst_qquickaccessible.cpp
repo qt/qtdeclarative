@@ -70,6 +70,7 @@ private slots:
     void basicPropertiesTest();
     void hitTest();
     void checkableTest();
+    void expandableTest();
     void ignoredTest();
     void passwordTest();
     void announceTest();
@@ -808,6 +809,41 @@ void tst_QQuickAccessible::checkableTest()
     QAccessibleInterface *checkBox2 = root->child(4);
     QVERIFY(!(checkBox2->state().checked));
     QVERIFY(checkBox2->state().checkable);
+
+    QTestAccessibility::clearEvents();
+}
+
+void tst_QQuickAccessible::expandableTest() {
+    auto window = std::make_unique<QQuickView>();
+    window->setSource(testFileUrl("expandable.qml"));
+    window->show();
+
+    QQuickItem *contentItem = window->contentItem();
+    QVERIFY(contentItem);
+    QQuickItem *rootItem = contentItem->childItems().first();
+    QVERIFY(rootItem);
+
+    QAccessibleInterface *iface =
+        QAccessible::queryAccessibleInterface(window.get());
+    QVERIFY(iface);
+    QAccessibleInterface *root = iface->child(0);
+
+    QAccessibleInterface *button1 = root->child(0);
+    QCOMPARE(button1->role(), QAccessible::Button);
+    QVERIFY(!(button1->state().expanded));
+    QVERIFY(!(button1->state().expandable));
+
+    QAccessibleInterface *button2 = root->child(1);
+    QVERIFY(!(button2->state().expanded));
+    QVERIFY(button2->state().expandable);
+    QQuickItem *button2item =
+        qobject_cast<QQuickItem *>(rootItem->childItems().at(1));
+    QVERIFY(button2item);
+    QCOMPARE(button2item->objectName(), QLatin1String("button2"));
+
+    QAccessibleInterface *button3 = root->child(2);
+    QVERIFY(button3->state().expanded);
+    QVERIFY(button3->state().expandable);
 
     QTestAccessibility::clearEvents();
 }

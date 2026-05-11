@@ -71,6 +71,8 @@ public:
     STATE_PROPERTY(checkable)
     STATE_PROPERTY(checked)
     STATE_PROPERTY(editable)
+    STATE_PROPERTY(expandable)
+    STATE_PROPERTY(expanded)
     STATE_PROPERTY(focusable)
     STATE_PROPERTY(focused)
     STATE_PROPERTY(multiLine)
