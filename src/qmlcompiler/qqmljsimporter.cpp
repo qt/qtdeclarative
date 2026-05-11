@@ -44,8 +44,7 @@ static const QString prefixedName(const QString &prefix, const QString &name)
     return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
 }
 
-template <typename T>
-static QString ensureSlashQmldir(T &&path)
+static QString ensureSlashQmldir(const QString &path)
 {
     if (path.endsWith(SlashQmldir))
         return path;
