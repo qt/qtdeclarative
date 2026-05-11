@@ -172,6 +172,7 @@ private slots:
     void invalidContexts();
     void createObjectOnDestruction();
     void fetchValueType();
+    void delegatesVisibleInChildContexts();
 };
 
 QQmlEngineDebugObjectReference tst_QQmlEngineDebugService::findRootObject(
@@ -1405,6 +1406,59 @@ void tst_QQmlEngineDebugService::debuggerCrashOnAttach() {
     QVERIFY(success);
     QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
     QCOMPARE(m_dbg->valid(), true);
+}
+
+void tst_QQmlEngineDebugService::delegatesVisibleInChildContexts()
+{
+    // QTBUG-145794: Objects created in child contexts (Repeater delegates) must
+    // appear in the LIST_OBJECTS_R context tree, not be silently dropped.
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("delegateInChildContext.qml"));
+    QVERIFY(component.isReady());
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    bool success = false;
+    m_dbg->queryAvailableEngines(&success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    // Locate the debug reference for the engine we just created.
+    const int expectedId = QQmlDebugService::idForObject(&engine);
+    QQmlEngineDebugEngineReference engineRef;
+    for (const auto &ref : m_dbg->engines()) {
+        if (ref.debugId == expectedId) {
+            engineRef = ref;
+            break;
+        }
+    }
+    QVERIFY(engineRef.debugId >= 0);
+
+    m_dbg->queryRootContexts(engineRef, &success);
+    QVERIFY(success);
+    QVERIFY(QQmlDebugTest::waitForSignal(m_dbg, SIGNAL(result())));
+
+    // Walk the full context tree and collect every reported object.
+    std::function<QList<QQmlEngineDebugObjectReference>(const QQmlEngineDebugContextReference &)>
+            collectObjects;
+    collectObjects = [&](const QQmlEngineDebugContextReference &ctx) {
+        QList<QQmlEngineDebugObjectReference> result = ctx.objects;
+        for (const auto &child : ctx.contexts)
+            result += collectObjects(child);
+        return result;
+    };
+
+    const auto allObjects = collectObjects(m_dbg->rootContext());
+
+    // The Repeater has model: 3, so three delegate Items with objectName
+    // "delegateItem0", "delegateItem1", "delegateItem2" must be present.
+    int delegateCount = 0;
+    for (const auto &obj : allObjects) {
+        if (obj.name.startsWith(QLatin1String("delegateItem")))
+            ++delegateCount;
+    }
+    QCOMPARE(delegateCount, 3);
 }
 
 int main(int argc, char *argv[])

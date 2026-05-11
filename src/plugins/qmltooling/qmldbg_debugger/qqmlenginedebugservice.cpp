@@ -479,9 +479,17 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
         if (engine) {
             QQmlContext *rootContext = engine->rootContext();
-            QQmlContextPrivate *ctxtPriv = QQmlContextPrivate::get(rootContext);
-            ctxtPriv->cleanInstances(); // Clean deleted objects
-            const QList<QPointer<QObject>> instances = ctxtPriv->instances();
+            QList<QPointer<QObject>> instances;
+            std::function<void(const QQmlRefPointer<QQmlContextData> &)> collectInstances;
+            collectInstances = [&](const QQmlRefPointer<QQmlContextData> &ctx) {
+                QQmlContextPrivate *ctxPriv =
+                        QQmlContextPrivate::get(ctx->asQQmlContext());
+                ctxPriv->cleanInstances(); // Clean deleted objects
+                instances.append(ctxPriv->instances());
+                for (auto child = ctx->childContexts(); child; child = child->nextChild())
+                    collectInstances(child);
+            };
+            collectInstances(QQmlContextData::get(rootContext));
             buildObjectList(rs, rootContext, instances);
             buildStatesList(true, instances);
         }
