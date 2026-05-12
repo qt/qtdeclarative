@@ -46,6 +46,7 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
     case QQStyleKitReader::ToolButton:
     case QQStyleKitReader::TabButton:
     case QQStyleKitReader::RadioButton:
+    case QQStyleKitReader::RoundButton:
     case QQStyleKitReader::CheckBox:
     case QQStyleKitReader::SwitchControl: {
         static QList<QQStyleKitExtendableControlType> t =

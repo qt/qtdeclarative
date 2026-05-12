@@ -53,6 +53,7 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
     case QQStyleKitReader::ControlType::AbstractButton:
     case QQStyleKitReader::ControlType::Button:
     case QQStyleKitReader::ControlType::FlatButton:
+    case QQStyleKitReader::ControlType::RoundButton:
         return QQuickTheme::Button;
     case QQStyleKitReader::ControlType::CheckBox:
         return QQuickTheme::CheckBox;

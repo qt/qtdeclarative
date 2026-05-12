@@ -75,6 +75,7 @@ public:
         ToolButton,
         ToolSeparator,
         RadioButton,
+        RoundButton,
         ItemDelegate,
         Popup,
         Menu,

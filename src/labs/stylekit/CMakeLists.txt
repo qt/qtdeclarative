@@ -44,6 +44,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ItemDelegate.qml
         ProgressBar.qml
         RadioButton.qml
+        RoundButton.qml
         RangeSlider.qml
         ScrollBar.qml
         ScrollIndicator.qml

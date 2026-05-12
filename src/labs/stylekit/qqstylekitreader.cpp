@@ -76,6 +76,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.Popup          \l {Popup}
     \value StyleReader.ProgressBar    \l {ProgressBar}
     \value StyleReader.RadioButton    \l {RadioButton}
+    \value StyleReader.RoundButton    \l {RoundButton}
     \value StyleReader.ScrollBar      \l {ScrollBar}
     \value StyleReader.ScrollView     \l {ScrollView}
     \value StyleReader.SearchField    \l {SearchField}
