@@ -48,6 +48,7 @@ qt_add_qml_module(
     [NO_GENERATE_QMLDIR]
     [NO_GENERATE_EXTRA_QMLDIRS]
     [NO_GENERATE_QTCONF]
+    [NO_GENERATE_AOT_VALIDATION]
     [NO_LINT]
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
@@ -439,7 +440,8 @@ categories:
     \li \l{Automatic type registration}{Code generation and tooling}
     \li \c NO_GENERATE_QMLTYPES, \c NO_GENERATE_QMLDIR, \c NO_GENERATE_EXTRA_QMLDIRS,
         \c TYPEINFO, \c NO_CACHEGEN, \c NO_LINT,
-        \l{qmlimportscanner and NO_IMPORT_SCAN}{NO_IMPORT_SCAN}
+        \l{qmlimportscanner and NO_IMPORT_SCAN}{NO_IMPORT_SCAN},
+        \c{NO_GENERATE_AOT_VALIDATION}
 \row
     \li \l{OUTPUT_DIRECTORY}{Output and installation}
     \li \l{OUTPUT_DIRECTORY}, \c OUTPUT_TARGETS, \l{NO_GENERATE_QTCONF}
@@ -905,6 +907,10 @@ none of these options are needed.
 \row
     \li \l{qmlimportscanner and NO_IMPORT_SCAN}{NO_IMPORT_SCAN}
     \li Automatic import scanning (static builds: configure-time; executables: build-time)
+\row
+    \li \c NO_GENERATE_AOT_VALIDATION
+    \li Generation of code to \l{Validation of ahead of time generated native code}{validate native code}
+        generated ahead of time by the \l{Qt Quick Compiler}
 \endtable
 
 Type registration is automatically performed for the backing target's C++

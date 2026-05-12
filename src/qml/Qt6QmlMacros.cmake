@@ -308,6 +308,7 @@ function(qt6_add_qml_module target)
         NO_GENERATE_QMLDIR
         NO_GENERATE_EXTRA_QMLDIRS
         NO_GENERATE_QTCONF
+        NO_GENERATE_AOT_VALIDATION
         NO_LINT
         NO_CACHEGEN
         NO_RESOURCE_TARGET_PATH
@@ -823,6 +824,7 @@ Check https://doc.qt.io/qt-6/qt-cmake-policy-qtp0001.html for policy details."
         QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
         QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
         QT_QML_MODULE_NO_GENERATE_EXTRA_QMLDIRS "${arg_NO_GENERATE_EXTRA_QMLDIRS}"
+        QT_QML_MODULE_NO_GENERATE_AOT_VALIDATION "${arg_NO_GENERATE_AOT_VALIDATION}"
         QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_NO_IMPORT_SCAN "${arg_NO_IMPORT_SCAN}"
@@ -3461,6 +3463,7 @@ function(qt6_target_qml_sources target)
     get_target_property(no_cachegen            ${target} QT_QML_MODULE_NO_CACHEGEN)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
     get_target_property(no_extra_qmldirs       ${target} QT_QML_MODULE_NO_GENERATE_EXTRA_QMLDIRS)
+    get_target_property(no_aot_validation      ${target} QT_QML_MODULE_NO_GENERATE_AOT_VALIDATION)
     get_target_property(discard_qml_contents   ${target} QT_QML_MODULE_DISCARD_QML_CONTENTS)
     get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
@@ -3574,6 +3577,10 @@ function(qt6_target_qml_sources target)
                 "$<$<NOT:$<IN_LIST:--only-bytecode,${arguments}>>:--module-id=${uri}(${target})>"
             )
             list(APPEND cachegen_args ${aotstats_args})
+        endif()
+
+        if (no_aot_validation)
+            list(APPEND cachegen_args "--no-aot-validation")
         endif()
 
         # For direct evaluation in if() below

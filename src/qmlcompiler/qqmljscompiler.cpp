@@ -529,10 +529,27 @@ static QString signatureToString(const QQmlPrivate::AOTLookupValidation::Signatu
     Q_UNREACHABLE_RETURN(QString());
 };
 
+static const char *skippedValidationCode = R"(
+bool validateLookupSignatures(QQmlEngine *engine, QV4::CompiledData::CompilationUnit *cu)
+{
+    // AOT validation code not generated (NO_GENERATE_AOT_VALIDATION)
+    Q_UNUSED(engine);
+    Q_UNUSED(cu);
+    return true;
+}
+
+)";
+
 template <typename WriteStr>
 static bool generateAotValidationCode(
-        const WriteStr &writeStr, const LookupSignatures &lookupSignatures)
+        const WriteStr &writeStr, const LookupSignatures &lookupSignatures, bool noAotValidation)
 {
+    if (noAotValidation) {
+        if (!writeStr(skippedValidationCode))
+            return false;
+        return true;
+    }
+
     using namespace QQmlPrivate::AOTLookupValidation;
     if (!writeStr("QQmlPrivate::AOTLookupValidation::LookupSignatures expectedLookupSignatures()\n"
                   "{\n"
@@ -594,7 +611,8 @@ bool validateLookupSignatures(QQmlEngine *engine, QV4::CompiledData::Compilation
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
                          const QV4::CompiledData::SaveableUnitPointer &unit,
                          const QQmlJSAotFunctionMap &aotFunctions,
-                         const LookupSignatures &lookupSignatures, QString *errorString)
+                         const LookupSignatures &lookupSignatures, bool noAotValidation,
+                         QString *errorString)
 {
 #if QT_CONFIG(temporaryfile)
     QSaveFile f(outputFileName);
@@ -626,8 +644,10 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (!writeStr("#include <QtQml/qqmlprivate.h>\n"))
         return false;
 
-    if (!writeStr("#include <QtCore/qhash.h>\n"))
-        return false;
+    if (!noAotValidation) {
+        if (!writeStr("#include <QtCore/qhash.h>\n"))
+            return false;
+    }
 
     if (!aotFunctions.isEmpty()) {
         QStringList includes;
@@ -652,7 +672,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (!writeStr(" {\n"))
         return false;
 
-    if (!generateAotValidationCode(writeStr, lookupSignatures))
+    if (!generateAotValidationCode(writeStr, lookupSignatures, noAotValidation))
         return false;
 
     if (!writeStr(QByteArrayLiteral("extern const unsigned char qmlData alignas(16) [];\n"
@@ -912,7 +932,7 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
         return QQmlJSAotFunction();
 
     QQmlJSCodeGenerator codegen(context, m_unitGenerator, &m_typeResolver, m_logger, blocks,
-                                annotations);
+                                annotations, noAotValidation());
     QQmlJSAotFunction result = codegen.run(function, basicBlocksValidationFailed);
     if (m_logger->currentFunctionHasErrorOrSkip())
         return QQmlJSAotFunction();

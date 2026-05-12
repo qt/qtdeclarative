@@ -57,10 +57,11 @@ QQmlJSCodeGenerator::QQmlJSCodeGenerator(
         const QV4::Compiler::Context *compilerContext,
         const QV4::Compiler::JSUnitGenerator *unitGenerator, const QQmlJSTypeResolver *typeResolver,
         QQmlJSLogger *logger, const BasicBlocks &basicBlocks,
-        const InstructionAnnotations &annotations)
+        const InstructionAnnotations &annotations, bool noAotValidation)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger, basicBlocks, annotations)
     , m_context(compilerContext)
     , m_lookupSignaturesRecorder(logger->filePath(), typeResolver)
+    , m_noAotValidation(noAotValidation)
 {}
 
 QString QQmlJSCodeGenerator::metaTypeFromType(const QQmlJSScope::ConstPtr &type) const
@@ -4636,18 +4637,21 @@ void QQmlJSCodeGenerator::GeneratePragmaWarningBlock::silenceDivideByZero()
 void QQmlJSCodeGenerator::recordPropertyLookup(const QQmlJSScope::ConstPtr &base,
                                                const QQmlJSMetaProperty &property)
 {
-    m_lookupSignaturesRecorder.recordPropertyLookup(base, property);
+    if (!m_noAotValidation)
+        m_lookupSignaturesRecorder.recordPropertyLookup(base, property);
 }
 
 void QQmlJSCodeGenerator::recordMethodLookup(const QQmlJSScope::ConstPtr &base,
                                              const QQmlJSMetaMethod &method)
 {
-    m_lookupSignaturesRecorder.recordMethodLookup(base, method);
+    if (!m_noAotValidation)
+        m_lookupSignaturesRecorder.recordMethodLookup(base, method);
 }
 
 void QQmlJSCodeGenerator::recordEnumKeyLookup(const QQmlJSScope::ConstPtr &base,
                                               const QQmlJSMetaEnum &metaEnum,
                                               const QString &keyName)
 {
-    m_lookupSignaturesRecorder.recordEnumKeyLookup(base, metaEnum, keyName);
+    if (!m_noAotValidation)
+        m_lookupSignaturesRecorder.recordEnumKeyLookup(base, metaEnum, keyName);
 }

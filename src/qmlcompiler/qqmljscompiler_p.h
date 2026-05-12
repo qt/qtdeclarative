@@ -66,6 +66,7 @@ public:
         NoFlags = 0x0,
         ValidateBasicBlocks = 0x1,
         IsLintCompiler = 0x2, // When we're linting and not compiling
+        NoAOTValidation = 0x4,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -87,6 +88,7 @@ public:
     LookupSignatures lookupSignatures() const { return m_lookupSignatures; }
 
     bool isLintCompiler() const { return m_flags & IsLintCompiler; }
+    bool noAotValidation() const { return m_flags & NoAOTValidation; }
 
     Flags m_flags;
 
@@ -149,7 +151,7 @@ bool Q_QMLCOMPILER_EXPORT qSaveQmlJSUnitAsCpp(const QString &inputFileName,
                                               const QV4::CompiledData::SaveableUnitPointer &unit,
                                               const QQmlJSAotFunctionMap &aotFunctions,
                                               const LookupSignatures &lookupSignatures,
-                                              QString *errorString);
+                                              bool noAotValidation, QString *errorString);
 
 QT_END_NAMESPACE
 

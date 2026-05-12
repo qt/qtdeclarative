@@ -33,7 +33,8 @@ public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
                         const QV4::Compiler::JSUnitGenerator *unitGenerator,
                         const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                        const BasicBlocks &basicBlocks, const InstructionAnnotations &annotations);
+                        const BasicBlocks &basicBlocks, const InstructionAnnotations &annotations,
+                        bool noAotValidation);
     ~QQmlJSCodeGenerator() = default;
 
     QQmlJSAotFunction run(const Function *function, bool basicBlocksValidationFailed);
@@ -436,6 +437,7 @@ private:
     QHash<QQmlJSRegisterContent, RegisterVariablesValue> m_registerVariables;
 
     QQmlJSLookupSignaturesRecorder m_lookupSignaturesRecorder;
+    bool m_noAotValidation = false;
 };
 
 QT_END_NAMESPACE

@@ -106,6 +106,9 @@ int main(int argc, char **argv)
     QCommandLineOption moduleIdOption("module-id"_L1, QCoreApplication::translate("main", "Identifies the module of the qml file being compiled for aot stats"), QCoreApplication::translate("main", "id"));
     parser.addOption(moduleIdOption);
 
+    QCommandLineOption noAotValidationOption("no-aot-validation"_L1, QCoreApplication::translate("main", "Skips generation of validation code for ahead-of-time generated code"));
+    parser.addOption(noAotValidationOption);
+
     QCommandLineOption outputFileOption("o"_L1, QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
 
@@ -229,12 +232,13 @@ int main(int argc, char **argv)
 
     if (target == GenerateCpp) {
         inputFileUrl = "qrc://"_L1 + inputResourcePath;
-        saveFunction = [inputResourcePath, outputFileName](
+        bool noAotValidation = parser.isSet(noAotValidationOption);
+        saveFunction = [inputResourcePath, outputFileName, noAotValidation](
                                const QV4::CompiledData::SaveableUnitPointer &unit,
                                const QQmlJSAotFunctionMap &aotFunctions,
                                const LookupSignatures &lookupSignatures, QString *errorString) {
             return qSaveQmlJSUnitAsCpp(inputResourcePath, outputFileName, unit, aotFunctions,
-                                       lookupSignatures, errorString);
+                                       lookupSignatures, noAotValidation, errorString);
         };
 
     } else {
@@ -302,6 +306,8 @@ int main(int argc, char **argv)
 
             if (parser.isSet(validateBasicBlocksOption))
                 cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::ValidateBasicBlocks);
+            if (parser.isSet(noAotValidationOption))
+                cppCodeGen.m_flags.setFlag(QQmlJSAotCompiler::NoAOTValidation);
 
             if (!qCompileQmlFile(inputFile, saveFunction, &cppCodeGen, &error,
                                  /* storeSourceLocation */ true)) {
