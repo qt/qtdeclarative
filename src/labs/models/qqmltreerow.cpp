@@ -25,8 +25,7 @@ QQmlTreeRow::QQmlTreeRow(const QVariant &data, QQmlTreeRow *parentItem)
 }
 
 QQmlTreeRow::QQmlTreeRow(const QVariantMap &data, QQmlTreeRow *parentItem)
-    : m_parent(parentItem),
-      dataMap(data)
+    : m_parent(parentItem)
 {
     unpackVariantMap(data);
 }
