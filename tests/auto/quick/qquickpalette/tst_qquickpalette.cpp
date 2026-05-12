@@ -10,6 +10,7 @@
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuick/private/qquickabstractpaletteprovider_p.h>
 #include <QtQuick/private/qquickpalettecolorprovider_p.h>
+#include <QtQuick/qquickitem.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
@@ -54,6 +55,8 @@ private Q_SLOTS:
 
     void qml_data();
     void qml();
+
+    void resetPaletteWithNoPalette();
 };
 
 using GroupGetter = QQuickColorGroup* (QQuickPalette::* )() const;
@@ -335,6 +338,16 @@ void tst_QQuickPalette::qml()
     const QVariant var = object->property("palette");
     QVERIFY(var.isValid());
     COMPARE_PALETTES(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
+}
+
+void tst_QQuickPalette::resetPaletteWithNoPalette()
+{
+    QQuickItem item;
+    const int idx = item.metaObject()->indexOfProperty("palette");
+    QVERIFY(idx >= 0);
+    const QMetaProperty prop = item.metaObject()->property(idx);
+    QVERIFY(prop.isResettable());
+    prop.reset(&item); // must not crash
 }
 
 QTEST_MAIN(tst_QQuickPalette)
