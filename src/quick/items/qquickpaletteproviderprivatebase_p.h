@@ -185,7 +185,8 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::setPalette(QQuickPalette *p)
 template<class I, class Impl>
 void QQuickPaletteProviderPrivateBase<I, Impl>::resetPalette()
 {
-    paletteData()->reset();
+    if (providesPalette())
+        paletteData()->reset();
 }
 
 template<class I, class Impl>
