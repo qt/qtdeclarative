@@ -338,6 +338,11 @@ QVariant QQmlTreeModel::getRow(const QModelIndex &rowIndex) const
 
 QVariant QQmlTreeModel::firstRow() const
 {
+    if (mRows.empty()) {
+        qmlWarning(this) << "TreeModel::firstRow(): model is empty";
+        return {};
+    }
+
     return mRows.front().get()->data();
 }
 
