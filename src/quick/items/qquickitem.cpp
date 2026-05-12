@@ -4227,7 +4227,7 @@ void QQuickItem::focusInEvent(QFocusEvent *event)
 {
     Q_D(QQuickItem);
 #if QT_CONFIG(accessibility)
-    if (QAccessible::isActive()) {
+    if (d->isAccessible && QAccessible::isActive()) {
         if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
             QAccessibleEvent ev(acc, QAccessible::Focus);
             QAccessible::updateAccessibility(&ev);
