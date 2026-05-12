@@ -307,9 +307,13 @@ void QQmlTreeModel::appendRow(const QVariant &row)
 */
 void QQmlTreeModel::clear()
 {
-    QQmlEngine *engine = qmlEngine(this);
-    Q_ASSERT(engine);
-    setRows(QVariant::fromValue(engine->newArray()));
+    if (mRows.empty())
+        return;
+
+    beginResetModel();
+    mRows.clear();
+    endResetModel();
+    emit rowsChanged();
 }
 
 /*!
