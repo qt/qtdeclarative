@@ -310,39 +310,31 @@ void tst_QQuickDrawer::state()
 void tst_QQuickDrawer::position_data()
 {
     QTest::addColumn<Qt::Edge>("edge");
-    QTest::addColumn<QPoint>("press");
-    QTest::addColumn<QPoint>("from");
-    QTest::addColumn<QPoint>("to");
+    QTest::addColumn<QMargins>("press");
+    QTest::addColumn<QMargins>("from");
+    QTest::addColumn<QMargins>("to");
     QTest::addColumn<qreal>("position");
 
-    // We need to start swiping exactly from the selected edge, but on Android
-    // ApplicationWindow will be fullscreen instead of the defined size, so
-    // we need to extract the edge values from screen geometry.
-#ifndef Q_OS_ANDROID
-    const int rightMargin = 399;
-    const int bottomMargin = 399;
-#else
-    const QRect screenGeometry = QGuiApplication::primaryScreen()->availableGeometry();
-    const int rightMargin = screenGeometry.right();
-    const int bottomMargin = screenGeometry.bottom();
-#endif
-
-    QTest::newRow("top") << Qt::TopEdge << QPoint(100, 0) << QPoint(100, 50) << QPoint(100, 150) << qreal(0.5);
-    QTest::newRow("left") << Qt::LeftEdge << QPoint(0, 100) << QPoint(50, 100) << QPoint(150, 100) << qreal(0.5);
-    QTest::newRow("right") << Qt::RightEdge << QPoint(rightMargin, 100)
-                           << QPoint(rightMargin - 50, 100) << QPoint(rightMargin - 150, 100)
+    QTest::newRow("top") << Qt::TopEdge << QMargins(100, 0, 0, 0)
+                         << QMargins(100, 50, 0, 0) << QMargins(100, 150, 0, 0)
+                         << qreal(0.5);
+    QTest::newRow("left") << Qt::LeftEdge << QMargins(0, 100, 0, 0)
+                          << QMargins(50, 100, 0, 0) << QMargins(150, 100, 0, 0)
+                          << qreal(0.5);
+    QTest::newRow("right") << Qt::RightEdge << QMargins(0, 100, 0, 0)
+                           << QMargins(0, 100, 50, 0) << QMargins(0, 100, 150, 0)
                            << qreal(0.5);
-    QTest::newRow("bottom") << Qt::BottomEdge << QPoint(100, bottomMargin)
-                            << QPoint(100, bottomMargin - 50) << QPoint(150, bottomMargin - 150)
+    QTest::newRow("bottom") << Qt::BottomEdge << QMargins(100, 0, 0, 0)
+                            << QMargins(100, 0, 0, 50) << QMargins(150, 0, 0, 150)
                             << qreal(0.5);
 }
 
 void tst_QQuickDrawer::position()
 {
     QFETCH(Qt::Edge, edge);
-    QFETCH(QPoint, press);
-    QFETCH(QPoint, from);
-    QFETCH(QPoint, to);
+    QFETCH(QMargins, press);
+    QFETCH(QMargins, from);
+    QFETCH(QMargins, to);
     QFETCH(qreal, position);
 
     QQuickControlsApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
@@ -356,14 +348,25 @@ void tst_QQuickDrawer::position()
     QVERIFY(drawer);
     drawer->setEdge(edge);
 
+    const QRect rect(QPoint(0, 0), window->geometry().size());
+    auto windowLocalPoint = [&](const QMargins &margins) {
+        const QRect inner = rect - margins;
+        switch (edge) {
+        case Qt::TopEdge: return inner.topLeft();
+        case Qt::LeftEdge: return inner.topLeft();
+        case Qt::RightEdge: return inner.topRight();
+        case Qt::BottomEdge: return inner.bottomLeft();
+        }
+        Q_UNREACHABLE_RETURN(QPoint{});
+    };
     // Give it some time (50 ms) before the press to avoid flakiness on OpenSUSE: QTBUG-77946
-    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, press, 50);
-    QTest::mouseMove(window, from);
-    QTest::mouseMove(window, to);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, windowLocalPoint(press), 50);
+    QTest::mouseMove(window, windowLocalPoint(from));
+    QTest::mouseMove(window, windowLocalPoint(to));
     QCOMPARE(drawer->position(), position);
 
     // moved half-way open at almost infinite speed => snap to open
-    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, to);
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, windowLocalPoint(to));
     QTRY_COMPARE(drawer->position(), 1.0);
 }
 
