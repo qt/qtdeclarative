@@ -8,7 +8,6 @@
 \ingroup qtqml-tooling
 \ingroup qtqml-tooling-devtools
 
-\section1 qmlformat
 \e qmlformat is a tool that automatically formats QML files in accordance
 with the \l{QML Coding Conventions}.
 
