@@ -61,6 +61,7 @@
 #include <QtGui/qpainterpath.h>
 #include <QtGui/qpainterstateguard.h>
 #include <QtGui/qstylehints.h>
+#include <QtQml/private/qqmlcomponent_p.h>
 #include <QtLabsStyleKit/private/qqstylekit_p.h>
 #include <QtLabsStyleKit/private/qqstylekitcontrolproperties_p.h>
 #include <QtLabsStyleKit/private/qqstylekitstyle_p.h>
@@ -288,6 +289,17 @@ bool QStyleKitStylePrivate::loadStyle()
         return false;
     }
     QQmlComponent component(qmlEngine, url);
+    // Avoid creating anything other than StyleKit Style objects
+    // by checking the metaobject of the root type before creating the object
+    QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
+    const auto compilationUnit = componentPrivate->compilationUnit();
+    const auto propertyCache = compilationUnit ? compilationUnit->rootPropertyCache() : nullptr;
+    const auto firstMetaObject = propertyCache ? propertyCache->firstCppMetaObject() : nullptr;
+    if (!firstMetaObject || !firstMetaObject->inherits(&QQStyleKitStyle::staticMetaObject)) {
+        qWarning("QStyleKitStyle: Failed to load style from %s: component is not a StyleKit Style.",
+                 qPrintable(stylePath));
+        return false;
+    }
     if (component.isError()) {
         qWarning("QStyleKitStyle: Failed to load style from %s: %s",
                  qPrintable(stylePath), qPrintable(component.errorString()));

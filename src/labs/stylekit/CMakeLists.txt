@@ -90,6 +90,8 @@ if(TARGET Qt::Widgets)
         LIBRARIES
             Qt::Widgets
             Qt::WidgetsPrivate
+            Qt::Qml
+            Qt::QmlPrivate
     )
     add_subdirectory(widgets/plugin)
 endif()
