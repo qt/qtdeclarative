@@ -1075,6 +1075,11 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing primitive with QCommonStyle: %d", int(pe));
+        QCommonStyle::drawPrimitive(pe, opt, p, w);
+        return;
+    }
 
     switch (pe) {
     case PE_FrameButtonBevel:
@@ -1083,7 +1088,10 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
                                         ? QQStyleKitReader::ControlType::FlatButton
                                         : QQStyleKitReader::ControlType::Button;
             const auto r = d->resolve(w, controlType, btn->state);
+            if (!r.isValid())
+                break;
             d->drawStyledItemRect(r.background(), opt->rect, p);
+            return;
         }
         break;
     case PE_Frame: {
@@ -1105,8 +1113,10 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         else
             controlType = QQStyleKitReader::ControlType::Frame;
         const auto r = d->resolve(w, controlType, opt->state);
+        if (!r.isValid())
+            break;
         d->drawStyledItemRect(r.background(), opt->rect, p);
-        break;
+        return;
     }
 #if QT_CONFIG(lineedit)
     case PE_PanelLineEdit: {
@@ -1123,17 +1133,21 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 #endif
         // For spinbox and combobox, the line edit doesn't have its own background in the Controls style
         if (isInSpinBox || isInComboBox)
-            break;
+            return;
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::TextField, opt->state);
+        if (!r.isValid())
+            break;
         d->drawStyledItemRect(r.background(), opt->rect, p);
-        break;
+        return;
     }
 #endif // QT_CONFIG(lineedit)
 #if QT_CONFIG(itemviews)
     case PE_PanelItemViewItem: {
         const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        if (!r.isValid())
+            break;
         d->drawStyledItemRect(r.background(), opt->rect, p);
-        break;
+        return;
     }
 #endif // QT_CONFIG(itemviews)
     case PE_IndicatorCheckBox:
@@ -1142,32 +1156,41 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
             ? QQStyleKitReader::ControlType::CheckBox
             : QQStyleKitReader::ControlType::RadioButton;
         const auto r = d->resolve(w, controlType, opt->state);
+        if (!r.isValid())
+            break;
         d->drawControlIndicator(r.indicator(), opt->rect, p);
-        break;
+        return;
     }
     case PE_IndicatorArrowDown: {
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ComboBox, opt->state);
+        if (!r.isValid())
+            break;
         d->drawControlIndicator(r.indicator(), opt->rect, p);
-        break;
+        return;
     }
     case PE_IndicatorItemViewItemCheck: {
         const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        if (!r.isValid())
+            break;
         d->drawControlIndicator(r.indicator(), opt->rect, p);
-        break;
+        return;
     }
 #if QT_CONFIG(spinbox)
     case PE_IndicatorSpinUp:
     case PE_IndicatorSpinDown: {
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::SpinBox, opt->state);
+        if (!r.isValid())
+            break;
         const auto *indicator = r.indicator();
         const auto *upDownIndicator = indicator ? (pe == PE_IndicatorSpinUp ? indicator->up() : indicator->down()) : nullptr;
         d->drawControlIndicator(upDownIndicator, opt->rect, p);
-        break;
+        return;
     }
 #endif // QT_CONFIG(spinbox)
     default:
         break;
     }
+    QCommonStyle::drawPrimitive(pe, opt, p, w);
 }
 
 /*! \reimp */
@@ -1175,6 +1198,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing control with QCommonStyle: %d", int(element));
+        QCommonStyle::drawControl(element, opt, p, w);
+        return;
+    }
 
     switch (element) {
     case CE_PushButton:
@@ -1184,18 +1212,20 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             btnContent.rect = subElementRect(SE_PushButtonContents, btn, w);
             proxy()->drawControl(CE_PushButtonLabel, &btnContent, p, w);
         }
-        break;
+        return;
     case CE_PushButtonBevel:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             QStyleOptionButton btnBg(*btn);
             btnBg.rect = subElementRect(SE_PushButtonBevel, btn, w);
             proxy()->drawPrimitive(PE_FrameButtonBevel, &btnBg, p, w);
         }
-        break;
+        return;
     case CE_PushButtonLabel:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
             const auto controlType = btn->features & QStyleOptionButton::Flat ? QQStyleKitReader::ControlType::FlatButton : QQStyleKitReader::ControlType::Button;
             const auto r = d->resolve(w, controlType, btn->state);
+            if (!r.isValid())
+                break;
             const auto metrics = r.metrics;
 
             QRect textRect = opt->rect;
@@ -1259,6 +1289,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
                     textRect = textRect.adjusted(indicatorSize, 0, 0, 0);
             }
             d->drawControlText(r.text(), r.font(), textRect, btn->text, textFlags, p);
+            return;
         }
         break;
     case CE_CheckBox:
@@ -1267,6 +1298,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto controlType = element == CE_CheckBox ? QQStyleKitReader::ControlType::CheckBox
                                                             : QQStyleKitReader::ControlType::RadioButton;
             const auto r = d->resolve(w, controlType, btn->state);
+            if (!r.isValid())
+                break;
             QRect backgroundRect = btn->rect.marginsRemoved(r.metrics->margins);
             // background
             d->drawStyledItemRect(r.background(), backgroundRect, p);
@@ -1282,6 +1315,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             indicator.rect = subElementRect(indicatorElement, btn, w);
             const auto primitiveElement = element == CE_CheckBox ? PE_IndicatorCheckBox : PE_IndicatorRadioButton;
             proxy()->drawPrimitive(primitiveElement, &indicator, p, w);
+            return;
         }
         break;
     case CE_CheckBoxLabel:
@@ -1290,10 +1324,13 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto controlType = element == CE_CheckBoxLabel ? QQStyleKitReader::ControlType::CheckBox
                                                                  : QQStyleKitReader::ControlType::RadioButton;
             const auto r = d->resolve(w, controlType, btn->state);
+            if (!r.isValid())
+                break;
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             d->drawControlText(r.text(), r.font(), opt->rect, btn->text, textFlags, p);
+            return;
         }
         break;
 #if QT_CONFIG(combobox)
@@ -1302,12 +1339,15 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (comboBox->editable)
                 break;
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ComboBox, comboBox->state);
+            if (!r.isValid())
+                break;
             const QRect textRect = subControlRect(CC_ComboBox, comboBox, SC_ComboBoxEditField, w)
                                    .marginsRemoved(r.metrics->textPadding);
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             d->drawControlText(r.text(), r.font(), textRect, comboBox->currentText, textFlags, p);
+            return;
         }
         break;
 #endif // QT_CONFIG(combobox)
@@ -1315,6 +1355,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     case CE_ProgressBar:
         if (const QStyleOptionProgressBar *progressBar = qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ProgressBar, progressBar->state);
+            if (!r.isValid())
+                break;
             QRect backgroundRect = progressBar->rect.marginsRemoved(r.metrics->margins);
             // background
             d->drawStyledItemRect(r.background(), backgroundRect, p);
@@ -1326,20 +1368,25 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             contents.rect = subElementRect(SE_ProgressBarContents, progressBar, w);
             proxy()->drawControl(CE_ProgressBarContents, &contents, p, w);
             // We intentionally don't draw the label as it is not drawn on the Controls Style
+            return;
         }
         break;
     case CE_ProgressBarGroove: {
         // groove = indicator background
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ProgressBar, opt->state);
+        if (!r.isValid())
+            break;
         const auto *indicator = r.indicator();
         if (indicator && indicator->visible() && indicator->opacity() > 0)
             d->drawStyledItemRect(indicator, opt->rect, p);
-        break;
+        return;
     }
     case CE_ProgressBarContents:
         // contents = indicator foreground
         if (const auto *progressBar = qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ProgressBar, progressBar->state);
+            if (!r.isValid())
+                break;
             const auto progress = progressBar->progress;
             const auto ratio = progressBar->maximum > progressBar->minimum ? (progress - progressBar->minimum) / static_cast<qreal>(progressBar->maximum - progressBar->minimum) : 0;
             const auto width = static_cast<int>(progressBar->rect.width() * ratio);
@@ -1348,6 +1395,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             const auto *foreground = r.indicator() ? r.indicator()->foreground() : nullptr;
             if (foreground && foreground->visible() && foreground->opacity() > 0)
                 d->drawStyledItemRect(foreground, contentsRect, p);
+            return;
         }
         break;
 #endif // QT_CONFIG(progressbar)
@@ -1355,6 +1403,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     case CE_ItemViewItem:
         if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
             const auto r = d->resolveItemViewItem(w, opt, QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+            if (!r.isValid())
+                break;
             QStyleOptionViewItem optBg(*itemViewOption);
             optBg.rect = optBg.rect.marginsRemoved(r.metrics->margins);
             QRect indicatorRect = subElementRect(SE_ItemViewItemCheckIndicator, itemViewOption, w);
@@ -1402,6 +1452,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
             d->drawControlText(itemTextProps, itemFont, textRect, itemViewOption->text, textFlags, p);
+            return;
         }
         break;
 #endif // QT_CONFIG(itemviews)
@@ -1410,8 +1461,11 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 #if QT_CONFIG(combobox)
         if (w && w->inherits("QComboBoxPrivateContainer")) {
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::Popup, opt->state);
+            if (!r.isValid())
+                break;
             QRect backgroundRect = opt->rect.marginsRemoved(r.metrics->margins);
             d->drawStyledItemRect(r.background(), backgroundRect, p);
+            return;
         }
 #endif // QT_CONFIG(combobox)
         break;
@@ -1419,12 +1473,17 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     default:
         break;
     }
+    QCommonStyle::drawControl(element, opt, p, w);
 }
 
 /*! \reimp */
 QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, const QWidget *widget) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating subElementRect with QCommonStyle: %d", int(r));
+        return QCommonStyle::subElementRect(r, opt, widget);
+    }
 
     switch (r) {
     case SE_PushButtonLayoutItem:
@@ -1434,6 +1493,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                                         ? QQStyleKitReader::ControlType::FlatButton
                                         : QQStyleKitReader::ControlType::Button;
             const auto resolved = d->resolveLayout(controlType, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QRect rect = opt->rect.marginsRemoved(metrics.margins);
             return visualRect(opt->direction, opt->rect, rect);
@@ -1445,6 +1506,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                                         ? QQStyleKitReader::ControlType::FlatButton
                                         : QQStyleKitReader::ControlType::Button;
             const auto resolved = d->resolveLayout(controlType, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QRect rect = opt->rect.marginsRemoved(metrics.margins + metrics.padding + metrics.textPadding);
             return visualRect(opt->direction, opt->rect, rect);
@@ -1455,6 +1518,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         const auto controlType = r == SE_CheckBoxContents ? QQStyleKitReader::ControlType::CheckBox
                                                             : QQStyleKitReader::ControlType::RadioButton;
         const auto resolved = d->resolveLayout(controlType, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
         const auto subElement = r == SE_CheckBoxContents ? SE_CheckBoxIndicator : SE_RadioButtonIndicator;
@@ -1480,6 +1545,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
             ? QQStyleKitReader::ControlType::CheckBox
             : QQStyleKitReader::ControlType::RadioButton;
         const auto resolved = d->resolveLayout(controlType, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
@@ -1502,6 +1569,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
 #if QT_CONFIG(itemviews)
     case SE_ItemViewItemCheckIndicator: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
@@ -1524,6 +1593,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
     case SE_ItemViewItemText:
     if (const auto *itemViewOption = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
         QRect indicatorRect;
@@ -1575,6 +1646,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
 #if QT_CONFIG(progressbar)
     case SE_ProgressBarGroove: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ProgressBar, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         QRect rect = opt->rect.marginsRemoved(metrics.margins);
         const auto *indicator = resolved.indicator();
@@ -1597,6 +1670,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
     case SE_ProgressBarContents: {
         if (qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ProgressBar, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto *foreground = resolved.indicator() ? resolved.indicator()->foreground() : nullptr;
             if (!foreground || !foreground->visible() || foreground->opacity() == 0)
                 return opt->rect;
@@ -1622,6 +1697,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
 #endif
             const auto controlType = isInSpinBox ? QQStyleKitReader::ControlType::SpinBox : QQStyleKitReader::ControlType::TextField;
             const auto resolved = d->resolveLayout(controlType, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QRect contentsRect = opt->rect.marginsRemoved(metrics.padding);
             const auto *textProps = resolved.text();
@@ -1650,6 +1727,8 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
 #if QT_CONFIG(combobox)
         if (widget && widget->inherits("QComboBoxPrivateContainer")) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Popup, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
             return visualRect(opt->direction, opt->rect, contentsRect);
@@ -1667,12 +1746,19 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing complex control with QCommonStyle: %d", int(cc));
+        QCommonStyle::drawComplexControl(cc, opt, p, w);
+        return;
+    }
 
     switch (cc) {
 #if QT_CONFIG(slider)
     case CC_Slider:
         if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::Slider, slider->state);
+            if (!r.isValid())
+                break;
             const auto &metrics = *r.metrics;
             QRect backgroundRect = opt->rect.marginsRemoved(metrics.margins);
 
@@ -1769,15 +1855,18 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 if (handle && handle->visible() && handle->opacity() > 0)
                     d->drawStyledItemRect(handle, handleOpt.rect, p);
             }
+            return;
         }
-        return;
+        break;
 #endif // QT_CONFIG(slider)
 #if QT_CONFIG(combobox)
     case CC_ComboBox:
         if (const QStyleOptionComboBox *combo = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             // background
-            QRect frameRect = subControlRect(CC_ComboBox, opt, SC_ComboBoxFrame, w);
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::ComboBox, combo->state);
+            if (!r.isValid())
+                break;
+            QRect frameRect = subControlRect(CC_ComboBox, opt, SC_ComboBoxFrame, w);
             d->drawStyledItemRect(r.background(), frameRect, p);
 
             // indicator
@@ -1786,6 +1875,7 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 indicatorOpt.rect = subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, w);
                 proxy()->drawPrimitive(PE_IndicatorArrowDown, &indicatorOpt, p, w);
             }
+            return;
         }
         break;
 #endif // QT_CONFIG(combobox)
@@ -1793,6 +1883,8 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
     case CC_SpinBox:
         if (const QStyleOptionSpinBox *spin = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             const auto r = d->resolve(w, QQStyleKitReader::ControlType::SpinBox, spin->state);
+            if (!r.isValid())
+                break;
             QRect frameRect = opt->rect.marginsRemoved(r.metrics->margins);
             // background
             d->drawStyledItemRect(r.background(), frameRect, p);
@@ -1807,12 +1899,14 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                 downOpt.rect = subControlRect(CC_SpinBox, opt, SC_SpinBoxDown, w);
                 proxy()->drawPrimitive(PE_IndicatorSpinDown, &downOpt, p, w);
             }
+            return;
         }
         break;
 #endif // QT_CONFIG(spinbox)
     default:
-        QCommonStyle::drawComplexControl(cc, opt, p, w);
+        break;
     }
+    QCommonStyle::drawComplexControl(cc, opt, p, w);
 }
 
 /*! \reimp */
@@ -1827,12 +1921,19 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
     const QWidget *w) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating subControlRect with QCommonStyle: %d %d",
+                 int(cc), int(sc));
+        return QCommonStyle::subControlRect(cc, opt, sc, w);
+    }
 
     switch (cc) {
 #if QT_CONFIG(slider)
     case CC_Slider:
         if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Slider, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QRect contentsRect = opt->rect.marginsRemoved(
                 slider->orientation == Qt::Horizontal
@@ -1959,6 +2060,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
         if (const QStyleOptionComboBox *combo = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             QRect frameRect = combo->rect;
             const auto r = d->resolveLayout(QQStyleKitReader::ControlType::ComboBox, combo->state);
+            if (!r.isValid())
+                break;
             const auto &metrics = *r.metrics;
             frameRect = frameRect.marginsRemoved(metrics.margins);
             switch (sc) {
@@ -2012,6 +2115,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
     case CC_SpinBox:
         if (const QStyleOptionSpinBox *spinBox = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             const auto r = d->resolveLayout(QQStyleKitReader::ControlType::SpinBox, spinBox->state);
+            if (!r.isValid())
+                break;
             const auto &metrics = *r.metrics;
             QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
             QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
@@ -2098,6 +2203,10 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     const QSize &contentsSize, const QWidget *widget) const
 {
     Q_D(const QStyleKitStyle);
+    if (!d->style) {
+        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating sizeFromContents with QCommonStyle: %d", int(ct));
+        return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
+    }
 
     switch (ct) {
     case CT_PushButton:
@@ -2106,6 +2215,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                                         ? QQStyleKitReader::ControlType::FlatButton
                                         : QQStyleKitReader::ControlType::Button;
             const auto resolved = d->resolveLayout(controlType, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
             const QSize contentSizeWithPadding = textSize.expandedTo(contentsSize)
@@ -2124,6 +2235,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
             const auto controlType = ct == CT_CheckBox ? QQStyleKitReader::ControlType::CheckBox
                                                        : QQStyleKitReader::ControlType::RadioButton;
             const auto resolved = d->resolveLayout(controlType, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
             const int bgWidth = metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right();
@@ -2144,6 +2257,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     case CT_ItemViewItem:
         if (const auto *item = qstyleoption_cast<const QStyleOptionViewItem *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ItemDelegate, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, item->text);
             const int bgWidth = metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right();
@@ -2164,6 +2279,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     case CT_ProgressBar:
         if (qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ProgressBar, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             const auto indicatorW = std::max(metrics.indicatorImplicitSize.width()
                                                 + metrics.indicatorMargins.left()
@@ -2188,6 +2305,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     case CT_Slider:
         if (const auto *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::Slider, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             // background in Controls = indicator = groove + track
             const int bgW = std::max(metrics.indicatorImplicitSize.width() + metrics.indicatorMargins.left() + metrics.indicatorMargins.right(),
@@ -2212,6 +2331,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 #endif
             auto controlType = isInSpinBox ? QQStyleKitReader::ControlType::SpinBox : QQStyleKitReader::ControlType::TextField;
             const auto resolved = d->resolveLayout(controlType, lineEditOpt.state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             QSize bgSize(0, 0);
             // For spinbox, the line edit doesn't have its own background in the Controls style
@@ -2225,6 +2346,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     case CT_ComboBox:
         if (const auto *comboBox = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ComboBox, opt->state);
+            if (!resolved.isValid())
+                break;
             const auto &metrics = *resolved.metrics;
             const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, comboBox->currentText);
             const int bgW = metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right();
@@ -2245,6 +2368,8 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 #if QT_CONFIG(spinbox)
     case CT_SpinBox: {
         const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::SpinBox, opt->state);
+        if (!resolved.isValid())
+            break;
         const auto &metrics = *resolved.metrics;
         const int bgW = metrics.bgImplicitSize.width() + metrics.margins.left() + metrics.margins.right();
         const int bgH = metrics.bgImplicitSize.height() + metrics.margins.top() + metrics.margins.bottom();
@@ -2260,7 +2385,6 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                             + metrics.indicatorMargins.bottom();
         return QSize(std::max({contentW + indicatorW + metrics.spacing, bgW}),
                      std::max({contentH, indicatorH, bgH}));
-        break;
     }
 #endif // QT_CONFIG(spinbox)
     default:
