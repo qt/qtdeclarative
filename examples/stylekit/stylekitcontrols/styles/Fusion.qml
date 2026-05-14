@@ -18,6 +18,7 @@ Style {
 
         readonly property color backgroundColor: backgroundDelegate.delegateStyle.data
                                                  ? backgroundDelegate.delegateStyle.data.overlayColor : "transparent"
+        property int radius: 2
 
         Rectangle {
             anchors.fill: parent
@@ -26,7 +27,7 @@ Style {
                 GradientStop { position: 0.0; color: backgroundDelegate.backgroundColor }
                 GradientStop { position: 1.0; color: Qt.lighter(backgroundDelegate.backgroundColor, 1.05) }
             }
-            radius: 2
+            radius: backgroundDelegate.radius
             border.color: "#121111"
         }
 
@@ -35,7 +36,7 @@ Style {
             width: parent.width - 2
             height: parent.height - 2
             color: "transparent"
-            radius: 2
+            radius: backgroundDelegate.radius
             border.color: "#424040"
         }
     }
@@ -134,6 +135,10 @@ Style {
             radius: width / 2
             foreground.margins: 4
         }
+    }
+
+    roundButton {
+        background.radius: 255
     }
 
     switchControl {
@@ -402,6 +407,10 @@ Style {
                 border.color: "#121111"
             }
             pressed.indicator.color: "#363333"
+        }
+
+        roundButton {
+            background.delegate: BackgroundDelegate { radius: height / 2 }
         }
 
         scrollBar {

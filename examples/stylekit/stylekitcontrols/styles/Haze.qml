@@ -148,6 +148,10 @@ Style {
         }
     }
 
+    roundButton {
+        background.radius: 255
+    }
+
     scrollBar {
         padding: 2
         background.visible: false

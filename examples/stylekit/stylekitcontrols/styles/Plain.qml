@@ -93,6 +93,10 @@ Style {
         padding: 0
     }
 
+    roundButton {
+        background.radius: 255
+    }
+
     scrollBar {
         // Hide the background, showing only the groove and handle
         background.visible: false
