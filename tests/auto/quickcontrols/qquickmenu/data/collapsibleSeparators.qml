@@ -17,6 +17,8 @@ ApplicationWindow {
     property alias separator1: separator1
     property alias separator2: separator2
     property alias separator3: separator3
+    property alias boundSeparator: boundSeparator
+    property bool showBoundSeparator: true
 
     Menu {
         id: menu
@@ -32,6 +34,8 @@ ApplicationWindow {
         MenuSeparator { id: separator2 }
 
         MenuItem { id: menuItem5; text: "Item 5" }
+
+        MenuSeparator { id: boundSeparator; visible: showBoundSeparator }
 
         MenuSeparator { id: separator3 }
     }

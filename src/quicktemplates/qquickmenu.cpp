@@ -31,6 +31,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmldata_p.h>
 #include <QtQml/private/qv4scopedvalue_p.h>
 #include <QtQml/private/qv4variantobject_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
@@ -1194,6 +1195,14 @@ void QQuickMenuPrivate::updateCollapsedSeparators()
         return QQuickItemPrivate::get(item)->explicitVisible;
     };
 
+    auto hasVisibleBinding = [](QQuickItem *item) {
+        static const int visibleIndex = QQuickItem::staticMetaObject.indexOfProperty("visible");
+        auto ddata = QQmlData::get(item, false);
+        if (!ddata)
+            return false;
+        return ddata->hasBindingBit(visibleIndex);
+    };
+
     auto hideSeparator = [this](QQuickItem *separatorItem) {
         separatorItem->setVisible(false);
         separatorItem->setHeight(0);
@@ -1216,10 +1225,8 @@ void QQuickMenuPrivate::updateCollapsedSeparators()
         return;
     }
 
-    // Track the first pending separator between visible item groups.
-    // Consecutive separators are collapsed immediately.
+    QQuickItem *visibleSeparatorBefore = nullptr;
     bool hasVisibleItemBefore = false;
-    QQuickItem *firstPendingSep = nullptr;
 
     for (int i = 0; i < count; ++i) {
         QQuickItem *item = itemAt(i);
@@ -1227,25 +1234,29 @@ void QQuickMenuPrivate::updateCollapsedSeparators()
             continue;
 
         if (qobject_cast<QQuickMenuSeparator *>(item)) {
-            if (!firstPendingSep)
-                firstPendingSep = item;
-            else
-                hideSeparator(item);
-        } else if (isExplicitlyVisible(item)) {
-            if (firstPendingSep) {
-                if (hasVisibleItemBefore)
-                    showSeparator(firstPendingSep);
-                else
-                    hideSeparator(firstPendingSep);
-                firstPendingSep = nullptr;
+            if (hasVisibleBinding(item)) {
+                if (isExplicitlyVisible(item) && !visibleSeparatorBefore)
+                    visibleSeparatorBefore = item;
+                continue;
             }
+
+            if (visibleSeparatorBefore) {
+                hideSeparator(item);
+            } else if (hasVisibleItemBefore) {
+                visibleSeparatorBefore = item;
+                showSeparator(item);
+            } else {
+                hideSeparator(item);
+            }
+        } else if (isExplicitlyVisible(item)) {
             hasVisibleItemBefore = true;
+            visibleSeparatorBefore = nullptr;
         }
     }
 
     // Trailing separator
-    if (firstPendingSep)
-        hideSeparator(firstPendingSep);
+    if (visibleSeparatorBefore && !hasVisibleBinding(visibleSeparatorBefore))
+        hideSeparator(visibleSeparatorBefore);
 }
 
 QQuickMenu *QQuickMenuPrivate::currentSubMenu() const
@@ -1992,16 +2003,16 @@ void QQuickMenu::setIcon(const QQuickIcon &icon)
     hidden. This mirrors the behavior of \l QMenu::separatorsCollapsible in
     Qt Widgets.
 
-    The default value is \c false.
+    The default value is \c true.
 
     This is useful when menu items are dynamically shown or hidden, as it
     prevents orphaned separators from being displayed.
 
-    \note When this property is \c true, the menu takes ownership of the
-    \l {Item::}{visible} and \l {Item::}{height} properties of MenuSeparator
-    items. Any user-defined bindings on these properties will be overwritten.
-    If you need to manually control separator visibility, set this property
-    to \c false.
+    \note Separators that have a user-defined binding on the \l {Item::}{visible}
+    property are not affected by this mechanism and are left unchanged.
+    For separators without a \c visible binding, the menu manages both
+    \l {Item::}{visible} and \l {Item::}{height} properties. Any existing
+    binding on \l {Item::}{height} will be overwritten.
 
     \sa MenuSeparator
 */

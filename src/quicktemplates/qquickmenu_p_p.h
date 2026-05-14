@@ -138,7 +138,7 @@ public:
     void resetContentItem();
 
     bool cascade = false;
-    bool collapsibleSeparators = false;
+    bool collapsibleSeparators = true;
     bool updatingCollapsedSeparators = false;
     bool triedToCreateNativeMenu = false;
     int hoverTimer = 0;
