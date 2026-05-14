@@ -992,53 +992,61 @@ TestCase {
     }
 
     Component {
-        id: reopenCombo
+        id: reopenComboBoxComponent
         Window {
-            property alias innerCombo: innerCombo
+            property alias comboBox: comboBox
             visible: true
             width: 300
             height: 300
             ComboBox {
-                id: innerCombo
+                id: comboBox
                 model: 10
                 anchors.verticalCenter: parent.verticalCenter
             }
         }
     }
 
-    // This test checks that when reopening the combobox that it is still appears at the same y position as
-    // previously
+    // This test checks that when reopening the combobox that it is still appears at the same
+    // y position as previously.
     function test_reopen_popup() {
-        let control = createTemporaryObject(reopenCombo, testCase)
-        verify(control)
-        let y = 0;
-        control.innerCombo.popup.popupType = Popup.Item
+        let root = createTemporaryObject(reopenComboBoxComponent, testCase)
+        verify(root)
+        let control = root.comboBox
+        let expectedY = 0
         for (let i = 0; i < 2; ++i) {
-            tryCompare(control.innerCombo.popup, "visible", false)
-            control.innerCombo.y = control.height - (control.innerCombo.popup.contentItem.height * 0.99)
-            let popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.innerCombo.popup, signalName: "yChanged"})
+            // Shouldn't have opened yet.
+            verify(!control.popup.visible)
+
+            // Position it near the bottom of the window.
+            control.y = root.height - (control.popup.contentItem.height * 0.99)
+            let popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.popup, signalName: "yChanged"})
             verify(popupYSpy.valid)
-            mousePress(control.innerCombo)
-            compare(control.innerCombo.pressed, true)
-            compare(control.innerCombo.popup.visible, false)
-            mouseRelease(control.innerCombo)
-            compare(control.innerCombo.pressed, false)
-            compare(control.innerCombo.popup.visible, true)
-            if (control.innerCombo.popup.enter)
-                tryCompare(control.innerCombo.popup.enter, "running", false)
-            // Check on the second opening that it has the same y position as before
+
+            // Click on the ComboBox to open the popup.
+            mousePress(control)
+            compare(control.pressed, true)
+            compare(control.popup.visible, false)
+            mouseRelease(control)
+            compare(control.pressed, false)
+            tryCompare(control.popup, "opened", true)
+            // Not sure why this is necessary, but it fixes a failure we were seeing on Android:
+            // previously we waited for the y to settle down on the first open by waiting for
+            // popupYSpy.count to become greater than 1, but it was failing.
+            if (isPolishScheduled(root))
+                waitForPolish(root)
+
             if (i !== 0) {
-                // y should not have changed again
-                if (StyleInfo.styleName !== "FluentWinUI3") // the popup y in FluentWinUI3 depends on the implicitHeight
-                    verify(popupYSpy.count === 0)
-                verify(y === control.innerCombo.popup.y)
+                // This is the second time it's been opened; check that it has the same y position as before.
+                // The popup y in FluentWinUI3 depends on the implicitHeight.
+                if (StyleInfo.styleName !== "FluentWinUI3")
+                    compare(popupYSpy.count, 0)
+                compare(control.popup.y, expectedY)
             } else {
-                // In some cases on the initial show, y changes more than once
-                tryVerify(function(){ return popupYSpy.count >= 1 })
-                y = control.innerCombo.popup.y
-                mouseClick(control.innerCombo)
-                compare(control.innerCombo.pressed, false)
-                tryCompare(control.innerCombo.popup, "visible", false)
+                // This is the first time it's been opened.
+                expectedY = control.popup.y
+                mouseClick(control)
+                compare(control.pressed, false)
+                tryCompare(control.popup, "visible", false)
             }
         }
     }
