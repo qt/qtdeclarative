@@ -76,8 +76,8 @@ ApplicationWindow {
             }
         }
 
-        // Controls left undefined — such as radioButton, checkBox, or
-        // switchControl — fall back to their immediate base type, which in
+        // Controls left undefined — such as radioButton, checkBox, roundButton
+        // or switchControl — fall back to their immediate base type, which in
         // this style will be either abstractButton or control directly.
     }
     //! [Plain Style]

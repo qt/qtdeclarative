@@ -200,6 +200,11 @@ BaseStyle {
         checked.indicator.foreground.visible: true
     }
 
+    roundButton {
+        background.radius: 255
+        text.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+    }
+
     scrollBar {
         padding: 0
         background {

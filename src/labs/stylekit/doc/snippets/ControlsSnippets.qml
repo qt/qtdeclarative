@@ -274,6 +274,13 @@ ApplicationWindow {
         }
         //! [radioButton]
 
+        //! [roundButton]
+        roundButton {
+            background.radius: 255
+            text.alignment: Qt.AlignVCenter | Qt.AlignHCenter
+        }
+        //! [roundButton]
+
         //! [scrollBar]
         scrollBar {
             padding: 0
@@ -588,6 +595,10 @@ ApplicationWindow {
 
             RadioButton {
                 text: "RadioButton"
+            }
+
+            RoundButton {
+                text: "RoundButton"
             }
 
             Frame {

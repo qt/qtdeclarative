@@ -59,7 +59,8 @@ QT_BEGIN_NAMESPACE
 
     Grouped property for styling all button-like controls, including
     \l [QtQuickControls]{Button}, \l [QtQuickControls]{CheckBox},
-    \l [QtQuickControls]{RadioButton}, and \l [QtQuickControls]{Switch}.
+    \l [QtQuickControls]{RadioButton}, \l [QtQuickControls]{Switch}
+    and \l [QtQuickControls]{RoundButton}.
     Unset properties fall back to \l control.
 
     \snippet ControlsSnippets.qml abstractButton
@@ -231,6 +232,16 @@ QT_BEGIN_NAMESPACE
     Unset properties fall back to \l abstractButton.
 
     \snippet ControlsSnippets.qml radioButton
+*/
+
+/*!
+    \qmlproperty ControlStyle AbstractStylableControls::roundButton
+
+    Grouped property for styling \l [QtQuickControls]{RoundButton}.
+
+    Unset properties fall back to \l abstractButton.
+
+    \snippet ControlsSnippets.qml roundButton
 */
 
 /*!
