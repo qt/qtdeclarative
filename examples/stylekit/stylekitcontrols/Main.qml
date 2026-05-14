@@ -8,7 +8,7 @@ import "styles"
 
 ApplicationWindow {
     id: app
-    width: 1024
+    width: 1048
     height: 800
     visible: true
     title: qsTr("StyleKit")
@@ -61,6 +61,10 @@ ApplicationWindow {
                         text: "Flat"
                         flat: true
                         checkable: true
+                    }
+
+                    RoundButton {
+                        text: "Round"
                     }
                 }
             }

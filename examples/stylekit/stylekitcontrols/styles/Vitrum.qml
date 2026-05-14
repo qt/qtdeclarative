@@ -277,6 +277,10 @@ Style {
         }
     }
 
+    roundButton {
+        background.radius: 255
+    }
+
     popup {
         padding: 2
         topPadding: 20
