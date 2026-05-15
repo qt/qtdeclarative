@@ -295,9 +295,14 @@ void QQmlTableModel::appendRow(const QVariant &row)
 */
 void QQmlTableModel::clear()
 {
-    QQmlEngine *engine = qmlEngine(this);
-    Q_ASSERT(engine);
-    setRows(QVariant::fromValue(engine->newArray()));
+    if (mRows.empty())
+        return;
+    beginResetModel();
+    mRows.clear();
+    mRowCount = 0;
+    endResetModel();
+    emit rowCountChanged();
+    emit rowsChanged();
 }
 
 /*!
