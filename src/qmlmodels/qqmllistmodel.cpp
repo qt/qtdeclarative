@@ -273,8 +273,8 @@ void StringOrTranslation::setString(const QString &s)
         return;
     QString mutableString(s);
     QString::DataPointer dataPointer = mutableString.data_ptr();
-    arrayData = dataPointer->d_ptr();
-    stringData = dataPointer->data();
+    arrayData = dataPointer.d_ptr();
+    stringData = dataPointer.data();
     stringSize = mutableString.size();
     if (arrayData)
         arrayData->ref();
