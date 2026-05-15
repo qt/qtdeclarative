@@ -98,7 +98,7 @@ void Heap::StringOrSymbol::destroy()
 {
     if (subtype < Heap::String::StringType_AddedString) {
         internalClass->engine->memoryManager->changeUnmanagedHeapSizeUsage(
-                    qptrdiff(-text()->size) * qptrdiff(sizeof(QChar)));
+                    qptrdiff(-text().size) * qptrdiff(sizeof(QChar)));
     }
     text().~QStringPrivate();
     Base::destroy();
