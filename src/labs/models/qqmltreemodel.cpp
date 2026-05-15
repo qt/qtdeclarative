@@ -12,11 +12,7 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace Qt::StringLiterals;
-
 Q_STATIC_LOGGING_CATEGORY(lcTreeModel, "qt.qml.treemodel")
-
-static const QString ROWS_PROPERTY_NAME = u"rows"_s;
 
 /*!
     \qmltype TreeModel
