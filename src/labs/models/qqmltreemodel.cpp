@@ -12,10 +12,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace Qt::StringLiterals;
-
-static const QString ROWS_PROPERTY_NAME = u"rows"_s;
-
 /*!
     \qmltype TreeModel
 //!    \nativetype QQmlTreeModel
