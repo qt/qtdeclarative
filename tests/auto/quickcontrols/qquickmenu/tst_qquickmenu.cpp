@@ -135,6 +135,8 @@ private slots:
     void collapsibleSeparators();
     void collapsibleSeparatorsUserHidden();
     void collapsibleSeparatorsWithBinding();
+    void contentWidth();
+    void contentWidthExplicitOverride();
 
 private:
     bool nativeMenuSupported = false;
@@ -3885,6 +3887,93 @@ void tst_QQuickMenu::collapsibleSeparatorsWithBinding()
     QVERIFY(!separator3->isVisible());    // consecutive after bound — collapsed
     menu->close();
     QTRY_VERIFY(!menu->isVisible());
+}
+
+void tst_QQuickMenu::contentWidth()
+{
+    // Verify that the menu's contentItem implicitWidth tracks the
+    // maximum implicitWidth of all visible menu items, and updates
+    // when items are added, removed, or resized.
+    QQuickControlsApplicationHelper helper(this, QLatin1String("contentWidth.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    menu->open();
+    TRY_VERIFY_POPUP_OPENED(menu);
+
+    QQuickItem *contentItem = menu->contentItem();
+    QVERIFY(contentItem);
+
+    // 1. Initial state: implicitWidth equals the widest item
+    qreal maxImplicitWidth = 0;
+    for (int i = 0; i < menu->count(); ++i) {
+        QQuickItem *item = menu->itemAt(i);
+        QVERIFY(item);
+        maxImplicitWidth = qMax(maxImplicitWidth, item->implicitWidth());
+    }
+    QCOMPARE_GT(maxImplicitWidth, 0);
+    QCOMPARE(contentItem->implicitWidth(), maxImplicitWidth);
+
+    // 2. Add a wider item: implicitWidth grows
+    const qreal oldImplicitWidth = contentItem->implicitWidth();
+    QVariant returnedValue;
+    QMetaObject::invokeMethod(window, "addLongMenuItem", Q_RETURN_ARG(QVariant, returnedValue));
+    QQuickMenuItem *newItem = qvariant_cast<QQuickMenuItem *>(returnedValue);
+    QVERIFY(newItem);
+    QTRY_VERIFY(newItem->implicitWidth() > oldImplicitWidth);
+    QTRY_COMPARE(contentItem->implicitWidth(), newItem->implicitWidth());
+
+    // 3. Remove the widest item: implicitWidth shrinks
+    const qreal widestWidth = newItem->implicitWidth();
+    menu->removeItem(newItem);
+    QCOMPARE_LT(contentItem->implicitWidth(), widestWidth);
+    // Should be back to the original max
+    QCOMPARE(contentItem->implicitWidth(), oldImplicitWidth);
+
+    // 4. Change text of an item to make it the widest: implicitWidth updates
+    QQuickMenuItem *shortItem = qobject_cast<QQuickMenuItem *>(menu->itemAt(0));
+    QVERIFY(shortItem);
+    shortItem->setText(QStringLiteral("This text is now much much much much longer than any other item in the menu"));
+    QCOMPARE_GT(shortItem->implicitWidth(), oldImplicitWidth);
+    QCOMPARE(contentItem->implicitWidth(), shortItem->implicitWidth());
+}
+
+void tst_QQuickMenu::contentWidthExplicitOverride()
+{
+    // Verify that an explicit contentWidth set by the user prevents
+    // the automatic content width adjustment when items are added.
+    QQuickControlsApplicationHelper helper(this, QLatin1String("contentWidth.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+
+    // Set an explicit contentWidth and open
+    menu->setContentWidth(200);
+    menu->open();
+    TRY_VERIFY_POPUP_OPENED(menu);
+
+    QQuickItem *contentItem = menu->contentItem();
+    QVERIFY(contentItem);
+
+    const qreal widthBeforeAdd = contentItem->width();
+
+    // Adding a wider item should not change the width since contentWidth is explicitly set
+    QVariant returnedValue;
+    QMetaObject::invokeMethod(window, "addLongMenuItem", Q_RETURN_ARG(QVariant, returnedValue));
+    QQuickMenuItem *newItem = qvariant_cast<QQuickMenuItem *>(returnedValue);
+    QVERIFY(newItem);
+    QTRY_COMPARE_GT(newItem->implicitWidth(), widthBeforeAdd);
+
+    // Width must remain unchanged — explicit contentWidth prevents auto-resize
+    QCOMPARE(contentItem->width(), widthBeforeAdd);
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)

@@ -95,6 +95,7 @@ public:
     void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
     void itemDestroyed(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange change, const QRectF &diff) override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
 
     QQuickPopupPositioner *getPositioner() override;
     bool prepareEnterTransition() override;
@@ -109,6 +110,7 @@ public:
     void onItemVisibleChanged();
     void updateTextPadding();
     void updateCollapsedSeparators();
+    void updateContentWidth();
 
     QQuickMenu *currentSubMenu() const;
     void setParentMenu(QQuickMenu *parent);

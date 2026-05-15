@@ -617,7 +617,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
     QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-53262
     if (complete)
         resizeItem(item);
-    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+    QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::ImplicitWidth);
     QQuickItemPrivate::get(item)->updateOrAddGeometryChangeListener(this, QQuickGeometryChange::Width);
     contentModel->insert(index, item);
 
@@ -644,6 +644,7 @@ void QQuickMenuPrivate::insertItem(int index, QQuickItem *item)
         printContentModelItems();
 
     updateTextPadding();
+    updateContentWidth();
     if (visible)
         updateCollapsedSeparators();
 }
@@ -715,7 +716,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
 
     contentData.removeOne(item);
 
-    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent);
+    QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed | QQuickItemPrivate::Parent | QQuickItemPrivate::ImplicitWidth);
     QQuickItemPrivate::get(item)->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
     item->setParentItem(nullptr);
     contentModel->remove(index);
@@ -744,6 +745,7 @@ void QQuickMenuPrivate::removeItem(int index, QQuickItem *item, DestructionPolic
     if (lcMenu().isDebugEnabled())
         printContentModelItems();
 
+    updateContentWidth();
     if (visible)
         updateCollapsedSeparators();
 }
@@ -961,6 +963,32 @@ void QQuickMenuPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChan
         // doesn't have an explicit width set, make it fill the width of the menu.
         resizeItem(item);
     }
+}
+
+void QQuickMenuPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    if (item != contentItem)
+        updateContentWidth();
+}
+
+void QQuickMenuPrivate::updateContentWidth()
+{
+    if (!contentModel || !contentItem)
+        return;
+
+    Q_Q(QQuickMenu);
+    qreal maxWidth = 0;
+    for (int i = 0; i < contentModel->count(); ++i) {
+        QQuickItem *item = q->itemAt(i);
+        if (item && QQuickItemPrivate::get(item)->explicitVisible)
+            maxWidth = qMax(maxWidth, item->implicitWidth());
+    }
+
+    // Set the implicitWidth on the contentItem (ListView) so that the
+    // menu expands to fit its widest item. An explicit contentWidth on
+    // the Menu takes precedence over this value.
+    if (!qFuzzyIsNull(maxWidth))
+        contentItem->setImplicitWidth(maxWidth);
 }
 
 QQuickPopupPositioner *QQuickMenuPrivate::getPositioner()
