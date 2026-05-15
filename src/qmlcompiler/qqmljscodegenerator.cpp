@@ -71,9 +71,9 @@ QString QQmlJSCodeGenerator::metaTypeFromType(const QQmlJSScope::ConstPtr &type)
 
 QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type) const
 {
-    return u"[]() { static const auto t = QMetaType::fromName(\""_s
+    return u"[]() { static constexpr QByteArrayView name(\""_s
             + QString::fromUtf8(QMetaObject::normalizedType(type->augmentedInternalName().toUtf8()))
-            + u"\"); return t; }()"_s;
+            + u"\"); static const auto t = QMetaType::fromName(name); return t; }()"_s;
 }
 
 QString QQmlJSCodeGenerator::compositeListMetaType(const QString &elementName) const
