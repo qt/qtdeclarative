@@ -41,8 +41,8 @@ struct Q_QML_EXPORT SharedArrayBuffer : Object {
     void setSharedArrayBuffer(bool shared) noexcept { isShared = shared; }
     bool isSharedArrayBuffer() const noexcept { return isShared; }
 
-    char *arrayData() noexcept { return arrayDataPointer()->data(); }
-    const char *constArrayData() const noexcept { return constArrayDataPointer()->data(); }
+    char *arrayData() noexcept { return arrayDataPointer().data(); }
+    const char *constArrayData() const noexcept { return constArrayDataPointer().data(); }
     uint arrayDataLength() const noexcept { return constArrayDataPointer().size; }
 
     bool hasSharedArrayData() const noexcept { return constArrayDataPointer().isShared(); }
