@@ -348,14 +348,19 @@ void QQStyleKitStyle::recreateTheme()
     QQmlComponent *effectiveThemeComponent = nullptr;
 
     if (QString::compare(m_themeName, kSystem, Qt::CaseInsensitive) == 0) {
-        const auto scheme = QGuiApplication::styleHints()->colorScheme();
-        if (scheme == Qt::ColorScheme::Light) {
-            effectiveThemeName = kLight;
-            effectiveThemeComponent = m_light;
-        }
-        else if (scheme == Qt::ColorScheme::Dark) {
+        switch (QGuiApplication::styleHints()->colorScheme()) {
+        case Qt::ColorScheme::Dark:
             effectiveThemeName = kDark;
             effectiveThemeComponent = m_dark;
+            break;
+        case Qt::ColorScheme::Light:
+        case Qt::ColorScheme::Unknown:
+            effectiveThemeName = kLight;
+            effectiveThemeComponent = m_light;
+            break;
+        // Intentionally skipping a default case here, so that if a new scheme is added
+        // in the future, we get a warning about an unhandled enum value, which will prompt
+        // us to consider if we need to add explicit support for it in StyleKit as well.
         }
     } else if (QString::compare(m_themeName, kLight, Qt::CaseInsensitive) == 0) {
         effectiveThemeName = kLight;
