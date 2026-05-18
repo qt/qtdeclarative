@@ -377,15 +377,15 @@ void QQStyleKitStyle::recreateTheme()
             }
         }
         if (effectiveThemeName.isEmpty())
-            qmlWarning(this) << "No theme found with name:" << m_themeName;
+            qmlWarning(this) << "No theme found with themeName '" << m_themeName << "'";
         else if (!effectiveThemeComponent)
             qmlWarning(this) << "Custom theme '" << effectiveThemeName << "' has no theme component set";
     }
 
-    if (m_effectiveThemeName == effectiveThemeName)
-        return;
-
     if (m_theme) {
+        if (m_effectiveThemeName == effectiveThemeName)
+            return;
+
         m_theme->deleteLater();
         m_theme = nullptr;
     }
