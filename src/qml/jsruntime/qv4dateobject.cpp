@@ -320,8 +320,8 @@ static inline double ParseString(const QString &s, double localTZA)
       after it) may be omitted. In each part, the second and later components
       are optional. There's an extended syntax for negative and large positive
       years: ±yyyyyy; the leading sign, even when +, isn't optional.  If month
-      (MM) or day (dd) is omitted, it is 01; if minute (mm) or second (ss) is
-      omitted, it's 00; if milliseconds (zzz) are omitted, they're 000.
+      (MM) or day (dd) is omitted, it is 01; if hour (HH), minute (mm) or second
+      (ss) is omitted, it's 00; if milliseconds (zzz) are omitted, they're 000.
 
       When the time zone offset (t) is absent, date-only forms are interpreted as
       indicating a UTC time and date-time forms are interpreted in local time.
