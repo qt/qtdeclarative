@@ -117,7 +117,7 @@ void Heap::SharedArrayBuffer::init(size_t length)
 void Heap::SharedArrayBuffer::init(const QByteArray& array)
 {
     Object::init();
-    new (&arrayDataPointerStorage) QArrayDataPointer<char>(const_cast<QByteArray &>(array).data_ptr());
+    new (&arrayDataPointerStorage) QArrayDataPointer<char>(array.data_ptr());
     isShared = true;
 }
 
