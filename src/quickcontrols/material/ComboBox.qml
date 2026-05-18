@@ -90,6 +90,7 @@ T.ComboBox {
         topMargin: 12
         bottomMargin: 12
         verticalPadding: 8
+        font: control.font
 
         Material.theme: control.Material.theme
         Material.accent: control.Material.accent

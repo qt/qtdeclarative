@@ -2524,4 +2524,20 @@ TestCase {
         compare(control.background.children[0].width, 100)
         compare(control.background.children[0].height, 30)
     }
+
+    Component {
+        id: popupFontComponent
+        ComboBox {
+            font.pixelSize: 44
+            font.bold: true
+        }
+    }
+
+    function test_popupFont() {
+        let control = createTemporaryObject(popupFontComponent, testCase)
+        verify(control)
+        compare(control.font.pixelSize, 44)
+        compare(control.font.bold, true)
+        compare(control.popup.font, control.font)
+    }
 }

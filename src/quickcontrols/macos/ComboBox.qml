@@ -74,7 +74,9 @@ NativeStyle.DefaultComboBox {
         topInset: -32
         rightInset: -32
         bottomInset: -32
+        font: control.font
         palette: control.palette
+
         contentItem: ListView {
             clip: true
             model: control.delegateModel

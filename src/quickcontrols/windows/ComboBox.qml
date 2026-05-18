@@ -84,6 +84,7 @@ T.ComboBox {
         height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
         topMargin: 6
         bottomMargin: 6
+        font: control.font
 
         contentItem: ListView {
             clip: true
