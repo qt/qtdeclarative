@@ -114,6 +114,7 @@ T.ComboBox {
         height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
         topMargin: 8
         bottomMargin: 8
+        font: control.font
 
         Universal.theme: control.Universal.theme
         Universal.accent: control.Universal.accent

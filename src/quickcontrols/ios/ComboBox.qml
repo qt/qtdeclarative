@@ -120,12 +120,11 @@ T.ComboBox {
     popup: T.Popup {
         x: (control.width - width) / 2
         y: control.height + 6
-
         height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
         width: control.__popupButtonStyle ? 250 : control.width
-
         topMargin: 6
         bottomMargin: 6
+        font: control.font
 
         enter: Transition {
             NumberAnimation { property: "scale"; from: 0.2; to: 1.0; easing.type: Easing.OutQuint; duration: 220 }

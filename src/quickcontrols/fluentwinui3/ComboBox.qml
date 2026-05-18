@@ -154,6 +154,7 @@ T.ComboBox {
         width: control.width
         topMargin: 8
         bottomMargin: 8
+        font: control.font
         palette: control.palette
 
         enter: Transition {

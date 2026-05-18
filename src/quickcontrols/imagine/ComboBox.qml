@@ -121,6 +121,7 @@ T.ComboBox {
         rightInset: background ? -background.rightInset || 0 : 0
         bottomInset: background ? -background.bottomInset || 0 : 0
 
+        font: control.font
         palette.text: control.palette.text
         palette.highlight: control.palette.highlight
         palette.highlightedText: control.palette.highlightedText
