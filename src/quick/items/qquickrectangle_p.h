@@ -130,7 +130,7 @@ class Q_QUICK_EXPORT QQuickRectangle : public QQuickItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor NOTIFY colorChanged)
     Q_PROPERTY(QJSValue gradient READ gradient WRITE setGradient RESET resetGradient)
     Q_PROPERTY(QQuickPen * border READ border CONSTANT)
     Q_PROPERTY(qreal radius READ radius WRITE setRadius NOTIFY radiusChanged)
@@ -145,6 +145,7 @@ public:
 
     QColor color() const;
     void setColor(const QColor &);
+    void resetColor();
 
     QQuickPen *border();
 

@@ -56,6 +56,13 @@ void tst_qquickrectangle::color()
 
     QImage image = view.grabWindow();
     QVERIFY(image.pixel(0,0) == QColor("#020202").rgba());
+
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(view.rootObject());
+    QVERIFY(rect);
+    QCOMPARE(rect->color(), QColor("#020202"));
+
+    rect->resetColor();
+    QCOMPARE(rect->color(), QColor(Qt::white));
 }
 
 void tst_qquickrectangle::gradient()

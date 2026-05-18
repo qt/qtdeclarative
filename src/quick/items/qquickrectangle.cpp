@@ -762,6 +762,11 @@ void QQuickRectangle::setColor(const QColor &c)
     emit colorChanged();
 }
 
+void QQuickRectangle::resetColor()
+{
+    setColor(Qt::white);
+}
+
 QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
 {
     Q_UNUSED(data);
