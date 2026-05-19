@@ -31,12 +31,12 @@ struct ContextRegistrator
         // creation for index == 0 and falls back to returning parentContext
         // otherwise. the qmltc generates exactly that but with an implicit
         // index check
-        if (index == 0) {
-            auto priv = QQmlEnginePrivate::get(engine);
-            return priv->createInternalContext(priv->compilationUnitFromUrl(url), parentContext, 0,
-                                               true);
-        }
-        return parentContext;
+        if (index != 0)
+            return parentContext;
+
+        QQmlEnginePrivate *priv = QQmlEnginePrivate::get(engine);
+        return priv->createComponentRootContext(priv->compilationUnitFromUrl(url), parentContext,
+                                                0);
     }
 
     static void set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,

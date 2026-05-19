@@ -1605,32 +1605,29 @@ QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const 
     return executable.data();
 }
 
-QQmlRefPointer<QQmlContextData>
-QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext,
-                                         int subComponentIndex, bool isComponentRoot)
+QQmlRefPointer<QQmlContextData> QQmlEnginePrivate::createComponentRootContext(
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+        const QQmlRefPointer<QQmlContextData> &parentContext, int subComponentIndex)
 {
     Q_ASSERT(unit);
 
-    QQmlRefPointer<QQmlContextData> context;
-    context = QQmlContextData::createRefCounted(parentContext);
-    context->setInternal(true);
-    context->setImports(unit->typeNameCache());
-    context->initFromTypeCompilationUnit(unit, subComponentIndex);
+    QQmlRefPointer<QQmlContextData> context =
+            createBareContext(unit, parentContext, subComponentIndex);
 
     const auto *dependentScripts = unit->dependentScriptsPtr();
     const qsizetype dependentScriptsSize = dependentScripts->size();
-    if (isComponentRoot && dependentScriptsSize) {
-        QV4::ExecutionEngine *v4 = v4Engine.get();
-        Q_ASSERT(v4);
-        QV4::Scope scope(v4);
+    if (!dependentScriptsSize)
+        return context;
 
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(dependentScriptsSize));
-        context->setImportedScripts(v4, scripts);
-        QV4::ScopedValue v(scope);
-        for (qsizetype i = 0; i < dependentScriptsSize; ++i)
-            scripts->put(i, (v = dependentScripts->at(i)->scriptValueForContext(context)));
-    }
+    QV4::ExecutionEngine *v4 = v4Engine.get();
+    Q_ASSERT(v4);
+
+    QV4::Scope scope(v4);
+    QV4::ScopedObject scripts(scope, v4->newArrayObject(dependentScriptsSize));
+    context->setImportedScripts(v4, scripts);
+    QV4::ScopedValue v(scope);
+    for (qsizetype i = 0; i < dependentScriptsSize; ++i)
+        scripts->put(i, (v = dependentScripts->at(i)->scriptValueForContext(context)));
 
     return context;
 }
