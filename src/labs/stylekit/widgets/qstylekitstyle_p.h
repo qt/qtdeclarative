@@ -124,6 +124,10 @@ private:
     void unsetStyleFont(QWidget *widget);
     void setStyleFont(QWidget *widget);
 
+    void unsetStylePalette(QWidget *widget);
+    void setStylePalette(QWidget *widget, const QPalette &stylePalette) const;
+    void refreshStylePalette(QWidget *widget);
+
     QQStyleKitReader *readerForWidget(const QWidget *widget) const;
     void cleanupWidgetReader(const QWidget *widget) const;
 
@@ -171,6 +175,7 @@ private:
     // Cache of resolved metrics per control type and state
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;
+    mutable QHash<const QWidget *, Tampered<QPalette>> customPaletteWidgets;
     QString stylePath;
 };
 
