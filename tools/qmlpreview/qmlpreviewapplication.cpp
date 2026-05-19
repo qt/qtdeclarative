@@ -54,9 +54,6 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
 {
     m_connection.reset(new QQmlDebugConnection);
     m_qmlPreviewClient.reset(new QQmlPreviewClient(m_connection.data()));
-    QQmlPreviewClient::Settings settings;
-    settings.enableInPlaceUpdates = false;
-    m_qmlPreviewClient->sendConfiguration(settings);
     m_connectTimer.setInterval(1000);
 
     m_loadTimer.setInterval(100);
@@ -67,12 +64,26 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
 
     connect(&m_connectTimer, &QTimer::timeout, this, &QmlPreviewApplication::tryToConnect);
     connect(m_connection.data(), &QQmlDebugConnection::connected, &m_connectTimer, &QTimer::stop);
+    connect(m_connection.data(), &QQmlDebugConnection::connected, this, [this]() {
+        QQmlPreviewClient::Settings settings;
+        settings.enableInPlaceUpdates = true;
+        m_qmlPreviewClient->sendConfiguration(settings);
+        const QString status = QString::fromUtf8("Inplace updates configuration: %1")
+                                       .arg(settings.enableInPlaceUpdates ? "enabled" : "disabled");
+        logStatus(status);
+    });
 
-    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::error,
-            this, &QmlPreviewApplication::logError);
-    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::request,
-            this, &QmlPreviewApplication::serveRequest);
-
+    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::error, this,
+            &QmlPreviewApplication::logError);
+    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::request, this,
+            &QmlPreviewApplication::serveRequest);
+    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::confirmation, this,
+            [this](const QQmlPreviewClient::Settings &settings) {
+                m_confirmedSettings = settings;
+                const QString status = QString::fromUtf8("Inplace updates setting confirmed as: %1")
+                                       .arg(m_confirmedSettings.enableInPlaceUpdates ? "enabled" : "disabled");
+                logStatus(status);
+            });
     connect(&m_watcher, &QmlPreviewFileSystemWatcher::fileChanged,
             this, &QmlPreviewApplication::sendFile);
     connect(&m_watcher, &QmlPreviewFileSystemWatcher::directoryChanged,

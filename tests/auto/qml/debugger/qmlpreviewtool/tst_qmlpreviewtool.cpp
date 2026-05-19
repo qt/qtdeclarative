@@ -28,6 +28,8 @@ private slots:
     void resourceFileUpdate();
     void resourceVerboseOutput();
     void loadFromModuleFileUpdate();
+    void settingConfiguration();
+    void settingConfirmation();
 
 private:
     QString m_qmlPreviewPath;
@@ -133,6 +135,8 @@ void tst_QmlPreviewTool::startPreview(const QStringList &args)
     m_process.setProcessChannelMode(QProcess::MergedChannels);
     connect(&m_process, &QProcess::readyReadStandardOutput,
             this, &tst_QmlPreviewTool::readProcessOutput);
+    m_process.setEnvironment(QProcess::systemEnvironment()
+                             + QStringList(QLatin1String("QMLPREVIEW_HOTRELOAD=1")));
     m_process.start(m_qmlPreviewPath, args);
     QVERIFY2(m_process.waitForStarted(5000),
              qPrintable(QLatin1String("Failed to start qmlpreview: ") + m_process.errorString()));
@@ -323,6 +327,28 @@ void tst_QmlPreviewTool::loadFromModuleFileUpdate()
 
     // The test application has never seen its own file.
     QVERIFY(!m_output.contains(QLatin1String("HELPER_MODULE_RESOURCE")));
+}
+
+void tst_QmlPreviewTool::settingConfiguration()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("CONFIGURATION"))));
+
+    startPreview({ QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile });
+    QVERIFY2(waitForOutput(QLatin1String("Inplace updates configuration: enabled")),
+             qPrintable(QLatin1String("Did not receive configuration log. Output:\n") + m_output));
+}
+
+void tst_QmlPreviewTool::settingConfirmation()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    const QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("CONFIRMATION"))));
+
+    startPreview({ QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile });
+    QVERIFY2(waitForOutput(QLatin1String("Inplace updates setting confirmed as: enabled")),
+             qPrintable(QLatin1String("Did not receive confirmation log. Output:\n") + m_output));
 }
 
 QTEST_MAIN(tst_QmlPreviewTool)
