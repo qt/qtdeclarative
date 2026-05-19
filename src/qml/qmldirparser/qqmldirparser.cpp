@@ -479,41 +479,41 @@ static bool canDisambiguate(
 
 static void disambiguateFileSelectedComponents(QQmlDirComponents *components)
 {
-    using Iterator = QQmlDirComponents::iterator;
+    using ConstIterator = QQmlDirComponents::const_iterator;
 
     // end iterator may get invalidated by the erasing below.
     // Therefore, refetch it on each iteration.
-    for (Iterator it = components->begin(); it != components->end();) {
+    for (ConstIterator cit = components->constBegin(); cit != components->constEnd();) {
 
         // We can erase and re-assign cit if we immediately forget cit2.
         // But we cannot erase cit2 without potentially invalidating cit.
 
         bool doErase = false;
-        const Iterator end = components->end();
-        for (Iterator it2 = ++Iterator(it); it2 != end; ++it2) {
-            if (it2.key() != it.key())
+        const ConstIterator cend = components->constEnd();
+        for (ConstIterator cit2 = ++ConstIterator(cit); cit2 != cend; ++cit2) {
+            if (cit2.key() != cit.key())
                 break;
 
-            Q_ASSERT(it2->typeName == it->typeName);
+            Q_ASSERT(cit2->typeName == cit->typeName);
 
-            if (it2->version != it->version
-                || it2->internal != it->internal
-                || it2->singleton != it->singleton) {
+            if (cit2->version != cit->version
+                || cit2->internal != cit->internal
+                || cit2->singleton != cit->singleton) {
                 continue;
             }
 
             // The two components may differ only by fileName now.
 
-            if (canDisambiguate(it->fileName, it2->fileName, &(it2->fileName))) {
+            if (canDisambiguate(cit->fileName, cit2->fileName, &(cit2->fileName))) {
                 doErase = true;
                 break;
             }
         }
 
         if (doErase)
-            it = components->erase(it);
+            cit = components->erase(cit);
         else
-            ++it;
+            ++cit;
     }
 }
 
