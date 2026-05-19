@@ -291,6 +291,8 @@ private slots:
 
     void instanceof_data();
     void instanceof();
+    void instanceofMultiEngine();
+    void instanceofMultiEngineInlineComponent();
 
     void concurrentLoadQmlDir();
 
@@ -5835,6 +5837,73 @@ void tst_qqmllanguage::instanceof()
         QVERIFY(expr.hasError());
         QCOMPARE(expr.error().description(), expectedValue.toString());
     }
+}
+
+// QTBUG-146847: instanceof must work for composite types even when multiple
+// engines have loaded the same QML file (registering separate compilation units
+// and thus different QMetaObject instances for the same type).
+void tst_qqmllanguage::instanceofMultiEngine()
+{
+    const QUrl url = testFileUrl("instanceofMultiEngine/Main.qml");
+
+    QQmlEngine engine1;
+    QQmlComponent component1(&engine1, url);
+    QVERIFY2(component1.isReady(), qPrintable(component1.errorString()));
+    QScopedPointer<QObject> obj1(component1.create());
+    QVERIFY(obj1);
+
+    QQmlEngine engine2;
+    QQmlComponent component2(&engine2, url);
+    QVERIFY2(component2.isReady(), qPrintable(component2.errorString()));
+    QScopedPointer<QObject> obj2(component2.create());
+    QVERIFY(obj2);
+
+    // Evaluate instanceof AFTER both engines have loaded their compilation units.
+    // This is the scenario that triggers the bug: metaObjectForType() may return
+    // the metaObject from a different engine's compilation unit.
+    QQmlExpression expr1(engine1.contextForObject(obj1.data()), obj1.data(),
+                         QStringLiteral("instance instanceof MyType"));
+    QVariant result1 = expr1.evaluate();
+    QVERIFY2(!expr1.hasError(), qPrintable(expr1.error().description()));
+    QVERIFY(result1.toBool());
+
+    QQmlExpression expr2(engine2.contextForObject(obj2.data()), obj2.data(),
+                         QStringLiteral("instance instanceof MyType"));
+    QVariant result2 = expr2.evaluate();
+    QVERIFY2(!expr2.hasError(), qPrintable(expr2.error().description()));
+    QVERIFY(result2.toBool());
+}
+
+// QTBUG-146847: same as instanceofMultiEngine but for inline components.
+// The inline component's metaObject is at a different index in the compilation
+// unit's property caches, not at the root.
+void tst_qqmllanguage::instanceofMultiEngineInlineComponent()
+{
+    const QUrl url = testFileUrl("instanceofMultiEngine/Inline.qml");
+
+    QQmlEngine engine1;
+    QQmlComponent component1(&engine1, url);
+    QVERIFY2(component1.isReady(), qPrintable(component1.errorString()));
+    QScopedPointer<QObject> obj1(component1.create());
+    QVERIFY(obj1);
+
+    QQmlEngine engine2;
+    QQmlComponent component2(&engine2, url);
+    QVERIFY2(component2.isReady(), qPrintable(component2.errorString()));
+    QScopedPointer<QObject> obj2(component2.create());
+    QVERIFY(obj2);
+
+    QQmlExpression expr1(engine1.contextForObject(obj1.data()), obj1.data(),
+                         QStringLiteral("instance instanceof InlineType"));
+    QVariant result1 = expr1.evaluate();
+    QVERIFY2(!expr1.hasError(), qPrintable(expr1.error().description()));
+    QVERIFY(result1.toBool());
+
+    QQmlExpression expr2(engine2.contextForObject(obj2.data()), obj2.data(),
+                         QStringLiteral("instance instanceof InlineType"));
+    QVariant result2 = expr2.evaluate();
+    QVERIFY2(!expr2.hasError(), qPrintable(expr2.error().description()));
+    QVERIFY(result2.toBool());
 }
 
 void tst_qqmllanguage::concurrentLoadQmlDir()

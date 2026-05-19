@@ -499,6 +499,17 @@ bool QQmlTypeWrapper::virtualIsEqualTo(Managed *a, Managed *b)
     return false;
 }
 
+static bool instanceHasCompilationUnit(QObject *wrapperObject)
+{
+    // If the target type is a composite type, we can cut instanceof short
+    // if the object is not of a composite type (e.g. Rectangle{} is never
+    // an instance of CustomRectangle)
+
+    QQmlData *theirDData = QQmlData::get(wrapperObject);
+    Q_ASSERT(theirDData); // must exist, otherwise how do we have a QObjectWrapper for it?!
+    return !theirDData->compilationUnit.isNull();
+}
+
 static ReturnedValue instanceOfQObject(
         const QV4::QQmlTypeWrapper *typeWrapper, QObject *wrapperObject)
 {
@@ -508,25 +519,38 @@ static ReturnedValue instanceOfQObject(
         return engine->throwTypeError();
 
     const QQmlType type = typeWrapper->d()->type();
-    const QMetaType myTypeId = type.typeId();
     QQmlMetaObject myQmlType;
-    if (!myTypeId.isValid()) {
-        // we're a composite type; a composite type cannot be equal to a
-        // non-composite object instance (Rectangle{} is never an instance of
-        // CustomRectangle)
-        QQmlData *theirDData = QQmlData::get(wrapperObject);
-        Q_ASSERT(theirDData); // must exist, otherwise how do we have a QObjectWrapper for it?!
-        if (!theirDData->compilationUnit)
+    if (type.isComposite()) {
+        if (!instanceHasCompilationUnit(wrapperObject))
             return Encode(false);
 
-        QQmlRefPointer<QQmlTypeData> td
-                = engine->typeLoader()->getType(typeWrapper->d()->type().sourceUrl());
-        if (CompiledData::CompilationUnit *cu = td->compilationUnit())
-            myQmlType = QQmlMetaType::metaObjectForType(cu->metaType());
-        else
-            return Encode(false); // It seems myQmlType has some errors, so we could not compile it.
+        const CompiledData::CompilationUnit *cu
+                = engine->typeLoader()->getType(type.sourceUrl())->compilationUnit();
+
+        // If the CU isn't there, the type probably has errors, so we could not compile it.
+        if (!cu)
+            return Encode(false);
+
+        myQmlType = QQmlMetaObject(cu->rootPropertyCache());
+        Q_ASSERT(!myQmlType.isNull());
+    } else if (type.isInlineComponentType()) {
+        if (!instanceHasCompilationUnit(wrapperObject))
+            return Encode(false);
+
+        auto baseUrl = type.sourceUrl();
+        baseUrl.setFragment(QString());
+
+        const CompiledData::CompilationUnit *cu
+                = engine->typeLoader()->getType(baseUrl)->compilationUnit();
+
+        if (!cu)
+            return Encode(false);
+
+        myQmlType = QQmlMetaObject(cu->propertyCaches.at(
+                cu->inlineComponentId(type.elementName())));
+        Q_ASSERT(!myQmlType.isNull());
     } else {
-        myQmlType = QQmlMetaType::metaObjectForType(myTypeId);
+        myQmlType = QQmlMetaType::metaObjectForType(type.typeId());
         if (myQmlType.isNull())
             return Encode(false);
     }
