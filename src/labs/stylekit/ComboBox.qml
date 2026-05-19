@@ -58,7 +58,7 @@ T.ComboBox {
             StyleKitLayoutItem {
                 id: indicatorItem
                 item: control.indicator
-                alignment: Qt.AlignRight | Qt.AlignVCenter
+                alignment: styleReader.indicator.alignment
                 margins.left: styleReader.indicator.leftMargin
                 margins.right: styleReader.indicator.rightMargin
                 margins.top: styleReader.indicator.topMargin

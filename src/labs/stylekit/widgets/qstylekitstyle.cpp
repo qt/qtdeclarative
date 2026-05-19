@@ -1969,12 +1969,12 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 QRect indicatorRect = subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow, w);
                 const int spacing = metrics.spacing;
                 const auto *indicator = r.indicator();
-                const uint alignment = indicator
-                    ? resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter)
-                    : uint(Qt::AlignLeft | Qt::AlignVCenter);
-                if (alignment & Qt::AlignLeft) {
+                const uint indicatorAlign = indicator
+                    ? resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter)
+                    : uint(Qt::AlignRight | Qt::AlignVCenter);
+                if (indicatorAlign & Qt::AlignLeft) {
                     contentsRect.setLeft(indicatorRect.right() + spacing);
-                } else if (alignment & Qt::AlignRight) {
+                } else if (indicatorAlign & Qt::AlignRight) {
                     contentsRect.setRight(indicatorRect.left() - spacing);
                 }
                 return visualRect(opt->direction, opt->rect, contentsRect);
@@ -1991,7 +1991,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const int h = indicator->implicitHeight() >= 0
                     ? indicator->implicitHeight()
                     : contentsRect.height() - indicator->topMargin() - indicator->bottomMargin();
-                const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
+                const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
                 const QMargins indicatorMargins(indicator->leftMargin(), indicator->topMargin(),
                                                indicator->rightMargin(), indicator->bottomMargin());
                 return visualRect(opt->direction, opt->rect,

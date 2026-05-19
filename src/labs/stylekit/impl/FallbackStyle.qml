@@ -118,6 +118,7 @@ BaseStyle {
         indicator {
             color: __transparent
             border.width: 0
+            alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
                 implicitWidth: 10
                 implicitHeight: 10
