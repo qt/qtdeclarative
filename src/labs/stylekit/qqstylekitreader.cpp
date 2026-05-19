@@ -225,8 +225,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-static const QString kAlternate1 = "A1"_L1;
-static const QString kAlternate2 = "A2"_L1;
+static constexpr QLatin1StringView kAlternate1 = "A1"_L1;
+static constexpr QLatin1StringView kAlternate2 = "A2"_L1;
 
 static quint64 textFontOverridesSignature(const QQStyleKitTextProperties *t)
 {
