@@ -206,6 +206,12 @@ private slots:
     // silently when the property's metatype is QQuickItem* (type mismatch).
     void compositeRebuildNoVisualChildDuplication();
 
+    void singletonConstantPropertyChange();
+    void singletonBindingPropagation();
+    void singletonChildObjectPropertyChange();
+    void singletonPropertyAddition();
+    void singletonConsumerBindingRefresh();
+
 private:
     QQmlEngine engine;
 };
@@ -3223,6 +3229,183 @@ void tst_QQmlPreviewObjectPatch::compositeRebuildNoVisualChildDuplication()
     // not 4 (which would indicate old children were not removed).
     for (QQuickItem *composite : composites)
         QCOMPARE(composite->childItems().size(), 2);
+}
+
+void tst_QQmlPreviewObjectPatch::singletonConstantPropertyChange()
+{
+    QQmlEngine engine;
+
+    const QString moduleDir = dataDirectory() + QStringLiteral("/SingletonModule");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/SingletonModulePatched");
+    engine.addImportPath(dataDirectory());
+
+    // Instantiate a consumer so the singleton is actually created.
+    QQmlComponent consumerComp(&engine, QUrl::fromLocalFile(moduleDir + "/Consumer.qml"));
+    QVERIFY2(consumerComp.isReady(), qPrintable(consumerComp.errorString()));
+    QScopedPointer<QObject> consumer(consumerComp.create());
+    QVERIFY(consumer);
+
+    // Verify initial state.
+    QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#121212"));
+    QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#FEFEFE"));
+
+    // Get the old and new singleton CUs.
+    QQmlComponent oldComp(&engine, QUrl::fromLocalFile(moduleDir + "/Colors.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+
+    QQmlComponent newComp(&engine, QUrl::fromLocalFile(patchedDir + "/Colors.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // Discover and patch singleton objects.
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#ffffff"));
+    QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#121111"));
+}
+
+void tst_QQmlPreviewObjectPatch::singletonBindingPropagation()
+{
+    QQmlEngine engine;
+    QQmlComponent oldComp(&engine, testFileUrl("SingletonScriptBindingOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    const QColor oldBg("#121212");
+    QCOMPARE(object->property("background").value<QColor>(), oldBg);
+    const QColor oldDerived = object->property("derivedColor").value<QColor>();
+    QVERIFY(oldDerived.isValid());
+
+    QQmlComponent newComp(&engine, testFileUrl("SingletonScriptBindingNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    if (objects.empty())
+        objects.push_back(object.data());
+
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // background changes to #ffffff.
+    QCOMPARE(object->property("background").value<QColor>(), QColor("#ffffff"));
+
+    // derivedColor uses a script binding: Qt.lighter(background, 1.5).
+    // The binding must re-evaluate with the new background value.
+    const QColor newDerived = object->property("derivedColor").value<QColor>();
+    QVERIFY(newDerived != oldDerived);
+}
+
+void tst_QQmlPreviewObjectPatch::singletonChildObjectPropertyChange()
+{
+    QQmlEngine engine;
+    QQmlComponent oldComp(&engine, testFileUrl("SingletonInlineCompOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Access the currentTheme alias — it should point to darkTheme.
+    QObject *currentTheme = qvariant_cast<QObject *>(object->property("currentTheme"));
+    QVERIFY(currentTheme);
+    QCOMPARE(currentTheme->property("background").value<QColor>(), QColor("#121212"));
+    QCOMPARE(currentTheme->property("textColor").value<QColor>(), QColor("#FEFEFE"));
+
+    QQmlComponent newComp(&engine, testFileUrl("SingletonInlineCompNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    if (objects.empty())
+        objects.push_back(object.data());
+
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // After hot-reload, the inline component child's constants should update.
+    // The darkTheme instance should have its new values.
+    currentTheme = qvariant_cast<QObject *>(object->property("currentTheme"));
+    QVERIFY(currentTheme);
+    QCOMPARE(currentTheme->property("background").value<QColor>(), QColor("#1a1a1a"));
+    QCOMPARE(currentTheme->property("textColor").value<QColor>(), QColor("#E0E0E0"));
+}
+
+void tst_QQmlPreviewObjectPatch::singletonPropertyAddition()
+{
+    QQmlEngine engine;
+    QQmlComponent oldComp(&engine, testFileUrl("SingletonPropertyAddOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    QCOMPARE(object->property("background").value<QColor>(), QColor("#121212"));
+    QVERIFY(!object->property("borderColor").isValid());
+
+    QQmlComponent newComp(&engine, testFileUrl("SingletonPropertyAddNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    if (objects.empty())
+        objects.push_back(object.data());
+
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // The newly added property should become accessible on the singleton.
+    QCOMPARE(object->property("borderColor").value<QColor>(), QColor("#3E3E3E"));
+
+    // Existing properties should be preserved.
+    QCOMPARE(object->property("background").value<QColor>(), QColor("#121212"));
+}
+
+void tst_QQmlPreviewObjectPatch::singletonConsumerBindingRefresh()
+{
+    QQmlEngine engine;
+
+    const QString moduleDir = dataDirectory() + QStringLiteral("/SingletonModule");
+    const QString patchedDir = dataDirectory() + QStringLiteral("/SingletonModulePatched");
+    engine.addImportPath(dataDirectory());
+
+    // Load Consumer which binds to Colors.background and Colors.textColor.
+    QQmlComponent consumerComp(&engine, QUrl::fromLocalFile(moduleDir + "/Consumer.qml"));
+    QVERIFY2(consumerComp.isReady(), qPrintable(consumerComp.errorString()));
+    QScopedPointer<QObject> consumer(consumerComp.create());
+    QVERIFY(consumer);
+
+    QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#121212"));
+    QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#FEFEFE"));
+
+    // Get old and new Colors singleton CUs.
+    QQmlComponent colorsOldComp(&engine, QUrl::fromLocalFile(moduleDir + "/Colors.qml"));
+    QVERIFY2(colorsOldComp.isReady(), qPrintable(colorsOldComp.errorString()));
+    const auto oldColorsCU = QQmlComponentPrivate::get(&colorsOldComp)->compilationUnit();
+
+    QQmlComponent colorsNewComp(&engine, QUrl::fromLocalFile(patchedDir + "/Colors.qml"));
+    QVERIFY2(colorsNewComp.isReady(), qPrintable(colorsNewComp.errorString()));
+    const auto newColorsCU = QQmlComponentPrivate::get(&colorsNewComp)->compilationUnit();
+    QVERIFY(oldColorsCU && newColorsCU);
+
+    // Patch the singleton.
+    auto singletonObjects = objectsForCompilationUnit(&engine, oldColorsCU);
+    QVERIFY(!singletonObjects.empty());
+    QVERIFY(updateObjects(singletonObjects, oldColorsCU, newColorsCU));
+
+    QCOMPARE(consumer->property("currentBackground").value<QColor>(), QColor("#ffffff"));
+    QCOMPARE(consumer->property("currentTextColor").value<QColor>(), QColor("#121111"));
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
