@@ -5,6 +5,8 @@
 #include <QtTest/QTest>
 #include <QtTest/qtestaccessible.h>
 
+#include <QtCore/qregularexpression.h>
+
 #include <QtGui/qaccessible.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qaccessiblecache_p.h>
@@ -79,6 +81,8 @@ private slots:
 
     void editableTextInterface_data();
     void editableTextInterface();
+
+    void labelForNullptrTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -1083,6 +1087,23 @@ void tst_QQuickAccessible::editableTextInterface()
         editableIface->deleteText(9, 13);
         QCOMPARE(accessibleQuickItem->text(QAccessible::Value), QString("This is a test"));
     }
+}
+
+void tst_QQuickAccessible::labelForNullptrTest()
+{
+    // Verify that passing nullptr to setLabelFor/setLabelledBy emits a warning
+    // and does not crash (QTBUG-146127)
+    auto clearEvents = qScopeGuard([]{ QTestAccessibility::clearEvents(); });
+
+    QQuickItem parent;
+    auto *attached = new QQuickAccessibleAttached(&parent);
+    QTestAccessibility::clearEvents();
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("labelFor cannot be null"));
+    attached->setLabelFor(nullptr);
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("labelledBy cannot be null"));
+    attached->setLabelledBy(nullptr);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)

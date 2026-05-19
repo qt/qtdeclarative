@@ -26,6 +26,7 @@
 #include <QtGui/qaccessible.h>
 #include <private/qtquickglobal_p.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -144,12 +145,17 @@ public:
 
     void setLabelledBy(QQuickItem *labelledBy)
     {
+        QQuickItem *p = qobject_cast<QQuickItem *>(parent());
+        if (!labelledBy) {
+            qmlWarning(p) << "labelledBy cannot be null";
+            return;
+        }
         setLabelledByInternal(labelledBy);
 
         QQuickAccessibleAttached *label = qobject_cast<QQuickAccessibleAttached *>(
                 qmlAttachedPropertiesObject<QQuickAccessibleAttached>(labelledBy));
 
-        label->setLabelForInternal(qobject_cast<QQuickItem *>(parent()));
+        label->setLabelForInternal(p);
     }
     void setLabelledByInternal(QQuickItem *labelledBy)
     {
@@ -164,11 +170,16 @@ public:
 
     void setLabelFor(QQuickItem *labelFor)
     {
+        QQuickItem *p = qobject_cast<QQuickItem *>(parent());
+        if (!labelFor) {
+            qmlWarning(p) << "labelFor cannot be null";
+            return;
+        }
         setLabelForInternal(labelFor);
 
         QQuickAccessibleAttached *labelled = qobject_cast<QQuickAccessibleAttached *>(
                 qmlAttachedPropertiesObject<QQuickAccessibleAttached>(labelFor));
-        labelled->setLabelledBy(qobject_cast<QQuickItem *>(parent()));
+        labelled->setLabelledBy(p);
     }
 
     void setLabelForInternal(QQuickItem *labelFor)
