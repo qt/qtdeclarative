@@ -137,6 +137,7 @@ private slots:
     void delegateLoading_data();
     void delegateLoading();
     void cursorDelegateHeight();
+    void cursorDelegateAlignment();
     void navigation();
     void readOnly();
 #if QT_CONFIG(clipboard)
@@ -3160,6 +3161,51 @@ void tst_qquicktextedit::cursorDelegateHeight()
     // Test that the delegate gets deleted
     textEditObject->setCursorDelegate(nullptr);
     QVERIFY(!textEditObject->findChild<QQuickItem*>("cursorInstance"));
+}
+
+void tst_qquicktextedit::cursorDelegateAlignment()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("cursorTest.qml")));
+    QQuickTextEdit *textEditObject = window.rootObject()->findChild<QQuickTextEdit*>("textEditObject");
+    QVERIFY(textEditObject);
+
+    // Give focus to create the cursor delegate
+    textEditObject->setFocus(true);
+    QTRY_VERIFY(textEditObject->isCursorVisible());
+    QQuickItem *delegateObject = textEditObject->findChild<QQuickItem*>("cursorInstance");
+    QVERIFY(delegateObject);
+
+    // Place cursor at end of text so position change is visible
+    textEditObject->setCursorPosition(textEditObject->text().size());
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+
+    // Test: changing horizontalAlignment updates cursorDelegate position
+    const qreal xBefore = delegateObject->x();
+    textEditObject->setHAlign(QQuickTextEdit::AlignRight);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QVERIFY(delegateObject->x() != xBefore);
+
+    textEditObject->setHAlign(QQuickTextEdit::AlignHCenter);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+
+    textEditObject->setHAlign(QQuickTextEdit::AlignLeft);
+    QCOMPARE(delegateObject->x(), textEditObject->cursorRectangle().x());
+    QCOMPARE(delegateObject->x(), xBefore);
+
+    // Test: changing verticalAlignment updates cursorDelegate position
+    const qreal yBefore = delegateObject->y();
+    textEditObject->setVAlign(QQuickTextEdit::AlignBottom);
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QVERIFY(delegateObject->y() != yBefore);
+
+    textEditObject->setVAlign(QQuickTextEdit::AlignVCenter);
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+
+    textEditObject->setVAlign(QQuickTextEdit::AlignTop);
+    QCOMPARE(delegateObject->y(), textEditObject->cursorRectangle().y());
+    QCOMPARE(delegateObject->y(), yBefore);
 }
 
 /*
