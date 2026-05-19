@@ -1,0 +1,3 @@
+module SingletonModule
+singleton Colors 1.0 Colors.qml
+Consumer 1.0 Consumer.qml
