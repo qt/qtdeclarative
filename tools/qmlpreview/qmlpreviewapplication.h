@@ -58,6 +58,8 @@ private:
     QTimer m_loadTimer;
     QTimer m_connectTimer;
     uint m_connectionAttempts;
+
+    QQmlPreviewClient::Settings m_confirmedSettings;
 };
 
 #endif // QMLPREVIEWAPPLICATION_H
