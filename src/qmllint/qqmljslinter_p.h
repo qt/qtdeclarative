@@ -109,8 +109,7 @@ public:
     LintResult lintFile(const QString &filename, const QString *fileContents, const bool silent,
                         QJsonArray *json, const QStringList &qmlImportPaths,
                         const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                        const QList<QQmlJS::LoggerCategory> &categories,
-                        const QQmlJS::HeuristicContextProperties &contextProperties = {});
+                        const QList<QQmlJS::LoggerCategory> &categories);
 
     LintResult lintModule(const QString &uri, const bool silent, QJsonArray *json,
                           const QStringList &qmlImportPaths, const QStringList &resourceFiles);
@@ -134,16 +133,14 @@ private:
     LintResult lintFileImpl(const QString &filename, const QString *fileContents, const bool silent,
                             QJsonArray *json, const QStringList &qmlImportPaths,
                             const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                            const QList<QQmlJS::LoggerCategory> &categories,
-                            const QQmlJS::HeuristicContextProperties &heuristicContextProperties);
+                            const QList<QQmlJS::LoggerCategory> &categories);
     LintResult lintModuleImpl(const QString &uri, const bool silent, QJsonArray *json,
                               const QStringList &qmlImportPaths, const QStringList &resourceFiles);
     void setupLoggingCategoriesInLogger(const QList<QQmlJS::LoggerCategory> &categories);
     void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
     void processMessages(QJsonArray &warnings);
-    ContextPropertyInfo
-    contextPropertiesFor(const QString &fileName, QQmlJSResourceFileMapper *mapper,
-                         const QQmlJS::HeuristicContextProperties &heuristicContextProperties);
+    void updateUserContextProperties(const QString &fileNamej);
+    void updateHeuristicContextProperties(const QString &fileName);
 
     bool m_useAbsolutePath;
     bool m_enablePlugins;
@@ -151,11 +148,14 @@ private:
     QScopedPointer<QQmlJSLogger> m_logger;
     QString m_fileContents;
     std::vector<Plugin> m_plugins;
+
     QQmlToolingSettings m_userContextPropertySettings =
             QQmlToolingSettings(QStringLiteral("contextProperties"));
+    QQmlJS::UserContextProperties m_cachedUserContextProperties;
     QQmlToolingSettings::Searcher m_heuristicContextPropertySearcher =
             QQmlToolingSettings::Searcher(QStringLiteral(".qt/contextPropertyDump.ini"),
                                           QStringLiteral("contextPropertyDump.ini"));
+    QQmlJS::HeuristicContextProperties m_cachedHeuristicContextProperties;
 };
 
 QT_END_NAMESPACE

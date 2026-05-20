@@ -13,14 +13,13 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 QQmlJSLinterTypePropagator::QQmlJSLinterTypePropagator(
-        const QV4::Compiler::JSUnitGenerator *unitGenerator,
-        const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-        const BasicBlocks &basicBlocks, const InstructionAnnotations &annotations,
-        QQmlSA::PassManager *passManager, const ContextPropertyInfo &contextPropertyInfo)
+        const QV4::Compiler::JSUnitGenerator *unitGenerator, const QQmlJSTypeResolver *typeResolver,
+        QQmlJSLogger *logger, const QQmlJS::LinterContext &context, const BasicBlocks &basicBlocks,
+        const InstructionAnnotations &annotations, QQmlSA::PassManager *passManager)
     : QQmlJSTypePropagator(unitGenerator, typeResolver, logger, basicBlocks, annotations),
-      m_passManager(passManager), m_contextPropertyInfo(contextPropertyInfo)
+      m_passManager(passManager),
+      m_context(context)
 {
-
 }
 
 void QQmlJSLinterTypePropagator::generate_Ret()
@@ -78,14 +77,12 @@ void QQmlJSLinterTypePropagator::generate_LoadQmlContextPropertyLookup(int index
     // complain about renamed types in enums like MyType.Enum.EnumValue
     if (accumulatorOut.variant() == QQmlJSRegisterContent::Attachment
         || accumulatorOut.variant() == QQmlJSRegisterContent::MetaType) {
-        if (m_renamedComponents) {
-            m_renamedComponents->handleRenamedType(accumulatorOut.scopeType(), name,
-                                                   currentNonEmptySourceLocation(), m_logger);
-        }
+        m_context.renamedComponents.handleRenamedType(accumulatorOut.scopeType(), name,
+                                                      currentNonEmptySourceLocation(), m_logger);
     }
 
     const QQmlJSScope::ConstPtr scope = accumulatorOut.scopeType();
-    const QQmlJSScope::ConstPtr idScope = m_scopesById.scope(name, scope);
+    const QQmlJSScope::ConstPtr idScope = m_context.scopesById.scope(name, scope);
     if (!idScope.isNull()) {
         const auto log = [&](const auto &memberType, const auto &memberOwnerScope) {
             IdMemberShadow idMemberShadow{ name, idScope, memberOwnerScope };
@@ -363,7 +360,7 @@ void QQmlJSLinterTypePropagator::handleUnqualifiedAccessAndContextProperties(
 {
     QQmlJSTypePropagator::handleUnqualifiedAccessAndContextProperties(name, isMethod);
 
-    if (m_contextPropertyInfo.userContextProperties.isUnqualifiedAccessDisabled(name))
+    if (m_context.userContextProperties.isUnqualifiedAccessDisabled(name))
         return;
 
     const auto warningMessage = [&name, this]() {
@@ -379,7 +376,7 @@ void QQmlJSLinterTypePropagator::handleUnqualifiedAccessAndContextProperties(
         return result;
     };
 
-    if (m_contextPropertyInfo.userContextProperties.isOnUsageWarned(name)) {
+    if (m_context.userContextProperties.isOnUsageWarned(name)) {
         m_logger->log(warningMessage(), qmlContextProperties, currentSourceLocation());
         return;
     }
@@ -388,7 +385,7 @@ void QQmlJSLinterTypePropagator::handleUnqualifiedAccessAndContextProperties(
     handleUnqualifiedAccess(name, isMethod);
 
     const QList<QQmlJS::HeuristicContextProperty> definitions =
-            m_contextPropertyInfo.heuristicContextProperties.definitionsForName(name);
+            m_context.heuristicContextProperties.definitionsForName(name);
     if (definitions.isEmpty())
         return;
     QString warning = warningMessage();
@@ -499,7 +496,7 @@ bool QQmlJSLinterTypePropagator::checkTypeResolved(const QQmlJSScope::ConstPtr &
     if (type->isFullyResolved() || type->isScript())
         return true;
 
-    if (!m_knownUnresolvedTypes->hasSeen(type)) {
+    if (!m_context.knownUnresolvedTypes.hasSeen(type)) {
 
         m_logger->log(QStringLiteral("Type %1 is used but it is not resolved")
                               .arg(QQmlJSUtils::getScopeName(type, type->scopeType())),

@@ -32,12 +32,10 @@ size_t qHash(const IdMemberShadow &idShadowsMember, size_t seed)
     return qHashMulti(seed, idShadowsMember.name, idShadowsMember.idScope,
                       idShadowsMember.memberOwnerScope);
 }
-
 QQmlJSLinterCodegen::QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
                                          const QStringList &qmldirFiles, QQmlJSLogger *logger,
-                                         const ContextPropertyInfo &contextPropertyInfo)
-    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger),
-      m_contextPropertyInfo(contextPropertyInfo)
+                                         const QQmlJS::LinterContext &context)
+    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger), m_context(context)
 {
     m_flags |= QQmlJSAotCompiler::IsLintCompiler;
 }
@@ -115,13 +113,10 @@ void QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
             QQmlJSBasicBlocks(context, m_unitGenerator, &m_typeResolver, m_logger)
                     .run(function, ValidateBasicBlocks, dummy);
 
-    QQmlJSLinterTypePropagator lintTypePropgator(
-            m_unitGenerator, &m_typeResolver, m_logger, blocksAndAnnotations.basicBlocks,
-            blocksAndAnnotations.annotations, m_passManager, m_contextPropertyInfo);
-    lintTypePropgator.setScopesById(m_scopesById);
+    QQmlJSLinterTypePropagator lintTypePropgator(m_unitGenerator, &m_typeResolver, m_logger,
+                                                 m_context, blocksAndAnnotations.basicBlocks,
+                                                 blocksAndAnnotations.annotations, m_passManager);
     lintTypePropgator.setIdMemberShadows(&m_idMemberShadows);
-    lintTypePropgator.setRenamedComponents(m_renamedComponents);
-    lintTypePropgator.setKnownUnresolvedTypes(m_knownUnresolvedTypes);
     blocksAndAnnotations = lintTypePropgator.run(function);
 
     if (m_logger->categorySeverity(qmlCompiler) == QQmlJS::WarningSeverity::Disable)

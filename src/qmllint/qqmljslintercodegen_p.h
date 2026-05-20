@@ -27,6 +27,7 @@
 #include <private/qqmljscompiler_p.h>
 #include <private/qqmljscontextproperties_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmljslintercontext_p.h>
 #include <private/qqmljslintertypepropagator_p.h>
 #include <private/qqmljslogger_p.h>
 #include <private/qqmljsscope_p.h>
@@ -55,7 +56,7 @@ class QQmlJSLinterCodegen : public QQmlJSAotCompiler
 public:
     QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
                         const QStringList &qmldirFiles, QQmlJSLogger *logger,
-                        const ContextPropertyInfo &contextPropertyInfo);
+                        const QQmlJS::LinterContext &context);
 
     void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
     std::variant<QQmlJSAotFunction, QList<QQmlJS::DiagnosticMessage>>
@@ -70,21 +71,6 @@ public:
         m_typeResolver = std::move(typeResolver);
     }
 
-    void setScopesById(const QQmlJSScopesById scopesByid)
-    {
-        m_scopesById = scopesByid;
-    }
-
-    void setRenamedComponents(const QQmlJS::LinterRenamedComponents *renamedComponents)
-    {
-        m_renamedComponents = renamedComponents;
-    }
-
-    void setKnownUnresolvedTypes(QDuplicateTracker<QQmlJSScope::ConstPtr> *tracker)
-    {
-        m_knownUnresolvedTypes = tracker;
-    }
-
     QQmlJSTypeResolver *typeResolver() { return &m_typeResolver; }
 
     void setPassManager(QQmlSA::PassManager *passManager);
@@ -96,11 +82,8 @@ private:
 
     void analyzeFunction(const QV4::Compiler::Context *context,
                          QQmlJSCompilePass::Function *function);
-    ContextPropertyInfo m_contextPropertyInfo;
-    QQmlJSScopesById m_scopesById;
+    const QQmlJS::LinterContext &m_context;
     QSet<IdMemberShadow> m_idMemberShadows;
-    QDuplicateTracker<QQmlJSScope::ConstPtr> *m_knownUnresolvedTypes = nullptr;
-    const QQmlJS::LinterRenamedComponents *m_renamedComponents = nullptr;
 };
 
 QT_END_NAMESPACE

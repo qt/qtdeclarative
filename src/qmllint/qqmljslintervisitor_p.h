@@ -17,6 +17,7 @@
 
 #include <private/qqmljsimportvisitor_p.h>
 #include <private/qqmljslinterrenamedcomponents_p.h>
+#include <private/qqmljslintercontext_p.h>
 
 #include <private/qqmljsengine_p.h>
 
@@ -39,7 +40,7 @@ public:
                   const QString &implicitImportDirectory,
                   const QStringList &qmldirFiles = QStringList(), QQmlJS::Engine *engine = nullptr);
 
-    const LinterRenamedComponents &renamedComponents() const { return m_renamedComponents; }
+    const QQmlJS::LinterRenamedComponents &renamedComponents() const { return m_renamedComponents; }
 
 protected:
     using QQmlJSImportVisitor::endVisit;
