@@ -17,7 +17,7 @@ Window {
         fillItem: Image {
             objectName: "fillItem"
             visible: false
-            source: "../../data/col320x480.jpg"
+            source: "qrc:/data/col320x480.jpg"
             parent: theShape
         }
     }

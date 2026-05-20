@@ -33,12 +33,18 @@ qt_internal_extend_target(tst_qquickrectangleshape CONDITION TARGET Qt::Widgets
         Qt::Widgets
 )
 
-qt_internal_extend_target(tst_qquickrectangleshape CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquickrectangleshape CONDITION ANDROID OR IOS OR OHOS
     DEFINES
         QT_QMLTEST_DATADIR=":/data"
 )
 
-qt_internal_extend_target(tst_qquickrectangleshape CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquickrectangleshape CONDITION NOT ANDROID AND NOT IOS AND NOT OHOS
     DEFINES
         QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+)
+
+qt_internal_add_resource(tst_qquickrectangleshape "tst_qquickrectangleshape_shared_fillitem"
+    PREFIX "/"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}/.."
+    FILES "${CMAKE_CURRENT_SOURCE_DIR}/../data/col320x480.jpg"
 )
