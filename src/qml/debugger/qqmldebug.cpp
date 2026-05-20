@@ -64,11 +64,12 @@ Q_CONSTINIT static std::atomic_flag s_printedWarning = Q_ATOMIC_FLAG_INIT;
 void QQmlDebuggingEnabler::enableDebugging(bool printWarning)
 {
     if (printWarning && !s_printedWarning.test_and_set(std::memory_order_relaxed)) {
-        QByteArray warning("QML debugging is enabled. Only use this in a safe environment.\n");
+        QByteArray warning("QML debugging is enabled. Only use this in a safe environment.");
         if (qEnvironmentVariableIsSet("CLICOLOR_FORCE") || qEnvironmentVariableIsSet("QTC_RUN")
             || qEnvironmentVariableIsSet("VSCODE_CLI")) {
             warning = QByteArray("\033[38;2;255;0;0m") + warning + "\033[0m";
         }
+        warning += '\n';
 #ifdef Q_OS_WIN
         // Debuggers on Windows (except vscode) do not display the stderr output
         if (!qEnvironmentVariableIsSet("VSCODE_CLI"))
