@@ -83,6 +83,8 @@ public:
 
     bool reportConfigForFiles(const QStringList &files);
 
+    QString currentSettingsPath() const { return m_currentSettingsPath; }
+
 protected:
     QString m_currentSettingsPath;
     QVariantHash m_values;
