@@ -404,6 +404,14 @@ QString Q_QMLCOMPILER_EXPORT getScopeName(const QQmlJSScope::ConstPtr &scope,
                                           QQmlJSScope::ScopeType type);
 QString Q_QMLCOMPILER_EXPORT fileSelectorFor(const QQmlJSScope::ConstPtr &scope1);
 
+// TODO: use a central list of file extensions that can also be used by qmetatypesjsonprocessor.cpp
+// (that needs header file extensions) and Qt6QmlMacros.cmake.
+constexpr inline std::array cppFileFilters{
+    QLatin1String("*.cpp"), QLatin1String("*.cxx"), QLatin1String("*.cc"),  QLatin1String("*.c"),
+    QLatin1String("*.c++"), QLatin1String("*.hpp"), QLatin1String("*.hxx"), QLatin1String("*.hh"),
+    QLatin1String("*.h"),   QLatin1String("*.h++"),
+};
+
 bool Q_QMLCOMPILER_EXPORT canStrictlyCompareWithVar(const QQmlJSTypeResolver *typeResolver,
                                                     const QQmlJSScope::ConstPtr &lhsType,
                                                     const QQmlJSScope::ConstPtr &rhsType);

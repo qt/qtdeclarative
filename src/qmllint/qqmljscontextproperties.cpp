@@ -4,6 +4,7 @@
 
 #include "qqmljscontextproperties_p.h"
 
+#include <private/qqmljsutils_p.h>
 #include <private/qtqmlglobal_p.h>
 
 #include <QtCore/qtconfigmacros.h>
@@ -30,13 +31,6 @@ using namespace Qt::StringLiterals;
 static constexpr QLatin1StringView s_pattern =
         R"x((\.|->)setContextProperty\s*\(\s*(QStringLiteral\s*\(|QString\s*\(|QLatin1String(View)?\s*\(|u)?\s*"([^"]*)")x"_L1;
 static constexpr int s_contextPropertyNameIdxInPattern = 4;
-
-// TODO: use a central list of file extensions that can also be used by qmetatypesjsonprocessor.cpp
-// (that needs header file extensions) and Qt6QmlMacros.cmake.
-static constexpr std::array s_fileFilters = {
-    "*.cpp"_L1, "*.cxx"_L1, "*.cc"_L1, "*.c"_L1, "*.c++"_L1,
-    "*.hpp"_L1, "*.hxx"_L1, "*.hh"_L1, "*.h"_L1, "*.h++"_L1,
-};
 
 static const QRegularExpression s_matchSetContextProperty{ s_pattern,
                                                            QRegularExpression::MultilineOption };
@@ -79,7 +73,8 @@ void HeuristicContextProperties::collectFromFile(const QString &filePath)
 
 void HeuristicContextProperties::grepFallback(const QList<QString> &rootUrls)
 {
-    const QStringList fileFilters{ s_fileFilters.begin(), s_fileFilters.end() };
+    const QStringList fileFilters{ QQmlJSUtils::cppFileFilters.begin(),
+                                   QQmlJSUtils::cppFileFilters.end() };
 
     for (const QString &url : rootUrls) {
         for (const auto &dirEntry : QDirListing{ url, fileFilters,
@@ -133,7 +128,7 @@ void HeuristicContextProperties::collectFromDirs(const QList<QString> &dirs)
                            s_pattern };
 
     // don't search non-cpp files
-    for (const auto fileFilter : s_fileFilters)
+    for (const auto &fileFilter : QQmlJSUtils::cppFileFilters)
         arguments << "--include"_L1 << fileFilter;
 
     arguments.append(dirs);
