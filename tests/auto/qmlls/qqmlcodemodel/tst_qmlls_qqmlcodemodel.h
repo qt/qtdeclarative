@@ -47,6 +47,7 @@ private slots:
     void addingWorkspaces();
     void newWorkspace();
     void duplicateWorkspace();
+    void updateQmllsBuildIni();
     void withQmllsBuildIni();
     void withQmllsBuildIniWithoutRootUrls();
     void withQmllsBuildIniRelativeImportPath();

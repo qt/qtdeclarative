@@ -93,6 +93,9 @@ public:
     QStringList resourceFilesFor(const QString &filePath);
     ModuleSetting settingFor(const QString &filePath);
 
+    void addModuleSetting(const ModuleSetting &moduleSetting);
+    void writeQmllsBuildIniContent(const QString &file) const;
+
 private:
     QString m_docDir;
     ModuleSettings m_moduleSettings;

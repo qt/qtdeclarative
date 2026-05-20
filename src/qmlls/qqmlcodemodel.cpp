@@ -878,6 +878,28 @@ ModuleSetting QQmllsBuildInformation::settingFor(const QString &filePath)
     return result;
 }
 
+void QQmllsBuildInformation::addModuleSetting(const ModuleSetting &moduleSetting)
+{
+    m_moduleSettings.append(moduleSetting);
+}
+
+void QQmllsBuildInformation::writeQmllsBuildIniContent(const QString &file) const
+{
+#if QT_CONFIG(settings)
+    QFile f(file);
+    if (!f.open(QFile::WriteOnly | QFile::Text))
+        return;
+    for (int i = 0; i < m_moduleSettings.size(); ++i) {
+        const QString key = QString(m_moduleSettings[i].sourceFolder).replace("/"_L1, "<SLASH>"_L1);
+        const QString imports = m_moduleSettings[i].importPaths.join(QDir::listSeparator());
+        f.write("[%1]\nimportPaths=\"%7\"\n"_L1.arg(key, imports).toUtf8());
+    }
+
+#else
+    Q_UNUSED(file);
+#endif
+}
+
 QQmllsBuildInformation::QQmllsBuildInformation() { }
 
 } // namespace QmlLsp

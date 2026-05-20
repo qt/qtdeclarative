@@ -689,6 +689,51 @@ void tst_qmlls_qqmlcodemodel::withQmllsBuildIni()
     QCOMPARE(loadedQmldir(domItemB), "\"%1\""_L1.arg(importPathB + "MyModule/qmldir"_L1));
 }
 
+void tst_qmlls_qqmlcodemodel::updateQmllsBuildIni()
+{
+    const QByteArray rootAUrl = testFileUrl("twoWorkspaces/WorkSpaceA/"_L1).toEncoded();
+    const QString rootA = testFile("twoWorkspaces/WorkSpaceA/"_L1);
+    const QString importPathA = testFile("twoWorkspaces/ImportPathA/"_L1);
+    const QString defaultImportPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+    const QStringList expectedImportPathA{ importPathA, defaultImportPath };
+
+    QTemporaryDir buildPathA;
+    QVERIFY(buildPathA.isValid());
+
+    const QString resourceFileA = buildPathA.filePath("resourceA.qrc");
+
+    QDir(buildPathA.path()).mkdir(".qt"_L1);
+
+    QFile emptyBuildIni(buildPathA.filePath(".qt/.qmlls.build.ini"_L1));
+    QVERIFY(emptyBuildIni.open(QFile::WriteOnly));
+    emptyBuildIni.write("[General]");
+    emptyBuildIni.close(); // writeQmllsBuildIniContent() doesn't work if this is still open
+
+    TestCodeModelManager manager;
+    manager.addRootUrls({ rootAUrl });
+
+    QCOMPARE_NE(manager.findCodeModelForFile(rootAUrl)->importPaths(), expectedImportPathA);
+    QCOMPARE(manager.resourceFilesForFileUrl(rootAUrl), { });
+
+    // should load the empty ini
+    manager.setBuildPathsForRootUrl(rootAUrl, { buildPathA.path() });
+    QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPaths(), { });
+    QCOMPARE_NE(manager.findCodeModelForFile(rootAUrl)->importPathsForUrl(rootAUrl),
+                expectedImportPathA);
+    QCOMPARE(manager.resourceFilesForFileUrl(rootAUrl), { });
+
+    QmlLsp::QQmllsBuildInformation buildIni;
+    buildIni.addModuleSetting(
+            QmlLsp::ModuleSetting{ rootA, { importPathA, defaultImportPath }, { resourceFileA } });
+    buildIni.writeQmllsBuildIniContent(buildPathA.filePath(".qt/.qmlls.build.ini"_L1));
+
+    // should reload the settings file on setBuildPathsForRootUrl()
+    manager.setBuildPathsForRootUrl(rootAUrl, { buildPathA.path() });
+    QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPaths(), expectedImportPathA);
+    QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPathsForUrl(rootAUrl),
+             expectedImportPathA);
+}
+
 void tst_qmlls_qqmlcodemodel::withQmllsBuildIniRelativeImportPath()
 {
     const QString defaultImportPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
