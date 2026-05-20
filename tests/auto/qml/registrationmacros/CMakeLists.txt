@@ -22,6 +22,7 @@ qt_internal_add_test(tst_registrationmacros
 set_target_properties(tst_registrationmacros PROPERTIES
     QT_QML_MODULE_VERSION 6.2
     QT_QML_MODULE_URI test
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_registrationmacros)

@@ -60,6 +60,7 @@ qt_add_resources(tst_qqmltypeloader "typeloader"
 set_target_properties(tst_qqmltypeloader PROPERTIES
     QT_QML_MODULE_VERSION 3.2
     QT_QML_MODULE_URI declarative.import.for.typeloader.test
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_qqmltypeloader)

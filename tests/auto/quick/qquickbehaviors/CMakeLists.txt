@@ -37,6 +37,7 @@ qt_internal_add_test(tst_qquickbehaviors
 set_target_properties(tst_qquickbehaviors PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI test
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_qquickbehaviors)

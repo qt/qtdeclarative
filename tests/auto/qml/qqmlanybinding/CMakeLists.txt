@@ -35,6 +35,7 @@ qt_internal_add_test(tst_qqmlanybinding
 set_target_properties(tst_qqmlanybinding PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI bindable
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_qqmlanybinding)

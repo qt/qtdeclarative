@@ -57,6 +57,7 @@ qt_internal_extend_target(tst_qqmlinfo CONDITION NOT ANDROID AND NOT IOS
 set_target_properties(tst_qqmlinfo PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI org.qtproject.Test
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_qqmlinfo)

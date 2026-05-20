@@ -53,6 +53,7 @@ qt_internal_extend_target(tst_qqmlproperty CONDITION NOT ANDROID AND NOT IOS
 set_target_properties(tst_qqmlproperty PROPERTIES
     QT_QML_MODULE_VERSION 2.0
     QT_QML_MODULE_URI io.qt.bugreports
+    QT_QML_MODULE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 _qt_internal_qml_type_registration(tst_qqmlproperty)
