@@ -3,7 +3,7 @@ import QtQuick.Shapes
 
 Rectangle {
     width: 500
-    height: 1200
+    height: 900
     color: "black"
 
     ListModel {
@@ -18,7 +18,7 @@ Rectangle {
         Shape {
             preferredRendererType: selectedRenderer
             width: 250
-            height: 400
+            height: 300
             clip: true
 
             transform: [
@@ -28,9 +28,9 @@ Rectangle {
                 },
                 Matrix4x4 {
                     matrix: Qt.matrix4x4(1, 0, 0, 0,
-                                     0, 1, 0, 0,
-                                     0, 0, 1, 0,
-                                     0, -1/50, 0, 1)
+                                         0, 1, 0, 0,
+                                         0, 0, 1, 0,
+                                         0, -1/50, 0, 1)
                 },
                 Translate {
                     x: 100
@@ -61,7 +61,9 @@ Rectangle {
     }
 
     Row {
-        anchors.fill: parent
+        y: -100
+        height: parent.height - y
+        width: parent.width
         Repeater {
             model: renderers
             Column {

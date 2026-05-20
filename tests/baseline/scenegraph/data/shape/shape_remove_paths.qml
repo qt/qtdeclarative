@@ -160,4 +160,17 @@ Rectangle {
             }
         }
     }
+
+    Rectangle {
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        height: 20
+        width: 20
+
+        ColorAnimation on color {
+            from: "black"
+            to: "white"
+            duration: anim.duration
+        }
+    }
 }
