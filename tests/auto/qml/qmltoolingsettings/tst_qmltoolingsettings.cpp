@@ -147,6 +147,7 @@ void tst_qmltoolingsettings::searchOptions()
 
     QCOMPARE(actualResult.type, expectedResult.type);
     QCOMPARE(actualResult.iniFilePath, expectedResult.iniFilePath);
+    QCOMPARE(settings.currentSettingsPath(), expectedResult.iniFilePath);
 }
 
 void tst_qmltoolingsettings::iniSection()

@@ -86,6 +86,8 @@ public:
     bool reportConfigForFiles(const QStringList &files);
     auto asKeyValueRange() const { return m_values.asKeyValueRange(); };
 
+    QString currentSettingsPath() const { return m_currentSettingsPath; }
+
 protected:
     QString m_currentSettingsPath;
     QVariantHash m_values;
