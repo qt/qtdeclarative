@@ -33,8 +33,11 @@ void QQmlToolingSettings::addOption(const QString &name, const QVariant &default
 }
 
 QQmlToolingSettings::QQmlToolingSettings(const QString &toolName,
-                                         const QStringList &recognizedIniSections)
-    : m_searcher(u".%1.ini"_s.arg(toolName), u"%1.ini"_s.arg(toolName)),
+                                         const QStringList &recognizedIniSections,
+                                         const QString &localSettingsFile,
+                                         const QString &globalSettingsFile)
+    : m_searcher(localSettingsFile.isEmpty() ? u".%1.ini"_s.arg(toolName) : localSettingsFile,
+                 globalSettingsFile.isEmpty() ? u"%1.ini"_s.arg(toolName) : globalSettingsFile),
       m_recognizedIniSections(recognizedIniSections)
 {
 }
@@ -50,7 +53,7 @@ QQmlToolingSettings::SearchResult QQmlToolingSettings::read(const QString &setti
 
     QSettings settings(settingsFilePath, QSettings::IniFormat);
 
-    if (!options.isQmllintSilent) {
+    if (!options.isQmllintSilent && !m_recognizedIniSections.isEmpty()) {
         const QStringList sections = settings.childGroups() << QLatin1String("General");
         for (const QString &section : sections) {
             if (!m_recognizedIniSections.contains(section)) {

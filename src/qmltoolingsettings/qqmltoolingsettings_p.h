@@ -29,7 +29,9 @@ class QQmlToolingSettings
 {
 public:
     QQmlToolingSettings(const QString &toolName,
-                        const QStringList &recognizedIniSections = { QStringLiteral("General") });
+                        const QStringList &recognizedIniSections = { QStringLiteral("General") },
+                        const QString &localSettingsFile = { },
+                        const QString &globalSettingsFile = { });
     struct SearchOptions
     {
         SearchOptions();
@@ -82,12 +84,13 @@ public:
     bool isSet(const QString &name) const;
 
     bool reportConfigForFiles(const QStringList &files);
+    auto asKeyValueRange() const { return m_values.asKeyValueRange(); };
 
 protected:
     QString m_currentSettingsPath;
     QVariantHash m_values;
     Searcher m_searcher;
-    QStringList m_recognizedIniSections;
+    QStringList m_recognizedIniSections; // can be empty to skip ini section name check
 
     SearchResult read(const QString &settingsFilePath, SearchOptions options);
 };

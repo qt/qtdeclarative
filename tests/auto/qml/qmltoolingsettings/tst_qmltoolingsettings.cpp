@@ -3,9 +3,12 @@
 
 #include <QtTest/QTest>
 #include <QtLogging>
+#include <QString>
 
 #include <QtQmlToolingSettings/private/qqmltoolingsettings_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+
+using namespace Qt::StringLiterals;
 
 class tst_qmltoolingsettings : public QQmlDataTest
 {
@@ -23,6 +26,7 @@ private Q_SLOTS:
 
     void searchOptions_data();
     void searchOptions();
+    void iniSection();
 };
 
 tst_qmltoolingsettings::tst_qmltoolingsettings() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
@@ -143,6 +147,30 @@ void tst_qmltoolingsettings::searchOptions()
 
     QCOMPARE(actualResult.type, expectedResult.type);
     QCOMPARE(actualResult.iniFilePath, expectedResult.iniFilePath);
+}
+
+void tst_qmltoolingsettings::iniSection()
+{
+    QQmlToolingSettings good{ "iniSections"_L1,
+                              { "General"_L1, "A"_L1, "B"_L1, "C"_L1 },
+                              "iniSections.ini" };
+    QQmlToolingSettings bad{ "iniSections"_L1, { "B"_L1, "C"_L1 }, "iniSections.ini" };
+    QQmlToolingSettings silent{ "iniSections"_L1, { }, "iniSections.ini" };
+
+    const QString path = testFile("iniSections/iniSections.ini");
+    good.search(path);
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression("Unrecognized section \"A\" in .*/iniSections/iniSections.ini"_L1
+                               "\nRecognized sections are: \\[B, C\\]"_L1));
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(
+                    "Unrecognized section \"General\" in .*/iniSections/iniSections.ini"_L1
+                    "\nRecognized sections are: \\[B, C\\]"_L1));
+    bad.search(path);
+
+    silent.search(path);
 }
 
 QTEST_MAIN(tst_qmltoolingsettings)
