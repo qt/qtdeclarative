@@ -130,6 +130,7 @@ private Q_SLOTS:
     void ownerOfEnum();
     void ensureModuleName();
     void sourceAndBuildTypeAreTheSame();
+    void importMissingModule();
 
 public:
     tst_qqmljsscope()
@@ -1193,6 +1194,25 @@ void tst_qqmljsscope::sourceAndBuildTypeAreTheSame()
     const auto sourceRoot = importer.importFile(testFile("SimpleModule/Main.qml"));
     const auto buildRoot = importer.importFile(testFile("SimpleModule/build/Main.qml"));
     QCOMPARE(sourceRoot, buildRoot);
+}
+
+void tst_qqmljsscope::importMissingModule()
+{
+    auto first =
+            m_importer.importModule("DoesNotExist"_L1, quint8(QQmlJS::PrecedenceValues::Default),
+                                    QString(), QTypeRevision(), nullptr);
+    auto second =
+            m_importer.importModule("DoesNotExist"_L1, quint8(QQmlJS::PrecedenceValues::Default),
+                                    QString(), QTypeRevision(), nullptr);
+
+    QCOMPARE(first.warnings().size(), 1);
+    QCOMPARE(second.warnings().size(), 1);
+    QCOMPARE(first.warnings().front().message, second.warnings().front().message);
+
+    auto qualified =
+            m_importer.importModule("DoesNotExist"_L1, quint8(QQmlJS::PrecedenceValues::Default),
+                                    "DNE"_L1, QTypeRevision(), nullptr);
+    QVERIFY(qualified.types().contains("DNE"_L1));
 }
 
 QTEST_MAIN(tst_qqmljsscope)

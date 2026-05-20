@@ -245,6 +245,9 @@ private:
 
         // Whether a system module has been imported
         bool hasSystemModule = false;
+        // Whether QQmlJSImporter::importHelper() returned false on the first time it loaded the
+        // QML Module, so that further calls to importHelper() have the same return value.
+        bool wasFound = true;
     };
 
     struct Import {

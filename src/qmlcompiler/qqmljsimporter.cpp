@@ -860,9 +860,12 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
 
     const QQmlJS::Import cacheKey(prefix, moduleCacheName, version, isFile, isDependency);
 
+    // Insert a prefix even if the module was not registered.
+    if (!prefix.isEmpty())
+        types->qmlNames.setType(prefix, { { }, precedence });
+
     auto getTypesFromCache = [&]() -> bool {
-        if (!m_cachedImportTypes.contains(cacheKey))
-            return false;
+        Q_ASSERT(m_cachedImportTypes.contains(cacheKey));
 
         const auto &cacheEntry = m_cachedImportTypes[cacheKey];
 
@@ -876,11 +879,11 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
             types->qmlNames.addTypes(cacheEntry->qmlNames);
         }
 
-        return true;
+        return cacheEntry->wasFound;
     };
 
-    if (getTypesFromCache())
-        return true;
+    if (m_cachedImportTypes.contains(cacheKey))
+        return getTypesFromCache();
 
     auto cacheTypes = QSharedPointer<QQmlJSImporter::AvailableTypes>(
             new QQmlJSImporter::AvailableTypes(QQmlJS::ContextualTypes(
@@ -891,8 +894,10 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
     const auto it = m_seenImports.constFind(importId);
 
     if (it != m_seenImports.constEnd()) {
-        if (it->isEmpty())
+        if (it->isEmpty()) {
+            cacheTypes->wasFound = false;
             return false;
+        }
 
         Q_ASSERT(m_seenQmldirFilesAndDirectories.contains(*it));
         const QQmlJSImporter::Import import = m_seenQmldirFilesAndDirectories.value(*it);
@@ -900,9 +905,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
         importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
         processImport(cacheKey, import, precedence, cacheTypes.get());
 
-        const bool typesFromCache = getTypesFromCache();
-        Q_ASSERT(typesFromCache);
-        return typesFromCache;
+        return getTypesFromCache();
     }
 
     QStringList modulePaths;
@@ -946,9 +949,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
             importDependencies(import, precedence, cacheTypes.get(), prefix, version, isDependency);
             // Potentially merges with the result of readDirectory() above.
             processImport(cacheKey, import, precedence, cacheTypes.get());
-            const bool typesFromCache = getTypesFromCache();
-            Q_ASSERT(typesFromCache);
-            return typesFromCache;
+            return getTypesFromCache();
         };
 
         // Check whether we need to import again below, reading the qmldir this time.
@@ -970,12 +971,11 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types, 
 
     if (isFile) {
         // We've loaded the directory above
-        const bool typesFromCache = getTypesFromCache();
-        Q_ASSERT(typesFromCache);
-        return typesFromCache;
+        return getTypesFromCache();
     }
 
     m_seenImports.insert(importId, QString());
+    cacheTypes->wasFound = false;
     return false;
 }
 
