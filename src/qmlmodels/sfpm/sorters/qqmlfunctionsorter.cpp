@@ -120,7 +120,7 @@ void QQmlFunctionSorter::componentComplete()
     if (parameterType.flags() & QMetaType::PointerToQObject) {
         QObject *created0 = nullptr;
         QObject *created1 = nullptr;
-        if (parameterQmlType.isInlineComponentType()) {
+        if (parameterQmlType.isInlineComponent()) {
             const auto executableCu = engine->handle()->executableCompilationUnit(std::move(cu));
             const QString icName = parameterQmlType.elementName();
             created0 = QQmlObjectCreator(context, executableCu, context, icName).create(

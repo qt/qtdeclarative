@@ -643,11 +643,7 @@ bool QQmlType::isComposite() const
 
 bool QQmlType::isCompositeSingleton() const
 {
-    // if the outer type is a composite singleton, d->regType will indicate that even for
-    // the inline component type
-    // however, inline components can -at least for now- never be singletons
-    // so we just do one additional check
-    return d && d->regType == CompositeSingletonType && !isInlineComponentType();
+    return d && d->regType == CompositeSingletonType;
 }
 
 bool QQmlType::isQObjectSingleton() const
@@ -765,8 +761,9 @@ int QQmlType::index() const
     return d ? d->index : -1;
 }
 
-bool QQmlType::isInlineComponentType() const {
-    return d ? d->regType == QQmlType::InlineComponentType : false;
+bool QQmlType::isInlineComponent() const
+{
+    return d && d->regType == QQmlType::InlineComponentType;
 }
 
 QUrl QQmlType::sourceUrl() const

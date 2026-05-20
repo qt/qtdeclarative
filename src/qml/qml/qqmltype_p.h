@@ -91,6 +91,7 @@ public:
     bool isInterface() const;
     bool isComposite() const;
     bool isCompositeSingleton() const;
+    bool isInlineComponent() const;
     bool isQObjectSingleton() const;
     bool isQJSValueSingleton() const;
     bool isSequentialContainer() const;
@@ -119,8 +120,6 @@ public:
     int finalizerCast() const;
 
     int index() const;
-
-    bool isInlineComponentType() const;
 
     struct Q_QML_EXPORT SingletonInstanceInfo final
         : public QQmlRefCounted<SingletonInstanceInfo>

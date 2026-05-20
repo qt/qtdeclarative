@@ -1419,7 +1419,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         return nullptr;
     }
 
-    if (!type.isComposite() && !type.isInlineComponentType()) {
+    if (!type.isComposite()) {
         if (QObject *instance = type.createWithQQmlData())
             return initializeNonComposite(index, obj, typeRef, instance, parent, flags);
         recordError(
@@ -1434,7 +1434,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             : engine->handle()->executableCompilationUnit(typeRef->compilationUnit());
     Q_ASSERT(executableCu);
 
-    const bool isInlineComponent = type.isInlineComponentType();
+    const bool isInlineComponent = type.isInlineComponent();
     const QString inlineComponentName = isInlineComponent ? type.elementName() : QString();
     QQmlObjectCreator subCreator(
             context, executableCu, inlineComponentName, sharedState.data(),
@@ -1593,7 +1593,7 @@ QObject *QQmlObjectCreator::initializeNonComposite(
 
     const QQmlType type = typeRef->type();
     Q_ASSERT(type.isValid());
-    Q_ASSERT(!type.isComposite() && !type.isInlineComponentType());
+    Q_ASSERT(!type.isComposite());
 
     QScopedValueRollback<QQmlObjectCreator*> ocRestore(QQmlEnginePrivate::get(engine)->activeObjectCreator, this);
 
@@ -1877,7 +1877,7 @@ void QQmlObjectCreator::registerPostHocRequiredProperties(const QV4::CompiledDat
         }
         Q_ASSERT(!_compiledObject->hasFlag(QV4::CompiledData::Object::IsComponent));
         QQmlType type = typeRef->type();
-        if (type.isComposite() || type.isInlineComponentType())
+        if (type.isComposite())
             return { _propertyCache->propertyOffset(), _propertyCache->propertyCount() }; // 2.
         return { 0, _propertyCache->propertyCount() }; // 1.
     };

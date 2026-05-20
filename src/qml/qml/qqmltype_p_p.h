@@ -100,7 +100,16 @@ public:
 
     bool isComposite() const
     {
-        return regType == QQmlType::CompositeType || regType == QQmlType::CompositeSingletonType;
+        switch (regType) {
+        case QQmlType::CompositeType:
+        case QQmlType::CompositeSingletonType:
+        case QQmlType::InlineComponentType:
+            return true;
+        default:
+            break;
+        }
+
+        return false;
     }
 
     bool isValueType() const

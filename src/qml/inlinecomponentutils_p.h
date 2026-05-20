@@ -79,19 +79,24 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer,
         const CompiledObject *obj = objectContainer->objectAt(ic.objectIndex);
         QV4::ResolvedTypeReference *currentICTypeRef = objectContainer->resolvedType(ic.nameIndex);
         auto createEdgeFromTypeRef = [&](QV4::ResolvedTypeReference *targetTypeRef) {
-            if (targetTypeRef) {
-                const auto targetType = targetTypeRef->type();
-                if (targetType.isInlineComponentType()
-                        && containedInSameType(targetType, currentICTypeRef->type())) {
-                    auto icIt = std::find_if(allICs.cbegin(), allICs.cend(), [&](const QV4::CompiledData::InlineComponent &icSearched){
-                        return objectContainer->stringAt(icSearched.nameIndex)
-                               == targetType.elementName();
-                    });
-                    Q_ASSERT(icIt != allICs.cend());
-                    Node& target = nodes[i];
-                    adjacencyList[std::distance(allICs.cbegin(), icIt)].push_back(&target);
-                }
+            if (!targetTypeRef)
+                return;
+
+            const QQmlType targetType = targetTypeRef->type();
+            if (!targetType.isInlineComponent()
+                || !containedInSameType(targetType, currentICTypeRef->type())) {
+                return;
             }
+
+            const auto icIt =
+                    std::find_if(allICs.cbegin(), allICs.cend(),
+                                 [&](const QV4::CompiledData::InlineComponent &icSearched) {
+                                     return objectContainer->stringAt(icSearched.nameIndex)
+                                             == targetType.elementName();
+                                 });
+            Q_ASSERT(icIt != allICs.cend());
+
+            adjacencyList[std::distance(allICs.cbegin(), icIt)].push_back(&nodes[i]);
         };
         if (obj->inheritedTypeNameIndex != 0) {
             QV4::ResolvedTypeReference *parentTypeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);

@@ -525,20 +525,7 @@ static ReturnedValue instanceOfQObject(
 
     const QQmlType type = typeWrapper->d()->type();
     QQmlMetaObject myQmlType;
-    if (type.isComposite()) {
-        if (!instanceHasCompilationUnit(wrapperObject))
-            return Encode(false);
-
-        const CompiledData::CompilationUnit *cu
-                = engine->typeLoader()->getType(type.sourceUrl())->compilationUnit();
-
-        // If the CU isn't there, the type probably has errors, so we could not compile it.
-        if (!cu)
-            return Encode(false);
-
-        myQmlType = QQmlMetaObject(cu->rootPropertyCache());
-        Q_ASSERT(!myQmlType.isNull());
-    } else if (type.isInlineComponentType()) {
+    if (type.isInlineComponent()) {
         if (!instanceHasCompilationUnit(wrapperObject))
             return Encode(false);
 
@@ -553,6 +540,19 @@ static ReturnedValue instanceOfQObject(
 
         myQmlType = QQmlMetaObject(cu->propertyCaches.at(
                 cu->inlineComponentId(type.elementName())));
+        Q_ASSERT(!myQmlType.isNull());
+    } else if (type.isComposite()) {
+        if (!instanceHasCompilationUnit(wrapperObject))
+            return Encode(false);
+
+        const CompiledData::CompilationUnit *cu
+                = engine->typeLoader()->getType(type.sourceUrl())->compilationUnit();
+
+        // If the CU isn't there, the type probably has errors, so we could not compile it.
+        if (!cu)
+            return Encode(false);
+
+        myQmlType = QQmlMetaObject(cu->rootPropertyCache());
         Q_ASSERT(!myQmlType.isNull());
     } else {
         myQmlType = QQmlMetaType::metaObjectForType(type.typeId());

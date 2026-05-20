@@ -117,7 +117,7 @@ public:
     static QQmlType findOrCreateSpeculativeInlineComponentType(const QUrl &url);
     static QQmlType findOrCreateSpeculativeInlineComponentType(const QQmlType &outerType, const QString &name)
     {
-        return outerType.isComposite()
+        return (outerType.isComposite() && !outerType.isInlineComponent())
                 ? findOrCreateSpeculativeInlineComponentType(
                         inlineComponentUrl(outerType.sourceUrl(), name))
                 : QQmlType();

@@ -207,7 +207,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
     const QV4::ResolvedTypeReference *typeRef =
             currentUnit->resolvedType(obj->inheritedTypeNameIndex);
 
-    while (typeRef && (typeRef->type().isComposite() || typeRef->type().isInlineComponentType())) {
+    while (typeRef && typeRef->type().isComposite()) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> cu = typeRef->isSelfReference()
                 ? currentUnit
                 : currentUnit->engine->executableCompilationUnit(typeRef->compilationUnit());
@@ -220,7 +220,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
 
         int rootIndex;
         QString icName;
-        if (typeRef->type().isInlineComponentType()) {
+        if (typeRef->type().isInlineComponent()) {
             icName = typeRef->type().elementName();
             rootIndex = cu->inlineComponentId(icName);
         } else {

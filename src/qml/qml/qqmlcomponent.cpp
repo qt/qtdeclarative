@@ -1513,21 +1513,7 @@ void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyString
                     .arg(uri.toString(), typeName.toString()));
     } else if (type.isCreatable()) {
         emitComplete();
-    } else if (type.isComposite()) {
-        QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous;
-        switch (m_loadHelper->mode()) {
-        case QQmlTypeLoader::Asynchronous:
-            mode = QQmlComponent::Asynchronous;
-            break;
-        case QQmlTypeLoader::PreferSynchronous:
-        case QQmlTypeLoader::Synchronous:
-            mode = QQmlComponent::PreferSynchronous;
-            break;
-        }
-
-        // loadUrl takes care of signal emission
-        loadUrl(type.sourceUrl(), mode);
-    } else if (type.isInlineComponentType()) {
+    } else if (type.isInlineComponent()) {
         auto baseUrl = type.sourceUrl();
         baseUrl.setFragment(QString());
 
@@ -1560,7 +1546,22 @@ void QQmlComponentPrivate::completeLoadFromModule(QAnyStringView uri, QAnyString
             m_inlineComponentName = std::make_unique<QString>(std::move(elementName));
             emitComplete();
         }
-    } else if (type.isSingleton() || type.isCompositeSingleton()) {
+    } else if (type.isComposite()) {
+        QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous;
+        switch (m_loadHelper->mode()) {
+        case QQmlTypeLoader::Asynchronous:
+            mode = QQmlComponent::Asynchronous;
+            break;
+        case QQmlTypeLoader::PreferSynchronous:
+        case QQmlTypeLoader::Synchronous:
+            mode = QQmlComponent::PreferSynchronous;
+            break;
+        }
+
+        // loadUrl takes care of signal emission
+        loadUrl(type.sourceUrl(), mode);
+    } else if (type.isSingleton()) {
+        // TODO: This is meant to cover composite singletons but doesn't.
         reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)").arg(typeName.toString()));
     } else {
         reportError(QLatin1String("Could not load %1, as the type is uncreatable").arg(typeName.toString()));

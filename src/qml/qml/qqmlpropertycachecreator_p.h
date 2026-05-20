@@ -848,14 +848,14 @@ inline std::optional<QMetaType> QQmlPropertyCacheCreator<ObjectContainer>::metaT
                 QQmlType::AnyRegistrationType, &selfReference))
         return {};
 
-    if (!qmltype.isComposite()) {
-        const QMetaType typeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
-        if (!typeId.isValid() && qmltype.isInlineComponentType()) {
+    if (qmltype.isInlineComponent()) {
+        const QMetaType listTypeId = param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
+        if (!listTypeId.isValid()) {
             const QQmlType qmlType = objectContainer->qmlTypeForComponent(qmltype.elementName());
             return param.isList() ? qmlType.qListTypeId() : qmlType.typeId();
-        } else {
-            return typeId;
         }
+    } else if (!qmltype.isComposite()) {
+        return param.isList() ? qmltype.qListTypeId() : qmltype.typeId();
     }
 
     if (selfReference) {
@@ -912,7 +912,7 @@ inline auto QQmlPropertyCacheCreator<ObjectContainer>::tryResolvePropertyType(
 
     propertyType.metaType = propertyIR.isList() ? qmltype.qListTypeId() : qmltype.typeId();
 
-    if (!qmltype.isComposite() && !qmltype.isInlineComponentType())
+    if (!qmltype.isComposite())
         propertyType.revision = qmltype.version();
 
     return propertyType;
@@ -1020,7 +1020,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         const auto referencedType = typeRef->type();
         Q_ASSERT(referencedType.isValid());
         *type = referencedType.typeId();
-        if (!type->isValid() && referencedType.isInlineComponentType()) {
+        if (!type->isValid() && referencedType.isInlineComponent()) {
             *type = objectContainer->qmlTypeForComponent(referencedType.elementName()).typeId();
             Q_ASSERT(type->isValid());
         }

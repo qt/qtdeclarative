@@ -456,7 +456,7 @@ bool QQmlTypeData::checkDependencies()
         const TypeReference &type = *it;
         Q_ASSERT(!type.typeData
                  || type.typeData->isCompleteOrError()
-                 || type.type.isInlineComponentType());
+                 || type.type.isInlineComponent());
 
         if (type.typeData && type.typeData->isError()) {
             const QString &typeName = stringAt(it.key());
@@ -464,7 +464,7 @@ bool QQmlTypeData::checkDependencies()
             return false;
         }
 
-        if (!type.selfReference && type.type.isInlineComponentType()) {
+        if (!type.selfReference && type.type.isInlineComponent()) {
             const QString icName = type.type.elementName();
             Q_ASSERT(!icName.isEmpty());
 
@@ -1085,10 +1085,7 @@ bool QQmlTypeData::resolveTypes()
 
         if (ref.selfReference) {
             // nothing to do
-        } else if (ref.type.isComposite()) {
-            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
-            addDependency(ref.typeData.data());
-        } else if (ref.type.isInlineComponentType()) {
+        } else if (ref.type.isInlineComponent()) {
             QUrl containingTypeUrl = ref.type.sourceUrl();
             Q_ASSERT(!containingTypeUrl.isEmpty());
             if (QQmlMetaType::equalBaseUrls(finalUrl(), containingTypeUrl)) {
@@ -1100,6 +1097,9 @@ bool QQmlTypeData::resolveTypes()
                 ref.typeData = typeData;
                 addDependency(typeData.data());
             }
+        } else if (ref.type.isComposite()) {
+            ref.typeData = typeLoader()->getType(ref.type.sourceUrl());
+            addDependency(ref.typeData.data());
         }
 
         ref.version = version;
@@ -1139,20 +1139,20 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 return qQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
             const auto compilationUnit = resolvedType->typeData->compilationUnit();
-            if (qmlType.isInlineComponentType()) {
+            if (qmlType.isInlineComponent()) {
                 // Inline component which is part of an already resolved type
                 QString icName = qmlType.elementName();
                 Q_ASSERT(!icName.isEmpty());
 
                 ref->setTypePropertyCache(compilationUnit->propertyCaches.at(
                     compilationUnit->inlineComponentId(icName)));
-                Q_ASSERT(ref->type().isInlineComponentType());
+                Q_ASSERT(ref->type().isInlineComponent());
             } else {
                 ref->setTypePropertyCache(compilationUnit->rootPropertyCache());
             }
             if (!resolvedType->selfReference)
                 ref->setCompilationUnit(compilationUnit);
-        } else if (qmlType.isInlineComponentType()) {
+        } else if (qmlType.isInlineComponent()) {
             // Inline component.
             // If it's from a different file we have a typeData and can't get here.
             // If it's defined in the same file we're currently compiling, we don't want to use it.

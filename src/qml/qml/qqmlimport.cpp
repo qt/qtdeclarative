@@ -456,14 +456,18 @@ bool QQmlImports::resolveType(
                 << "resolveType:" << qPrintable(baseUrl().toString()) << type.toString() << " => "
 
                 if (type_return && type_return->isValid()) {
-                    if (type_return->isCompositeSingleton())
-                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL-SINGLETON";
-                    else if (type_return->isComposite())
-                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE/URL";
-                    else if (type_return->isInlineComponentType())
-                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' ' << type_return->sourceUrl() << " TYPE(INLINECOMPONENT)";
-                    else
+                    if (type_return->isCompositeSingleton()) {
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' '
+                                           << type_return->sourceUrl() << " TYPE/URL-SINGLETON";
+                    } else if (type_return->isInlineComponent()) {
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' '
+                                           << type_return->sourceUrl() << " TYPE(INLINECOMPONENT)";
+                    } else if (type_return->isComposite()) {
+                        RESOLVE_TYPE_DEBUG << type_return->typeName() << ' '
+                                           << type_return->sourceUrl() << " TYPE/URL";
+                    } else {
                         RESOLVE_TYPE_DEBUG << type_return->typeName() << " TYPE";
+                    }
                 }
 #undef RESOLVE_TYPE_DEBUG
             }

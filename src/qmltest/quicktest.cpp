@@ -371,7 +371,7 @@ private:
 
         if (const auto superType
                 = compilationUnit->resolvedType(object->inheritedTypeNameIndex)->type();
-                    superType.isComposite() || superType.isInlineComponentType()) {
+                    superType.isComposite()) {
 
             // Reset fragment, so that we don't run into problems with inline components
             QUrl baseUrl = superType.sourceUrl();
