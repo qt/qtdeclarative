@@ -376,7 +376,7 @@ void QQmlCodeModelManager::setCMakeJobs(int jobs)
 
 void QQmlCodeModelManager::setBuildPathsForRootUrl(const QByteArray &url, const QStringList &paths)
 {
-    m_buildInformation.loadSettingsFrom(paths);
+    m_buildInformation.loadSettingsFrom(paths, ForceUpdate);
 
     // build paths passed by -b have an empty url and apply to all workspaces
     if (url.isEmpty()) {
