@@ -525,45 +525,15 @@ void QQmlJSLinter::processMessages(QJsonArray &warnings)
     });
 }
 
-ContextPropertyInfo QQmlJSLinter::contextPropertiesFor(
-        const QString &filename, QQmlJSResourceFileMapper *mapper,
-        const QQmlJS::HeuristicContextProperties &heuristicContextProperties)
+QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
+                                                const QString *fileContents, const bool silent,
+                                                QJsonArray *json, const QStringList &qmlImportPaths,
+                                                const QStringList &qmldirFiles,
+                                                const QStringList &resourceFiles,
+                                                const QList<QQmlJS::LoggerCategory> &categories)
 {
-    ContextPropertyInfo result;
-    if (m_userContextPropertySettings.search(filename).isValid()) {
-        result.userContextProperties =
-                QQmlJS::UserContextProperties{ m_userContextPropertySettings };
-    }
-
-    if (heuristicContextProperties.isValid()) {
-        result.heuristicContextProperties = heuristicContextProperties;
-        return result;
-    }
-
-#if QT_CONFIG(qmlcontextpropertydump)
-    const QString buildPath = QQmlJSUtils::qmlBuildPathFromSourcePath(mapper, filename);
-    if (const auto searchResult = m_heuristicContextPropertySearcher.search(buildPath);
-        searchResult.isValid()) {
-        QSettings settings(searchResult.iniFilePath, QSettings::IniFormat);
-        result.heuristicContextProperties =
-                QQmlJS::HeuristicContextProperties::collectFrom(&settings);
-    }
-#else
-    Q_UNUSED(mapper);
-#endif
-    return result;
-}
-
-QQmlJSLinter::LintResult
-QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                       QJsonArray *json, const QStringList &qmlImportPaths,
-                       const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                       const QList<QQmlJS::LoggerCategory> &categories,
-                       const QQmlJS::HeuristicContextProperties &heuristicContextProperties)
-{
-    const LintResult lintResult =
-            lintFileImpl(filename, fileContents, silent, json, qmlImportPaths, qmldirFiles,
-                         resourceFiles, categories, heuristicContextProperties);
+    const LintResult lintResult = lintFileImpl(filename, fileContents, silent, json, qmlImportPaths,
+                                               qmldirFiles, resourceFiles, categories);
     if (!json)
         return lintResult;
 
@@ -596,12 +566,43 @@ void QQmlJSLinter::setupLoggingCategoriesInLogger(const QList<QQmlJS::LoggerCate
     }
 }
 
+void QQmlJSLinter::updateUserContextProperties(const QString &fileName)
+{
+    const QString cachedSettingsPath = m_userContextPropertySettings.currentSettingsPath();
+    auto searchResult = m_userContextPropertySettings.search(fileName);
+    if (searchResult.iniFilePath == cachedSettingsPath)
+        return;
+    if (!searchResult.isValid()) {
+        m_cachedUserContextProperties = { };
+        return;
+    }
+    m_cachedUserContextProperties = QQmlJS::UserContextProperties{ m_userContextPropertySettings };
+}
+
+void QQmlJSLinter::updateHeuristicContextProperties(const QString &fileName)
+{
+#if QT_CONFIG(qmlcontextpropertydump)
+    const QString buildPath =
+            QQmlJSUtils::qmlBuildPathFromSourcePath(m_importer.resourceFileMapper(), fileName);
+
+    const QString cachedSettingsPath = m_userContextPropertySettings.currentSettingsPath();
+    const auto searchResult = m_heuristicContextPropertySearcher.search(buildPath);
+    if (searchResult.iniFilePath == cachedSettingsPath)
+        return;
+    if (!searchResult.isValid()) {
+        m_cachedHeuristicContextProperties = { };
+        return;
+    }
+    QSettings settings(searchResult.iniFilePath, QSettings::IniFormat);
+    m_cachedHeuristicContextProperties = QQmlJS::HeuristicContextProperties::collectFrom(&settings);
+#endif
+}
+
 QQmlJSLinter::LintResult
 QQmlJSLinter::lintFileImpl(const QString &filename, const QString *fileContents, const bool silent,
-                       QJsonArray *json, const QStringList &qmlImportPaths,
-                       const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                       const QList<QQmlJS::LoggerCategory> &categories,
-                       const QQmlJS::HeuristicContextProperties &heuristicContextProperties)
+                           QJsonArray *json, const QStringList &qmlImportPaths,
+                           const QStringList &qmldirFiles, const QStringList &resourceFiles,
+                           const QList<QQmlJS::LoggerCategory> &categories)
 {
     QString code;
 
@@ -686,13 +687,19 @@ QQmlJSLinter::lintFileImpl(const QString &filename, const QString *fileContents,
     const QString resolvedPath =
             (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
 
-    QQmlJSLinterCodegen codegen{ &m_importer, resolvedPath, qmldirFiles, m_logger.get(),
-                                 contextPropertiesFor(filename, mapper ? &*mapper : nullptr,
-                                                      heuristicContextProperties) };
+    updateHeuristicContextProperties(filename);
+    updateUserContextProperties(filename);
+
+    QQmlJS::LinterContext context{
+        v.addressableScopes(),         *v.knownUnresolvedTypes(),
+        v.renamedComponents(),         m_importer,
+        m_cachedUserContextProperties, m_cachedHeuristicContextProperties
+    };
+
+    QQmlJSLinterCodegen codegen{
+        &m_importer, resolvedPath, qmldirFiles, m_logger.get(), context,
+    };
     codegen.setTypeResolver(std::move(typeResolver));
-    codegen.setScopesById(v.addressableScopes());
-    codegen.setRenamedComponents(&v.renamedComponents());
-    codegen.setKnownUnresolvedTypes(v.knownUnresolvedTypes());
 
     using PassManagerPtr =
             std::unique_ptr<QQmlSA::PassManager,

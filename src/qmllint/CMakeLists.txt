@@ -16,6 +16,7 @@ qt_internal_add_module(QmlLintPrivate
         qqmljsvaluetypefromstringcheck_p.h qqmljsvaluetypefromstringcheck.cpp
         qqmljsusercontextproperties_p.h qqmljsusercontextproperties.cpp
         qqmljslinterrenamedcomponents_p.h qqmljslinterrenamedcomponents.cpp
+        qqmljslintercontext_p.h
 
     PUBLIC_LIBRARIES
         Qt::CorePrivate

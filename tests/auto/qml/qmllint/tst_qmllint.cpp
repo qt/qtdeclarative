@@ -3386,13 +3386,9 @@ QJsonArray TestQmllint::callQmllintImpl(const QString &fileToLint, const QString
             writeQrcFileMapping(options.qrcToFilePaths, qrcFile);
             resourceFiles.append(qrcFile);
         }
-
-        const auto contextProperties =
-                QQmlJS::HeuristicContextProperties::collectFromCppSourceDirs(options.rootUrls);
-
         lintResult = m_linter.lintFile(lintedFile, content.isEmpty() ? nullptr : &content, true,
                                        &jsonOutput, resolvedImportPaths, options.qmldirFiles,
-                                       resourceFiles, resolvedCategories, contextProperties);
+                                       resourceFiles, resolvedCategories);
     } else {
         lintResult = m_linter.lintModule(fileToLint, true, &jsonOutput, resolvedImportPaths,
                                          options.resources);
@@ -3425,7 +3421,16 @@ QJsonArray TestQmllint::callQmllintOnSnippet(const QString &snippet,
                                              const CallQmllintOptions &options,
                                              CallQmllintChecks checks)
 {
-    return callQmllintImpl("Snippet.qml", snippet, options, checks);
+    if (options.rootUrls.isEmpty())
+        return callQmllintImpl("Snippet.qml", snippet, options, checks);
+    QTemporaryDir dir;
+    [&dir]() { QVERIFY(dir.isValid()); }();
+    if (QTest::currentTestFailed())
+        return { };
+    const auto contextProperties =
+            QQmlJS::HeuristicContextProperties::collectFromCppSourceDirs(options.rootUrls);
+    contextProperties.writeCache(dir.path());
+    return callQmllintImpl(dir.filePath("Snippet.qml"), snippet, options, checks);
 }
 
 void TestQmllint::testFixes(bool shouldSucceed, QStringList importPaths, QStringList qmldirFiles,

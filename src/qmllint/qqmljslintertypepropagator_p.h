@@ -20,14 +20,9 @@
 #include <private/qqmljscontextproperties_p.h>
 #include <private/qqmljsusercontextproperties_p.h>
 #include <private/qqmljslinterrenamedcomponents_p.h>
+#include <private/qqmljslintercontext_p.h>
 
 QT_BEGIN_NAMESPACE
-
-struct ContextPropertyInfo
-{
-    QQmlJS::HeuristicContextProperties heuristicContextProperties;
-    QQmlJS::UserContextProperties userContextProperties;
-};
 
 struct IdMemberShadow;
 
@@ -36,32 +31,17 @@ class QQmlJSLinterTypePropagator : public QQmlJSTypePropagator
 public:
     QQmlJSLinterTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
-                               const BasicBlocks &basicBlocks = {},
-                               const InstructionAnnotations &annotations = {},
-                               QQmlSA::PassManager *passManager = nullptr,
-                               const ContextPropertyInfo &contextPropertyInfo = {});
-
-    void setScopesById(const QQmlJSScopesById &scopesById)
-    {
-        m_scopesById = scopesById;
-    }
+                               const QQmlJS::LinterContext &linterContext,
+                               const BasicBlocks &basicBlocks = { },
+                               const InstructionAnnotations &annotations = { },
+                               QQmlSA::PassManager *passManager = nullptr);
 
     void setIdMemberShadows(QSet<IdMemberShadow> *idMemberShadows)
     {
         m_idMemberShadows = idMemberShadows;
     }
 
-    void setRenamedComponents(const QQmlJS::LinterRenamedComponents *renamedComponents)
-    {
-        m_renamedComponents = renamedComponents;
-    }
-    void setKnownUnresolvedTypes(QDuplicateTracker<QQmlJSScope::ConstPtr> *knownUnresolvedTypes)
-    {
-        m_knownUnresolvedTypes = knownUnresolvedTypes;
-    }
-
 private:
-
     void generate_Ret() override;
     void generate_LoadQmlContextPropertyLookup(int index) override;
     void generate_GetOptionalLookup(int index, int offset) override;
@@ -87,11 +67,8 @@ private:
     bool checkTypeResolved(const QQmlJSScope::ConstPtr &type);
 
     QQmlSA::PassManager *m_passManager = nullptr;
-    ContextPropertyInfo m_contextPropertyInfo;
-    QQmlJSScopesById m_scopesById;
+    const QQmlJS::LinterContext &m_context;
     QSet<IdMemberShadow> *m_idMemberShadows = nullptr;
-    const QQmlJS::LinterRenamedComponents *m_renamedComponents = nullptr;
-    QDuplicateTracker<QQmlJSScope::ConstPtr> *m_knownUnresolvedTypes = nullptr;
 };
 
 QT_END_NAMESPACE
