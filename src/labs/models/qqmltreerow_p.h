@@ -28,7 +28,7 @@ QT_REQUIRE_CONFIG(qml_tree_model);
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
-static const QString ROWS_PROPERTY_NAME = u"rows"_s;
+static constexpr QLatin1StringView ROWS_PROPERTY_NAME = "rows"_L1;
 
 class QQmlTreeRow
 {
