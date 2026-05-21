@@ -79,7 +79,7 @@ static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor vi
         return true;
 
     const bool b = visitor(
-            QQmlJS::Dom::PathEls::Field(field), [&self, field, &value]() -> QQmlJS::Dom::DomItem {
+            field, [&self, field, &value]() -> QQmlJS::Dom::DomItem {
                 const QQmlJS::Dom::Path pathFromOwner{ self.pathFromOwner().withField(field) };
                 return self.subScriptElementWrapperItem(value);
             });
@@ -94,7 +94,7 @@ static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor vi
                  const ScriptList &value)
 {
     const bool b = visitor(
-            QQmlJS::Dom::PathEls::Field(field), [&self, field, &value]() -> QQmlJS::Dom::DomItem {
+            field, [&self, field, &value]() -> QQmlJS::Dom::DomItem {
                 const QQmlJS::Dom::Path pathFromOwner{ self.pathFromOwner().withField(field) };
                 return self.subListItem(value.asList(pathFromOwner));
             });
@@ -110,7 +110,7 @@ bool GenericScriptElement::iterateDirectSubpaths(const DomItem &self, DirectVisi
                 it->second);
     }
     for (auto it = m_values.begin(); it != m_values.end(); ++it) {
-        cont &= self.invokeVisitorOnValue(visitor, PathEls::Field(it->first), it->second);
+        cont &= self.invokeVisitorOnValue(visitor, it->first, it->second);
     }
     return cont;
 }
@@ -164,7 +164,7 @@ void BlockStatement::createFileLocations(const FileLocations::Tree &base)
 bool IdentifierExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont &= self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::identifier), m_name);
+    cont &= self.invokeVisitorOnValue(visitor, Fields::identifier, m_name);
     return cont;
 }
 
@@ -173,7 +173,7 @@ bool Literal::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) 
     bool cont = true;
     std::visit(
             [&cont, &visitor, &self](auto &&e) {
-                cont &= self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::value), e);
+                cont &= self.invokeVisitorOnValue(visitor, Fields::value, e);
             },
             m_value);
     return cont;
@@ -256,7 +256,7 @@ bool BinaryExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor 
 {
     bool cont = true;
     cont &= wrap(self, visitor, Fields::left, m_left);
-    cont &= self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::operation), m_operator);
+    cont &= self.invokeVisitorOnValue(visitor, Fields::operation, m_operator);
     cont &= wrap(self, visitor, Fields::right, m_right);
     return cont;
 }
@@ -282,7 +282,7 @@ void BinaryExpression::createFileLocations(const FileLocations::Tree &base)
 bool VariableDeclarationEntry::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont &= self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::scopeType), m_scopeType);
+    cont &= self.invokeVisitorOnValue(visitor, Fields::scopeType, m_scopeType);
     cont &= wrap(self, visitor, Fields::identifier, m_identifier);
     cont &= wrap(self, visitor, Fields::initializer, m_initializer);
     return cont;

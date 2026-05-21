@@ -514,6 +514,11 @@ public:
     PathComponent(Root &&o): m_data(std::move(o)) {}
     PathComponent(Current &&o): m_data(std::move(o)) {}
 
+    // Convenience constructors
+    Q_IMPLICIT PathComponent(FieldName f): m_data(Field(f)) {}
+    Q_IMPLICIT PathComponent(PathRoot r): m_data(Root(r)) {}
+    Q_IMPLICIT PathComponent(PathCurrent c): m_data(Current(c)) {}
+
 private:
     friend class QQmlJS::Dom::Path;
     friend class QQmlJS::Dom::PathEls::TestPaths;

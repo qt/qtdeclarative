@@ -38,7 +38,7 @@ bool Info::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) con
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::fullRegion, [this]() {
         return sourceLocationToQCborValue(fullRegion);
     });
-    cont = cont && visitor(PathEls::Field(Fields::regions), [this, &self]() -> DomItem {
+    cont = cont && visitor(Fields::regions, [this, &self]() -> DomItem {
                const Path pathFromOwner = self.pathFromOwner().withField(Fields::regions);
                auto map = Map::fromFileRegionMap(pathFromOwner, regions);
                return self.subMapItem(map);
@@ -192,14 +192,14 @@ bool Node::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) con
 {
     bool cont = true;
     if (const Ptr p = parent()) {
-        cont = cont && visitor(PathEls::Field(Fields::parent), [&self, &p]() {
+        cont = cont && visitor(Fields::parent, [&self, &p]() {
                    return self.copy(p, self.m_ownerPath.dropTail(2), p.get());
                });
     }
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::path, [this]() {
         return path().toString();
     });
-    cont = cont && visitor(PathEls::Field(Fields::subItems), [this, &self]() {
+    cont = cont && visitor(Fields::subItems, [this, &self]() {
                // keyed by Path::toString() to avoid reparsing the path in Map::key()
                QMap<QString, Path> byName;
                for (auto it = m_subItems.keyBegin(), end = m_subItems.keyEnd(); it != end; ++it)
@@ -218,8 +218,8 @@ bool Node::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) con
                        },
                        QLatin1String("Node")));
            });
-    cont = cont && visitor(PathEls::Field(Fields::infoItem), [&self, this]() {
-               return self.wrap(PathEls::Field(Fields::infoItem), m_info);
+    cont = cont && visitor(Fields::infoItem, [&self, this]() {
+               return self.wrap(Fields::infoItem, m_info);
            });
     return cont;
 }

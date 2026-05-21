@@ -108,8 +108,8 @@ bool JsFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) c
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
     cont = cont && self.invokeVisitorOnField(visitor, Fields::fileLocationsTree, m_fileLocationsTree);
     if (m_script)
-        cont = cont && visitor(PathEls::Field(Fields::expression), [this, &self]() {
-                   return self.subOwnerItem(PathEls::Field(Fields::expression), m_script);
+        cont = cont && visitor(Fields::expression, [this, &self]() {
+                   return self.subOwnerItem(Fields::expression, m_script);
                });
     return cont;
 }
@@ -255,7 +255,7 @@ DomItem QmlFile::field(const DomItem &self, FieldName name) const
 {
     ensurePopulated();
     if (name == Fields::components)
-        return self.wrap(PathEls::Field(Fields::components), lazyMembers().m_components);
+        return self.wrap(Fields::components, lazyMembers().m_components);
     return DomBase::field(self, name);
 }
 

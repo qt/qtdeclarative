@@ -1020,16 +1020,6 @@ DomItem DomItem::path(const Path &p, const ErrorHandler &errorHandler) const
     return res;
 }
 
-DomItem DomItem::path(const QString &p, const ErrorHandler &errorHandler) const
-{
-    return path(Path::fromString(p, errorHandler));
-}
-
-DomItem DomItem::path(QStringView p, const ErrorHandler &errorHandler) const
-{
-    return path(Path::fromString(p, errorHandler));
-}
-
 QList<QString> DomItem::fields() const
 {
     return visitEl([this](auto &&el) { return el->fields(*this); });
@@ -2652,14 +2642,14 @@ bool Reference::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::referredObjectPath, [this]() {
         return referredObjectPath.toString();
     });
-    cont = cont && visitor(PathEls::Field(Fields::get), [this, &self]() { return this->get(self); });
+    cont = cont && visitor(Fields::get, [this, &self]() { return this->get(self); });
     return cont;
 }
 
 DomItem Reference::field(const DomItem &self, FieldName name) const
 {
     if (Fields::referredObjectPath == name) {
-        return self.subDataItem(PathEls::Field(Fields::referredObjectPath),
+        return self.subDataItem(Fields::referredObjectPath,
                                 referredObjectPath.toString());
     }
     if (Fields::get == name)
@@ -2858,7 +2848,7 @@ int OwningItem::nextRevision()
 bool OwningItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont = cont && visitor(PathEls::Field(Fields::errors), [&self, this]() {
+    cont = cont && visitor(Fields::errors, [&self, this]() {
                // only for traversal/dumps; keyed by Path::toString() to avoid
                // reparsing the path in Map::key()
                QMap<QString, ErrorMessage> myErrors;

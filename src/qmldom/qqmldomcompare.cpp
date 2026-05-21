@@ -44,14 +44,14 @@ bool domCompare(const DomItem &i1, const DomItem &i2, function_ref<bool(Path, co
                 if (hasK1) {
                     k1 = f1.at(it1);
                     el1 = i1.field(fieldOf(k1));
-                    filt1 = i1.isCanonicalChild(el1) && filter(i1, PathEls::Field(fieldOf(k1)), el1);
+                    filt1 = i1.isCanonicalChild(el1) && filter(i1, fieldOf(k1), el1);
                 }
                 bool hasK2 = it2 != f2.size();
                 bool filt2 = hasK2;
                 if (hasK2) {
                     k2 = f2.at(it2);
                     el2 = i2.field(fieldOf(k2));
-                    filt2 = i2.isCanonicalChild(el2) && filter(i2, PathEls::Field(fieldOf(k2)), el2);
+                    filt2 = i2.isCanonicalChild(el2) && filter(i2, fieldOf(k2), el2);
                 }
                 // continue when filtering out
                 if (hasK1 && !filt1) {

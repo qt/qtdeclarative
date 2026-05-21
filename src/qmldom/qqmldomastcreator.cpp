@@ -266,13 +266,12 @@ FileLocations::Tree QQmlDomAstCreatorBase::createMap(DomType k, const Path &p, A
         base = currentNodeEl().fileLocations;
         if (p.length() > 2) {
             Path p2 = p[p.length() - 2];
-            if (p2.headKind() == Path::Kind::Field
-                && (p2.checkHeadName(Fields::children) || p2.checkHeadName(Fields::objects)
-                    || p2.checkHeadName(Fields::value) || p2.checkHeadName(Fields::annotations)
-                    || p2.checkHeadName(Fields::children)))
+            const auto fn = p2.headField();
+            if (fn
+                && (*fn == Fields::children || *fn == Fields::objects || *fn == Fields::value
+                    || *fn == Fields::annotations))
                 relative = p.mid(p.length() - 2, 2);
-            else if (p.last().checkHeadName(Fields::value)
-                     && p.last().headKind() == Path::Kind::Field)
+            else if (auto lastFn = p.last().headField(); lastFn && *lastFn == Fields::value)
                 relative = p.last();
             else {
                 qCWarning(domLog) << "unexpected path to QmlObject in createMap" << p;

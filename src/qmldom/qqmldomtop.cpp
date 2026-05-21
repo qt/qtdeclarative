@@ -144,8 +144,8 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
 {
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::name), name());
-    cont = cont && visitor(PathEls::Field(Fields::qmlFileWithPath), [this, &self]() {
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::name, name());
+    cont = cont && visitor(Fields::qmlFileWithPath, [this, &self]() {
                return self.subMapItem(Map(
                        Path::fromField(Fields::qmlFileWithPath),
                        [this](const DomItem &map, const QString &key) {
@@ -154,7 +154,7 @@ bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visit
                        [this](const DomItem &) { return qmlFilePaths(); },
                        QLatin1String("QmlFile")));
            });
-    cont = cont && visitor(PathEls::Field(Fields::jsFileWithPath), [this, &self]() {
+    cont = cont && visitor(Fields::jsFileWithPath, [this, &self]() {
                return self.subMapItem(Map(
                        Path::fromField(Fields::jsFileWithPath),
                        [this](const DomItem &map, const QString &key) {
@@ -509,12 +509,12 @@ Path LoadInfo::canonicalPath(const DomItem &) const
 bool LoadInfo::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = OwningItem::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::status), int(status()));
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::nLoaded), nLoaded());
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::elementCanonicalPath),
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::status, int(status()));
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::nLoaded, nLoaded());
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::elementCanonicalPath,
                                          elementCanonicalPath().toString());
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::nNotdone), nNotDone());
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::nCallbacks), nCallbacks());
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::nNotdone, nNotDone());
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::nCallbacks, nCallbacks());
     return cont;
 }
 
@@ -784,13 +784,13 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
     DomItem univ = universe();
-    cont = cont && visitor(PathEls::Field(Fields::universe), [this]() { return universe(); });
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::options), int(options()));
-    cont = cont && visitor(PathEls::Field(Fields::base), [this]() { return base(); });
+    cont = cont && visitor(Fields::universe, [this]() { return universe(); });
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::options, int(options()));
+    cont = cont && visitor(Fields::base, [this]() { return base(); });
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::loadPaths, [this]() {
         return loadPaths();
     });
-    cont = cont && visitor(PathEls::Field(Fields::qmlFileWithPath), [this, &self]() {
+    cont = cont && visitor(Fields::qmlFileWithPath, [this, &self]() {
                return self.subMapItem(Map(
                        Path::fromField(Fields::qmlFileWithPath),
                        [&self, this](const DomItem &map, const QString &key) {
@@ -799,7 +799,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                        [&self, this](const DomItem &) { return qmlFilePaths(self); },
                        QLatin1String("QmlFile")));
            });
-    cont = cont && visitor(PathEls::Field(Fields::jsFileWithPath), [this, &self]() {
+    cont = cont && visitor(Fields::jsFileWithPath, [this, &self]() {
                return self.subMapItem(Map(
                        Path::fromField(Fields::jsFileWithPath),
                        [this](const DomItem &map, const QString &key) {
@@ -826,7 +826,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
         }
     };
     cont = cont && visitor(
-                    PathEls::Field(Fields::loadsWithWork), [&ensureInfo, &self, &loadsWithWork]() {
+                    Fields::loadsWithWork, [&ensureInfo, &self, &loadsWithWork]() {
                         ensureInfo();
                         return self.subListItem(List(
                                 Path::fromField(Fields::loadsWithWork),
@@ -842,7 +842,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                                 },
                                 nullptr, QLatin1String("Path")));
                     });
-    cont = cont && visitor(PathEls::Field(Fields::inProgress), [&self, &ensureInfo, &inProgress]() {
+    cont = cont && visitor(Fields::inProgress, [&self, &ensureInfo, &inProgress]() {
                ensureInfo();
                return self.subListItem(List(
                        Path::fromField(Fields::inProgress),
@@ -856,7 +856,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                        [inProgress](const DomItem &) { return index_type(inProgress.size()); },
                        nullptr, QLatin1String("Path")));
            });
-    cont = cont && visitor(PathEls::Field(Fields::loadInfo), [&self, this]() {
+    cont = cont && visitor(Fields::loadInfo, [&self, this]() {
                // keyed by Path::toString() to avoid reparsing the path in Map::key()
                QMap<QString, std::shared_ptr<LoadInfo>> infos;
                for (const Path &p : loadInfoPaths())
@@ -1566,7 +1566,7 @@ bool ExternalItemInfoBase::iterateDirectSubpaths(const DomItem &self, DirectVisi
     if (!self.invokeVisitorOnLazyField(visitor, Fields::lastValidRevision,
                                        [this, &self]() { return lastValidRevision(self); }))
         return false;
-    if (!visitor(PathEls::Field(Fields::currentItem),
+    if (!visitor(Fields::currentItem,
                  [&self, this]() { return currentItem(self); }))
         return false;
     if (!self.invokeVisitorOnLazyField(visitor, Fields::currentExposedAt,
@@ -1611,14 +1611,14 @@ bool ExternalItemPairBase::iterateDirectSubpaths(const DomItem &self, DirectVisi
     if (!self.invokeVisitorOnLazyField(visitor, Fields::currentIsValid,
                                        [this]() { return currentIsValid(); }))
         return false;
-    if (!visitor(PathEls::Field(Fields::validItem), [this, &self]() { return validItem(self); }))
+    if (!visitor(Fields::validItem, [this, &self]() { return validItem(self); }))
         return false;
-    if (!visitor(PathEls::Field(Fields::currentItem),
+    if (!visitor(Fields::currentItem,
                  [this, &self]() { return currentItem(self); }))
         return false;
-    if (!self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::validExposedAt), validExposedAt))
+    if (!self.invokeVisitorOnValue(visitor, Fields::validExposedAt, validExposedAt))
         return false;
-    if (!self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::currentExposedAt),
+    if (!self.invokeVisitorOnValue(visitor, Fields::currentExposedAt,
                                    currentExposedAt)) {
         return false;
     }

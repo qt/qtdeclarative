@@ -948,8 +948,6 @@ public:
     index_type length() const { return size(); }
 
     DomItem path(const Path &p, const ErrorHandler &h = &defaultErrorHandler) const;
-    DomItem path(const QString &p, const ErrorHandler &h = &defaultErrorHandler) const;
-    DomItem path(QStringView p, const ErrorHandler &h = &defaultErrorHandler) const;
 
     QList<QString> fields() const;
     DomItem field(FieldName name) const;
@@ -1066,7 +1064,7 @@ public:
     template <typename F>
     bool invokeVisitorOnLazyField(DirectVisitor visitor, FieldName f, F valueF) const
     {
-        PathEls::PathComponent c = PathEls::Field(f);
+        PathEls::PathComponent c = f;
         auto lazyWrap = [this, &c, &valueF]() {
             return this->subValueItem<decltype(valueF())>(c, valueF());
         };
@@ -1077,7 +1075,7 @@ public:
     bool invokeVisitorOnReference(DirectVisitor visitor, FieldName f,
                                   const Path &referencedObject) const
     {
-        PathEls::PathComponent c = PathEls::Field(f);
+        PathEls::PathComponent c = f;
         return visitor(c, [c, this, referencedObject]() {
             return this->subReferenceItem(c, referencedObject);
         });
@@ -1085,7 +1083,7 @@ public:
     bool invokeVisitorOnReferences(DirectVisitor visitor, FieldName f,
                                    const QList<Path> &paths) const
     {
-        PathEls::PathComponent c = PathEls::Field(f);
+        PathEls::PathComponent c = f;
         return visitor(c, [c, this, paths]() { return this->subReferencesItem(c, paths); });
     }
     DomItem subListItem(const List &list) const;
@@ -1110,7 +1108,7 @@ public:
     template <typename T>
     bool invokeVisitorOnField(DirectVisitor visitor, FieldName f, T &obj) const
     {
-        PathEls::PathComponent c = PathEls::Field(f);
+        PathEls::PathComponent c = f;
         auto lazyWrap = [this, &c, &obj]() { return this->wrap<T>(c, obj); };
         return visitor(c, lazyWrap);
     }
@@ -1572,8 +1570,6 @@ public:
     MutableDomItem operator[](index_type i) { return MutableDomItem(item().index(i)); }
 
     MutableDomItem path(const Path &p) { return MutableDomItem(item().path(p)); }
-    MutableDomItem path(const QString &p) { return path(Path::fromString(p)); }
-    MutableDomItem path(QStringView p) { return path(Path::fromString(p)); }
 
     QList<QString> const fields() { return item().fields(); }
     MutableDomItem field(FieldName name) { return MutableDomItem(item().field(name)); }

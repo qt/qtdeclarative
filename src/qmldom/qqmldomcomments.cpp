@@ -200,8 +200,8 @@ A comment has methods to write it out again (write) and expose it to the Dom
 bool Comment::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
     bool cont = true;
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::rawComment), rawComment());
-    cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::newlinesBefore),
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::rawComment, rawComment());
+    cont = cont && self.invokeVisitorOnValue(visitor, Fields::newlinesBefore,
                                          newlinesBefore());
     return cont;
 }
@@ -936,7 +936,7 @@ bool RegionComments::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
 {
     bool cont = true;
     if (!m_regionComments.isEmpty()) {
-        cont = cont && visitor(PathEls::Field(Fields::regionComments), [this, &self]() -> DomItem {
+        cont = cont && visitor(Fields::regionComments, [this, &self]() -> DomItem {
                    const Path pathFromOwner =
                            self.pathFromOwner().withField(Fields::regionComments);
                    auto map = Map::fromFileRegionMap(pathFromOwner, m_regionComments);

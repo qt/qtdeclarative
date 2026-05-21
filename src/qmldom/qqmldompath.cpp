@@ -422,7 +422,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                             .handle(errorHandler);
                     return Path();
                 }
-                components.append(Component(PathEls::Root(rootKind)));
+                components.append(Component(rootKind));
                 state = PathEls::ParserState::End;
             } else if (c == at) {
                 i0 = i;
@@ -436,7 +436,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                             .handle(errorHandler);
                     return Path();
                 }
-                components.append(Component(PathEls::Current(currentKind)));
+                components.append(Component(currentKind));
                 state = PathEls::ParserState::End;
             } else if (c.isLetter()) {
                 myErrors().warning(tr("Field expressions should start with a dot, even when at the start of the path %1.")
@@ -562,7 +562,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                                 .handle(errorHandler);
                         return Path();
                     }
-                    components.append(Component(PathEls::Current(currentKind)));
+                    components.append(Component(currentKind));
                     state = PathEls::ParserState::End;
                 } else if (s.at(i) == dollar) {
                     i0 = ++i;
@@ -576,7 +576,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                                 .handle(errorHandler);
                         return Path();
                     }
-                    components.append(Component(PathEls::Root(rootKind)));
+                    components.append(Component(rootKind));
                     state = PathEls::ParserState::End;
                 } else {
                     c=s.at(i);
@@ -613,7 +613,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
 Path Path::fromRoot(PathRoot s)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(PathEls::Root(s)))));
+                    QList<Component>(1,Component(s))));
 }
 
 Path Path::fromIndex(index_type i)
@@ -626,7 +626,7 @@ Path Path::fromField(FieldName name)
 {
     return Path(0, 1,
                 std::make_shared<PathEls::PathData>(
-                        QList<Component>(1, Component(PathEls::Field(name)))));
+                        QList<Component>(1, Component(name))));
 }
 
 Path Path::fromKey(QStringView s)
@@ -647,7 +647,7 @@ Path Path::fromKey(const QString &s)
 Path Path::fromCurrent(PathCurrent s)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(PathEls::Current(s)))));
+                    QList<Component>(1,Component(s))));
 }
 
 Path Path::withEmpty() const
@@ -664,7 +664,7 @@ Path Path::withField(FieldName name) const
         return noEndOffset().withField(name);
     return Path(0, m_length + 1,
                 std::make_shared<PathEls::PathData>(
-                        QList<Component>(1, Component(PathEls::Field(name))), m_data));
+                        QList<Component>(1, Component(name)), m_data));
 }
 
 Path Path::withKey(const QString &name) const
@@ -693,7 +693,7 @@ Path Path::withCurrent(PathCurrent s) const
     if (m_endOffset != 0)
         return noEndOffset().withCurrent(s);
     return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QList<Component>(1,Component(PathEls::Current(s))), m_data));
+                    QList<Component>(1,Component(s)), m_data));
 }
 
 static QList<Path::Component>
