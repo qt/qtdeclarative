@@ -767,7 +767,7 @@ public:
     bool iterateBaseDirectSubpaths(const DomItem &self, DirectVisitor) const;
     QList<QString> fields() const;
     QList<QString> fields(const DomItem &) const override { return fields(); }
-    DomItem field(const DomItem &self, QStringView name) const override;
+    DomItem field(const DomItem &self, FieldName name) const override;
     void updatePathFromOwner(const Path &newPath) override;
     QString localDefaultPropertyName() const;
     QString defaultPropertyName(const DomItem &self) const;
@@ -945,7 +945,7 @@ public:
 
     bool iterateDirectSubpaths(const DomItem &, DirectVisitor) const override;
     void updatePathFromOwner(const Path &newPath) override;
-    DomItem field(const DomItem &self, QStringView name) const override;
+    DomItem field(const DomItem &self, FieldName name) const override;
 
     QString name() const { return m_name; }
     const QMultiMap<QString, EnumDecl> &enumerations() const & { return m_enumerations; }

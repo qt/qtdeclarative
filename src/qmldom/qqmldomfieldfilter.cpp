@@ -131,16 +131,16 @@ FieldFilter FieldFilter::defaultFilter()
     QMultiMap<QString, QString> fieldFilterAdd { { QLatin1String("ScriptExpression"),
                                                    QLatin1String("code") } };
     QMultiMap<QString, QString> fieldFilterRemove{
-        { QString(), Fields::code.toString() },
-        { QString(), Fields::postCode.toString() },
-        { QString(), Fields::preCode.toString() },
-        { QString(), Fields::importScope.toString() },
-        { QString(), Fields::fileLocationsTree.toString() },
-        { QString(), Fields::astComments.toString() },
-        { QString(), Fields::comments.toString() },
-        { QString(), Fields::exports.toString() },
-        { QString(), Fields::propertyInfos.toString() },
-        { QLatin1String("FileLocationsNode"), Fields::parent.toString() }
+        { QString(), fieldNameToQString(Fields::code) },
+        { QString(), fieldNameToQString(Fields::postCode) },
+        { QString(), fieldNameToQString(Fields::preCode) },
+        { QString(), fieldNameToQString(Fields::importScope) },
+        { QString(), fieldNameToQString(Fields::fileLocationsTree) },
+        { QString(), fieldNameToQString(Fields::astComments) },
+        { QString(), fieldNameToQString(Fields::comments) },
+        { QString(), fieldNameToQString(Fields::exports) },
+        { QString(), fieldNameToQString(Fields::propertyInfos) },
+        { QLatin1String("FileLocationsNode"), fieldNameToQString(Fields::parent) }
     };
     return FieldFilter { fieldFilterAdd, fieldFilterRemove };
 }

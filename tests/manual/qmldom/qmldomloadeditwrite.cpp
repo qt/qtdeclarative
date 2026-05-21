@@ -153,7 +153,7 @@ int main()
         Q_ASSERT(qmlFile.internalKind() == DomType::QmlFile);
         // .initernalKindStr() is a convenience string version of it
         Q_ASSERT(qmlFile.internalKindStr() == u"QmlFile");
-        // the object attributes (fields) can be reached using .field(u"filedName")
+        // the object attributes (fields) can be reached using .key(u"filedName")
         // normally one should not use a string, but the Fields:: constant
         DomItem qmlFile2 = tFile.field(Fields::currentItem);
         // all the available fields can be listed via fields()

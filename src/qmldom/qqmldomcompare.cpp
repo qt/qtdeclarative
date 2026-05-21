@@ -35,17 +35,23 @@ bool domCompare(const DomItem &i1, const DomItem &i2, function_ref<bool(Path, co
                 DomItem el1, el2;
                 bool hasK1 = it1 != f1.size();
                 bool filt1 = hasK1;
+                // fields() only yields Fields::* names
+                auto fieldOf = [](const QString &name) {
+                    auto fn = fieldNameFromString(name);
+                    Q_ASSERT(fn);
+                    return *fn;
+                };
                 if (hasK1) {
                     k1 = f1.at(it1);
-                    el1 = i1.field(k1);
-                    filt1 = i1.isCanonicalChild(el1) && filter(i1, PathEls::Field(k1), el1);
+                    el1 = i1.field(fieldOf(k1));
+                    filt1 = i1.isCanonicalChild(el1) && filter(i1, PathEls::Field(fieldOf(k1)), el1);
                 }
                 bool hasK2 = it2 != f2.size();
                 bool filt2 = hasK2;
                 if (hasK2) {
                     k2 = f2.at(it2);
-                    el2 = i2.field(k2);
-                    filt2 = i2.isCanonicalChild(el2) && filter(i2, PathEls::Field(k2), el2);
+                    el2 = i2.field(fieldOf(k2));
+                    filt2 = i2.isCanonicalChild(el2) && filter(i2, PathEls::Field(fieldOf(k2)), el2);
                 }
                 // continue when filtering out
                 if (hasK1 && !filt1) {
@@ -58,16 +64,16 @@ bool domCompare(const DomItem &i1, const DomItem &i2, function_ref<bool(Path, co
                     continue;
                 }
                 if (filt1 && filt2 && k1 == k2) {
-                    if (!domCompare(el1, el2, change, filter, basePath.withField(k1)))
+                    if (!domCompare(el1, el2, change, filter, basePath.withField(fieldOf(k1))))
                         return false;
                     ++it1;
                     ++it2;
                 } else if (!hasK1 || (hasK2 && k1 > k2)) {
-                    if (!change(basePath.withField(k1), DomItem::empty, el2))
+                    if (!change(basePath.withField(fieldOf(k1)), DomItem::empty, el2))
                         return false;
                     ++it2;
                 } else {
-                    if (!change(basePath.withField(k1), el1, DomItem::empty))
+                    if (!change(basePath.withField(fieldOf(k1)), el1, DomItem::empty))
                         return false;
                     ++it1;
                 }

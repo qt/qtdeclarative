@@ -21,7 +21,7 @@ void TestFileLocations::InfoDOMAPI()
     // Info is a simple object wrap
     auto infoItem = DomItem().wrap({}, regionsInfo);
 
-    const QList<QString> expectedFields = { QString(Fields::fullRegion), QString(Fields::regions) };
+    const QList<QString> expectedFields = { fieldNameToQString(Fields::fullRegion), fieldNameToQString(Fields::regions) };
     QCOMPARE(infoItem.fields(), expectedFields);
     QCOMPARE(infoItem.field(Fields::fullRegion).value(), sourceLocationToQCborValue(fullRegionLoc));
     QCOMPARE(infoItem.field(Fields::regions).key(fileLocationRegionName(tokenRegion)).value(),
@@ -46,7 +46,7 @@ void TestFileLocations::NodeDOMAPI()
 
     const QList<QString> expectedRootNodeFields = {
         // root has no parent => not visited
-        QString(Fields::path), QString(Fields::subItems), QString(Fields::infoItem)
+        fieldNameToQString(Fields::path), fieldNameToQString(Fields::subItems), fieldNameToQString(Fields::infoItem)
     };
     QCOMPARE(rootNodeItem.fields(), expectedRootNodeFields);
 
@@ -55,9 +55,9 @@ void TestFileLocations::NodeDOMAPI()
     rootNodePtr->insertOrReturnChildAt(childPath);
     auto childNodeItem = rootNodeItem.field(Fields::subItems).key(childPath.toString());
 
-    const QList<QString> expectedChildNodeFields = { QString(Fields::parent), QString(Fields::path),
-                                                     QString(Fields::subItems),
-                                                     QString(Fields::infoItem) };
+    const QList<QString> expectedChildNodeFields = { fieldNameToQString(Fields::parent), fieldNameToQString(Fields::path),
+                                                     fieldNameToQString(Fields::subItems),
+                                                     fieldNameToQString(Fields::infoItem) };
     QCOMPARE(childNodeItem.fields(), expectedChildNodeFields);
     QCOMPARE(childNodeItem.field(Fields::parent).ownerAs<Node>(), rootNodePtr);
 }
@@ -107,9 +107,9 @@ void TestFileLocations::visitTree()
                                                 "$top.children",
                                                 "$top.children[0]",
                                                 "$top.children[1]",
-                                                "$top.children[1].child",
-                                                "$top.children[1].child[0]",
-                                                "$top.children[1].child[1]" };
+                                                "$top.children[1][\"child\"]",
+                                                "$top.children[1][\"child\"][0]",
+                                                "$top.children[1][\"child\"][1]" };
 
     QCOMPARE(visitedNodePaths, expectedVisitedNodePaths);
 }

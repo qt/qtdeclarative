@@ -34,25 +34,17 @@ std::pair<QString, MockObject> MockObject::asStringPair() const
 
 bool MockObject::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
-    static QHash<QString, QString> knownFields;
-    static QBasicMutex m;
-    auto toField = [](const QString &f) -> QStringView {
-        QMutexLocker l(&m);
-        if (!knownFields.contains(f))
-            knownFields[f] = f;
-        return knownFields[f];
-    };
     bool cont = CommentableDomElement::iterateDirectSubpaths(self, visitor);
     auto itV = subValues.begin();
     auto endV = subValues.end();
     while (itV != endV) {
-        cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(toField(itV.key())), *itV);
+        cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Key(itV.key()), *itV);
         ++itV;
     }
     auto itO = subObjects.begin();
     auto endO = subObjects.end();
     while (itO != endO) {
-        cont = cont && visitor(PathEls::Field(toField(itO.key())), [&self, &itO]() {
+        cont = cont && visitor(PathEls::Key(itO.key()), [&self, &itO]() {
                    return self.copy(&(*itO));
                });
         ++itO;
@@ -89,19 +81,15 @@ Path MockOwner::canonicalPath(const DomItem &) const
 
 bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
-    static QHash<QString, QString> knownFields;
-    static QBasicMutex m;
-    auto toField = [](const QString &f) -> QStringView {
-        QMutexLocker l(&m);
-        if (!knownFields.contains(f))
-            knownFields[f] = f;
-        return knownFields[f];
+    auto wrapAsKey = [&self, &visitor](const QString &name, auto &obj) {
+        PathEls::PathComponent c = PathEls::Key(name);
+        return visitor(c, [&self, &c, &obj]() { return self.wrap(c, obj); });
     };
     {
         auto itV = subValues.begin();
         auto endV = subValues.end();
         while (itV != endV) {
-            if (!self.invokeVisitorOnValue(visitor, PathEls::Field(toField(itV.key())), *itV))
+            if (!self.invokeVisitorOnValue(visitor, PathEls::Key(itV.key()), *itV))
                 return false;
             ++itV;
         }
@@ -110,7 +98,7 @@ bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
         auto itO = subObjects.begin();
         auto endO = subObjects.end();
         while (itO != endO) {
-            if (!visitor(PathEls::Field(toField(itO.key())),
+            if (!visitor(PathEls::Key(itO.key()),
                          [&self, &itO]() { return self.copy(&(*itO)); })) {
                 return false;
             }
@@ -121,7 +109,7 @@ bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
         auto it = subMaps.begin();
         auto end = subMaps.end();
         while (it != end) {
-            if (!self.invokeVisitorOnField(visitor, toField(it.key()), it.value()))
+            if (!wrapAsKey(it.key(), it.value()))
                 return false;
             ++it;
         }
@@ -130,7 +118,7 @@ bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
         auto it = subMultiMaps.begin();
         auto end = subMultiMaps.end();
         while (it != end) {
-            if (!self.invokeVisitorOnField(visitor, toField(it.key()), it.value()))
+            if (!wrapAsKey(it.key(), it.value()))
                 return false;
             ++it;
         }
@@ -139,7 +127,7 @@ bool MockOwner::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
         auto it = subLists.begin();
         auto end = subLists.end();
         while (it != end) {
-            if (!self.invokeVisitorOnField(visitor, toField(it.key()), it.value()))
+            if (!wrapAsKey(it.key(), it.value()))
                 return false;
             ++it;
         }

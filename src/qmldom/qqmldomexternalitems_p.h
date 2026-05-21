@@ -233,7 +233,7 @@ public:
     static ErrorGroups myParsingErrors();
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const
             override; // iterates the *direct* subpaths, returns false if a quick end was requested
-    DomItem field(const DomItem &self, QStringView name) const override;
+    DomItem field(const DomItem &self, FieldName name) const override;
     std::shared_ptr<QmlFile> makeCopy(const DomItem &self) const
     {
         return std::static_pointer_cast<QmlFile>(doCopy(self));

@@ -125,7 +125,7 @@ bool Component::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
     return cont;
 }
 
-DomItem Component::field(const DomItem &self, QStringView name) const
+DomItem Component::field(const DomItem &self, FieldName name) const
 {
     if (name == Fields::name)
         return self.wrap(PathEls::Field(Fields::name), m_name);
@@ -432,12 +432,12 @@ bool QmlObject::iterateBaseDirectSubpaths(const DomItem &self, DirectVisitor vis
 QList<QString> QmlObject::fields() const
 {
     static QList<QString> myFields(
-            { Fields::comments.toString(), Fields::idStr.toString(),
-              Fields::name.toString(), Fields::prototypes.toString(),
-              Fields::nextScope.toString(), Fields::propertyDefs.toString(),
-              Fields::bindings.toString(), Fields::methods.toString(),
-              Fields::children.toString(), Fields::annotations.toString(),
-              Fields::propertyInfos.toString() });
+            { fieldNameToQString(Fields::comments), fieldNameToQString(Fields::idStr),
+              fieldNameToQString(Fields::name), fieldNameToQString(Fields::prototypes),
+              fieldNameToQString(Fields::nextScope), fieldNameToQString(Fields::propertyDefs),
+              fieldNameToQString(Fields::bindings), fieldNameToQString(Fields::methods),
+              fieldNameToQString(Fields::children), fieldNameToQString(Fields::annotations),
+              fieldNameToQString(Fields::propertyInfos) });
     return myFields;
 }
 
@@ -449,7 +449,7 @@ bool QmlObject::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
     return cont;
 }
 
-DomItem QmlObject::field(const DomItem &self, QStringView name) const
+DomItem QmlObject::field(const DomItem &self, FieldName name) const
 {
     if (name == Fields::name)
         return self.subDataItem(PathEls::Field(Fields::name), this->name());
@@ -499,7 +499,7 @@ DomItem QmlObject::field(const DomItem &self, QStringView name) const
         return self.subDataItem(PathEls::Field(Fields::defaultPropertyName),
                                 defaultPropertyName(self));
     }
-    static QStringList knownLookups({ Fields::fileLocationsTree.toString() });
+    static const QSet<FieldName> knownLookups({ Fields::fileLocationsTree });
     if (!knownLookups.contains(name)) {
         qCWarning(domLog()) << "Asked non existing field " << name << " in QmlObject "
                             << pathFromOwner();
@@ -766,7 +766,7 @@ QList<std::pair<SourceLocation, DomItem>> QmlObject::orderOfAttributes(const Dom
             }
         }
     };
-    auto addMyMMap = [this, &objLocPtr, &self, &addMMap](QStringView fieldName) {
+    auto addMyMMap = [this, &objLocPtr, &self, &addMMap](FieldName fieldName) {
         DomItem base = this->field(self, fieldName);
         addMMap(base, FileLocations::find(objLocPtr, base.pathFromOwner().last()));
     };
@@ -877,7 +877,7 @@ static QStringList keepKeysOrder(const QList<std::pair<SourceLocation, DomItem>>
 }
 
 static QList<DomItem> keepDomItemsOrder(const QList<std::pair<SourceLocation, DomItem>> &attribs,
-                                        const QStringView &field, const DomItem &refItem)
+                                        FieldName field, const DomItem &refItem)
 {
     DomItem item = refItem.field(field);
     QList<DomItem> values = item.values();
@@ -1541,7 +1541,7 @@ DomItem BindingValue::value(const DomItem &binding) const
         return binding.subOwnerItem(PathEls::Field(Fields::value), scriptExpression);
     case BindingValueKind::Array:
         return binding.subListItem(List::fromQListRef<QmlObject>(
-                binding.pathFromOwner().withField(u"value"), array,
+                binding.pathFromOwner().withField(Fields::value), array,
                 [](const DomItem &self, const PathEls::PathComponent &, const QmlObject &obj) {
                     return self.copy(&obj);
                 }));
@@ -1622,8 +1622,7 @@ bool ScriptExpression::iterateDirectSubpaths(const DomItem &self, DirectVisitor 
     cont = cont && self.invokeVisitorOnValue(visitor, PathEls::Field(Fields::code), code());
     cont = cont && self.invokeVisitorOnLazyField(
                     visitor, Fields::localOffset,
-                    [this]() { return sourceLocationToQCborValue(localOffset()); },
-                    ConstantData::Options::MapIsMap);
+                    [this]() { return sourceLocationToQCborValue(localOffset()); });
     cont = cont && self.invokeVisitorOnLazyField(visitor, Fields::astRelocatableDump, [this]() {
         return astRelocatableDump();
     });

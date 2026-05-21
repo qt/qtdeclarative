@@ -67,20 +67,12 @@ DomItem DomTop::containingObject(const DomItem &) const
 
 bool DomTop::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
-    static QHash<QString, QString> knownFields;
-    static QBasicMutex m;
-    auto toField = [](const QString &f) mutable -> QStringView {
-        QMutexLocker l(&m);
-        if (!knownFields.contains(f))
-            knownFields[f] = f;
-        return knownFields[f];
-    };
     bool cont = true;
     auto objs = m_extraOwningItems;
     auto itO = objs.cbegin();
     auto endO = objs.cend();
     while (itO != endO) {
-        cont = cont && visitor(PathEls::Field(toField(itO.key())), [&self, &itO]() {
+        cont = cont && visitor(PathEls::Key(itO.key()), [&self, &itO]() {
                    return std::visit([&self](auto &&el) { return self.copy(el); }, *itO);
                });
         ++itO;
@@ -891,7 +883,7 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
     return cont;
 }
 
-DomItem DomEnvironment::field(const DomItem &self, QStringView name) const
+DomItem DomEnvironment::field(const DomItem &self, FieldName name) const
 {
     return DomTop::field(self, name);
 }
@@ -1591,14 +1583,14 @@ int ExternalItemInfoBase::currentRevision(const DomItem &) const
 int ExternalItemInfoBase::lastRevision(const DomItem &self) const
 {
     Path p = currentItem()->canonicalPath();
-    DomItem lastValue = self.universe()[p.mid(1, p.length() - 1)].field(u"revision");
+    DomItem lastValue = self.universe()[p.mid(1, p.length() - 1)][u"revision"];
     return static_cast<int>(lastValue.value().toInteger(0));
 }
 
 int ExternalItemInfoBase::lastValidRevision(const DomItem &self) const
 {
     Path p = currentItem()->canonicalPath();
-    DomItem lastValidValue = self.universe()[p.mid(1, p.length() - 2)].field(u"validItem").field(u"revision");
+    DomItem lastValidValue = self.universe()[p.mid(1, p.length() - 2)].field(Fields::validItem)[u"revision"];
     return static_cast<int>(lastValidValue.value().toInteger(0));
 }
 

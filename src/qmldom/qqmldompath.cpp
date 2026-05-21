@@ -51,8 +51,7 @@ This allows to share the path prefix when constructing paths recursively, for ex
 \section2 PathData as elements of the linked list trees
 
 Each node of the linked list tree is stored as \c PathData. It contains a vector of
-\c PathComponents, a pointer to the previous element in the path (called parent), and a QStringList
-to extend the lifetime of QStringViews used inside of PathComponent.
+\c PathComponents and a pointer to the previous element in the path (called parent).
 
 \section3 PathComponents
 
@@ -67,13 +66,11 @@ The path can also be "compressed", as the linked list structure contains vectors
 \endcode
 when \c{[c,d]} got appended to \c{[a, b]} via \c withPath, for example.
 
-\section3 String Data
+\section3 Component string ownership
 
-The PathData is responsible to own the string data used by the PathComponents it contains.
-PathComponents do not contain any owning QStrings, they only hold QStringViews. To construct a
-PathData, store the string data in the QStringList such that it can be referenced by the
-QStringViews of PathData's PathComponents. PathData are assumed to be immutable after construction
-to avoid any dangling references due to a QStringList reallocation, for example.
+No \c PathComponent refers to external string storage: \c Field stores a
+\c FieldName enum value, and \c Key owns its \c QString. Paths are therefore
+self-contained.
 
 \section2 Appending
 
@@ -214,8 +211,13 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
     switch (p1.kind()) {
     case Kind::Empty:
         return 0;
-    case Kind::Field:
-        return std::get<Field>(p1.m_data).fieldName.compare(std::get<Field>(p2.m_data).fieldName);
+    case Kind::Field: {
+        const auto a = std::get<Field>(p1.m_data).fieldName;
+        const auto b = std::get<Field>(p2.m_data).fieldName;
+        if (a == b)
+            return 0;
+        return size_t(a) < size_t(b) ? -1 : 1;
+    }
     case Kind::Index:
         if (std::get<Index>(p1.m_data).indexValue < std::get<Index>(p2.m_data).indexValue)
             return -1;
@@ -311,6 +313,14 @@ PathCurrent Path::headCurrent() const
     return PathCurrent::Obj;
 }
 
+std::optional<FieldName> Path::headField() const
+{
+    auto &comp = component(0);
+    if (const PathEls::Field *f = comp.asField())
+        return f->fieldName;
+    return std::nullopt;
+}
+
 Path::Kind Path::headKind() const
 {
     if (m_length == 0)
@@ -345,15 +355,25 @@ Path Path::last() const
 
 /*!
 \internal
-\brief Splits the path at the last field, root or current Component.
+\brief Splits the path at the last field or current component, or right after a
+root anchor.
+
+Field and Current introduce a new logical "starting point" inside the path,
+so split puts everything before them into \c pathToSource and the component
+itself (plus any tail) into \c pathFromSource. A Root, in contrast, is an
+anchor: \c pathToSource includes the Root and \c pathFromSource is what
+follows it. If neither is present, the entire path is \c pathFromSource.
 */
 Source Path::split() const
 {
     int i = length();
     while (i>0) {
         const PathEls::PathComponent &c=component(--i);
-        if (c.kind() == Kind::Field || c.kind() == Kind::Root || c.kind() == Kind::Current) {
+        if (c.kind() == Kind::Field || c.kind() == Kind::Current) {
             return Source{mid(0, i), mid(i)};
+        }
+        if (c.kind() == Kind::Root) {
+            return Source{mid(0, i + 1), mid(i + 1)};
         }
     }
     return Source{Path(), *this};
@@ -504,7 +524,11 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                     while (i < s.size() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda)) {
                         ++i;
                     }
-                    components.append(Component(PathEls::Field(s.mid(i0,i-i0))));
+                    const QStringView ident = s.mid(i0, i - i0);
+                    if (auto fn = fieldNameFromString(ident))
+                        components.append(Component(*fn));
+                    else
+                        components.append(Component(PathEls::Key(ident.toString())));
                     state = PathEls::ParserState::End;
                 } else if (s.at(i).isDigit()) {
                     i0 = i;
@@ -580,8 +604,7 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
 
         return Path();
     case PathEls::ParserState::End:
-        return Path(0, components.size(), std::make_shared<PathEls::PathData>(
-                                                  QStringList(), components));
+        return Path(0, components.size(), std::make_shared<PathEls::PathData>(components));
     }
     Q_ASSERT(false && "Unexpected state in Path::fromString");
     return Path();
@@ -590,25 +613,20 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
 Path Path::fromRoot(PathRoot s)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Root(s)))));
+                    QList<Component>(1,Component(PathEls::Root(s)))));
 }
 
 Path Path::fromIndex(index_type i)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Index(i)))));
+                    QList<Component>(1,Component(PathEls::Index(i)))));
 }
 
-Path Path::fromField(QStringView s)
+Path Path::fromField(FieldName name)
 {
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Field(s)))));
-}
-
-Path Path::fromField(const QString &s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(s), QList<Component>(1,Component(PathEls::Field(s)))));
+    return Path(0, 1,
+                std::make_shared<PathEls::PathData>(
+                        QList<Component>(1, Component(PathEls::Field(name)))));
 }
 
 Path Path::fromKey(QStringView s)
@@ -616,20 +634,20 @@ Path Path::fromKey(QStringView s)
     return Path(
             0, 1,
             std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1, Component(PathEls::Key(s.toString())))));
+                    QList<Component>(1, Component(PathEls::Key(s.toString())))));
 }
 
 Path Path::fromKey(const QString &s)
 {
     return Path(0, 1,
                 std::make_shared<PathEls::PathData>(
-                        QStringList(), QList<Component>(1, Component(PathEls::Key(s)))));
+                        QList<Component>(1, Component(PathEls::Key(s)))));
 }
 
 Path Path::fromCurrent(PathCurrent s)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Current(s)))));
+                    QList<Component>(1,Component(PathEls::Current(s)))));
 }
 
 Path Path::withEmpty() const
@@ -637,22 +655,16 @@ Path Path::withEmpty() const
     if (m_endOffset != 0)
         return noEndOffset().withEmpty();
     return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component()), m_data));
+                    QList<Component>(1,Component()), m_data));
 }
 
-Path Path::withField(const QString &name) const
-{
-    auto res = withField(QStringView(name));
-    res.m_data->strData.append(name);
-    return res;
-}
-
-Path Path::withField(QStringView name) const
+Path Path::withField(FieldName name) const
 {
     if (m_endOffset != 0)
         return noEndOffset().withField(name);
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Field(name))), m_data));
+    return Path(0, m_length + 1,
+                std::make_shared<PathEls::PathData>(
+                        QList<Component>(1, Component(PathEls::Field(name))), m_data));
 }
 
 Path Path::withKey(const QString &name) const
@@ -660,7 +672,7 @@ Path Path::withKey(const QString &name) const
     if (m_endOffset != 0)
         return noEndOffset().withKey(name);
     return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Key(name))), m_data));
+                    QList<Component>(1,Component(PathEls::Key(name))), m_data));
 }
 
 Path Path::withKey(QStringView name) const
@@ -673,7 +685,7 @@ Path Path::withIndex(index_type i) const
     if (m_endOffset != 0)
         return noEndOffset().withIndex(i);
     return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(i)), m_data));
+                    QList<Component>(1,Component(i)), m_data));
 }
 
 Path Path::withCurrent(PathCurrent s) const
@@ -681,7 +693,7 @@ Path Path::withCurrent(PathCurrent s) const
     if (m_endOffset != 0)
         return noEndOffset().withCurrent(s);
     return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Current(s))), m_data));
+                    QList<Component>(1,Component(PathEls::Current(s))), m_data));
 }
 
 static QList<Path::Component>
@@ -701,22 +713,20 @@ reverseAndConcat(const std::vector<QList<Path::Component> *> &list, qsizetype si
     return components;
 }
 
-static std::pair<std::vector<QList<Path::Component> *>, QStringList>
+static std::vector<QList<Path::Component> *>
 collectBackwards(PathEls::PathData *pathStart, qsizetype size)
 {
     using Component = Path::Component;
     std::vector<QList<Component> *> componentList;
     qsizetype foundComponents = 0;
-    QStringList addedStrs;
     for (auto data = pathStart; data; data = data->parent.get()) {
-        addedStrs.append(data->strData);
         componentList.push_back(&data->components);
         foundComponents += data->components.size();
 
         if (foundComponents >= size)
-            return std::make_pair(componentList, addedStrs);
+            return componentList;
     }
-    return std::make_pair(componentList, addedStrs);
+    return componentList;
 }
 
 /*!
@@ -752,14 +762,13 @@ Path Path::withPath(const Path &toAdd, bool avoidToAddAsBase) const
     }
 
     const Path toAddNoEndOffset = toAdd.noEndOffset();
-    auto [componentListList, addedStrs] =
-            collectBackwards(toAddNoEndOffset.m_data.get(), toAdd.length());
+    auto componentListList = collectBackwards(toAddNoEndOffset.m_data.get(), toAdd.length());
 
     QList<Component> componentList = reverseAndConcat(componentListList, toAdd.length());
 
     Path result(
             0, resLength,
-            std::make_shared<PathEls::PathData>(addedStrs, componentList, noEndOffset().m_data));
+            std::make_shared<PathEls::PathData>(componentList, noEndOffset().m_data));
     return result;
 }
 
@@ -866,7 +875,7 @@ Path Path::noEndOffset() const
     if (endOffset > 0) {
         Q_ASSERT(lastData && "Internal problem, reference to non existing PathData");
         return Path(0, m_length, std::make_shared<PathEls::PathData>(
-                        lastData->strData, lastData->components.mid(0, lastData->components.size() - endOffset), lastData->parent));
+                        lastData->components.mid(0, lastData->components.size() - endOffset), lastData->parent));
     }
     return Path(0, m_length, lastData);
 }
@@ -886,8 +895,7 @@ Path Path::withComponent(const PathEls::PathComponent &c)
     }
     auto my_data =
             (m_data ? m_data
-                    : std::make_shared<PathEls::PathData>(QStringList(),
-                                                          QList<PathEls::PathComponent>()));
+                    : std::make_shared<PathEls::PathData>(QList<PathEls::PathComponent>()));
     switch (c.kind()) {
     case PathEls::Kind::Empty:
     case PathEls::Kind::Index:
@@ -959,14 +967,6 @@ Path Path::mid(int offset, int length) const
 Path Path::mid(int offset) const
 {
     return mid(offset, m_length - offset);
-}
-
-Path Path::fromString(const QString &s, const ErrorHandler &errorHandler)
-{
-    Path res = fromString(QStringView(s), errorHandler);
-    if (res.m_data)
-        res.m_data->strData.append(s);
-    return res;
 }
 
 } // end namespace Dom

@@ -61,9 +61,9 @@ QCborValue pluginData(const QQmlDirParser::Plugin &pl, const QStringList &cNames
     QCborArray names;
     for (const QString &n : cNames)
         names.append(n);
-    return QCborMap({ { QCborValue(QStringView(Fields::name)), pl.name },
-                      { QStringView(Fields::path), pl.path },
-                      { QStringView(Fields::classNames), names } });
+    return QCborMap({ { QCborValue(fieldNameToString(Fields::name)), pl.name },
+                      { fieldNameToString(Fields::path), pl.path },
+                      { fieldNameToString(Fields::classNames), names } });
 }
 
 JsFile::JsFile(
@@ -251,7 +251,7 @@ bool QmlFile::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) 
     return cont;
 }
 
-DomItem QmlFile::field(const DomItem &self, QStringView name) const
+DomItem QmlFile::field(const DomItem &self, FieldName name) const
 {
     ensurePopulated();
     if (name == Fields::components)

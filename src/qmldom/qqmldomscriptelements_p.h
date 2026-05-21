@@ -177,12 +177,12 @@ public:
     DomType kind() const override { return m_kind; }
     void setKind(DomType kind) { m_kind = kind; }
 
-    decltype(auto) insertChild(QStringView name, VariantT v)
+    decltype(auto) insertChild(QQmlJS::Dom::FieldType name, VariantT v)
     {
         return m_children.insert(std::make_pair(name, v));
     }
 
-    ScriptElementVariant elementChild(const QQmlJS::Dom::FieldType &field)
+    ScriptElementVariant elementChild(QQmlJS::Dom::FieldType field)
     {
         auto it = m_children.find(field);
         if (it == m_children.end())
@@ -192,7 +192,7 @@ public:
         return std::get<ScriptElementVariant>(it->second);
     }
 
-    void insertValue(QStringView name, const QCborValue &v)
+    void insertValue(QQmlJS::Dom::FieldType name, const QCborValue &v)
     {
         m_values.insert(std::make_pair(name, v));
     }

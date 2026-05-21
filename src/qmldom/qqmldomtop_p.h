@@ -62,7 +62,7 @@ public:
     QString canonicalFilePath(const DomItem &) const final override;
     Path canonicalPath(const DomItem &self) const final override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const final override;
-    DomItem field(const DomItem &self, QStringView name) const final override
+    DomItem field(const DomItem &self, FieldName name) const final override
     {
         return OwningItem::field(self, name);
     }
@@ -382,7 +382,7 @@ public:
     Path canonicalPath() const { return m_canonicalPath; }
     Path canonicalPath(const DomItem &) const final override { return canonicalPath(); }
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const final override;
-    DomItem field(const DomItem &self, QStringView name) const final override
+    DomItem field(const DomItem &self, FieldName name) const final override
     {
         return OwningItem::field(self, name);
     }
@@ -666,7 +666,7 @@ public:
     Path canonicalPath() const override;
     using DomTop::canonicalPath;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
-    DomItem field(const DomItem &self, QStringView name) const final override;
+    DomItem field(const DomItem &self, FieldName name) const final override;
 
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) const;
 

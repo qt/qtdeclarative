@@ -56,13 +56,13 @@ private slots:
                                    DomCreationOption::Default, universePtr));
         env = DomItem(envPtr);
         testOwnerPtr = std::shared_ptr<MockOwner>(new MockOwner(
-                Path::fromRoot(PathRoot::Env).withField(u"testOwner"), 0,
+                Path::fromRoot(PathRoot::Env).withKey(u"testOwner"), 0,
                 QMap<QString, MockObject> {
                         MockObject(
-                                Path::fromField(u"obj1"),
+                                Path::fromKey(u"obj1"),
                                 QMap<QString, MockObject> {
                                         MockObject(
-                                                Path::fromField(u"obj1").withField(u"obj1_2"),
+                                                Path::fromKey(u"obj1").withKey(u"obj1_2"),
                                                 QMap<QString, MockObject> {},
                                                 QMap<QString, QCborValue> {
                                                         { QStringLiteral(u"val1"), QCborValue(3) },
@@ -73,10 +73,10 @@ private slots:
                                         { QLatin1String("val2"), QCborValue(2) } })
                                 .asStringPair(),
                         MockObject(
-                                Path::fromField(u"obj2"),
+                                Path::fromKey(u"obj2"),
                                 QMap<QString, MockObject> {
                                         MockObject(
-                                                Path::fromField(u"obj2").withField(u"obj2_2"),
+                                                Path::fromKey(u"obj2").withKey(u"obj2_2"),
                                                 QMap<QString, MockObject> {},
                                                 QMap<QString, QCborValue> {
                                                         { QStringLiteral(u"val1"), QCborValue(5) },
@@ -94,13 +94,13 @@ private slots:
                 QMap<QString, QMap<QString, MockObject>> {
                         { QStringLiteral(u"map"),
                           QMap<QString, MockObject> {
-                                  MockObject(Path::fromField(u"map").withKey(u"a"),
+                                  MockObject(Path::fromKey(u"map").withKey(u"a"),
                                              QMap<QString, MockObject> {},
                                              QMap<QString, QCborValue> {
                                                      { QStringLiteral(u"val1"), QCborValue(10) },
                                                      { QLatin1String("val2"), QCborValue(11) } })
                                           .asStringPair(),
-                                  MockObject(Path::fromField(u"map").withKey(u"b"),
+                                  MockObject(Path::fromKey(u"map").withKey(u"b"),
                                              QMap<QString, MockObject> {},
                                              QMap<QString, QCborValue> {
                                                      { QStringLiteral(u"val1"), QCborValue(12) },
@@ -111,13 +111,13 @@ private slots:
                           QMultiMap<QString, MockObject> {
                                   { QStringLiteral(u"a"),
                                     MockObject(
-                                            Path::fromField(u"mmap").withKey(u"a").withIndex(0),
+                                            Path::fromKey(u"mmap").withKey(u"a").withIndex(0),
                                             QMap<QString, MockObject> {},
                                             QMap<QString, QCborValue> {
                                                     { QStringLiteral(u"val1"), QCborValue(14) },
                                                     { QLatin1String("val2"), QCborValue(15) } }) },
                                   { QStringLiteral(u"a"),
-                                    MockObject(Path::fromField(u"mmap").withKey(u"a").withIndex(1),
+                                    MockObject(Path::fromKey(u"mmap").withKey(u"a").withIndex(1),
                                                QMap<QString, MockObject> {},
                                                QMap<QString, QCborValue> {
                                                        { QStringLiteral(u"val1"), QCborValue(16) },
@@ -126,19 +126,19 @@ private slots:
                 QMap<QString, QList<MockObject>> {
                         { QStringLiteral(u"list"),
                           QList<MockObject> {
-                                  MockObject(Path::fromField(u"list").withIndex(0),
+                                  MockObject(Path::fromKey(u"list").withIndex(0),
                                              QMap<QString, MockObject> {},
                                              QMap<QString, QCborValue> {
                                                      { QStringLiteral(u"val1"), QCborValue(18) },
                                                      { QLatin1String("val2"), QCborValue(19) } }),
-                                  MockObject(Path::fromField(u"list").withIndex(1),
+                                  MockObject(Path::fromKey(u"list").withIndex(1),
                                              QMap<QString, MockObject> {},
                                              QMap<QString, QCborValue> {
                                                      { QStringLiteral(u"val1"), QCborValue(20) },
                                                      { QLatin1String("val2"),
                                                        QCborValue(21) } }) } } }));
         envPtr->setExtraOwningItem(QStringLiteral(u"testOwner"), testOwnerPtr);
-        tOwner = env.field(u"testOwner");
+        tOwner = env.key(u"testOwner");
     }
 
     void testList()
@@ -149,8 +149,8 @@ private slots:
         QCOMPARE(&(l[1]), &(l[1]));
         QCOMPARE(&(l3[0]), &(l3[0]));
         // QCOMPARE(&(l3[0]), &(l4[0])); // shallow copy actually copies els (QVector behavior)...
-        DomItem list1 = env.subListItem(List::fromQListRef<int>(Path::fromField(u"list"), l, &wrapInt));
-        DomItem list2 = env.subListItem(List::fromQListRef<int>(Path::fromField(u"reverseList"), l,
+        DomItem list1 = env.subListItem(List::fromQListRef<int>(Path::fromKey(u"list"), l, &wrapInt));
+        DomItem list2 = env.subListItem(List::fromQListRef<int>(Path::fromKey(u"reverseList"), l,
                                                                 &wrapInt, ListOptions::Reverse));
         QCOMPARE(list1.domKind(), DomKind::List);
         QCOMPARE(list1.indexes(), 4);
@@ -181,7 +181,7 @@ private slots:
         // QCOMPARE(&(*it), &(map2[QStringLiteral(u"a")]));
         QCOMPARE(&(*it3), &(*it4));
         // QCOMPARE(&(*it3), &(*it5));
-        DomItem map1 = env.subMapItem(Map::fromMapRef<int>(Path::fromField(u"map"), map, &wrapInt));
+        DomItem map1 = env.subMapItem(Map::fromMapRef<int>(Path::fromKey(u"map"), map, &wrapInt));
         QCOMPARE(map1.domKind(), DomKind::Map);
         QCOMPARE(map1[u"a"].value().toInteger(), 1);
         QCOMPARE(map1.key(QStringLiteral(u"a")).value().toInteger(), 1);
@@ -210,7 +210,7 @@ private slots:
         // QCOMPARE(&(*it), &(*it3));
         QCOMPARE(&(*it4), &(*it5));
         // QCOMPARE(&(*it4), &(*it6));
-        DomItem map1 = env.subMapItem(Map::fromMultiMapRef<int>(Path::fromField(u"mmap"), mmap));
+        DomItem map1 = env.subMapItem(Map::fromMultiMapRef<int>(Path::fromKey(u"mmap"), mmap));
         QCOMPARE(map1[u"b"].index(0).value().toInteger(), 2);
         QVERIFY(!map1[u"b"].index(2));
         QVERIFY(!map1[u"c"]);
@@ -266,17 +266,17 @@ private slots:
     void testReference()
     {
         Path p = Path::fromRoot(PathRoot::Env);
-        DomItem ref = env.subReferenceItem(PathEls::Field(u"ref"), p);
-        QCOMPARE(ref.field(u"referredObjectPath").value().toString(), p.toString());
+        DomItem ref = env.subReferenceItem(PathEls::Key(QStringLiteral(u"ref")), p);
+        QCOMPARE(ref.field(Fields::referredObjectPath).value().toString(), p.toString());
         QCOMPARE(ref.fields(),
                  QList<QString>({ QStringLiteral(u"referredObjectPath"), QStringLiteral(u"get") }));
-        QCOMPARE(ref.field(u"get").internalKind(), DomType::DomEnvironment);
+        QCOMPARE(ref.field(Fields::get).internalKind(), DomType::DomEnvironment);
         // test stability (cache)
-        QCOMPARE(ref.field(u"get").internalKind(), DomType::DomEnvironment);
+        QCOMPARE(ref.field(Fields::get).internalKind(), DomType::DomEnvironment);
     }
     void testRefCache()
     {
-        Path refPath = env.canonicalPath().withField(u"dummyRef");
+        Path refPath = env.canonicalPath().withKey(u"dummyRef");
         RefCacheEntry e0 = RefCacheEntry::forPath(env, refPath);
         QCOMPARE(e0.cached, RefCacheEntry::Cached::None);
         bool didAdd1 = RefCacheEntry::addForPath(
@@ -325,39 +325,41 @@ private slots:
         QCOMPARE(univ2.internalKind(), DomType::DomUniverse);
         QCOMPARE(univ2.owningItemPtr(), universePtr);
         QCOMPARE(univ2.topPtr(), universePtr);
-        DomItem univ3 = env.field(u"universe");
+        DomItem univ3 = env.field(Fields::universe);
         QCOMPARE(univ3.internalKind(), DomType::DomUniverse);
     }
 
     void testTOwner()
     {
-        QVERIFY(env.fields().contains(QLatin1String("testOwner")));
+        QVERIFY(env.keys().contains(QLatin1String("testOwner")));
         QCOMPARE(tOwner.internalKind(), DomType::MockOwner);
         QCOMPARE(tOwner.pathFromOwner(), Path());
-        DomItem map = tOwner.field(u"map");
-        QCOMPARE(map[u"b"].field(u"val1").value().toInteger(), 12);
+        DomItem map = tOwner.key(u"map");
+        QCOMPARE(map[u"b"].key(u"val1").value().toInteger(), 12);
         QCOMPARE(map[u"b"].container(), map);
-        QCOMPARE(map[u"b"].container()[u"b"].field(u"val1").value().toInteger(), 12);
+        QCOMPARE(map[u"b"].container()[u"b"].key(u"val1").value().toInteger(), 12);
         QCOMPARE(map[u"b"].containingObject(), tOwner);
-        DomItem mmap = tOwner.field(u"mmap");
-        QCOMPARE(mmap[u"a"].index(0).field(u"val1").value().toInteger(), 14);
+        DomItem mmap = tOwner.key(u"mmap");
+        QCOMPARE(mmap[u"a"].index(0).key(u"val1").value().toInteger(), 14);
         QCOMPARE(mmap[u"a"].container(), mmap);
-        QCOMPARE(mmap[u"a"].container()[u"a"].index(0).field(u"val1").value().toInteger(), 14);
+        QCOMPARE(mmap[u"a"].container()[u"a"].index(0).key(u"val1").value().toInteger(), 14);
         QCOMPARE(mmap[u"a"].containingObject(), tOwner);
         QCOMPARE(mmap[u"a"].index(0).container(), mmap[u"a"]);
         QCOMPARE(mmap[u"a"].index(0).containingObject(), tOwner);
-        DomItem list = tOwner.field(u"list");
-        QCOMPARE(list[0].field(u"val1").value().toInteger(), 18);
+        DomItem list = tOwner.key(u"list");
+        QCOMPARE(list[0].key(u"val1").value().toInteger(), 18);
         QCOMPARE(list.container(), tOwner);
         QCOMPARE(list[0].container(), list);
         QCOMPARE(list[0].containingObject(), tOwner);
-        QCOMPARE(list[0].container()[0].field(u"val1").value().toInteger(), 18);
+        QCOMPARE(list[0].container()[0].key(u"val1").value().toInteger(), 18);
         QCOMPARE(tOwner.containingObject().internalKind(), DomType::DomEnvironment);
         QCOMPARE(tOwner.container().internalKind(), DomType::DomEnvironment);
-        QCOMPARE(tOwner.fields(),
-                 QStringList({ QStringLiteral(u"val1"), QStringLiteral(u"obj1"),
-                               QStringLiteral(u"obj2"), QStringLiteral(u"map"),
-                               QStringLiteral(u"mmap"), QStringLiteral(u"list") }));
+        // MockOwner exposes its sub-items as Key components (free-form names),
+        // so the test fixture's entries appear in keys(), not fields().
+        QCOMPARE(tOwner.keys(),
+                 QSet<QString>({ QStringLiteral(u"val1"), QStringLiteral(u"obj1"),
+                                 QStringLiteral(u"obj2"), QStringLiteral(u"map"),
+                                 QStringLiteral(u"mmap"), QStringLiteral(u"list") }));
         auto tOwner2 = env.path(u"$env.testOwner");
         QCOMPARE(tOwner2.internalKind(), DomType::MockOwner);
         auto tOwner3 = tOwner.path(u"$env.testOwner");
@@ -378,15 +380,15 @@ private slots:
     }
     void testSubObj()
     {
-        auto obj1 = tOwner.field(u"obj1");
+        auto obj1 = tOwner.key(u"obj1");
         QCOMPARE(obj1.internalKind(), DomType::MockObject);
         auto obj1_1 = env.path(u".testOwner.obj1.obj1_2");
         QCOMPARE(obj1_1.internalKind(), DomType::MockObject);
-        QCOMPARE(obj1_1.field(u"val1").value().toInteger(), 3);
+        QCOMPARE(obj1_1.key(u"val1").value().toInteger(), 3);
     }
     void testEquality()
     {
-        auto obj1 = tOwner.field(u"obj1");
+        auto obj1 = tOwner.key(u"obj1");
         auto obj1_1 = env.path(u".testOwner.obj1.obj1_2");
         QCOMPARE(obj1_1.container(), obj1);
         QCOMPARE(obj1_1.environment(), env);
@@ -3447,7 +3449,7 @@ private slots:
                          });
         envPtr->loadPendingDependencies();
 
-        FieldFilter filter({}, { { QString(), Fields::propertyDefs.toString() } });
+        FieldFilter filter({}, { { QString(), fieldNameToQString(Fields::propertyDefs) } });
 
         // check if propertyDefs is visited without the filter
         bool success = false;

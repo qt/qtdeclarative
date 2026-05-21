@@ -238,35 +238,21 @@ void DomBase::writeOut(const DomItem &self, OutWriter &) const
                            << self.canonicalPath();
 }
 
-ConstantData::ConstantData(const Path &pathFromOwner, const QCborValue &value, Options options)
-    : DomElement(pathFromOwner), m_value(value), m_options(options)
+ConstantData::ConstantData(const Path &pathFromOwner, const QCborValue &value)
+    : DomElement(pathFromOwner), m_value(value)
 {}
 
 bool ConstantData::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
 {
-    static QHash<QString, QString> knownFields;
-    static QBasicMutex m;
-    auto toField = [](const QString &f) -> QStringView {
-        QMutexLocker l(&m);
-        if (!knownFields.contains(f))
-            knownFields[f] = f;
-        return knownFields[f];
-    };
     if (m_value.isMap()) {
         QCborMap map = m_value.toMap();
         auto it = map.cbegin();
         auto end = map.cend();
         while (it != end) {
             QString key = it.key().toString();
-            PathEls::PathComponent comp;
-            switch (m_options) {
-            case ConstantData::Options::MapIsMap:
-                comp = PathEls::Key(key);
-                break;
-            case ConstantData::Options::FirstMapIsFields:
-                comp = PathEls::Field(toField(key));
-                break;
-            }
+            // CBOR map keys are runtime strings, not symbolic field identifiers,
+            // so they are addressed as Key components, not Fields.
+            PathEls::PathComponent comp = PathEls::Key(key);
             auto val = it.value();
             if (!self.invokeVisitorOnValue(visitor, comp, val))
                 return false;
@@ -295,14 +281,8 @@ quintptr ConstantData::id() const
 
 DomKind ConstantData::domKind() const
 {
-    if (m_value.isMap()) {
-        switch (m_options) {
-        case ConstantData::Options::MapIsMap:
-            return DomKind::Map;
-        case ConstantData::Options::FirstMapIsFields:
-            return DomKind::Object;
-        }
-    }
+    if (m_value.isMap())
+        return DomKind::Map;
     if (m_value.isArray())
         return DomKind::List;
     return DomKind::Value;
@@ -813,10 +793,12 @@ static LookupOptions resolveLookupOptions(const PathCurrent &current, const DomI
 
     if (current == PathCurrent::Lookup) {
         DomItem comp = it.component();
-        DomItem strict = comp.field(u"~strictLookup~");
+        // These are runtime configuration flags attached via extra owning items
+        // (now Key-keyed), not structural Fields.
+        DomItem strict = comp[u"~strictLookup~"];
         if (!strict) {
             DomItem env = it.environment();
-            strict = env.field(u"defaultStrictLookup");
+            strict = env[u"defaultStrictLookup"];
         }
         if (strict && strict.value().toBool())
             opt = opt | LookupOption::Strict;
@@ -891,8 +873,10 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                     it = resolveReference(it, it.canonicalPath(),
                                           visitedRefs == nullptr ? &vRefs : visitedRefs,
                                           errorHandler, myResolveErrors());
+                } else if (auto fn = cNow.headField()) {
+                    it = it.field(*fn);
                 } else {
-                    it = it.field(cNow.headName()); // avoid instantiation of QString?
+                    it = DomItem();
                 }
                 break;
             case Path::Kind::Index:
@@ -1051,7 +1035,7 @@ QList<QString> DomItem::fields() const
     return visitEl([this](auto &&el) { return el->fields(*this); });
 }
 
-DomItem DomItem::field(QStringView name) const
+DomItem DomItem::field(FieldName name) const
 {
     return visitEl([this, name](auto &&el) { return el->field(*this, name); });
 }
@@ -2087,14 +2071,18 @@ DomItem DomItem::operator[](const QString &cName) const
 {
     if (internalKind() == DomType::Map)
         return key(cName);
-    return field(cName);
+    if (auto fn = fieldNameFromString(cName))
+        return field(*fn);
+    return DomItem();
 }
 
 DomItem DomItem::operator[](QStringView cName) const
 {
     if (internalKind() == DomType::Map)
         return key(cName.toString());
-    return field(cName);
+    if (auto fn = fieldNameFromString(cName))
+        return field(*fn);
+    return DomItem();
 }
 
 DomItem DomItem::operator[](const Path &p) const
@@ -2668,7 +2656,7 @@ bool Reference::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor
     return cont;
 }
 
-DomItem Reference::field(const DomItem &self, QStringView name) const
+DomItem Reference::field(const DomItem &self, FieldName name) const
 {
     if (Fields::referredObjectPath == name) {
         return self.subDataItem(PathEls::Field(Fields::referredObjectPath),
@@ -2681,7 +2669,7 @@ DomItem Reference::field(const DomItem &self, QStringView name) const
 
 QList<QString> Reference::fields(const DomItem &) const
 {
-    return QList<QString>({Fields::referredObjectPath.toString(), Fields::get.toString()});
+    return QList<QString>({fieldNameToQString(Fields::referredObjectPath), fieldNameToQString(Fields::get)});
 }
 
 DomItem Reference::index(const DomItem &, index_type) const
@@ -2881,8 +2869,7 @@ bool OwningItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visito
                        [myErrors](const DomItem &map, const QString &name) {
                            auto it = myErrors.find(name);
                            if (it != myErrors.end())
-                               return map.subDataItem(PathEls::Key(name), it->toCbor(),
-                                                      ConstantData::Options::FirstMapIsFields);
+                               return map.subDataItem(PathEls::Key(name), it->toCbor());
                            return DomItem();
                        },
                        [myErrors](const DomItem &) {

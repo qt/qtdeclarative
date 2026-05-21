@@ -227,7 +227,7 @@ public:
     QString typeName() const;
 
     virtual QList<QString> fields(const DomItem &self) const;
-    virtual DomItem field(const DomItem &self, QStringView name) const;
+    virtual DomItem field(const DomItem &self, FieldName name) const;
 
     virtual index_type indexes(const DomItem &self) const;
     virtual DomItem index(const DomItem &self, index_type index) const;
@@ -470,26 +470,18 @@ public:
     constexpr static DomType kindValue = DomType::ConstantData;
     DomType kind() const override { return kindValue; }
 
-    enum class Options {
-        MapIsMap,
-        FirstMapIsFields
-    };
-
     ConstantData *operator->() { return this; }
     const ConstantData *operator->() const { return this; }
     ConstantData &operator*() { return *this; }
     const ConstantData &operator*() const { return *this; }
 
-    ConstantData(const Path &pathFromOwner, const QCborValue &value,
-                 Options options = Options::MapIsMap);
+    ConstantData(const Path &pathFromOwner, const QCborValue &value);
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
     quintptr id() const override;
     DomKind domKind() const override;
     QCborValue value() const override { return m_value; }
-    Options options() const { return m_options; }
 private:
     QCborValue m_value;
-    Options m_options;
 };
 
 class QMLDOM_EXPORT SimpleObjectWrapBase : public DomElement
@@ -654,7 +646,7 @@ public:
               const SourceLocation &loc = SourceLocation());
     quintptr id() const override;
     bool iterateDirectSubpaths(const DomItem &self, DirectVisitor) const override;
-    DomItem field(const DomItem &self, QStringView name) const override;
+    DomItem field(const DomItem &self, FieldName name) const override;
     QList<QString> fields(const DomItem &self) const override;
     index_type indexes(const DomItem &) const override { return 0; }
     DomItem index(const DomItem &, index_type) const override;
@@ -945,6 +937,7 @@ public:
     DomItem operator[](const Path &path) const;
     DomItem operator[](QStringView component) const;
     DomItem operator[](const QString &component) const;
+    DomItem operator[](FieldName name) const { return field(name); }
     DomItem operator[](const char16_t *component) const
     {
         return (*this)[QStringView(component)];
@@ -959,7 +952,7 @@ public:
     DomItem path(QStringView p, const ErrorHandler &h = &defaultErrorHandler) const;
 
     QList<QString> fields() const;
-    DomItem field(QStringView name) const;
+    DomItem field(FieldName name) const;
 
     index_type indexes() const;
     DomItem index(index_type) const;
@@ -1064,27 +1057,24 @@ public:
     bool iterateDirectSubpaths(DirectVisitor v) const;
 
     template<typename T>
-    DomItem subDataItem(const PathEls::PathComponent &c, const T &value,
-                        ConstantData::Options options = ConstantData::Options::MapIsMap) const;
+    DomItem subDataItem(const PathEls::PathComponent &c, const T &value) const;
     template<typename T>
-    DomItem subValueItem(const PathEls::PathComponent &c, const T &value,
-                         ConstantData::Options options = ConstantData::Options::MapIsMap) const;
+    DomItem subValueItem(const PathEls::PathComponent &c, const T &value) const;
     template <typename T>
-    bool invokeVisitorOnValue(DirectVisitor visitor, const PathEls::PathComponent &c, const T &value,
-                         ConstantData::Options options = ConstantData::Options::MapIsMap) const;
+    bool invokeVisitorOnValue(DirectVisitor visitor, const PathEls::PathComponent &c,
+                              const T &value) const;
     template <typename F>
-    bool invokeVisitorOnLazyField(DirectVisitor visitor, QStringView f, F valueF,
-                             ConstantData::Options options = ConstantData::Options::MapIsMap) const
+    bool invokeVisitorOnLazyField(DirectVisitor visitor, FieldName f, F valueF) const
     {
         PathEls::PathComponent c = PathEls::Field(f);
-        auto lazyWrap = [this, &c, &valueF, options]() {
-            return this->subValueItem<decltype(valueF())>(c, valueF(), options);
+        auto lazyWrap = [this, &c, &valueF]() {
+            return this->subValueItem<decltype(valueF())>(c, valueF());
         };
         return visitor(c, lazyWrap);
     }
     DomItem subReferencesItem(const PathEls::PathComponent &c, const QList<Path> &paths) const;
     DomItem subReferenceItem(const PathEls::PathComponent &c, const Path &referencedObject) const;
-    bool invokeVisitorOnReference(DirectVisitor visitor, QStringView f,
+    bool invokeVisitorOnReference(DirectVisitor visitor, FieldName f,
                                   const Path &referencedObject) const
     {
         PathEls::PathComponent c = PathEls::Field(f);
@@ -1092,7 +1082,7 @@ public:
             return this->subReferenceItem(c, referencedObject);
         });
     }
-    bool invokeVisitorOnReferences(DirectVisitor visitor, QStringView f,
+    bool invokeVisitorOnReferences(DirectVisitor visitor, FieldName f,
                                    const QList<Path> &paths) const
     {
         PathEls::PathComponent c = PathEls::Field(f);
@@ -1118,7 +1108,7 @@ public:
     template <typename T>
     DomItem wrap(const PathEls::PathComponent &c, const T &obj) const;
     template <typename T>
-    bool invokeVisitorOnField(DirectVisitor visitor, QStringView f, T &obj) const
+    bool invokeVisitorOnField(DirectVisitor visitor, FieldName f, T &obj) const
     {
         PathEls::PathComponent c = PathEls::Field(f);
         auto lazyWrap = [this, &c, &obj]() { return this->wrap<T>(c, obj); };
@@ -1586,7 +1576,7 @@ public:
     MutableDomItem path(QStringView p) { return path(Path::fromString(p)); }
 
     QList<QString> const fields() { return item().fields(); }
-    MutableDomItem field(QStringView name) { return MutableDomItem(item().field(name)); }
+    MutableDomItem field(FieldName name) { return MutableDomItem(item().field(name)); }
     index_type indexes() { return item().indexes(); }
     MutableDomItem index(index_type i) { return MutableDomItem(item().index(i)); }
 
@@ -1911,8 +1901,7 @@ constexpr bool domTypeIsScriptElement(DomType k)
 }
 
 template<typename T>
-DomItem DomItem::subValueItem(const PathEls::PathComponent &c, const T &value,
-                              ConstantData::Options options) const
+DomItem DomItem::subValueItem(const PathEls::PathComponent &c, const T &value) const
 {
     using BaseT = std::remove_cv_t<std::remove_reference_t<T>>;
     if constexpr (
@@ -1920,46 +1909,43 @@ DomItem DomItem::subValueItem(const PathEls::PathComponent &c, const T &value,
                     QCborValue,
                     BaseT> || std::is_base_of_v<QCborArray, BaseT> || std::is_base_of_v<QCborMap, BaseT>) {
         return DomItem(m_top, m_owner, m_ownerPath,
-                       ConstantData(pathFromOwner().withComponent(c), value, options));
+                       ConstantData(pathFromOwner().withComponent(c), value));
     } else if constexpr (std::is_same_v<DomItem, BaseT>) {
-        Q_UNUSED(options);
         return value;
     } else if constexpr (IsList<T>::value && !std::is_convertible_v<BaseT, QStringView>) {
         return subListItem(List::fromQList<typename BaseT::value_type>(
                 pathFromOwner().withComponent(c), value,
-                [options](const DomItem &list, const PathEls::PathComponent &p,
-                          const typename T::value_type &v) { return list.subValueItem(p, v, options); }));
+                [](const DomItem &list, const PathEls::PathComponent &p,
+                   const typename T::value_type &v) { return list.subValueItem(p, v); }));
     } else if constexpr (IsSharedPointerToDomObject<BaseT>::value) {
-        Q_UNUSED(options);
         return subOwnerItem(c, value);
     } else {
-        return subDataItem(c, value, options);
+        return subDataItem(c, value);
     }
 }
 
 template<typename T>
-DomItem DomItem::subDataItem(const PathEls::PathComponent &c, const T &value,
-                             ConstantData::Options options) const
+DomItem DomItem::subDataItem(const PathEls::PathComponent &c, const T &value) const
 {
     using BaseT = std::remove_cv_t<std::remove_reference_t<T>>;
     if constexpr (std::is_same_v<BaseT, ConstantData>) {
         return this->copy(value);
     } else if constexpr (std::is_base_of_v<QCborValue, BaseT>) {
         return DomItem(m_top, m_owner, m_ownerPath,
-                       ConstantData(pathFromOwner().withComponent(c), value, options));
+                       ConstantData(pathFromOwner().withComponent(c), value));
     } else {
         return DomItem(
                 m_top, m_owner, m_ownerPath,
-                ConstantData(pathFromOwner().withComponent(c), QCborValue(value), options));
+                ConstantData(pathFromOwner().withComponent(c), QCborValue(value)));
     }
 }
 
 template <typename T>
 bool DomItem::invokeVisitorOnValue(DirectVisitor visitor, const PathEls::PathComponent &c,
-                                   const T &value, ConstantData::Options options) const
+                                   const T &value) const
 {
-    auto lazyWrap = [this, &c, &value, options]() {
-        return this->subValueItem<T>(c, value, options);
+    auto lazyWrap = [this, &c, &value]() {
+        return this->subValueItem<T>(c, value);
     };
     return visitor(c, lazyWrap);
 }
@@ -2097,12 +2083,12 @@ inline QList<QString> DomBase::fields(const DomItem &self) const
     return res;
 }
 
-inline DomItem DomBase::field(const DomItem &self, QStringView name) const
+inline DomItem DomBase::field(const DomItem &self, FieldName name) const
 {
     DomItem res;
     self.iterateDirectSubpaths(
             [&res, name](const PathEls::PathComponent &c, function_ref<DomItem()> obj) {
-                if (c.kind() == Path::Kind::Field && c.checkName(name)) {
+                if (const PathEls::Field *f = c.asField(); f && f->fieldName == name) {
                     res = obj();
                     return false;
                 }

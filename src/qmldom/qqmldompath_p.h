@@ -29,6 +29,7 @@
 
 #include <functional>
 #include <iterator>
+#include <optional>
 
 QT_BEGIN_NAMESPACE
 
@@ -43,6 +44,266 @@ class Path;
 using ErrorHandler = std::function<void(const ErrorMessage &)> ;
 
 using index_type = qint64;
+
+#define QMLDOM_FIELD_LIST(F) \
+    F(access) \
+    F(accessSemantics) \
+    F(allSources) \
+    F(alternative) \
+    F(annotations) \
+    F(arguments) \
+    F(astComments) \
+    F(astRelocatableDump) \
+    F(attachedType) \
+    F(attachedTypeName) \
+    F(autoExports) \
+    F(base) \
+    F(binaryExpression) \
+    F(bindable) \
+    F(bindingElement) \
+    F(bindingIdentifiers) \
+    F(bindingType) \
+    F(bindings) \
+    F(block) \
+    F(body) \
+    F(callee) \
+    F(canonicalFilePath) \
+    F(canonicalPath) \
+    F(caseBlock) \
+    F(caseClause) \
+    F(caseClauses) \
+    F(catchBlock) \
+    F(catchParameter) \
+    F(children) \
+    F(classNames) \
+    F(code) \
+    F(commentedElements) \
+    F(comments) \
+    F(components) \
+    F(condition) \
+    F(consequence) \
+    F(contents) \
+    F(contentsDate) \
+    F(cppType) \
+    F(currentExposedAt) \
+    F(currentIsValid) \
+    F(currentItem) \
+    F(currentRevision) \
+    F(declarations) \
+    F(defaultClause) \
+    F(defaultPropertyName) \
+    F(defaultValue) \
+    F(designerSupported) \
+    F(elLocation) \
+    F(elements) \
+    F(elementCanonicalPath) \
+    F(enumerations) \
+    F(errors) \
+    F(exportSource) \
+    F(exports) \
+    F(expr) \
+    F(expression) \
+    F(expressionType) \
+    F(extensionTypeName) \
+    F(fileLocationsTree) \
+    F(fileName) \
+    F(finallyBlock) \
+    F(regExpFlags) \
+    F(forStatement) \
+    F(fullRegion) \
+    F(get) \
+    F(hasCallback) \
+    F(hasCustomParser) \
+    F(idStr) \
+    F(identifier) \
+    F(ids) \
+    F(implicit) \
+    F(import) \
+    F(importId) \
+    F(importScope) \
+    F(importSources) \
+    F(imported) \
+    F(imports) \
+    F(inProgress) \
+    F(infoItem) \
+    F(inheritVersion) \
+    F(initializer) \
+    F(interfaceNames) \
+    F(isAlias) \
+    F(isComposite) \
+    F(isConstructor) \
+    F(isCreatable) \
+    F(isDefaultMember) \
+    F(isFinal) \
+    F(isInternal) \
+    F(isLatest) \
+    F(isList) \
+    F(isPointer) \
+    F(isReadonly) \
+    F(isRequired) \
+    F(isSignalHandler) \
+    F(isSingleton) \
+    F(isValid) \
+    F(jsFileWithPath) \
+    F(kind) \
+    F(lastRevision) \
+    F(label) \
+    F(lastValidRevision) \
+    F(left) \
+    F(loadInfo) \
+    F(loadOptions) \
+    F(loadPaths) \
+    F(loadsWithWork) \
+    F(localOffset) \
+    F(location) \
+    F(logicalPath) \
+    F(majorVersion) \
+    F(metaRevisions) \
+    F(methodType) \
+    F(methods) \
+    F(minorVersion) \
+    F(moduleIndex) \
+    F(moduleIndexWithUri) \
+    F(moduleScope) \
+    F(moreCaseClauses) \
+    F(nAllLoadedCallbacks) \
+    F(nCallbacks) \
+    F(nLoaded) \
+    F(nNotdone) \
+    F(name) \
+    F(nameIdentifiers) \
+    F(newlinesBefore) \
+    F(nextComponent) \
+    F(nextScope) \
+    F(notify) \
+    F(objects) \
+    F(onAttachedObject) \
+    F(operation) \
+    F(options) \
+    F(parameters) \
+    F(parent) \
+    F(parentObject) \
+    F(path) \
+    F(regExpPattern) \
+    F(plugins) \
+    F(postCode) \
+    F(postComments) \
+    F(pragma) \
+    F(pragmas) \
+    F(preCode) \
+    F(preComments) \
+    F(properties) \
+    F(propertyDef) \
+    F(propertyDefRef) \
+    F(propertyDefs) \
+    F(propertyInfos) \
+    F(propertyName) \
+    F(prototypes) \
+    F(qmlFileWithPath) \
+    F(qmlFiles) \
+    F(qualifiedImports) \
+    F(rawComment) \
+    F(read) \
+    F(referredObject) \
+    F(referredObjectPath) \
+    F(regionComments) \
+    F(regions) \
+    F(requestedAt) \
+    F(requestingUniverse) \
+    F(returnType) \
+    F(returnTypeName) \
+    F(right) \
+    F(rootComponent) \
+    F(scopeType) \
+    F(scriptElement) \
+    F(sources) \
+    F(statement) \
+    F(statements) \
+    F(status) \
+    F(stringValue) \
+    F(subComponents) \
+    F(subImports) \
+    F(subItems) \
+    F(symbol) \
+    F(symbols) \
+    F(target) \
+    F(targetPropertyName) \
+    F(templateLiteral) \
+    F(text) \
+    F(type) \
+    F(typeArgument) \
+    F(typeArgumentName) \
+    F(typeName) \
+    F(types) \
+    F(universe) \
+    F(uri) \
+    F(uris) \
+    F(validExposedAt) \
+    F(validItem) \
+    F(value) \
+    F(elementTypeName) \
+    F(values) \
+    F(version) \
+    F(when) \
+    F(write)
+
+/*
+   FieldName enumerates the symbolic names that may appear as a Field component
+   of a Path.
+
+   We use an X macro for the enum creation and the enum<->string conversion, as
+   that has lower overhead than using QMetaEnum.
+
+   The string spellings exist for two use cases: rendering paths as
+   text (toString / dump / diagnostics) and parsing user-supplied paths back to
+   their structural form.
+ */
+enum class FieldName : quint16 {
+#define QMLDOM_DEFINE_FIELD_ENUMERATOR(name) name,
+    QMLDOM_FIELD_LIST(QMLDOM_DEFINE_FIELD_ENUMERATOR)
+#undef QMLDOM_DEFINE_FIELD_ENUMERATOR
+    NumFieldNames
+};
+
+using FieldType = FieldName;
+
+namespace FieldNameImpl {
+#define QMLDOM_DEFINE_FIELD_STRING(name) QStringView(u ## #name),
+inline constexpr std::array<QStringView, size_t(FieldName::NumFieldNames)> fieldNameStrings = {
+    QMLDOM_FIELD_LIST(QMLDOM_DEFINE_FIELD_STRING)
+};
+#undef QMLDOM_DEFINE_FIELD_STRING
+} // namespace FieldNameImpl
+
+inline QStringView fieldNameToString(FieldName f)
+{
+    Q_ASSERT(size_t(f) < size_t(FieldName::NumFieldNames));
+    return FieldNameImpl::fieldNameStrings[size_t(f)];
+}
+
+inline QString fieldNameToQString(FieldName f)
+{
+    return fieldNameToString(f).toString();
+}
+
+inline std::optional<FieldName> fieldNameFromString(QStringView s)
+{
+    for (size_t i = 0; i < std::size(FieldNameImpl::fieldNameStrings); ++i) {
+        if (s == FieldNameImpl::fieldNameStrings[i])
+            return static_cast<FieldName>(i);
+    }
+    return std::nullopt;
+}
+
+inline QDebug operator<<(QDebug d, FieldName f) { return d << fieldNameToString(f); }
+
+// Fields:: namespace exposes each FieldName enumerator as a constant, so the
+// canonical Fields::xxx usage compiles unchanged and resolves to a FieldName.
+namespace Fields {
+#define QMLDOM_DEFINE_FIELD_CONST(name) inline constexpr FieldName name = FieldName::name;
+QMLDOM_FIELD_LIST(QMLDOM_DEFINE_FIELD_CONST)
+#undef QMLDOM_DEFINE_FIELD_CONST
+} // namespace Fields
 
 namespace PathEls {
 
@@ -86,13 +347,16 @@ class Field final : public Base
 {
 public:
     Field() = default;
-    Field(QStringView n): fieldName(n) {}
-    QString name() const { return fieldName.toString(); }
-    bool checkName(QStringView s) const { return s == fieldName; }
-    QStringView stringView() const { return fieldName; }
-    void dump(const Sink &sink) const { sink(fieldName); }
+    Field(FieldName n) : fieldName(n) {}
+    // No QString/QStringView constructors: Field is reserved for the symbolic
+    // names listed in QMLDOM_FIELD_LIST. Runtime/free-form names are Keys, and
+    // string input goes through the path parser (Path::fromString).
+    QString name() const { return fieldNameToQString(fieldName); }
+    bool checkName(QStringView s) const { return s == fieldNameToString(fieldName); }
+    QStringView stringView() const { return fieldNameToString(fieldName); }
+    void dump(const Sink &sink) const { sink(fieldNameToString(fieldName)); }
 
-    QStringView fieldName;
+    FieldName fieldName = FieldName(0);
 };
 
 class Index final : public Base
@@ -280,233 +544,20 @@ inline bool operator>=(const PathComponent& lhs, const PathComponent& rhs){ retu
 
 class PathData {
 public:
-    PathData(const QStringList &strData, const QList<PathComponent> &components)
-        : strData(strData), components(components)
+    PathData(const QList<PathComponent> &components)
+        : components(components)
     {}
-    PathData(const QStringList &strData, const QList<PathComponent> &components,
+    PathData(const QList<PathComponent> &components,
              const std::shared_ptr<PathData> &parent)
-        : strData(strData), components(components), parent(parent)
+        : components(components), parent(parent)
     {}
 
-    QStringList strData;
     QList<PathComponent> components;
     std::shared_ptr<PathData> parent;
 };
 
 } // namespace PathEls
 
-#define QMLDOM_USTRING(s) QStringView(u##s)
-#define QMLDOM_FIELD(name) inline constexpr const auto name = QMLDOM_USTRING(#name)
-/*!
-   \internal
-   In an ideal world, the Fields namespace would be an enum, not strings.
-   Use FieldType whenever you expect a static String from the Fields namespace instead of an
-   arbitrary QStringView.
- */
-using FieldType = QStringView;
-// namespace, so it cam be reopened to add more entries
-namespace Fields{
-QMLDOM_FIELD(access);
-QMLDOM_FIELD(accessSemantics);
-QMLDOM_FIELD(allSources);
-QMLDOM_FIELD(alternative);
-QMLDOM_FIELD(annotations);
-QMLDOM_FIELD(arguments);
-QMLDOM_FIELD(astComments);
-QMLDOM_FIELD(astRelocatableDump);
-QMLDOM_FIELD(attachedType);
-QMLDOM_FIELD(attachedTypeName);
-QMLDOM_FIELD(autoExports);
-QMLDOM_FIELD(base);
-QMLDOM_FIELD(binaryExpression);
-QMLDOM_FIELD(bindable);
-QMLDOM_FIELD(bindingElement);
-QMLDOM_FIELD(bindingIdentifiers);
-QMLDOM_FIELD(bindingType);
-QMLDOM_FIELD(bindings);
-QMLDOM_FIELD(block);
-QMLDOM_FIELD(body);
-QMLDOM_FIELD(callee);
-QMLDOM_FIELD(canonicalFilePath);
-QMLDOM_FIELD(canonicalPath);
-QMLDOM_FIELD(caseBlock);
-QMLDOM_FIELD(caseClause);
-QMLDOM_FIELD(caseClauses);
-QMLDOM_FIELD(catchBlock);
-QMLDOM_FIELD(catchParameter);
-QMLDOM_FIELD(children);
-QMLDOM_FIELD(classNames);
-QMLDOM_FIELD(code);
-QMLDOM_FIELD(commentedElements);
-QMLDOM_FIELD(comments);
-QMLDOM_FIELD(components);
-QMLDOM_FIELD(condition);
-QMLDOM_FIELD(consequence);
-QMLDOM_FIELD(contents);
-QMLDOM_FIELD(contentsDate);
-QMLDOM_FIELD(cppType);
-QMLDOM_FIELD(currentExposedAt);
-QMLDOM_FIELD(currentIsValid);
-QMLDOM_FIELD(currentItem);
-QMLDOM_FIELD(currentRevision);
-QMLDOM_FIELD(declarations);
-QMLDOM_FIELD(defaultClause);
-QMLDOM_FIELD(defaultPropertyName);
-QMLDOM_FIELD(defaultValue);
-QMLDOM_FIELD(designerSupported);
-QMLDOM_FIELD(elLocation);
-QMLDOM_FIELD(elements);
-QMLDOM_FIELD(elementCanonicalPath);
-QMLDOM_FIELD(enumerations);
-QMLDOM_FIELD(errors);
-QMLDOM_FIELD(exportSource);
-QMLDOM_FIELD(exports);
-QMLDOM_FIELD(expr);
-QMLDOM_FIELD(expression);
-QMLDOM_FIELD(expressionType);
-QMLDOM_FIELD(extensionTypeName);
-QMLDOM_FIELD(fileLocationsTree);
-QMLDOM_FIELD(fileName);
-QMLDOM_FIELD(finallyBlock);
-QMLDOM_FIELD(regExpFlags);
-QMLDOM_FIELD(forStatement);
-QMLDOM_FIELD(fullRegion);
-QMLDOM_FIELD(get);
-QMLDOM_FIELD(hasCallback);
-QMLDOM_FIELD(hasCustomParser);
-QMLDOM_FIELD(idStr);
-QMLDOM_FIELD(identifier);
-QMLDOM_FIELD(ids);
-QMLDOM_FIELD(implicit);
-QMLDOM_FIELD(import);
-QMLDOM_FIELD(importId);
-QMLDOM_FIELD(importScope);
-QMLDOM_FIELD(importSources);
-QMLDOM_FIELD(imported);
-QMLDOM_FIELD(imports);
-QMLDOM_FIELD(inProgress);
-QMLDOM_FIELD(infoItem);
-QMLDOM_FIELD(inheritVersion);
-QMLDOM_FIELD(initializer);
-QMLDOM_FIELD(interfaceNames);
-QMLDOM_FIELD(isAlias);
-QMLDOM_FIELD(isComposite);
-QMLDOM_FIELD(isConstructor);
-QMLDOM_FIELD(isCreatable);
-QMLDOM_FIELD(isDefaultMember);
-QMLDOM_FIELD(isFinal);
-QMLDOM_FIELD(isInternal);
-QMLDOM_FIELD(isLatest);
-QMLDOM_FIELD(isList);
-QMLDOM_FIELD(isPointer);
-QMLDOM_FIELD(isReadonly);
-QMLDOM_FIELD(isRequired);
-QMLDOM_FIELD(isSignalHandler);
-QMLDOM_FIELD(isSingleton);
-QMLDOM_FIELD(isValid);
-QMLDOM_FIELD(jsFileWithPath);
-QMLDOM_FIELD(kind);
-QMLDOM_FIELD(lastRevision);
-QMLDOM_FIELD(label);
-QMLDOM_FIELD(lastValidRevision);
-QMLDOM_FIELD(left);
-QMLDOM_FIELD(loadInfo);
-QMLDOM_FIELD(loadOptions);
-QMLDOM_FIELD(loadPaths);
-QMLDOM_FIELD(loadsWithWork);
-QMLDOM_FIELD(localOffset);
-QMLDOM_FIELD(location);
-QMLDOM_FIELD(logicalPath);
-QMLDOM_FIELD(majorVersion);
-QMLDOM_FIELD(metaRevisions);
-QMLDOM_FIELD(methodType);
-QMLDOM_FIELD(methods);
-QMLDOM_FIELD(minorVersion);
-QMLDOM_FIELD(moduleIndex);
-QMLDOM_FIELD(moduleIndexWithUri);
-QMLDOM_FIELD(moduleScope);
-QMLDOM_FIELD(moreCaseClauses);
-QMLDOM_FIELD(nAllLoadedCallbacks);
-QMLDOM_FIELD(nCallbacks);
-QMLDOM_FIELD(nLoaded);
-QMLDOM_FIELD(nNotdone);
-QMLDOM_FIELD(name);
-QMLDOM_FIELD(nameIdentifiers);
-QMLDOM_FIELD(newlinesBefore);
-QMLDOM_FIELD(nextComponent);
-QMLDOM_FIELD(nextScope);
-QMLDOM_FIELD(notify);
-QMLDOM_FIELD(objects);
-QMLDOM_FIELD(onAttachedObject);
-QMLDOM_FIELD(operation);
-QMLDOM_FIELD(options);
-QMLDOM_FIELD(parameters);
-QMLDOM_FIELD(parent);
-QMLDOM_FIELD(parentObject);
-QMLDOM_FIELD(path);
-QMLDOM_FIELD(regExpPattern);
-QMLDOM_FIELD(plugins);
-QMLDOM_FIELD(postCode);
-QMLDOM_FIELD(postComments);
-QMLDOM_FIELD(pragma);
-QMLDOM_FIELD(pragmas);
-QMLDOM_FIELD(preCode);
-QMLDOM_FIELD(preComments);
-QMLDOM_FIELD(properties);
-QMLDOM_FIELD(propertyDef);
-QMLDOM_FIELD(propertyDefRef);
-QMLDOM_FIELD(propertyDefs);
-QMLDOM_FIELD(propertyInfos);
-QMLDOM_FIELD(propertyName);
-QMLDOM_FIELD(prototypes);
-QMLDOM_FIELD(qmlFileWithPath);
-QMLDOM_FIELD(qmlFiles);
-QMLDOM_FIELD(qualifiedImports);
-QMLDOM_FIELD(rawComment);
-QMLDOM_FIELD(read);
-QMLDOM_FIELD(referredObject);
-QMLDOM_FIELD(referredObjectPath);
-QMLDOM_FIELD(regionComments);
-QMLDOM_FIELD(regions);
-QMLDOM_FIELD(requestedAt);
-QMLDOM_FIELD(requestingUniverse);
-QMLDOM_FIELD(returnType);
-QMLDOM_FIELD(returnTypeName);
-QMLDOM_FIELD(right);
-QMLDOM_FIELD(rootComponent);
-QMLDOM_FIELD(scopeType);
-QMLDOM_FIELD(scriptElement);
-QMLDOM_FIELD(sources);
-QMLDOM_FIELD(statement);
-QMLDOM_FIELD(statements);
-QMLDOM_FIELD(status);
-QMLDOM_FIELD(stringValue);
-QMLDOM_FIELD(subComponents);
-QMLDOM_FIELD(subImports);
-QMLDOM_FIELD(subItems);
-QMLDOM_FIELD(symbol);
-QMLDOM_FIELD(symbols);
-QMLDOM_FIELD(target);
-QMLDOM_FIELD(targetPropertyName);
-QMLDOM_FIELD(templateLiteral);
-QMLDOM_FIELD(text);
-QMLDOM_FIELD(type);
-QMLDOM_FIELD(typeArgument);
-QMLDOM_FIELD(typeArgumentName);
-QMLDOM_FIELD(typeName);
-QMLDOM_FIELD(types);
-QMLDOM_FIELD(universe);
-QMLDOM_FIELD(uri);
-QMLDOM_FIELD(uris);
-QMLDOM_FIELD(validExposedAt);
-QMLDOM_FIELD(validItem);
-QMLDOM_FIELD(value);
-QMLDOM_FIELD(elementTypeName);
-QMLDOM_FIELD(values);
-QMLDOM_FIELD(version);
-QMLDOM_FIELD(when);
-QMLDOM_FIELD(write);
-} // namespace Fields
 
 class Source;
 size_t qHash(const Path &, size_t);
@@ -539,6 +590,12 @@ public:
     Kind headKind() const;
     QString headName() const;
     bool checkHeadName(QStringView name) const;
+    bool checkHeadName(FieldName name) const
+    {
+        const auto f = headField();
+        return f && *f == name;
+    }
+    std::optional<FieldName> headField() const;
     index_type headIndex(index_type defaultValue=-1) const;
     Path head() const;
     Path last() const;
@@ -553,19 +610,16 @@ public:
     Path withComponent(const PathEls::PathComponent &c);
 
     // # Path construction
-    static Path fromString(const QString &s, const ErrorHandler &errorHandler = nullptr);
     static Path fromString(QStringView s, const ErrorHandler &errorHandler = nullptr);
     static Path fromRoot(PathRoot r);
     static Path fromIndex(index_type i);
-    static Path fromField(QStringView s=u"");
-    static Path fromField(const QString &s);
+    static Path fromField(FieldName name);
     static Path fromKey(QStringView s=u"");
     static Path fromKey(const QString &s);
     static Path fromCurrent(PathCurrent c);
     // add
     Path withEmpty() const;
-    Path withField(const QString &name) const;
-    Path withField(QStringView name) const;
+    Path withField(FieldName name) const;
     Path withKey(const QString &name) const;
     Path withKey(QStringView name) const;
     Path withIndex(index_type i) const;

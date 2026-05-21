@@ -72,7 +72,7 @@ using QQmlJS::Dom::ScriptElementVariant;
    \internal
     Helper for fields with elements in iterateDirectSubpaths.
  */
-static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor visitor, QStringView field,
+static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor visitor, QQmlJS::Dom::FieldName field,
                  const ScriptElementVariant &value)
 {
     if (!value)
@@ -90,7 +90,7 @@ static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor vi
    \internal
     Helper for fields with lists in iterateDirectSubpaths.
  */
-static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor visitor, QStringView field,
+static bool wrap(const QQmlJS::Dom::DomItem &self, QQmlJS::Dom::DirectVisitor visitor, QQmlJS::Dom::FieldName field,
                  const ScriptList &value)
 {
     const bool b = visitor(
