@@ -3,6 +3,7 @@
 
 /*!
 \page qtquick-bestpractices.html
+\meta {keywords} {qmltopic}
 \title Best Practices for QML and Qt Quick
 \brief Lists best practices for working with QML and Qt Quick.
 \ingroup best-practices

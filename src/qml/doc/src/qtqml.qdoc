@@ -3,6 +3,7 @@
 
 /*!
 \page qtqml-index.html
+\meta {keywords} {qmltopic}
 \title Qt Qml
 \brief The Qt Qml module implements the QML language and offers APIs to register
        types for it.

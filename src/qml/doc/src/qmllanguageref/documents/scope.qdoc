@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-documents-scope.html
+\meta {keywords} {qmltopic}
 \title Scope and Naming Resolution
 \brief overview of scope and naming resolution
 \ingroup explanations-programminglanguages

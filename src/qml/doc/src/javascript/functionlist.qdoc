@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
     \page qtqml-javascript-functionlist.html
+    \meta {keywords} {qmltopic}
     \title List of JavaScript Objects and Functions
     \brief A list of objects, functions, and properties supported in QML.
 

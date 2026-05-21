@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-documents-networktransparency.html
+\meta {keywords} {qmltopic}
 \title Resource Loading and Network Transparency
 \brief about loading files and resources across a network
 

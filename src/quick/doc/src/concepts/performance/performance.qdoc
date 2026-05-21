@@ -3,6 +3,7 @@
 
 /*!
 \page qtquick-performance.html
+\meta {keywords} {qmltopic}
 \title Performance considerations and suggestions
 \keyword QML Performance Considerations And Suggestions
 \brief Discussion of performance-related trade-offs and best-practices

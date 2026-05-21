@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-javascript-expressions.html
+\meta {keywords} {qmltopic}
 \title JavaScript Expressions in QML Documents
 \brief Description of where JavaScript expressions are valid in QML documents
 
