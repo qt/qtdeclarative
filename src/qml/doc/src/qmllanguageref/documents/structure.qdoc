@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-documents-structure.html
+\meta {keywords} {qmltopic}
 \title Structure of a QML Document
 \brief Description of the structure of QML documents
 

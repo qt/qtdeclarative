@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-javascript-hostenvironment.html
+\meta {keywords} {qmltopic}
 \title JavaScript Host Environment
 \brief Description of the JavaScript host environment provided by the QML engine
 

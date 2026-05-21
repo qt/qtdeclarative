@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-modules-qmldir.html
+\meta {keywords} {qmltopic}
 \title Module Definition qmldir Files
 \brief Defines a QML module
 

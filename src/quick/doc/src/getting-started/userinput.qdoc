@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-userinput.html
+\meta {keywords} {qmltopic}
 \title Handling user input
 \keyword Use Case - Responding To User Input in QML
 \brief Example of how to accept user input and respond to it in a QML application

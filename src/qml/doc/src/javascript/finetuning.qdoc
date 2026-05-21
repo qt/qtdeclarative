@@ -3,6 +3,7 @@
 /*!
 
 \page qtqml-javascript-finetuning.html
+\meta {keywords} {qmltopic}
 \title Configuring the JavaScript Engine
 \brief Describes the environment variables available, to control how Javascript is run.
 

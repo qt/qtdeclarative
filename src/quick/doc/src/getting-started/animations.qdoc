@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-animations.html
+\meta {keywords} {qmltopic}
 \title Animations
 \keyword Use case - Animations In QML
 \brief Example of how to include animations in QML applications

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-text.html
+\meta {keywords} {qmltopic}
 \title Displaying text
 \keyword Use Case - Displaying Text In QML
 \brief Example of how to display text in QML

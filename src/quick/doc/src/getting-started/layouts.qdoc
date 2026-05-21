@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-layouts.html
+\meta {keywords} {qmltopic}
 \title Positioners and layouts
 \keyword Use Case - Positioners and Layouts In QML
 \brief Example of how to create layouts for visual components in a QML application

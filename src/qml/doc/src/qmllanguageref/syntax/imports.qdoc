@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-syntax-imports.html
+\meta {keywords} {qmltopic}
 \title Import Statements
 \brief Description of import statements in QML
 \keyword QML.import

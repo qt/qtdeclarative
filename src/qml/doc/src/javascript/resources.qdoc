@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-javascript-resources.html
+\meta {keywords} {qmltopic}
 \title Defining JavaScript Resources in QML
 \brief Description of how JavaScript files may be defined for use in QML
 
