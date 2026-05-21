@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only
 
 import QtQuick 2.12
-import QtQuick.Window 2.12
 import Qt.labs.qmlmodels 1.0
 
 TableView {
