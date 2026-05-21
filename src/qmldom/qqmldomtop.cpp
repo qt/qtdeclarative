@@ -865,32 +865,20 @@ bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor vi
                        nullptr, QLatin1String("Path")));
            });
     cont = cont && visitor(PathEls::Field(Fields::loadInfo), [&self, this]() {
+               // keyed by Path::toString() to avoid reparsing the path in Map::key()
+               QMap<QString, std::shared_ptr<LoadInfo>> infos;
+               for (const Path &p : loadInfoPaths())
+                   infos.insert(p.toString(), loadInfo(p));
                return self.subMapItem(Map(
                        Path::fromField(Fields::loadInfo),
-                       [this](const DomItem &map, const QString &pStr) {
-                           bool hasErrors = false;
-                           Path p = Path::fromString(pStr, [&hasErrors](const ErrorMessage &m) {
-                               switch (m.level) {
-                               case ErrorLevel::Debug:
-                               case ErrorLevel::Info:
-                                   break;
-                               case ErrorLevel::Warning:
-                               case ErrorLevel::Error:
-                               case ErrorLevel::Fatal:
-                                   hasErrors = true;
-                                   break;
-                               }
-                           });
-                           if (!hasErrors)
-                               return map.copy(loadInfo(p));
-                           return DomItem();
+                       [infos](const DomItem &map, const QString &name) {
+                           auto it = infos.find(name);
+                           if (it == infos.end())
+                               return DomItem();
+                           return map.copy(*it);
                        },
-                       [this](const DomItem &) {
-                           QSet<QString> res;
-                           const auto infoPaths = loadInfoPaths();
-                           for (const Path &p : infoPaths)
-                               res.insert(p.toString());
-                           return res;
+                       [infos](const DomItem &) {
+                           return QSet<QString>(infos.keyBegin(), infos.keyEnd());
                        },
                        QLatin1String("LoadInfo")));
            });

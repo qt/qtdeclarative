@@ -200,17 +200,21 @@ bool Node::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) con
         return path().toString();
     });
     cont = cont && visitor(PathEls::Field(Fields::subItems), [this, &self]() {
+               // keyed by Path::toString() to avoid reparsing the path in Map::key()
+               QMap<QString, Path> byName;
+               for (auto it = m_subItems.keyBegin(), end = m_subItems.keyEnd(); it != end; ++it)
+                   byName.insert(it->toString(), *it);
                return self.subMapItem(Map(
                        Path::fromField(Fields::subItems),
-                       [this](const DomItem &map, const QString &key) {
-                           Path p = Path::fromString(key);
-                           return map.copy(m_subItems.value(p), map.canonicalPath().withKey(key));
+                       [this, byName](const DomItem &map, const QString &name) {
+                           auto it = byName.find(name);
+                           if (it == byName.end())
+                               return DomItem();
+                           return map.copy(m_subItems.value(*it),
+                                           map.canonicalPath().withKey(name));
                        },
-                       [this](const DomItem &) {
-                           QSet<QString> res;
-                           for (const auto &p : m_subItems.keys())
-                               res.insert(p.toString());
-                           return res;
+                       [byName](const DomItem &) {
+                           return QSet<QString>(byName.keyBegin(), byName.keyEnd());
                        },
                        QLatin1String("Node")));
            });

@@ -2871,24 +2871,22 @@ bool OwningItem::iterateDirectSubpaths(const DomItem &self, DirectVisitor visito
 {
     bool cont = true;
     cont = cont && visitor(PathEls::Field(Fields::errors), [&self, this]() {
-               QMultiMap<Path, ErrorMessage> myErrors = localErrors();
+               // only for traversal/dumps; keyed by Path::toString() to avoid
+               // reparsing the path in Map::key()
+               QMap<QString, ErrorMessage> myErrors;
+               for (const auto &[path, msg] : localErrors().asKeyValueRange())
+                   myErrors.insert(path.toString(), msg);
                return self.subMapItem(Map(
                        self.pathFromOwner().withField(Fields::errors),
-                       [myErrors](const DomItem &map, const QString &key) {
-                           auto it = myErrors.find(Path::fromString(key));
+                       [myErrors](const DomItem &map, const QString &name) {
+                           auto it = myErrors.find(name);
                            if (it != myErrors.end())
-                               return map.subDataItem(PathEls::Key(key), it->toCbor(),
+                               return map.subDataItem(PathEls::Key(name), it->toCbor(),
                                                       ConstantData::Options::FirstMapIsFields);
-                           else
-                               return DomItem();
+                           return DomItem();
                        },
                        [myErrors](const DomItem &) {
-                           QSet<QString> res;
-                           auto it = myErrors.keyBegin();
-                           auto end = myErrors.keyEnd();
-                           while (it != end)
-                               res.insert(it++->toString());
-                           return res;
+                           return QSet<QString>(myErrors.keyBegin(), myErrors.keyEnd());
                        },
                        QLatin1String("ErrorMessages")));
            });

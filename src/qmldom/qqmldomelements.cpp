@@ -607,7 +607,7 @@ LocallyResolvedAlias QmlObject::resolveAlias(const DomItem &self,
 LocallyResolvedAlias QmlObject::resolveAlias(const DomItem &self, const QStringList &accessSequence) const
 {
     LocallyResolvedAlias res;
-    QSet<QString> visitedAlias;
+    QSet<Path> visitedAlias;
     if (accessSequence.isEmpty()) {
         return res;
     } else if (accessSequence.size() > 3) {
@@ -635,7 +635,7 @@ LocallyResolvedAlias QmlObject::resolveAlias(const DomItem &self, const QStringL
             if (defNowPtr->isAlias()) {
                 res.typeName = QString();
                 ++res.nAliases;
-                QString aliasPath = defNow.canonicalPath().toString();
+                Path aliasPath = defNow.canonicalPath();
                 if (visitedAlias.contains(aliasPath)) {
                     res.status = LocallyResolvedAlias::Status::Loop;
                     return res;
