@@ -538,8 +538,9 @@ set(a_files "")
 set(b_files "")
 
 foreach(qml_file IN LISTS qml_files)
-    string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file ${qml_file})
-    string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file})
+    string(REGEX REPLACE "\\.\\.[/\\\\]" "_" compiled_file "${qml_file}")
+    string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file "${compiled_file}")
+    string(REGEX REPLACE "[$#?/ ]+" "_" compiled_file "${compiled_file}")
 
     list(APPEND
         a_files
