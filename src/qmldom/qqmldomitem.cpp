@@ -911,8 +911,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
             {
                 PathCurrent current = cNow.headCurrent();
                 switch (current) {
-                case PathCurrent::Other:
-                    // todo
                 case PathCurrent::Obj:
                     if (domKind() != DomKind::Object)
                         it = it.containingObject();
@@ -1017,20 +1015,6 @@ bool DomItem::resolve(const Path &path, DomItem::Visitor visitor, const ErrorHan
                 }
                 break;
             }
-            case Path::Kind::Any:
-                visitTree(
-                        Path(),
-                        [&toDos, iPath](Path, const DomItem &item, bool) {
-                            toDos.append({ item, iPath });
-                            return true;
-                        },
-                        VisitOption::VisitSelf | VisitOption::Recurse | VisitOption::VisitAdopted);
-                branchExhausted = true;
-                break;
-            case Path::Kind::Filter:
-                if (cNow.headFilter() && !cNow.headFilter()(it))
-                    branchExhausted = true;
-                break;
             }
         }
         // visit the resolved path
@@ -2656,8 +2640,6 @@ bool Reference::shouldCache() const
             }
             break;
         case Path::Kind::Empty:
-        case Path::Kind::Any:
-        case Path::Kind::Filter:
             return true;
         default:
             break;

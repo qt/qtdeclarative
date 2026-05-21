@@ -30,7 +30,6 @@ namespace Dom {
 Q_NAMESPACE_EXPORT(QMLDOM_EXPORT)
 
 enum class PathRoot {
-    Other,
     Modules,
     Cpp,
     Libs,
@@ -41,7 +40,6 @@ enum class PathRoot {
 Q_ENUM_NS(PathRoot)
 
 enum class PathCurrent {
-    Other,
     Obj,
     Component,
     Module,

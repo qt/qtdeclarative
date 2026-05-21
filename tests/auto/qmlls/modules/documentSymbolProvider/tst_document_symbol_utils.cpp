@@ -22,7 +22,7 @@ static inline DomItem domItem(DomClass &&c)
     constexpr auto kind = std::decay<DomClass>::type::kindValue;
     if constexpr (domTypeIsDomElement(kind)) {
         c.updatePathFromOwner(
-                Path::fromCurrent()); // necessary for querying fields, a.k.a. init DomElement
+                Path::fromCurrent(PathCurrent::Obj)); // necessary for querying fields, a.k.a. init DomElement
         // For the "DomElement"-s owners are required,
         // hence creating Env as an owner and then call copy on it
         return domEnv.copy(&c);

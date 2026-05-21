@@ -64,7 +64,7 @@ void TestFileLocations::NodeDOMAPI()
 
 void TestFileLocations::createEnsureFind()
 {
-    const auto childCanonicalPath = Path::fromString(u"$root.children[0]");
+    const auto childCanonicalPath = Path::fromString(u"$top.children[0]");
     auto rootNodePtr = FileLocations::createTree(childCanonicalPath.head());
 
     // drop front because paths in the tree are relative
@@ -79,10 +79,10 @@ void TestFileLocations::createEnsureFind()
 
 void TestFileLocations::visitTree()
 {
-    const auto child1CanonicalPath = Path::fromString(u"$root.children[0]");
-    const auto child2CanonicalPath = Path::fromString(u"$root.children[1]");
-    const auto grandChild1CanonicalPath = Path::fromString(u"$root.children[1].child[0]");
-    const auto grandChild2CanonicalPath = Path::fromString(u"$root.children[1].child[1]");
+    const auto child1CanonicalPath = Path::fromString(u"$top.children[0]");
+    const auto child2CanonicalPath = Path::fromString(u"$top.children[1]");
+    const auto grandChild1CanonicalPath = Path::fromString(u"$top.children[1].child[0]");
+    const auto grandChild2CanonicalPath = Path::fromString(u"$top.children[1].child[1]");
 
     auto rootNodePtr = FileLocations::createTree(child1CanonicalPath.head());
     FileLocations::ensure(rootNodePtr, child1CanonicalPath.dropFront());
@@ -103,13 +103,13 @@ void TestFileLocations::visitTree()
     // arrays or maps...
     // partially due to the nature of Path structure and DOM wrappers... But we still want
     // to test that all of those are correctly visited....
-    QList<QString> expectedVisitedNodePaths = { "$root",
-                                                "$root.children",
-                                                "$root.children[0]",
-                                                "$root.children[1]",
-                                                "$root.children[1].child",
-                                                "$root.children[1].child[0]",
-                                                "$root.children[1].child[1]" };
+    QList<QString> expectedVisitedNodePaths = { "$top",
+                                                "$top.children",
+                                                "$top.children[0]",
+                                                "$top.children[1]",
+                                                "$top.children[1].child",
+                                                "$top.children[1].child[0]",
+                                                "$top.children[1].child[1]" };
 
     QCOMPARE(visitedNodePaths, expectedVisitedNodePaths);
 }
@@ -117,7 +117,7 @@ void TestFileLocations::visitTree()
 void TestFileLocations::addRegion()
 {
     { // Main region update on a node
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
         QVERIFY(!rootNodePtr->info().fullRegion.isValid());
         QVERIFY(rootNodePtr->info().regions.empty());
 
@@ -129,7 +129,7 @@ void TestFileLocations::addRegion()
     }
 
     { // Update on a node if loc.begin < fullRegion.begin()
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
 
         const auto rootMainLoc = QQmlJS::SourceLocation(2, 4);
         FileLocations::addRegion(rootNodePtr, FileLocationRegion::MainRegion, rootMainLoc);
@@ -144,7 +144,7 @@ void TestFileLocations::addRegion()
     }
 
     { // Update on a node if loc.end > fullRegion.end()
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
 
         const auto rootMainLoc = QQmlJS::SourceLocation(0, 4);
         FileLocations::addRegion(rootNodePtr, FileLocationRegion::MainRegion, rootMainLoc);
@@ -159,7 +159,7 @@ void TestFileLocations::addRegion()
     }
 
     { // Update all parents
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
         auto child = FileLocations::ensure(rootNodePtr, Path::fromString(u".child"));
         auto grandChild = FileLocations::ensure(rootNodePtr, Path::fromString(u".child.child"));
 
@@ -176,7 +176,7 @@ void TestFileLocations::addRegion()
     }
 
     { // Update only one parent
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
         const auto rootMainLoc = QQmlJS::SourceLocation(0, 4);
         FileLocations::addRegion(rootNodePtr, FileLocationRegion::MainRegion, rootMainLoc);
 
@@ -194,7 +194,7 @@ void TestFileLocations::addRegion()
     }
 
     { // FullRegion is not updated if adding MainRegion, which is smaller than current
-        auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+        auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
 
         const auto rootMainRegionLoc = QQmlJS::SourceLocation(0, 7);
         FileLocations::addRegion(rootNodePtr, FileLocationRegion::MainRegion, rootMainRegionLoc);
@@ -212,7 +212,7 @@ void TestFileLocations::addRegion()
 void TestFileLocations::treeOf()
 {
     // prepare mock File locations for the "rootObject"
-    auto rootNodePtr = FileLocations::createTree(Path::fromRoot());
+    auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
     auto objNodePtr =
             FileLocations::ensure(rootNodePtr, Path::fromString(u".components[\"\"][0].objects[0]"));
     const auto objLocation = QQmlJS::SourceLocation(1, 1);

@@ -145,7 +145,7 @@ DomItem DomUniverse::create(const QString &universeName)
 
 Path DomUniverse::canonicalPath() const
 {
-    return Path::fromRoot(u"universe");
+    return Path::fromRoot(PathRoot::Universe);
 }
 
 bool DomUniverse::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const
@@ -784,7 +784,7 @@ DomType DomEnvironment::kind() const
 
 Path DomEnvironment::canonicalPath() const
 {
-    return Path::fromRoot(u"env");
+    return Path::fromRoot(PathRoot::Env);
 }
 
 bool DomEnvironment::iterateDirectSubpaths(const DomItem &self, DirectVisitor visitor) const

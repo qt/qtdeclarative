@@ -48,8 +48,6 @@ private slots:
         QVERIFY(c1 != c1_1);
         QVERIFY(c < c1_1);
         QCOMPARE(c1_1.name(), QLatin1String("@ids"));
-        PathComponent c1_2{Current(u"ids")};
-        QCOMPARE(c1_1, c1_2);
         PathComponent c2 = c1;
         QCOMPARE(c2.kind(), Kind::Current);
         QCOMPARE(c2, c1);
@@ -71,43 +69,19 @@ private slots:
         auto c7 = PathComponent(Key(QStringLiteral(u" ugly\n \t \\string\"'bla")));
         QCOMPARE(c7.kind(), Kind::Key);
         QCOMPARE(c7.name(), QLatin1String(" ugly\n \t \\string\"'bla"));
-        auto c8=PathComponent(Root(u"pippo"));
-        QCOMPARE(c8.kind(), Kind::Root);
-        QCOMPARE(c8.name(), QLatin1String("$pippo"));
         auto c8_1=PathComponent(Root(PathRoot::Env));
         QCOMPARE(c8_1.kind(), Kind::Root);
         QCOMPARE(c8_1.name(), QLatin1String("$env"));
-        auto c8_2=PathComponent(Root(u"env"));
-        QCOMPARE(c8_1, c8_2);
-        auto c9=PathComponent(Current(u"ippo"));
-        QCOMPARE(c9.kind(), Kind::Current);
-        QCOMPARE(c9.name(), QLatin1String("@ippo"));
-        auto c10=PathComponent(Any());
-        QCOMPARE(c10.kind(), Kind::Any);
-        QVERIFY(c9!=c10);
-        auto c11=PathComponent(Filter([](const DomItem &){ return true; }));
-        auto c12=c11;
-        auto c13=PathComponent(Filter([](const DomItem &){ return false; }));
-        auto c14=PathComponent(Filter([](const DomItem &){ return false; }, u"skipAll"));
-        auto c15=PathComponent(Filter([](const DomItem &){ return true; }, u"skipAll"));
-        QCOMPARE(c11.kind(), Kind::Filter);
-        QCOMPARE(c11, c11);
-        QVERIFY(c11 != c12); // native code assumed to be non comparable and different even if they are the same
-        QVERIFY(c11 != c13);
-        QVERIFY(c13 != c14);
-        QVERIFY(c11 != c14);
-        QCOMPARE(c14, c14);
-        QCOMPARE(c14, c15); // same description (without < at the beginning) assumes same function even if different
     }
 
     void testPaths() {
         Path p;
         QCOMPARE(p.length(), 0);
         QCOMPARE(p.length(), 0);
-        Path p0 = Path::fromRoot();
+        Path p0 = Path::fromRoot(PathRoot::Env);
         QCOMPARE(p0[0].headKind(), Kind::Root);
         QCOMPARE(p0.length(), 1);
-        Path p1 = p0.withCurrent();
+        Path p1 = p0.withCurrent(PathCurrent::Obj);
         QCOMPARE(p1.length(), 2);
         testPathInternals(p1);
         QCOMPARE(p1[0].headKind(), Kind::Root);
@@ -126,37 +100,26 @@ private slots:
         QCOMPARE(p3, p3a);
         auto p4 = p3.withKey(u"bla");
         QCOMPARE(p4[4].headKind(), Kind::Key);
-        auto p5 = p4.withAny();
-        QCOMPARE(p5[5].headKind(), Kind::Any);
-        auto p6 = p5.withEmpty();
-        QCOMPARE(p6[6].headKind(), Kind::Empty);
-        auto rString = u"$.@.aa[4][\"bla\"][*].";
+        auto p6 = p4.withEmpty();
+        QCOMPARE(p6[5].headKind(), Kind::Empty);
+        auto rString = u"$env.@obj.aa[4][\"bla\"].";
         QCOMPARE(p6.toString(), rString);
-        auto p7 = p6.withFilter([](const DomItem &){ return true; }, u"true");
-        auto p7Str = p7.toString();
-        QCOMPARE(p7Str, u"$.@.aa[4][\"bla\"][*].[?(true)]");
-        auto p8 = p7.dropTail();
-        QCOMPARE(p8.length(), 7);
-        QCOMPARE(p8.toString(), rString);
-        QCOMPARE(p8, p6);
+        auto p8 = p6.dropTail();
+        QCOMPARE(p8.length(), 5);
         auto p9 = Path::fromString(rString);
-        QCOMPARE(p9.length(), 7);
+        QCOMPARE(p9.length(), 6);
         auto p9Str = p9.toString();
         QCOMPARE(p9Str, rString);
         QCOMPARE(p9, p6);
         auto p10 = p6.dropFront();
-        QCOMPARE(p10.length(), 6);
+        QCOMPARE(p10.length(), 5);
         auto p10Str = p10.toString();
-        auto r2Str = u"@.aa[4][\"bla\"][*].";
+        auto r2Str = u"@obj.aa[4][\"bla\"].";
         QCOMPARE(p10Str, r2Str);
         auto p11 = Path::fromString(r2Str);
         auto p11Str = p11.toString();
         QCOMPARE(p11Str, r2Str);
         QCOMPARE(p10, p11);
-        auto p12 = p7.mid(1,6);
-        auto p12Str = p12.toString();
-        QCOMPARE(p12Str, r2Str);
-        QCOMPARE(p10, p12);
     }
 
     void testPathSplit()

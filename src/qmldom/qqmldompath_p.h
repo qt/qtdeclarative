@@ -53,8 +53,6 @@ enum class Kind{
     Key,
     Root,
     Current,
-    Any,
-    Filter
 };
 
 class TestPaths;
@@ -64,8 +62,6 @@ class Index;
 class Key;
 class Root;
 class Current;
-class Any;
-class Filter;
 
 class Base {
 public:
@@ -135,16 +131,7 @@ class Root final : public Base
 {
 public:
     Root() = default;
-    Root(PathRoot r): contextKind(r), contextName() {}
-    Root(QStringView n) {
-        QMetaEnum metaEnum = QMetaEnum::fromType<PathRoot>();
-        contextKind = PathRoot::Other;
-        for (int i = 0; i < metaEnum.keyCount(); ++ i)
-            if (n.compare(QString::fromUtf8(metaEnum.key(i)), Qt::CaseInsensitive) == 0)
-                contextKind = PathRoot(metaEnum.value(i));
-        if (contextKind == PathRoot::Other)
-            contextName = n;
-    }
+    Root(PathRoot r): contextKind(r) {}
     QString name() const {
         switch (contextKind) {
         case PathRoot::Modules:
@@ -159,22 +146,16 @@ public:
             return QStringLiteral(u"$env");
         case PathRoot::Universe:
             return QStringLiteral(u"$universe");
-        case PathRoot::Other:
-            return QString::fromUtf8("$").append(contextName.toString());
         }
         Q_ASSERT(false && "Unexpected contextKind in name");
         return QString();
     }
     bool checkName(QStringView s) const {
-        if (contextKind != PathRoot::Other)
-            return s.compare(name(), Qt::CaseInsensitive) == 0;
-        return s.startsWith(QChar::fromLatin1('$')) && s.mid(1) == contextName;
+        return s.compare(name(), Qt::CaseInsensitive) == 0;
     }
-    QStringView stringView() const { return contextName; }
     void dump(const Sink &sink) const { sink(name()); }
 
-    PathRoot contextKind = PathRoot::Other;
-    QStringView contextName;
+    PathRoot contextKind = PathRoot::Modules;
 };
 
 class Current final : public Base
@@ -182,19 +163,8 @@ class Current final : public Base
 public:
     Current() = default;
     Current(PathCurrent c): contextKind(c) {}
-    Current(QStringView n) {
-        QMetaEnum metaEnum = QMetaEnum::fromType<PathCurrent>();
-        contextKind = PathCurrent::Other;
-        for (int i = 0; i < metaEnum.keyCount(); ++ i)
-            if (n.compare(QString::fromUtf8(metaEnum.key(i)), Qt::CaseInsensitive) == 0)
-                contextKind = PathCurrent(metaEnum.value(i));
-        if (contextKind == PathCurrent::Other)
-            contextName = n;
-    }
     QString name() const {
         switch (contextKind) {
-        case PathCurrent::Other:
-            return QString::fromUtf8("@").append(contextName.toString());
         case PathCurrent::Obj:
             return QStringLiteral(u"@obj");
         case PathCurrent::Component:
@@ -216,41 +186,11 @@ public:
         return QString();
     }
     bool checkName(QStringView s) const {
-        if (contextKind != PathCurrent::Other)
-            return s.compare(name(), Qt::CaseInsensitive) == 0;
-        return s.startsWith(QChar::fromLatin1('@')) && s.mid(1) == contextName;
+        return s.compare(name(), Qt::CaseInsensitive) == 0;
     }
-    QStringView stringView() const { return contextName; }
     void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
 
-    PathCurrent contextKind = PathCurrent::Other;
-    QStringView contextName;
-};
-
-class Any final : public Base
-{
-public:
-    Any() = default;
-    QString name() const { return QLatin1String("*"); }
-    bool checkName(QStringView s) const { return s == u"*"; }
-    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
-    bool hasSquareBrackets() const { return true; }
-};
-
-class QMLDOM_EXPORT Filter final : public Base
-{
-public:
-    Filter() = default;
-    Filter(const std::function<bool(const DomItem &)> &f,
-           QStringView filterDescription = u"<native code filter>");
-    QString name() const;
-    bool checkName(QStringView s) const;
-    QStringView stringView() const { return filterDescription; }
-    void dump(const Sink &sink) const { Base::dump(sink, name(), hasSquareBrackets()); }
-    bool hasSquareBrackets() const { return true; }
-
-    std::function<bool(const DomItem &)> filterFunction;
-    QStringView filterDescription;
+    PathCurrent contextKind = PathCurrent::Obj;
 };
 
 class QMLDOM_EXPORT PathComponent {
@@ -300,8 +240,6 @@ public:
     const Key     *asKey()     const { return std::get_if<Key>(&m_data); }
     const Root    *asRoot()    const { return std::get_if<Root>(&m_data); }
     const Current *asCurrent() const { return std::get_if<Current>(&m_data); }
-    const Any     *asAny()     const { return std::get_if<Any>(&m_data); }
-    const Filter  *asFilter()  const { return std::get_if<Filter>(&m_data); }
 
     static int cmp(const PathComponent &p1, const PathComponent &p2);
 
@@ -311,14 +249,12 @@ public:
     PathComponent(Key &&o): m_data(std::move(o)) {}
     PathComponent(Root &&o): m_data(std::move(o)) {}
     PathComponent(Current &&o): m_data(std::move(o)) {}
-    PathComponent(Any &&o): m_data(std::move(o)) {}
-    PathComponent(Filter &&o): m_data(std::move(o)) {}
 
 private:
     friend class QQmlJS::Dom::Path;
     friend class QQmlJS::Dom::PathEls::TestPaths;
 
-    using Variant = std::variant<Empty, Field, Index, Key, Root, Current, Any, Filter>;
+    using Variant = std::variant<Empty, Field, Index, Key, Root, Current>;
 
     template<typename T, Kind K>
     static constexpr bool variantTypeMatches
@@ -330,9 +266,7 @@ private:
     static_assert(variantTypeMatches<Key,     Kind::Key>);
     static_assert(variantTypeMatches<Root,    Kind::Root>);
     static_assert(variantTypeMatches<Current, Kind::Current>);
-    static_assert(variantTypeMatches<Any,     Kind::Any>);
-    static_assert(variantTypeMatches<Filter,  Kind::Filter>);
-    static_assert(std::variant_size_v<Variant> == size_t(Kind::Filter) + 1);
+    static_assert(std::variant_size_v<Variant> == size_t(Kind::Current) + 1);
 
     Variant m_data;
 };
@@ -606,7 +540,6 @@ public:
     QString headName() const;
     bool checkHeadName(QStringView name) const;
     index_type headIndex(index_type defaultValue=-1) const;
-    std::function<bool(const DomItem &)> headFilter() const;
     Path head() const;
     Path last() const;
     Source split() const;
@@ -623,16 +556,12 @@ public:
     static Path fromString(const QString &s, const ErrorHandler &errorHandler = nullptr);
     static Path fromString(QStringView s, const ErrorHandler &errorHandler = nullptr);
     static Path fromRoot(PathRoot r);
-    static Path fromRoot(QStringView s=u"");
-    static Path fromRoot(const QString &s);
     static Path fromIndex(index_type i);
     static Path fromField(QStringView s=u"");
     static Path fromField(const QString &s);
     static Path fromKey(QStringView s=u"");
     static Path fromKey(const QString &s);
     static Path fromCurrent(PathCurrent c);
-    static Path fromCurrent(QStringView s=u"");
-    static Path fromCurrent(const QString &s);
     // add
     Path withEmpty() const;
     Path withField(const QString &name) const;
@@ -640,13 +569,7 @@ public:
     Path withKey(const QString &name) const;
     Path withKey(QStringView name) const;
     Path withIndex(index_type i) const;
-    Path withAny() const;
-    Path withFilter(const std::function<bool(const DomItem &)> &, const QString &) const;
-    Path withFilter(const std::function<bool(const DomItem &)> &,
-                QStringView desc=u"<native code filter>") const;
     Path withCurrent(PathCurrent s) const;
-    Path withCurrent(const QString &s) const;
-    Path withCurrent(QStringView s=u"") const;
     Path withPath(const Path &toAdd, bool avoidToAddAsBase = false) const;
 
     Path expandFront() const;

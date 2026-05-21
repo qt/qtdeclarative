@@ -56,7 +56,7 @@ private slots:
                                    DomCreationOption::Default, universePtr));
         env = DomItem(envPtr);
         testOwnerPtr = std::shared_ptr<MockOwner>(new MockOwner(
-                Path::fromRoot(u"env").withField(u"testOwner"), 0,
+                Path::fromRoot(PathRoot::Env).withField(u"testOwner"), 0,
                 QMap<QString, MockObject> {
                         MockObject(
                                 Path::fromField(u"obj1"),
@@ -265,7 +265,7 @@ private slots:
     }
     void testReference()
     {
-        Path p = Path::fromRoot(u"env");
+        Path p = Path::fromRoot(PathRoot::Env);
         DomItem ref = env.subReferenceItem(PathEls::Field(u"ref"), p);
         QCOMPARE(ref.field(u"referredObjectPath").value().toString(), p.toString());
         QCOMPARE(ref.fields(),
@@ -312,7 +312,7 @@ private slots:
         QCOMPARE(env.pathFromOwner(), Path());
         QCOMPARE(env.containingObject().internalKind(), DomType::Empty);
         QCOMPARE(env.container().internalKind(), DomType::Empty);
-        QCOMPARE(env.canonicalPath(), Path::fromRoot(u"env"));
+        QCOMPARE(env.canonicalPath(), Path::fromRoot(PathRoot::Env));
         QCOMPARE(env.path(u"$env").internalKind(), DomType::DomEnvironment);
         QCOMPARE(env.top().internalKind(), DomType::DomEnvironment);
         QCOMPARE(env.environment().internalKind(), DomType::DomEnvironment);

@@ -129,7 +129,7 @@ or by modifying an existing path
 Path qmlFilePath =
     Path::fromString(u"$env.qmlFilesByPath[\"/path/to/file\"]");
 Path imports = qmlFilePath.withField(u"imports")
-Path currentComponentImports = Path::fromCurrent(u"component").withField(u"imports");
+Path currentComponentImports = Path::fromCurrent(PathCurrent::Component).withField(u"imports");
 \endcode
 
 This is a way to refer to elements in the Dom models that is not dependent from the source location,
@@ -184,24 +184,24 @@ void Base::dump(const Sink &sink, const QString &name, bool hasSquareBrackets) c
         sink(u"]");
 }
 
-Filter::Filter(const std::function<bool(const DomItem &)> &f, QStringView filterDescription)
-    : filterFunction(f), filterDescription(filterDescription) {}
-
-QString Filter::name() const {
-    return QLatin1String("?(%1)").arg(filterDescription); }
-
-bool Filter::checkName(QStringView s) const
-{
-    return s.startsWith(u"?(")
-            && s.mid(2, s.size()-3) == filterDescription
-            && s.endsWith(u")");
-}
-
 enum class ParserState{
     Start,
     IndexOrKey,
     End
 };
+
+template<typename Enum>
+static bool lookupEnumValue(QStringView name, Enum &out)
+{
+    QMetaEnum metaEnum = QMetaEnum::fromType<Enum>();
+    for (int j = 0; j < metaEnum.keyCount(); ++j) {
+        if (name.compare(QString::fromUtf8(metaEnum.key(j)), Qt::CaseInsensitive) == 0) {
+            out = Enum(metaEnum.value(j));
+            return true;
+        }
+    }
+    return false;
+}
 
 int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
 {
@@ -232,39 +232,11 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
             k1 = PathRoot::Top;
         if (k2 == PathRoot::Env || k2 == PathRoot::Universe)
             k2 = PathRoot::Top;
-        int c = int(k1) - int(k2);
-        if (c != 0)
-            return c;
-        return std::get<Root>(p1.m_data).contextName.compare(std::get<Root>(p2.m_data).contextName);
+        return int(k1) - int(k2);
     }
     case Kind::Current:
-    {
-        int c = int(std::get<Current>(p1.m_data).contextKind)
+        return int(std::get<Current>(p1.m_data).contextKind)
                 - int(std::get<Current>(p2.m_data).contextKind);
-        if (c != 0)
-            return c;
-        return std::get<Current>(p1.m_data).contextName
-                .compare(std::get<Current>(p2.m_data).contextName);
-    }
-    case Kind::Any:
-        return 0;
-    case Kind::Filter:
-    {
-        int c = std::get<Filter>(p1.m_data).filterDescription
-                        .compare(std::get<Filter>(p2.m_data).filterDescription);
-        if (c != 0)
-            return c;
-        if (std::get<Filter>(p1.m_data).filterDescription.startsWith(u"<")) {
-            // assuming non comparable native code (target comparison is not portable)
-            auto pp1 = &p1;
-            auto pp2 = &p2;
-            if (pp1 < pp2)
-                return -1;
-            if (pp1 > pp2)
-                return 1;
-        }
-        return 0;
-    }
     }
     Q_ASSERT(false && "unexpected PathComponent in PathComponent::cmp");
     return 0;
@@ -328,7 +300,7 @@ PathRoot Path::headRoot() const
     auto &comp = component(0);
     if (PathEls::Root const * r = comp.asRoot())
         return r->contextKind;
-    return PathRoot::Other;
+    return PathRoot::Modules;
 }
 
 PathCurrent Path::headCurrent() const
@@ -336,7 +308,7 @@ PathCurrent Path::headCurrent() const
     auto comp = component(0);
     if (PathEls::Current const * c = comp.asCurrent())
         return c->contextKind;
-    return PathCurrent::Other;
+    return PathCurrent::Obj;
 }
 
 Path::Kind Path::headKind() const
@@ -359,15 +331,6 @@ bool Path::checkHeadName(QStringView name) const
 index_type Path::headIndex(index_type defaultValue) const
 {
     return component(0).index(defaultValue);
-}
-
-std::function<bool(const DomItem &)> Path::headFilter() const
-{
-    auto &comp = component(0);
-    if (PathEls::Filter const * f = comp.asFilter()) {
-        return f->filterFunction;
-    }
-    return {};
 }
 
 Path Path::head() const
@@ -432,14 +395,28 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                 while (i < s.size() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
-                components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
+                QStringView name = s.mid(i0, i - i0);
+                PathRoot rootKind;
+                if (!PathEls::lookupEnumValue(name, rootKind)) {
+                    myErrors().error(tr("Unknown root context '$%1'.").arg(name))
+                            .handle(errorHandler);
+                    return Path();
+                }
+                components.append(Component(PathEls::Root(rootKind)));
                 state = PathEls::ParserState::End;
             } else if (c == at) {
                 i0 = i;
                 while (i < s.size() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
-                components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
+                QStringView name = s.mid(i0, i - i0);
+                PathCurrent currentKind;
+                if (!PathEls::lookupEnumValue(name, currentKind)) {
+                    myErrors().error(tr("Unknown current context '@%1'.").arg(name))
+                            .handle(errorHandler);
+                    return Path();
+                }
+                components.append(Component(PathEls::Current(currentKind)));
                 state = PathEls::ParserState::End;
             } else if (c.isLetter()) {
                 myErrors().warning(tr("Field expressions should start with a dot, even when at the start of the path %1.")
@@ -501,27 +478,6 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                     return Path();
                 }
                 components.append(PathEls::Key(strVal));
-            } else if (c == QChar::fromLatin1('*')) {
-                components.append(Component(PathEls::Any()));
-            } else if (c == QChar::fromLatin1('?')) {
-                while (i < s.size() && s.at(i).isSpace())
-                    ++i;
-                if (i >= s.size() || s.at(i) != QChar::fromLatin1('(')) {
-                    myErrors().error(tr("Expected a brace in filter after the question mark (at char %1).")
-                            .arg(QString::number(i))).handle(errorHandler);
-                    return Path();
-                }
-                i0 = ++i;
-                while (i < s.size() && s.at(i) != QChar::fromLatin1(')')) ++i; // check matching braces when skipping??
-                if (i >= s.size() || s.at(i) != QChar::fromLatin1(')')) {
-                    myErrors().error(tr("Expected a closing brace in filter after the question mark (at char %1).")
-                            .arg(QString::number(i))).handle(errorHandler);
-                    return Path();
-                }
-                //auto filterDesc = s.mid(i0,i-i0);
-                ++i;
-                myErrors().error(tr("Filter from string not yet implemented.")).handle(errorHandler);
-                return Path();
             } else {
                 myErrors().error(tr("Unexpected character '%1' after square bracket at %2.")
                                  .arg(c).arg(i-1)).handle(errorHandler);
@@ -575,14 +531,28 @@ Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
                     while (i < s.size() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
-                    components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
+                    QStringView name = s.mid(i0, i - i0);
+                    PathCurrent currentKind;
+                    if (!PathEls::lookupEnumValue(name, currentKind)) {
+                        myErrors().error(tr("Unknown current context '@%1'.").arg(name))
+                                .handle(errorHandler);
+                        return Path();
+                    }
+                    components.append(Component(PathEls::Current(currentKind)));
                     state = PathEls::ParserState::End;
                 } else if (s.at(i) == dollar) {
                     i0 = ++i;
                     while (i < s.size() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
-                    components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
+                    QStringView name = s.mid(i0, i - i0);
+                    PathRoot rootKind;
+                    if (!PathEls::lookupEnumValue(name, rootKind)) {
+                        myErrors().error(tr("Unknown root context '$%1'.").arg(name))
+                                .handle(errorHandler);
+                        return Path();
+                    }
+                    components.append(Component(PathEls::Root(rootKind)));
                     state = PathEls::ParserState::End;
                 } else {
                     c=s.at(i);
@@ -623,24 +593,11 @@ Path Path::fromRoot(PathRoot s)
                     QStringList(), QList<Component>(1,Component(PathEls::Root(s)))));
 }
 
-Path Path::fromRoot(const QString &s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(s), QList<Component>(1,Component(PathEls::Root(s)))));
-}
-
 Path Path::fromIndex(index_type i)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
                     QStringList(), QList<Component>(1,Component(PathEls::Index(i)))));
 }
-
-Path Path::fromRoot(QStringView s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Root(s)))));
-}
-
 
 Path Path::fromField(QStringView s)
 {
@@ -670,18 +627,6 @@ Path Path::fromKey(const QString &s)
 }
 
 Path Path::fromCurrent(PathCurrent s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Current(s)))));
-}
-
-Path Path::fromCurrent(const QString &s)
-{
-    return Path(0,1,std::make_shared<PathEls::PathData>(
-                    QStringList(s), QList<Component>(1,Component(PathEls::Current(s)))));
-}
-
-Path Path::fromCurrent(QStringView s)
 {
     return Path(0,1,std::make_shared<PathEls::PathData>(
                     QStringList(), QList<Component>(1,Component(PathEls::Current(s)))));
@@ -731,43 +676,7 @@ Path Path::withIndex(index_type i) const
                     QStringList(), QList<Component>(1,Component(i)), m_data));
 }
 
-Path Path::withAny() const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withAny();
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Any())), m_data));
-}
-
-Path Path::withFilter(const std::function<bool(const DomItem &)> &filterF, const QString &desc) const
-{
-    auto res = withFilter(filterF, QStringView(desc));
-    res.m_data->strData.append(desc);
-    return res;
-}
-
-Path Path::withFilter(const std::function<bool(const DomItem &)> &filter, QStringView desc) const
-{
-    if (m_endOffset != 0)
-        return noEndOffset().withFilter(filter, desc);
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Filter(filter, desc))), m_data));
-}
-
 Path Path::withCurrent(PathCurrent s) const
-{
-    return Path(0,m_length+1,std::make_shared<PathEls::PathData>(
-                    QStringList(), QList<Component>(1,Component(PathEls::Current(s))), m_data));
-}
-
-Path Path::withCurrent(const QString &s) const
-{
-    auto res = withCurrent(QStringView(s));
-    res.m_data->strData.append(s);
-    return res;
-}
-
-Path Path::withCurrent(QStringView s) const
 {
     if (m_endOffset != 0)
         return noEndOffset().withCurrent(s);
@@ -980,41 +889,14 @@ Path Path::withComponent(const PathEls::PathComponent &c)
                     : std::make_shared<PathEls::PathData>(QStringList(),
                                                           QList<PathEls::PathComponent>()));
     switch (c.kind()) {
-    case PathEls::Kind::Any:
     case PathEls::Kind::Empty:
     case PathEls::Kind::Index:
-        // no string
     case PathEls::Kind::Field:
         // string assumed to stay valid (Fields::...)
-        my_data->components.append(c);
-        break;
     case PathEls::Kind::Current:
-        if (c.asCurrent()->contextKind == PathCurrent::Other) {
-            my_data->strData.append(c.asCurrent()->contextName.toString());
-            my_data->components.append(PathEls::Current(my_data->strData.last()));
-        } else {
-            my_data->components.append(c);
-        }
-        break;
-    case PathEls::Kind::Filter:
-        if (!c.asFilter()->filterDescription.isEmpty()) {
-            my_data->strData.append(c.asFilter()->filterDescription.toString());
-            my_data->components.append(
-                    PathEls::Filter(c.asFilter()->filterFunction, my_data->strData.last()));
-        } else {
-            my_data->components.append(c);
-        }
-        break;
     case PathEls::Kind::Key:
-        my_data->components.append(c);
-        break;
     case PathEls::Kind::Root:
-        if (c.asRoot()->contextKind == PathRoot::Other) {
-            my_data->strData.append(c.asRoot()->contextName.toString());
-            my_data->components.append(PathEls::Root(my_data->strData.last()));
-        } else {
-            my_data->components.append(c);
-        }
+        my_data->components.append(c);
         break;
     }
     if (m_data)
