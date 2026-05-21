@@ -3,6 +3,7 @@
 
 /*!
 \page qtqml-javascript-dynamicobjectcreation.html
+\meta {keywords} {qmltopic}
 \title Dynamic QML Object Creation from JavaScript
 \brief instantiating and managing QML objects from JavaScript
 

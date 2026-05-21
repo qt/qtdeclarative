@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtqml-documents-definetypes.html
+\meta {keywords} {qmltopic}
 \title Defining Object Types through QML Documents
 \brief Description of how a QML document is a reusable type definition
 

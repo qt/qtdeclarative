@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-visual.html
+\meta {keywords} {qmltopic}
 \title Visual types
 \keyword Use Case - Visual Elements In QML
 \brief Example of how to display visual item types in a QML application

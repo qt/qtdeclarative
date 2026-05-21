@@ -3,6 +3,7 @@
 /*!
 
 \page qtqml-javascript-memory.html
+\meta {keywords} {qmltopic}
 \title Memory Management in the JavaScript Engine
 \brief Describes how the JavaScript Engine manages memory.
 

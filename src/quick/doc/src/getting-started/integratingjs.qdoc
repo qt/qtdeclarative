@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
 /*!
 \page qtquick-usecase-integratingjs.html
+\meta {keywords} {qmltopic}
 \title Integrating JavaScript in QML
 \keyword Use Case - Integrating JavaScript in QML
 \brief Example of how to integrate JavaScript code in QML views
