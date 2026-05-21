@@ -10,6 +10,8 @@ find_package(Qt6 REQUIRED COMPONENTS Quick Core QmlDesignSupport)
 
 qt_standard_project_setup(REQUIRES 6.12)
 
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/objectregistry")
+
 qt_add_executable(appObjectRegistryTest
     main.cpp
 )
