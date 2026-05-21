@@ -1647,8 +1647,8 @@ void QQStyleKitIndicatorProperties::emitGlobally(
 {
     // Go through all instances of QQStyleKitIndicatorProperties
     const QQStyleKitControlProperties *cp = controlProperties();
-    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->up());
-    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->down());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->indicator1());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->indicator2());
 }
 
 QQStyleKitDelegateProperties *QQStyleKitIndicatorProperties::foreground() const
@@ -1680,12 +1680,22 @@ QQStyleKitDelegateProperties *QQStyleKitIndicatorWithSubTypes::foreground() cons
 
 QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::up() const
 {
-    return lazyCreateGroup(m_up, QQSK::PropertyGroup::DelegateSubtype1);
+    return indicator1();
 }
 
 QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::down() const
 {
-    return lazyCreateGroup(m_down, QQSK::PropertyGroup::DelegateSubtype2);
+    return indicator2();
+}
+
+QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::indicator1() const
+{
+    return lazyCreateGroup(m_indicator1, QQSK::PropertyGroup::DelegateSubtype1);
+}
+
+QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::indicator2() const
+{
+    return lazyCreateGroup(m_indicator2, QQSK::PropertyGroup::DelegateSubtype2);
 }
 
 // ************* QQStyleKitTextProperties ****************
@@ -1907,15 +1917,15 @@ void QQStyleKitControlProperties::forEachUsedDelegate(
         f(m_indicator, QQSK::Delegate::Indicator, "indicator"_L1);
         if (m_indicator->m_foreground)
             f(m_indicator->m_foreground, QQSK::Delegate::IndicatorForeground, "indicator.foreground"_L1);
-        if (m_indicator->m_up) {
-            f(m_indicator->m_up, QQSK::Delegate::IndicatorUp, "indicator.up"_L1);
-            if (m_indicator->m_up->m_foreground)
-                f(m_indicator->m_up->m_foreground, QQSK::Delegate::IndicatorUpForeground, "indicator.up.foreground"_L1);
+        if (m_indicator->m_indicator1) {
+            f(m_indicator->m_indicator1, QQSK::Delegate::Indicator1, "indicator.up"_L1);
+            if (m_indicator->m_indicator1->m_foreground)
+                f(m_indicator->m_indicator1->m_foreground, QQSK::Delegate::Indicator1Foreground, "indicator.up.foreground"_L1);
         }
-        if (m_indicator->m_down) {
-            f(m_indicator->m_down, QQSK::Delegate::IndicatorDown, "indicator.down"_L1);
-            if (m_indicator->m_down->m_foreground)
-                f(m_indicator->m_down->m_foreground, QQSK::Delegate::IndicatorDownForeground, "indicator.down.foreground"_L1);
+        if (m_indicator->m_indicator2) {
+            f(m_indicator->m_indicator2, QQSK::Delegate::Indicator2, "indicator.down"_L1);
+            if (m_indicator->m_indicator2->m_foreground)
+                f(m_indicator->m_indicator2->m_foreground, QQSK::Delegate::Indicator2Foreground, "indicator.down.foreground"_L1);
         }
     }
 

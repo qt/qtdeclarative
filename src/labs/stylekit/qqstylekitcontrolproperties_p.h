@@ -454,6 +454,10 @@ public:
     QQStyleKitIndicatorProperties *up() const;
     QQStyleKitIndicatorProperties *down() const;
 
+    // Internal for the aliases
+    QQStyleKitIndicatorProperties *indicator1() const;
+    QQStyleKitIndicatorProperties *indicator2() const;
+
 signals:
     void foregroundChanged();
     void upChanged();
@@ -461,8 +465,8 @@ signals:
 
 private:
     QQStyleKitDelegateProperties *m_foreground = nullptr;
-    QQStyleKitIndicatorProperties *m_up = nullptr;
-    QQStyleKitIndicatorProperties *m_down = nullptr;
+    QQStyleKitIndicatorProperties *m_indicator1 = nullptr;
+    QQStyleKitIndicatorProperties *m_indicator2 = nullptr;
 
     friend class QQStyleKitReader;
     friend class QQStyleKitControlProperties;

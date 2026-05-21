@@ -34,10 +34,10 @@ public:
         HandleSecond            = 0x0010,
         Indicator               = 0x0020,
         IndicatorForeground     = 0x0040,
-        IndicatorUp             = 0x0080,
-        IndicatorUpForeground   = 0x0100,
-        IndicatorDown           = 0x0200,
-        IndicatorDownForeground = 0x0400,
+        Indicator1              = 0x0080,
+        Indicator1Foreground    = 0x0100,
+        Indicator2              = 0x0200,
+        Indicator2Foreground    = 0x0400,
     };
     Q_DECLARE_FLAGS(Delegates, Delegate)
     Q_FLAG(Delegate)
