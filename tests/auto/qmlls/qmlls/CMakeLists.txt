@@ -32,8 +32,10 @@ qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
         QT_QMLTEST_DATADIR=":/domdata"
 )
 
-if (TARGET qmlls)
-    # in a standalone build, the qmlls target won't exist
-    # but we assume that it is available if you manually set up the test
-    add_dependencies(tst_qmlls qmlls)
-endif()
+# The test spawns qmlls as a subprocess; it needs the qmlls completion plugins
+# and the QtQuick qmltypes from the build tree.
+foreach(_qmlls_test_dep IN ITEMS qmlls qt_qmlls_plugins_all Quick)
+    if (TARGET ${_qmlls_test_dep})
+        add_dependencies(tst_qmlls ${_qmlls_test_dep})
+    endif()
+endforeach()

@@ -33,6 +33,12 @@ qt_internal_add_test(tst_qmlls_qqmlcodemodel
 
 add_dependencies(tst_qmlls_qqmlcodemodel tst_qqmlcodemodel_testprocess)
 
+# The test resolves QtQuick types via the code model; the QtQuick qmltypes are
+# generated as part of building the Quick C++ target.
+if (TARGET Quick)
+    add_dependencies(tst_qmlls_qqmlcodemodel Quick)
+endif()
+
 qt_internal_extend_target(tst_qmlls_qqmlcodemodel CONDITION ANDROID OR IOS
     DEFINES
         QT_QQMLCODEMODEL_DATADIR=":/data"

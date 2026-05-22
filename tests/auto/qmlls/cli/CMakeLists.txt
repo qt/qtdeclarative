@@ -27,8 +27,10 @@ qt_internal_add_test(tst_qmlls_cli
     TESTDATA ${test_data}
 )
 
-if (TARGET qmlls)
-    # standalone test builds do not know the qmlls target
-    # but if TARGET qmlls is known it should be built before this test
-    add_dependencies(tst_qmlls_cli qmlls)
-endif()
+# The test spawns qmlls as a subprocess; it needs the qmlls completion plugins
+# and the QtQuick qmltypes from the build tree.
+foreach(_qmlls_test_dep IN ITEMS qmlls qt_qmlls_plugins_all Quick)
+    if (TARGET ${_qmlls_test_dep})
+        add_dependencies(tst_qmlls_cli ${_qmlls_test_dep})
+    endif()
+endforeach()
