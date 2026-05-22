@@ -271,6 +271,7 @@ QQStyleKitReader::QQStyleKitReader(QObject *parent)
     , m_dontEmitChangedSignals(false)
     , m_effectiveVariationsDirty(true)
     , m_transitionsEnabled(true)
+    , m_completed(false)
     , m_global(QQStyleKitControlProperties(QQSK::PropertyGroup::GlobalFlag, this))
 {
     s_allReaders.append(this);
@@ -464,7 +465,7 @@ void QQStyleKitReader::maybeTrackDelegates()
 void QQStyleKitReader::updateControl()
 {
     const QQStyleKitStyle *currentStyle = style();
-    if (!currentStyle || !currentStyle->loaded())
+    if (!m_completed || !currentStyle || !currentStyle->loaded())
         return;
 
     /* Alternate between two states to trigger a state change. The state group
@@ -530,6 +531,15 @@ void QQStyleKitReader::resetReadersForStyle(const QQStyleKitStyle *style)
 
 void QQStyleKitReader::populateLocalStorage()
 {
+    if (!m_completed) {
+        /* The local storage is used for implementing transitions and to ensure that we
+         * only emit changed signals for properties that actually change during a state
+         * change. During start-up, however, all properties are considered dirty, so we
+         * can delay populating the storage until the first time we get a state change
+         * after completed, to improve start-up performance. */
+        return;
+    }
+
     if (!m_storage.isEmpty())
         return;
     const auto *stylePtr = style();

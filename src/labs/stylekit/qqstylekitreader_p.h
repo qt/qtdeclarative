@@ -31,9 +31,10 @@ class QQuickPalette;
 class QQStyleKitVariation;
 class QQStyleKitPropertyResolver;
 
-class Q_LABSSTYLEKIT_EXPORT QQStyleKitReader : public QQStyleKitControlProperties
+class Q_LABSSTYLEKIT_EXPORT QQStyleKitReader : public QQStyleKitControlProperties, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQStyleKitExtendableControlType controlType READ controlType WRITE setControlType NOTIFY controlTypeChanged FINAL)
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool focused READ focused WRITE setFocused NOTIFY focusedChanged FINAL)
@@ -172,6 +173,10 @@ signals:
 private slots:
     void onPaletteChanged();
 
+protected:
+    void classBegin() override {}
+    void componentComplete() override { m_completed = true; };
+
 private:
     void updateControl();
     void populateLocalStorage();
@@ -199,6 +204,7 @@ private:
     bool m_dontEmitChangedSignals: 1;
     bool m_effectiveVariationsDirty: 1;
     bool m_transitionsEnabled: 1;
+    bool m_completed: 1;
 
     QPointer<QQuickPalette> m_palette;
     QPalette m_effectivePalette;
