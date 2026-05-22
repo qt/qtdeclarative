@@ -10,6 +10,8 @@
 #include <QtQmlDom/private/qqmldomelements_p.h>
 // cast of the top level items (DomEnvironments,...)
 #include <QtQmlDom/private/qqmldomtop_p.h>
+// parsePath() for textual path expressions
+#include <QtQmlDomPathParser/private/qqmldompathparser_p.h>
 
 #include <QtTest/QTest>
 #include <QCborValue>
@@ -82,7 +84,7 @@ int main()
                  << imports.canonicalPath();
         // a path can be converted to/from strings
         QString pString = imports.canonicalPath().toString();
-        Path importsPath = Path::fromString(pString);
+        Path importsPath = parsePath(pString);
         // and loaded again using the .path(somePath) method
         DomItem imports2 = env.path(importsPath);
         Q_ASSERT(imports == imports2);

@@ -20,4 +20,5 @@ qt_internal_add_test(tst_qmldompath
         QT_DEPRECATED_WARNINGS
     LIBRARIES
         Qt::QmlDomPrivate
+        Qt::QmlDomPathParserPrivate
 )

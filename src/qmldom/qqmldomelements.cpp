@@ -47,6 +47,18 @@ namespace Dom {
 
 namespace Paths {
 
+// Error group and translation context for the input validation below.
+class PathBuilderErrors
+{
+    Q_DECLARE_TR_FUNCTIONS(Paths)
+public:
+    static ErrorGroups group()
+    {
+        static ErrorGroups res = { { DomItem::domErrorGroup, NewErrorGroup("Paths") } };
+        return res;
+    }
+};
+
 Path moduleIndexPath(const QString &uri, int majorVersion, const ErrorHandler &errorHandler)
 {
     QString version = QString::number(majorVersion);
@@ -57,8 +69,8 @@ Path moduleIndexPath(const QString &uri, int majorVersion, const ErrorHandler &e
     QRegularExpression moduleRe(QLatin1String(R"(\A\w+(?:\.\w+)*\Z)"));
     auto m = moduleRe.match(uri);
     if (!m.isValid())
-        Path::myErrors()
-                .error(Path::tr("Invalid module name in import %1").arg(uri))
+        PathBuilderErrors::group()
+                .error(PathBuilderErrors::tr("Invalid module name in import %1").arg(uri))
                 .handle(errorHandler);
     return Path::fromRoot(PathRoot::Env).withField(Fields::moduleIndexWithUri).withKey(uri).withKey(version);
 }
@@ -77,7 +89,9 @@ Path moduleScopePath(const QString &uri, const QString &version, const ErrorHand
 {
     Version v = Version::fromString(version);
     if (!version.isEmpty() && !(v.isValid() || v.isLatest()))
-        Path::myErrors().error(Path::tr("Invalid Version %1").arg(version)).handle(errorHandler);
+        PathBuilderErrors::group()
+                .error(PathBuilderErrors::tr("Invalid Version %1").arg(version))
+                .handle(errorHandler);
     return moduleScopePath(uri, v, errorHandler);
 }
 

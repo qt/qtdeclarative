@@ -120,13 +120,16 @@ m_data member, or indirectly through another PathData's \c m_parent member.
 
 \section1 Usage
 
-It can be created either from a string, with the path static functions
-or by modifying an existing path
+It can be created with the path static functions or by modifying an existing
+path. To parse a Path from its textual form, use \c parsePath() from
+\c qqmldompathparser_p.h.
 \code
-Path qmlFilePath =
-    Path::fromString(u"$env.qmlFilesByPath[\"/path/to/file\"]");
-Path imports = qmlFilePath.withField(u"imports")
-Path currentComponentImports = Path::fromCurrent(PathCurrent::Component).withField(u"imports");
+Path imports = Path::fromRoot(PathRoot::Env)
+                   .withField(Fields::qmlFilesByPath)
+                   .withKey(QStringLiteral("/path/to/file"))
+                   .withField(Fields::imports);
+Path currentComponentImports = Path::fromCurrent(PathCurrent::Component)
+                                   .withField(Fields::imports);
 \endcode
 
 This is a way to refer to elements in the Dom models that is not dependent from the source location,
@@ -179,25 +182,6 @@ void Base::dump(const Sink &sink, const QString &name, bool hasSquareBrackets) c
     sink(name);
     if (hasSquareBrackets)
         sink(u"]");
-}
-
-enum class ParserState{
-    Start,
-    IndexOrKey,
-    End
-};
-
-template<typename Enum>
-static bool lookupEnumValue(QStringView name, Enum &out)
-{
-    QMetaEnum metaEnum = QMetaEnum::fromType<Enum>();
-    for (int j = 0; j < metaEnum.keyCount(); ++j) {
-        if (name.compare(QString::fromUtf8(metaEnum.key(j)), Qt::CaseInsensitive) == 0) {
-            out = Enum(metaEnum.value(j));
-            return true;
-        }
-    }
-    return false;
 }
 
 int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
@@ -379,236 +363,6 @@ Source Path::split() const
     return Source{Path(), *this};
 }
 
-Path Path::fromString(QStringView s, const ErrorHandler &errorHandler)
-{
-    if (s.isEmpty())
-        return Path();
-    int len=1;
-    const QChar dot = QChar::fromLatin1('.');
-    const QChar lsBrace = QChar::fromLatin1('[');
-    const QChar rsBrace = QChar::fromLatin1(']');
-    const QChar dollar = QChar::fromLatin1('$');
-    const QChar at = QChar::fromLatin1('@');
-    const QChar quote = QChar::fromLatin1('"');
-    const QChar backslash = QChar::fromLatin1('\\');
-    const QChar underscore = QChar::fromLatin1('_');
-    const QChar tilda = QChar::fromLatin1('~');
-    for (int i=0; i < s.size(); ++i)
-        if (s.at(i) == lsBrace || s.at(i) == dot)
-            ++len;
-    QList<Component> components;
-    components.reserve(len);
-    int i = 0;
-    int i0 = 0;
-    PathEls::ParserState state = PathEls::ParserState::Start;
-    while (i < s.size()) {
-        // skip space
-        while (i < s.size() && s.at(i).isSpace())
-            ++i;
-        if (i >= s.size())
-            break;
-        QChar c = s.at(i++);
-        switch (state) {
-        case PathEls::ParserState::Start:
-            if (c == dollar) {
-                i0 = i;
-                while (i < s.size() && s.at(i).isLetterOrNumber()){
-                    ++i;
-                }
-                QStringView name = s.mid(i0, i - i0);
-                PathRoot rootKind;
-                if (!PathEls::lookupEnumValue(name, rootKind)) {
-                    myErrors().error(tr("Unknown root context '$%1'.").arg(name))
-                            .handle(errorHandler);
-                    return Path();
-                }
-                components.append(Component(rootKind));
-                state = PathEls::ParserState::End;
-            } else if (c == at) {
-                i0 = i;
-                while (i < s.size() && s.at(i).isLetterOrNumber()){
-                    ++i;
-                }
-                QStringView name = s.mid(i0, i - i0);
-                PathCurrent currentKind;
-                if (!PathEls::lookupEnumValue(name, currentKind)) {
-                    myErrors().error(tr("Unknown current context '@%1'.").arg(name))
-                            .handle(errorHandler);
-                    return Path();
-                }
-                components.append(Component(currentKind));
-                state = PathEls::ParserState::End;
-            } else if (c.isLetter()) {
-                myErrors().warning(tr("Field expressions should start with a dot, even when at the start of the path %1.")
-                                 .arg(s)).handle(errorHandler);
-                return Path();
-            } else {
-                --i;
-                state = PathEls::ParserState::End;
-            }
-            break;
-        case PathEls::ParserState::IndexOrKey:
-            if (c.isDigit()) {
-                i0 = i-1;
-                while (i < s.size() && s.at(i).isDigit())
-                    ++i;
-                bool ok;
-                components.append(Component(static_cast<index_type>(s.mid(i0,i-i0).toString()
-                                                                    .toLongLong(&ok))));
-                if (!ok) {
-                    myErrors().warning(tr("Error extracting integer from '%1' at char %2.")
-                        .arg(s.mid(i0,i-i0))
-                        .arg(QString::number(i0))).handle(errorHandler);
-                }
-            } else if (c.isLetter() || c == tilda || c == underscore) {
-                i0 = i-1;
-                while (i < s.size() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda))
-                    ++i;
-                components.append(Component(PathEls::Key(s.mid(i0, i - i0).toString())));
-            } else if (c == quote) {
-                i0 = i;
-                QString strVal;
-                bool properEnd = false;
-                while (i < s.size()) {
-                    c = s.at(i);
-                    if (c == quote) {
-                        properEnd = true;
-                        break;
-                    } else if (c == backslash) {
-                        strVal.append(s.mid(i0, i - i0).toString());
-                        c = s.at(++i);
-                        i0 = i + 1;
-                        if (c == QChar::fromLatin1('n'))
-                            strVal.append(QChar::fromLatin1('\n'));
-                        else if (c == QChar::fromLatin1('r'))
-                            strVal.append(QChar::fromLatin1('\r'));
-                        else if (c == QChar::fromLatin1('t'))
-                            strVal.append(QChar::fromLatin1('\t'));
-                        else
-                            strVal.append(c);
-                    }
-                    ++i;
-                }
-                if (properEnd) {
-                    strVal.append(s.mid(i0, i - i0).toString());
-                    ++i;
-                } else {
-                    myErrors().error(tr("Unclosed quoted string at char %1.")
-                                     .arg(QString::number(i - 1))).handle(errorHandler);
-                    return Path();
-                }
-                components.append(PathEls::Key(strVal));
-            } else {
-                myErrors().error(tr("Unexpected character '%1' after square bracket at %2.")
-                                 .arg(c).arg(i-1)).handle(errorHandler);
-                return Path();
-            }
-            while (i < s.size() && s.at(i).isSpace()) ++i;
-            if (i >= s.size() || s.at(i) != rsBrace) {
-                myErrors().error(tr("square braces misses closing brace at char %1.")
-                                 .arg(QString::number(i))).handle(errorHandler);
-                return Path();
-            } else {
-                ++i;
-            }
-            state = PathEls::ParserState::End;
-            break;
-        case PathEls::ParserState::End:
-            if (c == dot) {
-                while (i < s.size() && s.at(i).isSpace()) ++i;
-                if (i == s.size()) {
-                    components.append(Component());
-                    state = PathEls::ParserState::End;
-                } else if (s.at(i).isLetter() || s.at(i) == underscore || s.at(i) == tilda) {
-                    i0 = i;
-                    while (i < s.size() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda)) {
-                        ++i;
-                    }
-                    const QStringView ident = s.mid(i0, i - i0);
-                    if (auto fn = fieldNameFromString(ident))
-                        components.append(Component(*fn));
-                    else
-                        components.append(Component(PathEls::Key(ident.toString())));
-                    state = PathEls::ParserState::End;
-                } else if (s.at(i).isDigit()) {
-                    i0 = i;
-                    while (i < s.size() && s.at(i).isDigit()){
-                        ++i;
-                    }
-                    bool ok;
-                    components.append(Component(static_cast<index_type>(s.mid(i0,i-i0).toString().toLongLong(&ok))));
-                    if (!ok) {
-                        myErrors().warning(tr("Error extracting integer from '%1' at char %2.")
-                                           .arg(s.mid(i0,i-i0))
-                                           .arg(QString::number(i0))).handle(errorHandler);
-                        return Path();
-                    } else {
-                        myErrors().info(tr("Index should use square brackets and not a dot (at char %1).")
-                                           .arg(QString::number(i0))).handle(errorHandler);
-                    }
-                    state = PathEls::ParserState::End;
-                } else if (s.at(i) == dot || s.at(i) == lsBrace) {
-                    components.append(Component());
-                    state = PathEls::ParserState::End;
-                } else if (s.at(i) == at) {
-                    i0 = ++i;
-                    while (i < s.size() && s.at(i).isLetterOrNumber()){
-                        ++i;
-                    }
-                    QStringView name = s.mid(i0, i - i0);
-                    PathCurrent currentKind;
-                    if (!PathEls::lookupEnumValue(name, currentKind)) {
-                        myErrors().error(tr("Unknown current context '@%1'.").arg(name))
-                                .handle(errorHandler);
-                        return Path();
-                    }
-                    components.append(Component(currentKind));
-                    state = PathEls::ParserState::End;
-                } else if (s.at(i) == dollar) {
-                    i0 = ++i;
-                    while (i < s.size() && s.at(i).isLetterOrNumber()){
-                        ++i;
-                    }
-                    QStringView name = s.mid(i0, i - i0);
-                    PathRoot rootKind;
-                    if (!PathEls::lookupEnumValue(name, rootKind)) {
-                        myErrors().error(tr("Unknown root context '$%1'.").arg(name))
-                                .handle(errorHandler);
-                        return Path();
-                    }
-                    components.append(Component(rootKind));
-                    state = PathEls::ParserState::End;
-                } else {
-                    c=s.at(i);
-                    myErrors().error(tr("Unexpected character '%1' after dot (at char %2).")
-                                     .arg(QStringView(&c,1))
-                                     .arg(QString::number(i-1))).handle(errorHandler);
-                    return Path();
-                }
-            } else if (c == lsBrace) {
-                state = PathEls::ParserState::IndexOrKey;
-            } else {
-                myErrors().error(tr("Unexpected character '%1' after end of component (char %2).")
-                                 .arg(QStringView(&c,1))
-                                 .arg(QString::number(i-1))).handle(errorHandler);
-                return Path();
-            }
-            break;
-        }
-    }
-    switch (state) {
-    case PathEls::ParserState::Start:
-        return Path();
-    case PathEls::ParserState::IndexOrKey:
-        errorHandler(myErrors().error(tr("unclosed square brace at end.")));
-
-        return Path();
-    case PathEls::ParserState::End:
-        return Path(0, components.size(), std::make_shared<PathEls::PathData>(components));
-    }
-    Q_ASSERT(false && "Unexpected state in Path::fromString");
-    return Path();
-}
 
 Path Path::fromRoot(PathRoot s)
 {
@@ -910,12 +664,6 @@ Path Path::withComponent(const PathEls::PathComponent &c)
     if (m_data)
         m_endOffset = 1;
     return Path { 0, static_cast<quint16>(m_length + 1), my_data };
-}
-
-ErrorGroups Path::myErrors()
-{
-    static ErrorGroups res = {{NewErrorGroup("PathParsing")}};
-    return res;
 }
 
 void Path::dump(const Sink &sink) const

@@ -350,7 +350,7 @@ public:
     Field(FieldName n) : fieldName(n) {}
     // No QString/QStringView constructors: Field is reserved for the symbolic
     // names listed in QMLDOM_FIELD_LIST. Runtime/free-form names are Keys, and
-    // string input goes through the path parser (Path::fromString).
+    // string input goes through parsePath().
     QString name() const { return fieldNameToQString(fieldName); }
     bool checkName(QStringView s) const { return s == fieldNameToString(fieldName); }
     QStringView stringView() const { return fieldNameToString(fieldName); }
@@ -571,11 +571,9 @@ class PathIterator;
 // begin() can basically be itself, end() the empty path (zero length), iteration though dropFront()
 class QMLDOM_EXPORT Path{
     Q_GADGET
-    Q_DECLARE_TR_FUNCTIONS(ErrorGroup);
 public:
     using Kind = PathEls::Kind;
     using Component = PathEls::PathComponent;
-    static ErrorGroups myErrors(); // use static consts and central registration instead?
 
     Path() = default;
     explicit Path(const PathEls::PathComponent &c) : m_endOffset(0), m_length(0)
@@ -615,7 +613,8 @@ public:
     Path withComponent(const PathEls::PathComponent &c);
 
     // # Path construction
-    static Path fromString(QStringView s, const ErrorHandler &errorHandler = nullptr);
+    // To parse a Path from its textual form, see parsePath()
+    // in qqmldompathparser_p.h.
     static Path fromRoot(PathRoot r);
     static Path fromIndex(index_type i);
     static Path fromField(FieldName name);

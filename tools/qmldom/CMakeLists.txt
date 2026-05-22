@@ -14,5 +14,6 @@ qt_internal_add_tool(${target_name}
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlDomPrivate
+        Qt::QmlDomPathParserPrivate
 )
 qt_internal_return_unless_building_tools()

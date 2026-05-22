@@ -4,6 +4,7 @@
 #ifndef TST_QMLDOMPATH_H
 #define TST_QMLDOMPATH_H
 #include <QtQmlDom/private/qqmldompath_p.h>
+#include <QtQmlDomPathParser/private/qqmldompathparser_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 
 #include <QtTest/QTest>
@@ -94,7 +95,7 @@ private slots:
         QCOMPARE(p6.toString(), rString);
         auto p8 = p6.dropTail();
         QCOMPARE(p8.length(), 5);
-        auto p9 = Path::fromString(rString);
+        auto p9 = parsePath(rString);
         QCOMPARE(p9.length(), 6);
         auto p9Str = p9.toString();
         QCOMPARE(p9Str, rString);
@@ -104,7 +105,7 @@ private slots:
         auto p10Str = p10.toString();
         auto r2Str = u"@obj[\"aa\"][4][\"bla\"].";
         QCOMPARE(p10Str, r2Str);
-        auto p11 = Path::fromString(r2Str);
+        auto p11 = parsePath(r2Str);
         auto p11Str = p11.toString();
         QCOMPARE(p11Str, r2Str);
         QCOMPARE(p10, p11);

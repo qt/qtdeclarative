@@ -12,7 +12,7 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmldomloadeditwrite")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Qml QmlDomPrivate)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Qml QmlDomPrivate QmlDomPathParserPrivate)
 
 add_compile_definitions(
     QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/auto/qmldom/domdata"
@@ -26,6 +26,7 @@ target_link_libraries(qmldomloadeditwrite PUBLIC
     Qt6::Core
     Qt6::Qml
     Qt6::QmlDomPrivate
+    Qt6::QmlDomPathParserPrivate
 )
 
 install(TARGETS qmldomloadeditwrite

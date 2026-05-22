@@ -64,7 +64,8 @@ void TestFileLocations::NodeDOMAPI()
 
 void TestFileLocations::createEnsureFind()
 {
-    const auto childCanonicalPath = Path::fromString(u"$top.children[0]");
+    const auto childCanonicalPath =
+            Path::fromRoot(PathRoot::Top).withField(Fields::children).withIndex(0);
     auto rootNodePtr = FileLocations::createTree(childCanonicalPath.head());
 
     // drop front because paths in the tree are relative
@@ -79,10 +80,11 @@ void TestFileLocations::createEnsureFind()
 
 void TestFileLocations::visitTree()
 {
-    const auto child1CanonicalPath = Path::fromString(u"$top.children[0]");
-    const auto child2CanonicalPath = Path::fromString(u"$top.children[1]");
-    const auto grandChild1CanonicalPath = Path::fromString(u"$top.children[1].child[0]");
-    const auto grandChild2CanonicalPath = Path::fromString(u"$top.children[1].child[1]");
+    const auto top = Path::fromRoot(PathRoot::Top).withField(Fields::children);
+    const auto child1CanonicalPath = top.withIndex(0);
+    const auto child2CanonicalPath = top.withIndex(1);
+    const auto grandChild1CanonicalPath = child2CanonicalPath.withKey(u"child").withIndex(0);
+    const auto grandChild2CanonicalPath = child2CanonicalPath.withKey(u"child").withIndex(1);
 
     auto rootNodePtr = FileLocations::createTree(child1CanonicalPath.head());
     FileLocations::ensure(rootNodePtr, child1CanonicalPath.dropFront());
@@ -160,8 +162,9 @@ void TestFileLocations::addRegion()
 
     { // Update all parents
         auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
-        auto child = FileLocations::ensure(rootNodePtr, Path::fromString(u".child"));
-        auto grandChild = FileLocations::ensure(rootNodePtr, Path::fromString(u".child.child"));
+        auto child = FileLocations::ensure(rootNodePtr, Path::fromKey(u"child"));
+        auto grandChild = FileLocations::ensure(rootNodePtr,
+                                                Path::fromKey(u"child").withKey(u"child"));
 
         const auto grandChildMainLoc = QQmlJS::SourceLocation(0, 3);
         const auto rootMainRegionAfterAdd =
@@ -180,8 +183,9 @@ void TestFileLocations::addRegion()
         const auto rootMainLoc = QQmlJS::SourceLocation(0, 4);
         FileLocations::addRegion(rootNodePtr, FileLocationRegion::MainRegion, rootMainLoc);
 
-        auto child = FileLocations::ensure(rootNodePtr, Path::fromString(u".child"));
-        auto grandChild = FileLocations::ensure(rootNodePtr, Path::fromString(u".child.child"));
+        auto child = FileLocations::ensure(rootNodePtr, Path::fromKey(u"child"));
+        auto grandChild = FileLocations::ensure(rootNodePtr,
+                                                Path::fromKey(u"child").withKey(u"child"));
 
         const auto grandChildMainLoc = QQmlJS::SourceLocation(0, 3);
         const auto childMainRegionAfterAdd = combine(child->info().fullRegion, grandChildMainLoc);
@@ -213,8 +217,12 @@ void TestFileLocations::treeOf()
 {
     // prepare mock File locations for the "rootObject"
     auto rootNodePtr = FileLocations::createTree(Path::fromRoot(PathRoot::Top));
-    auto objNodePtr =
-            FileLocations::ensure(rootNodePtr, Path::fromString(u".components[\"\"][0].objects[0]"));
+    auto objNodePtr = FileLocations::ensure(rootNodePtr,
+                                            Path::fromField(Fields::components)
+                                                    .withKey(u"")
+                                                    .withIndex(0)
+                                                    .withField(Fields::objects)
+                                                    .withIndex(0));
     const auto objLocation = QQmlJS::SourceLocation(1, 1);
     objNodePtr->info().fullRegion = objLocation;
 

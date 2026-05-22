@@ -40,6 +40,7 @@ qt_internal_add_test(tst_dom_all
     LIBRARIES
         Qt::Core
         Qt::QmlDomPrivate
+        Qt::QmlDomPathParserPrivate
         Qt::Test
     TESTDATA ${test_data}
 )

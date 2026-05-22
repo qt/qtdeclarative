@@ -51,5 +51,23 @@ qt_internal_add_module(QmlDomPrivate
     NO_GENERATE_CPP_EXPORTS
 )
 
+#####################################################################
+## QmlDomPathParserPrivate Module:
+##
+## Parser for textual Path expressions (parsePath). Kept out of
+## QmlDomPrivate so that users of the DOM do not link it.
+#####################################################################
+
+qt_internal_add_module(QmlDomPathParserPrivate
+    STATIC
+    INTERNAL_MODULE
+    SOURCES
+        qqmldompathparser.cpp qqmldompathparser_p.h
+    PUBLIC_LIBRARIES
+        Qt::QmlDomPrivate
+    NO_UNITY_BUILD
+    NO_GENERATE_CPP_EXPORTS
+)
+
 #### Keys ignored in scope 1:.:.:qmldom.pro:<TRUE>:
 # _OPTION = "host_build"

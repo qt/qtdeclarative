@@ -15,6 +15,7 @@
 #include <QtQmlDom/private/qqmldomelements_p.h>
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 #include <QtQmlDom/private/qqmldomastdumper_p.h>
+#include <QtQmlDomPathParser/private/qqmldompathparser_p.h>
 
 #include <cstdio>
 #include <optional>
@@ -152,7 +153,7 @@ int main(int argc, char *argv[])
 
     QList<Path> pathsToDump;
     for (const QString &pStr : parser.values(pathToDumpOption)) {
-        pathsToDump.append(Path::fromString(pStr));
+        pathsToDump.append(parsePath(pStr));
     }
     if (pathsToDump.isEmpty())
         pathsToDump.append(Path());
