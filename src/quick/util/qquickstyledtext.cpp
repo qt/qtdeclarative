@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <QTextLayout>
 #include <QDebug>
+#include <QVarLengthArray>
 #include <qmath.h>
 #include "qquickstyledtext_p.h"
 #include <QQmlContext>
@@ -137,6 +138,14 @@ namespace {
 bool is_equal_ignoring_case(QStringView s1, QLatin1StringView s2) noexcept
 {
     return s1.compare(s2, Qt::CaseInsensitive) == 0;
+}
+
+int lookupHtmlTag(QStringView tag)
+{
+    QVarLengthArray<char16_t, 12> lower(tag.size());
+    for (qsizetype i = 0; i < tag.size(); ++i)
+        lower[i] = tag[i].toLower().unicode();
+    return QTextHtmlParser::lookupElement(QStringView(lower));
 }
 }
 
@@ -330,76 +339,75 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
             if (tagLength == 0)
                 return false;
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            const QChar char0 = tag.at(0).toLower();
-            if (char0 == QLatin1Char('b')) {
-                if (tagLength == 1) {
-                    format.setFontWeight(QFont::Bold);
-                    return true;
-                } else if (tagLength == 2 && tag.at(1).toLower() == QLatin1Char('r')) {
-                    textOut.append(QChar(QChar::LineSeparator));
-                    hasSpace = true;
-                    prependSpace = false;
-                    return false;
-                }
-            } else if (char0 == QLatin1Char('i')) {
-                if (tagLength == 1) {
-                    format.setFontItalic(true);
-                    return true;
-                }
-            } else if (char0 == QLatin1Char('p')) {
-                if (tagLength == 1) {
-                    if (!hasNewLine)
-                        textOut.append(QChar::LineSeparator);
-                    hasSpace = true;
-                    prependSpace = false;
-                } else if (is_equal_ignoring_case(tag, QLatin1String("pre"))) {
-                    preFormat = true;
-                    if (!hasNewLine)
-                        textOut.append(QChar::LineSeparator);
-                    format.setFontFamilies(QStringList {QString::fromLatin1("Courier New"), QString::fromLatin1("courier")});
-                    format.setFontFixedPitch(true);
-                    return true;
-                }
-            } else if (char0 == QLatin1Char('u')) {
-                if (tagLength == 1) {
-                    format.setFontUnderline(true);
-                    return true;
-                } else if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
-                    List listItem;
-                    listItem.level = 0;
-                    listItem.type = Unordered;
-                    listItem.format = Bullet;
-                    listStack.push(listItem);
-                }
-            } else if (char0 == QLatin1Char('h') && tagLength == 2) {
+            switch (lookupHtmlTag(tag)) {
+            case Html_b:
+                format.setFontWeight(QFont::Bold);
+                return true;
+            case Html_br:
+                textOut.append(QChar(QChar::LineSeparator));
+                hasSpace = true;
+                prependSpace = false;
+                return false;
+            case Html_i:
+                format.setFontItalic(true);
+                return true;
+            case Html_p:
+                if (!hasNewLine)
+                    textOut.append(QChar::LineSeparator);
+                hasSpace = true;
+                prependSpace = false;
+                return false;
+            case Html_pre:
+                preFormat = true;
+                if (!hasNewLine)
+                    textOut.append(QChar::LineSeparator);
+                format.setFontFamilies(QStringList {QString::fromLatin1("Courier New"), QString::fromLatin1("courier")});
+                format.setFontFixedPitch(true);
+                return true;
+            case Html_u:
+                format.setFontUnderline(true);
+                return true;
+            case Html_ul: {
+                List listItem;
+                listItem.level = 0;
+                listItem.type = Unordered;
+                listItem.format = Bullet;
+                listStack.push(listItem);
+                return false;
+            }
+            case Html_h1:
+            case Html_h2:
+            case Html_h3:
+            case Html_h4:
+            case Html_h5:
+            case Html_h6: {
                 int level = tag.at(1).digitValue();
-                if (level >= 1 && level <= 6) {
-                    if (!hasNewLine)
-                        textOut.append(QChar::LineSeparator);
-                    hasSpace = true;
-                    prependSpace = false;
-                    setFontSize(7 - level, format);
-                    format.setFontWeight(QFont::Bold);
-                    return true;
-                }
-            } else if (char0 == QLatin1Char('s')) {
-                if (tagLength == 1) {
-                    format.setFontStrikeOut(true);
-                    return true;
-                } else if (is_equal_ignoring_case(tag, QLatin1String("strong"))) {
-                    format.setFontWeight(QFont::Bold);
-                    return true;
-                }
-            } else if (is_equal_ignoring_case(tag, QLatin1String("del"))) {
+                if (!hasNewLine)
+                    textOut.append(QChar::LineSeparator);
+                hasSpace = true;
+                prependSpace = false;
+                setFontSize(7 - level, format);
+                format.setFontWeight(QFont::Bold);
+                return true;
+            }
+            case Html_s:
                 format.setFontStrikeOut(true);
                 return true;
-            } else if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
+            case Html_strong:
+                format.setFontWeight(QFont::Bold);
+                return true;
+            case Html_del:
+                format.setFontStrikeOut(true);
+                return true;
+            case Html_ol: {
                 List listItem;
                 listItem.level = 0;
                 listItem.type = Ordered;
                 listItem.format = Decimal;
                 listStack.push(listItem);
-            } else if (is_equal_ignoring_case(tag, QLatin1String("li"))) {
+                return false;
+            }
+            case Html_li:
                 if (!hasNewLine)
                     textOut.append(QChar(QChar::LineSeparator));
                 if (!listStack.isEmpty()) {
@@ -434,30 +442,33 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                     }
                     textOut += QString(2, QChar::Nbsp);
                 }
+                return false;
+            default:
+                break;
             }
             return false;
         } else if (ch->isSpace()) {
             // may have params.
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            if (is_equal_ignoring_case(tag, QLatin1String("font")))
+            switch (lookupHtmlTag(tag)) {
+            case Html_font:
                 return parseFontAttributes(ch, textIn, format);
-            if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
+            case Html_ol:
                 parseOrderedListAttributes(ch, textIn);
-                return false; // doesn't modify format
-            }
-            if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
+                return false;
+            case Html_ul:
                 parseUnorderedListAttributes(ch, textIn);
-                return false; // doesn't modify format
-            }
-            if (is_equal_ignoring_case(tag, QLatin1String("a"))) {
+                return false;
+            case Html_a:
                 return parseAnchorAttributes(ch, textIn, format);
-            }
-            if (is_equal_ignoring_case(tag, QLatin1String("img"))) {
+            case Html_img:
                 parseImageAttributes(ch, textIn, textOut);
                 return false;
+            default:
+                if (*ch == greaterThan || ch->isNull())
+                    continue;
+                break;
             }
-            if (*ch == greaterThan || ch->isNull())
-                continue;
         } else if (*ch != slash) {
             tagLength++;
         }
@@ -477,68 +488,53 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
             if (tagLength == 0)
                 return false;
             auto tag = QStringView(textIn).mid(tagStart, tagLength);
-            const QChar char0 = tag.at(0).toLower();
             hasNewLine = false;
-            if (char0 == QLatin1Char('b')) {
-                if (tagLength == 1)
-                    return true;
-                else if (tag.at(1).toLower() == QLatin1Char('r') && tagLength == 2)
-                    return false;
-            } else if (char0 == QLatin1Char('i')) {
-                if (tagLength == 1)
-                    return true;
-            } else if (char0 == QLatin1Char('a')) {
-                if (tagLength == 1)
-                    return true;
-            } else if (char0 == QLatin1Char('p')) {
-                if (tagLength == 1) {
-                    textOut.append(QChar::LineSeparator);
-                    hasNewLine = true;
-                    hasSpace = true;
-                    return false;
-                } else if (is_equal_ignoring_case(tag, QLatin1String("pre"))) {
-                    preFormat = false;
-                    if (!hasNewLine)
-                        textOut.append(QChar::LineSeparator);
-                    hasNewLine = true;
-                    hasSpace = true;
-                    return true;
-                }
-            } else if (char0 == QLatin1Char('u')) {
-                if (tagLength == 1)
-                    return true;
-                else if (is_equal_ignoring_case(tag, QLatin1String("ul"))) {
-                    if (!listStack.isEmpty()) {
-                        listStack.pop();
-                        if (!listStack.size())
-                            textOut.append(QChar::LineSeparator);
-                    }
-                    return false;
-                }
-            } else if (char0 == QLatin1Char('h') && tagLength == 2) {
+            switch (lookupHtmlTag(tag)) {
+            case Html_b:
+            case Html_i:
+            case Html_a:
+            case Html_u:
+            case Html_font:
+            case Html_strong:
+            case Html_del:
+            case Html_s:
+                return true;
+            case Html_br:
+                return false;
+            case Html_p:
                 textOut.append(QChar::LineSeparator);
                 hasNewLine = true;
                 hasSpace = true;
+                return false;
+            case Html_pre:
+                preFormat = false;
+                if (!hasNewLine)
+                    textOut.append(QChar::LineSeparator);
+                hasNewLine = true;
+                hasSpace = true;
                 return true;
-            } else if (is_equal_ignoring_case(tag, QLatin1String("font"))) {
-                return true;
-            } else if (char0 == QLatin1Char('s')) {
-                if (tagLength == 1) {
-                    return true;
-                } else if (is_equal_ignoring_case(tag, QLatin1String("strong"))) {
-                    return true;
-                }
-            } else if (is_equal_ignoring_case(tag, QLatin1String("del"))) {
-                return true;
-            } else if (is_equal_ignoring_case(tag, QLatin1String("ol"))) {
+            case Html_ul:
+            case Html_ol:
                 if (!listStack.isEmpty()) {
                     listStack.pop();
                     if (!listStack.size())
                         textOut.append(QChar::LineSeparator);
                 }
                 return false;
-            } else if (is_equal_ignoring_case(tag, QLatin1String("li"))) {
+            case Html_h1:
+            case Html_h2:
+            case Html_h3:
+            case Html_h4:
+            case Html_h5:
+            case Html_h6:
+                textOut.append(QChar::LineSeparator);
+                hasNewLine = true;
+                hasSpace = true;
+                return true;
+            case Html_li:
                 return false;
+            default:
+                break;
             }
             return false;
         } else if (!ch->isSpace()){
