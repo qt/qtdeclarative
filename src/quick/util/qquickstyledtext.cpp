@@ -666,14 +666,14 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
                 image->url = QUrl(attr.second.toString());
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("width"))) {
                 bool ok;
-                int v = attr.second.toString().toInt(&ok);
+                int v = attr.second.toInt(&ok);
                 if (ok && v <= QQUICKSTYLEDPARSER_COORD_LIMIT)
                     image->size.setWidth(v);
                 else
                     qCWarning(lcStyledText) << "Invalid width provided for <img>";
             } else if (is_equal_ignoring_case(attr.first, QLatin1String("height"))) {
                 bool ok;
-                int v = attr.second.toString().toInt(&ok);
+                int v = attr.second.toInt(&ok);
                 if (ok && v <= QQUICKSTYLEDPARSER_COORD_LIMIT)
                     image->size.setHeight(v);
                 else
