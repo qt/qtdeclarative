@@ -1159,26 +1159,24 @@ bool QQmlDomAstCreatorBase::visit(AST::UiScriptBinding *el)
             QmlComponent &comp = current<QmlComponent>();
             pathFromOwner = comp.addId(idVal, AddOption::KeepExisting, &idPtr);
             QRegularExpression idRe(QRegularExpression::anchoredPattern(
-                    QStringLiteral(uR"([[:lower:]][[:lower:][:upper:]0-9_]*)")));
+                    QStringLiteral(uR"([[:lower:]_][[:lower:][:upper:]0-9_]*)")));
             auto m = idRe.matchView(iExp->name);
             if (!m.hasMatch()) {
+                const auto m = "id attributes should only be a lower case letter or an underscore "
+                               "followed by letters, numbers or underscores, not %1";
                 qmlFile.addError(std::move(
-                        astParseErrors()
-                                .warning(tr("id attributes should only be a lower case letter "
-                                            "followed by letters, numbers or underscore, not %1")
-                                                 .arg(iExp->name))
-                                .withPath(pathFromOwner)));
+                        astParseErrors().warning(tr(m).arg(iExp->name)).withPath(pathFromOwner)));
             }
         } else {
             pathFromOwner =
                     current<QmlObject>().addBinding(bindingV, AddOption::KeepExisting, &bindingPtr);
             Q_ASSERT_X(bindingPtr, className, "binding could not be retrieved");
+            const auto m = "id attributes should only be a lower case letter or an underscore "
+                           "followed by letters, numbers or underscores, not %1 %2, assuming they "
+                           "refer to a property";
             qmlFile.addError(std::move(
                     astParseErrors()
-                            .warning(tr("id attributes should only be a lower case letter "
-                                        "followed by letters, numbers or underscore, not %1 "
-                                        "%2, assuming they refer to a property")
-                                             .arg(script->code(), script->astRelocatableDump()))
+                            .warning(tr(m).arg(script->code(), script->astRelocatableDump()))
                             .withPath(pathFromOwner)));
         }
     } else {
