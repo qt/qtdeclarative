@@ -313,10 +313,10 @@ TestCase {
         let p0 = {}
         if (control.orientation === Qt.Horizontal) {
             availableSlideWidth = control.width - control.rightPadding - control.leftPadding
-            p0 = { x = control.leftPadding, y = control.height/2 }
+            p0 = { x: control.leftPadding, y: control.height/2 }
         } else {
             availableSlideHeight = control.height - control.bottomPadding - control.topPadding
-            p0 = { x = control.width/2, y = control.topPadding}
+            p0 = { x: control.width/2, y: control.topPadding}
         }
 
         let touch = touchEvent(control)
