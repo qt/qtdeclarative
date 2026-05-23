@@ -867,7 +867,7 @@ struct BoundNames : public QList<BoundName>
     int indexOf(const QString &name, int from = 0) const
     {
         auto found = std::find_if(constBegin() + from, constEnd(),
-                                  [name](const BoundName &it) { return it.id == name; });
+                                  [&name](const BoundName &it) { return it.id == name; });
         if (found == constEnd())
             return -1;
         return found - constBegin();
