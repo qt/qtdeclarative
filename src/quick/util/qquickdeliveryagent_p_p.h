@@ -188,6 +188,9 @@ public:
 
     QList<QQuickItem *> eventTargets(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
                                        qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate) const;
+    void eventTargetsAppend(QQuickItem *, const QEvent *event, int pointId, QPointF localPos, QPointF scenePos,
+                            qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate,
+                            QList<QQuickItem *> &targets) const;
     QList<QQuickItem *> pointerTargets(QQuickItem *, const QPointerEvent *event, const QEventPoint &point,
                                          bool checkMouseButtons, bool checkAcceptsTouch) const;
     QList<QQuickItem *> mergePointerTargets(const QList<QQuickItem *> &list1, const QList<QQuickItem *> &list2) const;

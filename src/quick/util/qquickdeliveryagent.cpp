@@ -2185,11 +2185,25 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     effectivelyClipsEventHandlingChildren() on it. It could even be 0 x 0 if
     width and height aren't declared.)
 */
-// FIXME: should this be iterative instead of recursive?
 QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, const QEvent *event, int pointId,
         QPointF localPos, QPointF scenePos, qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate) const
 {
     QList<QQuickItem *> targets;
+    eventTargetsAppend(item, event, pointId, localPos, scenePos, predicate, targets);
+    return targets;
+}
+
+/*!
+    \internal
+    Recursively collects event-target items into \a targets in reverse
+    paint order (highest stacking order first), interleaving \a item
+    among its children according to z-order.
+*/
+// FIXME: should this be iterative instead of recursive?
+void QQuickDeliveryAgentPrivate::eventTargetsAppend(QQuickItem *item, const QEvent *event, int pointId,
+        QPointF localPos, QPointF scenePos, qxp::function_ref<std::optional<bool> (QQuickItem *, const QEvent *)> predicate,
+        QList<QQuickItem *> &targets) const
+{
     auto itemPrivate = QQuickItemPrivate::get(item);
 
     // If the item clips, or all children are inside, and it's not the root item,
@@ -2198,12 +2212,12 @@ QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, c
     if (item != rootItem && !itemPrivate->eventHandlingBounds().contains(localPos) &&
          itemPrivate->effectivelyClipsEventHandlingChildren()) {
         qCDebug(lcPtrLoc) << "skipping because" << localPos << "is outside rectangular bounds of" << item;
-        return targets;
+        return;
     }
 
     // If we didn't return early: check containment more thoroughly, then build
     // a list of children in paint order, modified to respect z property adjustments.
-    QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
+    const QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
     if (pointId >= 0) {
         // If pointId is set, it's meant to indicate that this is a QPointerEvent, not e.g. a QContextMenuEvent.
         // Localize the relevant QEventPoint before calling the predicate: if it calls anyPointerHandlerWants(),
@@ -2217,32 +2231,32 @@ QList<QQuickItem *> QQuickDeliveryAgentPrivate::eventTargets(QQuickItem *item, c
     const std::optional<bool> override = predicate(item, event);
     const bool relevant = override.has_value() ? override.value()
                                                : item == rootItem || item->contains(localPos);
-    if (relevant) {
-        auto it = std::lower_bound(children.begin(), children.end(), 0,
-           [](auto lhs, auto rhs) -> bool { return lhs->z() < rhs; });
-        children.insert(it, item);
-    }
 
-    // The list of children is in paint order (parents and lower-z items first):
-    // iterate in reverse order (children and higher-z items go first into the targets list).
+    // Iterate in reverse paint order (highest stacking order first).
+    // Emit self before the first child with z < 0 (i.e. between children
+    // painted above and below self).
+    bool selfEmitted = !relevant;
     for (int ii = children.size() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
+        if (!selfEmitted && child->z() < 0) {
+            targets.append(item);
+            selfEmitted = true;
+        }
+
         auto childPrivate = QQuickItemPrivate::get(child);
         if (!child->isVisible() || !child->isEnabled() || childPrivate->culled ||
-                (child != item && childPrivate->extra.isAllocated() && childPrivate->extra->subsceneDeliveryAgent))
+                (childPrivate->extra.isAllocated() && childPrivate->extra->subsceneDeliveryAgent))
             continue;
 
-        if (child == item) {
-            targets << child;
-        } else {
-            QTransform childToParent;
-            childPrivate->itemToParentTransform(&childToParent);
-            const QPointF childLocalPos = childToParent.inverted().map(localPos);
-            targets << eventTargets(child, event, pointId, childLocalPos, scenePos, predicate);
-        }
+        QTransform childToParent;
+        childPrivate->itemToParentTransform(&childToParent);
+        const QPointF childLocalPos = childToParent.inverted().map(localPos);
+        eventTargetsAppend(child, event, pointId, childLocalPos, scenePos, predicate, targets);
     }
 
-    return targets;
+    // If all children have z >= 0, self goes last in reverse order
+    if (!selfEmitted)
+        targets.append(item);
 }
 
 /*! \internal
