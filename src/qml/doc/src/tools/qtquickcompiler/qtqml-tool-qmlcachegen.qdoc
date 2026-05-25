@@ -11,4 +11,7 @@
 \e qmlcachegen is an internal build tool, invoked by the build system
 when using \l qt_add_qml_module in CMake or CONFIG+=qtquickcompiler in
 qmake. Users should not invoke it manually.
+
+For more information, see \l{Qt Quick Compiler}.
+
 */
