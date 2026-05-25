@@ -11,7 +11,7 @@
 
 With the \l{\QC: Profiling QML Applications}{QML Profiler} you can analyze
 your QML code for performance issues. The profiler is part of
-both \QC and \QDS. The best way to use it is to utilize \{QC}'s or \{QDS}'s
+both \QC and \QDS. The best way to use it is to utilize \QC or \QDS
 defaults for build and run settings.
 
 If you are building or running manually, in order to use the QML Profiler,

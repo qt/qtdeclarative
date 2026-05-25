@@ -152,7 +152,7 @@ void QmlProfilerApplication::parseArguments()
                                tr("Comma-separated list of features to record. By default all "
                                   "features supported by the QML engine are recorded. If --include "
                                   "is specified, only the given features will be recorded. "
-                                  "The following features are unserstood by qmlprofiler: %1").arg(
+                                  "The following features are understood by qmlprofiler: %1").arg(
                                    featureList.join(", ")),
                                QLatin1String("feature,..."));
     parser.addOption(include);
