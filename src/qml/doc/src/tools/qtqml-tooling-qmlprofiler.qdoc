@@ -8,7 +8,6 @@
 \ingroup qtqml-tooling
 \ingroup qtqml-tooling-devtools
 
-\section1 qmlprofiler
 
 The \c qmlprofiler retrieves QML tracing data from an application. The collected
 data can then be visualized in \QC.
@@ -17,5 +16,102 @@ To profile an application, enable QML debugging.
 
 See the \l{\QC: Profiling QML Applications}{QML Profiler} to learn
 more.
+
+\table
+\header
+    \li Usage
+\row
+    \li qmlprofiler [\l{options}] executable [parameters...]
+\endtable
+
+\section2 options
+
+\table
+\header
+    \li Option
+    \li Description
+\row
+    \li \c{-a, --attach <hostname>}
+    \li Attach to an application already running on <hostname>, instead of
+        starting it locally.
+\row
+    \li \c{-p, --port <port>}
+    \li Connect to the TCP port <port>. The default is 3768.
+\row
+    \li \c{-o, --output <file>}
+    \li Save tracing data in <file>. By default the data is sent to the standard output.
+\row
+    \li \c{--record <on|off>}
+    \li If set to 'off', don't immediately start recording data when the QML
+        engine starts, but instead either start the recording interactively
+        or with the JavaScript \c{console.profile()} function. By default the
+        recording starts immediately.
+\row
+    \li \c{--include <feature,...>}
+    \li Comma-separated list of features to record. By default all features
+        supported by the QML engine are recorded. If \c{--include} is specified,
+        only the given features will be recorded. The following features are
+        understood by qmlprofiler: \c{javascript}, \c{memory}, \c{pixmapcache}, \c{scenegraph},
+        \c{animations}, \c{painting}, \c{compiling}, \c{creating}, \c{binding}, \c{handlingsignal},
+        \c{inputevents}, \c{debugmessages}, \c{quick3d}.
+\row
+    \li \c{--exclude <feature,...>}
+    \li Comma-separated list of features to exclude when recording. By default,
+        all features supported by the QML engine are recorded. See \c{--include} for
+        the features understood by qmlprofiler.
+\row
+    \li \c{--interactive}
+    \li Manually control the recording from the command line. The profiler will
+        not terminate itself when the application does so in this case.
+        The following commands are available:
+        \list
+        \li \c{'r', 'record'}
+
+           Switch recording on or off.
+        \li \c{'o [file]', 'output [file]'}
+
+           Output profiling data to \c{<file>}. If no \c{<file>} parameter is given,
+           output to whatever was given with \c{--output}, or standard output.
+        \li \c{'c', 'clear'}
+
+           Clear profiling data recorded so far from memory.
+        \li \c{'f [file]', 'flush [file]'}
+
+           Stop recording if it is running, then output the data, and finally
+           clear it from memory.
+        \li \c{'q', 'quit'}
+
+           Terminate the target process if started from qmlprofiler, and
+           qmlprofiler itself.
+        \endlist
+\row
+    \li \c{--verbose}
+    \li Print debugging output.
+\row
+    \li \c{-h, --help}
+    \li Displays help on commandline options.
+\row
+    \li \c{--help-all}
+    \li Displays help, including generic Qt options.
+\row
+    \li \c{-v, --version}
+    \li Displays version information.
+\endtable
+
+\section2 Arguments
+
+\table
+    \header
+        \li Argument
+        \li Description
+    \row
+        \li executable
+        \li The path of the executable file that loads a QML document.
+    \row
+        \li parameters
+        \li Arguments of the executable
+
+\endtable
+
 
 */
