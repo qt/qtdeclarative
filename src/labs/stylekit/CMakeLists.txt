@@ -42,6 +42,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ComboBox.qml
         Frame.qml
         ItemDelegate.qml
+        MenuSeparator.qml
         ProgressBar.qml
         RadioButton.qml
         RoundButton.qml

@@ -79,6 +79,7 @@ public:
         ItemDelegate,
         Popup,
         Menu,
+        MenuSeparator,
         Dialog,
         Pane,
         Page,

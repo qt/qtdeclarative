@@ -169,6 +169,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml label
 */
 
+/*
+    \qmlproperty ControlStyle AbstractStylableControls::menuSeparator
+
+    Grouped property for styling \l [QtQuickControls]{MenuSeparator}.
+
+    Unset properties fall back to \l control.
+
+    \snippet ControlsSnippets.qml menuSeparator
+*/
+
 /*!
     \qmlproperty ControlStyle AbstractStylableControls::page
 
@@ -473,6 +483,7 @@ IMPLEMENT_ACCESSORS(frame, QQStyleKitReader::ControlType::Frame)
 IMPLEMENT_ACCESSORS(label, QQStyleKitReader::ControlType::Label)
 IMPLEMENT_ACCESSORS(groupBox, QQStyleKitReader::ControlType::GroupBox)
 IMPLEMENT_ACCESSORS(textArea, QQStyleKitReader::ControlType::TextArea)
+IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
 
 #undef IMPLEMENT_ACCESSORS
 

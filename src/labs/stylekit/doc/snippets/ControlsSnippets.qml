@@ -169,6 +169,19 @@ ApplicationWindow {
         //! [label]
         */
 
+        //! [menuSeparator]
+        menuSeparator {
+            background.visible: false
+            indicator {
+                implicitWidth: 188
+                implicitHeight: 1
+                border.width: 0
+                color: "#c0c0c0"
+                foreground.visible: false
+            }
+        }
+        //! [menuSeparator]
+
         //! [page]
         page {
             background {

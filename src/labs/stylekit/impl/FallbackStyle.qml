@@ -170,6 +170,18 @@ BaseStyle {
         background.visible: false
     }
 
+    menuSeparator {
+        padding: 2
+        background.visible: false
+        indicator {
+            implicitWidth: 188
+            implicitHeight: 1
+            border.width: 0
+            color: __strokeMuted
+            foreground.visible: false
+        }
+    }
+
     page {
         background.border.width: 0
     }
