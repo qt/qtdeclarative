@@ -2009,6 +2009,7 @@ void tst_QQuickListView::enforceRange_withoutHighlight()
     QTRY_COMPARE(listview->contentY(), expectedPos);
 
     expectedPos += 20 + 10;     // scroll past 1st section and section delegate of 2nd section
+    QTRY_VERIFY(window.data()->isActive());
     QTest::keyClick(window.data(), Qt::Key_Down);
 
     QTRY_COMPARE(listview->contentY(), expectedPos);

@@ -447,11 +447,12 @@ void tst_qqmllocale::toString_data()
     functionCallScript = "locale.toString(123.456)";
     QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "123,456" << QString();
 
-    functionCallScript = "locale.toString(123.456, 'e')";
+    // Exponent case should match what's asked for:
+    functionCallScript = "locale.toString(123.456, 'E')";
     QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "1,234560E+02" << QString();
 
     functionCallScript = "locale.toString(123.456, 'e', 1)";
-    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "1,2E+02" << QString();
+    QTest::newRow(qPrintable(functionCallScript)) << "de_DE" << functionCallScript << "1,2e+02" << QString();
 
     // Test toString(Date, string) and toString(Date[, FormatType]).
     const QDateTime midnight2000(QDate(2000, 1, 1), QTime(0, 0));

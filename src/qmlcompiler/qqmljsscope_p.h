@@ -596,14 +596,8 @@ QT_WARNING_POP
         return m_childScopes;
     }
 
-    QVector<QQmlJSScope::ConstPtr> childScopes() const
-    {
-        QVector<QQmlJSScope::ConstPtr> result;
-        result.reserve(m_childScopes.size());
-        for (const auto &child : m_childScopes)
-            result.append(child);
-        return result;
-    }
+    QVector<QQmlJSScope::ConstPtr> childScopes() const;
+    QVector<QQmlJSScope::ConstPtr> descendantScopes() const;
 
     static QTypeRevision resolveTypes(
             const Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
@@ -615,7 +609,7 @@ QT_WARNING_POP
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
     static void resolveList(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &arrayType);
-    static void resolveGeneralizedGroup(
+    static void resolveGroup(
             const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &baseType,
             const QQmlJSScope::ContextualTypes &contextualTypes,
             QSet<QString> *usedTypes = nullptr);

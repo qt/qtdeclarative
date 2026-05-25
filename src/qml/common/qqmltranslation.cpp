@@ -3,6 +3,8 @@
 
 #include "private/qqmltranslation_p.h"
 
+QT_BEGIN_NAMESPACE
+
 QQmlTranslation::QQmlTranslation(const Data &d) : data(d) { }
 QQmlTranslation::QQmlTranslation() : data(nullptr) { }
 
@@ -123,3 +125,5 @@ QString QQmlTranslation::QsTrIdData::idForQmlDebug() const
 {
     return QString::fromUtf8(id);
 }
+
+QT_END_NAMESPACE

@@ -1011,9 +1011,7 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                             "Cannot assign literal of type null to double") } } };
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
-            << Result { { Message {
-                       QStringLiteral("Component is missing required property requiredAlias from "
-                                      "RequiredWithRootLevelAlias") } } };
+            << Result{ { Message{ u"Component is missing required property foo from Item"_s } } };
     QTest::newRow("missingSingletonPragma")
             << QStringLiteral("missingSingletonPragma.qml")
             << Result { { Message { QStringLiteral(
@@ -1108,6 +1106,9 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
     QTest::newRow("StoreNameMethod")
             << QStringLiteral("storeNameMethod.qml")
             << Result { { Message { QStringLiteral("Cannot assign to method foo") } } };
+    QTest::newRow("missingRequiredOnObjectDefinitionBinding")
+            << QStringLiteral("missingRequiredPropertyOnObjectDefinitionBinding.qml")
+            << Result{ { { uR"(Component is missing required property i from here)"_s, 4, 26 } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1289,6 +1290,16 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedAttachedLayout") << QStringLiteral("groupedAttachedLayout.qml");
     QTest::newRow("constInvokable") << QStringLiteral("useConstInvokable.qml");
     QTest::newRow("scopedAndUnscopedEnums") << QStringLiteral("enumValid.qml");
+
+    QTest::addRow("deceptiveLayout") << u"deceptiveLayout.qml"_s;
+    QTest::newRow("aliasGroup") << QStringLiteral("aliasGroup.qml");
+    QTest::newRow("aliasToRequiredProperty")
+            << QStringLiteral("aliasToRequiredPropertyIsNotRequiredItself.qml");
+    QTest::newRow("setRequiredTroughAlias") << QStringLiteral("setRequiredPropertyThroughAlias.qml");
+    QTest::newRow("setRequiredTroughAliasOfAlias")
+            << QStringLiteral("setRequiredPropertyThroughAliasOfAlias.qml");
+    QTest::newRow("evals")
+            << QStringLiteral("evals.qml");
 }
 
 void TestQmllint::cleanQmlCode()

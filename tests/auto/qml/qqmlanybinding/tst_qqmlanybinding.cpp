@@ -5,6 +5,7 @@
 #include <QtCore/QScopedPointer>
 #include <QtQml/private/qqmlanybinding_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtCore/private/qobject_p.h>
 #include "withbindable.h"
 
 class tst_qqmlanybinding : public QQmlDataTest
@@ -18,6 +19,7 @@ private slots:
     void basicActions_data();
     void basicActions();
     void unboundQQmlPropertyBindingDoesNotCrash();
+    void ofDynamicMetaObject();
 };
 
 tst_qqmlanybinding::tst_qqmlanybinding()
@@ -125,6 +127,47 @@ void tst_qqmlanybinding::unboundQQmlPropertyBindingDoesNotCrash()
     binding.installOn(prop);
     // the value is correctly updated.
     QCOMPARE(prop.read(), 1);
+}
+
+class QObjectDynamicMetaObject : public QDynamicMetaObjectData
+{
+public:
+#if QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
+    const QMetaObject *toDynamicMetaObject(QObject *) const final
+    {
+        return &QObject::staticMetaObject;
+    }
+#else
+    QMetaObject *toDynamicMetaObject(QObject *) final
+    {
+        return const_cast<QMetaObject *>(&QObject::staticMetaObject);
+    }
+#endif
+
+    int metaCall(QObject *o, QMetaObject::Call c, int id, void **argv) final
+    {
+        return o->qt_metacall(c, id, argv);
+    }
+};
+
+void tst_qqmlanybinding::ofDynamicMetaObject()
+{
+    QObject o;
+    const QQmlPropertyIndex objectNameIndex(
+            QObject::staticMetaObject.indexOfProperty("objectName"));
+    QObjectPrivate::get(&o)->metaObject = new QObjectDynamicMetaObject;
+
+    QQmlAnyBinding a = QQmlAnyBinding::ofProperty(&o, objectNameIndex);
+    QVERIFY(!a);
+
+    QPropertyBinding<QString> binding
+            = Qt::makePropertyBinding([]() { return QStringLiteral("foo"); });
+    o.bindableObjectName().setBinding(binding);
+    QQmlAnyBinding b = QQmlAnyBinding::ofProperty(&o, objectNameIndex);
+    QVERIFY(b);
+
+    QCOMPARE(QPropertyBindingPrivate::get(b.asUntypedPropertyBinding()),
+             QPropertyBindingPrivate::get(binding));
 }
 
 QTEST_MAIN(tst_qqmlanybinding)

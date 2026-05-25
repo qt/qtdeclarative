@@ -132,7 +132,7 @@ of their use.
 
 \list
     \li \l{Qt::createComponent()}{object Qt.createComponent(url)}
-    \li \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
+    \li \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, url url)}
 \endlist
 
 
@@ -1286,12 +1286,18 @@ void QtObject::exit(int retCode) const
 }
 
 /*!
-\qmlmethod object Qt::createQmlObject(string qml, object parent, string filepath)
+\qmlmethod object Qt::createQmlObject(string qml, object parent, url url)
 
-Returns a new object created from the given \a qml string which will have the specified \a parent,
-or \c null if there was an error in creating the object.
+Compiles the given \a qml string into a component and then returns a new object created from
+that component. The new object will have the specified \a parent. Returns \c null if there was
+an error in creating the component or the object.
 
-If \a filepath is specified, it will be used for error reporting for the created object.
+If \a url is specified, it will be used as URL of the component. This is useful for error
+reporting.
+
+\warning The new component will shadow any existing component of the same URL. You should not
+pass a URL of an existing component. In particular, by passing the URL of the surrounding QML
+file, you prevent access to the surrounding component from the new one.
 
 Example (where \c parentItem is the id of an existing QML item):
 

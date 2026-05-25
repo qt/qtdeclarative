@@ -8,6 +8,7 @@
 #include <QtGui/qguiapplication.h>
 #include "qquicklabel_p.h"
 #include "qquicklabel_p_p.h"
+#include "qquicktemplatesutils_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextarea_p_p.h"
 #include "qquicktextfield_p.h"
@@ -722,12 +723,12 @@ bool QQuickControlPrivate::calcHoverEnabled(const QQuickItem *item)
         if (qobject_cast<const QQuickPopupItem *>(p))
             break;
 
-        if (const QQuickControl *control = qobject_cast<const QQuickControl *>(p))
-            return control->isHoverEnabled();
-
-        QVariant v = p->property("hoverEnabled");
-        if (v.isValid() && v.userType() == QMetaType::Bool)
-            return v.toBool();
+        if (QQuickTemplatesUtils::isInteractiveControlType(p)) {
+            const QVariant hoverEnabledProperty = p->property("hoverEnabled");
+            Q_ASSERT(hoverEnabledProperty.isValid());
+            Q_ASSERT(hoverEnabledProperty.userType() == QMetaType::Bool);
+            return hoverEnabledProperty.toBool();
+        }
 
         p = p->parentItem();
     }

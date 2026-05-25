@@ -66,6 +66,7 @@ private slots:
     void comboBoxPopupWithThemeDefault();
 
     void toolTipPaletteUpdate();
+    void inheritPaletteForPopupWithinItemView();
 };
 
 tst_palette::tst_palette()
@@ -608,6 +609,36 @@ void tst_palette::toolTipPaletteUpdate()
 
     QCOMPARE(toolTipPalette->toolTipBase(), windowPalette->toolTipBase());
     QCOMPARE(toolTipPalette->toolTipText(), windowPalette->toolTipText());
+}
+
+void tst_palette::inheritPaletteForPopupWithinItemView()
+{
+    QQuickApplicationHelper helper(this, "inheritPaletteForPopupWithinItemView.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *listView = window->property("listView").value<QQuickItem *>();
+    QVERIFY(listView);
+    QQuickItem *contentItem = listView->property("contentItem").value<QQuickItem *>();
+    QVERIFY(contentItem);
+    QQuickItem *item = contentItem->childItems().value(0);
+    QVERIFY(item);
+    auto *button = item->property("button").value<QQuickButton *>();
+    QVERIFY(button);
+
+    auto windowPalette = QQuickWindowPrivate::get(window)->palette();
+    auto buttonPalette = QQuickItemPrivate::get(button)->palette();
+
+    QCOMPARE(windowPalette->window(), buttonPalette->window());
+    QCOMPARE(windowPalette->buttonText(), buttonPalette->buttonText());
+
+    windowPalette->setWindow(Qt::red);
+    windowPalette->setButtonText(Qt::blue);
+
+    QCOMPARE(windowPalette->window(), buttonPalette->window());
+    QCOMPARE(windowPalette->buttonText(), buttonPalette->buttonText());
 }
 
 QTEST_MAIN(tst_palette)

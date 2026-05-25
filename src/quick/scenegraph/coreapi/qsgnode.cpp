@@ -7,6 +7,8 @@
 #include "qsgnodeupdater_p.h"
 #include "qsgmaterial.h"
 
+#include <algorithm>
+
 #include "limits.h"
 
 QT_BEGIN_NAMESPACE
@@ -1309,7 +1311,7 @@ const qreal OPACITY_THRESHOLD = 0.001;
 
 void QSGOpacityNode::setOpacity(qreal opacity)
 {
-    opacity = qBound<qreal>(0, opacity, 1);
+    opacity = std::clamp(opacity, qreal(0.0),  qreal(1.0));
     if (m_opacity == opacity)
         return;
     DirtyState dirtyState = DirtyOpacity;

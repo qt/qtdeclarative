@@ -142,7 +142,7 @@ public:
     {
         m_time = 0;
         m_timer.start();
-        m_wallTime.restart();
+        m_wallTime.start();
         QAnimationDriver::start();
     }
 
@@ -184,7 +184,7 @@ public:
                 if (m_lag > 10 && m_bad > 2) {
                     m_mode = TimerMode;
                     qCDebug(QSG_LOG_INFO, "animation driver switched to timer mode");
-                    m_wallTime.restart();
+                    m_wallTime.start();
                 }
             } else {
                 m_lag = 0;
@@ -265,7 +265,7 @@ public:
 
     void start() override
     {
-        m_wallTime.restart();
+        m_wallTime.start();
         QAnimationDriver::start();
     }
 

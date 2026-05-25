@@ -144,15 +144,15 @@ available when you import \c QtQuick.
     The following properties are also available:
 
     \list
-    \li \l enumeration \c font.weight
+    \li \l {QML Enumerations}{enumeration} \c font.weight
     \li \l bool \c font.overline
     \li \l bool \c font.strikeout
-    \li \l enumeration \c font.capitalization
+    \li \l {QML Enumerations}{enumeration} \c font.capitalization
     \li \l real \c font.letterSpacing
     \li \l real \c font.wordSpacing
     \li \l bool \c font.kerning
     \li \l bool \c font.preferShaping
-    \li \l enumeration \c font.hintingPreference
+    \li \l {QML Enumerations}{enumeration} \c font.hintingPreference
     \li \l string \c font.styleName
     \endlist
 

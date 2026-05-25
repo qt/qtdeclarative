@@ -308,7 +308,7 @@ void QQuickMaterialTextContainer::paint(QPainter *painter)
 
     // Draw the focus line at the bottom for filled containers.
     if (m_filled) {
-        if (!qFuzzyCompare(m_focusAnimationProgress, 1.0)) {
+        if (!qFuzzyCompare(m_focusAnimationProgress, qreal(1.0))) {
             // Draw the enabled active indicator line (#10) that's at the bottom when it's not focused:
             // https://m3.material.io/components/text-fields/specs#6d654d1d-262e-4697-858c-9a75e8e7c81d
             // Don't bother drawing it when the animation has finished, as the focused active indicator

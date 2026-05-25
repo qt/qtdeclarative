@@ -197,6 +197,8 @@ private slots:
     void positionViewAtLastRow();
     void positionViewAtLastColumn_data();
     void positionViewAtLastColumn();
+    void positionViewAtRow_syncView();
+    void positionViewAtColumn_syncView();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -4368,6 +4370,80 @@ void tst_QQuickTableView::positionViewAtLastColumn()
         QCOMPARE(tableView->rightColumn(), model.columnCount() - 1);
         QCOMPARE(tableView->contentX(), (model.columnCount() - viewportColumnCount) * delegateSize);
     }
+}
+
+void tst_QQuickTableView::positionViewAtRow_syncView()
+{
+    // Check that if you call positionViewAtRow on a sync child, both
+    // the syncView and the syncChild will be positioned.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewV);
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableViewV->setModel(model);
+    QCOMPARE(tableViewV->syncDirection(), Qt::Vertical);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->topRow(), 0);
+    QCOMPARE(tableView->leftColumn(), 0);
+    QCOMPARE(tableViewV->topRow(), 0);
+    QCOMPARE(tableViewV->leftColumn(), 0);
+
+    tableViewV->positionViewAtRow(50, QQuickTableView::AlignTop);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->leftColumn(), 0);
+    QCOMPARE(tableView->topRow(), 50);
+    QCOMPARE(tableViewV->leftColumn(), 0);
+    QCOMPARE(tableViewV->topRow(), 50);
+
+    // Trying to position the sync child in an unsynced
+    // direction should only move the sync child.
+    tableViewV->positionViewAtColumn(90, QQuickTableView::AlignLeft);
+    WAIT_UNTIL_POLISHED_ARG(tableViewV);
+
+    QCOMPARE(tableView->leftColumn(), 0);
+    QCOMPARE(tableView->topRow(), 50);
+    QCOMPARE(tableViewV->leftColumn(), 90);
+    QCOMPARE(tableViewV->topRow(), 50);
+}
+
+void tst_QQuickTableView::positionViewAtColumn_syncView()
+{
+    // Check that if you call positionViewAtColumn on a sync child, both
+    // the syncView and the syncChild will be positioned.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableViewH->setModel(model);
+    QCOMPARE(tableViewH->syncDirection(), Qt::Horizontal);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->topRow(), 0);
+    QCOMPARE(tableView->leftColumn(), 0);
+    QCOMPARE(tableViewH->topRow(), 0);
+    QCOMPARE(tableViewH->leftColumn(), 0);
+
+    tableViewH->positionViewAtColumn(50, QQuickTableView::AlignLeft);
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->leftColumn(), 50);
+    QCOMPARE(tableView->topRow(), 0);
+    QCOMPARE(tableViewH->leftColumn(), 50);
+    QCOMPARE(tableViewH->topRow(), 0);
+
+    // Trying to position the sync child in an unsynced
+    // direction should only move the sync child.
+    tableViewH->positionViewAtRow(90, QQuickTableView::AlignTop);
+    WAIT_UNTIL_POLISHED_ARG(tableViewH);
+
+    QCOMPARE(tableView->leftColumn(), 50);
+    QCOMPARE(tableView->topRow(), 0);
+    QCOMPARE(tableViewH->leftColumn(), 50);
+    QCOMPARE(tableViewH->topRow(), 90);
 }
 
 void tst_QQuickTableView::itemAtCell_data()

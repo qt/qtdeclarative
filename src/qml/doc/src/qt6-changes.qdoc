@@ -47,6 +47,10 @@
 
     Qt.resolvedUrl can be used in both Qt 5 and 6.
 
+    As a porting aid, the \c{QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT} environment variable can be set
+    to 1 to obtain the Qt 5 behavior. This is possible since Qt 6.2.2. However, it is recommended
+    to only use this to unblock a port, and to use \c Qt.resolvedUrl as explained above.
+
     \section2 Variant Properties
 
     \c variant properties, which have been marked as obsolete since Qt 5, are now treated in exactly

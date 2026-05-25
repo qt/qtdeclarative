@@ -2873,7 +2873,7 @@ void tst_qquicktextedit::cursorVisible()
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
-    QCOMPARE(&view, qGuiApp->focusWindow());
+    QTRY_COMPARE(&view, qGuiApp->focusWindow());
 
     QCOMPARE(edit.isCursorVisible(), false);
 
@@ -4282,8 +4282,8 @@ void tst_qquicktextedit::preeditCursorRectangle()
     QQuickTextEdit *edit = qobject_cast<QQuickTextEdit *>(view.rootObject());
     QVERIFY(edit);
 
+    QTRY_VERIFY(edit->findChild<QQuickItem *>("cursor") != nullptr);
     QQuickItem *cursor = edit->findChild<QQuickItem *>("cursor");
-    QVERIFY(cursor);
 
     QSignalSpy editSpy(edit, SIGNAL(cursorRectangleChanged()));
     QSignalSpy panelSpy(qGuiApp->inputMethod(), SIGNAL(cursorRectangleChanged()));
@@ -5714,7 +5714,7 @@ void tst_qquicktextedit::undo()
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
 
-    QVERIFY(textEdit->hasActiveFocus());
+    QTRY_VERIFY(textEdit->hasActiveFocus());
     QVERIFY(!textEdit->canUndo());
 
     QSignalSpy spy(textEdit, SIGNAL(canUndoChanged()));
@@ -6185,7 +6185,7 @@ void tst_qquicktextedit::emptytags_QTBUG_22058()
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
     QQuickTextEdit *input = qobject_cast<QQuickTextEdit *>(qvariant_cast<QObject *>(window.rootObject()->property("inputField")));
-    QVERIFY(input->hasActiveFocus());
+    QTRY_VERIFY(input->hasActiveFocus());
 
     QInputMethodEvent event("", QList<QInputMethodEvent::Attribute>());
     event.setCommitString("<b>Bold<");
@@ -6435,7 +6435,7 @@ void tst_qquicktextedit::keyEventPropagation()
     QSignalSpy upSpy(root, SIGNAL(keyUp(int)));
 
     QQuickTextEdit *textEdit = root->findChild<QQuickTextEdit *>();
-    QVERIFY(textEdit->hasActiveFocus());
+    QTRY_VERIFY(textEdit->hasActiveFocus());
     simulateKey(&view, Qt::Key_Back);
     QCOMPARE(downSpy.size(), 1);
     QCOMPARE(upSpy.size(), 1);

@@ -1704,18 +1704,23 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
                 break;
             }
         }
+
+        // If there are pending changes, the item returned from snapItemAt might get deleted as
+        // soon as applyPendingChanges() is called (from e.g. updateHighlight()).
+        // Therefore, apply the pending changes before we call snapItemAt()
+        if (strictHighlightRange)
+            updateHighlight();
+
         FxViewItem *topItem = snapItemAt(tempPosition + snapOffset + highlightRangeStart);
-        if (strictHighlightRange && currentItem && (!topItem || (topItem->index != currentIndex && fixupMode == Immediate))) {
-            // StrictlyEnforceRange always keeps an item in range
-            updateHighlight();
-            topItem = currentItem;
-        }
         FxViewItem *bottomItem = snapItemAt(tempPosition + snapOffset + highlightRangeEnd);
-        if (strictHighlightRange && currentItem && (!bottomItem || (bottomItem->index != currentIndex && fixupMode == Immediate))) {
+        if (strictHighlightRange && currentItem) {
             // StrictlyEnforceRange always keeps an item in range
-            updateHighlight();
-            bottomItem = currentItem;
+            if (!topItem || (topItem->index != currentIndex && fixupMode == Immediate))
+                topItem = currentItem;
+            if (!bottomItem || (bottomItem->index != currentIndex && fixupMode == Immediate))
+                bottomItem = currentItem;
         }
+
         qreal pos = 0;
         bool isInBounds = -position() > maxExtent && -position() <= minExtent;
 

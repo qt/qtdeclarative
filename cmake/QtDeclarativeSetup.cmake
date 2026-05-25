@@ -3,9 +3,9 @@
 
 # Create a header containing a hash that describes this library.  For a
 # released version of Qt, we'll use the .tag file that is updated by git
-# archive with the tree hash. For unreleased versions, we'll ask git
-# rev-parse. If none of this works, we use CMake to hash all the files
-# in the src/qml/ directory.
+# archive with the tree hash. For unreleased versions, we'll do
+# "git show -s --format=format:%T" to get the tree hash. If none of this
+# works, we use CMake to hash all the files in the src/qml/ directory.
 # Skip recreation of the hash when doing a developer build.
 function(qt_declarative_write_tag_header target_name)
     set(out_file "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
@@ -27,7 +27,7 @@ function(qt_declarative_write_tag_header target_name)
         set(QML_COMPILE_HASH "${tag_contents}")
     elseif(git_path AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../.git")
         execute_process(
-            COMMAND ${git_path} rev-parse HEAD
+            COMMAND ${git_path} show -s --format=format:%T HEAD
             OUTPUT_VARIABLE QML_COMPILE_HASH
             OUTPUT_STRIP_TRAILING_WHITESPACE
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")

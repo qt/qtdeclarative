@@ -347,23 +347,16 @@ bool QQmlDirParser::parse(const QString &source)
             _linkTarget = sections[1];
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
-            const Component entry(sections[0], sections[1], QTypeRevision());
-            _components.insert(entry.typeName, entry);
+            insertComponentOrScript(sections[0], sections[1], QTypeRevision());
         } else if (sectionCount == 3) {
             const QTypeRevision version = parseVersion(sections[1]);
             if (version.isValid()) {
-                const QString &fileName = sections[2];
-
-                if (fileName.endsWith(QLatin1String(".js")) || fileName.endsWith(QLatin1String(".mjs"))) {
-                    // A 'js' extension indicates a namespaced script import
-                    const Script entry(sections[0], fileName, version);
-                    _scripts.append(entry);
-                } else {
-                    const Component entry(sections[0], fileName, version);
-                    _components.insert(entry.typeName, entry);
-                }
+                insertComponentOrScript(sections[0], sections[2], version);
             } else {
-                reportError(lineNumber, 0, QStringLiteral("invalid version %1, expected <major>.<minor>").arg(sections[1]));
+                reportError(
+                        lineNumber, 0,
+                        QStringLiteral("invalid version %1, expected <major>.<minor>")
+                                .arg(sections[1]));
             }
         } else {
             reportError(lineNumber, 0,
@@ -506,6 +499,16 @@ void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &des
     error.loc.startColumn = column;
     error.message = description;
     _errors.append(error);
+}
+
+void QQmlDirParser::insertComponentOrScript(
+        const QString &name, const QString &fileName, QTypeRevision version)
+{
+    // A 'js' extension indicates a namespaced script import
+    if (fileName.endsWith(QLatin1String(".js")) || fileName.endsWith(QLatin1String(".mjs")))
+        _scripts.append(Script(name, fileName, version));
+    else
+        _components.insert(name, Component(name, fileName, version));
 }
 
 void QQmlDirParser::setError(const QQmlJS::DiagnosticMessage &e)

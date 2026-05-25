@@ -345,7 +345,8 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
         QV4::CompiledData::Binding::Flag flag
                 = QV4::CompiledData::Binding::IsSignalHandlerExpression;
 
-        const bool isPropertyObserver = !signalPropertyData && qPropertyData && qPropertyData->isBindable();
+        const bool isPropertyObserver
+                = !signalPropertyData && qPropertyData && qPropertyData->notifiesViaBindable();
         if (signal && !(qPropertyData && qPropertyData->isAlias() && isPropertyObserver)) {
             int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
             sigIndex = propertyCache->originalClone(sigIndex);

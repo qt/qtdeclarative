@@ -5,6 +5,7 @@
 #include "qquickcontentitem_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquicktemplatesutils_p.h"
 #include "qquicktextarea_p.h"
 #include "qquicktextfield_p.h"
 #include "qquicktoolbar_p.h"
@@ -270,7 +271,7 @@ static QQuickItem *findActiveFocusControl(QQuickWindow *window)
 {
     QQuickItem *item = window->activeFocusItem();
     while (item) {
-        if (qobject_cast<QQuickControl *>(item) || qobject_cast<QQuickTextField *>(item) || qobject_cast<QQuickTextArea *>(item))
+        if (QQuickTemplatesUtils::isInteractiveControlType(item))
             return item;
         item = item->parentItem();
     }

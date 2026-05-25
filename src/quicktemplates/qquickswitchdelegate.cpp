@@ -5,6 +5,8 @@
 
 #include "qquickitemdelegate_p_p.h"
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -119,7 +121,7 @@ qreal QQuickSwitchDelegate::position() const
 void QQuickSwitchDelegate::setPosition(qreal position)
 {
     Q_D(QQuickSwitchDelegate);
-    position = qBound<qreal>(0.0, position, 1.0);
+    position = std::clamp(position, qreal(0.0),  qreal(1.0));
     if (qFuzzyCompare(d->position, position))
         return;
 

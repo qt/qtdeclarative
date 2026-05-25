@@ -139,7 +139,7 @@ void tst_Animators::testTransitionsWithImplicitFrom()
 
     // transition to the "right" state
     rectangle->setState("right");
-    QTRY_VERIFY(!controller->m_runningAnimators.isEmpty());
+    QVERIFY(QTest::qWaitFor([&]{ return !controller->m_runningAnimators.isEmpty();}));
     auto r_job = *controller->m_runningAnimators.constBegin();
     QVERIFY(r_job);
     QCOMPARE(r_job->from(), 0);
@@ -153,7 +153,7 @@ void tst_Animators::testTransitionsWithImplicitFrom()
 
     // transition back to the "left" state
     rectangle->setState("left");
-    QTRY_VERIFY(!controller->m_runningAnimators.isEmpty());
+    QVERIFY(QTest::qWaitFor([&]{ return !controller->m_runningAnimators.isEmpty();}));
     auto l_job = *controller->m_runningAnimators.constBegin();
     QVERIFY(l_job);
     QCOMPARE(l_job->from(), 100); // this was not working in older Qt versions

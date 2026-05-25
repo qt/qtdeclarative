@@ -273,10 +273,20 @@ void tst_qqmllistmodel::static_i18n_data()
         << QVariant(QString::fromUtf8("na\303\257ve"))
         << QString();
 
+    QTest::newRow("QT_TR_NOOP_disambig")
+            << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"na\303\257ve\", \"disambig\") }")
+            << QVariant(QString::fromUtf8("na\303\257ve"))
+            << QString();
+
     QTest::newRow("QT_TRANSLATE_NOOP")
         << "ListElement { foo: QT_TRANSLATE_NOOP(\"MyListModel\", \"hello\") }"
         << QVariant(QString("hello"))
         << QString();
+
+    QTest::newRow("QT_TRANSLATE_NOOP_disambig")
+            << "ListElement { foo: QT_TRANSLATE_NOOP(\"MyListModel\", \"hello\", \"greeting\") }"
+            << QVariant(QString("hello"))
+            << QString();
 
     QTest::newRow("QT_TRID_NOOP")
         << QString::fromUtf8("ListElement { foo: QT_TRID_NOOP(\"qtn_1st_text\") }")
@@ -284,7 +294,7 @@ void tst_qqmllistmodel::static_i18n_data()
         << QString();
 
     QTest::newRow("QT_TR_NOOP extra param")
-            << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"hello\",\"world\") }")
+            << QString::fromUtf8("ListElement { foo: QT_TR_NOOP(\"hello\",\"world\", \"!\") }")
             << QVariant(QString())
             << QString("ListElement: cannot use script for property value");
 

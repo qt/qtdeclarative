@@ -2418,6 +2418,7 @@ void tst_qqmlproperty::initFlags_data()
     QTest::addColumn<bool>("passObject");
     QTest::addColumn<QString>("name");
     QTest::addColumn<QQmlPropertyPrivate::InitFlags>("flags");
+    QTest::addColumn<bool>("useInnerObject");
 
     const QString names[] = {
         QStringLiteral("foo"),
@@ -2443,7 +2444,10 @@ void tst_qqmlproperty::initFlags_data()
             for (const auto &flagSet : flagSets) {
                 const QString rowName = QStringLiteral("%1,%2,%3")
                         .arg(passObject).arg(name).arg(flagSet.toInt());
-                QTest::addRow("%s", qPrintable(rowName)) << passObject << name << flagSet;
+                QTest::addRow("%s", qPrintable(rowName + ",outer"))
+                        << passObject << name << flagSet << false;
+                QTest::addRow("%s", qPrintable(rowName + ",inner"))
+                        << passObject << name << flagSet << true;
             }
         }
     }
@@ -2454,6 +2458,7 @@ void tst_qqmlproperty::initFlags()
     QFETCH(bool, passObject);
     QFETCH(QString, name);
     QFETCH(QQmlPropertyPrivate::InitFlags, flags);
+    QFETCH(bool, useInnerObject);
 
     QQmlEngine engine;
     QQmlComponent c(&engine);
@@ -2465,15 +2470,31 @@ void tst_qqmlproperty::initFlags()
             property int bar: 12
             property alias abar: self.bar
         }
-    )", QUrl());
-    QVERIFY(c.isReady());
+    )", QUrl("outer"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
 
-    QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(o.data()));
+    QObject *object = nullptr;
+
+    QScopedPointer<QObject> i;
+    if (useInnerObject) {
+        QQmlComponent c2(&engine);
+        c2.setData(R"(
+            import QtQml
+            QtObject {}
+        )", QUrl("inner"));
+        QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+        i.reset(c2.create(qmlContext(o.data())));
+        object = i.data();
+    } else {
+        object = o.data();
+    }
+
+    QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(object));
 
     const QQmlProperty property = QQmlPropertyPrivate::create(
-                    passObject ? o.data() : nullptr, name, context, flags);
+                    passObject ? object : nullptr, name, context, flags);
 
     const bool usesId = name.startsWith(QStringLiteral("self."));
     const bool hasSignal = name.endsWith(QStringLiteral("foo"));
@@ -2484,6 +2505,8 @@ void tst_qqmlproperty::initFlags()
     } else if (usesId && !(flags & QQmlPropertyPrivate::InitFlag::AllowId)) {
         QVERIFY(!property.isValid());
     } else if (hasSignal && !(flags & QQmlPropertyPrivate::InitFlag::AllowSignal)) {
+        QVERIFY(!property.isValid());
+    } else if (useInnerObject && passObject) {
         QVERIFY(!property.isValid());
     } else {
         QVERIFY(property.isValid());

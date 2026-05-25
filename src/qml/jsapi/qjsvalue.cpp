@@ -418,6 +418,17 @@ QJSValue::ErrorType QJSValue::errorType() const
   Returns true if this QJSValue is an object of the Array class;
   otherwise returns false.
 
+  \note This method is the equivalent of \e Array.isArray() in JavaScript. You
+        can use it to identify JavaScript arrays, but it will return \c false
+        for any array-like objects that are not JavaScript arrays. This includes
+        QML \e list objects for either value types or object types, JavaScript
+        typed arrays, JavaScript ArrayBuffer objects, and any custom array-like
+        objects you may create yourself. All of these \e behave like JavaScript
+        arrays, though: They generally expose the same methods and the
+        subscript operator can be used on them. Therefore, using this method to
+        determine whether an object could be used like an array is not
+        advisable.
+
   \sa QJSEngine::newArray()
 */
 bool QJSValue::isArray() const
@@ -1006,7 +1017,7 @@ bool QJSValue::equals(const QJSValue& other) const
     \header \li Type \li Result
     \row    \li Undefined  \li true
     \row    \li Null       \li true
-    \row    \li Boolean    \li true if both values are true, false otherwise
+    \row    \li Boolean    \li true if values are both true or both false, false otherwise
     \row    \li Number     \li false if either value is NaN (Not-a-Number); true if values are equal, false otherwise
     \row    \li String     \li true if both values are exactly the same sequence of characters, false otherwise
     \row    \li Object     \li true if both values refer to the same object, false otherwise

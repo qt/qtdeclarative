@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
 #include <QtCore/qiterable.h>
@@ -42,6 +43,8 @@
 #endif
 
 using namespace Qt::StringLiterals;
+
+Q_IMPORT_QML_PLUGIN(OtherModuleTestPlugin)
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
@@ -434,6 +437,15 @@ private slots:
     void nestedVectors();
 
     void overrideInnerBinding();
+
+    void jsSelfImport();
+
+    void singletonResultionImportOrder();
+    void attachedTypeResultionImportOrder();
+    void asCastTypeResolutionImportOrderAB();
+    void asCastTypeResolutionImportOrderBA();
+
+    void aliasOfBindableValueTypeProperty();
 
 private:
     QQmlEngine engine;
@@ -8275,6 +8287,110 @@ void tst_qqmllanguage::overrideInnerBinding()
 
     QFont font = qvariant_cast<QFont>(o->property("font"));
     QCOMPARE(font.family(), "Ariallll");
+}
+
+void tst_qqmllanguage::jsSelfImport()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+    QQmlComponent c(&engine, "JsSelfImport", "Main");
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->objectName(), "customPrint");
+}
+
+void tst_qqmllanguage::singletonResultionImportOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("singletonResolutionImportOrder.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "OtherModuleTest Singleton");
+}
+
+void tst_qqmllanguage::attachedTypeResultionImportOrder()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("attachedTypeResolutionImportOrder.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "OtherModuleTest Attached Type");
+}
+
+void tst_qqmllanguage::asCastTypeResolutionImportOrderAB()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("asCastTypeResolutionImportOrderAB.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("s").toString(), "StaticTest");
+}
+
+void tst_qqmllanguage::asCastTypeResolutionImportOrderBA()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("asCastTypeResolutionImportOrderBA.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtWarningMsg,
+                         QRegularExpression(".*TypeError: Cannot call method 's' of null"));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+}
+
+void tst_qqmllanguage::aliasOfBindableValueTypeProperty()
+{
+    QQmlEngine e;
+    QQmlComponent c(&e, testFileUrl("aliasOfBindableValueTypeProperty.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("aa"), 101);
+    QCOMPARE(o->property("bb"), 14);
+    QCOMPARE(o->property("aaChanges"), 1);
+    QCOMPARE(o->property("bbChanges"), 1);
+
+    o->setObjectName("15");
+    QCOMPARE(o->property("aa"), 101);
+    QCOMPARE(o->property("bb"), 15);
+    QCOMPARE(o->property("aaChanges"), 2);
+    QCOMPARE(o->property("bbChanges"), 2);
+
+    o->setProperty("point", QPointF(17, 18));
+    QCOMPARE(o->property("aa"), 17);
+    QCOMPARE(o->property("bb"), 18);
+    QCOMPARE(o->property("aaChanges"), 3);
+    QCOMPARE(o->property("bbChanges"), 3);
+
+    BindablePoint *b = qobject_cast<BindablePoint *>(o.data());
+    QVERIFY(b);
+    b->bindablePoint().setValue(QPointF(19, 20));
+    QCOMPARE(o->property("aa"), 19);
+    QCOMPARE(o->property("bb"), 20);
+    QCOMPARE(o->property("aaChanges"), 4);
+    QCOMPARE(o->property("bbChanges"), 4);
+
+    QMetaObject::invokeMethod(o.data(), "reassign");
+    QCOMPARE(o->property("aa"), 19);
+    QCOMPARE(o->property("bb"), 16.5);
+    QCOMPARE(o->property("aaChanges"), 5);
+    QCOMPARE(o->property("bbChanges"), 5);
+
+    const QMetaObject *mo = o->metaObject();
+    const int aaIndex = mo->indexOfProperty("aa");
+    QVERIFY(aaIndex >= 0);
+
+    // Querying the bindable of a value type alias results in the bindable of the core property.
+    QUntypedBindable bindable;
+    void *args[] { &bindable };
+    QCOMPARE(o->metaObject()->metacall(o.data(), QMetaObject::BindableProperty, aaIndex, args), -1);
+    QVERIFY(bindable.isValid());
+    QCOMPARE(bindable.metaType(), QMetaType::fromType<QPointF>());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

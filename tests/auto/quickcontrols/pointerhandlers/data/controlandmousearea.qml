@@ -12,6 +12,7 @@ Item {
 
     MouseArea {
         id: outerMouseArea
+        objectName: "outerMouseArea"
         x: 10
         y: 10
         width: 200
@@ -25,14 +26,18 @@ Item {
 
         Button {
             id: buttonInTheMiddle
+            objectName: "buttonInTheMiddle"
             width: parent.width - 20
             height: parent.height - 20
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             text: hovered ? "hovered" : ""
+            // Explicitly set this, as it's false on platforms like Android.
+            hoverEnabled: true
 
             MouseArea {
                 id: innerMouseArea
+                objectName: "innerMouseArea"
                 width: parent.width - 20
                 height: parent.height - 20
                 anchors.right: parent.right

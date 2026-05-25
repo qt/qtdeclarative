@@ -178,25 +178,47 @@ protected:
     // the content of QmlIR::Object::functionsAndExpressions
     QHash<QQmlJSScope::ConstPtr, QList<QString>> m_functionsAndExpressions;
 
-    struct FunctionOrExpressionIdentifier
+    template <bool scopeIsConst = true>
+    struct ScopeAndNameT
     {
-        QQmlJSScope::ConstPtr scope;
+        using Scope = std::conditional_t<scopeIsConst, QQmlJSScope::ConstPtr, QQmlJSScope::Ptr>;
+
+        ScopeAndNameT() = default;
+        ScopeAndNameT(const Scope &scope, const QString &name) : scope(scope), name(name) { }
+        ScopeAndNameT(const ScopeAndNameT &) = default;
+        ScopeAndNameT(ScopeAndNameT &&) = default;
+        ScopeAndNameT &operator=(const ScopeAndNameT &) = default;
+        ScopeAndNameT &operator=(ScopeAndNameT &&) = default;
+        ~ScopeAndNameT() = default;
+
+               // Create const from non-const
+        ScopeAndNameT(typename std::enable_if<scopeIsConst, ScopeAndNameT<false>>::type &nonConst)
+            : scope(nonConst.scope), name(nonConst.name)
+        {
+        }
+
+        friend bool operator==(const ScopeAndNameT &lhs, const ScopeAndNameT &rhs)
+        {
+            return lhs.scope == rhs.scope && lhs.name == rhs.name;
+        }
+        friend bool operator!=(const ScopeAndNameT &lhs, const ScopeAndNameT &rhs)
+        {
+            return !(lhs == rhs);
+        }
+        friend size_t qHash(const ScopeAndNameT &san, size_t seed = 0)
+        {
+            return qHashMulti(seed, san.scope, san.name);
+        }
+
+        Scope scope;
         QString name;
-        friend bool operator==(const FunctionOrExpressionIdentifier &x,
-                               const FunctionOrExpressionIdentifier &y)
-        {
-            return x.scope == y.scope && x.name == y.name;
-        }
-        friend bool operator!=(const FunctionOrExpressionIdentifier &x,
-                               const FunctionOrExpressionIdentifier &y)
-        {
-            return !(x == y);
-        }
-        friend size_t qHash(const FunctionOrExpressionIdentifier &x, size_t seed = 0)
-        {
-            return qHashMulti(seed, x.scope, x.name);
-        }
     };
+    using ConstScopeAndName = ScopeAndNameT<true>;
+    using ScopeAndName = ScopeAndNameT<false>;
+
+    using FunctionOrExpressionIdentifier = ConstScopeAndName;
+    using Property = ConstScopeAndName;
+    using Alias = ConstScopeAndName;
 
     // tells whether last-processed UiScriptBinding is truly a script binding
     bool m_thisScriptBindingIsJavaScript = false;
@@ -314,6 +336,8 @@ protected:
     QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
 
     QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QString>>> m_propertyBindings;
+    QVector<Alias> m_aliasDefinitions;
+    QHash<Property, QList<Alias>> m_propertyAliases;
 
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
@@ -324,7 +348,9 @@ private:
             const QQmlJSScope::ConstPtr &signalScope, const QQmlJS::SourceLocation &location,
             const QString &handlerName, const QStringList &handlerParameters);
     void importBaseModules();
-    void resolveAliasesAndIds();
+    void resolveAliases();
+    void populatePropertyAliases();
+    void resolveGroupProperties();
     void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
 
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);

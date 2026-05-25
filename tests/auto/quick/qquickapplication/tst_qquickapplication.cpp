@@ -91,7 +91,8 @@ void tst_qquickapplication::active()
         } else {
             // Otherwise, app activation is triggered by window activation.
             window.show();
-            window.requestActivate();
+            if (QGuiApplication::platformName().toLower() != "xcb")
+                window.requestActivate();
             QVERIFY(QTest::qWaitForWindowActive(&window));
             QCOMPARE(QGuiApplication::focusWindow(), &window);
             QVERIFY(item->property("active").toBool());

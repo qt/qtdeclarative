@@ -2640,4 +2640,58 @@ private:
     std::vector<std::vector<int>> m_list;
 };
 
+namespace YepNamespaceA {
+class YepAttached : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+public:
+    YepAttached(QObject *parent) : QObject(parent) { }
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest Attached Type"); }
+};
+class Yep : public QObject
+{
+    Q_OBJECT
+    QML_ATTACHED(YepAttached)
+    QML_ELEMENT
+
+public:
+    static YepAttached *qmlAttachedProperties(QObject *object) { return new YepAttached(object); }
+};
+
+class YepSingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+
+public:
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest Singleton"); }
+};
+
+class MyObject : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    Q_INVOKABLE QString s() const { return QStringLiteral("StaticTest"); }
+};
+} // namespace YepNamespaceA
+
+class BindablePoint : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(QPointF point BINDABLE bindablePoint READ default WRITE default)
+public:
+    BindablePoint(QObject *parent = nullptr) : QObject(parent), m_point(QPointF(101, 102)) {}
+
+    QBindable<QPointF> bindablePoint() { return QBindable<QPointF>(&m_point); }
+
+private:
+    QProperty<QPointF> m_point;
+};
+
 #endif // TESTTYPES_H

@@ -104,7 +104,7 @@ void QQmlPropertyToPropertyBinding::update(QQmlPropertyData::WriteFlags flags)
     const QMetaProperty property = sourceMetaObject->property(m_sourcePropertyIndex);
     if (!property.isConstant()) {
         captureProperty(sourceMetaObject, QMetaObjectPrivate::signalIndex(property.notifySignal()),
-                        property.isBindable(), !vtd.isValid() && d->isBindable());
+                        property.isBindable(), !vtd.isValid() && d->acceptsQBinding());
     }
 
     QQmlPropertyPrivate::writeValueProperty(

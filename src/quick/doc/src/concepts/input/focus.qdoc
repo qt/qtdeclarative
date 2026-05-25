@@ -76,7 +76,7 @@ The MyWidget code:
 \snippet qml/focus/MyWidget.qml mywidget
 
 We want the first \c MyWidget object to have the focus, so we set its
-\c focus property to \c true. However, by running the code, we can confirm that
+\c focus property to \c true. However, by running the code, it can happen that
 the second widget receives the focus.
 
 \image declarative-qmlfocus2.png
@@ -85,9 +85,9 @@ Looking at both \c MyWidget and \c window code, the problem is evident - there
 are three types that set the \c focus property to \c true. The two
 \c {MyWidget}s set the \c focus to \c true and the \c window component also sets the
 focus. Ultimately, only one type can have keyboard focus, and the system has
-to decide which type receives the focus. When the second \c MyWidget is created,
-it receives the focus because it is the last type to set its \c focus
-property to \c true.
+to decide which type receives the focus. Since QML does not guarantee which element
+will have its properties initialized first, it might be that the last \c MyWidget
+gets the initial focus.
 
 This problem is due to visibility. The \c MyWidget component would like to have
 the focus, but it cannot control the focus when it is imported or reused.

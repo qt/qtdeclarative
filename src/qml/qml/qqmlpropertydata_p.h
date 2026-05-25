@@ -70,7 +70,7 @@ public:
         // Lastly, isDirect and isOverridden apply to both functions and non-functions
     private:
         unsigned isConst                       : 1; // Property: has CONST flag/Method: is const
-        unsigned isVMEFunction                 : 1; // Function was added by QML
+        unsigned isDeepAliasORisVMEFunction    : 1; // Alias points into value type OR Function was added by QML
         unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
         unsigned isResettableORisSignal        : 1; // Has RESET function OR Function is a signal
         unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
@@ -111,6 +111,11 @@ public:
             isAliasORisVMESignal = b;
         }
 
+        void setIsDeepAlias(bool b) {
+            Q_ASSERT(type != FunctionType);
+            isDeepAliasORisVMEFunction = b;
+        }
+
         void setIsFinal(bool b) {
             Q_ASSERT(type != FunctionType);
             isFinalORisV4Function = b;
@@ -132,8 +137,9 @@ public:
 
         void setIsVMEFunction(bool b) {
             Q_ASSERT(type == FunctionType);
-            isVMEFunction = b;
+            isDeepAliasORisVMEFunction = b;
         }
+
         void setHasArguments(bool b) {
             Q_ASSERT(type == FunctionType);
             isWritableORhasArguments = b;
@@ -204,7 +210,7 @@ public:
     bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
-    bool isVMEFunction() const { return isFunction() && m_flags.isVMEFunction; }
+    bool isVMEFunction() const { return isFunction() && m_flags.isDeepAliasORisVMEFunction; }
     bool hasArguments() const { return isFunction() && m_flags.isWritableORhasArguments; }
     bool isSignal() const { return isFunction() && m_flags.isResettableORisSignal; }
     bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
@@ -214,7 +220,9 @@ public:
     void setOverload(bool onoff) { m_flags.isOverload = onoff; }
     bool isCloned() const { return isFunction() && m_flags.isRequiredORisCloned; }
     bool isConstructor() const { return isFunction() && m_flags.isConstructorORisBindable; }
-    bool isBindable() const { return !isFunction() && m_flags.isConstructorORisBindable; }
+
+    bool notifiesViaBindable() const { return !isFunction() && m_flags.isConstructorORisBindable; }
+    bool acceptsQBinding() const { return notifiesViaBindable() && !m_flags.isDeepAliasORisVMEFunction; }
 
     bool hasOverride() const { return overrideIndex() >= 0; }
     bool hasRevision() const { return revision() != QTypeRevision::zero(); }
@@ -351,6 +359,17 @@ public:
         return true;
     }
 
+    QUntypedBindable propertyBindable(QObject *target) const
+    {
+        QUntypedBindable result;
+        void *argv[] = { &result };
+        if (hasStaticMetaCallFunction())
+            staticMetaCallFunction()(target, QMetaObject::BindableProperty, relativePropertyIndex(), argv);
+        else
+            doMetacall<QMetaObject::BindableProperty>(target, coreIndex(), argv);
+        return result;
+    }
+
     static Flags defaultSignalFlags()
     {
         Flags f;
@@ -410,7 +429,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 QQmlPropertyData::Flags::Flags()
     : otherBits(0)
     , isConst(false)
-    , isVMEFunction(false)
+    , isDeepAliasORisVMEFunction(false)
     , isWritableORhasArguments(false)
     , isResettableORisSignal(false)
     , isAliasORisVMESignal(false)
@@ -427,7 +446,7 @@ QQmlPropertyData::Flags::Flags()
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
 {
     return isConst == other.isConst &&
-            isVMEFunction == other.isVMEFunction &&
+            isDeepAliasORisVMEFunction == other.isDeepAliasORisVMEFunction &&
             isWritableORhasArguments == other.isWritableORhasArguments &&
             isResettableORisSignal == other.isResettableORisSignal &&
             isAliasORisVMESignal == other.isAliasORisVMESignal &&
