@@ -169,6 +169,18 @@ ApplicationWindow {
         //! [label]
         */
 
+        //! [menuBarItem]
+        menuBarItem {
+            text.alignment: Qt.AlignLeft | Qt.AlignVCenter
+            background {
+                radius: 0
+                color: "transparent"
+                border.width: 0
+            }
+            hovered.background.color: "#c0c0c0"
+        }
+        //! [menuBarItem]
+
         //! [menuSeparator]
         menuSeparator {
             background.visible: false

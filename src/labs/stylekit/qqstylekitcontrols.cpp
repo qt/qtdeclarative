@@ -170,6 +170,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*
+    \qmlproperty ControlStyle AbstractStylableControls::menuBarItem
+
+    Grouped property for styling menu items in a \l [QtQuickControls]{MenuBar}.
+
+    Unset properties fall back to \l control.
+
+    \note In Qt Quick Controls, a \l [QtQuickControls]{MenuBarItem} inherits from
+    \l [QtQuickControls]{AbstractButton}. In StyleKit, however, \c menuBarItem is a
+    separate control type that falls back to \l control instead of \l abstractButton,
+    since menu bar items are typically styled very differently from regular buttons
+    (flat, no borders or drop shadows, etc.).
+
+    \snippet ControlsSnippets.qml menuBarItem
+*/
+
+/*
     \qmlproperty ControlStyle AbstractStylableControls::menuSeparator
 
     Grouped property for styling \l [QtQuickControls]{MenuSeparator}.
@@ -483,6 +499,7 @@ IMPLEMENT_ACCESSORS(frame, QQStyleKitReader::ControlType::Frame)
 IMPLEMENT_ACCESSORS(label, QQStyleKitReader::ControlType::Label)
 IMPLEMENT_ACCESSORS(groupBox, QQStyleKitReader::ControlType::GroupBox)
 IMPLEMENT_ACCESSORS(textArea, QQStyleKitReader::ControlType::TextArea)
+IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuSeparator, QQStyleKitReader::ControlType::MenuSeparator)
 
 #undef IMPLEMENT_ACCESSORS

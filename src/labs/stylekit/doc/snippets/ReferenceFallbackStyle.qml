@@ -161,6 +161,18 @@ BaseStyle {
         background.visible: false
     }
 
+    menuBarItem {
+        text.alignment: Qt.AlignLeft | Qt.AlignVCenter
+        background {
+            implicitWidth: 40
+            implicitHeight: 40
+            radius: 0
+            color: __transparent
+            border.width: 0
+        }
+        hovered.background.color: __backgroundSubtle
+    }
+
     menuSeparator {
         padding: 2
         background.visible: false
