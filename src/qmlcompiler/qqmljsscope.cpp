@@ -420,10 +420,30 @@ QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr> QQmlJSScope::findType(
     };
 
     auto type = contextualTypes.types().constFind(name);
+    const QString currentSelector = contextualTypes.currentFileSelector();
 
     if (type != contextualTypes.types().constEnd()) {
-        useType();
-        return *type;
+        // fast path: no selector context active
+        if (currentSelector.isEmpty()) {
+            useType();
+            return *type;
+        }
+        // selector active: discard a mismatched promoted file-selected variant
+        const QString typeSelector = QQmlJSUtils::fileSelectorFor(type->scope);
+        if (typeSelector.isEmpty() || typeSelector == currentSelector) {
+            useType();
+            return *type;
+        }
+        if (auto matching = contextualTypes.fileSelectedTypeFor(name, currentSelector)) {
+            useType();
+            return *matching;
+        }
+    } else if (!currentSelector.isEmpty()) {
+        // try a file-selected variant matching the current selector
+        if (auto matching = contextualTypes.fileSelectedTypeFor(name, currentSelector)) {
+            useType();
+            return *matching;
+        }
     }
 
     const auto findListType = [&](const QString &prefix, const QString &postfix)

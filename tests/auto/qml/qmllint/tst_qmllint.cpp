@@ -710,6 +710,14 @@ void TestQmllint::dirtyQmlCode_data()
                        } }
                        .withFlags(Result::UseSettings)
             << withFileSelectorResourceFile;
+    // This might be debatable: Maybe someone alwyas has 2 selectors at the same time
+    // But for now, we assume that warning about it leads to a better trade-off.
+    QTest::newRow("fileSelectorAccessingFileFromOtherSelector")
+            << QStringLiteral("FileSelector5/+bar/Type.qml")
+            << Result{ {
+                       { "FooInternal was not found"_L1, 3, 1 },
+               } }
+            << defaultOptions;
     QTest::newRow(("ImportModuleWithFileSelector"))
             << QStringLiteral("FileSelector/main.qml") << Result::cleanWithSettings()
             << defaultOptions;
@@ -2704,6 +2712,8 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("FileSelector3/App.qml") << withResourceFiles;
     QTest::newRow("fileSelectorCompatibleFileSelectedType")
             << QStringLiteral("FileSelector3/+Material/App.qml") << withResourceFiles;
+    QTest::newRow("fileSelectorWithoutUnselected")
+            << QStringLiteral("FileSelector4/Main.qml") << defaultOptions;
 
     QTest::newRow("forLoop") << QStringLiteral("forLoop.qml") << defaultOptions;
     QTest::newRow("goodAlias") << QStringLiteral("goodAlias.qml") << defaultOptions;

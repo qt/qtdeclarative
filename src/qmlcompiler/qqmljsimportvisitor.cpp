@@ -484,6 +484,14 @@ void QQmlJSImportVisitor::importBaseModules()
 {
     Q_ASSERT(m_rootScopeImports.isEmpty());
     m_rootScopeImports = m_importer->importHardCodedBuiltins();
+    /* Pass the file's selector along so we have a consistent view on selectors:
+       - If there is a file selector, we only consider non-file-selected files and those
+         using the same selector. Reality is more complicated, but this should be enoguh
+         for most projects.
+       - If the current file is not using a file selector, we consider everything
+     */
+    m_rootScopeImports.setCurrentFileSelector(
+            QQmlJSUtils::fileSelectorFor(m_exportedRootScope));
 
     const QQmlJS::SourceLocation invalidLoc;
     const auto types = m_rootScopeImports.types();
