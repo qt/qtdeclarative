@@ -332,7 +332,7 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
         size = QSize(item->width(), item->height());
 
     if (size.width() < 1 || size.height() < 1) {
-        qmlWarning(item) << "grabToImage: item has invalid dimensions";
+        qmlWarning(item) << "grabToImage: item's width and/or height are less than 1: " << size;
         return nullptr;
     }
 
@@ -464,7 +464,7 @@ bool QQuickItem::grabToImage(const QJSValue &callback, const QSize &targetSize)
         size = QSize(width(), height());
 
     if (size.width() < 1 || size.height() < 1) {
-        qmlWarning(this) << "grabToImage: item has invalid dimensions";
+        qmlWarning(this) << "grabToImage: item's width and/or height are less than 1: " << size;
         return false;
     }
 
