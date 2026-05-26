@@ -105,6 +105,11 @@ public:
         const QQmlJS::ContextualTypes &contextualTypes() const { return m_types; }
         const QList<QQmlJS::DiagnosticMessage> &warnings() const { return m_warnings; };
 
+        void setCurrentFileSelector(const QString &selector)
+        {
+            m_types.setCurrentFileSelector(selector);
+        }
+
         bool isEmpty() const { return m_types.types().isEmpty(); }
 
         bool hasType(const QString &name) const { return m_types.hasType(name); }
