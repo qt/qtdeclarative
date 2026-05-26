@@ -1,0 +1,5 @@
+module FileSelector5
+Type 1.0 +foo/Type.qml
+Type 1.0 +bar/Type.qml
+FooInternal 1.0 +foo/FooInternal.qml
+BarInternal 1.0 +bar/BarInternal.qml

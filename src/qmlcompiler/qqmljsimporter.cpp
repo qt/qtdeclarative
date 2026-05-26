@@ -455,6 +455,13 @@ void QQmlJSImporter::insertExport(const QQmlJS::ContextualType &type,
         if (const QString fileSelector = QQmlJSUtils::fileSelectorFor(type.scope);
             !fileSelector.isEmpty()) {
             types->qmlNames.setFileSelectedType(fileSelector, qmlName, type);
+            // If no other variant exists (with either a different or no file selector),
+            // insert the current one.
+            // A later non-selected variant will replace this entry.
+            if (!types->qmlNames.hasType(qmlName)) {
+                types->qmlNames.setType(qmlName, type);
+                (*seenExports)[qmlName].append(valExport);
+            }
             return;
         }
     }
@@ -565,6 +572,12 @@ void QQmlJSImporter::insertExportWithConflictingVersion(
             !fileSelector.isEmpty()) {
             types->qmlNames.setFileSelectedType(fileSelector, qmlName,
                                                 { val.scope, valExport.version(), precedence });
+            // Ensure type is found if there are no non-file selected versions
+            if (!types->qmlNames.hasType(qmlName)) {
+                types->qmlNames.setType(qmlName,
+                                        { val.scope, valExport.version(), precedence });
+                (*seenExports)[qmlName].append(valExport);
+            }
             return;
         }
         if (!QQmlJSUtils::fileSelectorFor(scope).isEmpty()) {
