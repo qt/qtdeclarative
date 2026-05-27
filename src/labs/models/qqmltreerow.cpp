@@ -67,6 +67,14 @@ void QQmlTreeRow::removeChildAt(int i)
     m_children.erase(std::next(m_children.begin(), i));
 }
 
+QQmlTreeRow* QQmlTreeRow::takeChild(int i)
+{
+    auto it = std::next(m_children.begin(), i);
+    QQmlTreeRow *child = it->release();
+    m_children.erase(it);
+    return child;
+}
+
 void QQmlTreeRow::setData(const QVariant &data)
 {
     dataMap.clear();

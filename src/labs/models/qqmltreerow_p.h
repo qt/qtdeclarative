@@ -51,6 +51,7 @@ public:
     const std::vector<std::unique_ptr<QQmlTreeRow>>& children() const { return m_children; }
     void removeChild(std::vector<std::unique_ptr<QQmlTreeRow>>::const_iterator &child);
     void removeChildAt(int i);
+    QQmlTreeRow *takeChild(int i);
     void setData(const QVariant &data);
     void setData(const QVariantMap &data);
     void setField(const QString &key, const QVariant &value);

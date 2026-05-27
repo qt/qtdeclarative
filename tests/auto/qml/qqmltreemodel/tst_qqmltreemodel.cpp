@@ -41,6 +41,8 @@ private slots:
     void setData();
     void insertRow();
     void insertRowEmptyModel();
+    void moveRows();
+    void moveRowsAcrossNodes();
 };
 
 void tst_QQmlTreeModel::appendToEmptyModel()
@@ -1536,6 +1538,186 @@ void tst_QQmlTreeModel::insertRowEmptyModel()
     QCOMPARE(model->data(model->index(0, 3, QModelIndex()), roleNames.key("decoration")).toString(), u"orange"_s);
     QCOMPARE(model->data(model->index(0, 4, QModelIndex()), roleNames.key("display")).toDouble(), 2.50);
     QCOMPARE(model->data(model->index(0, 4, QModelIndex()), roleNames.key("decoration")).toString(), u"orange"_s);
+}
+
+void tst_QQmlTreeModel::moveRows()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("simple.qml")));
+
+    auto *model = view.rootObject()->property("testModel").value<QQmlTreeModel*>();
+    QVERIFY(model);
+
+    QCOMPARE(model->columnCount(), 2);
+    QCOMPARE(model->treeSize(), 28);
+
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+    QCOMPARE(rowsChangedSpy.count(), 0);
+
+    QQuickTreeView *treeView = view.rootObject()->property("treeView").value<QQuickTreeView*>();
+    QVERIFY(treeView);
+
+    QCOMPARE(treeView->columns(), 2);
+    QCOMPARE(treeView->rows(), 2);   //treeView cannot call our treeSize
+
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(roleNames.size(), 1);
+
+    // rowCount is the same as childCount
+    QCOMPARE(model->rowCount(), 2);
+    QCOMPARE(model->rowCount(model->index(std::vector<int>{0}, 0)), 5);
+    QCOMPARE(model->rowCount(model->index(std::vector<int>{1}, 0)), 5);
+    QCOMPARE(model->rowCount(model->index({0,0}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,1}, 0)), 6);
+    QCOMPARE(model->rowCount(model->index({0,2}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,3}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,4}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,0}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,1}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,2}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,3}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,4}, 0)), 10);
+
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+
+    QModelIndex parentIndex = model->index({1,4}, 0);
+
+    // All destination indices use pre-removal semantics (as required by beginMoveRows).
+
+    model->moveRows(parentIndex, 2, 4, parentIndex, 10);
+    std::array<int, 10> target = {0, 1, 6, 7, 8, 9, 2, 3, 4, 5};
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), target[i]);
+
+    model->moveRows(parentIndex, 6, 4, parentIndex, 2);
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+
+    model->moveRows(parentIndex, 2, 4, parentIndex, 7);
+    target = {0, 1, 6, 2, 3, 4, 5, 7, 8, 9};
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), target[i]);
+
+    model->moveRows(parentIndex, 2, 1, parentIndex, 7);
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+
+    model->moveRows(parentIndex, 5, 3, parentIndex, 1);
+    target = {0, 5, 6, 7, 1, 2, 3, 4, 8, 9};
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), target[i]);
+
+    model->moveRows(parentIndex, 1, 3, parentIndex, 8);
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+
+    model->moveRows(parentIndex, 5, 5, parentIndex, 2);
+    target = {0, 1, 5, 6, 7, 8, 9, 2, 3, 4};
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), target[i]);
+
+    model->moveRows(parentIndex, 2, 5, parentIndex, 10);
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+
+    QCOMPARE(model->moveRows(parentIndex, 1, 2, parentIndex, 11), false);
+    for (int i = 0; i < 10; i++)
+        QCOMPARE(model->data(model->index({1, 4, i}, 1), roleNames.key("display")).toInt(), i);
+}
+
+void tst_QQmlTreeModel::moveRowsAcrossNodes()
+{
+    QQuickView view;
+    QVERIFY(QQuickTest::showView(view, testFileUrl("simple.qml")));
+    auto *model = view.rootObject()->property("testModel").value<QQmlTreeModel*>();
+    QVERIFY(model);
+    QCOMPARE(model->columnCount(), 2);
+    QCOMPARE(model->treeSize(), 28);
+
+    QSignalSpy rowsChangedSpy(model, SIGNAL(rowsChanged()));
+    QVERIFY(rowsChangedSpy.isValid());
+    QCOMPARE(rowsChangedSpy.count(), 0);
+
+    QQuickTreeView *treeView = view.rootObject()->property("treeView").value<QQuickTreeView*>();
+    QVERIFY(treeView);
+    QCOMPARE(treeView->columns(), 2);
+    QCOMPARE(treeView->rows(), 2);
+
+    const QHash<int, QByteArray> roleNames = model->roleNames();
+    QCOMPARE(roleNames.size(), 1);
+
+    // rowCount is the same as childCount
+    QCOMPARE(model->rowCount(), 2);
+    QCOMPARE(model->rowCount(model->index(std::vector<int>{0}, 0)), 5);
+    QCOMPARE(model->rowCount(model->index(std::vector<int>{1}, 0)), 5);
+    QCOMPARE(model->rowCount(model->index({0,0}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,1}, 0)), 6);
+    QCOMPARE(model->rowCount(model->index({0,2}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,3}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({0,4}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,0}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,1}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,2}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,3}, 0)), 0);
+    QCOMPARE(model->rowCount(model->index({1,4}, 0)), 10);
+
+    // Cross-parent moves: destination indices are unchanged because
+    // the removal from one parent does not affect the other parent's
+    // child indices.
+
+    // move from [0, 1], 2..3 to [1,0], 0..
+    model->moveRows(model->index({0,1}, 0), 2, 2,
+                    model->index({1,0}, 0), 0);
+    QCOMPARE(rowsChangedSpy.count(), 1);
+    QCOMPARE(model->treeSize(), 28);
+    QVERIFY(model->rowCount(model->index({0,1}, 0)) == 4); // was 6
+    QVERIFY(model->rowCount(model->index({1,0}, 0)) == 2); // was 0
+    QCOMPARE(model->data(model->index({1, 0, 0}, 0), roleNames.key("display")).toString(), "[0,1,2]");
+    QCOMPARE(model->data(model->index({1, 0, 1}, 0), roleNames.key("display")).toString(), "[0,1,3]");
+
+    // revert
+    model->moveRows(model->index({1,0}, 0), 0, 2,
+                    model->index({0,1}, 0), 2);
+    QCOMPARE(rowsChangedSpy.count(), 2);
+    QCOMPARE(model->treeSize(), 28);
+    QVERIFY(model->rowCount(model->index({0,1}, 0)) == 6);
+    QVERIFY(model->rowCount(model->index({1,0}, 0)) == 0);
+    QCOMPARE(model->data(model->index({0, 1, 2}, 0), roleNames.key("display")).toString(), "[0,1,2]");
+    QCOMPARE(model->data(model->index({0, 1, 3}, 0), roleNames.key("display")).toString(), "[0,1,3]");
+
+    // move from [0, 1], 2..10 to [0], 0.. — too many rows
+    // beginMoveRows rejects silently (sourceRow + count > rowCount)
+    QCOMPARE(model->moveRows(model->index({0,1}, 0), 2, 8,
+                             model->index(std::vector<int>{0}, 0), 0), false);
+    QCOMPARE(rowsChangedSpy.count(), 2);
+    QCOMPARE(model->treeSize(), 28);
+
+    // move from [0], 0..2 to [0,1], 0.. — would move parent under its own child
+    // beginMoveRows detects ancestor-descendant overlap and rejects
+    QCOMPARE(model->moveRows(model->index(std::vector<int>{0}, 0), 0, 2,
+                             model->index({0,1}, 0), 0), false);
+    QCOMPARE(rowsChangedSpy.count(), 2);
+    QCOMPARE(model->treeSize(), 28);
+
+    // move from [0], 0 to [0,1], 0 — sibling of the destination, this is fine
+    model->moveRows(model->index(std::vector<int>{0}, 0), 0, 1,
+                    model->index({0,1}, 0), 0);
+    QCOMPARE(rowsChangedSpy.count(), 3);
+    QCOMPARE(model->treeSize(), 28);
+    // [0,0] is gone: [0,1] is there now:
+    QCOMPARE(model->data(model->index({0, 0}, 0), roleNames.key("display")).toString(), "[0,1]");
+    // it is here (this is confusing but ok)
+    QCOMPARE(model->data(model->index({0, 0, 0}, 0), roleNames.key("display")).toString(), "[0,0]");
+
+    // revert
+    model->moveRows(model->index({0,0}, 0), 0, 1,
+                    model->index(std::vector<int>{0}, 0), 0);
+    QCOMPARE(rowsChangedSpy.count(), 4);
+    QCOMPARE(model->treeSize(), 28);
+    QCOMPARE(model->data(model->index({0, 0}, 0), roleNames.key("display")).toString(), "[0,0]");
+    QCOMPARE(model->data(model->index({0, 1}, 0), roleNames.key("display")).toString(), "[0,1]");
 }
 
 QTEST_MAIN(tst_QQmlTreeModel)

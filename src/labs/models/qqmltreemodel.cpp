@@ -720,6 +720,84 @@ QQmlTreeRow *QQmlTreeModel::getPointerToTreeRow(QModelIndex &modIndex,
     return static_cast<QQmlTreeRow*>(modIndex.internalPointer());
 }
 
+/*!
+    \qmlmethod bool TreeModel::moveRows(QModelIndex sourceParent, int sourceRow, int count,
+                        QModelIndex destinationParent, int destinationChild)
+    \since 6.12
+    Moves \a count rows starting at \a sourceRow from \a sourceParent to
+    \a destinationParent, inserting before \a destinationChild.
+
+    The \a destinationChild refers to the position in the \a destinationParent
+    \e before the move (pre-removal index), consistent with
+    QAbstractItemModel::beginMoveRows().
+
+    The source and destination ranges must exist, and \a sourceParent and
+    \a destinationParent must not overlap such that a parent would be moved
+    under its own child.
+
+    Returns \c true if the rows were successfully moved; otherwise returns
+    \c false.
+
+    \sa appendRow(), insertRow(), removeRow()
+*/
+bool QQmlTreeModel::moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
+                             const QModelIndex &destinationParent, int destinationChild)
+{
+    if (count <= 0)
+        return false;
+
+    // beginMoveRows does not validate bounds against rowCount,
+    // so we must check before calling it.
+    if (sourceRow < 0 || sourceRow + count > rowCount(sourceParent))
+        return false;
+    if (destinationChild < 0 || destinationChild > rowCount(destinationParent))
+        return false;
+
+    if (!beginMoveRows(sourceParent, sourceRow, sourceRow + count - 1,
+                       destinationParent, destinationChild))
+        return false;
+
+    // Root-level children live in mRows on the model, not in a QQmlTreeRow,
+    // so internalPointer() is nullptr for the root QModelIndex.
+    auto takeChild = [this](const QModelIndex &parent, int row) -> QQmlTreeRow * {
+        if (parent.isValid())
+            return static_cast<QQmlTreeRow *>(parent.internalPointer())->takeChild(row);
+        auto it = std::next(mRows.begin(), row);
+        QQmlTreeRow *child = it->release();
+        mRows.erase(it);
+        return child;
+    };
+
+    auto insertChild = [this](const QModelIndex &parent, int row, QQmlTreeRow *child) {
+        if (parent.isValid()) {
+            static_cast<QQmlTreeRow *>(parent.internalPointer())->insertChild(row, child);
+        } else {
+            child->setParent(nullptr);
+            mRows.insert(std::next(mRows.begin(), row),
+                         std::unique_ptr<QQmlTreeRow>(child));
+        }
+    };
+
+    std::vector<QQmlTreeRow *> buffer;
+    buffer.reserve(count);
+    for (int i = 0; i < count; ++i)
+        buffer.push_back(takeChild(sourceParent, sourceRow));
+
+    // beginMoveRows uses pre-removal indexing, but after takeChild the
+    // parent's child vector has already shrunk.  Adjust for same-parent
+    // backward moves.
+    int insertAt = destinationChild;
+    if (sourceParent == destinationParent && destinationChild > sourceRow)
+        insertAt -= count;
+
+    for (int i = 0; i < count; ++i)
+        insertChild(destinationParent, insertAt + i, buffer[i]);
+
+    endMoveRows();
+    emit rowsChanged();
+    return true;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qqmltreemodel_p.cpp"
