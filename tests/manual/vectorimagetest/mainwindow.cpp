@@ -69,14 +69,38 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->cbLooping, &QCheckBox::toggled, m_manager, &VectorImageManager::setLooping);
     connect(ui->cbLooping, &QCheckBox::toggled, this, &MainWindow::setLooping);
     connect(ui->cbLooping, &QCheckBox::toggled, m_svgPainter, &SvgPainter::setLooping);
+    connect(ui->tbPlay, &QToolButton::clicked, this, &MainWindow::togglePlaying);
+
+    connect(ui->hsTime, &QAbstractSlider::valueChanged, m_manager, &VectorImageManager::setCurrentTime);
+    connect(m_manager, &VectorImageManager::currentTimeChanged, ui->hsTime, &QAbstractSlider::setValue);
+    connect(m_manager, &VectorImageManager::playingChanged, m_svgPainter, &SvgPainter::setPlaying);
 
     int scale = m_settings->value(QStringLiteral("scale"), 10).toInt();
     ui->hsScale->setValue(scale);
 
     ui->cbLooping->setChecked(m_settings->value(QStringLiteral("looping")).toBool());
+    m_manager->setPlaying(m_settings->value(QStringLiteral("playing")).toBool());
+    updatePlayButton();
 
     ui->tbNext->setShortcut(QKeySequence(QKeySequence::MoveToNextChar));
     ui->tbPrev->setShortcut(QKeySequence(QKeySequence::MoveToPreviousChar));
+}
+
+void MainWindow::updatePlayButton()
+{
+    if (m_manager->playing())
+        ui->tbPlay->setIcon(QIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackPause)));
+    else
+        ui->tbPlay->setIcon(QIcon(QIcon::fromTheme(QIcon::ThemeIcon::MediaPlaybackStart)));
+
+    ui->hsTime->setEnabled(!m_manager->playing());
+}
+
+void MainWindow::togglePlaying()
+{
+    m_manager->setPlaying(!m_manager->playing());
+    m_settings->setValue(QStringLiteral("playing"), m_manager->playing());
+    updatePlayButton();
 }
 
 void MainWindow::vectorImageSizeUpdated()
@@ -174,6 +198,8 @@ void MainWindow::updateSource()
     ui->lSvgRenderer->setVisible(!isLottie);
     ui->saLottieAnimation->setVisible(isLottie);
     ui->lLottieAnimation->setVisible(isLottie);
+    ui->lTime->setVisible(isLottie);
+    ui->hsTime->setVisible(isLottie);
 }
 
 void MainWindow::selectDirectory()

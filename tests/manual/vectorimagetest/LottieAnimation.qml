@@ -24,5 +24,15 @@ Item {
         textureSize: Qt.size(width * parent.scale, height * parent.scale)
         source: VectorImageManager.currentSource.toString().endsWith("json") ? VectorImageManager.currentSource : ""
         loops: VectorImageManager.looping ? LottieAnimation.Infinite : 1
+        autoPlay: false
+    }
+
+    Connections {
+        target: VectorImageManager
+
+        function onCurrentTimeChanged(time) {
+            var frame = ((time / 100.0) * (lottieAnimation.endFrame - lottieAnimation.startFrame) + lottieAnimation.startFrame)
+            lottieAnimation.gotoAndStop(frame)
+        }
     }
 }

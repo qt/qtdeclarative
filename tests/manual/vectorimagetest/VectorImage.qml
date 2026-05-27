@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.VectorImage
 import QtQuick.Controls
+import Qt.labs.lottieqt
 
 Item {
     width: vectorImage.visible ? vectorImage.implicitWidth * (VectorImageManager.scale / 10.0) : 500
@@ -31,6 +32,29 @@ Item {
         animations.loops: VectorImageManager.looping ? Animation.Infinite : 1
         asynchronous: true
         visible: status === VectorImage.Ready
+        animations.paused: !VectorImageManager.playing
+
+        LottieVectorImageController {
+            id: controller
+            target: VectorImageManager.currentSource.toString().endsWith("json") ? vectorImage : null
+            onCurrentFrameChanged: {
+                VectorImageManager.currentTime = 100.0 * (controller.currentFrame - controller.startFrame) / (controller.endFrame - controller.startFrame)
+            }
+        }
+    }
+
+    property bool isUpdating: false
+    Connections {
+        target: VectorImageManager
+
+        function onCurrentTimeChanged(time) {
+            if (!VectorImageManager.playing && !isUpdating) {
+                isUpdating = true
+                var frame = ((time / 100.0) * (controller.endFrame - controller.startFrame) + controller.startFrame)
+                controller.gotoAndStop(frame)
+                isUpdating = false
+            }
+        }
     }
 
     BusyIndicator {

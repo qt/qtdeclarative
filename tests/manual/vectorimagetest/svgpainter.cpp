@@ -74,6 +74,7 @@ void SvgPainter::paintEvent(QPaintEvent *event)
 
         m_renderer.setAspectRatioMode(Qt::KeepAspectRatio);
         m_renderer.render(&p);
+        m_renderer.setAnimationEnabled(m_playing);
         m_size = m_renderer.defaultSize();
         setFixedSize(m_size * m_scale / 10.0);
 

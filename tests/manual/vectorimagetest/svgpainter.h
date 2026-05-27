@@ -21,6 +21,7 @@ class SvgPainter : public QWidget
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(bool looping READ looping WRITE setLooping NOTIFY loopingChanged)
+    Q_PROPERTY(bool playing READ playing WRITE setPlaying NOTIFY playingChanged)
 public:
     explicit SvgPainter(QWidget *parent = nullptr);
 
@@ -43,10 +44,25 @@ public:
         emit loopingChanged();
     }
 
+    bool playing() const
+    {
+        return m_playing;
+    }
+
+    void setPlaying(bool playing)
+    {
+        if (m_playing == playing)
+            return;
+        m_playing = playing;
+        update();
+        emit playingChanged();
+    }
+
 signals:
     void sourceChanged();
     void scaleChanged();
     void loopingChanged();
+    void playingChanged();
 
 protected:
 #ifndef SVGWIDGET
@@ -60,6 +76,7 @@ private:
     QSize m_size;
     qreal m_scale;
     bool m_looping = false;
+    bool m_playing = false;
 #ifndef SVGWIDGET
     QSvgRenderer m_renderer;
 #endif
