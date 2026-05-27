@@ -377,9 +377,16 @@ void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)
     if (d->lifeSpan*1000 < m_system->maxLife) {
         dataHeap.insert(d);
     } else {
+        bool extended = false;
         int extend = 2 * m_system->maxLife / 3;
-        while ((roundedTime(d->t) + extend) <= m_system->timeInt)
+        while ((roundedTime(d->t) + extend) <= m_system->timeInt) {
             d->extendLife(m_system->maxLife / 3000.0, m_system);
+            extended = true;
+        }
+        if (extended) {
+            for (QQuickParticlePainter *p : std::as_const(painters))
+                p->reload(d);
+        }
         dataHeap.insertTimed(d, roundedTime(d->t) + extend);
     }
 }
