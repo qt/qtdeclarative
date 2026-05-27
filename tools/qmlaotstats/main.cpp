@@ -29,7 +29,7 @@ bool saveFormattedStats(const QString &stats, const QString &outputPath)
         return false;
     }
 
-    if (outputFile.write(stats.toLatin1()) == -1) {
+    if (outputFile.write(stats.toUtf8()) == -1) {
         qDebug() << "Could not write formatted AOT stats to" << outputPath;
         return false;
     } else {
