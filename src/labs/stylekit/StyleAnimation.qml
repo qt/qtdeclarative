@@ -52,10 +52,10 @@ ParallelAnimation {
             return
         anim.properties += props.replace(/\$/g, "indicator")
         anim.properties += props.replace(/\$/g, "indicator.foreground")
-        anim.properties += props.replace(/\$/g, "indicator.up")
-        anim.properties += props.replace(/\$/g, "indicator.up.foreground")
-        anim.properties += props.replace(/\$/g, "indicator.down")
-        anim.properties += props.replace(/\$/g, "indicator.down.foreground")
+        anim.properties += props.replace(/\$/g, "indicator.first")
+        anim.properties += props.replace(/\$/g, "indicator.first.foreground")
+        anim.properties += props.replace(/\$/g, "indicator.second")
+        anim.properties += props.replace(/\$/g, "indicator.second.foreground")
     }
 
     function __animateHandles(doAnimate, anim, props) {

@@ -441,6 +441,8 @@ class QQStyleKitIndicatorWithSubTypes : public QQStyleKitDelegateProperties
     Q_PROPERTY(QQStyleKitDelegateProperties *foreground READ foreground NOTIFY foregroundChanged FINAL)
     Q_PROPERTY(QQStyleKitIndicatorProperties *up READ up NOTIFY upChanged FINAL)
     Q_PROPERTY(QQStyleKitIndicatorProperties *down READ down NOTIFY downChanged FINAL)
+    Q_PROPERTY(QQStyleKitIndicatorProperties *first READ first NOTIFY firstChanged FINAL)
+    Q_PROPERTY(QQStyleKitIndicatorProperties *second READ second NOTIFY secondChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
     QML_NAMED_ELEMENT(IndicatorStyle)
 
@@ -453,20 +455,21 @@ public:
     QQStyleKitDelegateProperties *foreground() const;
     QQStyleKitIndicatorProperties *up() const;
     QQStyleKitIndicatorProperties *down() const;
-
-    // Internal for the aliases
-    QQStyleKitIndicatorProperties *indicator1() const;
-    QQStyleKitIndicatorProperties *indicator2() const;
+    // Generic indicators
+    QQStyleKitIndicatorProperties *first() const;
+    QQStyleKitIndicatorProperties *second() const;
 
 signals:
     void foregroundChanged();
     void upChanged();
     void downChanged();
+    void firstChanged();
+    void secondChanged();
 
 private:
     QQStyleKitDelegateProperties *m_foreground = nullptr;
-    QQStyleKitIndicatorProperties *m_indicator1 = nullptr;
-    QQStyleKitIndicatorProperties *m_indicator2 = nullptr;
+    QQStyleKitIndicatorProperties *m_first = nullptr;
+    QQStyleKitIndicatorProperties *m_second = nullptr;
 
     friend class QQStyleKitReader;
     friend class QQStyleKitControlProperties;

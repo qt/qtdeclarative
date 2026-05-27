@@ -26,18 +26,18 @@ class QQSK: public QObject
 
 public:
     enum class Delegate {
-        NoDelegate              = 0x0000,
-        Control                 = 0x0001,
-        Background              = 0x0002,
-        Handle                  = 0x0004,
-        HandleFirst             = 0x0008,
-        HandleSecond            = 0x0010,
-        Indicator               = 0x0020,
-        IndicatorForeground     = 0x0040,
-        Indicator1              = 0x0080,
-        Indicator1Foreground    = 0x0100,
-        Indicator2              = 0x0200,
-        Indicator2Foreground    = 0x0400,
+        NoDelegate                  = 0x0000,
+        Control                     = 0x0001,
+        Background                  = 0x0002,
+        Handle                      = 0x0004,
+        HandleFirst                 = 0x0008,
+        HandleSecond                = 0x0010,
+        Indicator                   = 0x0020,
+        IndicatorForeground         = 0x0040,
+        IndicatorFirst              = 0x0080,
+        IndicatorFirstForeground    = 0x0100,
+        IndicatorSecond             = 0x0200,
+        IndicatorSecondForeground   = 0x0400,
     };
     Q_DECLARE_FLAGS(Delegates, Delegate)
     Q_FLAG(Delegate)

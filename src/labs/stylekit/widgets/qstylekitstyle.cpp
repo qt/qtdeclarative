@@ -1315,7 +1315,7 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         if (!r.isValid())
             break;
         const auto *indicator = r.indicator();
-        const auto *upDownIndicator = indicator ? (pe == PE_IndicatorSpinUp ? indicator->up() : indicator->down()) : nullptr;
+        const auto *upDownIndicator = indicator ? (pe == PE_IndicatorSpinUp ? indicator->first() : indicator->second()) : nullptr;
         d->drawControlIndicator(upDownIndicator, opt->rect, p);
         return;
     }
@@ -2284,8 +2284,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 QRect upIndicatorRect = subControlRect(CC_SpinBox, opt, SC_SpinBoxUp, w);
                 QRect downIndicatorRect = subControlRect(CC_SpinBox, opt, SC_SpinBoxDown, w);
                 const int spacing = metrics.spacing;
-                const auto *upIndicator = r.indicator() ? r.indicator()->up() : nullptr;
-                const auto *downIndicator = r.indicator() ? r.indicator()->down() : nullptr;
+                const auto *upIndicator = r.indicator() ? r.indicator()->first() : nullptr;
+                const auto *downIndicator = r.indicator() ? r.indicator()->second() : nullptr;
                 const bool hasUpIndicator = upIndicator && upIndicator->visible() && upIndicator->opacity() > 0;
                 const bool hasDownIndicator = downIndicator && downIndicator->visible() && downIndicator->opacity() > 0;
                 const uint upAlign = hasUpIndicator
@@ -2318,7 +2318,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 return visualRect(opt->direction, opt->rect, contentsRect);
             }
             case SC_SpinBoxUp: {
-                const auto *upIndicator = r.indicator() ? r.indicator()->up() : nullptr;
+                const auto *upIndicator = r.indicator() ? r.indicator()->first() : nullptr;
                 if (!upIndicator || !upIndicator->visible() || upIndicator->opacity() == 0)
                     return contentsRect;
 
@@ -2331,7 +2331,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     d->getAlignedRectInContainer(contentsRect, QSize(w, h), upAlign, QMargins(), upMargins));
             }
             case SC_SpinBoxDown: {
-                const auto *downIndicator = r.indicator() ? r.indicator()->down() : nullptr;
+                const auto *downIndicator = r.indicator() ? r.indicator()->second() : nullptr;
                 if (!downIndicator || !downIndicator->visible() || downIndicator->opacity() == 0)
                     return frameRect;
 

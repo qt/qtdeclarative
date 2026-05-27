@@ -661,9 +661,11 @@ QT_BEGIN_NAMESPACE
 
     SubIndicatorStyle extends \l DelegateStyle with a \l foreground
     property. It is used for styling sub-indicator delegates such as
-    \l {IndicatorStyle::up}{indicator.up} and
-    \l {IndicatorStyle::down}{indicator.down} in controls
-    like \l [QtQuickControls]{SpinBox}.
+    \l {IndicatorStyle::first}{indicator.first} and
+    \l {IndicatorStyle::second}{indicator.second} in controls
+    with multiple indicators, like \l [QtQuickControls]{SpinBox}.
+    For SpinBox, \c {indicator.first} styles the increment button, and
+    \c {indicator.second} styles the decrement button.
     It is equivalent to \l IndicatorStyle, but does not itself
     contain sub-indicators.
 
@@ -705,10 +707,18 @@ QT_BEGIN_NAMESPACE
 
     Some controls have more than one indicator. For example,
     \l [QtQuickControls]{SpinBox} has both an increment and a decrement
-    button. These can be styled independently using the \l up and \l down
-    sub-indicators, \c {spinBox.indicator.up} and
-    \c {spinBox.indicator.down}. Properties not set on a sub-indicator
-    fall back to the indicator itself.
+    button. These can be styled independently using the \l first and \l second
+    sub-indicators, \c {spinBox.indicator.first} and
+    \c {spinBox.indicator.second}. For SpinBox, \c {indicator.first} styles
+    the increment button, and \c {indicator.second} styles the decrement
+    button. Properties not set on a sub-indicator fall back to the indicator
+    itself.
+
+    \note The \c up and \c down properties are kept as aliases for
+    \c first and \c second for backward compatibility. New code
+    should use \c first and \c second, as these names are generic and can be
+    used by controls with sub-indicators that do not represent up/down actions.
+    The compatibility aliases may be removed in a future version.
 
     \snippet DelegateStyle_indicator.qml up and down indicator
 
@@ -716,16 +726,6 @@ QT_BEGIN_NAMESPACE
 
     \sa SubIndicatorStyle, DelegateStyle, ControlStyle, ControlStateStyle,
         {qtlabsstylekit-fallbackstyle.html}{FallbackStyle Reference}
-*/
-
-/*!
-    \qmlproperty SubIndicatorStyle IndicatorStyle::down
-
-    Grouped property for styling the down (decrement) sub-indicator.
-    This is used by controls such as \l [QtQuickControls]{SpinBox}.
-    Unset properties fall back to the indicator itself.
-
-    \sa up
 */
 
 /*!
@@ -743,13 +743,34 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty SubIndicatorStyle IndicatorStyle::up
+    \qmlproperty SubIndicatorStyle IndicatorStyle::first
 
-    Grouped property for styling the up (increment) sub-indicator.
-    This is used by controls such as \l [QtQuickControls]{SpinBox}.
+    Grouped property for styling the first sub-indicator of controls that
+    expose multiple indicators. For \l [QtQuickControls]{SpinBox}, this
+    styles the increment button.
     Unset properties fall back to the indicator itself.
 
-    \sa down
+    \note The \c up property is kept as an alias for \c first for backward
+    compatibility. New code should use \c first, as this name is generic
+    and can be used by controls with sub-indicators that do not represent
+    up actions. The compatibility alias may be removed in a future version.
+
+    \sa second
+*/
+
+/*!
+    \qmlproperty SubIndicatorStyle IndicatorStyle::second
+
+    Grouped property for styling the second sub-indicator of for example a
+    \l [QtQuickControls]{SpinBox}.
+    Unset properties fall back to the indicator itself.
+
+    \note The \c down property is kept as an alias for \c second for backward
+    compatibility. New code should use \c second, as this name is generic
+    and can be used by controls with sub-indicators that do not represent
+    down actions. The compatibility alias may be removed in a future version.
+
+    \sa first
 */
 
 // ************* TextStyle ****************
@@ -1647,8 +1668,8 @@ void QQStyleKitIndicatorProperties::emitGlobally(
 {
     // Go through all instances of QQStyleKitIndicatorProperties
     const QQStyleKitControlProperties *cp = controlProperties();
-    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->indicator1());
-    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->indicator2());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->first());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, indicator()->second());
 }
 
 QQStyleKitDelegateProperties *QQStyleKitIndicatorProperties::foreground() const
@@ -1680,22 +1701,22 @@ QQStyleKitDelegateProperties *QQStyleKitIndicatorWithSubTypes::foreground() cons
 
 QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::up() const
 {
-    return indicator1();
+    return first();
 }
 
 QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::down() const
 {
-    return indicator2();
+    return second();
 }
 
-QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::indicator1() const
+QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::first() const
 {
-    return lazyCreateGroup(m_indicator1, QQSK::PropertyGroup::DelegateSubtype1);
+    return lazyCreateGroup(m_first, QQSK::PropertyGroup::DelegateSubtype1);
 }
 
-QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::indicator2() const
+QQStyleKitIndicatorProperties *QQStyleKitIndicatorWithSubTypes::second() const
 {
-    return lazyCreateGroup(m_indicator2, QQSK::PropertyGroup::DelegateSubtype2);
+    return lazyCreateGroup(m_second, QQSK::PropertyGroup::DelegateSubtype2);
 }
 
 // ************* QQStyleKitTextProperties ****************
@@ -1917,15 +1938,15 @@ void QQStyleKitControlProperties::forEachUsedDelegate(
         f(m_indicator, QQSK::Delegate::Indicator, "indicator"_L1);
         if (m_indicator->m_foreground)
             f(m_indicator->m_foreground, QQSK::Delegate::IndicatorForeground, "indicator.foreground"_L1);
-        if (m_indicator->m_indicator1) {
-            f(m_indicator->m_indicator1, QQSK::Delegate::Indicator1, "indicator.up"_L1);
-            if (m_indicator->m_indicator1->m_foreground)
-                f(m_indicator->m_indicator1->m_foreground, QQSK::Delegate::Indicator1Foreground, "indicator.up.foreground"_L1);
+        if (m_indicator->m_first) {
+            f(m_indicator->m_first, QQSK::Delegate::IndicatorFirst, "indicator.first"_L1);
+            if (m_indicator->m_first->m_foreground)
+                f(m_indicator->m_first->m_foreground, QQSK::Delegate::IndicatorFirstForeground, "indicator.first.foreground"_L1);
         }
-        if (m_indicator->m_indicator2) {
-            f(m_indicator->m_indicator2, QQSK::Delegate::Indicator2, "indicator.down"_L1);
-            if (m_indicator->m_indicator2->m_foreground)
-                f(m_indicator->m_indicator2->m_foreground, QQSK::Delegate::Indicator2Foreground, "indicator.down.foreground"_L1);
+        if (m_indicator->m_second) {
+            f(m_indicator->m_second, QQSK::Delegate::IndicatorSecond, "indicator.second"_L1);
+            if (m_indicator->m_second->m_foreground)
+                f(m_indicator->m_second->m_foreground, QQSK::Delegate::IndicatorSecondForeground, "indicator.second.foreground"_L1);
         }
     }
 

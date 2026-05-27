@@ -390,13 +390,15 @@ ApplicationWindow {
                     alignment: Qt.AlignCenter
                 }
                 // Place the down and up buttons on the left and right side of the control
-                down {
-                    alignment: Qt.AlignLeft
-                    foreground.rotation: 90
-                }
-                up {
+                // up button
+                first {
                     alignment: Qt.AlignRight
                     foreground.rotation: -90
+                }
+                // down button
+                second {
+                    alignment: Qt.AlignLeft
+                    foreground.rotation: 90
                 }
             }
         }

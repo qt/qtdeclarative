@@ -77,24 +77,24 @@ T.SpinBox {
             StyleKitLayoutItem {
                 id: upIndicatorItem
                 item: control.up.indicator
-                alignment: styleReader.indicator.up.alignment
-                margins.left: styleReader.indicator.up.leftMargin
-                margins.right: styleReader.indicator.up.rightMargin
-                margins.top: styleReader.indicator.up.topMargin
-                margins.bottom: styleReader.indicator.up.bottomMargin
-                fillWidth: styleReader.indicator.up.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.up.implicitHeight === Style.Stretch
+                alignment: styleReader.indicator.first.alignment
+                margins.left: styleReader.indicator.first.leftMargin
+                margins.right: styleReader.indicator.first.rightMargin
+                margins.top: styleReader.indicator.first.topMargin
+                margins.bottom: styleReader.indicator.first.bottomMargin
+                fillWidth: styleReader.indicator.first.implicitWidth === Style.Stretch
+                fillHeight: styleReader.indicator.first.implicitHeight === Style.Stretch
             },
             StyleKitLayoutItem {
                 id: downIndicatorItem
                 item: control.down.indicator
-                alignment: styleReader.indicator.down.alignment
-                margins.left: styleReader.indicator.down.leftMargin
-                margins.right: styleReader.indicator.down.rightMargin
-                margins.top: styleReader.indicator.down.topMargin
-                margins.bottom: styleReader.indicator.down.bottomMargin
-                fillWidth: styleReader.indicator.down.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.down.implicitHeight === Style.Stretch
+                alignment: styleReader.indicator.second.alignment
+                margins.left: styleReader.indicator.second.leftMargin
+                margins.right: styleReader.indicator.second.rightMargin
+                margins.top: styleReader.indicator.second.topMargin
+                margins.bottom: styleReader.indicator.second.bottomMargin
+                fillWidth: styleReader.indicator.second.implicitWidth === Style.Stretch
+                fillHeight: styleReader.indicator.second.implicitHeight === Style.Stretch
             }
         ]
         spacing: styleReader.spacing
@@ -130,7 +130,7 @@ T.SpinBox {
 
     up.indicator: IndicatorDelegate {
         quickControl: control
-        indicatorStyle: upProperties.indicator.up
+        indicatorStyle: upProperties.indicator.first
         x: upIndicatorItem.x
         y: upIndicatorItem.y
         width: upIndicatorItem.width
@@ -139,7 +139,7 @@ T.SpinBox {
 
     down.indicator: IndicatorDelegate {
         quickControl: control
-        indicatorStyle: downProperties.indicator.down
+        indicatorStyle: downProperties.indicator.second
         x: downIndicatorItem.x
         y: downIndicatorItem.y
         width: downIndicatorItem.width

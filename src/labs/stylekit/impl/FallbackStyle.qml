@@ -294,13 +294,15 @@ BaseStyle {
                 implicitHeight: 10
                 alignment: Qt.AlignCenter
             }
-            down {
-                alignment: Qt.AlignLeft
-                foreground.rotation: 90
-            }
-            up {
+            // up button
+            first {
                 alignment: Qt.AlignRight
                 foreground.rotation: -90
+            }
+            // down button
+            second {
+                alignment: Qt.AlignLeft
+                foreground.rotation: 90
             }
         }
     }
