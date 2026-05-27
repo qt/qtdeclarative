@@ -37,6 +37,8 @@ private slots:
     void updateIndex(int newIndex);
     void setLooping(bool looping);
     void vectorImageSizeUpdated();
+    void updatePlayButton();
+    void togglePlaying();
 
 private:
     void updateCurrentDir(const QString &newDir);

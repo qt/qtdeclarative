@@ -21,6 +21,8 @@ class VectorImageManager : public QObject
     Q_PROPERTY(QList<QUrl> sources READ sources NOTIFY sourcesChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
     Q_PROPERTY(bool looping READ looping WRITE setLooping NOTIFY loopingChanged)
+    Q_PROPERTY(bool playing READ playing WRITE setPlaying NOTIFY playingChanged)
+    Q_PROPERTY(qreal currentTime READ currentTime WRITE setCurrentTime NOTIFY currentTimeChanged)
 public:
     VectorImageManager(QObject *parent);
     ~VectorImageManager() override;
@@ -63,6 +65,30 @@ public:
         return m_looping;
     }
 
+    bool playing() const
+    {
+        return m_playing;
+    }
+
+    void setPlaying(bool on)
+    {
+        if (m_playing == on)
+            return;
+
+        m_playing = on;
+        emit playingChanged(on);
+    }
+
+    void seek(qreal pos)
+    {
+        emit seekRequested(pos);
+    }
+
+    qreal currentTime() const
+    {
+        return m_currentTime;
+    }
+
 public slots:
     void setScale(int newScale);
     void setLooping(bool looping)
@@ -72,6 +98,15 @@ public slots:
 
         m_looping = looping;
         emit loopingChanged();
+    }
+
+    void setCurrentTime(qreal time)
+    {
+        if (qFuzzyCompare(time, m_currentTime))
+            return;
+
+        m_currentTime = time;
+        emit currentTimeChanged(time);
     }
 
 signals:
@@ -85,6 +120,10 @@ signals:
     void scaleChanged();
     void loopingChanged();
 
+    void playingChanged(bool play);
+    void seekRequested(qreal time);
+    void currentTimeChanged(qreal time);
+
 private:
     static VectorImageManager *g_manager;
     int m_currentIndex = -1;
@@ -93,6 +132,8 @@ private:
     QString m_qmlSource;
     qreal m_scale = 10.0;
     bool m_looping = false;
+    bool m_playing = false;
+    qreal m_currentTime = 0.0;
 };
 
 #endif // VECTORIMAGEMANAGER_H
