@@ -763,17 +763,14 @@ void QQuickTextPrivate::elideFormats(
     }
 }
 
-QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line, const QTextLine *nextLine) const
+QString QQuickTextPrivate::elidedText(qreal lineWidth, const QTextLine &line) const
 {
-    const int length = (nextLine && nextLine->isValid())
-            ? line.textLength() + nextLine->textLength()
-            : line.textLength();
     return layout.engine()->elidedText(
             Qt::TextElideMode(elideMode),
             QFixed::fromReal(lineWidth),
             0,
             line.textStart(),
-            length);
+            line.textLength());
 }
 
 void QQuickTextPrivate::clearFormats()
@@ -944,9 +941,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                 visibleCount -= 1;
 
                 const QTextLine previousLine = layout.lineAt(visibleCount - 1);
-                elideText = layoutText.at(line.textStart() - 1) != QChar::LineSeparator
-                        ? elidedText(line.width(), previousLine, &line)
-                        : elidedText(line.width(), previousLine);
+                elideText = elidedText(line.width(), previousLine);
                 elideStart = previousLine.textStart();
                 elideEnd = line.textStart() + line.textLength();
 
@@ -994,15 +989,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
                         if (eos != -1)  // There's an abbreviated string available
                             break;
 
-                        // Create and shape the next line so that
-                        // elidedText() knows text continues beyond the
-                        // visible line. Width 0 keeps maximumWidth() correct.
-                        QTextLine nextLine = layout.createLine();
-                        if (nextLine.isValid())
-                            nextLine.setLineWidth(0);
-                        elideText = wrappedLine
-                                ? elidedText(line.width(), line, &nextLine)
-                                : elidedText(line.width(), line);
+                        elideText = elidedText(line.width(), line);
                         elideStart = line.textStart();
                         elideEnd = elideStart + line.textLength();
                     } else {

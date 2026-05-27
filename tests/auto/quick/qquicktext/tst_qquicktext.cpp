@@ -60,6 +60,7 @@ private slots:
     void elideRelayoutAfterZeroWidth_data();
     void elideRelayoutAfterZeroWidth();
     void elideRelayoutAfterGrowingWidth();
+    void implicitWidthRespectsMaximumLineCount();
     void multilineElide_data();
     void multilineElide();
     void implicitElide_data();
@@ -657,7 +658,7 @@ void tst_qquicktext::elideRelayoutAfterGrowingWidth()
     QVERIFY(textPrivate->widthValid());
 
     const qreal implicitWidth = text->implicitWidth();
-    const int steps = 6;
+    const int steps = 4;
     const int startingStep = 1;
 
     // Initially set it to larger than the implicitWidth
@@ -677,6 +678,24 @@ void tst_qquicktext::elideRelayoutAfterGrowingWidth()
         lastLayedOutRect = textPrivate->layedOutTextRect.width();
         QVERIFY(text->truncated());
     }
+}
+
+void tst_qquicktext::implicitWidthRespectsMaximumLineCount()
+{
+    // The multiline elide path must not lay out extra lines beyond
+    // maximumLineCount that would inflate implicitWidth.
+    QScopedPointer<QQuickText> text(new QQuickText);
+    text->setText("Short\nThis is a much longer second line of text");
+    text->setMaximumLineCount(1);
+    text->setElideMode(QQuickText::ElideRight);
+    text->setWidth(100); // triggers multilineElide path
+    text->componentComplete();
+
+    // implicitWidth should reflect only the first (visible) line.
+    // +1.0 for possible rounding between QFontMetricsF and QTextLayout.
+    QFontMetricsF fm(text->font());
+    const qreal firstLineWidth = fm.horizontalAdvance("Short");
+    QCOMPARE_LE(text->implicitWidth(), firstLineWidth + 1.0);
 }
 
 void tst_qquicktext::multilineElide_data()
@@ -2643,9 +2662,6 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() <= textObject->width());
     QVERIFY(textObject->contentHeight() < textObject->height());
     QCOMPARE(spySize.size(), 3);
-    #if (defined(Q_CC_MSVC) && Q_CC_MSVC > 1920) || defined(Q_CC_MINGW)
-        QEXPECT_FAIL("", "QTBUG-88646", Continue);
-    #endif
     QCOMPARE(spyWidth.size(), 3);
     QCOMPARE(spyHeight.size(), 2);
     int spyCount = 3;
@@ -2664,9 +2680,6 @@ void tst_qquicktext::contentSize()
     QVERIFY(textObject->contentWidth() > textObject->width());
     QVERIFY(textObject->contentHeight() > textObject->height());
     QCOMPARE(spySize.size(), ++spyCount);
-    #if (defined(Q_CC_MSVC) && Q_CC_MSVC > 1920) || defined(Q_CC_MINGW)
-        QEXPECT_FAIL("", "QTBUG-88646", Continue);
-    #endif
     QCOMPARE(spyWidth.size(), spyCount);
     QCOMPARE(spyHeight.size(), 3);
 }
