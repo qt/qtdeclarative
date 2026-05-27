@@ -55,6 +55,7 @@ private:
 
     friend class QQStyleKitPropertyResolver;
     friend class QQStyleKitStyle;
+    friend class QQStyleKitAttached;
 };
 
 class QQStyleKitVariationAttached : public QObject

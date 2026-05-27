@@ -132,13 +132,7 @@ void QQStyleKitAttached::setStyle(QQStyleKitStyle *style)
         m_style->deleteLater();
 
     m_style = style;
-
-    if (m_style && m_style->m_theme) {
-        m_style->m_theme->updateThemePalettes();
-        m_style->m_theme->updateThemeFonts();
-    }
-    if (m_style->loaded())
-        QQStyleKitReader::resetAll();
+    m_style->reapplyStyle();
 
     emit styleChanged();
 }
