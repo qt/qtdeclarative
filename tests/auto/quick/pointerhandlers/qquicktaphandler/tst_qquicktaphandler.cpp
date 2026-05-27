@@ -61,6 +61,8 @@ private slots:
     void nestedDoubleTap();
     void nestedAndSiblingPropagation_data();
     void nestedAndSiblingPropagation();
+    void grabUngrabItemCoordinates_data();
+    void grabUngrabItemCoordinates();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName,
@@ -1321,6 +1323,54 @@ void tst_TapHandler::nestedAndSiblingPropagation() // QTBUG-117387
     QCOMPARE(th1->isPressed(), expectPropagation);
 
     QQuickTest::pointerRelease(device, &window, 0, middle);
+}
+
+void tst_TapHandler::grabUngrabItemCoordinates_data()
+{
+    QTest::addColumn<QQuickTapHandler::GesturePolicy>("gesturePolicy");
+    QTest::addColumn<QPoint>("scenePressPoint");
+    QTest::addColumn<QPoint>("sceneReleasePoint");
+    QTest::addColumn<QPointF>("expectedItemGrabPos");
+    QTest::addColumn<QPointF>("expectedItemUngrabPos");
+
+    QTest::newRow("Passive, within bounds") << QQuickTapHandler::GesturePolicy::DragThreshold
+            << QPoint(101, 101) << QPoint(101, 101)
+            << QPointF( 1,   1) << QPointF( 1,   1);
+    QTest::newRow("Passive, out of bounds") << QQuickTapHandler::GesturePolicy::DragThreshold
+            << QPoint(101, 101) << QPoint( 99, 101)
+            << QPointF( 1,   1) << QPointF(-1,   1); // QTBUG-147003
+    QTest::newRow("Exclusive, within bounds") << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds
+            << QPoint(101, 101) << QPoint(101, 101)
+            << QPointF( 1,   1) << QPointF( 1,   1); // QTBUG-146781
+    QTest::newRow("Exclusive, out of bounds") << QQuickTapHandler::GesturePolicy::ReleaseWithinBounds
+            << QPoint(101, 101) << QPoint( 99, 101)
+            << QPointF( 1,   1) << QPointF(-1,   1); // QTBUG-146781
+}
+
+void tst_TapHandler::grabUngrabItemCoordinates()
+{
+    QFETCH(QQuickTapHandler::GesturePolicy, gesturePolicy);
+    QFETCH(QPoint, scenePressPoint);
+    QFETCH(QPoint, sceneReleasePoint);
+    QFETCH(QPointF, expectedItemGrabPos);
+    QFETCH(QPointF, expectedItemUngrabPos);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("grabUngrabItemCoordinates.qml")));
+    QQuickTapHandler *th = window.rootObject()->findChild<QQuickTapHandler*>();
+    QVERIFY(th);
+    th->setGesturePolicy(gesturePolicy);
+
+    QSignalSpy grabChangedSpy(th, SIGNAL(grabChanged(QPointingDevice::GrabTransition,QEventPoint)));
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, scenePressPoint);
+    QTest::mouseMove(&window, sceneReleasePoint);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, sceneReleasePoint);
+
+    QTRY_COMPARE(grabChangedSpy.size(), 2);
+    const auto pressPoint = grabChangedSpy.first().at(1).value<QEventPoint>();
+    const auto releasePoint = grabChangedSpy.last().at(1).value<QEventPoint>();
+    QCOMPARE(pressPoint.position(), expectedItemGrabPos);
+    QCOMPARE(releasePoint.position(), expectedItemUngrabPos);
 }
 
 QTEST_MAIN(tst_TapHandler)

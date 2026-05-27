@@ -1949,8 +1949,20 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
         if (handler->parentItem()) {
             auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
             if (itemPriv->deliveryAgent() == q) {
-                handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
-                                       const_cast<QEventPoint &>(point));
+                if (grabGained) {
+                    handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
+                                           const_cast<QEventPoint &>(point));
+                } else {
+                    // When a grab is relinquished/lost, the event point is localized to the new grabber
+                    // or not localized at all (QTBUG-146781, QTBUG-147003). Thus, we must re-localize it
+                    // for the old grabber's onGrabChanged() handler.
+                    QEventPoint lostPoint(point);
+                    QMutableEventPoint::setPosition(lostPoint, handler->parentItem()->mapFromScene(point.scenePosition()));
+                    handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
+                                           lostPoint);
+                    qCDebug(lcPtrLoc) << event->type() << "@" << point.scenePosition()
+                                      << "to old handler" << grabber << "->" << lostPoint;
+                }
             }
             if (grabGained) {
                 // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
