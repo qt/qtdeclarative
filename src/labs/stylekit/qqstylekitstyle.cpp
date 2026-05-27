@@ -429,13 +429,20 @@ void QQStyleKitStyle::recreateTheme()
     if (m_theme->palettes())
         m_theme->palettes()->setFallbackPalette(palettes());
 
-    m_theme->updateThemePalettes();
-    m_theme->updateThemeFonts();
-
-    QQStyleKitVariation::resetVariationsForStyle(this);
-    QQStyleKitReader::resetReadersForStyle(this);
+    reapplyStyle();
 
     emit themeChanged();
+}
+
+void QQStyleKitStyle::reapplyStyle()
+{
+    if (!loaded())
+        return;
+
+    m_theme->updateThemePalettes();
+    m_theme->updateThemeFonts();
+    QQStyleKitVariation::resetVariationsForStyle(this);
+    QQStyleKitReader::resetReadersForStyle(this);
 }
 
 QQStyleKitStyle* QQStyleKitStyle::current()
@@ -500,14 +507,25 @@ void QQStyleKitStyle::componentComplete()
 {
     QQStyleKitControls::componentComplete();
 
-    /* It's important to set m_completed before creating the theme, otherwise
-     * styleAndThemeFinishedLoading() will still be false, which will e.g cause
-     * property reads to return early from QQStyleKitPropertyResolver */
-    m_completed = true;
-
     executeFallbackStyle(true);
-    parseThemes();
-    recreateTheme();
+
+    /* If the style is top-level (i.e not a fallback style), we instantiate its theme and
+     * tell all relevant StyleReaders to update.
+     * Note: as an optimization, we currently don't support fallback styles to have their own
+     * themes, simply because it reduces the number of layers that need to be searched during
+     * property resolution. But we might need to reconsider implementing support for this later. */
+    const bool isTopLevelStyle = !qobject_cast<QQStyleKitStyle *>(parent());
+    if (isTopLevelStyle) {
+        parseThemes();
+        recreateTheme();
+        /* It's important to set m_completed to true before resetting the readers, otherwise
+         * QQStyleKitStyle::loaded() will still be false, which will cause property reads to
+         * trigger the "skip read" optimization from QQStyleKitPropertyResolver */
+        m_completed = true;
+        reapplyStyle();
+    }
+
+    m_completed = true;
 }
 
 QT_END_NAMESPACE
