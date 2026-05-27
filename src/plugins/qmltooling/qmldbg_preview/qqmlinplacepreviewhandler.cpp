@@ -15,6 +15,7 @@
 #include <private/qqmlpreviewobjectpatch_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qv4resolvedtypereference_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -34,6 +35,7 @@ struct InplaceUpdate
     QQmlEngine *engine = nullptr;
     std::vector<ComponentUpdate> pendingComponentUpdates;
     std::vector<ComponentUpdate> processedComponentUpdates;
+    QList<QQmlRefPointer<QV4::CompiledData::CompilationUnit>> droppedUnits;
 
     void emitReloadFailure(const QString &message) { emit handler->hotReloadFailure(message); }
 
@@ -121,6 +123,35 @@ void findCurrentRootObject(QQmlEngine *engine, const QUrl &url, QQmlPreviewHandl
     });
 }
 
+// Walk all compilation units in the engine and replace resolved type references
+// that still point to any of the dropped (old) base CUs with freshly compiled ones.
+// TODO: This is dangerous. We are manipulating compilation units exposed to multiple
+//       engines on potentially multiple threads.
+static void updateResolvedTypeReferences(
+        QV4::ExecutionEngine *v4,
+        const QList<QQmlRefPointer<QV4::CompiledData::CompilationUnit>> &droppedUnits)
+{
+    const auto allCUs = v4->compilationUnits();
+    for (const auto &ecu : allCUs) {
+        const auto &baseCU = ecu->baseCompilationUnit();
+        for (auto *typeRef : std::as_const(baseCU->resolvedTypes)) {
+            if (typeRef->isSelfReference())
+                continue;
+            const auto &refCU = typeRef->compilationUnit();
+            if (!refCU)
+                continue;
+            for (const auto &oldCU : droppedUnits) {
+                if (refCU == oldCU) {
+                    const auto newCU = QQmlMetaType::obtainCompilationUnit(oldCU->finalUrl());
+                    if (newCU)
+                        typeRef->setCompilationUnit(newCU);
+                    break;
+                }
+            }
+        }
+    }
+}
+
 static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdate> inplaceUpdate)
 {
     ComponentUpdate componentUpdate;
@@ -163,10 +194,16 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
             inplaceUpdate->emitReloadFailure("Could not apply diff");
 
         inplaceUpdate->processedComponentUpdates.push_back(std::move(componentUpdate));
+    }
 
-        // Once all components have been handled, refresh all bindings
-        if (inplaceUpdate->pendingComponentUpdates.empty())
-            QQmlPreview::refreshBindings(oldExecCU, newExecCU);
+    // Once all components have been handled, update resolved type references in all
+    // compilation units and refresh all bindings
+    if (inplaceUpdate->pendingComponentUpdates.empty()) {
+        updateResolvedTypeReferences(component->engine()->handle(), inplaceUpdate->droppedUnits);
+        for (const ComponentUpdate &update : inplaceUpdate->processedComponentUpdates)
+            QQmlPreview::refreshBindings(
+                    update.oldUnit,
+                    QQmlComponentPrivate::get(update.component.get())->compilationUnit());
     }
 }
 
@@ -224,13 +261,17 @@ void QQmlInPlacePreviewHandler::load(const QUrl &url)
     const QList<QQmlEngine *> seenEngines = engines();
     const QList<QUrl> urls = std::exchange(m_droppedUrls, {});
 
+    QList<QQmlRefPointer<QV4::CompiledData::CompilationUnit>> droppedUnits;
     for (const QUrl &droppedUrl : urls) {
-        while (const auto cu = QQmlMetaType::obtainCompilationUnit(droppedUrl))
+        while (const auto cu = QQmlMetaType::obtainCompilationUnit(droppedUrl)) {
+            droppedUnits.append(cu);
             QQmlMetaType::deepClearCompositeType(cu);
+        }
     }
     for (QQmlEngine *engine : seenEngines) {
         std::shared_ptr<InplaceUpdate> inplaceUpdate =
                 std::make_shared<InplaceUpdate>(this, engine);
+        inplaceUpdate->droppedUnits = droppedUnits;
 
         // Schedule this on the engine's thread. The shared pointer keeps the update alive as
         // long as necessary.

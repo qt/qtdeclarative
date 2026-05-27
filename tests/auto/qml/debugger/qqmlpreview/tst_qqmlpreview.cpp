@@ -101,6 +101,8 @@ private slots:
     void inPlaceJsFunctionBodyEdit();
     void inPlaceObjectTreeRemoveChild();
     void inPlaceObjectTreeAddChild();
+    void inPlaceChildComponentMultipleEdits();
+    void inPlaceLazyComponentUpdateBeforeInstantiation();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -1302,6 +1304,86 @@ void tst_QQmlPreview::inPlaceObjectTreeAddChild()
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// Test that editing a child component three consecutive times applies all
+// changes.  Without the fix for stale resolved type references (commit
+// 1b014d5ac6), the third edit would silently fail because the parent's
+// type reference still pointed to the original compilation unit, preventing
+// object discovery on the third reload round.
+void tst_QQmlPreview::inPlaceChildComponentMultipleEdits()
+{
+    const QString file("inplace_typeref_test/Main.qml");
+    const QString childFile("inplace_typeref_test/ChildItem.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("typeref_test label=initial");
+
+    // Edit 1: label "initial" → "first"
+    QByteArray contents = readAndModify(childFile, {{"\"initial\"", "\"first\""}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("typeref_test label=first");
+
+    // Edit 2: label "first" → "second"
+    contents.replace("\"first\"", "\"second\"");
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("typeref_test label=second");
+
+    // Edit 3: label "second" → "third"
+    // This is the edit that fails without the type-reference update fix.
+    contents.replace("\"second\"", "\"third\"");
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+    verifyProcessOutputContains("typeref_test label=third");
+
+    QVERIFY2(m_process->state() != QProcess::NotRunning,
+             "Process crashed during repeated child component edits");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
+}
+
+void tst_QQmlPreview::inPlaceLazyComponentUpdateBeforeInstantiation()
+{
+    const QString file("inplace_lazy_component_test/Main.qml");
+    const QString childFile("inplace_lazy_component_test/LazyChild.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+
+    // Wait until the app signals it's ready (child component is NOT yet instantiated).
+    verifyProcessOutputContains("lazy_component_test ready");
+
+    // Modify the child component BEFORE it has been instantiated.
+    // Change label from "original" to "modified".
+    QByteArray contents = readAndModify(childFile, {{"\"original\"", "\"modified\""}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(childFile), contents);
+    m_client->triggerLoad(testFileUrl(childFile));
+
+    // The component will be instantiated after 0.5 seconds via the Loader timer.
+    // When it is instantiated, it should use the MODIFIED version ("modified"),
+    // not the old version ("original").
+    // This verifies that in-place updates to not-yet-instantiated components
+    // take effect upon future instantiation.
+    QTRY_VERIFY_WITH_TIMEOUT(
+            m_process->output().contains("lazy_component_test label=modified"), 15000);
+
+    QVERIFY2(m_process->state() != QProcess::NotRunning,
+             "Process crashed during lazy component in-place update");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+    QVERIFY(m_serviceErrors.isEmpty());
 }
 
 QTEST_MAIN(tst_QQmlPreview)
