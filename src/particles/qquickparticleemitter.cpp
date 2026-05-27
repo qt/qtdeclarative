@@ -403,8 +403,8 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
                      + (QRandomGenerator::global()->bounded((m_particleDurationVariation*2) + 1) - m_particleDurationVariation))
                     / 1000.0;
 
-            if (datum->lifeSpan >= m_system->maxLife){
-                datum->lifeSpan = m_system->maxLife;
+            if (datum->lifeSpan * 1000 >= m_system->maxLife) {
+                datum->lifeSpan = m_system->maxLife / 1000.0;
                 if (m_emitCap == -1)
                     m_emitCap = particleCount();
                 m_emitCap--;//emitCap keeps us from reemitting 'infinite' particles after their life. Unless you reset the emitter.
