@@ -7,7 +7,6 @@
 #include <QPainter>
 #include <QTextLayout>
 #include <QDebug>
-#include <QVarLengthArray>
 #include <qmath.h>
 #include "qquickstyledtext_p.h"
 #include <QQmlContext>
@@ -142,10 +141,7 @@ bool is_equal_ignoring_case(QStringView s1, QLatin1StringView s2) noexcept
 
 int lookupHtmlTag(QStringView tag)
 {
-    QVarLengthArray<char16_t, 12> lower(tag.size());
-    for (qsizetype i = 0; i < tag.size(); ++i)
-        lower[i] = tag[i].toLower().unicode();
-    return QTextHtmlParser::lookupElement(QStringView(lower));
+    return QTextHtmlParser::lookupElement(tag);
 }
 }
 
