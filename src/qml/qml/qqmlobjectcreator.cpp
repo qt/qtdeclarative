@@ -1982,8 +1982,14 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
-    _ddata->compilationUnit = compilationUnit;
-    _ddata->cuObjectIndex = int(_compiledObjectIndex);
+    // If it's a group property object, don't populate CU and object index.
+    // It might be populated at the actual instantiation point, or the object might not be
+    // created by QML at all.
+    if (!stringAt(_compiledObject->inheritedTypeNameIndex).isEmpty()) {
+        _ddata->compilationUnit = compilationUnit;
+        _ddata->cuObjectIndex = int(_compiledObjectIndex);
+    }
+
     if (_compiledObject->hasFlag(QV4::CompiledData::Object::HasDeferredBindings))
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context, m_inlineComponentName);
 

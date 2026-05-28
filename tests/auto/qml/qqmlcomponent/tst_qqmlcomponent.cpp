@@ -14,6 +14,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmldata_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4qmlcontext_p.h>
@@ -168,6 +169,7 @@ private slots:
     void setDataSynchronous();
     void setDataAsynchronous();
     void createWithInitialPropertiesRequiredAlias();
+    void groupedPropertyDoesNotOverwriteCompilationUnit();
 
 private:
     QQmlEngine engine;
@@ -2103,6 +2105,33 @@ void tst_qqmlcomponent::createWithInitialPropertiesRequiredAlias()
         QScopedPointer<QObject> obj(comp.createWithInitialProperties({{ u"aliasToFoo"_s, 42 }}));
         QVERIFY2(!obj.isNull(), qPrintable(comp.errorString()));
     }
+}
+
+void tst_qqmlcomponent::groupedPropertyDoesNotOverwriteCompilationUnit()
+{
+    // A derived type applying grouped property bindings to a child object defined in
+    // the base type must not overwrite the child's ddata->compilationUnit/cuObjectIndex.
+    // Those fields should reflect the actual instantiation point (the base type's CU).
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("GroupedPropertyDerived.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    std::unique_ptr<QObject> root(component.create());
+    QVERIFY(root);
+
+    QObject *child = root->property("child").value<QObject *>();
+    QVERIFY(child);
+    QCOMPARE(child->objectName(), "modified");
+
+    QQmlData *ddata = QQmlData::get(child);
+    QVERIFY(ddata);
+    QVERIFY(ddata->compilationUnit);
+
+    // The child's compilationUnit must point to GroupedPropertyBase.qml (where it's
+    // actually instantiated), not GroupedPropertyDerived.qml (which merely applies
+    // a grouped property binding to it).
+    const QUrl childCuUrl = ddata->compilationUnit->finalUrl();
+    QVERIFY2(childCuUrl.toString().contains("GroupedPropertyBase.qml"),
+             qPrintable("Expected GroupedPropertyBase.qml but got: " + childCuUrl.toString()));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
