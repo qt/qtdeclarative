@@ -72,14 +72,6 @@ way:
         \c CONFIG+=qtquickcompiler directive.
 \endlist
 
-\section1 Prototyping with QML Scene
-
-The Declarative UI package includes a QML Runtime Tool,
-\l{qml_runtime_tool}{qml}, which loads and displays QML documents. This is
-useful during the application development phase for prototyping QML-based
-applications without writing your own C++ applications to invoke the QML
-runtime.
-
 
 \section1 Using the Qt Resource System with QML
 
