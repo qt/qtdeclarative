@@ -29,7 +29,9 @@ QT_BEGIN_NAMESPACE
 class QQuickShaderEffect;
 class QQuickShaderEffectSource;
 
-class QQuickMultiEffectPrivate : public QQuickItemPrivate
+class QQuickMultiEffectPrivate : public QQuickItemPrivate,
+                                 public QSafeQuickItemChangeListener<QQuickMultiEffectPrivate>
+
 {
     Q_DECLARE_PUBLIC(QQuickMultiEffect)
 
@@ -140,6 +142,8 @@ public:
     void updateSourcePadding();
     void updateProxyActiveCheck();
     void proxyOutputChanged();
+
+    void itemDestroyed(QQuickItem *item) final;
 
 private:
     bool m_initialized = false;
