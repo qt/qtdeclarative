@@ -207,11 +207,32 @@ static TextEdits wrapInLoaderTextEdits(const QQmlLSUtils::ItemLocation &item)
     return edits;
 }
 
+static inline std::optional<QQmlLSUtils::ItemLocation>
+qmlObjectDefinedAt(const QQmlLSUtils::ItemLocation &item)
+{
+    if (item.domItem.internalKind() != DomType::ScriptIdentifierExpression) {
+        return std::nullopt;
+    }
+    auto parentObject = item.domItem.qmlObject();
+    const auto objectLoc = FileLocations::treeOf(parentObject);
+
+    if (item.fileLocation->info().fullRegion.begin() != objectLoc->info().fullRegion.begin()) {
+        return std::nullopt;
+    }
+
+    return QQmlLSUtils::ItemLocation{ parentObject, objectLoc };
+}
+
 static CodeActions
 wrapComponentInLoader(const OptionalVersionedTextDocumentIdentifier &textDocument,
                       const QQmlLSUtils::ItemLocation &item)
 {
     if (item.domItem.internalKind() != DomType::QmlObject) {
+        // If the current item is actually the identifier that defines a QML object,
+        // treat it as if the object itself was selected
+        if (auto qmlObject = qmlObjectDefinedAt(item)) {
+            return wrapComponentInLoader(textDocument, *qmlObject);
+        }
         // applicable only to objects
         return {};
     }
@@ -267,10 +288,7 @@ void QQmlCodeActionSupport::process(QQmlCodeActionSupport::RequestPointerArgumen
         return request->m_response.sendResponse(codeActions);
     }
 
-    // QmlObject has the same start location as UiQualifiedId
-    // Therefore in order to get codeActions relevant to QmlObject it's more reliable
-    // to use range.end instead of range.start
-    const auto &itemsFound = tryLocateItems(maybeDoc.value(), request->m_parameters.range.end);
+    const auto &itemsFound = tryLocateItems(maybeDoc.value(), request->m_parameters.range.start);
     if (!itemsFound.has_value()) {
         qCWarning(lsCodeActionSupport) << itemsFound.error().message;
         return request->m_response.sendResponse(codeActions);
