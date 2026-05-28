@@ -217,6 +217,20 @@ QQuickMultiEffect::QQuickMultiEffect(QQuickItem *parent)
 
 QQuickMultiEffect::~QQuickMultiEffect()
 {
+    Q_D(QQuickMultiEffect);
+
+    // Disconnect the change listeners before we destroy the base types. Destroying the base types
+    // may still trigger changes we're listening to. The private object is only destroyed by the
+    // QObject dtor.
+
+    if (d->m_sourceItem) {
+        QQuickItemPrivate::get(d->m_sourceItem)
+                ->removeItemChangeListener(d, QQuickItemPrivate::ChangeType::Destroyed);
+    }
+    if (d->m_maskSourceItem) {
+        QQuickItemPrivate::get(d->m_maskSourceItem)
+                ->removeItemChangeListener(d, QQuickItemPrivate::ChangeType::Destroyed);
+    }
 }
 
 /*!
@@ -954,6 +968,11 @@ void QQuickMultiEffectPrivate::setSource(QQuickItem *item)
     if (item == m_sourceItem)
         return;
 
+    if (m_sourceItem)
+        QQuickItemPrivate::get(m_sourceItem)->removeItemChangeListener(this, ChangeType::Destroyed);
+    if (item)
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, ChangeType::Destroyed);
+
     m_sourceItem = item;
     if (m_shaderSource)
         m_shaderSource->setInput(m_sourceItem);
@@ -1330,6 +1349,13 @@ void QQuickMultiEffectPrivate::setMaskSource(QQuickItem *item)
     Q_Q(QQuickMultiEffect);
     if (item == m_maskSourceItem)
         return;
+
+    if (m_maskSourceItem) {
+        QQuickItemPrivate::get(m_maskSourceItem)
+                ->removeItemChangeListener(this, ChangeType::Destroyed);
+    }
+    if (item)
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, ChangeType::Destroyed);
 
     m_maskSourceItem = item;
     if (m_shaderEffect) {
@@ -1843,6 +1869,14 @@ void QQuickMultiEffectPrivate::proxyOutputChanged()
     updateBlurLevel(true);
     updateBlurItemSizes();
     updateSourcePadding();
+}
+
+void QQuickMultiEffectPrivate::itemDestroyed(QQuickItem *item)
+{
+    if (item == m_sourceItem)
+        setSource(nullptr);
+    else if (item == m_maskSourceItem)
+        setMaskSource(nullptr);
 }
 
 void QQuickMultiEffectPrivate::updateProxyActiveCheck()
