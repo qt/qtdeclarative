@@ -42,6 +42,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ComboBox.qml
         Frame.qml
         ItemDelegate.qml
+        MenuBar.qml
         MenuBarItem.qml
         MenuSeparator.qml
         ProgressBar.qml

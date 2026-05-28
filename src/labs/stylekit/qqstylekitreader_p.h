@@ -80,6 +80,7 @@ public:
         ItemDelegate,
         Popup,
         Menu,
+        MenuBar,
         MenuBarItem,
         MenuSeparator,
         Dialog,
