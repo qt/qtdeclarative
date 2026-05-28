@@ -104,11 +104,12 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
 
     const auto singleItemDoc = fakeTextDocument("import QtQuick; Item{}");
     QTest::newRow("emptyRange") << singleItemDoc << Range{} << CodeActions{};
-    QTest::newRow("import") << singleItemDoc << Range{ {}, { 0, 14 } } << CodeActions{};
-    QTest::newRow("rootItem") << singleItemDoc << Range{ {}, { 0, 22 } } << CodeActions{};
+    QTest::newRow("import") << singleItemDoc << Range{ { 0, 4 }, { 0, 14 } } << CodeActions{};
+    QTest::newRow("rootItem") << singleItemDoc << Range{ { 0, 16 }, { 0, 22 } } << CodeActions{};
 
     const auto propertyDoc = fakeTextDocument("import QtQuick; Item{ property var p }");
-    QTest::newRow("property") << propertyDoc << Range{ {}, { 0, 36 } } << CodeActions{};
+    QTest::newRow("property_def") << propertyDoc << Range{ { 0, 22 }, { 0, 36 } } << CodeActions{};
+    QTest::newRow("property_name") << propertyDoc << Range{ { 0, 35 }, { 0, 36 } } << CodeActions{};
 
     const auto itemWithBindingDoc =
             fakeTextDocument("import QtQuick; Item{ property var p: Item {} }");
@@ -131,12 +132,12 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
                       "Loader {\n    id: loader_Item\n    sourceComponent: component_Item\n}\n" }
         };
 
-        QTest::newRow("inside_binding") << itemInsideBindingDoc << Range{ {}, { 0, 50 } }
+        QTest::newRow("inside_binding") << itemInsideBindingDoc << Range{ { 0, 45 }, { 0, 50 } }
                                         << CodeActions{ codeAction(std::move(edits)) };
     }
 
     const auto twoItemsDoc = fakeTextDocument("import QtQuick; Item{ Item{} }");
-    QTest::newRow("rootItem2") << twoItemsDoc << Range{ { 0, 15 }, { 0, 30 } } << CodeActions{};
+    QTest::newRow("rootItem2") << twoItemsDoc << Range{ { 0, 16 }, { 0, 30 } } << CodeActions{};
 
     {
         TextEdits edits{
@@ -151,7 +152,7 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
                       "Loader {\n    id: loader_Item\n    sourceComponent: component_Item\n}\n" }
         };
 
-        QTest::newRow("childItem") << twoItemsDoc << Range{ { 0, 21 }, { 0, 28 } }
+        QTest::newRow("childItem") << twoItemsDoc << Range{ { 0, 22 }, { 0, 28 } }
                                    << CodeActions{ codeAction(std::move(edits)) };
     }
 
@@ -165,7 +166,8 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
                                             "       }\n"
                                             "   }\n"
                                             "}");
-    QTest::newRow("nestedDoc_RootItem") << nestedDoc << Range{ {}, { 9, 0 } } << CodeActions{};
+    QTest::newRow("nestedDoc_RootItem")
+            << nestedDoc << Range{ { 1, 1 }, { 9, 0 } } << CodeActions{};
 
     {
         TextEdits edits{
@@ -192,7 +194,7 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
                     "Loader {\n    id: loader_item1\n    sourceComponent: component_item1\n}\n" }
         };
 
-        QTest::newRow("nestedDoc_Item1") << nestedDoc << Range{ {}, { 8, 3 } }
+        QTest::newRow("nestedDoc_Item1") << nestedDoc << Range{ { 2, 4 }, { 8, 3 } }
                                          << CodeActions{ codeAction(std::move(edits)) };
     }
 }
