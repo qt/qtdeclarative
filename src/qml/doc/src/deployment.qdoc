@@ -6,15 +6,9 @@
 \title Deploying QML Applications
 \brief Provides information on how to use deploy QML applications.
 
-QML documents are loaded and run by the QML runtime. This includes the
-Declarative UI engine along with the built-in QML types and plugin modules. The
-QML runtime also provides access to third-party QML types and modules.
-
-Applications that use QML must invoke the QML runtime to run QML documents. You
-can do this by creating a QQuickView or a QQmlEngine, as described below. In
-addition, the Declarative UI package includes the \c qml tool, which loads
-\c {.qml} files. This tool is useful for developing and testing QML code without
-having to write a C++ application to load the QML runtime.
+This page provides information on how to deploy QML applications. It covers the
+use of \QC for deployment, and the use of the Qt Resource System to package QML
+files and other resources with the application executable.
 
 \section1 Deploying applications with \QC
 
