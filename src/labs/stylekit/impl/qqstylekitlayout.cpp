@@ -5,7 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static qreal width(QQStyleKitLayoutItem *li, qreal availableWidth = .0)
+static qreal layoutWidth(QQStyleKitLayoutItem *li, qreal availableWidth = .0)
 {
     Q_ASSERT(li);
     Q_ASSERT(li->item());
@@ -16,7 +16,7 @@ static qreal width(QQStyleKitLayoutItem *li, qreal availableWidth = .0)
     return qMax(.0, w);
 }
 
-static qreal height(QQStyleKitLayoutItem *li, qreal availableHeight = .0)
+static qreal layoutHeight(QQStyleKitLayoutItem *li, qreal availableHeight = .0)
 {
     Q_ASSERT(li);
     Q_ASSERT(li->item());
@@ -32,7 +32,7 @@ static qreal totalWidth(const QList<QQStyleKitLayoutItem *> &items, qreal spacin
     qreal total = .0;
     for (QQStyleKitLayoutItem *li : items) {
         if (li->item() && li->item()->isVisible())
-            total += width(li) + li->margins().left() + li->margins().right() + spacing;
+            total += layoutWidth(li) + li->margins().left() + li->margins().right() + spacing;
     }
     return total;
 }
@@ -42,7 +42,7 @@ static qreal totalHeight(const QList<QQStyleKitLayoutItem *> &items)
     qreal maxHeight = .0;
     for (QQStyleKitLayoutItem *li : items) {
         if (li->item() && li->item()->isVisible()) {
-            const qreal h = height(li) + li->margins().top() + li->margins().bottom();
+            const qreal h = layoutHeight(li) + li->margins().top() + li->margins().bottom();
             if (h > maxHeight)
                 maxHeight = h;
         }
@@ -55,7 +55,7 @@ static qreal vAlignY(QQStyleKitLayoutItem *li, qreal containerY, qreal container
     Q_ASSERT(li);
     Q_ASSERT(li->item());
 
-    const auto itemHeight = height(li, containerHeight);
+    const auto itemHeight = layoutHeight(li, containerHeight);
     const auto vAlign = li->alignment() & Qt::AlignVertical_Mask;
     const auto margins = li->margins();
     if (vAlign & Qt::AlignTop)
@@ -206,14 +206,11 @@ void QQStyleKitLayoutItem::setFillHeight(bool fill)
     emit fillHeightChanged();
 }
 
-QQStyleKitLayout::QQStyleKitLayout(QObject *parent)
-    : QObject(parent)
+QQStyleKitLayout::QQStyleKitLayout(QQuickItem *parent)
+    : QQuickItem(parent)
     , m_mirrored(false)
     , m_enabled(true)
-    , m_updatingLayout(false)
 {
-    m_updateTimer.setSingleShot(true);
-    connect(&m_updateTimer, &QTimer::timeout, this, &QQStyleKitLayout::updateLayout);
 }
 
 QQuickItem *QQStyleKitLayout::container() const
@@ -228,10 +225,10 @@ void QQStyleKitLayout::setContainer(QQuickItem *container)
 
     m_container = container;
     emit containerChanged();
-    connect(m_container, &QQuickItem::widthChanged, this, &QQStyleKitLayout::scheduleUpdate);
-    connect(m_container, &QQuickItem::heightChanged, this, &QQStyleKitLayout::scheduleUpdate);
+    connect(m_container, &QQuickItem::widthChanged, this, &QQStyleKitLayout::polish);
+    connect(m_container, &QQuickItem::heightChanged, this, &QQStyleKitLayout::polish);
 
-    scheduleUpdate();
+    polish();
 }
 
 QQmlListProperty<QQStyleKitLayoutItem> QQStyleKitLayout::layoutItems()
@@ -249,13 +246,13 @@ void QQStyleKitLayout::layoutItem_append(QQmlListProperty<QQStyleKitLayoutItem> 
     QQStyleKitLayout *layout = qobject_cast<QQStyleKitLayout *>(list->object);
     if (layout && item) {
         layout->m_layoutItems.append(item);
-        connect(item, &QQStyleKitLayoutItem::itemChanged, layout, &QQStyleKitLayout::scheduleUpdate);
-        connect(item, &QQStyleKitLayoutItem::alignmentChanged, layout, &QQStyleKitLayout::scheduleUpdate);
-        connect(item, &QQStyleKitLayoutItem::marginsChanged, layout, &QQStyleKitLayout::scheduleUpdate);
-        connect(item, &QQStyleKitLayoutItem::fillWidthChanged, layout, &QQStyleKitLayout::scheduleUpdate);
-        connect(item, &QQStyleKitLayoutItem::fillHeightChanged, layout, &QQStyleKitLayout::scheduleUpdate);
+        connect(item, &QQStyleKitLayoutItem::itemChanged, layout, &QQStyleKitLayout::polish);
+        connect(item, &QQStyleKitLayoutItem::alignmentChanged, layout, &QQStyleKitLayout::polish);
+        connect(item, &QQStyleKitLayoutItem::marginsChanged, layout, &QQStyleKitLayout::polish);
+        connect(item, &QQStyleKitLayoutItem::fillWidthChanged, layout, &QQStyleKitLayout::polish);
+        connect(item, &QQStyleKitLayoutItem::fillHeightChanged, layout, &QQStyleKitLayout::polish);
         emit layout->layoutItemsChanged();
-        layout->scheduleUpdate();
+        layout->polish();
     }
 }
 
@@ -281,7 +278,7 @@ void QQStyleKitLayout::layoutItem_clear(QQmlListProperty<QQStyleKitLayoutItem> *
     if (layout) {
         layout->m_layoutItems.clear();
         emit layout->layoutItemsChanged();
-        layout->scheduleUpdate();
+        layout->polish();
     }
 }
 
@@ -302,7 +299,7 @@ void QQStyleKitLayout::setContentMargins(const QMarginsF &margins)
 
     m_contentMargins = margins;
     emit contentMarginsChanged();
-    scheduleUpdate();
+    polish();
 }
 
 qreal QQStyleKitLayout::spacing() const
@@ -317,7 +314,7 @@ void QQStyleKitLayout::setSpacing(qreal spacing)
 
     m_spacing = spacing;
     emit spacingChanged();
-    scheduleUpdate();
+    polish();
 }
 
 bool QQStyleKitLayout::isMirrored() const
@@ -332,7 +329,7 @@ void QQStyleKitLayout::setMirrored(bool mirrored)
 
     m_mirrored = mirrored;
     emit mirroredChanged();
-    scheduleUpdate();
+    polish();
 }
 
 qreal QQStyleKitLayout::implicitWidth() const
@@ -352,7 +349,7 @@ void QQStyleKitLayout::setImplicitWidth(qreal width)
 
     m_implicitWidth = width;
     emit implicitWidthChanged();
-    scheduleUpdate();
+    polish();
 }
 
 void QQStyleKitLayout::setImplicitHeight(qreal height)
@@ -362,7 +359,7 @@ void QQStyleKitLayout::setImplicitHeight(qreal height)
 
     m_implicitHeight = height;
     emit implicitHeightChanged();
-    scheduleUpdate();
+    polish();
 }
 
 bool QQStyleKitLayout::isEnabled() const
@@ -379,20 +376,16 @@ void QQStyleKitLayout::setEnabled(bool enabled)
     emit enabledChanged();
 
     if (m_enabled)
-        scheduleUpdate();
+        polish();
 }
 
-void QQStyleKitLayout::updateLayout()
+void QQStyleKitLayout::updatePolish()
 {
     if (!m_enabled)
         return;
 
     if (!m_container || m_container->width() <= 0 || m_container->height() <= 0)
         return;
-
-    if (m_updatingLayout)
-        return;
-    m_updatingLayout = true;
 
     QList<QQStyleKitLayoutItem *> left;
     QList<QQStyleKitLayoutItem *> right;
@@ -441,8 +434,8 @@ void QQStyleKitLayout::updateLayout()
                 continue;
 
             const QMarginsF margins = li->margins();
-            const qreal itemWidth = width(li, paddedWidth);
-            const qreal itemHeight = height(li, paddedHeight);
+            const qreal itemWidth = layoutWidth(li, paddedWidth);
+            const qreal itemHeight = layoutHeight(li, paddedHeight);
             auto y = vAlignY(li, paddedY, paddedHeight);
             li->setX(x + margins.left());
             li->setY(y);
@@ -463,8 +456,8 @@ void QQStyleKitLayout::updateLayout()
                 continue;
 
             const QMarginsF margins = li->margins();
-            const qreal itemWidth = width(li, paddedWidth);
-            const qreal itemHeight = height(li, paddedHeight);
+            const qreal itemWidth = layoutWidth(li, paddedWidth);
+            const qreal itemHeight = layoutHeight(li, paddedHeight);
             x -= itemWidth + margins.right() + margins.left();
             auto y = vAlignY(li, paddedY, paddedHeight);
             li->setX(x + margins.left());
@@ -486,8 +479,8 @@ void QQStyleKitLayout::updateLayout()
                 continue;
 
             const QMarginsF margins = li->margins();
-            const qreal itemWidth = width(li, paddedWidth);
-            const qreal itemHeight = height(li, paddedHeight);
+            const qreal itemWidth = layoutWidth(li, paddedWidth);
+            const qreal itemHeight = layoutHeight(li, paddedHeight);
             auto y = vAlignY(li, paddedY, paddedHeight);
             li->setX(x + margins.left());
             li->setY(y);
@@ -530,13 +523,6 @@ void QQStyleKitLayout::updateLayout()
         m_padding = newPadding;
         emit paddingChanged();
     }
-    m_updatingLayout = false;
-}
-
-void QQStyleKitLayout::scheduleUpdate()
-{
-    if (!m_updateTimer.isActive())
-        m_updateTimer.start(0);
 }
 
 QT_END_NAMESPACE

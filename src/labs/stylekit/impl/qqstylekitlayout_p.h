@@ -19,6 +19,7 @@
 #include <QtQml/QtQml>
 #include <QtCore/qtimer.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -85,7 +86,7 @@ private:
     qreal m_height = 0;
 };
 
-class QQStyleKitLayout : public QObject
+class QQStyleKitLayout : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *container READ container WRITE setContainer NOTIFY containerChanged FINAL)
@@ -101,7 +102,7 @@ class QQStyleKitLayout : public QObject
     QML_NAMED_ELEMENT(StyleKitLayout)
 
 public:
-    QQStyleKitLayout(QObject *parent = nullptr);
+    QQStyleKitLayout(QQuickItem *parent = nullptr);
 
     QQuickItem *container() const;
     void setContainer(QQuickItem *item);
@@ -141,8 +142,7 @@ signals:
     void enabledChanged();
 
 private:
-    void updateLayout();
-    void scheduleUpdate();
+    void updatePolish() override;
 
     static void layoutItem_append(QQmlListProperty<QQStyleKitLayoutItem> *list, QQStyleKitLayoutItem *item);
     static qsizetype layoutItem_count(QQmlListProperty<QQStyleKitLayoutItem> *list);
@@ -159,9 +159,6 @@ private:
 
     bool m_mirrored: 1;
     bool m_enabled: 1;
-    bool m_updatingLayout: 1;
-
-    QTimer m_updateTimer;
 };
 
 QT_END_NAMESPACE
