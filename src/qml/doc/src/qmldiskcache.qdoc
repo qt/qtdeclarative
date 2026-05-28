@@ -4,107 +4,144 @@
 /*!
 \page qmldiskcache.html
 \title The QML Disk Cache
-\brief QML documents are generally pre-compiled or cached after compilation.
+\brief QML documents are pre-compiled ahead of time or cached after compilation
+    at runtime.
+
+To achieve optimal performance, QML documents are either pre-compiled ahead of
+time during the build process or cached after compilation at runtime. This page
+describes both strategies and how to configure the caching behavior.
+
+\section1 Ahead-of-Time Compilation
 
 You should define your QML modules using \l{qt_add_qml_module} that makes sure
-that the \l{Qt Quick Compiler} processes your QML and JavaScript files ahead of
-time. Also, it guarantees optimum performance at run time. The
-\l{Qt Quick Compiler} generates byte code for
-each function and binding. This byte code can be used by the QML interpreter,
-and the Just-in-time (JIT) compiler in the QML engine. In addition, the
-\l{Qt Quick Compiler} generates native code for suitable functions and
-bindings. The native code can be executed directly, which results in better
-performance than interpreting or just-in-time compiling the byte code. Both,
-byte code and native code are then compiled into your binary.
+the \l{Qt Quick Compiler} processes your QML and JavaScript files ahead of time.
+This guarantees optimum performance at run time.
 
-When using \l{qmake} you can specify \c{CONFIG += qtquickcompiler} to
-give similar treatment to QML and JavaScript files added as resources to your
-project. \l{\QC Documentation}{\QC} has a setting that allows passing
-\c{CONFIG += qtquickcompiler} to the qmake command line. By default, it is
-enabled for release and profile builds. \l{qmake} cannot pass as much
-information to the \l{Qt Quick Compiler} as CMake. Therefore, the compilation
-will contain less native code.
+The \l{Qt Quick Compiler} generates byte code for each function and binding.
+This byte code can be used by the QML interpreter and the Just-in-Time (JIT)
+compiler in the QML engine. In addition, the \l{Qt Quick Compiler} generates
+native code for suitable functions and bindings. The native code is executed
+directly, which results in better performance than interpreting or just-in-time
+compiling byte code. Both byte code and native code are then compiled into your
+application binary.
 
-\section1 QML Caching
+One benefit of ahead-of-time compilation is that syntax errors in your QML
+documents are detected at application compile-time instead of at run-time when
+the file is loaded.
 
-The QML runtime loads QML documents by parsing them and generating byte code.
-Most of the time, the document hasn't changed since the last time it was
-loaded. To speed up this loading process, the QML runtime maintains a cache
-file for each QML document. This cache file contains the compiled byte code and
-a binary representation of the QML document structure. In addition, when
-multiple applications use the same QML document, the memory needed for the code
-is shared between application processes. The cache files are loaded via the
-\c mmap() system call on POSIX-compliant operating systems or
-\c CreateFileMapping() on Windows, resulting in significant memory savings.
+\section2 With CMake
 
-Each time you load a changed QML document, the cache is automatically
-re-created. Cache files are located in a sub-directory of
-QStandardPaths::CacheLocation with the name "qmlcache". The file extension is
-\c .qmlc for QML documents and \c .jsc for imported JavaScript modules.
+When using CMake with \l{qt_add_qml_module}, QML files are automatically
+compiled ahead of time. You should load your QML documents from the resource
+file system where possible. This ensures the QML engine can find the code
+compiled ahead of time.
 
-\target Compiling Ahead of Time
-\section1 Ahead-of-Time compilation
+\section2 With qmake
 
-The automatic caching of compiled QML documents into cache files results in
-significantly faster application load time. However, the initial creation of
-cache files can still take time, especially when the application starts for the
-very first time. To avoid that initial step and provide faster startup times
-from the very beginning, Qt's build system allows you to perform the
-compilation step for QML files ahead of time, when compiling the C++ parts of
-your application.
+When using \l{qmake}, you can enable ahead-of-time compilation by specifying
+\c{CONFIG += qtquickcompiler} in your project file. \l{\QC Documentation}{\QC}
+has a setting that allows passing this directive to the qmake command line.
+By default, it is enabled for release and profile builds.
 
-One benefit of compiling ahead of time is that, in the event of syntax errors
-in your QML documents, you are notified at application compile-time instead of
-at run-time, when the file is loaded.
-
-This will happen automatically if you use the
-\l{qt_add_qml_module}{CMake QML Module API}, for qmake see the section below.
-
-\section2 qmake
-
-When using qmake, in order to deploy your application with QML files compiled
-ahead of time, you must organize the files and the build system in a specific
-way:
+When using qmake, you must organize your project in a specific way:
 
 \list
     \li All QML documents (including JavaScript files) must be included as
         resources via \l{The Qt Resource System}{Qt's Resource system}.
     \li Your application must load the QML documents via the \c qrc:/// URL
         scheme.
-    \li You can enable Ahead-of-Time compilation using the
-        \c CONFIG+=qtquickcompiler directive.
 \endlist
 
-You should make sure to load your QML documents from the resource file system
-where possible. Otherwise the QML engine won't be able to find the code compiled
-ahead of time.
+Note that qmake cannot pass as much information to the \l{Qt Quick Compiler}
+as CMake. Therefore, the compilation will contain less native code.
 
-If no byte code or native code can be found for a QML document at run time, or
-if the code is found but cannot be used, the QML engine compiles the document
-into a byte code representation on the fly. The compiling process can be time
-consuming, and the result will contain only byte code. Subsequent loads of the
-same document will yield the same byte code. The QML engine can optimize this
-step by caching the result of the compilation. It stores the byte code in a
-cache file and later loads the cache file instead of re-compiling when the same
-QML document is requested again. Usually, the cache files are stored in a
-subdirectory \c{qmlcache} of the  system's cache directory, as denoted by
-QStandardPaths::CacheLocation.
+\section1 Runtime Disk Caching
 
-Checks are in place to make sure that any cache files and any code compiled
-ahead of time are only loaded if all of the following conditions are met:
+If no pre-compiled code is found at run time, or if the code cannot be used, the
+QML engine compiles QML documents into a byte code representation on the fly.
+Instead of re-compiling the same document each time it is loaded, the QML engine
+caches the compiled byte code. The caching process is automatic: each time you
+load a changed QML document, the cache is automatically re-created.
+
+\section2 Cache File Format and Location
+
+Cache files use the following extensions:
+
+\list
+    \li \c .qmlc for compiled QML documents
+    \li \c .jsc for imported JavaScript files
+    \li \c .mjsc for ECMAScript modules
+\endlist
+
+Cache files are located in a subdirectory named \c{qmlcache} of the system's
+cache directory, as denoted by QStandardPaths::CacheLocation.
+
+\section2 Memory Efficiency
+
+Cache files are loaded via the \c mmap() system call on POSIX-compliant
+operating systems or \c CreateFileMapping() on Windows. This memory-mapping
+approach results in significant memory savings. In addition, when multiple
+applications use the same QML document, the memory needed for the code is shared
+between application processes, further reducing memory overhead.
+
+\section1 Cache Validation
+
+Cache files and ahead-of-time compiled code are only loaded if all of the
+following conditions are met:
+
 \list
     \li The Qt version has not changed
     \li The source code in the original file has not changed
     \li The QML debugger is not running
 \endlist
 
-Only the \c{QML_FORCE_DISK_CACHE} variable (see below) overrides only the
-condition regarding the QML debugger. The other environment variables do not
-influence these conditions.
+Note that \c{QML_FORCE_DISK_CACHE} (see below) can override the QML debugger
+condition. The other environment variables do not influence these validation
+conditions.
 
-The primary way of fine tuning the behavior regarding ahead of time compiled
-code and caching is via the environment variable \c{QML_DISK_CACHE}. This
-variable takes a comma-separated list of options, for example:
+\section2 Validation of ahead of time generated native code
+
+The native code generated by the \l{Qt Quick Compiler} has some assumptions
+built in. If the conditions in which the code is executed differ from those in
+which it was compiled, the code may be unsafe to use. Therefore, the native code
+is validated at runtime using metadata stored alongside it. If this validation
+passes, the code is executed as normal. If it fails, the execution silently
+falls back to interpreting the bytecode instead. This validation happens once
+per file, the first time the code is loaded, and either approves or rejects all
+functions and bindings in that QML file as a whole.
+
+You can customize the validation of AOT code:
+
+\list
+    \li To disable the validation at runtime, set the
+        \c{QV4_SKIP_AOT_VALIDATION} environment variable. This allows you to
+        avoid paying the small overhead of performing the validation.
+
+        \code
+        QV4_SKIP_AOT_VALIDATION=1 ./myQmlApp
+        \endcode
+    \li To ensure that validation succeeds at runtime, set the
+        \c{QV4_FAIL_ON_INVALID_AOT} environment variable. If validation fails,
+        the program is terminated. This allows you to make sure compiled
+        functions are indeed executed as native code, for example.
+
+        \code
+        QV4_FAIL_ON_INVALID_AOT=1 ./myQmlApp
+        \endcode
+    \li To disable the feature completely and prevent the \l{Qt Quick Compiler}
+        from generating the metadata and validation logic, pass
+        \c{NO_GENERATE_AOT_VALIDATION} to \l{qt_add_qml_module}.
+
+        \code
+        qt_add_qml_module(... NO_GENERATE_AOT_VALIDATION)
+        \endcode
+\endlist
+
+
+\section1 Configuration
+
+You can fine-tune caching behavior using the environment variable
+\c{QML_DISK_CACHE}, which takes a comma-separated list of options. For example:
 
 \badcode
 QML_DISK_CACHE=aot,qmlc-read
