@@ -25,6 +25,56 @@ enabled for release and profile builds. \l{qmake} cannot pass as much
 information to the \l{Qt Quick Compiler} as CMake. Therefore, the compilation
 will contain less native code.
 
+\section1 QML Caching
+
+The QML runtime loads QML documents by parsing them and generating byte code.
+Most of the time, the document hasn't changed since the last time it was
+loaded. To speed up this loading process, the QML runtime maintains a cache
+file for each QML document. This cache file contains the compiled byte code and
+a binary representation of the QML document structure. In addition, when
+multiple applications use the same QML document, the memory needed for the code
+is shared between application processes. The cache files are loaded via the
+\c mmap() system call on POSIX-compliant operating systems or
+\c CreateFileMapping() on Windows, resulting in significant memory savings.
+
+Each time you load a changed QML document, the cache is automatically
+re-created. Cache files are located in a sub-directory of
+QStandardPaths::CacheLocation with the name "qmlcache". The file extension is
+\c .qmlc for QML documents and \c .jsc for imported JavaScript modules.
+
+\target Compiling Ahead of Time
+\section1 Ahead-of-Time compilation
+
+The automatic caching of compiled QML documents into cache files results in
+significantly faster application load time. However, the initial creation of
+cache files can still take time, especially when the application starts for the
+very first time. To avoid that initial step and provide faster startup times
+from the very beginning, Qt's build system allows you to perform the
+compilation step for QML files ahead of time, when compiling the C++ parts of
+your application.
+
+One benefit of compiling ahead of time is that, in the event of syntax errors
+in your QML documents, you are notified at application compile-time instead of
+at run-time, when the file is loaded.
+
+This will happen automatically if you use the
+\l{qt_add_qml_module}{CMake QML Module API}, for qmake see the section below.
+
+\section2 qmake
+
+When using qmake, in order to deploy your application with QML files compiled
+ahead of time, you must organize the files and the build system in a specific
+way:
+
+\list
+    \li All QML documents (including JavaScript files) must be included as
+        resources via \l{The Qt Resource System}{Qt's Resource system}.
+    \li Your application must load the QML documents via the \c qrc:/// URL
+        scheme.
+    \li You can enable Ahead-of-Time compilation using the
+        \c CONFIG+=qtquickcompiler directive.
+\endlist
+
 You should make sure to load your QML documents from the resource file system
 where possible. Otherwise the QML engine won't be able to find the code compiled
 ahead of time.
