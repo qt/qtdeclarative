@@ -98,3 +98,12 @@
     \title Android: FrameLayout.LayoutParams
 */
 
+/*!
+    \externalpage https://doc-snapshots.qt.io/qtbridges-dev/qtbridges-csharp-index.html
+    \title Qt Bridges for C#
+*/
+
+/*!
+    \externalpage https://doc-snapshots.qt.io/qtbridges-dev/qtbridges-rust-index.html
+    \title Qt Bridges for Rust
+*/
