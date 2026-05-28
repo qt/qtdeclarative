@@ -13,7 +13,7 @@
         \list
         \include includes/qml-language-reference.qdocinc qml-language-reference-structure
         \endlist
-
+    \li \l{Initializing the QML Runtime}
     \li \l{Prototyping, Debugging and Profiling QML Applications}
         \list
         \li \l{Prototyping with the QML Runtime Tool}
