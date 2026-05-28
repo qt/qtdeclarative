@@ -169,6 +169,15 @@ ApplicationWindow {
         //! [label]
         */
 
+        //! [menuBar]
+        menuBar {
+            background {
+                radius: 0
+                border.width: 0
+            }
+        }
+        //! [menuBar]
+
         //! [menuBarItem]
         menuBarItem {
             text.alignment: Qt.AlignLeft | Qt.AlignVCenter

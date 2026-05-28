@@ -70,6 +70,7 @@ QT_BEGIN_NAMESPACE
     \value StyleReader.ItemDelegate   \l {ItemDelegate}
     \value StyleReader.Label          \l {Label}
     \value StyleReader.Menu           \l {Menu}
+    \value StyleReader.MenuBar        \l {MenuBar}
     \value StyleReader.MenuBarItem    \l {MenuBarItem}
     \value StyleReader.MenuSeparator  \l {MenuSeparator}
     \value StyleReader.Dialog         \l {Dialog}

@@ -32,10 +32,6 @@ BaseStyle {
 
     readonly property real indicatorSize: 24
 
-    applicationWindow {
-        background.color: __baseWhite
-    }
-
     control {
         spacing: 5
         padding: 5
@@ -85,7 +81,6 @@ BaseStyle {
         }
 
         hovered {
-            background.color: __backgroundMuted
             handle.color: __backgroundMuted
         }
 
@@ -93,6 +88,14 @@ BaseStyle {
             background.color: __baseWhite
             text.color: __textSubtle
         }
+    }
+
+    abstractButton {
+        hovered.background.color: __backgroundMuted
+    }
+
+    applicationWindow {
+        background.color: __baseWhite
     }
 
     checkBox {
@@ -168,6 +171,14 @@ BaseStyle {
 
     label {
         background.visible: false
+    }
+
+    menuBar {
+        background {
+            radius: 0
+            border.width: 0
+            color: __backgroundDefault
+        }
     }
 
     menuBarItem {
