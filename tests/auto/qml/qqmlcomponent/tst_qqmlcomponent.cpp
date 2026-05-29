@@ -1507,6 +1507,8 @@ void tst_qqmlcomponent::loadFromModuleLifecycle()
         QVERIFY(watcher);
         QCOMPARE(watcher->states, expected);
         QCOMPARE(watcher->observedTexts, QStringList(3));
+        QVERIFY(watcher->hasContextInClassBegin);
+        QVERIFY(watcher->hasEngineInClassBegin);
 
         const QString loaded = "load from module"_L1;
         root.reset(component.createWithInitialProperties(QVariantMap{{text, loaded}}));

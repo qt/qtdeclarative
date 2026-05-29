@@ -1117,6 +1117,21 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     m_state.setCompletePending(true);
 
     QObject *rv = nullptr;
+    auto setupDData = [&]() {
+        QQmlData *ddata = QQmlData::get(rv);
+        Q_ASSERT(ddata);
+        // top-level objects should never get JS ownership.
+        // if JS ownership is needed this needs to be explicitly undone (like in createObject())
+        ddata->indestructible = true;
+        ddata->explicitIndestructibleSet = true;
+        ddata->rootObjectInCreation = false;
+
+        // Assign parent context to the object if we haven't created one.
+        if (!ddata->outerContext)
+            ddata->outerContext = context.data();
+        if (!ddata->context)
+            ddata->context = context.data();
+    };
 
     const QQmlType type = loadedType();
     if (!type.isValid()) {
@@ -1138,11 +1153,14 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
         rv = m_state.creator()->create(m_start, nullptr, nullptr, flags);
         if (!rv)
             m_state.appendCreatorErrors();
+        else
+            setupDData();
         enginePriv->dereferenceScarceResources();
     } else {
         // TODO: extract into function
         rv = type.createWithQQmlData();
         QQmlPropertyCache::ConstPtr propertyCache = QQmlData::ensurePropertyCache(rv);
+        setupDData();
         if (QQmlParserStatus *parserStatus = parserStatusCast(type, rv)) {
             parserStatus->classBegin();
             m_state.ensureRequiredPropertyStorage(rv);
@@ -1164,22 +1182,6 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
             // it is unclear what we can do in that case
             // ### TOOD: QTBUG-136560
         }
-    }
-
-    if (rv) {
-        QQmlData *ddata = QQmlData::get(rv);
-        Q_ASSERT(ddata);
-        // top-level objects should never get JS ownership.
-        // if JS ownership is needed this needs to be explicitly undone (like in createObject())
-        ddata->indestructible = true;
-        ddata->explicitIndestructibleSet = true;
-        ddata->rootObjectInCreation = false;
-
-        // Assign parent context to the object if we haven't created one.
-        if (!ddata->outerContext)
-            ddata->outerContext = context.data();
-        if (!ddata->context)
-            ddata->context = context.data();
     }
 
     return rv;
