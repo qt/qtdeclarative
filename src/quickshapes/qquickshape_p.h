@@ -234,7 +234,7 @@ class Q_QUICKSHAPES_EXPORT QQuickShapePath : public QQuickPath
     Q_PROPERTY(QQuickItem *fillItem READ fillItem WRITE setFillItem NOTIFY fillItemChanged REVISION(6, 8) FINAL)
     Q_PROPERTY(QQuickShapeTrim *trim READ trim CONSTANT REVISION(6, 10) FINAL)
     Q_PROPERTY(bool cosmeticStroke READ cosmeticStroke WRITE setCosmeticStroke NOTIFY cosmeticStrokeChanged REVISION(6, 11) FINAL)
-    Q_PROPERTY(QQuickShapeGradient *strokeGradient READ strokeGradient WRITE setStrokeGradient NOTIFY strokeGradientChanged RESET resetStrokeGradient REVISION(6, 12) FINAL)
+    Q_PROPERTY(QQuickShapeGradient *strokeGradient READ strokeGradient WRITE setStrokeGradient NOTIFY strokeGradientChanged RESET resetStrokeGradient REVISION(6, 12))
     QML_NAMED_ELEMENT(ShapePath)
     QML_ADDED_IN_VERSION(1, 0)
 
