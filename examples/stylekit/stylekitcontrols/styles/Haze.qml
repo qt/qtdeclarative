@@ -251,7 +251,6 @@ Style {
         slider {
             background.implicitWidth: 100
             indicator.implicitHeight: 8
-            indicator.implicitWidth: Style.Stretch
         }
 
         pane {

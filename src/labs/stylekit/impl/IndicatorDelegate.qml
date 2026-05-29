@@ -40,8 +40,8 @@ DelegateContainer {
                 margins.right: indicatorStyle.foreground.rightMargin
                 margins.top: indicatorStyle.foreground.topMargin
                 margins.bottom: indicatorStyle.foreground.bottomMargin
-                fillWidth: indicatorStyle.foreground.implicitWidth === Style.Stretch
-                fillHeight: indicatorStyle.foreground.implicitHeight === Style.Stretch
+                fillWidth: indicatorStyle.foreground.fillWidth
+                fillHeight: indicatorStyle.foreground.fillHeight
             }
         ]
         mirrored: quickControl.mirrored

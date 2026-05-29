@@ -238,6 +238,8 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitProp
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
     Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged FINAL)
+    Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged FINAL)
+    Q_PROPERTY(bool fillHeight READ fillHeight WRITE setFillHeight NOTIFY fillHeightChanged FINAL)
     Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged FINAL)
     Q_PROPERTY(qreal leftMargin READ leftMargin WRITE setLeftMargin NOTIFY leftMarginChanged FINAL)
     Q_PROPERTY(qreal rightMargin READ rightMargin WRITE setRightMargin NOTIFY rightMarginChanged FINAL)
@@ -299,6 +301,12 @@ public:
 
     qreal minimumWidth() const;
     void setMinimumWidth(qreal width);
+
+    bool fillWidth() const;
+    void setFillWidth(bool fill);
+
+    bool fillHeight() const;
+    void setFillHeight(bool fill);
 
     qreal margins() const;
     void setMargins(qreal margins);
@@ -371,6 +379,8 @@ signals:
     void opacityChanged();
     void dataChanged();
     void delegateChanged();
+    void fillWidthChanged();
+    void fillHeightChanged();
 
 private:
     QPointer<QQuickGradient> m_gradient;

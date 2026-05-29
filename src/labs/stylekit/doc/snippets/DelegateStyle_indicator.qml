@@ -38,7 +38,7 @@ ApplicationWindow {
             text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
             padding: 0
             indicator {
-                implicitHeight: Style.Stretch
+                fillHeight: true
                 color: "navy"
                 opacity: 0.1
                 foreground {

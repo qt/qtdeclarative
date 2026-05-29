@@ -54,8 +54,8 @@ Item {
                 margins.right: indicatorStyle.rightMargin
                 margins.top: indicatorStyle.topMargin
                 margins.bottom: indicatorStyle.bottomMargin
-                fillWidth: indicatorStyle.implicitWidth === Style.Stretch
-                fillHeight: indicatorStyle.implicitHeight === Style.Stretch
+                fillWidth: indicatorStyle.fillWidth
+                fillHeight: indicatorStyle.fillHeight
             }
         ]
         mirrored: quickControl.mirrored

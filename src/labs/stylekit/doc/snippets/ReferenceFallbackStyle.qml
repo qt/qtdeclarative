@@ -52,8 +52,8 @@ BaseStyle {
             color: __baseWhite
             border.color: __strokeStrong
             foreground {
-                implicitWidth: Style.Stretch
-                implicitHeight: Style.Stretch
+                fillWidth: true
+                fillHeight: true
                 margins: 1
                 color: palette.accent
                 image.color: palette.accent
@@ -116,12 +116,15 @@ BaseStyle {
     }
 
     comboBox {
-        text.alignment: Qt.AlignVCenter
+        text.alignment: Qt.AlignVCenter | Qt.AlignLeft
         background.implicitWidth: 150
         indicator {
             color: __transparent
             border.width: 0
+            alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
+                fillWidth: false
+                fillHeight: false
                 implicitWidth: 10
                 implicitHeight: 10
                 alignment: Qt.AlignCenter
@@ -138,13 +141,21 @@ BaseStyle {
         hovered.background.visible: true
     }
 
+    pane {
+        padding: 12
+        background {
+            implicitWidth: 200
+            implicitHeight: 200
+            color: __baseWhite
+        }
+    }
+
     frame {
         background.color: Qt.darker(__baseWhite, 1.05)
     }
 
     groupBox {
-        text.padding: 12
-        padding: 12
+        background.topMargin: 20
         background.implicitHeight: 20
     }
 
@@ -236,14 +247,6 @@ BaseStyle {
         background.border.width: 0
     }
 
-    pane {
-        background {
-            implicitWidth: 200
-            implicitHeight: 200
-            color: __baseWhite
-        }
-    }
-
     popup {
         background {
             implicitWidth: 200
@@ -280,7 +283,6 @@ BaseStyle {
         padding: 0
         background {
             implicitHeight: 10
-            visible: false
         }
         indicator {
             implicitHeight: 10
@@ -324,7 +326,7 @@ BaseStyle {
             implicitWidth: 150
         }
         indicator {
-            implicitWidth: Style.Stretch
+            fillWidth: true
             implicitHeight: 8
             radius: 8
             foreground {
@@ -336,7 +338,7 @@ BaseStyle {
     spinBox {
         text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         indicator {
-            implicitHeight: Style.Stretch
+            fillHeight: true
             border.width: 0
             margins: 0
             color: __transparent
@@ -346,9 +348,14 @@ BaseStyle {
                 image.fillMode: Image.PreserveAspectFit
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
 
-                // Note: by setting a rotation, we cannot at the same time set the implicit size to
-                // Stretch, since Stretch will be based on the unrotated geometry of the indicator.
-                // So if the height of the indicator is different from the width, things will look wrong.
+                // Note: since we set a rotation, we cannot at the same time set fillWidth or fillHeight to
+                // true, since the rotation is applied after the layout has been done based on the unrotated
+                // geometry of the indicator. So we set a fixed implicit size here instead, and let the layout
+                // stretch the indicator by setting the alignment to AlignCenter. This way, the indicator will be
+                // stretched in both dimensions, but still maintain its aspect ratio due to the image's fillMode
+                // being PreserveAspectFit.
+                fillWidth: false
+                fillHeight: false
                 implicitWidth: 10
                 implicitHeight: 10
                 alignment: Qt.AlignCenter

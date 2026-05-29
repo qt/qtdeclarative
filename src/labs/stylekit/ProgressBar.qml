@@ -51,8 +51,8 @@ T.ProgressBar {
                     bottom: styleReader.indicator.bottomMargin
                 }
                 alignment: styleReader.indicator.alignment
-                fillWidth: styleReader.indicator.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.implicitHeight === Style.Stretch
+                fillWidth: styleReader.indicator.fillWidth
+                fillHeight: styleReader.indicator.fillHeight
             }
         ]
     }

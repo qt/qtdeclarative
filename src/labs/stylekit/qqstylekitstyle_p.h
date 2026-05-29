@@ -47,11 +47,6 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitStyle : public QQStyleKitStyleAndThemeBase
     QML_NAMED_ELEMENT(BaseStyle)
 
 public:
-    enum Constants {
-        Stretch = -1, // Use all available space
-    };
-    Q_ENUM(Constants)
-
     QQStyleKitStyle(QObject *parent = nullptr);
     ~QQStyleKitStyle();
 

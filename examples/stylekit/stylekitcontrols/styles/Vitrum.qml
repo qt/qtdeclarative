@@ -341,7 +341,6 @@ Style {
     slider {
         spacing: 26
         background.implicitWidth: 180
-        // indicator.implicitHeight: UnifiedStyle.Stretch
         indicator.foreground.minimumWidth: 50
         indicator.foreground.margins: 2
         indicator.foreground.delegate: null

@@ -329,13 +329,24 @@ QT_BEGIN_NAMESPACE
     \qmlproperty real DelegateStyle::implicitHeight
 
     The implicit height of this delegate.
+
+    \note This property is ignored if \l fillHeight is \c true, including when
+    it is set higher up in the style hierarchy — for example in the
+    \l {Style::fallbackStyle}{fallback style}.
+
+    \sa fillHeight, {StyleKit Property Resolution}
 */
 
 /*!
     \qmlproperty real DelegateStyle::implicitWidth
 
-    The implicit width of this delegate. Set this to \l {Style::Stretch}{Style.Stretch}
-    to make the delegate fill the available width of the control.
+    The implicit width of this delegate.
+
+    \note This property is ignored if \l fillWidth is \c true, including when
+    it is set higher up in the style hierarchy — for example in the
+    \l {Style::fallbackStyle}{fallback style}.
+
+    \sa fillWidth, {StyleKit Property Resolution}
 */
 
 /*!
@@ -362,6 +373,38 @@ QT_BEGIN_NAMESPACE
 
     The minimum width of this delegate. The delegate will not be sized
     smaller than this value.
+*/
+
+/*!
+    \qmlproperty bool DelegateStyle::fillWidth
+
+    Whether the delegate should fill the available width of the parent item.
+
+    Some delegates, such as the groove of a \l [QtQuickControls]{Slider}, are
+    often expected to fill the available width of the control, rather than
+    having a fixed implicit width. This can be achieved by setting
+    \c fillWidth to \c true. To add some space between the delegate and the
+    edges of its parent, use the \l margins properties.
+
+    If \c fillWidth is \c false, the delegate's width is determined by its \l implicitWidth.
+
+    \sa fillHeight, implicitWidth
+*/
+
+/*!
+    \qmlproperty bool DelegateStyle::fillHeight
+
+    Whether the delegate should fill the available height of the parent item.
+
+    Some delegates, such as the foreground of a checkbox indicator, are often expected
+    to fill the available height (and width) of the indicator, rather than
+    having a fixed implicit height. This can be achieved by setting
+    \c fillHeight to \c true. To add some space between the delegate and the
+    edges of its parent, use the \l margins properties.
+
+    If \c fillHeight is \c false, the delegate's height is determined by its \l implicitHeight.
+
+    \sa fillWidth, implicitHeight
 */
 
 /*!
@@ -1472,6 +1515,28 @@ void QQStyleKitDelegateProperties::setMinimumWidth(qreal width)
 {
     if (setStyleProperty(QQSK::Property::MinimumWidth, width))
         handleStylePropertyChanged(&QQStyleKitDelegateProperties::minimumWidthChanged);
+}
+
+bool QQStyleKitDelegateProperties::fillWidth() const
+{
+    return styleProperty<bool>(QQSK::Property::FillWidth);
+}
+
+void QQStyleKitDelegateProperties::setFillWidth(bool fill)
+{
+    if (setStyleProperty(QQSK::Property::FillWidth, fill))
+        handleStylePropertyChanged(&QQStyleKitDelegateProperties::fillWidthChanged);
+}
+
+bool QQStyleKitDelegateProperties::fillHeight() const
+{
+    return styleProperty<bool>(QQSK::Property::FillHeight);
+}
+
+void QQStyleKitDelegateProperties::setFillHeight(bool fill)
+{
+    if (setStyleProperty(QQSK::Property::FillHeight, fill))
+        handleStylePropertyChanged(&QQStyleKitDelegateProperties::fillHeightChanged);
 }
 
 qreal QQStyleKitDelegateProperties::margins() const

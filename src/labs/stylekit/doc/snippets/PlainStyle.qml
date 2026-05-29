@@ -42,7 +42,7 @@ Style {
     }
 
     slider {
-        indicator.implicitWidth: Style.Stretch
+        indicator.fillWidth: true
         indicator.implicitHeight: 6
         indicator.radius: 3
     }
