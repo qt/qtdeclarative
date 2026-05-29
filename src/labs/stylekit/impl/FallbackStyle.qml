@@ -52,8 +52,8 @@ BaseStyle {
             color: __baseWhite
             border.color: __strokeStrong
             foreground {
-                implicitWidth: Style.Stretch
-                implicitHeight: Style.Stretch
+                fillWidth: true
+                fillHeight: true
                 margins: 1
                 color: palette.accent
                 image.color: palette.accent
@@ -123,6 +123,8 @@ BaseStyle {
             border.width: 0
             alignment: Qt.AlignRight | Qt.AlignVCenter
             foreground {
+                fillWidth: false
+                fillHeight: false
                 implicitWidth: 10
                 implicitHeight: 10
                 alignment: Qt.AlignCenter
@@ -324,7 +326,7 @@ BaseStyle {
             implicitWidth: 150
         }
         indicator {
-            implicitWidth: Style.Stretch
+            fillWidth: true
             implicitHeight: 8
             radius: 8
             foreground {
@@ -336,7 +338,7 @@ BaseStyle {
     spinBox {
         text.alignment: Qt.AlignHCenter | Qt.AlignVCenter
         indicator {
-            implicitHeight: Style.Stretch
+            fillHeight: true
             border.width: 0
             margins: 0
             color: __transparent
@@ -346,9 +348,14 @@ BaseStyle {
                 image.fillMode: Image.PreserveAspectFit
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
 
-                // Note: by setting a rotation, we cannot at the same time set the implicit size to
-                // Stretch, since Stretch will be based on the unrotated geometry of the indicator.
-                // So if the height of the indicator is different from the width, things will look wrong.
+                // Note: since we set a rotation, we cannot at the same time set fillWidth or fillHeight to
+                // true, since the rotation is applied after the layout has been done based on the unrotated
+                // geometry of the indicator. So we set a fixed implicit size here instead, and let the layout
+                // stretch the indicator by setting the alignment to AlignCenter. This way, the indicator will be
+                // stretched in both dimensions, but still maintain its aspect ratio due to the image's fillMode
+                // being PreserveAspectFit.
+                fillWidth: false
+                fillHeight: false
                 implicitWidth: 10
                 implicitHeight: 10
                 alignment: Qt.AlignCenter

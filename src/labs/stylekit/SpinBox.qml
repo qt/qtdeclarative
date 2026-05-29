@@ -82,8 +82,8 @@ T.SpinBox {
                 margins.right: styleReader.indicator.first.rightMargin
                 margins.top: styleReader.indicator.first.topMargin
                 margins.bottom: styleReader.indicator.first.bottomMargin
-                fillWidth: styleReader.indicator.first.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.first.implicitHeight === Style.Stretch
+                fillWidth: styleReader.indicator.first.fillWidth
+                fillHeight: styleReader.indicator.first.fillHeight
             },
             StyleKitLayoutItem {
                 id: downIndicatorItem
@@ -93,8 +93,8 @@ T.SpinBox {
                 margins.right: styleReader.indicator.second.rightMargin
                 margins.top: styleReader.indicator.second.topMargin
                 margins.bottom: styleReader.indicator.second.bottomMargin
-                fillWidth: styleReader.indicator.second.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.second.implicitHeight === Style.Stretch
+                fillWidth: styleReader.indicator.second.fillWidth
+                fillHeight: styleReader.indicator.second.fillHeight
             }
         ]
         spacing: styleReader.spacing

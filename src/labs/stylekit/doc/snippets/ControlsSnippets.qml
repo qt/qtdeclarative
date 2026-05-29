@@ -409,9 +409,8 @@ ApplicationWindow {
             background.visible: false
 
             indicator {
-                // The groove of the slider should fill out the entire width of
-                // the control, which we achieve by setting implicitWidth to Style.Stretch.
-                implicitWidth: Style.Stretch
+                // The groove of the slider should fill out the entire width of the control
+                fillWidth: true
                 implicitHeight: 8
                 radius: 255
                 color: "#e0e0e0"

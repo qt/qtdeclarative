@@ -56,24 +56,6 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty int Style::Stretch
-    \readonly
-
-    A sentinel value that, when assigned to a delegate's
-    \l {DelegateStyle::implicitWidth}{implicitWidth} or
-    \l {DelegateStyle::implicitHeight}{implicitHeight}, causes the delegate
-    to fill the available space along that axis. The space available will
-    be constrained by layout properties, such as \l {DelegateStyle::}{margins} and
-    \l {ControlStyle::}{padding}.
-
-    For example, to make a slider groove fill out the available width:
-
-    \snippet StyleSnippets.qml stretch
-
-    \sa DelegateStyle::implicitWidth, DelegateStyle::implicitHeight
-*/
-
-/*!
     \qmlproperty list<string> Style::customThemeNames
     \readonly
 

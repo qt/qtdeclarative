@@ -43,7 +43,7 @@ ApplicationWindow {
             // Unset properties fall back to control.
             handle.color: "white"
             indicator {
-                implicitWidth: Style.Stretch
+                fillWidth: true
                 implicitHeight: 6
                 color: "steelblue"
                 foreground.color: "skyblue"

@@ -91,6 +91,8 @@ public:
         Data,
         Delegate,
         FillMode,
+        FillWidth,
+        FillHeight,
         Gradient,
         HOffset,
         Image,

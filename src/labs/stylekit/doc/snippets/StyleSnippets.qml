@@ -11,13 +11,6 @@ ApplicationWindow {
     visible: true
 
     StyleKit.style: Style {
-        //! [stretch]
-        slider {
-            indicator.implicitWidth: Style.Stretch
-            indicator.implicitHeight: 6
-        }
-        //! [stretch]
-
         //! [dark]
         dark: Theme {
             control.background.color: "#404040"

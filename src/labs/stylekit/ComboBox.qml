@@ -63,8 +63,8 @@ T.ComboBox {
                 margins.right: styleReader.indicator.rightMargin
                 margins.top: styleReader.indicator.topMargin
                 margins.bottom: styleReader.indicator.bottomMargin
-                fillWidth: styleReader.indicator.implicitWidth === Style.Stretch
-                fillHeight: styleReader.indicator.implicitHeight === Style.Stretch
+                fillWidth: styleReader.indicator.fillWidth
+                fillHeight: styleReader.indicator.fillHeight
             }
         ]
         spacing: styleReader.spacing
