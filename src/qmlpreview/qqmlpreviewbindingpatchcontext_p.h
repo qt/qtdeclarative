@@ -12,6 +12,8 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
+#include <unordered_map>
+
 //
 //  W A R N I N G
 //  -------------
@@ -30,20 +32,55 @@ namespace QQmlPreview {
 class BindingPatchContext
 {
 public:
-    BindingPatchContext(QObject *object) : m_object(object), m_ddata(QQmlData::get(object)) { }
+    BindingPatchContext(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                        int objectIndex, const QString &prefix)
+        : m_object(object), unit(unit), objectIndex(objectIndex), prefix(prefix + QLatin1Char('.'))
+    {
+    }
+
+    BindingPatchContext(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                        int objectIndex)
+        : m_object(object), unit(unit), objectIndex(objectIndex)
+    {
+    }
 
     void reset();
+    void stashExternalState(
+            const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &internalUnits);
+    void restoreExternalState();
+
+    BindingPatchContext *childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                      const QV4::CompiledData::Binding *binding);
+    BindingPatchContext *attachedContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                         const QV4::CompiledData::Binding *binding);
 
 private:
-    void resetBinding(const QMetaObject *metaObject, const QV4::CompiledData::Binding *binding,
-                      const QString &defaultPropName,
+    struct StoredBinding
+    {
+        QString propertyName;
+        QQmlAnyBinding binding;
+    };
+
+    struct StoredValue
+    {
+        QString propertyName;
+        QVariant value;
+    };
+
+    void recordBindingValues(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                             int cuIndex, QHash<QString, QVariant> *constantValues = nullptr);
+    void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
-    void resetBindings(const QMetaObject *metaObject,
-                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit, int cuIndex);
+    void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex);
 
     QObject *m_object = nullptr;
-    QQmlData *m_ddata = nullptr;
-    QDuplicateTracker<int> m_handledProperties;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> unit;
+    int objectIndex;
+    QString prefix;
+
+    std::vector<StoredBinding> m_storedBindings;
+    std::vector<StoredValue> m_storedValues;
+    std::unordered_map<QString, std::unique_ptr<BindingPatchContext>> m_children;
 };
 
 } // namespace QQmlPreview

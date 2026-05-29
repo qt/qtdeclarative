@@ -18,6 +18,7 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlpreviewdiff_p.h>
 #include <private/qqmlpreviewobjectpatch_p.h>
+#include <private/qv4engine_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
 #include <QtQuick/qquickitem.h>
@@ -145,6 +146,17 @@ private slots:
     // Reproduces the lookupIdObject crash specifically.
     void compositeContextIdLookupCrash();
 
+    // Reproduces the coffee demo "Out of" label bug: a script binding
+    // (visible: (root.cupsLeft != 0) ? false : true) is changed to a constant
+    // (visible: true), then changed back. The binding must be re-created so
+    // that the visible property responds to cupsLeft changes again.
+    void scriptToConstantToScriptRoundtrip();
+
+    // Same as above but the external binding is a script expression (2 + 3)
+    // rather than a literal (5). Verifies that external script bindings also
+    // survive a rebuild of the target's compilation unit.
+    void scriptToConstantToScriptRoundtripExternalScript();
+
     // SafeArea attached property assertion crash after rebuild.
     // Reproduces ASSERT "item == parent()" in qquicksafearea.cpp when
     // resize event fires after rebuild orphaned the attached SafeArea object.
@@ -186,7 +198,10 @@ static bool updateObjects(std::vector<QObject *> &objects,
     return false;
 }
 
-tst_QQmlPreviewObjectPatch::tst_QQmlPreviewObjectPatch() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
+tst_QQmlPreviewObjectPatch::tst_QQmlPreviewObjectPatch() : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+    QV4::ExecutionEngine::setPreviewing(true);
+}
 
 void tst_QQmlPreviewObjectPatch::granularConstantUpdate()
 {
@@ -242,7 +257,6 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdatePreservesUserOverride()
     // The user-overridden value (99 ≠ old default 10) must not be touched.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->property("count").toInt(), 99); // preserved
 }
 
@@ -275,7 +289,6 @@ void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->property("count").toInt(), 42);
     QCOMPARE(object->property("newProp").toString(), QString("added"));
 }
@@ -309,7 +322,6 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->property("count").toInt(), 77);
     QVERIFY(!object->property("removedProp").isValid());
 }
@@ -726,7 +738,6 @@ void tst_QQmlPreviewObjectPatch::scriptBindingChangeDropsCppPropertyOverride()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->objectName(), QStringLiteral("user-modified"));
 
     // The new CU's script binding was applied correctly.
@@ -904,14 +915,12 @@ void tst_QQmlPreviewObjectPatch::reattachPreservesExternalBinding()
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->property("value").toInt(), 42);
 
     // Now change __mult to 8.  If the binding is live, value updates to 48.
     // If only the value was stashed (binding lost), value stays at 42.
     engine.rootContext()->setContextProperty("__mult", 8);
 
-    QEXPECT_FAIL("", "We do not preserve user overrides", Continue);
     QCOMPARE(object->property("value").toInt(), 48);
 }
 
@@ -2537,6 +2546,175 @@ void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
 
     // The root should still be updated (its context is valid).
     QCOMPARE(object->property("counter").toInt(), 3);
+}
+
+// Reproduces the coffee demo bug where the "Out of" label stays visible after
+// a script binding → constant → script binding roundtrip during in-place preview.
+//
+// Scenario:
+//   1. CoffeeCardForm.ui.qml has:  visible: (root.cupsLeft != 0) ? false : true
+//   2. User edits to:              visible: true   (constant)
+//   3. User edits back to:         visible: (root.cupsLeft != 0) ? false : true
+//
+// After step 3, the script binding must be active again: when cupsLeft > 0,
+// visible should be false. The bug causes the binding NOT to be re-created,
+// so visible stays true regardless of cupsLeft.
+//
+// This test reproduces the full roundtrip: load the original (script binding),
+// patch to the intermediate (constant), then patch back (script binding).
+// Uses a composite type hierarchy (Form + Derived + Wrapper) to faithfully
+// reproduce the coffee demo structure where CoffeeCardForm.ui.qml is patched
+// while instances live inside ChoosingCoffeeForm → CoffeeCard → CoffeeCardForm.
+void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtrip()
+{
+    // --- Step 1: Load the outer wrapper which instantiates the composite type ---
+    // This establishes: OuterWrapper → Wrapper → Derived → FormOld
+    // cupsLeft is set from OuterWrapper (like ChoosingCoffee.qml sets it from outside).
+    QQmlComponent wrapperComp(&engine, testFileUrl("ScriptToConstantToScriptOuterWrapper.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    // Find the derived/card instance via the wrapper's card alias.
+    QObject *card = wrapper->property("card").value<QObject *>();
+    QVERIFY(card);
+    QCOMPARE(card->property("cupsLeft").toInt(), 5);
+
+    // Get the outOfDialog Rectangle via the alias.
+    QObject *outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+
+    // cupsLeft = 5, so (cupsLeft != 0) ? false : true → false → Rectangle hidden
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // Verify the binding is reactive
+    card->setProperty("cupsLeft", 0);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+    card->setProperty("cupsLeft", 5);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // --- Step 2: Patch the form CU (script binding → constant true) ---
+    // Load old and mid form components to get their CUs for diffing.
+    QQmlComponent oldFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    QQmlComponent midFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormMid.qml"));
+    QVERIFY2(midFormComp.isReady(), qPrintable(midFormComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    const auto midExecUnit = QQmlComponentPrivate::get(&midFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit && midExecUnit);
+
+    // Find objects belonging to the form's CU (the form-level objects inside `card`).
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, midExecUnit));
+
+    // After patching to constant true, the Rectangle should be visible.
+    // Re-fetch outOfDialog since it might have been recreated.
+    outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+
+    // Process events between patches (mimics real scenario where there's time between edits)
+    QCoreApplication::processEvents();
+
+    // --- Step 3: Patch the form CU again (constant true → script binding) ---
+    QQmlComponent newFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    objects = objectsForCompilationUnit(&engine, midExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, midExecUnit, newExecUnit));
+
+    // After restoring the script binding, cupsLeft = 5 → visible should be false.
+    // BUG: the external cupsLeft binding is lost during rebuild, cupsLeft falls back
+    // to 0 (form default), and the binding (root.cupsLeft != 0) ? false : true
+    // evaluates to true — the "Out of" label stays visible.
+    outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // Verify the binding is truly reactive again
+    card->setProperty("cupsLeft", 0);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+    card->setProperty("cupsLeft", 3);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+}
+
+void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtripExternalScript()
+{
+    // Same as scriptToConstantToScriptRoundtrip but the outer wrapper uses a
+    // script expression (2 + 3) rather than a literal constant (5).
+    QQmlComponent wrapperComp(&engine, testFileUrl("ScriptToConstantToScriptOuterWrapperScript.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    QObject *card = wrapper->property("card").value<QObject *>();
+    QVERIFY(card);
+    QCOMPARE(card->property("cupsLeft").toInt(), 5);
+
+    QObject *outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // Verify the binding is reactive
+    card->setProperty("cupsLeft", 0);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+    card->setProperty("cupsLeft", 5);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // --- Step 2: Patch the form CU (script binding → constant true) ---
+    QQmlComponent oldFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    QQmlComponent midFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormMid.qml"));
+    QVERIFY2(midFormComp.isReady(), qPrintable(midFormComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    const auto midExecUnit = QQmlComponentPrivate::get(&midFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit && midExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, midExecUnit));
+
+    outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+
+    QCoreApplication::processEvents();
+
+    // --- Step 3: Patch the form CU again (constant true → script binding) ---
+    QQmlComponent newFormComp(&engine,
+                              testFileUrl("ScriptToConstantToScriptFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    objects = objectsForCompilationUnit(&engine, midExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, midExecUnit, newExecUnit));
+
+    // After restoring the script binding, the external script expression
+    // (2 + 3 = 5) must still be in effect, so visible should be false.
+    outOfDialog = card->property("outOfDialog").value<QObject *>();
+    QVERIFY(outOfDialog);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
+
+    // Verify the binding is truly reactive again
+    card->setProperty("cupsLeft", 0);
+    QCOMPARE(outOfDialog->property("visible").toBool(), true);
+    card->setProperty("cupsLeft", 3);
+    QCOMPARE(outOfDialog->property("visible").toBool(), false);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
