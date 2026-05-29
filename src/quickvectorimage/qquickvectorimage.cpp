@@ -449,8 +449,15 @@ void QQuickVectorImage::setRetainWhileLoading(bool retainWhileLoading)
 }
 
 /*!
-    \qmlproperty bool QtQuick.VectorImage::VectorImage::status
+    \qmlproperty enumeration QtQuick.VectorImage::VectorImage::status
     \since 6.12
+
+    This property holds the status of vector image loading. It can be one of:
+
+    \value VectorImage.Null       No vector image has been set
+    \value VectorImage.Ready      The vector image has been loaded
+    \value VectorImage.Loading    The vector image is currently being loaded
+    \value VectorImage.Error      An error occurred while loading the vector image
 */
 QQuickVectorImage::Status QQuickVectorImage::status() const
 {
