@@ -126,8 +126,6 @@ public:
     bool isValid() const { return m_errors.isEmpty(); }
     bool isInplace() const { return m_inplace; }
     void setIsInplace(bool newInplace) { m_inplace = newInplace; }
-    bool forceEnabled() const { return m_force; }
-    void setForceEnabled(bool newForce) { m_force = newForce; }
     bool ignoreSettingsEnabled() const { return m_ignoreSettings; }
     void setIgnoreSettingsEnabled(bool newIgnoreSettings) { m_ignoreSettings = newIgnoreSettings; }
     bool writeDefaultSettingsEnabled() const { return m_writeDefaultSettings; }
@@ -187,7 +185,6 @@ private:
 
     bool m_verbose = false;
     bool m_inplace = false;
-    bool m_force = false;
     bool m_ignoreSettings = false;
     bool m_writeDefaultSettings = false;
     bool m_outputOptions = false;

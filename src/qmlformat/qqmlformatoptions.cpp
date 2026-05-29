@@ -199,19 +199,16 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
             "file"_L1);
     parser.addOption(settingsOption);
 
-    parser.addOption(QCommandLineOption(
-            { "i"_L1, "inplace"_L1 },
-            QStringLiteral("Edit file in-place instead of outputting to stdout.")));
-
     // Note the blatant abuse of the option's help text to add a "section marker"
     // Therefore, this needs to come last. Also, on Windows, the unicode characters seem to cause issues
-    parser.addOption(QCommandLineOption({ "f"_L1, "force"_L1 },
-                                        #ifdef Q_OS_WINDOWS
-                                        "Continue even if an error has occurred.\n<><><><><><><><><>\nFormatting options\n<><><><><><><><><>"_L1
-                                        #else
-                                        u"Continue even if an error has occurred.\n♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦\nFormatting options\n♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦"_s
-                                        #endif
-                                        ));
+    parser.addOption(QCommandLineOption(
+            { "i"_L1, "inplace"_L1 },
+#ifdef Q_OS_WINDOWS
+            "Edit file in-place instead of outputting to stdout.\n<><><><><><><><><>\nFormatting options\n<><><><><><><><><>"_L1
+#else
+            u"Edit file in-place instead of outputting to stdout.\n♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦\nFormatting options\n♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦♦"_s
+#endif
+            ));
 
     //
     // options that can be configured by qmlformat.ini
@@ -343,7 +340,6 @@ QQmlFormatOptions QQmlFormatOptions::buildCommandLineOptions(const QStringList &
     options.setDryRun(parser.isSet(dryrunOption));
     options.setIsVerbose(parser.isSet("verbose"_L1));
     options.setIsInplace(parser.isSet("inplace"_L1));
-    options.setForceEnabled(parser.isSet("force"_L1));
     options.setIgnoreSettingsEnabled(parser.isSet("ignore-settings"_L1));
 
     if (parser.isSet("tabs"_L1)) {
