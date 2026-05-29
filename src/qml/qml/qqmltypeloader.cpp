@@ -748,10 +748,21 @@ void QQmlTypeLoader::Blob::importQmldirScripts(
 {
     assertTypeLoaderThread();
 
-    const auto qmldirScripts = qmldir.scripts();
+    // A "prefer" directive in the qmldir redirects file lookups to another
+    // location, typically the compiled-in resources. Honor it here so that
+    // qualified scripts resolve from the same location as components and
+    // unqualified scripts, which inherit the redirect via the import URL set
+    // up by QQmlImports::addLibraryImport(). Otherwise a deployed module whose
+    // files only exist in the resources would try to load the script from a
+    // nonexistent file next to the qmldir on disk. See QTBUG-143877.
+    QQmlTypeLoaderQmldirContent redirectedQmldir = qmldir;
+    const QUrl scriptBaseUrl = redirectedQmldir.hasRedirection()
+        ? QUrl{QQmlImports::redirectQmldirContent(typeLoader(), &redirectedQmldir)}
+        : qmldirUrl;
+    const auto qmldirScripts = redirectedQmldir.scripts();
     for (const QQmlDirParser::Script &script : qmldirScripts) {
         const QUrl plainUrl = QUrl(script.fileName);
-        const QUrl scriptUrl = qmldirUrl.resolved(plainUrl);
+        const QUrl scriptUrl = scriptBaseUrl.resolved(plainUrl);
         QQmlRefPointer<QQmlScriptBlob> blob = typeLoader()->getScript(scriptUrl, plainUrl);
 
         // Self-import via qmldir is OK-ish. We ignore it.
