@@ -276,6 +276,10 @@ public:
     void setSilent(bool silent) { m_output.setSilent(silent); }
     bool isSilent() const { return m_output.isSilent(); }
 
+    void setManualFlush(bool manualFlush) { m_manualFlush = manualFlush; }
+    bool hasManualFlush() const { return m_manualFlush; }
+    void manualFlush() { m_output.flushBuffer(); }
+
     /*!
     \internal
     The logger is disabled when warnings are not relevant, for example when the import visitor runs
@@ -368,6 +372,7 @@ private:
     bool m_hasPendingCompileError = false;
     bool m_hasCompileSkip = false;
     bool m_isDisabled = false;
+    bool m_manualFlush = false;
 
     QQmlJS::WarningSeverity m_compileErrorSeverity = QQmlJS::WarningSeverity::Warning;
     QQmlJS::WarningSeverity m_compileSkipSeverity = QQmlJS::WarningSeverity::Info;

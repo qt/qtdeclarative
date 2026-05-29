@@ -326,7 +326,7 @@ void QQmlJSLogger::log(Message &&diagMsg, bool showContext, bool showFileName)
         m_currentFunctionMessages.push_back(std::move(diagMsg));
     }
 
-    if (!m_inTransaction)
+    if (!m_inTransaction && !m_manualFlush)
         m_output.flushBuffer();
 }
 
@@ -398,7 +398,8 @@ void QQmlJSLogger::commit()
 
     m_currentFunctionMessages.append(std::exchange(m_pendingMessages, {}));
     m_hasCompileError = m_hasCompileError || std::exchange(m_hasPendingCompileError, false);
-    m_output.flushBuffer();
+    if (!m_manualFlush)
+        m_output.flushBuffer();
     m_inTransaction = false;
 }
 
