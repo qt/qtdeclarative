@@ -57,9 +57,6 @@ The following options only affect the tool behavior:
     \li \c{-i}, \c{--inplace}
     \li Edit file in-place instead of outputting to stdout.
 \row
-    \li \c{-f}, \c{--force}
-    \li Continue even if an error has occurred.
-\row
     \li \c{-F}, \c{--files <file>}
     \li Format all files listed in file, in-place
 \endtable
