@@ -44,6 +44,7 @@ qt_internal_add_qml_module(LabsStyleKit
         ItemDelegate.qml
         MenuBar.qml
         MenuBarItem.qml
+        MenuItem.qml
         MenuSeparator.qml
         ProgressBar.qml
         RadioButton.qml

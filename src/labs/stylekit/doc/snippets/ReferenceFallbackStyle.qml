@@ -184,6 +184,35 @@ BaseStyle {
         hovered.background.color: __backgroundSubtle
     }
 
+    menuItem {
+        text.alignment: Qt.AlignLeft | Qt.AlignVCenter
+        background {
+            implicitWidth: 200
+            border.width: 0
+        }
+        indicator {
+            color: __transparent
+            border.width: 0
+            foreground {
+                implicitWidth: 10
+                implicitHeight: 10
+                color: __transparent
+                image.color: __textDefault
+                image.fillMode: Image.PreserveAspectFit
+                alignment: Qt.AlignCenter
+            }
+            first {
+                alignment: Qt.AlignLeft
+                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+            }
+            second {
+                alignment: Qt.AlignRight
+                foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+            }
+        }
+        hovered.background.color: __backgroundSubtle
+    }
+
     menuSeparator {
         padding: 2
         background.visible: false
