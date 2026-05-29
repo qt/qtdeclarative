@@ -34,10 +34,10 @@ class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImage : public QQuickItem
     Q_PROPERTY(QQuickVectorImageAnimations *animations READ animations CONSTANT REVISION(6, 10) FINAL)
     Q_PROPERTY(bool assumeTrustedSource READ assumeTrustedSource WRITE setAssumeTrustedSource NOTIFY assumeTrustedSourceChanged FINAL)
     Q_PROPERTY(bool asynchronousShapes READ asynchronousShapes WRITE setAsynchronousShapes NOTIFY asynchronousShapesChanged REVISION(6, 11) FINAL)
-    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 12) FINAL)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 12) FINAL)
-    Q_PROPERTY(bool retainWhileLoading READ retainWhileLoading WRITE setRetainWhileLoading NOTIFY retainWhileLoadingChanged REVISION(6, 12) FINAL)
-    Q_PROPERTY(QQuickItem *generatedItem READ generatedItem NOTIFY generatedItemChanged REVISION(6, 12) FINAL)
+    Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged REVISION(6, 12))
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(6, 12))
+    Q_PROPERTY(bool retainWhileLoading READ retainWhileLoading WRITE setRetainWhileLoading NOTIFY retainWhileLoadingChanged REVISION(6, 12))
+    Q_PROPERTY(QQuickItem *generatedItem READ generatedItem NOTIFY generatedItemChanged REVISION(6, 12))
     QML_NAMED_ELEMENT(VectorImage)
 
 public:
