@@ -77,6 +77,7 @@
             \li \l {Qt Labs WavefrontMesh QML Types}
         \endlist
     \li \l {Important Concepts In Qt Quick - Convenience Types}{Convenience types}
+    \li \l {svgtoqml}{SVG to QML converter}
     \li \l {Qt Quick Shapes QML Types}{Qt Quick Shapes}
     \li \l {Qt Quick Vector Image QML Types}{Qt Quick Vector Image}
     \li \l {Qt Quick Widgets}{Displaying Qml views in Qt Widgets}
