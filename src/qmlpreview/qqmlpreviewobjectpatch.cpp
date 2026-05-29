@@ -266,7 +266,7 @@ static void rebuildObject(QObject *object, int cuIndex,
             QQmlRefPointer<QQmlContextData>(ddata->outerContext);
 
     // If the object has no context, or is scheduled for deletion, it's half-dead already.
-    if (!ddata->context || !outerContext || ddata->isQueuedForDeletion)
+    if (!ddata->context || !outerContext || !outerContext->isValid() || ddata->isQueuedForDeletion)
         return;
 
     CompositeLevel instanceLevel{ ddata->compilationUnit == oldUnit ? newUnit

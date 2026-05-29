@@ -14,6 +14,7 @@
 
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmldata_p.h>
+#include <private/qqmlcontextdata_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlpreviewdiff_p.h>
 #include <private/qqmlpreviewobjectpatch_p.h>
@@ -148,6 +149,11 @@ private slots:
     // Reproduces ASSERT "item == parent()" in qquicksafearea.cpp when
     // resize event fires after rebuild orphaned the attached SafeArea object.
     void safeAreaAttachedRebuildCrash();
+
+    // Consecutive in-place updates must skip objects whose outer context was
+    // invalidated by a prior rebuild. Without the isValid() check in
+    // rebuildObject(), the second update crashes accessing a dead context.
+    void consecutiveUpdatesDeadContext();
 
 private:
     QQmlEngine engine;
@@ -2461,6 +2467,76 @@ void tst_QQmlPreviewObjectPatch::safeAreaAttachedRebuildCrash()
         }
     }
     QVERIFY(background);
+}
+
+// Consecutive in-place updates: the first update invalidates the outer context
+// of some child objects. Without the outerContext->isValid() guard the second
+// update tries to use that dead context and crashes.
+void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
+{
+    QQmlComponent v1Comp(&engine, testFileUrl("DeadContextV1.qml"));
+    QVERIFY2(v1Comp.isReady(), qPrintable(v1Comp.errorString()));
+    QScopedPointer<QObject> object(v1Comp.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("counter").toInt(), 1);
+
+    QQmlComponent v2Comp(&engine, testFileUrl("DeadContextV2.qml"));
+    QVERIFY2(v2Comp.isReady(), qPrintable(v2Comp.errorString()));
+
+    const auto v1Unit = QQmlComponentPrivate::get(&v1Comp)->compilationUnit();
+    const auto v2Unit = QQmlComponentPrivate::get(&v2Comp)->compilationUnit();
+    QVERIFY(v1Unit && v2Unit);
+
+    // First update: v1 -> v2.
+    auto objects = objectsForCompilationUnit(&engine, v1Unit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, v1Unit, v2Unit));
+    QCOMPARE(object->property("counter").toInt(), 2);
+
+    // Simulate the condition that triggers the bug: between two rapid updates,
+    // a child object's outer context becomes invalid. This happens in practice
+    // when a parent context gets invalidated during cleanup of an intermediate
+    // state (e.g. cascading context invalidation from a destroyed ancestor).
+    // We identify the inline component instance (whose outerContext differs from
+    // the root's ownContext) and invalidate it.
+    QQmlData *rootData = QQmlData::get(object.data());
+    QVERIFY(rootData && rootData->ownContext);
+    QQmlRefPointer<QQmlContextData> rootCtx(rootData->ownContext.data());
+
+    objects = objectsForCompilationUnit(&engine, v2Unit);
+    QVERIFY(objects.size() > 1); // root + inline component instance
+
+    bool invalidatedChild = false;
+    for (QObject *obj : objects) {
+        QQmlData *ddata = QQmlData::get(obj);
+        if (!ddata || !ddata->outerContext)
+            continue;
+        // Find an object whose outer context is NOT the root's own context —
+        // that's the inline component instance with its own context chain.
+        if (ddata->outerContext != rootCtx.data()) {
+            QQmlRefPointer<QQmlContextData> ctx(ddata->outerContext);
+            ctx->invalidate();
+            invalidatedChild = true;
+            break;
+        }
+    }
+    QVERIFY(invalidatedChild);
+
+    // Second update on the same objects. Without the isValid() guard in
+    // rebuildObject(), this crashes by trying to create objects into the
+    // invalidated context.
+    QQmlComponent v3Comp(&engine, testFileUrl("DeadContextV3.qml"));
+    QVERIFY2(v3Comp.isReady(), qPrintable(v3Comp.errorString()));
+
+    const auto v3Unit = QQmlComponentPrivate::get(&v3Comp)->compilationUnit();
+    QVERIFY(v3Unit);
+
+    objects = objectsForCompilationUnit(&engine, v2Unit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, v2Unit, v3Unit));
+
+    // The root should still be updated (its context is valid).
+    QCOMPARE(object->property("counter").toInt(), 3);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
