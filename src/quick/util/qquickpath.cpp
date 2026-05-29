@@ -1982,6 +1982,8 @@ void QQuickPathArc::addToPath(QPainterPath &path, const QQuickPathData &data)
 {
     const QPointF &startPoint = path.currentPosition();
     const QPointF &endPoint = positionForCurve(data, startPoint);
+    if (startPoint == endPoint)
+        return;
     QQuickSvgParser::pathArc(path,
             _radiusX,
             _radiusY,

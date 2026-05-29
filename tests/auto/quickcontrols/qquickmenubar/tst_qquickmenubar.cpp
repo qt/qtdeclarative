@@ -67,11 +67,8 @@ void tst_qquickmenubar::delegate()
 
 void tst_qquickmenubar::mouse()
 {
-    SKIP_IF_NO_WINDOW_ACTIVATION
-
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+    SKIP_IF_NO_WINDOW_ACTIVATION;
+    SKIP_IF_NO_MOUSE_HOVER;
 
     QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
 
@@ -720,9 +717,7 @@ void tst_qquickmenubar::addRemove()
 
 void tst_qquickmenubar::checkHighlightWhenMenuDismissed()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Mouse highlight not functional on offscreen/minimal platforms");
+    SKIP_IF_NO_MOUSE_HOVER;
 
     QQmlApplicationEngine engine(testFileUrl("checkHighlightWhenDismissed.qml"));
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(engine.rootObjects().value(0)));

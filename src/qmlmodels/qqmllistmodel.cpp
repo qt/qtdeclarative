@@ -3018,8 +3018,9 @@ bool QQmlListModelParser::definesEmptyList(const QString &s)
 
     The names used for roles must begin with a lower-case letter and should be
     common to all elements in a given model. Values must be simple constants; either
-    strings (quoted and optionally within a call to QT_TR_NOOP), boolean values
-    (true, false), numbers, or enumeration values (such as AlignText.AlignHCenter).
+    strings (quoted and optionally within a call to
+    \l [QML] {Qt::} {QT_TR_NOOP()}, boolean values (true, false), numbers, or
+    enumeration values (such as AlignText.AlignHCenter).
 
     Beginning with Qt 5.11 ListElement also allows assigning a function declaration to
     a role. This allows the definition of ListElements with callable actions.

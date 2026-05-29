@@ -51,6 +51,8 @@ tst_pointerhandlers::tst_pointerhandlers()
 
 void tst_pointerhandlers::hover_controlInsideControl()
 {
+    SKIP_IF_NO_MOUSE_HOVER;
+
     // Test that if you move the mouse over a control that is
     // a child of another control, both controls end up hovered.
     // A control should basically not block (accept) hover events.
@@ -102,6 +104,8 @@ void tst_pointerhandlers::hover_controlInsideControl()
 
 void tst_pointerhandlers::hover_controlAndMouseArea()
 {
+    SKIP_IF_NO_MOUSE_HOVER;
+
     QQuickView view(testFileUrl("controlandmousearea.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();

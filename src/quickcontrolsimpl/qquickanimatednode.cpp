@@ -31,7 +31,7 @@ int QQuickAnimatedNode::currentTime() const
 void QQuickAnimatedNode::setCurrentTime(int time)
 {
     m_currentTime = time;
-    m_timer.restart();
+    m_timer.start();
 }
 
 int QQuickAnimatedNode::duration() const
@@ -71,7 +71,7 @@ void QQuickAnimatedNode::start(int duration)
 
     m_running = true;
     m_currentLoop = 0;
-    m_timer.restart();
+    m_timer.start();
     if (duration > 0)
         m_duration = duration;
 

@@ -300,7 +300,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
                 for (auto idContext = context; idContext; idContext = idContext->parent()) {
                     const int objectId = idContext->propertyIndex(pathName.toString());
                     if (objectId != -1 && objectId < idContext->numIdValues()) {
-                        currentObject = context->idValue(objectId);
+                        currentObject = idContext->idValue(objectId);
                         break;
                     }
                 }
@@ -711,7 +711,7 @@ bool QQmlProperty::isBindable() const
     if (!d->object)
         return false;
     if (d->core.isValid())
-        return d->core.isBindable();
+        return d->core.notifiesViaBindable();
     return false;
 }
 
@@ -1365,7 +1365,9 @@ struct BindingFixer
     BindingFixer(QObject *object, const QQmlPropertyData &property,
                  QQmlPropertyData::WriteFlags flags)
     {
-        if (!property.isBindable() || !(flags & QQmlPropertyData::DontRemoveBinding))
+        // Even if QML cannot install bindings on this property, there may be a C++-created binding.
+        // If the property can notify via a bindable, there is a bindable that can hold a binding.
+        if (!property.notifiesViaBindable() || !(flags & QQmlPropertyData::DontRemoveBinding))
             return;
 
         QUntypedBindable bindable;

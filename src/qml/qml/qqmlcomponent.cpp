@@ -352,7 +352,7 @@ static void removePendingQPropertyBinding(
     if (QQmlData *ddata = QQmlData::get(o)) {
         const QQmlPropertyData *propData = ddata->propertyCache->property(
             propertyName, o, ddata->outerContext);
-        if (propData && propData->isBindable())
+        if (propData && propData->acceptsQBinding())
             creator->removePendingBinding(o, propData->coreIndex());
         return;
     }
@@ -694,6 +694,9 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit 
     Sets the QQmlComponent to use the given QML \a data. If \a url
     is provided, it is used to set the component name and to provide
     a base path for items resolved by this component.
+
+    \warning The new component will shadow any existing component of
+    the same URL. You should not pass a URL of an existing component.
 */
 void QQmlComponent::setData(const QByteArray &data, const QUrl &url)
 {

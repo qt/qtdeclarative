@@ -21,6 +21,7 @@
 using namespace Qt::StringLiterals;
 
 Q_IMPORT_QML_PLUGIN(TestTypesPlugin)
+Q_IMPORT_QML_PLUGIN(ConfusedPlugin)
 
 class tst_QmlCppCodegen : public QObject
 {
@@ -44,6 +45,7 @@ private slots:
     void scopedEnum();
     void sequenceToIterable();
     void compositeTypeMethod();
+    void confusedModule();
     void excessiveParameters();
     void jsImport();
     void jsmoduleImport();
@@ -511,6 +513,26 @@ void tst_QmlCppCodegen::compositeTypeMethod()
     QVERIFY(!object.isNull());
     QSignalSpy spy(object.data(), SIGNAL(foo()));
     QTRY_VERIFY(spy.size() > 0);
+}
+
+void tst_QmlCppCodegen::confusedModule()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, QUrl(u"qrc:/qt/qml/Confused/Main.qml"_s));
+    QVERIFY2(!component.isError(), component.errorString().toUtf8());
+    QTest::ignoreMessage(QtDebugMsg, "Hello from Test");
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQmlComponent component2(&engine, QUrl(u"qrc:/qt/qml/Confused/Main2.qml"_s));
+    QVERIFY2(!component2.isError(), component2.errorString().toUtf8());
+    // TODO: We would like to have a better error here, but we currently cannot propagate it.
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            "qrc:/qt/qml/Confused/Main2.qml:5: "
+            "TypeError: Property 'Print' of object [object Object] is not a function");
+    QScopedPointer<QObject> object2(component2.create());
+    QVERIFY(!object2.isNull());
 }
 
 void tst_QmlCppCodegen::excessiveParameters()

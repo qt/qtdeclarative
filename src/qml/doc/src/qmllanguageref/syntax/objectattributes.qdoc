@@ -127,8 +127,8 @@ Rectangle {
 
 \section4 Valid Types in Custom Property Definitions
 
-Any of the \l {QML Value Types} aside from the \l enumeration type can be used
-as custom property types. For example, these are all valid property declarations:
+Any of the \l {QML Value Types} can be used as custom property types. For
+example, these are all valid property declarations:
 
 \qml
 Item {
@@ -1124,7 +1124,8 @@ Text {
 }
 \endqml
 
-More information on enumeration usage in QML can be found in the \l {QML Value Types} \l enumeration documentation.
+More information on enumeration usage in QML can be found in the documentation on
+\l {QML Enumerations}.
 
 The ability to declare enumerations in QML was introduced in Qt 5.10.
 

@@ -7,6 +7,8 @@
 
 #include <QtQuick/private/qquickwindow_p.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -124,13 +126,13 @@ qreal QQuickSliderPrivate::positionAt(const QPointF &point) const
         if (!qFuzzyIsNull(extent))
             pos = (q->height() - point.y() - q->bottomPadding() - offset) / extent;
     }
-    return qBound<qreal>(0.0, pos, 1.0);
+    return std::clamp(pos, qreal(0.0), qreal(1.0));
 }
 
 void QQuickSliderPrivate::setPosition(qreal pos)
 {
     Q_Q(QQuickSlider);
-    pos = qBound<qreal>(0.0, pos, 1.0);
+    pos = std::clamp(pos, qreal(0.0), qreal(1.0));
     if (qFuzzyCompare(position, pos))
         return;
 

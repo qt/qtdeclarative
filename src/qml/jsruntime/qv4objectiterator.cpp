@@ -159,7 +159,7 @@ PropertyKey ForInIteratorObject::nextProperty() const
         }
 
         c = c->getPrototypeOf();
-        d()->current.set(scope.engine, c->d());
+        d()->current.set(scope.engine, c ? c->d() : nullptr);
         if (!c)
             break;
         delete d()->iterator;

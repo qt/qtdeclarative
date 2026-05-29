@@ -123,6 +123,10 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
     // Objective is to update the dirty status and rects.
     for (auto i = m_renderableNodes.rbegin(); i != m_renderableNodes.rend(); ++i) {
         auto node = *i;
+        // Track the original version of isDirty() as it can change if
+        // when we subtract dirty regions but still need to mark the previously
+        // dirty region as dirty.
+        const bool wasDirty = node->isDirty();
         if (!m_dirtyRegion.isEmpty()) {
             // See if the current dirty regions apply to the current node
             node->addDirtyRegion(m_dirtyRegion, true);
@@ -156,7 +160,11 @@ QRegion QSGAbstractSoftwareRenderer::optimizeRenderList()
                 // if isAlpha, add node's dirty rect to m_dirtyRegion
                 m_dirtyRegion += node->dirtyRegion();
             }
-            // if previousDirtyRegion has content outside of boundingRect add to m_dirtyRegion
+        }
+
+        if (wasDirty) {
+            // If this node started out dirty, make sure its previous region is
+            // added to the dirty region so that it gets cleared properly.
             QRegion prevDirty = node->previousDirtyRegion();
             if (!prevDirty.isNull())
                 m_dirtyRegion += prevDirty;

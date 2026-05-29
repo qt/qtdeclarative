@@ -918,7 +918,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             && !_valueTypeProperty;
 
     if (allowedToRemoveBinding) {
-        if (bindingProperty->isBindable()) {
+        if (bindingProperty->acceptsQBinding()) {
             removePendingBinding(_bindingTarget, bindingProperty->coreIndex());
         } else {
             QQmlPropertyPrivate::removeBinding(
@@ -935,7 +935,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                         _bindingTarget, signalIndex, context,
                         _scopeObject, runtimeFunction, currentQmlContext());
 
-            if (bindingProperty->isBindable()) {
+            if (bindingProperty->notifiesViaBindable()) {
                 auto target = _bindingTarget;
                 if (bindingProperty->isAlias()) {
                     // If the property is an alias, we cannot obtain the bindable interface directly with qt_metacall
@@ -959,7 +959,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
                 bs->takeExpression(expr);
             }
-        } else if (bindingProperty->isBindable()) {
+        } else if (bindingProperty->acceptsQBinding()) {
             QUntypedPropertyBinding qmlBinding;
             if (binding->isTranslationBinding()) {
                 qmlBinding = QQmlTranslationPropertyBinding::create(bindingProperty, compilationUnit, binding);

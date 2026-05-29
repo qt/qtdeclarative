@@ -234,8 +234,8 @@ public:
         , stopEventProcessing(false)
     {
         sgrc = static_cast<QSGDefaultRenderContext *>(renderContext);
-#if (defined(Q_OS_QNX) && defined(Q_PROCESSOR_X86)) || defined(Q_OS_INTEGRITY)
-        // The SDP 6.6.0 x86 MESA driver requires a larger stack than the default.
+#if defined(Q_OS_QNX) || defined(Q_OS_INTEGRITY)
+        // The render thread requires a larger stack than the default (256k).
         setStackSize(1024 * 1024);
 #endif
     }

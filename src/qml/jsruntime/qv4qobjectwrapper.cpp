@@ -277,9 +277,13 @@ ReturnedValue QObjectWrapper::getProperty(
 
     QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
 
-    if (ep && ep->propertyCapture && !property->isConstant())
-        if (!property->isBindable() || ep->propertyCapture->expression->mustCaptureBindableProperty())
-            ep->propertyCapture->captureProperty(object, property->coreIndex(), property->notifyIndex());
+    if (ep && ep->propertyCapture && !property->isConstant()) {
+        if (!property->notifiesViaBindable()
+                || ep->propertyCapture->expression->mustCaptureBindableProperty()) {
+            ep->propertyCapture->captureProperty(
+                    object, property->coreIndex(), property->notifyIndex());
+        }
+    }
 
     if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
@@ -516,7 +520,7 @@ void QObjectWrapper::setProperty(
             ScopedContext ctx(scope, f->scope());
 
             // binding assignment.
-            if (property->isBindable()) {
+            if (property->acceptsQBinding()) {
                 const QQmlPropertyIndex idx(property->coreIndex(), /*not a value type*/-1);
                 auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, idx);
                 QUntypedPropertyBinding binding;
@@ -527,6 +531,7 @@ void QObjectWrapper::setProperty(
                 } else {
                     binding = QQmlPropertyBinding::create(property, f->function(), object, callingQmlContext,
                                                            ctx, targetObject, targetIndex);
+
                 }
                 QUntypedBindable bindable;
                 void *argv = {&bindable};
@@ -1088,6 +1093,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
     PersistentValue function;
     PersistentValue thisObject;
     QMetaMethod signal;
+    qsizetype maxNumArguments;
 
     QObjectSlotDispatcher()
         : QtPrivate::QSlotObjectBase(&impl)
@@ -1113,14 +1119,16 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QQmlMetaObject::ArgTypeStorage<9> storage;
             QQmlMetaObject::methodParameterTypes(This->signal, &storage, nullptr);
 
-            int argCount = storage.size();
+            const qsizetype argCount = std::min(storage.size(), This->maxNumArguments);
 
             Scope scope(v4);
             ScopedFunctionObject f(scope, This->function.value());
 
             JSCallArguments jsCallData(scope, argCount);
-            *jsCallData.thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
-            for (int ii = 0; ii < argCount; ++ii) {
+            *jsCallData.thisObject = This->thisObject.isUndefined()
+                    ? v4->globalObject->asReturnedValue()
+                    : This->thisObject.value();
+            for (qsizetype ii = 0; ii < argCount; ++ii) {
                 QMetaType type = storage[ii];
                 if (type == QMetaType::fromType<QVariant>()) {
                     jsCallData.args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
@@ -1251,8 +1259,22 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
 
     QPair<QObject *, int> functionData = QObjectMethod::extractQtMethod(f); // align with disconnect
     if (QObject *receiver = functionData.first) {
+        if (functionData.second == -1) {
+            slot->maxNumArguments = std::numeric_limits<qsizetype>::max();
+        } else {
+            // This means we are connecting to QObjectMethod which complains about extra arguments.
+            Heap::QObjectMethod *d = static_cast<Heap::QObjectMethod *>(f->d());
+            const QMetaObject *metaObject = receiver->metaObject();
+            d->ensureMethodsCache(metaObject);
+            slot->maxNumArguments = std::accumulate(d->methods, d->methods + d->methodCount, 0,
+                                                    [metaObject](int a, const QQmlPropertyData &b) {
+                return std::max(a, metaObject->method(b.coreIndex()).parameterCount());
+            });
+        }
+
         QObjectPrivate::connect(signalObject, signalIndex, receiver, slot, Qt::AutoConnection);
     } else {
+        slot->maxNumArguments = std::numeric_limits<qsizetype>::max();
         qCInfo(lcObjectConnect,
                "Could not find receiver of the connection, using sender as receiver. Disconnect "
                "explicitly (or delete the sender) to make sure the connection is removed.");
