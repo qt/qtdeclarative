@@ -55,6 +55,7 @@ qt_internal_add_resource(tst_qqmlimport "preferred"
         "/qqmlimport/ModuleWithPrefer/"
     FILES
         "Preferred.qml"
+        "PreferredScript.js"
 )
 
 qt_internal_add_resource(tst_qqmlimport "preferred2"

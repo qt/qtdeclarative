@@ -226,6 +226,9 @@ public:
 
     static QQmlError moduleNotFoundError(const QString &uri, QTypeRevision version);
 
+    static QString redirectQmldirContent(QQmlTypeLoader *typeLoader,
+                                         QQmlTypeLoaderQmldirContent *qmldir);
+
 private:
     enum class IsLibrary : bool { No = false, Yes = true };
 
@@ -278,9 +281,6 @@ private:
 
     void registerBuiltinModuleTypes(
             const QQmlTypeLoaderQmldirContent &qmldir, QTypeRevision version);
-
-    QString redirectQmldirContent(
-            QQmlTypeLoader *typeLoader, QQmlTypeLoaderQmldirContent *qmldir);
 
     bool getQmldirContent(
             QQmlTypeLoader *typeLoader,  const QString &qmldirIdentifier, const QString &uri,

@@ -71,6 +71,7 @@ private slots:
     void envResourceImportPath();
     void preferResourcePath_data();
     void preferResourcePath();
+    void preferResourcePathScript();
     void invalidFileImport_data();
     void invalidFileImport();
     void implicitWithDependencies();
@@ -134,6 +135,23 @@ void tst_QQmlImport::preferResourcePath()
     QQmlComponent component(&engine, file);
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> o(component.create());
+    QCOMPARE(o->objectName(), "right");
+}
+
+void tst_QQmlImport::preferResourcePathScript()
+{
+    // A qualified import of a module with a "prefer" directive must resolve
+    // its scripts from the preferred (resource) location, just like its
+    // components. Otherwise the script next to the qmldir on disk would be
+    // used, which does not exist when the module is deployed with its files
+    // compiled into resources. QTBUG-143877
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    QQmlComponent component(&engine, testFileUrl("preferScriptQualified.qml"));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
     QCOMPARE(o->objectName(), "right");
 }
 
