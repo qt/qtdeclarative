@@ -1975,11 +1975,6 @@ void DomEnvironment::TypeReader::operator()(QQmlJSImporter *importer, const QStr
     Q_UNUSED(importer);
     Q_UNUSED(scopeToPopulate);
 
-    const QFileInfo info{ filePath };
-    const QString baseName = info.baseName();
-    scopeToPopulate->setInternalName(baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3)
-                                                                              : baseName);
-
     std::shared_ptr<DomEnvironment> envPtr = m_env.lock();
     // populate QML File if from implicit import directory
     // use the version in DomEnvironment and do *not* load from disk.

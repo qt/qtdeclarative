@@ -22,9 +22,6 @@ void defaultTypeReader(QQmlJSImporter *importer, const QString &filePath,
 {
     using namespace QQmlJS::AST;
     const QFileInfo info{ filePath };
-    const QString baseName = info.baseName();
-    scope->setInternalName(baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3)
-                                                                    : baseName);
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
