@@ -935,7 +935,6 @@ target_sources(Qml
         doc/src/tools/qtquickcompiler/qtqml-qml-script-compiler.qdoc
         doc/src/tools/qtquickcompiler/qtqml-tool-qmlcachegen.qdoc
         doc/src/tools/qtqml-tooling-qmlimportscanner.qdoc
-        doc/src/tools/qtqml-tooling-svgtoqml.qdoc
         doc/src/tools/qtqml-tooling-qmlprofiler.qdoc
         doc/src/tools/qtqml-tooling-qml.qdoc
         doc/src/tools/qtqml-tooling-qmltyperegistrar.qdoc

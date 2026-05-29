@@ -873,6 +873,7 @@ target_sources(Quick
         doc/src/concepts/statesanimations/behaviors.qdoc
         doc/src/concepts/statesanimations/states.qdoc
         doc/src/concepts/statesanimations/topic.qdoc
+        doc/src/concepts/tools/qtqml-tooling-svgtoqml.qdoc
         doc/src/concepts/visualcanvas/adaptations.qdoc
         doc/src/concepts/visualcanvas/coordinates.qdoc
         doc/src/concepts/visualcanvas/scenegraph.qdoc
