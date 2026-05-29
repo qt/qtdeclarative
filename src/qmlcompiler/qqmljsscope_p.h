@@ -157,7 +157,7 @@ public:
                                   typename QMultiHash<Key, Value>::iterator>;
 
     static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
-    static QQmlJSScope::Ptr resetForReparse(QQmlJSScope::Ptr &&scope);
+    static const QQmlJSScope::Ptr &resetForReparse(const QQmlJSScope::Ptr &scope);
 
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
@@ -728,23 +728,21 @@ constexpr inline bool isFunctionScope(ScopeType type)
 
 template <typename T>
 static void resetFactory(QDeferredSharedPointer<T> &pointer, QQmlJSImporter *importer,
-                         const QQmlJS::TypeReader &typeReader, const QString &filePath)
+                         const QQmlJS::TypeReader &typeReader)
 {
     const auto &factory = pointer.factory();
-    QDeferredFactory<std::remove_const_t<T>> newFactory(importer,
-                                                        typeReader, filePath,
-                                                        factory ? factory->moduleName() : QString(),
-                                                        factory ? factory->isSingleton() : false);
+    QDeferredFactory<std::remove_const_t<T>> newFactory(
+            importer, typeReader, factory ? factory->filePath() : pointer.data()->filePath(),
+            factory ? factory->moduleName() : pointer.data()->moduleName(),
+            factory ? factory->isSingleton() : pointer.data()->isSingleton());
     return resetFactoryImpl(pointer, std::move(newFactory));
 }
 
 template<typename T, typename U>
 void resetFactoryImpl(QDeferredSharedPointer<T> &pointer, U&& factory)
 {
-    pointer.m_data.reset();
     *pointer.m_factory = std::forward<U>(factory);
 }
-
 
 QT_END_NAMESPACE
 

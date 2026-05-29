@@ -112,6 +112,8 @@ private Q_SLOTS:
     void attachedSignalHandler();
     void scriptIndices();
     void extensions();
+    void reset();
+    void resetFactoryTest();
     void emptyBlockBinding();
     void hasOwnEnumerationKeys();
     void ownModuleName();
@@ -130,6 +132,7 @@ private Q_SLOTS:
     void ownerOfEnum();
     void ensureModuleName();
     void sourceAndBuildTypeAreTheSame();
+    void weakPointers();
 
 public:
     tst_qqmljsscope()
@@ -767,6 +770,65 @@ void tst_qqmljsscope::extensions()
     QVERIFY(!childScopes[4]->isSelfExtension());
 }
 
+void tst_qqmljsscope::reset()
+{
+    auto scope = QQmlJSScope::create();
+    QVERIFY(!scope.factory());
+
+    scope->setIsArrayScope(true);
+    scope->setBaseTypeName("MyBase"_L1);
+
+    scope->setIsSingleton(true);
+    scope->setOwnModuleName("MyModule"_L1);
+    scope->setInternalName("MyItem"_L1);
+    scope = QQmlJSScope::resetForReparse(scope);
+    // these fields should not get resetted:
+    QVERIFY(scope->isSingleton());
+    QCOMPARE(scope->ownModuleName(), "MyModule"_L1);
+    QCOMPARE(scope->internalName(), "MyItem"_L1);
+
+    // these fields should be resetted:
+    QVERIFY(!scope->isArrayScope());
+    QCOMPARE(scope->baseTypeName(), QString());
+
+    // see if the factory gets resetted
+    using Factory = QDeferredFactory<QQmlJSScope>;
+    QQmlJSImporter importer{ {}, {} };
+    QQmlJSScope::Ptr withFactory{
+        QQmlJSScope::create(),
+        QSharedPointer<Factory>{ new Factory(&importer, {}, testFile("isRoot.qml"_L1), "moduleName"_L1, true) },
+    };
+
+    QQmlJSScope::resetForReparse(withFactory);
+    QVERIFY(!withFactory.factory());
+    // these values should have moved from factory to the scope:
+    QCOMPARE(withFactory->internalName(), "isRoot"_L1);
+    QCOMPARE(withFactory->moduleName(), "moduleName"_L1);
+    QCOMPARE(withFactory->isSingleton(), true);
+}
+
+void tst_qqmljsscope::resetFactoryTest()
+{
+    using Factory = QDeferredFactory<QQmlJSScope>;
+    QQmlJSImporter importer{ { }, { } };
+    QQmlJSScope::Ptr withFactory{
+        QQmlJSScope::create(),
+        QSharedPointer<Factory>{
+                new Factory(&importer, { }, testFile("isRoot.qml"_L1), "moduleName"_L1, true) },
+    };
+
+    QQmlJS::TypeReader fancyTypeReader;
+
+    // set a new importer
+    resetFactory(withFactory, &importer, fancyTypeReader);
+
+    QVERIFY(withFactory.factory());
+    QCOMPARE(withFactory.factory()->filePath(), testFile("isRoot.qml"));
+    QCOMPARE(withFactory.factory()->internalName(), "isRoot"_L1);
+    QCOMPARE(withFactory.factory()->moduleName(), "moduleName"_L1);
+    QCOMPARE(withFactory.factory()->isSingleton(), true);
+}
+
 void tst_qqmljsscope::emptyBlockBinding()
 {
     QQmlJSScope::ConstPtr root = run(u"emptyBlockBinding.qml"_s);
@@ -1193,6 +1255,45 @@ void tst_qqmljsscope::sourceAndBuildTypeAreTheSame()
     const auto sourceRoot = importer.importFile(testFile("SimpleModule/Main.qml"));
     const auto buildRoot = importer.importFile(testFile("SimpleModule/build/Main.qml"));
     QCOMPARE(sourceRoot, buildRoot);
+}
+
+void tst_qqmljsscope::weakPointers()
+{
+    // linting scenario from QTBUG-146688, where grouped properties types disappeared when linting
+    // these files in exact that order:
+    // HomePage populates all other qml scopes
+    // NavBarForm.ui.qml used to drop data weakly referenced from NewTaskForm to NavBar
+    // NewTask can't find the type weakly referenced from NewTaskForm's "backbutton" property and
+    // emits bogus warnings.
+    std::array filesToLint = {
+        testFile("weakpointers/HomePage.qml"),
+        testFile("weakpointers/NavBarForm.ui.qml"),
+        testFile("weakpointers/NewTask.qml"),
+    };
+
+    // sanity testing: trigger buggy old behavior to prove the tests effectiveness
+    QQmlJSImporter importer(QLibraryInfo::paths(QLibraryInfo::QmlImportsPath), nullptr);
+
+    auto getBackButtonProperty = [&importer, &filesToLint]() -> QQmlJSMetaProperty {
+        const QQmlJSScope::ConstPtr &validScope = importer.importFile(filesToLint.back());
+        if (!validScope->baseType())
+            return { };
+        return validScope->baseType()->property("backButton");
+    };
+    QVERIFY(getBackButtonProperty().isValid());
+    QVERIFY(getBackButtonProperty().type());
+
+    QQmlJSScope::Ptr lastScope;
+    for (const auto &file : filesToLint) {
+        lastScope = importer.importFile(file);
+        QQmlJSScope::resetForReparse(lastScope);
+        resetFactory(lastScope, &importer, { });
+        QVERIFY(lastScope.data());
+    }
+
+    QVERIFY(getBackButtonProperty().isValid());
+    QEXPECT_FAIL("", "ResetForReparse breaks weak references to the resetted scope", Continue);
+    QVERIFY(getBackButtonProperty().type());
 }
 
 QTEST_MAIN(tst_qqmljsscope)

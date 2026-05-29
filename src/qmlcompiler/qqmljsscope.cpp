@@ -50,28 +50,39 @@ void QQmlJSScope::reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScop
 \internal
 Prepares the scope to be used by QQmlJSImportVisitor: we don't want to have "left-overs" from a
 potential previous import visitor run, so remove all information except for the information set
-by the qqmljsimporter (internalName, moduleName and isSingleton).
+by the qqmljsimporter (internalName, moduleName and isSingleton). Remove the scope's factory to
+avoid populating the scope via lazy-loading, if there is one.
+
+Warning: All pre-existing references to scope's children become invalid after this method was called.
+For example, a weak QQmlJSMetaProperty::type pointer pointing to a child of scope becomes invalid
+after resetForReparse was called. This is fine for snippets (that are never referenced by other files),
+and might cause bogus warnings (missing type for example) otherwise.
  */
-QQmlJSScope::Ptr QQmlJSScope::resetForReparse(Ptr &&scope)
+const QQmlJSScope::Ptr &QQmlJSScope::resetForReparse(const Ptr &scope)
 {
     auto *factory = scope.factory();
     if (!factory) {
         const QString moduleName = scope->moduleName();
         const bool isSingleton = scope->isSingleton();
+        const QString filePath = scope->filePath();
         *scope = QQmlJSScope{ scope->internalName() };
         scope->setOwnModuleName(moduleName);
         scope->setIsSingleton(isSingleton);
-        return std::move(scope);
+        scope->setFilePath(filePath);
+        return scope;
     }
-
+    // we are about to reparse the file belonging to this scope,
+    // so remove any factory to avoid populating the scope twice.
     const QString moduleName = factory->moduleName();
     const QString internalName = factory->internalName();
     const bool isSingleton = factory->isSingleton();
+    const QString filePath = factory->filePath();
     *scope.factory() = QQmlJSScope::ConstPtr::Factory{ };
+    scope->setFilePath(filePath);
     scope->setOwnModuleName(moduleName);
     scope->setInternalName(internalName);
     scope->setIsSingleton(isSingleton);
-    return std::move(scope);
+    return scope;
 }
 
 /*!
