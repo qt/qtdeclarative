@@ -92,7 +92,6 @@
         \li \l{qml}
         \li \l{qmlimportscanner}
         \li \l{qmlcontextpropertydump}
-        \li \l{svgtoqml}
         \endlist
 
     \li \l{CMake Integration for QML}
