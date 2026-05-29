@@ -1232,6 +1232,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
 {
     scope->setOwnModuleName(m_moduleName);
     scope->setIsSingleton(m_isSingleton);
+    scope->setInternalName(internalName());
 
     m_typeReader(m_importer, m_filePath, scope);
 }

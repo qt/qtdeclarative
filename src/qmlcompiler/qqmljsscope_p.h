@@ -676,7 +676,8 @@ public:
 
     QString internalName() const
     {
-        return QFileInfo(m_filePath).baseName();
+        const QString baseName = QFileInfo(m_filePath).baseName();
+        return baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3) : baseName;
     }
 
     QString filePath() const { return m_filePath; }
