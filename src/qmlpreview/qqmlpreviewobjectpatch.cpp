@@ -280,7 +280,18 @@ static void rebuildObject(QObject *object, int cuIndex,
 
     std::vector<CompositeLevel> levels = collectCompositeLevels(instanceLevel, oldUnit, newUnit);
 
-    BindingPatchContext(object).reset();
+    // Build the set of compilation units that participate in this rebuild.
+    // Bindings from these CUs are "internal" and will be re-created by repopulateBindings.
+    std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> internalUnits;
+    internalUnits.push_back(oldUnit);
+    internalUnits.push_back(newUnit);
+    internalUnits.push_back(instanceLevel.cu);
+    for (const auto &level : levels)
+        internalUnits.push_back(level.cu);
+
+    BindingPatchContext patchCtx(object, ddata->compilationUnit, ddata->cuObjectIndex);
+    patchCtx.stashExternalState(internalUnits);
+    patchCtx.reset();
 
     QV4::ExecutionEngine *v4 = newUnit->engine;
     Q_ASSERT(v4);
@@ -367,6 +378,9 @@ static void rebuildObject(QObject *object, int cuIndex,
                                    QQmlObjectCreator::InitFlag::None);
         QQmlInstantiationInterrupt interrupt;
         creator.finalize(interrupt);
+
+        // Restore externally set bindings and values that were stashed before reset
+        patchCtx.restoreExternalState();
     }
 }
 
