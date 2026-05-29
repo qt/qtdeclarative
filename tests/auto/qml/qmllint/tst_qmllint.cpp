@@ -3803,12 +3803,31 @@ void TestQmllint::missingBuiltinsNoCrash()
 
 void TestQmllint::absolutePath()
 {
+    QTemporaryDir temp;
+    QVERIFY(temp.isValid());
     QString absPathOutput = runQmllint("memberNotFound.qml", false, warningsShouldFailArgs(), true, true, true);
     QString relPathOutput = runQmllint("memberNotFound.qml", false, warningsShouldFailArgs(), true, true, false);
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
 
     QVERIFY(absPathOutput.contains(absolutePath));
     QVERIFY(!relPathOutput.contains(absolutePath));
+
+    runQmllint("memberNotFound.qml", false,
+               warningsShouldFailArgs() << "--json" << temp.filePath("absolute.json"_L1), true,
+               true, true);
+    runQmllint("memberNotFound.qml", false,
+               warningsShouldFailArgs() << "--json" << temp.filePath("relative.json"_L1), true,
+               true, false);
+
+    QFile absoluteJsonFile(temp.filePath("absolute.json"_L1));
+    QVERIFY(absoluteJsonFile.open(QFile::ReadOnly | QFile::Text));
+    const QByteArray absoluteJson = absoluteJsonFile.readAll();
+    QVERIFY(absoluteJson.contains(absolutePath.toUtf8()));
+
+    QFile relativeJsonFile(temp.filePath("relative.json"_L1));
+    QVERIFY(relativeJsonFile.open(QFile::ReadOnly | QFile::Text));
+    const QByteArray relativeJson = relativeJsonFile.readAll();
+    QVERIFY(!relativeJson.contains(absolutePath.toUtf8()));
 }
 
 void TestQmllint::importMultipartUri()
