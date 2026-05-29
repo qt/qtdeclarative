@@ -165,6 +165,7 @@ private slots:
     void popupWindowPositionerRespectingScreenBounds_data();
     void popupWindowPositionerRespectingScreenBounds();
     void popupWindowRepositionOnImplicitSizeChange();
+    void popupWindowDragInsidePopup();
     void propagateTouchEvents();
     void blockEventsBehindModal_data();
     void blockEventsBehindModal();
@@ -3778,6 +3779,47 @@ void tst_QQuickPopup::popupWindowRepositionOnImplicitSizeChange()
     // The tooltip should remain at the same y position.
     // Without the fix (missing reposition()), y shifts incorrectly.
     QCOMPARE(popupWindow->y(), initialY);
+}
+
+void tst_QQuickPopup::popupWindowDragInsidePopup() // QTBUG-146887
+{
+    if (!arePopupWindowsSupported())
+        QSKIP("The platform doesn't support popup windows. Skipping test.");
+
+    QQuickApplicationHelper helper(this, "popupWindowWithSlider.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    auto *popup = window->property("popup").value<QQuickPopup *>();
+    QVERIFY(popup);
+    auto *slider = window->property("slider").value<QQuickSlider *>();
+    QVERIFY(slider);
+
+    popup->open();
+    TRY_VERIFY_POPUP_OPENED(popup);
+
+    auto *popupWindow = QQuickPopupPrivate::get(popup)->popupWindow;
+    QVERIFY(popupWindow);
+
+    // The slider starts at 50; drag it toward value 0 by moving from the
+    // slider center to its left edge (inside the popup window).
+    const QPoint sliderCenter = slider->mapToScene(slider->boundingRect().center()).toPoint();
+    const QPoint sliderLeft = slider->mapToScene(QPointF(0, slider->height() / 2)).toPoint();
+
+    QTest::mousePress(popupWindow, Qt::LeftButton, Qt::NoModifier, sliderCenter);
+    const qreal valueAfterPress = slider->value();
+
+    QTest::mouseMove(popupWindow, sliderLeft);
+    const qreal valueAfterDrag = slider->value();
+
+    QTest::mouseRelease(popupWindow, Qt::LeftButton, Qt::NoModifier, sliderLeft);
+
+    // The slider value must have decreased, proving the drag was delivered.
+    QVERIFY2(valueAfterDrag < valueAfterPress,
+             qPrintable(QString("Slider value did not decrease during drag: was %1, got %2")
+                                .arg(valueAfterPress).arg(valueAfterDrag)));
 }
 
 void tst_QQuickPopup::propagateTouchEvents()
