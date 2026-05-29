@@ -294,6 +294,12 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
         else
             return false;
 
+        // If the target is this popup window itself, normal event delivery will
+        // handle it (e.g. an exclusive grabber like a Slider). Forwarding to the
+        // same DA with the grabber cleared would break drag operations.
+        if (targetWindow == q)
+            return false;
+
         // Forward move events to the target window
         const auto scenePos = pe->point(0).scenePosition();
         const auto translatedScenePos = targetWindow->mapFromGlobal(globalPos);
