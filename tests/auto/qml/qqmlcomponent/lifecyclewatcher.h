@@ -21,6 +21,8 @@ public:
     {
         states.push_back(1);
         observedTexts.push_back(text);
+        hasContextInClassBegin = qmlContext(this);
+        hasEngineInClassBegin = qmlEngine(this);
     }
 
     void componentComplete() override
@@ -38,6 +40,8 @@ public:
     QString text;
     QList<int> states;
     QStringList observedTexts;
+    bool hasEngineInClassBegin = false;
+    bool hasContextInClassBegin = false;
 };
 
 #endif
