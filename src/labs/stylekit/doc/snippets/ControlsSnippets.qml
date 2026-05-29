@@ -190,6 +190,33 @@ ApplicationWindow {
         }
         //! [menuBarItem]
 
+        //! [menuItem]
+        menuItem {
+            text.alignment: Qt.AlignVCenter | Qt.AlignLeft
+            background {
+                implicitWidth: 200
+                border.width: 0
+            }
+            indicator {
+                color: "transparent"
+                border.width: 0
+                foreground {
+                    image.color: palette.accent
+                    alignment: Qt.AlignCenter
+                }
+                first {
+                    alignment: Qt.AlignLeft
+                    foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
+                }
+                second {
+                    alignment: Qt.AlignRight
+                    foreground.image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
+                }
+            }
+            hovered.background.color: "#c0c0c0"
+        }
+        //! [menuItem]
+
         //! [menuSeparator]
         menuSeparator {
             background.visible: false

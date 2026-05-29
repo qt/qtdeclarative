@@ -82,6 +82,7 @@ public:
         Menu,
         MenuBar,
         MenuBarItem,
+        MenuItem,
         MenuSeparator,
         Dialog,
         Pane,

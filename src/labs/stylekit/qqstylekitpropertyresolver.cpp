@@ -35,6 +35,11 @@ const QList<QQStyleKitExtendableControlType> QQStyleKitPropertyResolver::baseTyp
      *      from other buttons (e.g., without borders, drop shadows, gradients, etc.). For that
      *      reason, it falls back to Control rather than AbstractButton.
      *
+     * MenuItem — In Qt Quick Controls, MenuItem inherits from AbstractButton. Although it
+     *     behaves similarly to a button, it is typically styled very differently
+     *     (e.g., without borders, drop shadows, gradients, etc.). For that reason, it falls
+     *     back to Control rather than AbstractButton.
+     *
      * TabBar — In Qt Quick Controls, ToolBar inherits Pane, while TabBar inherits Container.
      *     Since it is desirable for a TabBar to share styling characteristics (such as
      *     background color) with ToolBar and Pane, we let it fall back to Pane instead of
