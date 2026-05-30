@@ -5,7 +5,8 @@
     \title Qt Quick Examples - Canvas
     \example canvas
     \brief This is a collection of QML Canvas examples.
-    \image qml-canvas-example.png
+    \image qml-canvas-example.png {Pink heart drawn with bezier curves
+           and sliders for line width, scale, rotation, and alpha}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
