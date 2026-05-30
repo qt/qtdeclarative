@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - Shader Effects
     \example shadereffects
-    \image qml-shadereffects-example.png
+    \image qml-shadereffects-example.png {Qt text with various shader
+           effects including genie, outline, shadow, and wobble}
     \brief A Qt Quick example demonstrating the use of shader effects.
     \ingroup qtquickexamples
     \examplecategory {Graphics}

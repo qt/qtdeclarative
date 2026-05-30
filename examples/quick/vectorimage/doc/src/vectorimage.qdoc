@@ -3,7 +3,8 @@
 /*!
     \title Vector Image Example
     \example vectorimage
-    \image qml-vectorimage-example.png
+    \image qml-vectorimage-example.png {3x3 grid comparing Image,
+           VectorImage, and svgtoqml rendering of hearts at different scales}
     \brief A Qt Quick example demonstrating the differences of \l{Qt SVG}, VectorImage and \l{svgtoqml}.
     \ingroup qtquickexamples
     \examplecategory {Graphics}

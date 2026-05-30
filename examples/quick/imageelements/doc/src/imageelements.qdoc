@@ -4,7 +4,8 @@
     \title Qt Quick Examples - Image Elements
     \example imageelements
     \brief This is a collection of QML examples relating to image types.
-    \image qml-imageelements-example.png
+    \image qml-imageelements-example.png {one frame shown by AnimatedSprite:
+          a 3D rendered woofer}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
