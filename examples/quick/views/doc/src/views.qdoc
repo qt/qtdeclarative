@@ -5,7 +5,8 @@
     \title Qt Quick Examples - Views
     \example views
     \brief This is a collection of QML model-view examples.
-    \image qml-modelviews-example.png
+    \image qml-modelviews-example.png {ListView showing food items with names,
+           categories, prices, and add/remove buttons}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
