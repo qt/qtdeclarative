@@ -12,7 +12,8 @@
 
     \section1 Overview
 
-    \image qtabstractlistmodel_portrait.png
+    \image qtabstractlistmodel_portrait.png {Android app with ListView
+           displaying UUID and row data with Add Row and Remove Row buttons}
 
     This example consists of two separate projects: A QML project and a Kotlin-based Android
     project which will host and display the QML content. It shows how to use
