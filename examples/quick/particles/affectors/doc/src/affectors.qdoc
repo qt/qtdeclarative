@@ -6,7 +6,7 @@
     \example particles/affectors
     \examplecategory {Graphics}
     \brief This is a collection of examples using Affectors in the QML particle system.
-    \image qml-affectors-example.png
+    \image qml-affectors-example.png {Red balls floating past a blue flame, with one ball on fire}
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
     Each example is a small QML file emphasizing a particular type or feature.

@@ -6,7 +6,8 @@
     \example particles/imageparticle
     \examplecategory {Graphics}
     \brief This is a collection of examples using Affectors in the QML particle system.
-    \image qml-imageparticle-example.png
+    \image qml-imageparticle-example.png {Colorful star particles with
+           rainbow variations emanating from bright center}
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
     Each example is a small QML file emphasizing a particular type or feature.
