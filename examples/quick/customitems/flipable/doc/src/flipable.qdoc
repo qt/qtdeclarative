@@ -9,6 +9,7 @@
 
     This example shows how to use the \l Flipable element.
 
-    \image qml-flipable-example.png
+    \image qml-flipable-example.png {Two playing cards on green background,
+           9 of clubs flipping around vertical axis and 5 of hearts flipping around horizontal axis}
 */
 
