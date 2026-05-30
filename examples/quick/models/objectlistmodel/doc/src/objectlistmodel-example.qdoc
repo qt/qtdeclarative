@@ -7,5 +7,6 @@
     \brief Shows how to use a QList<QObject*> as a model in QML.
     \examplecategory {User Interface Components}
 
-    \image qml-objectlistmodel-example.png
+    \image qml-objectlistmodel-example.png {List displaying four items
+           with colors from red, green, blue, and yellow}
 */

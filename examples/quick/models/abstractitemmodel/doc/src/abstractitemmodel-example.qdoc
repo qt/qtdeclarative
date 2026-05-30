@@ -7,5 +7,6 @@
     \brief Shows how to use a QAbstractItemModel subclass as a model in QML.
     \examplecategory {User Interface Components}
 
-    \image qml-abstractitemmodel-example.png
+    \image qml-abstractitemmodel-example.png {List showing three animals
+           with name and size: Wolf, Polar bear, and Quoll}
 */

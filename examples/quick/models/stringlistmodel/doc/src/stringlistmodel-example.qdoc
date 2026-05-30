@@ -7,5 +7,6 @@
     \brief Shows how to use a QStringList as a model in QML.
     \examplecategory {User Interface Components}
 
-    \image qml-stringlistmodel-example.png
+    \image qml-stringlistmodel-example.png {List displaying four text
+           items from a QStringList model}
 */
