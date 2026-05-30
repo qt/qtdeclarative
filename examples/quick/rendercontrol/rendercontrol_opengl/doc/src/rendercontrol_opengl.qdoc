@@ -7,7 +7,8 @@
     \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based OpenGL renderer.
     \examplecategory {Graphics}
 
-    \image rendercontrol-opengl-example.jpg
+    \image rendercontrol-opengl-example.jpg {3D cube with Qt Quick
+           content rendered as texture on each face}
 
     The Qt Quick scene is managed by a QQuickWindow that is not visible
     on-screen. Rather, rendering targets an OpenGL texture and is controlled
