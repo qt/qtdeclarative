@@ -8,7 +8,8 @@
     to embed Qt Quick content in Android projects.
     \ingroup qtquickexamples
 
-    \image portrait_java.png
+    \image portrait_java.png {Android app with two QtQuickView sections
+           displaying QML content and Java controls for interaction}
 
     \include running-qtquick-for-android-examples.qdocinc
 
