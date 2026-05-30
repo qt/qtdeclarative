@@ -4,7 +4,8 @@
     \title Qt Quick Examples - MouseArea
     \example mousearea
     \brief This is an example of the MouseArea type in QML.
-    \image qml-mousearea-example.png
+    \image qml-mousearea-example.png {Red Click square and blue Drag square
+           with mouse event status text below}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
