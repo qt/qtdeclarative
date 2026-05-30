@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - MultiEffect Item Switcher
     \example multieffect/itemswitcher
-    \image qml-multieffectitemswitcher-example.jpg
+    \image qml-multieffectitemswitcher-example.jpg {Item switcher showing
+           Qt logo with Thunder transition effect and effect selection menu}
     \brief Demonstrates MultiEffect usage.
     \ingroup qtquickexamples
     \examplecategory {Graphics}
