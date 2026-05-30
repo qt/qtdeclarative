@@ -29,7 +29,8 @@
 
     \section1 TapHandler
 
-    \image pointerhandlers-example-taphandler.webp
+    \image pointerhandlers-example-taphandler.webp {TapHandler demo with
+           checkboxes for accepted mouse clicks and gesture policy options}
 
     The "tap" page shows how to detect touchscreen taps, long-presses, and
     mouse clicks with different buttons. You can also try out the different
@@ -47,7 +48,9 @@
     If you try this example on a touchscreen, you should be able to interact
     with all three buttons at the same time with different fingers.
 
-    \image pointerhandlers-example-multibutton.webp
+    \image pointerhandlers-example-multibutton.webp {Three buttons with
+           different gesturePolicy values launching balloons, missiles,
+           and fighters}
 
     \section2 Pie Menu
 
@@ -57,7 +60,8 @@
     you drag outside the menu, or release in the middle of the menu, nothing is
     selected. If you drag outside the grey viewport, the menu is cancelled.
 
-    \image pointerhandlers-example-piemenu.webp
+    \image pointerhandlers-example-piemenu.webp {Gray touch area with
+           instruction to hold for context menu}
 
     \section1 PointHandler
 
@@ -67,7 +71,9 @@
     an executable, you will see this feedback at the same time as the feedback
     from the PointHandlers in the main pointerhandlers.qml file.
 
-    \image pointerhandlers-example-pointhandler.webp
+    \image pointerhandlers-example-pointhandler.webp {Main menu listing twelve
+           pointer handler demos starting with tap, multibuttons, pieMenu,
+           single point handler, hover sidebar, and joystick}
 
     The "tablet canvas" page uses PointHandler to uniquely detect different
     \l {QPointingDevice::PointerType}{types of pointing devices}, so that if
@@ -96,7 +102,8 @@
     possible; and an \l AnchorAnimation animates the knob's return to the
     center position when released.
 
-    \image pointerhandlers-example-joystick.jpg
+    \image pointerhandlers-example-joystick.jpg {Red joystick handle being
+           dragged by a finger above dark metallic housing}
 
     The "fling animation" page demonstrates one use of the
     DragHandler::centroid::velocity property, which simply makes the value from
@@ -104,7 +111,8 @@
     that is used in this example shows one way to simulate phyics (momentum and
     friction) without resorting to heavier solutions.
 
-    \image pointerhandlers-example-fling.webp
+    \image pointerhandlers-example-fling.webp {Two red balls with velocity values
+           displayed on black background}
 
     \section1 PinchHandler
 
@@ -117,7 +125,9 @@
     able to manipulate each instance uniquely. Some items also have
     DragHandlers and TapHandlers.
 
-    \image pointerhandlers-example-pinchhandler.webp
+    \image pointerhandlers-example-pinchhandler.webp {Multiple rectangles
+           with pinch gesture instructions showing scale, rotation, and
+           translation values}
 
     \section1 Interoperability
 
@@ -143,7 +153,8 @@
     would have: you can tap on the knob.
     \endlist
 
-    \image pointerhandlers-example-mixer.webp
+    \image pointerhandlers-example-mixer.webp {Audio mixer with five
+           vertical channel sliders labeled Channel 1 through 5}
 
     \section2 Map
 
@@ -154,7 +165,8 @@
     different resolution. Dragging vertically with two fingers activates a
     DragHandler that manipulates a \l Rotation transform to tilt the map.
 
-    \image pointerhandlers-example-map.webp
+    \image pointerhandlers-example-map.webp {World map showing continents
+           with scale information overlay}
 
     \section2 Fake Flickable
 
@@ -167,5 +179,6 @@
     There's also a slide-out "drawer" component holding a few more
     pointer-handler-powered controls.
 
-    \image pointerhandlers-example-fakeflickable.jpg
+    \image pointerhandlers-example-fakeflickable.jpg {QML code viewer with
+           font size slider showing DragHandler and BoundaryRule code}
 */
