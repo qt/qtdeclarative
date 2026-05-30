@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - RectangularShadow NeumorphicPanel
     \example multieffect/neumorphicpanel
-    \image qml-neumorphicpanel-example.jpg
+    \image qml-neumorphicpanel-example.jpg {Neumorphic panel with Qt logo
+           and control sliders for shadow size, radius, blur, and opacity}
     \brief Demonstrates RectangularShadow usage.
     \ingroup qtquickexamples
     \examplecategory {Graphics}

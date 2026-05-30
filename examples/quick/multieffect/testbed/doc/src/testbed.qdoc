@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - MultiEffect Test Bed
     \example multieffect/testbed
-    \image qml-multieffecttestbed-example.jpg
+    \image qml-multieffecttestbed-example.jpg {MultiEffect test bed with
+           controls for color, blur, and shadow effects applied to demo items}
     \brief Demonstrates MultiEffect usage.
     \ingroup qtquickexamples
     \examplecategory {Graphics}
