@@ -9,5 +9,6 @@
 
     \brief Shows how to combine two textures from two texture providers in a custom scene graph node.
 
-    \image twotextureproviders-example.jpg
+    \image twotextureproviders-example.jpg {Rotating blue rectangle and
+           Qt Quick text XOR-blended, showing transparency where they overlap}
  */

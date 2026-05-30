@@ -12,7 +12,8 @@
     that is backed by a scene graph node derived from QSGRenderNode, providing
     it's own QRhi-based rendering.
 
-    \image customrendernode-example.jpg
+    \image customrendernode-example.jpg {RGB triangle with overlapping
+           rectangles shown in Direct and Layer rendering modes}
 
     \note This example demonstrates advanced, low-level functionality performing
     portable, cross-platform 3D rendering, while relying on APIs with limited

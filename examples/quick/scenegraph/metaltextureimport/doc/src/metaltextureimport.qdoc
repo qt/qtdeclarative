@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to use a texture created directly with Metal.
 
-    \image metaltextureimport-example.jpg
+    \image metaltextureimport-example.jpg {Squircle rendered into a
+           Metal texture and displayed in a Qt Quick item}
 
     The Metal Texture Import example shows how an application can import and
     use a

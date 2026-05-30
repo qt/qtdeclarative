@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to use a texture created directly with Vulkan.
 
-    \image vulkantextureimport-example.jpg
+    \image vulkantextureimport-example.jpg {Squircle rendered into a
+           Vulkan texture and displayed in a Qt Quick item}
 
 
     The Vulkan Texture Import example shows how an application can import and

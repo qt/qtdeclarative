@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to render directly with \l QRhi under a Qt Quick scene.
 
-    \image rhiunderqml-example.jpg
+    \image rhiunderqml-example.jpg {Animated squircle rendered with
+           QRhi under Qt Quick scene with text overlay}
 
     \section1 Introduction
 

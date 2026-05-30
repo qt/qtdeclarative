@@ -9,7 +9,8 @@
     \examplecategory {Mobile}
     \brief Shows how to render OpenGL under a Qt Quick scene.
 
-    \image openglunderqml-example.jpg
+    \image openglunderqml-example.jpg {Animated squircle rendered with
+           OpenGL under Qt Quick scene with text overlay}
 
     The OpenGL under QML example shows how an application can make use
     of the \l QQuickWindow::beforeRendering() signal to draw custom
