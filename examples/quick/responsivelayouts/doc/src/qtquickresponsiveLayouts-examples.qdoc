@@ -19,7 +19,8 @@
     can be used to create responsive layouts that adapt to the window or
     screen size.
 
-    \image qtquicklayouts-example-responsivelayouts.png
+    \image qtquicklayouts-example-responsivelayouts.png {Two windows showing
+           responsive layout: narrow view with compact grid, wide view with sidebar}
 
 
     First we need to define all items that should appear in or UI at some point.
