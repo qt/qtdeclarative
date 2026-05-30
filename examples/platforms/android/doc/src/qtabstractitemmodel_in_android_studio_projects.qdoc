@@ -13,7 +13,8 @@
 
     \section1 Overview
 
-    \image qtabstractitemmodel_portrait.png
+    \image qtabstractitemmodel_portrait.png {Android app with TableView
+           displaying editable cell grid and row/column control buttons}
 
     This example consists of two projects: an Android Studio project
     (qtabstractitemmodel_java) and a QML project (qtabstractitemmodel).
