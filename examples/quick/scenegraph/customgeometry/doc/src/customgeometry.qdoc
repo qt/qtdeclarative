@@ -14,7 +14,8 @@
     part of the CustomGeometry module and makes use of this in a QML
     file.
 
-    \image custom-geometry-example.png
+    \image custom-geometry-example.png {Bezier curve rendered using
+           custom scene graph geometry with line strips}
 
     \section1 BezierCurve Declaration
 

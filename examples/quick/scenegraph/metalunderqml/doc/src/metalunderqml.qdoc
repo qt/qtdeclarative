@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to render directly with Metal under a Qt Quick scene.
 
-    \image metalunderqml-example.jpg
+    \image metalunderqml-example.jpg {Animated squircle rendered with
+           Metal under Qt Quick scene with text overlay}
 
     The Metal Under QML example shows how an application can make use
     of the \l QQuickWindow::beforeRendering() and \l

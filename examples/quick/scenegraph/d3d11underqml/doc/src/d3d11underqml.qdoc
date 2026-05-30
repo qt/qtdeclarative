@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to render directly with Direct3D 11 under a Qt Quick scene.
 
-    \image d3d11underqml-example.jpg
+    \image d3d11underqml-example.jpg {Animated squircle rendered with
+           Direct3D 11 under Qt Quick scene with text overlay}
 
     The Direct3D 11 Under QML example shows how an application can make use
     of the \l QQuickWindow::beforeRendering() signal to draw custom

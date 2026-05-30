@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows benefits of custom items animating independently of the main thread while using the threaded render loop of Qt Quick.
 
-    \image threadedanimation-example.jpg
+    \image threadedanimation-example.jpg {Two spinner animations comparing
+           main thread and scene graph thread animation with Blocked button}
 
     This example shows the fundamental concept behind the \l Animator types, by
     implementing a custom item that effectively animates itself by not relying

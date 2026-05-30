@@ -8,7 +8,8 @@
     \ingroup qtquickexamples
     \brief Shows how to render directly with Vulkan under a Qt Quick scene.
 
-    \image vulkanunderqml-example.jpg
+    \image vulkanunderqml-example.jpg {Animated squircle rendered with
+           Vulkan under Qt Quick scene with text overlay}
 
     \note Compiling this example requires an SDK. See \l{Vulkan Integration} for
     information on what to install.
