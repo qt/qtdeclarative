@@ -6,7 +6,8 @@
     \example particles/system
     \examplecategory {Graphics}
     \brief This is a collection of examples using Affectors in the QML particle system.
-    \image qml-system-example.png
+    \image qml-system-example.png {Circular particles with black borders
+           on blue background demonstrating multiple painters}
 
     This is a collection of small QML examples relating to using Affectors in the particle system.
     Each example is a small QML file emphasizing a particular type or feature.
