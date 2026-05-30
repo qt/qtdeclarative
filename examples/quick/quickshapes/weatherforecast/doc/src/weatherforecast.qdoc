@@ -3,7 +3,8 @@
 /*!
     \title Weather Forecast Example
     \example quickshapes/weatherforecast
-    \image qml-weatherforecast-example.png
+    \image qml-weatherforecast-example.png {Weather forecast app showing
+           vector map of Europe with city temperatures and weather icons}
     \brief A Qt Quick Shapes example demonstrating different ways to uses shapes in an application.
     \ingroup qtquickexamples
     \examplecategory {Graphics}
@@ -30,7 +31,8 @@
     With \l{QtQuick.Shapes} the shapes are described mathematically, as a set of curves and line
     segments, and thus they can be scaled arbitrarily without introducing artifacts.
 
-    \image qml-weatherforecast-example.png
+    \image qml-weatherforecast-example.png {Weather forecast app showing
+           vector map of Europe with city temperatures and weather icons}
 
     In the Weather Forecast example, there are three main uses of shapes:
 
@@ -70,7 +72,8 @@
     Click on the map to zoom into a country. The scale will be adjusted so that the country shape
     fills the window and the fill color will be slightly darker.
 
-    \image zoomed.png
+    \image zoomed.png {Zoomed view of Finland with country name label and
+           enlarged weather icons showing thunderstorm and sun}
 
     \note The weather symbols on the zoomed map are the same assets as in the original view, but at
     a much larger size.
@@ -100,7 +103,8 @@
     Click on the cog wheel in the upper left corner to open a settings panel, where different
     approaches to rasterization can be selected.
 
-    \image settings.png
+    \image settings.png {Settings panel with renderer options: Curve Renderer,
+           Geometry Renderer, and Geometry Renderer 4x MSAA}
 
     \l{QtQuick.Shapes} supports two different renderers, selectable using the
     \l{ QtQuick.Shapes::Shape::preferredRendererType}{preferredRendererType} property. The preferred

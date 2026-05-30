@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - Shapes
     \example quickshapes/shapes
-    \image qml-shapes-example.png
+    \image qml-shapes-example.png {Grid of shape demos including tiger,
+           text, gradients, rounded rectangles, fills and strokes}
     \brief A Qt Quick example demonstrating the use of shape items.
     \ingroup qtquickexamples
     \examplecategory {Graphics}
