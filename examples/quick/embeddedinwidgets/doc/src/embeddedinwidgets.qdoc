@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - Embedded in Widgets
     \example embeddedinwidgets
-    \image qml-embeddedinwidgets-example.jpg
+    \image qml-embeddedinwidgets-example.jpg {Widget window with QLineEdit
+           fields and embedded QML content showing two TextField instances}
     \brief Demonstrates embedding a QQuickWindow into a QWidget UI via QWidget::createWindowContainer().
     \ingroup qtquickexamples
     \examplecategory {Graphics}

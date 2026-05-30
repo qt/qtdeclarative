@@ -3,7 +3,8 @@
 /*!
     \title Qt Quick Examples - Item Variable Refresh Rate
     \example itemvariablerefreshrate
-    \image qml-itemvariablerefreshrate-example.png
+    \image qml-itemvariablerefreshrate-example.png {Rotated Qt logo with
+           FPS counter and frame rate control slider}
     \brief A Qt Quick example shows how to setup variable refresh rate for
     specific parts of the UI.
     \ingroup qtquickexamples
