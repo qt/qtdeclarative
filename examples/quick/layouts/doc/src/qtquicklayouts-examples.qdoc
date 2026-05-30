@@ -4,7 +4,8 @@
     \title Qt Quick Layouts - Basic Example
     \example layouts
     \brief Demonstrates how to use layout types to arrange a UI.
-    \image qtquicklayouts-example-layouts.png
+    \image qtquicklayouts-example-layouts.png {Row layout with text field
+           and button, Grid layout with labeled inputs and spanning text}
     \ingroup qtquickexamples
     \examplecategory {User Interface Components}
 

@@ -4,7 +4,8 @@
     \title Qt Quick Examples - Positioners
     \example positioners
     \brief This is a collection of QML Positioner examples.
-    \image qml-positioners-example.png
+    \image qml-positioners-example.png {Colored rectangles arranged in
+           Column, Row, Grid, and Flow positioner layouts}
     \ingroup qtquickexamples
     \examplecategory {User Interface Components}
 
