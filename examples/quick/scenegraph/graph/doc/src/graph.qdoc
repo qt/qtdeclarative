@@ -10,6 +10,7 @@
     \brief Demonstrates how one can combine custom materials and geometries
     under a single QQuickItem.
 
-    \image graph-example.jpg
+    \image graph-example.jpg {Animated line graph rendered using custom
+           scene graph materials and geometry}
 
  */

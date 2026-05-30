@@ -11,7 +11,8 @@
     The custom material example shows how to implement an item that is rendered
     using a material with a custom vertex and fragment shader.
 
-    \image custom-material-example.jpg
+    \image custom-material-example.jpg {Mandelbrot fractal rendered using
+           custom QSGMaterial with fragment shader}
 
     \section1 Shader and material
 

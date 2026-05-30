@@ -9,7 +9,8 @@
 
     \brief Shows how to implement a custom QQuickItem that displays a QRhi-rendered texture.
 
-    \image rhitextureitem-example.jpg
+    \image rhitextureitem-example.jpg {RGB triangle rendered using QRhi
+           displayed as a QQuickItem, with settings panel for MSAA and texture options}
 
     This example shows how to implement an item that performs cross-platform,
     portable 3D rendering into a texture using the QRhi APIs and then displays
