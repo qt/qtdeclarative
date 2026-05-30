@@ -6,7 +6,8 @@
     \title Models and Views: Fetch More functionality using a worker thread
     \brief Demonstrates how to implement fetchMore() in a worker thread while maintaining a responsive UI.
     \examplecategory {User Interface Components}
-    \image qml-threadedfetchmore-example.png
+    \image qml-threadedfetchmore-example.png {List view showing contact
+           items with loading indicator at bottom}
 
     This example shows how to utilize QAbstractItemModel::fetchMore() with an
     object moved to a QThread so that the data fetching does not block the UI.
