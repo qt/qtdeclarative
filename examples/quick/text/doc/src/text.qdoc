@@ -4,7 +4,8 @@
     \title Qt Quick Examples - Text
     \example text
     \brief This is a collection of QML examples relating to text.
-    \image qml-text-example.png
+    \image qml-text-example.png {Text samples showing different fonts,
+           letter spacing, and text styling effects}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
