@@ -7,7 +7,8 @@
     can be used for custom table models.
     \examplecategory {Graphics}
 
-    \image qt-pixelator.png
+    \image qt-pixelator.png {Qt logo displayed as dot pattern using
+           TableView with dot sizes based on pixel gray values}
     \ingroup qtquickexamples
 
     \include examples-run.qdocinc
