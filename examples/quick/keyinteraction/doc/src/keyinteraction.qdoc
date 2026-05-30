@@ -4,7 +4,8 @@
     \title Qt Quick Examples - Key Interaction
     \example keyinteraction
     \brief This is a collection of QML keyboard interaction examples.
-    \image qml-keyinteraction-example.png
+    \image qml-keyinteraction-example.png {Grid and list elements demonstrating keyboard
+            navigation, interrupted by a placeholder context menu at the left side}
     \ingroup qtquickexamples
     \examplecategory {Graphics}
 
