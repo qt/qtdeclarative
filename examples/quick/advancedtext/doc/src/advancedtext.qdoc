@@ -3,7 +3,8 @@
 /*!
     \title Advanced Text Example
     \example advancedtext
-    \image qml-advancedtext-example.png
+    \image qml-advancedtext-example.png {Variable font demo with width
+           and weight sliders adjusting text to fit layout bounds}
     \brief A Qt Quick example demonstrating some advanced features of text.
     \ingroup qtquickexamples
     \examplecategory {Graphics}
@@ -28,12 +29,14 @@
     The example illustrates how this may be used in a real world scenario: When starting the
     example, the text snippets stretch outside the bounding boxes defined in the strict layout.
 
-    \image qml-advancedtext-example-wrong.png
+    \image qml-advancedtext-example-wrong.png {Text overflowing outside
+           its bounding boxes before width and weight adjustment}
 
     By tweaking the width and/or weight, the visual designer can get variations of the font which
     fit the layout exactly without having to change the font size.
 
-    \image qml-advancedtext-example.png
+    \image qml-advancedtext-example.png {Text fitting within bounding
+           boxes after width and weight adjustment}
 
     The example assigns sliders to each of the two variable axes in the font. It then binds the
     variable axis values to the sliders so that the font updates automatically when the user changes
