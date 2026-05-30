@@ -12,7 +12,8 @@
     \l Image elements with \l Rotation transforms and \l SpringAnimation behaviors
     to produce an interactive speedometer-type dial.
 
-    \image qml-dialcontrol-example.png
+    \image qml-dialcontrol-example.png {Speedometer dial with needle at 60,
+           showing 0-120 scale and slider control}
 */
 
 
