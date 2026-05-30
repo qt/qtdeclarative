@@ -7,5 +7,6 @@
     \brief Shows how to render a Qt Quick scene into a texture that is then used by a non-Quick based Direct3D 11 renderer.
     \examplecategory {Graphics}
 
-    \image rendercontrol-d3d11-example.jpg
+    \image rendercontrol-d3d11-example.jpg {Qt Quick scene with particle
+           effects rendered to a Direct3D 11 texture}
 */

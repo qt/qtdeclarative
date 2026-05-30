@@ -6,7 +6,8 @@
     \example rendercontrol/rendercontrol_rhi
     \brief Shows how to render a Qt Quick scene into a QRhiTexture.
     \examplecategory {Graphics}
-    \image rendercontrol-rhi-example.jpg
+    \image rendercontrol-rhi-example.jpg {Grid of rendered frames with
+           CPU and GPU timing metrics for each frame}
 
     This example demonstrates how to set up a Qt Quick scene that has its
     rendering redirected into a \l QRhiTexture. The application is then free to
