@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="data/Main.qml">../../../mymodule-source/MyModule/Main.qml</file>
+  </qresource>
+</RCC>

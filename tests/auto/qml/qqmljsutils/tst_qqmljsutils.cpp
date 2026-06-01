@@ -46,4 +46,23 @@ void tst_qqmljsutils::qmlFileSourcePathFromBuildPath()
     QCOMPARE(QQmlJSUtils::qmlBuildPathFromSourcePath(&mapper, expectedSourceFile), buildFile);
 }
 
+void tst_qqmljsutils::qmlBuildPathFromSourcePathWithMultipleRegistrations()
+{
+    // The mapper is constructed directly (rather than via resourceFilesFromBuildFolders)
+    // to control the qrc file order: testdata_builtin.qrc must come first to reproduce
+    // the scenario where a source file is registered in multiple qrc files with
+    // different resource path prefixes.
+    QQmlJSResourceFileMapper mapper({
+        testFile(u"mymodule-build-builtin-testdata/.qt/rcc/testdata_builtin.qrc"_s),
+        testFile(u"mymodule-build-builtin-testdata/.qt/rcc/raw_qml_0.qrc"_s),
+        testFile(u"mymodule-build-builtin-testdata/.qt/rcc/qmake_app.qrc"_s),
+    });
+
+    const QString sourceFile = testFile(u"mymodule-source/MyModule/Main.qml"_s);
+    const QString expectedBuildPath =
+            testFile(u"mymodule-build-builtin-testdata/MyModule/Main.qml"_s);
+
+    QCOMPARE(QQmlJSUtils::qmlBuildPathFromSourcePath(&mapper, sourceFile), expectedBuildPath);
+}
+
 QTEST_MAIN(tst_qqmljsutils)
