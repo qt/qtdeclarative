@@ -311,7 +311,7 @@ QVariant QQuickText::loadResource(int type, const QUrl &source)
             if (job->isError()) {
                 qmlWarning(this) << job->error();
                 delete *it;
-                it = d->extra->pixmapsInProgress.erase(it);
+                d->extra->pixmapsInProgress.erase(it);
                 return QImage();
             }
             qCDebug(lcText) << "already downloading" << url;
@@ -339,7 +339,7 @@ void QQuickText::resourceRequestFinished()
 {
     Q_D(QQuickText);
     bool allDone = true;
-    for (auto it = d->extra->pixmapsInProgress.cbegin(); it != d->extra->pixmapsInProgress.cend();) {
+    for (auto it = d->extra->pixmapsInProgress.begin(); it != d->extra->pixmapsInProgress.end();) {
         auto *job = *it;
         if (job->isError()) {
             // get QTextDocument::loadResource() to call QQuickText::loadResource() again, to return the placeholder
