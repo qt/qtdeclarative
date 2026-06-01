@@ -3012,7 +3012,8 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
 
 static void getLinks_helper(const QTextLayout *layout, QList<QQuickTextPrivate::LinkDesc> *links)
 {
-    for (const QTextLayout::FormatRange &formatRange : layout->formats()) {
+    const auto formats = layout->formats();
+    for (const QTextLayout::FormatRange &formatRange : formats) {
         if (formatRange.format.isAnchor()) {
             const int start = formatRange.start;
             const int len = formatRange.length;
