@@ -244,6 +244,22 @@ static uint resolvedAlignment(uint raw, Qt::Alignment hDefault, Qt::Alignment vD
     return result;
 }
 
+static qreal resolvedImplicitWidth(const QQStyleKitDelegateProperties *element, qreal availableW)
+{
+    return element->fillWidth() ? availableW : qMax(0.0, element->implicitWidth());
+}
+
+static qreal resolvedImplicitHeight(const QQStyleKitDelegateProperties *element, qreal avilableH)
+{
+    return element->fillHeight() ? avilableH : qMax(0.0, element->implicitHeight());
+}
+
+static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
+{
+    return QMargins(element->leftMargin(), element->topMargin(),
+                    element->rightMargin(), element->bottomMargin());
+}
+
 // Copied from qstylesheetstyle.cpp
 static const QWidget *containerWidget(const QWidget *w)
 {
@@ -807,8 +823,10 @@ void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegatePropert
     // foreground
     QRectF foregroundRect;
     const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignHCenter, Qt::AlignVCenter);
-    const auto foregroundW = foreground->implicitWidth() >= 0 ? foreground->implicitWidth() : indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin();
-    const auto foregroundH = foreground->implicitHeight() >= 0 ? foreground->implicitHeight() : indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin();
+    const auto foregroundW = resolvedImplicitWidth(foreground,
+        indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
+    const auto foregroundH = resolvedImplicitHeight(foreground,
+        indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
     foregroundRect.setSize(QSizeF(foregroundW, foregroundH));
     if (foregroundAlign & Qt::AlignLeft)
         foregroundRect.moveLeft(indicatorRect.left() + foreground->leftMargin());
@@ -1012,7 +1030,7 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         if (scale == 0)
             scale = 1.0;
         metrics.bgImplicitSize = QSize(static_cast<int>(background->implicitWidth()), static_cast<int>(background->implicitHeight())) * scale;
-        metrics.margins = QMargins(background->leftMargin(), background->topMargin(), background->rightMargin(), background->bottomMargin());
+        metrics.margins = elementMargins(background);
     }
     const auto *textProps = props->text();
     if (textProps)
@@ -1022,7 +1040,7 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         auto scale = indicator->scale();
         if (scale == 0)
             scale = 1.0;
-        metrics.indicatorMargins = QMargins(indicator->leftMargin(), indicator->topMargin(), indicator->rightMargin(), indicator->bottomMargin());
+        metrics.indicatorMargins = elementMargins(indicator);
         metrics.indicatorImplicitSize = QSize(std::max(.0, indicator->implicitWidth()),
                                              std::max(.0, indicator->implicitHeight())) * scale;
 
@@ -1031,13 +1049,11 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
             auto scale = foreground->scale();
             if (scale == 0)
                 scale = 1.0;
-            metrics.foregroundMargins = QMargins(foreground->leftMargin(), foreground->topMargin(), foreground->rightMargin(), foreground->bottomMargin());
-            const auto foregroundW = foreground->implicitWidth() >= 0
-                ? foreground->implicitWidth()
-                : std::max(0, metrics.indicatorImplicitSize.width() - metrics.foregroundMargins.left() - metrics.foregroundMargins.right());
-            const auto foregroundH = foreground->implicitHeight() >= 0
-                ? foreground->implicitHeight()
-                : std::max(0, metrics.indicatorImplicitSize.height() - metrics.foregroundMargins.top() - metrics.foregroundMargins.bottom());
+            metrics.foregroundMargins = elementMargins(foreground);
+            const auto foregroundW = resolvedImplicitWidth(foreground,
+                std::max(.0, qreal(metrics.indicatorImplicitSize.width() - metrics.foregroundMargins.left() - metrics.foregroundMargins.right())));
+            const auto foregroundH = resolvedImplicitHeight(foreground,
+                std::max(.0, qreal(metrics.indicatorImplicitSize.height() - metrics.foregroundMargins.top() - metrics.foregroundMargins.bottom())));
             metrics.foregroundImplicitSize = QSize(foregroundW, foregroundH) * scale;
         }
     }
@@ -1046,8 +1062,9 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         auto scale = handle->scale();
         if (scale == 0)
             scale = 1.0;
-        metrics.handleImplicitSize = QSize(handle->implicitWidth(), handle->implicitHeight()) * scale;
-        metrics.handleMargins = QMargins(handle->leftMargin(), handle->topMargin(), handle->rightMargin(), handle->bottomMargin());
+        metrics.handleImplicitSize = QSize(std::max(.0, handle->implicitWidth()),
+                                           std::max(.0, handle->implicitHeight())) * scale;
+        metrics.handleMargins = elementMargins(handle);
     }
     return metrics;
 }
@@ -1686,14 +1703,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = indicator->implicitWidth() >= 0
-            ? indicator->implicitWidth()
-            : rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right();
-        const int h = indicator->implicitHeight() >= 0
-            ? indicator->implicitHeight()
-            : rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom();
+        const int w = resolvedImplicitWidth(indicator,
+            rect.width() - metrics.padding.left() - metrics.padding.right()
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
+        const int h = resolvedImplicitHeight(indicator,
+            rect.height() - metrics.padding.top() - metrics.padding.bottom()
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -1710,14 +1725,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = indicator->implicitWidth() >= 0
-            ? indicator->implicitWidth()
-            : rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right();
-        const int h = indicator->implicitHeight() >= 0
-            ? indicator->implicitHeight()
-            : rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom();
+        const int w = resolvedImplicitWidth(indicator,
+            rect.width() - metrics.padding.left() - metrics.padding.right()
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
+        const int h = resolvedImplicitHeight(indicator,
+            rect.height() - metrics.padding.top() - metrics.padding.bottom()
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -1787,14 +1800,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = indicator->implicitWidth() >= 0
-            ? indicator->implicitWidth()
-            : rect.width() - metrics.padding.left() - metrics.padding.right()
-                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right();
-        const int h = indicator->implicitHeight() >= 0
-            ? indicator->implicitHeight()
-            : rect.height() - metrics.padding.top() - metrics.padding.bottom()
-                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom();
+        const int w = resolvedImplicitWidth(indicator,
+            rect.width() - metrics.padding.left() - metrics.padding.right()
+                - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
+        const int h = resolvedImplicitHeight(indicator,
+            rect.height() - metrics.padding.top() - metrics.padding.bottom()
+                - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
         const QRect indicatorRect = d->getAlignedRectInContainer(
             rect, QSize(w, h), alignment, metrics.padding, metrics.indicatorMargins);
@@ -1810,10 +1821,12 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                 return opt->rect;
 
             QRect indicatorRect = visualRect(opt->direction, opt->rect, subElementRect(SE_ProgressBarGroove, opt, widget));
-            const auto foregroundW = foreground->implicitWidth() >= 0 ? foreground->implicitWidth() : indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin();
-            const auto foregroundH = foreground->implicitHeight() >= 0 ? foreground->implicitHeight() : indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin();
+            const auto foregroundW = resolvedImplicitWidth(foreground,
+                indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
+            const auto foregroundH = resolvedImplicitHeight(foreground,
+                indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
             const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
-            const QMargins foregroundMargins = QMargins(foreground->leftMargin(), foreground->topMargin(), foreground->rightMargin(), foreground->bottomMargin());
+            const QMargins foregroundMargins = elementMargins(foreground);
             const QRect foregroundRect = d->getAlignedRectInContainer(
                 indicatorRect, QSize(foregroundW, foregroundH), foregroundAlign, QMargins(0, 0, 0, 0), foregroundMargins);
             return visualRect(opt->direction, opt->rect, foregroundRect);
@@ -1923,9 +1936,9 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
                     qreal trackW, trackH;
                     if (isHorizontal) {
                         trackW = ratio * availableW;
-                        trackH = foreground->implicitHeight() >= 0 ? foreground->implicitHeight() : availableH;
+                        trackH = resolvedImplicitHeight(foreground, availableH);
                     } else {
-                        trackW = foreground->implicitWidth() >= 0 ? foreground->implicitWidth() : availableW;
+                        trackW = resolvedImplicitWidth(foreground, availableW);
                         trackH = ratio * availableH;
                     }
                     QRect trackRect(0, 0, trackW, trackH);
@@ -2117,19 +2130,11 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
 
                 qreal grooveW, grooveH;
                 if (isHorizontal) {
-                    grooveW = indicator->implicitWidth() >= 0
-                        ? indicator->implicitWidth()
-                        : availableW;
-                    grooveH = indicator->implicitHeight() >= 0
-                        ? indicator->implicitHeight()
-                        : availableH;
+                    grooveW = resolvedImplicitWidth(indicator, availableW);
+                    grooveH = resolvedImplicitHeight(indicator, availableH);
                 } else {
-                    grooveW = indicator->implicitHeight() >= 0
-                        ? indicator->implicitHeight()
-                        : availableW;
-                    grooveH = indicator->implicitWidth() >= 0
-                        ? indicator->implicitWidth()
-                        : availableH;
+                    grooveW = resolvedImplicitHeight(indicator, availableW);
+                    grooveH = resolvedImplicitWidth(indicator, availableH);
                 }
 
                 QRectF grooveRect(0, 0, grooveW, grooveH);
@@ -2195,8 +2200,10 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
 
                 QRect handleRect;
                 const bool horizontal = slider->orientation == Qt::Horizontal;
-                const auto handleW = handle->implicitWidth() >= 0 ? handle->implicitWidth() : contentsRect.width() - handle->leftMargin() - handle->rightMargin();
-                const auto handleH = handle->implicitHeight() >= 0 ? handle->implicitHeight() : contentsRect.height() - handle->topMargin() - handle->bottomMargin();
+                const auto handleW = resolvedImplicitWidth(handle,
+                    contentsRect.width() - handle->leftMargin() - handle->rightMargin());
+                const auto handleH = resolvedImplicitHeight(handle,
+                    contentsRect.height() - handle->topMargin() - handle->bottomMargin());
                 const int range = horizontal ? contentsRect.width() - handleW : contentsRect.height() - handleH;
                 const int sliderPos = QStyle::sliderPositionFromValue(slider->minimum, slider->maximum,
                     slider->sliderPosition, range, !horizontal);
@@ -2245,15 +2252,12 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
                     return contentsRect;
 
-                const int w = indicator->implicitWidth() >= 0
-                    ? indicator->implicitWidth()
-                    : contentsRect.width() - indicator->leftMargin() - indicator->rightMargin();
-                const int h = indicator->implicitHeight() >= 0
-                    ? indicator->implicitHeight()
-                    : contentsRect.height() - indicator->topMargin() - indicator->bottomMargin();
+                const int w = resolvedImplicitWidth(indicator,
+                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
+                const int h = resolvedImplicitHeight(indicator,
+                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin());
                 const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
-                const QMargins indicatorMargins(indicator->leftMargin(), indicator->topMargin(),
-                                               indicator->rightMargin(), indicator->bottomMargin());
+                const QMargins indicatorMargins = elementMargins(indicator);
                 return visualRect(opt->direction, opt->rect,
                     d->getAlignedRectInContainer(contentsRect, QSize(w, h), indicatorAlign, QMargins(), indicatorMargins));
             }
@@ -2322,11 +2326,12 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!upIndicator || !upIndicator->visible() || upIndicator->opacity() == 0)
                     return contentsRect;
 
-                const int w = upIndicator->implicitWidth() >= 0 ? upIndicator->implicitWidth() : contentsRect.width() - upIndicator->leftMargin() - upIndicator->rightMargin();
-                const int h = upIndicator->implicitHeight() >= 0 ? upIndicator->implicitHeight() : contentsRect.height() - upIndicator->topMargin() - upIndicator->bottomMargin();
+                const int w = resolvedImplicitWidth(upIndicator,
+                    contentsRect.width() - upIndicator->leftMargin() - upIndicator->rightMargin());
+                const int h = resolvedImplicitHeight(upIndicator,
+                    contentsRect.height() - upIndicator->topMargin() - upIndicator->bottomMargin());
                 const uint upAlign = resolvedAlignment(upIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
-                const QMargins upMargins(upIndicator->leftMargin(), upIndicator->topMargin(),
-                                        upIndicator->rightMargin(), upIndicator->bottomMargin());
+                const QMargins upMargins = elementMargins(upIndicator);
                 return visualRect(opt->direction, opt->rect,
                     d->getAlignedRectInContainer(contentsRect, QSize(w, h), upAlign, QMargins(), upMargins));
             }
@@ -2335,11 +2340,12 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!downIndicator || !downIndicator->visible() || downIndicator->opacity() == 0)
                     return frameRect;
 
-                const int w = downIndicator->implicitWidth() >= 0 ? downIndicator->implicitWidth() : contentsRect.width() - downIndicator->leftMargin() - downIndicator->rightMargin();
-                const int h = downIndicator->implicitHeight() >= 0 ? downIndicator->implicitHeight() : contentsRect.height() - downIndicator->topMargin() - downIndicator->bottomMargin();
+                const int w = resolvedImplicitWidth(downIndicator,
+                    contentsRect.width() - downIndicator->leftMargin() - downIndicator->rightMargin());
+                const int h = resolvedImplicitHeight(downIndicator,
+                    contentsRect.height() - downIndicator->topMargin() - downIndicator->bottomMargin());
                 const uint downAlign = resolvedAlignment(downIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
-                const QMargins downMargins(downIndicator->leftMargin(), downIndicator->topMargin(),
-                                          downIndicator->rightMargin(), downIndicator->bottomMargin());
+                const QMargins downMargins = elementMargins(downIndicator);
                 return visualRect(opt->direction, opt->rect,
                     d->getAlignedRectInContainer(contentsRect, QSize(w, h), downAlign, QMargins(), downMargins));
             }
