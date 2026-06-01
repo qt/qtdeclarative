@@ -23,7 +23,7 @@
 
 QT_BEGIN_NAMESPACE
 
-enum QQmlJSScopesByIdOption: char {
+enum class QQmlJSScopesByIdOption : quint8 {
     Default = 0,
     AssumeComponentsAreBound = 1,
 };
@@ -140,7 +140,7 @@ public:
         \a scope or \a referrer.
      */
     QString id(const QQmlJSScope::ConstPtr &scope, const QQmlJSScope::ConstPtr &referrer,
-               QQmlJSScopesByIdOptions options = Default) const
+               QQmlJSScopesByIdOptions options = QQmlJSScopesByIdOption::Default) const
     {
         CertainCallback<QString> result;
         const Success isCertain = possibleIds(scope, referrer, options, result);
@@ -225,7 +225,7 @@ public:
         candidate or the \a referrer.
      */
     QQmlJSScope::ConstPtr scope(const QString &id, const QQmlJSScope::ConstPtr &referrer,
-                                QQmlJSScopesByIdOptions options = Default) const
+                                QQmlJSScopesByIdOptions options = QQmlJSScopesByIdOption::Default) const
     {
         CertainCallback<QQmlJSScope::ConstPtr> result;
         const Success isCertain = possibleScopes(id, referrer, options, result);
@@ -303,8 +303,10 @@ private:
                             const QQmlJSScope::ConstPtr &observer,
                             QQmlJSScopesByIdOptions options) const
     {
-        if (!m_componentsAreBound && !options.testAnyFlag(AssumeComponentsAreBound))
+        if (!m_componentsAreBound
+            && !options.testAnyFlag(QQmlJSScopesByIdOption::AssumeComponentsAreBound)) {
             return observed == observer;
+        }
 
         for (QQmlJSScope::ConstPtr scope = observer; scope; scope = scope->parentScope()) {
             if (scope == observed)

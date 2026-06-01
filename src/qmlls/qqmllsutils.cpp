@@ -1179,7 +1179,8 @@ propertyBindingFromReferrerScope(const QQmlJSScope::ConstPtr &referrerScope, con
 
         return ExpressionType {
             name,
-            resolverForIds->typeForId(referrerScope, name, AssumeComponentsAreBound),
+            resolverForIds->typeForId(referrerScope, name,
+                                      QQmlJSScopesByIdOption::AssumeComponentsAreBound),
             QmlObjectIdIdentifier
         };
     }
@@ -1541,7 +1542,7 @@ static std::optional<ExpressionType> resolveIdentifierExpressionType(const DomIt
 
     // check if its an id
     if (const QQmlJSScope::ConstPtr fromId =
-                resolver->typeForId(referrerScope, name, AssumeComponentsAreBound)) {
+        resolver->typeForId(referrerScope, name, QQmlJSScopesByIdOption::AssumeComponentsAreBound)) {
         return ExpressionType{ name, fromId, QmlObjectIdIdentifier };
     }
 
