@@ -151,7 +151,7 @@ private:
                                                qsizetype otDelta, qsizetype totalDelta,
                                                IndirectTable ownTable)
     {
-        if (totalDelta == 0)
+        if (otDelta == 0 && totalDelta == 0)
             return;
         Unit *u = reinterpret_cast<Unit *>(data.data());
 
