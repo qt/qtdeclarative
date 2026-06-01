@@ -62,6 +62,7 @@ class QQStyleKitControls : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQStyleKitControl *label READ label WRITE set_label NOTIFY labelChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *groupBox READ groupBox WRITE set_groupBox NOTIFY groupBoxChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *textArea READ textArea WRITE set_textArea NOTIFY textAreaChanged FINAL)
+    Q_PROPERTY(QQStyleKitControl *menu READ menu WRITE set_menu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuBar READ menuBar WRITE set_menuBar NOTIFY menuBarChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuBarItem READ menuBarItem WRITE set_menuBarItem NOTIFY menuBarItemChanged FINAL)
     Q_PROPERTY(QQStyleKitControl *menuItem READ menuItem WRITE set_menuItem NOTIFY menuItemChanged FINAL)
@@ -110,6 +111,7 @@ public:
     IMPLEMENT_ACCESSORS(label)
     IMPLEMENT_ACCESSORS(groupBox)
     IMPLEMENT_ACCESSORS(textArea)
+    IMPLEMENT_ACCESSORS(menu)
     IMPLEMENT_ACCESSORS(menuBar)
     IMPLEMENT_ACCESSORS(menuBarItem)
     IMPLEMENT_ACCESSORS(menuItem)
@@ -155,6 +157,7 @@ signals:
     void labelChanged();
     void groupBoxChanged();
     void textAreaChanged();
+    void menuChanged();
     void menuBarChanged();
     void menuBarItemChanged();
     void menuItemChanged();

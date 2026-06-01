@@ -173,6 +173,13 @@ BaseStyle {
         background.visible: false
     }
 
+    menu {
+        background {
+            implicitWidth: 200
+            implicitHeight: 40
+        }
+    }
+
     menuBar {
         background {
             radius: 0

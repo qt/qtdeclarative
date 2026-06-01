@@ -169,6 +169,16 @@ QT_BEGIN_NAMESPACE
     \snippet ControlsSnippets.qml label
 */
 
+/*!
+    \qmlproperty ControlStyle AbstractStylableControls::menu
+
+    Grouped property for styling \l [QtQuickControls]{Menu}.
+
+    Unset properties fall back to \l popup.
+
+    \snippet ControlsSnippets.qml menu
+*/
+
 /*
     \qmlproperty ControlStyle AbstractStylableControls::menuItem
 
@@ -525,6 +535,7 @@ IMPLEMENT_ACCESSORS(frame, QQStyleKitReader::ControlType::Frame)
 IMPLEMENT_ACCESSORS(label, QQStyleKitReader::ControlType::Label)
 IMPLEMENT_ACCESSORS(groupBox, QQStyleKitReader::ControlType::GroupBox)
 IMPLEMENT_ACCESSORS(textArea, QQStyleKitReader::ControlType::TextArea)
+IMPLEMENT_ACCESSORS(menu, QQStyleKitReader::ControlType::Menu)
 IMPLEMENT_ACCESSORS(menuBar, QQStyleKitReader::ControlType::MenuBar)
 IMPLEMENT_ACCESSORS(menuBarItem, QQStyleKitReader::ControlType::MenuBarItem)
 IMPLEMENT_ACCESSORS(menuItem, QQStyleKitReader::ControlType::MenuItem)
