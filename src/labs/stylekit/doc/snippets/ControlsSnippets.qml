@@ -169,6 +169,17 @@ ApplicationWindow {
         //! [label]
         */
 
+        //! [menu]
+        menu {
+            background {
+                implicitWidth: 200
+                implicitHeight: 40
+                border.color: "darkslategray"
+                radius: 4
+            }
+        }
+        //! [menu]
+
         //! [menuBar]
         menuBar {
             background {

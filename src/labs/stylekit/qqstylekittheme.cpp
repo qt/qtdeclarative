@@ -68,6 +68,7 @@ static QQuickTheme::Scope scopeForType(QQStyleKitExtendableControlType type)
     case QQStyleKitReader::ControlType::MenuBar:
     case QQStyleKitReader::ControlType::MenuBarItem:
         return QQuickTheme::MenuBar;
+    case QQStyleKitReader::ControlType::Menu:
     case QQStyleKitReader::ControlType::MenuItem:
     case QQStyleKitReader::ControlType::MenuSeparator:
         return QQuickTheme::Menu;
