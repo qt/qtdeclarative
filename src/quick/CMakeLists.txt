@@ -137,7 +137,6 @@ qt_internal_add_qml_module(Quick
         scenegraph/coreapi/qsgtexture_platform.h
         scenegraph/qsgadaptationlayer.cpp scenegraph/qsgadaptationlayer_p.h
         scenegraph/qsgcurveabstractnode_p.h
-        scenegraph/qsgbasicglyphnode.cpp scenegraph/qsgbasicglyphnode_p.h
         scenegraph/qsgbasicinternalimagenode.cpp scenegraph/qsgbasicinternalimagenode_p.h
         scenegraph/qsgbasicinternalrectanglenode.cpp scenegraph/qsgbasicinternalrectanglenode_p.h
         scenegraph/qsgcontext.cpp scenegraph/qsgcontext_p.h
