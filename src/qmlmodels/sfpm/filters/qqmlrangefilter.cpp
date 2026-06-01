@@ -20,7 +20,7 @@ QT_BEGIN_NAMESPACE
     RangeFilter accepts rows where the value of the configured role falls
     between \l minimum and \l maximum. Both bounds are inclusive by default.
 
-    The following example shows processes with the cpu usage in the range
+    The following example shows processes with the CPU usage in the range
     between 70 and 100:
 
     \qml
