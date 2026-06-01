@@ -25,6 +25,7 @@ using namespace Qt::StringLiterals;
 static QString sanitizeString(const QString &input)
 {
     QString s = input;
+    s.replace(QLatin1Char('\\'), QLatin1String("\\\\"));
     s.replace(QLatin1Char('"'), QLatin1String("\\\""));
     return s;
 }
@@ -2603,6 +2604,16 @@ bool QQuickQmlGenerator::generateRootNode(const StructureNodeInfo &info)
             stream() << "property real endFrame: " << info.timelineInfo->endFrame;
             stream() << "property real frameRate: " << info.timelineInfo->frameRate;
             stream() << "property real frameCounter: " << info.timelineInfo->startFrame;
+            if (!info.timelineInfo->markers.isEmpty()) {
+                QStringList markerEntries;
+                markerEntries.reserve(info.timelineInfo->markers.size());
+                for (const LottieMarkerInfo &marker : info.timelineInfo->markers) {
+                    markerEntries << u'"' + sanitizeString(marker.name) + u"\": ["
+                                    + QString::number(marker.frame) + u", "
+                                    + QString::number(marker.duration) + u']';
+                }
+                stream() << "property var markers: ({" << markerEntries.join(", "_L1) << "})";
+            }
             stream() << "NumberAnimation on frameCounter {";
             m_indentLevel++;
             stream() << "objectName: \"_qt_frameCounterAnimation\"";

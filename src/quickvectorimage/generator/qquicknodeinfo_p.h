@@ -151,6 +151,13 @@ struct UseNodeInfo : NodeInfo
     StructureNodeStage stage;
 };
 
+struct LottieMarkerInfo
+{
+    QString name;
+    int frame = 0;
+    int duration = 0;
+};
+
 struct TimelineInfo {
     int startFrame = 0;
     int endFrame = 0;
@@ -161,6 +168,7 @@ struct TimelineInfo {
     QString frameCounterReference;
     bool generateVisibility = false;
     bool generateFrameCounter = false;
+    QList<LottieMarkerInfo> markers;
 };
 
 struct StructureNodeInfo : NodeInfo
