@@ -745,7 +745,7 @@ void QQmlJSScope::resolveList(const QQmlJSScope::Ptr &self, const QQmlJSScope::C
     }
 
     const QQmlJS::ContextualType element = { self, QTypeRevision(),
-                                             QQmlJS::PrecedenceValues::Default };
+                                             quint8(QQmlJS::PrecedenceValues::Default) };
     const QQmlJSImportedScope array = {arrayType, QTypeRevision()};
     QQmlJS::ContextualTypes contextualTypes(
             QQmlJS::ContextualTypes::INTERNAL,

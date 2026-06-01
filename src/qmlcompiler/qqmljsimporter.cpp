@@ -720,7 +720,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importHardCodedBuiltins()
 
         const auto type = builtins.qmlNames.type(hardcoded);
         Q_ASSERT(type.scope);
-        result.setType(hardcoded, { type, QQmlJS::PrecedenceValues::Default });
+        result.setType(hardcoded, { type, quint8(QQmlJS::PrecedenceValues::Default) });
     }
 
     return ImportedTypes(std::move(result), {});
@@ -734,7 +734,7 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 
     AvailableTypes builtins(QQmlJS::ContextualTypes(QQmlJS::ContextualTypes::INTERNAL, {}, {}, {}));
 
-    importHelper(u"QML"_s, &builtins, QQmlJS::PrecedenceValues::Default, QString(),
+    importHelper(u"QML"_s, &builtins, quint8(QQmlJS::PrecedenceValues::Default), QString(),
                  QTypeRevision::fromVersion(1, 0));
 
     QQmlJSScope::ConstPtr arrayType = builtins.cppNames.type(u"Array"_s).scope;

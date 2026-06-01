@@ -27,7 +27,7 @@ namespace QQmlJS {
 
 // note: like QQmlImportInstance::Precedence, except that inline components are 0 and
 // "Precedence::Highest" is 1 instead of 0.
-enum PrecedenceValues : quint8 {
+enum class PrecedenceValues : quint8 {
     InlineComponent = 0,
     Default = 1,
     ImplicitImport = std::numeric_limits<quint8>::max() >> 1
