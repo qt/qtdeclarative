@@ -50,7 +50,6 @@ Type QQmlJSLookupSignaturesRecorder::type(
 
     bool isFileBeingCompiled = root->filePath() == m_typeResolver->logger()->filePath();
 
-    Q_ASSERT(isFileBeingCompiled || !root->moduleName().isEmpty());
     Q_ASSERT(!root->internalName().isEmpty());
     res.module = isFileBeingCompiled ? s_thisCuModule : root->moduleName();
     res.name = isFileBeingCompiled ? s_thisCuType : root->internalName();
