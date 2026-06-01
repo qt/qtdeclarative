@@ -19,6 +19,8 @@ private slots:
 
     void qmlFileSourcePathFromBuildPath_data();
     void qmlFileSourcePathFromBuildPath();
+
+    void qmlBuildPathFromSourcePathWithMultipleRegistrations();
 };
 
 #endif // TST_QQMLJSUTILS_P_H
