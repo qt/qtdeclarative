@@ -2402,7 +2402,7 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         // we shouldn't need to search for the current root component in any case here
         breakInheritanceCycles(m_currentScope);
         m_scopesById.possibleScopes(
-                name, m_currentScope, Default,
+                name, m_currentScope, QQmlJSScopesByIdOption::Default,
                 [&](const QQmlJSScope::ConstPtr &otherScopeWithID,
                     QQmlJSScopesById::Confidence confidence) {
             // If it's a fuzzy match, that's still warning-worthy
@@ -3148,7 +3148,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
         while (!childScopes.isEmpty()) {
             const QQmlJSScope::ConstPtr scope = childScopes.takeFirst();
             m_scopesById.possibleIds(
-                    scope, scope, Default,
+                    scope, scope, QQmlJSScopesByIdOption::Default,
                     [&](const QString &id, QQmlJSScopesById::Confidence confidence) {
                 // Any ID is enough to trigger the warning, no matter how confident we are about it.
                 Q_UNUSED(id);

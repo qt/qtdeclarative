@@ -138,7 +138,7 @@ public:
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForId(
             const QQmlJSScope::ConstPtr &scope, const QString &name,
-            QQmlJSScopesByIdOptions options = Default) const
+            QQmlJSScopesByIdOptions options = QQmlJSScopesByIdOption::Default) const
     {
         return m_objectsById.scope(name, scope, options);
     }
@@ -149,7 +149,7 @@ public:
 
     QQmlJSScope::ConstPtr scopedType(
             const QQmlJSScope::ConstPtr &scope, const QString &name,
-            QQmlJSScopesByIdOptions options = Default) const;
+            QQmlJSScopesByIdOptions options = QQmlJSScopesByIdOption::Default) const;
 
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
@@ -237,7 +237,7 @@ public:
     QQmlJSRegisterContent scopedType(
             QQmlJSRegisterContent scope, const QString &name,
             int lookupIndex = QQmlJSRegisterContent::InvalidLookupIndex,
-            QQmlJSScopesByIdOptions options = Default) const;
+            QQmlJSScopesByIdOptions options = QQmlJSScopesByIdOption::Default) const;
 
     QQmlJSRegisterContent memberType(
             QQmlJSRegisterContent type, const QString &name,
