@@ -234,6 +234,24 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
     return QQStyleKitReader::Control;
 }
 
+// Returns true for widgets that draw themselves using their widget font and
+// palette directly, bypassing the style's drawControl path.
+static bool isSelfPaintingWidget(const QWidget *widget)
+{
+    return false
+#if QT_CONFIG(label)
+        || qobject_cast<const QLabel *>(widget)
+#endif
+#if QT_CONFIG(textedit)
+        || qobject_cast<const QTextEdit *>(widget)
+        || qobject_cast<const QPlainTextEdit *>(widget)
+#endif
+#if QT_CONFIG(lineedit)
+        || qobject_cast<const QLineEdit *>(widget)
+#endif
+        ;
+}
+
 static uint resolvedAlignment(uint raw, Qt::Alignment hDefault, Qt::Alignment vDefault)
 {
     uint result = 0;
@@ -370,7 +388,7 @@ void QStyleKitStylePrivate::updateStyle()
     for (auto *widget : std::as_const(*QWidgetPrivate::allWidgets)) {
         if (customFontWidgets.contains(widget))
             unsetStyleFont(widget);
-        setStyleFont(widget);
+        refreshStyleFont(widget);
         if (customPaletteWidgets.contains(widget))
             unsetStylePalette(widget);
         refreshStylePalette(widget);
@@ -395,7 +413,33 @@ void QStyleKitStylePrivate::unsetStyleFont(QWidget *widget)
     widget->setFont(std::move(customFont).reverted(widget->font()));
 }
 
-void QStyleKitStylePrivate::setStyleFont(QWidget *widget)
+void QStyleKitStylePrivate::setStyleFont(QWidget *widget, const QFont &styleFont)
+{
+    if (!style || !widget)
+        return;
+
+    const auto styleMask = styleFont.resolveMask();
+    auto it = customFontWidgets.find(widget);
+
+    if (it == customFontWidgets.end()) {
+        if (styleMask == 0)
+            return;
+        it = customFontWidgets.insert(widget, { QWidgetPrivate::get(widget)->localFont(), 0 });
+        QObject::connect(widget, &QObject::destroyed, widget, [this, widget]() {
+            customFontWidgets.remove(widget);
+        });
+    }
+
+    it->resolveMask = styleMask;
+
+    const QFont &baseline = it->oldWidgetValue;
+    QFont merged = styleFont.resolve(baseline);
+    merged.setResolveMask(baseline.resolveMask() | styleMask);
+    if (widget->font() != merged)
+        widget->setFont(merged);
+}
+
+void QStyleKitStylePrivate::refreshStyleFont(QWidget *widget)
 {
     if (!style || !widget)
         return;
@@ -403,24 +447,16 @@ void QStyleKitStylePrivate::setStyleFont(QWidget *widget)
     const QWidget *targetWidget = containerWidget(widget);
     QQStyleKitReader::ControlType controlType = controlTypeForWidget(targetWidget);
 
-    const QFont styleFont = style->fontForControlType(controlType);
-
-    if (styleFont.resolveMask() == 0)
+    auto *shared = ensureSharedReader();
+    if (!shared)
         return;
 
-    if (!customFontWidgets.contains(widget)) {
-        customFontWidgets.insert(widget, { widget->font(), 0 });
-        QObject::connect(widget, &QObject::destroyed, widget, [this, widget]() {
-            customFontWidgets.remove(widget);
-        });
-    }
+    QStyleOption opt;
+    opt.initFrom(targetWidget);
+    const QQSK::State currentState = resolvedStateFor(controlType, opt.state);
 
-    const quint64 styleMask = styleFont.resolveMask();
-    customFontWidgets[widget].resolveMask |= styleMask;
-
-    QFont merged = styleFont.resolve(widget->font());
-    merged.setResolveMask(widget->font().resolveMask() | styleMask);
-    widget->setFont(merged);
+    shared->setControlTypeAndState(controlType, currentState);
+    setStyleFont(widget, shared->font());
 }
 
 void QStyleKitStylePrivate::unsetStylePalette(QWidget *widget)
@@ -428,9 +464,6 @@ void QStyleKitStylePrivate::unsetStylePalette(QWidget *widget)
     auto it = customPaletteWidgets.find(widget);
     if (it == customPaletteWidgets.end())
         return;
-
-    Q_Q(QStyleKitStyle);
-    widget->removeEventFilter(q);
 
     auto customPalette = std::move(*it);
     customPaletteWidgets.erase(it);
@@ -467,15 +500,7 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
         return;
 
     const bool isWindow = widget->windowType() & (Qt::Popup | Qt::Window | Qt::Dialog);
-    const bool isPaletteManaged = false
-#if QT_CONFIG(label)
-        || qobject_cast<const QLabel *>(widget)
-#endif
-#if QT_CONFIG(textedit)
-        || qobject_cast<const QTextEdit *>(widget)
-        || qobject_cast<const QPlainTextEdit *>(widget)
-#endif
-        || isWindow;
+    const bool isPaletteManaged = isSelfPaintingWidget(widget) || isWindow;
     if (!isPaletteManaged)
         return;
 
@@ -512,11 +537,6 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
             stylePalette.setColor(QPalette::Disabled, QPalette::WindowText, dt->color());
         }
 
-        // Track state changes to update the text color if it changes btw states (e.g. hover/pressed)
-        if (!customPaletteWidgets.contains(widget)) {
-            Q_Q(QStyleKitStyle);
-            widget->installEventFilter(q);
-        }
     }
 
     setStylePalette(widget, stylePalette);
@@ -1237,21 +1257,6 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 #if QT_CONFIG(lineedit)
     case PE_PanelLineEdit:
         if (const auto *lineEdit = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
-            const QObject *parent = w ? w->parent() : nullptr;
-#if QT_CONFIG(spinbox)
-            const bool isInSpinBox = qobject_cast<const QAbstractSpinBox *>(parent);
-#else
-            const bool isInSpinBox = false;
-#endif
-#if QT_CONFIG(combobox)
-            const bool isInComboBox = qobject_cast<const QComboBox *>(parent);
-#else
-            const bool isInComboBox = false;
-#endif
-            // For spinbox and combobox, the line edit doesn't have its own background in the Controls style
-            if (isInSpinBox || isInComboBox)
-                return;
-
             // LineEdit sets Sunken flag to indicate Sunken frame,
             // but the style uses it to indicate pressed state, so ignore it
             QStyleOption lineEditOpt(*lineEdit);
@@ -1267,7 +1272,23 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
                     stylePalette.setColor(QPalette::Text, txt->color());
                     d->setStylePalette(const_cast<QLineEdit *>(le), stylePalette);
                 }
+                const_cast<QStyleKitStylePrivate *>(d)->setStyleFont(const_cast<QLineEdit *>(le), r.font());
             }
+
+            const QObject *parent = w ? w->parent() : nullptr;
+#if QT_CONFIG(spinbox)
+            const bool isInSpinBox = qobject_cast<const QAbstractSpinBox *>(parent);
+#else
+            const bool isInSpinBox = false;
+#endif
+#if QT_CONFIG(combobox)
+            const bool isInComboBox = qobject_cast<const QComboBox *>(parent);
+#else
+            const bool isInComboBox = false;
+#endif
+            // For spinbox and combobox, the line edit doesn't have its own background in the Controls style
+            if (isInSpinBox || isInComboBox)
+                return;
 
             d->drawStyledItemRect(r.background(), opt->rect, p);
             return;
@@ -2663,8 +2684,11 @@ void QStyleKitStyle::polish(QWidget *widget)
     }
 #endif
 
-    d->setStyleFont(widget);
+    d->refreshStyleFont(widget);
     d->refreshStylePalette(widget);
+
+    if (isSelfPaintingWidget(widget))
+        widget->installEventFilter(this);
 
     QCommonStyle::polish(widget);
 }
@@ -2687,6 +2711,8 @@ void QStyleKitStyle::unpolish(QWidget *widget)
     Q_D(QStyleKitStyle);
     d->unsetStylePalette(widget);
     d->unsetStyleFont(widget);
+    if (isSelfPaintingWidget(widget))
+        widget->removeEventFilter(this);
     d->cleanupWidgetReader(widget);
     QCommonStyle::unpolish(widget);
 }
@@ -2704,6 +2730,7 @@ bool QStyleKitStyle::eventFilter(QObject *obj, QEvent *event)
 {
     Q_D(QStyleKitStyle);
     switch (event->type()) {
+    case QEvent::EnabledChange:
     case QEvent::HoverEnter:
     case QEvent::HoverLeave:
     case QEvent::FocusIn:
@@ -2711,6 +2738,8 @@ bool QStyleKitStyle::eventFilter(QObject *obj, QEvent *event)
         if (auto *w = qobject_cast<QWidget *>(obj)) {
             if (d->customPaletteWidgets.contains(w))
                 d->refreshStylePalette(w);
+            if (d->customFontWidgets.contains(w))
+                d->refreshStyleFont(w);
         }
         break;
     default:
