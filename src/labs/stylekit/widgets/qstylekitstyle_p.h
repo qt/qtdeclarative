@@ -122,7 +122,8 @@ private:
     void updateStyle();
 
     void unsetStyleFont(QWidget *widget);
-    void setStyleFont(QWidget *widget);
+    void setStyleFont(QWidget *widget, const QFont &styleFont);
+    void refreshStyleFont(QWidget *widget);
 
     void unsetStylePalette(QWidget *widget);
     void setStylePalette(QWidget *widget, const QPalette &stylePalette) const;
