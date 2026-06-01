@@ -347,14 +347,15 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             pathWorkThreadPool->setMaxThreadCount(idealCount > 0 ? idealCount * 2 : 4);
         }
 #endif
-        auto testFeatureIndexUint = [](QQuickItem *item) -> bool {
-            if (auto *w = item->window()) {
-                if (auto *rhi = QQuickWindowPrivate::get(w)->rhi)
-                    return rhi->isFeatureSupported(QRhi::ElementIndexUint);
-            }
-            return true;
-        };
-        static bool supportsElementIndexUint = testFeatureIndexUint(m_item);
+
+        // RHI backend might not have had a chance of being initialized yet
+        // (we are called in the mainthread while renderthread might be in the
+        // process of starting up and setting the RHI backend.
+        // m_rhiBackendInitialized is set in updateNode() on the render thread
+        // when both threads are locked.
+        // Until then, we cannot assume we have support for uint32_t indices
+        // but only uint16_t ones.
+        const bool supportsElementIndexUint = m_rhiBackendInitialized ? m_supportsElementIndexUint : false;
         if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
             d.path.setFillRule(d.fillRule);
             if (m_api == QSGRendererInterface::Unknown)
@@ -537,6 +538,22 @@ void QQuickShapeGenericRenderer::updateNode()
 {
     if (!m_rootNode || !m_accDirty)
         return;
+
+    // Is it now safe to query the rhi backend
+    if (!m_rhiBackendInitialized) {
+        auto findRHIBackend = [](QQuickItem *item) -> QRhi * {
+            if (auto *w = item->window()) {
+                if (auto *rhi = QQuickWindowPrivate::get(w)->rhi)
+                    return rhi;
+            }
+            return nullptr;
+        };
+        auto *rhi = findRHIBackend(m_item);
+        if (rhi != nullptr) {
+            m_rhiBackendInitialized = true;
+            m_supportsElementIndexUint = rhi->isFeatureSupported(QRhi::ElementIndexUint);
+        }
+    }
 
 //                     [   m_rootNode   ]
 //                     /       /        /

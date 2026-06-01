@@ -51,7 +51,9 @@ public:
           m_rootNode(nullptr),
           m_accDirty(0),
           m_asyncCallback(nullptr),
-          m_asyncCallbackData(nullptr)
+          m_asyncCallbackData(nullptr),
+          m_rhiBackendInitialized(false),
+          m_supportsElementIndexUint(false)
     { }
     ~QQuickShapeGenericRenderer();
 
@@ -134,6 +136,8 @@ private:
     int m_accDirty;
     void (*m_asyncCallback)(void *);
     void *m_asyncCallbackData;
+    bool m_rhiBackendInitialized;
+    bool m_supportsElementIndexUint;
 };
 
 class QQuickShapeFillRunnable : public QObject, public QRunnable
