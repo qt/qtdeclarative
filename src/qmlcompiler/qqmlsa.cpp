@@ -1338,8 +1338,8 @@ Element GenericPass::resolveType(QAnyStringView moduleName, QAnyStringView typeN
 {
     Q_D(const GenericPass);
     QQmlJSImporter *typeImporter = PassManagerPrivate::visitor(*d->m_manager)->importer();
-    const auto module =
-            typeImporter->importModule(moduleName.toString(), QQmlJS::PrecedenceValues::Default);
+    const auto module = typeImporter->importModule(moduleName.toString(),
+                                                   quint8(QQmlJS::PrecedenceValues::Default));
     const auto scope = module.type(typeName.toString()).scope;
     return QQmlJSScope::createQQmlSAElement(scope);
 }
@@ -1527,7 +1527,7 @@ bool PassManagerPrivate::registerPropertyPass(std::shared_ptr<PropertyPass> pass
     if (!moduleName.isEmpty() && !typeName.isEmpty()) {
         auto typeImporter = m_visitor->importer();
         auto module = typeImporter->importModule(moduleName.toString(),
-                                                 QQmlJS::PrecedenceValues::Default);
+                                                 quint8(QQmlJS::PrecedenceValues::Default));
         auto element = QQmlJSScope::createQQmlSAElement(module.type(typeName.toString()).scope);
 
         if (element.isNull())
