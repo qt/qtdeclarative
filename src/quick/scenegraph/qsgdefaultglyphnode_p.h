@@ -17,17 +17,19 @@
 //
 
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QSGDefaultGlyphNode : public QSGBasicGlyphNode
+class QSGDefaultGlyphNode : public QSGGlyphNode
 {
 public:
     QSGDefaultGlyphNode(QSGRenderContext *context);
-    ~QSGDefaultGlyphNode();
-    void setMaterialColor(const QColor &color) override;
+    ~QSGDefaultGlyphNode() override;
     void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
+    void setColor(const QColor &color) override;
+    void setStyle(QQuickText::TextStyle) override;
+    void setStyleColor(const QColor &) override;
+    QPointF baseLine() const override { return m_baseLine; }
     void update() override;
     void preprocess() override;
     void setPreferredAntialiasingMode(AntialiasingMode) override;
@@ -53,6 +55,13 @@ private:
     uint m_dirtyGeometry: 1;
 
     AntialiasingMode m_preferredAntialiasingMode;
+    QGlyphRun m_glyphs;
+    QPointF m_position;
+    QColor m_color;
+    QQuickText::TextStyle m_style;
+    QColor m_styleColor;
+    QPointF m_baseLine;
+    QSGGeometry m_geometry;
 };
 
 QT_END_NAMESPACE

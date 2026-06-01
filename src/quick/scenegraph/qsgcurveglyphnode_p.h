@@ -18,7 +18,6 @@
 
 #include <qtquickexports.h>
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qsgbasicglyphnode_p.h>
 
 QT_BEGIN_NAMESPACE
 
