@@ -7,7 +7,6 @@
 #include <private/qqmljstyperesolver_p.h>
 
 using namespace Qt::StringLiterals;
-using namespace QQmlPrivate::AOTLookupValidation;
 
 QT_BEGIN_NAMESPACE
 
@@ -19,10 +18,12 @@ QQmlJSLookupSignaturesRecorder::QQmlJSLookupSignaturesRecorder(
     Q_ASSERT(m_typeResolver);
 }
 
-Type QQmlJSLookupSignaturesRecorder::type(
+QQmlPrivate::AOTLookupValidation::Type QQmlJSLookupSignaturesRecorder::type(
         const QQmlJSScope::ConstPtr &type)
 {
-    Type res;
+    using namespace QQmlPrivate::AOTLookupValidation;
+
+    QQmlPrivate::AOTLookupValidation::Type res;
     if (!type->isComposite()) {
         if (type->accessSemantics() == QQmlSA::AccessSemantics::Value && type->isSelfExtension()) {
             res.name = type->internalName();
@@ -129,6 +130,8 @@ static int ownRegularPropertyCountAfterIndex(const QQmlJSScope::ConstPtr &type, 
 void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::ConstPtr &base,
                                                           const QQmlJSMetaProperty &property)
 {
+    using namespace QQmlPrivate::AOTLookupValidation;
+
     const QString &name = property.propertyName();
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfProperty(base, name);
     if (base->isScript() || safeBase(base) || cantDesync(owner))
@@ -163,6 +166,8 @@ void QQmlJSLookupSignaturesRecorder::recordPropertyLookup(const QQmlJSScope::Con
 void QQmlJSLookupSignaturesRecorder::recordMethodLookup(const QQmlJSScope::ConstPtr &base,
                                                         const QQmlJSMetaMethod &method)
 {
+    using namespace QQmlPrivate::AOTLookupValidation;
+
     const QString &name = method.methodName();
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfMethod(base, name);
     if (base->isScript() || safeBase(base) || cantDesync(owner))
@@ -205,6 +210,8 @@ void QQmlJSLookupSignaturesRecorder::recordEnumKeyLookup(const QQmlJSScope::Cons
                                                          const QQmlJSMetaEnum &metaEnum,
                                                          const QString &keyName)
 {
+    using namespace QQmlPrivate::AOTLookupValidation;
+
     const auto [owner, extensionSpecifier] = QQmlJSScope::ownerOfEnum(base, metaEnum.name());
     if (base->isScript() || safeBase(base) || cantDesync(owner))
         return;

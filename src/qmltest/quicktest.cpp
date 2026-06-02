@@ -281,8 +281,6 @@ void maybeInvokeSetupMethod(QObject *setupObject, const char *member, Args &&...
     }
 }
 
-using namespace QV4::CompiledData;
-
 class TestCaseCollector
 {
 public:
@@ -345,6 +343,8 @@ private:
             const QQmlRefPointer<QV4::CompiledData::CompilationUnit> &compilationUnit,
             const QV4::CompiledData::Object *object = nullptr)
     {
+        using namespace QV4::CompiledData;
+
         QQmlType testCaseType;
         for (quint32 i = 0, count = compilationUnit->importCount(); i < count; ++i) {
             const Import *import = compilationUnit->importAt(i);
