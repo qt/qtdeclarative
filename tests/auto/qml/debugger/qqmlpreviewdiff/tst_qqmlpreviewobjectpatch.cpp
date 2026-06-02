@@ -162,6 +162,20 @@ private slots:
     // resize event fires after rebuild orphaned the attached SafeArea object.
     void safeAreaAttachedRebuildCrash();
 
+    // External signal handler disconnection: when an object is rebuilt, signal
+    // connections made from outside that object are lost. This test exercises
+    // the known issue by connecting a signal handler from a separate (non-rebuilt)
+    // object and verifying it fails to fire after rebuild.
+    void externalSignalHandlerLostOnRebuild();
+    void externalSignalHandlerSignalRemoved();
+
+    // Same as above but connects to the signal via grouped property syntax
+    // (e.g. "target.onFired: ...") rather than a Connections element.
+    void externalSignalHandlerGroupedPropertySyntax();
+
+    // Same as above but uses signal.connect() from JavaScript.
+    void externalSignalHandlerJsConnect();
+
     // Consecutive in-place updates must skip objects whose outer context was
     // invalidated by a prior rebuild. Without the isValid() check in
     // rebuildObject(), the second update crashes accessing a dead context.
@@ -2715,6 +2729,213 @@ void tst_QQmlPreviewObjectPatch::scriptToConstantToScriptRoundtripExternalScript
     QCOMPARE(outOfDialog->property("visible").toBool(), true);
     card->setProperty("cupsLeft", 3);
     QCOMPARE(outOfDialog->property("visible").toBool(), false);
+}
+
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerLostOnRebuild()
+{
+    QQmlEngine localEngine;
+
+    QQmlComponent targetComp(&localEngine, testFileUrl("ExternalSignalHandlerOld.qml"));
+    QVERIFY2(targetComp.isReady(), qPrintable(targetComp.errorString()));
+    std::unique_ptr<QObject> target(targetComp.create());
+    QVERIFY(target);
+    QCOMPARE(target->property("counter").toInt(), 0);
+
+    // Connect an external signal handler from outside the target object.
+    // This simulates a parent/sibling object attaching a handler to the
+    // target's signal — the connecting object is not rebuilt.
+    // We use the counter property and a Connections-style approach: install an
+    // external binding that increments counter when fired() is emitted.
+    QQmlComponent observerComp(&localEngine);
+    observerComp.setData(
+            "import QtQml\n"
+            "QtObject {\n"
+            "    required property QtObject signalTarget\n"
+            "    property int callCount: 0\n"
+            "    property var conn1: Connections {\n"
+            "        target: signalTarget\n"
+            "        function onFired() { callCount++ }\n"
+            "    }\n"
+            "    property var conn2: Connections {\n"
+            "        target: signalTarget\n"
+            "        function onFired() { callCount++ }\n"
+            "    }\n"
+            "}\n",
+            QUrl("file:///test_external_signal_observer.qml"));
+    QVERIFY2(observerComp.isReady(), qPrintable(observerComp.errorString()));
+    std::unique_ptr<QObject> observer(observerComp.createWithInitialProperties(
+            {{"signalTarget", QVariant::fromValue(target.get())}}));
+    QVERIFY(observer);
+
+    // Sanity: the connection works before rebuild.
+    QMetaObject::invokeMethod(target.get(), "fired");
+    QCOMPARE(observer->property("callCount").toInt(), 2);
+
+    // Rebuild the target object (simulate hot-reload patching its CU).
+    QQmlComponent newComp(&localEngine, testFileUrl("ExternalSignalHandlerNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&targetComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // Fire the signal again after rebuild.
+    QMetaObject::invokeMethod(target.get(), "fired");
+
+    // The external signal handler must still be called after rebuild.
+    QCOMPARE(observer->property("callCount").toInt(), 4);
+}
+
+// Like externalSignalHandlerLostOnRebuild, but the new version of the target
+// removes the fired() signal entirely. The stashed external handler therefore
+// cannot be reattached: restoreExternalState() looks up the old signature on the
+// new metaobject and gets signalIndex < 0. This exercises the failure branch of
+// the stashed-handler restore, which the other external-handler tests never hit
+// because they keep the signal alive across the rebuild.
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerSignalRemoved()
+{
+    QQmlEngine localEngine;
+
+    QQmlComponent targetComp(&localEngine, testFileUrl("SignalRemovedOld.qml"));
+    QVERIFY2(targetComp.isReady(), qPrintable(targetComp.errorString()));
+    std::unique_ptr<QObject> target(targetComp.create());
+    QVERIFY(target);
+
+    QQmlComponent observerComp(&localEngine);
+    observerComp.setData(
+            "import QtQml\n"
+            "QtObject {\n"
+            "    property QtObject signalTarget\n"
+            "    property int callCount: 0\n"
+            "    property var conn: Connections {\n"
+            "        target: signalTarget\n"
+            "        function onFired() { callCount++ }\n"
+            "    }\n"
+            "}\n",
+            QUrl("file:///test_external_signal_removed_observer.qml"));
+    QVERIFY2(observerComp.isReady(), qPrintable(observerComp.errorString()));
+    std::unique_ptr<QObject> observer(observerComp.createWithInitialProperties(
+            { { QStringLiteral("signalTarget"), QVariant::fromValue(target.get()) } }));
+    QVERIFY(observer);
+
+    // Sanity: the connection works before rebuild.
+    QMetaObject::invokeMethod(target.get(), "fired");
+    QCOMPARE(observer->property("callCount").toInt(), 1);
+
+    QQmlComponent newComp(&localEngine, testFileUrl("SignalRemovedNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&targetComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // The signal is gone, so the handler is genuinely unrecoverable. The point of
+    // this test is that tearing down the engine and observer afterwards must not
+    // leak the stashed handler's expression or leave a dangling entry in the
+    // owner's signalHandlers list (caught by ASAN/LSan).
+    QVERIFY(target->metaObject()->indexOfSignal("fired()") < 0);
+}
+
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerGroupedPropertySyntax()
+{
+    // Load a wrapper component that uses an inline signal handler on a child
+    // component instance (like ChoosingCoffee.qml does with "cappuccino.button.onClicked:").
+    QQmlEngine localEngine;
+    localEngine.addImportPath(dataDirectory());
+    QQmlComponent wrapperComp(&localEngine, testFileUrl("GroupedSignalHandlerWrapper.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    QObject *target = wrapper->property("target").value<QObject *>();
+    QVERIFY(target);
+
+    // Sanity: the inline onFired: handler works.
+    QVERIFY(QMetaObject::invokeMethod(target, "fired"));
+    QCOMPARE(wrapper->property("callCount").toInt(), 2);
+
+    // Get the type-level CU for SignalTargetOld (the target's own type definition).
+    // The target's ddata->compilationUnit points to the wrapper's CU (which instantiates it),
+    // so we load the type separately — the type loader cache ensures we get the same CU.
+    QQmlComponent oldTargetComp(&localEngine, testFileUrl("SignalTargetOld.qml"));
+    QVERIFY2(oldTargetComp.isReady(), qPrintable(oldTargetComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldTargetComp)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newComp(&localEngine, testFileUrl("SignalTargetNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    // Only rebuild the target object (in a real scenario, only its type's file changed).
+    std::vector<QObject *> objects = { target };
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // The wrapper's state must not have been affected by the target rebuild.
+    QCOMPARE(wrapper->property("callCount").toInt(), 2);
+
+    // Fire the signal again after rebuild.
+    QVERIFY(QMetaObject::invokeMethod(target, "fired"));
+
+    // The external signal handler from the wrapper must still fire.
+    QCOMPARE(wrapper->property("callCount").toInt(), 4);
+}
+
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerJsConnect()
+{
+    QQmlEngine localEngine;
+
+    QQmlComponent targetComp(&localEngine, testFileUrl("ExternalSignalHandlerGroupedOld.qml"));
+    QVERIFY2(targetComp.isReady(), qPrintable(targetComp.errorString()));
+    std::unique_ptr<QObject> target(targetComp.create());
+    QVERIFY(target);
+
+    // Connect an external signal handler using a direct JavaScript signal.connect() call.
+    // This simulates the pattern where a parent directly connects to a child's signal
+    // via grouped property syntax (e.g. "target.onFired: ..." in ChoosingCoffee.qml).
+    QQmlComponent observerComp(&localEngine);
+    observerComp.setData(
+            "import QtQuick\n"
+            "Item {\n"
+            "    required property QtObject targetObj\n"
+            "    property int callCount: 0\n"
+            "    Component.onCompleted: {\n"
+            "        targetObj.fired.connect(function() { callCount++ })\n"
+            "        targetObj.fired.connect(function() { callCount++ })\n"
+            "    }\n"
+            "}\n",
+            QUrl("file:///test_external_signal_grouped_observer.qml"));
+    QVERIFY2(observerComp.isReady(), qPrintable(observerComp.errorString()));
+    std::unique_ptr<QObject> observer(observerComp.createWithInitialProperties(
+            {{"targetObj", QVariant::fromValue(target.get())}}));
+    QVERIFY(observer);
+
+    // Sanity: the connection works before rebuild.
+    QMetaObject::invokeMethod(target.get(), "fired");
+    QCOMPARE(observer->property("callCount").toInt(), 2);
+
+    // Rebuild the target object (simulate hot-reload patching its CU).
+    QQmlComponent newComp(&localEngine, testFileUrl("ExternalSignalHandlerGroupedNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&targetComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // Fire the signal again after rebuild.
+    QMetaObject::invokeMethod(target.get(), "fired");
+
+    // Both external signal handlers must still fire after rebuild.
+    QCOMPARE(observer->property("callCount").toInt(), 4);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)

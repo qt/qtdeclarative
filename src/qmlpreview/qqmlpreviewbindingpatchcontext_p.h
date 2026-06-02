@@ -29,6 +29,16 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlPreview {
 
+struct CompositeLevel
+{
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> oldCu;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> newCu;
+    int objectIndex = -1;
+    QString icName;
+
+    QQmlRefPointer<QQmlContextData> context;
+};
+
 class BindingPatchContext
 {
 public:
@@ -45,8 +55,7 @@ public:
     }
 
     void reset();
-    void stashExternalState(
-            const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &internalUnits);
+    void stashExternalState(const std::vector<CompositeLevel> &internalUnits);
     void restoreExternalState();
 
     BindingPatchContext *childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
@@ -67,6 +76,12 @@ private:
         QVariant value;
     };
 
+    struct StoredSignalHandler
+    {
+        QString signature;
+        std::unique_ptr<QQmlBoundSignal> handler;
+    };
+
     void recordBindingValues(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
                              int cuIndex, QHash<QString, QVariant> *constantValues = nullptr);
     void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
@@ -80,6 +95,7 @@ private:
 
     std::vector<StoredBinding> m_storedBindings;
     std::vector<StoredValue> m_storedValues;
+    std::vector<StoredSignalHandler> m_storedSignalHandlers;
     std::unordered_map<QString, std::unique_ptr<BindingPatchContext>> m_children;
 };
 

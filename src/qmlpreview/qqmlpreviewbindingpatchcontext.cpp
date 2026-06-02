@@ -4,8 +4,11 @@
 
 #include "qqmlpreviewbindingpatchcontext_p.h"
 
+#include <QtCore/qset.h>
+
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmlnotifier_p.h>
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlproperty_p.h>
@@ -20,13 +23,40 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlPreview {
 
+
+static bool functionBelongsToObject(const QV4::Function *f,
+                                    const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu,
+                                    int objectIndex)
+{
+    if (f->executableCompilationUnit() != cu)
+        return false;
+
+    const QV4::CompiledData::Object *obj = cu->objectAt(objectIndex);
+    for (auto binding = obj->bindingsBegin(), end = obj->bindingsEnd(); binding != end; ++binding) {
+        switch (binding->type()) {
+        case QV4::CompiledData::Binding::Type_GroupProperty:
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+        case QV4::CompiledData::Binding::Type_Object:
+            if (functionBelongsToObject(f, cu, binding->value.objectIndex))
+                return true;
+            break;
+        case QV4::CompiledData::Binding::Type_Script:
+            if (cu->runtimeFunctions[binding->value.compiledScriptIndex] == f)
+                return true;
+        default:
+            break;
+        }
+    }
+    return false;
+}
+
 // Determines whether a binding on a property is "external", i.e. not from any of the
 // compilation units that participate in the rebuild of this object.
 // External bindings come from other compilation units (e.g. a parent component setting a
 // property binding on a child instance) and must be preserved across rebuilds.
 static bool
 isExternalBinding(const QQmlAnyBinding &binding,
-                  const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &internalUnits)
+                  const std::vector<CompositeLevel> &internalUnits)
 {
     if (!binding)
         return false;
@@ -45,10 +75,11 @@ isExternalBinding(const QQmlAnyBinding &binding,
     if (!f)
         return false;
 
-    const QQmlRefPointer<QV4::ExecutableCompilationUnit> bindingCU = f->executableCompilationUnit();
     for (const auto &internalUnit : internalUnits) {
-        if (bindingCU == internalUnit)
+        if (functionBelongsToObject(f, internalUnit.oldCu, internalUnit.objectIndex)
+            || functionBelongsToObject(f, internalUnit.newCu, internalUnit.objectIndex)) {
             return false;
+        }
     }
 
     return true;
@@ -125,7 +156,7 @@ void BindingPatchContext::recordBindingValues(
 }
 
 void BindingPatchContext::stashExternalState(
-        const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &internalUnits)
+        const std::vector<CompositeLevel> &internalUnits)
 {
     // Determine which properties are assigned by the CU and their constant values
     QHash<QString, QVariant> constantValues;
@@ -140,24 +171,35 @@ void BindingPatchContext::stashExternalState(
         }
     }
 
-    // Only examine properties that appear in the CU's binding table.
-    // For each such property, check if its current state differs from what the CU set
-    // (indicating an external override that needs to be preserved).
-    // TODO: There may be other external bindings but we can't easily see whether they change
-    //       anything.
-    for (auto it = constantValues.cbegin(), end = constantValues.cend(); it != end; ++it) {
-        const QString propName = it.key();
+    // Iterate all properties. For those in the CU's binding table, check if the current state
+    // differs from what the CU set (indicating an external override to preserve). For the rest,
+    // check for external bindings installed by other components.
+    const QMetaObject *mo = m_object->metaObject();
+    for (int i = 0, count = mo->propertyCount(); i < count; ++i) {
+        const QMetaProperty metaProp = mo->property(i);
+        const QString propName = QString::fromUtf8(metaProp.name());
+
         const QQmlProperty qProp(m_object, propName);
         if (!qProp.isValid() || !qProp.isWritable())
             continue;
 
+        const auto it = constantValues.constFind(propName);
+        if (it == constantValues.cend()) {
+            // Property not in CU's binding table — check for external bindings.
+            const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
+            if (isExternalBinding(binding, internalUnits))
+                m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
+            continue;
+        }
+
+        // Property is in the CU's binding table.
         const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
         if (isExternalBinding(binding, internalUnits)) {
             m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
             continue;
         }
 
-        // Internal binding is still valid. Apparently it doens't get overridden by an external
+        // Internal binding is still valid. Apparently it doesn't get overridden by an external
         // constant or binding. Nothing to store.
         if (binding)
             continue;
@@ -187,6 +229,56 @@ void BindingPatchContext::stashExternalState(
 
         if (const QVariant current = qProp.read(); current != expected)
             m_storedValues.push_back({ propName, current });
+    }
+
+    const auto stashBoundSignal = [&](QQmlBoundSignal *boundSignal) {
+        const QByteArray signature =
+                QMetaObjectPrivate::signal(m_object->metaObject(), boundSignal->signalIndex())
+                        .methodSignature();
+        QQmlNotifierEndpoint *next = boundSignal->nextEndpoint();
+        boundSignal->disconnect();
+        m_storedSignalHandlers.push_back(
+                { QString::fromUtf8(signature), std::unique_ptr<QQmlBoundSignal>(boundSignal) });
+        return next;
+    };
+
+    // Stash external signal handlers connected to this object's signals.
+    // A handler is "internal" only if its function will be recreated during repopulation
+    // (i.e., it's a signal handler binding at one of the specific object indices being rebuilt).
+    if (QQmlData::NotifyList *list = QQmlData::get(m_object)->notifyList.loadRelaxed()) {
+        for (quint16 i = 0, end = list->notifiesSize; i < end; ++i) {
+            for (QQmlNotifierEndpoint *ep = list->notifies[i]; ep;) {
+                if (ep->callbackType() != QQmlNotifierEndpoint::QQmlBoundSignal) {
+                    ep = ep->nextEndpoint();
+                    continue;
+                }
+
+                QQmlBoundSignal *boundSignal = static_cast<QQmlBoundSignal *>(ep);
+                QQmlBoundSignalExpression *expr = boundSignal->expression();
+                if (!expr) {
+                    ep = stashBoundSignal(boundSignal);
+                    continue;
+                }
+
+                const QV4::Function *f = expr->function();
+                if (!f) {
+                    ep = stashBoundSignal(boundSignal);
+                    continue;
+                }
+
+                bool isInternal = false;
+                for (const CompositeLevel &internalUnit : internalUnits) {
+                    if (functionBelongsToObject(f, internalUnit.oldCu, internalUnit.objectIndex)
+                        || functionBelongsToObject(f, internalUnit.newCu,
+                                                   internalUnit.objectIndex)) {
+                        isInternal = true;
+                        break;
+                    }
+                }
+
+                ep = isInternal ? ep->nextEndpoint() : stashBoundSignal(boundSignal);
+            }
+        }
     }
 
     // Recurse into child contexts (group properties)
@@ -226,6 +318,20 @@ void BindingPatchContext::restoreExternalState()
         mo->property(idx).write(m_object, stored.value);
     }
     m_storedValues.clear();
+
+    // Restore external signal handlers that were detached during stash.
+    // Reconnect them to this object's signals.
+    if (!m_storedSignalHandlers.empty()) {
+        QQmlEngine *engine = unit->engine->qmlEngine();
+        for (auto &stored : m_storedSignalHandlers) {
+            const QMetaObject *metaObject = m_object->metaObject();
+            const int signalIndex = QMetaObjectPrivate::signalIndex(
+                    metaObject->method(metaObject->indexOfSignal(stored.signature.toUtf8())));
+            if (signalIndex >= 0)
+                stored.handler.release()->connect(m_object, signalIndex, engine);
+        }
+    }
+    m_storedSignalHandlers.clear();
 
     // Recurse into child contexts (group properties)
     for (auto &[name, child] : m_children) {
@@ -289,7 +395,9 @@ void BindingPatchContext::reset()
         resetBindings(vmeMeta->compilationUnit(), vmeMeta->qmlObjectId());
     }
 
-    // Remove all composite signal handlers, no matter where they're from.
+    // Remove remaining composite signal handlers (all internal ones).
+    // External handlers were already detached by stashExternalState() and are invisible here.
+    // The object creator will recreate the internal handlers when it rebuilds the object.
     while (QQmlBoundSignal *signalHandler = ddata->signalHandlers)
         delete signalHandler;
 
