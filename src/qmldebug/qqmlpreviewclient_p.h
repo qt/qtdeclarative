@@ -20,6 +20,12 @@
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
 
+#include <private/qqmlprofilerqtdwriter_p.h>
+#include <private/qqmlprofilerclient_p.h>
+#include <private/qquickeventreplayclient_p.h>
+
+#include <QtCore/QTimer>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlPreviewClientPrivate;
@@ -73,12 +79,26 @@ public:
     void triggerZoom(float factor);
     void triggerAnimationSpeed(float factor);
 
+    void loadUrl(const QUrl &url);
+    void replayEventsForUrl(const QUrl &url);
+
 Q_SIGNALS:
     void request(const QString &path);
     void error(const QString &message);
     void fps(const FpsInfo &info);
     void confirmation(const Settings &settings);
     void hotReloadFailure(const QString &reason);
+
+private:
+    void configureEventReplay();
+
+    void setNumExpectedEvents(qsizetype);
+    qsizetype numExpectedEvents() const;
+
+    QTimer &replayTimer() const;
+    QQmlProfilerClient &recordClient() const;
+    QQuickEventReplayClient &replayClient() const;
+    QQmlProfilerQtdWriter &eventReceiver() const;
 };
 
 QT_END_NAMESPACE

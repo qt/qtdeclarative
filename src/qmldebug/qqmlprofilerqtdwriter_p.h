@@ -43,6 +43,9 @@ public:
     void startTrace(qint64 time, const QList<int> &engineIds) final;
     void endTrace(qint64 time, const QList<int> &engineIds) final;
     void complete(qint64 maximumTime) final;
+
+    QList<QQmlProfilerEventType> eventTypes() const;
+    QList<QQmlProfilerEvent> events() const;
 };
 
 QT_END_NAMESPACE

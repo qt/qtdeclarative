@@ -675,6 +675,15 @@ qsizetype QQmlProfilerQtdWriter::numLoadedEvents() const
     return d_func()->events.size();
 }
 
+QList<QQmlProfilerEventType> QQmlProfilerQtdWriter::eventTypes() const
+{
+    return d_func()->eventTypes;
+}
+
+QList<QQmlProfilerEvent> QQmlProfilerQtdWriter::events() const
+{
+    return d_func()->events;
+}
 
 QT_END_NAMESPACE
 
