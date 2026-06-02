@@ -25,6 +25,7 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qaccessiblequickitem_p.h>
+#include <QtQuick/private/qaccessiblequickflickable_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -84,6 +85,9 @@ private slots:
     void editableTextInterface();
 
     void labelForNullptrTest();
+
+    void flickableViewportTest_data();
+    void flickableViewportTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -1140,6 +1144,56 @@ void tst_QQuickAccessible::labelForNullptrTest()
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression("labelledBy cannot be null"));
     attached->setLabelledBy(nullptr);
+}
+
+void tst_QQuickAccessible::flickableViewportTest_data()
+{
+    QTest::addColumn<QSizeF>("size");
+    QTest::addColumn<QSizeF>("contentSize");
+    QTest::addColumn<QPointF>("content");
+    QTest::addColumn<QPointF>("position");
+    QTest::addColumn<QSizeF>("viewportSize");
+
+    QTest::addRow("Fully visible") << QSizeF(100, 200) << QSizeF(100, 200) << QPointF(0, 0)
+                                   << QPointF(0, 0) << QSizeF(1, 1);
+    QTest::addRow("Quarter visible") << QSizeF(50, 100) << QSizeF(100, 200) << QPointF(0, 0)
+                                     << QPointF(0, 0) << QSizeF(0.5, 0.5);
+    QTest::addRow("Quarter visible - centered")
+            << QSizeF(50, 100) << QSizeF(100, 200) << QPointF(25, 50) << QPointF(0.25, 0.25)
+            << QSizeF(0.5, 0.5);
+    QTest::addRow("Quarter visible - at end")
+            << QSizeF(50, 100) << QSizeF(100, 200) << QPointF(50, 100) << QPointF(0.5, 0.5)
+            << QSizeF(0.5, 0.5);
+    QTest::addRow("Zero-size content")
+            << QSizeF(50, 100) << QSizeF(0, 0) << QPointF(0, 0) << QPointF(0, 0) << QSizeF(1, 1);
+    QTest::addRow("Content smaller than Flickable")
+            << QSizeF(100, 200) << QSizeF(50, 100) << QPointF(0, 0) << QPointF(0, 0)
+            << QSizeF(1, 1);
+}
+
+void tst_QQuickAccessible::flickableViewportTest()
+{
+    auto clearEvents = qScopeGuard([] { QTestAccessibility::clearEvents(); });
+
+    QFETCH(QSizeF, size);
+    QFETCH(QSizeF, contentSize);
+    QFETCH(QPointF, content);
+    QFETCH(QPointF, position);
+    QFETCH(QSizeF, viewportSize);
+
+    QQuickFlickable flickable;
+    flickable.setWidth(size.width());
+    flickable.setHeight(size.height());
+    flickable.setContentWidth(contentSize.width());
+    flickable.setContentHeight(contentSize.height());
+    flickable.setContentX(content.x());
+    flickable.setContentY(content.y());
+
+    QAccessibleQuickFlickable a11yFlickable(&flickable);
+    QCOMPARE(a11yFlickable.contentSize(), contentSize);
+    QCOMPARE(a11yFlickable.position(), position);
+    QCOMPARE(a11yFlickable.viewportSize(), viewportSize);
+    QCOMPARE(a11yFlickable.isIndexed(), false);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)
