@@ -1,7 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltccodewriter.h"
+#include "qqmltccodewriter_p.h"
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstringbuilder.h>
@@ -14,6 +14,8 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+
+namespace QQmltc {
 
 static QString urlToMacro(const QString &url)
 {
@@ -414,7 +416,8 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type,
             QmltcCodeWriter::write(code, child, exportMacro);
 
         // (non-visible) functions
-        dumpFunctions(code, type.functions, std::not_fn(isUserVisibleFunction));
+        dumpFunctions(code, type.functions,
+                      [&](const auto &m) { return !isUserVisibleFunction(m); });
 
         // variables and properties
         if (!type.variables.isEmpty() || !type.properties.isEmpty()) {
@@ -565,5 +568,7 @@ void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlM
     }
     code.rawAppendToCpp(u"}");
 }
+
+} // namespace QQmltc
 
 QT_END_NAMESPACE

@@ -1,8 +1,19 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef QMLTCCOMPILERPIECES_H
-#define QMLTCCOMPILERPIECES_H
+#ifndef QQMLTCCOMPILERPIECES_P_H
+#define QQMLTCCOMPILERPIECES_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qstringbuilder.h>
@@ -12,10 +23,12 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qqmltranslation_p.h>
 
-#include "qmltcoutputir.h"
-#include "qmltcvisitor.h"
+#include <private/qqmltcoutputir_p.h>
+#include <private/qqmltcvisitor_p.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QQmltc {
 
 /*!
     \internal
@@ -723,6 +736,8 @@ inline QString QmltcCodeGenerator::generate_typeCount(
     return components.join(u" + "_s);
 }
 
+} // namespace QQmltc
+
 QT_END_NAMESPACE
 
-#endif // QMLTCCOMPILERPIECES_H
+#endif // QQMLTCCOMPILERPIECES_P_H
