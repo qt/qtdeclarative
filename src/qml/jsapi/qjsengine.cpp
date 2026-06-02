@@ -642,7 +642,7 @@ QJSValue QJSEngine::importModule(const QString &fileName)
     instead of loading \a moduleName from the filesystem.
 
     Any valid QJSValue can be registered, but named exports (i.e.
-    \c {import { name } from "info"} are treated as members of an object, so
+    \c {import { name } from "info"}) are treated as members of an object, so
     the default export must be created with one of the newXYZ methods of
     QJSEngine.
 
@@ -658,6 +658,28 @@ QJSValue QJSEngine::importModule(const QString &fileName)
 
     \warning Attempting to access a named export from a QJSValue that is not an
     object will trigger a \l{Script Exceptions}{exception}.
+
+    \warning When a module is registered, the engine evaluates and snapshots
+    the properties of \a value to determine what will be exported. For a
+    wrapped \l QObject, this means its properties are only read once, and
+    subsequent modifications to those properties will \e not be reflected when
+    accessed from JavaScript. If your \l QObject has properties whose values
+    change after module registration, do not register the \l QObject directly.
+    Instead, wrap it inside another object:
+
+    \code
+    // C++ setup
+    QJSValue container = engine.newObject();
+    container.setProperty("instance", engine.newQObject(&myDynamicObject));
+    engine.registerModule("api.mjs", container);
+
+    // JavaScript usage
+    import {instance as Api} from "api.mjs"
+
+    // ...
+
+    console.log(Api.dynamicProperty)
+    \endcode
 
     \sa importModule()
  */
