@@ -653,6 +653,7 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_accessibility
         accessible/qaccessiblequicktextedit.cpp accessible/qaccessiblequicktextedit_p.h
         accessible/qaccessiblequicktextinput.cpp accessible/qaccessiblequicktextinput_p.h
         accessible/qaccessiblequickview.cpp accessible/qaccessiblequickview_p.h
+        accessible/qaccessiblequickflickable.cpp accessible/qaccessiblequickflickable_p.h
         accessible/qquickaccessiblefactory.cpp accessible/qquickaccessiblefactory_p.h
     LIBRARIES
         Qt::CorePrivate

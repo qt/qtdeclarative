@@ -8,6 +8,8 @@
 #include "qaccessiblequickitem_p.h"
 #include "qaccessiblequicktextedit_p.h"
 #include "qaccessiblequicktextinput_p.h"
+#include "qaccessiblequickflickable_p.h"
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
@@ -23,6 +25,8 @@ QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject 
         return new QAccessibleQuickTextEdit(qobject_cast<QQuickTextEdit *>(object));
     if (classname == QLatin1String("QQuickTextInput"))
         return new QAccessibleQuickTextInput(qobject_cast<QQuickTextInput *>(object));
+    if (classname == QLatin1String("QQuickFlickable"))
+        return new QAccessibleQuickFlickable(qobject_cast<QQuickFlickable *>(object));
     if (classname == QLatin1String("QQuickItem")) {
         QQuickItem *item = qobject_cast<QQuickItem *>(object);
         Q_ASSERT(item);
