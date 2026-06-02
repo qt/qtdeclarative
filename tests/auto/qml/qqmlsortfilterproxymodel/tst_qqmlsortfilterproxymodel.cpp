@@ -38,6 +38,7 @@ private slots:
     void validateValueFilterProperties();
     void validateFunctionFilterProperties();
     void verifyDynamicSortFilterProperty();
+    void functionFilterSuperClassMethod();
 
     void validateSorters_data();
     void validateSorters();
@@ -51,6 +52,7 @@ private slots:
     void validateStringSorterProperties();
     void validateFunctionSorterProperties_data();
     void validateFunctionSorterProperties();
+    void functionSorterSuperClassMethod();
 
     void primarySorter_data();
     void primarySorter();
@@ -955,6 +957,95 @@ void tst_QQmlSortFilterProxyModel::validateFunctionSorterProperties_data()
             << "(sfpmTestObject.getValue(lhsData.display) < sfpmTestObject.getValue(rhsData.display) ? 1 : -1)"
             << QVariantList({"V", "IV", "X", "IX", "III"})
             << QVariantList({"X", "IX", "V", "IV", "III"});
+}
+
+void tst_QQmlSortFilterProxyModel::functionSorterSuperClassMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmSuperClassFilterSorter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    const QStringList initial = {"cherry", "apple", "banana"};
+    QStandardItemModel standardModel;
+    for (const auto &data : initial)
+        standardModel.appendRow(new QStandardItem(data));
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    sfpmModel->setSourceModel(&standardModel);
+
+    auto *sorter = object->property("derivedSorter").value<QQmlSorterBase *>();
+    QVERIFY(sorter);
+
+    auto sorters = sfpmModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
+    sorters.append(&sorters, sorter);
+    QCOMPARE(sorters.count(&sorters), 1);
+
+    const QStringList expectedAscending = {"apple", "banana", "cherry"};
+    int row = 0;
+    for (const auto &data : expectedAscending)
+        QCOMPARE(sfpmModel->data(sfpmModel->index(row++, 0, QModelIndex()), Qt::DisplayRole), data);
+
+    auto *sfpmOverrideModel = object->property("sfpmOverrideProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmOverrideModel);
+    sfpmOverrideModel->setSourceModel(&standardModel);
+
+    auto *overrideSorter = object->property("overrideSorter").value<QQmlSorterBase *>();
+    QVERIFY(overrideSorter);
+
+    auto overrideSorters = sfpmOverrideModel->property("sorters").value<QQmlListProperty<QQmlSorterBase>>();
+    overrideSorters.append(&overrideSorters, overrideSorter);
+    QCOMPARE(overrideSorters.count(&overrideSorters), 1);
+
+    const QStringList expectedDescending = {"cherry", "banana", "apple"};
+    row = 0;
+    for (const auto &data : expectedDescending)
+        QCOMPARE(sfpmOverrideModel->data(sfpmOverrideModel->index(row++, 0, QModelIndex()), Qt::DisplayRole), data);
+}
+
+void tst_QQmlSortFilterProxyModel::functionFilterSuperClassMethod()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("sfpmSuperClassFilterSorter.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    const QStringList initial = {"cherry", "apple", "banana"};
+    QStandardItemModel standardModel;
+    for (const auto &data : initial)
+        standardModel.appendRow(new QStandardItem(data));
+
+    auto *sfpmModel = object->property("sfpmProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmModel);
+    sfpmModel->setSourceModel(&standardModel);
+
+    auto *filter = object->property("derivedFilter").value<QQmlFilterBase *>();
+    QVERIFY(filter);
+
+    auto filters = sfpmModel->filters();
+    filters.append(&filters, filter);
+    QCOMPARE(filters.count(&filters), 1);
+
+    QCOMPARE(sfpmModel->rowCount(), 1);
+    QCOMPARE(sfpmModel->data(sfpmModel->index(0, 0, QModelIndex()), Qt::DisplayRole), QStringLiteral("cherry"));
+
+    auto *sfpmOverrideModel = object->property("sfpmOverrideProxyModel").value<QQmlSortFilterProxyModel *>();
+    QVERIFY(sfpmOverrideModel);
+    sfpmOverrideModel->setSourceModel(&standardModel);
+
+    auto *overrideFilter = object->property("overrideFilter").value<QQmlFilterBase *>();
+    QVERIFY(overrideFilter);
+
+    auto overrideFilters = sfpmOverrideModel->filters();
+    overrideFilters.append(&overrideFilters, overrideFilter);
+    QCOMPARE(overrideFilters.count(&overrideFilters), 1);
+
+    QCOMPARE(sfpmOverrideModel->rowCount(), 2);
+    QCOMPARE(sfpmOverrideModel->data(sfpmOverrideModel->index(0, 0, QModelIndex()), Qt::DisplayRole), QStringLiteral("apple"));
+    QCOMPARE(sfpmOverrideModel->data(sfpmOverrideModel->index(1, 0, QModelIndex()), Qt::DisplayRole), QStringLiteral("banana"));
 }
 
 void tst_QQmlSortFilterProxyModel::validateFunctionSorterProperties()
