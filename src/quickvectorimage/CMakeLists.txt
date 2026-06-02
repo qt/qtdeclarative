@@ -24,6 +24,10 @@ qt_internal_add_module(QuickVectorImageGeneratorPrivate
         Qt::SvgPrivate
 )
 
+if(ANDROID)
+    qt_internal_force_export_module_dependency(QuickVectorImageGeneratorPrivate)
+endif()
+
 qt_internal_add_qml_module(QuickVectorImage
     URI "QtQuick.VectorImage"
     VERSION "${PROJECT_VERSION}"
