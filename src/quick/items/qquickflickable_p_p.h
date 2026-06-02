@@ -29,6 +29,10 @@
 #include <private/qquicktransitionmanager_p_p.h>
 #include <private/qpodvector_p.h>
 
+#if QT_CONFIG(accessibility)
+#  include <QElapsedTimer>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickFlickableVisibleArea;
@@ -248,6 +252,11 @@ public:
     static qsizetype data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
+
+#if QT_CONFIG(accessibility)
+private:
+    QElapsedTimer m_scrollEventTimer;
+#endif
 };
 
 class Q_QUICK_EXPORT QQuickFlickableVisibleArea : public QObject
