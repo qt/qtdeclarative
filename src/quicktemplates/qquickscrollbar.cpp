@@ -472,7 +472,7 @@ void QQuickScrollBarPrivate::setPosition(qreal newPosition, bool notifyVisualCha
         visualAreaChange(visualArea(), oldVisualArea);
 
 #if QT_CONFIG(accessibility)
-    if (QAccessible::isActive()) {
+    if (QAccessible::isActive() && isAccessible) {
         if (QAccessibleInterface *accessible = QAccessible::queryAccessibleInterface(q)) {
             if (QAccessibleValueInterface *valueInterface = accessible->valueInterface()) {
                 QAccessibleValueChangeEvent event(q, valueInterface->currentValue());
