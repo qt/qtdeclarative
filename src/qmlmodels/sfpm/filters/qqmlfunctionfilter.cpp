@@ -68,7 +68,7 @@ void QQmlFunctionFilter::componentComplete()
 {
     Q_D(QQmlFunctionFilter);
     const auto *metaObj = metaObject();
-    for (int idx = metaObj->methodOffset(); idx < metaObj->methodCount(); idx++) {
+    for (int idx = metaObj->methodCount() - 1; idx >= 0; idx--) {
         // Once we find the method signature, break the loop
         QMetaMethod method = metaObj->method(idx);
         if (method.nameView() == "filter") {
