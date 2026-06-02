@@ -192,15 +192,6 @@ struct ObjectAndIndex
     int index = -1;
 };
 
-struct CompositeLevel
-{
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> cu;
-    int objectIndex = 0;
-    QString icName;
-
-    QQmlRefPointer<QQmlContextData> context;
-};
-
 // Walk the type resolution chain starting from the object at cuIndex in unit,
 // collecting all composite (QML-defined) base type levels. Returns them ordered
 // deepest-first (e.g., grandparent before parent).
@@ -211,7 +202,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
 {
     std::vector<CompositeLevel> levels;
 
-    auto currentUnit = instanceLevel.cu;
+    auto currentUnit = instanceLevel.newCu;
     const QV4::CompiledData::Object *obj = currentUnit->objectAt(instanceLevel.objectIndex);
     const QV4::ResolvedTypeReference *typeRef =
             currentUnit->resolvedType(obj->inheritedTypeNameIndex);
@@ -223,6 +214,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
         Q_ASSERT(cu);
 
         // Replace the old unit with the new one wherever it occurs
+        const auto oldCu = cu;
         if (cu == oldUnit)
             cu = newUnit;
 
@@ -235,7 +227,7 @@ collectCompositeLevels(const CompositeLevel &instanceLevel,
             rootIndex = 0;
         }
 
-        levels.push_back({ cu, rootIndex, icName, nullptr });
+        levels.push_back({ oldCu, cu, rootIndex, icName, nullptr });
 
         if (rootIndex >= cu->objectCount())
             break;
@@ -269,25 +261,24 @@ static void rebuildObject(QObject *object, int cuIndex,
     if (!ddata->context || !outerContext || !outerContext->isValid() || ddata->isQueuedForDeletion)
         return;
 
-    CompositeLevel instanceLevel{ ddata->compilationUnit == oldUnit ? newUnit
+    CompositeLevel instanceLevel{ ddata->compilationUnit,
+                                  ddata->compilationUnit == oldUnit ? newUnit
                                                                     : ddata->compilationUnit,
                                   ddata->cuObjectIndex, QString(), outerContext };
 
     // If the object doesn't exist anymore in the new CU it will be deleted via GC.
     // Nothing to do here.
-    if (instanceLevel.objectIndex >= instanceLevel.cu->objectCount())
+    if (instanceLevel.objectIndex >= instanceLevel.newCu->objectCount())
         return;
 
     std::vector<CompositeLevel> levels = collectCompositeLevels(instanceLevel, oldUnit, newUnit);
 
     // Build the set of compilation units that participate in this rebuild.
     // Bindings from these CUs are "internal" and will be re-created by repopulateBindings.
-    std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> internalUnits;
-    internalUnits.push_back(oldUnit);
-    internalUnits.push_back(newUnit);
-    internalUnits.push_back(instanceLevel.cu);
+    std::vector<CompositeLevel> internalUnits;
+    internalUnits.push_back(instanceLevel);
     for (const auto &level : levels)
-        internalUnits.push_back(level.cu);
+        internalUnits.push_back(level);
 
     BindingPatchContext patchCtx(object, ddata->compilationUnit, ddata->cuObjectIndex);
     patchCtx.stashExternalState(internalUnits);
@@ -301,7 +292,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     if (outerContext->contextObject() == object) {
         outerContext->setContextObject(nullptr);
         outerContext = enginePrivate->createComponentRootContext(
-                instanceLevel.cu, outerContext->parent(), instanceLevel.objectIndex);
+                instanceLevel.newCu, outerContext->parent(), instanceLevel.objectIndex);
         outerContext->setContextObject(object);
         instanceLevel.context = outerContext;
     }
@@ -320,7 +311,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     for (qsizetype i = 0, end = levels.size(); i < end; ++i) {
         CompositeLevel &level = levels[i];
         levelContext = level.context = enginePrivate->createComponentRootContext(
-                level.cu, levelContext, level.objectIndex);
+                level.newCu, levelContext, level.objectIndex);
         levelContext->setContextObject(object);
     }
 
@@ -341,12 +332,12 @@ static void rebuildObject(QObject *object, int cuIndex,
 
     for (auto it = levels.crbegin(), end = levels.crend(); it != end; ++it) {
         it->context->addOwnedObject(ddata);
-        QQmlPropertyCache::ConstPtr cache = it->cu->propertyCachesPtr()->at(it->objectIndex);
-        new QQmlVMEMetaObject(v4, object, cache, it->cu, it->objectIndex);
+        QQmlPropertyCache::ConstPtr cache = it->newCu->propertyCachesPtr()->at(it->objectIndex);
+        new QQmlVMEMetaObject(v4, object, cache, it->newCu, it->objectIndex);
     }
 
     outerContext->addOwnedObject(ddata);
-    if (QQmlPropertyCacheVector *caches = instanceLevel.cu->propertyCachesPtr();
+    if (QQmlPropertyCacheVector *caches = instanceLevel.newCu->propertyCachesPtr();
         caches->count() > instanceLevel.objectIndex
         && caches->needsVMEMetaObject(instanceLevel.objectIndex)) {
         QQmlPropertyCache::ConstPtr cache = newUnit->propertyCachesPtr()->at(cuIndex);
@@ -359,7 +350,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     // In that case we have to abort.
     for (auto it = levels.crbegin(), end = levels.crend(); it != end && !ddata->isQueuedForDeletion;
          ++it) {
-        QQmlObjectCreator creator(it->context, it->cu, outerContext, it->icName, nullptr);
+        QQmlObjectCreator creator(it->context, it->newCu, outerContext, it->icName, nullptr);
         creator.repopulateBindings(it->objectIndex, object, it->context,
                                    QQmlObjectCreator::InitFlag::IsContextObject
                                            | QQmlObjectCreator::InitFlag::IsDocumentRoot);
@@ -372,7 +363,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     // In that case don't touch it any further.
     if (!ddata->isQueuedForDeletion) {
         // Repopulate bindings at the instance level in the parent CU.
-        QQmlObjectCreator creator(instanceLevel.context, instanceLevel.cu, outerContext, QString(),
+        QQmlObjectCreator creator(instanceLevel.context, instanceLevel.newCu, outerContext, QString(),
                                   nullptr);
         creator.repopulateBindings(instanceLevel.objectIndex, object, outerContext,
                                    QQmlObjectCreator::InitFlag::None);
