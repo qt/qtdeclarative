@@ -94,17 +94,21 @@ static CodeActions quickfixes(const QList<Diagnostic> &diagnostics)
 static TextEdit todoComment(const Position &pos, const QString &loaderId, const QString &maybeId,
                             const QList<std::pair<QString, QQmlJS::SourceLocation>> &nestedIds)
 {
-    QString comment = Tr::tr("// TODO: Move position bindings from the component to the Loader.\n"
-                             "//       Check all uses of 'parent' inside the root element of the "
-                             "component.\n");
+    const QString todo = Tr::tr("TODO:");
+    const QString prefix =  "//"_L1 + QString(2 + todo.size(), u' ');
+
+    QString comment = "// "_L1 + todo + u' '
+            + Tr::tr("Move position bindings from the component to the Loader.") + u'\n'
+            + prefix
+            + Tr::tr("Check all uses of 'parent' inside the root element of the component.") + u'\n';
 
     if (!maybeId.isEmpty()) {
-        comment += Tr::tr("//       Rename all outer uses of the id \"%1\" to \"%2.item\".\n")
-                           .arg(maybeId, loaderId);
+        comment += prefix
+                   + Tr::tr("Rename all outer uses of the id \"%1\" to \"%2.item\".").arg(maybeId, loaderId) + u'\n';
     }
     for (const auto &id : nestedIds) {
-        comment += Tr::tr("//       Rename all outer uses of the id \"%1\" to \"%2.item.%1\".\n")
-                           .arg(id.first, loaderId);
+        comment += prefix
+                + Tr::tr("Rename all outer uses of the id \"%1\" to \"%2.item.%1\".").arg(id.first, loaderId) + u'\n';
     }
 
     return { { pos, pos }, comment.toUtf8() };
