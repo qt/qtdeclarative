@@ -337,10 +337,30 @@ void QQuickFlickablePrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
             if (vData.contentPositionChangedExternallyDuringDrag)
                 vData.pressPos += deltaMoved.y();
         }
-        if (orient & Qt::Horizontal)
+#if QT_CONFIG(accessibility)
+        bool updateAccessibility = false;
+#endif
+        if (orient & Qt::Horizontal) {
             emit q->contentXChanged();
-        if (orient & Qt::Vertical)
+#if QT_CONFIG(accessibility)
+            updateAccessibility = true;
+#endif
+        }
+        if (orient & Qt::Vertical) {
             emit q->contentYChanged();
+#if QT_CONFIG(accessibility)
+            updateAccessibility = true;
+#endif
+        }
+#if QT_CONFIG(accessibility)
+        if (updateAccessibility && QAccessible::isActive()) {
+            if (!m_scrollEventTimer.isValid() || m_scrollEventTimer.elapsed() >= 250) {
+                m_scrollEventTimer.restart();
+                QAccessibleEvent ev(q, QAccessible::ScrollingPositionChanged);
+                QAccessible::updateAccessibility(&ev);
+            }
+        }
+#endif
     }
 }
 
