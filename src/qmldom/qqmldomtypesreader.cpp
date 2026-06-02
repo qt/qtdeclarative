@@ -19,8 +19,6 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-using namespace QQmlJS::AST;
-
 static ErrorGroups readerParseErrors()
 {
     static ErrorGroups errs = { { NewErrorGroup("Dom"), NewErrorGroup("QmltypesFile"),

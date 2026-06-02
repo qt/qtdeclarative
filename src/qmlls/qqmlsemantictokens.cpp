@@ -15,7 +15,6 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(semanticTokens, "qt.languageserver.semanticTokens")
 
-using namespace QQmlJS::AST;
 using namespace QQmlJS::Dom;
 using namespace QLspSpecification;
 
