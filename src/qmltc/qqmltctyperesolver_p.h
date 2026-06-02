@@ -1,10 +1,21 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef QMLTCTYPERESOLVER_H
-#define QMLTCTYPERESOLVER_H
+#ifndef QQMLTCTYPERESOLVER_P_H
+#define QQMLTCTYPERESOLVER_P_H
 
-#include "qmltcvisitor.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qqmltcvisitor_p.h>
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljstyperesolver_p.h>
@@ -12,6 +23,8 @@
 #include <private/qqmljslogger_p.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QQmltc {
 
 class QmltcTypeResolver : public QQmlJSTypeResolver
 {
@@ -35,6 +48,8 @@ private:
     QQmlJSScope::Ptr m_root;
 };
 
+} // namespace QQmltc
+
 QT_END_NAMESPACE
 
-#endif // QMLTCTYPERESOLVER_H
+#endif // QQMLTCTYPERESOLVER_P_H

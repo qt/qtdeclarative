@@ -1,7 +1,7 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#include "qmltccommandlineutils.h"
+#include "qqmltccommandlineutils_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qfileinfo.h>
@@ -10,6 +10,8 @@
 #include <QtCore/qlibraryinfo.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QQmltc {
 
 QString parseUrlArgument(const QString &arg)
 {
@@ -65,5 +67,7 @@ QString getImplicitImportDirectory(const QString &url)
     }
     return implicitImport;
 }
+
+} // namespace QQmltc
 
 QT_END_NAMESPACE

@@ -1,15 +1,28 @@
 // Copyright (C) 2021 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
-#ifndef QMLTCCODEWRITER_H
-#define QMLTCCODEWRITER_H
+#ifndef QQMLTCCODEWRITER_P_H
+#define QQMLTCCODEWRITER_P_H
 
-#include "qmltcoutputprimitives.h"
-#include "qmltcoutputir.h"
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <private/qqmltcoutputprimitives_p.h>
+#include <private/qqmltcoutputir_p.h>
 
 #include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QQmltc {
 
 struct QmltcCodeWriter
 {
@@ -34,6 +47,8 @@ private:
     static void writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlMethod); // special
 };
 
+} // namespace QQmltc
+
 QT_END_NAMESPACE
 
-#endif // QMLTCCODEWRITER_H
+#endif // QQMLTCCODEWRITER_P_H
