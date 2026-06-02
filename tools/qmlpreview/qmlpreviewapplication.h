@@ -42,6 +42,14 @@ private:
     bool sendFile(const QString &path);
     void sendDirectory(const QString &path);
 
+    void connectQmlPreviewClientSignals();
+    void connectConnectionSignals();
+    void connectWatcherSignals();
+
+    void killProcess();
+    void restartProcess();
+    void startProcess();
+
     QString m_executablePath;
     QStringList m_arguments;
     QScopedPointer<QProcess> m_process;
@@ -53,6 +61,7 @@ private:
     QHash<QString, QString> m_localToResourcePath;
     QScopedPointer<QQmlDebugConnection> m_connection;
     QScopedPointer<QQmlPreviewClient> m_qmlPreviewClient;
+    QScopedPointer<QQmlProfilerEventReceiver> m_eventReceiver;
     QmlPreviewFileSystemWatcher m_watcher;
 
     QTimer m_loadTimer;

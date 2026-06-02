@@ -17,6 +17,18 @@
 #include <QtCore/QFile>
 #include <QtCore/QLibraryInfo>
 
+static QString qmlPreviewServices()
+{
+    return QStringLiteral("QmlPreview,CanvasFrameRate,EventReplay");
+}
+
+static QString makeQmlPreviewArgument(const QString &socketFile)
+{
+    return QString("-qmljsdebugger=file:%1,block,services:%2")
+            .arg(socketFile)
+            .arg(qmlPreviewServices());
+}
+
 bool QmlPreviewApplication::argumentsFromCommandLineAndFile(
         QStringList &allArguments, const QStringList &arguments)
 {
@@ -54,25 +66,27 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
 {
     m_connection.reset(new QQmlDebugConnection);
     m_qmlPreviewClient.reset(new QQmlPreviewClient(m_connection.data()));
-    m_connectTimer.setInterval(1000);
 
     m_loadTimer.setInterval(100);
     m_loadTimer.setSingleShot(true);
-    connect(&m_loadTimer, &QTimer::timeout, this, [this]() {
-        m_qmlPreviewClient->triggerLoad(QUrl());
-    });
+    connect(&m_loadTimer, &QTimer::timeout, this,
+            [this]() { m_qmlPreviewClient->loadUrl(QUrl()); });
 
+    m_connectTimer.setInterval(1000);
     connect(&m_connectTimer, &QTimer::timeout, this, &QmlPreviewApplication::tryToConnect);
-    connect(m_connection.data(), &QQmlDebugConnection::connected, &m_connectTimer, &QTimer::stop);
-    connect(m_connection.data(), &QQmlDebugConnection::connected, this, [this]() {
-        QQmlPreviewClient::Settings settings;
-        settings.enableInPlaceUpdates = true;
-        m_qmlPreviewClient->sendConfiguration(settings);
-        const QString status = QString::fromUtf8("Inplace updates configuration: %1")
-                                       .arg(settings.enableInPlaceUpdates ? "enabled" : "disabled");
-        logStatus(status);
-    });
 
+    connectConnectionSignals();
+    connectQmlPreviewClientSignals();
+    connectWatcherSignals();
+}
+
+QmlPreviewApplication::~QmlPreviewApplication()
+{
+    killProcess();
+}
+
+void QmlPreviewApplication::connectQmlPreviewClientSignals()
+{
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::error, this,
             &QmlPreviewApplication::logError);
     connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::request, this,
@@ -84,13 +98,35 @@ QmlPreviewApplication::QmlPreviewApplication(int &argc, char **argv) :
                                        .arg(m_confirmedSettings.enableInPlaceUpdates ? "enabled" : "disabled");
                 logStatus(status);
             });
+    connect(m_qmlPreviewClient.data(), &QQmlPreviewClient::hotReloadFailure, this,
+            [this](const QString &reason) {
+                logError(QString::fromUtf8("Hot reload failure: %1").arg(reason));
+                restartProcess();
+            });
+}
+
+void QmlPreviewApplication::connectConnectionSignals()
+{
+    connect(m_connection.data(), &QQmlDebugConnection::connected, this, [this]() {
+        QQmlPreviewClient::Settings settings;
+        settings.enableInPlaceUpdates = true;
+        m_qmlPreviewClient->sendConfiguration(settings);
+        const QString status = QString::fromUtf8("Inplace updates configuration: %1")
+                                       .arg(settings.enableInPlaceUpdates ? "enabled" : "disabled");
+        logStatus(status);
+        m_connectTimer.stop();
+    });
+}
+
+void QmlPreviewApplication::connectWatcherSignals()
+{
     connect(&m_watcher, &QmlPreviewFileSystemWatcher::fileChanged,
             this, &QmlPreviewApplication::sendFile);
     connect(&m_watcher, &QmlPreviewFileSystemWatcher::directoryChanged,
             this, &QmlPreviewApplication::sendDirectory);
 }
 
-QmlPreviewApplication::~QmlPreviewApplication()
+void QmlPreviewApplication::killProcess()
 {
     if (m_process && m_process->state() != QProcess::NotRunning) {
         logStatus("Terminating process ...");
@@ -101,6 +137,23 @@ QmlPreviewApplication::~QmlPreviewApplication()
             m_process->kill();
         }
     }
+}
+
+void QmlPreviewApplication::restartProcess()
+{
+    logStatus(QString::fromUtf8("Restarting process ..."));
+
+    if (m_process) {
+        disconnect(m_process.data(), nullptr, this, nullptr);
+    }
+
+    killProcess();
+
+    // reset the connection
+    m_connection->close();
+    m_connectionAttempts = 0;
+    m_connection->startLocalServer(m_socketFile);
+    startProcess();
 }
 
 void QmlPreviewApplication::parseArguments()
@@ -167,27 +220,30 @@ int QmlPreviewApplication::exec()
     return QCoreApplication::exec();
 }
 
-void QmlPreviewApplication::run()
+void QmlPreviewApplication::startProcess()
 {
-    logStatus(QString("Listening on %1 ...").arg(m_socketFile));
-    m_connection->startLocalServer(m_socketFile);
     m_process.reset(new QProcess(this));
-    QStringList arguments;
-    arguments << QString("-qmljsdebugger=file:%1,block,services:QmlPreview").arg(m_socketFile);
-    arguments << m_arguments;
-
     m_process->setProcessChannelMode(QProcess::MergedChannels);
     connect(m_process.data(), &QIODevice::readyRead,
             this, &QmlPreviewApplication::processHasOutput);
     connect(m_process.data(), QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this](int){ processFinished(); });
-    logStatus(QString("Starting '%1 %2' ...").arg(m_executablePath, arguments.join(QLatin1Char(' '))));
-    m_process->start(m_executablePath, arguments);
+    m_arguments.append(makeQmlPreviewArgument(m_socketFile));
+    logStatus(QString("Starting '%1 %2' ...")
+                      .arg(m_executablePath, m_arguments.join(QLatin1Char(' '))));
+    m_process->start(m_executablePath, m_arguments);
     if (!m_process->waitForStarted()) {
         logError(QString("Could not run '%1': %2").arg(m_executablePath, m_process->errorString()));
         exit(1);
     }
     m_connectTimer.start();
+}
+
+void QmlPreviewApplication::run()
+{
+    logStatus(QString("Listening on %1 ...").arg(m_socketFile));
+    m_connection->startLocalServer(m_socketFile);
+    startProcess();
 }
 
 void QmlPreviewApplication::tryToConnect()

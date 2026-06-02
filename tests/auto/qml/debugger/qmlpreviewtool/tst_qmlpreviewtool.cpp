@@ -30,6 +30,7 @@ private slots:
     void loadFromModuleFileUpdate();
     void settingConfiguration();
     void settingConfirmation();
+    void hotReloadFailure();
 
 private:
     QString m_qmlPreviewPath;
@@ -349,6 +350,41 @@ void tst_QmlPreviewTool::settingConfirmation()
     startPreview({ QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile });
     QVERIFY2(waitForOutput(QLatin1String("Inplace updates setting confirmed as: enabled")),
              qPrintable(QLatin1String("Did not receive confirmation log. Output:\n") + m_output));
+}
+
+void tst_QmlPreviewTool::hotReloadFailure()
+{
+    m_tempDir = std::make_unique<QTemporaryDir>();
+    QVERIFY(m_tempDir->isValid());
+
+    QString qmlFile = m_tempDir->filePath(QLatin1String("test.qml"));
+    // Start with valid QML
+    QVERIFY(writeFile(qmlFile, makeQmlContent(QLatin1String("HOTRELOAD_START"))));
+
+    startPreview({QLatin1String("--verbose"), m_qmlRuntimePath, qmlFile, QStringLiteral("QMLPREVIEW_HOTRELOAD=1")});
+    QVERIFY2(waitForOutput(QLatin1String("HOTRELOAD_START")),
+             qPrintable(QLatin1String("Initial load failed. Output:\n") + m_output));
+
+    // Change non-composite basetype to trigger hotReloadFailure event
+    QVERIFY(writeFile(qmlFile, QLatin1String(R"(
+        import QtQuick
+        Item {
+        }
+    )").toUtf8()));
+
+    QVERIFY2(waitForOutput(QLatin1String("Hot reload failure"), 10000),
+             qPrintable(QLatin1String("Did not detect hot reload failure. Output:\n") + m_output));
+
+    // After a hot reload failure, the process should be restarted
+    QVERIFY2(waitForOutput(QLatin1String("Restarting process"), 10000),
+             qPrintable(QLatin1String("Did not receive restart signal. Output:\n") + m_output));
+
+    // Check for process lifecycle messages
+    QVERIFY2(m_output.contains(QLatin1String("Terminating process")),
+             qPrintable(QLatin1String("Missing 'Terminating process' message. Output:\n") + m_output));
+
+    QVERIFY2(m_output.contains(QLatin1String("Starting '")),
+             qPrintable(QLatin1String("Missing 'Starting' message. Output:\n") + m_output));
 }
 
 QTEST_MAIN(tst_QmlPreviewTool)

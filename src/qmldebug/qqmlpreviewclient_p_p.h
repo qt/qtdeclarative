@@ -28,6 +28,23 @@ public:
     QQmlPreviewClientPrivate(QQmlDebugConnection *connection)
         : QQmlDebugClientPrivate(QLatin1String("QmlPreview"), connection)
     {}
+
+    struct PreviewRecordingData
+    {
+        explicit PreviewRecordingData(QQmlDebugConnection *connection)
+            : eventReceiver(connection),
+              recordClient(connection, &eventReceiver, 1 << ProfileInputEvents),
+              replayClient(connection),
+              replayTimer()
+        {
+        }
+        QQmlProfilerQtdWriter eventReceiver;
+        QQmlProfilerClient recordClient;
+        QQuickEventReplayClient replayClient;
+        QTimer replayTimer;
+    };
+    std::unique_ptr<PreviewRecordingData> m_recordingData;
+    qsizetype m_numExpectedEvents = 0;
 };
 
 QT_END_NAMESPACE
