@@ -416,7 +416,7 @@ void Visitor::endVisit(QQmlJS::AST::UiProgram *program)
 
     findCppIncludes();
 
-    for (const QList<QQmlJSScope::ConstPtr> &qmlTypes : m_pureQmlTypes)
+    for (const QList<QQmlJSScope::ConstPtr> &qmlTypes : std::as_const(m_pureQmlTypes))
         for (const QQmlJSScope::ConstPtr &type : qmlTypes)
             checkNamesAndTypes(type);
 }
@@ -534,7 +534,7 @@ void Visitor::postVisitResolve(
         }
         return false;
     };
-    for (const auto &inlineComponentName : m_inlineComponentNames) {
+    for (const auto &inlineComponentName : std::as_const(m_inlineComponentNames)) {
         iterateBindings(m_inlineComponents[inlineComponentName], qmlIrOrderedBindings,
                         isOrUnderComponent, findDeferred);
     }
@@ -573,7 +573,7 @@ void Visitor::postVisitResolve(
     }
 
     // update the typeCounts
-    for (const auto &inlineComponent : m_inlineComponentNames) {
+    for (const auto &inlineComponent : std::as_const(m_inlineComponentNames)) {
         m_inlineComponentTypeCount[inlineComponent] = m_pureQmlTypes[inlineComponent].size();
     }
 
@@ -599,7 +599,7 @@ void Visitor::postVisitResolve(
     // only known after visitation is over!
 
     // filter step:
-    for (const auto &inlineComponent : m_inlineComponentNames) {
+    for (const auto &inlineComponent : std::as_const(m_inlineComponentNames)) {
         QList<QQmlJSScope::ConstPtr> filteredQmlTypesWithQmlBases;
         QList<QQmlJSScope::ConstPtr> &unfilteredQmlTypesWithQmlBases =
                 m_qmlTypesWithQmlBases[inlineComponent];
@@ -653,7 +653,7 @@ void Visitor::postVisitResolve(
         return false;
     };
 
-    for (const auto &inlineComponentName : m_inlineComponentNames) {
+    for (const auto &inlineComponentName : std::as_const(m_inlineComponentNames)) {
         syntheticCreationIndex = 0; // reset for each inline component
         iterateTypes(m_inlineComponents[inlineComponentName], qmlIrOrderedBindings,
                      addSyntheticIndex);
@@ -681,7 +681,7 @@ void Visitor::postVisitResolve(
         return false;
     };
 
-    for (const auto &inlineComponentName : m_inlineComponentNames) {
+    for (const auto &inlineComponentName : std::as_const(m_inlineComponentNames)) {
         currentId = 0; // reset for each inline component
         iterateTypes(m_inlineComponents[inlineComponentName], qmlIrOrderedBindings, setRuntimeId);
     }

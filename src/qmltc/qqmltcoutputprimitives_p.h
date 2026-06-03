@@ -102,7 +102,7 @@ public:
     void rawAppendSignatureToCpp(const String &what, int extraIndent = 0)
     {
         QString signatureScope;
-        for (const auto &scope : memberScopes)
+        for (const auto &scope : std::as_const(memberScopes))
             signatureScope += scope + u"::";
         rawAppendToCpp(signatureScope + what, extraIndent);
     }

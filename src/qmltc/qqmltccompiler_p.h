@@ -26,8 +26,6 @@
 
 #include <private/qqmljslogger_p.h>
 
-#include <memory>
-
 QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
