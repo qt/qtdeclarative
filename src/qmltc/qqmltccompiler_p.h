@@ -32,7 +32,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
 
-struct QmltcCompilerInfo
+struct CompilerInfo
 {
     QString outputCppFile;
     QString outputHFile;
@@ -42,18 +42,18 @@ struct QmltcCompilerInfo
     QString exportInclude;
 };
 
-class QmltcCompiler
+class Compiler
 {
     using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
     using InlineComponentNameType = QQmlJSScope::InlineComponentNameType;
     using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
 
 public:
-    QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
-                  QQmlJSLogger *logger);
-    void compile(const QmltcCompilerInfo &info);
+    Compiler(const QString &url, TypeResolver *resolver, Visitor *visitor,
+             QQmlJSLogger *logger);
+    void compile(const CompilerInfo &info);
 
-    ~QmltcCompiler();
+    ~Compiler();
 
     /*! \internal
 
@@ -68,31 +68,31 @@ public:
 
 private:
     QString m_url; // QML input file url
-    QmltcTypeResolver *m_typeResolver = nullptr;
-    QmltcVisitor *m_visitor = nullptr;
+    TypeResolver *m_typeResolver = nullptr;
+    Visitor *m_visitor = nullptr;
     QQmlJSLogger *m_logger = nullptr;
-    QmltcCompilerInfo m_info {}; // miscellaneous input/output information
+    CompilerInfo m_info {}; // miscellaneous input/output information
     QString m_urlMethodName;
     uint m_currentVariableNumber = 0;
 
     struct UniqueStringId;
-    struct QmltcTypeLocalData;
+    struct TypeLocalData;
     // per-type, per-property code generation cache of created symbols
-    QHash<UniqueStringId, QmltcTypeLocalData> m_uniques;
+    QHash<UniqueStringId, TypeLocalData> m_uniques;
 
-    void compileUrlMethod(QmltcMethod &urlMethod, const QString &urlMethodName);
+    void compileUrlMethod(Method &urlMethod, const QString &urlMethodName);
     void
-    compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type,
-                std::function<void(QmltcType &, const QQmlJSScope::ConstPtr &)> compileElements);
-    void compileTypeElements(QmltcType &current, const QQmlJSScope::ConstPtr &type);
-    void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
-    void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
+    compileType(Type &current, const QQmlJSScope::ConstPtr &type,
+                std::function<void(Type &, const QQmlJSScope::ConstPtr &)> compileElements);
+    void compileTypeElements(Type &current, const QQmlJSScope::ConstPtr &type);
+    void compileEnum(Type &current, const QQmlJSMetaEnum &e);
+    void compileMethod(Type &current, const QQmlJSMetaMethod &m,
                        const QQmlJSScope::ConstPtr &owner);
-    void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
+    void compileProperty(Type &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
-    void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
+    void compileAlias(Type &current, const QQmlJSMetaProperty &alias,
                       const QQmlJSScope::ConstPtr &owner);
-    void compileExtraListMethods(QmltcType &current, const QQmlJSMetaProperty &p);
+    void compileExtraListMethods(Type &current, const QQmlJSMetaProperty &p);
 
     QString uniqueVariableName(const QString &qmlName)
     {
@@ -123,47 +123,46 @@ private:
     QStringList unprocessedListBindings;
     QQmlJSMetaProperty unprocessedListProperty;
 
-    void processLastListBindings(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+    void processLastListBindings(Type &current, const QQmlJSScope::ConstPtr &type,
                                  const BindingAccessorData &accessor);
 
-    void compileBinding(QmltcType &current, QList<QQmlJSMetaPropertyBinding>::iterator bindingStart,
+    void compileBinding(Type &current, QList<QQmlJSMetaPropertyBinding>::iterator bindingStart,
                         QList<QQmlJSMetaPropertyBinding>::iterator bindingEnd,
                         const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
 
-    void compileBindingByType(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileBindingByType(Type &current, const QQmlJSMetaPropertyBinding &binding,
                               const QQmlJSScope::ConstPtr &type,
                               const BindingAccessorData &accessor);
 
-    void compileObjectBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileObjectBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                               const QQmlJSScope::ConstPtr &type,
                               const BindingAccessorData &accessor);
 
-    void compileValueSourceOrInterceptorBinding(QmltcType &current,
+    void compileValueSourceOrInterceptorBinding(Type &current,
                                                 const QQmlJSMetaPropertyBinding &binding,
                                                 const QQmlJSScope::ConstPtr &type,
                                                 const BindingAccessorData &accessor);
 
-    void compileAttachedPropertyBinding(QmltcType &current,
-                                        const QQmlJSMetaPropertyBinding &binding,
+    void compileAttachedPropertyBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                                         const QQmlJSScope::ConstPtr &type,
                                         const BindingAccessorData &accessor);
 
-    void compileGroupPropertyBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileGroupPropertyBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                                      const QQmlJSScope::ConstPtr &type,
                                      const BindingAccessorData &accessor);
 
-    void compileTranslationBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileTranslationBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                                    const QQmlJSScope::ConstPtr &type,
                                    const BindingAccessorData &accessor);
 
     // special case (for simplicity)
-    void compileScriptBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+    void compileScriptBinding(Type &current, const QQmlJSMetaPropertyBinding &binding,
                               const QString &bindingSymbolName, const QQmlJSScope::ConstPtr &type,
                               const QString &propertyName,
                               const QQmlJSScope::ConstPtr &propertyType,
                               const BindingAccessorData &accessor);
 
-    void compilePropertyInitializer(QmltcType &current, const QQmlJSScope::ConstPtr &type);
+    void compilePropertyInitializer(Type &current, const QQmlJSScope::ConstPtr &type);
 
     /*!
         \internal
@@ -177,7 +176,7 @@ private:
     struct UniqueStringId
     {
         QString unique;
-        UniqueStringId(const QmltcType &context, const QString &property)
+        UniqueStringId(const Type &context, const QString &property)
             : unique(context.cppType + u"_" + property) // this is unique enough
         {
             Q_ASSERT(!context.cppType.isEmpty());
@@ -197,7 +196,7 @@ private:
         }
     };
 
-    struct QmltcTypeLocalData
+    struct TypeLocalData
     {
         // empty QString() means that the local data is not present (yet)
         QString qmlListVariableName;

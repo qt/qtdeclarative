@@ -23,15 +23,15 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
 
-struct QmltcOutput
+struct Output
 {
     QString header;
     QString cpp;
 };
 
-class QmltcOutputWrapper
+class OutputWrapper
 {
-    QmltcOutput &m_code;
+    Output &m_code;
 
     template<typename String>
     static void rawAppend(QString &out, const String &what, int extraIndent = 0)
@@ -41,8 +41,8 @@ class QmltcOutputWrapper
     }
 
 public:
-    QmltcOutputWrapper(QmltcOutput &code) : m_code(code) { }
-    const QmltcOutput &code() const { return m_code; }
+    OutputWrapper(Output &code) : m_code(code) { }
+    const Output &code() const { return m_code; }
 
     QStack<QString> memberScopes; // member name scopes e.g. MyClass::MySubclass::
     int headerIndent = 0; // header indentation level
@@ -55,8 +55,8 @@ public:
     // MemberNameScope makes sure "MyClass::" is recorded
     struct MemberNameScope
     {
-        QmltcOutputWrapper *m_code;
-        MemberNameScope(QmltcOutputWrapper *code, const QString &str) : m_code(code)
+        OutputWrapper *m_code;
+        MemberNameScope(OutputWrapper *code, const QString &str) : m_code(code)
         {
             m_code->memberScopes.push(str);
         }
@@ -66,16 +66,16 @@ public:
 
     struct HeaderIndentationScope
     {
-        QmltcOutputWrapper *m_code;
-        HeaderIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->headerIndent; }
+        OutputWrapper *m_code;
+        HeaderIndentationScope(OutputWrapper *code) : m_code(code) { ++m_code->headerIndent; }
         ~HeaderIndentationScope() { --m_code->headerIndent; }
         Q_DISABLE_COPY_MOVE(HeaderIndentationScope)
     };
 
     struct CppIndentationScope
     {
-        QmltcOutputWrapper *m_code;
-        CppIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->cppIndent; }
+        OutputWrapper *m_code;
+        CppIndentationScope(OutputWrapper *code) : m_code(code) { ++m_code->cppIndent; }
         ~CppIndentationScope() { --m_code->cppIndent; }
         Q_DISABLE_COPY_MOVE(CppIndentationScope)
     };

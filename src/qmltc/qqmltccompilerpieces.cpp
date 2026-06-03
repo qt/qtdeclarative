@@ -24,9 +24,8 @@ static QString scopeName(const QQmlJSScope::ConstPtr &scope)
     return scope->internalName();
 }
 
-QmltcCodeGenerator::PreparedValue
-QmltcCodeGenerator::wrap_extensionType(const QQmlJSScope::ConstPtr &type,
-                                       const QQmlJSMetaProperty &p, const QString &accessor)
+CodeGenerator::PreparedValue CodeGenerator::wrap_extensionType(
+        const QQmlJSScope::ConstPtr &type, const QQmlJSMetaProperty &p, const QString &accessor)
 {
     Q_ASSERT(type->isFullyResolved());
 
@@ -86,7 +85,7 @@ QmltcCodeGenerator::wrap_extensionType(const QQmlJSScope::ConstPtr &type,
     return { prologue, value, epilogue };
 }
 
-void QmltcCodeGenerator::generate_assignToListProperty(
+void CodeGenerator::generate_assignToListProperty(
         QStringList *block, const QQmlJSScope::ConstPtr &type, const QQmlJSMetaProperty &p,
         const QStringList &values, const QString &accessor, QString &qmlListVarName)
 {
@@ -95,8 +94,8 @@ void QmltcCodeGenerator::generate_assignToListProperty(
 
     if (populateLocalListProperty) {
         auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
-                QmltcCodeGenerator::wrap_extensionType(
-                        type, p, QmltcCodeGenerator::wrap_privateClass(accessor, p));
+                CodeGenerator::wrap_extensionType(
+                        type, p, CodeGenerator::wrap_privateClass(accessor, p));
 
         qmlListVarName = u"listprop_%1"_s.arg(p.propertyName());
         const QQmlJSScope::ConstPtr elementType = p.type()->elementType();
@@ -107,18 +106,16 @@ void QmltcCodeGenerator::generate_assignToListProperty(
     }
     for (const QString &value : values) {
         auto [prologue, wrappedValue, epilogue] =
-                QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+                CodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block << prologue;
         *block << u"%1.append(std::addressof(%1), %2);"_s.arg(qmlListVarName, wrappedValue);
         *block << epilogue;
     }
 }
 
-void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
-                                                   const QQmlJSScope::ConstPtr &type,
-                                                   const QQmlJSMetaProperty &p,
-                                                   const QString &value, const QString &accessor,
-                                                   bool constructFromQObject)
+void CodeGenerator::generate_assignToProperty(QStringList *block, const QQmlJSScope::ConstPtr &type,
+                                              const QQmlJSMetaProperty &p, const QString &value,
+                                              const QString &accessor, bool constructFromQObject)
 {
     Q_ASSERT(block);
     Q_ASSERT(p.isValid());
@@ -130,7 +127,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         Q_ASSERT(!p.isPrivate());
         // this object is compiled, so just assignment should work fine
         auto [prologue, wrappedValue, epilogue] =
-                QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+                CodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block += prologue;
         *block << u"%1->m_%2 = %3;"_s.arg(accessor, propertyName, wrappedValue);
         *block += epilogue;
@@ -139,12 +136,12 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
                        p, QQmlJSUtils::PropertyAccessor_Write)) {
         // there's a WRITE function
         auto [prologue, wrappedValue, epilogue] =
-                QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+                CodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block += prologue;
 
         auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
-                QmltcCodeGenerator::wrap_extensionType(
-                        type, p, QmltcCodeGenerator::wrap_privateClass(accessor, p));
+                CodeGenerator::wrap_extensionType(
+                        type, p, CodeGenerator::wrap_privateClass(accessor, p));
         *block += extensionPrologue;
         *block << extensionAccessor + u"->" + propertySetter + u"(" + wrappedValue + u");";
         *block += extensionEpilogue;
@@ -166,9 +163,8 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
     }
 }
 
-void QmltcCodeGenerator::generate_setIdValue(QStringList *block, const QString &context,
-                                             qsizetype index, const QString &accessor,
-                                             const QString &idString)
+void CodeGenerator::generate_setIdValue(QStringList *block, const QString &context, qsizetype index,
+                                        const QString &accessor, const QString &idString)
 {
     Q_ASSERT(index >= 0);
     *block << u"Q_ASSERT(%1 < %2->numIdValues()); // make sure Id is in bounds"_s.arg(index).arg(
@@ -177,9 +173,9 @@ void QmltcCodeGenerator::generate_setIdValue(QStringList *block, const QString &
                                                              idString, accessor);
 }
 
-void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+void CodeGenerator::generate_callExecuteRuntimeFunction(
         QStringList *block, const QString &url, QQmlJSMetaMethod::AbsoluteFunctionIndex index,
-        const QString &accessor, const QString &returnType, const QList<QmltcVariable> &parameters)
+        const QString &accessor, const QString &returnType, const QList<Variable> &parameters)
 {
     *block << u"QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(" + accessor + u"));";
 
@@ -198,7 +194,7 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
         types << u"QMetaType::fromType<std::decay_t<" + returnType + u">>()";
     }
 
-    for (const QmltcVariable &p : parameters) {
+    for (const Variable &p : parameters) {
         args << u"const_cast<void *>(reinterpret_cast<const void *>(std::addressof(" + p.name
                         + u")))";
         types << u"QMetaType::fromType<std::decay_t<" + p.cppType + u">>()";
@@ -214,7 +210,7 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
         *block << u"return " + returnValueName + u";";
 }
 
-void QmltcCodeGenerator::generate_createBindingOnProperty(
+void CodeGenerator::generate_createBindingOnProperty(
         QStringList *block, const QString &unitVarName, const QString &scope,
         qsizetype functionIndex, const QString &target, const QQmlJSScope::ConstPtr &targetType,
         int propertyIndex, const QQmlJSMetaProperty &p, int valueTypeIndex,
@@ -231,10 +227,10 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
         const QString accessor = (valueTypeIndex == -1) ? target : subTarget;
 
         QStringList prologue;
-        QString value = QmltcCodeGenerator::wrap_privateClass(accessor, p);
+        QString value = CodeGenerator::wrap_privateClass(accessor, p);
         QStringList epilogue;
         if (targetType) {
-            auto [pro, v, epi] = QmltcCodeGenerator::wrap_extensionType(targetType, p, value);
+            auto [pro, v, epi] = CodeGenerator::wrap_extensionType(targetType, p, value);
             std::tie(prologue, value, epilogue) = std::make_tuple(pro, v, epi);
         }
 
@@ -296,7 +292,7 @@ static QString serializeTranslation(const QQmlTranslation &translation)
             });
 }
 
-void QmltcCodeGenerator::generate_createTranslationBindingOnProperty(
+void CodeGenerator::generate_createTranslationBindingOnProperty(
         QStringList *block, const TranslationBindingInfo &info)
 {
     const QString propName = QQmlJSUtils::toLiteral(info.property.propertyName());
@@ -310,7 +306,7 @@ void QmltcCodeGenerator::generate_createTranslationBindingOnProperty(
                                                 .arg(info.propertyIndex)
                                                 .arg(qqmlTranslation, propName);
 
-        *block << QmltcCodeGenerator::wrap_privateClass(info.target, info.property) + u"->"
+        *block << CodeGenerator::wrap_privateClass(info.target, info.property) + u"->"
                         + bindable + u"().setBinding(" + createTranslationCode + u");";
     } else {
         QString locationString =
@@ -336,8 +332,8 @@ void QmltcCodeGenerator::generate_createTranslationBindingOnProperty(
     }
 }
 
-QmltcCodeGenerator::PreparedValue
-QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value)
+CodeGenerator::PreparedValue
+CodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value)
 {
     auto isDerivedFromBuiltin = [](const QQmlJSScope::ConstPtr &derived, const QString &builtin) {
         for (QQmlJSScope::ConstPtr t = derived; t; t = t->baseType()) {
@@ -368,7 +364,7 @@ QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, 
     return { prologue, value, epilogue };
 }
 
-QString QmltcCodeGenerator::wrap_privateClass(const QString &accessor, const QQmlJSMetaProperty &p)
+QString CodeGenerator::wrap_privateClass(const QString &accessor, const QQmlJSMetaProperty &p)
 {
     if (!p.isPrivate())
         return accessor;
@@ -377,7 +373,7 @@ QString QmltcCodeGenerator::wrap_privateClass(const QString &accessor, const QQm
     return u"static_cast<" + privateType + u" *>(QObjectPrivate::get(" + accessor + u"))";
 }
 
-QString QmltcCodeGenerator::wrap_addressof(const QString &addressed)
+QString CodeGenerator::wrap_addressof(const QString &addressed)
 {
     return u"std::addressof(" + addressed + u")";
 }
