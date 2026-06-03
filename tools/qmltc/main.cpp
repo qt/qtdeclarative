@@ -33,13 +33,9 @@ using namespace Qt::StringLiterals;
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    for (const QQmlJS::LoggerCategory &category : logger.categories()) {
-        if (category.id() == qmlUnusedImports)
-            continue;
-        // shadowing is fine for qmltc
-        if (category.id() == qmlShadow || category.id() == qmlPropertyOverride)
-            continue;
-        logger.setCategorySeverity(category.id(), QQmlSA::WarningSeverity::Error);
+    for (const auto [id, catOverride] : QQmltc::categoryOverrides()) {
+        if (catOverride.has_value())
+            logger.setCategorySeverity(id, catOverride.value());
     }
 }
 

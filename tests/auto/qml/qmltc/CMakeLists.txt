@@ -31,7 +31,10 @@ set(qmltc_module_libs
     qmltc_exported_tests_moduleplugin
     qmltc_exported_no_file_name_test_module
     qmltc_exported_no_file_name_test_moduleplugin
+    Qt::QmlCompilerPrivate
+    Qt::QmltcPrivate
 )
+
 qt_internal_add_test(tst_qmltc_diskcache
     SOURCES ${test_sources}
     LIBRARIES ${qmltc_module_libs}
