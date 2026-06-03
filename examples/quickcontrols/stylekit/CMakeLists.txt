@@ -4,9 +4,10 @@
 cmake_minimum_required(VERSION 3.16)
 project(StyleKitExample VERSION 1.0 LANGUAGES CXX)
 
-find_package(Qt6 6.11 REQUIRED Core Gui Qml Quick QuickControls2)
-find_program(QSB_EXECUTABLE qsb HINTS "${QT_HOST_PATH}/bin")
-if(NOT QSB_EXECUTABLE OR NOT EXISTS "${QSB_EXECUTABLE}")
+find_package(Qt6 6.11 REQUIRED COMPONENTS Core Gui Qml Quick QuickControls2)
+find_package(Qt6 6.11 COMPONENTS ShaderTools)
+
+if(NOT TARGET Qt::qsb)
     message(FATAL_ERROR "qsb not found. Please install Qt Shader Tools to build this example.")
 endif()
 
@@ -63,7 +64,7 @@ foreach(SHADER ${SHADERS})
 
     add_custom_command(
         OUTPUT ${OUTPUT}
-        COMMAND ${QSB_EXECUTABLE} ${QSB_FLAGS} -o ${OUTPUT} ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}
+        COMMAND "$<TARGET_FILE:Qt::qsb>" ${QSB_FLAGS} -o ${OUTPUT} ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${SHADER}
         COMMENT "Compiling shader ${SHADER} → ${NAME_WE}.qsb"
         VERBATIM
