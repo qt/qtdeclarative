@@ -1,5 +1,5 @@
-import QtQml 2.0
-import modulewithinternaltypes 1.0
+import QtQml
+import modulewithinternaltypes
 QtObject {
     property InternalType myInternalType: InternalType {}
 }

@@ -1,0 +1,4 @@
+module modulewithinternaltypescomplexsubdir
+A 1.0 A.qml
+UsesB 1.0 sub2/usesB.qml
+internal InternalB sub1/B.qml
