@@ -43,11 +43,11 @@ inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
 
 // simple class that, for a given property, creates information for the
 // Q_PROPERTY macro (READ/WRITE function names, etc.)
-struct QmltcPropertyData
+struct PropertyData
 {
-    QmltcPropertyData(const QQmlJSMetaProperty &p) : QmltcPropertyData(p.propertyName()) { }
+    PropertyData(const QQmlJSMetaProperty &p) : PropertyData(p.propertyName()) { }
 
-    QmltcPropertyData(const QString &propertyName)
+    PropertyData(const QString &propertyName)
     {
         read = propertyName;
         write = QQmlSignalNames::addPrefixToPropertyName(u"set", propertyName);

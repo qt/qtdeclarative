@@ -29,7 +29,7 @@ using namespace Qt::StringLiterals;
 
 namespace QQmltc {
 
-class QmltcVisitor : public QQmlJSImportVisitor
+class Visitor : public QQmlJSImportVisitor
 {
     void findCppIncludes();
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
@@ -43,9 +43,9 @@ class QmltcVisitor : public QQmlJSImportVisitor
     using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
 
 public:
-    QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                 const QString &implicitImportDirectory,
-                 const QStringList &qmldirFiles = QStringList());
+    Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+            const QString &implicitImportDirectory,
+            const QStringList &qmldirFiles = QStringList());
 
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
