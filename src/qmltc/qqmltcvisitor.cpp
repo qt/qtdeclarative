@@ -14,6 +14,7 @@
 #include <private/qqmljsutils_p.h>
 
 #include <algorithm>
+#include <array>
 
 QT_BEGIN_NAMESPACE
 
@@ -22,6 +23,85 @@ using namespace Qt::StringLiterals;
 Q_DECLARE_LOGGING_CATEGORY(lcQmltcCompiler)
 
 namespace QQmltc {
+
+QSpan<const QmltcLoggingCategoryOverride> categoryOverrides()
+{
+    const auto Error = std::make_optional(QQmlJS::WarningSeverity::Error);
+
+    // We want qmltc to be stricter than qmllint. Override certain categories.
+    // Kept in sync via tst_qmltc::ensureWarningCategoryOverridesSync
+    static const std::array overrides{
+        QmltcLoggingCategoryOverride{ qmlAccessSingleton, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlAliasCycle, Error },
+        QmltcLoggingCategoryOverride{ qmlAssignmentInCondition, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlAttachedPropertyReuse, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlBlockScopeVarDeclaration, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlComma, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlCompiler, Error },
+        QmltcLoggingCategoryOverride{ qmlComponentChildrenCount, Error },
+        QmltcLoggingCategoryOverride{ qmlConfusingExpressionStatement, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlConfusingMinuses, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlConfusingPluses, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlContextProperties, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlDeferredPropertyId, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlEnumsAreNotTypes, Error },
+        QmltcLoggingCategoryOverride{ qmlEqualityTypeCoercion, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlDeprecated, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlDuplicateEnumEntries, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlDuplicateImport, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlDuplicateInlineComponent, Error },
+        QmltcLoggingCategoryOverride{ qmlDuplicatePropertyBinding, Error },
+        QmltcLoggingCategoryOverride{ qmlDuplicatedName, Error },
+        QmltcLoggingCategoryOverride{ qmlEnumEntryMatchesEnum, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlEnumKeyCase, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlEval, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlFunctionUsedBeforeDeclaration, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlIdShadowsMember, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlImport, Error },
+        QmltcLoggingCategoryOverride{ qmlImportFileSelector, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlIncompatibleType, Error },
+        QmltcLoggingCategoryOverride{ qmlInheritanceCycle, Error },
+        QmltcLoggingCategoryOverride{ qmlInlineComponentEnums, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlInvalidLintDirective, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlLiteralConstructor, Error },
+        QmltcLoggingCategoryOverride{ qmlMissingEnumEntry, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlMissingProperty, Error },
+        QmltcLoggingCategoryOverride{ qmlMissingType, Error },
+        QmltcLoggingCategoryOverride{ qmlMultilineStrings, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlNonListProperty, Error },
+        QmltcLoggingCategoryOverride{ qmlNonRootEnums, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlPropertyOverride, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlUnterminatedCase, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlPreferNonVarProperties, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlPrefixedImportType, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlReadOnlyProperty, Error },
+        QmltcLoggingCategoryOverride{ qmlRecursionDepthErrors, Error },
+        QmltcLoggingCategoryOverride{ qmlRedundantOptionalChaining, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlRenamedType, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlRequired, Error },
+        QmltcLoggingCategoryOverride{ qmlShadow, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlSignalParameters, Error },
+        QmltcLoggingCategoryOverride{ qmlStalePropertyRead, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlSyntax, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlSyntaxDuplicateIds, Error },
+        QmltcLoggingCategoryOverride{ qmlSyntaxIdQuotation, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlTypeInstantiatedRecursively, Error },
+        QmltcLoggingCategoryOverride{ qmlTopLevelComponent, Error },
+        QmltcLoggingCategoryOverride{ qmlUncreatableType, Error },
+        QmltcLoggingCategoryOverride{ qmlUnintentionalEmptyBlock, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlUnqualified, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlUnreachableCode, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlUnresolvedAlias, Error },
+        QmltcLoggingCategoryOverride{ qmlUnresolvedType, Error },
+        QmltcLoggingCategoryOverride{ qmlUnusedImports, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlUseProperFunction, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlVarUsedBeforeDeclaration, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlVoid, std::nullopt },
+        QmltcLoggingCategoryOverride{ qmlWith, std::nullopt },
+    };
+
+    return overrides;
+}
 
 static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, int> &repetitions)
 {

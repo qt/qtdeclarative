@@ -124,6 +124,8 @@
 #include <QtCore/private/qobject_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
 #include <QtCore/qtranslator.h>
+#include <private/qqmljslogger_p.h>
+#include <private/qqmltcvisitor_p.h>
 
 #ifndef QMLTC_TESTS_DISABLE_CACHE
 #    error "QMLTC_TESTS_DISABLE_CACHE is supposed to be defined and be equal to either 0 or 1"
@@ -3485,6 +3487,13 @@ void tst_qmltc::typedMethodCallOnIdLookup()
     QQmlEngine e;
     PREPEND_NAMESPACE(typedMethodCallOnIdLookup) created(&e);
     QCOMPARE(created.property("result").toString(), u"[Hello]"_s);
+}
+
+void tst_qmltc::ensureWarningCategoryOverridesSync()
+{
+    const auto overrides = QQmltc::categoryOverrides();
+    const auto builtins = QQmlJSLogger::builtinCategories();
+    QCOMPARE(overrides.size(), builtins.size());
 }
 
 QTEST_MAIN(tst_qmltc)
