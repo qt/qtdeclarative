@@ -626,7 +626,7 @@ void QQuickQmlGenerator::generateMarkers(const PathNodeInfo &info)
 
             //stream() << "clip: true";
             stream() << "sourceComponent: " << markerId << "_container";
-            stream() << "property real strokeWidth: " << info.strokeStyle.width;
+            stream() << "property real strokeWidth: " << info.strokeStyle.width.defaultValue().toReal();
             stream() << "transform: [";
             m_indentLevel++;
             if (i == 0) {
@@ -1057,7 +1057,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
         } else {
             stream() << "strokeColor: \"" << strokeColor.name(QColor::HexArgb) << "\"";
         }
-        stream() << "strokeWidth: " << info.strokeStyle.width;
+        stream() << "strokeWidth: " << info.strokeStyle.width.defaultValue().toReal();
         stream() << "capStyle: " << QQuickVectorImageGenerator::Utils::strokeCapStyleString(info.strokeStyle.lineCapStyle);
         stream() << "joinStyle: " << QQuickVectorImageGenerator::Utils::strokeJoinStyleString(info.strokeStyle.lineJoinStyle);
         stream() << "miterLimit: " << info.strokeStyle.miterLimit;
@@ -1066,7 +1066,7 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
         if (info.strokeStyle.dashArray.length() != 0) {
             stream() << "strokeStyle: " << "ShapePath.DashLine";
             stream() << "dashPattern: " << QQuickVectorImageGenerator::Utils::listString(info.strokeStyle.dashArray);
-            stream() << "dashOffset: " << info.strokeStyle.dashOffset;
+            stream() << "dashOffset: " << info.strokeStyle.dashOffset.defaultValue().toReal();
         }
     }
 
@@ -1215,6 +1215,11 @@ void QQuickQmlGenerator::outputShapePath(const PathNodeInfo &info, const QPainte
     } else {
         generatePropertyAnimation(info.strokeStyle.color, shapePathId, QStringLiteral("strokeColor"));
     }
+    if (info.strokeStyle.width.isAnimated())
+        generatePropertyAnimation(info.strokeStyle.width, shapePathId, QStringLiteral("strokeWidth"));
+    if (info.strokeStyle.dashOffset.isAnimated())
+        generatePropertyAnimation(info.strokeStyle.dashOffset, shapePathId, QStringLiteral("dashOffset"));
+
     if (info.fillOpacity.isAnimated()) {
         generatePropertyAnimation(info.fillColor, shapePathId, QStringLiteral("fillBase"));
         generatePropertyAnimation(info.fillOpacity, shapePathId, QStringLiteral("fillOpacity"));
