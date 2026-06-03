@@ -16,14 +16,19 @@
 // We mean it.
 //
 
-#include <QtCore/qmetaobject.h>
 #include <private/qmetaobject_p.h>
+#include <private/qobject_p.h>
+#include <private/qqmldata_p.h>
+#include <private/qqmlproperty_p.h>
+#include <private/qthread_p.h>
 #include <private/qtqmlglobal_p.h>
+
+#include <QtQml/qqmlengine.h>
+#include <QtCore/qmetaobject.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlNotifierEndpoint;
-class QQmlData;
 class Q_QML_EXPORT QQmlNotifier
 {
 public:
@@ -42,7 +47,6 @@ private:
     QQmlNotifierEndpoint *endpoints = nullptr;
 };
 
-class QQmlEngine;
 class QQmlNotifierEndpoint
 {
     QQmlNotifierEndpoint  *next;
@@ -69,7 +73,7 @@ public:
     inline bool isConnected(QObject *source, int sourceSignal) const;
     inline bool isConnected(QQmlNotifier *) const;
 
-    void connect(QObject *source, int sourceSignal, QQmlEngine *engine, bool doNotify = true);
+    inline void connect(QObject *source, int sourceSignal, QQmlEngine *engine, bool doNotify = true);
     inline void connect(QQmlNotifier *);
     inline void disconnect();
 
@@ -80,6 +84,9 @@ public:
     inline void cancelNotify();
 
     inline int signalIndex() const { return sourceSignal; }
+
+    inline Callback callbackType() const { return callback; }
+    inline QQmlNotifierEndpoint *nextEndpoint() const { return next; }
 
     inline qintptr sender() const;
     inline void setSender(qintptr sender);
@@ -155,6 +162,39 @@ bool QQmlNotifierEndpoint::isConnected(QObject *source, int sourceSignal) const
 bool QQmlNotifierEndpoint::isConnected(QQmlNotifier *notifier) const
 {
     return sourceSignal == -1 && senderAsNotifier() == notifier;
+}
+
+void QQmlNotifierEndpoint::connect(QObject *source, int sourceSignal, QQmlEngine *engine,
+                                   bool doNotify)
+{
+    disconnect();
+
+    Q_ASSERT(engine);
+    if (QObjectPrivate::get(source)->threadData.loadRelaxed()->threadId.loadRelaxed()
+        != QObjectPrivate::get(engine)->threadData.loadRelaxed()->threadId.loadRelaxed()) {
+
+        QString sourceName;
+        QDebug(&sourceName) << source;
+        sourceName = sourceName.left(sourceName.size() - 1);
+        QString engineName;
+        QDebug(&engineName).nospace() << engine;
+        engineName = engineName.left(engineName.size() - 1);
+
+        qFatal("QQmlEngine: Illegal attempt to connect to %s that is in"
+               " a different thread than the QML engine %s.",
+               qPrintable(sourceName), qPrintable(engineName));
+    }
+
+    setSender(qintptr(source));
+    this->sourceSignal = sourceSignal;
+    QQmlPropertyPrivate::flushSignal(source, sourceSignal);
+    QQmlData *ddata = QQmlData::get(source, true);
+    ddata->addNotify(sourceSignal, this);
+    if (doNotify) {
+        needsConnectNotify = doNotify;
+        QObjectPrivate *const priv = QObjectPrivate::get(source);
+        priv->connectNotify(QMetaObjectPrivate::signal(source->metaObject(), sourceSignal));
+    }
 }
 
 void QQmlNotifierEndpoint::connect(QQmlNotifier *notifier)

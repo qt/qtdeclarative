@@ -4,7 +4,10 @@
 
 #include "qqmllist.h"
 #include "qqmllist_p.h"
-#include <QtQml/private/qqmlproperty_p.h>
+
+#include <private/qqmlcontextdata_p.h>
+#include <private/qqmlproperty_p.h>
+#include <private/qqmlpropertycache_p.h>
 
 QT_BEGIN_NAMESPACE
 

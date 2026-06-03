@@ -4,13 +4,17 @@
 
 #include "qquickimageselector_p.h"
 
+#include <private/qqmlproperty_p.h>
+
+#include <QtCore/qcache.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfileinfo.h>
-#include <QtCore/qcache.h>
-#include <QtCore/qloggingcategory.h>
 #include <QtCore/qfileselector.h>
+#include <QtCore/qloggingcategory.h>
+
+#include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlfile.h>
-#include <QtQml/private/qqmlproperty_p.h>
+
 #include <algorithm>
 
 QT_BEGIN_NAMESPACE

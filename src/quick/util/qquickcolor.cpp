@@ -4,6 +4,7 @@
 
 #include "qquickcolor_p.h"
 
+#include <private/qqmlcontextdata_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qv4engine_p.h>
 
