@@ -137,8 +137,6 @@ struct QmltcCodeGenerator
                                             const QQmlJSMetaProperty &p, const QString &accessor);
 
     static QString wrap_privateClass(const QString &accessor, const QQmlJSMetaProperty &p);
-    static QString wrap_qOverload(const QList<QmltcVariable> &parameters,
-                                  const QString &overloaded);
     static QString wrap_addressof(const QString &addressed);
 
     QString urlMethodName() const
