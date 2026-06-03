@@ -121,4 +121,5 @@ private slots:
     void nestedWithId();
 
     void typedMethodCallOnIdLookup();
+    void ensureWarningCategoryOverridesSync();
 };

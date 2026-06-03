@@ -33,14 +33,13 @@ using namespace Qt::StringLiterals;
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    for (const QQmlJS::LoggerCategory &category : logger.categories()) {
-        if (category.id() == qmlUnusedImports)
-            continue;
-        // shadowing is fine for qmltc
-        if (category.id() == qmlShadow || category.id() == qmlPropertyOverride)
-            continue;
-        logger.setCategoryLevel(category.id(), QtCriticalMsg);
-        logger.setCategoryIgnored(category.id(), false);
+    for (const auto [id, catOverride] : QQmltc::categoryOverrides()) {
+        if (catOverride.has_value()) {
+            const auto level = catOverride.value();
+            logger.setCategoryLevel(id, level);
+            logger.setCategoryIgnored(id, false);
+            logger.setCategoryFatal(id, level == QtCriticalMsg);
+        }
     }
 }
 

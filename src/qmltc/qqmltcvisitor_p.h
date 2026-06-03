@@ -15,6 +15,9 @@
 // We mean it.
 //
 
+#include <private/qtqmlcompilerglobal_p.h>
+
+#include <QtCore/qspan.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qlist.h>
@@ -28,6 +31,9 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 namespace QQmltc {
+
+using QmltcLoggingCategoryOverride = std::pair<QQmlJS::LoggerWarningId, std::optional<QtMsgType>>;
+QSpan<const QmltcLoggingCategoryOverride> categoryOverrides();
 
 class Visitor : public QQmlJSImportVisitor
 {
