@@ -350,7 +350,14 @@ All warnings can be set to four levels of severity:
         return 0;
     }
 
-    const auto positionalArguments = parser.positionalArguments();
+    const auto positionalArguments = [&parser]() {
+        auto positionalArguments = parser.positionalArguments();
+        auto begin = positionalArguments.begin(), end = positionalArguments.end();
+        std::sort(begin, end);
+        positionalArguments.erase(std::unique(begin, end), end);
+        return positionalArguments;
+    }();
+
     if (positionalArguments.isEmpty()) {
         parser.showHelp(-1);
     }
