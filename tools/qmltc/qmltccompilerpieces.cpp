@@ -375,16 +375,6 @@ QString QmltcCodeGenerator::wrap_privateClass(const QString &accessor, const QQm
     return u"static_cast<" + privateType + u" *>(QObjectPrivate::get(" + accessor + u"))";
 }
 
-QString QmltcCodeGenerator::wrap_qOverload(const QList<QmltcVariable> &parameters,
-                                           const QString &overloaded)
-{
-    QStringList types;
-    types.reserve(parameters.size());
-    for (const QmltcVariable &p : parameters)
-        types.emplaceBack(p.cppType);
-    return u"qOverload<" + types.join(u", "_s) + u">(" + overloaded + u")";
-}
-
 QString QmltcCodeGenerator::wrap_addressof(const QString &addressed)
 {
     return u"std::addressof(" + addressed + u")";
