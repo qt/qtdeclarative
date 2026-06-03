@@ -202,6 +202,9 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine
     }
 }
 
+QQmlPropertyPrivate::QQmlPropertyPrivate() = default;
+QQmlPropertyPrivate::~QQmlPropertyPrivate() = default;
+
 QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName,
                                          const QQmlRefPointer<QQmlContextData> &context,
                                          QQmlPropertyPrivate::InitFlags flags)

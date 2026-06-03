@@ -5,6 +5,7 @@
 #include "qqmlsynchronizer_p.h"
 
 #include <private/qobject_p.h>
+#include <private/qqmlcontextdata_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <private/qv4scopedvalue_p.h>
