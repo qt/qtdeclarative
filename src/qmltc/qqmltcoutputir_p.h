@@ -32,52 +32,52 @@ namespace QQmltc {
 // form. These classes are used to generate C++ code.
 
 // Represents C++ variable
-struct QmltcVariable
+struct Variable
 {
     QString cppType; // C++ type of a variable
     QString name; // variable name
     QString defaultValue; // optional initialization value
 
-    QmltcVariable() = default;
+    Variable() = default;
     // special ctor for QList's emplace back
-    QmltcVariable(const QString &t, const QString &n, const QString &v = QString())
+    Variable(const QString &t, const QString &n, const QString &v = QString())
         : cppType(t), name(n), defaultValue(v)
     {
     }
 };
 
-struct QmltcProperty : QmltcVariable
+struct Property : Variable
 {
     QString containingClass;
     QString signalName;
 
-    QmltcProperty() = default;
-    QmltcProperty(const QString t, const QString &n, const QString &c, const QString &s)
-        : QmltcVariable(t, n), containingClass(c), signalName(s)
+    Property() = default;
+    Property(const QString t, const QString &n, const QString &c, const QString &s)
+        : Variable(t, n), containingClass(c), signalName(s)
     {
     }
 };
 
 // Represents QML -> C++ compiled enumeration type
-struct QmltcEnum
+struct Enum
 {
     QString cppType; // C++ type of an enum
     QStringList keys; // enumerator keys
     QStringList values; // enumerator values
     QString ownMocLine; // special MOC line that follows enum declaration
 
-    QmltcEnum() = default;
-    QmltcEnum(const QString &t, const QStringList &ks, const QStringList &vs, const QString &l)
+    Enum() = default;
+    Enum(const QString &t, const QStringList &ks, const QStringList &vs, const QString &l)
         : cppType(t), keys(ks), values(vs), ownMocLine(l)
     {
     }
 };
 
-struct QmltcMethodBase
+struct MethodBase
 {
     QStringList comments; // C++ comments
     QString name; // C++ function name
-    QList<QmltcVariable> parameterList; // C++ function parameter list
+    QList<Variable> parameterList; // C++ function parameter list
     QStringList body; // C++ function code
     QQmlJSMetaMethod::Access access = QQmlJSMetaMethod::Public; // access specifier
     QStringList declarationPrefixes;
@@ -85,7 +85,7 @@ struct QmltcMethodBase
 };
 
 // Represents QML -> C++ compiled function
-struct QmltcMethod : QmltcMethodBase
+struct Method : MethodBase
 {
     QString returnType; // C++ return type
     QQmlJSMetaMethodType type = QQmlJSMetaMethodType::Method; // Qt function type
@@ -95,13 +95,13 @@ struct QmltcMethod : QmltcMethodBase
 };
 
 // Represents C++ ctor of a type
-struct QmltcCtor : QmltcMethodBase
+struct Ctor : MethodBase
 {
     QStringList initializerList; // C++ ctor's initializer list
 };
 
 // Represents C++ dtor of a type
-struct QmltcDtor : QmltcMethodBase
+struct Dtor : MethodBase
 {
 };
 
@@ -111,21 +111,22 @@ struct QmltcDtor : QmltcMethodBase
 // document to allow the user to set the initial values for
 // properties, when creating a component, with support for strong
 // typing.
-struct QmltcPropertyInitializer {
+struct PropertyInitializer
+{
     QString name;
 
-    QmltcCtor constructor;
+    Ctor constructor;
 
     // A member containing a reference to the object for which the
     // properties should be set.
-    QmltcVariable component;
+    Variable component;
 
     // A member containing a cache of properties that were actually
     // set that can be referenced later..
-    QmltcVariable initializedCache;
+    Variable initializedCache;
 
     // Setter methods for each property.
-    QList<QmltcMethod> propertySetters;
+    QList<Method> propertySetters;
 };
 
 // Represents a generated class that contains a bundle of values to
@@ -135,14 +136,15 @@ struct QmltcPropertyInitializer {
 // of the document, where it will be used as a constructor argument to
 // force the user to provide initial values for the required
 // properties of the constructed type.
-struct QmltcRequiredPropertiesBundle {
+struct RequiredPropertiesBundle
+{
     QString name;
 
-    QList<QmltcVariable> members;
+    QList<Variable> members;
 };
 
 // Represents QML -> C++ compiled type
-struct QmltcType
+struct Type
 {
     QString cppType; // C++ type of the QML type
     QStringList baseClasses; // C++ type names of base classes
@@ -150,46 +152,46 @@ struct QmltcType
     QStringList otherCode; // Random code that doesn't fit any category, e.g. friend declarations
 
     // member types: enumerations and child types
-    QList<QmltcEnum> enums;
-    QList<QmltcType> children; // these are pretty much always empty
+    QList<Enum> enums;
+    QList<Type> children; // these are pretty much always empty
 
     // special member functions:
-    QmltcCtor baselineCtor {}; // does basic contruction
-    QmltcCtor externalCtor {}; // calls basicCtor, calls init
-    QmltcMethod init {}; // starts object initialization (context setup), calls finalize
-    QmltcMethod beginClass {}; // calls QQmlParserStatus::classBegin()
-    QmltcMethod endInit {}; // ends object initialization (with "simple" bindings setup)
-    QmltcMethod setComplexBindings {}; // sets up "complex" (e.g. script) bindings
-    QmltcMethod completeComponent {}; // calls QQmlParserStatus::componentComplete()
-    QmltcMethod finalizeComponent {}; // calls QQmlFinalizerHook::componentFinalized()
-    QmltcMethod handleOnCompleted {}; // calls Component.onCompleted
+    Ctor baselineCtor {}; // does basic contruction
+    Ctor externalCtor {}; // calls basicCtor, calls init
+    Method init {}; // starts object initialization (context setup), calls finalize
+    Method beginClass {}; // calls QQmlParserStatus::classBegin()
+    Method endInit {}; // ends object initialization (with "simple" bindings setup)
+    Method setComplexBindings {}; // sets up "complex" (e.g. script) bindings
+    Method completeComponent {}; // calls QQmlParserStatus::componentComplete()
+    Method finalizeComponent {}; // calls QQmlFinalizerHook::componentFinalized()
+    Method handleOnCompleted {}; // calls Component.onCompleted
 
-    std::optional<QmltcDtor> dtor {};
+    std::optional<Dtor> dtor {};
 
     // member functions: methods, signals and slots
-    QList<QmltcMethod> functions;
+    QList<Method> functions;
     // member variables
-    QList<QmltcVariable> variables;
-    QList<QmltcProperty> properties;
+    QList<Variable> variables;
+    QList<Property> properties;
 
     // QML document root specific:
-    std::optional<QmltcMethod> typeCount; // the number of QML types defined in a document
+    std::optional<Method> typeCount; // the number of QML types defined in a document
 
     // TODO: only needed for binding callables - should not be needed, generally
     bool ignoreInit = false; // specifies whether init and externalCtor should be ignored
 
     // needed for singletons
-    std::optional<QmltcMethod> staticCreate{};
+    std::optional<Method> staticCreate{};
 
     // A proxy class that provides a restricted interface that only
     // allows setting the properties of the type.
-    QmltcPropertyInitializer propertyInitializer{};
+    PropertyInitializer propertyInitializer{};
 
-    std::optional<QmltcRequiredPropertiesBundle> requiredPropertiesBundle{};
+    std::optional<RequiredPropertiesBundle> requiredPropertiesBundle{};
 };
 
 // Represents whole QML program, compiled to C++
-struct QmltcProgram
+struct Program
 {
     QString url; // QML file url
     QString cppPath; // C++ output .cpp path
@@ -198,9 +200,9 @@ struct QmltcProgram
     QString exportMacro; // if not empty, the macro that should be used to export the generated
                          // classes
     QSet<QString> includes; // non-default C++ include files
-    QmltcMethod urlMethod; // returns QUrl of the QML document
+    Method urlMethod; // returns QUrl of the QML document
 
-    QList<QmltcType> compiledTypes; // all QML types that are compiled to C++
+    QList<Type> compiledTypes; // all QML types that are compiled to C++
 };
 
 } // namespace QQmltc

@@ -74,14 +74,14 @@ static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
     return false;
 }
 
-QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                           const QString &implicitImportDirectory, const QStringList &qmldirFiles)
+Visitor::Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+                 const QString &implicitImportDirectory, const QStringList &qmldirFiles)
     : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmldirFiles)
 {
     m_qmlTypeNames.append(QFileInfo(logger->filePath()).baseName()); // put document root
 }
 
-void QmltcVisitor::findCppIncludes()
+void Visitor::findCppIncludes()
 {
     // TODO: this pass is slow: we have to do exhaustive search because some C++
     // code could do forward declarations and they are hard to handle correctly
@@ -193,7 +193,7 @@ static void addCleanQmlTypeName(QStringList *names, const QQmlJSScope::ConstPtr 
     names->append(name.replace(u'.', u'_'));
 }
 
-bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
+bool Visitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
     if (!QQmlJSImportVisitor::visit(object))
         return false;
@@ -216,14 +216,14 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     return true;
 }
 
-void QmltcVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *object)
+void Visitor::endVisit(QQmlJS::AST::UiObjectDefinition *object)
 {
     if (m_currentScope->scopeType() == QQmlSA::ScopeType::QMLScope)
         m_qmlTypeNames.removeLast();
     QQmlJSImportVisitor::endVisit(object);
 }
 
-bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
+bool Visitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     if (!QQmlJSImportVisitor::visit(uiob))
         return false;
@@ -237,13 +237,13 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     return true;
 }
 
-void QmltcVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
+void Visitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     m_qmlTypeNames.removeLast();
     QQmlJSImportVisitor::endVisit(uiob);
 }
 
-bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
+bool Visitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
 {
     if (!QQmlJSImportVisitor::visit(publicMember))
         return false;
@@ -257,7 +257,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
         QQmlJSMetaProperty property = owner->ownProperty(name);
         Q_ASSERT(property.isValid());
         if (!property.isAlias()) { // aliases are covered separately
-            QmltcPropertyData compiledData(property);
+            PropertyData compiledData(property);
             if (property.read().isEmpty())
                 property.setRead(compiledData.read);
             if (!property.isList()) {
@@ -294,7 +294,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
     return true;
 }
 
-bool QmltcVisitor::visit(QQmlJS::AST::UiScriptBinding *scriptBinding)
+bool Visitor::visit(QQmlJS::AST::UiScriptBinding *scriptBinding)
 {
     if (!QQmlJSImportVisitor::visit(scriptBinding))
         return false;
@@ -308,14 +308,14 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiScriptBinding *scriptBinding)
     return true;
 }
 
-bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
+bool Visitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))
         return false;
     return true;
 }
 
-void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
+void Visitor::endVisit(QQmlJS::AST::UiProgram *program)
 {
     QQmlJSImportVisitor::endVisit(program);
     if (!rootScopeIsValid()) // in case we failed badly
@@ -341,7 +341,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
             checkNamesAndTypes(type);
 }
 
-bool QmltcVisitor::checkCustomParser(const QQmlJSScope::ConstPtr &scope)
+bool Visitor::checkCustomParser(const QQmlJSScope::ConstPtr &scope)
 {
     if (QQmlJSImportVisitor::checkCustomParser(scope))
         m_seenCustomParsers = true;
@@ -417,7 +417,7 @@ void iterateTypes(
     resolve things that couldn't be resolved during the AST traversal, such
     as anything that is dependent on implicit or explicit components
 */
-void QmltcVisitor::postVisitResolve(
+void Visitor::postVisitResolve(
         const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> &qmlIrOrderedBindings)
 {
 
@@ -610,7 +610,7 @@ void QmltcVisitor::postVisitResolve(
 static void setAliasData(QQmlJSMetaProperty *alias, const QQmlJSUtils::ResolvedAlias &origin)
 {
     Q_ASSERT(origin.kind != QQmlJSUtils::AliasTarget_Invalid);
-    QmltcPropertyData compiledData(*alias);
+    PropertyData compiledData(*alias);
     if (alias->read().isEmpty())
         alias->setRead(compiledData.read);
     if (origin.kind == QQmlJSUtils::AliasTarget_Object) // id-pointing aliases only have READ method
@@ -627,7 +627,7 @@ static void setAliasData(QQmlJSMetaProperty *alias, const QQmlJSUtils::ResolvedA
         alias->setBindable(compiledData.bindable);
 }
 
-void QmltcVisitor::setupAliases()
+void Visitor::setupAliases()
 {
     QStack<QQmlJSScope::Ptr> types;
     types.push(m_exportedRootScope);
@@ -653,7 +653,7 @@ void QmltcVisitor::setupAliases()
     }
 }
 
-void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
+void Visitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
 {
     static const QString cppKeywords[] = {
         u"alignas"_s,
@@ -838,7 +838,7 @@ void QmltcVisitor::checkNamesAndTypes(const QQmlJSScope::ConstPtr &type)
  *  Returns the file path for the C++ header of \a scope or the header created
  *  by qmltc for it and its inline components.
  */
-QString QmltcVisitor::filePath(const QQmlJSScope::ConstPtr &scope) const
+QString Visitor::filePath(const QQmlJSScope::ConstPtr &scope) const
 {
     const QString filePath = scope->filePath();
     if (!filePath.endsWith(u".qml")) // assume the correct path is set
@@ -860,7 +860,7 @@ QString QmltcVisitor::filePath(const QQmlJSScope::ConstPtr &scope) const
     return QFileInfo(*firstHeader).fileName();
 }
 
-QString QmltcVisitor::sourceDirectoryPath(const QString &path) const
+QString Visitor::sourceDirectoryPath(const QString &path) const
 {
     auto result = QQmlJSUtils::sourceDirectoryPath(m_importer, path);
     if (const QString *srcDirPath = std::get_if<QString>(&result))

@@ -243,7 +243,7 @@ int main(int argc, char **argv)
         }
     }
 
-    QQmltc::QmltcCompilerInfo info;
+    QQmltc::CompilerInfo info;
     info.outputCppFile = parser.value(outputCppOption);
     info.outputHFile = parser.value(outputHOption);
     info.resourcePath = firstQml(paths);
@@ -264,7 +264,7 @@ int main(int argc, char **argv)
     importer.setMetaDataMapper(&metaDataMapper);
     auto qmltcVisitor = [](QQmlJS::AST::Node *rootNode, QQmlJSImporter *self,
                            const QQmlJSImporter::ImportVisitorPrerequisites &p) {
-        QQmltc::QmltcVisitor v(self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles);
+        QQmltc::Visitor v(self, p.m_logger, p.m_implicitImportDirectory, p.m_qmldirFiles);
         QQmlJS::AST::Node::accept(rootNode, &v);
     };
     importer.setImportVisitor(qmltcVisitor);
@@ -281,11 +281,12 @@ int main(int argc, char **argv)
         else
             currentScope->setOwnModuleName(parser.value(moduleOption));
     }
-    QQmltc::QmltcVisitor visitor(&importer, &logger,
-                                 QQmlJSImportVisitor::implicitImportDirectory(url, &mapper),
-                                 qmldirFiles);
-    visitor.setMode(QQmltc::QmltcVisitor::Compile);
-    QQmltc::QmltcTypeResolver typeResolver { &importer };
+
+    QQmltc::Visitor visitor(&importer, &logger,
+                            QQmlJSImportVisitor::implicitImportDirectory(url, &mapper),
+                            qmldirFiles);
+    visitor.setMode(QQmltc::Visitor::Compile);
+    QQmltc::TypeResolver typeResolver{ &importer };
     typeResolver.init(&visitor, qmlParser.rootNode());
 
     using PassManagerPtr =
@@ -315,7 +316,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    QQmltc::QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
+    QQmltc::Compiler compiler(url, &typeResolver, &visitor, &logger);
     compiler.compile(info);
 
     if (logger.hasErrors())

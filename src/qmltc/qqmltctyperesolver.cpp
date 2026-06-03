@@ -18,7 +18,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
 
-void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
+void TypeResolver::init(Visitor *visitor, QQmlJS::AST::Node *program)
 {
     QQmlJSTypeResolver::init(visitor, program);
 
@@ -40,7 +40,7 @@ void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
 }
 
 QQmlJSScope::Ptr
-QmltcTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
+TypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {
     qCDebug(lcTypeResolver2()).nospace()
             << "looking for object at " << location.line() << ':' << location.column();
@@ -48,7 +48,7 @@ QmltcTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location)
 }
 
 std::pair<QString, QQmlJSScope::Ptr>
-QmltcTypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
+TypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
 {
     const auto files = m_importer->importedFiles();
     auto it = std::find_if(files.cbegin(), files.cend(), [&](const QQmlJSScope::Ptr &importedType) {

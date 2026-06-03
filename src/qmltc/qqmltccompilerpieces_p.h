@@ -37,40 +37,39 @@ namespace QQmltc {
     complicated, repetitive, nasty logic which is better kept in a single
     confined place.
 */
-struct QmltcCodeGenerator
+struct CodeGenerator
 {
     static const QString privateEngineName;
     static const QString typeCountName;
 
     QString documentUrl;
-    QmltcVisitor *visitor = nullptr;
+    Visitor *visitor = nullptr;
 
     using InlineComponentOrDocumentRootName = QQmlJSScope::InlineComponentOrDocumentRootName;
     using RootDocumentNameType = QQmlJSScope::RootDocumentNameType;
 
-    [[nodiscard]] inline decltype(auto) generate_initCode(QmltcType &current,
+    [[nodiscard]] inline decltype(auto) generate_initCode(Type &current,
                                                           const QQmlJSScope::ConstPtr &type) const;
-    inline void generate_initCodeForTopLevelComponent(QmltcType &current,
+    inline void generate_initCodeForTopLevelComponent(Type &current,
                                                       const QQmlJSScope::ConstPtr &type);
 
-    inline void generate_qmltcInstructionCallCode(QmltcMethod *function,
+    inline void generate_qmltcInstructionCallCode(Method *function,
                                                   const QQmlJSScope::ConstPtr &type,
                                                   const QString &baseInstructionArgs,
                                                   const QString &childInstructionArgs) const;
-    inline void generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
-    inline void generate_setComplexBindingsCode(QmltcType &current,
+    inline void generate_endInitCode(Type &current, const QQmlJSScope::ConstPtr &type) const;
+    inline void generate_setComplexBindingsCode(Type &current,
                                                 const QQmlJSScope::ConstPtr &type) const;
 
-    inline void generate_interfaceCallCode(QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
+    inline void generate_interfaceCallCode(Method *function, const QQmlJSScope::ConstPtr &type,
                                            const QString &interfaceName,
                                            const QString &interfaceCall) const;
-    inline void generate_beginClassCode(QmltcType &current,
-                                        const QQmlJSScope::ConstPtr &type) const;
-    inline void generate_completeComponentCode(QmltcType &current,
+    inline void generate_beginClassCode(Type &current, const QQmlJSScope::ConstPtr &type) const;
+    inline void generate_completeComponentCode(Type &current,
                                                const QQmlJSScope::ConstPtr &type) const;
-    inline void generate_finalizeComponentCode(QmltcType &current,
+    inline void generate_finalizeComponentCode(Type &current,
                                                const QQmlJSScope::ConstPtr &type) const;
-    inline void generate_handleOnCompletedCode(QmltcType &current,
+    inline void generate_handleOnCompletedCode(Type &current,
                                                const QQmlJSScope::ConstPtr &type) const;
 
     static void generate_assignToProperty(QStringList *block, const QQmlJSScope::ConstPtr &type,
@@ -106,7 +105,7 @@ struct QmltcCodeGenerator
                                                     QQmlJSMetaMethod::AbsoluteFunctionIndex index,
                                                     const QString &accessor,
                                                     const QString &returnType,
-                                                    const QList<QmltcVariable> &parameters = {});
+                                                    const QList<Variable> &parameters = {});
 
     static void generate_createBindingOnProperty(QStringList *block, const QString &unitVarName,
                                                  const QString &scope, qsizetype functionIndex,
@@ -180,8 +179,8 @@ struct QmltcCodeGenerator
 
     \sa generate_initCodeForTopLevelComponent
 */
-inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
-                                                            const QQmlJSScope::ConstPtr &type) const
+inline decltype(auto) CodeGenerator::generate_initCode(Type &current,
+                                                       const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
 
@@ -287,7 +286,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
         QString idString = visitor->addressableScopes().id(type, type);
         if (idString.isEmpty())
             idString = u"<unknown>"_s;
-        QmltcCodeGenerator::generate_setIdValue(
+        CodeGenerator::generate_setIdValue(
                 &current.init.body, relevantContext, id, u"this"_s, idString);
     }
 
@@ -349,9 +348,8 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
 
     \sa generate_initCode
 */
-inline void
-QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
-                                                          const QQmlJSScope::ConstPtr &type)
+inline void CodeGenerator::generate_initCodeForTopLevelComponent(Type &current,
+                                                                 const QQmlJSScope::ConstPtr &type)
 {
     Q_UNUSED(type);
 
@@ -375,7 +373,7 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
     current.init.body << u"// QQmlComponent(engine, compilationUnit, start, parent):"_s;
     current.init.body
             << u"auto compilationUnit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
-                    + QmltcCodeGenerator::urlMethodName() + u"());";
+                    + CodeGenerator::urlMethodName() + u"());";
     current.init.body << u"d->compilationUnit = compilationUnit;"_s;
     current.init.body << u"d->start = 0;"_s;
     current.init.body << u"d->url = compilationUnit->finalUrl();"_s;
@@ -394,8 +392,8 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
     boilerplate, adding it to a passed \a function. This is a building block
     used to generate e.g. QML_endInit code.
 */
-inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
-        QmltcMethod *function, const QQmlJSScope::ConstPtr &type,
+inline void CodeGenerator::generate_qmltcInstructionCallCode(
+        Method *function, const QQmlJSScope::ConstPtr &type,
         const QString &baseInstructionArgs, const QString &childInstructionArgs) const
 {
     using namespace Qt::StringLiterals;
@@ -447,8 +445,8 @@ inline void QmltcCodeGenerator::generate_qmltcInstructionCallCode(
     initialization. Additionally, the QML document root's endInit calls endInit
     methods of all the necessary QML types within the document.
 */
-inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
-                                                     const QQmlJSScope::ConstPtr &type) const
+inline void CodeGenerator::generate_endInitCode(Type &current,
+                                                const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
 
@@ -475,7 +473,7 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
                                                "QQmlEnginePrivate::get(engine)->"
                                                "compilationUnitFromUrl(%2()), thisContext, %3);")
                                         .arg(QString::number(visitor->qmlIrObjectIndex(type)),
-                                             QmltcCodeGenerator::urlMethodName(), icName);
+                                             CodeGenerator::urlMethodName(), icName);
         current.endInit.body << u"}"_s;
     }
 }
@@ -489,8 +487,8 @@ inline void QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
     all the necessary QML types within the document.
 */
 inline void
-QmltcCodeGenerator::generate_setComplexBindingsCode(QmltcType &current,
-                                                    const QQmlJSScope::ConstPtr &type) const
+CodeGenerator::generate_setComplexBindingsCode(Type &current,
+                                               const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
 
@@ -511,10 +509,10 @@ QmltcCodeGenerator::generate_setComplexBindingsCode(QmltcType &current,
     it to a passed \a function. This is a building block used to generate e.g.
     QQmlParserStatus API calls.
 */
-inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function,
-                                                           const QQmlJSScope::ConstPtr &type,
-                                                           const QString &interfaceName,
-                                                           const QString &interfaceCall) const
+inline void CodeGenerator::generate_interfaceCallCode(Method *function,
+                                                      const QQmlJSScope::ConstPtr &type,
+                                                      const QString &interfaceName,
+                                                      const QString &interfaceCall) const
 {
     using namespace Qt::StringLiterals;
 
@@ -583,8 +581,8 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
     calls QQmlParserStatus::classBegin() when \a type implements the
     corresponding interface.
 */
-inline void QmltcCodeGenerator::generate_beginClassCode(QmltcType &current,
-                                                        const QQmlJSScope::ConstPtr &type) const
+inline void CodeGenerator::generate_beginClassCode(Type &current,
+                                                   const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
     generate_interfaceCallCode(&current.beginClass, type, u"QQmlParserStatus"_s, u"classBegin"_s);
@@ -597,9 +595,8 @@ inline void QmltcCodeGenerator::generate_beginClassCode(QmltcType &current,
     optionally calls QQmlParserStatus::componentComplete() when \a type
     implements the corresponding interface.
 */
-inline void
-QmltcCodeGenerator::generate_completeComponentCode(QmltcType &current,
-                                                   const QQmlJSScope::ConstPtr &type) const
+inline void CodeGenerator::generate_completeComponentCode(Type &current,
+                                                          const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
     generate_interfaceCallCode(&current.completeComponent, type, u"QQmlParserStatus"_s,
@@ -613,9 +610,8 @@ QmltcCodeGenerator::generate_completeComponentCode(QmltcType &current,
     optionally calls QQmlFinalizerHook::componentFinalized() when \a type
     implements the corresponding interface.
 */
-inline void
-QmltcCodeGenerator::generate_finalizeComponentCode(QmltcType &current,
-                                                   const QQmlJSScope::ConstPtr &type) const
+inline void CodeGenerator::generate_finalizeComponentCode(Type &current,
+                                                          const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
     generate_interfaceCallCode(&current.finalizeComponent, type, u"QQmlFinalizerHook"_s,
@@ -629,9 +625,8 @@ QmltcCodeGenerator::generate_finalizeComponentCode(QmltcType &current,
     optionally calls a Component.onCompleted handler if that is present in \a
     type.
 */
-inline void
-QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
-                                                   const QQmlJSScope::ConstPtr &type) const
+inline void CodeGenerator::generate_handleOnCompletedCode(Type &current,
+                                                          const QQmlJSScope::ConstPtr &type) const
 {
     using namespace Qt::StringLiterals;
 
@@ -697,7 +692,7 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
     For the object lookup logic itself, see QQmltcObjectCreationHelper
 */
 template<typename Predicate>
-inline QString QmltcCodeGenerator::generate_typeCount(
+inline QString CodeGenerator::generate_typeCount(
         Predicate p, const InlineComponentOrDocumentRootName &inlinedComponent) const
 {
     using namespace Qt::StringLiterals;

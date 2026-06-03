@@ -26,15 +26,15 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
 
-class QmltcTypeResolver : public QQmlJSTypeResolver
+class TypeResolver : public QQmlJSTypeResolver
 {
 public:
-    QmltcTypeResolver(QQmlJSImporter *importer) : QQmlJSTypeResolver(importer), m_importer(importer)
+    TypeResolver(QQmlJSImporter *importer) : QQmlJSTypeResolver(importer), m_importer(importer)
     {
         Q_ASSERT(importer);
     }
 
-    void init(QmltcVisitor *visitor, QQmlJS::AST::Node *program);
+    void init(Visitor *visitor, QQmlJS::AST::Node *program);
 
     QQmlJSScope::Ptr scopeForLocation(const QV4::CompiledData::Location &location) const;
 

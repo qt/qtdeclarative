@@ -24,27 +24,27 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmltc {
 
-struct QmltcCodeWriter
+struct CodeWriter
 {
-    static void writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
+    static void writeGlobalHeader(OutputWrapper &code, const QString &sourcePath,
                                   const QString &hPath, const QString &cppPath,
                                   const QString &outNamespace,
                                   const QSet<QString> &requiredCppIncludes);
-    static void writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
+    static void writeGlobalFooter(OutputWrapper &code, const QString &sourcePath,
                                   const QString &outNamespace);
-    static void write(QmltcOutputWrapper &code, const QmltcProgram &program);
-    static void write(QmltcOutputWrapper &code, const QmltcType &type, const QString &exportMacro);
-    static void write(QmltcOutputWrapper &code, const QmltcEnum &enumeration);
-    static void write(QmltcOutputWrapper &code, const QmltcMethod &method);
-    static void write(QmltcOutputWrapper &code, const QmltcCtor &ctor);
-    static void write(QmltcOutputWrapper &code, const QmltcDtor &dtor);
-    static void write(QmltcOutputWrapper &code, const QmltcVariable &var);
-    static void write(QmltcOutputWrapper &code, const QmltcProperty &prop);
-    static void write(QmltcOutputWrapper &code, const QmltcPropertyInitializer &propertyInitializer, const QmltcType& wrappedType);
-    static void write(QmltcOutputWrapper &code, const QmltcRequiredPropertiesBundle &requiredPropertiesBundle);
+    static void write(OutputWrapper &code, const Program &program);
+    static void write(OutputWrapper &code, const Type &type, const QString &exportMacro);
+    static void write(OutputWrapper &code, const Enum &enumeration);
+    static void write(OutputWrapper &code, const Method &method);
+    static void write(OutputWrapper &code, const Ctor &ctor);
+    static void write(OutputWrapper &code, const Dtor &dtor);
+    static void write(OutputWrapper &code, const Variable &var);
+    static void write(OutputWrapper &code, const Property &prop);
+    static void write(OutputWrapper &code, const PropertyInitializer &propertyInitializer, const Type& wrappedType);
+    static void write(OutputWrapper &code, const RequiredPropertiesBundle &requiredPropertiesBundle);
 
 private:
-    static void writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlMethod); // special
+    static void writeUrl(OutputWrapper &code, const Method &urlMethod); // special
 };
 
 } // namespace QQmltc
