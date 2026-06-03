@@ -602,9 +602,20 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                             && (c.version.minorVersion() > candidate->version.minorVersion()))) {
                     if (base) {
                         componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
-                        if (c.internal) {
-                            if (resolveLocalUrl(*base, c.fileName) != componentUrl)
+                        if (c.internal && resolveLocalUrl(*base, c.fileName) != componentUrl) {
+                            // This can happen if the module is spread over multiple directories.
+                            // We need to check that the accessing component belongs to the same
+                            // module.
+                            const auto componentsBegin = qmlDirComponents.cbegin();
+                            const auto componentsEnd = qmlDirComponents.cend();
+                            if (std::find_if(componentsBegin, componentsEnd,
+                                             [&](const QQmlDirParser::Component &component) {
+                                                 return resolveLocalUrl(url, component.fileName)
+                                                         == *base;
+                                             })
+                                == componentsEnd) {
                                 continue; // failed attempt to access an internal type
+                            }
                         }
 
                         const bool recursion = *base == componentUrl;
