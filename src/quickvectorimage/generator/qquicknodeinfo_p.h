@@ -74,11 +74,11 @@ struct StrokeStyle
     Qt::PenJoinStyle lineJoinStyle = Qt::MiterJoin;
     int miterLimit = 4;
     bool cosmetic = false;
-    qreal dashOffset = 0;
     QList<qreal> dashArray;
+    QQuickAnimatedProperty dashOffset = QQuickAnimatedProperty(QVariant::fromValue(qreal(0)));
     QQuickAnimatedProperty color = QQuickAnimatedProperty(QVariant::fromValue(QColorConstants::Transparent));
     QQuickAnimatedProperty opacity = QQuickAnimatedProperty(QVariant::fromValue(qreal(1.0)));
-    qreal width = 1.0;
+    QQuickAnimatedProperty width = QQuickAnimatedProperty(QVariant::fromValue(qreal(1.0)));
 
     static StrokeStyle fromPen(const QPen &p)
     {
@@ -87,9 +87,9 @@ struct StrokeStyle
         style.lineJoinStyle = p.joinStyle() == Qt::SvgMiterJoin ? Qt::MiterJoin : p.joinStyle(); //TODO support SvgMiterJoin
         style.miterLimit = qRound(p.miterLimit());
         style.cosmetic = p.isCosmetic();
-        style.dashOffset = p.dashOffset();
+        style.dashOffset.setDefaultValue(p.dashOffset());
         style.dashArray = p.dashPattern();
-        style.width = p.widthF();
+        style.width.setDefaultValue(p.widthF());
 
         return style;
     }
