@@ -26,14 +26,17 @@
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qaccessiblequickitem_p.h>
 #include <QtQuick/private/qaccessiblequickflickable_p.h>
+#include <QtQuick/private/qaccessiblequicklistview_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 #include <QQmlComponent>
 #include <QQmlApplicationEngine>
 
 using namespace Qt::StringLiterals;
+using namespace QQuickViewTestUtils;
 
 #define EXPECT(cond) \
     do { \
@@ -88,6 +91,11 @@ private slots:
 
     void flickableViewportTest_data();
     void flickableViewportTest();
+
+    void listViewViewportTest_data();
+    void listViewViewportTest();
+    void listViewSetPositionTest_data();
+    void listViewSetPositionTest();
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
@@ -1194,6 +1202,131 @@ void tst_QQuickAccessible::flickableViewportTest()
     QCOMPARE(a11yFlickable.position(), position);
     QCOMPARE(a11yFlickable.viewportSize(), viewportSize);
     QCOMPARE(a11yFlickable.isIndexed(), false);
+}
+
+void tst_QQuickAccessible::listViewViewportTest_data()
+{
+    QTest::addColumn<int>("rowCount");
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<int>("index");
+    QTest::addColumn<QSizeF>("contentSize");
+    QTest::addColumn<QPointF>("position");
+    QTest::addColumn<QSizeF>("viewportSize");
+
+    QTest::addRow("Vertical - empty")
+            << 0 << QQuickListView::Vertical << 0 << QSizeF(0, 0) << QPointF(0, 0) << QSizeF(1, 1);
+    QTest::addRow("Vertical - index 0") << 100 << QQuickListView::Vertical << 0 << QSizeF(1, 100)
+                                        << QPointF(0, 0) << QSizeF(1, 0.3);
+    QTest::addRow("Vertical - index 10") << 100 << QQuickListView::Vertical << 10 << QSizeF(1, 100)
+                                         << QPointF(0, 0.1) << QSizeF(1, 0.3);
+    QTest::addRow("Vertical - index 50") << 100 << QQuickListView::Vertical << 50 << QSizeF(1, 100)
+                                         << QPointF(0, 0.5) << QSizeF(1, 0.3);
+    QTest::addRow("Vertical - index 70") << 100 << QQuickListView::Vertical << 70 << QSizeF(1, 100)
+                                         << QPointF(0, 0.7) << QSizeF(1, 0.3);
+    // 30 delegates fit in the view's height
+    QTest::addRow("Vertical - index 90") << 100 << QQuickListView::Vertical << 90 << QSizeF(1, 100)
+                                         << QPointF(0, 0.7) << QSizeF(1, 0.3);
+    QTest::addRow("Vertical - index 99") << 100 << QQuickListView::Vertical << 99 << QSizeF(1, 100)
+                                         << QPointF(0, 0.7) << QSizeF(1, 0.3);
+
+    QTest::addRow("Horizontal - empty") << 0 << QQuickListView::Horizontal << 0 << QSizeF(0, 0)
+                                        << QPointF(0, 0) << QSizeF(1, 1);
+    QTest::addRow("Horizontal - index 0") << 100 << QQuickListView::Horizontal << 0
+                                          << QSizeF(100, 1) << QPointF(0, 0) << QSizeF(0.05, 1);
+    QTest::addRow("Horizontal - index 10") << 100 << QQuickListView::Horizontal << 10
+                                           << QSizeF(100, 1) << QPointF(0.1, 0) << QSizeF(0.05, 1);
+    QTest::addRow("Horizontal - index 50") << 100 << QQuickListView::Horizontal << 50
+                                           << QSizeF(100, 1) << QPointF(0.5, 0) << QSizeF(0.05, 1);
+    QTest::addRow("Horizontal - index 70") << 100 << QQuickListView::Horizontal << 70
+                                           << QSizeF(100, 1) << QPointF(0.7, 0) << QSizeF(0.05, 1);
+    // 5 delegates fit in the view's width
+    QTest::addRow("Horizontal - index 90") << 100 << QQuickListView::Horizontal << 90
+                                           << QSizeF(100, 1) << QPointF(0.9, 0) << QSizeF(0.05, 1);
+    QTest::addRow("Horizontal - index 99") << 100 << QQuickListView::Horizontal << 99
+                                           << QSizeF(100, 1) << QPointF(0.95, 0) << QSizeF(0.05, 1);
+}
+
+void tst_QQuickAccessible::listViewViewportTest()
+{
+    auto clearEvents = qScopeGuard([] { QTestAccessibility::clearEvents(); });
+
+    QFETCH(int, rowCount);
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(int, index);
+    QFETCH(QSizeF, contentSize);
+    QFETCH(QPointF, position);
+    QFETCH(QSizeF, viewportSize);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->rootContext()->setContextProperty("listModel", rowCount);
+    window->setSource(testFileUrl("listview.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listView);
+
+    auto *a11yIface = QAccessible::queryAccessibleInterface(listView);
+    auto *a11yListView = dynamic_cast<QAccessibleQuickListView *>(a11yIface);
+    QVERIFY(a11yListView);
+
+    listView->setOrientation(orientation);
+    listView->positionViewAtIndex(index, QQuickListView::Beginning);
+
+    QCOMPARE(a11yListView->contentSize(), contentSize);
+    QCOMPARE(a11yListView->position(), position);
+    QCOMPARE(a11yListView->viewportSize(), viewportSize);
+    QCOMPARE(a11yListView->isIndexed(), true);
+}
+
+void tst_QQuickAccessible::listViewSetPositionTest_data()
+{
+    QTest::addColumn<int>("rowCount");
+    QTest::addColumn<QQuickListView::Orientation>("orientation");
+    QTest::addColumn<QPointF>("position");
+
+    QTest::addRow("Vertical - empty") << 0 << QQuickListView::Vertical << QPointF(0, 0);
+    QTest::addRow("Vertical - 10") << 100 << QQuickListView::Vertical << QPointF(0, 0.1);
+    QTest::addRow("Vertical - 50") << 100 << QQuickListView::Vertical << QPointF(0, 0.5);
+    QTest::addRow("Vertical - 70") << 100 << QQuickListView::Vertical << QPointF(0, 0.7);
+    // 30 delegates fit in the view's height
+    QTest::addRow("Vertical - 90") << 100 << QQuickListView::Vertical << QPointF(0, 0.7);
+    QTest::addRow("Vertical - 99") << 100 << QQuickListView::Vertical << QPointF(0, 0.7);
+
+    QTest::addRow("Horizontal - empty") << 0 << QQuickListView::Horizontal << QPointF(0, 0);
+    QTest::addRow("Horizontal - 10") << 100 << QQuickListView::Horizontal << QPointF(0.1, 0);
+    QTest::addRow("Horizontal - 50") << 100 << QQuickListView::Horizontal << QPointF(0.5, 0);
+    QTest::addRow("Horizontal - 70") << 100 << QQuickListView::Horizontal << QPointF(0.7, 0);
+    // 5 delegates fit in the view's height
+    QTest::addRow("Horizontal - 90") << 100 << QQuickListView::Horizontal << QPointF(0.95, 0);
+    QTest::addRow("Horizontal - 99") << 100 << QQuickListView::Horizontal << QPointF(0.95, 0);
+}
+
+void tst_QQuickAccessible::listViewSetPositionTest()
+{
+    auto clearEvents = qScopeGuard([] { QTestAccessibility::clearEvents(); });
+
+    QFETCH(int, rowCount);
+    QFETCH(QQuickListView::Orientation, orientation);
+    QFETCH(QPointF, position);
+
+    QScopedPointer<QQuickView> window(createView());
+    window->rootContext()->setContextProperty("listModel", rowCount);
+    window->setSource(testFileUrl("listview.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listView = qobject_cast<QQuickListView *>(window->rootObject());
+    QVERIFY(listView);
+
+    auto *a11yIface = QAccessible::queryAccessibleInterface(listView);
+    auto *a11yListView = dynamic_cast<QAccessibleQuickListView *>(a11yIface);
+    QVERIFY(a11yListView);
+
+    listView->setOrientation(orientation);
+
+    a11yListView->setPosition(position);
+    QCOMPARE(a11yListView->position(), position);
 }
 
 QTEST_MAIN(tst_QQuickAccessible)
