@@ -55,13 +55,21 @@ public:
     }
 
     void reset();
-    void stashExternalState(const std::vector<CompositeLevel> &internalUnits);
+    void stashExternalState(
+            const std::vector<CompositeLevel> &internalUnits,
+            QDuplicateTracker<QObject *> *seenChildren);
+    void refreshObjects();
     void restoreExternalState();
 
     BindingPatchContext *childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                      const QV4::CompiledData::Binding *binding);
+                                      const QV4::CompiledData::Binding *binding,
+                                      QDuplicateTracker<QObject *> *seenChildren);
+    BindingPatchContext *childContext(const QString &name, QObject *object,
+                                      const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                      int objectIndex, QDuplicateTracker<QObject *> *seenChildren);
     BindingPatchContext *attachedContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                         const QV4::CompiledData::Binding *binding);
+                                         const QV4::CompiledData::Binding *binding,
+                                         QDuplicateTracker<QObject *> *seenChildren);
 
 private:
     struct StoredBinding
@@ -83,7 +91,8 @@ private:
     };
 
     void recordBindingValues(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                             int cuIndex, QHash<QString, QVariant> *constantValues = nullptr);
+                             int cuIndex, QHash<QString, QVariant> *constantValues,
+                             QDuplicateTracker<QObject *> *seenChildren);
     void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
     void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex);

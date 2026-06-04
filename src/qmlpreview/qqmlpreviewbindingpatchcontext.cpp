@@ -87,7 +87,7 @@ isExternalBinding(const QQmlAnyBinding &binding,
 
 void BindingPatchContext::recordBindingValues(
         const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex,
-        QHash<QString, QVariant> *constantValues)
+        QHash<QString, QVariant> *constantValues, QDuplicateTracker<QObject *> *seenChildren)
 {
     Q_ASSERT(constantValues);
 
@@ -108,10 +108,10 @@ void BindingPatchContext::recordBindingValues(
 
         switch (binding->type()) {
         case QV4::CompiledData::Binding::Type_AttachedProperty:
-            attachedContext(unit, binding);
+            attachedContext(unit, binding, seenChildren);
             continue;
         case QV4::CompiledData::Binding::Type_GroupProperty:
-            childContext(unit, binding);
+            childContext(unit, binding, seenChildren);
             continue;
         default:
             break;
@@ -155,33 +155,54 @@ void BindingPatchContext::recordBindingValues(
     }
 }
 
-void BindingPatchContext::stashExternalState(
-        const std::vector<CompositeLevel> &internalUnits)
+void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &internalUnits,
+                                             QDuplicateTracker<QObject *> *seenChildren)
 {
     // Determine which properties are assigned by the CU and their constant values
     QHash<QString, QVariant> constantValues;
-    recordBindingValues(unit, objectIndex, &constantValues);
+    recordBindingValues(unit, objectIndex, &constantValues, seenChildren);
 
     if (prefix.isEmpty() && QQmlData::get(m_object)->hasVMEMetaObject) {
         for (QQmlVMEMetaObject *vmeMeta =
                      static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(m_object)->metaObject);
              vmeMeta; vmeMeta = vmeMeta->parentVMEMetaObject()) {
             if (auto cu = vmeMeta->compilationUnit())
-                recordBindingValues(cu, vmeMeta->qmlObjectId(), &constantValues);
+                recordBindingValues(cu, vmeMeta->qmlObjectId(), &constantValues, seenChildren);
         }
     }
 
     // Iterate all properties. For those in the CU's binding table, check if the current state
     // differs from what the CU set (indicating an external override to preserve). For the rest,
     // check for external bindings installed by other components.
+    // Additionally, for QObject* properties pointing to QML-created children, register them
+    // as child contexts so their external signal handlers are stashed recursively at the end.
     const QMetaObject *mo = m_object->metaObject();
     for (int i = 0, count = mo->propertyCount(); i < count; ++i) {
         const QMetaProperty metaProp = mo->property(i);
         const QString propName = QString::fromUtf8(metaProp.name());
 
         const QQmlProperty qProp(m_object, propName);
-        if (!qProp.isValid() || !qProp.isWritable())
+        if (!qProp.isValid())
             continue;
+
+        // Discover QML-created child objects accessible via QObject* properties.
+        // Objects without a CU (like lazily-created grouped property objects) survive
+        // rebuilds unchanged and don't need stashing.
+        if (qProp.propertyMetaType().flags().testFlag(QMetaType::PointerToQObject)) {
+            if (QObject *child = qProp.read().value<QObject *>()) {
+                if (QQmlData *childDdata = QQmlData::get(child)) {
+                    if (const auto &childCU = childDdata->compilationUnit; childCU
+                        && std::find_if(internalUnits.begin(), internalUnits.end(),
+                                        [&](const CompositeLevel &level) {
+                                            return level.newCu == childCU || level.oldCu == childCU;
+                                        })
+                                != internalUnits.end()) {
+                        childContext(propName, child, childCU, childDdata->cuObjectIndex,
+                                     seenChildren);
+                    }
+                }
+            }
+        }
 
         const auto it = constantValues.constFind(propName);
         if (it == constantValues.cend()) {
@@ -245,6 +266,8 @@ void BindingPatchContext::stashExternalState(
     // Stash external signal handlers connected to this object's signals.
     // A handler is "internal" only if its function will be recreated during repopulation
     // (i.e., it's a signal handler binding at one of the specific object indices being rebuilt).
+    // Only QQmlBoundSignal endpoints are stashed — other notifier endpoints (e.g. alias
+    // tracking) are embedded in VME data arrays and cannot be safely owned or relocated.
     if (QQmlData::NotifyList *list = QQmlData::get(m_object)->notifyList.loadRelaxed()) {
         for (quint16 i = 0, end = list->notifiesSize; i < end; ++i) {
             for (QQmlNotifierEndpoint *ep = list->notifies[i]; ep;) {
@@ -284,7 +307,28 @@ void BindingPatchContext::stashExternalState(
     // Recurse into child contexts (group properties)
     for (auto &[name, child] : m_children) {
         if (child)
-            child->stashExternalState(internalUnits);
+            child->stashExternalState(internalUnits, seenChildren);
+    }
+}
+
+void BindingPatchContext::refreshObjects()
+{
+    // After a rebuild, child objects (accessed via grouped properties) may have
+    // been replaced. Re-fetch QObject pointers from the parent's properties so
+    // that restoreExternalState() reconnects to the new objects.
+    for (auto &[name, child] : m_children) {
+        if (!child)
+            continue;
+
+        // Children with a non-empty prefix share m_object with their parent
+        // (value-type group properties). They don't need refreshing.
+        if (!child->prefix.isEmpty())
+            continue;
+
+        if (QObject *newObj = m_object->property(name.toUtf8()).value<QObject *>())
+            child->m_object = newObj;
+
+        child->refreshObjects();
     }
 }
 
@@ -295,8 +339,19 @@ void BindingPatchContext::restoreExternalState()
         if (!stored.binding)
             continue;
         QQmlProperty qProp(m_object, stored.propertyName);
-        if (qProp.isValid())
-            stored.binding.installOn(qProp);
+        if (!qProp.isValid())
+            continue;
+
+        // After a rebuild, child objects may have been replaced (refreshObjects).
+        // The stashed binding's targetObject still references the old object.
+        // Update it to the new object before installing, otherwise installOn()
+        // asserts that targetObject() == target.object().
+        if (auto *abstractBinding = stored.binding.asAbstractBinding()) {
+            if (abstractBinding->targetObject() != qProp.object())
+                abstractBinding->setTarget(qProp);
+        }
+
+        stored.binding.installOn(qProp);
     }
     m_storedBindings.clear();
 
@@ -342,7 +397,8 @@ void BindingPatchContext::restoreExternalState()
 
 BindingPatchContext *
 BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                  const QV4::CompiledData::Binding *binding)
+                                  const QV4::CompiledData::Binding *binding,
+                                  QDuplicateTracker<QObject *> *seenChildren)
 {
     const QString name = unit->stringAt(binding->propertyNameIndex);
 
@@ -351,7 +407,12 @@ BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilatio
     if (size == m_children.size())
         return child.get();
 
+    if (!seenChildren)
+        return nullptr;
+
     if (QObject *groupObject = m_object->property(name.toUtf8()).value<QObject *>()) {
+        if (seenChildren->hasSeen(groupObject))
+            return nullptr;
         child = std::make_unique<BindingPatchContext>(groupObject, unit,
                                                       binding->value.objectIndex);
     } else {
@@ -362,8 +423,28 @@ BindingPatchContext::childContext(const QQmlRefPointer<QV4::ExecutableCompilatio
 }
 
 BindingPatchContext *
+BindingPatchContext::childContext(const QString &name, QObject *object,
+                                  const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                  int objectIndex, QDuplicateTracker<QObject *> *seenChildren)
+{
+    const size_t size = m_children.size();
+    std::unique_ptr<BindingPatchContext> &child = m_children[name];
+    if (size == m_children.size()) {
+        Q_ASSERT(!child || child->m_object == object);
+        return child.get();
+    }
+
+    if (!seenChildren || seenChildren->hasSeen(object))
+        return nullptr;
+
+    child = std::make_unique<BindingPatchContext>(object, unit, objectIndex);
+    return child.get();
+}
+
+BindingPatchContext *
 BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
-                                     const QV4::CompiledData::Binding *binding)
+                                     const QV4::CompiledData::Binding *binding,
+                                     QDuplicateTracker<QObject *> *seenChildren)
 {
     const QString name = unit->stringAt(binding->propertyNameIndex);
 
@@ -372,14 +453,20 @@ BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompila
     if (size == m_children.size())
         return child.get();
 
+    if (!seenChildren)
+        return nullptr;
+
     QV4::ResolvedTypeReference *typeRef = unit->resolvedType(binding->propertyNameIndex);
     Q_ASSERT(typeRef);
     QQmlAttachedPropertiesFunc func =
             typeRef->type().attachedPropertiesFunction(unit->engine->typeLoader());
     Q_ASSERT(func);
 
-    if (QObject *attached = QQmlData::get(m_object)->attachedProperties()->value(func))
+    if (QObject *attached = QQmlData::get(m_object)->attachedProperties()->value(func)) {
+        if (seenChildren->hasSeen(attached))
+            return nullptr;
         child = std::make_unique<BindingPatchContext>(attached, unit, binding->value.objectIndex);
+    }
     return child.get();
 }
 
@@ -447,7 +534,7 @@ void BindingPatchContext::resetBinding(
             return;
         }
     } else if (flags.testFlag(QMetaType::PointerToQObject) && binding->isGroupProperty()) {
-        if (BindingPatchContext *child = childContext(oldUnit, binding))
+        if (BindingPatchContext *child = childContext(oldUnit, binding, nullptr))
             child->resetBindings(oldUnit, binding->value.objectIndex);
         return;
     }
@@ -476,7 +563,7 @@ void BindingPatchContext::resetBindings(
             if (!QQmlData::get(m_object)->hasExtendedData())
                 continue;
 
-            if (BindingPatchContext *attached = attachedContext(oldUnit, binding))
+            if (BindingPatchContext *attached = attachedContext(oldUnit, binding, nullptr))
                 attached->resetBindings(oldUnit, binding->value.objectIndex);
 
             continue;

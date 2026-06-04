@@ -281,7 +281,8 @@ static void rebuildObject(QObject *object, int cuIndex,
         internalUnits.push_back(level);
 
     BindingPatchContext patchCtx(object, ddata->compilationUnit, ddata->cuObjectIndex);
-    patchCtx.stashExternalState(internalUnits);
+    QDuplicateTracker<QObject *> seenChildren;
+    patchCtx.stashExternalState(internalUnits, &seenChildren);
     patchCtx.reset();
 
     QV4::ExecutionEngine *v4 = newUnit->engine;
@@ -370,7 +371,9 @@ static void rebuildObject(QObject *object, int cuIndex,
         QQmlInstantiationInterrupt interrupt;
         creator.finalize(interrupt);
 
-        // Restore externally set bindings and values that were stashed before reset
+        // Restore externally set bindings and values that were stashed before reset.
+        // First refresh child object pointers — they may have been replaced during rebuild.
+        patchCtx.refreshObjects();
         patchCtx.restoreExternalState();
     }
 }
