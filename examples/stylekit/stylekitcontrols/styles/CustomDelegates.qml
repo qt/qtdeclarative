@@ -270,7 +270,6 @@ Style {
         indicator {
             color: Qt.darker("#8e848a", 1.6)
         }
-        hovered.background.color: Qt.lighter("#8e848a", 1.2)
     }
 
     button {
@@ -282,6 +281,7 @@ Style {
                 overlayScale: 0.5
             }
         }
+        hovered.background.color: Qt.lighter("#8e848a", 1.2)
         hovered.background.data: OverlayData {
             overlayScale: 1.8
         }
@@ -304,6 +304,14 @@ Style {
             margins: 4
             delegate: WavingQt {}
         }
+    }
+
+    menuBarItem {
+        hovered.background.color: Qt.lighter("#8e848a", 1.2)
+    }
+
+    menuItem {
+        hovered.background.color: Qt.lighter("#8e848a", 1.2)
     }
 
     radioButton {
@@ -341,5 +349,4 @@ Style {
         spacing: 50
         hovered.background.color: "#8e848a"
     }
-
 }

@@ -382,6 +382,47 @@ Style {
         hovered.background.color: myTheme.accentBackground.normal
     }
 
+    menu {
+        padding: 2
+        background.implicitWidth: 100
+    }
+
+    menuBar {
+        padding: 2
+    }
+
+    menuBarItem {
+        padding: 2
+        background.implicitWidth: 100
+        hovered.background.color: myTheme.accentBackground.normal
+    }
+
+    menuItem {
+        padding: 2
+        hovered.background.color: myTheme.accentBackground.normal
+    }
+
+    menuSeparator {
+        padding: 4
+
+        background {
+            implicitWidth: 100
+            implicitHeight: 0
+            color: "transparent"
+            border.width: 0
+        }
+
+        indicator {
+            implicitHeight: 1
+            implicitWidth: 100
+            color: myTheme.neutralStroke.normal
+            border.width: 0
+
+            foreground.margins: 0
+            foreground.visible: false
+        }
+    }
+
     // THEMES
 
     light: MyTheme {

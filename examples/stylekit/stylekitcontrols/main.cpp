@@ -7,6 +7,7 @@
 
 int main(int argc, char *argv[])
 {
+    QGuiApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
     engine.loadFromModule("StyleKitControlsExampleModule", "Main");
