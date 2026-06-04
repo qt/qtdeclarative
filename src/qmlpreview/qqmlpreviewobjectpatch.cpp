@@ -283,7 +283,15 @@ static void rebuildObject(QObject *object, int cuIndex,
     BindingPatchContext patchCtx(object, ddata->compilationUnit, ddata->cuObjectIndex);
     QDuplicateTracker<QObject *> seenChildren;
     patchCtx.stashExternalState(internalUnits, &seenChildren);
-    patchCtx.reset();
+    // Collect the CUs whose children will be recreated by repopulateBindings.
+    // This is oldUnit (being replaced) and the composite-level CUs.
+    // NOT newUnit (already-rebuilt objects pointing here must be preserved)
+    // and NOT instanceLevel.cu (its repopulateBindings only sets bindings, not children).
+    std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> unitsToUnparent;
+    unitsToUnparent.push_back(oldUnit);
+    for (const auto &level : levels)
+        unitsToUnparent.push_back(level.oldCu);
+    patchCtx.reset(unitsToUnparent);
 
     QV4::ExecutionEngine *v4 = newUnit->engine;
     Q_ASSERT(v4);
@@ -436,6 +444,14 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
 
     if (rebuildOuter)
         rebuild = std::move(componentRoots);
+
+    // Sort by descending cuIndex so that leaf objects (children) are rebuilt
+    // before their parents. This prevents reset() from unparenting objects
+    // that are about to be rebuilt themselves.
+    std::sort(rebuild.begin(), rebuild.end(),
+              [](const ObjectAndIndex &a, const ObjectAndIndex &b) {
+                  return a.index > b.index;
+              });
 
     QQmlRefPointer<QQmlContextData> rootContext;
     for (const auto &[object, cuIndex] : rebuild) {

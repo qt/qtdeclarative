@@ -196,6 +196,16 @@ private slots:
     //   ASSERT: "abstractBinding->targetObject() == target.object()"
     void externalBindingOnSubObjectTargetMismatch();
 
+    // Coffee demo regression: signal handler on sub-object is lost when
+    // the signal was never fired before rebuild (endpoint stays in todo queue).
+    void externalSignalHandlerOnSubObjectUnfired();
+
+    // Coffee demo regression: after rebuilding a composite type, old visual
+    // children remain in the scene (parentItem not cleared). The bug was that
+    // QMetaProperty::write() with QVariant::fromValue<QObject*>(nullptr) fails
+    // silently when the property's metatype is QQuickItem* (type mismatch).
+    void compositeRebuildNoVisualChildDuplication();
+
 private:
     QQmlEngine engine;
 };
@@ -1605,7 +1615,9 @@ void tst_QQmlPreviewObjectPatch::inPlaceUpdateNoObjectDuplication()
     //    QQuickAnchors) may appear as additional children — that's expected.
     QVERIFY(object->children().size() >= childCountBefore);
 
-    // 3. All objects now reference the new compilation unit.
+    // 3. All live objects now reference the new compilation unit.
+    //    Objects that were retired during reset() (replaced by repopulateBindings)
+    //    keep their compilationUnit for GC purposes and get remapped.
     for (QObject *obj : objects) {
         QQmlData *ddata = QQmlData::get(obj);
         QVERIFY(ddata);
@@ -3108,6 +3120,109 @@ void tst_QQmlPreviewObjectPatch::externalBindingOnSubObjectTargetMismatch()
     // Verify the binding is still live by changing multiplier again.
     wrapper->setProperty("multiplier", 7);
     QCOMPARE(button->property("interval").toInt(), 1400);
+}
+
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnSubObjectUnfired()
+{
+    // Reproduces the coffee demo bug where the button was never clicked before
+    // the file edit. The signal handler's QQmlNotifierEndpoint remains in the
+    // NotifyList's 'todo' queue because layout() was never triggered for the
+    // 'triggered' signal index. The stash code must call layout() to find it.
+
+    QQmlEngine localEngine;
+    localEngine.addImportPath(dataDirectory());
+    QQmlComponent wrapperComp(&localEngine, testFileUrl("SubObjectSignalUnfiredWrapper.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    QObject *target = wrapper->property("target").value<QObject *>();
+    QVERIFY(target);
+    QObject *button = target->property("button").value<QObject *>();
+    QVERIFY(button);
+
+    // Do NOT fire the signal before rebuild (this is the key difference from
+    // externalSignalHandlerOnSubObject). The handler stays in the todo queue.
+    QCOMPARE(wrapper->property("callCount").toInt(), 0);
+
+    // Rebuild the form CU (simulates editing a text label in the form).
+    QQmlComponent oldFormComp(&localEngine, testFileUrl("SubObjectSignalUnfiredFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newFormComp(&localEngine, testFileUrl("SubObjectSignalUnfiredFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // Re-fetch button (it was replaced during rebuild).
+    button = target->property("button").value<QObject *>();
+    QVERIFY(button);
+
+    // Fire the signal on the new button AFTER rebuild.
+    QVERIFY(QMetaObject::invokeMethod(button, "triggered"));
+
+    // The external signal handler must survive the rebuild.
+    QCOMPARE(wrapper->property("callCount").toInt(), 1);
+}
+
+// Verifies that after rebuilding a composite type's CU, old visual children
+// are properly removed from the scene. Without the fix for QMetaProperty::write
+// (using the property's own metatype instead of QObject*), old children remained
+// as visual children because setParentItem(nullptr) was never called.
+void tst_QQmlPreviewObjectPatch::compositeRebuildNoVisualChildDuplication()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("MultipleCompositeInstancesOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Get the root item and find the composite children.
+    auto *rootItem = qobject_cast<QQuickItem *>(object.get());
+    QVERIFY(rootItem);
+
+    // Find composite instances (CompositeBaseWithAliases) by checking for "header" property.
+    QList<QQuickItem *> composites;
+    for (QQuickItem *child : rootItem->childItems()) {
+        if (child->property("header").isValid())
+            composites.append(child);
+    }
+    QCOMPARE(composites.size(), 2);
+
+    // Each composite has 2 visual children (headerText + contentArea).
+    for (QQuickItem *composite : composites)
+        QCOMPARE(composite->childItems().size(), 2);
+
+    // Now rebuild: apply the "new" version of the CU (same structure, different marker value).
+    QQmlComponent newComp(&engine, testFileUrl("MultipleCompositeInstancesNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // After rebuild, the marker should be updated.
+    QCOMPARE(object->property("marker").toInt(), 2);
+
+    // Re-find the composite instances (they should still be visual children of root).
+    composites.clear();
+    for (QQuickItem *child : rootItem->childItems()) {
+        if (child->property("header").isValid())
+            composites.append(child);
+    }
+    QCOMPARE(composites.size(), 2);
+
+    // CRITICAL: Each composite must STILL have exactly 2 visual children,
+    // not 4 (which would indicate old children were not removed).
+    for (QQuickItem *composite : composites)
+        QCOMPARE(composite->childItems().size(), 2);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
