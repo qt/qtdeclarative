@@ -246,6 +246,10 @@ void QQuickTextPrivate::updateLayout()
                 tmp.replace(QLatin1Char('\n'), QChar::LineSeparator);
                 layout.setText(tmp);
             }
+            // Detect direction from the layout text (already stripped of
+            // HTML markup for StyledText, identical to source for plain).
+            rightToLeftText = layout.text().isRightToLeft();
+            determineHorizontalAlignment();
             textHasChanged = false;
         }
     } else if (extra.isAllocated() && extra->lineHeightValid) {
@@ -1404,6 +1408,7 @@ void QQuickTextPrivate::updateDocumentText()
         extra->doc->setPlainText(text);
 #endif
     rightToLeftText = extra->doc->toPlainText().isRightToLeft();
+    determineHorizontalAlignment();
 }
 
 /*!
@@ -1845,13 +1850,10 @@ void QQuickText::setText(const QString &n)
     d->styledText = d->format == StyledText || (d->format == AutoText && Qt::mightBeRichText(n));
     d->text = n;
     if (isComponentComplete()) {
-        if (d->richText) {
+        if (d->richText)
             d->updateDocumentText();
-        } else {
+        else
             d->clearFormats();
-            d->rightToLeftText = d->text.isRightToLeft();
-        }
-        d->determineHorizontalAlignment();
     }
     d->textHasChanged = true;
     d->implicitWidthValid = false;
@@ -2341,10 +2343,8 @@ void QQuickText::setTextFormat(TextFormat format)
             d->updateDocumentText();
         } else {
             d->clearFormats();
-            d->rightToLeftText = d->text.isRightToLeft();
             d->textHasChanged = true;
         }
-        d->determineHorizontalAlignment();
     }
     d->updateLayout();
     setAcceptHoverEvents(d->richText || d->styledText);
@@ -2910,12 +2910,8 @@ void QQuickText::componentComplete()
 {
     Q_D(QQuickText);
     if (d->updateOnComponentComplete) {
-        if (d->richText) {
+        if (d->richText)
             d->updateDocumentText();
-        } else {
-            d->rightToLeftText = d->text.isRightToLeft();
-        }
-        d->determineHorizontalAlignment();
     }
     QQuickItem::componentComplete();
     if (d->updateOnComponentComplete)
