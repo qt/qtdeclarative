@@ -138,6 +138,45 @@ Style {
         text.bold: true
     }
 
+    menu {
+        background.implicitWidth: 120
+    }
+
+    menuBar {
+        padding: 1
+        background.implicitHeight: 30
+    }
+
+    menuBarItem {
+        background {
+            implicitHeight: 30
+            implicitWidth: 30
+        }
+    }
+
+    menuItem {
+        background.implicitHeight: 30
+    }
+
+    menuSeparator {
+        padding: 0
+
+        background {
+            implicitWidth: 120
+            implicitHeight: 1
+            border.width: 0
+        }
+
+        indicator {
+            implicitHeight: 1
+            implicitWidth: 120
+            border.width: 0
+
+            foreground.margins: 0
+            foreground.visible: false
+        }
+    }
+
     radioButton {
         indicator {
             foreground {
@@ -352,11 +391,6 @@ Style {
             }
 
             hovered {
-                background {
-                    color: palette.accent
-                    border.color: "white"
-                    shadow.color: "white"
-                }
                 handle {
                     shadow.color: "white"
                     shadow.scale: 1.6
@@ -378,12 +412,35 @@ Style {
                 shadow.scale: 1.05
             }
             hovered.background {
-                shadow.scale: 1.4
                 color: palette.accent
+                border.color: "white"
+                shadow.color: "white"
+                shadow.scale: 1.4
             }
             checked {
                 background.color: palette.accent
             }
+        }
+
+        comboBox {
+            hovered.background {
+                color: palette.accent
+                border.color: "white"
+                shadow.color: "white"
+                shadow.scale: 1.4
+            }
+        }
+
+        itemDelegate {
+            hovered.background.color: palette.accent
+        }
+
+        menuBarItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuItem {
+            hovered.background.color: palette.accent
         }
 
         pane {
@@ -482,14 +539,6 @@ Style {
             }
 
             hovered {
-                background {
-                    border.color: "white"
-                    color: palette.accent
-                    shadow.color: "white"
-                    shadow.scale: 1.1
-                    shadow.blur: 20
-                }
-
                 handle {
                     shadow.color: "white"
                 }
@@ -516,6 +565,40 @@ Style {
                     color: "#bbbbbb"
                 }
             }
+
+            hovered {
+                background {
+                    border.color: "white"
+                    color: palette.accent
+                    shadow.color: "white"
+                    shadow.scale: 1.1
+                    shadow.blur: 20
+                }
+            }
+        }
+
+        comboBox {
+            hovered {
+                background {
+                    border.color: "white"
+                    color: palette.accent
+                    shadow.color: "white"
+                    shadow.scale: 1.1
+                    shadow.blur: 20
+                }
+            }
+        }
+
+        itemDelegate {
+            hovered.background.color: palette.accent
+        }
+
+        menuBarItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuItem {
+            hovered.background.color: palette.accent
         }
 
         textInput {

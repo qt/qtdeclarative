@@ -22,7 +22,6 @@ Style {
         hovered {
             // Here we override some of the properties for the 'hovered' state. The ones
             // we don't set here will fall back to be read from the 'normal' state.
-            background.color: palette.accent
             handle.color: palette.accent.darker(1.2)
         }
 
@@ -75,6 +74,7 @@ Style {
                 verticalOffset: 2
             }
         }
+        hovered.background.color: palette.accent
     }
 
     itemDelegate {
@@ -86,6 +86,22 @@ Style {
             background.color: palette.accent
             text.color: "white"
         }
+    }
+
+    menuBar {
+        padding: 0
+    }
+
+    menuBarItem {
+        hovered.background.color: palette.accent
+    }
+
+    menuItem {
+        hovered.background.color: palette.accent
+    }
+
+    menuSeparator {
+        indicator.color: palette.accent
     }
 
     popup {

@@ -129,6 +129,46 @@ Style {
         }
     }
 
+    menu {
+        background.implicitWidth: 200
+    }
+
+    menuBar {
+        padding: 1
+        background.implicitHeight: 20
+    }
+
+    menuBarItem {
+        background {
+            implicitHeight: 20
+            implicitWidth: 20
+            border.width: 0
+        }
+    }
+
+    menuItem {
+        background {
+            implicitHeight: 20
+            border.width: 0
+        }
+    }
+
+    menuSeparator {
+        padding: 5
+
+        background {
+            implicitWidth: 188
+            implicitHeight: 1
+            border.width: 0
+        }
+        indicator {
+            implicitWidth: 188
+            implicitHeight: 1
+            border.width: 0
+            foreground.visible: false
+        }
+    }
+
     radioButton {
         indicator {
             radius: width / 2
@@ -268,6 +308,19 @@ Style {
             pressed.background.color: Qt.lighter("lightgray", 1.1)
         }
 
+        menuBarItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuSeparator {
+            background.color: "transparent"
+            indicator.color: Qt.lighter("darkgray", 1.1)
+        }
+
         scrollBar {
             indicator {
                 foreground.color: Qt.darker("lightgray", 1.05)
@@ -342,7 +395,6 @@ Style {
             }
         }
 
-
         abstractButton {
             background.delegate: BackgroundDelegate {}
 
@@ -408,6 +460,19 @@ Style {
                 overlayColor: "#1e1e1e"
             }
             indicator.color: "transparent"
+        }
+
+        menuBarItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuItem {
+            hovered.background.color: palette.accent
+        }
+
+        menuSeparator {
+            background.color: "transparent"
+            indicator.color: Qt.lighter("#2E2B2B", 1.1)
         }
 
         radioButton {
