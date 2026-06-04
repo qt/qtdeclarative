@@ -16,7 +16,7 @@
 //
 
 #include <QObject>
-#include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickgenerator_p.h>
 
 #define QQuickVectorImageFormatsPluginFactory_iid "org.qt-project.Qt.QVectorImageFormatsPluginFactory"
 
@@ -26,7 +26,7 @@ class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickVectorImagePluginGenerator
 {
 public:
     virtual ~QQuickVectorImagePluginGenerator();
-    virtual bool generate(const QString &fileName, QQuickItemGenerator *generator) = 0;
+    virtual bool generate(const QString &fileName, QQuickGenerator *generator) = 0;
 };
 
 class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickVectorImagePlugin

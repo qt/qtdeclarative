@@ -81,10 +81,7 @@ public:
         return m_urlPrefix;
     }
 
-    void addExtraImport(const QString &import)
-    {
-        m_extraImports.append(import);
-    }
+    void addExtraImport(const QString &import) override { m_extraImports.append(import); }
 
     QStringList extraImports() const
     {

@@ -49,6 +49,7 @@ public:
     std::unique_ptr<QQmlContext> context;
     QQuickVectorImageAnimations *animations = nullptr;
     QQuickVectorImageIncubator *incubator = nullptr;
+    QQuickItem *pendingRootItem = nullptr;
 };
 
 QT_END_NAMESPACE

@@ -57,6 +57,8 @@ public:
     void setGeneratorFlags(QQuickVectorImageGenerator::GeneratorFlags flags);
     QQuickVectorImageGenerator::GeneratorFlags generatorFlags();
 
+    virtual void addExtraImport(const QString &import) { Q_UNUSED(import) }
+
     bool generate();
     QQuickVectorImageGenerator::ErrorState errorState() const { return m_errorState; }
 

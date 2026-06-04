@@ -15,24 +15,43 @@
 // We mean it.
 //
 
-#include "qquickqmlgenerator_p.h"
+#include "qquickgenerator_p.h"
 #include "qquicknodeinfo_p.h"
-
-#include <QStack>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickMatrix4x4;
-class QQuickAnimatedProperty;
-class QQmlContext;
-class QQmlIncubator;
+class QQuickItem;
 
-class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickQmlGenerator
+class Q_QUICKVECTORIMAGEGENERATOR_EXPORT QQuickItemGenerator : public QQuickGenerator
 {
 public:
-    QQuickItemGenerator(const QString fileName,
-                        QQuickVectorImageGenerator::GeneratorFlags flags);
-    ~QQuickItemGenerator();
+    QQuickItemGenerator(const QString &fileName, QQuickVectorImageGenerator::GeneratorFlags flags);
+    ~QQuickItemGenerator() override;
+
+    QQuickItem *takeRootItem();
+
+    QString generateNodeBase(const NodeInfo &info, const QString &idSuffix = QString{}) override;
+    bool generateDefsNode(const StructureNodeInfo &info) override;
+    void generateDefsInstantiationNode(const StructureNodeInfo &info) override;
+    void generateImageNode(const ImageNodeInfo &info) override;
+    void generatePath(const PathNodeInfo &info,
+                      const QRectF &overrideBoundingRect = QRectF{}) override;
+    void generateNode(const NodeInfo &info) override;
+    void generateTextNode(const TextNodeInfo &info) override;
+    void generateUseNode(const UseNodeInfo &info) override;
+    void generateFilterNode(const FilterNodeInfo &info) override;
+    bool generateStructureNode(const StructureNodeInfo &info) override;
+    bool generateRootNode(const StructureNodeInfo &info) override;
+    bool generateMaskNode(const MaskNodeInfo &info) override;
+    bool generateMarkerNode(const MarkerNodeInfo &info) override;
+    bool generatePatternNode(const PatternNodeInfo &info) override;
+    void outputShapePath(const PathNodeInfo &info, const QPainterPath *path,
+                         const QQuadPath *quadPath,
+                         QQuickVectorImageGenerator::PathSelector pathSelector,
+                         const QRectF &boundingRect) override;
+
+private:
+    QQuickItem *m_rootItem = nullptr;
 };
 
 QT_END_NAMESPACE

@@ -16,6 +16,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qstandardpaths.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -58,6 +59,13 @@ QQuickQmlGenerator::QQuickQmlGenerator(const QString fileName, QQuickVectorImage
 {
     m_result.open(QIODevice::ReadWrite);
     m_oldIndentLevels.push(0);
+
+    if (outFileName.isEmpty()) {
+        setRetainFilePaths(true);
+        setAssetFileDirectory(QStandardPaths::writableLocation(QStandardPaths::TempLocation));
+        setAssetFilePrefix(QStringLiteral("_qt_vectorimage_"));
+        setUrlPrefix(QStringLiteral("file:"));
+    }
 }
 
 QQuickQmlGenerator::~QQuickQmlGenerator()

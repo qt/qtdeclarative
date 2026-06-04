@@ -15,6 +15,12 @@
 
 QT_BEGIN_NAMESPACE
 
+static bool useQmlGenerator()
+{
+    static const bool val = !qEnvironmentVariableIsSet("QT_QUICKVECTORIMAGE_USE_ITEM_GENERATOR");
+    return val;
+}
+
 /*!
     \qmlmodule QtQuick.VectorImage
     \title Qt Quick Vector Image QML Types
@@ -83,16 +89,10 @@ void QQuickVectorImagePrivate::loadFile()
         incubator->deleteLater();
     }
 
-    QQmlIncubator::IncubationMode mode = asynchronous
-                                             ? QQmlIncubator::Asynchronous
-                                             : QQmlIncubator::Synchronous;
-
-    if (!context || context->engine() != qmlContext(q)->engine())
-        context.reset(new QQmlContext(qmlContext(q)->engine()));
-
-    incubator = new QQuickVectorImageIncubator(mode, context.get(), q);
-    QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::statusChanged);
-    QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q, &QQuickVectorImage::updateItem);
+    if (pendingRootItem != nullptr) {
+        delete pendingRootItem;
+        pendingRootItem = nullptr;
+    }
 
     QQuickVectorImageGenerator::GeneratorFlags flags;
     if (preferredRendererType == QQuickVectorImage::CurveRenderer)
@@ -104,16 +104,54 @@ void QQuickVectorImagePrivate::loadFile()
     if (asynchronous)
         flags.setFlag(QQuickVectorImageGenerator::AsynchronousLoading);
 
-    incubator->start(localFile, flags);
+    if (useQmlGenerator()) {
+        QQmlIncubator::IncubationMode mode =
+                asynchronous ? QQmlIncubator::Asynchronous : QQmlIncubator::Synchronous;
+
+        if (!context || context->engine() != qmlContext(q)->engine())
+            context.reset(new QQmlContext(qmlContext(q)->engine()));
+
+        incubator = new QQuickVectorImageIncubator(mode, context.get(), q);
+        QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
+                         &QQuickVectorImage::statusChanged);
+        QObject::connect(incubator, &QQuickVectorImageIncubator::statusUpdated, q,
+                         &QQuickVectorImage::updateItem);
+        incubator->start(localFile, flags);
+    } else {
+        QQuickItemGenerator gen(localFile, flags);
+        gen.generate();
+
+        if (gen.errorState() == QQuickVectorImageGenerator::NoError) {
+            pendingRootItem = gen.takeRootItem();
+        } else {
+            qCWarning(lcQuickVectorImage) << "QQuickItemGenerator: failed to generate" << localFile
+                                          << "(errorState:" << gen.errorState() << ")";
+        }
+        q->updateItem();
+        emit q->statusChanged();
+    }
 }
 
 void QQuickVectorImage::updateItem()
 {
     Q_D(QQuickVectorImage);
-    if (d->incubator == nullptr
-        || d->incubator->object() == nullptr
-        || !d->incubator->isReady()) {
-        return;
+
+    QQuickItem *item = nullptr;
+    if (d->incubator != nullptr) {
+        if (d->incubator->object() == nullptr || !d->incubator->isReady())
+            return;
+        item = qobject_cast<QQuickItem *>(d->incubator->object());
+        if (item == nullptr) {
+            qCWarning(lcQuickVectorImage)
+                    << "QQuickVectorImage::updateItem: Root item not a QQuickItem:"
+                    << d->incubator->errors();
+            return;
+        }
+    } else {
+        item = d->pendingRootItem;
+        d->pendingRootItem = nullptr;
+        if (item == nullptr)
+            return;
     }
 
     if (d->rootItem != nullptr)
@@ -122,13 +160,6 @@ void QQuickVectorImage::updateItem()
     d->rootItem = new QQuickItem(this);
     d->rootItem->setParentItem(this);
     auto emitter = qScopeGuard([&] { emit generatedItemChanged(); }); // emit at any function exit
-
-    QQuickItem *item = qobject_cast<QQuickItem *>(d->incubator->object());
-    if (item == nullptr) {
-        qCWarning(lcQuickVectorImage) << "QQuickItemGenerator::generateRootItem: Root item not a QQuickItem:"
-                                      << d->incubator->errors();
-        return;
-    }
 
     if (item->width() == 0 || item->height() == 0)
         return;
@@ -158,9 +189,11 @@ void QQuickVectorImage::updateItem()
         }
     }
 
-    d->incubator->disconnect(this);
-    d->incubator->deleteLater();
-    d->incubator = nullptr;
+    if (d->incubator) {
+        d->incubator->disconnect(this);
+        d->incubator->deleteLater();
+        d->incubator = nullptr;
+    }
 }
 
 /*!

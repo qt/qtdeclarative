@@ -19,7 +19,7 @@
 #include <QtQml/qqmlincubator.h>
 
 #include <QtQuickVectorImage/qtquickvectorimageexports.h>
-#include <QtQuickVectorImageGenerator/private/qquickitemgenerator_p.h>
+#include <QtQuickVectorImageGenerator/private/qquickqmlgenerator_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageplugin_p.h>
 #include <QtQuickVectorImageGenerator/private/qquickvectorimageglobal_p.h>
 
@@ -37,13 +37,10 @@ public:
     void createGenerator(const QString &fileName,
                          QQuickVectorImageGenerator::GeneratorFlags flags)
     {
-        m_generator.reset(new QQuickItemGenerator(fileName, flags));
+        m_generator.reset(new QQuickQmlGenerator(fileName, flags, QString{}));
     }
 
-    QQuickItemGenerator *generator() const
-    {
-        return m_generator.get();
-    }
+    QQuickQmlGenerator *generator() const { return m_generator.get(); }
 
     void addPluginGenerator(QQuickVectorImagePluginGenerator *pluginGenerator)
     {
@@ -57,8 +54,8 @@ Q_SIGNALS:
     void finished();
 
 private:
-    std::unique_ptr<QQuickItemGenerator> m_generator;
-    std::vector<std::unique_ptr<QQuickVectorImagePluginGenerator> > m_pluginGenerators;
+    std::unique_ptr<QQuickQmlGenerator> m_generator;
+    std::vector<std::unique_ptr<QQuickVectorImagePluginGenerator>> m_pluginGenerators;
 };
 
 class Q_QUICKVECTORIMAGE_EXPORT QQuickVectorImageIncubator : public QObject, public QQmlIncubator
