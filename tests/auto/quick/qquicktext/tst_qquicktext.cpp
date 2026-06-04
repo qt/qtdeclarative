@@ -190,6 +190,11 @@ private slots:
     void textObjectBaselineAlignment();
     void textObjectBaselineVsBottomAlignment();
 
+    void styledTextDirectionWithSpan_data();
+    void styledTextDirectionWithSpan();
+    void styledTextDirectionNoExtraSignal_data();
+    void styledTextDirectionNoExtraSignal();
+
 private:
     QStringList standard;
     QStringList richText;
@@ -5540,6 +5545,90 @@ void tst_qquicktext::clearTruncated()
     QVERIFY(text->truncated());
     text->setText("");
     QVERIFY(!text->truncated());
+}
+
+// QTBUG-147277: StyledText paragraph direction must be detected from the
+// actual text content, ignoring HTML tags like <span> or <b>.
+void tst_qquicktext::styledTextDirectionWithSpan_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QQuickText::HAlignment>("expectedAlignment");
+
+    QTest::newRow("RTL plain") << u"שלום עולם"_s << QQuickText::AlignRight;
+    QTest::newRow("RTL in <span>") << u"<span>שלום</span> עולם"_s << QQuickText::AlignRight;
+    QTest::newRow("RTL in <b>") << u"<b>שלום</b> עולם"_s << QQuickText::AlignRight;
+    QTest::newRow("RTL in nested tags") << u"<span><b>שלום</b></span> עולם"_s << QQuickText::AlignRight;
+    QTest::newRow("LTR in <span>") << u"<span>Hello</span> World"_s << QQuickText::AlignLeft;
+    QTest::newRow("LTR plain") << u"Hello World"_s << QQuickText::AlignLeft;
+}
+
+void tst_qquicktext::styledTextDirectionWithSpan()
+{
+    QFETCH(QString, text);
+    QFETCH(QQuickText::HAlignment, expectedAlignment);
+
+    QScopedPointer<QQuickText> textItem(new QQuickText);
+    textItem->setTextFormat(QQuickText::StyledText);
+    textItem->setText(text);
+    textItem->componentComplete();
+    QCOMPARE(textItem->effectiveHAlign(), expectedAlignment);
+}
+
+// Verify that effectiveHorizontalAlignmentChanged is emitted at most once
+// (no spurious emission with wrong value followed by correction).
+void tst_qquicktext::styledTextDirectionNoExtraSignal_data()
+{
+    QTest::addColumn<QQuickText::TextFormat>("format");
+    QTest::addColumn<QString>("initialText");
+    QTest::addColumn<QString>("newText");
+    QTest::addColumn<QQuickText::HAlignment>("expectedAlignment");
+    QTest::addColumn<int>("expectedSignalCount");
+
+    // Changing from plain RTL to styled RTL must emit exactly 0 signals
+    // (alignment stays Right throughout).
+    QTest::newRow("StyledText, RTL plain -> RTL in <span>")
+        << QQuickText::StyledText << u"שלום עולם"_s << u"<span>שלום</span> עולם"_s
+        << QQuickText::AlignRight << 0;
+    // Changing from LTR to styled RTL must emit exactly 1 signal.
+    QTest::newRow("StyledText, LTR -> RTL in <span>")
+        << QQuickText::StyledText << u"Hello World"_s << u"<span>שלום</span> עולם"_s
+        << QQuickText::AlignRight << 1;
+    // Changing from RTL to styled LTR must emit exactly 1 signal.
+    QTest::newRow("StyledText, RTL -> LTR in <span>")
+        << QQuickText::StyledText << u"שלום עולם"_s << u"<span>Hello</span> World"_s
+        << QQuickText::AlignLeft << 1;
+    // Same direction, no signal.
+    QTest::newRow("StyledText, LTR -> LTR in <span>")
+        << QQuickText::StyledText << u"Hello World"_s << u"<span>Hello</span> World"_s
+        << QQuickText::AlignLeft << 0;
+    // Plain text RTL -> RTL (no tags), no signal.
+    QTest::newRow("PlainText, RTL -> RTL")
+        << QQuickText::PlainText << u"שלום"_s << u"שלום עולם"_s
+        << QQuickText::AlignRight << 0;
+    // RichText same scenario.
+    QTest::newRow("RichText, RTL plain -> RTL in <span>")
+        << QQuickText::RichText << u"שלום עולם"_s << u"<span>שלום</span> עולם"_s
+        << QQuickText::AlignRight << 0;
+}
+
+void tst_qquicktext::styledTextDirectionNoExtraSignal()
+{
+    QFETCH(QQuickText::TextFormat, format);
+    QFETCH(QString, initialText);
+    QFETCH(QString, newText);
+    QFETCH(QQuickText::HAlignment, expectedAlignment);
+    QFETCH(int, expectedSignalCount);
+
+    QScopedPointer<QQuickText> textItem(new QQuickText);
+    textItem->setTextFormat(format);
+    textItem->setWidth(200);
+    textItem->setText(initialText);
+
+    QSignalSpy spy(textItem.data(), &QQuickText::effectiveHorizontalAlignmentChanged);
+    textItem->setText(newText);
+
+    QCOMPARE(textItem->effectiveHAlign(), expectedAlignment);
+    QCOMPARE(spy.count(), expectedSignalCount);
 }
 
 QT_END_NAMESPACE
