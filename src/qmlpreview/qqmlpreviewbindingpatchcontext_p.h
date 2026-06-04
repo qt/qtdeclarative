@@ -54,7 +54,7 @@ public:
     {
     }
 
-    void reset();
+    void reset(const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent);
     void stashExternalState(
             const std::vector<CompositeLevel> &internalUnits,
             QDuplicateTracker<QObject *> *seenChildren);
@@ -96,6 +96,8 @@ private:
     void resetBinding(const QV4::CompiledData::Binding *binding, const QString &name,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
     void resetBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int cuIndex);
+    static void retireObject(QObject *object);
+    static void clearBindingsRecursive(QObject *object);
 
     QObject *m_object = nullptr;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> unit;

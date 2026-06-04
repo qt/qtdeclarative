@@ -4,20 +4,22 @@
 
 #include "qqmlpreviewbindingpatchcontext_p.h"
 
-#include <QtCore/qset.h>
-
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlnotifier_p.h>
 #include <private/qqmlobjectcreator_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlproperty_p.h>
+#include <private/qqmlpropertybinding_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4generatorobject_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4resolvedtypereference_p.h>
+
+#include <QtCore/qqueue.h>
+#include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,19 +63,25 @@ isExternalBinding(const QQmlAnyBinding &binding,
     if (!binding)
         return false;
 
-    // QPropertyBindingPrivate-based bindings are external.
-    if (!binding.isAbstractPropertyBinding())
-        return true;
+    const QV4::Function *f = nullptr;
 
-    const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding();
+    if (const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
+        // Other kinds of abstract bindings (e.g. ValueTypeProxyBinding) are external
+        if (abstractBinding->kind() == QQmlAbstractBinding::QmlBinding)
+            f = static_cast<const QQmlBinding *>(abstractBinding)->function();
+    } else if (const QPropertyBindingPrivate *priv =
+                       QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
+               priv && priv->hasCustomVTable()) {
+        // QPropertyBindingPrivate-based binding. Check if it's a QQmlPropertyBinding
+        // with a JS expression we can trace back to a CU.
+        if (const QQmlPropertyBindingJS *jsExpr =
+                    static_cast<const QQmlPropertyBinding *>(priv)->jsExpression()) {
+            f = jsExpr->function();
+        }
+    }
 
-    // Other kinds of abstract bindings (e.g. ValueTypeProxyBinding) are external
-    if (abstractBinding->kind() != QQmlAbstractBinding::QmlBinding)
-        return true;
-
-    const QV4::Function *f = static_cast<const QQmlBinding *>(abstractBinding)->function();
     if (!f)
-        return false;
+        return true;
 
     for (const auto &internalUnit : internalUnits) {
         if (functionBelongsToObject(f, internalUnit.oldCu, internalUnit.objectIndex)
@@ -269,6 +277,12 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
     // Only QQmlBoundSignal endpoints are stashed — other notifier endpoints (e.g. alias
     // tracking) are embedded in VME data arrays and cannot be safely owned or relocated.
     if (QQmlNotifyList *list = QQmlData::get(m_object)->notifyList.loadRelaxed()) {
+        // Ensure all endpoints are moved from the pending 'todo' list into the
+        // laid-out 'notifies' array. Endpoints remain in 'todo' until a signal
+        // with a high enough index is actually delivered, so without this call
+        // we'd miss handlers for signals that were never fired (e.g. clicked()).
+        if (list->todo)
+            list->layout();
         for (quint16 i = 0, end = list->notifiesSize; i < end; ++i) {
             for (QQmlNotifierEndpoint *ep = list->notifies[i]; ep;) {
                 if (ep->callbackType() != QQmlNotifierEndpoint::QQmlBoundSignal) {
@@ -321,9 +335,12 @@ void BindingPatchContext::refreshObjects()
             continue;
 
         // Children with a non-empty prefix share m_object with their parent
-        // (value-type group properties). They don't need refreshing.
-        if (!child->prefix.isEmpty())
+        // (value-type group properties like "font."). Update them to match.
+        if (!child->prefix.isEmpty()) {
+            child->m_object = m_object;
+            child->refreshObjects();
             continue;
+        }
 
         if (QObject *newObj = m_object->property(name.toUtf8()).value<QObject *>())
             child->m_object = newObj;
@@ -470,7 +487,8 @@ BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompila
     return child.get();
 }
 
-void BindingPatchContext::reset()
+void BindingPatchContext::reset(
+        const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent)
 {
     resetBindings(unit, objectIndex);
 
@@ -500,17 +518,72 @@ void BindingPatchContext::reset()
         return false;
     };
 
+    const auto shouldUnparent = [&](const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu) {
+        return cu
+                && std::find(unitsToUnparent.begin(), unitsToUnparent.end(), cu)
+                != unitsToUnparent.end();
+    };
+
     const QObjectList children = m_object->children();
 
     for (QObject *child : children) {
-        // Objects from the same CU have likely been created as inner scopes and will be replaced.
-        // Unparent the old ones so that the GC can take care of them.
-        // But skip attached property objects — they are reused across rebuilds.
+        // Objects from the old CU or composite-level CUs will be recreated by
+        // repopulateBindings. Unparent them so they don't interfere with the new objects.
+        // Attached property objects are reused across rebuilds.
         if (QQmlData *childDdata = QQmlData::get(child);
-            childDdata && childDdata->compilationUnit == ddata->compilationUnit) {
+            childDdata && shouldUnparent(childDdata->compilationUnit)) {
             if (!isAttached(child))
-                child->setParent(nullptr);
+                retireObject(child);
         }
+    }
+}
+
+// Fully retire an old object that is being replaced by repopulateBindings.
+// Recursively removes bindings from all descendants (unlinking expressions
+// from context lists), then removes the subtree from the tree and schedules it
+// for deletion. compilationUnit is intentionally left intact. The GC needs it.
+void BindingPatchContext::retireObject(QObject *object)
+{
+    // First pass: recursively remove all bindings from the entire subtree.
+    // This must happen before any parent changes so that binding
+    // evaluations triggered by re-parenting find no live expressions.
+    clearBindingsRecursive(object);
+
+    // Remove from parent (in QtQuick "visual parent" or parentItem) via the meta property system.
+    // We must not assume any particular property to be the "parent" property here. That's what
+    // we have the ParentProperty classInfo for.
+    const QMetaObject *mo = object->metaObject();
+    if (const int classInfoIndex = mo->indexOfClassInfo("ParentProperty"); classInfoIndex >= 0) {
+        const QMetaClassInfo classInfo = mo->classInfo(classInfoIndex);
+        if (const int propertyIndex = mo->indexOfProperty(classInfo.value()); propertyIndex >= 0) {
+            const QMetaProperty property = mo->property(propertyIndex);
+            if ((!property.isResettable() || !property.reset(object)) && property.isWritable())
+                property.write(object, QVariant(property.metaType()));
+        }
+    }
+
+    // Unparent from QObject hierarchy so it no longer appears in
+    // parent->children(), then schedule deletion. The destructor will
+    // cascade-delete all QObject children (the recursive descendants).
+    QQml_setParent_noEvent(object, nullptr);
+    object->deleteLater();
+}
+
+void BindingPatchContext::clearBindingsRecursive(QObject *object)
+{
+    QQueue<QObject *> queue;
+    queue.enqueue(object);
+
+    while (!queue.isEmpty()) {
+        QObject *next = queue.dequeue();
+        queue.append(next->children());
+
+        QQmlData *ddata = QQmlData::get(next);
+        if (!ddata)
+            continue;
+
+        while (ddata->bindings)
+            QQmlPropertyPrivate::removeBinding(ddata->bindings);
     }
 }
 
