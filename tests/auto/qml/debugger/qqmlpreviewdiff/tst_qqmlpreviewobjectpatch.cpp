@@ -183,6 +183,10 @@ private slots:
     // the grouped-property signal handler is lost.
     void externalSignalHandlerOnSubObject();
 
+    // Same as above but the sub-object is accessible only via a list property
+    // (property list<Timer>), not a single QObject* alias.
+    void externalSignalHandlerOnListChild();
+
     // Consecutive in-place updates must skip objects whose outer context was
     // invalidated by a prior rebuild. Without the isValid() check in
     // rebuildObject(), the second update crashes accessing a dead context.
@@ -3126,6 +3130,65 @@ void tst_QQmlPreviewObjectPatch::externalBindingOnSubObjectTargetMismatch()
     // Verify the binding is still live by changing multiplier again.
     wrapper->setProperty("multiplier", 7);
     QCOMPARE(button->property("interval").toInt(), 1400);
+}
+
+void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnListChild()
+{
+    // Like externalSignalHandlerOnSubObject, but the child Timer is accessible
+    // only via a list property (property list<Timer> timers), not a single
+    // QObject* alias. The signal handler is connected via signal.connect() in
+    // the wrapper's Component.onCompleted.
+
+    QQmlEngine localEngine;
+    localEngine.addImportPath(dataDirectory());
+    QQmlComponent wrapperComp(&localEngine, testFileUrl("ListChildWrapper.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    QObject *target = wrapper->property("target").value<QObject *>();
+    QVERIFY(target);
+
+    // Read the list property to get the second timer.
+    QQmlListReference timersList(target, "timers");
+    QVERIFY(timersList.isValid());
+    QVERIFY(timersList.count() >= 2);
+    QObject *timer = timersList.at(1);
+    QVERIFY(timer);
+
+    // Sanity: the signal handler connected via signal.connect() works.
+    QVERIFY(QMetaObject::invokeMethod(timer, "triggered"));
+    QCOMPARE(wrapper->property("callCount").toInt(), 1);
+
+    // Get the form's type-level compilation unit.
+    QQmlComponent oldFormComp(&localEngine, testFileUrl("ListChildFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newFormComp(&localEngine, testFileUrl("ListChildFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    // Rebuild only the form's objects.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // Re-fetch the timer from the list — it may be a new object after rebuild.
+    QQmlListReference newTimersList(target, "timers");
+    QVERIFY(newTimersList.isValid());
+    QVERIFY(newTimersList.count() >= 2);
+    timer = newTimersList.at(1);
+    QVERIFY(timer);
+
+    // Fire the signal on the (possibly new) timer after rebuild.
+    QVERIFY(QMetaObject::invokeMethod(timer, "triggered"));
+
+    // The external signal handler from the wrapper must still fire.
+    QEXPECT_FAIL("", "We don't properly re-attach signal handlers to list elements", Continue);
+    QCOMPARE(wrapper->property("callCount").toInt(), 2);
 }
 
 void tst_QQmlPreviewObjectPatch::externalSignalHandlerOnSubObjectUnfired()
