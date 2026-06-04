@@ -1372,6 +1372,7 @@ function(_qt_internal_deferred_aotstats_setup qt_cmake_export_namespace)
             DEPENDS "${formatted_stats_file}"
             COMMAND "${CMAKE_COMMAND}" -E cat "${formatted_stats_file}"
         )
+        _qt_internal_assign_to_internal_targets_folder(all_aotstats)
     endif()
 endfunction()
 
@@ -1462,6 +1463,7 @@ function(_qt_internal_write_deferred_qmlls_build_ini_file qt_cmake_export_namesp
         DEPENDS ${qmlls_build_ini_file}
         VERBATIM
     )
+    _qt_internal_assign_to_internal_targets_folder(generate_qmlls_build_ini_file)
     foreach(current_target IN LISTS _qmlls_build_ini_targets)
         add_dependencies(${current_target} generate_qmlls_build_ini_file)
     endforeach()
@@ -1815,11 +1817,13 @@ function(_qt_internal_add_generate_context_property_dump_target lint_target)
         add_custom_target(${global_target_name}
             DEPENDS "${qmlcontextpropertydump_file}"
         )
+        _qt_internal_assign_to_internal_targets_folder(${global_target_name})
 
         add_custom_target(${global_target_clean_name}
             COMMAND ${CMAKE_COMMAND} -E rm "${qmlcontextpropertydump_file}"
             COMMENT "Removing ${qmlcontextpropertydump_file} file"
         )
+        _qt_internal_assign_to_internal_targets_folder(${global_target_clean_name})
     endif()
 
     if(QT_QMLLINT_CONTEXT_PROPERTY_DUMP)
