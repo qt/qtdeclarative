@@ -12,7 +12,8 @@
 The \c qmlprofiler retrieves QML tracing data from an application. The collected
 data can then be visualized in \QC.
 
-To profile an application, enable QML debugging.
+To enable \c qmlprofiler to profile an application, make sure to build the
+application with the \l{QML debugging infrastructure} enabled.
 
 See the \l{\QC: Profiling QML Applications}{QML Profiler} to learn
 more.
