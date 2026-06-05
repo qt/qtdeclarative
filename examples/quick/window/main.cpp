@@ -14,10 +14,6 @@ int main(int argc, char* argv[])
     QGuiApplication app(argc, argv);
     QQmlEngine engine;
 
-#ifdef Q_OS_MACOS
-    engine.addImportPath(app.applicationDirPath() + QStringLiteral("/../PlugIns"));
-#endif
-
     QQmlComponent component(&engine);
     QQuickWindow::setDefaultAlphaBuffer(true);
     component.loadUrl(QUrl("qrc:/qt/qml/window/window.qml"));

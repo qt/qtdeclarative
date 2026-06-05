@@ -9,9 +9,6 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 //![0]
     QQuickView view;
-#ifdef Q_OS_MACOS
-    view.engine()->addImportPath(app.applicationDirPath() + "/../PlugIns");
-#endif
 //![0]
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.loadFromModule("ChartsApp", "App");
