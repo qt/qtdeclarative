@@ -172,11 +172,25 @@ They must be deployed to the devices for debugging and profiling to work.
 \section2 Enabling the infrastructure
 
 When you compile your application, you must explicitly enable the debugging
-infrastructure. If you use qmake, you can add the \c {CONFIG+=qml_debug}
-configuration parameters to the project \c{.pro} file.
+infrastructure.
 
-If you use another build system, you can pass the \c {QT_QML_DEBUG} define
-to the compiler:
+If you use CMake, you can pass \c{-DCMAKE_CXX_FLAGS_INIT=-DQT_QML_DEBUG} as an
+argument to \c cmake on the command line to enable it only for a specific build. You can also permanently enable
+it in your CMakeLists.txt file by adding the following snippet:
+
+\badcode
+    qt_add_executable(MyApp
+    ...
+    )
+
+    target_compile_definitions(MyApp PRIVATE QT_QML_DEBUG)
+\endcode
+
+If you use qmake, you can add the \c {CONFIG+=qml_debug}
+configuration parameters to the project \c{.pro} file or pass it as argument on the command line.
+
+If you use another build system, you need to pass the \c {QT_QML_DEBUG} define
+to the compiler via the build system's means.
 
 \note Enabling the debugging infrastructure may compromise the integrity of
 your application and system, and therefore, you should only enable it in a

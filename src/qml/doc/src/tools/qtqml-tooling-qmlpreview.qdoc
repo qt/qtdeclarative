@@ -59,17 +59,8 @@ has to have QML debugging enabled. \l {details}{More...}
 \target details
 
 \section3 Enable QML Debugging
-To enable QML debugging, make sure you build your application with appropriate
-configuration parameters. When using qmake, you should add \c {CONFIG+=qml_debug}
-in the \c {.pro} file. If you use another build system, then \c {QT_QML_DEBUG}
-variable should be defined.
 
-\badcode
-    qt_add_executable(MyApp
-    ...
-    )
-
-    target_compile_definitions(MyApp PRIVATE QT_QML_DEBUG)
-\endcode
+To use \c{qmlpreview} on an executable, the executable must be built
+with the \l{QML debugging infrastructure} enabled.
 
 */
