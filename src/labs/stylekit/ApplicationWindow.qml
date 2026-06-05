@@ -11,10 +11,14 @@ import Qt.labs.StyleKit.impl
 T.ApplicationWindow {
     id: control
 
-    leftPadding: styleReader.leftPadding
-    topPadding: styleReader.topPadding
-    rightPadding: styleReader.rightPadding
-    bottomPadding: styleReader.bottomPadding
+    // Padding needs to take SafeArea into account, otherwise the contentItem will
+    // be placed under for example the menu bar. The SafeArea attached object that
+    // takes this into account is placed on the contentItem.parent
+    // ("ApplicationWindowContentControl"), and not directly on the ApplicationWindow itself.
+    topPadding: contentItem.parent.SafeArea.margins.top + styleReader.topPadding
+    leftPadding: contentItem.parent.SafeArea.margins.left + styleReader.leftPadding
+    rightPadding: contentItem.parent.SafeArea.margins.right + styleReader.rightPadding
+    bottomPadding: contentItem.parent.SafeArea.margins.bottom + styleReader.bottomPadding
 
     color: styleReader.background.color
 
