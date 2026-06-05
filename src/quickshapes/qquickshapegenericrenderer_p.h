@@ -53,7 +53,7 @@ public:
           m_asyncCallback(nullptr),
           m_asyncCallbackData(nullptr),
           m_rhiBackendInitialized(false),
-          m_supportsElementIndexUint(false)
+          m_supportsElementIndexUint(true)
     { }
     ~QQuickShapeGenericRenderer();
 
