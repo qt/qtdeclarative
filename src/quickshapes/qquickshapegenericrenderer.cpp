@@ -372,7 +372,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
         // when both threads are locked.
         // Until then, we cannot assume we have support for uint32_t indices
         // but only uint16_t ones.
-        const bool supportsElementIndexUint = m_rhiBackendInitialized ? m_supportsElementIndexUint : false;
+        const bool supportsElementIndexUint = m_rhiBackendInitialized ? m_supportsElementIndexUint : true;
         if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
             d.path.setFillRule(d.fillRule);
             if (m_api == QSGRendererInterface::Unknown)
