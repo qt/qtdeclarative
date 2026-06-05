@@ -679,12 +679,10 @@ QQuickToolTip *QQuickToolTipAttached::toolTip() const
         the visible property has been explicitly set, or the text property has
         not been set, this value has no effect, and the behavior will be
         equivalent to \c ToolTip.Manual.
-
         The shared tool tip will also default to platform-specific values
         for its delay and timeout properties.
     \value ToolTip.Manual The shared tool tip will not be shown automatically,
         and the developer is responsible for setting the visible property.
-
         The shared tool tip will not default to platform-specific values
         for its delay and timeout properties.
 
