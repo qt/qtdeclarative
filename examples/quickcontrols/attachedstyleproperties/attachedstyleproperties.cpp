@@ -13,9 +13,6 @@ int main(int argc, char *argv[])
     app.setApplicationName("Attached Objects");
 
     QQmlApplicationEngine engine;
-#ifdef Q_OS_MACOS
-    engine.addImportPath(app.applicationDirPath() + "/../PlugIns");
-#endif
     const QUrl url(QStringLiteral("qrc:/attachedstyleproperties.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {

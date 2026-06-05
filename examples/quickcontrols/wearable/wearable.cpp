@@ -21,9 +21,6 @@ int main(int argc, char *argv[])
     //! [style]
 
     QQmlApplicationEngine engine;
-#ifdef Q_OS_MACOS
-    engine.addImportPath(app.applicationDirPath() + "/../PlugIns");
-#endif
     engine.loadFromModule("Wearable", "Main");
 
     return app.exec();
