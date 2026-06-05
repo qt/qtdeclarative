@@ -356,10 +356,10 @@ bool ScriptFormatter::visit(NewExpression *ast)
 bool ScriptFormatter::visit(CallExpression *ast)
 {
     accept(ast->base);
-    out(ast->optionalToken);
-    out(ast->lparenToken);
+    outWithComments(ast->optionalToken, ast);
+    outWithComments(ast->lparenToken, ast);
     accept(ast->arguments);
-    out(ast->rparenToken);
+    outWithComments(ast->rparenToken, ast);
     return false;
 }
 
@@ -908,13 +908,13 @@ bool ScriptFormatter::visit(Elision *ast)
 bool ScriptFormatter::visit(ArgumentList *ast)
 {
     for (ArgumentList *it = ast; it; it = it->next) {
+        if (it->commaToken.isValid()) {
+            outWithComments(it->commaToken, it);
+            ensureSpaceIfNoComment();
+        }
         if (it->isSpreadElement)
             out("...");
         accept(it->expression);
-        if (it->next) {
-            out(","); // it->commaToken
-            ensureSpaceIfNoComment();
-        }
     }
     return false;
 }
