@@ -337,9 +337,26 @@ static void insertIntoSortedMetaTypeList(QList<MetaType> &typeList, const MetaTy
         typeList.insert(lower, toBeAdded);
 }
 
+static bool sortedMetaTypeListContains(const QList<MetaType> &typeList, const MetaType &type)
+{
+    const auto [first, last] = std::equal_range(
+            typeList.constBegin(), typeList.constEnd(), type, qualifiedClassNameLessThan);
+    for (auto it = first; it != last; ++it) {
+        if (*it == type)
+            return true;
+    }
+    return false;
+}
+
 enum class TypeRelation
 {
     Base, Property, Argument, Return, Enum, Attached, SequenceValue, Extension
+};
+
+// Whether the type whose related types are currently being processed is itself opaque.
+enum class ContextOpacity
+{
+    FullyRegistered, Opaque
 };
 
 static QLatin1StringView typeRelationString(TypeRelation relation)
@@ -428,7 +445,8 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto addReference
             = [&](const MetaType &type, QSet<QAnyStringView> *processedRelatedNames,
-                  FoundType::Origin origin, TypeRelation relation) {
+                  FoundType::Origin origin, TypeRelation relation,
+                  ContextOpacity contextOpacity = ContextOpacity::FullyRegistered) {
         if (type.isEmpty())
             return;
         QAnyStringView qualifiedName = type.qualifiedClassName();
@@ -444,10 +462,16 @@ void MetaTypesJsonProcessor::addRelatedTypes()
             switch (relation) {
             case TypeRelation::Property:
             case TypeRelation::Return:
-            case TypeRelation::Argument: {
+            case TypeRelation::Argument:
                 // still only opaque, we can return
                 return;
-            }
+            case TypeRelation::Base:
+                // A base type only stays opaque if the type it is a base of is opaque, too.
+                // Otherwise it has to be properly registered and we fall through to the regular
+                // handling below.
+                if (contextOpacity == ContextOpacity::Opaque)
+                    return;
+                break;
             default:
                 break;
             }
@@ -463,10 +487,17 @@ void MetaTypesJsonProcessor::addRelatedTypes()
         switch (relation) {
         case TypeRelation::Property:
         case TypeRelation::Return:
-        case TypeRelation::Argument: {
+        case TypeRelation::Argument:
             insertIntoSortedMetaTypeList(m_opaqueTypes, type);
             return;
-        }
+        case TypeRelation::Base:
+            // Only the bases of opaque types are themselves opaque. The bases of regular types
+            // are registered normally, just like any other related type.
+            if (contextOpacity == ContextOpacity::Opaque) {
+                insertIntoSortedMetaTypeList(m_opaqueTypes, type);
+                return;
+            }
+            break;
         default:
             break;
         }
@@ -484,12 +515,13 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto addInterface
             = [&](QAnyStringView typeName, const QList<QAnyStringView> &namespaces,
-                  TypeRelation relation) {
+                  TypeRelation relation, ContextOpacity contextOpacity = ContextOpacity::FullyRegistered) {
         if (const FoundType other = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, typeName, namespaces)) {
             if (!other.native.isEmpty()) {
                 addReference(
-                        other.native, &processedRelatedNativeNames, other.nativeOrigin, relation);
+                        other.native, &processedRelatedNativeNames, other.nativeOrigin, relation,
+                        contextOpacity);
                 return true;
             }
         } else {
@@ -504,14 +536,16 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
     const auto doAddReferences = [&](QAnyStringView typeName,
                                      const QList<QAnyStringView> &namespaces,
-                                     TypeRelation relation) {
+                                     TypeRelation relation,
+                                     ContextOpacity contextOpacity = ContextOpacity::FullyRegistered) {
         if (const FoundType other = QmlTypesClassDescription::findType(
                     m_types, m_foreignTypes, typeName, namespaces)) {
             addReference(
-                    other.native, &processedRelatedNativeNames, other.nativeOrigin, relation);
+                    other.native, &processedRelatedNativeNames, other.nativeOrigin, relation,
+                    contextOpacity);
             addReference(
                     other.javaScript, &processedRelatedJavaScriptNames, other.javaScriptOrigin,
-                    relation);
+                    relation, contextOpacity);
             return true;
         }
 
@@ -579,9 +613,10 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
 
 
-    const auto addSupers = [&](const MetaType &context, const QList<QAnyStringView> &namespaces) {
+    const auto addSupers = [&](const MetaType &context, const QList<QAnyStringView> &namespaces,
+                               ContextOpacity contextOpacity) {
         for (const Interface &iface : context.ifaces())
-            addInterface(interfaceName(iface), namespaces, TypeRelation::Base);
+            addInterface(interfaceName(iface), namespaces, TypeRelation::Base, contextOpacity);
 
         // We don't warn about missing bases for value types. They don't have to be registered.
         bool warnAboutSupers = context.kind() != MetaType::Kind::Gadget;
@@ -593,7 +628,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 continue;
 
             QAnyStringView typeName = superObject.name;
-            if (doAddReferences(typeName, namespaces, TypeRelation::Base))
+            if (doAddReferences(typeName, namespaces, TypeRelation::Base, contextOpacity))
                 warnAboutSupers = false;
             else
                 missingSupers.append(typeName);
@@ -675,6 +710,9 @@ void MetaTypesJsonProcessor::addRelatedTypes()
 
         const MetaType classDef = typeQueue.dequeue();
         const QList<QAnyStringView> namespaces = MetaTypesJsonProcessor::namespaces(classDef);
+        const ContextOpacity classDefOpacity = sortedMetaTypeListContains(m_opaqueTypes, classDef)
+                ? ContextOpacity::Opaque
+                : ContextOpacity::FullyRegistered;
 
         for (const ClassInfo &obj : classDef.classInfos()) {
             if (addRelation(classDef, obj, namespaces))
@@ -691,7 +729,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                 const MetaType other = found.select(classDef, "Foreign");
                 const QList<QAnyStringView> otherNamespaces
                         = MetaTypesJsonProcessor::namespaces(other);
-                addSupers(other, otherNamespaces);
+                addSupers(other, otherNamespaces, classDefOpacity);
                 addProperties(other, otherNamespaces);
                 addMethods(other, otherNamespaces);
                 addEnums(other, otherNamespaces);
@@ -713,7 +751,7 @@ void MetaTypesJsonProcessor::addRelatedTypes()
                     << "is declared as foreign type, but cannot be found.";
         }
 
-        addSupers(classDef, namespaces);
+        addSupers(classDef, namespaces, classDefOpacity);
         addProperties(classDef, namespaces);
         addMethods(classDef, namespaces);
         addEnums(classDef, namespaces);

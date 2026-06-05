@@ -1033,6 +1033,7 @@ private slots:
     void preserveVoidStarPropTypes();
 
     void inaccessibleBase();
+    void opaqueBase();
     void enumsExplicitlyScoped();
     void namespacedExtracted();
     void derivedFromInvisible();
