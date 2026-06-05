@@ -69,6 +69,7 @@ private slots:
     void attachedPropertyAdded();
     void attachedPropertyRemoved();
     void groupPropertyFontChange();
+    void groupPropertyValueTypeOverridePreserved();
     void groupPropertyAnchorsChange();
     void groupPropertyAnchorsTargetChange();
     void groupPropIndexShift();
@@ -1138,6 +1139,43 @@ void tst_QQmlPreviewObjectPatch::groupPropertyFontChange()
 
     QFont newFont = object->property("font").value<QFont>();
     QCOMPARE(newFont.pixelSize(), 24);
+}
+
+// Like granularConstantUpdatePreservesUserOverride, but the user override is on a
+// *value-type sub-property* (font.pixelSize) rather than a top-level property.
+// The stash/restore path records sub-property constants by their bare name and then
+// iterates the parent's metaobject, so "pixelSize" is never matched and the override
+// is silently dropped on rebuild — even though resetBindings does apply the prefix.
+void tst_QQmlPreviewObjectPatch::groupPropertyValueTypeOverridePreserved()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("GroupPropertyFontChangeOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+    QCOMPARE(object->property("font").value<QFont>().pixelSize(), 12);
+
+    // The user manually changed font.pixelSize after the component loaded.
+    QQmlProperty pixelSize(object.data(), "font.pixelSize");
+    QVERIFY(pixelSize.isValid());
+    QVERIFY(pixelSize.write(99));
+    QCOMPARE(object->property("font").value<QFont>().pixelSize(), 99);
+
+    QQmlComponent newComp(&engine, testFileUrl("GroupPropertyFontChangeNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // The user-overridden sub-property (99 != old default 12) should survive the rebuild,
+    // just like a top-level property override does. It currently reverts to the new CU's
+    // internal value (24): the prefix is only applied when resetting bindings, not when
+    // stashing and restoring external state, so the override is never recorded.
+    QEXPECT_FAIL("", "Value-type sub-property overrides are not stashed and restored", Continue);
+    QCOMPARE(object->property("font").value<QFont>().pixelSize(), 99);
 }
 
 // Group property change on an object type (anchors.leftMargin: 5 → 10).
