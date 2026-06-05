@@ -1,8 +1,9 @@
-import QtQuick 2.15
+import QtQuick
 
 Item {
     width: 320
     height: 480
+    property bool suspendGrabbing: animator.running
 
     ShaderEffect {
         x: 10
@@ -13,6 +14,7 @@ Item {
         fragmentShader: "qrc:shaders/property.frag.qsb"
 
         UniformAnimator on colorProperty {
+            id: animator
             duration: 20
             from: 0.0
             to: 1.0
