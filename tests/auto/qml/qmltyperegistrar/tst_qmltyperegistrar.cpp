@@ -1404,6 +1404,91 @@ void tst_qmltyperegistrar::inaccessibleBase()
     })"));
 }
 
+void tst_qmltyperegistrar::opaqueBase()
+{
+    // OpaqueWithOpaqueBase is only used as a property type, so it is opaque.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "opaquetypes.h"
+        lineNumber: 23
+        name: "OpaqueWithOpaqueBase"
+        accessSemantics: "reference"
+        prototype: "OpaqueGrandBase"
+        Property { name: "o"; type: "int"; index: 0; lineNumber: 26; isPropertyConstant: true }
+    })"));
+
+    // Its base is not registered either. Since the derived type is opaque, the
+    // base must show up as opaque as well, rather than as a fully registered type.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "opaquetypes.h"
+        lineNumber: 12
+        name: "OpaqueGrandBase"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "g"; type: "int"; index: 0; lineNumber: 15; isPropertyConstant: true }
+    })"));
+
+    // OpaqueWithRegisteredBase is also only used as a property type and thus opaque.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "opaquetypes.h"
+        lineNumber: 48
+        name: "OpaqueWithRegisteredBase"
+        accessSemantics: "reference"
+        prototype: "RegisteredBase"
+        Property { name: "w"; type: "int"; index: 0; lineNumber: 51; isPropertyConstant: true }
+    })"));
+
+    // Its base, however, is a properly registered type. It must therefore appear
+    // as a normal, exported type and must not be turned into an opaque type.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "opaquetypes.h"
+        lineNumber: 35
+        name: "RegisteredBase"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlTypeRegistrarTest/RegisteredBase 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "r"; type: "int"; index: 0; lineNumber: 39; isPropertyConstant: true }
+    })"));
+
+    // OpaqueSharingBase is opaque, and it derives from SharedBase. On its own that
+    // would make SharedBase opaque as well.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        isTypeOpaque: true
+        file: "opaquetypes.h"
+        lineNumber: 74
+        name: "OpaqueSharingBase"
+        accessSemantics: "reference"
+        prototype: "SharedBase"
+        Property { name: "os"; type: "int"; index: 0; lineNumber: 77; isPropertyConstant: true }
+    })"));
+
+    // However, SharedBase is also the base of the registered RegisteredSharingBase.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "opaquetypes.h"
+        lineNumber: 86
+        name: "RegisteredSharingBase"
+        accessSemantics: "reference"
+        prototype: "SharedBase"
+        exports: ["QmlTypeRegistrarTest/RegisteredSharingBase 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property { name: "rs"; type: "int"; index: 0; lineNumber: 90; isPropertyConstant: true }
+    })"));
+
+    // Since a registered type derives from it, SharedBase must not be opaque even
+    // though an opaque type derives from it, too. It has to be registered normally.
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "opaquetypes.h"
+        lineNumber: 61
+        name: "SharedBase"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "s"; type: "int"; index: 0; lineNumber: 64; isPropertyConstant: true }
+    })"));
+}
+
 void tst_qmltyperegistrar::enumsExplicitlyScoped()
 {
     QVERIFY(qmltypesData.contains(R"(Component {
