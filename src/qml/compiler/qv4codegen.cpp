@@ -398,6 +398,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     case PreIncrement: {
         Reference e = expr.asLValue();
         e.loadInAccumulator();
+        e.isReadonly = true;
         Instruction::Increment inc = {};
         bytecodeGenerator->addInstruction(inc);
         if (exprAccept(nx))
@@ -424,6 +425,7 @@ Codegen::Reference Codegen::unop(UnaryOperation op, const Reference &expr)
     case PreDecrement: {
         Reference e = expr.asLValue();
         e.loadInAccumulator();
+        e.isReadonly = true;
         Instruction::Decrement dec = {};
         bytecodeGenerator->addInstruction(dec);
         if (exprAccept(nx))
@@ -4601,6 +4603,7 @@ Codegen::Reference Codegen::Reference::storeRetainAccumulator() const
         // a store will
         auto tmp = Reference::fromStackSlot(codegen);
         tmp.storeAccumulator(); // this is safe, and won't destory the accumulator
+        tmp.isReadonly = isReadonly;
         storeAccumulator();
         return tmp;
     } else {
