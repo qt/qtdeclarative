@@ -67,6 +67,7 @@ QQuickFileDialog::QQuickFileDialog(QObject *parent)
 {
     m_options->setFileMode(QFileDialogOptions::ExistingFile);
     m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
+    m_options->setSupportedSchemes({u"file"_s});
 }
 
 /*!
