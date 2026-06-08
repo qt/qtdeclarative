@@ -1333,14 +1333,22 @@ void tst_SceneGraph::sgTextNode()
 void tst_SceneGraph::sgInternalTextNodeRecycle_data()
 {
     QTest::addColumn<QUrl>("imgUrl");
+    QTest::addColumn<QQuickText::RenderType>("renderType");
 
-    QTest::newRow("text layout") << QUrl{};
-    QTest::newRow("text document") << testFileUrl(QLatin1String("blacknwhite.png"));
+    QTest::newRow("Text layout, Qt Rendering") << QUrl{} << QQuickText::QtRendering;
+    QTest::newRow("Text document, Qt Rendering") << testFileUrl(QLatin1String("blacknwhite.png")) << QQuickText::QtRendering;
+
+    QTest::newRow("Text layout, Native Rendering") << QUrl{} << QQuickText::NativeRendering;
+    QTest::newRow("Text document, Native Rendering") << testFileUrl(QLatin1String("blacknwhite.png")) << QQuickText::NativeRendering;
+
+    QTest::newRow("Text layout, Curve Rendering") << QUrl{} << QQuickText::CurveRendering;
+    QTest::newRow("Text document, Curve Rendering") << testFileUrl(QLatin1String("blacknwhite.png")) << QQuickText::CurveRendering;
 }
 
 void tst_SceneGraph::sgInternalTextNodeRecycle()
 {
     QFETCH(QUrl, imgUrl);
+    QFETCH(QQuickText::RenderType, renderType);
 
     QQuickView view;
     view.setSource(testFileUrl("simple.qml"));
@@ -1350,6 +1358,8 @@ void tst_SceneGraph::sgInternalTextNodeRecycle()
 
     QQuickText *textItem = view.rootObject()->findChild<QQuickText *>();
     QVERIFY(textItem);
+    textItem->setRenderType(renderType);
+
     view.grabWindow(); // Create nodes
 
     QQuickItemPrivate *d = QQuickItemPrivate::get(textItem);
@@ -1397,13 +1407,16 @@ void tst_SceneGraph::sgInternalTextNodeRecycle()
     }
 
     // Replace single glyph with single glyph and verify that glyph node is reused
-    textItem->setText(QStringLiteral("b"));
-    view.grabWindow();
+    // Skip this test for CurveRendering, since we don't recycle curve-rendered nodes currently.
+    if (renderType != QQuickText::CurveRendering) {
+        textItem->setText(QStringLiteral("b"));
+        view.grabWindow();
 
-    {
-        QVERIFY(d->paintNode);
-        QCOMPARE(d->paintNode->childCount(), 1);
-        QCOMPARE(d->paintNode->childAtIndex(0), childNode);
+        {
+            QVERIFY(d->paintNode);
+            QCOMPARE(d->paintNode->childCount(), 1);
+            QCOMPARE(d->paintNode->childAtIndex(0), childNode);
+        }
     }
 
     textItem->setText(QString{});

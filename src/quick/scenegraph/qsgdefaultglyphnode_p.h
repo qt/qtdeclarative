@@ -57,6 +57,7 @@ private:
     };
 
     uint m_dirtyGeometry: 1;
+    uint m_recycled : 1;
 
     AntialiasingMode m_preferredAntialiasingMode;
     QGlyphRun m_glyphs;

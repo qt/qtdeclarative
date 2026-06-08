@@ -14,6 +14,7 @@ QSGDefaultGlyphNode::QSGDefaultGlyphNode(QSGRenderContext *context)
     , m_context(context)
     , m_glyphNodeType(RootGlyphNode)
     , m_dirtyGeometry(false)
+    , m_recycled(false)
     , m_preferredAntialiasingMode(DefaultAntialiasing)
     , m_style(QQuickText::Normal)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 0)
@@ -31,8 +32,6 @@ QSGDefaultGlyphNode::~QSGDefaultGlyphNode()
 
 void QSGDefaultGlyphNode::cleanup()
 {
-    setMaterial(nullptr);
-
     if (m_glyphNodeType == SubGlyphNode)
         return;
 
@@ -55,12 +54,13 @@ void QSGDefaultGlyphNode::recycle()
 
     m_dirtyGeometry = true;
     m_preferredAntialiasingMode = DefaultAntialiasing;
+    m_recycled = true;
 }
 
 void QSGDefaultGlyphNode::setColor(const QColor &color)
 {
     m_color = color;
-    if (material() != nullptr) {
+    if (material() != nullptr && !m_recycled) {
         static_cast<QSGTextMaskMaterial *>(material())->setColor(color);
         markDirty(DirtyMaterial);
     }
@@ -98,6 +98,8 @@ void QSGDefaultGlyphNode::setPreferredAntialiasingMode(AntialiasingMode mode)
 
 void QSGDefaultGlyphNode::update()
 {
+    m_recycled = false;
+
     QRawFont font = m_glyphs.rawFont();
     QMargins margins(0, 0, 0, 0);
 
