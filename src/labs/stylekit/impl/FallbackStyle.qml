@@ -166,7 +166,6 @@ BaseStyle {
             radius: 0
             color: __baseWhite
             border.width: 0
-            shadow.visible: false
         }
         hovered.background.color: __backgroundDefault
     }
@@ -178,12 +177,15 @@ BaseStyle {
     menu {
         background {
             implicitWidth: 200
-            implicitHeight: 40
+            implicitHeight: 20
         }
     }
 
     menuBar {
+        padding: 1
+        spacing: 0
         background {
+            implicitHeight: 20
             radius: 0
             border.width: 0
             color: __backgroundDefault
@@ -193,8 +195,8 @@ BaseStyle {
     menuBarItem {
         text.alignment: Qt.AlignLeft | Qt.AlignVCenter
         background {
-            implicitWidth: 40
-            implicitHeight: 40
+            implicitWidth: 20
+            implicitHeight: 20
             radius: 0
             color: __transparent
             border.width: 0
@@ -206,6 +208,7 @@ BaseStyle {
         text.alignment: Qt.AlignLeft | Qt.AlignVCenter
         background {
             implicitWidth: 200
+            radius: 0
             border.width: 0
         }
         indicator {
@@ -232,8 +235,14 @@ BaseStyle {
     }
 
     menuSeparator {
-        padding: 2
-        background.visible: false
+        padding: 0
+
+        background {
+            implicitWidth: 188
+            implicitHeight: 1
+            color: "transparent"
+            border.width: 0
+        }
         indicator {
             implicitWidth: 188
             implicitHeight: 1
