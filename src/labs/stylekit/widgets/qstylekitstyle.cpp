@@ -252,6 +252,23 @@ static bool isSelfPaintingWidget(const QWidget *widget)
         ;
 }
 
+static QWidget *managedViewport(QWidget *widget)
+{
+#if QT_CONFIG(textedit)
+    if (auto *textEdit = qobject_cast<QTextEdit *>(widget))
+        return textEdit->viewport();
+    if (auto *plainTextEdit = qobject_cast<QPlainTextEdit *>(widget))
+        return plainTextEdit->viewport();
+#endif
+#if QT_CONFIG(itemviews) && QT_CONFIG(combobox)
+    if (auto *view = qobject_cast<QAbstractItemView *>(widget)) {
+        if (auto *p = view->parentWidget(); p && p->inherits("QComboBoxPrivateContainer"))
+            return view->viewport();
+    }
+#endif
+    return nullptr;
+}
+
 static uint resolvedAlignment(uint raw, Qt::Alignment hDefault, Qt::Alignment vDefault)
 {
     uint result = 0;
@@ -552,7 +569,6 @@ void QStyleKitStylePrivate::refreshStylePalette(QWidget *widget)
             stylePalette.setColor(QPalette::Disabled, QPalette::Text, dt->color());
             stylePalette.setColor(QPalette::Disabled, QPalette::WindowText, dt->color());
         }
-
     }
 
     setStylePalette(widget, stylePalette);
@@ -1639,6 +1655,16 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             return;
         }
 #endif // QT_CONFIG(combobox)
+#if QT_CONFIG(textedit)
+        if (qobject_cast<const QTextEdit *>(w)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::TextArea, opt->state);
+            if (!r.isValid())
+                break;
+            QRect backgroundRect = opt->rect.marginsRemoved(r.metrics->margins);
+            d->drawStyledItemRect(r.background(), backgroundRect, p);
+            return;
+        }
+#endif // QT_CONFIG(textedit)
         break;
 #endif // QT_NO_FRAME
     default:
@@ -1897,10 +1923,20 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding);
+            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding + metrics.textPadding);
             return visualRect(opt->direction, opt->rect, contentsRect);
         }
 #endif
+#if QT_CONFIG(textedit)
+        if (qobject_cast<const QTextEdit *>(widget)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::TextArea, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            QRect contentsRect = opt->rect.marginsRemoved(metrics.margins + metrics.padding + metrics.textPadding);
+            return visualRect(opt->direction, opt->rect, contentsRect);
+        }
+#endif // textedit
         break;
     default:
         break;
@@ -2662,14 +2698,13 @@ void QStyleKitStyle::polish(QWidget *widget)
     if (isInteractiveControl)
         d->readerForWidget(widget);
 
-#if QT_CONFIG(itemviews)
-    if (auto *view = qobject_cast<QAbstractItemView *>(widget)) {
-#if QT_CONFIG(combobox)
-        if (auto *p = view->parentWidget(); p && p->inherits("QComboBoxPrivateContainer"))
-            view->viewport()->setAutoFillBackground(false);
-#endif
+    // Disable the viewport's autoFillBackground so the styled background shows through.
+    // Only flip it when it was enabled, and store the widget so unpolish() can restore it
+    // (e.g. when the application switches to a non-StyleKit style).
+    if (QWidget *vp = managedViewport(widget); vp && vp->autoFillBackground()) {
+        vp->setAutoFillBackground(false);
+        d->autoFillDisabledWidgets.insert(widget);
     }
-#endif
 
 #if QT_CONFIG(lineedit)
     if (auto *lineEdit = qobject_cast<QLineEdit *>(widget)) {
@@ -2719,6 +2754,10 @@ void QStyleKitStyle::unpolish(QWidget *widget)
     d->unsetStyleFont(widget);
     if (isSelfPaintingWidget(widget))
         widget->removeEventFilter(this);
+    if (d->autoFillDisabledWidgets.remove(widget)) {
+        if (QWidget *vp = managedViewport(widget))
+            vp->setAutoFillBackground(true);
+    }
     d->cleanupWidgetReader(widget);
     QCommonStyle::unpolish(widget);
 }
