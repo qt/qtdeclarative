@@ -544,6 +544,7 @@ public:
     bool visit(ArgumentList *argumentList) override
     {
         addSourceLocations(argumentList, argumentList->commaToken);
+        addSourceLocations(argumentList, argumentList->spreadToken);
         AST::Node::accept(argumentList->next, this);
         return true;
     }

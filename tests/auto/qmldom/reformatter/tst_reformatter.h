@@ -466,6 +466,9 @@ private slots:
                 << u"f(a, // 1\n"_s
                    u"  b, // 2\n"_s
                    u"  c)"_s;
+        QTest::newRow("commentsOnCallWithSpread")
+                << u"f(/*1*/.../*2*/a/*3*/,/*4*/.../*5*/b)"_s
+                << u"f(/*1*/.../*2*/a/*3*/,/*4*/.../*5*/b)"_s;
     }
 
     void typeAnnotations()
