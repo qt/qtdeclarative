@@ -7,6 +7,7 @@
 \brief A tool that helps you write code in your favorite LSP-supporting editor.
 \ingroup qtqml-tooling
 \ingroup qtqml-tooling-devtools
+\keyword qmlls
 
 \QMLLS is a tool shipped with Qt that helps you write code
 in your favorite (LSP-supporting) editor.
