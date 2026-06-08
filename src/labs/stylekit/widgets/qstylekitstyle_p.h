@@ -16,6 +16,7 @@
 // We mean it.
 //
 
+#include <QtCore/qset.h>
 #include <QtWidgets/private/qtwidgetsglobal_p.h>
 #include <QtWidgets/qcommonstyle.h>
 #include <QtWidgets/private/qcommonstyle_p.h>
@@ -177,6 +178,8 @@ private:
     mutable QHash<MetricsCacheKey, ControlMetrics> metricsCache;
     QHash<const QWidget *, Tampered<QFont>> customFontWidgets;
     mutable QHash<const QWidget *, Tampered<QPalette>> customPaletteWidgets;
+    // Widgets whose viewport autoFillBackground we disabled in polish(); restored in unpolish()
+    QSet<const QWidget *> autoFillDisabledWidgets;
     QString stylePath;
 };
 
