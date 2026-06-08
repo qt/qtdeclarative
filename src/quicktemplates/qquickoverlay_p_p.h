@@ -72,6 +72,13 @@ public:
     QPointer<QQuickPopup> mouseGrabberPopup;
     QPointer<QQuickItem> lastActiveFocusItem;
     QPointer<QQuickPopup> lastActiveFocusItemPopup;
+    // Set once a popup without ClosePolicy::CloseMultiple has been given its one
+    // chance to close itself for the current press/release/touch event, so that
+    // further retried deliveries of that same event (e.g. childMouseEventFilter
+    // being called again for a sibling popupItem underneath) don't let more
+    // popups close for what is really a single click. Reset in QQuickOverlay::eventFilter
+    // at the start of each new press/release/touch event.
+    bool closeCascadeStopped = false;
 };
 
 QT_END_NAMESPACE

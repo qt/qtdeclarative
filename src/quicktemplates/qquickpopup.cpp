@@ -598,7 +598,7 @@ bool QQuickPopupPrivate::handlePress(QQuickItem *item, const QPointF &point, ulo
         // Note that the parentItem (e.g a menuBarItem, in case of a MenuBar) will
         // live inside another window when using popup windows. We therefore need to
         // map to and from global.
-        const QPointF globalPoint = item->mapToGlobal(point);
+        const QPointF globalPoint = item->mapToGlobal(item->mapFromScene(point));
         const QPointF localPoint = parentItem->mapFromGlobal(globalPoint);
         outsideParentPressed = !parentItem->contains(localPoint);
     }
@@ -1117,7 +1117,7 @@ void openPopup(QQuickPopupPrivate *d)
 #else
     const auto callPrepareEnterTransition = [d]() {
         d->transitionManager.transitionEnter();
-        s_windowExposedObserver.release();
+        std::ignore = s_windowExposedObserver.release();
     };
     if (d->usePopupWindow() && d->window->isVisible() && !d->window->isExposed())
         s_windowExposedObserver.reset(new QWindowExposedObserver(d->window, callPrepareEnterTransition));
@@ -2703,11 +2703,12 @@ void QQuickPopup::setScale(qreal scale)
     \value Popup.CloseOnReleaseOutsideParent The popup will close when the mouse is released outside of its parent.
     \value Popup.CloseOnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
-
-    The \c {CloseOnPress*} and \c {CloseOnRelease*} policies only apply for events
-    outside of popups. That is, if there are two popups open and the first has
-    \c Popup.CloseOnPressOutside as its policy, clicking on the second popup will
-    not result in the first closing.
+    \value Popup.CloseMultiple When using multiple nested popups, only the top-most popup closes on each outside
+        click by default. When the closing popup has this flag set, the next popup in the stack is also
+        checked: if the click position was outside it too, it closes as well. This cascade
+        continues down the stack until all popups have closed, a popup whose bounds contain
+        the click position is reached, or a popup without \c CloseMultiple is closed. Must
+        be combined with at least one \c {CloseOnPress*} or \c {CloseOnRelease*} flag.
 
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
 

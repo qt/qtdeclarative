@@ -247,7 +247,8 @@ public:
         CloseOnPressOutsideParent = 0x02,
         CloseOnReleaseOutside = 0x04,
         CloseOnReleaseOutsideParent = 0x08,
-        CloseOnEscape = 0x10
+        CloseOnEscape = 0x10,
+        CloseMultiple = 0x20,
     };
     Q_DECLARE_FLAGS(ClosePolicy, ClosePolicyFlag)
     Q_FLAG(ClosePolicy)

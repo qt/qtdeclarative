@@ -30,6 +30,7 @@ ApplicationWindow {
         ComboBox {
             id: combo
             model: 3
+            popup.closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside | Popup.CloseMultiple
         }
     }
 }

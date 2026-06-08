@@ -222,7 +222,6 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
 
     auto *pe = static_cast<QPointerEvent *>(event);
     const QPointF globalPos = pe->points().first().globalPosition();
-    const QQuickPopup::ClosePolicy closePolicy = popup->closePolicy();
     QQuickPopup *targetPopup = QQuickPopupPrivate::get(popup)->contains(contentItem->mapFromGlobal(globalPos)) ? popup : nullptr;
 
     // Resolve the Menu or MenuBar under the mouse, if any
@@ -248,13 +247,38 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
         menuParent = menuParent->parent();
     }
 
-    auto closePopupAndParentMenus = [q]() {
+    auto closePopups = [q, globalPos](QQuickPopup::ClosePolicy closePolicy) {
+        static const QQuickPopup::ClosePolicy outsideParentFlags =
+                QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseOnReleaseOutsideParent;
+
         QQuickPopup *current = q->popup();
-        do {
-            qCDebug(lcPopupWindow) << "Closing" << current << "from an outside pointer press or release event";
+        while (current && current->closePolicy().testAnyFlags(closePolicy)
+               && QQuickPopupPrivate::get(current)->popupWindow) {
+            auto *currentPrivate = QQuickPopupPrivate::get(current);
+            const QPointF scenePos = currentPrivate->popupWindow->contentItem()->mapFromGlobal(globalPos);
+            if (currentPrivate->contains(scenePos))
+                break; // clicked inside the popup itself: never closes, regardless of policy
+
+            // CloseOnPress/ReleaseOutsideParent closes the popup only when the click is
+            // outside its *parent* too, not merely outside the popup itself - e.g. a click
+            // landing on a sibling/ancestor popup's own content must not close this one
+            // unless the plain Outside flag (checked above) is also what's asked for here.
+            if (current->closePolicy().testAnyFlags(closePolicy & outsideParentFlags)) {
+                QQuickItem *parentItem = current->parentItem();
+                if (parentItem && parentItem->contains(parentItem->mapFromGlobal(globalPos)))
+                    break;
+            }
+
+            qCDebug(lcPopupWindow)
+                    << "Closing" << current << "from an outside pointer press or release event.";
             current->close();
-            current = qobject_cast<QQuickMenu *>(current->parent());
-        } while (current);
+            auto *transientParentPopupWindow = qobject_cast<QQuickPopupWindow *>(
+                    currentPrivate->popupWindow->transientParent());
+            current = current->closePolicy().testAnyFlag(QQuickPopup::CloseMultiple)
+                            && transientParentPopupWindow
+                    ? transientParentPopupWindow->popup()
+                    : nullptr;
+        }
     };
 
     if (pe->isBeginEvent()) {
@@ -264,7 +288,7 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
             // to the window under the pointer, and therefore also to the MenuBar.
             // The latter would otherwise cause a menu to reopen again immediately, and
             // undermine that we want to close all popups.
-            closePopupAndParentMenus();
+            closePopups(QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
             return true;
         } else if (!targetPopup) {
             // Pressed outside either a popup window, or a menu or menubar that owns a menu using popup windows.
@@ -273,8 +297,7 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
             // of the shadow, targetMenu will still be nullptr.
             // On WASM in particular, it's possible for dialogs to receive the event, when clicking in the non-client area. Don't close in those cases.
             if (event->type() != QEvent::NonClientAreaMouseButtonPress && event->type() != QEvent::NonClientAreaMouseButtonDblClick) {
-                if (closePolicy.testAnyFlags(QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent))
-                    closePopupAndParentMenus();
+                closePopups(QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseOnPressOutsideParent);
                 // A modal popup must consume the press event so that forwardToPopup() sees the event as handled
                 // so that it doesn't propagate to items behind the popup window (QTBUG-131786 etc.)
                 // A QTabletEvent in particular is not accepted by default
@@ -322,11 +345,11 @@ bool QQuickPopupWindowPrivate::filterPopupSpecialCases(QEvent *event)
         if (grabber)
             pe->setExclusiveGrabber(pe->point(0), grabber);
     } else if (pe->isEndEvent()) {
-        if (!targetPopup && !targetMenuBar && closePolicy.testAnyFlags(QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent)) {
+        if (!targetPopup && !targetMenuBar) {
             // Released outside either a popup window, or a menu or menubar that owns a menu using popup windows.
             // This should normally close the current popup window, unless it's inside the non-client area, which can happen in WASM dialogs.
             if (event->type() != QEvent::NonClientAreaMouseButtonRelease)
-                closePopupAndParentMenus();
+                closePopups(QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
             return false;
         }
 
