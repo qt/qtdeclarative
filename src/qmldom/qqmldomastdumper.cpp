@@ -542,8 +542,8 @@ public:
     void endVisit(AST::CallExpression *) override { stop(u"CallExpression"); }
 
     bool visit(AST::ArgumentList *el) override {
-        start(QLatin1String("ArgumentList commaToken=%1 isSpreadElement=%2")
-              .arg(loc(el->commaToken), boolStr(el->isSpreadElement)));
+        start(QLatin1String("ArgumentList commaToken=%1 spreadToken=%2")
+              .arg(loc(el->commaToken), loc(el->spreadToken)));
         return true;
     }
     void endVisit(AST::ArgumentList *) override { stop(u"ArgumentList"); }

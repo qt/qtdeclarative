@@ -912,8 +912,8 @@ bool ScriptFormatter::visit(ArgumentList *ast)
             outWithComments(it->commaToken, it);
             ensureSpaceIfNoComment();
         }
-        if (it->isSpreadElement)
-            out("...");
+        if (it->spreadToken.isValid())
+            outWithComments(it->spreadToken, it);
         accept(it->expression);
     }
     return false;

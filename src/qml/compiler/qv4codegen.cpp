@@ -2229,7 +2229,7 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
     bool hasSpread = false;
     int argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
-        if (it->isSpreadElement) {
+        if (it->spreadToken.isValid()) {
             hasSpread = true;
             ++argc;
         }
@@ -2243,7 +2243,7 @@ Codegen::Arguments Codegen::pushArgs(ArgumentList *args)
 
     argc = 0;
     for (ArgumentList *it = args; it; it = it->next) {
-        if (it->isSpreadElement) {
+        if (it->spreadToken.isValid()) {
             Reference::fromConst(
                     this,
                     StaticValue::emptyValue().asReturnedValue()).storeOnStack(calldata + argc);
