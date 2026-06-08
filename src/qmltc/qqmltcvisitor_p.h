@@ -31,6 +31,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
+Q_DECLARE_LOGGING_CATEGORY(lcQmltcCompiler)
+
 namespace QQmltc {
 
 using QmltcLoggingCategoryOverride = std::pair<QQmlJS::LoggerWarningId, std::optional<QQmlJS::WarningSeverity>>;

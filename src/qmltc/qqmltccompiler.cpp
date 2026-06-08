@@ -19,8 +19,6 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
-
 namespace QQmltc {
 
 bool qIsReferenceTypeList(const QQmlJSMetaProperty &p)

@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_DECLARE_LOGGING_CATEGORY(lcQmltcCompiler)
+Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
 namespace QQmltc {
 
