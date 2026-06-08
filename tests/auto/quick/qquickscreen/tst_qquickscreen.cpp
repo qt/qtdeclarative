@@ -49,6 +49,10 @@ void tst_qquickscreen::basicProperties()
     QVERIFY(screen->devicePixelRatio() >= 1.0);
     QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
     QCOMPARE(screen->geometry().y(), root->property("vy").toInt());
+    QCOMPARE(screen->geometry(), root->property("screenGeometry").toRect());
+    QCOMPARE(screen->availableGeometry(), root->property("screenAvailableGeometry").toRect());
+    QCOMPARE(screen->virtualGeometry(), root->property("desktopGeometry").toRect());
+    QCOMPARE(screen->availableVirtualGeometry(), root->property("availableDesktopGeometry").toRect());
 
     QVERIFY(root->property("screenCount").toInt() == QGuiApplication::screens().size());
 }
@@ -105,6 +109,10 @@ void tst_qquickscreen::fullScreenList()
         QCOMPARE(screenList[i]->devicePixelRatio(), info->devicePixelRatio());
         QCOMPARE(screenList[i]->geometry().x(), info->virtualX());
         QCOMPARE(screenList[i]->geometry().y(), info->virtualY());
+        QCOMPARE(screenList[i]->geometry(), info->geometry());
+        QCOMPARE(screenList[i]->availableGeometry(), info->availableGeometry());
+        QCOMPARE(screenList[i]->virtualGeometry(), info->desktopGeometry());
+        QCOMPARE(screenList[i]->availableVirtualGeometry(), info->availableDesktopGeometry());
     }
 }
 

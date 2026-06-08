@@ -20,6 +20,7 @@
 #include <QtQuick/private/qtquickglobal_p.h>
 
 #include <QtCore/qpointer.h>
+#include <QtCore/qrect.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -48,6 +49,12 @@ class Q_QUICK_EXPORT QQuickScreenInfo : public QObject
 
     Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION(2, 3) FINAL)
     Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION(2, 3) FINAL)
+
+    Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged REVISION(6, 13) FINAL)
+    Q_PROPERTY(QRect availableGeometry READ availableGeometry NOTIFY availableGeometryChanged REVISION(6, 13) FINAL)
+    Q_PROPERTY(QRect desktopGeometry READ desktopGeometry NOTIFY desktopGeometryChanged REVISION(6, 13) FINAL)
+    Q_PROPERTY(QRect availableDesktopGeometry READ availableDesktopGeometry NOTIFY availableDesktopGeometryChanged REVISION(6, 13) FINAL)
+
     QML_NAMED_ELEMENT(ScreenInfo)
     QML_ADDED_IN_VERSION(2, 3)
     QML_UNCREATABLE("ScreenInfo can only be used via the attached property, or by retrieving it from Application's screens property.")
@@ -70,6 +77,10 @@ public:
     Qt::ScreenOrientation orientation() const;
     int virtualX() const;
     int virtualY() const;
+    QRect geometry() const;
+    QRect availableGeometry() const;
+    QRect desktopGeometry() const;
+    QRect availableDesktopGeometry() const;
 
     void setWrappedScreen(QScreen *screen);
     QScreen *wrappedScreen() const;
@@ -89,6 +100,9 @@ Q_SIGNALS:
     void orientationChanged();
     Q_REVISION(2, 3) void virtualXChanged();
     Q_REVISION(2, 3) void virtualYChanged();
+    Q_REVISION(6, 13) void geometryChanged();
+    Q_REVISION(6, 13) void availableGeometryChanged();
+    Q_REVISION(6, 13) void availableDesktopGeometryChanged();
 
 protected:
     QPointer<QScreen> m_screen;

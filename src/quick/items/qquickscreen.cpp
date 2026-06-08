@@ -190,6 +190,37 @@ QT_BEGIN_NAMESPACE
     \sa primaryOrientation, QWindow::contentOrientation()
 */
 /*!
+    \qmlattachedproperty rect Screen::geometry
+    \readonly
+    \since 6.13
+
+    This property holds the screen's geometry in pixels.
+*/
+/*!
+    \qmlattachedproperty rect Screen::availableGeometry
+    \readonly
+    \since 6.13
+
+    This property holds the screen's available geometry in pixels, excluding
+    window manager reserved areas such as task bars and system menus.
+*/
+/*!
+    \qmlattachedproperty rect Screen::desktopGeometry
+    \readonly
+    \since 6.13
+
+    This property holds the geometry of the virtual desktop in pixels.
+*/
+/*!
+    \qmlattachedproperty rect Screen::availableDesktopGeometry
+    \readonly
+    \since 6.13
+
+    This property holds the available geometry of the virtual desktop in
+    pixels, excluding window manager reserved areas such as task bars and
+    system menus.
+*/
+/*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 
     Returns the rotation angle, in degrees, between the specified screen
@@ -307,6 +338,34 @@ int QQuickScreenInfo::virtualY() const
     return m_screen->geometry().topLeft().y();
 }
 
+QRect QQuickScreenInfo::geometry() const
+{
+    if (!m_screen)
+        return {};
+    return m_screen->geometry();
+}
+
+QRect QQuickScreenInfo::availableGeometry() const
+{
+    if (!m_screen)
+        return {};
+    return m_screen->availableGeometry();
+}
+
+QRect QQuickScreenInfo::desktopGeometry() const
+{
+    if (!m_screen)
+        return {};
+    return m_screen->virtualGeometry();
+}
+
+QRect QQuickScreenInfo::availableDesktopGeometry() const
+{
+    if (!m_screen)
+        return {};
+    return m_screen->availableVirtualGeometry();
+}
+
 void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
 {
     if (screen == m_screen)
@@ -324,6 +383,7 @@ void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
     if (!oldScreen || screen->geometry() != oldScreen->geometry()) {
         emit virtualXChanged();
         emit virtualYChanged();
+        emit geometryChanged();
     }
     if (!oldScreen || screen->size() != oldScreen->size()) {
         emit widthChanged();
@@ -341,15 +401,21 @@ void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
         emit orientationChanged();
     if (!oldScreen || screen->primaryOrientation() != oldScreen->primaryOrientation())
         emit primaryOrientationChanged();
-    if (!oldScreen || screen->availableVirtualGeometry() != oldScreen->availableVirtualGeometry())
+    if (!oldScreen || screen->availableGeometry() != oldScreen->availableGeometry())
+        emit availableGeometryChanged();
+    if (!oldScreen
+            || screen->virtualGeometry() != oldScreen->virtualGeometry()
+            || screen->availableVirtualGeometry() != oldScreen->availableVirtualGeometry()) {
         emit desktopGeometryChanged();
+    }
+    if (!oldScreen || screen->availableVirtualGeometry() != oldScreen->availableVirtualGeometry())
+        emit availableDesktopGeometryChanged();
     if (!oldScreen || screen->logicalDotsPerInch() != oldScreen->logicalDotsPerInch())
         emit logicalPixelDensityChanged();
     if (!oldScreen || screen->physicalDotsPerInch() != oldScreen->physicalDotsPerInch())
         emit pixelDensityChanged();
     if (!oldScreen || screen->devicePixelRatio() != oldScreen->devicePixelRatio())
         emit devicePixelRatioChanged();
-
     qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
             this, QQuickScreenInfo, SIGNAL(widthChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
@@ -358,16 +424,22 @@ void QQuickScreenInfo::setWrappedScreen(QScreen *screen)
             this, QQuickScreenInfo, SIGNAL(virtualXChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
             this, QQuickScreenInfo, SIGNAL(virtualYChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(geometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(geometryChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(orientationChanged(Qt::ScreenOrientation)),
             this, QQuickScreenInfo, SIGNAL(orientationChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(primaryOrientationChanged(Qt::ScreenOrientation)),
             this, QQuickScreenInfo, SIGNAL(primaryOrientationChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(virtualGeometryChanged(QRect)),
             this, QQuickScreenInfo, SIGNAL(desktopGeometryChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(virtualGeometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(availableDesktopGeometryChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(logicalDotsPerInchChanged(qreal)),
             this, QQuickScreenInfo, SIGNAL(logicalPixelDensityChanged()));
     qmlobject_connect(screen, QScreen, SIGNAL(physicalDotsPerInchChanged(qreal)),
             this, QQuickScreenInfo, SIGNAL(pixelDensityChanged()));
+    qmlobject_connect(screen, QScreen, SIGNAL(availableGeometryChanged(QRect)),
+            this, QQuickScreenInfo, SIGNAL(availableGeometryChanged()));
 }
 
 QScreen *QQuickScreenInfo::wrappedScreen() const
