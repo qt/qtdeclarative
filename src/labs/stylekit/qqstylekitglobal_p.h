@@ -38,6 +38,8 @@ public:
         IndicatorFirstForeground    = 0x0100,
         IndicatorSecond             = 0x0200,
         IndicatorSecondForeground   = 0x0400,
+        // Note: for now, "control.text" is not treated as a separate delegate, but
+        // as an integrated part of "control". Hence, there is no "Text" value in this enum.
     };
     Q_DECLARE_FLAGS(Delegates, Delegate)
     Q_FLAG(Delegate)

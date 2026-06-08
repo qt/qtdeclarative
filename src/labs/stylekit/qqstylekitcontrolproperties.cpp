@@ -923,6 +923,26 @@ QT_BEGIN_NAMESPACE
     \sa padding, bottomPadding, leftPadding, rightPadding
 */
 
+/*!
+    \qmlproperty TextStyle TextStyle::first
+
+    Grouped property for styling the first text element in controls that
+    expose two separate text labels. Unset properties fall back to
+    \l {ControlStyleProperties::text}{text} itself.
+
+    \sa second
+*/
+
+/*!
+    \qmlproperty TextStyle TextStyle::second
+
+    Grouped property for styling the second text element in controls that
+    expose two separate text labels.  Unset properties fall back to
+    \l {ControlStyleProperties::text}{text} itself.
+
+    \sa first
+*/
+
 // ************* QQStyleKitPropertyGroup ****************
 
 QHash<PropertyPathId_t, QString> QQStyleKitPropertyGroup::s_pathStrings;
@@ -1797,6 +1817,8 @@ void QQStyleKitTextProperties::emitGlobally(
 {
     const QQStyleKitControlProperties *cp = controlProperties();
     CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text()->first());
+    CONDITIONALLY_EMIT_SIGNALS_GLOBALLY_FOR(cp, text()->second());
 }
 
 QColor QQStyleKitTextProperties::color() const
@@ -1912,6 +1934,16 @@ void QQStyleKitTextProperties::setBottomPadding(qreal padding)
 {
     if (setStyleProperty(QQSK::Property::BottomPadding, padding))
         handleStylePropertyChanged(&QQStyleKitTextProperties::bottomPaddingChanged);
+}
+
+QQStyleKitTextProperties *QQStyleKitTextProperties::first() const
+{
+    return lazyCreateGroup(m_first, QQSK::PropertyGroup::DelegateSubtype1);
+}
+
+QQStyleKitTextProperties *QQStyleKitTextProperties::second() const
+{
+    return lazyCreateGroup(m_second, QQSK::PropertyGroup::DelegateSubtype2);
 }
 
 // ************* QQStyleKitControlProperties ****************

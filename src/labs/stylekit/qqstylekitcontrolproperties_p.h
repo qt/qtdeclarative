@@ -500,7 +500,8 @@ class QQStyleKitTextProperties : public QQStyleKitPropertyGroup
     Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding NOTIFY rightPaddingChanged FINAL)
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding NOTIFY topPaddingChanged FINAL)
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding NOTIFY bottomPaddingChanged FINAL)
-
+    Q_PROPERTY(QQStyleKitTextProperties *first READ first NOTIFY firstChanged FINAL)
+    Q_PROPERTY(QQStyleKitTextProperties *second READ second NOTIFY secondChanged FINAL)
     QML_UNCREATABLE("This component can only be instantiated by StyleKit")
     QML_NAMED_ELEMENT(TextStyle)
 
@@ -540,6 +541,9 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal bottomPadding);
 
+    QQStyleKitTextProperties *first() const;
+    QQStyleKitTextProperties *second() const;
+
 signals:
     void colorChanged();
     void alignmentChanged();
@@ -551,6 +555,12 @@ signals:
     void rightPaddingChanged();
     void topPaddingChanged();
     void bottomPaddingChanged();
+    void firstChanged();
+    void secondChanged();
+
+private:
+    QQStyleKitTextProperties *m_first = nullptr;
+    QQStyleKitTextProperties *m_second = nullptr;
 };
 
 /************* QQStyleKitControlProperties ****************
