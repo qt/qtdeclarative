@@ -266,7 +266,7 @@ static const int SUBMENU_DELAY = 225;
     \sa {Popup::}{activeFocus}
 */
 
-static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent;
+static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseMultiple;
 
 static bool shouldCascade()
 {

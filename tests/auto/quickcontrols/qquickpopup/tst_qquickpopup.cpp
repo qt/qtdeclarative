@@ -71,6 +71,7 @@ public:
 private slots:
     void cleanup();
     void initTestCase() override;
+    void cleanupTestCase();
     void init() override;
     void visible_data();
     void visible();
@@ -171,8 +172,17 @@ private slots:
     void blockEventsBehindModal();
     void spacingAndInsetsAreRevaluatedWhenChanged();
     void windowInsetsOrder();
+    void closeMultiple_data();
+    void closeMultiple();
 
 private:
+    // If we load the QML from scratch every row, closeMultiple takes considerably
+    // longer to run. However, we still want it to be data-driven (so that e.g. you
+    // can run individual rows), so we store it here and create it once in
+    // initTestCase, rather than create a new window and scene for every row.
+    // TODO: clean this up when we have a callback that is run after all rows
+    // have been run for a test function: QTBUG-134198
+    std::unique_ptr<QQuickApplicationHelper> closeMultipleHelper;
     QScopedPointer<QPointingDevice> touchScreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 #if QT_CONFIG(tabletevent)
     std::unique_ptr<const QPointingDevice> tabletStylusDevice{
@@ -205,6 +215,18 @@ void tst_QQuickPopup::initTestCase()
     QQmlDataTest::initTestCase();
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuWindows);
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
+
+    // closeMultiple is too slow to run with every QQC2 style, so only create
+    // its (expensive) scene when we know it won't be skipped.
+    if (QQuickStyle::name() == "Basic"_L1)
+        closeMultipleHelper.reset(new QQuickApplicationHelper(this, "nestedPopupsWithClosePolicy.qml"));
+}
+
+void tst_QQuickPopup::cleanupTestCase()
+{
+    // Must be destroyed before QTEST_QUICKCONTROLS_MAIN's runTests() moves on to the
+    // next style and clears type registrations out from under our QQmlEngine.
+    closeMultipleHelper.reset();
 }
 
 void tst_QQuickPopup::init()
@@ -4077,6 +4099,147 @@ void tst_QQuickPopup::windowInsetsOrder()
     QCOMPARE(insets.top(), 10);
     QCOMPARE(insets.right(), 15);
     QCOMPARE(insets.bottom(), 20);
+}
+
+void tst_QQuickPopup::closeMultiple_data()
+{
+    QTest::addColumn<QQuickPopup::PopupType>("popupType");
+    QTest::addColumn<QQuickPopup::ClosePolicy>("closePolicy");
+    QTest::addColumn<bool>("modal");
+
+    // A modal popup has a dimmer item that intercepts outside presses/releases
+    // via childMouseEventFilter, while a non-modal popup relies on the overlay's
+    // own event filter instead. Both paths need to agree on the CloseMultiple
+    // cascade, so every combination below is tested with modal true and false.
+    const auto addRow = [](const QByteArray &name, QQuickPopup::PopupType popupType,
+                            QQuickPopup::ClosePolicy closePolicy) {
+        for (bool modal : { false, true })
+            QTest::newRow(qPrintable(name + (modal ? "; modal" : "; non-modal")))
+                    << popupType << closePolicy << modal;
+    };
+
+    addRow("popupType: Popup.Item; singleCloseOnPressOutside", QQuickPopup::Item,
+           QQuickPopup::CloseOnPressOutside);
+    addRow("popupType: Popup.Item; multiCloseOnPressOutside", QQuickPopup::Item,
+           QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseMultiple);
+    addRow("popupType: Popup.Item; singleCloseOnPressOutsideParent", QQuickPopup::Item,
+           QQuickPopup::CloseOnPressOutsideParent);
+    addRow("popupType: Popup.Item; multiCloseOnPressOutsideParent", QQuickPopup::Item,
+           QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseMultiple);
+    addRow("popupType: Popup.Item; singleCloseOnReleaseOutside", QQuickPopup::Item,
+           QQuickPopup::CloseOnReleaseOutside);
+    addRow("popupType: Popup.Item; multiCloseOnReleaseOutside", QQuickPopup::Item,
+           QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseMultiple);
+    addRow("popupType: Popup.Item; singleCloseOnReleaseOutsideParent", QQuickPopup::Item,
+           QQuickPopup::CloseOnReleaseOutsideParent);
+    addRow("popupType: Popup.Item; multiCloseOnReleaseOutsideParent", QQuickPopup::Item,
+           QQuickPopup::CloseOnReleaseOutsideParent | QQuickPopup::CloseMultiple);
+    if (arePopupWindowsSupported()) {
+        addRow("popupType: Popup.Window; singleCloseOnPressOutside", QQuickPopup::Window,
+               QQuickPopup::CloseOnPressOutside);
+        addRow("popupType: Popup.Window; multiCloseOnPressOutside", QQuickPopup::Window,
+               QQuickPopup::CloseOnPressOutside | QQuickPopup::CloseMultiple);
+        addRow("popupType: Popup.Window; singleCloseOnPressOutsideParent", QQuickPopup::Window,
+               QQuickPopup::CloseOnPressOutsideParent);
+        addRow("popupType: Popup.Window; multiCloseOnPressOutsideParent", QQuickPopup::Window,
+               QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseMultiple);
+        addRow("popupType: Popup.Window; singleCloseOnReleaseOutside", QQuickPopup::Window,
+               QQuickPopup::CloseOnReleaseOutside);
+        addRow("popupType: Popup.Window; multiCloseOnReleaseOutside", QQuickPopup::Window,
+               QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseMultiple);
+        addRow("popupType: Popup.Window; singleCloseOnReleaseOutsideParent", QQuickPopup::Window,
+               QQuickPopup::CloseOnReleaseOutsideParent);
+        addRow("popupType: Popup.Window; multiCloseOnReleaseOutsideParent", QQuickPopup::Window,
+               QQuickPopup::CloseOnReleaseOutsideParent | QQuickPopup::CloseMultiple);
+    }
+}
+
+void tst_QQuickPopup::closeMultiple()
+{
+    QFETCH(QQuickPopup::PopupType, popupType);
+    QFETCH(QQuickPopup::ClosePolicy, closePolicy);
+    QFETCH(bool, modal);
+
+    if (!closeMultipleHelper)
+        QSKIP("The test function is too slow to run with every QQC2 style.");
+
+    QVERIFY2(closeMultipleHelper->ready, closeMultipleHelper->failureMessage());
+    QQuickWindow *window = closeMultipleHelper->window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    window->setProperty("popupType", popupType);
+    window->setProperty("closePolicy", closePolicy.toInt());
+    window->setProperty("modal", modal);
+
+    auto *popup1 = window->property("popup1").value<QQuickPopup *>();
+    QVERIFY(popup1);
+    auto *popup2 = window->property("popup2").value<QQuickPopup *>();
+    QVERIFY(popup2);
+    auto *popup3 = window->property("popup3").value<QQuickPopup *>();
+    QVERIFY(popup3);
+
+    const bool multiClose = closePolicy.testAnyFlag(QQuickPopup::CloseMultiple);
+
+    std::array<QQuickPopup *, 3> popups = { popup1, popup2, popup3 };
+
+    const auto closeAllPopups = [&popups] {
+        for (auto p : popups) {
+            p->close();
+            QTRY_VERIFY(!QQuickPopupPrivate::get(p)->transitionManager.isRunning());
+        }
+    };
+
+    // popup1/popup2/popup3 are reused across every row in this data-driven test (see
+    // initTestCase()), so if a QVERIFY/QCOMPARE below fails and returns early, leaving
+    // popups open would contaminate every subsequent row (e.g. a stale mouse grabber
+    // left pointing at a still-open popup). Guarantee cleanup regardless of how this
+    // function exits.
+    const auto cleanupGuard = qScopeGuard(closeAllPopups);
+
+    for (int i = popups.size() - 1; i >= 0; --i) {
+        // Open all popups
+        for (auto p : popups) {
+            p->open();
+            TRY_VERIFY_POPUP_OPENED(p);
+            QTRY_VERIFY(!QQuickPopupPrivate::get(p)->transitionManager.isRunning());
+        }
+
+        // Each popup has a button, which doesn't overlap with the child popup.
+        // For *OutsideParent policies, the click must land outside the popup's own parentItem
+        // to satisfy outsideParentPressed. Use one level higher so the click is outside
+        // popups.at(i)'s parentItem rather than inside it.
+        const bool isOutsideParentPolicy = closePolicy.testAnyFlags(
+                QQuickPopup::CloseOnPressOutsideParent | QQuickPopup::CloseOnReleaseOutsideParent);
+        const int clickParentIdx = (isOutsideParentPolicy && i > 0) ? i - 1 : i;
+        QQuickItem *parentItem = popups.at(clickParentIdx)->parentItem();
+
+        // Use {4,4} to stay outside all style buttons even with the smallest padding (Fusion: 6).
+        const QPoint windowClickPos =
+                window->mapFromGlobal(parentItem->mapToGlobal({ 4, 4 })).toPoint();
+
+        QVERIFY(QQuickTest::qWaitForPolish(window));
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, windowClickPos);
+
+        // The popup should close, starting from the top-most popup in the stack, if clicked outside.
+        // If CloseMultiple isn't set, only close the top-most popup in the stack: popups.last()
+        // If CloseMultiple is set, close all popups, until we find a popup that was hit by the mouse click, or reach the bottom of the stack.
+        // For *OutsideParent policies, popups.at(clickParentIdx) itself is also outside its own
+        // parent (that's the whole point of the click position chosen above), so it closes too -
+        // unlike the plain *Outside policies, where popups.at(clickParentIdx) contains the click
+        // and therefore stops the cascade instead.
+        for (std::size_t j = 0; j < popups.size(); ++j) {
+            const bool expectedOpen = multiClose ? (isOutsideParentPolicy ? int(j) <= clickParentIdx
+                                                                           : int(j) < clickParentIdx)
+                                                  : j != popups.size() - 1;
+            QTRY_VERIFY2(
+                    popups.at(j)->isOpened() == expectedOpen,
+                    qPrintable(QStringLiteral("The %1th popup is %2, even though we expect the opposite")
+                        .arg(j).arg(popups.at(j)->isOpened() ? "opened" : "closed")));
+        }
+
+        closeAllPopups();
+    }
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

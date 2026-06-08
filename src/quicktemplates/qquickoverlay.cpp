@@ -181,10 +181,43 @@ bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
     return false;
 }
 
+// A popup that isn't eligible to auto-close on an outside press/release at all
+// (e.g. ClosePolicy::NoAutoClose, or only CloseOnEscape) never participates in
+// the close cascade to begin with, and must not be treated as if it stopped a
+// cascade that never included it in the first place. Otherwise a non-modal,
+// non-closing popup sitting above a modal one (e.g. a tooltip) would wrongly
+// prevent the modal popup below from being asked to block the event.
+static bool canCascadeCloseOnOutsidePress(const QQuickPopup *popup)
+{
+    static const QQuickPopup::ClosePolicy outsideFlags = QQuickPopup::CloseOnPressOutside
+            | QQuickPopup::CloseOnReleaseOutside
+            | QQuickPopup::CloseOnPressOutsideParent
+            | QQuickPopup::CloseOnReleaseOutsideParent;
+    return popup->closePolicy().testAnyFlags(outsideFlags);
+}
+
+// A modal popup's overlayEvent()/blockInput() reports an outside press/release as
+// "handled" simply because its dimmer blocks input from reaching whatever is behind
+// it - regardless of whether the popup also closed itself as a result of the very
+// same event. Without this check, the cascade would stop at a modal popup that just
+// closed itself, instead of continuing on to the next popup below when CloseMultiple
+// is set, since a closed popup can no longer visually block anything.
+// Note: isVisible() doesn't flip to false until the exit transition finishes, so we
+// check isOpened() instead, which (via its transitionState check) turns false the
+// instant the exit transition starts.
+static bool closedItselfViaCloseMultiple(const QQuickPopup *popup, bool wasOpened)
+{
+    return wasOpened && !popup->isOpened() && canCascadeCloseOnOutsidePress(popup)
+            && popup->closePolicy().testFlag(QQuickPopup::CloseMultiple);
+}
+
 bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuickPopup *target)
 {
     if (target) {
+        const bool wasOpened = target->isOpened();
         if (target->overlayEvent(source, event)) {
+            if (closedItselfViaCloseMultiple(target, wasOpened))
+                return false;
             setMouseGrabberPopup(target);
             return true;
         }
@@ -203,12 +236,27 @@ bool QQuickOverlayPrivate::handlePress(QQuickItem *source, QEvent *event, QQuick
 #endif
         // allow non-modal popups to close themselves,
         // and non-dimming modal popups to block the event
+        if (closeCascadeStopped)
+            break;
         const auto popups = stackingOrderPopups();
+        bool passedWithCloseMultiple = false;
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(source, event)) {
-                setMouseGrabberPopup(popup);
+                // Don't grab a deeper popup as the mouse grabber when we've
+                // already iterated past a higher popup via CloseMultiple. The
+                // release loop's CloseMultiple logic will handle closing the
+                // higher popup correctly without a grabbed target.
+                if (!passedWithCloseMultiple)
+                    setMouseGrabberPopup(popup);
                 return true;
             }
+            if (!canCascadeCloseOnOutsidePress(popup))
+                continue;
+            if (!popup->closePolicy().testFlag(QQuickPopup::CloseMultiple)) {
+                closeCascadeStopped = true;
+                break;
+            }
+            passedWithCloseMultiple = true;
         }
         break;
     }
@@ -228,16 +276,24 @@ bool QQuickOverlayPrivate::handleMove(QQuickItem *source, QEvent *event, QQuickP
 bool QQuickOverlayPrivate::handleRelease(QQuickItem *source, QEvent *event, QQuickPopup *target)
 {
     if (target) {
+        const bool wasOpened = target->isOpened();
         setMouseGrabberPopup(nullptr);
         if (target->overlayEvent(source, event)) {
             setMouseGrabberPopup(nullptr);
-            return true;
+            if (!closedItselfViaCloseMultiple(target, wasOpened))
+                return true;
         }
-    } else {
+    } else if (!closeCascadeStopped) {
         const auto popups = stackingOrderPopups();
         for (QQuickPopup *popup : popups) {
             if (popup->overlayEvent(source, event))
                 return true;
+            if (!canCascadeCloseOnOutsidePress(popup))
+                continue;
+            if (!popup->closePolicy().testFlag(QQuickPopup::CloseMultiple)) {
+                closeCascadeStopped = true;
+                break;
+            }
         }
     }
     return false;
@@ -562,8 +618,27 @@ void QQuickOverlay::dropEvent(QDropEvent *event)
 bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
 {
     Q_D(QQuickOverlay);
+
+    // Qt retries delivery of a single press/release/touch event against each
+    // overlapping sibling popupItem underneath, from top to bottom, as long as
+    // the previous one doesn't accept it - which means this function can be
+    // called multiple times for what is really the same physical event. Once a
+    // popup without ClosePolicy::CloseMultiple has had its one chance to close
+    // below, don't let a later retry give another popup a chance too.
+    const bool isCloseCascadeEvent = event->type() == QEvent::MouseButtonPress
+            || event->type() == QEvent::MouseButtonRelease
+#if QT_CONFIG(quicktemplates2_multitouch)
+            || event->type() == QEvent::TouchBegin
+            || event->type() == QEvent::TouchUpdate
+            || event->type() == QEvent::TouchEnd
+#endif
+            ;
+    if (isCloseCascadeEvent && d->closeCascadeStopped)
+        return false;
+
     const auto popups = d->stackingOrderPopups();
-    for (QQuickPopup *popup : popups) {
+    for (qsizetype i = 0; i < popups.size(); ++i) {
+        QQuickPopup *popup = popups.at(i);
         QQuickPopupPrivate *p = QQuickPopupPrivate::get(popup);
 
         // Stop filtering overlay events when reaching a popup item or an item
@@ -598,16 +673,51 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
                 break;
 
             case QEvent::MouseButtonPress:
-            case QEvent::MouseMove:
             case QEvent::MouseButtonRelease:
+            case QEvent::MouseMove:
                 handled = d->handleMouseEvent(item, static_cast<QMouseEvent *>(event), popup);
                 break;
 
             default:
                 break;
             }
-            if (handled)
+            if (handled) {
+                // A modal popup's dimmer legitimately blocks a press from reaching
+                // whatever is behind it without closing itself (e.g. the click landed
+                // inside it, or its closePolicy doesn't close on press) - that's correct
+                // and must keep stopping delivery here. But popups further down the
+                // stack then never get their own QQuickPopupPrivate::handlePress() call,
+                // so their outsidePressed/outsideParentPressed is never recorded. If this
+                // popup participates in a CloseMultiple cascade, those lower popups may
+                // still need to close on the matching release, and tryClose() refuses to
+                // close a popup that never registered pressing outside it. Record that
+                // state now, without disturbing the blocked/handled return value above.
+                if (event->type() == QEvent::MouseButtonPress && isCloseCascadeEvent
+                        && canCascadeCloseOnOutsidePress(popup)
+                        && popup->closePolicy().testFlag(QQuickPopup::CloseMultiple)) {
+                    auto *mouseEvent = static_cast<QMouseEvent *>(event);
+                    for (qsizetype j = i + 1; j < popups.size(); ++j) {
+                        QQuickPopup *lower = popups.at(j);
+                        QQuickPopupPrivate::get(lower)->handlePress(
+                                item, mouseEvent->scenePosition(), mouseEvent->timestamp());
+                        if (canCascadeCloseOnOutsidePress(lower)
+                                && !lower->closePolicy().testFlag(QQuickPopup::CloseMultiple))
+                            break;
+                    }
+                }
                 return true;
+            }
+
+            // Unless this popup has CloseMultiple set, don't let popups further down
+            // the stack (in this call, or a later retry for the same event) get a
+            // chance to close themselves for this same press/release. Popups that
+            // aren't eligible to auto-close on an outside press/release at all don't
+            // participate in the cascade, so they don't stop it either.
+            if (isCloseCascadeEvent && canCascadeCloseOnOutsidePress(popup)
+                    && !popup->closePolicy().testFlag(QQuickPopup::CloseMultiple)) {
+                d->closeCascadeStopped = true;
+                break;
+            }
         }
     }
     return false;
@@ -617,7 +727,7 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
     \internal
 
     The overlay installs itself as an event filter on the window it belongs to.
-    It will filter Touch, Mouse (press and release) and Wheel related events.
+    It will filter Touch, Mouse (press and release), Wheel and DnD related events.
 
     Touch and MousePress events will be passed to the delivery agent for normal event propagation,
     where they will be filtered by the overlay again in QQuickOverlay::childMouseEventFilter.
@@ -684,6 +794,9 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         if (static_cast<QTouchEvent *>(event)->touchPointStates() & QEventPoint::Released)
             emit released();
 
+        // Starting a new touch event; let its cascade of popup closes run fresh.
+        d->closeCascadeStopped = false;
+
         // allow non-modal popups to close on touch release outside
         if (!d->mouseGrabberPopup) {
             QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
@@ -727,6 +840,9 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
 #endif
             emit pressed();
 
+        // Starting a new press; let its cascade of popup closes run fresh.
+        d->closeCascadeStopped = false;
+
         // setup currentEventDeliveryAgent like in QQuickDeliveryAgent::event
         QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = d->deliveryAgent();
         d->deliveryAgentPrivate()->handleMouseEvent(mouseEvent);
@@ -749,6 +865,9 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
         if (mouseEvent->source() == Qt::MouseEventNotSynthesized)
 #endif
             emit released();
+
+        // Starting a new release; let its cascade of popup closes run fresh.
+        d->closeCascadeStopped = false;
 
         // allow non-modal popups to close on mouse release outside
         if (!d->mouseGrabberPopup)
