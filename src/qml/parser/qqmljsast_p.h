@@ -1378,7 +1378,7 @@ public:
     ExpressionNode *expression;
     ArgumentList *next;
     SourceLocation commaToken;
-    bool isSpreadElement = false;
+    SourceLocation spreadToken;
 };
 
 class QML_PARSER_EXPORT PostIncrementExpression: public ExpressionNode
