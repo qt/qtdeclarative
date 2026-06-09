@@ -191,13 +191,12 @@ inline bool isPathContainer(const QSvgStructureNode *node)
             if (child->hasAnyMarker())
                 return false;
 
-            if (!child->style().opacity.isDefault())
+            if (!child->style().isDefaultProperty(QSvgStyleProperty::Opacity))
                 return false;
 
-            if (!child->style().transform.isDefault()) {
-                //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform";
+            if (!child->style().isDefaultProperty(QSvgStyleProperty::Transform))
                 return false;
-            }
+
             const auto animations = child->document()->animator()->animationsForNode(child.get());
             if (!animations.isEmpty()) {
                 //qCDebug(lcQuickVectorGraphics) << "NOT path container because local transform animation";
@@ -884,8 +883,9 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
         content.replace(QLatin1Char('\n'), QLatin1Char(' '));
 
         bool fontTag = false;
-        if (!tspan->style().fill.isDefault()) {
-            auto &b = tspan->style().fill->qbrush();
+        if (!tspan->style().isDefaultProperty(QSvgStyleProperty::Fill)) {
+            auto fill = static_cast<QSvgFillStyle *>(tspan->style().property(QSvgStyleProperty::Fill));
+            auto &b = fill->qbrush();
             qCDebug(lcQuickVectorImage) << "tspan FILL:" << b;
             if (b.style() != Qt::NoBrush)
             {
@@ -988,7 +988,7 @@ void QSvgVisitorImpl::visitTextNode(const QSvgText *node)
                     PathNodeInfo info;
                     fillCommonNodeInfo(node, info, QStringLiteral("_path%1").arg(pathIndex));
                     fillPathAnimationInfo(node, info);
-                    auto fillStyle = node->style().fill;
+                    auto fillStyle = static_cast<QSvgFillStyle *>(node->style().property(QSvgStyleProperty::Fill));
                     if (fillStyle)
                         info.fillRule = fillStyle->fillRule();
 
@@ -1660,12 +1660,15 @@ void QSvgVisitorImpl::fillCommonNodeInfo(const QSvgNode *node, NodeInfo &info, c
 
     info.nodeId = nodeId;
     info.typeName = node->typeName();
-    info.isDefaultTransform = node->style().transform.isDefault();
+    info.isDefaultTransform = node->style().isDefaultProperty(QSvgStyleProperty::Transform);
 
-    QTransform xf = !info.isDefaultTransform ? node->style().transform->qtransform() : QTransform();
+    auto transform = static_cast<QSvgTransformStyle *>(node->style().property(QSvgStyleProperty::Transform));
+    QTransform xf = !info.isDefaultTransform ? transform->qtransform() : QTransform();
     info.transform.setDefaultValue(QVariant::fromValue(xf));
-    info.isDefaultOpacity = node->style().opacity.isDefault();
-    info.opacity.setDefaultValue(!info.isDefaultOpacity ? node->style().opacity->opacity() : 1.0);
+
+    auto opacity = static_cast<QSvgOpacityStyle *>(node->style().property(QSvgStyleProperty::Opacity));
+    info.isDefaultOpacity = node->style().isDefaultProperty(QSvgStyleProperty::Opacity);
+    info.opacity.setDefaultValue(!info.isDefaultOpacity ? opacity->opacity() : 1.0);
     info.isVisible = node->isVisible();
     info.isDisplayed = node->displayMode() != QSvgNode::DisplayMode::NoneMode;
 
@@ -1935,17 +1938,19 @@ void QSvgVisitorImpl::fillTransformAnimationInfo(const QSvgNode *node, NodeInfo 
 void QSvgVisitorImpl::fillMotionPathAnimationInfo(const QSvgNode *node, NodeInfo &info)
 {
     QList<AnimationPair> animations = collectAnimations(node, QStringLiteral("offset-distance"));
+    auto offset = static_cast<QSvgOffsetStyle *>(node->style().property(QSvgStyleProperty::Offset));
+
     if (animations.isEmpty())
         return;
+
+    if (!offset) {
+        qCWarning(lcQuickVectorImage) << "Motion path animation: No offset path";
+        return;
+    }
 
     if (animations.size() > 1) {
         qCWarning(lcQuickVectorImage)
             << "Not supported: More than one offset path animation on same node";
-    }
-
-    if (node->style().offset == nullptr) {
-        qCWarning(lcQuickVectorImage) << "Motion path animation: No offset path";
-        return;
     }
 
     const AnimationPair &animationPair = animations.first();
@@ -1967,22 +1972,22 @@ void QSvgVisitorImpl::fillMotionPathAnimationInfo(const QSvgNode *node, NodeInfo
     outAnimation.repeatCount = repeatCount;
     outAnimation.startOffset = start;
 
-    QPainterPath originalPath = node->style().offset->path();
+    QPainterPath originalPath = offset->path();
 
     qreal baseRotation;
     bool adaptAngle;
-    switch (node->style().offset->rotateType()) {
+    switch (offset->rotateType()) {
     case QtSvg::OffsetRotateType::Auto:
         adaptAngle = true;
         baseRotation = 0.0;
         break;
     case QtSvg::OffsetRotateType::Angle:
         adaptAngle = false;
-        baseRotation = node->style().offset->rotateAngle();
+        baseRotation = offset->rotateAngle();
         break;
     case QtSvg::OffsetRotateType::AutoAngle:
         adaptAngle = true;
-        baseRotation = node->style().offset->rotateAngle();
+        baseRotation = offset->rotateAngle();
         break;
     case QtSvg::OffsetRotateType::Reverse:
         adaptAngle = true;
@@ -1990,7 +1995,7 @@ void QSvgVisitorImpl::fillMotionPathAnimationInfo(const QSvgNode *node, NodeInfo
         break;
     case QtSvg::OffsetRotateType::ReverseAngle:
         adaptAngle = true;
-        baseRotation = node->style().offset->rotateAngle() + 180.0f;
+        baseRotation = offset->rotateAngle() + 180.0f;
         break;
     default:
         Q_UNREACHABLE();
@@ -2086,7 +2091,7 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
         info.markerEndId = findOrCreateId(node->markerEndId());
 
     const QGradient *strokeGradient = m_styleResolver->currentStrokeGradient();
-    auto strokeStyle = node->style().stroke;
+    auto strokeStyle = static_cast<QSvgStrokeStyle *>(node->style().property(QSvgStyleProperty::Stroke));
     bool hasStrokePattern = strokeStyle
                             && strokeStyle->paintServer()
                             && strokeStyle->paintServer()->type() == QSvgPaintServer::Type::Pattern;
@@ -2104,7 +2109,7 @@ void QSvgVisitorImpl::handlePathNode(const QSvgNode *node, const QPainterPath &p
         info.grad = m_styleResolver->applyOpacityToGradient(*m_styleResolver->currentFillGradient(), m_styleResolver->currentFillOpacity());
     info.fillTransform = m_styleResolver->currentFillTransform();
 
-    auto fillStyle = node->style().fill;
+    auto fillStyle = static_cast<QSvgFillStyle *>(node->style().property(QSvgStyleProperty::Fill));
     if (fillStyle) {
         info.fillRule = fillStyle->fillRule();
 
