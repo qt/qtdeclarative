@@ -3053,7 +3053,7 @@ bool Codegen::visit(PreDecrementExpression *ast)
     if (hasError())
         return false;
     if (!expr.isLValue()) {
-        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix ++ operator applied to value that is not a reference."));
+        throwReferenceError(ast->expression->lastSourceLocation(), QStringLiteral("Prefix -- operator applied to value that is not a reference."));
         return false;
     }
 
