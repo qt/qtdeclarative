@@ -881,12 +881,15 @@ void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegatePropert
 
 void QStyleKitStylePrivate::drawControlText(const QQStyleKitTextProperties *textProps,
                                              const QFont &font, const QRect &rect,
-                                             const QString &text, uint textFlags, QPainter *p) const
+                                             const QString &text, uint textFlags,
+                                             QPainter *p, Qt::Alignment defaultAlignment) const
 {
     uint flags = textFlags;
     flags |= textProps
-        ? resolvedAlignment(textProps->alignment(), Qt::AlignHCenter, Qt::AlignVCenter)
-        : uint(Qt::AlignHCenter | Qt::AlignVCenter);
+        ? resolvedAlignment(textProps->alignment(),
+                            defaultAlignment & Qt::AlignHorizontal_Mask,
+                            defaultAlignment & Qt::AlignVertical_Mask)
+        : uint(defaultAlignment);
 
     const QFont oldFont = p->font();
     p->setFont(font.resolve(oldFont));
@@ -1374,6 +1377,15 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         return;
     }
 #endif // QT_CONFIG(spinbox)
+#if QT_CONFIG(groupbox)
+    case PE_FrameGroupBox: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::GroupBox, opt->state);
+        if (!r.isValid())
+            break;
+        d->drawStyledItemRect(r.background(), opt->rect, p);
+        return;
+    }
+#endif // QT_CONFIG(groupbox)
     default:
         break;
     }
@@ -1638,7 +1650,8 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
             uint textFlags = Qt::TextShowMnemonic;
             if (!styleHint(SH_UnderlineShortcut, opt, w))
                 textFlags |= Qt::TextHideMnemonic;
-            d->drawControlText(itemTextProps, itemFont, textRect, itemViewOption->text, textFlags, p);
+            d->drawControlText(itemTextProps, itemFont, textRect, itemViewOption->text, textFlags, p,
+                               Qt::AlignLeft | Qt::AlignVCenter);
             return;
         }
         break;
@@ -2130,6 +2143,35 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
         }
         break;
 #endif // QT_CONFIG(spinbox)
+#if QT_CONFIG(groupbox)
+    case CC_GroupBox:
+        if (const QStyleOptionGroupBox *groupBox = qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::GroupBox, groupBox->state);
+            if (!r.isValid())
+                break;
+
+            // background/frame
+            if (groupBox->subControls & SC_GroupBoxFrame) {
+                QStyleOptionFrame frameOpt;
+                frameOpt.QStyleOption::operator=(*groupBox);
+                frameOpt.rect = subControlRect(CC_GroupBox, opt, SC_GroupBoxFrame, w);
+                drawPrimitive(PE_FrameGroupBox, &frameOpt, p, w);
+            }
+
+            // title
+            if (groupBox->subControls & SC_GroupBoxLabel && !groupBox->text.isEmpty()) {
+                const auto *textProps = r.text();
+                const QFont textFont = r.font();
+                QRect titleRect = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w);
+                d->drawControlText(textProps, textFont, titleRect.marginsRemoved(r.metrics->textPadding),
+                                   groupBox->text, Qt::TextShowMnemonic, p, Qt::AlignLeft | Qt::AlignVCenter);
+            }
+            // don't draw checkmark as the Controls style doesn't draw it
+            // and StyleKit doesn't provide a way to style it
+            return;
+        }
+        break;
+#endif // QT_CONFIG(groupbox)
     default:
         break;
     }
@@ -2412,6 +2454,49 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
         }
         break;
 #endif // QT_CONFIG(spinbox)
+#if QT_CONFIG(groupbox)
+    case CC_GroupBox:
+        if (const QStyleOptionGroupBox *groupBox = qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
+            const auto r = d->resolveLayout(QQStyleKitReader::ControlType::GroupBox, groupBox->state);
+            if (!r.isValid())
+                break;
+            const auto &metrics = *r.metrics;
+            QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
+            switch (sc) {
+            case SC_GroupBoxFrame:
+                return visualRect(opt->direction, opt->rect, frameRect);
+            case SC_GroupBoxLabel: {
+                const int fontHeight = opt->fontMetrics.height();
+                const int labelHeight = metrics.textPadding.top() + fontHeight
+                                        + metrics.textPadding.bottom();
+                // const QRect labelContainer(opt->rect.left() + metrics.padding.left() + metrics.textPadding.left(),
+                //                            opt->rect.top() + metrics.padding.top() + metrics.textPadding.top(),
+                //                            opt->rect.width() - metrics.padding.left() - metrics.padding.right() - metrics.textPadding.left() - metrics.textPadding.right(),
+                //                            labelHeight);
+                const QRect labelContainer(opt->rect.left(), opt->rect.top(),
+                                            opt->rect.width(),
+                                            labelHeight);
+                return visualRect(opt->direction, opt->rect, labelContainer);
+            }
+            case SC_GroupBoxCheckBox: {
+                // The controls style doesn't draw the checkbox, so we don't return a rect for it
+                return QRect();
+            }
+            case SC_GroupBoxContents: {
+                const auto labelHeight = subControlRect(CC_GroupBox, opt, SC_GroupBoxLabel, w).height();
+                const auto offset = metrics.padding.top() + qMax(labelHeight, metrics.margins.top() + metrics.spacing);
+                QRect contentsRect(opt->rect.left() + metrics.padding.left(),
+                                   opt->rect.top() + offset,
+                                   opt->rect.width() - metrics.padding.left() - metrics.padding.right(),
+                                   opt->rect.bottom() - opt->rect.top() - offset - metrics.padding.bottom());
+                return visualRect(opt->direction, opt->rect, contentsRect);
+            }
+            default:
+                break;
+            }
+        }
+        break;
+#endif // QT_CONFIG(groupbox)
     default:
         break;
     }
@@ -2609,6 +2694,21 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                      std::max({contentH, indicatorH, bgH}));
     }
 #endif // QT_CONFIG(spinbox)
+#if QT_CONFIG(groupbox)
+    case CT_GroupBox:
+        if (const auto *groupBox = qstyleoption_cast<const QStyleOptionGroupBox *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::GroupBox, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            const QSize bgSize = metrics.bgImplicitSize + QSize(metrics.margins.left() + metrics.margins.right(),
+                                                metrics.margins.top() + metrics.margins.bottom());
+            const QSize contentSize = contentsSize.grownBy(metrics.padding);
+            const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, groupBox->text).grownBy(metrics.textPadding);
+            return textSize.expandedTo(contentSize).expandedTo(bgSize);
+        }
+        break;
+#endif // QT_CONFIG(groupbox)
     default:
         break;
     }

@@ -22,7 +22,8 @@ T.GroupBox {
      * background's topMargin, which pushes the frame below the label.
      * This ensures that padding still represents the space between the
      * frame and the child controls, consistent with Pane and Frame. */
-    topPadding: styleReader.topPadding + styleReader.background.topMargin
+    topPadding: styleReader.topPadding + Math.max(styleReader.background.topMargin,
+                                                  implicitLabelHeight + spacing)
 
     leftPadding: styleReader.leftPadding
     rightPadding: styleReader.rightPadding
@@ -46,7 +47,6 @@ T.GroupBox {
     }
 
     label: Text {
-        x: control.leftPadding
         padding: styleReader.text.padding
         leftPadding: styleReader.text.leftPadding
         rightPadding: styleReader.text.rightPadding
