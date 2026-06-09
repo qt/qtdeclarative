@@ -310,9 +310,15 @@ attached signal handlers.
 
 Signals can be added to custom QML types through the \c signal keyword.
 
-The syntax for defining a new signal is:
+The preferred syntax for defining a new signal is:
+
+\tt{signal <name>[([<parameter name> : <type>[, ...]])]}
+
+There is also an old syntax with the type before the name:
 
 \tt{signal <name>[([<type> <parameter name>[, ...]])]}
+
+You should use the new syntax.
 
 A signal is emitted by invoking the signal as a method.
 
@@ -328,7 +334,7 @@ import QtQuick
 Rectangle {
     id: root
 
-    signal activated(real xPosition, real yPosition)
+    signal activated(xPosition: real, yPosition: real)
     property point mouseXY
     property int side: 100
     width: side; height: side
@@ -369,7 +375,7 @@ import QtQuick
 Rectangle {
     id: relay
 
-    signal messageReceived(string person, string notice)
+    signal messageReceived(person: string, notice: string)
 
     Component.onCompleted: {
         relay.messageReceived.connect(sendToPost)
