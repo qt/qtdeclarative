@@ -131,6 +131,9 @@ private Q_SLOTS:
     void compilerWarnings_data();
     void compilerWarnings();
 
+    void cycles_data();
+    void cycles();
+
     void testUnknownCausesFail();
 
     void directoryPassedAsQmlTypesFile();
@@ -3230,6 +3233,28 @@ void TestQmllint::compilerWarnings()
         category->setSeverity(QQmlJS::WarningSeverity::Warning);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &categories);
+}
+
+void TestQmllint::cycles_data()
+{
+    QTest::addColumn<QString>("filename");
+    const QString dataFolder = testFile("cycles");
+
+    for (const auto &file : QDirListing(dataFolder, QDirListing::IteratorFlag::Recursive)) {
+        if (!file.isFile())
+            continue;
+        QTest::addRow("%s", qPrintable(QStringView(file.filePath().mid(dataFolder.size() + 1))))
+                << file.filePath();
+    }
+}
+
+void TestQmllint::cycles()
+{
+    QFETCH(QString, filename);
+
+    QQmlJSLinter::LintResult result = m_linter.lintFile(
+            filename, nullptr, false, nullptr, m_defaultImportPaths, { }, { }, m_categories);
+    QCOMPARE(result, QQmlJSLinter::LintSuccess);
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
