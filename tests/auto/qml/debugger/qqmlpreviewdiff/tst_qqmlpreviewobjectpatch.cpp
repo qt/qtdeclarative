@@ -221,6 +221,24 @@ private slots:
     void childOrderBindingShift_data();
     void childOrderBindingShift();
 
+    // Required property supplied via createWithInitialProperties must be
+    // preserved across a hot-reload rebuild of that component's CU. Without
+    // the fix in stashExternalState(), the VME meta-object reconstruction
+    // resets the required property to null and the dependent bindings break.
+    void requiredPropertyPreservedOnRebuild();
+
+    // Bindings from a child composite type's own CU on deeply-nested sub-objects
+    // (accessed through intermediate C++ parents) must not be incorrectly stashed
+    // during a parent form rebuild. The child is fully recreated during the
+    // rebuild, so its internal bindings are fresh. Stashing and restoring them
+    // overwrites the fresh binding with a stale copy that has the wrong scope.
+    void childBindingScopeAfterFormRebuild();
+
+    // Rebuilding a form CU when the top-level object is a derived type (directly
+    // inheriting from the form, not instantiated by an outer CU) must not crash.
+    // The instance-level VME creation must use the correct CU and objectIndex.
+    void topLevelDerivedTypeFormRebuild();
+
 private:
     QQmlEngine engine;
 };
@@ -3538,6 +3556,196 @@ void tst_QQmlPreviewObjectPatch::childOrderBindingShift()
                         QString("data[%1] is null, expected \"%2\"").arg(i).arg(expectedOrder[i])));
         QCOMPARE(child->objectName(), expectedOrder[i]);
     }
+}
+
+// Required property supplied via createWithInitialProperties must survive a
+// hot-reload rebuild of that component's CU. Before the fix, stashExternalState()
+// skipped declared non-alias VME properties that had no binding, so the required
+// property was reset to null when the VME meta-object was reconstructed, and any
+// dependent bindings (e.g. "value: dependency.answer") evaluated to -1 / null.
+void tst_QQmlPreviewObjectPatch::requiredPropertyPreservedOnRebuild()
+{
+    QQmlEngine localEngine;
+
+    // Provider: a simple object with an "answer" property.
+    QQmlComponent providerComp(&localEngine);
+    providerComp.setData("import QtQml\nQtObject { property int answer: 42 }",
+                         QUrl("file:///required_prop_provider.qml"));
+    QVERIFY2(providerComp.isReady(), qPrintable(providerComp.errorString()));
+    std::unique_ptr<QObject> provider(providerComp.create());
+    QVERIFY(provider);
+
+    // Target: declares "required property QtObject dependency" and a binding
+    // "property int value: dependency ? dependency.answer : -1".
+    // The required property is set via createWithInitialProperties — it has no
+    // binding in the compilation unit, only an externally-supplied value.
+    QQmlComponent targetComp(&localEngine, testFileUrl("RequiredPropPreservedOld.qml"));
+    QVERIFY2(targetComp.isReady(), qPrintable(targetComp.errorString()));
+    std::unique_ptr<QObject> target(targetComp.createWithInitialProperties(
+            { { QStringLiteral("dependency"), QVariant::fromValue(provider.get()) } }));
+    QVERIFY(target);
+
+    // Sanity: before rebuild, value is read through dependency correctly.
+    QCOMPARE(target->property("dependency").value<QObject *>(), provider.get());
+    QCOMPARE(target->property("value").toInt(), 42);
+
+    // Simulate a hot-reload: rebuild the target's CU (new version adds "marker: 99").
+    QQmlComponent newComp(&localEngine, testFileUrl("RequiredPropPreservedNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&targetComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // After rebuild, required property must still point to the original provider.
+    QCOMPARE(target->property("dependency").value<QObject *>(), provider.get());
+    // The script binding "dependency ? dependency.answer : -1" must still evaluate
+    // correctly through the restored dependency reference.
+    QCOMPARE(target->property("value").toInt(), 42);
+    // The new constant property from the rebuild must also be present.
+    QCOMPARE(target->property("marker").toInt(), 99);
+}
+
+// Reproduces the coffee demo button bug: a child composite type (CoffeeCard/
+// ChildBindingScopeWidget) has a binding on a deeply-nested sub-object (the
+// button's "enabled" property, set from the widget's own CU). When the parent
+// form is rebuilt, the widget and its sub-objects are fully recreated with fresh
+// bindings. Without the fix, stashExternalState() incorrectly stashes the old
+// "enabled" binding (classifying it as "external" because the widget's CU is
+// not in internalUnits). restoreExternalState() then overwrites the fresh binding
+// with the stale copy whose scope points to the OLD (retired) widget. This makes
+// the binding evaluate against dead data, breaking the "enabled" state.
+void tst_QQmlPreviewObjectPatch::childBindingScopeAfterFormRebuild()
+{
+    QQmlEngine localEngine;
+    localEngine.addImportPath(dataDirectory());
+
+    QQmlComponent outerComp(&localEngine, testFileUrl("ChildBindingScopeOuter.qml"));
+    QVERIFY2(outerComp.isReady(), qPrintable(outerComp.errorString()));
+    std::unique_ptr<QObject> outer(outerComp.create());
+    QVERIFY(outer);
+
+    QObject *wrapper = outer->property("inner").value<QObject *>();
+    QVERIFY(wrapper);
+    QObject *widget = wrapper->property("widget").value<QObject *>();
+    QVERIFY(widget);
+    QObject *button = widget->property("button").value<QObject *>();
+    QVERIFY(button);
+
+    // Sanity: active=true → interval=500 (binding: root.active ? 500 : 1000)
+    QCOMPARE(widget->property("active").toBool(), true);
+    QCOMPARE(button->property("interval").toInt(), 500);
+
+    // Verify binding is live before rebuild.
+    widget->setProperty("active", false);
+    QCOMPARE(button->property("interval").toInt(), 1000);
+    widget->setProperty("active", true);
+    QCOMPARE(button->property("interval").toInt(), 500);
+
+    // Load the form's CU for rebuild.
+    QQmlComponent oldFormComp(&localEngine, testFileUrl("ChildBindingScopeFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newFormComp(&localEngine, testFileUrl("ChildBindingScopeFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    // Rebuild the form CU. The widget child is destroyed and recreated.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // Re-fetch — widget and button (Timer) were replaced during rebuild.
+    widget = wrapper->property("widget").value<QObject *>();
+    QVERIFY(widget);
+    button = widget->property("button").value<QObject *>();
+    QVERIFY(button);
+
+    // The "interval" binding on the new Timer must read from the NEW widget's
+    // "active" property. active defaults to true, so interval must be 500.
+    QCOMPARE(button->property("interval").toInt(), 500);
+
+    // Verify the binding is LIVE — changing "active" on the NEW widget must
+    // propagate to the timer. If the binding has a stale scope (old widget),
+    // this won't update.
+    widget->setProperty("active", false);
+    QCOMPARE(button->property("interval").toInt(), 1000);
+
+    widget->setProperty("active", true);
+    QCOMPARE(button->property("interval").toInt(), 500);
+
+    // Verify the form change took effect.
+    QCOMPARE(wrapper->property("label").toString(), QString("hello!"));
+}
+
+// When the top-level component directly inherits from the form being rebuilt
+// (ddata->compilationUnit != oldUnit and needsVMEMetaObject is true), the
+// instance-level VME must be created with the correct CU and objectIndex.
+// Previously, it incorrectly used newUnit/cuIndex (the rebuilt form) instead of
+// instanceLevel.newCu/instanceLevel.objectIndex (the wrapper's own CU), causing
+// a crash in property writes during repopulateBindings.
+void tst_QQmlPreviewObjectPatch::topLevelDerivedTypeFormRebuild()
+{
+    QQmlEngine localEngine;
+    localEngine.addImportPath(dataDirectory());
+
+    // Create the wrapper DIRECTLY (no outer instantiation layer).
+    // The wrapper inherits from the form and adds its own property (triggerCount).
+    QQmlComponent wrapperComp(&localEngine, testFileUrl("ChildBindingScopeWrapper.qml"));
+    QVERIFY2(wrapperComp.isReady(), qPrintable(wrapperComp.errorString()));
+    std::unique_ptr<QObject> wrapper(wrapperComp.create());
+    QVERIFY(wrapper);
+
+    QObject *widget = wrapper->property("widget").value<QObject *>();
+    QVERIFY(widget);
+    QCOMPARE(wrapper->property("triggerCount").toInt(), 0);
+    QCOMPARE(wrapper->property("label").toString(), QString("hello"));
+
+    // Load the form's CU for rebuild.
+    QQmlComponent oldFormComp(&localEngine, testFileUrl("ChildBindingScopeFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit);
+
+    QQmlComponent newFormComp(&localEngine, testFileUrl("ChildBindingScopeFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(newExecUnit);
+
+    // This must not crash. The wrapper is found via its VME chain (which includes
+    // the form CU). The instance-level VME is for the wrapper's own CU.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // The wrapper's own property must still be functional.
+    QCOMPARE(wrapper->property("triggerCount").toInt(), 0);
+
+    // The form's label change must have taken effect.
+    QCOMPARE(wrapper->property("label").toString(), QString("hello!"));
+
+    // The widget must still be accessible.
+    widget = wrapper->property("widget").value<QObject *>();
+    QVERIFY(widget);
+    QObject *button = widget->property("button").value<QObject *>();
+    QVERIFY(button);
+
+    // The widget's binding must still work.
+    QCOMPARE(button->property("interval").toInt(), 500);
+    widget->setProperty("active", false);
+    QCOMPARE(button->property("interval").toInt(), 1000);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
