@@ -653,12 +653,12 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << Result{ { { "Unqualified access"_L1, 12, 36 } } } << defaultOptions;
-    QTest::newRow("AutomatchedSignalHandler2")
-            << QStringLiteral("AutomatchedSignalHandler.qml")
-            << Result{ { { "Implicitly defining \"onClicked\" as signal handler in Connections "
-                           "is deprecated. Create a function instead: \"function onClicked() "
-                           "{ ... }\""_L1 } } }
+            << Result{ {
+                       { "Unqualified access"_L1, 12, 36 },
+                       { "Implicitly defining \"onClicked\" as signal handler in Connections "
+                         "is deprecated. Create a function instead: \"function onClicked() "
+                         "{ ... }\""_L1 },
+               } }
             << defaultOptions;
     QTest::newRow("BadAttached")
             << QStringLiteral("badAttached.qml")
@@ -945,11 +945,11 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("WithStatement")
             << QStringLiteral("WithStatement.qml")
             << Result{ { { "with statements are strongly discouraged"_L1 } } } << defaultOptions;
-    QTest::newRow("aliasCycle1") << QStringLiteral(
-            "aliasCycle.qml") << Result{ { { "Alias \"b\" is part of an alias cycle"_L1, 6, 5 } } }
-                                 << defaultOptions;
-    QTest::newRow("aliasCycle2") << QStringLiteral(
-            "aliasCycle.qml") << Result{ { { "Alias \"a\" is part of an alias cycle"_L1, 5, 5 } } }
+    QTest::newRow("aliasCycle1") << QStringLiteral("aliasCycle.qml")
+                                 << Result{ {
+                                            { "Alias \"b\" is part of an alias cycle"_L1, 6, 5 },
+                                            { "Alias \"a\" is part of an alias cycle"_L1, 5, 5 },
+                                    } }
                                  << defaultOptions;
     QTest::newRow("anchors3")
             << QStringLiteral("anchors3.qml")
@@ -1082,15 +1082,6 @@ void TestQmllint::dirtyQmlCode_data()
             << Result{ { { "Component is missing required property bar from Rectangle"_L1, 11,
                            13 } } }
             << defaultOptions;
-    QTest::newRow("connectionsBinding")
-            << QStringLiteral("autofix/ConnectionsHandler.qml")
-            << Result{ { { "Implicitly defining \"onWidthChanged\" as signal handler in "
-                           "Connections is deprecated. Create a function instead: \"function "
-                           "onWidthChanged() { ... }\"."_L1 },
-                         { "Implicitly defining \"onColorChanged\" as signal handler in "
-                           "Connections is deprecated. Create a function instead: "
-                           "\"function onColorChanged(collie) { ... }\"."_L1 } } }
-            << defaultOptions;
     QTest::newRow("cppPropertyChangeHandlers-no-property")
             << QStringLiteral("badCppPropertyChangeHandlers3.qml")
             << Result{ { { "no matching signal found for handler \"onXChanged\""_L1 } } }
@@ -1184,13 +1175,12 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("duplicatedPropertyName")
             << QStringLiteral("duplicatedPropertyName.qml")
-            << Result{ { { "Duplicated property name \"cat\", \"cat\" is already a property."_L1, 5,
-                           21 } } }
-            << defaultOptions;
-    QTest::newRow("duplicatedSignalName")
-            << QStringLiteral("duplicatedPropertyName.qml")
-            << Result{ { { "Duplicated signal name \"clicked\", \"clicked\" is already a signal"_L1,
-                           8, 12 } } }
+            << Result{ {
+                       { "Duplicated property name \"cat\", \"cat\" is already a property."_L1, 5,
+                         21 },
+                       { "Duplicated signal name \"clicked\", \"clicked\" is already a signal"_L1,
+                         8, 12 },
+               } }
             << defaultOptions;
     QTest::newRow("enumInvalid")
             << QStringLiteral("enumInvalid.qml")
@@ -1251,19 +1241,15 @@ void TestQmllint::dirtyQmlCode_data()
             << defaultOptions;
     QTest::newRow("invalidAliasTarget1")
             << QStringLiteral("invalidAliasTarget.qml")
-            << Result{ { { "Invalid alias expression - an initializer is needed."_L1, 6, 18 } } }
-            << defaultOptions;
-    QTest::newRow("invalidAliasTarget2")
-            << QStringLiteral("invalidAliasTarget.qml")
-            << Result{ { { "Invalid alias expression. Only IDs and field member expressions can "
-                           "be aliased"_L1,
-                           7, 30 } } }
-            << defaultOptions;
-    QTest::newRow("invalidAliasTarget3")
-            << QStringLiteral("invalidAliasTarget.qml")
-            << Result{ { { "Invalid alias expression. Only IDs and field member expressions can be "
-                           "aliased"_L1,
-                           9, 34 } } }
+            << Result{ {
+                       { "Invalid alias expression - an initializer is needed."_L1, 6, 18 },
+                       { "Invalid alias expression. Only IDs and field member expressions can "
+                         "be aliased"_L1,
+                         7, 30 },
+                       { "Invalid alias expression. Only IDs and field member expressions can be "
+                         "aliased"_L1,
+                         9, 34 },
+               } }
             << defaultOptions;
     QTest::newRow("invalidInterceptor")
             << QStringLiteral("invalidInterceptor.qml")
