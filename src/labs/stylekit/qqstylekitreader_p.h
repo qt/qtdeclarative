@@ -151,6 +151,10 @@ public:
     QObject *target() const;
     void setTarget(QObject *target);
 
+    // Called by componentComplete()
+    // Factored out so the widget style can call it
+    void setCompleted(bool completed);
+
     bool transitionsEnabled() const;
     void setTransitionsEnabled(bool enabled);
 
@@ -177,7 +181,7 @@ private slots:
 
 protected:
     void classBegin() override {}
-    void componentComplete() override { m_completed = true; };
+    void componentComplete() override;
 
 private:
     void updateControl();
