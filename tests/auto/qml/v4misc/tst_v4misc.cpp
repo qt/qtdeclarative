@@ -95,8 +95,8 @@ void tst_v4misc::parserMisc_data()
     QTest::newRow("for (va() in obj) {}") << QString("ReferenceError: Invalid left-hand side expression for 'in' expression");
     QTest::newRow("[1]=7[A=8=9]") << QString("ReferenceError: left-hand side of assignment operator is not an lvalue");
     QTest::newRow("var asmvalsLen = asmvals{{{{{ngth}}}}};") << QString("SyntaxError: Expected token `;'");
-    QTest::newRow("T||9[---L6i]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
-    QTest::newRow("a?b:[---Hi]") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("T||9[---L6i]") << QString("ReferenceError: Prefix -- operator applied to value that is not a reference.");
+    QTest::newRow("a?b:[---Hi]") << QString("ReferenceError: Prefix -- operator applied to value that is not a reference.");
     QTest::newRow("[``]=1") << QString("ReferenceError: Binding target is not a reference.");
 }
 
