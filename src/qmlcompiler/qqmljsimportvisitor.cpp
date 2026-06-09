@@ -424,8 +424,8 @@ void QQmlJSImportVisitor::resolveGroupProperties()
     }
 }
 
-QString QQmlJSImportVisitor::implicitImportDirectory(
-        const QString &localFile, QQmlJSResourceFileMapper *mapper)
+QString QQmlJSImportVisitor::implicitImportDirectory(const QString &localFile,
+                                                     const QQmlJSResourceFileMapper *mapper)
 {
     if (mapper) {
         const auto resource = mapper->entry(
@@ -501,7 +501,7 @@ void QQmlJSImportVisitor::importBaseModules()
         // Import all possible resource directories the file may belong to.
         // This is somewhat fuzzy, but if you're mapping the same file to multiple resource
         // locations, you're on your own anyway.
-        if (QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
+        if (const QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper()) {
             const QStringList resourcePaths = mapper->resourcePaths(QQmlJSResourceFileMapper::Filter {
                     m_logger->filePath(), QStringList(), QQmlJSResourceFileMapper::Resource });
             for (const QString &path : resourcePaths) {

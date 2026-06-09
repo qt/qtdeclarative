@@ -71,8 +71,8 @@ public:
         return m_scopesByIrLocation;
     }
 
-    static QString implicitImportDirectory(
-            const QString &localFile, QQmlJSResourceFileMapper *mapper);
+    static QString implicitImportDirectory(const QString &localFile,
+                                           const QQmlJSResourceFileMapper *mapper);
 
     // ### should this be restricted?
     QQmlJSImporter *importer() { return m_importer; }

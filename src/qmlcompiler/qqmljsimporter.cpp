@@ -191,8 +191,8 @@ QQmlJSImporter::QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFil
 {
 }
 
-static QString resolvePreferredPath(
-        const QString &qmldirPath, const QString &prefer, QQmlJSResourceFileMapper *mapper)
+static QString resolvePreferredPath(const QString &qmldirPath, const QString &prefer,
+                                    const QQmlJSResourceFileMapper *mapper)
 {
     if (prefer.isEmpty())
         return qmldirPath;
