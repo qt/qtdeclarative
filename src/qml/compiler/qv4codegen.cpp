@@ -954,6 +954,8 @@ bool Codegen::visit(ExportDeclaration *ast)
         exportedValue = popResult();
     } else if (ExpressionNode *expr = ast->variableStatementOrDeclaration->expressionCast()) {
         exportedValue = expression(expr);
+        if (hasError())
+            return false;
     }
 
     exportedValue.loadInAccumulator();
@@ -1327,6 +1329,8 @@ bool Codegen::visit(ArrayMemberExpression *ast)
 
     TailCallBlocker blockTailCalls(this);
     Reference base = expression(ast->base);
+    if (hasError())
+        return false;
 
     auto writeSkip = [&]() {
         base.loadInAccumulator();
@@ -1335,10 +1339,11 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         m_optionalChainsStates->top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
     };
 
-    if (hasError())
-        return false;
     if (base.isSuper()) {
-        Reference index = expression(ast->expression).storeOnStack();
+        auto e = expression(ast->expression);
+        if (hasError())
+            return false;
+        Reference index = e.storeOnStack();
         optionalChainFinalizer(Reference::fromSuperProperty(index), isTailOfChain);
         return false;
     }
@@ -2609,7 +2614,10 @@ bool Codegen::visit(TaggedTemplate *ast)
         return false;
 
     RegisterScope scope(this);
-    return handleTaggedTemplate(expression(ast->base), ast);
+    auto base = expression(ast->base);
+    if (hasError())
+        return false;
+    return handleTaggedTemplate(std::move(base), ast);
 }
 
 bool Codegen::handleTaggedTemplate(Reference base, TaggedTemplate *ast)
@@ -2872,7 +2880,10 @@ bool Codegen::visit(NotExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    setExprResult(unop(Not, expression(ast->expression)));
+    auto e = expression(ast->expression);
+    if (hasError())
+        return false;
+    setExprResult(unop(Not, e));
     return false;
 }
 
@@ -3190,7 +3201,11 @@ bool Codegen::visit(TildeExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    setExprResult(unop(Compl, expression(ast->expression)));
+    auto e = expression(ast->expression);
+    if (hasError())
+        return false;
+
+    setExprResult(unop(Compl, e));
     return false;
 }
 
@@ -3236,7 +3251,11 @@ bool Codegen::visit(UnaryMinusExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    setExprResult(unop(UMinus, expression(ast->expression)));
+    auto e = expression(ast->expression);
+    if (hasError())
+        return false;
+
+    setExprResult(unop(UMinus, e));
     return false;
 }
 
@@ -3246,7 +3265,11 @@ bool Codegen::visit(UnaryPlusExpression *ast)
         return false;
 
     TailCallBlocker blockTailCalls(this);
-    setExprResult(unop(UPlus, expression(ast->expression)));
+    auto e = expression(ast->expression);
+    if (hasError())
+        return false;
+
+    setExprResult(unop(UPlus, e));
     return false;
 }
 
