@@ -589,6 +589,7 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForWidget(const QWidget *widget) 
     auto *widgetReader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     widgetReader->setExplicitStyle(style);
     widgetReader->setTarget(const_cast<QWidget *>(widget));
+    widgetReader->setCompleted(true);
     widgetReaders.insert(widget, widgetReader);
     QObject::connect(widget, &QObject::destroyed, q, [this, widget]() {
         cleanupWidgetReader(widget);
@@ -638,6 +639,7 @@ QQStyleKitReader *QStyleKitStylePrivate::readerForItemViewItem(
     auto *reader = new QQStyleKitReader(const_cast<QStyleKitStyle *>(q));
     reader->setExplicitStyle(style);
     reader->setTarget(const_cast<QWidget *>(widget));
+    reader->setCompleted(true);
     byItem.insert(itemKey, reader);
     return reader;
 }
@@ -783,6 +785,7 @@ QQStyleKitReader *QStyleKitStylePrivate::ensureSharedReader() const
     // Disable transitions since this reader is used for one-off metric reads in layout queries
     sharedReader->setTransitionsEnabled(false);
     sharedReader->setExplicitStyle(style);
+    sharedReader->setCompleted(true);
     return sharedReader;
 }
 

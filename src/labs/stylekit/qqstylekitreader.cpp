@@ -796,6 +796,11 @@ void QQStyleKitReader::setTarget(QObject *target)
     m_target = target;
 }
 
+void QQStyleKitReader::setCompleted(bool completed)
+{
+    m_completed = completed;
+}
+
 bool QQStyleKitReader::transitionsEnabled() const
 {
     return m_transitionsEnabled;
@@ -929,6 +934,11 @@ bool QQStyleKitReader::rebuildEffectiveFont()
 QQStyleKitControlProperties *QQStyleKitReader::global() const
 {
     return &const_cast<QQStyleKitReader *>(this)->m_global;
+}
+
+void QQStyleKitReader::componentComplete()
+{
+    setCompleted(true);
 }
 
 QT_END_NAMESPACE
