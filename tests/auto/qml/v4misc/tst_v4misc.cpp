@@ -100,6 +100,7 @@ void tst_v4misc::parserMisc_data()
     QTest::newRow("[``]=1") << QString("ReferenceError: Binding target is not a reference.");
     QTest::newRow("++++Q??+++f") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
     QTest::newRow("++++Q32++-x+x+-x-Lx+-x+x+-x-LxQtmo??+++Iabx+x") << QString("ReferenceError: Prefix ++ operator applied to value that is not a reference.");
+    QTest::newRow("0?? --0") << QString("ReferenceError: Prefix -- operator applied to value that is not a reference.");
 }
 
 void tst_v4misc::parserMisc()

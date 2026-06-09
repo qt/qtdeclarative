@@ -1493,6 +1493,11 @@ bool Codegen::visit(BinaryExpression *ast)
         iftrue.link();
 
         Reference right = expression(ast->right);
+        if (hasError()) {
+            jump_endif.link();
+            return false;
+        }
+
         right.loadInAccumulator();
         jump_endif.link();
         setExprResult(Reference::fromAccumulator(this));
