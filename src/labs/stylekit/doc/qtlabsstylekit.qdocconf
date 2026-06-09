@@ -13,7 +13,7 @@ qhp.QtLabsStyleKit.virtualFolder = qtlabsstylekit
 qhp.QtLabsStyleKit.indexTitle    = Qt Labs StyleKit
 qhp.QtLabsStyleKit.indexRoot     =
 
-qhp.QtLabsStyleKit.subprojects = features manual examples qmltypes
+qhp.QtLabsStyleKit.subprojects = features manual examples qmltypes classes
 
 # If we have more topics in this module, we should replace the "manual"
 # block with the qtlabsstylekit-toc.qdoc file that will contain the full table
@@ -36,10 +36,12 @@ qhp.QtLabsStyleKit.subprojects.qmltypes.indexTitle = Qt Labs StyleKit QML Types
 qhp.QtLabsStyleKit.subprojects.qmltypes.selectors = qmlclass
 qhp.QtLabsStyleKit.subprojects.qmltypes.sortPages = true
 
-depends = qtcore qtgui qtdoc qtqml qtqmlcore qtquick qtquickcontrols
+qhp.QtLabsStyleKit.subprojects.classes.title = C++ Classes
+qhp.QtLabsStyleKit.subprojects.classes.indexTitle = Qt Labs StyleKit C++ Classes
+qhp.QtLabsStyleKit.subprojects.classes.selectors = class
+qhp.QtLabsStyleKit.subprojects.classes.sortPages = true
 
-# This module has no documented C++ types, clear the module header
-moduleheader =
+depends = qtcore qtgui qtdoc qtqml qtqmlcore qtquick qtquickcontrols
 
 examplesinstallpath = stylekit
 exampledirs += snippets \

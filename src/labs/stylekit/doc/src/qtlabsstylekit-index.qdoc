@@ -70,6 +70,10 @@
         \li \l{StyleKit Quick Controls Example} - Shows how to style \l {Qt Quick Controls} using \l {Qt Labs StyleKit}{StyleKit}.
     \endlist
 
+    \section1 C++ Classes
+
+    \generatelist {classesbymodule QtLabsStyleKit}
+
     \section1 QML Types
 
     \generatelist {qmltypesbymodule Qt.labs.StyleKit}

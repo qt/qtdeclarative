@@ -1,0 +1,13 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \module QtLabsStyleKit
+    \title Qt Labs StyleKit C++ Classes
+    \ingroup modules
+    \qtcmakepackage LabsStyleKit
+    \brief Provides C++ classes for integrating Qt Labs StyleKit with Qt Widgets.
+
+    For more information on the Qt Labs StyleKit module, see the
+    \l{Qt Labs StyleKit} module documentation.
+*/
