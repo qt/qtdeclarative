@@ -10,12 +10,13 @@ ApplicationWindow {
 
     property alias button: btn
     property string toolTipText: "?"
+    property bool showToolTip: false
 
     Button {
         id: btn
         text: "Hover me"
         ToolTip.delay: 0
-        ToolTip.visible: hovered && toolTipText.length > 0
+        ToolTip.visible: showToolTip && toolTipText.length > 0
         ToolTip.text: toolTipText
     }
 }

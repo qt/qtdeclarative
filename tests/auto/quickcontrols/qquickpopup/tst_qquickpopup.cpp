@@ -3790,33 +3790,41 @@ void tst_QQuickPopup::popupWindowRepositionOnImplicitSizeChange()
     toolTip->setTopInset(-10);
     toolTip->setBottomInset(-10);
 
-    // Hover the button to show the tooltip. Start from the bottom of the
-    // window to ensure a proper hover-enter transition on the button.
-    const QPointF buttonCenter = button->mapToItem(window->contentItem(),
-        QPointF(button->width() / 2, button->height() / 2));
-    PointLerper lerper(window, QPoint(buttonCenter.x(), window->height() - 1));
-    lerper.move(buttonCenter.toPoint());
+    // Show the tooltip with the initial short text and record its geometry.
+    // Visibility is driven by a property rather than synthetic mouse hover,
+    // which is flaky on Windows (QTBUG-147315).
+    window->setProperty("showToolTip", true);
     QTRY_VERIFY(toolTip->isOpened());
 
     auto *popupPrivate = QQuickPopupPrivate::get(toolTip);
-    TRY_VERIFY_POPUP_OPENED(toolTip);
     auto *popupWindow = popupPrivate->popupWindow;
     QVERIFY(popupWindow);
     QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
 
     const int initialY = popupWindow->y();
-
     const int initialWidth = popupWindow->width();
 
-    // Change the text to something much longer, triggering implicit size change.
-    // Without the fix, the popup window is resized but not repositioned,
-    // causing the y position to drift.
+    // Hide the tooltip, then grow the text to something much longer while it is
+    // hidden. The popup window stays alive while hidden, so the implicit size
+    // change happens off-screen and fires implicitHeightChanged/-WidthChanged.
+    window->setProperty("showToolTip", false);
+    QTRY_VERIFY(!toolTip->isVisible());
     window->setProperty("toolTipText", "Flinstone, Fred - a much longer tooltip text");
 
-    // Wait for the popup window to finish resizing before checking position.
+    // Show the tooltip again. Without the fix, the popup window was resized
+    // while hidden but not repositioned, so it reappears with a drifted y
+    // (QTBUG-142700). The drift only manifests on this second show.
+    window->setProperty("showToolTip", true);
+    QTRY_VERIFY(toolTip->isOpened());
+
+    popupWindow = popupPrivate->popupWindow;
+    QVERIFY(popupWindow);
+    QVERIFY(QTest::qWaitForWindowExposed(popupWindow));
+
+    // Wait for the popup window to reflect the larger implicit size.
     QTRY_VERIFY(popupWindow->width() > initialWidth);
 
-    // The tooltip should remain at the same y position.
+    // The tooltip should reappear at the same y position.
     // Without the fix (missing reposition()), y shifts incorrectly.
     QCOMPARE(popupWindow->y(), initialY);
 }
