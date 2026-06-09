@@ -145,8 +145,8 @@ public:
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
                    QQmlJSImporterFlags flags = QQmlJSImporterFlags{});
 
-    QQmlJSResourceFileMapper *resourceFileMapper() const { return m_mapper; }
-    void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
+    const QQmlJSResourceFileMapper *resourceFileMapper() const { return m_mapper; }
+    void setResourceFileMapper(const QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
 
     QQmlJSResourceFileMapper *metaDataMapper() const { return m_metaDataMapper; }
     void setMetaDataMapper(QQmlJSResourceFileMapper *mapper) { m_metaDataMapper = mapper; }
@@ -320,7 +320,7 @@ private:
     QList<QQmlJS::DiagnosticMessage> m_globalWarnings;
     std::optional<AvailableTypes> m_builtins;
 
-    QQmlJSResourceFileMapper *m_mapper = nullptr;
+    const QQmlJSResourceFileMapper *m_mapper = nullptr;
     QQmlJSResourceFileMapper *m_metaDataMapper = nullptr;
     QQmlJSImporterFlags m_flags;
     bool useOptionalImports() const { return m_flags.testFlag(UseOptionalImports); };
