@@ -349,8 +349,8 @@ static void rebuildObject(QObject *object, int cuIndex,
     if (QQmlPropertyCacheVector *caches = instanceLevel.newCu->propertyCachesPtr();
         caches->count() > instanceLevel.objectIndex
         && caches->needsVMEMetaObject(instanceLevel.objectIndex)) {
-        QQmlPropertyCache::ConstPtr cache = newUnit->propertyCachesPtr()->at(cuIndex);
-        new QQmlVMEMetaObject(v4, object, cache, newUnit, cuIndex);
+        QQmlPropertyCache::ConstPtr cache = caches->at(instanceLevel.objectIndex);
+        new QQmlVMEMetaObject(v4, object, cache, instanceLevel.newCu, instanceLevel.objectIndex);
     }
 
     // Repopulate bindings at each composite level (deepest first).

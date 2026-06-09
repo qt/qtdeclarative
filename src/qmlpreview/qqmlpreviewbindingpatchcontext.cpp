@@ -56,9 +56,9 @@ static bool functionBelongsToObject(const QV4::Function *f,
 // compilation units that participate in the rebuild of this object.
 // External bindings come from other compilation units (e.g. a parent component setting a
 // property binding on a child instance) and must be preserved across rebuilds.
-static bool
-isExternalBinding(const QQmlAnyBinding &binding,
-                  const std::vector<CompositeLevel> &internalUnits)
+static bool isExternalBinding(const QQmlAnyBinding &binding,
+                              const std::vector<CompositeLevel> &internalUnits,
+                              QObject *target)
 {
     if (!binding)
         return false;
@@ -87,6 +87,30 @@ isExternalBinding(const QQmlAnyBinding &binding,
         if (functionBelongsToObject(f, internalUnit.oldCu, internalUnit.objectIndex)
             || functionBelongsToObject(f, internalUnit.newCu, internalUnit.objectIndex)) {
             return false;
+        }
+    }
+
+    const QQmlData *ddata = QQmlData::get(target);
+    if (!ddata)
+        return true;
+
+    // If the binding lives in an outer context that's still part of the rebuild, it is not
+    // actually external since it will be re-recreated.
+
+    for (QQmlRefPointer<QQmlContextData> context = ddata->outerContext; context;
+         context = context->parent()) {
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> cu = context->typeCompilationUnit();
+        if (!cu)
+            continue;
+
+        if (f->executableCompilationUnit() == cu)
+            return false;
+
+        if (std::any_of(internalUnits.begin(), internalUnits.end(),
+                        [&](const CompositeLevel &level) {
+                            return level.oldCu == cu || level.newCu == cu;
+                        })) {
+            break;
         }
     }
 
@@ -161,6 +185,14 @@ void BindingPatchContext::recordBindingValues(
             break;
         }
     }
+
+    for (int propertyIndex = 0, end = obj->propertyCount(); propertyIndex != end; ++propertyIndex) {
+        const qsizetype size = constantValues->size();
+        QVariant &value =
+                (*constantValues)[unit->stringAt(obj->propertyTable()[propertyIndex].nameIndex())];
+        if (constantValues->size() != size)
+            value = QVariant(cache->property(cache->propertyOffset() + propertyIndex)->propType());
+    }
 }
 
 void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &internalUnits,
@@ -216,14 +248,14 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
         if (it == constantValues.cend()) {
             // Property not in CU's binding table — check for external bindings.
             const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
-            if (isExternalBinding(binding, internalUnits))
+            if (isExternalBinding(binding, internalUnits, m_object))
                 m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
             continue;
         }
 
         // Property is in the CU's binding table.
         const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
-        if (isExternalBinding(binding, internalUnits)) {
+        if (isExternalBinding(binding, internalUnits, m_object)) {
             m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
             continue;
         }
