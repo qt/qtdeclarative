@@ -152,10 +152,11 @@ QT_BEGIN_NAMESPACE
 
     \snippet DelegateStyle_transitions.qml transition
 
-    Also note that \l ColorAnimation has a special feature that
-    animates \e all color properties that changed during a
-    state change if \l {PropertyAnimation::}{property} and
-    \l {PropertyAnimation::}{properties} are left unset.
+    \note For color properties that participate in a transition, prefer
+    \l {Qt::alpha}{Qt.alpha} over \c "transparent"
+    (e.g. \c {menuBarItem.background.color: Qt.alpha(palette.accent, 0)}).
+    \c "transparent" is \c {Qt.rgba(0, 0, 0, 0)}, which can pull interpolated
+    colors toward black during the transition.
 */
 
 // ************* DelegateStyle ****************
