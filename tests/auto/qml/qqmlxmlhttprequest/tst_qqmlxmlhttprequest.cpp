@@ -1175,8 +1175,8 @@ void tst_qqmlxmlhttprequest::sendFileRequest()
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
-#ifdef Q_OS_ANDROID
-    QSKIP("Trying to run the main app .so lib crashes on Android (QTBUG-99214)");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
     if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
         // Test with no settings, neither reading nor writing should work
@@ -1232,8 +1232,8 @@ void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNoWrite() {
-#ifdef Q_OS_ANDROID
-    QSKIP("Trying to run the main app .so lib crashes on Android (QTBUG-99214)");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
 
     if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
@@ -1265,8 +1265,8 @@ void tst_qqmlxmlhttprequest::sendFileRequestNoWrite() {
 
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNoRead() {
-#ifdef Q_OS_ANDROID
-    QSKIP("Trying to run the main app .so lib crashes on Android (QTBUG-99214)");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform (QTBUG-99214)");
 #endif
 
     if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {

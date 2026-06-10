@@ -2471,8 +2471,8 @@ void tst_qqmlproperty::compatResolveUrls()
 
     QCOMPARE(qvariant_cast<QUrl>(o->property("a")), QUrl(QStringLiteral("relative/url.png")));
 
-#ifdef Q_OS_ANDROID
-    QSKIP("Can't start QProcess to run a custom user binary on Android");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform");
 #endif
 
 #if QT_CONFIG(process)
