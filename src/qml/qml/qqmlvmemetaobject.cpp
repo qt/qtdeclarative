@@ -251,7 +251,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
                 return;
 
             if (pd->notifyIndex() != -1 && ctxt->engine())
-                connect(target, pd->notifyIndex(), ctxt->engine());
+                QQmlData::connectEndpoint(this, target, pd->notifyIndex(), ctxt->engine());
         }
 
         metaObject.setTag(EndPointIsConnected);
@@ -1519,8 +1519,8 @@ void QQmlVMEMetaObject::connectAlias(const QV4::CompiledData::Object *compiledOb
 
     const QQmlPropertyData *aliasProperty = cache->property(aliasOffset() + aliasId);
     endpoint->metaObject = this;
-    endpoint->connect(m_ctxt->idValueBindings(
-            aliasProperty ? aliasProperty->aliasTargetObjectId() : -1));
+    m_ctxt->idValueBindings(
+            aliasProperty ? aliasProperty->aliasTargetObjectId() : -1)->connect(endpoint);
     endpoint->tryConnect();
 }
 

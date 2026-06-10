@@ -212,59 +212,6 @@ public:
     QHash<QQmlAttachedPropertiesFunc, QObject *> attachedProperties;
 };
 
-void QQmlData::NotifyList::layout(QQmlNotifierEndpoint *endpoint)
-{
-    // Add a temporary sentinel at beginning of list. This will be overwritten
-    // when the end point is inserted into the notifies further down.
-    endpoint->prev = nullptr;
-
-    while (endpoint->next) {
-        Q_ASSERT(reinterpret_cast<QQmlNotifierEndpoint *>(endpoint->next->prev) == endpoint);
-        endpoint = endpoint->next;
-    }
-
-    while (endpoint) {
-        QQmlNotifierEndpoint *ep = (QQmlNotifierEndpoint *) endpoint->prev;
-
-        int index = endpoint->sourceSignal;
-        index = qMin(index, 0xFFFF - 1);
-
-        endpoint->next = notifies[index];
-        if (endpoint->next) endpoint->next->prev = &endpoint->next;
-        endpoint->prev = &notifies[index];
-        notifies[index] = endpoint;
-
-        endpoint = ep;
-    }
-}
-
-void QQmlData::NotifyList::layout()
-{
-    Q_ASSERT(maximumTodoIndex >= notifiesSize);
-
-    if (todo) {
-        QQmlNotifierEndpoint **old = notifies;
-        const int reallocSize = (maximumTodoIndex + 1) * sizeof(QQmlNotifierEndpoint*);
-        notifies = (QQmlNotifierEndpoint**)realloc(notifies, reallocSize);
-        const int memsetSize = (maximumTodoIndex - notifiesSize + 1) *
-                sizeof(QQmlNotifierEndpoint*);
-        memset(notifies + notifiesSize, 0, memsetSize);
-
-        if (notifies != old) {
-            for (int ii = 0; ii < notifiesSize; ++ii)
-                if (notifies[ii])
-                    notifies[ii]->prev = &notifies[ii];
-        }
-
-        notifiesSize = maximumTodoIndex + 1;
-
-        layout(todo);
-    }
-
-    maximumTodoIndex = 0;
-    todo = nullptr;
-}
-
 void QQmlData::deferData(
         int objectIndex, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
         const QQmlRefPointer<QQmlContextData> &context, const QString &inlineComponentName)
@@ -307,10 +254,10 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
 {
     // Can only happen on "home" thread. We apply relaxed semantics when loading the atomics.
 
-    NotifyList *list = notifyList.loadRelaxed();
+    QQmlNotifyList *list = notifyList.loadRelaxed();
 
     if (!list) {
-        list = new NotifyList;
+        list = new QQmlNotifyList;
         // We don't really care when this change takes effect on other threads. The notifyList can
         // only become non-null once in the life time of a QQmlData. It becomes null again when the
         // underlying QObject is deleted. At that point any interaction with the QQmlData is UB
@@ -347,7 +294,7 @@ void QQmlData::addNotify(int index, QQmlNotifierEndpoint *endpoint)
 void QQmlData::disconnectNotifiers(QQmlData::DeleteNotifyList doDelete)
 {
     // Can only happen on "home" thread. We apply relaxed semantics when loading  the atomics.
-    if (NotifyList *list = notifyList.loadRelaxed()) {
+    if (QQmlNotifyList *list = notifyList.loadRelaxed()) {
         while (QQmlNotifierEndpoint *todo = list->todo)
             todo->disconnect();
         for (int ii = 0; ii < list->notifiesSize; ++ii) {

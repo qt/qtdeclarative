@@ -514,7 +514,7 @@ void Heap::ReferenceObject::connectToNotifySignal(QObject *obj, int property, QQ
     // index" instead.
     const int index = QMetaObjectPrivate::signalIndex(obj->metaObject()->property(property)
                                                                     .notifySignal());
-    referenceEndpoint->connect(obj, index, engine);
+    QQmlData::connectEndpoint(referenceEndpoint, obj, index, engine);
 
     // When the object that is being referenced is destroyed, we
     // need to ensure that one additional read is performed to

@@ -296,7 +296,9 @@ qt_internal_add_qml_module(Qml
         qml/qqmlmoduleregistration.cpp qml/qqmlmoduleregistration.h
         qml/qqmlnetworkaccessmanagerfactory.cpp qml/qqmlnetworkaccessmanagerfactory.h
         qml/qqmlnotifier.cpp qml/qqmlnotifier_p.h
+        qml/qqmlnotifierendpoint_p.h
         qml/qqmlnotifyingblob.cpp qml/qqmlnotifyingblob_p.h
+        qml/qqmlnotifylist_p.h
         qml/qqmlobjectcreator.cpp qml/qqmlobjectcreator_p.h
         qml/qqmlobjectorgadget.cpp qml/qqmlobjectorgadget_p.h
         qml/qqmlopenmetaobject.cpp qml/qqmlopenmetaobject_p.h

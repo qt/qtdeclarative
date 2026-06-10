@@ -83,7 +83,7 @@ private:
         if (endpoint->isConnected(sourceObject, notifyIndex))
             endpoint->cancelNotify();
         else
-            endpoint->connect(sourceObject, notifyIndex, engine, true);
+            QQmlData::connectEndpoint(endpoint, sourceObject, notifyIndex, engine, true);
     }
 
     QQmlEngine *engine = nullptr;

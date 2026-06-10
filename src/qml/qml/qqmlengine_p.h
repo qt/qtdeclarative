@@ -27,7 +27,7 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmlmetatype_p.h>
-#include <private/qqmlnotifier_p.h>
+#include <private/qqmlnotifierendpoint_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlvaluetype_p.h>

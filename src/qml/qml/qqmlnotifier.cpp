@@ -3,9 +3,8 @@
 // Qt-Security score:significant
 
 #include "qqmlnotifier_p.h"
-#include "qqmlproperty_p.h"
+#include <private/qqmldata_p.h>
 #include <QtCore/qdebug.h>
-#include <private/qthread_p.h>
 
 QT_BEGIN_NAMESPACE
 

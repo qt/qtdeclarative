@@ -268,7 +268,7 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
     // (i.e., it's a signal handler binding at one of the specific object indices being rebuilt).
     // Only QQmlBoundSignal endpoints are stashed — other notifier endpoints (e.g. alias
     // tracking) are embedded in VME data arrays and cannot be safely owned or relocated.
-    if (QQmlData::NotifyList *list = QQmlData::get(m_object)->notifyList.loadRelaxed()) {
+    if (QQmlNotifyList *list = QQmlData::get(m_object)->notifyList.loadRelaxed()) {
         for (quint16 i = 0, end = list->notifiesSize; i < end; ++i) {
             for (QQmlNotifierEndpoint *ep = list->notifies[i]; ep;) {
                 if (ep->callbackType() != QQmlNotifierEndpoint::QQmlBoundSignal) {
@@ -383,7 +383,7 @@ void BindingPatchContext::restoreExternalState()
             const int signalIndex = QMetaObjectPrivate::signalIndex(
                     metaObject->method(metaObject->indexOfSignal(stored.signature.toUtf8())));
             if (signalIndex >= 0)
-                stored.handler.release()->connect(m_object, signalIndex, engine);
+                QQmlData::connectEndpoint(stored.handler.release(), m_object, signalIndex, engine);
         }
     }
     m_storedSignalHandlers.clear();
