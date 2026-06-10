@@ -79,6 +79,9 @@ QQuickFileDialog::QQuickFileDialog(QObject *parent)
     \value FileDialog.OpenFile The dialog is used to select an existing file (default).
     \value FileDialog.OpenFiles The dialog is used to select multiple existing files.
     \value FileDialog.SaveFile The dialog is used to select any file. The file does not have to exist.
+    \value FileDialog.OpenUrl The dialog is used to select an existing URL.
+    \value FileDialog.OpenUrls The dialog is used to select multiple existing URLs.
+    \value FileDialog.SaveUrl The dialog is used to select any URL. The file does not have to exist.
 */
 QQuickFileDialog::FileMode QQuickFileDialog::fileMode() const
 {
@@ -91,16 +94,26 @@ void QQuickFileDialog::setFileMode(FileMode mode)
     if (mode == m_fileMode)
         return;
 
+    m_options->setSupportedSchemes(QStringList());
     switch (mode) {
     case OpenFile:
+        m_options->setSupportedSchemes(QStringList(u"file"_s));
+        [[fallthrough]];
+    case OpenUrl:
         m_options->setFileMode(QFileDialogOptions::ExistingFile);
         m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
         break;
     case OpenFiles:
+        m_options->setSupportedSchemes(QStringList(u"file"_s));
+        [[fallthrough]];
+    case OpenUrls:
         m_options->setFileMode(QFileDialogOptions::ExistingFiles);
         m_options->setAcceptMode(QFileDialogOptions::AcceptOpen);
         break;
     case SaveFile:
+        m_options->setSupportedSchemes(QStringList(u"file"_s));
+        [[fallthrough]];
+    case SaveUrl:
         m_options->setFileMode(QFileDialogOptions::AnyFile);
         m_options->setAcceptMode(QFileDialogOptions::AcceptSave);
         break;
@@ -161,13 +174,16 @@ void QQuickFileDialog::setSelectedFiles(const QList<QUrl> &selectedFiles)
     if (m_selectedFiles == selectedFiles)
         return;
 
-    if (m_fileMode == SaveFile && selectedFiles.size() > 1) {
+    if ((m_fileMode == SaveFile || m_fileMode == SaveUrl) && selectedFiles.size() > 1) {
         qmlWarning(this) << "Cannot set more than one selected file when fileMode is SaveFile";
         return;
     }
 
-    if (m_fileMode != SaveFile) {
+    if (m_fileMode != SaveFile && m_fileMode != SaveUrl) {
         for (const auto &selectedFile : selectedFiles) {
+            if ((m_fileMode == OpenUrl || m_fileMode == OpenUrls) && selectedFile.scheme() != "file"_L1)
+                // we can't test existence for non-local URLs
+                continue;
             const QString selectedFilePath = QQmlFile::urlToLocalFileOrQrc(selectedFile);
             if (!QFileInfo::exists(selectedFilePath)) {
                 qmlWarning(this) << "Cannot set " << selectedFilePath

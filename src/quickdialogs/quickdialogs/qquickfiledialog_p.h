@@ -51,7 +51,10 @@ public:
     enum FileMode {
         OpenFile,
         OpenFiles,
-        SaveFile
+        SaveFile,
+        OpenUrl,
+        OpenUrls,
+        SaveUrl,
     };
     Q_ENUM(FileMode)
 
