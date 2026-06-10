@@ -114,8 +114,8 @@ void tst_qqmlapplicationengine::testNonResolvedPath()
 
 void tst_qqmlapplicationengine::application_data()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Cannot launch external process on Android");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform");
 #endif
     QTest::addColumn<QByteArray>("qmlFile");
     QTest::addColumn<QByteArray>("expectedStdErr");
@@ -289,9 +289,8 @@ void tst_qqmlapplicationengine::loadFromModuleTranslation_data()
 
 void tst_qqmlapplicationengine::loadFromModuleTranslation()
 {
-#if defined(Q_OS_ANDROID)
-    QSKIP("Test doesn't currently run on Android");
-    return;
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform");
 #endif
 
 #if QT_CONFIG(process)

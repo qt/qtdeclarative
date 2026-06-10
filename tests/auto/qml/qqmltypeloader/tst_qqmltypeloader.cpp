@@ -561,7 +561,10 @@ void tst_QQMLTypeLoader::qmlSingletonWithinModule()
 
 static void checkCleanCacheLoad(const QString &testCase)
 {
-#if QT_CONFIG(process)
+    // QProcess is restricted on Android 8+ (exec from outside nativeLibraryDir is blocked).
+    // See QTBUG-133037. In practice unreachable on Android: the test suite is not built
+    // there (QT_FEATURE_private_tests=OFF).
+#if QT_CONFIG(process) && !defined(Q_OS_ANDROID) && !defined(Q_OS_OHOS)
     const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
     if (qEnvironmentVariableIsSet(skipKey))
         return;
@@ -586,9 +589,6 @@ static void checkCleanCacheLoad(const QString &testCase)
 
 void tst_QQMLTypeLoader::multiSingletonModule()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Android seems to have problems with QProcess");
-#endif
     qmlClearTypeRegistrations();
     QQmlEngine engine;
     engine.addImportPath(testFile("imports"));
@@ -621,9 +621,6 @@ void tst_QQMLTypeLoader::multiSingletonModuleNoWarning()
 
 void tst_QQMLTypeLoader::implicitComponentModule()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Android seems to have problems with QProcess");
-#endif
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("implicitcomponent.qml"));
     QCOMPARE(component.status(), QQmlComponent::Ready);
@@ -635,8 +632,8 @@ void tst_QQMLTypeLoader::implicitComponentModule()
 
 void tst_QQMLTypeLoader::customDiskCachePath()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Android seems to have problems with QProcess");
+#if defined(Q_OS_ANDROID) || defined(Q_OS_OHOS)
+    QSKIP("Cannot launch external process on this platform");
 #endif
 
 #if QT_CONFIG(process)
