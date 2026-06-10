@@ -29,7 +29,7 @@ sourcedirs  += ..
 exampledirs += snippets
 imagedirs   += images
 
-depends += qtcore qtdoc qtgui qtqml qtquick
+depends += qtcore qtdoc qtgui qtqml qtquick qtcmake
 
 tagfile = qtqmldesignsupport.tags
 
