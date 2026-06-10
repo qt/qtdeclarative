@@ -43,7 +43,6 @@ Style {
 
     component HandleDelegate: StyledItem {
         id: handleDelegate
-        required property QtObject control
         property int radius: 2
 
         width: parent.width
@@ -218,6 +217,16 @@ Style {
             foreground {
                 margins: 0
                 border.width: 1
+            }
+        }
+        vertical {
+            background {
+                implicitWidth: 5
+                implicitHeight: 140
+            }
+            indicator {
+                implicitWidth: 5
+                implicitHeight: 140
             }
         }
     }

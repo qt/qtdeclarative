@@ -51,18 +51,14 @@ T.Slider {
             }
         },
         State {
-            // Note: we deliberatly flip margins (but not padding) in vertical
-            // mode since a vertical slider is logically a flipped horizontal slider.
             when: control.vertical
             PropertyChanges  {
-                control.handle.x: leftPadding
-                   + styleReader.handle.topMargin - styleReader.handle.bottomMargin
-                   + (availableWidth + handle.height) / 2
-                control.handle.y: topPadding + styleReader.handle.leftMargin
-                   + (visualPosition * (availableHeight - styleReader.handle.leftMargin
-                         - styleReader.handle.rightMargin - handle.width))
-                control.handle.rotation: 90
-                control.handle.transformOrigin: Item.TopLeft
+                control.handle.x: control.leftPadding
+                   + styleReader.handle.leftMargin - styleReader.handle.rightMargin
+                   + (availableWidth - handle.width) / 2
+                control.handle.y: control.topPadding + styleReader.handle.topMargin
+                   + (visualPosition * (availableHeight - styleReader.handle.topMargin
+                         - styleReader.handle.bottomMargin - handle.height))
             }
         }
     ]
@@ -89,6 +85,5 @@ T.Slider {
         indicatorStyle: styleReader.indicator
         backgroundStyle: styleReader.background
         indicator.secondProgress: control.position
-        vertical: control.vertical
     }
 }

@@ -129,9 +129,9 @@ void QQStyleKitDelegateContainer::maybeCreateDelegate()
             QQmlEngine *engine = qmlEngine(this);
             s_defaultDelegateComponent = new QQmlComponent(engine);
             const QString qmlCode = QString::fromUtf8(R"(
-                import QtQuick
                 import Qt.labs.StyleKit
                 StyledItem {
+                    visible: delegateStyle.visible
                     width: parent.width
                     height: parent.height
                 }
@@ -269,6 +269,24 @@ void QQStyleKitDelegateContainer::componentComplete()
             delete m_shadowInstance;
             maybeCreateShadow();
         }
+    });
+
+    /* rotation and scale are applied here rather than as QML bindings
+     * in each QML file that uses a container, simply to avoid repeating the same
+     * bindings in all container instances.  But note, the properties we set from
+     * c++ cannot then be bound to another value from QML since the c++ code would
+     * ignore and overwrite such bindings. For this reason, properties like 'visible'
+     * still needs to be set from QML since a container should sometimes be hidden
+     * based on the state of the control (e.g a menu arrow should only be visible
+     * when the menu has children etc). */
+    setRotation(m_delegateProperties->rotation());
+    setScale(m_delegateProperties->scale());
+
+    connect(m_delegateProperties, &QQStyleKitDelegateProperties::rotationChanged, this, [this]() {
+        setRotation(m_delegateProperties->rotation());
+    });
+    connect(m_delegateProperties, &QQStyleKitDelegateProperties::scaleChanged, this, [this]() {
+        setScale(m_delegateProperties->scale());
     });
 
     updateImplicitSize();

@@ -4,6 +4,7 @@
 
 import QtQuick
 import Qt.labs.StyleKit
+import Qt.labs.StyleKit.impl
 
 BaseStyle {
     id: style
@@ -267,6 +268,7 @@ BaseStyle {
     progressBar {
         background.visible: false
         indicator.implicitWidth: 150
+        indicator.foreground.delegate: ProgressDelegate {}
     }
 
     radioButton {
@@ -349,8 +351,21 @@ BaseStyle {
             fillWidth: true
             implicitHeight: 8
             radius: 8
-            foreground {
-                radius: 7
+            foreground.radius: 7
+            foreground.delegate: ProgressDelegate {}
+        }
+        vertical {
+            // Manually transpose the sizes
+            background {
+                implicitWidth: 40
+                implicitHeight: 150
+            }
+
+            indicator {
+                fillWidth: false
+                fillHeight: true
+                implicitWidth: 8
+                alignment: Qt.AlignHCenter
             }
         }
     }
@@ -367,13 +382,6 @@ BaseStyle {
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
-
-                // Note: since we set a rotation, we cannot at the same time set fillWidth or fillHeight to
-                // true, since the rotation is applied after the layout has been done based on the unrotated
-                // geometry of the indicator. So we set a fixed implicit size here instead, and let the layout
-                // stretch the indicator by setting the alignment to AlignCenter. This way, the indicator will be
-                // stretched in both dimensions, but still maintain its aspect ratio due to the image's fillMode
-                // being PreserveAspectFit.
                 fillWidth: false
                 fillHeight: false
                 implicitWidth: 10

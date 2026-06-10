@@ -3,7 +3,6 @@
 // Qt-Security score:significant reason:default
 
 import QtQuick
-import QtQuick.Templates as T
 import Qt.labs.StyleKit
 import Qt.labs.StyleKit.impl
 
@@ -13,14 +12,9 @@ DelegateContainer {
     implicitWidth: Math.max(delegateInstance ? delegateInstance.implicitWidth : 0, indicatorLayout.implicitWidth)
     implicitHeight: Math.max(delegateInstance ? delegateInstance.implicitHeight : 0, indicatorLayout.implicitHeight)
 
-    visible: delegateStyle.visible
-    transformOrigin: Item.TopLeft
-    rotation: vertical ? 90 : 0
-    scale: vertical ? -1 : 1
     delegateStyle: root.indicatorStyle
-
+    visible: delegateStyle.visible
     required property DelegateStyle indicatorStyle
-    property bool vertical: false
 
     /* Some indicators (Slider, RangeSlider) should let the foreground delegate
      * only fill up a certain amount of the available foreground space (that is, the
@@ -59,29 +53,5 @@ DelegateContainer {
         z: 1
         width: fgItem.width
         height: fgItem.height
-
-        states: State {
-            /* Set a width on the foreground that matches the progress. But only do so if the default
-             * delegate is being used. If a custom delegate is used, it is responsible for sizing
-             * itself based on the available space (which is given by the size of this container).
-             * (And ideally, resizing the container to match the progress should eventually be moved
-             * out of this file, and into StyledItem, or perhaps a new StyledIndicatorItem).
-             * Resizing the container to match the progress when a custom delegate is being used
-             * assumes too much about how the delegate implements the progress, and prevents custom
-             * delegates from implementing it by other means (e.g. a circular progress
-             * indicator that fills in a circle rather than stretching a rectangle etc). */
-            when: foreground.usingDefaultDelegate && (root.firstProgress !== 0.0 || root.secondProgress !== 1.0)
-            PropertyChanges {
-                target: foreground
-                x: fgItem.x + root.firstProgress * (fgItem.fillWidth
-                    ? fgItem.width - delegateStyle.minimumWidth : fgItem.width)
-                y: fgItem.y
-                width: fgItem.fillWidth ? (delegateStyle.minimumWidth
-                    + ((root.secondProgress - root.firstProgress) * (fgItem.width
-                    - delegateStyle.minimumWidth)))
-                        : (root.secondProgress - root.firstProgress) * fgItem.width
-                height: fgItem.height
-            }
-        }
     }
 }

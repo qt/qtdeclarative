@@ -216,7 +216,14 @@ Style {
             }
         }
         vertical {
-            background.implicitWidth: 150
+            background {
+                implicitWidth: 50
+                implicitHeight: 150
+            }
+
+            indicator {
+                implicitWidth: 8
+            }
         }
     }
 
@@ -721,6 +728,16 @@ Style {
                     color: "ghostwhite"
                     border.width: 1
                     foreground.color: "black"
+                }
+                vertical {
+                    background {
+                        implicitWidth: 12
+                        implicitHeight: 180
+                    }
+                    indicator {
+                        implicitWidth: 12
+                        implicitHeight: 180
+                    }
                 }
             }
 

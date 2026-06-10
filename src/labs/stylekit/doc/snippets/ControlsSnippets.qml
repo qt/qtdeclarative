@@ -409,7 +409,13 @@ ApplicationWindow {
 
         //! [slider]
         slider {
-            background.visible: false
+            background {
+                // The background is hidden, but its implicit size still
+                // determines the overall implicit size of the control.
+                visible: false
+                implicitWidth: 150
+                implicitHeight: 50
+            }
 
             indicator {
                 // The groove of the slider should fill out the entire width of the control
@@ -432,7 +438,17 @@ ApplicationWindow {
             }
 
             vertical {
-                // if needed, you can override properties for vertical sliders
+                // Transpose relevant geometry
+                background {
+                    implicitWidth: 50
+                    implicitHeight: 150
+                }
+
+                indicator {
+                    fillWidth: false
+                    fillHeight: true
+                    implicitWidth: 8
+                }
             }
         }
         //! [slider]
@@ -586,19 +602,25 @@ ApplicationWindow {
 
         //! [toolSeparator]
         toolSeparator {
-            background.visible: false
+            background {
+                // The background is hidden, but its implicit size still
+                // determines the overall implicit size of the control.
+                visible: false
+                implicitWidth: 10
+                implicitHeight: 10
+            }
             indicator {
                 implicitWidth: 30
                 implicitHeight: 1
                 border.width: 0
                 color: "#c0c0c0"
+                alignment: Qt.AlignCenter
                 foreground.visible: false
             }
             vertical {
                 indicator {
                     implicitWidth: 1
                     implicitHeight: 30
-                    alignment: Qt.AlignHCenter
                 }
             }
         }

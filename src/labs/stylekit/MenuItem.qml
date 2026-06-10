@@ -107,7 +107,7 @@ T.MenuItem {
     indicator: IndicatorDelegate {
         quickControl: control
         indicatorStyle: styleReader.indicator.first
-        visible: control.checked && control.checkable
+        visible: control.checked && control.checkable && indicatorStyle.visible
         x: checkIndicatorItem.x
         y: checkIndicatorItem.y
         width: checkIndicatorItem.width
@@ -117,7 +117,7 @@ T.MenuItem {
     arrow: IndicatorDelegate {
         quickControl: control
         indicatorStyle: styleReader.indicator.second
-        visible: control.subMenu
+        visible: control.subMenu && indicatorStyle.visible
         x: arrowIndicatorItem.x
         y: arrowIndicatorItem.y
         width: arrowIndicatorItem.width
