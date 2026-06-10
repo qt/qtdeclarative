@@ -1133,4 +1133,14 @@ void tst_qmlls_qqmlcodemodel::brokenQmllsBuildIniV2()
     QCOMPARE_EQ(buildIni.resourceFilesFor("/hello/src/File.qml"), { "/123/a.qrc"_L1 });
 }
 
+void tst_qmlls_qqmlcodemodel::onBuildFinished()
+{
+    QmlLsp::QQmlCodeModelManager manager;
+    QSignalSpy spy(&manager, &QmlLsp::QQmlCodeModelManager::backgroundBuildFinished);
+    manager.onBuildFinished(QByteArray());
+    QCOMPARE(spy.count(), 1);
+    manager.onBuildFinished(testFile("").toUtf8());
+    QCOMPARE(spy.count(), 2);
+}
+
 QTEST_MAIN(tst_qmlls_qqmlcodemodel)

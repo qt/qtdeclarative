@@ -63,6 +63,7 @@ private slots:
     void reloadQmllsBuildIniV1AfterBuild();
     void reloadQmllsBuildIniV2AfterBuild();
     void brokenQmllsBuildIniV2();
+    void onBuildFinished();
 };
 
 #endif // TST_QMLLS_QQMLCODEMODEL_H

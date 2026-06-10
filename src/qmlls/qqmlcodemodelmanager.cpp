@@ -13,6 +13,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QmlLsp {
 
+Q_STATIC_LOGGING_CATEGORY(lcCodeModelManager, "qt.languageserver.codemodelmanager")
+
 using namespace QQmlJS::Dom;
 using namespace Qt::StringLiterals;
 
@@ -65,10 +67,12 @@ QQmlCodeModelManager::QQmlCodeModelManager(QObject *parent, QQmlToolingSharedSet
 
 void QQmlCodeModelManager::onBuildFinished(const QByteArray &url)
 {
+    qCInfo(lcCodeModelManager) << "Build for workspace" << url << "finished.";
     auto it = findWorkspace(url);
-    // note: fallback workspaces have no build folder information
-    if (it == fallbackWorkspace() || it == m_workspaces.end())
+    if (it == fallbackWorkspace() || it == m_workspaces.end()) {
+        emit backgroundBuildFinished(url);
         return;
+    }
 
     // refresh information obtained from build folder, like .qmlls.build.ini or resource files
     const QStringList buildPaths = it->codeModel->buildPaths();

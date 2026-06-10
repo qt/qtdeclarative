@@ -359,7 +359,8 @@ void QQmlCodeModel::callCMakeBuild(QProcessScheduler *scheduler)
     }
     if (commands.isEmpty())
         return;
-    scheduler->schedule(commands, m_rootUrl);
+    qCInfo(codeModelLog) << "Starting background build on paths" << buildPaths.join(", "_L1);
+    scheduler->schedule(commands, m_rootUrl.isEmpty() ? "Default workspace"_ba : m_rootUrl);
 }
 
 void QQmlCodeModel::reloadAllOpenFiles()
