@@ -292,7 +292,7 @@ void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)
         Q_ASSERT(g->isConnected(n));
     } else {
         g = QQmlJavaScriptExpressionGuard::New(expression, engine);
-        g->connect(n);
+        n->connect(g);
     }
 
     expression->activeGuards.prepend(g);
@@ -429,7 +429,7 @@ void QQmlPropertyCapture::captureNonBindableProperty(QObject *o, int n, int c, b
             Q_ASSERT(g->isConnected(o, n));
         } else {
             g = QQmlJavaScriptExpressionGuard::New(expression, engine);
-            g->connect(o, n, engine, doNotify);
+            QQmlData::connectEndpoint(g, o, n, engine, doNotify);
         }
 
         expression->activeGuards.prepend(g);

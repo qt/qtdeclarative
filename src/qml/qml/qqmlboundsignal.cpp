@@ -232,7 +232,7 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
         This ensures that 'parameter' will be available from QML.
     */
     signal = QQmlPropertyCache::originalClone(target, signal);
-    QQmlNotifierEndpoint::connect(target, signal, engine);
+    QQmlData::connectEndpoint(this, target, signal, engine);
 }
 
 QQmlBoundSignal::~QQmlBoundSignal()
