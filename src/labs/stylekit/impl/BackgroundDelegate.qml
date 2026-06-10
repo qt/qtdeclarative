@@ -9,4 +9,5 @@ import Qt.labs.StyleKit.impl
 DelegateContainer {
     required property DelegateStyle backgroundStyle
     delegateStyle: backgroundStyle
+    visible: delegateStyle.visible
 }
