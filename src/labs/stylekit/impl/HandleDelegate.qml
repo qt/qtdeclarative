@@ -10,4 +10,5 @@ import Qt.labs.StyleKit.impl
 DelegateContainer {
     delegateStyle: handleStyle
     required property DelegateStyle handleStyle
+    visible: handleStyle.visible
 }
