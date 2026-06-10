@@ -74,6 +74,7 @@ qt_internal_add_qml_module(LabsStyleKit
         TextArea.qml
     LIBRARIES
         Qt6::GuiPrivate
+        Qt6::Qml
         Qt6::Quick
         Qt6::QuickPrivate
         Qt6::QuickTemplates2
