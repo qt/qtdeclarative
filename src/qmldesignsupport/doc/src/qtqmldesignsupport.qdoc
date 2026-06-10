@@ -6,7 +6,7 @@
     \page qtqmldesignsupport-index.html
     \brief Provides a set of types to allow registering and referencing objects in QML
 
-    The \QDesSup provides support for design tooling with a set of types for
+    The \QDesSup module provides support for design tooling with a set of types for
     registering and referencing objects in QML. Objects are identified with a key string at
     registration and reference types can use these keys to get references to the registered objects.
     The idea is to allow clean separation between UI code and business logic, particularly in cases
@@ -15,6 +15,8 @@
     \l{\QDesSup QML Types}{QML API} and a
     \l{\QDesSup C++ Classes}{C++ API} for referencing registered objects.
     The object registration is only available as \l{\QDesSup QML Types}{QML API}.
+
+    The \QDesSup module was introduced in Qt 6.12.
 
     \section1 Using the Module
 
