@@ -16,29 +16,17 @@ import Qt.labs.StyleKit.impl
 */
 Item {
     id: root
-    implicitWidth: !vertical
-                   ? Math.max(background.implicitWidth,
-                              indicatorLayout.implicitWidth)
-                   : Math.max(background.implicitHeight,
-                              indicatorLayout.implicitHeight)
-    implicitHeight: !vertical
-                    ? Math.max(background.implicitHeight,
-                               indicatorLayout.implicitHeight)
-                    : Math.max(background.implicitWidth,
-                               indicatorLayout.implicitWidth)
+    implicitWidth: Math.max(background.implicitWidth, indicatorLayout.implicitWidth)
+    implicitHeight: Math.max(background.implicitHeight, indicatorLayout.implicitHeight)
 
     required property DelegateStyle indicatorStyle
     required property DelegateStyle backgroundStyle
     required property T.Control quickControl
     property alias indicator: indicator
-    property bool vertical: false
 
     StyleKitLayout {
         id: indicatorLayout
-        container: Item {
-            width: !vertical ? root.width : root.height
-            height: !vertical ? root.height : root.width
-        }
+        container: root
         contentMargins {
             left: quickControl.leftPadding - quickControl.leftInset
             top: quickControl.topPadding - quickControl.topInset
@@ -64,7 +52,7 @@ Item {
     BackgroundDelegate {
         id: background
         quickControl: root.quickControl
-        delegateStyle: root.backgroundStyle
+        backgroundStyle: root.backgroundStyle
         width: parent.width
         height: parent.height
     }
@@ -73,11 +61,10 @@ Item {
         id: indicator
         quickControl: root.quickControl
         indicatorStyle: root.indicatorStyle
-        vertical: root.vertical
         z: 1
-        x: !vertical ? indicatorItem.x : indicatorItem.y
-        y: !vertical ? indicatorItem.y : indicatorItem.x + indicatorItem.width
-        width: !vertical ? indicatorItem.width : indicatorItem.width
-        height: !vertical ? indicatorItem.height : indicatorItem.height
+        x: indicatorItem.x
+        y: indicatorItem.y
+        width: indicatorItem.width
+        height: indicatorItem.height
     }
 }

@@ -87,9 +87,6 @@ Style {
         implicitHeight: delegateStyle.implicitHeight
         width: parent.width
         height: parent.height
-        scale: delegateStyle.scale
-        rotation: delegateStyle.rotation
-        visible: delegateStyle.visible
 
         Star {
             visible: delegate.control.checked
@@ -121,7 +118,6 @@ Style {
         required property QtObject control
 
         Text {
-            rotation: sliderHandle.control.vertical ? -90 : 0
             color: "ghostwhite"
             anchors.centerIn: parent
             font.pixelSize: 9

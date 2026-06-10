@@ -13,9 +13,6 @@ Style {
         implicitHeight: unifiedSourceItem.implicitHeight
         width: parent.width
         height: parent.height
-        scale: delegateStyle.scale
-        rotation: delegateStyle.rotation
-        visible: delegateStyle.visible
 
         required property DelegateStyle delegateStyle
 
@@ -47,8 +44,6 @@ Style {
             width: parent.width
             height: parent.height
             visible: false
-            rotation: 0.0
-            scale: 1.0
         }
     }
 
@@ -162,7 +157,6 @@ Style {
                 border.width: 3
                 border.color: myTheme.accentStroke.normal
                 color: myTheme.accentBackground.normal
-                delegate: NoiseDelegate {}
             }
         }
 
@@ -189,6 +183,10 @@ Style {
                 color: myTheme.shadowColor
                 blur: 5
             }
+        }
+
+        indicator {
+            foreground.delegate: NoiseDelegate {}
         }
 
         hovered {
@@ -343,10 +341,18 @@ Style {
         background.implicitWidth: 180
         indicator.foreground.minimumWidth: 50
         indicator.foreground.margins: 2
-        indicator.foreground.delegate: null
         handle {
             leftMargin: 8
             rightMargin: 8
+        }
+        vertical {
+            background {
+                implicitHeight: 180
+                implicitWidth: myTheme.controlHeight
+            }
+            indicator {
+                implicitWidth: myTheme.controlHeight
+            }
         }
     }
 

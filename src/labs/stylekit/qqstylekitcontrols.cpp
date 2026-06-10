@@ -359,6 +359,10 @@ QT_BEGIN_NAMESPACE
     track is styled through the indicator's foreground.
     Unset properties fall back to \l control.
 
+    For vertical sliders, swap the \l {DelegateStyle::implicitWidth}{implicitWidth}
+    and \l {DelegateStyle::implicitHeight}{implicitHeight} of the relevant delegates
+    so that the control is taller than it is wide, as shown in the snippet below.
+
     \snippet ControlsSnippets.qml slider
 */
 
@@ -462,6 +466,10 @@ QT_BEGIN_NAMESPACE
     Grouped property for styling \l [QtQuickControls]{ToolSeparator}.
 
     Unset properties fall back to \l control.
+
+    For vertical separators, swap the \l {DelegateStyle::implicitWidth}{implicitWidth}
+    and \l {DelegateStyle::implicitHeight}{implicitHeight} of the relevant delegates
+    so that the control is taller than it is wide, as shown in the snippet below.
 
     \snippet ControlsSnippets.qml toolSeparator
 */

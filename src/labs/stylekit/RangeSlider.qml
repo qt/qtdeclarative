@@ -60,27 +60,21 @@ T.RangeSlider {
             }
         },
         State {
-            // Note: we deliberatly flip margins (but not padding) in vertical
-            // mode since a vertical slider is logically a flipped horizontal slider.
             when: control.vertical
             PropertyChanges  {
                 control.first.handle.x: leftPadding
-                   + styleReaderFirst.handle.topMargin - styleReaderFirst.handle.bottomMargin
-                   + (availableWidth + first.handle.height) / 2
-                control.first.handle.y: topPadding + styleReaderFirst.handle.leftMargin
-                   + (first.visualPosition * (availableHeight - styleReaderFirst.handle.leftMargin
-                         - styleReaderFirst.handle.rightMargin - first.handle.width))
-                control.first.handle.rotation: 90
-                control.first.handle.transformOrigin: Item.TopLeft
+                   + styleReaderFirst.handle.leftMargin - styleReaderFirst.handle.rightMargin
+                   + (availableWidth - first.handle.width) / 2
+                control.first.handle.y: topPadding + styleReaderFirst.handle.topMargin
+                   + (first.visualPosition * (availableHeight - styleReaderFirst.handle.topMargin
+                         - styleReaderFirst.handle.bottomMargin - first.handle.height))
 
                 control.second.handle.x: leftPadding
-                   + styleReaderSecond.handle.topMargin - styleReaderSecond.handle.bottomMargin
-                   + (availableWidth + second.handle.height) / 2
-                control.second.handle.y: topPadding + styleReaderSecond.handle.leftMargin
-                   + (second.visualPosition * (availableHeight - styleReaderSecond.handle.leftMargin
-                         - styleReaderSecond.handle.rightMargin - second.handle.width))
-                control.second.handle.rotation: 90
-                control.second.handle.transformOrigin: Item.TopLeft
+                   + styleReaderSecond.handle.leftMargin - styleReaderSecond.handle.rightMargin
+                   + (availableWidth - second.handle.width) / 2
+                control.second.handle.y: topPadding + styleReaderSecond.handle.topMargin
+                   + (second.visualPosition * (availableHeight - styleReaderSecond.handle.topMargin
+                         - styleReaderSecond.handle.bottomMargin - second.handle.height))
             }
         }
     ]
@@ -137,6 +131,5 @@ T.RangeSlider {
         backgroundStyle: styleReaderIndicator.background
         indicator.firstProgress: control.first.position
         indicator.secondProgress: control.second.position
-        vertical: control.vertical
     }
 }

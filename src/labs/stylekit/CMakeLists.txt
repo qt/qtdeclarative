@@ -56,7 +56,6 @@ qt_internal_add_qml_module(LabsStyleKit
         ScrollView.qml
         Slider.qml
         Style.qml
-        StyledItem.qml
         StyleAnimation.qml
         SpinBox.qml
         Switch.qml
