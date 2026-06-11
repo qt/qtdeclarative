@@ -47,7 +47,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(QMetaType propertyType, QV4:
     binding->jsExpression()->setContext(ctxt);
     binding->jsExpression()->setScopeObject(obj);
     binding->jsExpression()->setupFunction(scope, function);
-    return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
+    return makeUntyped(binding);
 }
 
 QUntypedPropertyBinding QQmlPropertyBinding::createFromCodeString(const QQmlPropertyData *pd, const QString& str, QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt, const QString &url, quint16 lineNumber, QObject *target, QQmlPropertyIndex targetIndex)
@@ -62,7 +62,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromCodeString(const QQmlProp
     binding->jsExpression()->setNotifyOnValueChanged(true);
     binding->jsExpression()->setContext(ctxt);
     binding->jsExpression()->createQmlBinding(ctxt, obj, str, url, lineNumber);
-    return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
+    return makeUntyped(binding);
 }
 
 QUntypedPropertyBinding QQmlPropertyBinding::createFromScriptString(const QQmlPropertyData *property, const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt, QObject *target, QQmlPropertyIndex targetIndex)
@@ -100,7 +100,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromScriptString(const QQmlPr
     QV4::Scope scope(v4);
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(v4->rootContext(), ctxtdata, scopeObject));
     js->setupFunction(qmlContext, runtimeFunction);
-    return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
+    return makeUntyped(binding);
 }
 
 QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlPropertyData *pd, QV4::BoundFunction *function, QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
@@ -117,7 +117,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
     binding->jsExpression()->setScopeObject(obj);
     binding->jsExpression()->setupFunction(scope, function->function());
     js->m_boundFunction.set(function->engine(), *function);
-    return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
+    return makeUntyped(binding);
 }
 
 /*!
