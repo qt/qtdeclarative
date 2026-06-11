@@ -248,6 +248,11 @@ private slots:
 
     void insertBinding();
 
+    // Reproduces coffee demo crash 3: changing a function body in a derived type
+    // (that has states with PropertyChanges targeting form aliases) should not
+    // trigger an assert in "canGetTypeFromVariant<T>(this)" during rebuild.
+    void derivedTypeFunctionChangeCrash();
+
 private:
     QQmlEngine engine;
 };
@@ -3788,6 +3793,68 @@ void tst_QQmlPreviewObjectPatch::insertBinding()
     QVERIFY(updateObjects(objects, oldUnit, newUnit));
 
     QVERIFY2(object->objectName().isEmpty(), qPrintable(object->objectName()));
+}
+
+// Reproduces coffee demo crash 3: changing a function body in a derived type
+// (ApplicationFlow extending ApplicationFlowForm) that uses states with
+// PropertyChanges targeting form aliases. The rebuild should not trigger
+// ASSERT "canGetTypeFromVariant<T>(this)" in qvariant.h.
+void tst_QQmlPreviewObjectPatch::derivedTypeFunctionChangeCrash()
+{
+    QQmlEngine localEngine;
+    QQuickWindow window;
+    window.resize(400, 600);
+
+    QQmlComponent oldComp(&localEngine, testFileUrl("DerivedFunctionChangeOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Parent the root item into the window so anchors and StackView resolve.
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(object.get());
+    QVERIFY(rootItem);
+    rootItem->setParentItem(window.contentItem());
+    rootItem->setSize(QSizeF(400, 600));
+
+    // Activate the "Settings" state and push an item onto the StackView
+    // (simulating the coffee demo navigating to Settings page).
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "selectCoffee"));
+    QCOMPARE(object->property("state").toString(), QString("Settings"));
+
+    QObject *stack = object->property("stack").value<QObject *>();
+    QVERIFY(stack);
+
+    // Process events to ensure state transitions, layout, and rendering complete.
+    QCoreApplication::processEvents();
+    QCoreApplication::processEvents();
+
+    QQmlComponent newComp(&localEngine, testFileUrl("DerivedFunctionChangeNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // This may crash with ASSERT "canGetTypeFromVariant<T>(this)" when the state
+    // system tries to backup/restore anchor properties during rebuild while
+    // the StackView has active content.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+    QCoreApplication::processEvents();
+
+    // After rebuild, changing state exercises the state machine's property
+    // backup/restore mechanism with potentially stale anchor values.
+    object->setProperty("state", "Home");
+    QCoreApplication::processEvents();
+    object->setProperty("state", "Settings");
+    QCoreApplication::processEvents();
+
+    // If we survive, verify the function was updated.
+    QVERIFY(QMetaObject::invokeMethod(object.get(), "selectCoffee"));
+    QCOMPARE(object->property("coffeeName").toString(), QString("Cappuccinooooo"));
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
