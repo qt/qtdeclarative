@@ -10,6 +10,7 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlpropertybinding_p.h>
+#include <private/qqmlpropertytopropertybinding_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlvme_p.h>
 #include <private/qv4functionobject_p.h>
@@ -118,6 +119,23 @@ static bool isExternalBinding(const QQmlAnyBinding &binding,
     }
 
     return true;
+}
+
+static QObject *propertyToPropertySource(const QQmlAnyBinding &binding)
+{
+    if (const QQmlAbstractBinding *abstractBinding = binding.asAbstractBinding()) {
+        if (abstractBinding->kind() == QQmlAbstractBinding::PropertyToPropertyBinding) {
+            return static_cast<const QQmlPropertyToUnbindablePropertyBinding *>(abstractBinding)
+                    ->source();
+        }
+    } else if (const QPropertyBindingPrivate *priv =
+                       QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
+               priv && priv->isQmlBinding()) {
+        const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
+        if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::PropertyToProperty)
+            return static_cast<const QQmlPropertyToBindablePropertyBinding *>(priv)->source();
+    }
+    return nullptr;
 }
 
 void BindingPatchContext::recordBindingValues(
@@ -251,15 +269,20 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
         if (it == constantValues.cend()) {
             // Property not in CU's binding table — check for external bindings.
             const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
-            if (isExternalBinding(binding, internalUnits, m_object))
-                m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
+            if (isExternalBinding(binding, internalUnits, m_object)) {
+                QQmlAnyBinding taken = QQmlAnyBinding::takeFrom(qProp);
+                m_storedBindings.push_back(
+                        { propName, std::move(taken), propertyToPropertySource(binding) });
+            }
             continue;
         }
 
         // Property is in the CU's binding table.
         const QQmlAnyBinding binding = QQmlAnyBinding::ofProperty(qProp);
         if (isExternalBinding(binding, internalUnits, m_object)) {
-            m_storedBindings.push_back({ propName, QQmlAnyBinding::takeFrom(qProp) });
+            QQmlAnyBinding taken = QQmlAnyBinding::takeFrom(qProp);
+            m_storedBindings.push_back(
+                    { propName, std::move(taken), propertyToPropertySource(binding) });
             continue;
         }
 
@@ -362,6 +385,9 @@ void BindingPatchContext::stashExternalState(const std::vector<CompositeLevel> &
 
 void BindingPatchContext::refreshObjects()
 {
+    if (!m_object)
+        return;
+
     // After a rebuild, child objects (accessed via grouped properties) may have
     // been replaced. Re-fetch QObject pointers from the parent's properties so
     // that restoreExternalState() reconnects to the new objects.
@@ -386,10 +412,33 @@ void BindingPatchContext::refreshObjects()
 
 void BindingPatchContext::restoreExternalState()
 {
+    if (!m_object)
+        return;
+
     // Restore external bindings (look up by name since indices may have shifted)
     for (auto &stored : m_storedBindings) {
         if (!stored.binding)
             continue;
+
+        // If this was a property-to-property binding, verify the source object survived the
+        // rebuild. Delegate model items (the source for required-property bindings) are
+        // destroyed when the delegate is re-instantiated and new bindings are created
+        // automatically. Restoring a stale binding would dereference freed memory.
+        if (stored.sourceGuard.isNull()) {
+            bool isPTP = false;
+            if (auto *abstractBinding = stored.binding.asAbstractBinding()) {
+                isPTP = abstractBinding->kind()
+                        == QQmlAbstractBinding::PropertyToPropertyBinding;
+            } else if (const QPropertyBindingPrivate *priv = QPropertyBindingPrivate::get(
+                               stored.binding.asUntypedPropertyBinding())) {
+                const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
+                isPTP = base->bindingKind()
+                        == QQmlPropertyBindingBase::BindingKind::PropertyToProperty;
+            }
+            if (isPTP)
+                continue;
+        }
+
         QQmlProperty qProp(m_object, stored.propertyName);
         if (!qProp.isValid())
             continue;
