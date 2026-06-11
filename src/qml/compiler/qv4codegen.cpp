@@ -1335,7 +1335,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         base.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
         auto jumpToUndefined = bytecodeGenerator->jumpTrue();
-        m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
+        m_optionalChainsStates->top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
     };
 
     if (hasError())
@@ -1354,7 +1354,7 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         if (arrayIndex == UINT_MAX) {
             auto ref = Reference::fromMember(base, s, ast->expression->firstSourceLocation(),
                                              ast->isOptional,
-                                             &m_optionalChainsStates.top().jumpsToPatch);
+                                             &m_optionalChainsStates->top().jumpsToPatch);
             setExprResult(ref);
             optionalChainFinalizer(ref, isTailOfChain);
             return false;
@@ -2074,11 +2074,11 @@ bool Codegen::visit(CallExpression *ast)
     int thisObject = bytecodeGenerator->newRegister();
     int functionObject = bytecodeGenerator->newRegister();
 
-    if (ast->isOptional || m_optionalChainsStates.top().actuallyHasOptionals) {
+    if (ast->isOptional || m_optionalChainsStates->top().actuallyHasOptionals) {
         base.loadInAccumulator();
         bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
         auto jumpToUndefined = bytecodeGenerator->jumpTrue();
-        m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
+        m_optionalChainsStates->top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
     }
 
     auto calldata = pushArgs(ast->arguments);
@@ -2346,7 +2346,7 @@ bool Codegen::visit(DeleteExpression *ast)
     if (hasError())
         return false;
 
-    const bool chainActuallyHasOptionals = m_optionalChainsStates.top().actuallyHasOptionals;
+    const bool chainActuallyHasOptionals = m_optionalChainsStates->top().actuallyHasOptionals;
     if (chainActuallyHasOptionals)
         Q_ASSERT(expr.type == Reference::Member || expr.type == Reference::Subscript);
 
@@ -2385,7 +2385,7 @@ bool Codegen::visit(DeleteExpression *ast)
             expr.loadInAccumulator();
             bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
             auto jumpToUndefined = bytecodeGenerator->jumpTrue();
-            m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
+            m_optionalChainsStates->top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
         }
 
         Instruction::LoadRuntimeString instr;
@@ -2410,7 +2410,7 @@ bool Codegen::visit(DeleteExpression *ast)
             expr.loadInAccumulator();
             bytecodeGenerator->addInstruction(Instruction::CmpEqNull());
             auto jumpToUndefined = bytecodeGenerator->jumpTrue();
-            m_optionalChainsStates.top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
+            m_optionalChainsStates->top().jumpsToPatch.emplace_back(std::move(jumpToUndefined));
         }
 
         Instruction::DeleteProperty del;
@@ -2463,26 +2463,26 @@ bool Codegen::traverseOptionalChain(Node *node)
                node->kind == Node::Kind_ArrayMemberExpression ||
                node->kind == Node::Kind_DeleteExpression;
     };
-    m_optionalChainsStates.emplace();
+    m_optionalChainsStates->emplace();
     while (isOptionalChainableNode(node)) {
         m_seenOptionalChainNodes.insert(node);
 
         switch (node->kind) {
         case Node::Kind_FieldMemberExpression: {
             auto *fme = AST::cast<FieldMemberExpression *>(node);
-            m_optionalChainsStates.top().actuallyHasOptionals |= fme->isOptional;
+            m_optionalChainsStates->top().actuallyHasOptionals |= fme->isOptional;
             node = fme->base;
             break;
         }
         case Node::Kind_CallExpression: {
             auto *ce = AST::cast<CallExpression *>(node);
-            m_optionalChainsStates.top().actuallyHasOptionals |= ce->isOptional;
+            m_optionalChainsStates->top().actuallyHasOptionals |= ce->isOptional;
             node = ce->base;
             break;
         }
         case Node::Kind_ArrayMemberExpression: {
             auto *ame = AST::cast<ArrayMemberExpression *>(node);
-            m_optionalChainsStates.top().actuallyHasOptionals |= ame->isOptional;
+            m_optionalChainsStates->top().actuallyHasOptionals |= ame->isOptional;
             node = ame->base;
             break;
         }
@@ -2500,13 +2500,13 @@ bool Codegen::traverseOptionalChain(Node *node)
 void Codegen::optionalChainFinalizer(const Reference &expressionResult, bool tailOfChain,
                                      bool isDeleteExpression)
 {
-    auto &chainState = m_optionalChainsStates.top();
+    auto &chainState = m_optionalChainsStates->top();
     if (!tailOfChain) {
         setExprResult(expressionResult);
         return;
     } else if (!chainState.actuallyHasOptionals) {
         setExprResult(expressionResult);
-        m_optionalChainsStates.pop();
+        m_optionalChainsStates->pop();
         return;
     }
 
@@ -2549,7 +2549,7 @@ void Codegen::optionalChainFinalizer(const Reference &expressionResult, bool tai
         ref.savedCallPropertyNameIndex = expressionResult.propertyNameIndex;
     }
     setExprResult(ref);
-    m_optionalChainsStates.pop();
+    m_optionalChainsStates->pop();
 }
 
 bool Codegen::visit(FieldMemberExpression *ast)
@@ -2595,7 +2595,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     }
 
     auto ref = Reference::fromMember(base, ast->name.toString(), ast->lastSourceLocation(),
-                                     ast->isOptional, &m_optionalChainsStates.top().jumpsToPatch);
+                                     ast->isOptional, &m_optionalChainsStates->top().jumpsToPatch);
 
     optionalChainFinalizer(ref, isTailOfChain);
     return false;
@@ -3428,6 +3428,10 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     BytecodeGenerator::Label *savedReturnLabel = _returnLabel;
     _returnLabel = nullptr;
 
+    OptionalChainStates optionalChainStates;
+    OptionalChainStates *savedOptionalChainStates = m_optionalChainsStates;
+    m_optionalChainsStates = &optionalChainStates;
+
     bool savedFunctionEndsWithReturn = functionEndsWithReturn;
     functionEndsWithReturn = endsWithReturn(_module, body);
 
@@ -3495,7 +3499,9 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
 
     statementList(body);
 
-    if (!hasError()) {
+    if (hasError()) {
+        bytecodeGenerator->setError(true);
+    } else {
         bytecodeGenerator->setLocation(ast->lastSourceLocation());
         _context->emitBlockFooter(this);
 
@@ -3531,6 +3537,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalPara
     qSwap(_returnAddress, returnAddress);
     qSwap(requiresReturnValue, _requiresReturnValue);
     qSwap(_inFormalParameterList, inFormalParameterList);
+    m_optionalChainsStates = savedOptionalChainStates;
     bytecodeGenerator = savedBytecodeGenerator;
     delete _returnLabel;
     _returnLabel = savedReturnLabel;
