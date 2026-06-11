@@ -31,14 +31,12 @@ QQmlAnyBinding QQmlPropertyToPropertyBinding::create(
 {
     QQmlAnyBinding result;
     if (target.isBindable() && !QQmlPropertyPrivate::get(target)->isValueType()) {
-        if (source.isBindable()) {
-            result = QUntypedPropertyBinding(new QQmlBindableToBindablePropertyBinding(
-                    engine, source, target));
-            return result;
-        }
-
-        result = QUntypedPropertyBinding(new QQmlUnbindableToBindablePropertyBinding(
-                engine, source, target));
+        QPropertyBindingPrivate *binding = nullptr;
+        if (source.isBindable())
+            binding = new QQmlBindableToBindablePropertyBinding(engine, source, target);
+        else
+            binding = new QQmlUnbindableToBindablePropertyBinding(engine, source, target);
+        result = QPropertyBindingPrivate::makeUntyped(binding);
         return result;
     }
 

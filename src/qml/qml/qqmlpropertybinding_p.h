@@ -141,6 +141,12 @@ private:
 
     QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, HasBoundFunction hasBoundFunction);
 
+    static QUntypedPropertyBinding makeUntyped(QQmlPropertyBinding *binding)
+    {
+        QPropertyBindingPrivatePtr ptr(binding);
+        return QPropertyBindingPrivate::makeUntyped(static_cast<QPropertyBindingPrivate *>(ptr.data()));
+    }
+
     static void bindingErrorCallback(QPropertyBindingPrivate *);
 };
 

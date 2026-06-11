@@ -341,7 +341,7 @@ public:
         if (d.isT1()  || d.isNull())
             return {};
         auto priv = d.asT2();
-        return QUntypedPropertyBinding {priv};
+        return QPropertyBindingPrivate::makeUntyped(priv);
     }
 
     /*!
