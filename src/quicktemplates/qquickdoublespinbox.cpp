@@ -192,7 +192,7 @@ QQuickDoubleSpinBox::QQuickDoubleSpinBox(QQuickItem *parent)
 QQuickDoubleSpinBox::~QQuickDoubleSpinBox() { }
 
 /*!
-    \include qquickspinbox.qdocinc {from} {DoubleSpinBox} {0.0}
+    \include qquickspinbox.qdocinc {from} {double} {DoubleSpinBox} {0.0}
 */
 
 void QQuickDoubleSpinBox::setFrom(double from)
@@ -214,7 +214,7 @@ void QQuickDoubleSpinBox::setFrom(double from)
 }
 
 /*!
-    \include qquickspinbox.qdocinc {to} {DoubleSpinBox} {99.99}
+    \include qquickspinbox.qdocinc {to} {double} {DoubleSpinBox} {99.99}
 */
 
 void QQuickDoubleSpinBox::setTo(double to)
@@ -247,7 +247,7 @@ void QQuickDoubleSpinBox::setValue(double value)
 }
 
 /*!
-    \include qquickspinbox.qdocinc {stepSize} {DoubleSpinBox} {1.0}
+    \include qquickspinbox.qdocinc {stepSize} {double} {DoubleSpinBox} {1.0}
 */
 
 void QQuickDoubleSpinBox::setStepSize(double step)

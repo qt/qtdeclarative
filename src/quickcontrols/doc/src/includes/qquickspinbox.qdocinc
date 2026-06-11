@@ -9,17 +9,17 @@ are pressed, or the input field loses focus.
 //! [valueModified]
 
 //! [from]
-\qmlproperty double QtQuick.Controls::\1::from
+\qmlproperty \1 QtQuick.Controls::\2::from
 
-This property holds the starting value for the range. The default value is \c \2.
+This property holds the starting value for the range. The default value is \c \3.
 
 \sa to, value
 //! [from]
 
 //! [to]
-\qmlproperty int QtQuick.Controls::\1::to
+\qmlproperty \1 QtQuick.Controls::\2::to
 
-This property holds the end value for the range. The default value is \c 2.
+This property holds the end value for the range. The default value is \c \3.
 
 \sa from, value
 //! [to]
@@ -32,9 +32,9 @@ This property holds the value in the range \c from - \c to. The default value is
 //! [value-prop]
 
 //! [stepSize]
-\qmlproperty double QtQuick.Controls::\1::stepSize
+\qmlproperty \1 QtQuick.Controls::\2::stepSize
 
-This property holds the step size. The default value is \c \2.
+This property holds the step size. The default value is \c \3.
 
 \sa increase(), decrease()
 //! [stepSize]

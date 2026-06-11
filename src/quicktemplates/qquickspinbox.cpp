@@ -217,7 +217,7 @@ QQuickSpinBox::~QQuickSpinBox()
 }
 
 /*!
-    \include qquickspinbox.qdocinc {from} {SpinBox} {0}
+    \include qquickspinbox.qdocinc {from} {int} {SpinBox} {0}
 */
 
 void QQuickSpinBox::setFrom(int from)
@@ -238,7 +238,7 @@ void QQuickSpinBox::setFrom(int from)
 }
 
 /*!
-    \include qquickspinbox.qdocinc {to} {SpinBox} {99}
+    \include qquickspinbox.qdocinc {to} {int} {SpinBox} {99}
 */
 
 void QQuickSpinBox::setTo(int to)
@@ -269,7 +269,7 @@ void QQuickSpinBox::setValue(int value)
 }
 
 /*!
-    \include qquickspinbox.qdocinc {stepSize} {SpinBox} {1}
+    \include qquickspinbox.qdocinc {stepSize} {int} {SpinBox} {1}
 */
 
 void QQuickSpinBox::setStepSize(int step)
