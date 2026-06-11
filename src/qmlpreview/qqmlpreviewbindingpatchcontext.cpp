@@ -668,6 +668,12 @@ void BindingPatchContext::clearBindingsRecursive(QObject *object)
 
         while (ddata->bindings)
             QQmlPropertyPrivate::removeBinding(ddata->bindings);
+
+        // Don't delete signal handlers right away since we might still have
+        // them in other objects "external" state. Disable them so that they
+        // don't fire anymore until this object is actually deleted.
+        for (QQmlBoundSignal *sig = ddata->signalHandlers; sig; sig = sig->m_nextSignal)
+            sig->setEnabled(false);
     }
 }
 
