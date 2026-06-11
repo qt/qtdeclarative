@@ -86,7 +86,7 @@ void tst_qmlls_code_action::wrapComponentInLoader_data()
     using TextEdits = decltype(std::declval<TextDocumentEdit>().edits);
     const auto codeAction = [](TextEdits &&edits) -> CodeAction {
         TextDocumentEdit textDocEdit;
-        textDocEdit.textDocument = { { "file://tst.qml" }, {} };
+        textDocEdit.textDocument = { { "file://tst.qml" }, 0 };
         textDocEdit.edits = std::move(edits);
 
         WorkspaceEdit workspaceEdit;

@@ -32,11 +32,12 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
     ResponseScopeGuard guard(result, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (guard.setErrorFrom(itemsFound))
+    if (!itemsFound.has_value()) {
+        guard.setError(itemsFound.error());
         return;
+    }
 
-    QQmlLSUtils::ItemLocation &front =
-            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front = itemsFound.value().front();
 
     const QString newName = QString::fromUtf8(request->m_parameters.newName);
     auto expressionType =
@@ -47,8 +48,11 @@ void QQmlRenameSymbolSupport::process(QQmlRenameSymbolSupport::RequestPointerArg
         return;
     }
 
-    if (guard.setErrorFrom(QQmlLSUtils::checkNameForRename(front.domItem, newName, expressionType)))
+    if (const auto renameCheckError =
+                QQmlLSUtils::checkNameForRename(front.domItem, newName, expressionType)) {
+        guard.setError(renameCheckError.value());
         return;
+    }
 
     auto &editsByFileForResult = result.documentChanges.emplace();
 

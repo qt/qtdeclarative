@@ -207,8 +207,9 @@ static TextEdits wrapInLoaderTextEdits(const QQmlLSUtils::ItemLocation &item)
     return edits;
 }
 
-static CodeActions wrapComponentInLoader(const TextDocumentIdentifier &textDocument,
-                                         const QQmlLSUtils::ItemLocation &item)
+static CodeActions
+wrapComponentInLoader(const OptionalVersionedTextDocumentIdentifier &textDocument,
+                      const QQmlLSUtils::ItemLocation &item)
 {
     if (item.domItem.internalKind() != DomType::QmlObject) {
         // applicable only to objects
@@ -223,9 +224,7 @@ static CodeActions wrapComponentInLoader(const TextDocumentIdentifier &textDocum
         return {};
     }
 
-    TextDocumentEdit textDocEdit;
-    textDocEdit.textDocument = { textDocument, {} };
-    textDocEdit.edits = wrapInLoaderTextEdits(item);
+    TextDocumentEdit textDocEdit{ textDocument, wrapInLoaderTextEdits(item) };
 
     WorkspaceEdit edit;
     edit.documentChanges = { textDocEdit };
@@ -237,7 +236,7 @@ static CodeActions wrapComponentInLoader(const TextDocumentIdentifier &textDocum
     return { action };
 }
 
-static CodeActions refactorings(const TextDocumentIdentifier &textDocument,
+static CodeActions refactorings(const OptionalVersionedTextDocumentIdentifier &textDocument,
                                 const QQmlLSUtils::ItemLocation &item)
 {
     CodeActions codeActions;
@@ -262,18 +261,24 @@ void QQmlCodeActionSupport::process(QQmlCodeActionSupport::RequestPointerArgumen
     CodeActions codeActions;
     codeActions.append(quickfixes(request->m_parameters.context.diagnostics));
 
+    const auto &maybeDoc = tryOpenDocument(request->m_parameters.textDocument.uri);
+    if (!maybeDoc.has_value()) {
+        qCWarning(lsCodeActionSupport) << maybeDoc.error().message;
+        return request->m_response.sendResponse(codeActions);
+    }
+
     // QmlObject has the same start location as UiQualifiedId
     // Therefore in order to get codeActions relevant to QmlObject it's more reliable
     // to use range.end instead of range.start
-    auto itemsFound = itemsForRequest(request, request->m_parameters.range.end);
-    if (std::holds_alternative<QQmlLSUtils::ErrorMessage>(itemsFound)) {
-        qCWarning(lsCodeActionSupport) << std::get<QQmlLSUtils::ErrorMessage>(itemsFound).message;
-    } else if (std::holds_alternative<QList<QQmlLSUtils::ItemLocation>>(itemsFound)) {
-        QQmlLSUtils::ItemLocation &item =
-                std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
-
-        codeActions.append(refactorings(request->m_parameters.textDocument, item));
+    const auto &itemsFound = tryLocateItems(maybeDoc.value(), request->m_parameters.range.end);
+    if (!itemsFound.has_value()) {
+        qCWarning(lsCodeActionSupport) << itemsFound.error().message;
+        return request->m_response.sendResponse(codeActions);
     }
+
+    codeActions.append(refactorings(
+            { request->m_parameters.textDocument, maybeDoc.value().snapshot.validDocVersion },
+            itemsFound.value().front()));
 
     request->m_response.sendResponse(codeActions);
 }
