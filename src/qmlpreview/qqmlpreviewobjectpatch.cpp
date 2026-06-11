@@ -445,16 +445,28 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
     if (rebuildOuter)
         rebuild = std::move(componentRoots);
 
-    // Sort by descending cuIndex so that leaf objects (children) are rebuilt
-    // before their parents. This prevents reset() from unparenting objects
-    // that are about to be rebuilt themselves.
+    // Sort by ascending cuIndex so that parent objects are rebuilt before their
+    // children. A parent's reset() properly retires children (they still point to
+    // oldUnit) and repopulateBindings recreates them. This avoids leaking orphaned
+    // children and naturally handles cases where the context needs more ID slots.
     std::sort(rebuild.begin(), rebuild.end(),
-              [](const ObjectAndIndex &a, const ObjectAndIndex &b) {
-                  return a.index > b.index;
-              });
+              [](const ObjectAndIndex &a, const ObjectAndIndex &b) { return a.index < b.index; });
+
+    // Pre-compute which objects to skip: if an ancestor is also in the rebuild
+    // list, the child will be properly retired and recreated during the ancestor's
+    // rebuild. Rebuilding it individually would be wasted work on a stale pointer.
+    QSet<QObject *> skip;
+    for (const auto &[object, cuIndex] : rebuild) {
+        const QObjectList &children = object->children();
+        for (QObject *child : children)
+            skip.insert(child);
+    }
 
     QQmlRefPointer<QQmlContextData> rootContext;
     for (const auto &[object, cuIndex] : rebuild) {
+        if (skip.contains(object))
+            continue;
+
         rebuildObject(object, cuIndex, oldUnit, newUnit);
         QQmlData *rootData = QQmlData::get(object);
         if (rootData)

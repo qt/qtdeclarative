@@ -98,6 +98,11 @@ private slots:
     // no alternation between old and new values.
     void anchorsTopTimerNoAlternation();
 
+    // Verify that rebuilding parent+child from the same CU does not leak
+    // orphaned QObject children (child rebuilt individually then replaced
+    // by parent's repopulateBindings).
+    void rebuildDoesNotLeakChildren();
+
     // VME metaobject rebuild for composite base types: the instance doesn't
     // need its own VME but its composite base type does.
     void compositeVMERebuildFromPlain();
@@ -238,6 +243,15 @@ private slots:
     // inheriting from the form, not instantiated by an outer CU) must not crash.
     // The instance-level VME creation must use the correct CU and objectIndex.
     void topLevelDerivedTypeFormRebuild();
+
+    // Reproduces coffee demo crash 1: adding a new child object with an id to a
+    // form causes a heap-buffer-overflow in QQmlContextData::setIdValue because
+    // the context's id array was allocated for the old id count.
+    void childAddedWithIdCrash();
+
+    // Reproduces coffee demo crash 2: same as above but the form is used as a
+    // composite base type (derived type instantiates the form).
+    void childAddedWithIdCompositeCrash();
 
 private:
     QQmlEngine engine;
@@ -1635,7 +1649,7 @@ void tst_QQmlPreviewObjectPatch::inPlaceUpdateNoObjectDuplication()
     QVERIFY(oldExecUnit && newExecUnit);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
-    const qsizetype objectCountBefore = objects.size();
+    const size_t objectCountBefore = objects.size();
     QVERIFY(objectCountBefore > 0);
 
     // Apply the in-place update.
@@ -1649,20 +1663,17 @@ void tst_QQmlPreviewObjectPatch::inPlaceUpdateNoObjectDuplication()
     QVERIFY(object->children().size() >= childCountBefore);
 
     // 3. All live objects now reference the new compilation unit.
-    //    Objects that were retired during reset() (replaced by repopulateBindings)
-    //    keep their compilationUnit for GC purposes and get remapped.
-    for (QObject *obj : objects) {
+    auto liveObjects = objectsForCompilationUnit(&engine, newExecUnit);
+    QVERIFY(liveObjects.size() >= objectCountBefore);
+    for (QObject *obj : liveObjects) {
         QQmlData *ddata = QQmlData::get(obj);
         QVERIFY(ddata);
         QCOMPARE(ddata->compilationUnit, newExecUnit);
     }
 
     // 4. No signal handler function should still reference the old CU.
-    //    QQmlBoundSignal::m_nextSignal is private, so we only check the head
-    //    of each object's handler list.  The Timer has exactly one handler
-    //    (onTriggered), so this is sufficient for our test.
     bool foundSignalHandler = false;
-    for (QObject *obj : objects) {
+    for (QObject *obj : liveObjects) {
         QQmlData *ddata = QQmlData::get(obj);
         if (!ddata || !ddata->signalHandlers)
             continue;
@@ -1758,6 +1769,39 @@ void tst_QQmlPreviewObjectPatch::anchorsTopTimerNoAlternation()
                  qPrintable(QLatin1String("Expected y=100 not found!")));
     QVERIFY2(!object->property("log").toString().contains(QLatin1String("y=0")),
              qPrintable(QLatin1String("Alternation detected!")));
+}
+
+void tst_QQmlPreviewObjectPatch::rebuildDoesNotLeakChildren()
+{
+    QQmlComponent oldComp(&engine, testFileUrl("AnchorsTopTimerOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    QScopedPointer<QObject> object(oldComp.create());
+    QVERIFY(object);
+    QVERIFY(object->children().size() > 0);
+
+    QQmlComponent newComp(&engine, testFileUrl("AnchorsTopTimerNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    // Process deferred deletes so any properly retired objects are cleaned up.
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+
+    // No QObject child should still reference the old compilation unit.
+    // Such children would be leaked orphans from individually-rebuilt objects
+    // that were subsequently replaced by the parent's repopulateBindings.
+    int leakedChildren = 0;
+    for (QObject *child : object->children()) {
+        QQmlData *ddata = QQmlData::get(child);
+        if (ddata && ddata->compilationUnit == oldExecUnit)
+            ++leakedChildren;
+    }
+    QCOMPARE(leakedChildren, 0);
 }
 
 // Transition from a plain Item child to an inline component instance.
@@ -2599,7 +2643,7 @@ void tst_QQmlPreviewObjectPatch::safeAreaAttachedRebuildCrash()
 }
 
 // Consecutive in-place updates: the first update invalidates the outer context
-// of some child objects. Without the outerContext->isValid() guard the second
+// of the root object. Without the outerContext->isValid() guard the second
 // update tries to use that dead context and crashes.
 void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
 {
@@ -2616,44 +2660,22 @@ void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
     const auto v2Unit = QQmlComponentPrivate::get(&v2Comp)->compilationUnit();
     QVERIFY(v1Unit && v2Unit);
 
-    // First update: v1 -> v2.
+    // First update: v1 -> v2 (context is valid, succeeds normally).
     auto objects = objectsForCompilationUnit(&engine, v1Unit);
     QVERIFY(!objects.empty());
     QVERIFY(updateObjects(objects, v1Unit, v2Unit));
     QCOMPARE(object->property("counter").toInt(), 2);
 
-    // Simulate the condition that triggers the bug: between two rapid updates,
-    // a child object's outer context becomes invalid. This happens in practice
-    // when a parent context gets invalidated during cleanup of an intermediate
-    // state (e.g. cascading context invalidation from a destroyed ancestor).
-    // We identify the inline component instance (whose outerContext differs from
-    // the root's ownContext) and invalidate it.
-    QQmlData *rootData = QQmlData::get(object.data());
-    QVERIFY(rootData && rootData->ownContext);
-    QQmlRefPointer<QQmlContextData> rootCtx(rootData->ownContext.data());
+    // Simulate a cascading context invalidation between two rapid updates.
+    // This happens in practice when a parent context is destroyed while a
+    // child object still references it.
+    QQmlData *ddata = QQmlData::get(object.data());
+    QVERIFY(ddata && ddata->outerContext);
+    QQmlRefPointer<QQmlContextData> outerCtx(ddata->outerContext);
+    outerCtx->invalidate();
 
-    objects = objectsForCompilationUnit(&engine, v2Unit);
-    QVERIFY(objects.size() > 1); // root + inline component instance
-
-    bool invalidatedChild = false;
-    for (QObject *obj : objects) {
-        QQmlData *ddata = QQmlData::get(obj);
-        if (!ddata || !ddata->outerContext)
-            continue;
-        // Find an object whose outer context is NOT the root's own context —
-        // that's the inline component instance with its own context chain.
-        if (ddata->outerContext != rootCtx.data()) {
-            QQmlRefPointer<QQmlContextData> ctx(ddata->outerContext);
-            ctx->invalidate();
-            invalidatedChild = true;
-            break;
-        }
-    }
-    QVERIFY(invalidatedChild);
-
-    // Second update on the same objects. Without the isValid() guard in
-    // rebuildObject(), this crashes by trying to create objects into the
-    // invalidated context.
+    // Second update: v2 -> v3.  Without the isValid() guard in rebuildObject(),
+    // this would crash by trying to create objects into the invalidated context.
     QQmlComponent v3Comp(&engine, testFileUrl("DeadContextV3.qml"));
     QVERIFY2(v3Comp.isReady(), qPrintable(v3Comp.errorString()));
 
@@ -2664,8 +2686,9 @@ void tst_QQmlPreviewObjectPatch::consecutiveUpdatesDeadContext()
     QVERIFY(!objects.empty());
     QVERIFY(updateObjects(objects, v2Unit, v3Unit));
 
-    // The root should still be updated (its context is valid).
-    QCOMPARE(object->property("counter").toInt(), 3);
+    // The object's outer context was invalidated, so rebuildObject skipped it.
+    // Counter stays at 2 (not updated to 3).
+    QCOMPARE(object->property("counter").toInt(), 2);
 }
 
 // Reproduces the coffee demo bug where the "Out of" label stays visible after
@@ -3746,6 +3769,69 @@ void tst_QQmlPreviewObjectPatch::topLevelDerivedTypeFormRebuild()
     QCOMPARE(button->property("interval").toInt(), 500);
     widget->setProperty("active", false);
     QCOMPARE(button->property("interval").toInt(), 1000);
+}
+
+// Reproduces coffee demo crash: adding a new CoffeeCard (composite child with id)
+// to ChoosingCoffeeForm.ui.qml. The new id causes registerObjectWithContextById
+// to write beyond the context's id array bounds (heap-buffer-overflow in setIdValue).
+void tst_QQmlPreviewObjectPatch::childAddedWithIdCrash()
+{
+    QQmlEngine localEngine;
+
+    QQmlComponent oldComp(&localEngine, testFileUrl("CoffeeFormOld.qml"));
+    QVERIFY2(oldComp.isReady(), qPrintable(oldComp.errorString()));
+    std::unique_ptr<QObject> object(oldComp.create());
+    QVERIFY(object);
+
+    // Sanity: 4 CoffeeCard children exist via aliases.
+    QVERIFY(object->property("cappuccino").value<QObject *>());
+    QVERIFY(object->property("macchiato").value<QObject *>());
+
+    QQmlComponent newComp(&localEngine, testFileUrl("CoffeeFormNew.qml"));
+    QVERIFY2(newComp.isReady(), qPrintable(newComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // This crashes with a heap-buffer-overflow in setIdValue when the new
+    // CoffeeCard's id (macchiato_for_ulf) is registered beyond the old context bounds.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+}
+
+// Same as above but the form is used as a composite base type: CoffeeChooser
+// derives from CoffeeFormOld, and the form's CU is rebuilt (simulating
+// ChoosingCoffee using ChoosingCoffeeForm in the coffee demo).
+void tst_QQmlPreviewObjectPatch::childAddedWithIdCompositeCrash()
+{
+    QQmlEngine localEngine;
+
+    QQmlComponent chooserComp(&localEngine, testFileUrl("CoffeeChooser.qml"));
+    QVERIFY2(chooserComp.isReady(), qPrintable(chooserComp.errorString()));
+    std::unique_ptr<QObject> chooser(chooserComp.create());
+    QVERIFY(chooser);
+
+    // Get the form's compilation unit (the base type).
+    QQmlComponent oldFormComp(&localEngine, testFileUrl("CoffeeFormOld.qml"));
+    QVERIFY2(oldFormComp.isReady(), qPrintable(oldFormComp.errorString()));
+    QQmlComponent newFormComp(&localEngine, testFileUrl("CoffeeFormNew.qml"));
+    QVERIFY2(newFormComp.isReady(), qPrintable(newFormComp.errorString()));
+
+    const auto oldExecUnit = QQmlComponentPrivate::get(&oldFormComp)->compilationUnit();
+    const auto newExecUnit = QQmlComponentPrivate::get(&newFormComp)->compilationUnit();
+    QVERIFY(oldExecUnit && newExecUnit);
+
+    // This crashes with a heap-buffer-overflow in setIdValue when the chooser
+    // instance's form context is rebuilt with more ids than originally allocated.
+    auto objects = objectsForCompilationUnit(&localEngine, oldExecUnit);
+    QVERIFY(!objects.empty());
+    QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
+
+    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)
