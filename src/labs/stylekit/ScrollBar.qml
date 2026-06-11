@@ -15,10 +15,10 @@ T.ScrollBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    leftPadding: styleReader.leftPadding
-    topPadding: styleReader.topPadding
-    rightPadding: styleReader.rightPadding
-    bottomPadding: styleReader.bottomPadding
+    leftPadding: styleReader.leftPadding + styleReader.indicator.leftMargin
+    rightPadding: styleReader.rightPadding + styleReader.indicator.rightMargin
+    topPadding: styleReader.topPadding + styleReader.indicator.topMargin
+    bottomPadding: styleReader.bottomPadding + styleReader.indicator.bottomMargin
 
     leftInset: styleReader.background.leftMargin
     topInset: styleReader.background.topMargin
