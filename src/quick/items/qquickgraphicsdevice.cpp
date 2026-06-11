@@ -207,7 +207,35 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice ph
     QQuickGraphicsDevice dev;
     QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
     d->type = QQuickGraphicsDevicePrivate::Type::DeviceObjects;
-    d->u.deviceObjects = { physicalDevice, device, queueFamilyIndex, queueIndex };
+    d->u.deviceObjects = { physicalDevice, device, queueFamilyIndex, queueIndex, 0 };
+    return dev;
+}
+#endif
+
+/*!
+    \return a new QQuickGraphicsDevice referencing an existing \a device object.
+    \overload
+    \since 6.13
+
+    This factory function is suitable for Vulkan (1.1 and newer). This overload
+    takes a \a queueFlags argument as well, enabling using a queue with a
+    non-zero \c VkDeviceQueueCreateFlags.
+
+    \note the resulting QQuickGraphicsDevice does not own any native resources,
+    it merely contains references. It is the caller's responsibility to ensure
+    that the native resource exists as long as necessary.
+ */
+#if QT_CONFIG(vulkan) || defined(Q_QDOC)
+QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice physicalDevice,
+                                                             VkDevice device,
+                                                             int queueFamilyIndex,
+                                                             int queueIndex,
+                                                             VkDeviceQueueCreateFlags queueFlags)
+{
+    QQuickGraphicsDevice dev;
+    QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
+    d->type = QQuickGraphicsDevicePrivate::Type::DeviceObjects;
+    d->u.deviceObjects = { physicalDevice, device, queueFamilyIndex, queueIndex, quint32(queueFlags) };
     return dev;
 }
 #endif

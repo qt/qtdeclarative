@@ -1211,6 +1211,7 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QS
             importDev.dev = reinterpret_cast<VkDevice>(customDevD->u.deviceObjects.device);
             importDev.gfxQueueFamilyIdx = customDevD->u.deviceObjects.queueFamilyIndex;
             importDev.gfxQueueIdx = customDevD->u.deviceObjects.queueIndex;
+            importDev.gfxQueueFlags = customDevD->u.deviceObjects.queueFlags;
             qCDebug(QSG_LOG_INFO, "Using existing native Vulkan physical device %p device %p graphics queue family index %d",
                     importDev.physDev, importDev.dev, importDev.gfxQueueFamilyIdx);
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);

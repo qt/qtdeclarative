@@ -70,6 +70,7 @@ public:
         void *device;
         int queueFamilyIndex;
         int queueIndex;
+        quint32 queueFlags; // VkDeviceQueueCreateFlags
     };
 
     union {

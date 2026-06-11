@@ -49,6 +49,11 @@ public:
 #if QT_CONFIG(vulkan) || defined(Q_QDOC)
     static QQuickGraphicsDevice fromPhysicalDevice(VkPhysicalDevice physicalDevice);
     static QQuickGraphicsDevice fromDeviceObjects(VkPhysicalDevice physicalDevice, VkDevice device, int queueFamilyIndex, int queueIndex = 0);
+    static QQuickGraphicsDevice fromDeviceObjects(VkPhysicalDevice physicalDevice,
+                                                  VkDevice device,
+                                                  int queueFamilyIndex,
+                                                  int queueIndex,
+                                                  VkDeviceQueueCreateFlags queueFlags);
 #endif
 
     static QQuickGraphicsDevice fromRhi(QRhi *rhi);
