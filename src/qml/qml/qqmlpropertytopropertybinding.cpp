@@ -195,10 +195,21 @@ inline constexpr BindingFunctionVTable
 QQmlPropertyToBindablePropertyBinding::QQmlPropertyToBindablePropertyBinding(
         QQmlEngine *engine, const QQmlProperty &source, const QQmlProperty &target,
         const QtPrivate::BindingFunctionVTable *vtable)
-    : QPropertyBindingPrivate(
-              target.propertyMetaType(), vtable, QPropertyBindingSourceLocation(), false)
-    , m_binding(engine, source)
+    : QQmlPropertyBindingBase(target.object(), QQmlPropertyPrivate::propertyIndex(target),
+                              target.propertyMetaType(), vtable, BindingKind::PropertyToProperty),
+      m_binding(engine, source)
 {
+    errorCallBack = [](QPropertyBindingPrivate *that) {
+        auto self = static_cast<QQmlPropertyToBindablePropertyBinding *>(that);
+        if (self->m_binding.engine) {
+            const auto error = self->bindingError();
+            if (error.type() == QPropertyBindingError::BindingLoop) {
+                qmlWarning(self->m_binding.sourceObject)
+                        << QStringLiteral("Binding loop detected for property bound to ")
+                        << self->propertyDataPtr;
+            }
+        }
+    };
 }
 
 QQmlUnbindableToBindablePropertyBinding::QQmlUnbindableToBindablePropertyBinding(
