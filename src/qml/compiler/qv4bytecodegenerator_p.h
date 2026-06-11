@@ -78,7 +78,7 @@ public:
         { Q_ASSERT(generator && index != -1); }
 
         ~Jump() {
-            Q_ASSERT(index == -1 || generator->instructions[index].linkedLabel != -1); // make sure link() got called
+            Q_ASSERT(index == -1 || generator->hasError || generator->instructions[index].linkedLabel != -1); // make sure link() got called
         }
 
         Jump(Jump &&j) {
@@ -273,6 +273,8 @@ QT_WARNING_POP
         _labelInfos.push_back({ start.index });
     }
 
+    void setError(bool b) { hasError = b; }
+
 private:
     friend struct Jump;
     friend struct Label;
@@ -308,6 +310,7 @@ private:
     QQmlJS::SourceLocation currentSourceLocation;
     std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
     bool debugMode = false;
+    bool hasError = false;
 
     int lastInstrType = -1;
     Moth::Instr lastInstr;
