@@ -37,10 +37,12 @@ void QmlGoToTypeDefinitionSupport::process(RequestPointerArgument request)
     ResponseScopeGuard guard(results, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (guard.setErrorFrom(itemsFound))
+    if (!itemsFound.has_value()) {
+        guard.setError(itemsFound.error());
         return;
+    }
 
-    auto &front = std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
+    auto &front = itemsFound.value().front();
 
     auto base = QQmlLSUtils::findTypeDefinitionOf(front.domItem);
 

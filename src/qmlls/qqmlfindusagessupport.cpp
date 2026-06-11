@@ -37,11 +37,12 @@ void QQmlFindUsagesSupport::process(QQmlFindUsagesSupport::RequestPointerArgumen
     ResponseScopeGuard guard(results, request->m_response);
 
     auto itemsFound = itemsForRequest(request);
-    if (guard.setErrorFrom(itemsFound))
+    if (!itemsFound.has_value()) {
+        guard.setError(itemsFound.error());
         return;
+    }
 
-    QQmlLSUtils::ItemLocation &front =
-            std::get<QList<QQmlLSUtils::ItemLocation>>(itemsFound).front();
+    QQmlLSUtils::ItemLocation &front = itemsFound.value().front();
 
     auto usages = QQmlLSUtils::findUsagesOf(front.domItem);
 

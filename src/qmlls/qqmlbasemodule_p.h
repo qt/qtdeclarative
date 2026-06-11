@@ -67,38 +67,6 @@ struct ResponseScopeGuard
     // note: discards the current result or error message, if there is any
     void setError(const QQmlLSUtils::ErrorMessage &error) { m_response = error; }
 
-    template<typename... T>
-    bool setErrorFrom(const std::variant<T...> &variant)
-    {
-        static_assert(std::disjunction_v<std::is_same<T, QQmlLSUtils::ErrorMessage>...>,
-                      "ResponseScopeGuard::setErrorFrom was passed a variant that never contains"
-                      " an error message.");
-        if (auto x = std::get_if<QQmlLSUtils::ErrorMessage>(&variant)) {
-            setError(*x);
-            return true;
-        }
-        return false;
-    }
-
-    /*!
-        \internal
-        Note: use it as follows:
-        \badcode
-        if (scopeGuard.setErrorFrom(xxx)) {
-            // do early exit
-        }
-        // xxx was not an error, continue
-        \endcode
-    */
-    bool setErrorFrom(const std::optional<QQmlLSUtils::ErrorMessage> &error)
-    {
-        if (error) {
-            setError(*error);
-            return true;
-        }
-        return false;
-    }
-
     ~ResponseScopeGuard()
     {
         std::visit(qOverloadedVisitor{ [this](Result *result) { m_callback.sendResponse(*result); },
@@ -126,11 +94,14 @@ struct QQmlBaseModule : public QLanguageServerModule
     decltype(auto) getRequestHandler();
     // processes a request in a different thread.
     virtual void process(RequestPointerArgument toBeProcessed) = 0;
-    std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+    q23::expected<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
     itemsForRequest(const RequestPointer &request);
 
-    std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
-    itemsForRequest(const RequestPointer &request, const QLspSpecification::Position &position);
+    q23::expected<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+    tryLocateItems(const QmlLsp::OpenDocument &doc, const QLspSpecification::Position &position);
+
+    q23::expected<QmlLsp::OpenDocument, QQmlLSUtils::ErrorMessage>
+    tryOpenDocument(const QByteArray &uri);
 
 public Q_SLOTS:
     void updatedSnapshot(const QByteArray &uri);
@@ -231,48 +202,54 @@ void QQmlBaseModule<RequestType>::updatedSnapshot(const QByteArray &url)
     }
 }
 
-// TODO use q23::expected instead of a variant
 template <typename RequestType>
-std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+q23::expected<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
 QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request)
 {
-    return itemsForRequest(request, request->m_parameters.position);
+    return tryOpenDocument(request->m_parameters.textDocument.uri).and_then([&](const auto &doc) {
+        return tryLocateItems(doc, request->m_parameters.position);
+    });
 }
 
-// TODO use q23::expected instead of a variant
 template <typename RequestType>
-std::variant<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
-QQmlBaseModule<RequestType>::itemsForRequest(const RequestPointer &request,
-                                             const QLspSpecification::Position &position)
+q23::expected<QmlLsp::OpenDocument, QQmlLSUtils::ErrorMessage>
+QQmlBaseModule<RequestType>::tryOpenDocument(const QByteArray &uri)
 {
-
-    QmlLsp::OpenDocument doc = m_codeModelManager->openDocumentByUrl(
-            QQmlLSUtils::lspUriToQmlUrl(request->m_parameters.textDocument.uri));
+    QmlLsp::OpenDocument doc =
+            m_codeModelManager->openDocumentByUrl(QQmlLSUtils::lspUriToQmlUrl(uri));
 
     if (!doc.snapshot.validDocVersion || doc.snapshot.validDocVersion != doc.snapshot.docVersion) {
-        return QQmlLSUtils::ErrorMessage{ 0,
-                                          u"Cannot proceed: current QML document is invalid! Fix"
-                                          u" all the errors in your QML code and try again."_s };
+        return q23::unexpected(
+                QQmlLSUtils::ErrorMessage{ 0,
+                                           u"Cannot proceed: current QML document is invalid! Fix"
+                                           u" all the errors in your QML code and try again."_s });
     }
+    return doc;
+}
 
+template <typename RequestType>
+q23::expected<QList<QQmlLSUtils::ItemLocation>, QQmlLSUtils::ErrorMessage>
+QQmlBaseModule<RequestType>::tryLocateItems(const QmlLsp::OpenDocument &doc,
+                                            const QLspSpecification::Position &position)
+{
     QQmlJS::Dom::DomItem file = doc.snapshot.validDoc.fileObject(QQmlJS::Dom::GoTo::MostLikely);
     // clear reference cache to resolve latest versions (use a local env instead?)
     if (auto envPtr = file.environment().ownerAs<QQmlJS::Dom::DomEnvironment>())
         envPtr->clearReferenceCache();
     if (!file) {
-        return QQmlLSUtils::ErrorMessage{
-            0,
-            u"Could not find file %1 in project."_s.arg(doc.snapshot.doc.toString()),
-        };
+        return q23::unexpected(QQmlLSUtils::ErrorMessage{
+                0,
+                u"Could not find file %1 in project."_s.arg(doc.snapshot.doc.toString()),
+        });
     }
 
     auto itemsFound = QQmlLSUtils::itemsFromTextLocation(file, position.line, position.character);
 
     if (itemsFound.isEmpty()) {
-        return QQmlLSUtils::ErrorMessage{
-            0,
-            u"Could not find any items at given text location."_s,
-        };
+        return q23::unexpected(QQmlLSUtils::ErrorMessage{
+                0,
+                u"Could not find any items at given text location."_s,
+        });
     }
     return itemsFound;
 }
