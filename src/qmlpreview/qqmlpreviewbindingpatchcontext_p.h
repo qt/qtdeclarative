@@ -13,6 +13,8 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
+#include <QtCore/qpointer.h>
+
 #include <unordered_map>
 
 //
@@ -77,6 +79,7 @@ private:
     {
         QString propertyName;
         QQmlAnyBinding binding;
+        QPointer<QObject> sourceGuard;
     };
 
     struct StoredValue
@@ -100,7 +103,7 @@ private:
     static void retireObject(QObject *object);
     static void clearBindingsRecursive(QObject *object);
 
-    QObject *m_object = nullptr;
+    QPointer<QObject> m_object;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> unit;
     int objectIndex;
     QString prefix;

@@ -103,6 +103,7 @@ private slots:
     void inPlaceObjectTreeAddChild();
     void inPlaceChildComponentMultipleEdits();
     void inPlaceLazyComponentUpdateBeforeInstantiation();
+    void inPlaceRequiredPropertyDelegateCrash();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -1384,6 +1385,54 @@ void tst_QQmlPreview::inPlaceLazyComponentUpdateBeforeInstantiation()
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
     QVERIFY(m_serviceErrors.isEmpty());
+}
+
+// Reproduces a use-after-free crash: when rebuilding a ListView that has an
+// inline delegate with required properties, stashExternalState() stashes the
+// QQmlPropertyToPropertyBinding that QQmlDelegateModel installed for each
+// required property. The binding's sourceObject points to a
+// QQmlDMListAccessorData that is freed (ref-count → 0, not via deleteLater)
+// when reset() clears the model. restoreExternalState() then calls
+// readSourceValue() with the dangling sourceObject → crash.
+void tst_QQmlPreview::inPlaceRequiredPropertyDelegateCrash()
+{
+    const QString file("inplace_required_prop_delegate.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+
+    // Wait for the process to be fully up and for the ListView to have
+    // created its delegate items (currentItem must be non-null for
+    // stashExternalState to create a child context for it).
+    verifyProcessOutputContains("required_prop_delegate ready");
+
+    const int prevLen = m_process->output().size();
+
+    // Change clip: true → false in the ListView. This triggers rebuildObject()
+    // on the ListView, stashing the QQmlPropertyToPropertyBindings for the
+    // delegate's required properties, then freeing the source objects during
+    // reset(), and finally crashing in restoreExternalState().
+    QByteArray contents = readAndModify(file, {{"clip: true", "clip: false"}});
+    QVERIFY(!contents.isEmpty());
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+
+    // The Timer fires every 200 ms. After a successful in-place update the
+    // process stays alive and produces new output shortly. If the process
+    // crashed the condition stays false and the test fails at QTRY_VERIFY.
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().size() > prevLen
+                                    && m_process->output().mid(prevLen).contains(
+                                            "required_prop_delegate ready"),
+                             5000);
+
+    QVERIFY2(m_process->state() != QProcess::NotRunning,
+             "Process crashed when changing clip property on a ListView with "
+             "required-property delegates (use-after-free in restoreExternalState)");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
 }
 
 QTEST_MAIN(tst_QQmlPreview)
