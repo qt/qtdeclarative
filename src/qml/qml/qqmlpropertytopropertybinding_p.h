@@ -19,10 +19,9 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlnotifier_p.h>
+#include <private/qqmlpropertybindingbase_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <private/qv4jscall_p.h>
-
-#include <QtCore/qproperty.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -98,6 +97,8 @@ public:
     void setEnabled(bool e, QQmlPropertyData::WriteFlags flags) final;
     void update(QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding);
 
+    QObject *source() const { return m_binding.sourceObject; }
+
 protected:
     QQmlPropertyToUnbindablePropertyBinding(
             QQmlEngine *engine, const QQmlProperty &source, const QQmlProperty &target);
@@ -135,12 +136,14 @@ private:
     bool m_isObserving = false;
 };
 
-class QQmlPropertyToBindablePropertyBinding : public QPropertyBindingPrivate
+class QQmlPropertyToBindablePropertyBinding : public QQmlPropertyBindingBase
 {
 public:
     QQmlPropertyToBindablePropertyBinding(
             QQmlEngine *engine, const QQmlProperty &source, const QQmlProperty &target,
             const QtPrivate::BindingFunctionVTable *vtable);
+
+    QObject *source() const { return m_binding.sourceObject; }
 
     template<typename Concrete>
     static bool update(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f)

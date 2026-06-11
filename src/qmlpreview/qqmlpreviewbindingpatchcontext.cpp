@@ -70,12 +70,16 @@ static bool isExternalBinding(const QQmlAnyBinding &binding,
             f = static_cast<const QQmlBinding *>(abstractBinding)->function();
     } else if (const QPropertyBindingPrivate *priv =
                        QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding());
-               priv && priv->hasCustomVTable()) {
+               priv && priv->isQmlBinding()) {
         // QPropertyBindingPrivate-based binding. Check if it's a QQmlPropertyBinding
         // with a JS expression we can trace back to a CU.
-        if (const QQmlPropertyBindingJS *jsExpr =
-                    static_cast<const QQmlPropertyBinding *>(priv)->jsExpression()) {
-            f = jsExpr->function();
+
+        const auto base = static_cast<const QQmlPropertyBindingBase *>(priv);
+        if (base->bindingKind() == QQmlPropertyBindingBase::BindingKind::JavaScript) {
+            if (const QQmlPropertyBindingJS *jsExpr =
+                        static_cast<const QQmlPropertyBinding *>(base)->jsExpression()) {
+                f = jsExpr->function();
+            }
         }
     }
 

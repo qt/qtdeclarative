@@ -1742,14 +1742,19 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 
         // If the binding was actually not set, it's deleted now.
         if (success && bindingPrivateRefCount > 1) {
-            if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
-                auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
-                auto jsExpression = qmlBindingPriv->jsExpression();
-                const bool canRemove = !qmlBinding.error().hasError()
-                        && !qmlBindingPriv->hasDependencies()
-                        && !jsExpression->hasUnresolvedNames();
-                if (canRemove)
-                    bindable.takeBinding();
+            if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->isQmlBinding()) {
+                const auto qmlBindingBase = static_cast<const QQmlPropertyBindingBase *>(priv);
+                if (qmlBindingBase->bindingKind()
+                    == QQmlPropertyBindingBase::BindingKind::JavaScript) {
+                    const auto qmlBindingPriv =
+                            static_cast<const QQmlPropertyBinding *>(qmlBindingBase);
+                    const auto jsExpression = qmlBindingPriv->jsExpression();
+                    const bool canRemove = !qmlBinding.error().hasError()
+                            && !qmlBindingPriv->hasDependencies()
+                            && !jsExpression->hasUnresolvedNames();
+                    if (canRemove)
+                        bindable.takeBinding();
+                }
             }
         }
 

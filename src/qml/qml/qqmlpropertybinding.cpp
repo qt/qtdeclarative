@@ -38,7 +38,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(QMetaType propertyType, QV4:
     auto buffer = new std::byte[QQmlPropertyBinding::getSizeEnsuringAlignment()
             + sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
     auto binding = new (buffer) QQmlPropertyBinding(propertyType, target, targetIndex,
-                                                    TargetData::WithoutBoundFunction);
+                                                    HasBoundFunction::No);
     auto js = new(buffer + QQmlPropertyBinding::getSizeEnsuringAlignment() + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -54,7 +54,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromCodeString(const QQmlProp
 {
     auto buffer = new std::byte[QQmlPropertyBinding::getSizeEnsuringAlignment()
             + sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, HasBoundFunction::No);
     auto js = new(buffer + QQmlPropertyBinding::getSizeEnsuringAlignment() + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -90,7 +90,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromScriptString(const QQmlPr
 
     auto buffer = new std::byte[QQmlPropertyBinding::getSizeEnsuringAlignment()
             + sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(property->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(property->propType()), target, targetIndex, HasBoundFunction::No);
     auto js = new(buffer + QQmlPropertyBinding::getSizeEnsuringAlignment() + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -107,7 +107,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 {
     auto buffer = new std::byte[QQmlPropertyBinding::getSizeEnsuringAlignment()
             + sizeof(QQmlPropertyBindingJSForBoundFunction)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::HasBoundFunction);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, HasBoundFunction::Yes);
     auto js = new(buffer + QQmlPropertyBinding::getSizeEnsuringAlignment() + jsExpressionOffsetLength()) QQmlPropertyBindingJSForBoundFunction();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -164,16 +164,13 @@ void QQmlPropertyBindingJS::expressionChanged()
     m_error.setTag(NoTag);
 }
 
-QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction)
-    : QPropertyBindingPrivate(mt,
+QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target,
+                                         QQmlPropertyIndex targetIndex,
+                                         HasBoundFunction hasBoundFunction)
+    : QQmlPropertyBindingBase(target, targetIndex, mt,
                               bindingFunctionVTableForQQmlPropertyBinding(mt),
-                              QPropertyBindingSourceLocation(), true)
+                              BindingKind::JavaScript, hasBoundFunction)
 {
-    static_assert (std::is_trivially_destructible_v<TargetData>);
-    static_assert (sizeof(TargetData) + sizeof(DeclarativeErrorCallback) <= sizeof(QPropertyBindingSourceLocation));
-    static_assert (alignof(TargetData) <= alignof(QPropertyBindingSourceLocation));
-    const auto state = hasBoundFunction ? TargetData::HasBoundFunction : TargetData::WithoutBoundFunction;
-    new (&declarativeExtraData) TargetData {target, targetIndex, state};
     errorCallBack = bindingErrorCallback;
 }
 

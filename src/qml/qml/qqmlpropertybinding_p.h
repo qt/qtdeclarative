@@ -17,6 +17,7 @@
 //
 
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmlpropertybindingbase_p.h>
 #include <private/qqmlpropertydata_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qqmltranslation_p.h>
@@ -55,7 +56,7 @@ public:
     QV4::PersistentValue m_boundFunction;
 };
 
-class Q_QML_EXPORT QQmlPropertyBinding : public QPropertyBindingPrivate
+class Q_QML_EXPORT QQmlPropertyBinding : public QQmlPropertyBindingBase
 
 {
     friend class QQmlPropertyBindingJS;
@@ -112,9 +113,9 @@ public:
 
     static bool isUndefined(const QPropertyBindingPrivate *binding)
     {
-        if (!(binding && binding->hasCustomVTable()))
+        if (!binding || !binding->isQmlBinding())
             return false;
-        return static_cast<const QQmlPropertyBinding *>(binding)->isUndefined();
+        return static_cast<const QQmlPropertyBindingBase *>(binding)->isUndefined();
     }
 
     template<QMetaType::Type type>
@@ -125,7 +126,7 @@ public:
         return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate<type>(metaType, dataPtr);
     }
 
-    bool hasDependencies()
+    bool hasDependencies() const
     {
         return (dependencyObserverCount > 0) || !jsExpression()->activeGuards.isEmpty();
     }
@@ -138,45 +139,7 @@ private:
 
     QString createBindingLoopErrorDescription();
 
-    struct TargetData {
-        enum BoundFunction : bool {
-            WithoutBoundFunction = false,
-            HasBoundFunction = true,
-        };
-        TargetData(QObject *target, QQmlPropertyIndex index, BoundFunction state)
-            : target(target), targetIndex(index), hasBoundFunction(state)
-        {}
-        QObject *target;
-        QQmlPropertyIndex targetIndex;
-        bool hasBoundFunction;
-        bool isUndefined = false;
-    };
-    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction);
-
-    QObject *target()
-    {
-        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->target;
-    }
-
-    QQmlPropertyIndex targetIndex()
-    {
-        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->targetIndex;
-    }
-
-    bool hasBoundFunction()
-    {
-        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->hasBoundFunction;
-    }
-
-    bool isUndefined() const
-    {
-        return std::launder(reinterpret_cast<TargetData const *>(&declarativeExtraData))->isUndefined;
-    }
-
-    void setIsUndefined(bool isUndefined)
-    {
-        std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->isUndefined = isUndefined;
-    }
+    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, HasBoundFunction hasBoundFunction);
 
     static void bindingErrorCallback(QPropertyBindingPrivate *);
 };
@@ -278,7 +241,7 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
             // if property has been changed due to reset, reset is responsible for
             // notifying observers
             return false;
-        } else if (isUndefined()) {
+        } else if (QQmlPropertyBindingBase::isUndefined()) {
             setIsUndefined(false);
         }
 
