@@ -1589,9 +1589,7 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         const auto r = d->resolve(w, QQStyleKitReader::ControlType::ProgressBar, opt->state);
         if (!r.isValid())
             break;
-        const auto *indicator = r.indicator();
-        if (indicator && indicator->visible() && indicator->opacity() > 0)
-            d->drawStyledItemRect(indicator, opt->rect, p);
+        d->drawStyledItemRect(r.indicator(), opt->rect, p);
         return;
     }
     case CE_ProgressBarContents:
@@ -1693,6 +1691,15 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
         }
 #endif // QT_CONFIG(textedit)
         break;
+#if QT_CONFIG(scrollbar)
+    case CE_ScrollBarSlider: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::ScrollBar, opt->state);
+        if (!r.isValid())
+            break;
+        d->drawControlIndicator(r.indicator(), opt->rect, p);
+        return;
+    }
+#endif
 #endif // QT_NO_FRAME
     default:
         break;
@@ -1892,9 +1899,9 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                 break;
             const auto *foreground = resolved.indicator() ? resolved.indicator()->foreground() : nullptr;
             if (!foreground || !foreground->visible() || foreground->opacity() == 0)
-                return opt->rect;
+                return QRect();
 
-            QRect indicatorRect = visualRect(opt->direction, opt->rect, subElementRect(SE_ProgressBarGroove, opt, widget));
+            QRect indicatorRect = subElementRect(SE_ProgressBarGroove, opt, widget);
             const auto foregroundW = resolvedImplicitWidth(foreground,
                 indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
             const auto foregroundH = resolvedImplicitHeight(foreground,
@@ -1996,12 +2003,11 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             d->drawStyledItemRect(r.background(), backgroundRect, p);
 
             // groove
-            const auto grooveRect = subControlRect(CC_Slider, opt, SC_SliderGroove, w);
             if (slider->subControls & SC_SliderGroove) {
                 // groove
+                const auto grooveRect = proxy()->subControlRect(CC_Slider, opt, SC_SliderGroove, w);
                 const auto *indicator = r.indicator();
-                if (indicator && indicator->visible() && indicator->opacity() > 0)
-                    d->drawStyledItemRect(indicator, grooveRect, p);
+                d->drawStyledItemRect(indicator, grooveRect, p);
 
                 // track
                 const auto *foreground = indicator ? indicator->foreground() : nullptr;
@@ -2186,6 +2192,32 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
         }
         break;
 #endif // QT_CONFIG(groupbox)
+#if QT_CONFIG(scrollbar)
+    case CC_ScrollBar:
+        if (const auto *scrollbar = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::ScrollBar, scrollbar->state);
+            if (!r.isValid())
+                break;
+
+            // background = groove
+            if (scrollbar->subControls & SC_ScrollBarGroove) {
+                QRect backgroundRect = proxy()->subControlRect(CC_ScrollBar, opt, SC_ScrollBarGroove, w);
+                d->drawStyledItemRect(r.background(), backgroundRect, p);
+            }
+
+            // TODO: increase button
+            // TODO: decrease button
+
+            // slider = indicator
+            if (scrollbar->subControls & SC_ScrollBarSlider) {
+                QStyleOptionSlider newScrollbar(*scrollbar);
+                newScrollbar.rect = proxy()->subControlRect(CC_ScrollBar, opt, SC_ScrollBarSlider, w);
+                proxy()->drawControl(CE_ScrollBarSlider, &newScrollbar, p, w);
+            }
+            return;
+        }
+        break;
+#endif // QT_CONFIG(scrollbar)
     default:
         break;
     }
@@ -2218,14 +2250,13 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             if (!resolved.isValid())
                 break;
             const auto &metrics = *resolved.metrics;
-            QRect contentsRect = opt->rect.marginsRemoved(
-                slider->orientation == Qt::Horizontal
-                    ? QMargins(metrics.margins.left(), metrics.margins.top(), metrics.margins.right(), metrics.margins.bottom())
-                    : QMargins(metrics.margins.top(), metrics.margins.left(), metrics.margins.bottom(), metrics.margins.right())
-            ).marginsRemoved(
-                slider->orientation == Qt::Horizontal
-                    ? QMargins(metrics.padding.left(), metrics.padding.top(), metrics.padding.right(), metrics.padding.bottom())
-                    : QMargins(metrics.padding.top(), metrics.padding.left(), metrics.padding.bottom(), metrics.padding.right())
+            const bool horizontal = slider->orientation == Qt::Horizontal;
+            QRect contentsRect = opt->rect.marginsRemoved(horizontal
+                ? QMargins(metrics.margins.left(), metrics.margins.top(), metrics.margins.right(), metrics.margins.bottom())
+                : QMargins(metrics.margins.top(), metrics.margins.left(), metrics.margins.bottom(), metrics.margins.right())
+            ).marginsRemoved(horizontal
+                ? QMargins(metrics.padding.left(), metrics.padding.top(), metrics.padding.right(), metrics.padding.bottom())
+                : QMargins(metrics.padding.top(), metrics.padding.left(), metrics.padding.bottom(), metrics.padding.right())
             );
 
             const auto *indicator = resolved.indicator();
@@ -2233,16 +2264,15 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 return contentsRect;
             switch (sc) {
             case SC_SliderGroove: {
-                const bool isHorizontal = slider->orientation == Qt::Horizontal;
-                const auto availableW = isHorizontal
+                const auto availableW = horizontal
                     ? contentsRect.width() - indicator->leftMargin() - indicator->rightMargin()
                     : contentsRect.width() - indicator->topMargin() - indicator->bottomMargin();
-                const auto availableH = isHorizontal
+                const auto availableH = horizontal
                     ? contentsRect.height() - indicator->topMargin() - indicator->bottomMargin()
                     : contentsRect.height() - indicator->leftMargin() - indicator->rightMargin();
 
                 qreal grooveW, grooveH;
-                if (isHorizontal) {
+                if (horizontal) {
                     grooveW = resolvedImplicitWidth(indicator, availableW);
                     grooveH = resolvedImplicitHeight(indicator, availableH);
                 } else {
@@ -2256,7 +2286,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const uint rawVAlign = indicator->alignment() & Qt::AlignVertical_Mask;
                 // For vertical orientation, swap alignment axes
                 uint hAlign, vAlign;
-                if (isHorizontal) {
+                if (horizontal) {
                     hAlign = rawHAlign ? static_cast<Qt::Alignment>(rawHAlign) : Qt::AlignLeft;
                     vAlign = rawVAlign ? static_cast<Qt::Alignment>(rawVAlign) : Qt::AlignVCenter;
                 } else {
@@ -2312,7 +2342,6 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     return contentsRect;
 
                 QRect handleRect;
-                const bool horizontal = slider->orientation == Qt::Horizontal;
                 const auto handleW = resolvedImplicitWidth(handle,
                     contentsRect.width() - handle->leftMargin() - handle->rightMargin());
                 const auto handleH = resolvedImplicitHeight(handle,
@@ -2483,10 +2512,6 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 const int fontHeight = opt->fontMetrics.height();
                 const int labelHeight = metrics.textPadding.top() + fontHeight
                                         + metrics.textPadding.bottom();
-                // const QRect labelContainer(opt->rect.left() + metrics.padding.left() + metrics.textPadding.left(),
-                //                            opt->rect.top() + metrics.padding.top() + metrics.textPadding.top(),
-                //                            opt->rect.width() - metrics.padding.left() - metrics.padding.right() - metrics.textPadding.left() - metrics.textPadding.right(),
-                //                            labelHeight);
                 const QRect labelContainer(opt->rect.left(), opt->rect.top(),
                                             opt->rect.width(),
                                             labelHeight);
@@ -2511,6 +2536,71 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
         }
         break;
 #endif // QT_CONFIG(groupbox)
+#if QT_CONFIG(scrollbar)
+    case CC_ScrollBar:
+        if (const auto *scrollbar = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ScrollBar, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            const bool horizontal = scrollbar->orientation == Qt::Horizontal;
+            const QRectF grooveRect = opt->rect.marginsRemoved(horizontal
+                ? QMargins(metrics.margins.left(), metrics.margins.top(), metrics.margins.right(), metrics.margins.bottom())
+                : QMargins(metrics.margins.top(), metrics.margins.left(), metrics.margins.bottom(), metrics.margins.right()));
+
+            switch (sc) {
+            // TODO: support up/down buttons
+            case SC_ScrollBarAddLine:
+            case SC_ScrollBarSubLine:
+            case SC_ScrollBarSubPage:
+            case SC_ScrollBarAddPage:
+                return QRect();
+            case SC_ScrollBarGroove:
+                return visualRect(opt->direction, opt->rect, grooveRect.toAlignedRect());
+            case SC_ScrollBarSlider: {
+                const auto *indicator = resolved.indicator();
+                if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+                    return QRect();
+                QRectF contentsRect = grooveRect.marginsRemoved(horizontal
+                    ? QMargins(metrics.padding.left(), metrics.padding.top(), metrics.padding.right(), metrics.padding.bottom())
+                    : QMargins(metrics.padding.top(), metrics.padding.left(), metrics.padding.bottom(), metrics.padding.right()));
+
+                const qreal availableW = (horizontal ? contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin()
+                                                     : contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin());
+                const qreal availableH = (horizontal ? contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin()
+                                                     : contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin());
+
+                const int totalRange = scrollbar->maximum - scrollbar->minimum + scrollbar->pageStep;
+                const qreal ratio = totalRange > 0 ? qreal(scrollbar->pageStep) / totalRange : 1.0;
+                const qreal sliderW = qMax(qreal(metrics.indicatorImplicitSize.width()),
+                                               availableW * ratio);
+                const qreal sliderH = resolvedImplicitHeight(indicator, availableH);
+
+                const qreal travelRange = qMax(0.0, availableW - sliderW);
+                const int sliderPos = QStyle::sliderPositionFromValue(
+                    scrollbar->minimum, scrollbar->maximum,
+                    scrollbar->sliderPosition, int(travelRange), scrollbar->upsideDown);
+
+                QRectF sliderRect;
+                if (horizontal) {
+                    sliderRect = QRectF(
+                        contentsRect.x() + indicator->leftMargin() + sliderPos,
+                        contentsRect.y() + indicator->topMargin() + (availableH - sliderH) / 2.0,
+                        sliderW, sliderH);
+                } else {
+                    sliderRect = QRectF(
+                        contentsRect.x() + indicator->leftMargin() + (availableH - sliderH) / 2.0,
+                        contentsRect.y() + indicator->topMargin() + sliderPos,
+                        sliderH, sliderW);
+                }
+                return visualRect(opt->direction, opt->rect, sliderRect.toAlignedRect());
+            }
+            default:
+                break;
+            }
+        }
+        break;
+#endif // QT_CONFIG(scrollbar)
     default:
         break;
     }
@@ -2723,6 +2813,37 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
         }
         break;
 #endif // QT_CONFIG(groupbox)
+#if QT_CONFIG(scrollbar)
+    case CT_ScrollBar:
+        if (const auto *scrollBar = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ScrollBar, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            const bool horizontal = scrollBar->orientation == Qt::Horizontal;
+
+            const int iH = metrics.indicatorImplicitSize.height()
+                + (horizontal ? metrics.padding.top()  + metrics.padding.bottom()
+                              : metrics.padding.left() + metrics.padding.right())
+                + (horizontal ? metrics.indicatorMargins.top()  + metrics.indicatorMargins.bottom()
+                              : metrics.indicatorMargins.left() + metrics.indicatorMargins.right());
+            const int iW = metrics.indicatorImplicitSize.width()
+                + (horizontal ? metrics.padding.left() + metrics.padding.right()
+                              : metrics.padding.top()  + metrics.padding.bottom())
+                + (horizontal ? metrics.indicatorMargins.left() + metrics.indicatorMargins.right()
+                              : metrics.indicatorMargins.top()  + metrics.indicatorMargins.bottom());
+            const int bgH = metrics.bgImplicitSize.height()
+                + (horizontal ? metrics.margins.top()  + metrics.margins.bottom()
+                              : metrics.margins.left() + metrics.margins.right());
+            const int bgW = metrics.bgImplicitSize.width()
+                + (horizontal ? metrics.margins.left() + metrics.margins.right()
+                              : metrics.margins.top()  + metrics.margins.bottom());
+            return horizontal
+                    ? QSize(std::max(iW, bgW), std::max(iH, bgH))
+                    : QSize(std::max(iH, bgH), std::max(iW, bgW));
+        }
+        break;
+#endif // QT_CONFIG(scrollbar)
     default:
         break;
     }
@@ -2767,6 +2888,14 @@ void QStyleKitStyle::polish(QWidget *widget)
 
     Q_D(QStyleKitStyle);
     widget->setAttribute(Qt::WA_Hover);
+
+#if QT_CONFIG(scrollbar)
+    // QScrollBar sets WA_OpaquePaintEvent in its constructor, which skips
+    // background erase before paint. This can leave artifacts when the
+    // style's background is invisible, so disable it
+    if (qobject_cast<QScrollBar *>(widget))
+        widget->setAttribute(Qt::WA_OpaquePaintEvent, false);
+#endif
 
     // Create per-widget reader for interactive controls (transitions)
     const bool isInteractiveControl = false
@@ -2873,6 +3002,10 @@ void QStyleKitStyle::unpolish(QWidget *widget)
             vp->setAutoFillBackground(true);
     }
     d->cleanupWidgetReader(widget);
+#if QT_CONFIG(scrollbar)
+    if (qobject_cast<QScrollBar *>(widget))
+        widget->setAttribute(Qt::WA_OpaquePaintEvent);
+#endif
     QCommonStyle::unpolish(widget);
 }
 
