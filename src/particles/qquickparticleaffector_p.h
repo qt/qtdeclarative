@@ -91,6 +91,8 @@ public Q_SLOTS:
 void setSystem(QQuickParticleSystem* arg)
 {
     if (m_system != arg) {
+        if (m_system)
+            m_system->unregisterParticleAffector(this);
         m_system = arg;
         if (m_system)
             m_system->registerParticleAffector(this);

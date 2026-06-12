@@ -400,6 +400,10 @@ public:
     void registerParticleAffector(QQuickParticleAffector* a);
     void registerParticleGroup(QQuickParticleGroup* g);
 
+    void unregisterParticlePainter(QQuickParticlePainter* p);
+    void unregisterParticleEmitter(QQuickParticleEmitter* e);
+    void unregisterParticleAffector(QQuickParticleAffector* a);
+
     static void statePropertyRedirect(QQmlListProperty<QObject> *prop, QObject *value);
     static void stateRedirect(QQuickParticleGroup* group, QQuickParticleSystem* sys, QObject *value);
     bool isPaused() const
@@ -416,6 +420,9 @@ private:
     void searchNextFreeGroupId();
 
 private:
+    friend class QQuickParticlePainter;
+    friend class QQuickParticleEmitter;
+
     void emitterAdded(QQuickParticleEmitter *e);
     void postProcessEmitters();
     void initializeSystem();
