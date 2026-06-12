@@ -160,6 +160,17 @@ QT_BEGIN_NAMESPACE
     as any custom themes defined by the style.
 */
 
+/*!
+    \property QStyleKitStyle::customThemeNames
+    \brief the list of custom theme names defined by the loaded \l Style.
+
+    Unlike \l themeNames, this list excludes the built-in \c Light and
+    \c Dark themes and contains only the themes explicitly defined by the
+    style author. Returns an empty list when no style is loaded.
+
+    \sa themeNames, themeName
+*/
+
 static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
 {
     if (!widget)
@@ -1125,21 +1136,21 @@ QStyleKitStyle::QStyleKitStyle()
 }
 
 /*!
-    Constructs a QStyleKitStyle and loads the QML \l Style at \a fileName.
+    Constructs a QStyleKitStyle and loads the QML \l Style at \a filePath.
 
-    \a fileName is interpreted as a URL, and may use any scheme supported
+    \a filePath is interpreted as a URL, and may use any scheme supported
     by QQmlEngine, including \c qrc, \c file, and \c http. If the URL is
     invalid or the root object of the loaded component is not a \l Style,
     a warning is emitted and the constructed style behaves as
     QCommonStyle until a valid \l stylePath is set.
 */
-QStyleKitStyle::QStyleKitStyle(const QString &fileName)
+QStyleKitStyle::QStyleKitStyle(const QString &filePath)
     : QCommonStyle(*new QStyleKitStylePrivate())
 {
     Q_D(QStyleKitStyle);
-    d->stylePath = fileName;
+    d->stylePath = filePath;
     if (!d->loadStyle()) {
-        qWarning("QStyleKitStyle: Failed to load style from %s", qPrintable(fileName));
+        qWarning("QStyleKitStyle: Failed to load style from %s", qPrintable(filePath));
     }
 }
 
@@ -1162,9 +1173,9 @@ QString QStyleKitStyle::stylePath() const
 }
 
 /*!
-    Loads the QML \l Style at \a fileName and applies it to all widgets.
+    Loads the QML \l Style at \a filePath and applies it to all widgets.
 
-    \a fileName is interpreted as a URL. If the URL is the same as the
+    \a filePath is interpreted as a URL. If the URL is the same as the
     currently loaded style, this function does nothing. If the new style
     cannot be loaded, the previously loaded style remains active and a
     warning is emitted; \l stylePathChanged() is still emitted to reflect
@@ -1172,12 +1183,12 @@ QString QStyleKitStyle::stylePath() const
 
     \sa stylePath()
 */
-void QStyleKitStyle::setStylePath(const QString &fileName)
+void QStyleKitStyle::setStylePath(const QString &filePath)
 {
     Q_D(QStyleKitStyle);
-    if (d->stylePath == fileName)
+    if (d->stylePath == filePath)
         return;
-    d->stylePath = fileName;
+    d->stylePath = filePath;
     if (d->loadStyle())
         d->updateStyle();
     emit stylePathChanged();
@@ -2895,6 +2906,12 @@ bool QStyleKitStyle::eventFilter(QObject *obj, QEvent *event)
         break;
     }
     return QCommonStyle::eventFilter(obj, event);
+}
+
+/*! \reimp */
+bool QStyleKitStyle::event(QEvent *event)
+{
+    return QCommonStyle::event(event);
 }
 
 QT_END_NAMESPACE
