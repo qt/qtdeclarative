@@ -253,6 +253,8 @@ private slots:
     // composite base type (derived type instantiates the form).
     void childAddedWithIdCompositeCrash();
 
+    void insertBinding();
+
 private:
     QQmlEngine engine;
 };
@@ -277,7 +279,7 @@ static bool updateObjects(std::vector<QObject *> &objects,
 
     if (QQmlPreview::applyDiff(objects, diff, oldUnit, newUnit)) {
         QQmlMetaType::deepClearCompositeType(oldUnit->baseCompilationUnit());
-        QQmlPreview::refreshBindings(oldUnit, newUnit);
+        QQmlPreview::refreshBindings(oldUnit);
         return true;
     }
 
@@ -3832,6 +3834,27 @@ void tst_QQmlPreviewObjectPatch::childAddedWithIdCompositeCrash()
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+}
+
+void tst_QQmlPreviewObjectPatch::insertBinding()
+{
+    QQmlComponent oldComponent(&engine, testFileUrl("InsertBindingOld.qml"));
+    QVERIFY2(oldComponent.isReady(), qPrintable(oldComponent.errorString()));
+    const auto oldUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
+
+    std::unique_ptr<QObject> object(oldComponent.create());
+    QVERIFY(object);
+    QVERIFY2(object->objectName().isEmpty(), qPrintable(object->objectName()));
+
+    QQmlComponent newComponent(&engine, testFileUrl("InsertBindingNew.qml"));
+    QVERIFY2(newComponent.isReady(), qPrintable(newComponent.errorString()));
+    const auto newUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
+
+    auto objects = objectsForCompilationUnit(&engine, oldUnit);
+    QCOMPARE(objects.size(), 2);
+    QVERIFY(updateObjects(objects, oldUnit, newUnit));
+
+    QVERIFY2(object->objectName().isEmpty(), qPrintable(object->objectName()));
 }
 
 QTEST_MAIN(tst_QQmlPreviewObjectPatch)

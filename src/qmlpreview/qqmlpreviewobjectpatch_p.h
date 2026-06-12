@@ -32,8 +32,7 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit);
 
-void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit);
+void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit);
 
 } // namespace QQmlPreview
 
