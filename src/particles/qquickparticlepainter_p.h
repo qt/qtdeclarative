@@ -37,6 +37,7 @@ public: // data
 
 public:
     explicit QQuickParticlePainter(QQuickItem *parent = nullptr);
+    ~QQuickParticlePainter() override;
     //Data Interface to system
     void load(QQuickParticleData*);
     void reload(QQuickParticleData*);

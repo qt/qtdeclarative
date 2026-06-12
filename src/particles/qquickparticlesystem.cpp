@@ -437,10 +437,21 @@ QQuickParticleSystem::QQuickParticleSystem(QQuickItem *parent) :
     m_debugMode = qmlParticlesDebug();
 }
 
+template<typename T>
+void unsetSystem(const QList<QPointer<T>> &elements)
+{
+    for (T *element : elements) {
+        if (element)
+            element->setSystem(nullptr);
+    }
+}
+
 QQuickParticleSystem::~QQuickParticleSystem()
 {
-    for (QQuickParticleGroupData *gd : std::as_const(groupData))
-        delete gd;
+    unsetSystem(std::exchange(m_emitters, {}));
+    unsetSystem(std::exchange(m_affectors, {}));
+    unsetSystem(std::exchange(m_painters, {}));
+    qDeleteAll(groupData);
 }
 
 void QQuickParticleSystem::initGroups()
@@ -471,8 +482,6 @@ void QQuickParticleSystem::registerParticlePainter(QQuickParticlePainter* p)
         qDebug() << "Registering Painter" << p << "to" << this;
     //TODO: a way to Unregister emitters, painters and affectors
     m_painters << QPointer<QQuickParticlePainter>(p);//###Set or uniqueness checking?
-
-    connect(p, &QQuickParticlePainter::groupsChanged, this, [this, p] { this->loadPainter(p); }, Qt::QueuedConnection);
     loadPainter(p);
 }
 
@@ -480,15 +489,11 @@ void QQuickParticleSystem::registerParticleEmitter(QQuickParticleEmitter* e)
 {
     if (m_debugMode)
         qDebug() << "Registering Emitter" << e << "to" << this;
-    m_emitters << QPointer<QQuickParticleEmitter>(e);//###How to get them out?
+    m_emitters << QPointer<QQuickParticleEmitter>(e);
 }
 
 void QQuickParticleSystem::finishRegisteringParticleEmitter(QQuickParticleEmitter* e)
 {
-    connect(e, &QQuickParticleEmitter::particleCountChanged,
-            this, &QQuickParticleSystem::emittersChanged);
-    connect(e, &QQuickParticleEmitter::groupChanged,
-            this, &QQuickParticleSystem::emittersChanged);
     if (m_componentComplete)
         emitterAdded(e);
     e->reset();//Start, so that starttime factors appropriately
@@ -500,6 +505,30 @@ void QQuickParticleSystem::registerParticleAffector(QQuickParticleAffector* a)
         qDebug() << "Registering Affector" << a << "to" << this;
     if (!m_affectors.contains(a))
         m_affectors << QPointer<QQuickParticleAffector>(a);
+}
+
+void QQuickParticleSystem::unregisterParticlePainter(QQuickParticlePainter *p)
+{
+    if (m_debugMode)
+        qDebug() << "Unregistering Painter" << p << "from" << this;
+    m_painters.removeAll(p);
+    m_syncList.removeAll(p);
+    for (QQuickParticleGroupData *gd : std::as_const(groupData))
+        gd->painters.removeOne(p);
+}
+
+void QQuickParticleSystem::unregisterParticleEmitter(QQuickParticleEmitter *e)
+{
+    if (m_debugMode)
+        qDebug() << "Unregistering Emitter" << e << "from" << this;
+    m_emitters.removeAll(e);
+}
+
+void QQuickParticleSystem::unregisterParticleAffector(QQuickParticleAffector *a)
+{
+    if (m_debugMode)
+        qDebug() << "Unregistering Affector" << a << "from" << this;
+    m_affectors.removeAll(a);
 }
 
 void QQuickParticleSystem::registerParticleGroup(QQuickParticleGroup* g)

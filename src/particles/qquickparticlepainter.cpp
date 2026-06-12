@@ -42,6 +42,12 @@ QQuickParticlePainter::QQuickParticlePainter(QQuickItem *parent)
 {
 }
 
+QQuickParticlePainter::~QQuickParticlePainter()
+{
+    if (m_system)
+        m_system->unregisterParticlePainter(this);
+}
+
 void QQuickParticlePainter::itemChange(ItemChange change, const ItemChangeData &data)
 {
     if (change == QQuickItem::ItemSceneChange) {
@@ -91,6 +97,8 @@ void QQuickParticlePainter::recalculateGroupIds() const
 void QQuickParticlePainter::setSystem(QQuickParticleSystem *arg)
 {
     if (m_system != arg) {
+        if (m_system)
+            m_system->unregisterParticlePainter(this);
         m_system = arg;
         m_groupIdsNeedRecalculation = true;
         if (m_system){
@@ -103,12 +111,22 @@ void QQuickParticlePainter::setSystem(QQuickParticleSystem *arg)
 
 void QQuickParticlePainter::setGroups(const QStringList &arg)
 {
-    if (m_groups != arg) {
-        m_groups = arg;
-        m_groupIdsNeedRecalculation = true;
-        //Note: The system watches this as it has to recalc things when groups change. It will request a reset if necessary
-        Q_EMIT groupsChanged(arg);
+    if (m_groups == arg)
+        return;
+    m_groups = arg;
+    m_groupIdsNeedRecalculation = true;
+
+    if (m_system) {
+        QMetaObject::invokeMethod(
+                m_system,
+                [self = QPointer<QQuickParticlePainter>(this)]() {
+                    if (self)
+                        self->m_system->loadPainter(self);
+                },
+                Qt::QueuedConnection);
     }
+
+    Q_EMIT groupsChanged(arg);
 }
 
 void QQuickParticlePainter::load(QQuickParticleData* d)
