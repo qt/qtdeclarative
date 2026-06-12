@@ -15,17 +15,18 @@ class QStyleKitStylePrivate;
 class Q_LABSSTYLEKIT_EXPORT QStyleKitStyle : public QCommonStyle
 {
     Q_OBJECT
-    Q_PROPERTY(QString stylePath READ stylePath WRITE setStylePath NOTIFY stylePathChanged)
-    Q_PROPERTY(QString themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged)
-    Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY stylePathChanged)
+    Q_PROPERTY(QString stylePath READ stylePath WRITE setStylePath NOTIFY stylePathChanged FINAL)
+    Q_PROPERTY(QString themeName READ themeName WRITE setThemeName NOTIFY themeNameChanged FINAL)
+    Q_PROPERTY(QStringList themeNames READ themeNames NOTIFY stylePathChanged FINAL)
+    Q_PROPERTY(QStringList customThemeNames READ customThemeNames NOTIFY stylePathChanged FINAL)
 
 public:
     QStyleKitStyle();
-    QStyleKitStyle(const QString &fileName);
+    explicit QStyleKitStyle(const QString &filePath);
     ~QStyleKitStyle() override;
 
     QString stylePath() const;
-    void setStylePath(const QString &fileName);
+    void setStylePath(const QString &filePath);
     QString themeName() const;
     void setThemeName(const QString &themeName);
     QStringList themeNames() const;
@@ -59,6 +60,7 @@ public:
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
+    bool event(QEvent *event) override;
 
 Q_SIGNALS:
     void stylePathChanged();
