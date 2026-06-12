@@ -144,6 +144,7 @@ public Q_SLOTS:
     {
         if (m_particlesPerSecond != arg) {
             m_particlesPerSecond = arg;
+            callSystemEmittersChanged();
             Q_EMIT particlesPerSecondChanged(arg);
         }
     }
@@ -152,19 +153,29 @@ public Q_SLOTS:
     {
         if (m_particleDuration != arg) {
             m_particleDuration = arg;
+            callSystemEmittersChanged();
             Q_EMIT particleDurationChanged(arg);
         }
     }
 
     void setSystem(QQuickParticleSystem* arg)
     {
-        if (m_system != arg) {
-            m_system = arg;
-            m_groupIdNeedRecalculation = true;
-            if (m_system)
-                m_system->registerParticleEmitter(this);
-            Q_EMIT systemChanged(arg);
+        if (arg == m_system)
+            return;
+
+        if (m_system)
+            m_system->unregisterParticleEmitter(this);
+
+        m_system = arg;
+        m_groupIdNeedRecalculation = true;
+
+        if (m_system) {
+            m_system->registerParticleEmitter(this);
+            if (isComponentComplete())
+                m_system->finishRegisteringParticleEmitter(this);
         }
+
+        Q_EMIT systemChanged(arg);
     }
 
     void setGroup(const QString &arg)
@@ -172,6 +183,7 @@ public Q_SLOTS:
         if (m_group != arg) {
             m_group = arg;
             m_groupIdNeedRecalculation = true;
+            callSystemEmittersChanged();
             Q_EMIT groupChanged(arg);
         }
     }
@@ -328,6 +340,8 @@ protected:
        bool isEmitConnected();
 
 private: // data
+       void callSystemEmittersChanged();
+
        QString m_group;
        mutable bool m_groupIdNeedRecalculation;
        mutable QQuickParticleGroupData::ID m_groupId;

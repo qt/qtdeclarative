@@ -228,6 +228,12 @@ bool QQuickParticleEmitter::isEmitConnected()
             this, QQuickParticleEmitter, emitParticles, (const QList<QQuickV4ParticleData> &));
 }
 
+void QQuickParticleEmitter::callSystemEmittersChanged()
+{
+    if (m_system && isComponentComplete())
+        m_system->emittersChanged();
+}
+
 void QQuickParticleEmitter::reclaculateGroupId() const
 {
     if (!m_system) {
@@ -297,6 +303,7 @@ void QQuickParticleEmitter::setMaxParticleCount(int arg)
         }
         m_overwrite = arg < 0;
         m_maxParticleCount = arg;
+        callSystemEmittersChanged();
         emit maximumEmittedChanged(arg);
         emit particleCountChanged();
     }
