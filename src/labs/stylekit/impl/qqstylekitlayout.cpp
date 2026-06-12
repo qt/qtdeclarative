@@ -394,6 +394,12 @@ void QQStyleKitLayout::updatePolish()
     for (QQStyleKitLayoutItem *li : m_layoutItems) {
         if (!li->item() || !li->item()->isVisible())
             continue;
+        if (li->fillWidth()) {
+            // fillWidth items always expand to fill the available width,
+            // so horizontal alignment has no effect.
+            left.append(li);
+            continue;
+        }
         const auto hAlign = li->alignment() & Qt::AlignHorizontal_Mask;
         const bool isMirrored = m_mirrored && !(hAlign & Qt::AlignAbsolute);
         switch (hAlign) {
