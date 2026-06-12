@@ -3674,8 +3674,8 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
             : lhsContent.containedType();
 
     const bool isStrict = function == "strictlyEquals"_L1;
-    const bool strictlyComparableWithVar
-            = isStrict && canStrictlyCompareWithVar(m_typeResolver, lhsContained, rhsContained);
+    const bool strictlyComparableWithVar = isStrict
+            && QQmlJSUtils::canStrictlyCompareWithVar(m_typeResolver, lhsContained, rhsContained);
     auto isComparable = [&]() {
         if (m_typeResolver->isPrimitive(lhsContent) && m_typeResolver->isPrimitive(rhsContent))
             return true;
@@ -3687,9 +3687,9 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
             return true;
         if (strictlyComparableWithVar)
             return true;
-        if (canCompareWithQObject(m_typeResolver, lhsContained, rhsContained))
+        if (QQmlJSUtils::canCompareWithQObject(m_typeResolver, lhsContained, rhsContained))
             return true;
-        if (canCompareWithQUrl(m_typeResolver, lhsContained, rhsContained))
+        if (QQmlJSUtils::canCompareWithQUrl(m_typeResolver, lhsContained, rhsContained))
             return true;
         return false;
     };
@@ -3782,14 +3782,14 @@ void QQmlJSCodeGenerator::generateEqualityOperation(
             return invert ? u"false"_s : u"true"_s;
         }
 
-        if (canCompareWithQObject(m_typeResolver, lhsType, rhsType)) {
+        if (QQmlJSUtils::canCompareWithQObject(m_typeResolver, lhsType, rhsType)) {
             // Comparison of QObject-derived with nullptr or different QObject-derived.
             return (isTypeStorable(m_typeResolver, lhsType) ? lhsName : u"nullptr"_s)
                     + sign
                     + (isTypeStorable(m_typeResolver, rhsType) ? rhsName : u"nullptr"_s);
         }
 
-        if (canCompareWithQObject(m_typeResolver, lhsContained, rhsContained)) {
+        if (QQmlJSUtils::canCompareWithQObject(m_typeResolver, lhsContained, rhsContained)) {
             // Comparison of optional QObject-derived with nullptr or different QObject-derived.
             // Mind that null == undefined but null !== undefined
             // Therefore the isStrict dance.

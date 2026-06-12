@@ -16,20 +16,22 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
+namespace QQmlJSUtils {
+
 /*! \internal
 
     Fully resolves alias \a property and returns the information about the
     origin, which is not an alias.
 */
-template<typename ScopeForId>
-static QQmlJSUtils::ResolvedAlias
-resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
-             const QQmlJSScope::ConstPtr &owner, const QQmlJSUtils::AliasResolutionVisitor &visitor)
+template <typename ScopeForId>
+static ResolvedAlias resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
+                                  const QQmlJSScope::ConstPtr &owner,
+                                  const AliasResolutionVisitor &visitor)
 {
     Q_ASSERT(property.isAlias());
     Q_ASSERT(owner);
 
-    QQmlJSUtils::ResolvedAlias result {};
+    ResolvedAlias result{ };
     result.owner = owner;
 
     // TODO: one could optimize the generated alias code for aliases pointing to aliases
@@ -39,7 +41,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
     //  component and alias resolution on the ids of a different component fails then.
     if (QQmlJSMetaProperty nextProperty = property; nextProperty.isAlias()) {
         QQmlJSScope::ConstPtr resultOwner = result.owner;
-        result = QQmlJSUtils::ResolvedAlias {};
+        result = ResolvedAlias{ };
 
         visitor.reset();
 
@@ -57,7 +59,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
 
         aliasExprBits.removeFirst(); // Note: for simplicity, remove the <id>
         result.owner = resultOwner;
-        result.kind = QQmlJSUtils::AliasTarget_Object;
+        result.kind = AliasTarget_Object;
 
         for (const QString &bit : std::as_const(aliasExprBits)) {
             nextProperty = resultOwner->property(bit);
@@ -68,7 +70,7 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
 
             result.property = nextProperty;
             result.owner = resultOwner;
-            result.kind = QQmlJSUtils::AliasTarget_Property;
+            result.kind = AliasTarget_Property;
 
             resultOwner = nextProperty.type();
         }
@@ -77,33 +79,31 @@ resolveAlias(ScopeForId scopeForId, const QQmlJSMetaProperty &property,
     return result;
 }
 
-QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver,
-                                                     const QQmlJSMetaProperty &property,
-                                                     const QQmlJSScope::ConstPtr &owner,
-                                                     const AliasResolutionVisitor &visitor)
+ResolvedAlias resolveAlias(const QQmlJSTypeResolver *typeResolver,
+                           const QQmlJSMetaProperty &property, const QQmlJSScope::ConstPtr &owner,
+                           const AliasResolutionVisitor &visitor)
 {
-    return ::resolveAlias(
+    return resolveAlias(
             [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
                 return typeResolver->typeForId(referrer, id);
             },
             property, owner, visitor);
 }
 
-QQmlJSUtils::ResolvedAlias QQmlJSUtils::resolveAlias(const QQmlJSScopesById &idScopes,
-                                                     const QQmlJSMetaProperty &property,
-                                                     const QQmlJSScope::ConstPtr &owner,
-                                                     const AliasResolutionVisitor &visitor)
+ResolvedAlias resolveAlias(const QQmlJSScopesById &idScopes, const QQmlJSMetaProperty &property,
+                           const QQmlJSScope::ConstPtr &owner,
+                           const AliasResolutionVisitor &visitor)
 {
-    return ::resolveAlias(
+    return resolveAlias(
             [&](const QString &id, const QQmlJSScope::ConstPtr &referrer) {
                 return idScopes.scope(id, referrer);
             },
             property, owner, visitor);
 }
 
-std::optional<QQmlJSFixSuggestion> QQmlJSUtils::didYouMean(
-        const QString &userInput, QStringList candidates, const QString &filename,
-        const QQmlJS::SourceLocation &location)
+std::optional<QQmlJSFixSuggestion> didYouMean(const QString &userInput, QStringList candidates,
+                                              const QString &filename,
+                                              const QQmlJS::SourceLocation &location)
 {
     QString shortestDistanceWord;
     int shortestDistance = userInput.size();
@@ -165,7 +165,7 @@ std::optional<QQmlJSFixSuggestion> QQmlJSUtils::didYouMean(
     Returns empty string on error
 */
 std::variant<QString, QQmlJS::DiagnosticMessage>
-QQmlJSUtils::sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath)
+sourceDirectoryPath(const QQmlJSImporter *importer, const QString &buildDirectoryPath)
 {
     const auto makeError = [](const QString &msg) {
         return QQmlJS::DiagnosticMessage { msg, QtWarningMsg, QQmlJS::SourceLocation() };
@@ -255,7 +255,7 @@ bool canCompareWithQUrl(
     Utility method that searches qrc files in given folders. Do not use this when the order or
    selection of the returned qrc files matters.
 */
-QStringList QQmlJSUtils::resourceFilesFromBuildFolders(const QStringList &buildFolders)
+QStringList resourceFilesFromBuildFolders(const QStringList &buildFolders)
 {
     QStringList result;
     for (const QString &path : buildFolders) {
@@ -316,8 +316,8 @@ Obtains the source folder path from a build folder QML file path via the passed 
 This works on proper QML modules when using the nested-qml-module-with-prefer-feature
 from 6.8 and uses a heuristic when the qmldir with the prefer entry is missing.
 */
-QString QQmlJSUtils::qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
-                                                const QString &pathInBuildFolder)
+QString qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *mapper,
+                                   const QString &pathInBuildFolder)
 {
     if (!mapper)
         return pathInBuildFolder;
@@ -338,8 +338,8 @@ QString QQmlJSUtils::qmlSourcePathFromBuildPath(const QQmlJSResourceFileMapper *
 Obtains the source folder path from a build folder QML file path via the passed \c mapper, see also
 \l QQmlJSUtils::qmlSourcePathFromBuildPath.
 */
-QString QQmlJSUtils::qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
-                                                const QString &pathInSourceFolder)
+QString qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *mapper,
+                                   const QString &pathInSourceFolder)
 {
     if (!mapper)
         return pathInSourceFolder;
@@ -371,7 +371,7 @@ QString QQmlJSUtils::qmlBuildPathFromSourcePath(const QQmlJSResourceFileMapper *
   \internal
   Returns the name of \a scope based on \a type.
 */
-QString QQmlJSUtils::getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type)
+QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type)
 {
     Q_ASSERT(scope);
     if (type == QQmlSA::ScopeType::GroupedPropertyScope
@@ -390,7 +390,7 @@ QString QQmlJSUtils::getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScop
     return scope->baseTypeName();
 }
 
-QString QQmlJSUtils::fileSelectorFor(const QQmlJSScope::ConstPtr &scope)
+QString fileSelectorFor(const QQmlJSScope::ConstPtr &scope)
 {
     if (!scope)
         return { };
@@ -403,5 +403,7 @@ QString QQmlJSUtils::fileSelectorFor(const QQmlJSScope::ConstPtr &scope)
     }
     return { };
 }
+
+} // namespace QQmlJSUtils
 
 QT_END_NAMESPACE
