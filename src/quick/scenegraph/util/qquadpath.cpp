@@ -368,8 +368,16 @@ bool QQuadPath::contains(const QVector2D &point, int fromIndex, int toIndex) con
                 }
             }
             if (oneHit) {
-                dir = e.tangentAtFraction(tForHit).y() < 0 ? -1 : 1;
-                winding_number += dir;
+                float ty = e.tangentAtFraction(tForHit).y();
+                if (qFuzzyIsNull(ty)) {
+                    // Horizontal tangent is ambiguous, check second derivative
+                    const float b = e.endPoint().y() - 2 * e.controlPoint().y() + e.startPoint().y();
+                    ty = (tForHit < 0.5f) ? b : -b;
+                }
+                if (ty != 0.0f) {
+                    dir = ty < 0 ? -1 : 1;
+                    winding_number += dir;
+                }
             }
         }
     };
