@@ -201,9 +201,7 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
     if (inplaceUpdate->pendingComponentUpdates.empty()) {
         updateResolvedTypeReferences(component->engine()->handle(), inplaceUpdate->droppedUnits);
         for (const ComponentUpdate &update : inplaceUpdate->processedComponentUpdates)
-            QQmlPreview::refreshBindings(
-                    update.oldUnit,
-                    QQmlComponentPrivate::get(update.component.get())->compilationUnit());
+            QQmlPreview::refreshBindings(update.oldUnit);
     }
 }
 

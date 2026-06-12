@@ -514,43 +514,40 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
     return true;
 }
 
-// Update the m_v4Function of a QQmlJavaScriptExpression from the old CU to the
-// corresponding function in the new CU.
-static void updateExpressionFunction(QQmlJavaScriptExpression *expr,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+// Remove any function of the old CU from a QQmlJavaScriptExpression.
+// Returns true if the function has been cleared or there was none to begin with.
+static bool
+clearOldExpressionFunction(QQmlJavaScriptExpression *expr,
+                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
 {
     QV4::Function *f = expr->function();
-    if (!f || f->executableCompilationUnit() != oldUnit.data())
-        return;
+    if (!f)
+        return true;
 
-    const auto &oldFunctions = oldUnit->runtimeFunctions;
-    const int index = oldFunctions.indexOf(f);
-    Q_ASSERT(index >= 0);
+    if (f->executableCompilationUnit() != oldUnit.data())
+        return false;
 
-    expr->setFunction(index < newUnit->runtimeFunctions.size() ? newUnit->runtimeFunctions[index]
-                                                               : nullptr);
+    expr->setFunction(nullptr);
+    return true;
 }
 
 static void
-updateAndRefreshExpressionsRecursive(const QQmlRefPointer<QQmlContextData> &context,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+cleanAndRefreshExpressionsRecursive(const QQmlRefPointer<QQmlContextData> &context,
+                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
 {
     for (auto child = context->childContexts(); child; child = child->nextChild())
-        updateAndRefreshExpressionsRecursive(child, oldUnit, newUnit);
+        cleanAndRefreshExpressionsRecursive(child, oldUnit);
 
     for (auto *expr = context->expressions(); expr; expr = expr->nextExpression()) {
-        updateExpressionFunction(expr, oldUnit, newUnit);
-        expr->refresh();
+        if (!clearOldExpressionFunction(expr, oldUnit))
+            expr->refresh();
     }
 }
 
-void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
+void refreshBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
 {
-    updateAndRefreshExpressionsRecursive(
-            QQmlContextData::get(newUnit->engine->qmlEngine()->rootContext()), oldUnit, newUnit);
+    cleanAndRefreshExpressionsRecursive(
+            QQmlContextData::get(oldUnit->engine->qmlEngine()->rootContext()), oldUnit);
 }
 
 } // namespace QQmlPreview
