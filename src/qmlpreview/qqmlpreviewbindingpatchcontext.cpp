@@ -4,7 +4,6 @@
 
 #include "qqmlpreviewbindingpatchcontext_p.h"
 
-#include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlnotifier_p.h>
 #include <private/qqmlobjectcreator_p.h>
