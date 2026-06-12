@@ -38,7 +38,7 @@ T.ScrollIndicator {
         vertical: !control.horizontal
     }
 
-    contentItem: IndicatorDelegate {
+    contentItem: ContentItemIndicator {
         quickControl: control
         indicatorStyle: styleReader.indicator
         opacity: 0 // TODO: let style decide how, and when, to hide a ScrollIndicator

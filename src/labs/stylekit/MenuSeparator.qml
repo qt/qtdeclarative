@@ -38,7 +38,7 @@ T.MenuSeparator {
         palette: control.palette
     }
 
-    contentItem: IndicatorDelegate {
+    contentItem: ContentItemIndicator {
         quickControl: control
         indicatorStyle: styleReader.indicator
         transformOrigin: Item.Center
