@@ -6,6 +6,7 @@
 
 #include <private/qduplicatetracker_p.h>
 #include <private/qqmlanybinding_p.h>
+#include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qqmlpreviewdiff_p.h>
