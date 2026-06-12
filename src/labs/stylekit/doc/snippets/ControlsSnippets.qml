@@ -358,24 +358,26 @@ ApplicationWindow {
             padding: 0
             background {
                 // Set the groove size and color
+                implicitWidth: 10
                 implicitHeight: 10
                 color: "white"
             }
             indicator {
                 radius: 255
-                // For horizontal scroll bars, we only set the height. The width is set by the
-                // view to be the relative size of the view's content that is currently visible.
+                fillWidth: true
+                implicitWidth: 10
                 implicitHeight: 10
                 color: "#c0c0c0"
                 // The indicator is so simple that it doesn't need a foreground
                 foreground.visible: false
             }
             vertical {
-                // Override properties for vertical scroll bars if needed.
-                // For vertical indicators, we only set width. The height is set by the
-                // view to be the relative size of the view's content that is currently visible.
-                indicator.implicitWidth: 10
-                background.implicitWidth: 10
+                indicator {
+                    // In vertical mode, the indicator should stretch vertically
+                    // to fill the available height rather than the available width.
+                    fillWidth: false
+                    fillHeight: true
+                }
             }
         }
         //! [scrollBar]
@@ -386,8 +388,8 @@ ApplicationWindow {
             // indicator. So hide the background, since it represents the groove.
             background.visible: false
             indicator {
-                // For horizontal indicators, we only set the height. The width is set by the
-                // view to be the relative size of the view's content that is currently visible.
+                fillWidth: true
+                implicitWidth: 5
                 implicitHeight: 5
                 border.width: 0
                 color: "cornflowerblue"
@@ -395,11 +397,12 @@ ApplicationWindow {
                 foreground.visible: false
             }
             vertical {
-                // Override properties for vertical scroll indicators if needed
-                indicator.color: "violet"
-                // For vertical indicators, we only set width. The height is set by the
-                // view to be the relative size of the view's content that is currently visible.
-                indicator.implicitWidth: 5
+                indicator {
+                    // In vertical mode, the indicator should stretch vertically
+                    // to fill the available height rather than the available width.
+                    fillWidth: false
+                    fillHeight: true
+                }
             }
         }
         //! [scrollIndicator]
@@ -592,9 +595,11 @@ ApplicationWindow {
                 foreground.visible: false
             }
             vertical {
-                // Override properties for vertical tool separators if needed.
-                // Note: Qt Quick Controls automatically swaps the width and height
-                // for vertical tool separators, so avoid doing that here.
+                indicator {
+                    implicitWidth: 1
+                    implicitHeight: 30
+                    alignment: Qt.AlignHCenter
+                }
             }
         }
         //! [toolSeparator]

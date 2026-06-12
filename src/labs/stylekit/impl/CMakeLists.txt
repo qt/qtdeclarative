@@ -18,6 +18,7 @@ qt_internal_add_qml_module(LabsStyleKitImpl
         FallbackStyle.qml
         HandleDelegate.qml
         IndicatorDelegate.qml
+        ContentItemIndicator.qml
         Shadow.qml
     LIBRARIES
         Qt6::GuiPrivate

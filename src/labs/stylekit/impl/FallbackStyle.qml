@@ -291,41 +291,52 @@ BaseStyle {
     scrollBar {
         padding: 0
         background {
-            implicitHeight: 10
+            implicitWidth: 12
+            implicitHeight: 12
+            radius: 0
         }
         indicator {
-            implicitHeight: 10
-            radius: 255
-            foreground.radius: 255
-            foreground.color: __backgroundDefault
+            implicitWidth: 12
+            implicitHeight: 12
+            fillWidth: true
+            radius: 0
+            foreground.radius: 0
+            foreground.color: __backgroundMuted
         }
         vertical {
-            background.implicitWidth: 10
-            indicator.implicitWidth: 10
+            indicator {
+                fillWidth: false
+                fillHeight: true
+            }
         }
         hovered {
-            indicator.foreground.color: __backgroundMuted
+            indicator.foreground.color: __backgroundSubtle
         }
     }
 
     scrollIndicator {
         background {
+            implicitWidth: 6
             implicitHeight: 6
             visible: false
         }
         indicator {
-            border.width: 0
+            implicitWidth: 6
             implicitHeight: 6
+            fillWidth: true
             radius: 255
+            border.width: 0
             foreground {
                 margins: 0
                 radius: 255
-                color: __backgroundDefault
+                color: __backgroundMuted
             }
         }
         vertical {
-            background.implicitWidth: 6
-            indicator.implicitWidth: 6
+            indicator {
+                fillWidth: false
+                fillHeight: true
+            }
         }
     }
 
@@ -447,6 +458,13 @@ BaseStyle {
             border.width: 0
             color: __strokeMuted
             foreground.visible: false
+        }
+        vertical {
+            indicator {
+                implicitWidth: 1
+                implicitHeight: 30
+                alignment: Qt.AlignHCenter
+            }
         }
     }
 }

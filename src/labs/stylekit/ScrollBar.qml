@@ -39,7 +39,7 @@ T.ScrollBar {
         vertical: !control.horizontal
     }
 
-    contentItem: IndicatorDelegate {
+    contentItem: ContentItemIndicator {
         quickControl: control
         indicatorStyle: styleReader.indicator
     }

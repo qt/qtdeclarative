@@ -39,10 +39,9 @@ T.ToolSeparator {
         palette: control.palette
     }
 
-    contentItem: IndicatorDelegate {
+    contentItem: ContentItemIndicator {
         quickControl: control
         indicatorStyle: styleReader.indicator
-        vertical: control.vertical
         // FIXME: Remove and fix inside IndicatorDelegate.qml
         transformOrigin: Item.Center
     }
