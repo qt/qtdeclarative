@@ -209,6 +209,8 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 {
     QString localPath = QQmlFile::urlToLocalFileOrQrc(path);
     QUrl localUrl = QUrl(localPath);
+    if (!localUrl.authority().isEmpty())
+        return localPath;
     QString fullPath = localUrl.path();
     if (localUrl.scheme().size())
       fullPath = localUrl.scheme() + QLatin1Char(':') + fullPath;
@@ -514,20 +516,13 @@ QUrl QQuickFolderListModel::parentFolder() const
 {
     Q_D(const QQuickFolderListModel);
 
-    QString localFile = d->currentDir.toLocalFile();
-    if (!localFile.isEmpty()) {
-        QDir dir(localFile);
-        if (dir.isRoot() || !dir.cdUp())
-            return QUrl();
-        localFile = dir.path();
-    } else {
-        const QString path = d->currentDir.path();
-        const int pos = path.lastIndexOf(QLatin1Char('/'));
-        if (pos <= 0)
-            return QUrl();
-        localFile = path.left(pos);
-    }
-    return QUrl::fromLocalFile(localFile);
+    const QString localFile = d->currentDir.toLocalFile();
+    if (localFile.isEmpty())
+        return QUrl();
+    QDir dir(localFile);
+    if (dir.isRoot() || !dir.cdUp())
+        return QUrl();
+    return QUrl::fromLocalFile(dir.path());
 }
 
 /*!
@@ -947,7 +942,7 @@ QVariant QQuickFolderListModel::get(int idx, const QString &property) const
 int QQuickFolderListModel::indexOf(const QUrl &file) const
 {
     Q_D(const QQuickFolderListModel);
-    FileProperty toFind(QFileInfo(file.toLocalFile()));
+    FileProperty toFind(QFileInfo(QQmlFile::urlToLocalFileOrQrc(file)));
     return d->data.indexOf(toFind);
 }
 
