@@ -377,7 +377,7 @@ void QQuickTextDocumentPrivate::writeTo(const QUrl &fileUrl)
     if (!doc)
         return;
 
-    const QString filePath = fileUrl.toLocalFile();
+    const QString filePath = QQmlFile::urlToLocalFileOrQrc(fileUrl);
     const bool sameUrl = fileUrl == url;
     if (!sameUrl) {
 #if QT_CONFIG(mimetype)
@@ -516,7 +516,7 @@ void QQuickTextDocument::setTextDocument(QTextDocument *document)
 
     Saves the contents to the same file and format specified by \l source.
 
-    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+    \note You can save to a local file, or on Android to a \c content URL.
 
     \sa source, saveAs()
 */
@@ -527,7 +527,7 @@ void QQuickTextDocument::setTextDocument(QTextDocument *document)
     \since 6.7
     \preliminary
 
-    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+    \note You can save to a local file, or on Android to a \c content URL.
 
     \sa source, saveAs()
 */
@@ -546,7 +546,7 @@ void QQuickTextDocument::save()
     The file extension in \a url specifies the file format
     (as determined by QMimeDatabase::mimeTypeForUrl()).
 
-    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+    \note You can save to a local file, or on Android to a \c content URL.
 
     \sa source, save()
 */
@@ -560,14 +560,18 @@ void QQuickTextDocument::save()
     The file extension in \a url specifies the file format
     (as determined by QMimeDatabase::mimeTypeForUrl()).
 
-    \note You can save only to a \l {QUrl::isLocalFile()}{file on a mounted filesystem}.
+    \note You can save to a local file, or on Android to a \c content URL.
 
     \sa source, save()
 */
 void QQuickTextDocument::saveAs(const QUrl &url)
 {
     Q_D(QQuickTextDocument);
-    if (!url.isLocalFile()) {
+    bool canWrite = url.isLocalFile();
+#ifdef Q_OS_ANDROID
+    canWrite = canWrite || url.scheme() == "content"_L1;
+#endif
+    if (!canWrite) {
         d->setStatus(QQuickTextDocument::Status::NonLocalFileError,
                      QQuickTextDocument::tr("Can only save to local files"));
         return;

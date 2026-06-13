@@ -299,6 +299,9 @@ void tst_qquicktextdocument::sourceAndSave()
     QVERIFY(sf.exists());
     QString tmpPath = tmpDir.filePath(source);
     QVERIFY(sf.copy(tmpPath));
+#ifdef Q_OS_ANDROID
+    QVERIFY(QFile::setPermissions(tmpPath, QFileDevice::ReadOwner | QFileDevice::WriteOwner));
+#endif
     qCDebug(lcTests) << source << "copy ->" << tmpDir.path() << ":" << tmpPath;
 
     QCOMPARE(statusChangedSpy.size(), 0);
