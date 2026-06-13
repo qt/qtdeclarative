@@ -581,13 +581,17 @@ bool QQmlFile::isSynchronous(const QString &url)
 }
 
 #if defined(Q_OS_ANDROID)
-static bool hasLocalContentAuthority(const QUrl &url)
+static bool isLocalContentAuthority(QStringView authority)
 {
-    const QString authority = url.authority();
     return authority.isEmpty()
             || authority == QLatin1String(authority_externalstorage)
             || authority == QLatin1String(authority_downloads_documents)
             || authority == QLatin1String(authority_media_documents);
+}
+
+static bool hasLocalContentAuthority(const QUrl &url)
+{
+    return isLocalContentAuthority(url.authority());
 }
 #endif
 
@@ -670,10 +674,10 @@ static bool hasLocalContentAuthority(const QString &url, qsizetype schemeLength)
     if (offset == -1)
         return true; // no authority is a local authority.
 
-    const QString authorityAndPath = url.sliced(offset);
-    return authorityAndPath.startsWith(QLatin1String(authority_externalstorage))
-         || authorityAndPath.startsWith(QLatin1String(authority_downloads_documents))
-         || authorityAndPath.startsWith(QLatin1String(authority_media_documents));
+    const qsizetype slash = url.indexOf(QLatin1Char('/'), offset);
+    const qsizetype end = slash == -1 ? url.size() : slash;
+    const QStringView authority = QStringView(url).sliced(offset, end - offset);
+    return isLocalContentAuthority(authority);
 }
 
 #endif
@@ -744,9 +748,9 @@ QString QQmlFile::urlToLocalFileOrQrc(const QUrl& url)
     }
 
 #if defined(Q_OS_ANDROID)
-    if (url.scheme().compare(QLatin1String("assets"), Qt::CaseInsensitive) == 0)
+    if (url.scheme().compare(QLatin1String(assets_string), Qt::CaseInsensitive) == 0)
         return url.authority().isEmpty() ? url.toString() : QString();
-    if (url.scheme().compare(QLatin1String("content"), Qt::CaseInsensitive) == 0) {
+    if (url.scheme().compare(QLatin1String(content_string), Qt::CaseInsensitive) == 0) {
         if (hasLocalContentAuthority(url))
             return url.toString();
         return QString();
@@ -816,8 +820,8 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
     }
 
 #if defined(Q_OS_ANDROID)
-    if (url.startsWith(QLatin1String("assets:"), Qt::CaseInsensitive))
-        return isDoubleSlashed(url, strlen("assets:")) ? QString() : url;
+    if (hasScheme(url, assets_string, strlen(assets_string)))
+        return authorityOffset(url, strlen(assets_string)) == -1 ? url : QString();
     if (hasScheme(url, content_string, strlen(content_string)))
         return hasLocalContentAuthority(url, strlen(content_string)) ? url : QString();
 #endif
