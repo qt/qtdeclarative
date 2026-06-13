@@ -1336,11 +1336,12 @@ void tst_QQuickDropArea::signalOrder()
 
     QMimeData data;
 
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
+    const qreal dpr = window.devicePixelRatio();
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50) * dpr, Qt::CopyAction,
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 150), Qt::CopyAction,
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 150) * dpr, Qt::CopyAction,
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
-    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 250), Qt::CopyAction,
+    QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 250) * dpr, Qt::CopyAction,
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
 
     const QList<QVariant> eventOrder = item->property("eventOrder").toList();
