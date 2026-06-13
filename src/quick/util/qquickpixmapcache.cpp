@@ -861,6 +861,10 @@ void QQuickPixmapReader::processJobs()
                     usableJob = true;
                 } else {
                     localFile = QQmlFile::urlToLocalFileOrQrc(url);
+                    // A content URI can be local or remote, there is no reliable way to tell.
+                    // Assume local here on the reader thread where it will not block GUI-thread.
+                    if (localFile.isEmpty() && url.scheme() == QLatin1String("content"))
+                        localFile = url.toString();
                     usableJob = !localFile.isEmpty()
 #if QT_CONFIG(qml_network)
                             || networkJobs.size() < IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT
