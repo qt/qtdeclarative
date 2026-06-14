@@ -20,6 +20,7 @@
 #include <QFontDatabase>
 #include <QMatrix4x4>
 #include <QQuaternion>
+#include <QRegularExpression>
 #include <QSignalSpy>
 #include <QVector2D>
 #include <QVector3D>
@@ -29,6 +30,7 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <private/qtenvironmentvariables_p.h> // for qTzSet()
 #include <private/qqmlengine_p.h>
+#include <private/qqmlcontextdata_p.h>
 
 using namespace Qt::StringLiterals;
 
@@ -84,6 +86,7 @@ private slots:
     void resolvedUrl();
     void later_data();
     void later();
+    void laterInvalidatedContext();
     void qtObjectContents();
 
     void timeRoundtrip_data();
@@ -1436,6 +1439,52 @@ void tst_qqmlqt::later()
             QCOMPARE(root->property(qPrintable(propNames.at(i))), values.at(i));
         }
     }
+}
+
+//  a function scheduled via Qt.callLater() may have the QQmlContextData it (or one of its parent
+//  contexts) lives in invalidated before the queued call is serviced. The invalidation is
+//  artificial here, but it seems to be possible with pure QML using a Loader
+void tst_qqmlqt::laterInvalidatedContext()
+{
+    QQmlEngine engine;
+
+    // A C++-created context has no compilation unit, and - as long as no name is
+    // ever resolved against it - no property-name cache either.
+    QScopedPointer<QQmlContext> context(new QQmlContext(engine.rootContext()));
+
+    QQmlComponent component(&engine);
+    component.setData(
+            "import QtQml\n"
+            "QtObject {\n"
+            "    function arm() {\n"
+            // The closure is unguarded (its immediate scope is this CallContext,
+            // not a QmlContext, so QQmlDelayedCallQueue installs no object guard)
+            // and references a free name, forcing a lookup that walks up into the
+            // soon-to-be-invalidated parent context.
+            "        Qt.callLater(function() { return someUnresolvableName; });\n"
+            "    }\n"
+            "}\n",
+            QUrl("LaterInvalidContext.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> root(component.create(context.data()));
+    QVERIFY(root);
+    QMetaObject::invokeMethod(root.data(), "arm");
+
+    // Invalidate the context subtree the way QQuickLoader::clear() does: detach
+    // the engine but keep the objects and the parent-context links alive.
+    QQmlContextData::get(context.data())->clearContextRecursively();
+
+    // Service the queued Qt.callLater(). Before the fix this dereferenced the
+    // null engine in QQmlContextData::initPropertyNames(); now the lookup must
+    // fail gracefully.
+    QTest::ignoreMessage(
+            QtWarningMsg,
+            QRegularExpression(
+                    "ReferenceError: someUnresolvableName is not defined "
+                    "\\(exception occurred during delayed function evaluation\\)"));
+    QCoreApplication::processEvents();
+    // should not crash
 }
 
 void tst_qqmlqt::qtObjectContents()
