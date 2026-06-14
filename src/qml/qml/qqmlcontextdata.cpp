@@ -346,10 +346,23 @@ void QQmlContextData::addExpression(QQmlJavaScriptExpression *expression)
 
 void QQmlContextData::initPropertyNames() const
 {
-    if (m_typeCompilationUnit)
+    if (m_typeCompilationUnit) {
         m_propertyNameCache = m_typeCompilationUnit->namedObjectsPerComponent(m_componentObjectIndex);
-    else
-        m_propertyNameCache = QV4::IdentifierHash(m_engine->handle());
+    } else {
+        auto engine = m_engine;
+        if (!engine) {
+            // in some circumstances, we run into an invalidated context. In that case, we have no engine
+            // obviously, there's also no names to be found. Ideally, we'd have a special empty IdentifierHash
+            // for this which doesn't depend on an engine being available, but that currently doesn't exist.
+            // If we're evaluating, we should however still be able to find a parent context with an engine
+            for (auto ctxt = parent(); ctxt; ctxt = ctxt->parent()) {
+                if ((engine = ctxt->engine()))
+                    break;
+            }
+        }
+        Q_ASSERT(engine);
+        m_propertyNameCache = QV4::IdentifierHash(engine->handle());
+    }
     Q_ASSERT(!m_propertyNameCache.isEmpty());
 }
 
