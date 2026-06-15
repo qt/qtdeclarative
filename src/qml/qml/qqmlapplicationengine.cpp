@@ -54,11 +54,12 @@ void QQmlApplicationEnginePrivate::init()
         _q_loadTranslations();
     });
 #if QT_CONFIG(translation)
-    QTranslator* qtTranslator = new QTranslator(q);
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
-        QCoreApplication::installTranslator(qtTranslator);
-    else
-        delete qtTranslator;
+    const QStringList paths = QLibraryInfo::paths(QLibraryInfo::TranslationsPath);
+    for (const QString &path : paths) {
+        auto qtTranslator = std::make_unique<QTranslator>(q);
+        if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), path, QLatin1String(".qm")))
+            QCoreApplication::installTranslator(qtTranslator.release());
+    }
 #endif
     auto *selector = new QQmlFileSelector(q,q);
     selector->setExtraSelectors(extraFileSelectors);
