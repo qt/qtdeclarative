@@ -30,10 +30,6 @@
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qthread.h>
 
-#ifdef Q_OS_MACOS
-#include "private/qcore_mac_p.h"
-#endif
-
 #include <functional>
 
 #define ASSERT_LOADTHREAD() \
@@ -1269,26 +1265,7 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
 
 #if defined(Q_OS_ANDROID)
     addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"), AppendPath);
-#elif defined(Q_OS_MACOS)
-    // Add the main bundle's Resources/qml directory as an import path, so that QML modules are
-    // found successfully when running the app from its build dir.
-    // This is where macdeployqt and our CMake deployment logic puts Qt and user qmldir files.
-    if (!isPluginApplication) {
-        if (CFBundleRef bundleRef = CFBundleGetMainBundle()) {
-            if (QCFType<CFURLRef> urlRef = CFBundleCopyResourceURL(
-                        bundleRef, QCFString(QLatin1String("qml")), 0, 0)) {
-                if (QCFType<CFURLRef> absoluteUrlRef = CFURLCopyAbsoluteURL(urlRef)) {
-                    if (QCFString path = CFURLCopyFileSystemPath(
-                                absoluteUrlRef, kCFURLPOSIXPathStyle)) {
-                        if (QFile::exists(path)) {
-                            addImportPath(QDir(path).canonicalPath(), AppendPath);
-                        }
-                    }
-                }
-            }
-        }
-    }
-#endif // Q_OS_DARWIN
+#endif
 
     if (!isPluginApplication)
         addImportPath(QCoreApplication::applicationDirPath(), AppendPath);
