@@ -151,7 +151,7 @@ QSGAdaptationBackendData *contextFactory()
                     qWarning("Could not create scene graph context for backend '%s'"
                              " - check that plugins are installed correctly in %s",
                              qPrintable(requestedBackend),
-                             qPrintable(QLibraryInfo::path(QLibraryInfo::PluginsPath)));
+                             qPrintable(QLibraryInfo::paths(QLibraryInfo::PluginsPath).value(0)));
                 }
             }
 #endif // library
