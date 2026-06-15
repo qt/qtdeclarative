@@ -710,6 +710,7 @@ void tst_qmlls_qqmlcodemodel::updateQmllsBuildIni()
     emptyBuildIni.close(); // writeQmllsBuildIniContent() doesn't work if this is still open
 
     TestCodeModelManager manager;
+    QSignalSpy configurationChanged(&manager, &QmlLsp::QQmlCodeModelManager::configurationChanged);
     manager.addRootUrls({ rootAUrl });
 
     QCOMPARE_NE(manager.findCodeModelForFile(rootAUrl)->importPaths(), expectedImportPathA);
@@ -717,6 +718,7 @@ void tst_qmlls_qqmlcodemodel::updateQmllsBuildIni()
 
     // should load the empty ini
     manager.setBuildPathsForRootUrl(rootAUrl, { buildPathA.path() });
+    QCOMPARE(configurationChanged.size(), 1);
     QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPaths(), { });
     QCOMPARE_NE(manager.findCodeModelForFile(rootAUrl)->importPathsForUrl(rootAUrl),
                 expectedImportPathA);
@@ -729,6 +731,7 @@ void tst_qmlls_qqmlcodemodel::updateQmllsBuildIni()
 
     // should reload the settings file on setBuildPathsForRootUrl()
     manager.setBuildPathsForRootUrl(rootAUrl, { buildPathA.path() });
+    QCOMPARE(configurationChanged.size(), 2);
     QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPaths(), expectedImportPathA);
     QCOMPARE(manager.findCodeModelForFile(rootAUrl)->importPathsForUrl(rootAUrl),
              expectedImportPathA);
@@ -983,6 +986,7 @@ void tst_qmlls_qqmlcodemodel::multipleQProcessScheduler()
 void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
 {
     QmlLsp::QQmlCodeModelManager manager;
+    QSignalSpy configurationChanged(&manager, &QmlLsp::QQmlCodeModelManager::configurationChanged);
     const QByteArray rootUrl{ testFileUrl("rootA").toEncoded() };
     const QByteArray fallbackUrl;
 
@@ -994,6 +998,7 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
     manager.addRootUrls({ rootUrl });
 
     manager.setBuildPathsForRootUrl(rootUrl, { temporaryDir.path() });
+    QCOMPARE(configurationChanged.size(), 1);
     QCOMPARE(manager.importPathsForUrl(rootUrl), QStringList{ fallbackImportPath });
 
     QDir dir(temporaryDir.path());
@@ -1008,6 +1013,7 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
     }
 
     manager.onBuildFinished(rootUrl);
+    QCOMPARE(configurationChanged.size(), 2);
 
     const QStringList expectedImportPathsForRoot =
             QStringList{ testFile("test"_L1), fallbackImportPath };
@@ -1023,6 +1029,7 @@ void tst_qmlls_qqmlcodemodel::reloadQmllsBuildIniAfterBuild()
     }
 
     manager.onBuildFinished(rootUrl);
+    QCOMPARE(configurationChanged.size(), 3);
 
     const QStringList expectedImportPathsForRoot2 =
             QStringList{ testFile("test2"_L1), fallbackImportPath };

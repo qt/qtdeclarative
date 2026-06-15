@@ -216,6 +216,10 @@ void QQmlHighlightSupport::registerHandlers(QLanguageServer *server, QLanguageSe
     m_full.registerHandlers(server, protocol);
     m_delta.registerHandlers(server, protocol);
     m_range.registerHandlers(server, protocol);
+
+    QObject::connect(
+            m_full.manager(), &QmlLsp::QQmlCodeModelManager::configurationChanged, this,
+            [protocol]() { protocol->requestRequestingARefreshOfAllSemanticTokens({ }, { }); });
 }
 
 void QQmlHighlightSupport::setupCapabilities(

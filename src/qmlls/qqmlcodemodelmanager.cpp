@@ -70,6 +70,7 @@ void QQmlCodeModelManager::onBuildFinished(const QByteArray &url)
     const QStringList buildPaths = it->codeModel->buildPaths();
     m_buildInformation.loadSettingsFrom(buildPaths, ForceUpdate);
     setBuildPathsOn(&*it, buildPaths, AppendPathsFromFallback);
+    emit configurationChanged();
 }
 
 void QQmlCodeModelManager::prepareForShutdown()
@@ -371,11 +372,13 @@ void QQmlCodeModelManager::setBuildPathsForRootUrl(const QByteArray &url, const 
              ++it) {
             setBuildPathsOn(&*it, {}, AppendPathsFromFallback);
         }
+        emit configurationChanged();
         return;
     }
 
     auto ws = findWorkspaceForFile(url);
     setBuildPathsOn(&*ws, paths, AppendPathsFromFallback);
+    emit configurationChanged();
 }
 
 void QQmlCodeModelManager::addOpenToUpdate(const QByteArray &url)

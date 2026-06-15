@@ -56,6 +56,7 @@ public:
     void process(QQmlBaseModule<SemanticTokensRequest>::RequestPointerArgument req) override;
     void registerHandlers(QLanguageServer *, QLanguageServerProtocol *) override;
     void setHighlightingMode(QmlHighlighting::HighlightingMode mode) { m_mode = mode; }
+    QmlLsp::QQmlCodeModelManager *manager() const { return m_codeModelManager; }
     HIDE_UNUSED_OVERRIDES
     QmlHighlighting::HighlightingMode m_mode;
 };
