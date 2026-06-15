@@ -49,6 +49,8 @@ public:
     void registerHandlers(QLanguageServer *, QLanguageServerProtocol *) override;
     void setHighlightingMode(QmlHighlighting::HighlightingMode mode) { m_mode = mode; }
     HIDE_UNUSED_OVERRIDES
+    QmlLsp::QQmlCodeModelManager *manager() const { return m_codeModelManager; }
+
 private:
     QmlHighlighting::HighlightingMode m_mode;
 };

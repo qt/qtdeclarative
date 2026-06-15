@@ -134,6 +134,7 @@ Q_SIGNALS:
     void backgroundBuildStarted(const QByteArray &rootUri);
     void backgroundBuildFinished(const QByteArray &rootUri);
     void backgroundBuildCancelled(const QByteArray &rootUri);
+    void configurationChanged();
 };
 
 } // namespace QmlLsp
