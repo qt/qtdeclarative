@@ -217,7 +217,7 @@ static QStringList collectImportPaths(const QCommandLineParser &parser,
 
     // add as default fallback at the end
     if (!parser.isSet(qmlImportNoDefault))
-        importPaths << QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+        importPaths << QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
     return importPaths;
 }
 
