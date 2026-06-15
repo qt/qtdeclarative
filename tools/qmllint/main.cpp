@@ -263,7 +263,7 @@ All warnings can be set to four levels of severity:
         defaultImportPaths.append(QLatin1String(":/qt/qml"));
     };
 
-    defaultImportPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    defaultImportPaths.append(QLibraryInfo::paths(QLibraryInfo::QmlImportsPath));
 
     QStringList qmlImportPaths =
             parser.isSet(qmlImportNoDefault) ? QStringList {} : defaultImportPaths;

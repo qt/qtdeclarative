@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
     // use host qml import path as a sane default if nothing else has been provided
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
             ? parser.values(qmltypesDirsOption)
-            : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
+            : QLibraryInfo::paths(QLibraryInfo::Qml2ImportsPath);
 
     if (!parser.isSet(qmltypesFilesOption))
         qmltypeDirs << ".";

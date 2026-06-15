@@ -281,7 +281,7 @@ int main(int argc, char **argv)
                 importPaths.append(parser.values(importPathOption));
 
             if (!parser.isSet(bareOption))
-                importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+                importPaths.append(QLibraryInfo::paths(QLibraryInfo::QmlImportsPath));
 
             QQmlJSImporter importer(
                         importPaths, parser.isSet(resourceOption) ? &fileMapper : nullptr);
