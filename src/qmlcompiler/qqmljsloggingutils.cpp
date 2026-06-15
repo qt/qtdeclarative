@@ -12,6 +12,18 @@ QT_BEGIN_NAMESPACE
 using namespace Qt::StringLiterals;
 
 /*!
+    \enum QQmlSA::WarningSeverity
+    \inmodule QtQmlCompiler
+    \since 6.12
+
+    \brief Holds the possible severity levels of diagnostics messages for a logging category.
+    \value Error    Messages emitted by this logging category will cause an error.
+    \value Warning  Messages emitted by this logging category are warnings. No error is produced unless the \l{qmllint#Settings}{MaxWarnings} setting is set and exceeded.
+    \value Info     Messages emitted by this logging category are purely informative and do not count towards \l{qmllint#Settings}{MaxWarnings}.
+    \value Disable  This logging category will not emit any messages.
+*/
+
+/*!
     \class QQmlSA::LoggerWarningId
     \inmodule QtQmlCompiler
 
@@ -28,6 +40,14 @@ using namespace Qt::StringLiterals;
     \fn QAnyStringView QQmlSA::LoggerWarningId::name() const
     Returns the name of the wrapped warning category.
 */
+
+namespace QQmlSA {
+
+static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtInfoMsg));
+static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtWarningMsg));
+static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtCriticalMsg));
+
+} // namespace QQmlSA
 
 namespace QQmlJS {
 
@@ -207,6 +227,24 @@ std::optional<QQmlJS::WarningSeverity> severityFromString(const QString &s)
     return {};
 }
 
+static constexpr bool less(WarningSeverity lhs, WarningSeverity rhs)
+{
+    const auto orderedValue = [](WarningSeverity s) {
+        switch (s) {
+        case WarningSeverity::Error:
+            return 3;
+        case WarningSeverity::Warning:
+            return 2;
+        case WarningSeverity::Info:
+            return 1;
+        case WarningSeverity::Disable:
+            return 0;
+        }
+        Q_UNREACHABLE();
+    };
+    return orderedValue(lhs) < orderedValue(rhs);
+}
+
 /*!
 \internal
 Sets the category severity from a settings file and an optional parser.
@@ -236,7 +274,7 @@ void updateLogSeverities(QList<LoggerCategory> &categories,
             continue;
         }
 
-        if (category.isEssential() && severity.value() < category.severity()) {
+        if (category.isEssential() && less(severity.value(), category.severity())) {
             qWarning() << "In order to ensure the proper function of qmllint, the severity of the "
                           "essential category %1 cannot be lowered."_L1.arg(name);
             continue;

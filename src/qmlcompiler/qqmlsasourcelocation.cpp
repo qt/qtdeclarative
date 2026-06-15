@@ -170,6 +170,7 @@ bool QQmlSA::SourceLocation::operatorEqualsImpl(const SourceLocation &lhs,
 }
 
 /*!
+    \since 6.12
     Returns the source location of the origin of any QML document.
  */
 SourceLocation SourceLocation::documentOrigin()
