@@ -238,6 +238,10 @@ void QQuickDoubleValidator::resetLocaleName()
        /(\d{1,3})([.,]\d{1,2})?$/
        \endcode
    \endlist
+
+   \warning Regular expressions in JS support computationally expensive features like backtracking.
+   If untrusted input is passed to the \c{regularExpression} property, the application might become
+   unresponsive.
 */
 
 #endif // validator
