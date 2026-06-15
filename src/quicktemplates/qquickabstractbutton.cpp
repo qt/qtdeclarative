@@ -411,7 +411,10 @@ void QQuickAbstractButtonPrivate::updateEffectiveIcon()
 void QQuickAbstractButtonPrivate::click()
 {
     Q_Q(QQuickAbstractButton);
-    if (effectiveEnable)
+    // If our Action's trigger signal handler disables us (or the action, which causes us to be
+    // disabled), we still want clicked to be emitted so that e.g. menus close when a menu item is
+    // clicked. That's why we check wasEnabledBeforeTrigger here.
+    if (effectiveEnable || wasEnabledBeforeTrigger)
         emit q->clicked();
 }
 
@@ -429,15 +432,21 @@ void QQuickAbstractButtonPrivate::accessibleToggleAction()
 void QQuickAbstractButtonPrivate::trigger(bool doubleClick)
 {
     Q_Q(QQuickAbstractButton);
-    const bool wasEnabled = effectiveEnable;
+    const QScopedValueRollback<bool> rollback(wasEnabledBeforeTrigger, effectiveEnable);
+
+    bool actionTriggered = false;
     if (action && action->isEnabled())
-        QQuickActionPrivate::get(action)->trigger(q, false);
-    if (wasEnabled && (!action || !action->isEnabled())) {
-        if (!doubleClick)
-            emit q->clicked();
-        else
-            emit q->doubleClicked();
-    }
+        actionTriggered = QQuickActionPrivate::get(action)->trigger(q, false);
+
+    // Don't emit the signals below if we were disabled or if our action already emitted its
+    // triggered signal (which we connect to click, which emits clicked, so would emit twice).
+    if (!wasEnabledBeforeTrigger || actionTriggered)
+        return;
+
+    if (!doubleClick)
+        emit q->clicked();
+    else
+        emit q->doubleClicked();
 }
 
 void QQuickAbstractButtonPrivate::toggle(bool value)
