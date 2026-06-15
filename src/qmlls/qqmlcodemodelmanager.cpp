@@ -80,6 +80,7 @@ void QQmlCodeModelManager::onBuildFinished(const QByteArray &url)
     setBuildPathsOn(&*it, buildPaths, AppendPathsFromFallback);
     it->codeModel->reloadAllOpenFiles();
     emit backgroundBuildFinished(url);
+    emit configurationChanged();
 }
 
 void QQmlCodeModelManager::prepareForShutdown()
@@ -386,11 +387,13 @@ void QQmlCodeModelManager::setBuildPathsForRootUrl(const QByteArray &url, const 
              ++it) {
             setBuildPathsOn(&*it, {}, AppendPathsFromFallback);
         }
+        emit configurationChanged();
         return;
     }
 
     auto ws = findWorkspaceForFile(url);
     setBuildPathsOn(&*ws, paths, AppendPathsFromFallback);
+    emit configurationChanged();
 }
 
 void QQmlCodeModelManager::addOpenToUpdate(const QByteArray &url)
