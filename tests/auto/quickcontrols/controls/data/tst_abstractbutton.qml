@@ -1178,4 +1178,39 @@ TestCase {
         verify(sequenceSpy.success)
         tryCompare(destructionSpy, "count", 1)
     }
+
+    Component {
+        id: clickedEmittedTwiceBugComponent
+
+        Item {
+            id: container
+
+            property alias button: button
+
+            Button {
+                id: button
+                text: "Take all"
+                action: Action {
+                    shortcut: "R"
+                    enabled: container.visible
+                }
+                onClicked: {
+                    // some stuff would usually happen here...
+                    container.visible = false
+                }
+            }
+        }
+    }
+
+    function test_clickedEmittedTwiceBug() {
+        let root = createTemporaryObject(clickedEmittedTwiceBugComponent, testCase)
+        verify(root)
+        let control = root.button
+
+        let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        verify(clickedSpy.valid)
+
+        mouseClick(control)
+        compare(clickedSpy.count, 1)
+    }
 }
