@@ -77,26 +77,44 @@ void WorkspaceHandlers::setupCapabilities(QLspSpecification::ServerCapabilities 
 void WorkspaceHandlers::openInitialWorkspace(const InitializeParams &clientInfo)
 {
     if (clientInfo.workspaceFolders) {
-        QList<QByteArray> rootPaths;
-        for (const auto &folder : *clientInfo.workspaceFolders) {
-            rootPaths.append(QQmlLSUtils::lspUriToQmlUrl(folder.uri));
-        }
-        m_codeModelManager->addRootUrls(rootPaths);
+        std::visit(qOverloadedVisitor{
+                           [](std::nullptr_t) {},
+                           [this](const QList<WorkspaceFolder> &folders) {
+                               QList<QByteArray> rootPaths;
+                               for (const auto &folder : folders) {
+                                   rootPaths.append(QQmlLSUtils::lspUriToQmlUrl(folder.uri));
+                               }
+                               m_codeModelManager->addRootUrls(rootPaths);
+                           },
+                   },
+                   *clientInfo.workspaceFolders);
         return;
     }
 
     // note: rootUri is deprecated in the LSP protocol
-    if (clientInfo.rootUri) {
-        m_codeModelManager->addRootUrls({ QQmlLSUtils::lspUriToQmlUrl(*clientInfo.rootUri) });
-        return;
-    }
+    std::visit(qOverloadedVisitor{
+                       [](std::nullptr_t) {},
+                       [this](const QByteArray &rootUri) {
+                           m_codeModelManager->addRootUrls(
+                                   { QQmlLSUtils::lspUriToQmlUrl(rootUri) });
+                       },
+
+               },
+               clientInfo.rootUri);
+
     // note: rootPath is also deprecated in the LSP protocol. It was deprecated even before rootUri
     // was deprecated.
     if (clientInfo.rootPath) {
-        m_codeModelManager->addRootUrls({
-                QUrl::fromLocalFile(QString::fromUtf8(*clientInfo.rootPath)).toEncoded(),
-        });
-        return;
+        std::visit(qOverloadedVisitor{
+                           [](std::nullptr_t) {},
+                           [this](const QByteArray &rootPath) {
+                               m_codeModelManager->addRootUrls({
+                                       QUrl::fromLocalFile(QString::fromUtf8(rootPath)).toEncoded(),
+                               });
+                           },
+
+                   },
+                   *clientInfo.rootPath);
     }
 }
 
