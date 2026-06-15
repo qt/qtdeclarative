@@ -49,8 +49,6 @@ exampledirs += snippets \
 
 {headerdirs,sourcedirs} += ..
 
-imagedirs += images
-
 navigation.landingpage  = "Qt Labs StyleKit"
 navigation.qmltypespage = "Qt Labs StyleKit QML Types"
 
