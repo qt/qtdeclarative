@@ -162,6 +162,26 @@ BaseStyle {
         hovered.background.visible: true
     }
 
+    toolButton {
+        indicator {
+            color: __transparent
+            border.width: 0
+            width: 14
+            alignment: Qt.AlignRight | Qt.AlignVCenter
+            foreground {
+                fillWidth: false
+                fillHeight: false
+                width: 10
+                height: 10
+                alignment: Qt.AlignCenter
+                color: __transparent
+                image.color: __textDefault
+                image.fillMode: Image.PreserveAspectFit
+                image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/drop-indicator.png"
+            }
+        }
+    }
+
     pane {
         padding: 12
         background {
