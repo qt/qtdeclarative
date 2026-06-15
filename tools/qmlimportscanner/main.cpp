@@ -70,7 +70,7 @@ inline QString preferLiteral() { return QStringLiteral("prefer"); }
 void printUsage(const QString &appNameIn)
 {
     const std::string appName = appNameIn.toStdString();
-    const QString qmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+    const QString qmlPath = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath).value(0);
     std::cerr
         << "Usage: " << appName << " -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory\n"
            "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n"
