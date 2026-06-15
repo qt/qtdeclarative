@@ -6,10 +6,22 @@
 
 QT_BEGIN_NAMESPACE
 
+void QQmlPreviewBlacklist::blacklist(const QStringList &paths)
+{
+    for (const QString &path : paths)
+        blacklist(path);
+}
+
 void QQmlPreviewBlacklist::blacklist(const QString &path)
 {
     if (!path.isEmpty())
         m_root.insert(path, 0);
+}
+
+void QQmlPreviewBlacklist::whitelist(const QStringList &paths)
+{
+    for (const QString &path : paths)
+        whitelist(path);
 }
 
 void QQmlPreviewBlacklist::whitelist(const QString &path)

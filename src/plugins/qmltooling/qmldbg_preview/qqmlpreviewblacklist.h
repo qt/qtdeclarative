@@ -26,7 +26,9 @@ QT_BEGIN_NAMESPACE
 class QQmlPreviewBlacklist
 {
 public:
+    void blacklist(const QStringList &paths);
     void blacklist(const QString &path);
+    void whitelist(const QStringList &path);
     void whitelist(const QString &path);
     bool isBlacklisted(const QString &path) const;
     void clear();

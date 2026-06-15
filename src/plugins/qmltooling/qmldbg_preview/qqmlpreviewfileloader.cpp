@@ -29,10 +29,10 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service)
     m_blacklist.blacklist("/etc");
 
     for (int loc = QLibraryInfo::PrefixPath; loc < QLibraryInfo::TestsPath; ++loc) {
-        m_blacklist.blacklist(QLibraryInfo::path(
+        m_blacklist.blacklist(QLibraryInfo::paths(
                                   static_cast<QLibraryInfo::LibraryPath>(loc)));
     }
-    m_blacklist.blacklist(QLibraryInfo::path(QLibraryInfo::SettingsPath));
+    m_blacklist.blacklist(QLibraryInfo::paths(QLibraryInfo::SettingsPath));
 
     static const QStandardPaths::StandardLocation blackListLocations[] = {
         QStandardPaths::CacheLocation,
@@ -50,7 +50,7 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service)
             m_blacklist.blacklist(location);
     }
 
-    m_blacklist.whitelist(QLibraryInfo::path(QLibraryInfo::TestsPath));
+    m_blacklist.whitelist(QLibraryInfo::paths(QLibraryInfo::TestsPath));
 
     // On Windows, GenericDataLocation (AppData/Local) is a parent of the temp directory
     // (AppData/Local/Temp). Whitelist the temp path since we commonly want to preview
