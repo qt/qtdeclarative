@@ -23,28 +23,7 @@ enum class WarningSeverity
     Warning = QtMsgType::QtWarningMsg,
     Error = QtMsgType::QtCriticalMsg,
 };
-static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtInfoMsg));
-static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtWarningMsg));
-static_assert(int(WarningSeverity::Disable) != int(QtMsgType::QtCriticalMsg));
 
-inline bool operator<(WarningSeverity lhs, WarningSeverity rhs)
-{
-    const auto orderedValue = [](WarningSeverity s) {
-        switch (s) {
-        case WarningSeverity::Error:
-            return 3;
-        case WarningSeverity::Warning:
-            return 2;
-        case WarningSeverity::Info:
-            return 1;
-        case WarningSeverity::Disable:
-            return 0;
-        default:
-            Q_UNREACHABLE();
-        }
-    };
-    return orderedValue(lhs) < orderedValue(rhs);
-}
 } // namespace QQmlSA
 
 
