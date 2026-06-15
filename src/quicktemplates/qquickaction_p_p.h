@@ -58,7 +58,7 @@ public:
 
     bool handleShortcutEvent(QObject *object, QShortcutEvent *event);
 
-    void trigger(QObject*, bool doToggle);
+    bool trigger(QObject*, bool doToggle);
 
 #if QT_CONFIG(shortcut)
     class ShortcutEntry
