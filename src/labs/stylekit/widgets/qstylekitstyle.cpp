@@ -50,6 +50,9 @@
 #if QT_CONFIG(toolbar)
 #include <QtWidgets/qtoolbar.h>
 #endif
+#if QT_CONFIG(toolbutton)
+#include <QtWidgets/qtoolbutton.h>
+#endif
 #if QT_CONFIG(groupbox)
 #include <QtWidgets/qgroupbox.h>
 #endif
@@ -327,6 +330,10 @@ static QQStyleKitReader::ControlType controlTypeForWidget(const QWidget *widget)
 #if QT_CONFIG(toolbar)
     if (qobject_cast<const QToolBar *>(widget))
         return QQStyleKitReader::ToolBar;
+#endif
+#if QT_CONFIG(toolbutton)
+    if (qobject_cast<const QToolButton *>(widget))
+        return QQStyleKitReader::ToolButton;
 #endif
 #if QT_CONFIG(groupbox)
     if (qobject_cast<const QGroupBox *>(widget))
@@ -994,7 +1001,7 @@ void QStyleKitStylePrivate::clearMetricsCache()
 
 void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegateProperties *indicator, const QRectF &rect, QPainter *painter) const
 {
-    if (!indicator || !rect.isValid())
+    if (!indicator || !indicator->visible() || indicator->opacity() <= 0 || !rect.isValid())
         return;
 
     // indicator (background)
@@ -1538,6 +1545,16 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
         return;
     }
 #endif // QT_CONFIG(groupbox)
+#if QT_CONFIG(toolbutton)
+    case PE_FrameButtonTool:
+    case PE_PanelButtonTool: {
+        const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolButton, opt->state);
+        if (!r.isValid())
+            break;
+        d->drawStyledItemRect(r.background(), opt->rect, p);
+        return;
+    }
+#endif // QT_CONFIG(toolbutton)
     default:
         break;
     }
@@ -1834,6 +1851,80 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
     }
 #endif
 #endif // QT_NO_FRAME
+#if QT_CONFIG(toolbutton)
+    case CE_ToolButtonLabel:
+        if (const auto *tool = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolButton, tool->state);
+            if (!r.isValid())
+                break;
+            const auto *metrics = r.metrics;
+            QRect rect = tool->rect.marginsRemoved(metrics->textPadding);
+
+            uint textFlags = Qt::TextShowMnemonic;
+            if (!styleHint(SH_UnderlineShortcut, opt, w))
+                textFlags |= Qt::TextHideMnemonic;
+
+            const bool hasArrow = tool->features & QStyleOptionToolButton::Arrow;
+            if ((!hasArrow && tool->icon.isNull() && !tool->text.isEmpty())
+                || tool->toolButtonStyle == Qt::ToolButtonTextOnly) {
+                d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p);
+                return;
+            }
+
+            QPixmap pm;
+            QSize pmSize;
+            if (!hasArrow && !tool->icon.isNull()) {
+                const QIcon::State iconState = tool->state & State_On ? QIcon::On : QIcon::Off;
+                QIcon::Mode mode;
+                if (!(tool->state & State_Enabled))
+                    mode = QIcon::Disabled;
+                else if ((tool->state & State_MouseOver) && (tool->state & State_AutoRaise))
+                    mode = QIcon::Active;
+                else
+                    mode = QIcon::Normal;
+                pm = tool->icon.pixmap(tool->iconSize, p->device()->devicePixelRatio(), mode, iconState);
+                pmSize = pm.size() / pm.devicePixelRatio();
+            }
+
+            if (tool->toolButtonStyle == Qt::ToolButtonIconOnly || tool->text.isEmpty()) {
+                if (!pm.isNull()) {
+                    p->drawPixmap(visualRect(tool->direction, rect,
+                        QRect(rect.x() + (rect.width() - pmSize.width()) / 2,
+                              rect.y() + (rect.height() - pmSize.height()) / 2,
+                              pmSize.width(), pmSize.height())), pm);
+                }
+                return;
+            }
+
+            if (tool->toolButtonStyle == Qt::ToolButtonTextUnderIcon) {
+                if (!pm.isNull()) {
+                    const QRect pr(rect.x() + (rect.width() - pmSize.width()) / 2,
+                                   rect.y(), pmSize.width(), pmSize.height());
+                    p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
+                    QRect tr = rect;
+                    tr.setTop(rect.y() + pmSize.height() + metrics->spacing);
+                    d->drawControlText(r.text(), r.font(), visualRect(tool->direction, rect, tr),
+                                       tool->text, textFlags, p, Qt::AlignCenter);
+                } else {
+                    d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p, Qt::AlignCenter);
+                }
+            } else {
+                if (!pm.isNull()) {
+                    const QRect pr(rect.x(), rect.y() + (rect.height() - pmSize.height()) / 2,
+                                   pmSize.width(), pmSize.height());
+                    p->drawPixmap(visualRect(tool->direction, rect, pr), pm);
+                    QRect tr = rect;
+                    tr.setLeft(rect.x() + pmSize.width() + metrics->spacing);
+                    d->drawControlText(r.text(), r.font(), visualRect(tool->direction, rect, tr),
+                                       tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
+                } else {
+                    d->drawControlText(r.text(), r.font(), rect, tool->text, textFlags, p, Qt::AlignLeft | Qt::AlignVCenter);
+                }
+            }
+            return;
+        }
+        break;
+#endif // QT_CONFIG(toolbutton)
     default:
         break;
     }
@@ -2309,7 +2400,42 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
             }
             return;
         }
+        break;
 #endif // QT_CONFIG(scrollbar)
+#if QT_CONFIG(toolbutton)
+    case CC_ToolButton:
+        if (const QStyleOptionToolButton *tool = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
+            const auto r = d->resolve(w, QQStyleKitReader::ControlType::ToolButton, tool->state);
+            if (!r.isValid())
+                break;
+
+            // background
+            d->drawStyledItemRect(r.background(), opt->rect, p);
+
+            // menu arrow indicator
+            if ((tool->features & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::PopupDelay))
+                    == QStyleOptionToolButton::MenuButtonPopup
+                && (tool->subControls & SC_ToolButtonMenu)) {
+                const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
+                d->drawControlIndicator(r.indicator(), menuRect, p);
+            }
+
+            // label
+            State bflags = tool->state & ~State_Sunken;
+            if (bflags & State_AutoRaise) {
+                if (!(bflags & State_MouseOver) || !(bflags & State_Enabled))
+                    bflags &= ~State_Raised;
+            }
+            if (tool->state & State_Sunken && tool->activeSubControls & SC_ToolButton)
+                bflags |= State_Sunken;
+            QStyleOptionToolButton label = *tool;
+            label.state = bflags;
+            label.rect = subControlRect(CC_ToolButton, opt, SC_ToolButton, w);
+            proxy()->drawControl(CE_ToolButtonLabel, &label, p, w);
+            return;
+        }
+        break;
+#endif // QT_CONFIG(toolbutton)
     default:
         break;
     }
@@ -2425,12 +2551,11 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
 #if QT_CONFIG(combobox)
     case CC_ComboBox:
         if (const QStyleOptionComboBox *combo = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
-            QRect frameRect = combo->rect;
             const auto r = d->resolveLayout(QQStyleKitReader::ControlType::ComboBox, combo->state);
             if (!r.isValid())
                 break;
             const auto &metrics = *r.metrics;
-            frameRect = frameRect.marginsRemoved(metrics.margins);
+            QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
             switch (sc) {
             case SC_ComboBoxFrame:
                 return visualRect(opt->direction, opt->rect, frameRect);
@@ -2453,7 +2578,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
                 const auto *indicator = r.indicator();
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
-                    return contentsRect;
+                    return QRect();
 
                 const int w = resolvedWidth(indicator,
                     contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
@@ -2660,6 +2785,59 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
         }
         break;
 #endif // QT_CONFIG(scrollbar)
+#if QT_CONFIG(toolbutton)
+    case CC_ToolButton:
+        if (const auto *tool = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
+            const auto resolved = d->resolveLayout(QQStyleKitReader::ControlType::ToolButton, opt->state);
+            if (!resolved.isValid())
+                break;
+            const auto &metrics = *resolved.metrics;
+            QRect frameRect = opt->rect.marginsRemoved(metrics.margins);
+            switch (sc) {
+            case SC_ToolButton: {
+                QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
+                const bool hasMenuButton = (tool->features
+                    & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::HasMenu))
+                   != 0;
+                const auto *indicator = resolved.indicator();
+                if (hasMenuButton && indicator && indicator->visible() && indicator->opacity() > 0) {
+                    const QRect menuRect = subControlRect(CC_ToolButton, opt, SC_ToolButtonMenu, w);
+                    const int spacing = metrics.spacing;
+                    const uint indicatorAlign = resolvedAlignment(indicator->alignment(),
+                        Qt::AlignRight, Qt::AlignVCenter);
+                    if (indicatorAlign & Qt::AlignLeft)
+                        contentsRect.setLeft(menuRect.right() + spacing);
+                    else if (indicatorAlign & Qt::AlignRight)
+                        contentsRect.setRight(menuRect.left() - spacing);
+                }
+                return visualRect(opt->direction, opt->rect, contentsRect);
+            }
+            case SC_ToolButtonMenu: {
+                QRect contentsRect = frameRect.marginsRemoved(metrics.padding);
+                if ((tool->features
+                    & (QStyleOptionToolButton::MenuButtonPopup | QStyleOptionToolButton::PopupDelay))
+                   != QStyleOptionToolButton::MenuButtonPopup)
+                    break;
+
+                const auto *indicator = resolved.indicator();
+                if (!indicator || !indicator->visible() || indicator->opacity() == 0)
+                    return QRect();
+
+                const int w = resolvedWidth(indicator,
+                    contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
+                const int h = resolvedHeight(indicator,
+                    contentsRect.height() - indicator->topMargin() - indicator->bottomMargin());
+                const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
+                const QMargins indicatorMargins = elementMargins(indicator);
+                return visualRect(opt->direction, opt->rect,
+                    d->getAlignedRectInContainer(contentsRect, QSize(w, h), indicatorAlign, QMargins(), indicatorMargins));
+            }
+            default:
+                break;
+            }
+        }
+        break;
+#endif // QT_CONFIG(toolbutton)
     default:
         break;
     }
@@ -2673,26 +2851,33 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     Q_D(const QStyleKitStyle);
 
     switch (ct) {
+#if QT_CONFIG(pushbutton)
     case CT_PushButton:
-        if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
-            const auto controlType = btn->features & QStyleOptionButton::Flat
-                                        ? QQStyleKitReader::ControlType::FlatButton
-                                        : QQStyleKitReader::ControlType::Button;
-            const auto resolved = d->resolveLayout(controlType, opt->state);
-            if (!resolved.isValid())
-                break;
-            const auto &metrics = *resolved.metrics;
-            const QSize textSize = opt->fontMetrics.size(Qt::TextShowMnemonic, btn->text);
-            const QSize contentSizeWithPadding = textSize.expandedTo(contentsSize)
-                                            + QSize(metrics.padding.left() + metrics.padding.right(),
-                                            metrics.padding.top() + metrics.padding.bottom())
-                                            + QSize(metrics.textPadding.left() + metrics.textPadding.right(),
-                                            metrics.textPadding.top() + metrics.textPadding.bottom());
-            const QSize bgSizeWithMargins = metrics.bgImplicitSize + QSize(metrics.margins.left() + metrics.margins.right(),
-                                            metrics.margins.top() + metrics.margins.bottom());
-            return contentSizeWithPadding.expandedTo(bgSizeWithMargins);
+#endif
+#if QT_CONFIG(toolbutton)
+    case CT_ToolButton: {
+        auto controlType = QQStyleKitReader::ControlType::ToolButton;
+        if (const auto *buttonOpt = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
+            controlType = (buttonOpt->features & QStyleOptionButton::Flat)
+                  ? QQStyleKitReader::ControlType::FlatButton
+                  : QQStyleKitReader::ControlType::Button;
         }
-        break;
+        const auto resolved = d->resolveLayout(controlType, opt->state);
+        if (!resolved.isValid())
+            break;
+
+        const auto &metrics = *resolved.metrics;
+        const QSize contentSize = contentsSize
+                                  + QSize(metrics.padding.left() + metrics.padding.right(),
+                                          metrics.padding.top() + metrics.padding.bottom())
+                                  + QSize(metrics.textPadding.left() + metrics.textPadding.right(),
+                                          metrics.textPadding.top() + metrics.textPadding.bottom());
+        const QSize bgSize = metrics.bgImplicitSize
+                             + QSize(metrics.margins.left() + metrics.margins.right(),
+                                     metrics.margins.top() + metrics.margins.bottom());
+        return contentSize.expandedTo(bgSize);
+    }
+#endif
     case CT_CheckBox:
     case CT_RadioButton:
         if (const auto *btn = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
