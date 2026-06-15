@@ -143,8 +143,7 @@ private:
 
     static QUntypedPropertyBinding makeUntyped(QQmlPropertyBinding *binding)
     {
-        QPropertyBindingPrivatePtr ptr(binding);
-        return QPropertyBindingPrivate::makeUntyped(static_cast<QPropertyBindingPrivate *>(ptr.data()));
+        return QPropertyBindingPrivate::makeUntyped(binding);
     }
 
     static void bindingErrorCallback(QPropertyBindingPrivate *);
