@@ -67,7 +67,7 @@ public:
     void deliverLeaveEvent();
     void deliverEvent(QQuickWindow *window, QEvent *event);
     void start(Qt::DropActions supportedActions);
-    Qt::DropAction startDrag(Qt::DropActions supportedActions);
+    Qt::DropAction startDrag(Qt::DropActions supportedActions, QPixmap pixmap = {});
     void setTarget(QQuickItem *item);
     QMimeData *createMimeData() const;
     void loadPixmap();
