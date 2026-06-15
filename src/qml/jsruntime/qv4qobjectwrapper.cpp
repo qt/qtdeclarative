@@ -50,6 +50,23 @@
 #include <QtCore/qabstractitemmodel.h>
 #endif
 
+extern "C" {
+
+Q_QML_EXPORT bool qt_v4NativeCallHookEnabled = false;
+
+/*! \internal
+    Called right before a QML-to-C++ method call is dispatched, but only
+    when qt_v4NativeCallHookEnabled is set. An attached debugger can set
+    a breakpoint here. \a receiverMeta is the meta object of the call
+    receiver.
+*/
+Q_QML_EXPORT Q_DECL_COLD_FUNCTION void qt_v4AboutToCallNativeMethodHook(const QMetaObject *receiverMeta)
+{
+    Q_UNUSED(receiverMeta);
+}
+
+} // extern "C"
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcBuiltinsBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
@@ -2647,8 +2664,14 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
 
     if (d()->index == DestroyMethod)
         return method_destroy(v4, object.qObject(), argv, argc);
-    else if (d()->index == ToStringMethod)
+    else if (d()->index == ToStringMethod) {
+        if (Q_UNLIKELY(qt_v4NativeCallHookEnabled)) {
+            const QMetaObject *meta = object.metaObject();
+            if (meta && meta->indexOfMethod("toString()") >= 0)
+                qt_v4AboutToCallNativeMethodHook(meta);
+        }
         return method_toString(v4, object.qObject());
+    }
 
     d()->ensureMethodsCache(thisMeta);
 
@@ -2678,6 +2701,9 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         if (method == nullptr)
             return Encode::undefined();
     }
+
+    if (Q_UNLIKELY(qt_v4NativeCallHookEnabled))
+        qt_v4AboutToCallNativeMethodHook(object.metaObject());
 
     if (method->isV4Function()) {
         return doCall([&]() {
