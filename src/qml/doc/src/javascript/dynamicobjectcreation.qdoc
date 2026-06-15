@@ -12,6 +12,10 @@ useful to delay instantiation of objects until necessary, thereby improving
 application startup time.  It also allows visual objects to be dynamically
 created and added to the scene in reaction to user input or other events.
 
+\warning Objects should not be dynamically created from untrusted sources. The
+limitations \l{Qt Qml and JavaScript Sources}{for static QML sources} apply
+equally to dynamic object creation.
+
 \section1 Creating Objects Dynamically
 
 There are two ways to create objects dynamically from JavaScript. You can
