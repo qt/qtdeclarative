@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
     pass the file path to the constructor or to \l setStylePath():
 
     \code
-    auto *style = new QStyleKitStyle(QStringLiteral("qrc:/styles/MyStyle.qml"));
+    auto *style = new QStyleKitStyle(QStringLiteral(":/styles/MyStyle.qml"));
     QApplication::setStyle(style);
     \endcode
 
@@ -107,12 +107,12 @@ QT_BEGIN_NAMESPACE
 
     \code
     auto *style = QStyleFactory::create("StyleKit");
-    style->setProperty("stylePath", QStringLiteral("qrc:/styles/MyStyle.qml"));
+    style->setProperty("stylePath", QStringLiteral(":/styles/MyStyle.qml"));
     QApplication::setStyle(style);
     \endcode
 
     The Style is loaded with an internal QQmlEngine owned by the
-    QStyleKitStyle instance. If the URL is invalid or the root object is
+    QStyleKitStyle instance. If the path is invalid or the root object is
     not a \l Style, a warning is emitted and the style behaves like
     QCommonStyle until a valid \l stylePath is set.
 
@@ -130,15 +130,14 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \property QStyleKitStyle::stylePath
-    \brief the URL of the QML \l Style file driving this style.
+    \brief the path to the QML \l Style file driving this style.
 
-    The URL must resolve to a QML component whose root object is a
-    \l Style. Setting this property reloads the style; if the new file
-    cannot be loaded, the previously loaded style is kept and a warning
-    is emitted.
-
-    \note The file specified by \l stylePath must be a local file. Remote files
-    (e.g., HTTP URLs) are not supported.
+    The value is a path to a local file or a path to a file in the resource
+    file system (for example, \c{:/styles/MyStyle.qml}). A relative path is
+    resolved against the application's working directory. The file must
+    contain a QML component whose root object is a \l Style. Setting this
+    property reloads the style; if the new file cannot be loaded, the
+    previously loaded style is kept and a warning is emitted.
 */
 
 /*!
@@ -341,6 +340,13 @@ QStyleKitStylePrivate::QStyleKitStylePrivate()
 {
 }
 
+static QUrl urlFromStylePath(const QString &filePath)
+{
+    return filePath.startsWith(QLatin1Char(':'))
+        ? QUrl(QLatin1String("qrc") + filePath)
+        : QUrl::fromLocalFile(filePath);
+}
+
 bool QStyleKitStylePrivate::loadStyle()
 {
     Q_Q(QStyleKitStyle);
@@ -351,20 +357,17 @@ bool QStyleKitStylePrivate::loadStyle()
         qWarning("QStyleKitStyle: No QML engine available to load style.");
         return false;
     }
-    const QUrl url(stylePath);
+    const QUrl url = stylePath.isEmpty() ? QUrl() : urlFromStylePath(stylePath);
     if (stylePath.isEmpty() || !url.isValid()) {
         qWarning("QStyleKitStyle: No valid style path provided: %s", qPrintable(stylePath));
         return false;
     }
-    // TODO: Support async loading
-    // For now warn and fail if the URL is not a local file or qrc resource, as
-    // QQmlComponent loads them asynchronously but loadStyle() expects the style to be loaded synchronously
-    if (!url.isLocalFile() && url.scheme() != QLatin1String("qrc")) {
-        qWarning("QStyleKitStyle: only local files and qrc resources are supported as stylePath, got: %s",
-                 qPrintable(stylePath));
+    QQmlComponent component(qmlEngine, url);
+    if (component.isError()) {
+        qWarning("QStyleKitStyle: Failed to load style from %s: %s",
+                 qPrintable(stylePath), qPrintable(component.errorString()));
         return false;
     }
-    QQmlComponent component(qmlEngine, url);
     // Avoid creating anything other than StyleKit Style objects
     // by checking the metaobject of the root type before creating the object
     QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
@@ -374,11 +377,6 @@ bool QStyleKitStylePrivate::loadStyle()
     if (!firstMetaObject || !firstMetaObject->inherits(&QQStyleKitStyle::staticMetaObject)) {
         qWarning("QStyleKitStyle: Failed to load style from %s: component is not a StyleKit Style.",
                  qPrintable(stylePath));
-        return false;
-    }
-    if (component.isError()) {
-        qWarning("QStyleKitStyle: Failed to load style from %s: %s",
-                 qPrintable(stylePath), qPrintable(component.errorString()));
         return false;
     }
     QQStyleKitStyle *styleObject = qobject_cast<QQStyleKitStyle *>(component.create());
@@ -1137,10 +1135,10 @@ QStyleKitStyle::QStyleKitStyle()
 /*!
     Constructs a QStyleKitStyle and loads the QML \l Style at \a filePath.
 
-    \a filePath is interpreted as a URL, and may use any scheme supported
-    by QQmlEngine, including \c qrc, \c file, and \c http. If the URL is
-    invalid or the root object of the loaded component is not a \l Style,
-    a warning is emitted and the constructed style behaves as
+    \a filePath is a path to a local file or a path to a file in the resource
+    file system; a relative path is resolved against the application's working
+    directory. If the path is invalid or the root object of the loaded component
+    is not a \l Style, a warning is emitted and the constructed style behaves as
     QCommonStyle until a valid \l stylePath is set.
 */
 QStyleKitStyle::QStyleKitStyle(const QString &filePath)
@@ -1161,7 +1159,7 @@ QStyleKitStyle::~QStyleKitStyle()
 }
 
 /*!
-    Returns the URL of the currently loaded \l Style file.
+    Returns the path of the currently loaded \l Style file.
 
     \sa setStylePath()
 */
@@ -1174,9 +1172,10 @@ QString QStyleKitStyle::stylePath() const
 /*!
     Loads the QML \l Style at \a filePath and applies it to all widgets.
 
-    \a filePath is interpreted as a URL. If the URL is the same as the
-    currently loaded style, this function does nothing. If the new style
-    cannot be loaded, the previously loaded style remains active and a
+    \a filePath is a path to a local file or a path to a file in the resource
+    file system; see the \l stylePath property for the accepted forms. If it is
+    the same as the current \l stylePath, this function does nothing. If the new
+    style cannot be loaded, the previously loaded style remains active and a
     warning is emitted; \l stylePathChanged() is still emitted to reflect
     the changed property value.
 
