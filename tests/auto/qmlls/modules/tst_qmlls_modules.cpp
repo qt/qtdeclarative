@@ -222,9 +222,7 @@ void tst_qmlls_modules::checkCompletions(const QByteArray &uri, int lineNr, int 
             cParams,
             [clean, uri, expected, notExpected](auto res) {
                 QScopeGuard cleanup(clean);
-                QVERIFY(res);
-                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
-
+                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
                 if (!cItems) {
                     return;
                 }
@@ -343,8 +341,7 @@ void tst_qmlls_modules::function_documentations()
     m_protocol->requestCompletion(
             cParams,
             [clean, uri, expectedDocs](auto res) {
-                QVERIFY(res);
-                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
+                const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
 
                 if (!cItems) {
                     return;
@@ -590,8 +587,7 @@ void tst_qmlls_modules::goToTypeDefinition()
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
-                QVERIFY(res);
-                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&*res));
+                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&res));
 
                 QCOMPARE(result->size(), 1);
 
@@ -671,8 +667,7 @@ void tst_qmlls_modules::goToDefinition()
             params,
             [&](auto res) {
                 QScopeGuard cleanup(clean);
-                QVERIFY(res);
-                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&*res));
+                auto *result = std::get_if<QList<Location>>(std::get_if<Definition>(&res));
                 const QByteArray noResultExpected;
 
                 QVERIFY(result);
@@ -808,10 +803,9 @@ void tst_qmlls_modules::findUsages()
     auto clean = [didFinish]() { *didFinish = true; };
     m_protocol->requestReference(
             params,
-            [&](auto result) {
+            [&](auto _result) {
                 QScopeGuard cleanup(clean);
-                QVERIFY(result);
-
+                auto result = std::get_if<QList<Location>>(&_result);
                 QVERIFY(result);
                 if constexpr (enable_debug_output) {
                     if (!locationListsAreEqual(*result, expectedUsages)) {
@@ -925,8 +919,9 @@ void tst_qmlls_modules::documentFormatting()
 
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     auto clean = [didFinish]() { *didFinish = true; };
-    auto &&responseHandler = [&](auto response) {
+    auto &&responseHandler = [&](auto _response) {
         QScopeGuard cleanup(clean);
+        auto response = std::get_if<QList<QLspSpecification::TextEdit>>(&_response);
         QVERIFY(response);
         const auto results = *response;
         QVERIFY(results.size() == 1);
@@ -1129,8 +1124,9 @@ void tst_qmlls_modules::renameUsages()
     auto clean = [didFinish]() { *didFinish = true; };
     m_protocol->requestRename(
             params,
-            [&](auto &&result) {
+            [&](auto &&_result) {
                 QScopeGuard cleanup(clean);
+                auto result = std::get_if<WorkspaceEdit>(&_result);
                 QVERIFY(result);
                 QCOMPARE(result->changes.has_value(), expectedEdit.changes.has_value());
                 QCOMPARE(result->changeAnnotations.has_value(),
@@ -1618,8 +1614,9 @@ void tst_qmlls_modules::rangeFormatting()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto clean = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto result) {
+    auto &&responseHandler = [&](auto _result) {
         QScopeGuard cleanup(clean);
+        auto result = std::get_if<QList<QLspSpecification::TextEdit>>(&_result);
         QVERIFY(result);
 
         QFile file(testFile(expectedAfterFormat));
@@ -1701,8 +1698,10 @@ void tst_qmlls_modules::hover()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto clean = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto result) {
+    auto &&responseHandler = [&](auto _result) {
         QScopeGuard cleanup(clean);
+
+        auto result = std::get_if<QLspSpecification::Hover>(&_result);
         QVERIFY(result);
 
         const auto *const markupContent =
@@ -1793,8 +1792,7 @@ void tst_qmlls_modules::qmldirImports()
     cParams.textDocument.uri = *uri;
 
     m_protocol->requestCompletion(cParams, [&completionOk, &expectedCompletion](auto res) {
-        QVERIFY(res);
-        const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&*res);
+        const QList<CompletionItem> *cItems = std::get_if<QList<CompletionItem>>(&res);
 
         QSet<QString> labels;
         for (const CompletionItem &c : *cItems) {
@@ -1900,7 +1898,8 @@ void tst_qmlls_modules::quickFixes()
     bool codeActionOk = false;
 
     // request a quickfix with the obtained diagnostic
-    m_protocol->requestCodeAction(codeActionParams, [&](const auto &result) {
+    m_protocol->requestCodeAction(codeActionParams, [&](const auto &_result) {
+        auto result = std::get_if<QList<std::variant<Command, CodeAction>>>(&_result);
         QVERIFY(result);
         QCOMPARE(result->size(), 1);
         QVERIFY(std::holds_alternative<CodeAction>(result->front()));
@@ -1971,8 +1970,10 @@ void tst_qmlls_modules::semanticHighlightingFull()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto cleanup = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto result) {
+    auto &&responseHandler = [&](auto _result) {
         QScopeGuard callAtExit(cleanup);
+
+        auto result = std::get_if<SemanticTokens>(&_result);
         QVERIFY(result);
         QList<unsigned> data = result->data;
         QCOMPARE(data.size(), expectedData.size());
@@ -2020,9 +2021,9 @@ void tst_qmlls_modules::semanticHighlightingRange()
     std::shared_ptr<bool> didFinish = std::make_shared<bool>(false);
     const auto cleanup = [didFinish]() { *didFinish = true; };
 
-    auto &&responseHandler = [&](auto result) {
-        ;
+    auto &&responseHandler = [&](auto _result) {
         QScopeGuard callAtExit(cleanup);
+        auto result = std::get_if<SemanticTokens>(&_result);
         QVERIFY(result);
         QList<unsigned> data = result->data;
         QCOMPARE(data.size(), expectedData.size());
@@ -2083,8 +2084,9 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     QLspSpecification::SemanticTokensParams fullParams;
     fullParams.textDocument.uri = *uri;
     m_protocol->requestSemanticTokens(fullParams,
-    [&](auto res) {
+    [&](auto _res) {
         QScopeGuard callAtExit(cleanup);
+        auto res = std::get_if<SemanticTokens>(&_res);
         QVERIFY(res);
         params.previousResultId = res->resultId.value();
         fullDocumentSemanticTokensData = res->data;
@@ -2112,8 +2114,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
     }, std::move(errorHandler));
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 10000);
 
-    QVERIFY(result);
-    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&*result)) {
+    if (const auto *const delta = std::get_if<QLspSpecification::SemanticTokensDelta>(&result)) {
         QVERIFY(delta);
         const auto data = delta->edits.front().data;
         const auto start = delta->edits.front().start;
@@ -2122,7 +2123,7 @@ void tst_qmlls_modules::semanticHighlightingDelta()
         QCOMPARE(deleteCount, expectedEdits.front().deleteCount);
         QCOMPARE(data, expectedEdits.front().data);
     } else {
-        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&*result);
+        const auto *const full = std::get_if<QLspSpecification::SemanticTokens>(&result);
         QVERIFY(full);
         QCOMPARE(full->data, expectedEdits.front().data);
     }
@@ -2340,7 +2341,7 @@ void tst_qmlls_modules::documentSymbols()
 
     auto &&responseHandler = [&](auto res) {
         QScopeGuard callAtExit(cleanup);
-        const auto result = std::get_if<QList<DocumentSymbol>>(&*res);
+        const auto result = std::get_if<QList<DocumentSymbol>>(&res);
         QVERIFY(result);
         auto expectedResult = documentSymbolsExpectedResult();
         compareDocumentSymbolsLists(*result, expectedResult);
