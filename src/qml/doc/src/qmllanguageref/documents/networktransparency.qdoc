@@ -36,6 +36,10 @@ For example if the qmldir file contains the line "World World.qml", it will load
 \tt http://example.com/mystuff/World.qml
 Any other resources that \tt Hello.qml referred to, usually by a relative URL, would
 similarly be loaded from the network.
+The same holds true remote JavaScript files used with \l{WorkerScript}.
+
+\warning QML and JavaScript resources must only be loaded from trusted remote locations,
+compare the notes about \l{Qt Qml and JavaScript Sources}{processing data from untrusted sources}.
 
 
 \section1 Relative vs. Absolute URLs
