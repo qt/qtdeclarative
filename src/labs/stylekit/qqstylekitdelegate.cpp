@@ -210,6 +210,7 @@ void QQStyleKitDelegate::maybeCreateGradient()
                 width: parent.width
                 height: parent.height
                 color: "transparent"
+                visible: delegateStyle.gradient != null
                 gradient: delegateStyle.gradient
                 topLeftRadius: delegateStyle.topLeftRadius
                 topRightRadius: delegateStyle.topRightRadius
