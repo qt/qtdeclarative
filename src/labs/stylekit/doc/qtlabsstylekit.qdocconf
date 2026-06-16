@@ -27,8 +27,8 @@ qhp.QtLabsStyleKit.subprojects.manual.title = Reference Fallback Style
 qhp.QtLabsStyleKit.subprojects.manual.indexTitle = Reference Fallback Style
 qhp.QtLabsStyleKit.subprojects.manual.selectors = none
 
-qhp.QtLabsStyleKit.subprojects.examples.title = StyleKit Example
-qhp.QtLabsStyleKit.subprojects.examples.indexTitle = StyleKit Quick Controls Example
+qhp.QtLabsStyleKit.subprojects.examples.title = StyleKit Examples
+qhp.QtLabsStyleKit.subprojects.examples.indexTitle = Qt Labs StyleKit
 qhp.QtLabsStyleKit.subprojects.examples.selectors = none
 
 qhp.QtLabsStyleKit.subprojects.qmltypes.title = QML Types
@@ -41,7 +41,7 @@ qhp.QtLabsStyleKit.subprojects.classes.indexTitle = Qt Labs StyleKit C++ Classes
 qhp.QtLabsStyleKit.subprojects.classes.selectors = class
 qhp.QtLabsStyleKit.subprojects.classes.sortPages = true
 
-depends = qtcore qtgui qtdoc qtqml qtqmlcore qtquick qtquickcontrols
+depends = qtcore qtgui qtwidgets qtdoc qtqml qtqmlcore qtquick qtquickcontrols
 
 examplesinstallpath = stylekit
 exampledirs += snippets \
