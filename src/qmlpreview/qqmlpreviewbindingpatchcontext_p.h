@@ -9,7 +9,6 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmldata_p.h>
-#include <private/qqmlpreviewdiff_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 

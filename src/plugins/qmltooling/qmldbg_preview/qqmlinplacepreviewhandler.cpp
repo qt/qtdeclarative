@@ -181,17 +181,13 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
 
     QV4::ExecutionEngine *v4 = component->engine()->handle();
 
-    std::vector<QObject *> objects;
-    QV4::CompiledData::CompilationUnitDiff diff;
     if (const auto oldExecCU = componentUpdate.oldUnit) {
-        const auto newExecCU = QQmlComponentPrivate::get(component)->compilationUnit();
-
-        objects = v4->memoryManager->findObjectsForCompilationUnits(
+        std::vector<QObject *> objects = v4->memoryManager->findObjectsForCompilationUnits(
                 { oldExecCU->baseCompilationUnit() });
-        diff = QV4::CompiledData::diffCompilationUnits(oldExecCU->unitData(),
-                                                       newExecCU->unitData());
-        if (!QQmlPreview::applyDiff(objects, diff, oldExecCU, newExecCU))
+        if (!QQmlPreview::applyDiff(objects, oldExecCU,
+                                    QQmlComponentPrivate::get(component)->compilationUnit())) {
             inplaceUpdate->emitReloadFailure("Could not apply diff");
+        }
 
         inplaceUpdate->processedComponentUpdates.push_back(std::move(componentUpdate));
     }
@@ -199,7 +195,7 @@ static void updateInplace(QQmlComponent *component, std::shared_ptr<InplaceUpdat
     // Once all components have been handled, update resolved type references in all
     // compilation units and refresh all bindings
     if (inplaceUpdate->pendingComponentUpdates.empty()) {
-        updateResolvedTypeReferences(component->engine()->handle(), inplaceUpdate->droppedUnits);
+        updateResolvedTypeReferences(v4, inplaceUpdate->droppedUnits);
         for (const ComponentUpdate &update : inplaceUpdate->processedComponentUpdates)
             QQmlPreview::refreshBindings(update.oldUnit);
     }

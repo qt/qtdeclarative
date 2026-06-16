@@ -20,33 +20,8 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlPreview {
 
-enum Severity : quint8 {
-    Unaffected,
-    Rebuild,
-    Replace,
-};
-
-static void collectGroupAndAttachedPropertySubObjects(
-        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int objectIndex,
-        QVarLengthArray<int, 4> &indices)
-{
-    const QV4::CompiledData::Object *obj = unit->objectAt(objectIndex);
-    const QV4::CompiledData::Binding *binding = obj->bindingTable();
-    for (quint32 i = 0; i < obj->nBindings; ++i, ++binding) {
-        switch (binding->type()) {
-        case QV4::CompiledData::Binding::Type_AttachedProperty:
-        case QV4::CompiledData::Binding::Type_GroupProperty: {
-            const int subIndex = binding->value.objectIndex;
-            indices.push_back(subIndex);
-            collectGroupAndAttachedPropertySubObjects(unit, subIndex, indices);
-            break;
-        }
-        default:
-            break;
-        }
-    }
-}
-
+// The indices at which object appears in oldUnit: its own (ddata) index plus any indices it
+// occupies through composite base levels (the VME meta-object chain).
 static QVarLengthArray<int, 4>
 objectIndices(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit)
 {
@@ -63,12 +38,6 @@ objectIndices(QObject *object, const QQmlRefPointer<QV4::ExecutableCompilationUn
                 objectIndices.push_back(vme->qmlObjectId());
         }
     }
-
-    // Include indices of group property sub-objects (value types like font, anchors margins, etc.)
-    // These are virtual objects in the CU that don't correspond to real QObjects.
-    const qsizetype count = objectIndices.size();
-    for (qsizetype i = 0; i < count; ++i)
-        collectGroupAndAttachedPropertySubObjects(oldUnit, objectIndices[i], objectIndices);
 
     return objectIndices;
 }
@@ -101,89 +70,6 @@ hasChangedNonCompositeBaseType(const QQmlRefPointer<QV4::ExecutableCompilationUn
 
     return nonCompositeBaseType(oldTypeRef->typePropertyCache())
             != nonCompositeBaseType(newTypeRef->typePropertyCache());
-}
-
-static Severity objectAffectedByDiff(const QVarLengthArray<int, 4> &objectIndices,
-                                     const QV4::CompiledData::CompilationUnitDiff &diff,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
-                                     const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
-{
-    Severity result = Unaffected;
-
-    for (const QV4::CompiledData::Change &change : diff.changes) {
-        switch (change.type) {
-        case QV4::CompiledData::ChangeType::RequiredPropertyExtraDataAdded:
-        case QV4::CompiledData::ChangeType::RequiredPropertyExtraDataChanged:
-        case QV4::CompiledData::ChangeType::RequiredPropertyExtraDataRemoved:
-        case QV4::CompiledData::ChangeType::AliasAdded:
-        case QV4::CompiledData::ChangeType::AliasChanged:
-        case QV4::CompiledData::ChangeType::AliasRemoved:
-        case QV4::CompiledData::ChangeType::BindingAdded:
-        case QV4::CompiledData::ChangeType::BindingChanged:
-        case QV4::CompiledData::ChangeType::BindingRemoved:
-        case QV4::CompiledData::ChangeType::PropertyAdded:
-        case QV4::CompiledData::ChangeType::PropertyChanged:
-        case QV4::CompiledData::ChangeType::PropertyRemoved:
-        case QV4::CompiledData::ChangeType::SignalAdded:
-        case QV4::CompiledData::ChangeType::SignalChanged:
-        case QV4::CompiledData::ChangeType::SignalRemoved:
-            // These are object-specific. Only the object in question needs rebuilding.
-            if (!objectIndices.contains(change.objectIndex))
-                continue;
-            if (result == Unaffected)
-                result = Rebuild;
-            break;
-        case QV4::CompiledData::ChangeType::EnumAdded:
-        case QV4::CompiledData::ChangeType::EnumChanged:
-        case QV4::CompiledData::ChangeType::EnumRemoved:
-        case QV4::CompiledData::ChangeType::FunctionAdded:
-        case QV4::CompiledData::ChangeType::FunctionChanged:
-        case QV4::CompiledData::ChangeType::FunctionRemoved:
-            // These are global. All objects created from the CU need rebuilding
-            // TODO: Enum changes actually propagate outside the CU. We'd need to rebuild
-            //       absolutely everything that can reach the enum.
-            if (result == Unaffected)
-                result = Rebuild;
-            break;
-        case QV4::CompiledData::ChangeType::ImportAdded:
-        case QV4::CompiledData::ChangeType::ImportChanged:
-        case QV4::CompiledData::ChangeType::ImportRemoved:
-            // Changing imports can change everything or nothing. Most of the time you have no
-            // conflicting type names. Let's assume it's OK.
-            // TODO: To get this right, we need to compare all type resolutions in the whole CU
-            //       to see if they're still the same.
-            continue;
-        case QV4::CompiledData::ChangeType::InlineComponentAdded:
-        case QV4::CompiledData::ChangeType::InlineComponentRemoved:
-        case QV4::CompiledData::ChangeType::InlineComponentChanged:
-            // Adding, removing, or changing an inline component cannot change anything by itself.
-            // What we care about is the CU object the inline component refers to.
-            continue;
-        case QV4::CompiledData::ChangeType::ObjectChanged: {
-            if (!objectIndices.contains(int(change.index)))
-                continue;
-
-            // If the non-composite base type changes, we need to replace the object
-            if (hasChangedNonCompositeBaseType(oldUnit, newUnit, change.index))
-                return Replace;
-
-            // If only some flags change, rebuilding is enough.
-            if (result == Unaffected)
-                result = Rebuild;
-
-            break;
-        }
-        case QV4::CompiledData::ChangeType::ObjectAdded:
-        case QV4::CompiledData::ChangeType::ObjectRemoved:
-            // Adding or removing an object only takes effect if you also add or remove
-            // a binding to that object, and that causes the outer object to be rebuilt.
-            continue;
-        default:
-            continue;
-        }
-    }
-
-    return result;
 }
 
 struct ObjectAndIndex
@@ -386,7 +272,7 @@ static void rebuildObject(QObject *object, int cuIndex,
     }
 }
 
-bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::CompilationUnitDiff &diff,
+bool applyDiff(std::vector<QObject *> &objects,
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
 {
@@ -394,56 +280,66 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
     if (!newUnit->runtimeStrings)
         newUnit->populate();
 
+    // For now we always rebuild whole component roots: the document root (index 0) and any
+    // inline-component roots. We don't touch other objects directly. Rebuilding a root runs a
+    // full reset() + repopulateBindings() that cascades down the entire instantiation (and
+    // through its composite base levels), recreating every object below it. Since every
+    // non-root object is, by construction, a descendant of a component root, this is
+    // sufficient.
+    //
+    // A consequence worth remembering: because every live object is recreated, every
+    // QQmlJavaScriptExpression on those objects is recreated too, freshly bound to newUnit. By
+    // the time refreshBindings() runs, the only expressions still referencing oldUnit are the
+    // dead, detached leftovers of the resets. That is exactly why refreshBindings() can simply
+    // disable (null) them instead of remapping them to newUnit.
+    //
+    // When we switch to partial patching -- leaving objects the diff did not affect in place
+    // and only remapping their compilation unit instead of rebuilding them -- this invariant
+    // breaks and two things need care:
+    //
+    //   * Affectedness: we need to classify each object as unaffected (keep it, just remap its
+    //     CU), patchable (only constants or bindings have changed; no structural changes),
+    //     needing VME rebuild, or having a changed non-composite (C++) base type (cannot
+    //     be patched in place; its instantiating component must recreate it). The
+    //     CompilationUnitDiff carries this information. We'll need to compute it from the
+    //     given compilation units.
+    //
+    //   * refreshBindings(): an object left in place keeps its original expressions, whose
+    //     function() still points into oldUnit->runtimeFunctions. Disabling those would kill
+    //     bindings that are supposed to keep working. Each such expression must instead be
+    //     remapped to the function at the same index in newUnit->runtimeFunctions, i.e.
+    //     refreshBindings() has to take newUnit again and translate functions rather than null
+    //     them. As an additional complication, we must recognize that adding or removing functions
+    //     shifts function indices. So the function a binding referred to in the old compilation
+    //     unit may have a different index in the new one.
     std::vector<ObjectAndIndex> rebuild;
-    std::vector<ObjectAndIndex> componentRoots;
-    bool rebuildOuter = false;
 
     for (QObject *object : objects) {
-        bool isComponentRoot = false;
         const QVarLengthArray<int, 4> indices = objectIndices(object, oldUnit);
         for (int index : indices) {
-            if (index >= oldUnit->objectCount()) {
-                // Implicit component detected. Rebuild the component around it.
-                rebuildOuter = true;
+            // Objects instantiated by an enclosing component (indices beyond the CU, explicit
+            // Component content) are recreated when that enclosing root is rebuilt, so we don't
+            // record them here.
+            if (index >= oldUnit->objectCount())
                 continue;
-            }
-
             const auto flags = oldUnit->objectAt(index)->flags();
-            if (flags & QV4::CompiledData::Object::IsComponent) {
-                // Explicit component object. Rebuild the component around it.
-                rebuildOuter = true;
+            if (index != 0 && !(flags & QV4::CompiledData::Object::IsInlineComponentRoot))
                 continue;
-            }
 
-            if (index == 0 || flags & QV4::CompiledData::Object::IsInlineComponentRoot) {
-                componentRoots.push_back({ object, indices.first() });
-                isComponentRoot = true;
-                break;
-            }
-        }
-
-        switch (objectAffectedByDiff(indices, diff, oldUnit, newUnit)) {
-        case Unaffected:
-            // TODO: We don't actually need to rebuild here. We only need to update the context,
-            //       ddata, etc. to point to the new compilation unit.
-            if (isComponentRoot)
-                rebuild.push_back({ object, indices.first() });
-            continue;
-        case Rebuild:
-            rebuild.push_back({ object, indices.first() });
-            break;
-        case Replace:
-            // Can't replace the root object of a component
-            // TODO: In some cases we can, by rebuilding the object that instantiated it instead.
-            if (isComponentRoot)
+            // A component root whose own non-composite (C++) base type changed cannot be
+            // rebuilt in place: reset() + repopulateBindings() reuses the same QObject, which is
+            // still of the old C++ class. Bail so the caller falls back to a full reload.
+            // (If the index no longer exists in the new CU the root is obsolete; rebuildObject()
+            // skips it and the remap loop below retires it.)
+            if (index < newUnit->objectCount()
+                && hasChangedNonCompositeBaseType(oldUnit, newUnit, index)) {
                 return false;
-            rebuildOuter = true;
+            }
+
+            rebuild.push_back({ object, indices.first() });
             break;
         }
     }
-
-    if (rebuildOuter)
-        rebuild = std::move(componentRoots);
 
     // Sort by ascending cuIndex so that parent objects are rebuilt before their
     // children. A parent's reset() properly retires children (they still point to
@@ -462,15 +358,11 @@ bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::Compila
             skip.insert(child);
     }
 
-    QQmlRefPointer<QQmlContextData> rootContext;
     for (const auto &[object, cuIndex] : rebuild) {
         if (skip.contains(object))
             continue;
 
         rebuildObject(object, cuIndex, oldUnit, newUnit);
-        QQmlData *rootData = QQmlData::get(object);
-        if (rootData)
-            rootContext = rootData->ownContext;
     }
 
     for (QObject *object : objects) {
