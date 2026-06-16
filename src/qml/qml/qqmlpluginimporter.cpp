@@ -363,6 +363,9 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(
                     importVersion = lockModule(uri, qmldir->typeNamespace(), importVersion, errors);
                     if (!importVersion.isValid())
                         return QTypeRevision();
+                    qCDebug(lcQmlImport) << "module" << uri
+                                         << "provided by linked library" << qmldir->linkTarget()
+                                         << "; optional plugin not loaded";
                     // instance and loader intentionally left at nullptr
                     plugins->insert(std::make_pair(pluginId, QmlPlugin()));
                     // Not calling initializeEngine with null instance
@@ -393,6 +396,9 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(
                     }
                     return QTypeRevision();
                 }
+
+                qCDebug(lcQmlImport) << "module" << uri
+                                     << "provided by plugin" << fileInfo.absoluteFilePath();
 
                 instance = plugin.loader()->instance();
                 plugins->insert(std::make_pair(pluginId, std::move(plugin)));
