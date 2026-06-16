@@ -1,0 +1,42 @@
+// Copyright (C) 2026 The Qt Company Ltd.
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GFDL-1.3-no-invariants-only
+
+/*!
+    \example stylekitwidgets
+    \examplecategory {User Interface Components}
+    \title StyleKit Widgets Example
+    \brief Shows how to style \l {Qt Widgets} using \l {Qt Labs StyleKit}{StyleKit}.
+    \ingroup qtwidgets-examples
+
+    \image qtlabsstylekit-widgets-example.webp
+           {StyleKit Widgets Example showing buttons, sliders, and a settings panel}
+
+    This example shows how to style a Qt Widgets application with
+    \l {Qt Labs StyleKit}{StyleKit}. It demonstrates how to apply QML-defined
+    styles to standard Qt Widgets controls using \l QStyleKitStyle, and how
+    to switch between styles and themes at runtime.
+
+    The example includes three styles:
+
+    \list
+        \li \b Classic - A gradient-based style with multiple themes including
+            light, dark, high-contrast, and green.
+        \li \b Flat - A flat, Material Design-inspired style with light and dark themes.
+        \li \b Neon - A cyberpunk-inspired dark style with neon accent colors.
+    \endlist
+
+    The example demonstrates how to:
+
+    \list
+        \li Apply a \l QStyleKitStyle to a \l QApplication.
+        \li Switch between QML-defined styles at runtime using
+            \l {QStyleKitStyle::}{setStylePath()}.
+        \li Switch between themes within a style using
+            \l {QStyleKitStyle::}{setThemeName()}.
+        \li Organize widgets into labeled sections using \l QGroupBox.
+    \endlist
+
+    \sa {Qt Labs StyleKit}, {StyleKit Quick Controls Example}
+
+    \include examples-run.qdocinc
+*/
