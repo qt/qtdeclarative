@@ -533,7 +533,7 @@ QStringList QQmlTypeLoader::importPathList(PathType type) const
 /*!
     \internal
 */
-void QQmlTypeLoader::addImportPath(const QString &path)
+void QQmlTypeLoader::addImportPath(const QString &path, AddPathMode mode)
 {
     qCDebug(lcQmlImport) << "addImportPath:" << path;
 
@@ -561,10 +561,18 @@ void QQmlTypeLoader::addImportPath(const QString &path)
 
     QQmlTypeLoaderConfiguredDataPtr data(&m_data);
     if (!cPath.isEmpty()) {
-        if (data->importPaths.contains(cPath))
-            data->importPaths.move(data->importPaths.indexOf(cPath), 0);
-        else
-            data->importPaths.prepend(cPath);
+        if (mode == PrependPath) {
+            // Prepending an existing path moves it to the front, to reflect
+            // its new, higher priority.
+            if (data->importPaths.contains(cPath))
+                data->importPaths.move(data->importPaths.indexOf(cPath), 0);
+            else
+                data->importPaths.prepend(cPath);
+        } else if (!data->importPaths.contains(cPath)) {
+            // Appending leaves an already known path untouched, so that we
+            // don't lower the priority of a path that was explicitly prepended.
+            data->importPaths.append(cPath);
+        }
     }
 }
 
@@ -577,8 +585,8 @@ void QQmlTypeLoader::setImportPathList(const QStringList &paths)
 
     QQmlTypeLoaderConfiguredDataPtr data(&m_data);
     data->importPaths.clear();
-    for (auto it = paths.crbegin(); it != paths.crend(); ++it)
-        addImportPath(*it);
+    for (const QString &path : paths)
+        addImportPath(path, AppendPath);
 
     // Our existing cached paths may have been invalidated
     clearQmldirInfo();
@@ -598,20 +606,24 @@ void QQmlTypeLoader::setPluginPathList(const QStringList &paths)
 /*!
     \internal
 */
-void QQmlTypeLoader::addPluginPath(const QString& path)
+void QQmlTypeLoader::addPluginPath(const QString& path, AddPathMode mode)
 {
     qCDebug(lcQmlImport) << "addPluginPath:" << path;
 
     QQmlTypeLoaderConfiguredDataPtr data(&m_data);
 
     QUrl url = QUrl(path);
+    QString canonicalPath = path;
     if (url.isRelative() || url.scheme() == QLatin1String("file")
         || (url.scheme().size() == 1 && QFile::exists(path)) ) {  // windows path
         QDir dir = QDir(path);
-        data->pluginPaths.prepend(dir.canonicalPath());
-    } else {
-        data->pluginPaths.prepend(path);
+        canonicalPath = dir.canonicalPath();
     }
+
+    if (mode == PrependPath)
+        data->pluginPaths.prepend(canonicalPath);
+    else
+        data->pluginPaths.append(canonicalPath);
 }
 
 #if QT_CONFIG(qml_network)
@@ -1240,55 +1252,23 @@ Constructs a new type loader that uses the given \a engine.
 QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
     : m_data(engine)
 {
-    QQmlTypeLoaderConfiguredDataPtr data(&m_data);
-#if defined(Q_OS_OHOS)
-    // On HarmonyOS, Qt app and plugins all are Native C++ libraries (.so files).
-    // They have to be kept in entry/libs/${OHOS_ARCH} in .hap package.
-    data->pluginPaths << QCoreApplication::applicationDirPath();
-#else
-    data->pluginPaths << QLatin1String(".");
-#endif
-    // Search order is:
-    // 1. android or macos specific bundle paths.
-    // 2. applicationDirPath()
-    // 3. qrc:/qt-project.org/imports
-    // 4. qrc:/qt/qml
-    // 5. $QML2_IMPORT_PATH
-    // 6. $QML_IMPORT_PATH
-    // 7. QLibraryInfo::QmlImportsPath
-    //
-    // ... unless we're a plugin application. Then we don't pick up any special paths
-    // from environment variables or bundles and we also don't add the application dir path.
-
-    const auto paths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
-    for (const auto &installImportsPath: paths)
-        addImportPath(installImportsPath);
+    // Add default import and plugin paths. Paths are added in decreasting
+    // priority, by appending to the path lists.
 
     const bool isPluginApplication = QCoreApplication::testAttribute(Qt::AA_PluginApplication);
 
     auto addEnvPath = [this, isPluginApplication](const char *var, auto addPath) {
         if (Q_UNLIKELY(!isPluginApplication && !qEnvironmentVariableIsEmpty(var))) {
             const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
-            for (int ii = paths.size() - 1; ii >= 0; --ii)
-                (this->*addPath)(paths.at(ii));
+            for (const QString &path : paths)
+                (this->*addPath)(path, AppendPath);
         }
     };
 
-    // env import paths
-    addEnvPath("QML_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
-    addEnvPath("QML2_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
-
-    addImportPath(QStringLiteral("qrc:/qt/qml"));
-    addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
-
-    if (!isPluginApplication)
-        addImportPath(QCoreApplication::applicationDirPath());
-
-    addEnvPath("QML_PLUGIN_PATH", &QQmlTypeLoader::addPluginPath);
+    // Import paths, used for looking up QML modules, e.g. `MyModules/qmldir`
 
 #if defined(Q_OS_ANDROID)
-    addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"));
-    addEnvPath("QT_BUNDLED_LIBS_PATH", &QQmlTypeLoader::addPluginPath);
+    addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"), AppendPath);
 #elif defined(Q_OS_MACOS)
     // Add the main bundle's Resources/qml directory as an import path, so that QML modules are
     // found successfully when running the app from its build dir.
@@ -1301,7 +1281,7 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
                     if (QCFString path = CFURLCopyFileSystemPath(
                                 absoluteUrlRef, kCFURLPOSIXPathStyle)) {
                         if (QFile::exists(path)) {
-                            addImportPath(QDir(path).canonicalPath());
+                            addImportPath(QDir(path).canonicalPath(), AppendPath);
                         }
                     }
                 }
@@ -1309,6 +1289,38 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
         }
     }
 #endif // Q_OS_DARWIN
+
+    if (!isPluginApplication)
+        addImportPath(QCoreApplication::applicationDirPath(), AppendPath);
+
+    addImportPath(QStringLiteral("qrc:/qt-project.org/imports"), AppendPath);
+    addImportPath(QStringLiteral("qrc:/qt/qml"), AppendPath);
+
+    addEnvPath("QML2_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
+    addEnvPath("QML_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
+
+    const auto qmlImportPaths = QLibraryInfo::paths(QLibraryInfo::QmlImportsPath);
+    for (const auto &qmlImportPath : qmlImportPaths)
+        addImportPath(qmlImportPath, AppendPath);
+
+    // Plugin paths, used for looking up the backing library of a QML module
+
+#if defined(Q_OS_ANDROID)
+    addEnvPath("QT_BUNDLED_LIBS_PATH", &QQmlTypeLoader::addPluginPath);
+#endif
+    addEnvPath("QML_PLUGIN_PATH", &QQmlTypeLoader::addPluginPath);
+
+#if defined(Q_OS_OHOS)
+    // On HarmonyOS, Qt app and plugins all are Native C++ libraries (.so files).
+    // They have to be kept in entry/libs/${OHOS_ARCH} in .hap package.
+    addPluginPath(QCoreApplication::applicationDirPath(), AppendPath);
+#else
+    // Explicitly add "." to the plugin paths, to represent the path relative
+    // wo where the qmldir was found. We can't use addPluginPath() here, as
+    // it will resolve the path to an absolute path based on the working dir.
+    QQmlTypeLoaderConfiguredDataPtr data(&m_data);
+    data->pluginPaths << QLatin1String(".");
+#endif
 }
 
 /*!
