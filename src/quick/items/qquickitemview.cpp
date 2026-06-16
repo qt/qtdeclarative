@@ -19,6 +19,8 @@ Q_STATIC_LOGGING_CATEGORY(lcCount, "qt.quick.itemview.count")
 #define QML_VIEW_DEFAULTCACHEBUFFER 320
 #endif
 
+constexpr QQuickItemPrivate::ChangeTypes itemChangeListenerTypes = QQuickItemPrivate::Destroyed;
+
 FxViewItem::FxViewItem(QQuickItem *i, QQuickItemView *v, bool own, QQuickItemViewAttached *attached)
     : QQuickItemViewFxItem(i, own, QQuickItemViewPrivate::get(v))
     , view(v)
@@ -136,6 +138,9 @@ QQuickItemView::~QQuickItemView()
     }
     delete d->header;
     delete d->footer;
+
+    for (auto it = d->unrequestedItems.keyBegin(); it != d->unrequestedItems.keyEnd(); ++it)
+        QQuickItemPrivate::get(*it)->removeItemChangeListener(d, itemChangeListenerTypes);
 }
 
 
@@ -1681,8 +1686,6 @@ QQuickItemViewPrivate::QQuickItemViewPrivate()
     bufferPause.setDuration(16);
 }
 
-static const QQuickItemPrivate::ChangeTypes itemChangeListenerTypes = QQuickItemPrivate::Destroyed;
-
 QQuickItemViewPrivate::~QQuickItemViewPrivate()
 {
 #if QT_CONFIG(quick_viewtransitions)
@@ -2591,6 +2594,7 @@ void QQuickItemView::createdItem(int index, QObject* object)
     QQuickItem* item = qmlobject_cast<QQuickItem*>(object);
     if (!d->inRequest) {
         d->unrequestedItems.insert(item, index);
+        QQuickItemPrivate::get(item)->updateOrAddItemChangeListener(d, itemChangeListenerTypes);
         d->requestedIndex = -1;
         if (d->hasPendingChanges())
             d->layout();
@@ -2652,6 +2656,7 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
     item->trackGeometry(false);
 
     QQmlInstanceModel::ReleaseFlags flags = {};
+    bool removeItemChangeListener = true;
     if (QPointer<QQuickItem> quickItem = item->item) {
         if (model) {
             flags = model->release(quickItem, reusableFlag);
@@ -2664,8 +2669,11 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
                 }
                 // If deleteLater was called, the item isn't long for this world and so we shouldn't store references to it.
                 // This can happen when a Repeater is used to populate items in SwipeView's ListView contentItem.
-                if (!isClearing && !QObjectPrivate::get(quickItem)->deleteLaterCalled)
+                if (!isClearing && !QObjectPrivate::get(quickItem)->deleteLaterCalled) {
                     unrequestedItems.insert(quickItem, model->indexOf(quickItem, q));
+                    QQuickItemPrivate::get(quickItem)->updateOrAddItemChangeListener(this, itemChangeListenerTypes);
+                    removeItemChangeListener = false;
+                }
             } else if (flags & QQmlInstanceModel::Destroyed) {
                 quickItem->setParentItem(nullptr);
             } else if (flags & QQmlInstanceModel::Pooled) {
@@ -2673,7 +2681,8 @@ bool QQuickItemViewPrivate::releaseItem(FxViewItem *item, QQmlInstanceModel::Reu
             }
         }
 
-        QQuickItemPrivate::get(quickItem)->removeItemChangeListener(this, itemChangeListenerTypes);
+        if (removeItemChangeListener)
+            QQuickItemPrivate::get(quickItem)->removeItemChangeListener(this, itemChangeListenerTypes);
 #if QT_CONFIG(quick_viewtransitions)
         delete item->transitionableItem;
         item->transitionableItem = nullptr;
@@ -2725,6 +2734,8 @@ void QQuickItemViewPrivate::itemDestroyed(QQuickItem *item)
         releaseItem(currentItem, QQmlDelegateModel::NotReusable);
         currentItem = nullptr;
     }
+
+    unrequestedItems.remove(item);
 
     // Update the positioning of the items.
     forceLayoutPolish();
