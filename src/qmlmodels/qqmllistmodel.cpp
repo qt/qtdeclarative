@@ -35,6 +35,9 @@
 
 Q_DECLARE_METATYPE(const QV4::CompiledData::Binding*);
 
+#include <algorithm>
+#include <vector>
+
 QT_BEGIN_NAMESPACE
 
 // Set to 1024 as a debugging aid - easier to distinguish uids from indices of elements/models.
@@ -341,16 +344,16 @@ bool ListModel::sync(ListModel *src, ListModel *target)
 
     // Build hash of elements <-> uid for each of the lists
     QHash<int, ElementSync> elementHash;
-    for (int i = 0; i < target->elements.count(); ++i) {
-        ListElement *e = target->elements.at(i);
+    for (int i = 0; i < target->elementCount(); ++i) {
+        ListElement *e = target->elements[i];
         int uid = e->getUid();
         ElementSync sync;
         sync.target = e;
         sync.targetIndex = i;
         elementHash.insert(uid, sync);
     }
-    for (int i = 0; i < src->elements.count(); ++i) {
-        ListElement *e = src->elements.at(i);
+    for (int i = 0; i < src->elementCount(); ++i) {
+        ListElement *e = src->elements[i];
         int uid = e->getUid();
 
         QHash<int, ElementSync>::iterator it = elementHash.find(uid);
@@ -370,8 +373,8 @@ bool ListModel::sync(ListModel *src, ListModel *target)
 
     // Get list of elements that are in the target but no longer in the source. These get deleted first.
     int rowsRemoved = 0;
-    for (int i = 0 ; i < target->elements.count() ; ++i) {
-        ListElement *element = target->elements.at(i);
+    for (int i = 0 ; i < target->elementCount() ; ++i) {
+        ListElement *element = target->elements[i];
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.targetIndex >= 0);
         // need to update the targetIndex, to keep it correct after removals
@@ -382,7 +385,10 @@ bool ListModel::sync(ListModel *src, ListModel *target)
             if (targetModel)
                 targetModel->beginRemoveRows(QModelIndex(), i, i);
             s.target->destroy(target->m_layout);
-            target->elements.removeOne(s.target);
+            if (auto it = std::find(target->elements.begin(), target->elements.end(), s.target);
+                it != target->elements.end()) {
+                target->elements.erase(it);
+            }
             delete s.target;
             if (targetModel)
                 targetModel->endRemoveRows();
@@ -397,8 +403,8 @@ bool ListModel::sync(ListModel *src, ListModel *target)
 
     // Clear the target list, and append in correct order from the source
     target->elements.clear();
-    for (int i = 0; i < src->elements.count(); ++i) {
-        ListElement *srcElement = src->elements.at(i);
+    for (int i = 0; i < src->elementCount(); ++i) {
+        ListElement *srcElement = src->elements[i];
         ElementSync &s = elementHash.find(srcElement->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
         ListElement *targetElement = s.target;
@@ -406,14 +412,13 @@ bool ListModel::sync(ListModel *src, ListModel *target)
             targetElement = new ListElement(srcElement->getUid());
         }
         s.changedRoles = ListElement::sync(srcElement, src->m_layout, targetElement, target->m_layout);
-        target->elements.append(targetElement);
+        target->elements.push_back(targetElement);
     }
 
     target->updateCacheIndices();
 
     // Update values stored in target meta objects
-    for (int i=0 ; i < target->elements.count() ; ++i) {
-        ListElement *e = target->elements[i];
+    for (ListElement *e : target->elements) {
         if (ModelNodeMetaObject *mo = e->objectCache())
             mo->updateValues();
     }
@@ -424,9 +429,9 @@ bool ListModel::sync(ListModel *src, ListModel *target)
     // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
     // model indices are updated correctly
     int rowsInserted = 0;
-    const int targetElementCount = target->elements.count();
+    const int targetElementCount = target->elementCount();
     for (int i = 0 ; i < targetElementCount ; ++i) {
-        ListElement *element = target->elements.at(i);
+        ListElement *element = target->elements[i];
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
         s.srcIndex += rowsInserted;
@@ -442,7 +447,7 @@ bool ListModel::sync(ListModel *src, ListModel *target)
                     targetModel->endMoveRows();
                     // fixup target indices of elements that still need to move
                     for (int j=i+1; j < targetElementCount; ++j) {
-                        ListElement *eToFix = target->elements.at(j);
+                        ListElement *eToFix = target->elements[j];
                         ElementSync &sToFix = elementHash.find(eToFix->getUid()).value();
                         if (i < s.targetIndex) {
                             // element was moved down
@@ -478,7 +483,7 @@ ListModel::ListModel(ListLayout *layout, QQmlListModel *modelCache) : m_layout(l
 
 void ListModel::destroy()
 {
-    for (const auto &destroyer : remove(0, elements.count()))
+    for (const auto &destroyer : remove(0, elementCount()))
         destroyer();
 
     m_layout = nullptr;
@@ -489,7 +494,7 @@ void ListModel::destroy()
 
 int ListModel::appendElement()
 {
-    int elementIndex = elements.count();
+    int elementIndex = elementCount();
     newElement(elementIndex);
     return elementIndex;
 }
@@ -511,13 +516,11 @@ void ListModel::move(int from, int to, int n)
         n = tfrom-tto;
     }
 
-    QPODVector<ListElement *, 4> store;
-    for (int i=0 ; i < (to-from) ; ++i)
-        store.append(elements[from+n+i]);
-    for (int i=0 ; i < n ; ++i)
-        store.append(elements[from+i]);
-    for (int i=0 ; i < store.count() ; ++i)
-        elements[from+i] = store[i];
+    // Rotate the [from, to + n) sub-range so the n-element block starting at
+    // 'from' moves to the end of the range; no temporary storage required.
+    std::rotate(elements.begin() + from,
+                elements.begin() + from + n,
+                elements.begin() + to + n);
 
     updateCacheIndices(from, to + n);
 }
@@ -525,18 +528,18 @@ void ListModel::move(int from, int to, int n)
 void ListModel::newElement(int index)
 {
     ListElement *e = new ListElement;
-    elements.insert(index, e);
+    elements.insert(elements.begin() + index, e);
 }
 
 void ListModel::updateCacheIndices(int start, int end)
 {
-    int count = elements.count();
+    int count = elementCount();
 
     if (end < 0 || end > count)
         end = count;
 
     for (int i = start; i < end; ++i) {
-        ListElement *e = elements.at(i);
+        ListElement *e = elements[i];
         if (ModelNodeMetaObject *mo = e->objectCache())
             mo->m_elementIndex = i;
     }
@@ -559,8 +562,7 @@ ListModel *ListModel::getListProperty(int elementIndex, const ListLayout::Role &
 
 void ListModel::updateTranslations()
 {
-    for (int index = 0; index != elements.count(); ++index) {
-        ListElement *e = elements[index];
+    for (ListElement *e : elements) {
         if (ModelNodeMetaObject *cache = e->objectCache()) {
             // TODO: more fine grained tracking?
             cache->updateValues();
@@ -750,7 +752,7 @@ QList<std::function<void()>> ListModel::remove(int index, int count)
             delete element;
         });
     }
-    elements.remove(index, count);
+    elements.erase(elements.begin() + index, elements.begin() + index + count);
     updateCacheIndices(index);
     return toDestroy;
 }
@@ -772,7 +774,7 @@ int ListModel::setOrCreateProperty(int elementIndex, const QString &key, const Q
 {
     int roleIndex = -1;
 
-    if (elementIndex >= 0 && elementIndex < elements.count()) {
+    if (elementIndex >= 0 && elementIndex < elementCount()) {
         ListElement *e = elements[elementIndex];
 
         const ListLayout::Role *r = m_layout->getRoleOrCreate(key, data);
@@ -793,7 +795,7 @@ int ListModel::setExistingProperty(int elementIndex, const QString &key, const Q
 {
     int roleIndex = -1;
 
-    if (elementIndex >= 0 && elementIndex < elements.count()) {
+    if (elementIndex >= 0 && elementIndex < elementCount()) {
         ListElement *e = elements[elementIndex];
         const ListLayout::Role *r = m_layout->getExistingRole(key);
         if (r)
@@ -2589,13 +2591,9 @@ void QQmlListModel::move(int from, int to, int n)
             realN = tfrom-tto;
         }
 
-        QPODVector<DynamicRoleModelNode *, 4> store;
-        for (int i=0 ; i < (realTo-realFrom) ; ++i)
-            store.append(m_modelObjects[realFrom+realN+i]);
-        for (int i=0 ; i < realN ; ++i)
-            store.append(m_modelObjects[realFrom+i]);
-        for (int i=0 ; i < store.count() ; ++i)
-            m_modelObjects[realFrom+i] = store[i];
+        std::rotate(m_modelObjects.begin() + realFrom,
+                    m_modelObjects.begin() + realFrom + realN,
+                    m_modelObjects.begin() + realTo + realN);
 
     } else {
         m_listModel->move(from, to, n);

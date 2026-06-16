@@ -23,6 +23,8 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <qqml.h>
 
+#include <vector>
+
 QT_REQUIRE_CONFIG(qml_list_model);
 
 QT_BEGIN_NAMESPACE
@@ -362,7 +364,7 @@ public:
 
     int elementCount() const
     {
-        return elements.count();
+        return int(elements.size());
     }
 
     enum class SetElement {WasJustInserted, IsCurrentlyUpdated};
@@ -385,7 +387,7 @@ public:
     QObject *getOrCreateModelObject(QQmlListModel *model, int elementIndex);
 
 private:
-    QPODVector<ListElement *, 4> elements;
+    std::vector<ListElement *> elements;
     ListLayout *m_layout;
 
     QQmlListModel *m_modelCache;
