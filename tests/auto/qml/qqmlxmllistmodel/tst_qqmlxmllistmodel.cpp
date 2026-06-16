@@ -10,6 +10,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlnetworkaccessmanagerfactory.h>
 
+#include <QtNetwork/qhttpheaders.h>
+
 #include <QtCore/qset.h>
 #include <QtCore/qsortfilterproxymodel.h>
 #include <QtCore/qtemporaryfile.h>
@@ -136,7 +138,7 @@ class CustomNetworkAccessManagerFactory : public QObject, public QQmlNetworkAcce
 {
     Q_OBJECT
 public:
-    QVariantMap lastSentHeaders;
+    QHttpHeaders lastSentHeaders;
 
 protected:
     QNetworkAccessManager *create(QObject *parent) override;
@@ -155,13 +157,8 @@ protected:
     QNetworkReply *createRequest(Operation op, const QNetworkRequest &req,
                                  QIODevice *outgoingData = 0) override
     {
-        if (m_factory) {
-            QVariantMap map;
-            const auto rawHeaderList = req.rawHeaderList();
-            for (const QByteArray &header : rawHeaderList)
-                map[header] = req.rawHeader(header);
-            m_factory->lastSentHeaders = map;
-        }
+        if (m_factory)
+            m_factory->lastSentHeaders = req.headers();
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
     }
 
@@ -321,12 +318,10 @@ void tst_QQmlXmlListModel::headers()
     QTRY_COMPARE_WITH_TIMEOUT(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
                               QQmlXmlListModel::Error, 10000);
 
-    QLatin1String expectedAcceptHeader = "application/xml,*/*"_L1;
-
     QCOMPARE(factory.lastSentHeaders.size(), 1);
-    QVariant acceptHeader = factory.lastSentHeaders["accept"];
-    QVERIFY(acceptHeader.isValid());
-    QCOMPARE(acceptHeader.toString(), expectedAcceptHeader);
+    QVERIFY(factory.lastSentHeaders.contains(QHttpHeaders::WellKnownHeader::Accept));
+    QCOMPARE(factory.lastSentHeaders.combinedValue(QHttpHeaders::WellKnownHeader::Accept),
+             "application/xml,*/*"_ba);
 }
 
 void tst_QQmlXmlListModel::source()
