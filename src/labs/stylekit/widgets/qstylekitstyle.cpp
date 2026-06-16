@@ -1262,7 +1262,6 @@ void QStyleKitStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt,
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing primitive with QCommonStyle: %d", int(pe));
         QCommonStyle::drawPrimitive(pe, opt, p, w);
         return;
     }
@@ -1412,7 +1411,6 @@ void QStyleKitStyle::drawControl(ControlElement element, const QStyleOption *opt
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing control with QCommonStyle: %d", int(element));
         QCommonStyle::drawControl(element, opt, p, w);
         return;
     }
@@ -1712,7 +1710,6 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating subElementRect with QCommonStyle: %d", int(r));
         return QCommonStyle::subElementRect(r, opt, widget);
     }
 
@@ -1984,7 +1981,6 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, drawing complex control with QCommonStyle: %d", int(cc));
         QCommonStyle::drawComplexControl(cc, opt, p, w);
         return;
     }
@@ -2237,8 +2233,6 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating subControlRect with QCommonStyle: %d %d",
-                 int(cc), int(sc));
         return QCommonStyle::subControlRect(cc, opt, sc, w);
     }
 
@@ -2613,7 +2607,6 @@ QSize QStyleKitStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 {
     Q_D(const QStyleKitStyle);
     if (!d->style) {
-        qWarning("QStyleKitStyle: No StyleKit style loaded, calculating sizeFromContents with QCommonStyle: %d", int(ct));
         return QCommonStyle::sizeFromContents(ct, opt, contentsSize, widget);
     }
 
