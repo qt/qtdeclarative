@@ -4,6 +4,7 @@
 
 #include <QString>
 #include <QLocale>
+#include "common/qqmljsdiagnosticmessage_p.h"
 #include "common/qqmljssourcelocation_p.h"
 #include "qqmljsast_p.h"
 
@@ -398,6 +399,17 @@ bool ArrayPattern::convertLiteralToAssignmentPattern(SourceLocation *errorLocati
     return true;
 }
 
+QList<DiagnosticMessage> ArrayPattern::warningsForAssignments() const
+{
+    QList<DiagnosticMessage> result;
+    for (auto *it = elements; it; it = it->next) {
+        if (!it->element)
+            continue;
+        result += it->element->warningsForAssignments();
+    }
+    return result;
+}
+
 bool ObjectPattern::convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage)
 {
     if (parseMode == Binding)
@@ -408,6 +420,14 @@ bool ObjectPattern::convertLiteralToAssignmentPattern(SourceLocation *errorLocat
     }
     parseMode = Binding;
     return true;
+}
+
+QList<DiagnosticMessage> ObjectPattern::warningsForAssignments() const
+{
+    QList<DiagnosticMessage> result;
+    for (auto *it = properties; it; it = it->next)
+        result += it->property->warningsForAssignments();
+    return result;
 }
 
 bool PatternElement::convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage)
@@ -463,6 +483,29 @@ bool PatternElement::convertLiteralToAssignmentPattern(SourceLocation *errorLoca
     return true;
 }
 
+QList<DiagnosticMessage> PatternElement::warningsForAssignments() const
+{
+    LeftHandSideExpression *lhs = nullptr;
+
+    if (bindingTarget) {
+        lhs = bindingTarget->leftHandSideExpressionCast();
+    } else if (initializer) {
+        ExpressionNode *init = initializer;
+        if (BinaryExpression *b = init->binaryExpressionCast()) {
+            if (b->op == QSOperator::Assign)
+                lhs = b->left->leftHandSideExpressionCast();
+        }
+    }
+
+    if (!lhs)
+        return { };
+
+    if (auto *p = lhs->patternCast())
+        return p->warningsForAssignments();
+
+    return { };
+}
+
 bool PatternProperty::convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage)
 {
     Q_ASSERT(type != SpreadElement);
@@ -479,6 +522,24 @@ bool PatternProperty::convertLiteralToAssignmentPattern(SourceLocation *errorLoc
     return PatternElement::convertLiteralToAssignmentPattern(errorLocation, errorMessage);
 }
 
+QList<DiagnosticMessage> PatternProperty::warningsForAssignments() const
+{
+    QList<DiagnosticMessage> result;
+
+    if (!colonToken.isValid()) {
+        if (const BinaryExpression *b =
+                    initializer ? initializer->binaryExpressionCast() : nullptr) {
+            if (b->op == QSOperator::Assign) {
+                result.append(QQmlJS::DiagnosticMessage{
+                        QString::fromLatin1("Invalid shorthand property initializer"), QtWarningMsg,
+                        b->operatorToken });
+            }
+        }
+    }
+
+    result += PatternElement::warningsForAssignments();
+    return result;
+}
 
 void Elision::accept0(BaseVisitor *visitor)
 {

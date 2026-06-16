@@ -2211,6 +2211,46 @@ void TestQmllint::dirtyJsSnippet_data()
             << u"console.log(a = 1)"_s
             << Result{ { { "Unqualified access"_L1, 1, 13 } } }
             << defaultOptions;
+    // PatternProperty::isValidAssignmentPattern: shorthand assignments in object literal warn.
+    QTest::newRow("badObjectInitializer")
+            << u"let x, y; let obj = { \nx = 42, \ny = 9001 }"_s
+            << Result{ {
+                       { "Invalid shorthand property initializer"_L1, 2, 3 },
+                       { "Invalid shorthand property initializer"_L1, 3, 3 },
+               } }
+            << defaultOptions;
+    // PatternProperty::isValidAssignmentPattern: trailing comma variant.
+    QTest::newRow("badObjectInitializerTrailingComma")
+            << u"let a; let obj = { \na = 1, }"_s
+            << Result{ { { "Invalid shorthand property initializer"_L1, 2, 3 } } }
+            << defaultOptions;
+    // ObjectPattern::isValidAssignmentPattern: nested objects — all shorthand assignments warn.
+    QTest::newRow("badObjectInitializerNested")
+            << u"let a, b; let obj = { \ninner: { \na = 1, \nb = 2 } }"_s
+            << Result{ {
+                       { "Invalid shorthand property initializer"_L1, 3, 3 },
+                       { "Invalid shorthand property initializer"_L1, 4, 3 },
+               } }
+            << defaultOptions;
+    // Nested object literal: shorthand assignment in inner object is invalid.
+    QTest::newRow("badObjectInitializerNestedSingle")
+            << u"let a; let obj = { \ninner: { \na = 1 } }"_s
+            << Result{ { { "Invalid shorthand property initializer"_L1, 3, 3 } } }
+            << defaultOptions;
+    // ArrayPattern::isValidAssignmentPattern: shorthand assignment inside array literal warns.
+    QTest::newRow("badObjectInitializerInArray")
+            << u"let a; let arr = [{ \na = 1 }]"_s
+            << Result{ { { "Invalid shorthand property initializer"_L1, 2, 3 } } }
+            << defaultOptions;
+    // PatternProperty::isValidAssignmentPattern: multiple warnings collected in same object.
+    QTest::newRow("badObjectInitializerMultiple")
+            << u"let a, b, c; let obj = { \na = 1, \nb = 2, \nc = 3 }"_s
+            << Result{ {
+                       { "Invalid shorthand property initializer"_L1, 2, 3 },
+                       { "Invalid shorthand property initializer"_L1, 3, 3 },
+                       { "Invalid shorthand property initializer"_L1, 4, 3 },
+               } }
+            << defaultOptions;
     QTest::newRow("codeAfterBreak")
             << u"for (;;) { break; return 1;}"_s
             << Result{ { { "Unreachable code"_L1, 1, 19 } } }
@@ -2573,6 +2613,32 @@ void TestQmllint::cleanJsSnippet_data()
                "// qmllint enable var-used-before-declaration\n"
                "let x = 3;"_s
             << defaultOptions;
+
+    // Assignment in destructuring binding pattern — NOT an object literal, no warning.
+    QTest::newRow("destructuringAssignmentInBinding")
+            << u"let { a = 42 } = {}; return a;"_s << defaultOptions;
+    // Default parameter in function — NOT an object literal, no warning.
+    QTest::newRow("defaultParameterInFunction")
+            << u"function g(a = 1) { return a; } return g();"_s << defaultOptions;
+    // Destructuring in for-of — NOT an object literal, no warning.
+    QTest::newRow("destructuringInForOf")
+            << u"for (const { a = 0 } of [{}]) { return a; }"_s << defaultOptions;
+    // Destructuring assignment (lhs of =) — NOT an object literal, no warning.
+    QTest::newRow("destructuringAssignmentLhs")
+            << u"let a; ({ a = 1 } = { }); return a;"_s << defaultOptions;
+    QTest::newRow("arrowFunctionDestructuringDefault")
+            << u"const f = ({ a = 0 } = {}) => a; return f();"_s << defaultOptions;
+    // Nested object literal: destructuring assignment is valid when done inside
+    // a nested expression (IIFE), not as an object literal shorthand initializer.
+    QTest::newRow("nestedObjectLiteralWithDestructuringAssignment")
+            << u"let obj = { inner: (function() { let a; ({ a = 1 } = {}); return a; })() }; return obj.inner;"_s
+            << defaultOptions;
+    // Colon-property in object literal — NOT a shorthand assignment, no warning.
+    QTest::newRow("objectLiteralColonProperty")
+            << u"let obj = { a: 1, b: 2 }; return obj;"_s << defaultOptions;
+    // Shorthand property (no initializer) — valid, no warning.
+    QTest::newRow("objectLiteralShorthandProperty")
+            << u"let a = 1; let obj = { a }; return obj;"_s << defaultOptions;
 }
 
 void TestQmllint::cleanJsSnippet()

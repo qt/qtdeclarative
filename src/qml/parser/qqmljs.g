@@ -435,6 +435,16 @@ protected:
     QList<DiagnosticMessage> diagnostic_messages;
     bool m_identifierInsertionEnabled = false;
     bool m_incompleteBindingsEnabled = false;
+
+    // Deferred diagnostics from ObjectLiteral reductions that may later be
+    // reinterpreted as destructuring patterns via convertLiteralToAssignmentPattern().
+    // Only flushed to diagnostic_messages at end of parse if the node's parseMode
+    // is still Literal (i.e. it was never converted to a pattern).
+    struct PendingCoverDiagnostic {
+        AST::ObjectPattern *node = nullptr;
+        DiagnosticMessage diagnostic;
+    };
+    QList<PendingCoverDiagnostic> m_pendingCoverDiagnostics;
 };
 
 } // end of namespace QQmlJS
@@ -630,6 +640,7 @@ bool Parser::parse(int startToken)
 
     tos = -1;
     program = 0;
+    m_pendingCoverDiagnostics.clear();
 
     do {
         if (++tos == stack_size)
@@ -677,6 +688,10 @@ bool Parser::parse(int startToken)
                 loc(1) = yylloc;
             } else {
               --tos;
+              for (const auto &pending : m_pendingCoverDiagnostics) {
+                  if (pending.node->parseMode == AST::Pattern::Literal)
+                      diagnostic_messages.append(pending.diagnostic);
+              }
               return ! hadErrors;
             }
         } else if (action < 0) {
@@ -2218,6 +2233,8 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_RBRACE;
         AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(3);
+        for (const DiagnosticMessage &diag : node->warningsForAssignments())
+            m_pendingCoverDiagnostics.append({node, diag});
         sym(1).Node = node;
     } break;
 ./
@@ -2228,6 +2245,8 @@ ObjectLiteral: T_LBRACE PropertyDefinitionList T_COMMA T_RBRACE;
         AST::ObjectPattern *node = new (pool) AST::ObjectPattern(sym(2).PatternPropertyList->finish());
         node->lbraceToken = loc(1);
         node->rbraceToken = loc(4);
+        for (const DiagnosticMessage &diag : node->warningsForAssignments())
+            m_pendingCoverDiagnostics.append({node, diag});
         sym(1).Node = node;
     } break;
 ./
@@ -5128,6 +5147,11 @@ ExportSpecifier: IdentifierName T_AS IdentifierName;
 
         const QString msg = QCoreApplication::translate("QQmlParser", "Syntax error");
         diagnostic_messages.append(compileError(token_buffer[0].loc, msg));
+    }
+
+    for (const auto &pending : m_pendingCoverDiagnostics) {
+        if (pending.node->parseMode == AST::Pattern::Literal)
+            diagnostic_messages.append(pending.diagnostic);
     }
 
     return false;

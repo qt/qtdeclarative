@@ -19,6 +19,7 @@
 #include "qqmljsastvisitor_p.h"
 #include "qqmljsglobal_p.h"
 
+#include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qtaggedpointer.h>
@@ -730,6 +731,7 @@ public:
     };
     Pattern *patternCast() override;
     virtual bool convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage) = 0;
+    virtual QList<DiagnosticMessage> warningsForAssignments() const = 0;
     ParseMode parseMode = Literal;
 };
 
@@ -753,6 +755,7 @@ public:
     bool isValidArrayLiteral(SourceLocation *errorLocation = nullptr) const;
 
     bool convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage) override;
+    QList<DiagnosticMessage> warningsForAssignments() const override;
 
 // attributes
     PatternElementList *elements = nullptr;
@@ -782,6 +785,7 @@ public:
     { return rbraceToken; }
 
     bool convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage) override;
+    QList<DiagnosticMessage> warningsForAssignments() const override;
 
 // attributes
     PatternPropertyList *properties = nullptr;
@@ -974,6 +978,7 @@ public:
 
     void accept0(BaseVisitor *visitor) override;
     virtual bool convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage);
+    virtual QList<DiagnosticMessage> warningsForAssignments() const;
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken.isValid() ? identifierToken : (bindingTarget ? bindingTarget->firstSourceLocation() : initializer->firstSourceLocation()); }
@@ -1079,6 +1084,7 @@ public:
 
     void boundNames(BoundNames *names) override;
     bool convertLiteralToAssignmentPattern(SourceLocation *errorLocation, QString *errorMessage) override;
+    QList<DiagnosticMessage> warningsForAssignments() const override;
 
 // attributes
     PropertyName *name;
