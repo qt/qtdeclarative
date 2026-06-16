@@ -1232,7 +1232,7 @@ void QQmlEnginePrivate::cleanupScarceResources()
 */
 void QQmlEngine::addImportPath(const QString& path)
 {
-    QQmlTypeLoader::get(this)->addImportPath(path);
+    QQmlTypeLoader::get(this)->addImportPath(path, QQmlTypeLoader::PrependPath);
 }
 
 /*!
@@ -1286,7 +1286,7 @@ void QQmlEngine::setImportPathList(const QStringList &paths)
 */
 void QQmlEngine::addPluginPath(const QString& path)
 {
-    QQmlTypeLoader::get(this)->addPluginPath(path);
+    QQmlTypeLoader::get(this)->addPluginPath(path, QQmlTypeLoader::PrependPath);
 }
 
 /*!

@@ -246,13 +246,15 @@ public:
     void setProfiler(QQmlProfiler *profiler);
 #endif // QT_CONFIG(qml_debug)
 
+    enum AddPathMode { PrependPath, AppendPath };
+
     QStringList importPathList() const
     {
         QQmlTypeLoaderConfiguredDataConstPtr data(&m_data);
         return data->importPaths;
     }
     void setImportPathList(const QStringList &paths);
-    void addImportPath(const QString& dir);
+    void addImportPath(const QString& dir, AddPathMode mode);
 
     QStringList pluginPathList() const
     {
@@ -260,7 +262,7 @@ public:
         return data->pluginPaths;
     }
     void setPluginPathList(const QStringList &paths);
-    void addPluginPath(const QString& path);
+    void addPluginPath(const QString& path, AddPathMode mode);
 
     void setPluginInitialized(const QString &plugin)
     {
