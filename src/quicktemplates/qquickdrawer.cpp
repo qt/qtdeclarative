@@ -470,7 +470,6 @@ bool QQuickDrawerPrivate::blockInput(QQuickItem *item, const QPointF &point) con
 bool QQuickDrawerPrivate::handlePress(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
     offset = 0;
-    velocityCalculator.startMeasuring(point, timestamp);
 
     return QQuickPopupPrivate::handlePress(item, point, timestamp)
         || (interactive && popupItem == item);
@@ -493,7 +492,7 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
     return isGrabbed;
 }
 
-bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
+bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QEventPoint &point)
 {
     auto cleanup = qScopeGuard([this] {
         popupItem->setKeepMouseGrab(false);
@@ -503,18 +502,23 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
     });
     if (pressPoint.isNull())
         return false;
-    if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
-        velocityCalculator.reset();
-        return QQuickPopupPrivate::handleRelease(item, point, timestamp);
-    }
+    if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab())
+        return QQuickPopupPrivate::handleRelease(item, point);
 
-    velocityCalculator.stopMeasuring(point, timestamp);
+    const QPointF scenePosition = point.scenePosition();
     Qt::Edge effEdge = effectiveEdge();
+
+    // QEventPoint::velocity() might work here, but we've been using
+    // velocity of the whole press-to-release interaction
+    const qreal elapsed = (point.timestamp() - point.pressTimestamp()) / qreal(1000); // seconds
+    const QPointF delta = scenePosition - point.scenePressPosition();
     qreal velocity = 0;
-    if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
-        velocity = velocityCalculator.velocity().x();
-    else
-        velocity = velocityCalculator.velocity().y();
+    if (!qFuzzyIsNull(elapsed)) {
+        if (effEdge == Qt::LeftEdge || effEdge == Qt::RightEdge)
+            velocity = delta.x() / elapsed;
+        else
+            velocity = delta.y() / elapsed;
+    }
 
     // the velocity is calculated so that swipes from left to right
     // and top to bottom have positive velocity, and swipes from right
@@ -534,25 +538,25 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
     } else {
         switch (effEdge) {
         case Qt::LeftEdge:
-            if (point.x() - pressPoint.x() > 0)
+            if (scenePosition.x() - pressPoint.x() > 0)
                 transitionManager.transitionEnter();
             else
                 transitionManager.transitionExit();
             break;
         case Qt::RightEdge:
-            if (point.x() - pressPoint.x() < 0)
+            if (scenePosition.x() - pressPoint.x() < 0)
                 transitionManager.transitionEnter();
             else
                 transitionManager.transitionExit();
             break;
         case Qt::TopEdge:
-            if (point.y() - pressPoint.y() > 0)
+            if (scenePosition.y() - pressPoint.y() > 0)
                 transitionManager.transitionEnter();
             else
                 transitionManager.transitionExit();
             break;
         case Qt::BottomEdge:
-            if (point.y() - pressPoint.y() < 0)
+            if (scenePosition.y() - pressPoint.y() < 0)
                 transitionManager.transitionEnter();
             else
                 transitionManager.transitionExit();
@@ -567,8 +571,6 @@ bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, 
 void QQuickDrawerPrivate::handleUngrab()
 {
     QQuickPopupPrivate::handleUngrab();
-
-    velocityCalculator.reset();
 }
 
 static QList<QQuickStateAction> prepareTransition(QQuickDrawer *drawer, QQuickTransition *transition, qreal to)

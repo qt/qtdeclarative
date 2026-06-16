@@ -18,7 +18,6 @@
 
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
-#include <QtQuickTemplates2/private/qquickvelocitycalculator_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +48,7 @@ public:
 
     bool handlePress(QQuickItem* item, const QPointF &point, ulong timestamp) override;
     bool handleMove(QQuickItem* item, const QPointF &point, ulong timestamp) override;
-    bool handleRelease(QQuickItem* item, const QPointF &point, ulong timestamp) override;
+    bool handleRelease(QQuickItem* item, const QEventPoint &point) override;
     void handleUngrab() override;
 
     bool prepareEnterTransition() override;
@@ -65,7 +64,6 @@ public:
     qreal offset = 0;
     qreal position = 0;
     qreal dragMargin = 0;
-    QQuickVelocityCalculator velocityCalculator;
     bool delayedEnterTransition = false;
 };
 

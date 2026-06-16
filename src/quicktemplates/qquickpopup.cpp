@@ -613,16 +613,16 @@ bool QQuickPopupPrivate::handleMove(QQuickItem *item, const QPointF &point, ulon
     return blockInput(item, point);
 }
 
-bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
+bool QQuickPopupPrivate::handleRelease(QQuickItem *item, const QEventPoint &point)
 {
-    Q_UNUSED(timestamp);
+    const QPointF scenePosition = point.scenePosition();
     if (item != popupItem && !contains(pressPoint))
-        tryClose(point, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
+        tryClose(scenePosition, QQuickPopup::CloseOnReleaseOutside | QQuickPopup::CloseOnReleaseOutsideParent);
     pressPoint = QPointF();
     outsidePressed = false;
     outsideParentPressed = false;
     touchId = -1;
-    return blockInput(item, point);
+    return blockInput(item, scenePosition);
 }
 
 void QQuickPopupPrivate::handleUngrab()
@@ -646,7 +646,7 @@ bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
     case QEvent::MouseMove:
         return handleMove(item, event->scenePosition(), event->timestamp());
     case QEvent::MouseButtonRelease:
-        return handleRelease(item, event->scenePosition(), event->timestamp());
+        return handleRelease(item, event->point(0));
     default:
         Q_UNREACHABLE_RETURN(false);
     }
@@ -748,7 +748,7 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
             case QEventPoint::Updated:
                 return handleMove(item, point.scenePosition(), event->timestamp());
             case QEventPoint::Released:
-                return handleRelease(item, point.scenePosition(), event->timestamp());
+                return handleRelease(item, point);
             default:
                 break;
             }
