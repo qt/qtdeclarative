@@ -252,7 +252,7 @@ wrapComponentInLoader(const OptionalVersionedTextDocumentIdentifier &textDocumen
 
     CodeAction action;
     action.kind = CodeActionKind::RefactorRewrite;
-    action.title = "Wrap Component in Loader";
+    action.title = Tr::tr("Wrap Component in Loader").toUtf8();
     action.edit = edit;
     return { action };
 }
