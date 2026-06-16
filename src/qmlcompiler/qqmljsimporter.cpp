@@ -221,10 +221,8 @@ static QString resolvePreferredPath(
     // Host file system path. This should be rare. We don't generate it.
     const QFileInfo f(ensureSlashQmldir(prefer));
     const QString canonical = f.canonicalFilePath();
-    if (canonical.isEmpty()) {
-        qWarning() << "No qmldir at" << prefer;
+    if (canonical.isEmpty())
         return qmldirPath;
-    }
     return canonical;
 }
 
