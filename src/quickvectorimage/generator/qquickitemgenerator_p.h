@@ -18,6 +18,8 @@
 #include "qquickgenerator_p.h"
 #include "qquicknodeinfo_p.h"
 
+#include <QtCore/qstack.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickItem;
@@ -31,6 +33,9 @@ public:
     QQuickItem *takeRootItem();
 
     QString generateNodeBase(const NodeInfo &info, const QString &idSuffix = QString{}) override;
+    bool generateRootNode(const StructureNodeInfo &info) override;
+    bool generateStructureNode(const StructureNodeInfo &info) override;
+    void generateUseNode(const UseNodeInfo &info) override;
     bool generateDefsNode(const StructureNodeInfo &info) override;
     void generateDefsInstantiationNode(const StructureNodeInfo &info) override;
     void generateImageNode(const ImageNodeInfo &info) override;
@@ -38,10 +43,7 @@ public:
                       const QRectF &overrideBoundingRect = QRectF{}) override;
     void generateNode(const NodeInfo &info) override;
     void generateTextNode(const TextNodeInfo &info) override;
-    void generateUseNode(const UseNodeInfo &info) override;
     void generateFilterNode(const FilterNodeInfo &info) override;
-    bool generateStructureNode(const StructureNodeInfo &info) override;
-    bool generateRootNode(const StructureNodeInfo &info) override;
     bool generateMaskNode(const MaskNodeInfo &info) override;
     bool generateMarkerNode(const MarkerNodeInfo &info) override;
     bool generatePatternNode(const PatternNodeInfo &info) override;
@@ -52,6 +54,12 @@ public:
 
 private:
     QQuickItem *m_rootItem = nullptr;
+    QStack<QQuickItem *> m_itemStack;
+    quint32 m_nodeCounter = 0;
+
+    void pushItem(QQuickItem *item);
+    QQuickItem *popItem();
+    QQuickItem *currentItem() const;
 };
 
 QT_END_NAMESPACE
