@@ -1808,6 +1808,7 @@ bool QQuickQmlGenerator::generateMaskNode(const MaskNodeInfo &info)
         m_indentLevel++;
 
         stream() << "id: " << info.id; // This is in a different scope, so we can reuse the ID
+        stream() << "visible: false";
         stream() << "sourceComponent: " << info.id << "_container";
         stream() << "width: item !== null ? item.originalBounds.width : 0";
         stream() << "height: item !== null ? item.originalBounds.height : 0";
