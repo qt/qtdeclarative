@@ -16,7 +16,6 @@
 #include <private/qqmldata_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmlboundsignal_p.h>
-#include <private/qqmlpreviewdiff_p.h>
 #include <private/qqmlpreviewobjectpatch_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4executablecompilationunit_p.h>
@@ -29,12 +28,6 @@
 #include <QtGui/qcolor.h>
 
 using namespace QV4::CompiledData;
-
-static qsizetype countByType(const CompilationUnitDiff &diff, ChangeType type)
-{
-    return std::count_if(diff.changes.begin(), diff.changes.end(),
-                         [type](const Change &c) { return c.type == type; });
-}
 
 class tst_QQmlPreviewObjectPatch : public QQmlDataTest
 {
@@ -271,13 +264,7 @@ static bool updateObjects(std::vector<QObject *> &objects,
                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit)
 {
-    const auto diff = diffCompilationUnits(oldUnit->baseCompilationUnit()->unitData(),
-                                           newUnit->baseCompilationUnit()->unitData());
-
-    // Diff is tested elsewhere.
-    Q_ASSERT(diff.success);
-
-    if (QQmlPreview::applyDiff(objects, diff, oldUnit, newUnit)) {
+    if (QQmlPreview::applyDiff(objects, oldUnit, newUnit)) {
         QQmlMetaType::deepClearCompositeType(oldUnit->baseCompilationUnit());
         QQmlPreview::refreshBindings(oldUnit);
         return true;
@@ -307,13 +294,6 @@ void tst_QQmlPreviewObjectPatch::granularConstantUpdate()
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
-
-    // Verify the diff has the expected structure (test-data sanity check).
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    // Only `count` changed; `label` is identical and must not show as BindingChanged.
-    QCOMPARE(countByType(diff, ChangeType::BindingChanged), 1);
 
     // Apply the update to the live object — no new QObject created.
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
@@ -368,12 +348,6 @@ void tst_QQmlPreviewObjectPatch::granularPropertyAdditionWithStash()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    // Verify the diff has the expected structure (test-data sanity check).
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    QCOMPARE(countByType(diff, ChangeType::PropertyAdded), 1);
-
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
@@ -400,12 +374,6 @@ void tst_QQmlPreviewObjectPatch::granularPropertyRemovalWithStash()
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
-
-    // Verify the diff has the expected structure (test-data sanity check).
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    QCOMPARE(countByType(diff, ChangeType::PropertyRemoved), 1);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
@@ -434,14 +402,6 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionAdd()
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
-
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    // One FunctionAdded change at unit level (objectIndex == -1) is expected.
-    // The per-object function association is detected via ObjectChanged (which
-    // carries the updated functionOffsetTable), not as a separate FunctionAdded event.
-    QCOMPARE(countByType(diff, ChangeType::FunctionAdded), 1);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
@@ -475,12 +435,6 @@ void tst_QQmlPreviewObjectPatch::updateObjectsGeneratorFunctionAdd()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    // Two functions added (gen + runGen), both at unit level.
-    QCOMPARE(countByType(diff, ChangeType::FunctionAdded), 2);
-
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
@@ -512,14 +466,6 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionChange()
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
 
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-
-    // One FunctionChanged at unit level and one ObjectChanged for the object-level function table.
-    QCOMPARE(countByType(diff, ChangeType::FunctionChanged), 1);
-    QCOMPARE(countByType(diff, ChangeType::ObjectChanged), 1);
-
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
 
@@ -547,12 +493,6 @@ void tst_QQmlPreviewObjectPatch::updateObjectsFunctionRemove()
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComponent)->compilationUnit();
     const auto newExecUnit = QQmlComponentPrivate::get(&newComponent)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
-
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    QCOMPARE(countByType(diff, ChangeType::FunctionRemoved), 1);
-    QCOMPARE(countByType(diff, ChangeType::ObjectChanged), 1);
 
     auto objects = objectsForCompilationUnit(&engine, oldExecUnit);
     QVERIFY(updateObjects(objects, oldExecUnit, newExecUnit));
@@ -1604,13 +1544,6 @@ void tst_QQmlPreviewObjectPatch::signalHandlerWithPropertyAdd()
     const auto oldExecUnit = QQmlComponentPrivate::get(&oldComp)->compilationUnit();
     const auto newExecUnit = QQmlComponentPrivate::get(&newComp)->compilationUnit();
     QVERIFY(oldExecUnit && newExecUnit);
-
-    // Verify the diff contains both PropertyAdded and BindingChanged.
-    const auto diff = diffCompilationUnits(oldExecUnit->baseCompilationUnit()->unitData(),
-                                           newExecUnit->baseCompilationUnit()->unitData());
-    QVERIFY(diff.success);
-    QVERIFY(countByType(diff, ChangeType::PropertyAdded) >= 1);
-    QVERIFY(countByType(diff, ChangeType::BindingChanged) >= 1);
 
     // Apply — this used to assert in QQmlPropertyPrivate::setBinding()
     // because the signal handler binding had a null targetObject.

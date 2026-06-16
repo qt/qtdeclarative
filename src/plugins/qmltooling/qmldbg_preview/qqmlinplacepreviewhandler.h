@@ -18,13 +18,6 @@
 
 #include "qqmlpreviewhandler.h"
 
-#include <private/qqmlpreviewdiff_p.h>
-
-#include <QtQml/qqmlcomponent.h>
-
-#include <memory>
-#include <vector>
-
 QT_BEGIN_NAMESPACE
 
 class QQmlInPlacePreviewHandler : public QQmlPreviewHandler

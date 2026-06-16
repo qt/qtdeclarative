@@ -16,10 +16,8 @@
 // We mean it.
 //
 
-#include <private/qqmlpreviewdiff_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
-#include <QtQml/qqmlengine.h>
 #include <QtCore/qobject.h>
 
 #include <vector>
@@ -28,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlPreview {
 
-bool applyDiff(std::vector<QObject *> &objects, const QV4::CompiledData::CompilationUnitDiff &diff,
+bool applyDiff(std::vector<QObject *> &objects,
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &oldUnit,
                const QQmlRefPointer<QV4::ExecutableCompilationUnit> &newUnit);
 
