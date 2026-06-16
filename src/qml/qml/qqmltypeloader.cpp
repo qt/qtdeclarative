@@ -1266,17 +1266,17 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
 
     const bool isPluginApplication = QCoreApplication::testAttribute(Qt::AA_PluginApplication);
 
-    auto addEnvImportPath = [this, isPluginApplication](const char *var) {
+    auto addEnvPath = [this, isPluginApplication](const char *var, auto addPath) {
         if (Q_UNLIKELY(!isPluginApplication && !qEnvironmentVariableIsEmpty(var))) {
             const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
             for (int ii = paths.size() - 1; ii >= 0; --ii)
-                addImportPath(paths.at(ii));
+                (this->*addPath)(paths.at(ii));
         }
     };
 
     // env import paths
-    addEnvImportPath("QML_IMPORT_PATH");
-    addEnvImportPath("QML2_IMPORT_PATH");
+    addEnvPath("QML_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
+    addEnvPath("QML2_IMPORT_PATH", &QQmlTypeLoader::addImportPath);
 
     addImportPath(QStringLiteral("qrc:/qt/qml"));
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
@@ -1284,18 +1284,11 @@ QQmlTypeLoader::QQmlTypeLoader(QV4::ExecutionEngine *engine)
     if (!isPluginApplication)
         addImportPath(QCoreApplication::applicationDirPath());
 
-    auto addEnvPluginPath = [this, isPluginApplication](const char *var) {
-        if (Q_UNLIKELY(!isPluginApplication && !qEnvironmentVariableIsEmpty(var))) {
-            const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
-            for (int ii = paths.size() - 1; ii >= 0; --ii)
-                addPluginPath(paths.at(ii));
-        }
-    };
+    addEnvPath("QML_PLUGIN_PATH", &QQmlTypeLoader::addPluginPath);
 
-    addEnvPluginPath("QML_PLUGIN_PATH");
 #if defined(Q_OS_ANDROID)
     addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"));
-    addEnvPluginPath("QT_BUNDLED_LIBS_PATH");
+    addEnvPath("QT_BUNDLED_LIBS_PATH", &QQmlTypeLoader::addPluginPath);
 #elif defined(Q_OS_MACOS)
     // Add the main bundle's Resources/qml directory as an import path, so that QML modules are
     // found successfully when running the app from its build dir.
