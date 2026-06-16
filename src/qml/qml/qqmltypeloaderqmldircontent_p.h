@@ -48,6 +48,7 @@ public:
 
     QString qmldirLocation() const { return m_location; }
     QString preferredPath() const { return m_parser.preferredPath(); }
+    QString linkTarget() const { return m_parser.linkTarget(); }
 
     bool hasRedirection() const
     {
