@@ -31,18 +31,9 @@ class tst_QQuickFontDialogImpl : public QQmlDataTest
 
 public:
     tst_QQuickFontDialogImpl();
-    static void initMain()
-    {
-        // We need to set this attribute.
-        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
-        // We don't want to run this test for every style, as each one will have
-        // different ways of implementing the dialogs.
-        // For now we only test one style.
-        // TODO: use Basic
-        QQuickStyle::setStyle("Fusion");
-    }
 
 private slots:
+    void initTestCase() override;
     void defaults();
     void changingWritingSystem();
     void clickAroundInTheFamilyListView();
@@ -118,6 +109,12 @@ private:
 tst_QQuickFontDialogImpl::tst_QQuickFontDialogImpl()
     : QQmlDataTest(QT_QMLTEST_DATADIR, FailOnWarningsPolicy::DoNotFailOnWarnings)
 {
+}
+
+void tst_QQuickFontDialogImpl::initTestCase()
+{
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+    QQmlDataTest::initTestCase();
 }
 
 void tst_QQuickFontDialogImpl::defaults()
@@ -681,6 +678,6 @@ void tst_QQuickFontDialogImpl::checkFrameless()
     QVERIFY(dialogHelper.popupWindow()->flags().testFlag(Qt::FramelessWindowHint));
 }
 
-QTEST_MAIN(tst_QQuickFontDialogImpl)
+QTEST_QUICKDIALOGS_MAIN(tst_QQuickFontDialogImpl)
 
 #include "tst_qquickfontdialogimpl.moc"
