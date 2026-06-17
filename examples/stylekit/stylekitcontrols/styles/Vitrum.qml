@@ -352,6 +352,14 @@ Style {
             }
             indicator {
                 implicitWidth: myTheme.controlHeight
+                foreground.minimumWidth: 0
+                foreground.minimumHeight: 50
+            }
+            handle {
+                leftMargin: 0
+                rightMargin: 0
+                topMargin: 8
+                bottomMargin: 8
             }
         }
     }

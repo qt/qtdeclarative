@@ -96,7 +96,7 @@ void QQStyleKitDelegateContainer::updateImplicitSize()
          * but the container should still report the style's implicit size so
          * that it reserves the correct space in a layout. */
         implicitWidth = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->implicitWidth());
-        implicitHeight = m_delegateProperties->implicitHeight();
+        implicitHeight = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->implicitHeight());
     }
 
     setImplicitWidth(implicitWidth);
