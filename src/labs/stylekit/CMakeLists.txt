@@ -93,8 +93,9 @@ if(TARGET Qt::Widgets)
     qt_internal_extend_target(LabsStyleKit
         SOURCES
             widgets/qstylekitstyle.h widgets/qstylekitstyle_p.h widgets/qstylekitstyle.cpp
-        LIBRARIES
+        PUBLIC_LIBRARIES
             Qt::Widgets
+        LIBRARIES
             Qt::WidgetsPrivate
             Qt::Qml
             Qt::QmlPrivate
