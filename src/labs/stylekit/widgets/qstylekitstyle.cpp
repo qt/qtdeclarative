@@ -65,6 +65,7 @@
 #include <QtGui/qpainterstateguard.h>
 #include <QtGui/qstylehints.h>
 #include <QtQml/private/qqmlcomponent_p.h>
+#include <QtQml/qqmlengine.h>
 #include <QtLabsStyleKit/private/qqstylekit_p.h>
 #include <QtLabsStyleKit/private/qqstylekitcontrolproperties_p.h>
 #include <QtLabsStyleKit/private/qqstylekitstyle_p.h>

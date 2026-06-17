@@ -7,7 +7,6 @@
 
 #include <QtWidgets/qcommonstyle.h>
 #include <QtLabsStyleKit/qtlabsstylekitexports.h>
-#include <QtQml/qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
 
