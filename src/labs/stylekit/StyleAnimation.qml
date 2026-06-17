@@ -34,7 +34,7 @@ ParallelAnimation {
     property bool animateIndicatorScaleAndRotation: false
 
     readonly property string __geometryProps:
-        "$.implicitWidth, $.implicitHeight, "
+        "$.width, $.height, "
         + "$.margins, $.leftMargin, $.rightMargin, $.topMargin, $.bottomMargin, "
         + "$.minimumWidth, $.minimumHeight, "
     readonly property string __colorProps:

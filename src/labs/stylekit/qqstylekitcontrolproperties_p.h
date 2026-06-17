@@ -235,8 +235,8 @@ signals:
 class Q_LABSSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitPropertyGroup
 {
     Q_OBJECT
-    Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
-    Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight NOTIFY heightChanged FINAL)
     Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged FINAL)
     Q_PROPERTY(qreal minimumHeight READ minimumHeight WRITE setMinimumHeight NOTIFY minimumHeightChanged FINAL)
     Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged FINAL)
@@ -294,11 +294,11 @@ public:
     qreal rotation() const;
     void setRotation(qreal rotation);
 
-    qreal implicitWidth() const;
-    void setImplicitWidth(qreal width);
+    qreal width() const;
+    void setWidth(qreal width);
 
-    qreal implicitHeight() const;
-    void setImplicitHeight(qreal height);
+    qreal height() const;
+    void setHeight(qreal height);
 
     qreal minimumWidth() const;
     void setMinimumWidth(qreal width);
@@ -371,8 +371,8 @@ signals:
     void imageChanged();
     void gradientChanged();
     void colorImageChanged();
-    void implicitWidthChanged();
-    void implicitHeightChanged();
+    void widthChanged();
+    void heightChanged();
     void minimumWidthChanged();
     void minimumHeightChanged();
     void marginsChanged();

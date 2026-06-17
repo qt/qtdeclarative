@@ -31,8 +31,8 @@ Style {
         }
 
         handle {
-            implicitWidth: 25
-            implicitHeight: 25
+            width: 25
+            height: 25
             radius: 25
             gradient: Gradient {
                 GradientStop { position: 0.0; color: Qt.alpha("black", 0.0)}
@@ -71,8 +71,8 @@ Style {
         // 'radioButton', 'switch', etc. This is a good place to style the properties they all
         // have in common. Any properties not set here will fall back to those defined in 'control'.
         background {
-            implicitWidth: 100
-            implicitHeight: 30
+            width: 100
+            height: 30
             opacity: 0.8
             radius: 8
 
@@ -121,7 +121,7 @@ Style {
     }
 
     comboBox {
-        background.implicitWidth: 200
+        background.width: 200
         pressed.background.scale: 1.0
     }
 
@@ -132,49 +132,50 @@ Style {
         padding: 20
         background {
             border.width: 0
-            implicitWidth: 200
-            implicitHeight: 200
+            width: 200
+            height: 200
+            shadow.visible: false
         }
     }
 
     groupBox {
         background.topMargin: 20
-        background.implicitHeight: 30
+        background.height: 30
         text.bold: true
     }
 
     menu {
-        background.implicitWidth: 120
+        background.width: 120
     }
 
     menuBar {
         padding: 1
-        background.implicitHeight: 30
+        background.height: 30
     }
 
     menuBarItem {
         background {
-            implicitHeight: 30
-            implicitWidth: 30
+            height: 30
+            width: 30
         }
     }
 
     menuItem {
-        background.implicitHeight: 30
+        background.height: 30
     }
 
     menuSeparator {
         padding: 0
 
         background {
-            implicitWidth: 120
-            implicitHeight: 1
+            width: 120
+            height: 1
             border.width: 0
         }
 
         indicator {
-            implicitHeight: 1
-            implicitWidth: 120
+            height: 1
+            width: 120
             border.width: 0
 
             foreground.margins: 0
@@ -207,9 +208,9 @@ Style {
     }
 
     slider {
-        background.implicitWidth: 180
+        background.width: 180
         indicator {
-            implicitHeight: 8
+            height: 8
             radius: 8
             foreground {
                 radius: 8
@@ -217,12 +218,12 @@ Style {
         }
         vertical {
             background {
-                implicitWidth: 50
-                implicitHeight: 150
+                width: 50
+                height: 150
             }
 
             indicator {
-                implicitWidth: 8
+                width: 8
             }
         }
     }
@@ -230,16 +231,16 @@ Style {
     spinBox {
         padding: 4
         background {
-            implicitWidth: 100
+            width: 100
             scale: 1
         }
-        indicator.implicitHeight: 24
+        indicator.height: 24
     }
 
     switchControl {
         indicator {
-            implicitWidth: 60
-            implicitHeight: 30
+            width: 60
+            height: 30
             radius: 5
             foreground.radius: 4
         }
@@ -253,7 +254,7 @@ Style {
         // 'textInput' is the fallback for all text based controls, such as 'textField', 'textArea',
         // and 'searchField'. Any properties not set here will fall back to those defined in 'control'.
         background {
-            implicitWidth: 200
+            width: 200
         }
     }
 
@@ -273,35 +274,35 @@ Style {
         control {
             padding: 2
             background {
-                implicitHeight: 15
+                height: 15
             }
             indicator {
-                implicitWidth: 15
-                implicitHeight: 15
+                width: 15
+                height: 15
             }
             handle {
-                implicitWidth: 15
-                implicitHeight: 15
+                width: 15
+                height: 15
             }
         }
 
         textInput {
-            background.implicitWidth: 100
+            background.width: 100
         }
 
         abstractButton.background {
-            implicitWidth: 60
+            width: 60
         }
 
         switchControl {
-            background.implicitWidth: 40
-            indicator.implicitWidth: 40
-            indicator.implicitHeight: 20
+            background.width: 40
+            indicator.width: 40
+            indicator.height: 20
         }
 
         slider {
-            background.implicitWidth: 100
-            indicator.implicitHeight: 8
+            background.width: 100
+            indicator.height: 8
         }
 
         pane {
@@ -344,8 +345,8 @@ Style {
         // The 'controlType' can be any number between 0 and 100000.
         controlType: fancyButton
         background {
-            implicitWidth: 120
-            implicitHeight: 30
+            width: 120
+            height: 30
             radius: 0
         }
     }
@@ -357,7 +358,7 @@ Style {
     //
     // Within a theme, you can override any properties that should have different values
     // when the theme is applied. Typically, a style configures structural properties
-    // such as implicit size, padding, and radii, while a theme specifies colors. However,
+    // such as width, height, padding, and radii, while a theme specifies colors. However,
     // this is not a limitation — any properties can be overridden by a theme. Properties
     // not set in the theme will fall back to those defined in the style.
 
@@ -669,7 +670,7 @@ Style {
                 transition: null
 
                 background {
-                    implicitHeight: 40
+                    height: 40
                     shadow.color: "transparent"
                     color: "lightgray"
                     border.color: "black"
@@ -678,8 +679,8 @@ Style {
                 }
 
                 indicator {
-                    implicitWidth: 30
-                    implicitHeight: 30
+                    width: 30
+                    height: 30
                     color: "ghostwhite"
                     border.color: "black"
                     foreground.margins: 4
@@ -690,8 +691,8 @@ Style {
                 handle {
                     border.color: "black"
                     border.width: 2
-                    implicitWidth: 30
-                    implicitHeight: 30
+                    width: 30
+                    height: 30
                     radius: 30
                     gradient: null
                 }
@@ -723,20 +724,20 @@ Style {
 
             slider {
                 indicator {
-                    implicitWidth: 180
-                    implicitHeight: 12
+                    width: 180
+                    height: 12
                     color: "ghostwhite"
                     border.width: 1
                     foreground.color: "black"
                 }
                 vertical {
                     background {
-                        implicitWidth: 12
-                        implicitHeight: 180
+                        width: 12
+                        height: 180
                     }
                     indicator {
-                        implicitWidth: 12
-                        implicitHeight: 180
+                        width: 12
+                        height: 180
                     }
                 }
             }
@@ -756,14 +757,14 @@ Style {
                     radius: 16
                     margins: 0
                     border.width: 2
-                    implicitWidth: 60
-                    implicitHeight: 40
+                    width: 60
+                    height: 40
                     foreground.color: "transparent"
                 }
 
                 handle {
-                    implicitWidth: 20
-                    implicitHeight: 30
+                    width: 20
+                    height: 30
                     border.width: 2
                     color: "white"
                     margins: 6
@@ -799,10 +800,10 @@ Style {
             }
 
             scrollBar {
-                background.implicitWidth: 15
-                background.implicitHeight: 15
-                indicator.implicitWidth: 15
-                indicator.implicitHeight: 15
+                background.width: 15
+                background.height: 15
+                indicator.width: 15
+                indicator.height: 15
                 indicator.border.width: 3
                 indicator.foreground.margins: 3
                 indicator.foreground.color: "lightgray"

@@ -39,16 +39,16 @@ BaseStyle {
 
         background {
             radius: 2
-            implicitWidth: 100
-            implicitHeight: 40
+            width: 100
+            height: 40
             border.width: 1
             color: __backgroundDefault
             border.color: __strokeStrong
         }
 
         indicator {
-            implicitWidth: style.indicatorSize
-            implicitHeight: style.indicatorSize
+            width: style.indicatorSize
+            height: style.indicatorSize
             border.width: 1
             color: __baseWhite
             border.color: __strokeStrong
@@ -58,9 +58,6 @@ BaseStyle {
                 margins: 1
                 color: palette.accent
                 image.color: palette.accent
-                /* Note: don't set implicit size here, since the DelegateContainer will (and should)
-                 * fall back to use the size of the image if not set. So if we hard-code a size here,
-                 * it cannot be unset to be the size of the image (if any) again from the Style. */
             }
         }
 
@@ -69,8 +66,8 @@ BaseStyle {
         }
 
         handle {
-            implicitWidth: style.indicatorSize
-            implicitHeight: style.indicatorSize
+            width: style.indicatorSize
+            height: style.indicatorSize
             radius: style.indicatorSize / 2
             border.width: 1
             color: __backgroundDefault
@@ -141,7 +138,7 @@ BaseStyle {
 
     comboBox {
         text.alignment: Qt.AlignVCenter | Qt.AlignLeft
-        background.implicitWidth: 150
+        background.width: 150
         indicator {
             color: __transparent
             border.width: 0
@@ -149,8 +146,8 @@ BaseStyle {
             foreground {
                 fillWidth: false
                 fillHeight: false
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
                 alignment: Qt.AlignCenter
                 color: __transparent
                 image.color: __textDefault
@@ -168,8 +165,8 @@ BaseStyle {
     pane {
         padding: 12
         background {
-            implicitWidth: 200
-            implicitHeight: 200
+            width: 200
+            height: 200
             color: __baseWhite
         }
     }
@@ -180,7 +177,7 @@ BaseStyle {
 
     groupBox {
         background.topMargin: 20
-        background.implicitHeight: 20
+        background.height: 20
     }
 
     itemDelegate {
@@ -200,8 +197,8 @@ BaseStyle {
 
     menu {
         background {
-            implicitWidth: 200
-            implicitHeight: 20
+            width: 200
+            height: 20
         }
     }
 
@@ -209,7 +206,7 @@ BaseStyle {
         padding: 1
         spacing: 0
         background {
-            implicitHeight: 20
+            height: 20
             radius: 0
             border.width: 0
             color: __backgroundDefault
@@ -219,8 +216,8 @@ BaseStyle {
     menuBarItem {
         text.alignment: Qt.AlignLeft | Qt.AlignVCenter
         background {
-            implicitWidth: 20
-            implicitHeight: 20
+            width: 20
+            height: 20
             radius: 0
             color: __transparent
             border.width: 0
@@ -231,7 +228,7 @@ BaseStyle {
     menuItem {
         text.alignment: Qt.AlignLeft | Qt.AlignVCenter
         background {
-            implicitWidth: 200
+            width: 200
             radius: 0
             border.width: 0
         }
@@ -239,8 +236,8 @@ BaseStyle {
             color: __transparent
             border.width: 0
             foreground {
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
@@ -262,14 +259,14 @@ BaseStyle {
         padding: 0
 
         background {
-            implicitWidth: 188
-            implicitHeight: 1
+            width: 188
+            height: 1
             color: "transparent"
             border.width: 0
         }
         indicator {
-            implicitWidth: 188
-            implicitHeight: 1
+            height: 1
+            fillWidth: true
             border.width: 0
             color: __strokeMuted
             foreground.visible: false
@@ -282,15 +279,15 @@ BaseStyle {
 
     popup {
         background {
-            implicitWidth: 200
-            implicitHeight: 200
+            width: 200
+            height: 200
             border.width: 1
         }
     }
 
     progressBar {
         background.visible: false
-        indicator.implicitWidth: 150
+        indicator.width: 150
         indicator.foreground.delegate: ProgressDelegate {}
     }
 
@@ -316,13 +313,13 @@ BaseStyle {
     scrollBar {
         padding: 0
         background {
-            implicitWidth: 12
-            implicitHeight: 12
+            width: 12
+            height: 12
             radius: 0
         }
         indicator {
-            implicitWidth: 12
-            implicitHeight: 12
+            width: 12
+            height: 12
             fillWidth: true
             radius: 0
             foreground.radius: 0
@@ -341,13 +338,13 @@ BaseStyle {
 
     scrollIndicator {
         background {
-            implicitWidth: 6
-            implicitHeight: 6
+            width: 6
+            height: 6
             visible: false
         }
         indicator {
-            implicitWidth: 6
-            implicitHeight: 6
+            width: 6
+            height: 6
             fillWidth: true
             radius: 255
             border.width: 0
@@ -369,7 +366,7 @@ BaseStyle {
         text.padding: 5
         text.alignment: Qt.AlignVCenter | Qt.AlignLeft
         text.color: __baseBlack
-        background.implicitWidth: 200
+        background.width: 200
 
         indicator {
             fillHeight: true
@@ -379,8 +376,8 @@ BaseStyle {
             foreground {
                 fillWidth: false
                 fillHeight: false
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
                 alignment: Qt.AlignCenter
                 color: __transparent
             }
@@ -406,11 +403,11 @@ BaseStyle {
     slider {
         background {
             visible: false
-            implicitWidth: 150
+            width: 150
         }
         indicator {
             fillWidth: true
-            implicitHeight: 8
+            height: 8
             radius: 8
             foreground.radius: 7
             foreground.delegate: ProgressDelegate {}
@@ -418,14 +415,14 @@ BaseStyle {
         vertical {
             // Manually transpose the sizes
             background {
-                implicitWidth: 40
-                implicitHeight: 150
+                width: 40
+                height: 150
             }
 
             indicator {
                 fillWidth: false
                 fillHeight: true
-                implicitWidth: 8
+                width: 8
                 alignment: Qt.AlignHCenter
             }
         }
@@ -439,14 +436,14 @@ BaseStyle {
             margins: 0
             color: __transparent
             foreground {
+                width: 10
+                height: 10
+                fillWidth: false
+                fillHeight: false
                 color: __transparent
                 image.color: __textDefault
                 image.fillMode: Image.PreserveAspectFit
                 image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
-                fillWidth: false
-                fillHeight: false
-                implicitWidth: 10
-                implicitHeight: 10
                 alignment: Qt.AlignCenter
             }
             // up button
@@ -466,8 +463,8 @@ BaseStyle {
         background.visible: false
         text.alignment: Qt.AlignVCenter
         indicator {
-            implicitWidth: style.indicatorSize * 2
-            implicitHeight: style.indicatorSize
+            width: style.indicatorSize * 2
+            height: style.indicatorSize
             alignment: Qt.AlignLeft | Qt.AlignVCenter
             radius: style.indicatorSize / 2
             foreground {
@@ -496,7 +493,7 @@ BaseStyle {
     textField {
         text.alignment: Qt.AlignVCenter
         background {
-            implicitWidth: 150
+            width: 150
             gradient: null
         }
     }
@@ -504,8 +501,8 @@ BaseStyle {
     textInput {
         padding: 5
         background {
-            implicitWidth: 150
-            implicitHeight: 40
+            width: 150
+            height: 40
             border.width: 1
             color: __baseWhite
         }
@@ -515,23 +512,23 @@ BaseStyle {
     }
 
     toolBar {
-        background.implicitHeight: 40
+        background.height: 40
     }
 
     toolSeparator {
         padding: 2
         background.visible: false
         indicator {
-            implicitWidth: 30
-            implicitHeight: 1
+            width: 30
+            height: 1
             border.width: 0
             color: __strokeMuted
             foreground.visible: false
         }
         vertical {
             indicator {
-                implicitWidth: 1
-                implicitHeight: 30
+                width: 1
+                height: 30
                 alignment: Qt.AlignHCenter
             }
         }

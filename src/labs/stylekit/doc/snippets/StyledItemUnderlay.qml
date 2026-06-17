@@ -41,8 +41,8 @@ ApplicationWindow {
             required property DelegateStyle delegateStyle
             required property QtObject control
 
-            implicitWidth: delegateStyle.implicitWidth
-            implicitHeight: delegateStyle.implicitHeight
+            implicitWidth: delegateStyle.width
+            implicitHeight: delegateStyle.height
             width: parent.width
             height: parent.height
             scale: delegateStyle.scale

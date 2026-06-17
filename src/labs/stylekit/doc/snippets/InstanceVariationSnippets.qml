@@ -17,11 +17,11 @@ ApplicationWindow {
             name: "mini"
             control {
                 padding: 2
-                background.implicitHeight: 15
-                indicator.implicitWidth: 15
-                indicator.implicitHeight: 15
-                handle.implicitWidth: 15
-                handle.implicitHeight: 15
+                background.height: 15
+                indicator.width: 15
+                indicator.height: 15
+                handle.width: 15
+                handle.height: 15
             }
         }
 

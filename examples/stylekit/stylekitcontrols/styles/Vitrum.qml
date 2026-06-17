@@ -124,7 +124,7 @@ Style {
         bottomPadding: 5
 
         background {
-            implicitHeight: myTheme.controlHeight
+            height: myTheme.controlHeight
             color: myTheme.neutralBackground.normal
             delegate: NoiseDelegate {}
         }
@@ -135,8 +135,8 @@ Style {
         }
 
         handle {
-            implicitWidth: 36
-            implicitHeight: 36
+            width: 36
+            height: 36
             radius: 18
             border.width: 2
             border.color: myTheme.neutralStroke.normal
@@ -145,7 +145,7 @@ Style {
         }
 
         indicator {
-            implicitHeight: myTheme.controlHeight
+            height: myTheme.controlHeight
             radius: 25
             border.width: 3
             border.color: myTheme.neutralStroke.normal
@@ -167,7 +167,7 @@ Style {
 
     abstractButton {
         background {
-            implicitWidth: 100
+            width: 100
             radius: 255
             border.width: 2
             border.color: myTheme.neutralStroke.normal
@@ -221,29 +221,29 @@ Style {
 
     scrollIndicator {
         padding: 2
-        background.implicitHeight: 6
-        indicator.implicitHeight: 6
+        background.height: 6
+        indicator.height: 6
         vertical {
-            background.implicitWidth: 6
-            indicator.implicitWidth: 6
+            background.width: 6
+            indicator.width: 6
         }
     }
 
     scrollBar {
         padding: 2
-        background.implicitHeight: 20
+        background.height: 20
         background.visible: false
-        indicator.implicitHeight: 20
+        indicator.height: 20
         vertical {
-            background.implicitWidth: 20
-            indicator.implicitWidth: 20
+            background.width: 20
+            indicator.width: 20
         }
     }
 
     checkBox {
         indicator {
-            implicitWidth: 35
-            implicitHeight: 35
+            width: 35
+            height: 35
             radius: 4
             border.width: 1.5
             foreground {
@@ -257,8 +257,8 @@ Style {
 
     radioButton {
         indicator {
-            implicitWidth: 35
-            implicitHeight: 35
+            width: 35
+            height: 35
             radius: width / 2
             border.width: 1.5
             foreground {
@@ -287,14 +287,14 @@ Style {
 
     comboBox {
         background {
-            implicitWidth: 200
-            implicitHeight: myTheme.controlHeight
+            width: 200
+            height: myTheme.controlHeight
             radius: myTheme.controlHeight / 2
             border.color: myTheme.neutralStroke.normal
             color: myTheme.neutralBackground.normal
         }
         indicator {
-            implicitHeight: myTheme.controlHeight / 6
+            height: myTheme.controlHeight / 6
             color: "transparent"
             border.width: 0
             foreground {
@@ -319,16 +319,16 @@ Style {
             foreground.color: "transparent"
             foreground.image.color: myTheme.accentStroke.normal
             foreground.border.width: 0
-            foreground.implicitWidth: 20
-            foreground.implicitHeight: 20
+            foreground.width: 20
+            foreground.height: 20
         }
     }
 
     textField {
         background {
             radius: 9999999999
-            implicitWidth: 200
-            implicitHeight: myTheme.controlHeight
+            width: 200
+            height: myTheme.controlHeight
             border.color: myTheme.neutralStroke.normal
             color: myTheme.neutralBackground.normal
         }
@@ -338,7 +338,7 @@ Style {
 
     slider {
         spacing: 26
-        background.implicitWidth: 180
+        background.width: 180
         indicator.foreground.minimumWidth: 50
         indicator.foreground.margins: 2
         handle {
@@ -347,11 +347,11 @@ Style {
         }
         vertical {
             background {
-                implicitHeight: 180
-                implicitWidth: myTheme.controlHeight
+                height: 180
+                width: myTheme.controlHeight
             }
             indicator {
-                implicitWidth: myTheme.controlHeight
+                width: myTheme.controlHeight
                 foreground.minimumWidth: 0
                 foreground.minimumHeight: 50
             }
@@ -367,8 +367,8 @@ Style {
     switchControl {
         spacing: 8
         indicator {
-            implicitWidth: 80
-            implicitHeight: myTheme.controlHeight
+            width: 80
+            height: myTheme.controlHeight
             foreground.visible: false
         }
         handle {
@@ -398,7 +398,7 @@ Style {
 
     menu {
         padding: 2
-        background.implicitWidth: 100
+        background.width: 100
     }
 
     menuBar {
@@ -407,7 +407,7 @@ Style {
 
     menuBarItem {
         padding: 2
-        background.implicitWidth: 100
+        background.width: 100
         hovered.background.color: myTheme.accentBackground.normal
     }
 
@@ -420,15 +420,15 @@ Style {
         padding: 4
 
         background {
-            implicitWidth: 100
-            implicitHeight: 0
+            width: 100
+            height: 0
             color: "transparent"
             border.width: 0
         }
 
         indicator {
-            implicitHeight: 1
-            implicitWidth: 100
+            height: 1
+            width: 100
             color: myTheme.neutralStroke.normal
             border.width: 0
 

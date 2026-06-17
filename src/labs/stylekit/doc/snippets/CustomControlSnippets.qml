@@ -20,8 +20,8 @@ ApplicationWindow {
         CustomControl {
             controlType: style.myControlType
             background {
-                implicitWidth: 120
-                implicitHeight: 30
+                width: 120
+                height: 30
                 radius: 0
             }
             hovered.background.color: "lightslategray"
@@ -45,8 +45,8 @@ ApplicationWindow {
         HoverHandler { id: hoverHandler }
         TapHandler { id: tapHandler }
 
-        implicitWidth: styleReader.background.implicitWidth
-        implicitHeight: styleReader.background.implicitHeight
+        implicitWidth: styleReader.background.width
+        implicitHeight: styleReader.background.height
         color: styleReader.background.color
         radius: styleReader.background.radius
 

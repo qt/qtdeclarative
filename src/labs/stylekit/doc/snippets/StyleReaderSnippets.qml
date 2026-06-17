@@ -26,8 +26,8 @@ ApplicationWindow {
             palette: app.palette
         }
 
-        implicitWidth: styleReader.background.implicitWidth
-        implicitHeight: styleReader.background.implicitHeight
+        implicitWidth: styleReader.background.width
+        implicitHeight: styleReader.background.height
         color: styleReader.background.color
         radius: styleReader.background.radius
 
