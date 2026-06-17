@@ -574,9 +574,48 @@ BindingPatchContext::attachedContext(const QQmlRefPointer<QV4::ExecutableCompila
 void BindingPatchContext::reset(
         const std::vector<QQmlRefPointer<QV4::ExecutableCompilationUnit>> &unitsToUnparent)
 {
+    QQmlData *ddata = QQmlData::get(m_object);
+
+    const QHash<QQmlAttachedPropertiesFunc, QObject *> *attachedProperties =
+            ddata->hasExtendedData() ? ddata->attachedProperties() : nullptr;
+    QObjectList children = m_object->children();
+
+    // Remove the children we shouldn't retire from the list. That is the ones that haven't been
+    // created by the relevant compilation units.
+    const auto newEnd = std::remove_if(children.begin(), children.end(), [&](QObject *child) {
+        const QQmlData *childDdata = QQmlData::get(child);
+        if (!childDdata)
+            return true;
+
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu = childDdata->compilationUnit;
+        if (!cu)
+            return true;
+
+        if (std::find(unitsToUnparent.begin(), unitsToUnparent.end(), cu) == unitsToUnparent.end())
+            return true;
+
+        if (!attachedProperties)
+            return false;
+
+        for (QObject *attached : *attachedProperties) {
+            if (attached == child)
+                return true;
+        }
+
+        return false;
+    });
+    children.erase(newEnd, children.end());
+
+    // Remove childrens' bindings before resetBindings() runs.
+    // resetBindings() clears list/default properties via list.clear(), which calls
+    // setParentItem(nullptr) and emits parentChanged. Any QProperty binding on a
+    // child that reads 'parent' would then fire with parent == null. Clearing those
+    // bindings first prevents a flood of related warnings.
+    for (QObject *child : children)
+        clearBindingsRecursive(child);
+
     resetBindings(unit, objectIndex);
 
-    QQmlData *ddata = QQmlData::get(m_object);
     for (QQmlVMEMetaObject *vmeMeta = ddata->hasVMEMetaObject
                  ? static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(m_object)->metaObject)
                  : nullptr;
@@ -590,36 +629,11 @@ void BindingPatchContext::reset(
     while (QQmlBoundSignal *signalHandler = ddata->signalHandlers)
         delete signalHandler;
 
-    const QHash<QQmlAttachedPropertiesFunc, QObject *> *attachedProperties =
-            ddata->hasExtendedData() ? ddata->attachedProperties() : nullptr;
-    const auto isAttached = [attachedProperties](QObject *child) {
-        if (!attachedProperties)
-            return false;
-        for (QObject *attached : *attachedProperties) {
-            if (attached == child)
-                return true;
-        }
-        return false;
-    };
-
-    const auto shouldUnparent = [&](const QQmlRefPointer<QV4::ExecutableCompilationUnit> &cu) {
-        return cu
-                && std::find(unitsToUnparent.begin(), unitsToUnparent.end(), cu)
-                != unitsToUnparent.end();
-    };
-
-    const QObjectList children = m_object->children();
-
-    for (QObject *child : children) {
-        // Objects from the old CU or composite-level CUs will be recreated by
-        // repopulateBindings. Unparent them so they don't interfere with the new objects.
-        // Attached property objects are reused across rebuilds.
-        if (QQmlData *childDdata = QQmlData::get(child);
-            childDdata && shouldUnparent(childDdata->compilationUnit)) {
-            if (!isAttached(child))
-                retireObject(child);
-        }
-    }
+    // Objects from the old CU or composite-level CUs will be recreated by
+    // repopulateBindings. Unparent them so they don't interfere with the new objects.
+    // Attached property objects are reused across rebuilds.
+    for (QObject *child : children)
+        retireObject(child);
 }
 
 // Fully retire an old object that is being replaced by repopulateBindings.
@@ -628,11 +642,6 @@ void BindingPatchContext::reset(
 // for deletion. compilationUnit is intentionally left intact. The GC needs it.
 void BindingPatchContext::retireObject(QObject *object)
 {
-    // First pass: recursively remove all bindings from the entire subtree.
-    // This must happen before any parent changes so that binding
-    // evaluations triggered by re-parenting find no live expressions.
-    clearBindingsRecursive(object);
-
     // Remove from parent (in QtQuick "visual parent" or parentItem) via the meta property system.
     // We must not assume any particular property to be the "parent" property here. That's what
     // we have the ParentProperty classInfo for.
@@ -668,6 +677,21 @@ void BindingPatchContext::clearBindingsRecursive(QObject *object)
 
         while (ddata->bindings)
             QQmlPropertyPrivate::removeBinding(ddata->bindings);
+
+        // QProperty (BINDABLE) bindings live in the property's QPropertyBindingStorage,
+        // not in ddata->bindings. Remove them so they don't re-evaluate when
+        // setParentItem(nullptr) emits parentChanged during retireObject().
+        const QMetaObject *mo = next->metaObject();
+        for (int i = 0, n = mo->propertyCount(); i < n; ++i) {
+            if (!ddata->hasBindingBit(i))
+                continue;
+            const QMetaProperty prop = mo->property(i);
+            if (!prop.isBindable())
+                continue;
+            QUntypedBindable bindable = prop.bindable(next);
+            if (bindable.hasBinding())
+                bindable.takeBinding();
+        }
 
         // Don't delete signal handlers right away since we might still have
         // them in other objects "external" state. Disable them so that they
