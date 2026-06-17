@@ -1576,6 +1576,30 @@ void tst_qmltyperegistrar::foreignNamespacedWithEnum()
     })"));
 }
 
+void tst_qmltyperegistrar::splitTokenQmlForeign()
+{
+    QVERIFY(qmltypesData.contains(R"(Component {
+        file: "tst_qmltyperegistrar.h"
+        lineNumber: 953
+        name: "QList<SplitTokenQmlForeignStruct>"
+        accessSemantics: "none"
+    }
+)"));
+    QVERIFY(!qmltypesData.contains("QList < SplitTokenQmlForeignStruct >"));
+}
+
+void tst_qmltyperegistrar::multiWordQmlForeign()
+{
+    QVERIFY(qmltypesData.contains(R"(    Component {
+        file: "tst_qmltyperegistrar.h"
+        lineNumber: 960
+        name: "unsigned long long"
+        accessSemantics: "none"
+    }
+)"));
+    QVERIFY(!qmltypesData.contains("unsignedlonglong"));
+}
+
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
 void tst_qmltyperegistrar::verifyJsRoot()

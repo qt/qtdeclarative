@@ -945,6 +945,26 @@ private:
     QString m_foreignProperty;
 };
 
+struct SplitTokenQmlForeignStruct
+{
+    Q_GADGET
+};
+
+class SplitTokenQmlForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QList<SplitTokenQmlForeignStruct>)
+    QML_NAMED_ELEMENT(SplitTokenQmlForeignStructList)
+};
+
+struct UnsignedLongLongForeign
+{
+    Q_GADGET
+    QML_FOREIGN(unsigned long long)
+    QML_NAMED_ELEMENT("unsignedLongLong")
+    QML_USING(quint64)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -1039,6 +1059,8 @@ private slots:
     void derivedFromInvisible();
     void foreignFileAndLinePointsToNonForeign();
     void foreignNamespacedWithEnum();
+    void splitTokenQmlForeign();
+    void multiWordQmlForeign();
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
