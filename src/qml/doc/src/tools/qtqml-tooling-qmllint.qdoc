@@ -220,6 +220,9 @@ level. Use the special filename '-' to write to stdout instead of a file.
 This can be used to more easily integrate qmllint in your pre-commit hooks or
 CI testing.
 
+\note qmllint should be deployed in a sandbox, container, or other safe environment
+when running on untrusted code.
+
 \sa {Type Description Files}
 \sa {Qt Quick Tools and Utilities}
 */
