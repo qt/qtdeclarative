@@ -212,7 +212,8 @@ void updateEngine(std::shared_ptr<InplaceUpdate> inplaceUpdate, const QList<QUrl
     for (const QUrl &url : urls) {
         // First remove any cached instance of the CU
         // NB: Don't remove from the ExecutionEngine's list of CUs. We need those for the GC.
-        v4->typeLoader()->removeFromCache(url);
+        if (!v4->typeLoader()->removeFromCache(url))
+            continue;
 
         // Hold on to the old unit.
         QQmlRefPointer<QV4::ExecutableCompilationUnit> oldUnit = v4->compilationUnitForUrl(url);
