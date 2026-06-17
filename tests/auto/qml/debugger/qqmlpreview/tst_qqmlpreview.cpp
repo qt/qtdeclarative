@@ -105,6 +105,13 @@ private slots:
     void inPlaceLazyComponentUpdateBeforeInstantiation();
     void inPlaceRequiredPropertyDelegateCrash();
 
+    // samegame hot-reload trace regressions.
+    // A child's parent.width/parent.height bindings must not become null after
+    // an in-place rebuild of the root ("Cannot read property 'width' of null").
+    void inPlaceChildParentBindingNotNull();
+    // Same flood, but parent reached through `property Item parentBlock: parent`
+    // (content/BlockEmitter.qml).
+    void inPlaceParentIndirectionNotNull();
     // A dropped non-QML resource (image) must not be fed to the QML compiler
     // (".png:1:1: Unexpected token" / "Syntax error").
     void inPlaceImageNotParsedAsQml();
@@ -1434,6 +1441,89 @@ void tst_QQmlPreview::inPlaceRequiredPropertyDelegateCrash()
     QVERIFY2(m_process->state() != QProcess::NotRunning,
              "Process crashed when changing clip property on a ListView with "
              "required-property delegates (use-after-free in restoreExternalState)");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// After an in-place rebuild of the root, a child whose geometry binds to
+// parent.width / parent.height must keep a valid parent. In the samegame trace
+// this manifested as a flood of "Cannot read property 'width' of null".
+void tst_QQmlPreview::inPlaceChildParentBindingNotNull()
+{
+    const QString file("inplace_parent.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("parent_test hasParent=true marker=1");
+
+    // Structural edit (add a child) forces a full rebuild of the root, plus a
+    // marker bump so we can detect the new version took effect.
+    QByteArray contents = readAndModify(
+            file,
+            {{"property int marker: 1", "property int marker: 2"},
+             {"Rectangle {\n        id: child",
+              "Rectangle { objectName: \"added\"; width: 10 }\n\n    Rectangle {\n        id: child"}});
+    QVERIFY(!contents.isEmpty());
+
+    const int prevLen = m_process->output().size();
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().size() > prevLen
+                                     && m_process->output().mid(prevLen).contains("marker=2"),
+                             15000);
+
+    const QString after = m_process->output().mid(prevLen);
+
+    // The child keeps a valid parent after the rebuild settles.
+    QVERIFY(after.contains("parent_test hasParent=true marker=2"));
+
+    // During the rebuild the child must keep a valid parent: clearBindingsRecursive
+    // now runs before resetBindings clears the default-property list, preventing
+    // QProperty bindings from firing with parent == null.
+    const bool hadNullParentError =
+            after.contains("Cannot read property 'width' of null")
+            || after.contains("Cannot read property 'height' of null");
+    QVERIFY2(!hadNullParentError,
+             "child lost its parent during the in-place rebuild");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// parent reached through `property Item parentBlock: parent` (BlockEmitter).
+void tst_QQmlPreview::inPlaceParentIndirectionNotNull()
+{
+    const QString file("inplace_parentindirect.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("indirect hasParent=true marker=1");
+
+    QByteArray contents = readAndModify(
+            file,
+            {{"property int marker: 1", "property int marker: 2"},
+             {"Item {\n        id: child",
+              "Item { objectName: \"added\"; width: 10 }\n\n    Item {\n        id: child"}});
+    QVERIFY(!contents.isEmpty());
+
+    const int prevLen = m_process->output().size();
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+    QTRY_VERIFY_WITH_TIMEOUT(m_process->output().size() > prevLen
+                                     && m_process->output().mid(prevLen).contains("marker=2"),
+                             15000);
+
+    const QString after = m_process->output().mid(prevLen);
+    const bool hadNull = after.contains("hasParent=false")
+            || after.contains("Cannot read property 'width' of null")
+            || after.contains("Cannot read property 'height' of null");
+    QVERIFY2(!hadNull, "parentBlock indirection became null during the in-place rebuild");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
