@@ -214,7 +214,7 @@ public:
 
     void clearCache();
     void trimCache();
-    void removeFromCache(const QUrl &url);
+    bool removeFromCache(const QUrl &url);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;

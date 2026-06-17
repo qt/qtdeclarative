@@ -1863,20 +1863,16 @@ void QQmlTypeLoader::clearCache()
 
 /*!
     \internal
-    Replace the compilation unit cached for \a url with \a unit.
+    Remove any cached artifacts for \a url.
 
-    This is used by the QML preview object patcher (Pass 3) to make the type
-    loader return the updated compilation unit when other parts of the type
-    system (e.g., QQmlTypePrivate::compositePropertyCache()) ask for the type
-    data of a patched component.
+    Returns \c true if anything was removed, or \c false otherwise.
 */
-void QQmlTypeLoader::removeFromCache(const QUrl &url)
+bool QQmlTypeLoader::removeFromCache(const QUrl &url)
 {
     const QUrl normalized = QQmlMetaType::normalizedUrl(url);
     const QQmlTypeLoaderSharedDataPtr data(&m_data);
-    data->typeCache.remove(normalized);
-    data->scriptCache.remove(normalized);
-    data->qmldirCache.remove(normalized);
+    return data->typeCache.remove(normalized) || data->scriptCache.remove(normalized)
+            || data->qmldirCache.remove(normalized);
 }
 
 void QQmlTypeLoader::trimCache()

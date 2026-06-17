@@ -104,6 +104,10 @@ private slots:
     void inPlaceChildComponentMultipleEdits();
     void inPlaceLazyComponentUpdateBeforeInstantiation();
     void inPlaceRequiredPropertyDelegateCrash();
+
+    // A dropped non-QML resource (image) must not be fed to the QML compiler
+    // (".png:1:1: Unexpected token" / "Syntax error").
+    void inPlaceImageNotParsedAsQml();
 };
 
 tst_QQmlPreview::tst_QQmlPreview()
@@ -1430,6 +1434,50 @@ void tst_QQmlPreview::inPlaceRequiredPropertyDelegateCrash()
     QVERIFY2(m_process->state() != QProcess::NotRunning,
              "Process crashed when changing clip property on a ListView with "
              "required-property delegates (use-after-free in restoreExternalState)");
+
+    m_process->stop();
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
+}
+
+// A dropped non-QML resource (image) must not be fed to the QML compiler.
+// updateEngine() in the in-place handler constructs a QQmlComponent for every
+// dropped URL; a dropped .png is therefore compiled as QML and reports
+// ".png:1:1: Unexpected token" / "Syntax error" (samegame trace lines 9-16).
+void tst_QQmlPreview::inPlaceImageNotParsedAsQml()
+{
+    const QString file("inplace_image.qml");
+    QCOMPARE(startQmlProcess(file), ConnectSuccess);
+    QVERIFY(m_client);
+    QTRY_COMPARE(m_client->state(), QQmlDebugClient::Enabled);
+
+    enableInPlaceUpdates();
+    verifyProcessOutputContains("image_test marker=1");
+
+    // Simulate the IDE pushing a changed image and the .qml that references it,
+    // exactly as qmlpreview does when watched project files change. Both are
+    // "dropped" and then a Load is triggered.
+    const QString pngPath = testFile("inplace_pixel.png");
+    QFile png(pngPath);
+    QVERIFY(png.open(QIODevice::ReadOnly));
+    const QByteArray pngBytes = png.readAll();
+
+    QByteArray contents = readAndModify(file, {{"property int marker: 1",
+                                                "property int marker: 2"}});
+    QVERIFY(!contents.isEmpty());
+
+    serveFile(pngPath, pngBytes);
+    serveFile(testFile(file), contents);
+    m_client->triggerLoad(testFileUrl(file));
+    verifyProcessOutputContains("image_test marker=2");
+
+    const auto mentionsPngParseError = [](const QString &s) {
+        return s.contains(".png") && (s.contains("Unexpected token") || s.contains("Syntax error"));
+    };
+    bool pngParsedAsQml = mentionsPngParseError(m_process->output());
+    for (const QString &error : std::as_const(m_serviceErrors))
+        pngParsedAsQml = pngParsedAsQml || mentionsPngParseError(error);
+
+    QVERIFY2(!pngParsedAsQml, "image resource was parsed as QML during hot reload");
 
     m_process->stop();
     QTRY_COMPARE(m_client->state(), QQmlDebugClient::NotConnected);
