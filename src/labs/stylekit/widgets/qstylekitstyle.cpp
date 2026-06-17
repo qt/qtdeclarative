@@ -104,17 +104,6 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     QApplication::setStyle(style);
     \endcode
 
-    QStyleKitStyle is also registered as a QStyleFactory plugin under the
-    key \c StyleKit, which can be selected via the \c -style command line
-    argument or QApplication::setStyle(). When created through the
-    factory, set \l stylePath after construction to load a style file.
-
-    \code
-    auto *style = QStyleFactory::create("StyleKit");
-    style->setProperty("stylePath", QStringLiteral(":/styles/MyStyle.qml"));
-    QApplication::setStyle(style);
-    \endcode
-
     The Style is loaded with an internal QQmlEngine owned by the
     QStyleKitStyle instance. If the path is invalid or the root object is
     not a \l Style, a warning is emitted and the style uses a default
@@ -129,7 +118,7 @@ Q_STATIC_LOGGING_CATEGORY(lcStyleKit, "qt.labs.stylekit")
     OS color scheme changes, the active theme is recreated automatically
     and all widgets are repolished.
 
-    \sa QStyle, QCommonStyle, QStyleFactory, {Qt Labs StyleKit}, Style, Theme
+    \sa QStyle, QCommonStyle, {Qt Labs StyleKit}, Style, Theme
 */
 
 /*!
