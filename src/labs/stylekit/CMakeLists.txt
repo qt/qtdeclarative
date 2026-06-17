@@ -99,5 +99,10 @@ if(TARGET Qt::Widgets)
             Qt::Qml
             Qt::QmlPrivate
     )
-    add_subdirectory(widgets/plugin)
+    # The style plugin (widgets/plugin) is intentionally not built
+    # during TP phase. As a widget style plugin it would be discoverable
+    # by every Qt Widgets application through QStyleFactory::keys() and
+    # also cause deployment bloat by pulling in QtQuick/QML stack into widget
+    # apps that didn't opt in. Use QStyleKitStyle directly instead.
+    # add_subdirectory(widgets/plugin)
 endif()
