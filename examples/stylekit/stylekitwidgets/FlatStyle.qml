@@ -27,8 +27,8 @@ Style {
         }
 
         handle {
-            implicitWidth: 18
-            implicitHeight: 18
+            width: 18
+            height: 18
             radius: 0
             border.width: 1
             gradient: null
@@ -49,8 +49,8 @@ Style {
 
     abstractButton {
         background {
-            implicitWidth: 100
-            implicitHeight: 28
+            width: 100
+            height: 28
         }
     }
 
@@ -60,24 +60,24 @@ Style {
 
     checkBox {
         indicator {
-            implicitWidth: 18
-            implicitHeight: 18
+            width: 18
+            height: 18
         }
     }
 
     radioButton {
         indicator {
-            implicitWidth: 18
-            implicitHeight: 18
+            width: 18
+            height: 18
             radius: 9
             foreground.radius: 9
         }
     }
 
     slider {
-        background.implicitWidth: 180
+        background.width: 180
         indicator {
-            implicitHeight: 4
+            height: 4
             radius: 0
             foreground {
                 radius: 0
@@ -85,19 +85,19 @@ Style {
             }
         }
         vertical {
-            background.implicitHeight: 180
-            background.implicitWidth: 40
-            indicator.implicitWidth: 4
+            background.height: 180
+            background.width: 40
+            indicator.width: 4
         }
     }
 
     spinBox {
         padding: 4
-        background.implicitWidth: 100
+        background.width: 100
     }
 
     textInput {
-        background.implicitWidth: 200
+        background.width: 200
     }
 
     pane {

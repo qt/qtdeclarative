@@ -94,8 +94,8 @@ void QQStyleKitDelegate::setDelegateStyle(QQStyleKitDelegateProperties *delegate
     maybeCreateImage();
     updateImplicitSize();
 
-    connect(m_delegateProperties, &QQStyleKitDelegateProperties::implicitWidthChanged, this, &QQStyleKitDelegate::updateImplicitSize);
-    connect(m_delegateProperties, &QQStyleKitDelegateProperties::implicitHeightChanged, this, &QQStyleKitDelegate::updateImplicitSize);
+    connect(m_delegateProperties, &QQStyleKitDelegateProperties::widthChanged, this, &QQStyleKitDelegate::updateImplicitSize);
+    connect(m_delegateProperties, &QQStyleKitDelegateProperties::heightChanged, this, &QQStyleKitDelegate::updateImplicitSize);
 
     emit delegateStyleChanged();
 }
@@ -105,16 +105,14 @@ void QQStyleKitDelegate::updateImplicitSize()
     if (!m_delegateProperties)
         return;
 
-    /* The implicit size is determined by the following priority:
-     * 1. Explicit implicit size set on QQStyleKitDelegateProperties
-     * 2. Implicit size of the image (if present)
-     * 3. Zero
-     * The implicit size is read-only because it's calculated in C++ from internal
-     * child items that are intentionally not exposed to QML. */
-    const qreal impWidthInStyle = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->implicitWidth());
-    const qreal impHeightInStyle = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->implicitHeight());
-    setImplicitWidth(impWidthInStyle > 0 || !m_imageOverlay ? impWidthInStyle : m_imageOverlay->implicitWidth());
-    setImplicitHeight(impHeightInStyle > 0 || !m_imageOverlay ? impHeightInStyle : m_imageOverlay->implicitHeight());
+    /* The implicit size of this item is determined by the following priority:
+     * 1. The width/height set on DelegateStyle (clamped to minimumWidth/minimumHeight)
+     * 2. The implicit size of the image overlay (if present)
+     * 3. Zero */
+    const qreal widthInStyle = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->width());
+    const qreal heightInStyle = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->height());
+    setImplicitWidth(widthInStyle > 0 || !m_imageOverlay ? widthInStyle : m_imageOverlay->implicitWidth());
+    setImplicitHeight(heightInStyle > 0 || !m_imageOverlay ? heightInStyle : m_imageOverlay->implicitHeight());
 }
 
 void QQStyleKitDelegate::maybeCreateColor()

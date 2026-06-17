@@ -171,7 +171,7 @@ QT_BEGIN_NAMESPACE
     \l {ControlStyleProperties::}{indicator}, or a sub-element like
     \l {IndicatorStyle::foreground}{indicator.foreground}.
     It provides properties for controlling
-    \l {DelegateStyle::implicitWidth}{size},
+    \l {DelegateStyle::width}{size},
     \l {DelegateStyle::}{color}, \l {DelegateStyle::}{border},
     \l {DelegateStyle::}{radius}, \l {DelegateStyle::}{shadow},
     \l {DelegateStyle::}{image}, \l {DelegateStyle::}{opacity}, and more.
@@ -327,27 +327,37 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty real DelegateStyle::implicitHeight
+    \qmlproperty real DelegateStyle::width
 
-    The implicit height of this delegate.
+    The width of this delegate.
 
-    \note This property is ignored if \l fillHeight is \c true, including when
-    it is set higher up in the style hierarchy — for example in the
-    \l {Style::fallbackStyle}{fallback style}.
+    \note This property will only set the delegate width when \l fillWidth is \c false. This also
+    applies when \l fillWidth is set higher up in the style hierarchy, for example
+    in the \l {Style::fallbackStyle}{fallback style}.
 
-    \sa fillHeight, {StyleKit Property Resolution}
+    If this delegate is at the root of the control — for example the
+    \l {ControlStyleProperties::background}{background} or the
+    \l {ControlStyleProperties::indicator}{indicator} — it will also be included when
+    calculating the \l [QtQuick]{Item::implicitWidth}{implicit width} of the control, even when \l fillWidth is \c true.
+
+    \sa height, fillWidth, minimumWidth, {StyleKit Property Resolution}
 */
 
 /*!
-    \qmlproperty real DelegateStyle::implicitWidth
+    \qmlproperty real DelegateStyle::height
 
-    The implicit width of this delegate.
+    The height of this delegate.
 
-    \note This property is ignored if \l fillWidth is \c true, including when
-    it is set higher up in the style hierarchy — for example in the
-    \l {Style::fallbackStyle}{fallback style}.
+    \note This property will only set the delegate height when \l fillHeight is \c false. This also
+    applies when \l fillHeight is set higher up in the style hierarchy, for example
+    in the \l {Style::fallbackStyle}{fallback style}.
 
-    \sa fillWidth, {StyleKit Property Resolution}
+    If this delegate is at the root of the control — for example the
+    \l {ControlStyleProperties::background}{background} or the
+    \l {ControlStyleProperties::indicator}{indicator} — it will also be included when
+    calculating the \l [QtQuick]{Item::implicitHeight}{implicit height} of the control, even when \l fillHeight is \c true.
+
+    \sa width, fillHeight, minimumHeight, {StyleKit Property Resolution}
 */
 
 /*!
@@ -394,9 +404,9 @@ QT_BEGIN_NAMESPACE
     \c fillWidth to \c true. To add some space between the delegate and the
     edges of its parent, use the \l margins properties.
 
-    If \c fillWidth is \c false, the delegate's width is determined by its \l implicitWidth.
+    If \c fillWidth is \c false, the delegate's width is determined by its \l width.
 
-    \sa fillHeight, implicitWidth
+    \sa fillHeight, width
 */
 
 /*!
@@ -406,13 +416,13 @@ QT_BEGIN_NAMESPACE
 
     Some delegates, such as the foreground of a checkbox indicator, are often expected
     to fill the available height (and width) of the indicator, rather than
-    having a fixed implicit height. This can be achieved by setting
+    having a fixed height. This can be achieved by setting
     \c fillHeight to \c true. To add some space between the delegate and the
     edges of its parent, use the \l margins properties.
 
-    If \c fillHeight is \c false, the delegate's height is determined by its \l implicitHeight.
+    If \c fillHeight is \c false, the delegate's height is determined by its \l height.
 
-    \sa fillWidth, implicitHeight
+    \sa fillWidth, height
 */
 
 /*!
@@ -1512,26 +1522,26 @@ void QQStyleKitDelegateProperties::setRotation(qreal rotation)
         handleStylePropertyChanged(&QQStyleKitDelegateProperties::rotationChanged);
 }
 
-qreal QQStyleKitDelegateProperties::implicitWidth() const
+qreal QQStyleKitDelegateProperties::width() const
 {
-    return styleProperty<qreal>(QQSK::Property::ImplicitWidth);
+    return styleProperty<qreal>(QQSK::Property::Width);
 }
 
-void QQStyleKitDelegateProperties::setImplicitWidth(qreal width)
+void QQStyleKitDelegateProperties::setWidth(qreal width)
 {
-    if (setStyleProperty(QQSK::Property::ImplicitWidth, width))
-        handleStylePropertyChanged(&QQStyleKitDelegateProperties::implicitWidthChanged);
+    if (setStyleProperty(QQSK::Property::Width, width))
+        handleStylePropertyChanged(&QQStyleKitDelegateProperties::widthChanged);
 }
 
-qreal QQStyleKitDelegateProperties::implicitHeight() const
+qreal QQStyleKitDelegateProperties::height() const
 {
-    return styleProperty<qreal>(QQSK::Property::ImplicitHeight);
+    return styleProperty<qreal>(QQSK::Property::Height);
 }
 
-void QQStyleKitDelegateProperties::setImplicitHeight(qreal height)
+void QQStyleKitDelegateProperties::setHeight(qreal height)
 {
-    if (setStyleProperty(QQSK::Property::ImplicitHeight, height))
-        handleStylePropertyChanged(&QQStyleKitDelegateProperties::implicitHeightChanged);
+    if (setStyleProperty(QQSK::Property::Height, height))
+        handleStylePropertyChanged(&QQStyleKitDelegateProperties::heightChanged);
 }
 
 qreal QQStyleKitDelegateProperties::minimumWidth() const

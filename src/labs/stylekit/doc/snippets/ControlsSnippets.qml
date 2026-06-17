@@ -38,8 +38,8 @@ ApplicationWindow {
         //! [button]
         button {
             background {
-                implicitWidth: 120
-                implicitHeight: 40
+                width: 120
+                height: 40
                 shadow {
                     opacity: 0.6
                     color: "gray"
@@ -199,8 +199,8 @@ ApplicationWindow {
         //! [menu]
         menu {
             background {
-                implicitWidth: 200
-                implicitHeight: 40
+                width: 200
+                height: 40
                 border.color: "darkslategray"
                 radius: 4
             }
@@ -232,7 +232,7 @@ ApplicationWindow {
         menuItem {
             text.alignment: Qt.AlignVCenter | Qt.AlignLeft
             background {
-                implicitWidth: 200
+                width: 200
                 border.width: 0
             }
             indicator {
@@ -259,8 +259,8 @@ ApplicationWindow {
         menuSeparator {
             background.visible: false
             indicator {
-                implicitWidth: 188
-                implicitHeight: 1
+                width: 188
+                height: 1
                 border.width: 0
                 color: "#c0c0c0"
                 foreground.visible: false
@@ -285,8 +285,8 @@ ApplicationWindow {
         //! [pane]
         pane {
             background {
-                implicitWidth: 200
-                implicitHeight: 200
+                width: 200
+                height: 200
                 color: "white"
             }
         }
@@ -312,8 +312,8 @@ ApplicationWindow {
             // Hide the background; show only the progress bar
             background.visible: false
             indicator {
-                implicitWidth: 150
-                implicitHeight: 8
+                width: 150
+                height: 8
                 radius: 4
                 color: "#e0e0e0"
                 foreground {
@@ -330,8 +330,8 @@ ApplicationWindow {
         //! [progressBar indeterminate]
         progressBar {
             indicator {
-                implicitWidth: 150
-                implicitHeight: 8
+                width: 150
+                height: 8
                 foreground {
                     delegate: StyledItem {
                         // Draw a pulsating progress track when in indeterminate mode, and a normal track otherwise
@@ -385,15 +385,15 @@ ApplicationWindow {
             padding: 0
             background {
                 // Set the groove size and color
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
                 color: "white"
             }
             indicator {
                 radius: 255
                 fillWidth: true
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
                 color: "#c0c0c0"
                 // The indicator is so simple that it doesn't need a foreground
                 foreground.visible: false
@@ -416,8 +416,8 @@ ApplicationWindow {
             background.visible: false
             indicator {
                 fillWidth: true
-                implicitWidth: 5
-                implicitHeight: 5
+                width: 5
+                height: 5
                 border.width: 0
                 color: "cornflowerblue"
                 // The indicator is so simple that it doesn't need a foreground
@@ -474,14 +474,14 @@ ApplicationWindow {
                 // The background is hidden, but its implicit size still
                 // determines the overall implicit size of the control.
                 visible: false
-                implicitWidth: 150
-                implicitHeight: 50
+                width: 150
+                height: 50
             }
 
             indicator {
                 // The groove of the slider should fill out the entire width of the control
                 fillWidth: true
-                implicitHeight: 8
+                height: 8
                 radius: 255
                 color: "#e0e0e0"
                 foreground {
@@ -491,8 +491,8 @@ ApplicationWindow {
             }
 
             handle {
-                implicitWidth: 24
-                implicitHeight: 24
+                width: 24
+                height: 24
                 radius: 255
                 color: "white"
                 border.color: "#c0c0c0"
@@ -501,14 +501,14 @@ ApplicationWindow {
             vertical {
                 // Transpose relevant geometry
                 background {
-                    implicitWidth: 50
-                    implicitHeight: 150
+                    width: 50
+                    height: 150
                 }
 
                 indicator {
                     fillWidth: false
                     fillHeight: true
-                    implicitWidth: 8
+                    width: 8
                 }
             }
         }
@@ -573,8 +573,8 @@ ApplicationWindow {
                 // Add some space between the handle and the indicator
                 leftMargin: 2
                 rightMargin: 2
-                implicitWidth: 20
-                implicitHeight: 20
+                width: 20
+                height: 20
                 radius: 255
                 color: "white"
             }
@@ -623,7 +623,7 @@ ApplicationWindow {
             padding: 8
             text.alignment: Qt.AlignVCenter
             background {
-                implicitWidth: 150
+                width: 150
                 color: "white"
                 border.color: "#c0c0c0"
             }
@@ -649,7 +649,7 @@ ApplicationWindow {
             spacing: 2
             background {
                 radius: 0
-                implicitHeight: 40
+                height: 40
                 border.width: 1
             }
         }
@@ -667,12 +667,12 @@ ApplicationWindow {
                 // The background is hidden, but its implicit size still
                 // determines the overall implicit size of the control.
                 visible: false
-                implicitWidth: 10
-                implicitHeight: 10
+                width: 10
+                height: 10
             }
             indicator {
-                implicitWidth: 30
-                implicitHeight: 1
+                width: 30
+                height: 1
                 border.width: 0
                 color: "#c0c0c0"
                 alignment: Qt.AlignCenter
@@ -680,8 +680,8 @@ ApplicationWindow {
             }
             vertical {
                 indicator {
-                    implicitWidth: 1
-                    implicitHeight: 30
+                    width: 1
+                    height: 30
                 }
             }
         }

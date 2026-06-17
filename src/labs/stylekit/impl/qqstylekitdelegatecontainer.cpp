@@ -95,8 +95,8 @@ void QQStyleKitDelegateContainer::updateImplicitSize()
         /* The delegate instance may not exist yet (e.g. because it is hidden),
          * but the container should still report the style's implicit size so
          * that it reserves the correct space in a layout. */
-        implicitWidth = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->implicitWidth());
-        implicitHeight = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->implicitHeight());
+        implicitWidth = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->width());
+        implicitHeight = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->height());
     }
 
     setImplicitWidth(implicitWidth);

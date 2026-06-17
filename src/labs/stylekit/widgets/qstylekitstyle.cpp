@@ -384,14 +384,14 @@ static uint resolvedAlignment(uint raw, Qt::Alignment hDefault, Qt::Alignment vD
     return result;
 }
 
-static qreal resolvedImplicitWidth(const QQStyleKitDelegateProperties *element, qreal availableW)
+static qreal resolvedWidth(const QQStyleKitDelegateProperties *element, qreal availableW)
 {
-    return element->fillWidth() ? availableW : qMax(0.0, element->implicitWidth());
+    return element->fillWidth() ? availableW : qMax(0.0, element->width());
 }
 
-static qreal resolvedImplicitHeight(const QQStyleKitDelegateProperties *element, qreal avilableH)
+static qreal resolvedHeight(const QQStyleKitDelegateProperties *element, qreal avilableH)
 {
-    return element->fillHeight() ? avilableH : qMax(0.0, element->implicitHeight());
+    return element->fillHeight() ? avilableH : qMax(0.0, element->height());
 }
 
 static QMargins elementMargins(const QQStyleKitDelegateProperties *element)
@@ -1009,9 +1009,9 @@ void QStyleKitStylePrivate::drawControlIndicator(const QQStyleKitDelegatePropert
     // foreground
     QRectF foregroundRect;
     const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignHCenter, Qt::AlignVCenter);
-    const auto foregroundW = resolvedImplicitWidth(foreground,
+    const auto foregroundW = resolvedWidth(foreground,
         indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
-    const auto foregroundH = resolvedImplicitHeight(foreground,
+    const auto foregroundH = resolvedHeight(foreground,
         indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
     foregroundRect.setSize(QSizeF(foregroundW, foregroundH));
     if (foregroundAlign & Qt::AlignLeft)
@@ -1218,7 +1218,7 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         auto scale = background->scale();
         if (scale == 0)
             scale = 1.0;
-        metrics.bgImplicitSize = QSize(static_cast<int>(background->implicitWidth()), static_cast<int>(background->implicitHeight())) * scale;
+        metrics.bgImplicitSize = QSize(static_cast<int>(background->width()), static_cast<int>(background->height())) * scale;
         metrics.margins = elementMargins(background);
     }
     const auto *textProps = props->text();
@@ -1230,8 +1230,8 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         if (scale == 0)
             scale = 1.0;
         metrics.indicatorMargins = elementMargins(indicator);
-        metrics.indicatorImplicitSize = QSize(std::max(.0, indicator->implicitWidth()),
-                                             std::max(.0, indicator->implicitHeight())) * scale;
+        metrics.indicatorImplicitSize = QSize(std::max(.0, indicator->width()),
+                                             std::max(.0, indicator->height())) * scale;
 
         const auto *foreground = indicator->foreground();
         if (foreground) {
@@ -1239,9 +1239,9 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
             if (scale == 0)
                 scale = 1.0;
             metrics.foregroundMargins = elementMargins(foreground);
-            const auto foregroundW = resolvedImplicitWidth(foreground,
+            const auto foregroundW = resolvedWidth(foreground,
                 std::max(.0, qreal(metrics.indicatorImplicitSize.width() - metrics.foregroundMargins.left() - metrics.foregroundMargins.right())));
-            const auto foregroundH = resolvedImplicitHeight(foreground,
+            const auto foregroundH = resolvedHeight(foreground,
                 std::max(.0, qreal(metrics.indicatorImplicitSize.height() - metrics.foregroundMargins.top() - metrics.foregroundMargins.bottom())));
             metrics.foregroundImplicitSize = QSize(foregroundW, foregroundH) * scale;
         }
@@ -1251,8 +1251,8 @@ QStyleKitStylePrivate::ControlMetrics QStyleKitStylePrivate::metricsForReader(QQ
         auto scale = handle->scale();
         if (scale == 0)
             scale = 1.0;
-        metrics.handleImplicitSize = QSize(std::max(.0, handle->implicitWidth()),
-                                           std::max(.0, handle->implicitHeight())) * scale;
+        metrics.handleImplicitSize = QSize(std::max(.0, handle->width()),
+                                           std::max(.0, handle->height())) * scale;
         metrics.handleMargins = elementMargins(handle);
     }
     return metrics;
@@ -1906,10 +1906,10 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedImplicitWidth(indicator,
+        const int w = resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
                 - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedImplicitHeight(indicator,
+        const int h = resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
                 - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
@@ -1928,10 +1928,10 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedImplicitWidth(indicator,
+        const int w = resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
                 - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedImplicitHeight(indicator,
+        const int h = resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
                 - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
@@ -2003,10 +2003,10 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
         if (!indicator || !indicator->visible() || indicator->opacity() == 0)
             return rect;
 
-        const int w = resolvedImplicitWidth(indicator,
+        const int w = resolvedWidth(indicator,
             rect.width() - metrics.padding.left() - metrics.padding.right()
                 - metrics.indicatorMargins.left() - metrics.indicatorMargins.right());
-        const int h = resolvedImplicitHeight(indicator,
+        const int h = resolvedHeight(indicator,
             rect.height() - metrics.padding.top() - metrics.padding.bottom()
                 - metrics.indicatorMargins.top() - metrics.indicatorMargins.bottom());
         const uint alignment = resolvedAlignment(indicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
@@ -2024,9 +2024,9 @@ QRect QStyleKitStyle::subElementRect(SubElement r, const QStyleOption *opt, cons
                 return QRect();
 
             QRect indicatorRect = subElementRect(SE_ProgressBarGroove, opt, widget);
-            const auto foregroundW = resolvedImplicitWidth(foreground,
+            const auto foregroundW = resolvedWidth(foreground,
                 indicatorRect.width() - foreground->leftMargin() - foreground->rightMargin());
-            const auto foregroundH = resolvedImplicitHeight(foreground,
+            const auto foregroundH = resolvedHeight(foreground,
                 indicatorRect.height() - foreground->topMargin() - foreground->bottomMargin());
             const uint foregroundAlign = resolvedAlignment(foreground->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
             const QMargins foregroundMargins = elementMargins(foreground);
@@ -2138,8 +2138,8 @@ void QStyleKitStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCom
 
                     const auto hAlign = foreground->alignment() & Qt::AlignHorizontal_Mask;
                     const auto vAlign = foreground->alignment() & Qt::AlignVertical_Mask;
-                    const qreal fgW = resolvedImplicitWidth(foreground, availableW);
-                    const qreal fgH = resolvedImplicitHeight(foreground, availableH);
+                    const qreal fgW = resolvedWidth(foreground, availableW);
+                    const qreal fgH = resolvedHeight(foreground, availableH);
                     const qreal fgX = hAlign & Qt::AlignRight
                         ? grooveRect.left() + foreground->leftMargin() + availableW - fgW
                         : hAlign & Qt::AlignHCenter
@@ -2340,8 +2340,8 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
             case SC_SliderGroove: {
                 const auto availableW = contentsRect.width()  - indicator->leftMargin() - indicator->rightMargin();
                 const auto availableH = contentsRect.height() - indicator->topMargin()  - indicator->bottomMargin();
-                const qreal grooveW = resolvedImplicitWidth(indicator, availableW);
-                const qreal grooveH = resolvedImplicitHeight(indicator, availableH);
+                const qreal grooveW = resolvedWidth(indicator, availableW);
+                const qreal grooveH = resolvedHeight(indicator, availableH);
 
                 QRectF grooveRect(0, 0, grooveW, grooveH);
                 const uint rawHAlign = indicator->alignment() & Qt::AlignHorizontal_Mask;
@@ -2382,9 +2382,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                     return contentsRect;
 
                 QRect handleRect;
-                const auto handleW = resolvedImplicitWidth(handle,
+                const auto handleW = resolvedWidth(handle,
                     contentsRect.width() - handle->leftMargin() - handle->rightMargin());
-                const auto handleH = resolvedImplicitHeight(handle,
+                const auto handleH = resolvedHeight(handle,
                     contentsRect.height() - handle->topMargin() - handle->bottomMargin());
                 if (horizontal) {
                     const int range = contentsRect.width()
@@ -2448,9 +2448,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!indicator || !indicator->visible() || indicator->opacity() == 0)
                     return contentsRect;
 
-                const int w = resolvedImplicitWidth(indicator,
+                const int w = resolvedWidth(indicator,
                     contentsRect.width() - indicator->leftMargin() - indicator->rightMargin());
-                const int h = resolvedImplicitHeight(indicator,
+                const int h = resolvedHeight(indicator,
                     contentsRect.height() - indicator->topMargin() - indicator->bottomMargin());
                 const uint indicatorAlign = resolvedAlignment(indicator->alignment(), Qt::AlignRight, Qt::AlignVCenter);
                 const QMargins indicatorMargins = elementMargins(indicator);
@@ -2522,9 +2522,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!upIndicator || !upIndicator->visible() || upIndicator->opacity() == 0)
                     return contentsRect;
 
-                const int w = resolvedImplicitWidth(upIndicator,
+                const int w = resolvedWidth(upIndicator,
                     contentsRect.width() - upIndicator->leftMargin() - upIndicator->rightMargin());
-                const int h = resolvedImplicitHeight(upIndicator,
+                const int h = resolvedHeight(upIndicator,
                     contentsRect.height() - upIndicator->topMargin() - upIndicator->bottomMargin());
                 const uint upAlign = resolvedAlignment(upIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
                 const QMargins upMargins = elementMargins(upIndicator);
@@ -2536,9 +2536,9 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 if (!downIndicator || !downIndicator->visible() || downIndicator->opacity() == 0)
                     return frameRect;
 
-                const int w = resolvedImplicitWidth(downIndicator,
+                const int w = resolvedWidth(downIndicator,
                     contentsRect.width() - downIndicator->leftMargin() - downIndicator->rightMargin());
-                const int h = resolvedImplicitHeight(downIndicator,
+                const int h = resolvedHeight(downIndicator,
                     contentsRect.height() - downIndicator->topMargin() - downIndicator->bottomMargin());
                 const uint downAlign = resolvedAlignment(downIndicator->alignment(), Qt::AlignLeft, Qt::AlignVCenter);
                 const QMargins downMargins = elementMargins(downIndicator);
@@ -2624,7 +2624,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                 QRectF sliderRect;
                 if (horizontal) {
                     const qreal sliderW = qMax(qreal(metrics.indicatorImplicitSize.width()), availableW * ratio);
-                    const qreal sliderH = resolvedImplicitHeight(indicator, availableH);
+                    const qreal sliderH = resolvedHeight(indicator, availableH);
                     const qreal travelRange = qMax(0.0, availableW - sliderW);
                     const int sliderPos = QStyle::sliderPositionFromValue(
                         scrollbar->minimum, scrollbar->maximum,
@@ -2635,7 +2635,7 @@ QRect QStyleKitStyle::subControlRect(ComplexControl cc, const QStyleOptionComple
                         sliderW, sliderH);
                 } else {
                     const qreal sliderH = qMax(qreal(metrics.indicatorImplicitSize.width()), availableH * ratio);
-                    const qreal sliderW = resolvedImplicitWidth(indicator, availableW);
+                    const qreal sliderW = resolvedWidth(indicator, availableW);
                     const qreal travelRange = qMax(0.0, availableH - sliderH);
                     const int sliderPos = QStyle::sliderPositionFromValue(
                         scrollbar->minimum, scrollbar->maximum,

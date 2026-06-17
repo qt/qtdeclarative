@@ -44,8 +44,8 @@ ApplicationWindow {
                 id: handle
                 required property DelegateStyle delegateStyle
                 required property T.Slider control
-                implicitWidth: delegateStyle.implicitWidth
-                implicitHeight: delegateStyle.implicitHeight
+                implicitWidth: delegateStyle.width
+                implicitHeight: delegateStyle.height
                 radius: delegateStyle.radius
                 color: delegateStyle.color
                 Text {

@@ -400,8 +400,8 @@ ApplicationWindow {
     // define and style your own custom controls.
 
     component CustomButtonImplementation : Rectangle {
-        implicitWidth: fancyButton.background.implicitWidth + fancyButton.leftPadding + fancyButton.rightPadding
-        implicitHeight: fancyButton.background.implicitHeight + fancyButton.topPadding + fancyButton.bottomPadding
+        implicitWidth: fancyButton.background.width + fancyButton.leftPadding + fancyButton.rightPadding
+        implicitHeight: fancyButton.background.height + fancyButton.topPadding + fancyButton.bottomPadding
         radius: fancyButton.background.radius
         border.color: fancyButton.background.border.color
         border.width: fancyButton.background.border.width

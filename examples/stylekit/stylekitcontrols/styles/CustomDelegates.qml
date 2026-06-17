@@ -83,8 +83,8 @@ Style {
         required property DelegateStyle delegateStyle
         required property QtObject control
 
-        implicitWidth: delegateStyle.implicitWidth
-        implicitHeight: delegateStyle.implicitHeight
+        implicitWidth: delegateStyle.width
+        implicitHeight: delegateStyle.height
         width: parent.width
         height: parent.height
 
@@ -184,8 +184,8 @@ Style {
     }
 
     component WavingQt : ShaderEffect {
-        implicitWidth: delegateStyle.implicitWidth
-        implicitHeight: delegateStyle.implicitHeight
+        implicitWidth: delegateStyle.width
+        implicitHeight: delegateStyle.height
         visible: delegateStyle.visible
 
         required property DelegateStyle delegateStyle
@@ -295,8 +295,8 @@ Style {
 
     checkBox {
         indicator.foreground {
-            implicitWidth: 30
-            implicitHeight: 30
+            width: 30
+            height: 30
             margins: 4
             delegate: WavingQt {}
         }
@@ -337,7 +337,7 @@ Style {
     }
 
     comboBox {
-        background.implicitWidth: 200
+        background.width: 200
     }
 
     frame {

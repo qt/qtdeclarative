@@ -364,8 +364,8 @@ QQmlComponent *QQStyleKitReader::createDelegateChangesComponent(const QString &d
     static const QString qmlTemplateCode = QString::fromUtf8(R"(
     import QtQuick
     PropertyChanges { $ {
-        implicitWidth: global.$.implicitWidth
-        implicitHeight: global.$.implicitHeight
+        width: global.$.width
+        height: global.$.height
         visible: global.$.visible
         color: global.$.color
         gradient: global.$.gradient

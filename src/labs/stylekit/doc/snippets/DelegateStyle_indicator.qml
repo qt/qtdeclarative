@@ -47,8 +47,8 @@ ApplicationWindow {
                     image.color: "navy"
                     image.fillMode: Image.PreserveAspectFit
                     image.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/arrow-indicator.png"
-                    implicitWidth: 10
-                    implicitHeight: 10
+                    width: 10
+                    height: 10
                     alignment: Qt.AlignCenter
                 }
                 // up button

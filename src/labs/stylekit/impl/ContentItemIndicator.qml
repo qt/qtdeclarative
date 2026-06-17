@@ -18,8 +18,8 @@ Item {
      * correct sizing and alignment rules, making the styling API consistent regardless
      * of whether the user styles a 'checkBox.indicator' or a 'toolSeparator.indicator' */
 
-    implicitWidth: indicatorStyle.implicitWidth
-    implicitHeight: indicatorStyle.implicitHeight
+    implicitWidth: indicatorStyle.width
+    implicitHeight: indicatorStyle.height
     visible: indicatorStyle.visible
 
     required property DelegateStyle indicatorStyle

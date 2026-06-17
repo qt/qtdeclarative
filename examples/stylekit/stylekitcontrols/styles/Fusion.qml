@@ -103,52 +103,52 @@ Style {
 
         background.border.width: 1
         handle {
-            implicitWidth: 13
-            implicitHeight: 13
+            width: 13
+            height: 13
             radius: 2
         }
 
         indicator {
-            implicitWidth: 15
-            implicitHeight: 15
+            width: 15
+            height: 15
             radius: 2
         }
     }
 
     abstractButton {
         background {
-            implicitWidth: 80
-            implicitHeight: 24
+            width: 80
+            height: 24
         }
     }
 
     comboBox {
         background {
-            implicitWidth: 120
-            implicitHeight: 24
+            width: 120
+            height: 24
         }
     }
 
     menu {
-        background.implicitWidth: 200
+        background.width: 200
     }
 
     menuBar {
         padding: 1
-        background.implicitHeight: 20
+        background.height: 20
     }
 
     menuBarItem {
         background {
-            implicitHeight: 20
-            implicitWidth: 20
+            height: 20
+            width: 20
             border.width: 0
         }
     }
 
     menuItem {
         background {
-            implicitHeight: 20
+            height: 20
             border.width: 0
         }
     }
@@ -157,13 +157,13 @@ Style {
         padding: 5
 
         background {
-            implicitWidth: 188
-            implicitHeight: 1
+            width: 188
+            height: 1
             border.width: 0
         }
         indicator {
-            implicitWidth: 188
-            implicitHeight: 1
+            width: 188
+            height: 1
             border.width: 0
             foreground.visible: false
         }
@@ -182,14 +182,14 @@ Style {
 
     switchControl {
         indicator {
-            implicitWidth: 40
-            implicitHeight: 16
+            width: 40
+            height: 16
             foreground.radius: 1
         }
         handle {
             radius: 0
-            implicitWidth: 20
-            implicitHeight: 16
+            width: 20
+            height: 16
         }
     }
 
@@ -197,23 +197,23 @@ Style {
         background.visible: false
         padding: 2
         indicator {
-            implicitWidth: 7
-            implicitHeight: 7
+            width: 7
+            height: 7
         }
     }
 
     scrollIndicator {
         padding: 2
         indicator {
-            implicitWidth: 7
-            implicitHeight: 7
+            width: 7
+            height: 7
         }
     }
 
     slider {
         indicator {
-            implicitWidth: 140
-            implicitHeight: 5
+            width: 140
+            height: 5
             foreground {
                 margins: 0
                 border.width: 1
@@ -221,27 +221,27 @@ Style {
         }
         vertical {
             background {
-                implicitWidth: 5
-                implicitHeight: 140
+                width: 5
+                height: 140
             }
             indicator {
-                implicitWidth: 5
-                implicitHeight: 140
+                width: 5
+                height: 140
             }
         }
     }
 
     spinBox {
         background {
-            implicitWidth: 120
-            implicitHeight: 24
+            width: 120
+            height: 24
         }
     }
 
     textField {
         background {
-            implicitWidth: 120
-            implicitHeight: 24
+            width: 120
+            height: 24
         }
     }
 
