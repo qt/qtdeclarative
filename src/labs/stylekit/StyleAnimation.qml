@@ -36,7 +36,7 @@ ParallelAnimation {
     readonly property string __geometryProps:
         "$.implicitWidth, $.implicitHeight, "
         + "$.margins, $.leftMargin, $.rightMargin, $.topMargin, $.bottomMargin, "
-        + "$.minimumWidth, "
+        + "$.minimumWidth, $.minimumHeight, "
     readonly property string __colorProps:
         "$.color, $.border.color, $.image.color, $.shadow.color, "
     readonly property string __radiiProps:

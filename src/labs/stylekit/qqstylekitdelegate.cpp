@@ -112,7 +112,7 @@ void QQStyleKitDelegate::updateImplicitSize()
      * The implicit size is read-only because it's calculated in C++ from internal
      * child items that are intentionally not exposed to QML. */
     const qreal impWidthInStyle = qMax(m_delegateProperties->minimumWidth(), m_delegateProperties->implicitWidth());
-    const qreal impHeightInStyle = m_delegateProperties->implicitHeight();
+    const qreal impHeightInStyle = qMax(m_delegateProperties->minimumHeight(), m_delegateProperties->implicitHeight());
     setImplicitWidth(impWidthInStyle > 0 || !m_imageOverlay ? impWidthInStyle : m_imageOverlay->implicitWidth());
     setImplicitHeight(impHeightInStyle > 0 || !m_imageOverlay ? impHeightInStyle : m_imageOverlay->implicitHeight());
 }

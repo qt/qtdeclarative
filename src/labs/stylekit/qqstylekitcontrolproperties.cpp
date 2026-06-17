@@ -377,6 +377,13 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty real DelegateStyle::minimumHeight
+
+    The minimum height of this delegate. The delegate will not be sized
+    smaller than this value.
+*/
+
+/*!
     \qmlproperty bool DelegateStyle::fillWidth
 
     Whether the delegate should fill the available width of the parent item.
@@ -1536,6 +1543,17 @@ void QQStyleKitDelegateProperties::setMinimumWidth(qreal width)
 {
     if (setStyleProperty(QQSK::Property::MinimumWidth, width))
         handleStylePropertyChanged(&QQStyleKitDelegateProperties::minimumWidthChanged);
+}
+
+qreal QQStyleKitDelegateProperties::minimumHeight() const
+{
+    return styleProperty<qreal>(QQSK::Property::MinimumHeight);
+}
+
+void QQStyleKitDelegateProperties::setMinimumHeight(qreal height)
+{
+    if (setStyleProperty(QQSK::Property::MinimumHeight, height))
+        handleStylePropertyChanged(&QQStyleKitDelegateProperties::minimumHeightChanged);
 }
 
 bool QQStyleKitDelegateProperties::fillWidth() const

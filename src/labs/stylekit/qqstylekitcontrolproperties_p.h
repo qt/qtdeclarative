@@ -238,6 +238,7 @@ class Q_LABSSTYLEKIT_EXPORT QQStyleKitDelegateProperties : public QQStyleKitProp
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged FINAL)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged FINAL)
     Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged FINAL)
+    Q_PROPERTY(qreal minimumHeight READ minimumHeight WRITE setMinimumHeight NOTIFY minimumHeightChanged FINAL)
     Q_PROPERTY(bool fillWidth READ fillWidth WRITE setFillWidth NOTIFY fillWidthChanged FINAL)
     Q_PROPERTY(bool fillHeight READ fillHeight WRITE setFillHeight NOTIFY fillHeightChanged FINAL)
     Q_PROPERTY(qreal margins READ margins WRITE setMargins NOTIFY marginsChanged FINAL)
@@ -301,6 +302,9 @@ public:
 
     qreal minimumWidth() const;
     void setMinimumWidth(qreal width);
+
+    qreal minimumHeight() const;
+    void setMinimumHeight(qreal height);
 
     bool fillWidth() const;
     void setFillWidth(bool fill);
@@ -370,6 +374,7 @@ signals:
     void implicitWidthChanged();
     void implicitHeightChanged();
     void minimumWidthChanged();
+    void minimumHeightChanged();
     void marginsChanged();
     void leftMarginChanged();
     void rightMarginChanged();

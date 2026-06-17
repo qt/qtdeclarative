@@ -35,9 +35,9 @@ StyledItem {
         State {
             when: root.__vertical && (root.__firstProgress !== 0.0 || root.__secondProgress !== 1.0)
             PropertyChanges {
-                root.y: (1 - root.__secondProgress) * (delegateStyle.fillHeight ? parent.height - delegateStyle.minimumWidth : parent.height)
+                root.y: (1 - root.__secondProgress) * (delegateStyle.fillHeight ? parent.height - delegateStyle.minimumHeight : parent.height)
                 root.height: delegateStyle.fillHeight
-                    ? (delegateStyle.minimumWidth + ((root.__secondProgress - root.__firstProgress) * (parent.height - delegateStyle.minimumWidth)))
+                    ? (delegateStyle.minimumHeight + ((root.__secondProgress - root.__firstProgress) * (parent.height - delegateStyle.minimumHeight)))
                     : (root.__secondProgress - root.__firstProgress) * parent.height
             }
         }

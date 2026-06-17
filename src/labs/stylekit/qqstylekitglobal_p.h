@@ -104,6 +104,7 @@ public:
         LeftPadding,
         Margins,
         MinimumWidth,
+        MinimumHeight,
         Opacity,
         Padding,
         Radius,
